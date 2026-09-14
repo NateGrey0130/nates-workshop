@@ -1780,13 +1780,23 @@ function render() {
   // end of their half. Each entry keeps its original index because usePower()
   // indexes C.data.powers, which stays in stored order — sorting the stored
   // array would make the use button deduct the wrong power.
+  // THREE KINDS, NOT TWO. What this replaces asked `type === 'spell'` and
+  // treated everything else as psionic, so a Heroes Unlimited super ability
+  // sorted among the psionics and printed under a Psionics heading with an
+  // I.S.P. column it has no cost for. Ordered rather than tested: spells first
+  // by level, then psionics by category, then super abilities by tier.
+  const KIND_ORDER = { spell: 0, psionic: 1, super: 2 };
+  const kindOf = (x) => (x.type === 'spell' ? 'spell' : x.type === 'super' ? 'super' : 'psionic');
   const powerView = powers.map((p, i) => ({ p, i })).sort((a, b) => {
     const A = a.p, B = b.p;
-    if ((A.type === 'spell') !== (B.type === 'spell')) return A.type === 'spell' ? -1 : 1;
-    if (A.type === 'spell') {
+    const ka = kindOf(A), kb = kindOf(B);
+    if (ka !== kb) return KIND_ORDER[ka] - KIND_ORDER[kb];
+    if (ka === 'spell') {
       const la = A.level ?? Infinity, lb = B.level ?? Infinity;
       if (la !== lb) return la - lb;
     } else if ((A.category || '') !== (B.category || '')) {
+      // `category` carries the psionic category and the super-ability TIER -
+      // one grouping key for both, so this comparison needs no third branch.
       if (!A.category || !B.category) return A.category ? -1 : 1;
       return A.category.localeCompare(B.category);
     }
@@ -1795,12 +1805,22 @@ function render() {
 
   let lastPowerGroup = null;
   const powerRows = powerView.map(({ p, i }) => {
-    const pool = p.type === 'spell' ? 'ppe' : 'isp';
+    const kind = kindOf(p);
+    // A super ability has NO POOL: it is permanent and free, which is why
+    // `super_abilities` is a table with neither a cost column nor a level one.
+    // `cost` is therefore null on every one of them, the cost cell prints the
+    // em-dash it already prints for a costless power, and the use button below
+    // never renders - it is gated on `cost != null`.
+    const pool = kind === 'spell' ? 'ppe' : kind === 'super' ? null : 'isp';
     const cost = typeof p.cost === 'number' ? p.cost : null;
     // The group heading carries what the per-row "spell · L3" label used to.
-    const group = p.type === 'spell'
+    const TIER_LABEL = { minor: 'Minor', major: 'Major' };
+    const group = kind === 'spell'
       ? (p.level != null ? `Spells — Level ${p.level}` : 'Spells — Unleveled')
-      : (p.category ? `Psionics — ${p.category}` : 'Psionics');
+      : kind === 'super'
+        ? (p.category ? `Super abilities — ${TIER_LABEL[p.category] || p.category}`
+                      : 'Super abilities')
+        : (p.category ? `Psionics — ${p.category}` : 'Psionics');
     const head = group !== lastPowerGroup ? `<div class="power-group">${escHtml(group)}</div>` : '';
     lastPowerGroup = group;
     // Offered only when the pool can pay for it. shared/styles.css already dims
@@ -1808,7 +1828,7 @@ function render() {
     // of its own, and usePower keeps its guard for the call arriving by hand.
     // A variable-cost power is judged on its minimum - the same number usePower
     // deducts - so the button stays live and the G.M. adjusts for the rest.
-    const left = c[pool + '_current'];
+    const left = pool ? c[pool + '_current'] : null;
     const useBtn = w && cost != null && left != null
       ? `<button class="btn btn-sm btn-ghost noprint" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${i})">⚡ use</button>` : '';
     // What the power DOES, when the catalog knows. It arrives with the
@@ -2216,7 +2236,7 @@ function render() {
   </section>
 
   <section class="tabpanel${C.tab === 'powers' ? ' on' : ''}" data-tab="powers">
-    ${box('Psionics &amp; Magic', (powers.length
+    ${box(powers.some((x) => x.type === 'super') ? 'Powers' : 'Psionics &amp; Magic', (powers.length
       ? powerRows
       : '<p class="muted small">None.</p>')
       // The held powers carry their own text; everything this character does

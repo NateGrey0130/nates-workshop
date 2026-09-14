@@ -607,6 +607,58 @@ function psionicBlocks(data) {
   return out;
 }
 
+// Every super-ability block a class carries: its own, and any a special ability
+// grants. The same fold as psionicBlocks, and it exists for the same reason: a
+// Heroes Unlimited Power Category rolls on a table whose outcomes are whole
+// PACKAGES - "one major and three minor" against "four minor" - and the only
+// shape in this file that can offer a choice between packages is an ability
+// choice group whose options each carry a grant.
+function superAbilityBlocks(data) {
+  const out = [];
+  if (data?.super_abilities) out.push(['super_abilities', data.super_abilities]);
+  for (const d of data?.special_abilities || []) {
+    if (d && typeof d === 'object' && d.super_abilities) {
+      out.push([`special_abilities.${d.name}.super_abilities`, d.super_abilities]);
+    }
+  }
+  return out;
+}
+
+// The two tiers Heroes Unlimited prints, and the only values the catalog's
+// `super_abilities.tier` carries - 202 minor and 162 major, production,
+// 2026-09-13. NOT A LADDER, which is the difference from `psionics.type`: a
+// major is not a stronger minor, it is a different pool, and a category
+// granting "one major and one minor" draws from both. So there is no stronger
+// to compute and nothing here ranks them.
+const SUPER_ABILITY_TIERS = ['minor', 'major'];
+
+// Two super-ability blocks added together - the class's own plus whatever a
+// chosen ability grants. Counts ADD and lists union, which is the whole of it:
+// with no tier to rank and no kind to prefer there is nothing here that could
+// silently drop a grant the way `out.magic = occ.magic || rcc.magic` did.
+function mergeSuperAbilities(born, trained) {
+  if (!born) return trained;
+  if (!trained) return born;
+  // Spread first so an unenumerated key survives, the same courtesy mergeMagic
+  // extends to the eleven keys its blocks use.
+  const out = { ...born };
+  for (const [k, v] of Object.entries(trained)) if (v !== undefined) out[k] = v;
+
+  const starting = (born.abilities_starting || 0) + (trained.abilities_starting || 0);
+  if (starting) out.abilities_starting = starting;
+  for (const k of ['abilities', 'abilities_from']) {
+    const both = unionByName(born[k], trained[k]);
+    if (both.length) out[k] = both;
+  }
+  const groups = [...(born.abilities_starting_groups || []),
+                  ...(trained.abilities_starting_groups || [])];
+  if (groups.length) out.abilities_starting_groups = groups;
+  const tiers = [...new Set([...(born.tiers_allowed || []),
+                             ...(trained.tiers_allowed || [])])];
+  if (tiers.length) out.tiers_allowed = tiers;
+  return out;
+}
+
 // The same fold for magic. BOOK-INGEST-AUDIT.md F14.
 //
 // F10 excluded this saying "no race/O.C.C. pair in the catalog states both".
@@ -1042,6 +1094,27 @@ export function combineClasses(rcc, occ) {
   // Born plus trained, not one or the other (F10). The race is what a member of
   // that race comes with; the occupation is what its page teaches.
   if (rcc.psionics || occ.psionics) out.psionics = mergePsionics(rcc.psionics, occ.psionics);
+  // A Heroes Unlimited character is a Power Category in the R.C.C. slot and an
+  // Educational Level in the O.C.C. slot, so in every class that book will ever
+  // ship the block is on the RACE side - the mirror image of `skill_programs`
+  // two dozen lines above, which is only ever an O.C.C.'s. MERGED rather than
+  // read off one slot, for the reason F10 and F14 both give: a rule that reads
+  // from one side is a half-implementation failing in exactly one direction,
+  // and this is the direction nothing would notice.
+  //
+  // THE SUPERSEDE BRANCH DOES NOT ERASE, and neither does magic's - which the
+  // comment above magic says it does. `out` is seeded `{ ...rcc }` and the
+  // branch hands back `occ.X || rcc.X`, so a superseding occupation that states
+  // no block of its own - every one of them, since supersedes_race marks a
+  // transformation rather than a caster - leaves the race's standing. Measured
+  // on both existing blocks; see BOOK-INGEST-AUDIT.md F81. Written the same way
+  // here deliberately, so the fix is one change across three blocks rather than
+  // a fourth behaviour to reconcile.
+  if (rcc.super_abilities || occ.super_abilities) {
+    out.super_abilities = superseded
+      ? (occ.super_abilities || rcc.super_abilities)
+      : mergeSuperAbilities(rcc.super_abilities, occ.super_abilities);
+  }
   // Magic is what you studied AND what a creature was born with, and the two add
   // up the same way psionics do (F14). A superseding class is the exception, as
   // it is everywhere else: a character the book says was remade does not keep
@@ -1732,7 +1805,7 @@ export function isAbilityChoice(entry) {
 // M.D.C. arrives as a pool BONUS rather than an override, which is why pool
 // bonuses had to exist first — the ability adds to whatever the class already
 // rolls, it does not replace the formula.
-export const ABILITY_GRANTS = ['bonuses', 'psionics', 'magic'];
+export const ABILITY_GRANTS = ['bonuses', 'psionics', 'magic', 'super_abilities'];
 
 // A named ability definition, as opposed to a choice group.
 export function isAbilityDefinition(entry) {
@@ -1855,6 +1928,16 @@ export function applyAbilities(cls, chosen) {
     // outright replaced the class's I.S.P. formula with none at all.
     if (def.psionics) out.psionics = mergePsionics(out.psionics, def.psionics);
     if (def.magic) out.magic = out.magic || def.magic;
+    // Super abilities ADD rather than defer to whichever side spoke first: a
+    // Power Category states what its own page grants and a chosen option states
+    // what the roll bought, and both are real. The merge also has to work from
+    // NOTHING, because the commonest shape is a category granting none itself
+    // and offering several packages - Experiments' Table C is six of them - so
+    // `out.super_abilities` is usually undefined here and the option's block
+    // arrives whole.
+    if (def.super_abilities) {
+      out.super_abilities = mergeSuperAbilities(out.super_abilities, def.super_abilities);
+    }
     // An ability that changes HOW MANY O.C.C. Related Skills the class grants.
     // BOOK-INGEST-AUDIT.md F24: the Gypsy Gifted rolls one of four psychic
     // profiles, and two of the four are master psychics who get NO related
@@ -2398,6 +2481,88 @@ export function parseClassMarkdown(text) {
       }
     }
   }
+  // SUPER ABILITIES - the fifth power kind, and the third block of the family
+  // `magic` and `psionics` already form. A Heroes Unlimited super ability is a
+  // permanent trait with a range, a duration and a damage, NO cost and NO level
+  // (which is why it needed its own table rather than a spell row), so the gate
+  // on a pick is the TIER and nothing else.
+  //
+  // The block is named for the catalog table it draws from, which puts it three
+  // characters from `special_abilities` - a different key entirely, holding the
+  // class's OWN prose abilities and granting nothing from any catalog. The
+  // collision is unfortunate and the alternative was worse: naming the block for
+  // what it grants would have left the catalog and the frontmatter disagreeing
+  // about what the thing is called.
+  //
+  // These keys pair name for name with STARTING_SPEC.super in js/leveling.js.
+  // Anything added here has to be added there too, or it parses, stores and is
+  // never read - the exact shape `from_list` failed in for eleven months.
+  for (const [where, block] of superAbilityBlocks(data)) {
+    if (typeof block !== 'object' || Array.isArray(block)) {
+      errors.push(`${where} must be a map`);
+      continue;
+    }
+    if (block.abilities_starting !== undefined
+        && (!Number.isInteger(block.abilities_starting) || block.abilities_starting < 0)) {
+      errors.push(`${where}.abilities_starting must be a whole number of picks, zero or more`);
+    }
+    // REFUSED, NOT IGNORED. A per-level grant would have to be banked, and
+    // `pending_power_picks` has columns for a spell level, a tradition, a
+    // category and a name list - none for a TIER - so a banked super-ability
+    // grant would come back ungated and spend against all 364 rows. See the note
+    // where superAbilityGrantsFor would have been, in js/leveling.js. Nothing in
+    // either Heroes Unlimited book asks for this: the core grants every super
+    // ability at creation.
+    for (const k of ['abilities_per_level', 'abilities_schedule']) {
+      if (block[k] !== undefined) {
+        errors.push(`${where}.${k} is not supported - a super ability is granted at `
+          + 'creation, and there is nowhere to bank a per-level grant of one');
+      }
+    }
+    // A CLOSED set of two, unlike a skill or psionic category. Those are open
+    // vocabularies where an unknown name is a catalog gap worth reporting
+    // softly; there are exactly two tiers and there always will be, so a typo
+    // is a rule nothing can satisfy and the picker would come back empty.
+    for (const t of block.tiers_allowed || []) {
+      if (!SUPER_ABILITY_TIERS.includes(t)) {
+        errors.push(`${where}.tiers_allowed must be ${SUPER_ABILITY_TIERS.join(' or ')}, got: ${t}`);
+      }
+    }
+    if (block.tiers_allowed !== undefined
+        && (!Array.isArray(block.tiers_allowed) || !block.tiers_allowed.length)) {
+      errors.push(`${where}.tiers_allowed must be a non-empty list; omit it to allow both tiers`);
+    }
+    for (const k of ['abilities', 'abilities_from']) {
+      if (block[k] !== undefined
+          && (!Array.isArray(block[k]) || block[k].some((n) => typeof n !== 'string'))) {
+        errors.push(`${where}.${k} must be a list of super ability names`);
+      }
+    }
+    for (const g of block.abilities_starting_groups || []) {
+      if (!g || typeof g !== 'object' || !Number.isInteger(g.count) || g.count < 1) {
+        errors.push(`${where}.abilities_starting_groups entries need a whole count above zero`);
+        continue;
+      }
+      for (const t of g.tiers || []) {
+        if (!SUPER_ABILITY_TIERS.includes(t)) {
+          errors.push(`${where}.abilities_starting_groups tiers must be `
+            + `${SUPER_ABILITY_TIERS.join(' or ')}, got: ${t}`);
+        }
+      }
+    }
+    // A block that grants nothing is the silent-storage shape this file exists
+    // to catch: it parses, it stores, the sheet grows a heading, and the player
+    // is offered nothing. Stated zero is fine and means none, as it does for
+    // the five dragon hatchlings that state `spells_starting: 0`.
+    const grantsSomething = block.abilities_starting !== undefined
+      || (block.abilities_starting_groups || []).length
+      || (block.abilities || []).length;
+    if (!grantsSomething) {
+      warnings.push(`${where} grants no super abilities - state abilities_starting, `
+        + 'abilities, or a group, or drop the block');
+    }
+  }
+
   if (data.race_restrictions !== undefined && data.category !== 'occ') {
     warnings.push('race_restrictions is set on something that is not an O.C.C. and will do nothing');
   }

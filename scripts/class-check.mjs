@@ -606,7 +606,8 @@ if (noCatalog || fieldSources) {
   console.log('\nCATALOG          skipped (nothing parsed)');
 } else {
   const missing = await crossReference(env, null, data);
-  const counts = ['items', 'skills', 'spells', 'psionics'].map((k) => [k, missing[k].length]);
+  const counts = ['items', 'skills', 'spells', 'psionics', 'superAbilities']
+    .map((k) => [k, missing[k].length]);
   const total = counts.reduce((s, [, n]) => s + n, 0);
 
   console.log(`\nCATALOG (${remote ? 'REMOTE' : 'local'})`);

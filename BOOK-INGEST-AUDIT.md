@@ -10557,3 +10557,68 @@ TYPE check. A per_level that is a perfectly good number and the wrong one - a 5
 where the book freezes a skill, or a 0 where it does not - is invisible to it
 and always will be, because nothing in the repo knows what the book printed.
 That is what a readback assertion in a data script is for.
+
+### F81 - medium - `supersedes_race` does not erase the race's `magic` or `psionics`, and the comment above `magic` says it does
+
+**Found 2026-09-13** while adding the `super_abilities` grant block for Heroes
+Unlimited, by writing a smoke check that asserted the comment and watching it
+fail.
+
+**What the comment claims.** `js/parser.js`, above the magic branch of
+`combineClasses`:
+
+> A superseding class is the exception, as it is everywhere else: a character
+> the book says was remade does not keep its old race's magic either.
+
+**What the code does.** `combineClasses` opens `const out = { ...rcc }`, so the
+race's whole frontmatter is already in `out` before any block is considered. The
+branch then runs:
+
+```js
+if (occ.magic || rcc.magic) {
+  out.magic = superseded ? (occ.magic || rcc.magic) : mergeMagic(rcc.magic, occ.magic);
+}
+```
+
+With a superseding occupation that states no magic, `occ.magic` is undefined and
+`occ.magic || rcc.magic` hands the RACE's block straight back. Psionics never
+had an erase at all - its line is `if (rcc.psionics || occ.psionics) out.psionics
+= mergePsionics(...)`, with no `superseded` term.
+
+**Measured, not inferred:**
+
+```
+race { magic: { type: 'spell', spells_starting: 4 },
+       psionics: { type: 'major', powers_starting: 2 } }
+occ  { supersedes_race: true }
+
+merged.magic     -> {"type":"spell","spells_starting":4}
+merged.psionics  -> {"type":"major","powers_starting":2}
+```
+
+**Why the gap is invisible.** `supersedes_race` marks a TRANSFORMATION - the
+class whose book says the character stops being what it was - and such a class
+is never itself a caster, so `occ.magic` is undefined in every case that exists.
+The only branch that would ever erase anything is the one that never fires.
+F11's own smoke coverage checks the SKILLS half, which does work: `pastLife` is
+`[]` when superseded and 37 races' named skills really are dropped.
+
+**Severity.** Medium rather than high because nothing in the live catalog is
+wrong today: `supersedes_race` is opt-in, and the classes carrying it do not
+compose with a race that states magic or psionics in a way anyone has built.
+It is a rule that is written down, believed, and not enforced - which is the
+shape that becomes wrong the first time the combination is made.
+
+**The new block matches them deliberately.** `super_abilities` was written with
+the identical `superseded ? (occ.X || rcc.X) : merge(...)` shape rather than
+with the erase its author first wrote, so a fix is ONE change across three
+blocks rather than a fourth behaviour to reconcile. The smoke section
+`Super abilities` pins the current behaviour by name -
+`a superseding occupation does NOT erase the race's block (F81)` - and pins
+`magic` and `psionics` doing the same thing beside it, so taking this finding
+turns three checks red at once and each one says what it expected.
+
+**What taking it would cost.** Three lines and a decision about existing
+characters: the erase is a composition rule, so a character already saved
+against a superseding occupation would recompose without its race's spells. The
+decision is whether that is a correction or a migration.

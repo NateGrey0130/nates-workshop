@@ -215,30 +215,39 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 // filters per character instead — the audit validates characters from several
 // campaigns against one load. Rows keep their `system` column either way.
 export async function loadPowerCatalog(env, names, system) {
-  const empty = { spell: new Map(), psionic: new Map() };
+  const empty = { spell: new Map(), psionic: new Map(), super: new Map() };
   if (!names.length) return empty;
   // Chunked: D1 binds at most 100 parameters per statement, and a high-level
   // caster holds more than a hundred spells - which is exactly the character
   // this function exists to load.
   const spells = [];
   const psionics = [];
+  const supers = [];
   for (const batch of chunks(names)) {
     const placeholders = batch.map(() => '?').join(', ');
-    const [s, p] = await env.DB.batch([
+    // NO `description` on the super-ability row, for the reason the block
+    // comment above gives about the other two: the descriptions are 994KB
+    // across 364 rows and the validator needs a name and a tier.
+    const [s, p, a] = await env.DB.batch([
       env.DB.prepare(
         `SELECT name, level, ppe, ppe_note, system, tradition FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
       ).bind(...batch),
       env.DB.prepare(
         `SELECT name, category, isp, isp_note, system FROM psionic_powers WHERE name COLLATE NOCASE IN (${placeholders})`
       ).bind(...batch),
+      env.DB.prepare(
+        `SELECT name, tier, system FROM super_abilities WHERE name COLLATE NOCASE IN (${placeholders})`
+      ).bind(...batch),
     ]);
     if (s.results?.length) spells.push(...s.results);
     if (p.results?.length) psionics.push(...p.results);
+    if (a.results?.length) supers.push(...a.results);
   }
   // A NULL system is unrestricted, which is how every picker already reads it.
   const keep = (r) => !system || !r.system || r.system === system;
   for (const r of spells.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
   for (const r of psionics.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
+  for (const r of supers.filter(keep)) empty.super.set(r.name.toLowerCase(), r);
   return empty;
 }
 
@@ -265,12 +274,18 @@ export async function loadPowerDescriptions(env, powers) {
   // Which catalog each held name belongs to. A duplicate name across two
   // characters' powers is one lookup, not two.
   const wanted = new Map();
+  // A MAP RATHER THAN A TERNARY. "psionic, else spells" sent every unrecognised
+  // type to the spell table, so a super ability would have been looked up where
+  // it cannot be and its description silently dropped - and a description that
+  // is merely absent is indistinguishable from a catalog row that has none.
+  const CATALOG_OF = { psionic: 'psionics', super: 'superAbilities', spell: 'spells' };
   for (const p of list) {
     const name = String(p?.name ?? '').trim();
-    if (name) wanted.set(name.toLowerCase(), p?.type === 'psionic' ? 'psionics' : 'spells');
+    if (name) wanted.set(name.toLowerCase(), CATALOG_OF[p?.type] || 'spells');
   }
 
-  for (const [catalogKey, table] of [['spells', 'spells'], ['psionics', 'psionic_powers']]) {
+  for (const [catalogKey, table] of [['spells', 'spells'], ['psionics', 'psionic_powers'],
+                                     ['superAbilities', 'super_abilities']]) {
     const names = [...wanted].filter(([, k]) => k === catalogKey).map(([n]) => n);
     if (!names.length) continue;
 

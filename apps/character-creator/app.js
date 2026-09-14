@@ -102,6 +102,12 @@ const S = {
   equipment: [], equipInit: false,
   charName: '', campaignId: null, newCampaign: '',
   spells: [], psi: [], bio: {},
+  // Super abilities chosen at level 1. `supers` is the flat list and
+  // `superGroups` the per-group one, exactly as spells and psionics have both -
+  // except that no Power Category uses the flat form, since every one that
+  // grants abilities splits them by tier. It exists so the three kinds stay the
+  // same shape and `powerList` needs no special case.
+  supers: [],
   // Step 3. psiRoll is {roll, tier} once rolled — null means not yet rolled,
   // and a tier of null is a real result (26-00, no psionics) rather than an
   // absence, so the two must stay distinguishable.
@@ -134,13 +140,13 @@ const S = {
   // levelPsi is keyed by grant index for the same reason levelSpells is: a
   // psionic grant can name its own CATEGORIES, and the Mystic's level-4 power
   // comes from Super while its starting ones came from Sensitive and Healing.
-  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {},
+  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {}, levelSupers: {},
   // The level-1 picks when the class SPLITS them across restrictions - the
   // Delphi Juicer's "3 Physical + 1 Super". Keyed by group index for the same
   // reason levelSpells is, and separate from the flat `spells`/`psi` on
   // purpose: a class with one starting group keeps writing into those, so no
   // draft saved before this existed changes shape.
-  spellGroups: {}, psiGroups: {},
+  spellGroups: {}, psiGroups: {}, superGroups: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -152,10 +158,11 @@ const S = {
   skillCatalog: [], items: [], campaigns: [], existing: [],
   // Retired gear slugs → the slug they resolve to now. See findItem().
   itemRedirects: {},
-  spellCatalog: [], psiCatalog: [], me: null, isAdmin: false,
+  spellCatalog: [], psiCatalog: [], superCatalog: [], me: null, isAdmin: false,
   // Picker filter text. Transient view state, never persisted in a draft —
   // resuming a build should not resume half a search.
   gearFilter: '', relatedFilter: '', secondaryFilter: '', spellFilter: '', psiFilter: '',
+  superFilter: '',
   classFilter: '',
 };
 
@@ -446,6 +453,7 @@ const DRAFT_KEYS = [
   'occAttrBonuses', 'occRolledBonuses', 'totemAttrBonuses', 'totemRolledBonuses', 'minRerolls',
   'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
   'spellGroups', 'psiGroups',
+  'supers', 'superGroups', 'levelSupers',
 ];
 
 // Bumped whenever STEPS changes shape, because a draft stores `step` as an
@@ -846,8 +854,24 @@ function wirePickers() {
 
   for (const [id, key] of [['class-filter', 'classFilter'],
     ['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
-    ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter']]) {
+    ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter'],
+    ['super-filter', 'superFilter']]) {
     Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
+  }
+
+  // The SPLIT-GROUP pickers number their filter boxes - `psi-filter-0`,
+  // `spell-filter-1` - and the exact-id loop above has never matched one, so
+  // every class whose book splits its starting picks has rendered a filter box
+  // that does nothing. `Picker.wire` returns silently when the element is
+  // absent, which is why nothing ever said so. One filter per KIND, not per
+  // group, because the pool each group draws from is already disjoint: typing
+  // in one box filters every group of that kind, which is what a single
+  // `S.psiFilter` meant all along.
+  for (const [prefix, key] of [['spell-filter-', 'spellFilter'],
+    ['psi-filter-', 'psiFilter'], ['super-filter-', 'superFilter']]) {
+    for (const el of document.querySelectorAll(`[id^="${prefix}"]`)) {
+      Picker.wire(el.id, { onInput: (v) => { S[key] = v; render(); } });
+    }
   }
 }
 
@@ -993,6 +1017,7 @@ function resetBuild() {
   S.minRerolls = [];
   S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
   S.spellGroups = {}; S.psiGroups = {};
+  S.supers = []; S.superGroups = {}; S.levelSupers = {};
 }
 
 // Step 1 — the race (browse | guided)
@@ -1218,6 +1243,7 @@ function setStartingLevel(v) {
   // A different span is a different set of dice and a different set of grants,
   // so nothing rolled or chosen for the old one survives.
   S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
+  S.levelSupers = {};
   render();
 }
 
@@ -3339,6 +3365,88 @@ function psiGroupRows(list, count, kind = 'psi', gi = null) {
   }).join('');
 }
 
+// The same rows for a super ability. Grouped by TIER rather than by category,
+// and the right-hand column is the stat line rather than a cost, because a
+// super ability has none: it is a permanent trait, which is the whole reason
+// it needed a table of its own rather than a spell row.
+//
+// Only 41 of the 364 rows carry a range and 22 a damage (production,
+// 2026-09-13), so most rows show nothing there. An empty column is the honest
+// answer - the book prints no stat block for Extraordinary Speed either.
+function superGroupRows(list, count, kind = 'super', gi = null) {
+  const sorted = [...list].sort((a, b) =>
+    (a.tier || '\uffff').localeCompare(b.tier || '\uffff') || (a.name || '').localeCompare(b.name || ''));
+  const sizes = sorted.reduce((m, x) => { const g = x.tier || 'Untiered';
+    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
+  const label = (t) => (t === 'minor' ? 'Minor super abilities'
+    : t === 'major' ? 'Major super abilities' : 'Untiered');
+  let last = null;
+  return sorted.map((a) => {
+    const group = a.tier || 'Untiered';
+    const head = group !== last
+      ? `<div class="pick-group">${esc(label(group))}<span class="pick-group-n">${sizes.get(group)}</span></div>`
+      : '';
+    last = group;
+    const sel = powerList(kind, gi);
+    const on = sel.includes(a.name);
+    const blocked = !on && sel.length >= count;
+    const stat = [a.range, a.damage].filter(Boolean).join(' \u00b7 ');
+    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+        data-act="power" data-kind="${kind}" data-name="${esc(a.name)}"${
+        gi == null ? '' : ` data-gi="${gi}"`}>
+      <span>${esc(a.name)}</span>
+      <span class="pct">${esc(stat)}</span></label>`;
+  }).join('');
+}
+
+// The level-1 super-ability picks. ALWAYS the group form, because every Power
+// Category that grants any grants them split by tier - "one major super
+// ability, and one minor" (printed 56) - so unlike spells and psionics there is
+// no single-group shape worth a second renderer.
+function startingSuperHtml(groups) {
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  const takenAll = () => groups.flatMap((g, i) => powerList('super-start', i));
+
+  const blocks = groups.map((g, gi) => {
+    const chosen = powerList('super-start', gi);
+    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
+      .map((n) => String(n).toLowerCase()));
+    const pool = S.superCatalog.filter((a) => inSystem(a)
+      && (named ? named.has(String(a.name).toLowerCase())
+                : (!g.tiers || g.tiers.includes(a.tier)))
+      && !elsewhere.has(String(a.name).toLowerCase()));
+    const unknownNamed = named
+      ? g.from.filter((n) => !S.superCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
+    const list = Picker.filter(pool, S.superFilter)
+      .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S.superFilter)));
+    const gate = named ? `a list of ${g.from.length}`
+      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
+    return `<p class="small" style="margin-top:12px"><b>${g.count}
+      ${g.count === 1 ? 'ability' : 'abilities'}</b> <span class="muted">from ${esc(gate)}</span>
+      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
+      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
+      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
+        ${unknownNamed.length === 1 ? 'ability is' : 'abilities are'} not in the catalog yet:
+        ${esc(unknownNamed.join(', '))}.</p>` : '')
+      + Picker.inputHtml({ id: `super-filter-${gi}`, value: S.superFilter,
+          placeholder: 'Filter super abilities\u2026',
+          shown: Picker.filter(pool, S.superFilter).length, total: pool.length })
+      + superGroupRows(list, g.count, 'super-start', gi);
+  }).join('');
+
+  const granted = (psiClass()?.super_abilities?.abilities || [])
+    .filter((n) => typeof n === 'string' && n.trim());
+  return (granted.length ? `<h3>Super abilities &mdash; ${granted.length} granted by the Power Category
+      <span class="muted small">(already on the character)</span></h3>`
+      + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
+    + `<h3>Super abilities &mdash; ${takenAll().length}/${total}
+    <span class="muted small">(in the tiers the book keeps apart)</span></h3>`
+    + blocks;
+}
+
 // Spells a class knows OUTRIGHT, listed rather than picked.
 //
 // The Shifter's twenty and the Techno-Wizard's twenty-five have reached the
@@ -3534,9 +3642,10 @@ function renderPowers() {
   // a caster, and testing the block put a Spells heading over a class the step
   // should have called empty.
   const spells = startingSpellHtml();
+  const superGroups = startingGroups(cls, 'super');
   let inner = '';
-  if (!spells && !psi && !rolling) {
-    inner = `<p class="muted">This class has no spellcasting or psionics — carry on.</p>`;
+  if (!spells && !psi && !rolling && !superGroups.length) {
+    inner = `<p class="muted">This class has no spellcasting, psionics or super abilities — carry on.</p>`;
   }
   if (rolling) inner += psiRollHtml();
   inner += spells;
@@ -3584,9 +3693,14 @@ function renderPowers() {
         shown: Picker.filter(pool, S.psiFilter).length, total: pool.length }) +
       psiGroupRows(list, psi.count);
   }
+  // Last, because a Heroes Unlimited character reads its Power Category after
+  // its education: the two axes are independent and this is the one the book
+  // calls the character's power.
+  if (superGroups.length) inner += startingSuperHtml(superGroups);
   $('app').innerHTML = `
   <div class="panel">
-    <h2>Magic &amp; Psionics <span class="muted small">— ${esc(S.cls.name)}</span></h2>
+    <h2>${superGroups.length ? 'Powers' : 'Magic &amp; Psionics'}
+      <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     ${inner}
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.EQUIPMENT)">&larr; Back</button>
@@ -3696,7 +3810,16 @@ function powerList(kind, at = null) {
     // class that SPLITS its level-1 pick uses them.
     case 'spell-start': return S.spellGroups[at] || (S.spellGroups[at] = []);
     case 'psi-start': return S.psiGroups[at] || (S.psiGroups[at] = []);
-    default: return S.levelPsi[at] || (S.levelPsi[at] = []);
+    // Heroes Unlimited's super abilities, the same three shapes.
+    case 'super': return S.supers;
+    case 'super-start': return S.superGroups[at] || (S.superGroups[at] = []);
+    case 'super-adv': return S.levelSupers[at] || (S.levelSupers[at] = []);
+    case 'psi-adv': return S.levelPsi[at] || (S.levelPsi[at] = []);
+    // NAMED RATHER THAN LEFT TO `default`. The catch-all this replaces returned
+    // the level-up PSIONIC list for every unrecognised kind, so a new kind whose
+    // wiring was half done wrote its picks into a psychic's level-6 powers and
+    // looked like it worked.
+    default: throw new Error(`powerList: unknown kind ${kind}`);
   }
 }
 
@@ -3717,6 +3840,7 @@ function powersPayload() {
   const auto = (list) => (list || []).filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim());
   const autoSpells = auto(cls?.magic?.spells);
   const autoPsi = auto(cls?.psionics?.powers);
+  const autoSuper = auto(cls?.super_abilities?.abilities);
   const held = (a, b) => {
     const seen = new Set(a.map((n) => n.toLowerCase()));
     return [...a, ...b.filter((n) => !seen.has(String(n).toLowerCase()))];
@@ -3733,8 +3857,10 @@ function powersPayload() {
   const flat = (byGroup) => Object.values(byGroup).flat().filter(Boolean);
   const startSpells = [...S.spells, ...flat(S.spellGroups)];
   const startPsi = [...S.psi, ...flat(S.psiGroups)];
+  const startSuper = [...S.supers, ...flat(S.superGroups)];
   const spellNames = held(held(autoSpells, startSpells), flat(S.levelSpells));
   const psiNames = held(held(autoPsi, startPsi), flat(S.levelPsi));
+  const superNames = held(held(autoSuper, startSuper), flat(S.levelSupers));
   return [
     ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
@@ -3747,6 +3873,14 @@ function powersPayload() {
       // use button deducts it while the note says how the real spend grows.
       return { type: 'psionic', name: n, category: p?.category, cost: p?.isp,
                ...(p?.isp_note ? { cost_note: p.isp_note } : {}) };
+    }),
+    // NO `cost` AND NO `level`, and neither is an omission: a super ability is
+    // permanent and free, which is why `super_abilities` is its own table with
+    // neither column. `category` carries the tier so the sheet can group them
+    // the way it groups psionics, rather than inventing a third grouping key.
+    ...superNames.map((n) => {
+      const a = S.superCatalog.find((x) => x.name === n);
+      return { type: 'super', name: n, category: a?.tier };
     }),
   ];
 }
@@ -4028,6 +4162,8 @@ function renderReview() {
       .map((x) => esc(x.name) + ` <span class="muted">L${x.level} · ${x.cost} P.P.E.</span>`))}
     ${listSection('Psionic powers', powersPayload().filter((x) => x.type === 'psionic')
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category)} · ${x.cost} I.S.P.</span>`))}
+    ${listSection('Super abilities', powersPayload().filter((x) => x.type === 'super')
+      .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category || '')}</span>`))}
     <p class="warn" id="save-msg"></p>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.DETAILS)">&larr; Back</button>
@@ -4182,6 +4318,11 @@ async function boot(first = true) {
     _skillIndex = null;
     S.spellCatalog = catalogsRes.spells;
     S.psiCatalog = catalogsRes.psionics;
+    // `|| []` because a browser holding a warm 304 from before super abilities
+    // joined this payload would otherwise set the catalog to undefined and every
+    // `.filter` below it would throw. The ETag is a hash of the body, so the
+    // first boot after this deploys revalidates and refills it.
+    S.superCatalog = catalogsRes.superAbilities || [];
     S.totemCatalog = catalogsRes.totems || [];
     S.items = itemsRes.items;
     S.itemRedirects = itemsRes.redirects || {};

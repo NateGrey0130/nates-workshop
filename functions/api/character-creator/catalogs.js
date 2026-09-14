@@ -1,4 +1,5 @@
-// GET /api/character-creator/catalogs — skills, spells, and psionic powers.
+// GET /api/character-creator/catalogs — skills, spells, psionic powers and
+// super abilities.
 //
 // These used to be static JSON shipped with the deploy. They live in D1 now so
 // the import tool can create missing entries live, the same as items. One
@@ -9,7 +10,7 @@ import { getUserEmail, unauthorized } from './_lib/auth.js';
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
 
-  const [skills, spells, psionics, enchantments, totems] = await Promise.all([
+  const [skills, spells, psionics, supers, enchantments, totems] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -30,6 +31,20 @@ export async function onRequestGet({ request, env }) {
     // min_tier is in the boot projection because the powers picker filters on
     // it client-side; without it there is nothing to gate against.
     env.DB.prepare('SELECT name, category, isp, isp_note, min_tier, system, source_book FROM psionic_powers ORDER BY category, name').all(),
+    // Heroes Unlimited's fifth power kind, picked in the same wizard step as
+    // spells and psionics, so it boots with them.
+    //
+    // THE PROJECTION IS THE POINT HERE, more than for any other table on this
+    // list. 364 rows carry 994KB of `description` in production (2026-09-13) -
+    // forty times the whole rest of this payload - and the picker needs a name,
+    // a tier and the stat line, never the prose. The columns below are 24KB
+    // raw, and `range`, `duration` and `damage` are 2.5KB of that because only
+    // 41, 30 and 22 rows respectively have one: a super ability is usually a
+    // permanent trait with nothing to print in a stat block.
+    //
+    // `tier` is what the picker GATES on, the way min_tier gates psionics - a
+    // category granting "one major and one minor" filters this list twice.
+    env.DB.prepare('SELECT name, tier, system, source_book, range, duration, damage FROM super_abilities ORDER BY tier, name').all(),
     // Enchantments are small - 62 rows carrying about 5KB of description text,
     // production, 2026-09-05 - and the SHEET is what needs them: an item
     // carries slugs, and a slug without its definition renders as a slug.
@@ -56,6 +71,7 @@ export async function onRequestGet({ request, env }) {
     })),
     spells: spells.results,
     psionics: psionics.results,
+    superAbilities: supers.results,
     // `bonuses` is stored as a JSON string, decoded here so every caller does
     // not have to remember to - the same courtesy `systems` gets above.
     enchantments: enchantments.results.map((e) => ({
@@ -69,7 +85,7 @@ export async function onRequestGet({ request, env }) {
     })),
   });
 
-  // 25KB gzipped, fetched on EVERY wizard boot and EVERY sheet load, and
+  // 30KB gzipped, fetched on EVERY wizard boot and EVERY sheet load, and
   // between imports it never changes - so it carries a validator and a warm
   // load revalidates to an empty 304. `classes.js` does the same thing; the
   // browser does the caching and js/api.js needs no change, because fetch
@@ -77,9 +93,9 @@ export async function onRequestGet({ request, env }) {
   // revalidate every time", never "serve stale"; private because the site is.
   //
   // The validator is a HASH OF THE BODY, and not the count-and-max-updated_at
-  // aggregate classes.js uses, because none of these four tables has a
-  // timestamp column - checked on production 2026-09-05, all four return zero
-  // for created_at/updated_at in pragma_table_info. A count alone would go
+  // aggregate classes.js uses, because none of these tables has a timestamp
+  // column - checked on production 2026-09-05 for the first four, and
+  // `super_abilities` was created without one too (migration 057). A count alone would go
   // stale on exactly the write this catalog exists for: the editor's PATCH
   // changes a percentage in place and moves neither the row count nor the max
   // id, so a cached client would keep the wrong number with no way to notice.
@@ -87,11 +103,15 @@ export async function onRequestGet({ request, env }) {
   // all - every `d1-apply.mjs` data script goes straight to D1, and no
   // app-level version counter would ever hear about them.
   //
-  // What it does NOT save is database work: the four SELECTs above have
+  // What it does NOT save is database work: the six SELECTs above have
   // already run by the time there is a body to hash. This trades a little CPU
-  // for ~25KB of transfer per warm load, which is the right way round on a
+  // for ~30KB of transfer per warm load, which is the right way round on a
   // phone at a table and the wrong way round if this ever gets expensive to
-  // query. Both halves are measured in docs/plans/20-power-descriptions.md.
+  // query. Both halves are measured in docs/plans/20-power-descriptions.md. The
+  // figure moved from 25KB when super abilities joined the payload: 364 rows
+  // are 60KB raw and 5.4KB gzipped, measured against production 2026-09-13,
+  // most of the raw size being `source_book` repeated 364 times and most of
+  // that compressing away.
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
   const hex = [...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
   const etag = `W/"catalogs-${hex}"`;
