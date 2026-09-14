@@ -155,6 +155,60 @@ export function restrictionNames(data) {
   return wanted;
 }
 
+// Every spell or psionic power a class NAMES BY HAND, from every block that can
+// carry a name - not just the two `crossReference` used to look at.
+//
+// `magic.spells` and `psionics.powers` are GRANTS, and a grant naming a row the
+// catalog lacks is a visible gap by design. Everything below is a
+// RESTRICTION - `spells_from`, `spell_lists`, `powers_from`, and the `from` on a
+// starting group or a schedule entry - and a restriction naming nothing fails
+// CLOSED: the list IS the gate, so the picker comes up short or empty and
+// nothing anywhere says why. Same shape as an unmatched `only` on a skill
+// program, and as `from_list` before RETRO-AUDIT R11.
+//
+// Walked inside an ABILITY OPTION's block too. That is where this book keeps
+// them: an Alien's power category is a choice of six, and the Mystic option
+// carries all forty-eight of its spells while the Psychic option carries
+// thirty-three powers, one level below anything that used to be checked.
+function namedPowerLists(block) {
+  const out = [];
+  if (!block || typeof block !== 'object') return out;
+  for (const key of ['spells_from', 'powers_from', 'spells_per_level_from']) {
+    out.push(...nameList(block[key]));
+  }
+  for (const key of ['spells_starting_groups', 'powers_starting_groups',
+                     'spells_schedule', 'powers_schedule']) {
+    for (const g of block[key] || []) out.push(...nameList(g?.from));
+  }
+  // `spell_lists` is a MAP of named lists a schedule entry draws from.
+  for (const list of Object.values(block.spell_lists || {})) out.push(...nameList(list));
+  return out;
+}
+
+// `granted` and `listed` are kept APART because only one of them may be
+// stubbed. A grant naming an absent row is a row to create - the books cite
+// spells ahead of their import and the Priest of Light does it deliberately. A
+// LIST naming an absent row is a misspelling, and stubbing it would enshrine
+// the misspelling as a catalog row that sorts before the file which would have
+// created the real one.
+function referencedPowers(data, key) {
+  const blocks = [data?.[key]];
+  for (const d of data?.special_abilities || []) {
+    if (d && typeof d === 'object' && d[key]) blocks.push(d[key]);
+  }
+  const granted = [];
+  const listed = [];
+  for (const b of blocks) {
+    if (!b) continue;
+    granted.push(...nameList(b[key === 'magic' ? 'spells' : 'powers']));
+    listed.push(...namedPowerLists(b));
+  }
+  // A name that is BOTH granted and listed is a grant; it is stubbable and
+  // reporting it twice would read as two problems.
+  const g = new Set(granted.map(norm));
+  return { granted, listed: listed.filter((n) => !g.has(norm(n))) };
+}
+
 // Every super-ability name a class cites: granted outright, named on the
 // block's own list, named by a starting group, and the same three one level
 // deeper inside an ability option's block - which is where a Power Category
@@ -199,23 +253,29 @@ async function unresolvedRestrictions(env, data) {
 
 
 export async function crossReference(env, requestUrl, data) {
-  const [items, skills, spells, psionics, restrictions, mosSkills, superAbilities]
+  const magicNames = referencedPowers(data, 'magic');
+  const psiNames = referencedPowers(data, 'psionics');
+  const [items, skills, spells, psionics, restrictions, mosSkills, superAbilities,
+         spellLists, psionicLists]
     = await Promise.all([
       missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
       missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
-      missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
-      missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
+      missingFrom(env, 'spells', 'spells', 'name', magicNames.granted),
+      missingFrom(env, 'psionics', 'psionic_powers', 'name', psiNames.granted),
       unresolvedRestrictions(env, data),
       missingFrom(env, 'skills', 'skills', 'name', referencedMosSkills(data)),
       missingFrom(env, 'superAbilities', 'super_abilities', 'name',
                   referencedSuperAbilities(data)),
+      missingFrom(env, 'spells', 'spells', 'name', magicNames.listed),
+      missingFrom(env, 'psionics', 'psionic_powers', 'name', psiNames.listed),
     ]);
   // `mosSkills` is deliberately its own key rather than folded into `skills`.
   // Callers stub `missing.skills`; nothing should stub this one. See
   // referencedMosSkills above for why. `superAbilities` is the same posture for
   // a different reason: both books' ability lists are imported whole, so a name
   // that matches nothing is a misspelling and a stub would enshrine it.
-  return { items, skills, spells, psionics, restrictions, mosSkills, superAbilities };
+  return { items, skills, spells, psionics, restrictions, mosSkills, superAbilities,
+           spellLists, psionicLists };
 }
 
 // ─── stub inference ───

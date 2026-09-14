@@ -587,6 +587,7 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-13 | #1032 | the core's **16 new spells**, printed 96-103. Spells **919 -> 935**. |
 | 2026-09-14 | #1033 | **D1's R.C.C. half built**: the `super_abilities` grant block, wired from the parser through the wizard, the create validator and the sheet. `BOOK-INGEST-AUDIT` F81 filed. Code only. |
 | 2026-09-14 | this PR | the core's **4 new psionic powers**, printed 128-135, of thirty-three extracted. Psionics **125 -> 129**. Plus a folio repair on **23 super abilities**. |
+| 2026-09-14 | this PR | **NINE of the ten Power Categories as R.C.C. classes** - Aliens, Bionics, Experiments, Hardware, Magic, Mutants, Physical Training, Psionics, Robotics. Classes **288 -> 297**. Plus the 5 skills Hardware needs (skills **379 -> 384**), and `class-check` taught to look inside a `from` list. Special Training is the tenth and is five separate classes; it follows. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
