@@ -2453,9 +2453,11 @@ function skillByName() {
 
 // The skill catalog as THIS GAME prints it (BOOK-INGEST-AUDIT.md F83).
 //
-// Heroes Unlimited is a different game and gives every skill its own figure:
-// 48 of the 55 names it shares with the catalog disagree, Computer Operation
-// at 60% against 40%. A class can state an absolute for a skill it NAMES, and
+// Heroes Unlimited is a different game and gives every skill its own figure,
+// disagreeing with the catalog on nearly every name they share - Computer
+// Operation at 60% against 40%. The count is deliberately not written here; it
+// was wrong twice, and `docs/operations.md`'s clean-run table is the one copy a
+// test pins. A class can state an absolute for a skill it NAMES, and
 // the Heroes Unlimited classes do - but a choice group's `bonus:` adds to
 // whatever the picked row holds, and there is nowhere in a class to put the
 // book's own number for a skill the player chooses.
