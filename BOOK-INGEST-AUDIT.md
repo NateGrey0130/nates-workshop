@@ -11431,3 +11431,91 @@ fail a merge-time check, which is the cost of the check working. For
 `drift-check`, whatever advisory noise 364 super-ability names produce against
 their cited pages - unknown until run, and the `gear` comment is the precedent
 for backing it out if it cries wolf.
+### F87 - high - `unmodelledKeys` reads TOP-LEVEL keys only, so a wrong key one level down is invisible and `class-check` answers `ready`
+
+**Filed 2026-09-14**, after sixteen live classes were found offering zero
+secondary skills because they spell one key a way nothing reads. Found by
+reading the class through the real parser, not by any check.
+
+**The live case, which is the argument.** All sixteen Heroes Unlimited education
+classes write `skills.occ_secondary_skills: { count: N }`. The key the app reads
+is `skills.secondary_skills` - `apps/character-creator/app.js:2695`
+(`const secondaryCfg = sk.secondary_skills || { count: 0 };`) and
+`apps/character-creator/js/parser.js:2703`
+(`const secondary = data.skills.secondary_skills;`), both read 2026-09-14. So
+`secondaryCfg.count` is 0 and the wizard's secondary step offers nothing, where
+printed 27 and printed 56 give those characters **8 to 12** secondary skills.
+
+Measured by parsing every live Heroes Unlimited class through
+`parseClassMarkdown` against production, 2026-09-14: **25 of 30 offer zero**, and
+the sixteen among them each carry the number in the unread key
+(`hu-edu-doctorate` holds `occ_secondary_skills: 10` and offers 0). The other
+nine are the Power Categories, which correctly have none - a secondary allowance
+comes from the education class in the O.C.C. slot.
+
+**Why nothing caught it.** `scripts/class-check-lib.mjs:92-95`:
+
+```js
+export function unmodelledKeys(data) {
+  if (!data || typeof data !== 'object') return [];
+  return Object.keys(data).filter((k) => !KNOWN_KEYS.has(k));
+}
+```
+
+`Object.keys(data)` is the TOP LEVEL. `skills` is in `KNOWN_KEYS`, so the whole
+subtree beneath it is accepted without inspection, and
+`node scripts/class-check.mjs apps/character-creator/db/add-hu-edu-high-school-class.sql --remote`
+prints `class-check: ready - 0 errors, 0 warnings` on a class in this state -
+run 2026-09-14.
+
+**That is the check's own stated purpose missing its own case.** The doc comment
+directly above it says:
+
+> This is the signal that a class wants something the app cannot yet express.
+
+<!-- claim-ok: quoting the comment this finding says the code does not deliver on -->
+
+A key the app cannot express is exactly what `occ_secondary_skills` is. The check
+is right about what it is for and wrong about where to look.
+
+**The name is a trap the schema set, which is why this is worth a finding rather
+than a scolding.** The sibling key really is `occ_related_skills` - that prefix
+is correct there - so `occ_secondary_skills` reads as the matching spelling.
+**252 other published classes get it right** (`--remote`, 2026-09-14) and all
+sixteen wrong ones are from one batch. Sharper still: the five Special Training
+classes in the *same* batch spell it correctly, so the same book got it right in
+one PR and wrong in another.
+
+**Proposal.** Walk `skills` as well as the top level, comparing its keys against
+a `KNOWN_SKILL_KEYS` set built the same way `KNOWN_KEYS` is - from what the
+parser and the app actually read - and report an unknown one the way an unknown
+top-level key is reported today. **Posture: exactly what `unmodelledKeys` has
+now, and no more.** It is a WARNING in `class-check`, not an error, and it moves
+no exit code; a class carrying an unknown key still parses, still stores and
+still renders. Widening it to an error is a separate decision and this finding
+does not ask for one.
+
+**Scope it to `skills` and stop there.** `bonuses`, `variants[]` and
+`skill_programs` have the same hole and are deliberately not in this proposal:
+each needs its own list of what the app reads, each list is a claim that will
+rot, and `skills` is where the live damage is. A finding that tried to cover
+every nested object at once would be proposing a schema rather than a check.
+
+**Evidence:** the parser and app line numbers above, read 2026-09-14; the
+`class-check --remote` run quoted, the same day; the 25-of-30 census parsed
+through `parseClassMarkdown` against production, the same day. The data half is
+corrected in `apps/character-creator/db/zzzzzzzzzzz-hu-secondary-skills-key.sql`
+and this finding is the code half, which is not taken here.
+
+**Confidence: high** on the hole and on the live case - both were run, not read.
+**Medium on the cost**, and what would raise it is building
+`KNOWN_SKILL_KEYS` and running `class-check` over all 318 published classes to
+see how many existing ones it would newly warn about. That was not done here,
+and a taker should do it first: if the answer is large, the posture argument
+above matters more than the mechanism.
+
+**Ongoing cost: a second list to keep current.** `KNOWN_KEYS` already has that
+cost and pays it - its entries carry comments saying which reader consumes each
+one. A `skills` list is the same bargain one level down, and the same failure
+mode: a key added to the parser and not to the list produces a warning on a
+correct class.
