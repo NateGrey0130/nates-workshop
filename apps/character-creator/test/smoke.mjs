@@ -4025,6 +4025,74 @@ section('per_level on a skill entry');
   })());
 }
 
+// ---------- 1c25a0b. A restriction on the GROUP instead of the category ----------
+// BOOK-INGEST-AUDIT.md F84, parser half.
+//
+// `only`, `except`, `only_prefix` and `except_prefix` are read ONLY off a
+// CATEGORY ENTRY. `categoryAllows` finds the entry matching the skill's own
+// category and reads them off that object, returning true outright for a bare
+// string. Written one level out, on the choice group, they parsed, validated,
+// stored and did nothing - and it fails OPEN both ways, so the class simply
+// over-grants and nobody is told. The Night Witch offered all 87 Technical
+// skills for "Lore: two of choice" and `class-check` called it `ready`.
+section('Group-level skill restrictions');
+{
+  const entry = (e) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: occ\nskills:\n`
+    + `  occ_skills:\n    - ${e}\n---\n\n## Lore\n\nx\n`);
+  const groupErrors = (e) =>
+    (entry(e).errors || []).filter((m) => m.includes('on the GROUP'));
+
+  // All four, one at a time. Listed rather than looped so a key dropped from
+  // the parser's list fails BY NAME here instead of quietly reducing a count.
+  check('only_prefix on the group is refused',
+    groupErrors('{ choose: 3, categories: ["Technical"], only_prefix: ["Language:"] }').length === 1);
+  check('except_prefix on the group is refused',
+    groupErrors('{ choose: 3, categories: ["Technical"], except_prefix: ["Language:"] }').length === 1);
+  check('only on the group is refused',
+    groupErrors('{ choose: 2, categories: ["Technical"], only: ["Lore: Demons"] }').length === 1);
+  check('except on the group is refused',
+    groupErrors('{ choose: 2, categories: ["Technical"], except: ["Lore: Demons"] }').length === 1);
+
+  // REFUSED, not warned: the shape is unambiguously a mistake, and a warning on
+  // a silent over-grant is the same class of thing as the key itself.
+  check('and it is an ERROR, so the class does not parse',
+    entry('{ choose: 3, categories: ["Technical"], only_prefix: ["Language:"] }').ok === false);
+
+  // The message has to say where the key BELONGS, or an author reads "nothing
+  // reads it" and deletes the restriction rather than moving it.
+  // `?? ''` rather than `[0].includes(...)`: with the refusal removed this
+  // threw instead of failing, which aborts the run and hides the checks after
+  // it. Measured by removing the refusal and watching the section stop at five
+  // failures instead of six.
+  check('the message names the category form',
+    (groupErrors('{ choose: 3, categories: ["Technical"], only_prefix: ["Language:"] }')[0] ?? '')
+      .includes('categories: [{ name: "..."'));
+
+  // A group-level key on a `from` list is just as dead as on a `categories`
+  // one, and the first draft of this section covered only the second.
+  check('a from-list group carrying one is refused too',
+    groupErrors('{ choose: 2, from: ["Swimming", "Climbing"], except: ["Swimming"] }').length === 1);
+
+  // THE OTHER HALF, and what makes this a scope rule rather than a ban: the
+  // correct form must still pass, or the refusal has removed the feature.
+  check('the CATEGORY-entry form still parses',
+    entry('{ choose: 3, categories: [{ name: "Technical", only_prefix: ["Language:"] }] }').ok);
+  check('and a plain group with no restriction still parses',
+    entry('{ choose: 3, categories: ["Technical"] }').ok);
+
+  // THE PIN. A validator outlives the behaviour it protects unless something
+  // says the behaviour is still there. If `categoryAllows` ever started reading
+  // the group, this refusal would become WRONG rather than merely redundant.
+  check('categoryAllows still reads the four keys off the category ENTRY', (() => {
+    const src = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
+    const fn = src.slice(src.indexOf('function categoryAllows'));
+    const body = fn.slice(0, fn.indexOf('\n}\n'));
+    return ['only', 'except', 'only_prefix', 'except_prefix']
+      .every((k) => new RegExp(`entry\\.${k}\\b`).test(body));
+  })());
+}
+
 // ---------- 1c25a1. An attribute-derived skill base ----------
 // BOOK-INGEST-AUDIT.md F2. Phase World states Zero Gravity Movement & Combat as
 // "the P.P. attribute number x5%, plus 4% per level". `per_level` held the 4;

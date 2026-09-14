@@ -252,6 +252,34 @@ export function validateSkillEntries(where, entries, errors, warnings) {
           && (typeof s.per_level !== 'number' || !Number.isFinite(s.per_level))) {
         errors.push(`${where} choice-group per_level must be a number`);
       }
+      // `only`, `except`, `only_prefix` and `except_prefix` are read ONLY off a
+      // CATEGORY ENTRY - `categoryAllows` below finds the entry matching the
+      // skill's own category and reads them off that object, returning true
+      // outright for a bare string. Written one level out, on the group, they
+      // parse, validate, store and do NOTHING.
+      //
+      // REFUSED RATHER THAN WARNED, because there is no reading under which a
+      // group-level prefix means anything: it is unambiguously a mistake, and
+      // it fails OPEN in both directions. `only_prefix` ignored means the whole
+      // category; `except_prefix` ignored means nothing is excluded. Both grant
+      // MORE than the book allows, which is the direction nobody reports - a
+      // player just gets a longer list. The Night Witch's "Lore: two of choice"
+      // named its four lores on the group and so offered all 87 Technical
+      // skills, and `class-check` called it `ready - 0 errors, 0 warnings`.
+      //
+      // It is easy to write because the correct form is more verbose and the
+      // wrong one reads like the group's other keys: `choose`, `categories`,
+      // `bonus` and `note` all live at this level, so a fifth looks at home.
+      //
+      // BOOK-INGEST-AUDIT.md F84. Swept before this landed: 318 published live
+      // classes, 1,725 choice groups, 932 of these keys on a category entry and
+      // ZERO on a group (--remote, 2026-09-14), so nothing in the catalog
+      // starts failing on the day it ships.
+      for (const k of ['only', 'except', 'only_prefix', 'except_prefix']) {
+        if (s[k] === undefined) continue;
+        errors.push(`${where} choice-group sets ${k} on the GROUP, where nothing reads it; `
+          + `put it on the category entry - categories: [{ name: "...", ${k}: [...] }]`);
+      }
     } else if (!s.name) {
       errors.push(`${where} entries need a name (or choose/from for a choice-group)`);
     } else {
