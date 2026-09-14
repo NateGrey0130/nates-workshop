@@ -570,8 +570,29 @@ feature F78 asks for, because these tables grant BONUSES and nothing else.
 Level table - but the Alien's STEP FIVE prints its own five-outcome education
 table, which REPLACES it. Those five are O.C.C.s beside the standard eleven, and
 the Alien R.C.C. names them in `occ_restrictions: { only: [...] }`. That key
-takes class ids, so it cannot be written until they exist; the Alien ships
-without it and gains it in a `fix-` script afterwards.
+takes class ids, so it could not be written until they existed; it arrived in
+`zzzzzz-hu-education-occ-restrictions.sql` once they did, together with the
+mirror-image `except` on the eight other Power Categories.
+
+**A SKILL PROGRAM IS AN MOS OPTION, and `choose` had to be made real first.**
+An Educational Level grants two, three or four of the sixteen programs printed
+27-28. `skills.mos` is a named bundle of skills and choice groups chosen from a
+list, which is exactly a program - but its `choose` was validated and read by
+nothing, so a class asking for three granted one. That is `BOOK-INGEST-AUDIT`
+F82, taken the same day and in its own PR.
+
+**Each level carries its own copy of the programs it may take**, which looks
+like duplication and is not: printed 27's Special Restrictions give every level
+a different list. High School may take six of the sixteen; Trade School is the
+only level that may take all of them. The counts are pinned in
+`test/regression.mjs` - a number drifting toward 16 means a restriction has
+been lost.
+
+**Five of the Special Training classes and Physical Training take NO education
+at all**, and that is NOT expressed. Saying it needs `only: ["none"]`, a list
+matching no class id, which refuses every occupation rather than removing some
+- a different kind of change, and the wizard's O.C.C. step has never been shown
+a race that admits nothing. Left out deliberately rather than guessed.
 
 Why they are O.C.C.s rather than anything else: an education package is a
 CATEGORY MIX plus a secondary-skill count - *"two science and twelve secondary
@@ -611,6 +632,9 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-14 | this PR | the core's **4 new psionic powers**, printed 128-135, of thirty-three extracted. Psionics **125 -> 129**. Plus a folio repair on **23 super abilities**. |
 | 2026-09-14 | this PR | **NINE of the ten Power Categories as R.C.C. classes** - Aliens, Bionics, Experiments, Hardware, Magic, Mutants, Physical Training, Psionics, Robotics. Classes **288 -> 297**. Plus the 5 skills Hardware needs (skills **379 -> 384**), and `class-check` taught to look inside a `from` list. Special Training is the tenth and is five separate classes; it follows. |
 | 2026-09-14 | this PR | **SPECIAL TRAINING, the tenth category, as FIVE classes** - Ancient Master, Hunter/Vigilante, Secret Operative, Stage Magician, Super Sleuth. Classes **297 -> 302**, skills **384 -> 388**. **All ten Power Categories are now imported.** |
+| 2026-09-14 | this PR | **`BOOK-INGEST-AUDIT` F82 TAKEN** - `skills.mos.choose` honoured end to end. Code only, no book data; the Educational Levels were blocked on it. Its own table was wrong twice and the outcome note says so. |
+| 2026-09-14 | this PR | **THE ELEVEN EDUCATIONAL LEVELS**, printed 27, as O.C.C.s - D1's O.C.C. half. Each one's `skills.mos` offers the skill programs printed 27's Special Restrictions allow it and `choose` is 2, 3 or 4. Plus the ONE new skill the sixteen programs need (`Radio: Satellite Relay`, skills **388 -> 389**). |
+| 2026-09-14 | this PR | **THE ALIEN'S FIVE EDUCATION PACKAGES**, printed 56, which replace the table on 27 for that Power Category alone. Classes **302 -> 318**. Plus `occ_restrictions` on nine Power Categories, which needed the sixteen ids to exist first. **`BOOK-INGEST-AUDIT` F83 filed.** |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
@@ -623,6 +647,19 @@ subject line is not, and it cannot be corrected now.
 `node scripts/source-coverage.mjs --remote` has not been run for these slugs —
 run it from here on, now that production rows cite three of the four books.
 
-**ALL TEN Power Categories are imported** (2026-09-14). The Educational Levels
-they compose with are the outstanding work; see *The slot mapping, as built*
-below. `BOOK-INGEST-AUDIT` F82, which blocked them, was taken the same day.
+**D1 IS BUILT, BOTH HALVES** (2026-09-14). All ten Power Categories in the
+R.C.C. slot, and all sixteen educations in the O.C.C. slot - the eleven
+Educational Levels plus the Alien's own five. A Heroes Unlimited character
+can be built and saved.
+
+**The survey's count of sixteen skill programs was right**, and
+`BOOK-INGEST-AUDIT` F82 said fifteen. F82 was wrong: it folded **Language**
+into Journalist/Investigation. Recorded because the correction runs the other
+way from the usual one - the survey's counts were wrong three times in the
+Mystic Russia batch, and here the finding was.
+
+**What is left of this book:** the equipment chapter (printed 193-220, zero
+Heroes Unlimited gear rows), the two point-budget builders (G7), the Powers
+Unlimited One and Three classes, and `BOOK-INGEST-AUDIT` F83 - a choice
+group takes the catalog's percentage where this book prints its own, which
+is 25% of what every class here grants.

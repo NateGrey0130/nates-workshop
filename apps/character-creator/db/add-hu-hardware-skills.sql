@@ -88,20 +88,36 @@ SELECT 'five Hardware skills exist' AS assertion, count(*) AS got, 5 AS want
                 'Building Super Vehicles', 'Recognize Vehicle Quality',
                 'Make and Modify Weapons');
 
+-- BOUNDED BY NAME. This counted every row citing this book, which was the
+-- same number only while these five were the only ones. A rebuild applies
+-- the directory in sorted order, so one more HU skill script sorting ahead
+-- of this one makes an unbounded count read high on every rebuild.
 SELECT 'every one cites the Revised core' AS assertion, count(*) AS got, 5 AS want
-  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%';
+  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%'
+   AND name IN ('Hot Wiring', 'Recognize Quality and Complexity of Electrical Systems',
+                'Building Super Vehicles', 'Recognize Vehicle Quality',
+                'Make and Modify Weapons');
 
 SELECT 'every one carries its note' AS assertion, count(*) AS got, 5 AS want
   FROM skills
- WHERE source_book LIKE 'Revised Heroes Unlimited%' AND length(note) > 80;
+ WHERE source_book LIKE 'Revised Heroes Unlimited%' AND length(note) > 80
+   AND name IN ('Hot Wiring', 'Recognize Quality and Complexity of Electrical Systems',
+                'Building Super Vehicles', 'Recognize Vehicle Quality',
+                'Make and Modify Weapons');
 
 -- The two that advance, and the three that do not. Stated rather than trusted,
 -- because a per_level of 0 and a per_level nobody set look identical.
 SELECT 'two advance at +5% per level' AS assertion, count(*) AS got, 2 AS want
-  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%' AND per_level = 5;
+  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%' AND per_level = 5
+   AND name IN ('Hot Wiring', 'Recognize Quality and Complexity of Electrical Systems',
+                'Building Super Vehicles', 'Recognize Vehicle Quality',
+                'Make and Modify Weapons');
 
 SELECT 'and three print no per-level gain at all' AS assertion, count(*) AS got, 3 AS want
-  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%' AND per_level = 0;
+  FROM skills WHERE source_book LIKE 'Revised Heroes Unlimited%' AND per_level = 0
+   AND name IN ('Hot Wiring', 'Recognize Quality and Complexity of Electrical Systems',
+                'Building Super Vehicles', 'Recognize Vehicle Quality',
+                'Make and Modify Weapons');
 
 SELECT 'Building Super Vehicles stores the HEADING figure' AS assertion,
        count(*) AS got, 1 AS want

@@ -22,7 +22,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE,
-  parseClassMarkdown, combineClasses } from '../js/parser.js';
+  parseClassMarkdown, combineClasses, isChoiceGroup } from '../js/parser.js';
+import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
 
@@ -1340,7 +1341,89 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // block rather than by a later correction - the book prints nine Navy
     // specialties as part of the O.C.C. itself, so it needed no fixing up.
     'navy-seaman': 9,
+    // ---- Heroes Unlimited's eleven EDUCATIONAL LEVELS, printed 27 ----------
+    //
+    // The first classes to use an MOS for what the key was always shaped for
+    // and could not do: `choose` above one. Every class above states
+    // `choose: 1`, which is why BOOK-INGEST-AUDIT.md F82 - `choose` validated
+    // and read by nothing - survived the whole of the key's life unnoticed.
+    //
+    // THE COUNTS ARE THE POINT, and they are not all sixteen. The book prints
+    // sixteen skill programs and printed 27's Special Restrictions cut each
+    // level's list down: 7) High School may take only six named programs; 1)
+    // Espionage only for Military Specialist and Trade School; 6) the Military
+    // program only for Military, Military Specialist and Trade School; 5)
+    // Pilot Advanced for those three plus Doctorate. Trade School is the only
+    // level all three admit, so it alone offers all sixteen. A number here
+    // drifting toward 16 means a restriction has been lost.
+    'hu-edu-high-school': 6,
+    'hu-edu-military': 15,
+    'hu-edu-trade-school': 16,
+    'hu-edu-one-year-college': 13,
+    'hu-edu-two-years-college': 13,
+    'hu-edu-three-years-college': 13,
+    'hu-edu-four-years-college': 13,
+    'hu-edu-military-specialist': 16,
+    'hu-edu-bachelors': 13,
+    'hu-edu-masters': 13,
+    'hu-edu-doctorate': 14,
   };
+  // How many programs each level GRANTS, which is the half `choose` holds and
+  // the half that did nothing before F82. Pinned separately from the option
+  // counts above: a level offering the right list and granting the wrong
+  // number is the exact failure F82 describes, and it is invisible in a
+  // composed class.
+  const MOS_CHOOSE = {
+    'hu-edu-high-school': 2, 'hu-edu-military': 2, 'hu-edu-trade-school': 2,
+    'hu-edu-one-year-college': 2, 'hu-edu-two-years-college': 2,
+    'hu-edu-three-years-college': 3, 'hu-edu-four-years-college': 3,
+    // ONE, and it is not a typo. Printed 27 restriction 2 gives the Military
+    // Specialist six espionage skills and four W.P.s outright - those are in
+    // `occ_skills` - and then ONE whole program on top, which may be Espionage
+    // again for twelve espionage skills in total.
+    'hu-edu-military-specialist': 1,
+    'hu-edu-bachelors': 3, 'hu-edu-masters': 3, 'hu-edu-doctorate': 4,
+  };
+  for (const [id, want] of Object.entries(MOS_CHOOSE)) {
+    const cls = classes.find((c) => c.id === id);
+    check(`${id} grants ${want} skill program${want === 1 ? '' : 's'}`,
+      cls?.skills?.mos?.choose === want, `found ${cls?.skills?.mos?.choose}`);
+  }
+  // And it actually COMPOSES that way, which is the thing `choose` could not do
+  // before F82 and the reason the counts above are not enough on their own: a
+  // class may declare four and grant one, which is exactly what every class
+  // with an MOS did until 2026-09-14.
+  {
+    const doc = classes.find((c) => c.id === 'hu-edu-doctorate');
+    const mut = classes.find((c) => c.id === 'hu-mutants');
+    if (doc && mut) {
+      const nameCount = (c) => (c.skills.occ_skills || []).filter((e) => e.name).length;
+      const bare = composeClass({ rcc: mut, occ: doc, character: {} });
+      const four = composeClass({ rcc: mut, occ: doc,
+        character: { mos: ['communications', 'computer', 'medical', 'science'] } });
+      // 8 Communications + 2 Computer + 4 Medical (Medical Doctor included at
+      // this level) + 1 Science = 15 on top of the three automatic skills.
+      check('a Doctorate composes all FOUR chosen programs, not one',
+        nameCount(four) - nameCount(bare) === 15,
+        `added ${nameCount(four) - nameCount(bare)} named skills`);
+      check('and Medical Doctor is among them - only Masters and Doctorate get it',
+        (four.skills.occ_skills || []).some((e) => e.name === 'Medical Doctor'));
+      // The percentage is THIS BOOK's, not the catalog's. Computer Operation is
+      // 60% in Heroes Unlimited and 40% in the catalog; +35% educational bonus
+      // makes 95. A 75 here would mean the catalog's number leaked in.
+      const co = (four.skills.occ_skills || []).find((e) => e.name === 'Computer Operation');
+      check("and carries the book's own percentage, not the catalog's",
+        co?.base === 95, `Computer Operation base ${co?.base}`);
+      // The stored form and the pre-F82 form both still read.
+      const asText = composeClass({ rcc: mut, occ: doc,
+        character: { mos: '["communications","computer","medical","science"]' } });
+      check('the JSON-text form characters.mos stores composes identically',
+        nameCount(asText) === nameCount(four));
+      const one = composeClass({ rcc: mut, occ: doc, character: { mos: 'computer' } });
+      check('and a bare pre-F82 string still grants its one package',
+        nameCount(one) - nameCount(bare) === 2);
+    }
+  }
   for (const [id, want] of Object.entries(MOS_PACKAGES)) {
     const cls = classes.find((c) => c.id === id);
     check(`${id} still exists`, !!cls);
@@ -2621,6 +2704,45 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('each states only or except, never both and never empty',
     shape.length === 0, shape.map((r) => r.id).join(', '));
 
+  // ── A RESTRICTION ON THE CHOICE GROUP INSTEAD OF ON THE CATEGORY ─────────
+  //
+  // BOOK-INGEST-AUDIT.md F84. `categoryAllows` reads only/except/only_prefix/
+  // except_prefix off the CATEGORY ENTRY matching the skill's own category, and
+  // returns true outright for a bare string entry. The same four keys written
+  // one level out - beside `choose`, `categories` and `bonus`, where they read
+  // as if they belong - are stored and never looked at.
+  //
+  // IT FAILS OPEN IN BOTH DIRECTIONS. An ignored `only` or `only_prefix` means
+  // the whole category; an ignored `except`/`except_prefix` means nothing is
+  // excluded. Both grant MORE than the book allows, so a player sees a longer
+  // list and nothing anywhere complains. `class-check` reports such a class
+  // `ready`: every NAME is real, and the names were never the problem.
+  //
+  // The Night Witch shipped this way and offered all 87 Technical skills where
+  // printed 116 gives it a choice of four lores - measured by calling
+  // categoryAllows over the live catalog, 87 against 4. It is the only hit this
+  // sweep has ever had, out of 803 choice groups, and it is fixed in
+  // zzzzzzz-fix-night-witch-lore-scope.sql. This pins the sweep so it cannot
+  // come back while the parser still accepts the shape.
+  const GROUP_LEVEL_KEYS = ['only', 'except', 'only_prefix', 'except_prefix'];
+  const misScoped = [];
+  const walkGroups = (id, where, entries) => {
+    for (const e of entries || []) {
+      if (!isChoiceGroup(e)) continue;
+      const bad = GROUP_LEVEL_KEYS.filter((k) => e[k] !== undefined);
+      if (bad.length) misScoped.push(`${id} ${where}: ${bad.join('/')}`);
+    }
+  };
+  for (const c of classes) {
+    const s = c.skills || {};
+    walkGroups(c.id, 'occ_skills', s.occ_skills);
+    walkGroups(c.id, 'related', s.occ_related_skills?.entries);
+    walkGroups(c.id, 'secondary', s.occ_secondary_skills?.entries);
+    for (const o of s.mos?.options || []) walkGroups(c.id, `mos:${o.id || o.name}`, o.skills);
+  }
+  check('no choice group restricts on the GROUP instead of on the category',
+    misScoped.length === 0, misScoped.join(', '));
+
   // The rules themselves, through the resolver a player hits.
   const CASES = [
     ['dwarf', 'wizard', false], ['dwarf', 'knight', true], ['dwarf', 'psi-healer', true],
@@ -2633,6 +2755,26 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // which is the pair that proves this is reading the data and not a habit.
     ['goblin', 'psi-healer', true], ['hob-goblin', 'psi-healer', false],
     ['human', 'wizard', true],
+    // ---- Heroes Unlimited, printed 27 and printed 56 ----------------------
+    //
+    // Every Power Category rolls its schooling on the Educational Level table
+    // on printed 27 - except the ALIEN, which rolls there and is then sent to
+    // a five-outcome table of its own on printed 56 that REPLACES it. So the
+    // Alien takes one of its own five and none of the eleven, and the other
+    // eight Power Categories take any of the eleven and none of the Alien's.
+    //
+    // BOTH DIRECTIONS ARE PINNED because a restriction that fails OPEN is the
+    // failure mode: `except` naming nothing removes nothing, and an `only`
+    // silently dropped admits everything. Each pair below would pass with the
+    // restriction deleted if only its own direction were checked.
+    ['hu-aliens', 'hu-alien-edu-engineer', true],
+    ['hu-aliens', 'hu-edu-doctorate', false],
+    ['hu-aliens', 'hu-edu-high-school', false],
+    ['hu-mutants', 'hu-edu-doctorate', true],
+    ['hu-mutants', 'hu-alien-edu-engineer', false],
+    ['hu-hardware', 'hu-edu-trade-school', true],
+    ['hu-hardware', 'hu-alien-edu-combat-specialist', false],
+    ['hu-physical-training', 'hu-alien-edu-general-studies', false],
   ];
   const wrongCase = CASES.filter(([race, occ, want]) =>
     occAllowedForRace(byId[race], byId[occ]).allowed !== want);

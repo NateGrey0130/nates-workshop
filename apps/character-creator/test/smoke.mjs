@@ -5647,6 +5647,41 @@ section('MOS');
       /const on = \(S\.mos \|\| \[\]\)\.some\(/.test(mosAppSrc));
     check('the sheet renders every specialty, not the first',
       /cls\.mos_chosen\.map\(\(m\) => m\.name\)\.join/.test(mosSheetSrc), 'sheet.js');
+
+    // ── BOTH OF THESE WERE FOUND BY LOOKING AT THE PAGE ──────────────────
+    //
+    // Not by a check, and not by reading the source. Every check above passed
+    // while the picker was drawing four chosen programs indistinguishable from
+    // the ten unchosen ones, and labelling one of them "[object Object]".
+    //
+    // `styles.css` has exactly ONE rule for a chosen .pick and it is
+    // `.pick.sel`. This picker emitted `.pick.on`, so a chosen specialty
+    // computed to the same border and background as an unchosen one - it had
+    // never been visible, for any of the six MOS classes. It mattered little
+    // while one could be chosen (the skill list below changed, and that was the
+    // feedback) and a great deal at four of fourteen.
+    //
+    // Pinned against the CSS rather than against the string `sel`, so renaming
+    // the class in one file fails here instead of going quiet again.
+    {
+      const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+      const rules = css.match(/\.pick\.[a-z-]+\s*\{/g) || [];
+      const chosen = /\.pick\.([a-z-]+)\s*\{/.exec(css);
+      check('styles.css defines exactly one chosen-.pick class',
+        rules.length === 1, rules.join(' ') || 'none');
+      const emitted = [...mosAppSrc.matchAll(/class="pick\$\{[^}]*\? ' ([a-z-]+)' : ''\}"/g)]
+        .map((m) => m[1]);
+      check('and every .pick the wizard marks as chosen uses it',
+        emitted.length > 0 && chosen && emitted.every((c) => c === chosen[1]),
+        `css .pick.${chosen?.[1]}, emitted ${[...new Set(emitted)].join('/') || 'none'}`);
+    }
+    // A category MAY BE AN OBJECT - `{ name, only_prefix, ... }` - and joining
+    // the raw list rendered "3 from [object Object], [object Object]". Every
+    // other picker in app.js already goes through categoryLabel; this was the
+    // one that did not.
+    check('the MOS summary labels categories instead of joining objects',
+      /x\.categories\.map\(categoryLabel\)/.test(mosAppSrc)
+        && !/\(x\.categories \|\| x\.from \|\| \[\]\)\.join/.test(mosAppSrc));
   }
 
   const empty = { choose: 1, options: [{ id: 'a', name: 'A', skills: [] }] };
