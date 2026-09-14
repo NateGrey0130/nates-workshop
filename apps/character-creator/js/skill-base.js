@@ -77,7 +77,11 @@ export function systemBaseMap(rows) {
  * BOOK-INGEST-AUDIT.md F83. The catalog holds one `base` and one `per_level`
  * per skill, which was true enough while every book in it was Palladium's own.
  * Heroes Unlimited is a different GAME and prints its own figure for every
- * skill: 48 of the 55 names it shares with the catalog disagree.
+ * skill, and it disagrees with the catalog on nearly every name they share.
+ * No count in this sentence: it has carried a wrong one twice - it said 48 of
+ * 55 while the table held 59 rows - and the only figure worth quoting is the
+ * one a test pins, the `per-system skill bases` row of the clean-run table in
+ * `docs/operations.md`.
  *
  * APPLIED TO THE ROW, NOT PASSED TO `skillBase`. That is the whole design. A
  * `system` parameter on `skillBase` would have to be threaded through every
