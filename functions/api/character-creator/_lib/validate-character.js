@@ -45,7 +45,7 @@
 
 import { isChoiceGroup, categoryAllows, categoryLabel, categoryName, needsOccupation, relatedFloorStatus,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
-         applyAbilities } from '../../../../apps/character-creator/js/parser.js';
+         applyAbilities, mosList } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
          startingGroups, relatedAllowance, secondaryAllowance,
@@ -119,27 +119,44 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // A Military Occupational Specialty. The class offering one says "select one
   // area of specialty, gain all skills under that MOS", so a character with
   // none chosen is missing a package nothing else will mention.
+  //
+  // Since BOOK-INGEST-AUDIT.md F82 a class may ask for SEVERAL, and this counts
+  // them. Still a warning and not a violation, which is the posture the rule
+  // has always had and docs/race-and-occupation.md states outright - a short
+  // count is an unfinished build, not an illegal one, and the create endpoint
+  // must not start refusing characters it accepted yesterday.
   const mosCfg = cls.skills?.mos;
   if (mosCfg && Array.isArray(mosCfg.options) && mosCfg.options.length) {
-    const chosen = character?.mos;
-    const match = chosen && mosCfg.options.find(
-      (o) => String(o.id || o.name).toLowerCase() === String(chosen).toLowerCase());
-    if (!chosen) {
+    const want = Number.isFinite(mosCfg.choose) && mosCfg.choose > 0 ? mosCfg.choose : 1;
+    const chosen = mosList(character?.mos);
+    const known = chosen.filter((id) => mosCfg.options.some(
+      (o) => String(o.id || o.name).toLowerCase() === id.toLowerCase()));
+    const dangling = chosen.filter((id) => !known.includes(id));
+    if (known.length < want) {
       warnings.push({
         rule: 'mos_unchosen',
         class_id: cls.id ?? null,
         options: mosCfg.options.map((o) => o.name),
-        message: `${cls.name || 'This class'} offers a Military Occupational Specialty `
-          + 'and none is chosen, so its skill package is missing.',
+        chosen: known.length,
+        want,
+        message: want === 1
+          ? `${cls.name || 'This class'} offers a Military Occupational Specialty `
+            + 'and none is chosen, so its skill package is missing.'
+          : `${cls.name || 'This class'} grants ${want} Military Occupational Specialties `
+            + `and ${known.length} ${known.length === 1 ? 'is' : 'are'} chosen, `
+            + 'so the rest of its skill packages are missing.',
       });
-    } else if (!match) {
-      // The class was edited under a saved character. Say which one is gone.
+    }
+    // The class was edited under a saved character. Say which ones are gone -
+    // and separately from the count, because a character can be short AND hold
+    // a dangling id, and the two have different fixes.
+    for (const id of dangling) {
       warnings.push({
         rule: 'mos_unknown',
         class_id: cls.id ?? null,
-        mos: String(chosen),
+        mos: id,
         options: mosCfg.options.map((o) => o.id || o.name),
-        message: `"${chosen}" is not a specialty ${cls.name || 'this class'} offers, `
+        message: `"${id}" is not a specialty ${cls.name || 'this class'} offers, `
           + 'so none of its skills are being granted.',
       });
     }

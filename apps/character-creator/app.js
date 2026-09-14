@@ -22,7 +22,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
-         bonusesFromSkills, sumBonusGroups, abilityTouchesPool } from './js/parser.js';
+         bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
@@ -88,7 +88,9 @@ const S = {
   // re-roll a number the player has already seen.
   raceCls: null,
   attrMethods: {}, attrs: {}, attrRolls: {},
-  related: [], secondary: [], groupPicks: {}, mos: null, totem: null,
+  // `mos` is a LIST since BOOK-INGEST-AUDIT.md F82 - `skills.mos.choose` may
+  // ask for more than one, and until F82 it was validated and then ignored.
+  related: [], secondary: [], groupPicks: {}, mos: [], totem: null,
   // Starting-gear choices the class leaves open, and the slugs picked for each,
   // keyed by the entry's index in equipment_starting.
   gearChoices: [], gearPicks: {},
@@ -576,6 +578,12 @@ function resumeDraft() {
   // exactly the row it came from and nothing newer.
   S.draftVersion = d.updated_at ?? null;
   Object.assign(S, d.state);
+  // A draft saved before BOOK-INGEST-AUDIT.md F82 holds `mos` as one id or as
+  // null, and `character_drafts.state` is stored opaquely so nothing migrated
+  // it. This is the ONE place a pre-F82 string reaches the wizard - production
+  // holds no character with an MOS at all - and normalising here means every
+  // site after it can assume the list without testing for the string.
+  S.mos = mosList(S.mos);
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
   // the variant is re-applied on top of it.
@@ -1002,7 +1010,7 @@ function pickSystem(sys) {
   S.system = sys; S.step = ST.RACE; render();
 }
 function resetBuild() {
-  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = null; S.totem = null;
+  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = []; S.totem = null;
   // Group indices belong to one class's occ_skills, so their folds do too.
   S.groupUi = {};
   // Chosen skill PROGRAMS, held by CATEGORY name rather than by skill
@@ -1755,15 +1763,35 @@ function recompose() {
   pruneOrphanLevelPicks();
 }
 
-// Choosing again replaces rather than adds: an MOS is one specialty, and the
-// skills the previous one granted have to leave with it. recompose() rebuilds
-// occ_skills from the class, so nothing has to be unpicked by hand - but a
-// group pick made against the OLD specialty would dangle, so they clear too.
+// Clicking a chosen specialty takes it off, and the skills it granted leave
+// with it: recompose() rebuilds occ_skills from the class, so nothing has to be
+// unpicked by hand - but a group pick made against a specialty that is going
+// away would dangle, so they clear too.
+//
+// A LIST since BOOK-INGEST-AUDIT.md F82. This was a replace-toggle because a
+// class could only ever ask for one; `skills.mos.choose` said otherwise and was
+// read by nothing. At the cap the oldest pick makes way, rather than the click
+// doing nothing: silently ignoring a click reads as a broken button, and an
+// MOS is cheap to re-pick.
 function pickMos(id) {
-  S.mos = String(S.mos || '').toLowerCase() === String(id).toLowerCase() ? null : id;
+  const want = mosWanted();
+  const held = (S.mos || []).filter((m) => String(m).toLowerCase() !== String(id).toLowerCase());
+  if (held.length === (S.mos || []).length) {
+    // Not held: add it, dropping from the front if that would overrun.
+    held.push(id);
+    while (held.length > want) held.shift();
+  }
+  S.mos = held;
   S.groupPicks = {};
   recompose();
   render();
+}
+
+// How many specialties the class grants. One unless it says otherwise, which is
+// what every class carrying an MOS said before BOOK-INGEST-AUDIT.md F82.
+function mosWanted() {
+  const n = psiClass().skills?.mos?.choose;
+  return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
 // The chosen totem's catalog row, or null (BOOK-INGEST-AUDIT.md F56).
@@ -2557,15 +2585,25 @@ function renderSkills() {
   // step lists, so it is asked first. Unchosen, the class's own O.C.C. skills
   // are all there is - which is the honest state, not a broken one.
   const mosCfg = sk.mos;
+  // How many the class grants, and how many are held. A class asking for one is
+  // every class that carried this key before BOOK-INGEST-AUDIT.md F82, and it
+  // must read exactly as it did then - no count, no "0 of 1", just the buttons.
+  const mosWant = mosCfg ? mosWanted() : 1;
+  const mosHeld = (S.mos || []).length;
   const mosHtml = !mosCfg ? '' : `
     <div class="block">
-      <h3>Military Occupational Specialty</h3>
-      <div class="attr-note">${esc(mosCfg.note || 'Select one area of specialty. '
-        + 'Every skill under it is granted on top of the O.C.C. skills.')}</div>
+      <h3>Military Occupational Specialt${mosWant > 1 ? 'ies' : 'y'}</h3>
+      <div class="attr-note">${esc(mosCfg.note || (mosWant > 1
+        ? `Select ${mosWant} areas of specialty. Every skill under each one is granted `
+          + 'on top of the O.C.C. skills.'
+        : 'Select one area of specialty. '
+          + 'Every skill under it is granted on top of the O.C.C. skills.'))}</div>
+      ${mosWant > 1 ? `<div class="attr-note"><b>${mosHeld} of ${mosWant} chosen.</b>${
+        mosHeld >= mosWant ? ' Choosing another replaces the first.' : ''}</div>` : ''}
       <div class="pickgrid">
         ${(mosCfg.options || []).map((o) => {
           const id = o.id || o.name;
-          const on = String(S.mos || '').toLowerCase() === String(id).toLowerCase();
+          const on = (S.mos || []).some((m) => String(m).toLowerCase() === String(id).toLowerCase());
           const grants = (o.skills || []).map((x) => x.name
             || `${x.choose} from ${(x.categories || x.from || []).join(', ')}`).join(', ');
           return `<button class="pick${on ? ' on' : ''}" onclick="pickMos('${escJs(id)}')">
@@ -4204,7 +4242,7 @@ async function save() {
       class_variant: S.variant || undefined,
       occ_class_id: S.occ || undefined,
       occ_class_variant: S.occVariant || undefined,
-      mos: S.mos || undefined,
+      mos: S.mos?.length ? S.mos : undefined,
       totem: S.totem || undefined,
       psychic_tier: S.psiRoll?.tier || undefined,
       psychic_shape: S.psiRoll?.tier ? (S.psiShape || undefined) : undefined,

@@ -12,7 +12,7 @@ import { validateCharacter, loadSkillCategories } from './_lib/validate-characte
 import { loadPowerCatalog } from './_lib/power-picks.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
-import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc } from '../../../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc, mosList } from '../../../apps/character-creator/js/parser.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
@@ -108,10 +108,18 @@ export async function onRequestPost({ request, env }) {
   const occId = typeof b.occ_class_id === 'string' && b.occ_class_id.trim() ? b.occ_class_id.trim() : null;
   const occVariant = typeof b.occ_class_variant === 'string' && b.occ_class_variant.trim()
     ? b.occ_class_variant.trim() : null;
-  // Which Military Occupational Specialty was taken. Stored as the id the class
-  // declares, exactly like a variant - the granted skills are already in
-  // `skills`, but which package produced them is not recoverable from that.
-  const mos = typeof b.mos === 'string' && b.mos.trim() ? b.mos.trim() : null;
+  // Which Military Occupational Specialties were taken. Stored as the ids the
+  // class declares, exactly like a variant - the granted skills are already in
+  // `skills`, but which packages produced them is not recoverable from that.
+  //
+  // SEVERAL, since BOOK-INGEST-AUDIT.md F82 made `skills.mos.choose` mean what
+  // it says. A list is stored as JSON text, a lone id as itself, so a request
+  // that was already right writes exactly the bytes it used to and `mosList`
+  // reads either form back. Until F82 this read `typeof b.mos === 'string'`,
+  // which would have taken the new wizard's array and stored NULL in silence.
+  const mosPicked = mosList(b.mos);
+  const mos = !mosPicked.length ? null
+    : (Array.isArray(b.mos) ? JSON.stringify(mosPicked) : mosPicked[0]);
   // Which totem animal, by `totems.slug` (BOOK-INGEST-AUDIT.md F56), stored for
   // the MOS's reason: the skills it granted are in `skills`, but which animal
   // produced them is not recoverable from that, and its bonuses are not there.

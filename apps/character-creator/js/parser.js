@@ -301,6 +301,12 @@ export function validateSkillEntries(where, entries, errors, warnings) {
 // are granted IN ADDITION to the class's own occ_skills, which is what makes
 // this a different thing from `variants` - a variant REPLACES, and
 // VARIANT_OVERRIDES excludes the skills block on purpose.
+//
+// `choose` MAY BE MORE THAN ONE, and until BOOK-INGEST-AUDIT.md F82 it could
+// not be: it was validated here and honoured nowhere. `applyMos` took a single
+// id, `S.mos` was a single value and the picker was a replace-toggle, so a
+// class asking for three granted one and reported nothing wrong. Every class
+// that shipped in that time asks for exactly one, which is why it never bit.
 export function validateMos(mos, errors, warnings) {
   if (mos === undefined || mos === null) return;
   if (typeof mos !== 'object' || Array.isArray(mos)) {
@@ -337,6 +343,56 @@ export function validateMos(mos, errors, warnings) {
     }
     validateSkillEntries(`skills.mos["${o.name || id}"]`, o.skills, errors, warnings);
   }
+}
+
+// Which specialties a character holds, out of whatever is carrying them.
+//
+// THREE shapes arrive here and all three are current:
+//
+//   ["recon", "comms"]     an array, which is what the wizard sends now
+//   '["recon","comms"]'    that array as TEXT, straight off `characters.mos`
+//   "recon"                one bare id - every row written before F82, and
+//                          every draft saved before it
+//
+// `characters.mos` is deliberately NOT declared in CHARACTER_JSON_COLUMNS.
+// That list decodes a parse failure to an empty value, and a bare id is not
+// JSON - so declaring it there would turn a pre-F82 character's specialty into
+// no specialty at all, silently, which is the one failure worth designing
+// against. One tolerant reader costs less than a backfill and cannot lose a
+// value it does not recognise.
+//
+// Order is the caller's, de-duplicated case-insensitively: the book's rule is
+// that a program is taken once (Heroes Unlimited printed 27, restriction 8),
+// and granting one twice would double its skills rather than refuse.
+export function mosList(value) {
+  const raw = Array.isArray(value) ? value : parseMosText(value);
+  const seen = new Set();
+  const out = [];
+  for (const v of raw) {
+    const id = String(v ?? '').trim();
+    if (!id) continue;
+    const key = id.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(id);
+  }
+  return out;
+}
+
+function parseMosText(value) {
+  if (value === null || value === undefined) return [];
+  const s = String(value).trim();
+  if (!s) return [];
+  // Only a leading bracket is worth a parse attempt. A specialty id could in
+  // principle be named "[recon]" and would then round-trip as one id, which is
+  // the right answer for a string that is not a JSON array.
+  if (s.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* not JSON after all; it is one id that happens to start with [ */ }
+  }
+  return [s];
 }
 
 // `totem` - the class picks one animal from the `totems` catalog
