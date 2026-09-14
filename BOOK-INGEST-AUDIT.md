@@ -10453,6 +10453,106 @@ to a row's own base is what `js/parser.js` documents and what the wizard does.
 skills sit at another game's percentages, and every class written from here on
 has to carry a note explaining why.
 
+**TAKEN 2026-09-14, AS OPTION C.** `skill_system_bases (skill_name, system,
+base, per_level)`, migration **061**, and **59** rows for Heroes Unlimited. A
+skill the PLAYER picks now arrives at the book's percentage, not the catalog's.
+
+**WHAT SHIPPED.** The table, `applySystemBases()` in `js/skill-base.js` as the
+ONE implementation, and four readers wired to it: `/catalogs` (the wizard at
+boot, and the sheet by `?system=`), `_lib/grants.js`, `_lib/skill-picks.js` and
+the wizard's own derivation. Migration applied `--remote` before the merge.
+
+**THE SUBSTITUTION HAPPENS ON THE ROW, NOT INSIDE `skillBase()`.** That is the
+whole design and it is a direct answer to `F18`. A `system` argument on
+`skillBase` would have to be threaded through every caller, and `per_level` is
+read straight off the row by callers that never touch `skillBase` at all -
+`resolvePicks` was exactly that caller for `base_formula`, which is what F18
+was. A row that already carries the right numbers cannot be read wrongly by a
+reader that has never heard of this finding. It also covers a third place choice
+groups live that this finding never named: `variants[].skills_additional`, where
+Hardware's own *"select three mechanical skills"* actually sits.
+
+---
+
+**THIS FINDING'S NUMBERS WERE WRONG IN THREE PLACES. The premise audit caught
+all three, and one of them was a live data error.**
+
+<!-- claim-ok: quoting the premises this note corrects -->
+**1. "29 of 33 disagree" is an UNDERCOUNT. It is 59 of 68.** Both figures came
+from the same reader, and the reader was broken twice over - see below.
+
+**2. The census is 323 named and 431 entries, not 324 and 432.** The 108 choice
+groups is exact, so *"25% of every grant"* holds. Counted through the real
+`parseClassMarkdown` and `isChoiceGroup` against production. Counting all three
+locations across the thirty live Heroes Unlimited classes gives **130** choice
+groups, not 108 - this finding's census walked `occ_skills` and `skills.mos` and
+missed `variants[].skills_additional` entirely.
+
+**3. "The 324 named entries carry the book's numbers today" is FALSE**, and this
+is the one that mattered. Two demonstrated counterexamples in live data:
+
+- **`Weapon Systems`** in four Educational Levels stored **30% +5%**, which is
+  neither this book's figure (printed 35: **50% + 2%**) nor the catalog's
+  (40% +5%). Corrected in `zzzzzzzz-fix-hu-weapon-systems-base.sql`. The
+  per-level half is the expensive one: 2% a level against 5% is thirty points by
+  level ten, and **nothing re-resolves a stored skill after it is written.**
+- **`Locksmith`** in ten Educational Levels stored 35% + the bonus. Heroes
+  Unlimited prints **two** lock skills - `Picking Locks` at 35% (the thief's,
+  which the catalog calls `Pick Locks`) and `Locksmith` at 25% - and an alias
+  table mapped one onto the other. Corrected in
+  `zzzzzzz-fix-hu-locksmith-base.sql`. It surfaced because Locksmith appeared in
+  the AGREE column and the DISAGREE column of the same report at once.
+
+**So backfilling the named entries is CORRECTION, not tidying**, which this
+finding said the opposite of. See *What is left*.
+
+---
+
+**THE READER WAS BROKEN TWICE, AND BOTH FAILURES WERE SILENT IN THE SAME
+DIRECTION.** A missing override leaves the catalog's number standing, and
+nothing anywhere reports that.
+
+| the bug | what it cost |
+|---|---|
+| a bare-name search took the next `Base Skill:` after the name **anywhere** in the chapter - matching the word "Photography" inside the SURVEILLANCE SYSTEMS description | 3 of 28 wrong, including Photography reported as Surveillance's 40% |
+| segments were bounded by the next run-in heading, and `Skill:` or `Base Skill:` **begins a line** whenever that sentence wraps - both match a heading perfectly | 11 skills cut off immediately before their own percentage and dropped |
+
+The second is the one worth remembering: **the boundary detector matched a piece
+of the very thing it was meant to bound.** It was found by a premise audit
+reading three of the eleven off the page by hand and asking why they were
+absent - not by any count, which looked plausible at 48.
+
+---
+
+**A FOURTH READER WAS MISSED ON THE FIRST PASS.** `sheet.js` prints
+`${s.base}%` in two pick dropdowns, straight off the `/catalogs` payload, so it
+offered the catalog's percentage while `resolvePicks` stored the book's - one
+number disagreeing with itself on the same screen, which is F18 exactly. It is a
+CLASSIC SCRIPT and cannot import the helper, so `/catalogs` gained `?system=`
+and substitutes server-side for it. One implementation either way. A check pins
+both halves.
+
+**The key is the NAME, not the id**, contradicting this finding's own options
+table - and `050-catalog-pair-dismissals.sql` already settled that in writing:
+*"ids are insertion order and differ per environment"*. `ON UPDATE CASCADE`, so
+a catalog rename carries the override rather than stranding it, which is how a
+rename broke six classes' restrictions once before.
+
+**Verified by making the checks fail.** 18 new checks. `resolvePicks` cut back
+to the raw rows - F18's shape, reproduced deliberately - fails one; the sheet's
+`?system=` removed fails another. Smoke 2092 -> 2110, regression 435 -> 436.
+Against production: Cook goes 35% -> 50% for a Heroes Unlimited build and stays
+35% for a Rifts one.
+
+**WHAT IS LEFT, and it is this finding's own third error.** The **thirty** live
+Heroes Unlimited classes state absolute `base:` values computed as *catalog base
+plus printed bonus* - `hu-hardware` says so in its own extraction notes - and a
+class's absolute still wins over this table, by design. So the NAMED half of
+every one of them carries the catalog's arithmetic until it is backfilled from
+the table. That is a data pass over thirty classes, it is correction rather than
+tidying, and it is deliberately not in this PR: two of its numbers were repaired
+here by hand and the rest want one sweep rather than thirty judgements.
+
 ### F82 - high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program
 
 **Found 2026-09-14** while scoping the eleven Educational Levels, which are the

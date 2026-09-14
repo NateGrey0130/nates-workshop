@@ -546,7 +546,7 @@ import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuanti
          poolFormulaBounds, diceBounds, attributeCeiling,
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos, validateTotem, mosList } from '../js/parser.js';
-import { skillBase, isBaseFormula } from '../js/skill-base.js';
+import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js/skill-base.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
@@ -4051,6 +4051,109 @@ section('Attribute-derived skill base');
   check('and so does a formula that does not parse',
     skillBase({ base: 7, base_formula: 'PP times five' }, { PP: 12 }) === 7
     && skillBase({ base: 7, base_formula: 'PP*' }, { PP: 12 }) === 7);
+
+  // ── ONE GAME'S OWN PERCENTAGES (BOOK-INGEST-AUDIT.md F83) ───────────────
+  //
+  // The catalog holds one `base` per skill, which was true enough while every
+  // book in it was Palladium's own. Heroes Unlimited is a different game and
+  // prints its own figure for every skill: 48 of the 55 names it shares with
+  // the catalog disagree.
+  section('Per-system skill bases');
+  {
+    const cat = [
+      { name: 'Computer Operation', category: 'Technical', base: 40, per_level: 5 },
+      { name: 'Prowl', category: 'Physical', base: 25, per_level: 5 },
+      { name: 'Locksmith', category: 'Mechanical', base: 25, per_level: 5 },
+    ];
+    const hu = systemBaseMap([
+      { skill_name: 'Computer Operation', base: 60, per_level: 5, source_book: 'HU p.31' },
+      { skill_name: 'Prowl', base: 46, per_level: 8, source_book: 'HU p.35' },
+      // per_level ONLY: a book that changes the gain and not the base says so,
+      // and the row's own base has to survive.
+      { skill_name: 'Swimming', base: null, per_level: 8 },
+    ]);
+    const out = applySystemBases(cat, hu);
+    const by = (n) => out.find((r) => r.name === n);
+    check('a base is substituted', by('Computer Operation').base === 60);
+    check('and so is a per_level', by('Prowl').per_level === 8 && by('Prowl').base === 46);
+    check('a skill with no row is untouched',
+      by('Locksmith').base === 25 && by('Locksmith').per_level === 5);
+    check('the source book rides along, so a sheet can explain the number',
+      by('Computer Operation').system_base_source === 'HU p.31');
+
+    // THE INPUT IS NOT MUTATED. The wizard holds ONE catalog for a whole
+    // session and derives per system; mutating would leave one game's numbers
+    // under another the moment a player switched.
+    check('the raw catalog is left alone',
+      cat[0].base === 40 && cat[1].per_level === 5
+        && cat[0].system_base_source === undefined);
+
+    // A null override column means "no opinion", the same reading
+    // `base_formula` already has.
+    const onlyPer = applySystemBases(
+      [{ name: 'Swimming', base: 50, per_level: 5 }], hu)[0];
+    check('a null base leaves the catalog base standing',
+      onlyPer.base === 50 && onlyPer.per_level === 8);
+
+    check('no overrides returns the rows unchanged',
+      applySystemBases(cat, new Map()) === cat && applySystemBases(cat, null) === cat);
+    check('systemBaseMap reads skill_name or name, case-insensitively',
+      systemBaseMap([{ name: 'Prowl', base: 1 }]).get('prowl').base === 1
+        && systemBaseMap([{ skill_name: 'PROWL', base: 2 }]).get('prowl').base === 2);
+
+    // ── AND EVERY PATH THAT RESOLVES A PERCENTAGE USES IT ─────────────────
+    //
+    // This is the check that matters. F18 is the precedent and the warning:
+    // `skills.base_formula` had a client resolver documented as "the ONLY place
+    // the two are chosen between", and one server path never called it - so a
+    // skill taken at creation and the SAME skill taken at level-up disagreed,
+    // silently, for weeks. Three paths resolve a skill's numbers, and a fourth
+    // would have to learn this too.
+    const fnDir = join(repoRoot, 'functions', 'api', 'character-creator');
+    const paths = {
+      'catalogs.js (the wizard at boot)': ['catalogs.js', /skill_system_bases/],
+      '_lib/grants.js (a G.M. grant)': ['_lib/grants.js', /applySystemBases\(results \|\| \[\], systemBases\)/],
+      '_lib/skill-picks.js (a spent pick)': ['_lib/skill-picks.js', /applySystemBases\(results, systemBases\)/],
+    };
+    for (const [label, [file, re]] of Object.entries(paths)) {
+      check(`${label} applies the per-system base`,
+        re.test(readFileSync(join(fnDir, file), 'utf8')), file);
+    }
+    // And the endpoints actually hand one over - a defaulted parameter nobody
+    // passes is the same silence `skills.mos.choose` sat in for a year.
+    for (const f of ['characters/[id]/grants.js', 'characters/[id]/picks.js',
+                     'characters/[id]/level-confirm.js']) {
+      check(`${f} loads the character's system`,
+        /loadSystemBases\(env, await systemForCharacter\(env, params\.id\)\)/
+          .test(readFileSync(join(fnDir, f), 'utf8')), f);
+    }
+    // The wizard derives from the RAW catalog, and on every route that sets a
+    // system - picking one, and resuming a draft, which assigns it directly.
+    const wizSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+    check('the wizard keeps the raw catalog and derives from it',
+      /S\.skillCatalogRaw = catalogsRes\.skills;/.test(wizSrc)
+        && /S\.skillCatalog = applySystemBases\(raw, systemBaseMap\(mine\)\)/.test(wizSrc));
+    check('and re-derives on every route that sets the system',
+      (wizSrc.match(/applySkillSystem\(\);/g) || []).length >= 3, 'boot, pickSystem, resumeDraft');
+
+    // THE SHEET IS THE FOURTH READER and it was missed on the first pass -
+    // found by a premise audit, not by any check here. Its two pick dropdowns
+    // print `${s.base}%` straight off the `/catalogs` payload, so without this
+    // it offered the catalog's percentage while `resolvePicks` stored the
+    // book's: one number disagreeing with itself on the same screen.
+    //
+    // It asks the ENDPOINT to substitute rather than doing it itself, because
+    // sheet.js is a classic script and cannot import the helper - and a hand
+    // copy of the rule is the pair that drifts.
+    const sheetF83 = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const catSrc = readFileSync(join(fnDir, 'catalogs.js'), 'utf8');
+    check('the sheet asks /catalogs for its own system',
+      /api\('catalogs\?system=' \+ encodeURIComponent\(C\.data\.campaign_system/.test(sheetF83),
+      'sheet.js');
+    check('and the endpoint honours it',
+      /const system = new URL\(request\.url\)\.searchParams\.get\('system'\)/.test(catSrc)
+        && /skills: applySystemBases\(skills\.results, systemBaseMap\(/.test(catSrc));
+  }
 
   check('isBaseFormula admits the one shape and nothing else',
     isBaseFormula('PP*5') && isBaseFormula('Spd*2')

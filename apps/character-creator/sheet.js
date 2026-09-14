@@ -128,9 +128,26 @@ async function load() {
       api('items?system=' + encodeURIComponent(C.data.campaign_system)),
       // The skill picker needs the catalog to offer choices and to show what a
       // skill starts at. Parallel, so it costs nothing on a sheet with no picks.
-      api('catalogs').catch(() => ({ skills: [] })),
+      // `?system=` asks the endpoint to substitute THIS GAME's own skill
+      // percentages into the rows (BOOK-INGEST-AUDIT.md F83). It happens
+      // server-side because this file is a classic script and cannot import
+      // the helper - and doing it by hand here would be a second copy of a
+      // rule, which is the pair that drifts. The wizard asks WITHOUT a system,
+      // because it boots before one is chosen, and derives client-side.
+      //
+      // Getting this wrong is visible: these dropdowns would offer the
+      // catalog's percentage while `resolvePicks` stored the book's.
+      api('catalogs?system=' + encodeURIComponent(C.data.campaign_system || ''))
+        .catch(() => ({ skills: [] })),
     ]);
     C.journal = journal.entries; C.catalog = catalog.items;
+    // THIS CHARACTER'S GAME MAY PRINT DIFFERENT PERCENTAGES
+    // (BOOK-INGEST-AUDIT.md F83). Substituted here, on the rows, so the two
+    // dropdowns below show what the server will actually write when a pick is
+    // spent - `resolvePicks` applies the same overrides from the same helper.
+    // Showing the catalog's number here while the server stores the book's is
+    // exactly the split F18 was: one resolver, and a second path that never
+    // called it.
     C.skillCatalog = catalogs.skills || [];
     // Already in the response — the sheet kept only the skills until a level-up
     // had to offer the spells and powers a level grants.

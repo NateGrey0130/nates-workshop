@@ -7,6 +7,7 @@
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { listPending, resolvePicks, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
@@ -55,6 +56,11 @@ export async function onRequestPost({ request, env, params }) {
   const skills = character.skills;
 
   const picked = await resolvePicks(env, {
+    // The character's own GAME may print different percentages
+    // (BOOK-INGEST-AUDIT.md F83). Loaded here because this is where the
+    // character id is known; an empty map for every system that has no
+    // rows, which today is all of them but Heroes Unlimited.
+    systemBases: await loadSystemBases(env, await systemForCharacter(env, params.id)),
     picks: b.picks,
     existingSkills: skills,
     allowance,

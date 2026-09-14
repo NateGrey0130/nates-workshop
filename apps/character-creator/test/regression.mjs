@@ -471,6 +471,11 @@ const codexIndex = await api('GET', '/codex?section=index');
 const actual = {
   'classes (published, live)': classes.body.classes.length,
   skills: catalogs.body.skills.length,
+  // One game's own percentages (BOOK-INGEST-AUDIT.md F83). Counted through the
+  // boot payload like the rest, and it is the only route that reports them -
+  // the table has no picker and no codex section. A count here that drifts
+  // means a book's figures were added or lost without the record moving.
+  'per-system skill bases': (catalogs.body.skillSystemBases || []).length,
   spells: catalogs.body.spells.length,
   'psionic powers': catalogs.body.psionics.length,
   gear: items.body.items.length,

@@ -12,6 +12,7 @@ import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 import { listGrants, findSkillRow, skillEntryFor, grantEventStatement,
          readGrantBody, grantError } from '../../_lib/grants.js';
+import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id, { write: false });
@@ -33,7 +34,10 @@ export async function onRequestPost({ request, env, params }) {
   const character = await loadCharacter(env, params.id, ['id', 'level', 'skills', 'attributes']);
   const skills = Array.isArray(character.skills) ? character.skills : [];
 
-  const row = await findSkillRow(env, parsed.name);
+  // The character's own GAME may print a different percentage for this skill
+  // (BOOK-INGEST-AUDIT.md F83) - an empty map for every system with no rows.
+  const systemBases = await loadSystemBases(env, await systemForCharacter(env, params.id));
+  const row = await findSkillRow(env, parsed.name, systemBases);
   if (!row) return grantError(`No skill called "${parsed.name}" in the catalog`);
 
   // A skill is learned once, whoever granted it — the same rule that counts

@@ -56,3 +56,55 @@ export function skillBase(row, attrs = {}) {
   const derived = skillBaseFrom(row?.base_formula, attrs);
   return derived == null ? (row?.base ?? 0) : derived;
 }
+
+/**
+ * The per-system overrides as a lookup, from the `skill_system_bases` rows for
+ * ONE system. Lowercased on the name, because every other name match in this
+ * app is case-insensitive and a catalog row is matched by name everywhere.
+ */
+export function systemBaseMap(rows) {
+  const map = new Map();
+  for (const r of rows || []) {
+    const name = String(r?.skill_name ?? r?.name ?? '').trim().toLowerCase();
+    if (name) map.set(name, r);
+  }
+  return map;
+}
+
+/**
+ * Skill rows with one game's own percentages substituted in.
+ *
+ * BOOK-INGEST-AUDIT.md F83. The catalog holds one `base` and one `per_level`
+ * per skill, which was true enough while every book in it was Palladium's own.
+ * Heroes Unlimited is a different GAME and prints its own figure for every
+ * skill: 48 of the 55 names it shares with the catalog disagree.
+ *
+ * APPLIED TO THE ROW, NOT PASSED TO `skillBase`. That is the whole design. A
+ * `system` parameter on `skillBase` would have to be threaded through every
+ * caller, and `per_level` is read straight off the row by callers that never
+ * touch `skillBase` at all - `resolvePicks` was exactly that caller for
+ * `base_formula`, and shipped a bug for it (F18). A row that already carries
+ * the right numbers cannot be read wrongly by a caller that has not heard of
+ * this.
+ *
+ * The ROW's own value stands where the override says nothing for that column,
+ * so a book that changes only the per-level gain states only that.
+ *
+ * Returns NEW objects and never mutates the input: the wizard holds one catalog
+ * for a whole session, and a character in another system must not be shown
+ * numbers substituted for this one.
+ */
+export function applySystemBases(rows, overrides) {
+  if (!overrides || !overrides.size) return rows || [];
+  return (rows || []).map((row) => {
+    const o = overrides.get(String(row?.name ?? '').trim().toLowerCase());
+    if (!o) return row;
+    const out = { ...row };
+    if (o.base !== null && o.base !== undefined) out.base = o.base;
+    if (o.per_level !== null && o.per_level !== undefined) out.per_level = o.per_level;
+    // What a sheet or a catalog browser needs to explain a number that
+    // disagrees with the row a player may have seen elsewhere.
+    out.system_base_source = o.source_book ?? null;
+    return out;
+  });
+}

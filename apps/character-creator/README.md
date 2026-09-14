@@ -153,9 +153,12 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Six modules are imported by both the browser and the Workers runtime:
+Seven modules are imported by both the browser and the Workers runtime:
 `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
-`js/psionics.js` (transitively, through compose), and `js/language-skills.js`. That is why `app.js` and
+`js/psionics.js` (transitively, through compose), `js/language-skills.js`, and
+`js/skill-base.js` - which resolves a skill's starting percentage, including
+one game's own where it differs from the catalog's (`BOOK-INGEST-AUDIT` F83).
+That is why `app.js` and
 `catalog.js` are loaded as `<script type="module">` while the other pages are
 classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
@@ -184,7 +187,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-one tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-two tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -247,6 +250,7 @@ ppe and isp.
 | `vehicle_weapons` | The numbered weapon systems a vessel carries - five to eight of them, each with its own damage, rate of fire, range and payload, where `gear` has one of each column. `ordinal` is the book's own numbering. |
 | `totems` | The totem animals Spirit West prints on printed 96-105, one row each, shared by every class whose frontmatter says `totem:`. `skills` is JSON shaped like an `occ_skills` list, and `bonuses` a class bonuses block with dice and pools allowed, because a totem's apply at creation the way a class's do. `bonus_note` holds what that block cannot. `powers` is the Totem Warrior's giant-form text, shown only where the class key says `powers: true`. Slug-keyed: `characters.totem` holds the slug, with no foreign key. Migration 056, `BOOK-INGEST-AUDIT.md` F56. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `base_formula` overrides it with an attribute-derived percentage such as `PP*5`, for a book that states one that way; `base` stays the fallback. `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule). |
+| `skill_system_bases` | A skill's percentage where one GAME prints a different one (`BOOK-INGEST-AUDIT` F83, migration 061). Keyed `(skill_name, system)`; `base` and `per_level` are each nullable, so a book that changes only the per-level gain states only that and the reader coalesces. Keyed on the NAME because `skills.id` is AUTOINCREMENT and differs per environment, with `ON UPDATE CASCADE` so a rename carries the override. Heroes Unlimited needs 48 rows: it is a different game and prints its own figure for every skill. |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. `tradition` (migration 055) names the family - warlock, ocean, dolphin, spellsong, cloud, shaman - and NULL is a general invocation; a level-gated pick reaches a tradition only if the class's `magic.spell_traditions_allowed` names it. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
 | `super_abilities` | name, tier (minor/major), plus range, duration, damage, saving throw and description - the same field names spells and psionic powers use. **Neither a cost nor a level**, which is what separates these from both: a Heroes Unlimited super ability is a permanent trait, and the stat block describes it in use rather than pricing it. `variant_note` carries what an earlier book states instead, as in `psionic_powers`. Added by migration 057 for decision D3 of the Heroes Unlimited batch, and declared in `js/catalog-fields.js`, so the editor, the write endpoints and the importers all read it from there. |

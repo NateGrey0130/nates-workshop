@@ -29,7 +29,7 @@
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
-import { skillBase } from '../../../../apps/character-creator/js/skill-base.js';
+import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
 
 const GRANT_KINDS = ['skill', 'spell', 'psionic', 'ability',
                      'attribute', 'pool', 'combat', 'save'];
@@ -55,14 +55,22 @@ export async function listGrants(env, characterId) {
 // way a spent pick does, keeping the name they were given — "Language:
 // Dragonese" is a legitimate thing for a patron to teach and is not in the
 // catalog by that name.
-export async function findSkillRow(env, name) {
+//
+// `systemBases` is the override map for the character's own GAME
+// (BOOK-INGEST-AUDIT.md F83), and defaults to none - which is exactly what a
+// Rifts or Palladium Fantasy character wants, since no other system has a row.
+// It is applied to the ROWS before anything reads them, so `per_level` is right
+// too; no caller takes that through `skillBase()`, and that asymmetry is what
+// made F18 possible.
+export async function findSkillRow(env, name, systemBases = null) {
   const wanted = [name];
   if (isFamilyName(name)) wanted.push(String(otherRowFor(name)));
   const { results } = await env.DB.prepare(
     `SELECT name, category, base, base_formula, per_level FROM skills
      WHERE name COLLATE NOCASE IN (${wanted.map(() => '?').join(',')})`
   ).bind(...wanted).all();
-  const byName = new Map((results || []).map((r) => [r.name.toLowerCase(), r]));
+  const rows = applySystemBases(results || [], systemBases);
+  const byName = new Map(rows.map((r) => [r.name.toLowerCase(), r]));
   const exact = byName.get(name.toLowerCase());
   if (exact) return exact;
   if (!isFamilyName(name)) return null;

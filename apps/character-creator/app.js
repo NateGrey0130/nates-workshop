@@ -13,7 +13,7 @@
 // Object.assign at the bottom.
 import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute } from './js/dice.js';
-import { skillBase } from './js/skill-base.js';
+import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
@@ -584,6 +584,11 @@ function resumeDraft() {
   // holds no character with an MOS at all - and normalising here means every
   // site after it can assume the list without testing for the string.
   S.mos = mosList(S.mos);
+  // `S.system` arrived through Object.assign rather than through pickSystem,
+  // which is the only other place it is set - so the game's own skill
+  // percentages have to be derived here too (BOOK-INGEST-AUDIT.md F83). A
+  // resumed Heroes Unlimited build would otherwise show Palladium's numbers.
+  applySkillSystem();
   // The draft stores the class id and the stage separately, so the class is
   // resolved from scratch here — an edited class definition takes effect, and
   // the variant is re-applied on top of it.
@@ -1007,7 +1012,10 @@ function renderSystem() {
 }
 function pickSystem(sys) {
   if (S.system !== sys) { S.rcc = null; S.quiz = [null, null, null]; resetBuild(); }
-  S.system = sys; S.step = ST.RACE; render();
+  S.system = sys;
+  // This game's own skill percentages, if it prints any (F83).
+  applySkillSystem();
+  S.step = ST.RACE; render();
 }
 function resetBuild() {
   S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = []; S.totem = null;
@@ -2441,6 +2449,27 @@ let _skillIndex = null;
 function skillByName() {
   if (!_skillIndex) _skillIndex = new Map(S.skillCatalog.map((sk) => [sk.name, sk]));
   return _skillIndex;
+}
+
+// The skill catalog as THIS GAME prints it (BOOK-INGEST-AUDIT.md F83).
+//
+// Heroes Unlimited is a different game and gives every skill its own figure:
+// 48 of the 55 names it shares with the catalog disagree, Computer Operation
+// at 60% against 40%. A class can state an absolute for a skill it NAMES, and
+// the Heroes Unlimited classes do - but a choice group's `bonus:` adds to
+// whatever the picked row holds, and there is nowhere in a class to put the
+// book's own number for a skill the player chooses.
+//
+// Derived from the RAW catalog every time, never from the last derivation:
+// switching systems mid-build must not leave one game's substitutions under
+// another's. `applySystemBases` returns new objects and mutates nothing, so
+// the raw rows survive to be derived from again.
+function applySkillSystem() {
+  const raw = S.skillCatalogRaw || [];
+  const mine = (S.skillSystemBases || []).filter((b) => b.system === S.system);
+  S.skillCatalog = applySystemBases(raw, systemBaseMap(mine));
+  // The index is name -> row, and the rows have just been replaced.
+  _skillIndex = null;
 }
 
 // How each of a class's related-skill FLOORS is doing, given the picks made so
@@ -4373,8 +4402,14 @@ async function boot(first = true) {
       api('me').catch(() => ({})),
     ]);
     S.classes = classesRes.classes;
-    S.skillCatalog = catalogsRes.skills;
-    _skillIndex = null;
+    // THE RAW CATALOG IS KEPT SEPARATELY. One game may print a different
+    // percentage for a skill than another (BOOK-INGEST-AUDIT.md F83), and this
+    // endpoint is called ONCE at boot - before the player has picked a system -
+    // so the substitution cannot happen in the query. `applySkillSystem()`
+    // derives the working catalog whenever the system becomes known or changes.
+    S.skillCatalogRaw = catalogsRes.skills;
+    S.skillSystemBases = catalogsRes.skillSystemBases || [];
+    applySkillSystem();
     S.spellCatalog = catalogsRes.spells;
     S.psiCatalog = catalogsRes.psionics;
     // `|| []` because a browser holding a warm 304 from before super abilities
