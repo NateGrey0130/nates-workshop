@@ -212,12 +212,20 @@ not roll at all.
 - **Alignments are identical** — the same seven, printed 13.
 - **S.D.C., Hit Points, percentile skills, W.P.s and hand-to-hand** are the same
   Palladium chassis.
-- **`skill_programs` already exists in the frontmatter contract** —
-  `apps/character-creator/js/parser.js` validates
-  `{choose, base, per_level, categories}`, a whole category taken at one flat
-  percentage, and `characters.skills` already accepts `"type": "program"`. Built
-  for the Triax NGR Robot Soldier under `BOOK-INGEST-AUDIT` F23(b). It is most
-  of this book's skill engine already in place.
+- **`skill_programs` EXISTS AND IS THE WRONG SHAPE. This bullet said it was
+  *"most of this book's skill engine already in place"* and that is FALSE** -
+  corrected 2026-09-14, `BOOK-INGEST-AUDIT` F82. The block means *choose N
+  CATEGORIES, take everything each one allows, at one fixed percentage*, which
+  is what the Triax NGR Robot Soldier's book really does. Checked against all
+  fifteen programs on printed 27-28: **zero** are a whole category. Every one is
+  a named subset or a "select N from this category", and the educational bonus
+  ADDS to each skill's own base where `base` would FIX it. G2 and G3 below saw
+  three exceptions; there is no rule for them to be exceptions to.
+
+  **`skills.mos` is the right shape** - a named bundle of skills and choice
+  groups, chosen from a list - and its `choose` is validated and read by
+  nothing, so it grants one bundle whatever it says. That is F82, and it is what
+  the Educational Levels are blocked on.
 
 ### What does not fit
 

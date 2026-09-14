@@ -10254,6 +10254,125 @@ Heroes Unlimited still has no Educational Levels, which are the O.C.C. half of
 its slot mapping, and Nightbane has no data imported at all. It removes the
 constraint that made both impossible.
 
+### F82 - high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program
+
+**Found 2026-09-14** while scoping the eleven Educational Levels, which are the
+O.C.C. half of Heroes Unlimited's slot mapping and the last thing between that
+book and a playable character.
+
+**Two findings in one, because the second is only interesting once the first is
+known.**
+
+---
+
+**1. `skill_programs` is the wrong shape for this book, and the survey says it is
+the right one.**
+
+`apps/character-creator/docs/surveys/heroes-unlimited-core.md` records, under
+*What ALREADY fits, and it is more than expected*:
+
+<!-- claim-ok: quoting the survey claim this finding falsifies -->
+> `skill_programs` already exists in the frontmatter contract [...] It is most of
+> this book's skill engine already in place.
+
+It is none of it. `js/parser.js` states the block's meaning in its own comment:
+*choose N CATEGORIES, take everything each one allows, at one fixed percentage*,
+and it was built for the Triax NGR Robot Soldier, whose book really does grant
+three whole categories at a flat 38%.
+
+Heroes Unlimited prints **fifteen** skill programs on printed 27-28 and **not
+one of them is a whole category**. Measured against the live catalog 2026-09-14:
+
+| program | what it grants | its category |
+|---|---|---|
+| Communications | 8 NAMED | 21 rows |
+| Computer | 2 named | **no such category** |
+| Domestic | select THREE | 9 rows |
+| Electrical | 4 named, spanning Electrical AND Communications, one at -40% | 6 rows |
+| Espionage | select SIX | 13 rows |
+| Journalist/Investigation | 5 named across categories | **no such category** |
+| Mechanical | 4 named, one a nested pick, one at -40% | 13 rows |
+| Medical | 4 named, one conditional | 20 rows |
+| Military | 5 named, spanning Military, Pilot and Pilot Related | 23 rows |
+| Pilot Advanced | 4 named plus a pick of two aircraft | 51 rows |
+| Physical | select FOUR | 34 rows |
+| Science | 1 named plus select FOUR | 21 rows |
+| Technical | select THREE, excluding language | 87 rows |
+| W.P. Ancient | select THREE of a named seven | 38 rows |
+| W.P. Modern | select THREE of a named six | 38 rows |
+
+**Zero of fifteen.** Every one is either a named subset or a "select N from this
+category", and `skill_programs` can say neither. Its `base` is also the wrong
+arithmetic: it FIXES a percentage, and an Educational Level adds a one-time
+bonus of +5% to +35% **to the catalog's own figure**.
+
+The survey's G2 and G3 already knew part of this - *"3 HU programs grant NAMED
+SKILLS across categories"* and *"a program can carry a per-skill penalty inside
+the bundle"* - but recorded them as three exceptions to a rule that fits. There
+is no rule that fits.
+
+---
+
+**2. `skills.mos` IS the right shape, and its `choose` does nothing.**
+
+An MOS is *"select one area of specialty, gain all skills under that MOS"*, and
+each option carries a `skills[]` list of exactly the shape `occ_skills` uses -
+named skills with their own `base`, and choice groups with `categories` and a
+`bonus`. That is a Heroes Unlimited skill program precisely: a named bundle, a
+"select three from Domestic", or a mixture.
+
+`validateMos` in `js/parser.js` accepts a `choose`, defaults it to 1, and
+refuses one larger than the option list. **Nothing else reads it.**
+
+- `js/compose.js` - `applyMos(cls, mosId)` takes ONE id and finds ONE option.
+- `app.js` - `S.mos` is a single value, and its picker is a toggle that replaces
+  the previous pick rather than adding to it.
+- `characters.mos` is one column holding one id.
+
+Grepped 2026-09-14: `mos.choose` appears in the validator and in build artefacts
+of the same validator under `.wrangler/tmp/`, and nowhere else in the tree.
+
+**It has never bitten, and that is why it survived.** All six live classes that
+carry an MOS - merc-soldier, robot-pilot, coalition-technical-officer, monk,
+demon-goblin, navy-seaman - state `choose: 1`. A class stating `choose: 3`
+today parses clean, reports `ready` from `class-check`, stores fine, and grants
+**one** program. Silent storage, in the one key whose whole job is the count.
+
+---
+
+**Why it blocks.** An Educational Level grants 2, 3 or 4 skill programs - the
+whole eleven-row table on printed 27 is a bonus, a program count and a secondary
+count. Modelled as an MOS it needs `choose: 2` through `choose: 4`. Modelled as
+`skill_programs` it cannot be modelled at all. So the O.C.C. half of the slot
+mapping cannot ship until one of the two is fixed, and with it: the Alien's own
+five education packages, `occ_restrictions` on the Alien R.C.C., and any
+playable Heroes Unlimited character.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | make MOS multi-select end to end: `applyMos` takes a list, `S.mos` becomes an array, `characters.mos` stores a JSON list, the picker counts against `choose`, the validator enforces it, the sheet renders several | the shape is already right and already validated; this is finishing a key that was left half-built, and it is the only option that leaves `choose` meaning what it says | touches the stored shape of a column six live classes and any live character already write as a bare string, so both forms have to be read |
+| B | extend `skill_programs` to take named skills and per-entry bonuses | keeps MOS untouched | rebuilds `skill_programs` into a second MOS; two keys, one meaning, and the Triax class's flat-percentage reading has to survive |
+| C | one O.C.C. per combination | no code | eleven levels times fifteen programs is not a catalog, it is a cartesian product |
+| D | refuse `choose` above 1 in the validator and leave it | honest, tiny | Heroes Unlimited stays unplayable, and the key stays a lie about what the book can express |
+
+**Proposal: A**, in its own PR, with no Heroes Unlimited data in it - the same
+posture `super_abilities` shipped under in PR #1033. The reading compatibility is
+the real work: `character.mos` must accept a string OR a list wherever it is
+read, and keep writing whichever it was given until nothing writes a string.
+
+**Evidence:** every line read on `origin/main` at `57b88eb`, 2026-09-14. The
+fifteen-program table was generated by reading printed 27-28 against
+`SELECT category, count(*) FROM skills` on production, not from the survey.
+
+**Confidence: high.** The `choose` half is a grep with a null result and six
+live classes that all say 1. The `skill_programs` half is fifteen rows checked
+one at a time.
+
+**Ongoing cost of A:** one more shape a stored column can hold, until a backfill
+retires the string form. Worth saying out loud rather than discovering later.
+
 ### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
 
 **Found 2026-09-12** in the Nightbane R.C.C., printed 87.
