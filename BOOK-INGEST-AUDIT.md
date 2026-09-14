@@ -10352,6 +10352,89 @@ numbers were measured, not reasoned about.
 over-grant, and the sweep proposed above is the only thing that would ever say
 so.
 
+**TAKEN, 2026-09-14 (PR #1045) - OPTION A, THE PARSER HALF, AS WRITTEN.** The
+four keys are refused on a choice group in `validateSkillEntries`, as an ERROR
+naming the category form. **Posture said back: refuse, not warn** - C was
+rejected in the proposal on the grounds that *"a warning on a silent over-grant
+is the same class of thing as the key itself: present, and not read"*, and this
+is an error that moves `class-check`'s exit code to 1.
+
+<!-- claim-ok: quoting this finding's own option C to say the posture back -->
+
+**THE SWEEP WAS RE-RUN BEFORE IT LANDED, NOT TRUSTED.** This finding's own sweep
+was a day old and `main` had moved four times since. Re-measured `--remote`
+2026-09-14 with a walk DERIVED rather than copied - every object at any depth
+under the whole frontmatter, so a location nobody thought to list cannot hide a
+hit:
+
+```
+published live classes parsed: 318  (parse failures: 0)
+choice groups seen:            1725
+the four keys on a CATEGORY:   932   (read, correct)
+the four keys NOT on one:      0   (stored, never read)
+```
+
+**Its first draft was wrong and reported twelve hits**, all false: `copy_of`,
+`occ_restrictions` and `race_restrictions` each carry their own `only`/`except`
+which ARE read, by different code. Worth recording because it is the same shape
+as the finding - a key name that means one thing in one place and nothing in
+another - and because a sweep that over-reports is how a clean catalog gets
+"fixed".
+
+**The premise audit found the pinned sweep narrower than this finding claims.**
+The check in `test/regression.mjs` walks a named list of locations, and two of
+its arms are dead: it reads `occ_related_skills.entries` and
+`occ_secondary_skills.entries`, and **no live class carries either key** - of
+318 published classes, `occ_related_skills` holds only `count`, `categories`,
+`schedule`, `note` and `minimums`, and `occ_secondary_skills` holds only
+`count`. Its 803 is exactly `occ_skills` plus `mos`. So *"in `occ_skills`,
+related, secondary and every `skills.mos` option"* above describes coverage it
+does not have. Nothing is wrong in the data because of it - the deep walk above
+found zero hits anywhere - but a reader should not take that check as the
+backstop for all four locations. **Not fixed here**: this PR is the parser half,
+and a dead arm in a data check is its own change.
+
+**Proved by making it fail, not by watching it pass.** Ten checks land in a new
+smoke section, `Group-level skill restrictions`. With the refusal removed,
+**seven of the ten go red**; the three that stay green are the ones that must -
+the category form still parsing, a plain group still parsing, and the pin on
+`categoryAllows` still reading the keys off the entry. Smoke **2110 -> 2120**;
+regression unchanged at 436.
+
+**One of those checks threw instead of failing, and that is why the count above
+is trustworthy.** `groupErrors(...)[0].includes(...)` is a TypeError when there
+are no errors, which aborted the run at five failures and hid the checks after
+it. Changed to `(... ?? '')`, and the removal re-run to get the seven.
+
+**A LIVE CONSEQUENCE, EXPECTED AND NOT FIXED.**
+`node scripts/class-check.mjs apps/character-creator/db/add-night-witch-class.sql --remote`
+now exits **1** and prints `NOT ready - 1 error, 2 warnings`. That file is an
+APPLIED one-shot carrying the old form at line 57, and this repo's rule is that
+an applied script is never edited; `zzzzzzz-fix-night-witch-lore-scope.sql`
+already corrects the live row, and production is clean. **No suite turns red for
+it** - `test/smoke.mjs` skips a non-`ok` parse when walking the data scripts and
+only asserts that more than a hundred parsed - so the flagless run is green and
+this is a thing a person meets when they point `class-check` at that one file.
+It is left standing deliberately: the alternative is an exemption list, which
+would be a second place for this rule to be wrong.
+
+**The class note that cites this finding is corrected in the same PR**, per
+`audit-menu` step 5. The Night Witch's lore note said the group-level form is
+*"stored and never read"* - the MECHANISM half, which is exactly the half that
+rots, and taking this finding falsified it. Corrected in
+`zzzzzzzzzzz-f84-night-witch-note.sql`, applied `--remote`; the DECISION half,
+that the four names belong on the category entry, is untouched.
+`scripts/audit-citations.mjs --remote F84` reports that class and no other.
+
+**What this does NOT do.** It does not make the group-level form work (option B,
+rejected in the table above), it does not touch `categoryAllows`, and it changes
+nothing about any class in production - the sweep is the evidence for that last
+claim rather than an assumption. **`BOOK-INGEST-AUDIT` F88 filed** for the
+adjacent hole found at the same fix site: `validateCategories` is called on
+`categories_allowed`, `occ_related_skills.categories` and
+`skill_programs.categories` and on nothing else, so a choice group's own
+`categories` array is never validated at all.
+
 ### F83 - high - a choice group cannot state a book's own skill percentage, and Heroes Unlimited prints its own for every skill
 
 **Found 2026-09-14** while building the sixteen Heroes Unlimited education
@@ -11519,3 +11602,82 @@ cost and pays it - its entries carry comments saying which reader consumes each
 one. A `skills` list is the same bargain one level down, and the same failure
 mode: a key added to the parser and not to the list produces a warning on a
 correct class.
+### F88 - medium - a choice group's own `categories` array is never handed to `validateCategories`, so the entries F84 now insists on are themselves unchecked
+
+**Filed 2026-09-14** while taking `F84`, at the same fix site and one step
+further in. `F84` makes the parser insist that `only`, `except`, `only_prefix`
+and `except_prefix` be written on a CATEGORY ENTRY. This finding is that nothing
+then validates the entry.
+
+**The call sites, all of them.**
+`grep -n "validateCategories(" apps/character-creator/js/parser.js`, 2026-09-14,
+returns the definition and exactly three callers:
+
+```
+1401:  function validateCategories(where, categories, errors) {
+2556:    validateCategories(`${where}.categories_allowed`, block.categories_allowed, errors);
+2672:    validateCategories('skills.occ_related_skills.categories', related.categories, errors);
+2709:    validateCategories('skills.skill_programs.categories', programs.categories, errors);
+```
+
+A grep of `scripts/`, `apps/character-creator/*.js` and
+`functions/api/character-creator/` for the same call, the same day, returns
+nothing further. **A choice group's `categories` is not among them**, and a
+choice group is where the overwhelming majority of category entries live -
+**932** of them across 318 published classes and 1,725 choice groups
+(`--remote`, 2026-09-14, the deep walk run for `F84`).
+
+**What goes unchecked, probed against the real parser** rather than reasoned
+from the source: a group whose category entry sets **both** `only` and `except`,
+one whose `only_prefix` is a bare string where a list is expected, and one whose
+entry has **no `name` at all** each produce `ok=true`, zero errors and zero
+warnings.
+
+**And the contrast settles it.** The IDENTICAL entry, moved to
+`occ_related_skills.categories` where `validateCategories` IS called:
+
+```
+choice group          { name: "Technical", only: [...], except: [...] }  ok=true   errors=0
+occ_related_skills    { name: "Technical", only: [...], except: [...] }  ok=false  errors=1
+   ERROR  skills.occ_related_skills.categories.Technical sets both only and
+          except forms; use one direction
+```
+
+So the rule exists, is written, fires, and is simply never reached from the one
+place most category entries live.
+
+**Why it matters more after `F84` than before.** `F84`'s refusal pushes authors
+from a form that was silently dead to a form that is silently unvalidated. That
+is a clear improvement - the entry form at least *works* - but the failure mode
+it moves people into is the same shape one level down, and this finding exists
+so that is written somewhere rather than discovered again.
+
+**It is NOT known to be live.** No class in production is known to carry a
+malformed category entry; the `F84` sweep counted entries, it did not validate
+them. **That is the gap in this finding and the first thing a taker should
+close** - run `validateCategories` over all 932 entries against production
+before changing anything, because the size of that answer decides the posture.
+
+**Proposal.** Call `validateCategories` on a choice group's `categories` from
+`validateSkillEntries`, beside the `F84` refusal, with a `where` that names the
+group so an author can find it. **Posture: match what the three existing callers
+do, which is ERRORS** - `validateCategories` pushes to `errors`, and adding a
+fourth caller that somehow warned instead would be a second standard. **But if
+the pre-run above turns up live classes, take it as WARN first and tighten
+later**; the proposal is not worth turning a shelf of published classes into
+parse failures, which is what an error does here (`class-store.js` drops a class
+that fails to parse out of `GET /classes` entirely rather than 4xx-ing, so a
+class would vanish from every picker).
+
+**Evidence:** the grep above with its null result outside those three callers,
+and the three probes through `parseClassMarkdown`, all 2026-09-14. The 932 and
+1,725 are from the `F84` sweep against production the same day. **The pre-run
+this proposal asks for has NOT been done** - said plainly, because this finding
+otherwise reads as though it had.
+
+**Confidence: high** that the call is absent - it is a grep with a null result
+over every file that could hold it, and three probes agreeing. **Low on the
+cost**, and the pre-run is what raises it.
+
+**Ongoing cost: none beyond one more call.** `validateCategories` exists, is
+already maintained for three other callers, and gains no new rules here.
