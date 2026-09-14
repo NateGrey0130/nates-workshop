@@ -515,14 +515,89 @@ What is deliberately left, with the reason:
 - **The insanity tables, printed 24-26** — reachable later; not part of a
   character's stored state today.
 
+## The slot mapping, as built
+
+D1 said *"Power Category in the R.C.C. slot, Educational Level in the O.C.C.
+slot, sub-type as the variant"*. Building it settled four things that sentence
+did not, and each was settled by hitting a wall rather than by choosing.
+
+**A Power Category grants super abilities through a block of its own.**
+`super_abilities` shipped in PR #1033 as the third member of the family `magic`
+and `psionics` form, gated on the TIER. Before it there was a table of 364 rows
+no class could reach.
+
+**A roll for a PACKAGE is an ability choice group, not a variant.** Experiments'
+Table C is six whole outcomes - *"one major and three minor"* against *"four
+minor"* - and `variants` cannot carry a power block: `VARIANT_OVERRIDES` lists
+`bonuses` and `skill_overrides` and nothing else that grants. An entry in
+`special_abilities` can, because `ABILITY_GRANTS` now includes
+`super_abilities`, so the six outcomes are six named options under one
+`{ choose: 1 }`. The same shape carries the Alien's appearance, environment and
+power-source tables.
+
+**The random tables that MODIFY a character are ability choice groups too.**
+The Alien's thirteen appearances and eight homeworld environments, the Mutant's
+sixteen unusual characteristics, the Experiment's thirteen side-effects: each is
+a named option carrying `bonuses`, offered as `{ choose: 1, from: [...] }`. That
+is the whole of `BOOK-INGEST-AUDIT` F78's problem - a creation-time roll table
+that permanently modifies the character - solved for this book without the
+feature F78 asks for, because these tables grant BONUSES and nothing else.
+
+**An Educational Level is an O.C.C., and so is an Alien's education.** Printed
+27 exempts only Special Training and Physical Training from the Educational
+Level table - but the Alien's STEP FIVE prints its own five-outcome education
+table, which REPLACES it. Those five are O.C.C.s beside the standard eleven, and
+the Alien R.C.C. names them in `occ_restrictions: { only: [...] }`. That key
+takes class ids, so it cannot be written until they exist; the Alien ships
+without it and gains it in a `fix-` script afterwards.
+
+Why they are O.C.C.s rather than anything else: an education package is a
+CATEGORY MIX plus a secondary-skill count - *"two science and twelve secondary
+skills"* - and nothing but a class can hold one. A variant carries
+`skills_additional` and `related_skills_count` and no `skills` block at all; an
+ability carries `related_skills_count` and nothing else. Both were tried.
+
+### What the chassis still cannot say
+
+- **A second choice group cannot be conditioned on the first.** The
+  Super-Soldier's three enhancements are the Super-Soldier's, and a build that
+  did not take that option can still open the group. The book's own text is the
+  only rule, as it is at the table.
+- **A branch that swaps one power kind for another is not expressible.** The
+  Mutant's STEP FOUR offers psionics INSTEAD of two super abilities, and a class
+  granting the abilities outright cannot also offer a branch that grants none.
+  A psionic mutant is built as the Psionics category.
+- **`campaigns.system` is still two values** (D2), so no Heroes Unlimited
+  campaign can be created and none of this can be played yet. That is
+  `BOOK-INGEST-AUDIT` F73, filed one book earlier by the Nightbane survey.
+
 ## Ledger
 
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-12 | — | four books cached (557 pp); `books.json` registered all four; offsets measured and verified by the suite; `BOOK-INGEST-AUDIT` F73 filed; survey written. **No data applied, no schema change.** |
+| 2026-09-13 | #999 | all three Powers Unlimited books surveyed in full; **D0 answered** - build against the Revised core, take PU1 and PU3, EXCLUDE PU2. `BOOK-INGEST-AUDIT` F79 filed. |
+| 2026-09-13 | #1025 | **D3 taken**: migration `057-super-abilities.sql`, the fifth kind of power. No cost column and no level column, which is the reason the table exists. |
+| 2026-09-13 | #1026 | `super_abilities` declared as the eighth catalog in `js/catalog-fields.js`. |
+| 2026-09-13 | #1027 | the Revised core's **69 super abilities**, printed 163-192. |
+| 2026-09-13 | #1028 | Powers Unlimited One's **170 super abilities**. |
+| 2026-09-13 | #1029 | Powers Unlimited Three's **125 super abilities**. Catalog total **364**. |
+| 2026-09-13 | #1030 | **D4-D8 answered**; the decision record closed. |
+| 2026-09-13 | #1031 | stat-block repair on 15 core abilities - a `savings_throw` key typo that left 0 of 364 rows with a saving throw, and a `range` that had swallowed 621 characters of prose. |
+| 2026-09-13 | #1032 | the core's **16 new spells**, printed 96-103. Spells **919 -> 935**. |
+| 2026-09-14 | #1033 | **D1's R.C.C. half built**: the `super_abilities` grant block, wired from the parser through the wizard, the create validator and the sheet. `BOOK-INGEST-AUDIT` F81 filed. Code only. |
+| 2026-09-14 | this PR | the core's **4 new psionic powers**, printed 128-135, of thirty-three extracted. Psionics **125 -> 129**. Plus a folio repair on **23 super abilities**. |
+
+Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
+(`af196d9`), which is why the psionic count moves from 125 rather than from 116.
+**That commit's subject line says EIGHT and production holds NINE** rows citing
+Powers Unlimited One - counted 2026-09-14. The rows are the authority; the
+subject line is not, and it cannot be corrected now.
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote` has not been run for these slugs —
-no production row cites any of the four books yet, so the report would be four
-zero rows. It belongs here from the first data PR onward, not before.
+run it from here on, now that production rows cite three of the four books.
+
+**The ten Power Categories are the outstanding work**, plus the Educational
+Levels they compose with; see *The slot mapping, as built* below.
