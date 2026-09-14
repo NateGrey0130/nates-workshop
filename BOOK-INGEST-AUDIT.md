@@ -11221,3 +11221,213 @@ turns three checks red at once and each one says what it expected.
 characters: the erase is a composition rule, so a character already saved
 against a superseding occupation would recompose without its race's spells. The
 decision is whether that is a correction or a migration.
+### F85 - medium - the coverage ledger checks five catalogs and there are eight, so 466 cited rows are verified by nothing; and its second table list checks four, which prints a phantom -171
+
+**Filed 2026-09-14**, at the end of the Heroes Unlimited batch, when the survey's
+own *What remains* line said to start running the ledger for these slugs and the
+ledger reported a book with 364 imported rows as barely touched.
+
+**This is `F28` again, three tables later, and the shape is identical.** `F28`
+(2026-09-08) found `vehicles` missing from this same list, called the omission a
+one-word fix, and wrote down why it was easy to miss: the table appeared in the
+file, just not in the part that checks anything. What `F28` did not do is make
+the list derive from anything, so the next three tables landed the same way.
+
+**The case.** `scripts/source-coverage.mjs:115` builds a coverage row for
+`imported_classes` and then for five catalogs, by name:
+
+```js
+...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles'].map((t) => ({
+```
+
+`apps/character-creator/js/catalog-fields.js` declares **eight** catalogs - read
+2026-09-14, the `table:` keys at lines 37, 63, 94, 128, 164, 200, 266 and 319:
+`skills`, `spells`, `psionic_powers`, `super_abilities`, `enchantments`, `gear`,
+`vehicles`, `totems`. Three of the eight are absent from the list above, and each
+one has the `name` and `source_book` columns the five beside it are read through
+(`db/schema.sql`, read 2026-09-14, `super_abilities` at the block added by
+migration 057, `enchantments` and `totems` likewise).
+
+Counted with `node scripts/q.mjs --remote`, 2026-09-14:
+
+| table | rows | carrying a `source_book` | in the ledger |
+|---|---|---|---|
+| `super_abilities` | 364 | 364 | **no** |
+| `enchantments` | 62 | 62 | **no** |
+| `totems` | 40 | 40 | **no** |
+
+**466 rows, every one of them cited, none of them checked.**
+
+**The symptom is a sentence in two survey files, and it reads as a fact about
+production.** `apps/character-creator/docs/surveys/powers-unlimited-3.md`, under
+`### What remains`, read 2026-09-14:
+
+> `node scripts/source-coverage.mjs --remote` reports nothing for this slug: no
+> production row cites this book.
+
+<!-- claim-ok: quoting the survey sentence this finding falsifies -->
+
+The first half is true of the ledger. The second half is false: **125 super
+abilities cite Powers Unlimited Three** (`node scripts/q.mjs --remote`,
+2026-09-14). `powers-unlimited-1.md` carries the same two sentences and **both**
+halves are wrong there - the ledger prints `powers-unlimited-1   9 / 0`, which is
+nine psionic powers and not nothing, while 170 super abilities cite the book.
+
+And the book whose D1 half was built this week reports
+`heroes-unlimited-core  60 / 0`, of which 69 rows - more than the whole printed
+figure - are the super abilities the ledger does not look at.
+
+**The second table list, which is the half that misreports rather than omits.**
+The same file writes the list out again at `:385`, inside `--vs-build`:
+
+```js
+...['gear', 'skills', 'spells', 'psionic_powers'].map((t) => ({
+```
+
+`vehicles` is not there. So `F28`'s fix landed in one of this file's two lists,
+and the build side of the comparison now counts **one fewer table** than the live
+side it is subtracted from. Measured, not reasoned to -
+`node scripts/source-coverage.mjs --remote --vs-build`, 2026-09-14:
+
+```
+CITATION COVERAGE  remote vs a build from the repo
+  bucket            remote    build     delta
+  traceable         3145      2974      -171
+  ...
+  rows              3403      3232      -171
+```
+
+**-171 is the vehicles table, not a regression**, and nothing in the output says
+so. The paragraph printed directly beneath that table exists to warn a reader
+against misreading exactly this kind of delta, and it warns about the wrong
+mechanism - buckets moving against each other - because the asymmetry is in the
+inputs rather than in the buckets. `REBUILD-AUDIT.md` `F4` is the finding that
+built this table to catch 148 lost citations; a standing phantom of 171 is the
+noise that hides the next 148.
+
+**What this does NOT mean.** No citation is known to be wrong. All 466 rows carry
+a non-NULL `source_book`, every one was written by a generator that stamped the
+title and page range from the dict the row came from, and patching the list
+locally on 2026-09-14 put **all 466 in `traceable` and none in any other bucket**
+- so nothing is hiding behind the omission. The defect is that nothing checked,
+and per this report's own standing warning, traceable means CHECKABLE and never
+correct.
+
+**Proposal.** Add `'super_abilities'`, `'enchantments'` and `'totems'` to the
+list at `:115`, and `'vehicles'`, `'super_abilities'`, `'enchantments'` and
+`'totems'` to the list at `:385` so the two sides of `--vs-build` count the same
+tables. Widen `pad(g.label, 14)` in the COVERAGE loop: `super_abilities` is
+fifteen characters and the run above printed `super_abilities364` with no gap,
+the same way `psionic_powers116` already does. **Posture: unchanged - advisory,
+exits 0, no new gate, no schema change.** Evidence: the patched run of
+`source-coverage.mjs --remote` and `--vs-build`, both 2026-09-14, both reverted;
+row counts from `q.mjs --remote` the same day.
+
+**What it changes in the report:** three new COVERAGE rows; `powers-unlimited-3`
+appears for the first time at `125 / 0`; `powers-unlimited-1` moves `9 -> 179`,
+`heroes-unlimited-core` `60 -> 129`, `pf` `587 -> 649` (62 enchantments) and
+`spirit-west` `115 -> 155` (40 totems); and the `--vs-build` delta drops the
+phantom. Measured on the patched run, not predicted.
+
+**Whether to derive the list instead of adding four strings is the real
+question, and this finding does not answer it.** `catalog-fields.js` is a browser
+module the scripts do not import today, and the three lists that would want it
+disagree about scope on purpose. Adding the strings is the `F28` fix and fixes
+`F28`'s recurrence, not its cause; a taker who wants the cause should say so in
+the note.
+
+**Confidence: high**, and nothing would raise it - both halves were run rather
+than read. What is **not** measured is whether any of the 466 citations is
+*correct*, which this ledger has never answered for any table.
+
+**Ongoing cost: none beyond the line itself.** Four strings in a list that is
+already written out longhand twice, in a script nothing gates on. The cost that
+does not go away is the one `F28` already paid and this finding pays again: the
+ninth catalog will be omitted too.
+
+**Two sibling scripts carry the same longhand list and are NOT in scope here**,
+read 2026-09-14: `scripts/drift-check.mjs:181`
+(`CITATION_TABLES = ['spells', 'psionic_powers', 'skills']`) and
+`scripts/repo-vs-live.mjs:68` (seven entries, no `vehicles`, no
+`super_abilities`, no `totems`). Filed below as `F86` rather than left named and
+unnumbered, because they answer different questions from this one and from each
+other, and folding them in here would hide two decisions inside a one-word fix.
+
+### F86 - medium - `repo-vs-live` says "all catalogs" and compares five of eight, and `drift-check`'s citation check reads three
+
+**Filed 2026-09-14**, found while measuring `F85`. Neither script is the coverage
+ledger and neither omission is `F85`'s; they are here because the same longhand
+list is written in four places in `scripts/` and each one has drifted from the
+catalog roster separately.
+
+**`repo-vs-live.mjs`.** Its own opening line is
+`// Can the repo rebuild the live catalog, row for row?` and its usage line is
+`node scripts/repo-vs-live.mjs                 # all catalogs` (read 2026-09-14,
+lines 1 and 3). `TABLES` at `:68` holds seven entries - `skills`, `spells`,
+`psionic_powers`, `gear`, `enchantments`, `imported_classes`,
+`catalog_redirects`. Against the eight catalogs `catalog-fields.js` declares,
+**`vehicles`, `super_abilities` and `totems` are never compared**: 575 live rows
+(171 + 364 + 40, `q.mjs --remote`, 2026-09-14) whose names and column values are
+outside the check that exists to prove the repo rebuilds the catalog. The two
+non-catalog entries carry a comment saying why they were added and the block
+comment above the list explains the column pair; **no comment anywhere in the
+file mentions `vehicles`, `super_abilities` or `totems`** - `grep -n
+'vehicles\|super_abilities\|totems' scripts/repo-vs-live.mjs`, 2026-09-14,
+returns nothing. So this is omission rather than a decision recorded in place.
+
+**That matters more than `F85` does**, because this script's exit code means
+something: a missing or extra row **fails** it, and the three tables it does not
+read cannot fail it. A rebuild that dropped all 364 super abilities would print
+the same summary it prints today.
+
+**`drift-check.mjs`.** `CITATION_TABLES` at `:181` is
+`['spells', 'psionic_powers', 'skills']`, and this one is **half a decision
+already**: the comment at `:275` states plainly why `gear` is excluded - a gear
+name in this catalog is reworded prose rather than a heading the book prints, 35
+of 40 findings were that, and *"a check that cries wolf 35 times is worse than no
+check."* The same comment gives the criterion for inclusion: *"The other three
+tables have canonical name lists in the book - a checklist, an index, a skill
+list."*
+
+**`super_abilities` meets that criterion and is absent anyway.** The Heroes
+Unlimited survey records the alphabetical lists of minor and major super
+abilities at printed 163 and 169 as one of the book's own authority tables
+(`apps/character-creator/docs/surveys/heroes-unlimited-core.md`, *The book's
+authority tables*, read 2026-09-14) - a canonical name list, exactly the shape
+the comment names. `vehicles` and `totems` are the `gear` case rather than the
+spell case and probably belong out; nothing has decided either way in writing.
+
+**Proposal**, and it is two decisions rather than one change:
+
+1. **`repo-vs-live`**: add `['vehicles', 'name', 'slug']`,
+   `['totems', 'name', 'slug']` and `['super_abilities', 'name', 'name']` to
+   `TABLES`. The identity column is each table's real unique key, read from
+   `db/schema.sql` on 2026-09-14 rather than assumed - `vehicles.slug` and
+   `totems.slug` are `NOT NULL UNIQUE` and `super_abilities.name` is, which is
+   why only the third one repeats its name column. This script's own header
+   records a re-run lost to assuming `name` identified a row.
+   **Posture: unchanged.** The exit code
+   already fails on a missing row, and extending the list extends that gate to
+   three more tables, which is the point rather than a side effect. Expect
+   value-level differences on the first run, the way the other five started at
+   413; the header's standing rule is that the exit code means the first half.
+2. **`drift-check`**: add `'super_abilities'` to `CITATION_TABLES`, and write
+   down the decision for `vehicles` and `totems` either way, beside the `gear`
+   comment that already does this job. **Posture: advisory, unchanged** - the
+   citation section deliberately never touches the exit code.
+
+**Evidence**: line numbers and quoted comments read 2026-09-14; row counts from
+`node scripts/q.mjs --remote` the same day. **Neither proposal has been run** -
+unlike `F85`, this one is read rather than measured, and the first run of a
+widened `repo-vs-live` is the thing that would settle its cost.
+
+**Confidence: high on the omissions, low on what they will report.** What would
+raise the second half is running `repo-vs-live` with the three tables added and
+counting the differences; that was not done here because it builds a database and
+because the finding is not taken.
+
+**Ongoing cost.** For `repo-vs-live`, a wider gate: three more tables that can
+fail a merge-time check, which is the cost of the check working. For
+`drift-check`, whatever advisory noise 364 super-ability names produce against
+their cited pages - unknown until run, and the `gear` comment is the precedent
+for backing it out if it cries wolf.
