@@ -2604,9 +2604,24 @@ function renderSkills() {
         ${(mosCfg.options || []).map((o) => {
           const id = o.id || o.name;
           const on = (S.mos || []).some((m) => String(m).toLowerCase() === String(id).toLowerCase());
+          // A CATEGORY MAY BE AN OBJECT - `{ name, only, only_prefix, ... }` -
+          // and this joined the raw list, so an MOS option restricting a
+          // category rendered "3 from [object Object], [object Object]".
+          // `categoryLabel` is what every other picker in this file uses, and
+          // it shows the restriction rather than hiding it. A `from` list is
+          // plain names and joins as it always did.
           const grants = (o.skills || []).map((x) => x.name
-            || `${x.choose} from ${(x.categories || x.from || []).join(', ')}`).join(', ');
-          return `<button class="pick${on ? ' on' : ''}" onclick="pickMos('${escJs(id)}')">
+            || `${x.choose} from ${x.categories
+              ? x.categories.map(categoryLabel).join(', ')
+              : (x.from || []).join(', ')}`).join(', ');
+          // `sel`, NOT `on`. `styles.css` has one rule for a chosen .pick and
+          // it is `.pick.sel`; this picker was the only place in the file
+          // emitting `on`, so a chosen specialty computed to exactly the same
+          // border and background as an unchosen one and has never been
+          // visible. It mattered little while a class could choose one - the
+          // list below changed, which was the feedback - and it matters a lot
+          // now that four can be chosen out of fourteen.
+          return `<button class="pick${on ? ' sel' : ''}" onclick="pickMos('${escJs(id)}')">
             <b>${esc(o.name)}</b><span class="attr-note">${esc(grants)}</span></button>`;
         }).join('')}
       </div>

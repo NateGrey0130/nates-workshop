@@ -619,6 +619,48 @@ export const CORE_SDC_BY_CLASS = {
   // Strike Troopers at 10% of the Quebec Military, and the class is granted
   // Hand to Hand: Expert, three W.P.s and Military at +10%.
   'fq-cyborg-soldier': '3D6',
+  // Heroes Unlimited's eleven EDUCATIONAL LEVELS, printed 27. All 1D6, and the
+  // uniformity is the point rather than an oversight: an education is never a
+  // man of arms. This book puts schooling in the O.C.C. slot and the Power
+  // Category in the R.C.C. slot, so durability is the Power Category's to
+  // state - including for the two MILITARY educations, whose soldiering is
+  // training rather than a body.
+  //
+  // Which makes these entries very nearly moot, and worth having anyway.
+  // `combineClasses` gives the RACIAL class's pool precedence, so a played
+  // Heroes Unlimited character takes its S.D.C. from the Power Category every
+  // time; this fires only for an education played with no Power Category at
+  // all. The smoke test demands the classification rather than defaulting,
+  // because a class stating no formula and missing from this table is saved
+  // with `sdc_max` NULL.
+  'hu-edu-high-school': '1D6',
+  'hu-edu-military': '1D6',
+  'hu-edu-trade-school': '1D6',
+  'hu-edu-one-year-college': '1D6',
+  'hu-edu-two-years-college': '1D6',
+  'hu-edu-three-years-college': '1D6',
+  'hu-edu-four-years-college': '1D6',
+  'hu-edu-military-specialist': '1D6',
+  'hu-edu-bachelors': '1D6',
+  'hu-edu-masters': '1D6',
+  'hu-edu-doctorate': '1D6',
+  // The Alien R.C.C.'s own five education packages, printed 56. It does not
+  // roll on the table above - it prints a five-outcome one that replaces it -
+  // so these sit in the same slot and take the same 1D6.
+  //
+  // THE MILITARY AND COMBAT SPECIALISTS WERE CONSIDERED FOR 3D6 and left at
+  // 1D6. Each grants a hand to hand skill, several W.P.s and physical skills,
+  // which is what a men-of-arms entry usually looks like - but the 3D6/1D6
+  // split is read off a Palladium book's own section heading, and Heroes
+  // Unlimited has no such heading: it is not organised that way. What it does
+  // state is that "all aliens have a base S.D.C. of 20", on the R.C.C., which
+  // takes precedence over anything here. Guessing a grouping this book does not
+  // use, for a value the R.C.C. overrides, would be inventing a number.
+  'hu-alien-edu-general-studies': '1D6',
+  'hu-alien-edu-military-specialist': '1D6',
+  'hu-alien-edu-science-specialist': '1D6',
+  'hu-alien-edu-combat-specialist': '1D6',
+  'hu-alien-edu-engineer': '1D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

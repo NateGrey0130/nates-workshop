@@ -10254,6 +10254,205 @@ Heroes Unlimited still has no Educational Levels, which are the O.C.C. half of
 its slot mapping, and Nightbane has no data imported at all. It removes the
 constraint that made both impossible.
 
+### F84 - high - a restriction written on the choice GROUP instead of on the category is stored, never read, and reported `ready`
+
+**Found 2026-09-14** while building the Heroes Unlimited education classes, by
+checking an assumption rather than by any check firing.
+
+**The shape.** A choice group restricts a category like this:
+
+```yaml
+- { choose: 3, categories: [{ name: "Technical", except_prefix: ["Language:"] }] }
+```
+
+and the same four keys written one level out parse, validate, store and do
+**nothing**:
+
+```yaml
+- { choose: 3, categories: ["Technical"], except_prefix: ["Language:"] }
+```
+
+`categoryAllows` in `js/parser.js` finds the entry matching the skill's own
+category and reads `only`, `except`, `only_prefix` and `except_prefix` off
+**that entry**. A bare string entry returns `true` outright. Every reader in the
+tree is `entry.<key>` or `c.<key>` inside `validateCategories` - grepped
+2026-09-14 across `js/parser.js`, `app.js`, `functions/.../_lib/` and
+`scripts/class-check-lib.mjs`. **Nothing reads the group-level form and nothing
+rejects it**: a choice group may carry any key at all and no validator has an
+opinion.
+
+**Measured on the live catalog**, running `categoryAllows` against all 388
+skills:
+
+| group | admits, written on the group | admits, written on the category |
+|---|---|---|
+| Language Program - `only_prefix` over Technical + Communications | **108** | **30** |
+| Technical Program - `except_prefix: ["Language:"]` over Technical | **87** | **64** |
+
+So a level that should offer thirty language rows offered every Technical and
+Communications skill in the catalog, and a program whose entire restriction is
+*"select three, excluding language"* offered the languages.
+
+**It fails OPEN, and silently, in both directions.** `only_prefix` ignored means
+the whole category; `except_prefix` ignored means nothing is excluded. Both
+grant MORE than the book allows, which is the direction nothing complains
+about - a player simply gets a longer list.
+
+**`class-check --remote` reported the classes `ready - 0 errors, 0 warnings`**,
+and would have for all eleven. It has no rule here, and the catalog checks pass
+because every NAME involved is real - the names are not the problem, their
+scope is.
+
+**How it was caught, which is the part worth recording.** Not by a check. The
+classes were written, checked, emitted, and five were already applied to
+production when the shape was verified against `categoryAllows` directly,
+because it was an assumption that had not been tested. The five were deleted
+and re-applied.
+
+**Why it is easy to write.** The correct form is more verbose and the incorrect
+one reads exactly like the choice group's other keys - `choose`, `categories`,
+`bonus` and `note` all live at that level, so a fifth key there looks like it
+belongs. `F23(b)` introduced the prefix forms and its example puts them on the
+category, but nothing enforces that reading.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | refuse the four keys on a choice group outright in `validateSkillEntries` - an ERROR naming the category form | the shape is unambiguously a mistake: there is no reading under which a group-level prefix means anything, so a warning would be too weak; and the fix is mechanical | one more rule, and any existing class carrying the dead form starts failing - which is the point, but the sweep has to be run before it lands |
+| B | make the group-level form WORK, applied to every category in the list | forgiving; the author's intent is obvious | it is a second way to say one thing, and the two disagree where a prefix should be scoped to one category of several - the exact case `F23(b)`'s comment says it deliberately avoided |
+| C | warn rather than refuse | no sweep needed first | a warning on a silent over-grant is the same class of thing as the key itself: present, and not read |
+
+**Proposal: A**, the PARSER half only - **the sweep is already done and its one
+hit is already fixed.**
+
+Swept 2026-09-14 across all **318** published classes and **803** choice groups,
+in `occ_skills`, related, secondary and every `skills.mos` option. **One hit:**
+the Night Witch's *"Lore: two of choice"* (Mystic Russia printed 116), which
+named its four lores on the group and so offered **all 87 Technical skills**.
+Corrected in `zzzzzzz-fix-night-witch-lore-scope.sql`, applied `--remote`, and
+the sweep re-run against production reads clean.
+
+**The sweep now ships** as a check in `test/regression.mjs` - *"no choice group
+restricts on the GROUP instead of on the category"* - so the data half of this
+finding is pinned whether or not the parser half is ever taken. What A still
+buys is catching it at WRITE time, in `class-check`, instead of at test time
+after a class is already emitted; that is the half that would have saved the
+work this cost.
+
+**Evidence:** the 108/30 and 87/64 figures came from calling the real
+`categoryAllows` against `SELECT name, category FROM skills` on production. The
+"nothing reads it" claim is a grep with a null result over the four files that
+could.
+
+**Confidence: high.** The mechanism is eleven lines of `categoryAllows` and the
+numbers were measured, not reasoned about.
+
+**Ongoing cost of not taking it:** every class written from here on can silently
+over-grant, and the sweep proposed above is the only thing that would ever say
+so.
+
+### F83 - high - a choice group cannot state a book's own skill percentage, and Heroes Unlimited prints its own for every skill
+
+**Found 2026-09-14** while building the sixteen Heroes Unlimited education
+classes - the eleven Educational Levels on printed 27 and the Alien's five on
+printed 56.
+
+**Two halves. The first is measured and large; the second is small and total.**
+
+---
+
+**1. THE CATALOG'S PERCENTAGES ARE NOT THIS BOOK'S, AND 25% OF WHAT A CLASS
+GRANTS CANNOT SAY SO.**
+
+Heroes Unlimited is a different game, and printed 30-36 give every skill its own
+base. Of the **33** skill names that appear both in that chapter and in the
+shared `skills` catalog, **29 DISAGREE** - measured against production
+2026-09-14:
+
+| skill | Heroes Unlimited | catalog |
+|---|---|---|
+| Computer Operation | 60% +5% | 40% +5% |
+| Optic Systems | 50% +5% | 30% +5% |
+| Prowl | 46% +8% | 25% +5% |
+| Navigation | 60% +5% | 40% +5% |
+| Photography | 50% +5% | 35% +5% |
+| Disguise | 40% +5% | 25% +5% |
+| Cook | 50% +6% | 35% +5% |
+| ... | | 22 more |
+
+Four agree. **Locksmith is one of them, and it is the reason this was nearly
+missed**: the first skills spot-checked happened to be among the four.
+
+**A NAMED skill entry can say the book's number.** `base:` and `per_level:`
+state an absolute, which is exactly what they are for, and the fourteen Power
+Category classes already live do this. **A CHOICE GROUP cannot.** Its `bonus:`
+ADDS to whatever base the picked catalog row already holds, so
+`{ choose: 3, categories: ["Domestic"], bonus: 20 }` gives a Cook at Rifts' 35%
+plus 20 where the book says 50% plus 20 - fifteen points light, on a skill the
+player chose, with nothing anywhere saying so.
+
+Counted across the sixteen classes as built:
+
+| | entries | |
+|---|---|---|
+| named skills | **324** | state this book's own base - correct |
+| choice groups | **108** | take the catalog's base - **25% of every grant** |
+
+It is not confined to the education classes. The Hardware category's
+*"select three mechanical skills at +30%"* and the Secret Operative's *"nine
+espionage and military skills at +25%"* are the same shape, already live.
+
+---
+
+**2. A ROLLED SKILL BONUS CANNOT BE EXPRESSED AT ALL.**
+
+Two of the Alien's five education packages print *"a skill bonus of 1D20%
+applies (roll one twenty-sided die for the skill percentile bonus)"*. `bonus` is
+a number. There is no dice form, and `bonuses` - which does take dice - carries
+attributes, pools, combat and saves, not skill percentages.
+
+Both shipped stating **no bonus at all**, with a note telling the player to roll
+1D20 and add it by hand. Averaging it to 10 was rejected: it is wrong for every
+character and invisible, where a missing bonus is at least visibly missing.
+
+---
+
+**Why it matters more than a percentage usually would.** A skill percentage IS
+the skill - it is the number rolled against at the table. And the failure is
+silent in the direction that matters: the sheet shows a confident figure, the
+class parses clean, `class-check` reports `ready`, and only the book says
+otherwise.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **C (recommended)** | a per-system base: `skill_system_bases (skill_id, system, base, per_level)`, consulted when composing for that system | the divergence is a property of (skill, system), which is exactly this table's key; one row per disagreement, ~29 for this book; every class stops restating numbers, named entries included, and a book's figures arrive whether the skill was named or picked | a new table and a new lookup on the composition path - the five places a schema change lives, plus the composer |
+| B | let a choice group carry a base override per category | cheapest; no schema | pushes the book's data into every class naming that category, so 29 numbers become 29 x however many classes, and they drift |
+| A | namespace the rows - `Cook (Heroes Unlimited)` | precedent exists: spell traditions do it | ~60 new rows for this book and as many again for Nightbane; breaks every cross-book name match, and the catalog stops being one catalog |
+| D | leave it; note it in each class | no work | 25% of every Heroes Unlimited grant stays quietly wrong, and the next game imported inherits the same |
+
+**Proposal: C**, and NOT in the Heroes Unlimited batch - it is a schema change
+that serves every game, and this book is only the first to need it loudly.
+Nightbane is surveyed and not imported; it will want the same table.
+
+**What is already true and does not need C:** the 324 named entries. They carry
+the book's numbers today. C would let them stop repeating them, which is tidying
+rather than correction.
+
+**Evidence:** the 33-name comparison was generated by extracting every
+`Base Skill: N% + N%` on printed 30-36 against
+`SELECT name, base, per_level FROM skills` on production, not read off a survey.
+The 324/108 split was counted from the sixteen generated drafts.
+
+**Confidence: high** for the measurement, and for the mechanism - `bonus` adding
+to a row's own base is what `js/parser.js` documents and what the wizard does.
+
+**Ongoing cost of not taking it:** every Heroes Unlimited character's chosen
+skills sit at another game's percentages, and every class written from here on
+has to carry a note explaining why.
+
 ### F82 - high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program
 
 **Found 2026-09-14** while scoping the eleven Educational Levels, which are the
