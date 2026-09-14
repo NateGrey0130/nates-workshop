@@ -985,6 +985,12 @@ function renderSystem() {
       <button type="button" class="pick ${S.system === 'rifts' ? 'sel' : ''}" onclick="pickSystem('rifts')">
         <h3>☢️ Rifts</h3><p class="muted">Mega-damage, magic, and machines on post-apocalyptic Earth.</p>
       </button>
+      <button type="button" class="pick ${S.system === 'heroes-unlimited' ? 'sel' : ''}" onclick="pickSystem('heroes-unlimited')">
+        <h3>⚡ Heroes Unlimited</h3><p class="muted">Super abilities, hardware and magic in the modern world.</p>
+      </button>
+      <button type="button" class="pick ${S.system === 'nightbane' ? 'sel' : ''}" onclick="pickSystem('nightbane')">
+        <h3>☾ Nightbane</h3><p class="muted">The Nightlands, and what wears a human face.</p>
+      </button>
     </div>
   </div>`;
   // The character and campaign lists that sat here moved to the home view
