@@ -214,18 +214,32 @@ not roll at all.
   Palladium chassis.
 - **`skill_programs` EXISTS AND IS THE WRONG SHAPE. This bullet said it was
   *"most of this book's skill engine already in place"* and that is FALSE** -
-  corrected 2026-09-14, `BOOK-INGEST-AUDIT` F82. The block means *choose N
-  CATEGORIES, take everything each one allows, at one fixed percentage*, which
-  is what the Triax NGR Robot Soldier's book really does. Checked against all
-  fifteen programs on printed 27-28: **zero** are a whole category. Every one is
-  a named subset or a "select N from this category", and the educational bonus
-  ADDS to each skill's own base where `base` would FIX it. G2 and G3 below saw
-  three exceptions; there is no rule for them to be exceptions to.
+  corrected 2026-09-14, `BOOK-INGEST-AUDIT` F82. **Corrected a second time the
+  same day**, because the first correction carried F82's own two errors: it said
+  fifteen programs where the book prints **sixteen** (Language was swallowed
+  into Journalist/Investigation), and it said the block cannot express a named
+  subset, which it can - a `categories` entry takes `only`, `except`,
+  `only_prefix` and `except_prefix`, and the Triax NGR Robot Soldier this block
+  was built for uses them on eight of its thirteen entries.
+
+  **Five of the sixteen ARE sayable** as `skill_programs` today - Communications,
+  Computer, Journalist/Investigation, Medical and Military, the pure named
+  lists. The other eleven are not, and all sixteen fail on the arithmetic:
+
+  - ten need a **player pick inside the program** (*"select three from
+    Domestic"*), and a program grants its whole allowed set with no pick UI;
+  - two carry a **per-skill penalty** inside the bundle, which is a hard error;
+  - and `base` **FIXES** a percentage where an Educational Level's +5% to +35%
+    **ADDS** to each skill's own figure. There is no key that adds.
+
+  The third reason applies to every one of the sixteen and is on its own enough.
+  G2 and G3 below saw three exceptions to a rule; the rule is real and the
+  exceptions were counted against the wrong half of it.
 
   **`skills.mos` is the right shape** - a named bundle of skills and choice
-  groups, chosen from a list - and its `choose` is validated and read by
-  nothing, so it grants one bundle whatever it says. That is F82, and it is what
-  the Educational Levels are blocked on.
+  groups, chosen from a list. Its `choose` was validated and read by nothing, so
+  it granted one bundle whatever it said; **F82 was TAKEN 2026-09-14** and it is
+  honoured now, so the Educational Levels are no longer blocked on the code.
 
 ### What does not fit
 
@@ -233,7 +247,7 @@ not roll at all.
 |---|---|---|
 | G1 | `system` is a closed enum in **8** code sites, three of them SQLite `CHECK` constraints that cannot be widened by `ALTER`. **Already filed as `BOOK-INGEST-AUDIT` F73 by the Nightbane survey (PR #991)**, which hit the same wall one book earlier - so Heroes Unlimited is the SECOND game to need it and this is not a new finding | `db/schema.sql:179`, `:467`, `:575`; `js/parser.js:15`; `js/catalog-fields.js` x6 plus `:348`; `functions/api/character-creator/campaigns.js:56`; `app.js:710`/`:951`/`:954`; `codex.js:136`/`:334`; `catalog.js:130`; `js/rules.js:65` |
 | G2 | `skill_programs` grants by CATEGORY; **3** HU programs grant NAMED SKILLS across categories | Computer, Journalist/Investigation and Medical programs, printed 27-28 |
-| G3 | a program can carry a **per-skill penalty inside the bundle** - Robot Electronics at -40%, robot mechanics at -40% - and `parser.js:2444` rejects a per-category bonus deliberately | printed 27-28 |
+| G3 | a program can carry a **per-skill penalty inside the bundle** - Robot Electronics at -40%, robot mechanics at -40% - and `parser.js` rejects a per-category bonus inside a program deliberately (*"a program grants one fixed percentage and nothing reads it"* - named rather than numbered, the line cited here was `supersedes_race`) | printed 27-28 |
 | G4 | **3** programs have no catalog category: Computer, Journalist/Investigation, Language | catalog holds 17 categories |
 | G5 | HU splits W.P. into **Ancient** and **Modern**; the catalog has one `Weapon Proficiencies` (38 rows) | printed 28 |
 | G6 | **69** super abilities are a fifth power kind - permanent traits with Range/Duration/Damage, no cost and no level. Not spells, not psionics | printed 163-192 |
@@ -609,5 +623,6 @@ subject line is not, and it cannot be corrected now.
 `node scripts/source-coverage.mjs --remote` has not been run for these slugs —
 run it from here on, now that production rows cite three of the four books.
 
-**The ten Power Categories are the outstanding work**, plus the Educational
-Levels they compose with; see *The slot mapping, as built* below.
+**ALL TEN Power Categories are imported** (2026-09-14). The Educational Levels
+they compose with are the outstanding work; see *The slot mapping, as built*
+below. `BOOK-INGEST-AUDIT` F82, which blocked them, was taken the same day.

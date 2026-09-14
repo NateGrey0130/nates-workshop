@@ -22,7 +22,7 @@
 // everywhere is what to do once you have them, which is all this does.
 
 import { applyVariant, combineClasses, applyAbilities, bonusesFromSkills,
-         sumBonusGroups } from './parser.js';
+         sumBonusGroups, mosList } from './parser.js';
 import { withRolledPsionics } from './psionics.js';
 
 // Hit points and S.D.C. are CORE rules (p.18), stated once for every
@@ -653,27 +653,45 @@ function withCorePools(cls, occId) {
 // them, and they are the same shape - fixed skills and choice groups - which is
 // why the parser validates both through validateSkillEntries.
 //
-// An unknown id returns the class untouched rather than throwing: a character
-// who picked an MOS that a later edit removed is still a character, and the
-// validator reports the dangling choice as a violation where a human sees it.
+// An unknown id is SKIPPED rather than throwing: a character who picked an MOS
+// that a later edit removed is still a character, and the validator reports the
+// dangling choice where a human sees it. Skipping one of several still grants
+// the rest, which is the same reasoning one step along - a removed option must
+// not cost a character the specialties that are still real.
+//
+// SEVERAL, since BOOK-INGEST-AUDIT.md F82. `skills.mos.choose` has always been
+// validated and was honoured nowhere: this took one id and granted one option.
+// It now takes whatever `characters.mos` or a draft is carrying - a list, a
+// JSON list as text, or one bare id - because `mosList` reads all three and
+// every character written before F82 holds the third.
+//
 // NOT exported, deliberately. `composeClass` is the ONE place that knows the
 // order these steps run in, and a smoke check already fails any file calling
 // `combineClasses(` directly for that reason. Exporting this one invited the
 // same mistake by a different door: nothing outside this file ever imported it,
 // and now nothing can.
-function applyMos(cls, mosId) {
+function applyMos(cls, mos) {
   const options = cls?.skills?.mos?.options;
-  if (!cls || !mosId || !Array.isArray(options)) return cls;
-  const pick = options.find((o) => String(o.id || o.name).toLowerCase() === String(mosId).toLowerCase());
-  if (!pick || !Array.isArray(pick.skills)) return cls;
+  if (!cls || !Array.isArray(options)) return cls;
+  const picks = [];
+  for (const id of mosList(mos)) {
+    const pick = options.find((o) => String(o.id || o.name).toLowerCase() === id.toLowerCase());
+    if (pick && Array.isArray(pick.skills) && !picks.includes(pick)) picks.push(pick);
+  }
+  // No recognised pick leaves the class exactly as it was, which is what an
+  // unchosen MOS and an entirely dangling one both have to look like.
+  if (!picks.length) return cls;
   return {
     ...cls,
     skills: {
       ...cls.skills,
-      occ_skills: [...(cls.skills.occ_skills || []), ...pick.skills],
+      occ_skills: [...(cls.skills.occ_skills || []), ...picks.flatMap((p) => p.skills)],
     },
     // What was chosen, for the sheet and for anything asking after the fact.
-    mos_chosen: { id: pick.id || pick.name, name: pick.name },
+    // ALWAYS an array, including for the one-pick classes that are all this
+    // key had until F82 - a reader that has to test the shape before using it
+    // is how the single-value assumption would grow back.
+    mos_chosen: picks.map((p) => ({ id: p.id || p.name, name: p.name })),
   };
 }
 

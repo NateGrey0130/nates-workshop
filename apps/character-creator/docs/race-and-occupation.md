@@ -464,7 +464,7 @@ Officer taken alongside a racial class silently lost every specialty.
 choice groups — so both go through `validateSkillEntries()`. Two validators for
 one shape is the pair that drifts.
 
-`characters.mos` stores which one, by id, parallel to `class_variant`. The
+`characters.mos` stores which ones, by id, parallel to `class_variant`. The
 granted skills are already in `skills`, but which package produced them is not
 recoverable from that, so the sheet could not show it and a re-derive could not
 reproduce it.
@@ -473,7 +473,43 @@ reproduce it.
 picked is missing a whole skill package and nothing else would mention it; an id
 no option carries means the class was edited under a saved character. Both are
 reported where a human sees them, and neither blocks a save — the same reasoning
-`no_occupation` uses.
+`no_occupation` uses. A class asking for several and holding fewer is the same
+warning with a count on it.
+
+### `choose` may be more than one, and for two years it could not be
+
+`skills.mos.choose` was validated from the day the key landed and **read by
+nothing** until `BOOK-INGEST-AUDIT.md` F82. `applyMos` took one id and found one
+option, `S.mos` was a single value, the picker was a replace-toggle, and
+`characters.mos` held one id. A class stating `choose: 3` parsed clean, reported
+`ready` from `class-check`, stored fine and granted **one** - silent storage in
+the one key whose entire job is the count.
+
+It never bit because all six classes that carry an MOS state `choose: 1`. It
+surfaced when Heroes Unlimited's Educational Levels needed 2, 3 and 4.
+
+**Three shapes reach a reader, and all three are current:**
+
+| what | where from |
+|---|---|
+| `["recon", "comms"]` | the wizard, and `composeClass` |
+| `'["recon","comms"]'` | `characters.mos`, which is TEXT and stores the list as JSON |
+| `"recon"` | every row and draft written before F82 |
+
+`mosList()` in `js/parser.js` reads all three, and it is the only way any of
+them is read. **`mos` is deliberately NOT in `CHARACTER_JSON_COLUMNS`**: that
+list decodes a parse failure to an empty value, and a bare id is not JSON, so
+declaring it there would turn a pre-F82 character's specialty into no specialty
+at all - silently, which is the one failure this was worth designing against.
+
+The create endpoint writes a list as JSON and a lone id as itself, so a request
+that was already right writes the bytes it always did. Nothing needs a backfill:
+production holds three characters and **none of them has an MOS**, measured when
+F82 was taken.
+
+`mos_chosen` on the composed class is **always an array**, including for the
+one-pick classes that are all this key had until F82. A reader that has to test
+the shape before using it is how the single-value assumption would grow back.
 
 ### Two things that cost time here
 

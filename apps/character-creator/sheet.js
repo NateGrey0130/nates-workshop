@@ -2040,7 +2040,13 @@ function render() {
               not a skill-list detail: two Technical Officers with different
               specialties share no MOS skills at all. Shown beside the O.C.C.
               for that reason, and only when the class offers one. */''}
-        ${cls.mos_chosen ? field('M.O.S.', escHtml(cls.mos_chosen.name)) : ''}
+        ${/* An ARRAY since BOOK-INGEST-AUDIT.md F82, of one for every class
+              that offered this before it. Joined rather than given a row each,
+              because the label is the character's, not each specialty's. */''}
+        ${cls.mos_chosen?.length
+          ? field(cls.mos_chosen.length > 1 ? 'M.O.S.s' : 'M.O.S.',
+                  escHtml(cls.mos_chosen.map((m) => m.name).join(', ')))
+          : ''}
         ${/* The totem animal, for the same reason (BOOK-INGEST-AUDIT.md F56). */''}
         ${cls.totem_chosen ? field('Totem', escHtml(cls.totem_chosen.name)) : ''}
         ${field('Level', c.level)}

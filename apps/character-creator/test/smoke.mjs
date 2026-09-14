@@ -545,7 +545,7 @@ import { composeClass } from '../js/compose.js';
 import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuantity,
          poolFormulaBounds, diceBounds, attributeCeiling,
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
-import { validateMos, validateTotem } from '../js/parser.js';
+import { validateMos, validateTotem, mosList } from '../js/parser.js';
 import { skillBase, isBaseFormula } from '../js/skill-base.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
@@ -5501,11 +5501,14 @@ section('MOS');
   check('with none chosen the class grants only its own skills',
     names(composeClass({ rcc: cls, character: {} })).join() === 'Basic Math');
 
+  // A BARE STRING, which is what every character and draft written before
+  // BOOK-INGEST-AUDIT.md F82 holds. It has to keep composing exactly as it did.
   const comms = composeClass({ rcc: cls, character: { mos: 'comms' } });
   check('choosing one ADDS its skills rather than replacing',
     names(comms).join() === 'Basic Math,Radio: Basic', names(comms).join());
   check('and the choice is recorded for the sheet',
-    comms.mos_chosen && comms.mos_chosen.name === 'Communications MOS');
+    Array.isArray(comms.mos_chosen) && comms.mos_chosen.length === 1
+      && comms.mos_chosen[0].name === 'Communications MOS');
 
   const medic = composeClass({ rcc: cls, character: { mos: 'medic' } });
   check('a different specialty grants different skills',
@@ -5545,6 +5548,106 @@ section('MOS');
   validateMos(dupe, dErrs, []);
   check('two options with the same id are rejected',
     dErrs.some((e) => /two options called/.test(e)), dErrs.join('; '));
+
+  // ------------------------------------------------------------------
+  // `skills.mos.choose` is HONOURED (BOOK-INGEST-AUDIT.md F82).
+  //
+  // It was validated here and read by nothing for the whole of the key's life:
+  // a class asking for three granted one and reported nothing wrong. Every
+  // check below would have passed vacuously before F82 except the counting
+  // ones, which is why they are the point of this section.
+  section('MOS: choose more than one');
+
+  check('mosList reads a bare id - every pre-F82 character and draft',
+    mosList('comms').join() === 'comms');
+  check('mosList reads a list',
+    mosList(['comms', 'medic']).join() === 'comms,medic');
+  check('mosList reads a JSON list as TEXT - what characters.mos now holds',
+    mosList('["comms","medic"]').join() === 'comms,medic');
+  check('mosList treats an unparsable bracketed string as ONE id, not as empty',
+    mosList('[not json').join() === '[not json');
+  check('mosList drops blanks and null', mosList([null, '', ' ', 'x']).join() === 'x');
+  check('mosList is empty for null and for an empty string',
+    !mosList(null).length && !mosList('').length && !mosList(undefined).length);
+  // The book's rule is that a program is taken once (Heroes Unlimited printed
+  // 27, restriction 8). Granting one twice would DOUBLE its skills silently.
+  check('mosList de-duplicates case-insensitively',
+    mosList(['Comms', 'comms', 'medic']).join() === 'Comms,medic');
+
+  const both = composeClass({ rcc: cls, character: { mos: ['comms', 'medic'] } });
+  check('two specialties grant BOTH skill lists',
+    names(both).join() === 'Basic Math,Radio: Basic,Paramedic', names(both).join());
+  check('and both are recorded for the sheet',
+    both.mos_chosen.map((m) => m.id).join() === 'comms,medic');
+  check('a JSON list as text composes the same way',
+    names(composeClass({ rcc: cls, character: { mos: '["comms","medic"]' } })).join()
+      === 'Basic Math,Radio: Basic,Paramedic');
+  // One dangling id must not cost the character the specialty that is real.
+  const half = composeClass({ rcc: cls, character: { mos: ['no-such-mos', 'medic'] } });
+  check('an unknown id among several still grants the rest',
+    names(half).join() === 'Basic Math,Paramedic', names(half).join());
+
+  const twoCfg = { choose: 2, options: [
+    { id: 'a', name: 'A', skills: [{ name: 'X', base: 1 }] },
+    { id: 'b', name: 'B', skills: [{ name: 'Y', base: 1 }] }] };
+  const twoErrs = [];
+  validateMos(twoCfg, twoErrs, []);
+  check('choose: 2 against two options is legal', !twoErrs.length, twoErrs.join('; '));
+
+  // The validator's counting half. A short build is a WARNING and never a
+  // violation - the posture docs/race-and-occupation.md states, and the create
+  // endpoint must not start refusing characters it accepted yesterday.
+  const mosClass = { id: 'm', name: 'M', skills: { occ_skills: [], mos: twoCfg } };
+  const vOne = validateCharacter({ character: { mos: ['a'] }, cls: mosClass, skills: [] });
+  check('holding one of two is warned, not refused',
+    !vOne.violations.length
+      && vOne.warnings.some((w) => w.rule === 'mos_unchosen' && w.chosen === 1 && w.want === 2));
+  const vBoth = validateCharacter({ character: { mos: ['a', 'b'] }, cls: mosClass, skills: [] });
+  check('holding both is clean',
+    !vBoth.warnings.some((w) => w.rule === 'mos_unchosen'));
+  const vGone = validateCharacter({ character: { mos: ['a', 'zzz'] }, cls: mosClass, skills: [] });
+  check('a dangling id is named, and separately from the count',
+    vGone.warnings.filter((w) => w.rule === 'mos_unknown').map((w) => w.mos).join() === 'zzz'
+      && vGone.warnings.some((w) => w.rule === 'mos_unchosen'));
+  // A one-pick class is every class that carried this key before F82, and its
+  // message must not have changed.
+  const oneCfg = { choose: 1, options: twoCfg.options };
+  const vNone = validateCharacter({
+    character: {}, cls: { id: 'o', name: 'O', skills: { occ_skills: [], mos: oneCfg } }, skills: [] });
+  check('a one-pick class still says "none is chosen"',
+    vNone.warnings.some((w) => w.rule === 'mos_unchosen' && /none is chosen/.test(w.message)));
+
+  // The wizard and the endpoint, read off their source. The create path took
+  // `typeof b.mos === 'string'` until F82 and would have stored NULL for the
+  // array the wizard now sends - silently, which is the whole hazard.
+  {
+    const fnDir = join(repoRoot, 'functions', 'api', 'character-creator');
+    const charactersSrc = readFileSync(join(fnDir, 'characters.js'), 'utf8');
+    const charJsonSrc = readFileSync(join(fnDir, '_lib', 'character-json.js'), 'utf8');
+    const mosAppSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const mosSheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+
+    check('the create endpoint reads mos through mosList',
+      /const mosPicked = mosList\(b\.mos\)/.test(charactersSrc), 'characters.js');
+    check('and stores a list as JSON text rather than dropping it',
+      /Array\.isArray\(b\.mos\) \? JSON\.stringify\(mosPicked\)/.test(charactersSrc));
+    // Declaring `mos` a JSON column would decode a pre-F82 bare id to `[]` -
+    // LOSING it, because a bare id is not JSON and that list falls back to
+    // empty. The tolerant reader exists so this never has to happen.
+    check('mos is NOT declared a decoded JSON column',
+      !/CHARACTER_JSON_COLUMNS\s*=\s*\[[^\]]*'mos'/.test(charJsonSrc)
+        && !/ARRAY_COLUMNS\s*=\s*new Set\(\[[^\]]*'mos'/.test(charJsonSrc));
+    check('the wizard holds S.mos as a list',
+      /groupPicks: \{\}, mos: \[\], totem: null/.test(mosAppSrc));
+    check('and sends it only when something is chosen',
+      /mos: S\.mos\?\.length \? S\.mos : undefined/.test(mosAppSrc));
+    check('resuming a draft normalises a pre-F82 string',
+      /S\.mos = mosList\(S\.mos\);/.test(mosAppSrc));
+    check('the picker tests membership rather than equality',
+      /const on = \(S\.mos \|\| \[\]\)\.some\(/.test(mosAppSrc));
+    check('the sheet renders every specialty, not the first',
+      /cls\.mos_chosen\.map\(\(m\) => m\.name\)\.join/.test(mosSheetSrc), 'sheet.js');
+  }
 
   const empty = { choose: 1, options: [{ id: 'a', name: 'A', skills: [] }] };
   const eErrs = [];

@@ -10373,6 +10373,117 @@ one at a time.
 **Ongoing cost of A:** one more shape a stored column can hold, until a backfill
 retires the string form. Worth saying out loud rather than discovering later.
 
+**TAKEN 2026-09-14, AS OPTION A.** `skills.mos.choose` is honoured end to end.
+A class may now ask for several specialties and get them.
+
+**WHAT SHIPPED.** `mosList()` in `js/parser.js` - the one reader - plus
+`applyMos` taking a list, `S.mos` as an array, a picker that counts against
+`choose`, a create endpoint that stores one, a validator that counts, and a
+sheet that renders several. No migration: `characters.mos` is `TEXT` and a JSON
+list is text. No Heroes Unlimited data, which was the posture this asked for.
+
+---
+
+**THIS FINDING'S OWN TABLE WAS WRONG TWICE, AND THE PREMISE AUDIT CAUGHT BOTH.**
+Neither error changes the conclusion. Both change the reason, and the reason is
+what the next person reads.
+
+**1. It is SIXTEEN programs, not fifteen.** The table above lists fifteen and
+gives Journalist/Investigation *"5 named across categories"*. The book prints
+four under that heading - Computer Operation, Intelligence, Photography,
+Writing (Journalistic Style) - and then starts a new program, **Language**,
+*"Select Three"*. The fifth name was swallowed and the sixteenth program
+disappeared with it. The survey said sixteen all along and was right; this
+finding re-derived the count from its own reading and was wrong.
+
+<!-- claim-ok: quoting the premise this note corrects -->
+**2. `skill_programs` CAN express a named subset. The sentence "Every one is
+either a named subset or a 'select N from this category', and `skill_programs`
+can say neither" is FALSE in its second half**, and so is the claim that the
+block was *"built for the Triax NGR Robot Soldier, whose book really does grant
+three whole categories at a flat 38%"*.
+
+A `categories` entry takes `only`, `except`, `only_prefix` and `except_prefix`
+(`validateCategories`, `js/parser.js`), and for a PROGRAM specifically
+`programRowsFor` in `app.js` grants each `only` name wherever the catalog files
+it - deliberately dropping the cross-category bound that applies elsewhere. Its
+own comment names the case. The Triax class offers **thirteen** entries, of
+which **eight** carry `only` or `except`; Technical is `except_prefix: ["Lore"]`
+- which is this finding's own *"Technical: select three, excluding language"*
+exclusion, already a solved problem.
+
+The parser's comment says *"take everything each one **allows**"*. This finding
+read "allows" as "the whole category". It means the filter.
+
+**So the corrected count is five of sixteen sayable**, not zero of fifteen:
+Communications, Computer, Journalist/Investigation, Medical and Military are
+pure named lists. The other eleven are not, for three reasons that are real:
+
+| what cannot be said | why |
+|---|---|
+| a player pick INSIDE a program - *"select three from Domestic"* | `programSkills()` grants the whole allowed set; there is no pick UI and nowhere to store the pick. Ten of the sixteen need one |
+| a per-skill percentage inside the bundle | a per-category `bonus` is a HARD ERROR in `js/parser.js` - *"a program grants one fixed percentage and nothing reads it"*. Electrical and Mechanical each carry a skill at -40% |
+| adding to the catalog's own base | `base` FIXES the percentage. An Educational Level adds +5% to +35% to each skill's own figure, and there is no key that adds |
+
+**The third applies to all sixteen and is on its own sufficient**, which is why
+the conclusion stands with the reasoning replaced. Option A was the right call
+for a wrong reason, and a wrong reason in a menu outlives the decision it was
+written for.
+
+---
+
+**THE COST WAS SMALLER THAN STATED, IN THE ONE PLACE THAT MATTERED.** The
+options table's "against" column said this *"touches the stored shape of a
+column six live classes and any live character already write as a bare string"*,
+and the ongoing cost said *"until a backfill retires the string form"*. Measured
+on production 2026-09-14: **three characters, none with a `mos`**. The six
+classes declare options in `imported_classes.markdown`; they do not write
+`characters.mos`. There is nothing to backfill and no stored string to read.
+
+The string form survives in exactly one place - `character_drafts.state`, which
+`draft.js` stores opaquely, so a draft saved before today hands the wizard a
+bare id. That is normalised once, at `resumeDraft`.
+
+**A FIFTH SITE THIS FINDING DID NOT NAME, AND IT WAS THE DANGEROUS ONE.**
+`functions/api/character-creator/characters.js` read
+`typeof b.mos === 'string' ? b.mos.trim() : null`. The wizard now sends an
+array, and that line would have taken it and stored **NULL** - no error, no
+warning, a character saved without the specialties its player chose. The
+finding's bullet list stopped at `app.js`. A smoke check now reads that line.
+
+**`mos` IS DELIBERATELY NOT A DECODED JSON COLUMN**, and that is the one design
+decision here worth arguing. Adding it to `CHARACTER_JSON_COLUMNS` looks like
+the tidy answer and is the destructive one: that list decodes a parse failure to
+an empty value, and a bare id is not JSON, so every pre-F82 character's
+specialty would decode to `[]` - silently. One tolerant reader costs less than a
+backfill and cannot lose a value it does not recognise. A check pins the
+absence, because the tidy answer will look right again to somebody later.
+
+**THE POSTURE DID NOT CHANGE.** This finding said *"the validator enforces it"*
+without saying which validator or that today's rule is warn-not-block. It is
+still warn-not-block: a short count is an unfinished build, not an illegal one,
+and the create endpoint must not start refusing characters it accepted
+yesterday. What changed is that the warning now carries `chosen` and `want`, and
+a dangling id is reported separately from a short count - a character can be
+both, and the two have different fixes.
+
+**At the cap, the oldest pick makes way.** A click that does nothing reads as a
+broken button, and an MOS is cheap to re-pick. The book's own rule that a
+program is taken once (Heroes Unlimited printed 27, restriction 8) is enforced
+by `mosList` de-duplicating case-insensitively - granting one twice would double
+its skills rather than refuse.
+
+**Verified by making the checks fail.** 24 new checks, and the suite was run
+against two injected regressions before it was trusted: `applyMos` cut back to
+one pick failed 4 checks, and the endpoint's pre-F82 string-only line failed 2.
+Smoke 2065 -> 2089, regression 385 and play-flow 69 all green.
+
+**What this does NOT do.** It does not make the Educational Levels expressible
+on its own - they also need the sixteen programs written as MOS options, which
+is data, and three of those programs name a skill category the catalog does not
+have (Computer, Journalist/Investigation, Language - checked against production
+2026-09-14). It removes the constraint that made them impossible.
+
 ### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
 
 **Found 2026-09-12** in the Nightbane R.C.C., printed 87.
