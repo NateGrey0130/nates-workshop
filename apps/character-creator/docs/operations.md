@@ -316,7 +316,7 @@ local-only script is protected as soon as it says so.
 | per-system skill bases | 87 |
 | spells | 935 |
 | psionic powers | 129 |
-| gear | 1797 |
+| gear | 1881 |
 | vehicles | 171 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
