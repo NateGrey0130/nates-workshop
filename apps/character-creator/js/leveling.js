@@ -368,7 +368,15 @@ export function spellTraditionAllowed(spell, traditions) {
 // the app cannot check is one it should be honest about rather than silently
 // drop or silently enforce wrongly.
 export function grantNote(cls, kind, level, slot = 0) {
-  const schedule = kind === 'psionic' ? cls?.psionics?.powers_schedule : cls?.magic?.spells_schedule;
+  const SCHEDULES = {
+    psionic: cls?.psionics?.powers_schedule,
+    super: cls?.super_abilities?.abilities_schedule,
+    spell: cls?.magic?.spells_schedule,
+  };
+  // A MAP RATHER THAN A TERNARY on purpose. The two-way form this replaces read
+  // "psionic, else magic", so a third kind would silently have been handed the
+  // MAGIC schedule and shown a spell's note against a super ability.
+  const schedule = SCHEDULES[kind];
   const entry = entryAt(schedule, level, slot);
   return entry && typeof entry.note === 'string' && entry.note.trim() ? entry.note.trim() : null;
 }
@@ -417,6 +425,16 @@ const STARTING_SPEC = {
   psionic: { block: 'psionics', count: 'powers_starting', groups: 'powers_starting_groups',
              from: 'powers_from', gate: 'categories_allowed', gateKey: 'categories',
              granted: 'powers', schedule: 'powers_schedule', lists: null },
+  // Heroes Unlimited's fifth power kind. The gate is the TIER - minor or major
+  // - because a super ability has no level and no cost to gate on, and the way
+  // every Power Category grants them is a SPLIT: "one major super ability, and
+  // one minor" (printed 56). So the groups form is the normal case here rather
+  // than the exception it is for spells, and `abilities_starting` is the total
+  // those groups sum to, exactly as `spells_starting` is.
+  super: { block: 'super_abilities', count: 'abilities_starting',
+           groups: 'abilities_starting_groups', from: 'abilities_from',
+           gate: 'tiers_allowed', gateKey: 'tiers', granted: 'abilities',
+           schedule: 'abilities_schedule', lists: null },
 };
 
 const nonEmpty = (v) => (Array.isArray(v) && v.length ? v : null);
@@ -435,6 +453,7 @@ export function startingGroups(cls, kind) {
     count,
     spell_levels: kind === 'spell' ? (from ? null : gate) : null,
     categories: kind === 'psionic' ? (from ? null : gate) : null,
+    tiers: kind === 'super' ? (from ? null : gate) : null,
     traditions: blockTraditions,
     from,
     ...(note ? { note } : {}),
@@ -565,6 +584,20 @@ export function spellGrantsFor(cls, fromLevel, toLevel) {
 export function psionicGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.psionics, 'powers_per_level', 'powers_schedule', fromLevel, toLevel);
 }
+
+// THERE IS NO superAbilityGrantsFor, AND THAT IS A DECISION. Super abilities are
+// a CREATION-time pick only: `startingGroups(cls, 'super')` reads the block and
+// nothing banks a per-level grant of one.
+//
+// What stops the level-up side being wired is storage, not appetite. Banking a
+// grant writes a `pending_power_picks` row, and that table's restriction columns
+// are `spell_levels`, `spell_traditions`, `categories` and `from_names` - there
+// is nowhere to put a TIER. A banked super-ability grant would come back with no
+// gate at all and spend against every ability in the catalog, which is the
+// failure shape F65 already cost this file once. Adding the column is a
+// migration, and no class in either book needs one: the Revised core grants
+// every super ability at creation. So `parser.js` REFUSES `abilities_per_level`
+// and `abilities_schedule` rather than storing them where nothing reads them.
 
 // Which psionic CATEGORIES the powers gained AT `level` may come from.
 //

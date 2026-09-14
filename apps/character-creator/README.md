@@ -360,6 +360,28 @@ magic:
   spells_starting_groups:               # the same split, for spells
     - { count: 1, from: ["Air: Stop Wind", ...] }
   spells: ["Globe of Daylight"]   # only if the book names specific spells
+super_abilities:                # Heroes Unlimited's fifth power kind, granted
+                                # by a Power Category in the R.C.C. slot
+  abilities_starting: 2         # how many the player picks, IN TOTAL
+  tiers_allowed: ["minor"]      # minor | major - a CLOSED set of two, and not a
+                                # ladder: a major is a different pool, not a
+                                # better minor. Omit to allow both.
+  abilities: ["Extraordinary Speed"]   # granted outright, not picked
+  abilities_from: ["Growth", ...]      # the exact list to pick FROM; REPLACES
+                                       # the tier gate, as powers_from does
+  # Every Power Category that grants any splits them by tier - "one major super
+  # ability, and one minor" (printed 56) - so this is the normal form here
+  # rather than the exception it is for spells. The counts sum to
+  # abilities_starting, which stays the total.
+  abilities_starting_groups:
+    - { count: 1, tiers: ["major"] }
+    - { count: 1, tiers: ["minor"] }
+  # THERE IS NO abilities_per_level AND NO abilities_schedule, and stating
+  # either is an ERROR rather than a no-op. A banked grant is a
+  # `pending_power_picks` row, whose restriction columns are a spell level, a
+  # tradition, a category and a name list - there is nowhere to put a tier, so
+  # a banked super-ability grant would come back ungated. BOOK-INGEST-AUDIT F81
+  # is a neighbouring finding; the reasoning is in js/leveling.js.
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
   # An ability the player CHOOSES may carry what it grants, and may be
@@ -367,6 +389,13 @@ special_abilities:
   - name: "Super-Tough"
     description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
     bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
+  # An option may carry a whole `super_abilities` block, which is how a book
+  # that rolls for a PACKAGE is modelled - Heroes Unlimited's Experiments has
+  # six outcomes on one table, "one major and three minor" against "four minor".
+  # A choice group is the only shape here that can offer one instead of another.
+  - name: "Four minor super abilities"
+    description: "Table C, 21-40."
+    super_abilities: { abilities_starting: 4, abilities_starting_groups: [{ count: 4, tiers: ["minor"] }] }
   - { choose: 3, from: ["Psi-Sword", "Super-Tough"] }
 bonuses:                      # mechanical grants — see the section below
   pools: { ppe: "4d6" }              # ADDED to a pool's own formula; dice or flat

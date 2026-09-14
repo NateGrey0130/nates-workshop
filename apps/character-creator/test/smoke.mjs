@@ -487,7 +487,7 @@ import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
-         grantNote, startingPicksFor, spellTraditionAllowed,
+         grantNote, startingPicksFor, startingGroups, spellTraditionAllowed,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
@@ -2628,7 +2628,7 @@ section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
   // The Spirit Warrior converts only through its Earth or Plant realm, and
   // chooses three of six, so the flag rides on the ABILITY and is folded onto
   // the composed class when that ability is taken - the way F24's
-  // related_skills_count is, and outside ABILITY_GRANTS, whose three keys are
+  // related_skills_count is, and outside ABILITY_GRANTS, whose keys are all
   // maps (pinned in 'Chosen abilities').
   const LV = await import('../js/leveling.js');
   const realm = (name, extra) => [`  - name: "${name}"`, '    description: "x"', ...extra];
@@ -3705,6 +3705,244 @@ section('Skill programs');
   })());
 }
 
+// ---------- Super abilities ----------
+// Heroes Unlimited's fifth power kind, and the R.C.C. half of D1's slot mapping:
+// a Power Category sits in the race slot and grants super abilities, an
+// Educational Level sits in the occupation slot and grants skill programs.
+// See apps/character-creator/docs/surveys/heroes-unlimited-core.md G6.
+//
+// A super ability is a permanent trait with a range, a duration and a damage,
+// NO cost and NO level - which is why it needed migration 057's own table
+// rather than a spell row, and why every check below that would ask about a
+// cost asks about a TIER instead.
+section('Super abilities');
+{
+  const sup = (yaml) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: heroes-unlimited\nsource_book: B\ncategory: rcc\n`
+    + `super_abilities:\n${yaml}---\n\n## Lore\n\nx\n`);
+  const split = '  abilities_starting: 2\n  abilities_starting_groups:\n'
+    + '    - { count: 1, tiers: ["major"] }\n    - { count: 1, tiers: ["minor"] }\n';
+
+  check('a well-formed block parses', sup(split).ok, JSON.stringify(sup(split).errors));
+  check('and it is not reported as an unmodelled key',
+    unmodelledKeys(sup(split).data).length === 0,
+    unmodelledKeys(sup(split).data).join(', '));
+
+  // The tier vocabulary is CLOSED at two, unlike a skill or psionic category.
+  // A typo there is a rule nothing can satisfy, so the picker comes back empty
+  // rather than merely short.
+  check('an unknown tier is rejected',
+    !sup('  abilities_starting: 1\n  tiers_allowed: ["mega"]\n').ok);
+  check('an empty tiers_allowed is rejected',
+    !sup('  abilities_starting: 1\n  tiers_allowed: []\n').ok);
+  check('a group with no count is rejected',
+    !sup('  abilities_starting_groups:\n    - { tiers: ["minor"] }\n').ok);
+  check('a group naming an unknown tier is rejected',
+    !sup('  abilities_starting_groups:\n    - { count: 1, tiers: ["huge"] }\n').ok);
+  check('abilities must be a list of names',
+    !sup('  abilities_starting: 1\n  abilities: 3\n').ok);
+
+  // REFUSED RATHER THAN STORED. `pending_power_picks` has columns for a spell
+  // level, a tradition, a category and a name list - none for a tier - so a
+  // banked per-level grant would come back ungated and spend against all 364
+  // rows. Nothing in either book asks for one.
+  check('a per-level grant is refused, not silently stored',
+    !sup('  abilities_per_level: 1\n').ok);
+  check('and so is a schedule',
+    !sup('  abilities_schedule:\n    - { level: 4, count: 1 }\n').ok);
+
+  // The silent-storage shape: parses, stores, grows a heading, offers nothing.
+  check('a block that grants nothing warns',
+    sup('  tiers_allowed: ["minor"]\n').warnings.some((w) => /grants no super abilities/.test(w)));
+
+  // THE GATE REACHES THE PICKER. startingGroups is what both the wizard and the
+  // create validator read, so a tier that does not survive it is a gate that
+  // exists in the frontmatter and nowhere else.
+  check('startingGroups splits the pick by tier', (() => {
+    const g = startingGroups(sup(split).data, 'super');
+    return g.length === 2 && g[0].count === 1 && g[0].tiers?.[0] === 'major'
+        && g[1].tiers?.[0] === 'minor';
+  })());
+  check('a named list replaces the tier gate', (() => {
+    const g = startingGroups(sup('  abilities_starting: 1\n'
+      + '  abilities_from: ["Alter Physical Structure: Stone"]\n').data, 'super');
+    return g.length === 1 && g[0].tiers === null && g[0].from?.length === 1;
+  })());
+  check('a class with no block offers no groups',
+    startingGroups({ id: 'x' }, 'super').length === 0);
+
+  // THE CARRY, and the three cases that are actually the explicit line's.
+  //
+  // A RACE's block needs no line at all: combineClasses opens with
+  // `const out = { ...rcc }`, so it survives by the spread. Asserting it was
+  // this section's one vacuous check - removing the line left it passing - and
+  // it is kept below only as the baseline the other three are measured against.
+  const plain = { id: 'o', name: 'O', skills: { occ_skills: [] } };
+  check('a Power Category\'s block survives the merge', (() => {
+    const merged = combineClasses({ ...sup(split).data, id: 'r', name: 'R' }, plain);
+    return merged.super_abilities?.abilities_starting === 2
+        && merged.super_abilities?.abilities_starting_groups?.length === 2;
+  })());
+  // This one is the line. `out` is seeded from the RACE, so an occupation's
+  // block has no way into the composed class without it - the mirror of the
+  // defect skill_programs shipped with, where the race's was the orphan.
+  check('and so does an occupation\'s', (() => {
+    const merged = combineClasses({ id: 'r', name: 'R', skills: { occ_skills: [] } },
+                                  { ...sup(split).data, id: 'o', name: 'O' });
+    return merged.super_abilities?.abilities_starting === 2;
+  })());
+  check('two blocks ADD rather than one winning', (() => {
+    const race = { ...sup('  abilities_starting: 2\n').data, id: 'r', name: 'R' };
+    const occ = { ...sup('  abilities_starting: 1\n').data, id: 'o', name: 'O',
+                  skills: { occ_skills: [] } };
+    return combineClasses(race, occ).super_abilities?.abilities_starting === 3;
+  })());
+  // A SUPERSEDING OCCUPATION DOES NOT ERASE IT, which is not what was expected
+  // and is pinned here because it is what the code does. `out` is seeded from
+  // the race and the branch hands back `occ.X || rcc.X`, so a superseding
+  // occupation stating no block leaves the race's standing - and `magic` and
+  // `psionics` behave identically while the comment above `magic` claims the
+  // opposite. BOOK-INGEST-AUDIT.md F81. The new block matches them on purpose,
+  // so a fix is one change rather than three reconciliations.
+  check('a superseding occupation does NOT erase the race\'s block (F81)', (() => {
+    const race = { ...sup(split).data, id: 'r', name: 'R' };
+    const merged = combineClasses(race, { ...plain, supersedes_race: true });
+    return merged.super_abilities?.abilities_starting === 2;
+  })());
+  check('and magic and psionics do the same thing today', (() => {
+    const race = { id: 'r', name: 'R', skills: { occ_skills: [] },
+                   magic: { type: 'spell', spells_starting: 4 },
+                   psionics: { type: 'major', powers_starting: 2 } };
+    const merged = combineClasses(race, { ...plain, supersedes_race: true });
+    return merged.magic?.spells_starting === 4 && merged.psionics?.powers_starting === 2;
+  })());
+  check('a class with no block gains none from the merge', (() => {
+    const merged = combineClasses({ id: 'r', name: 'R', skills: { occ_skills: [] } }, plain);
+    return merged.super_abilities === undefined;
+  })());
+
+  // THE PACKAGE CHOICE. Experiments' Table C is six whole outcomes - "one major
+  // and three minor" against "four minor" - and an ability choice group whose
+  // options each carry a block is the only shape that can offer one. The
+  // commonest case is a category granting NOTHING itself, so the option's block
+  // has to arrive whole rather than merge into an absent one.
+  const pkg = parseClassMarkdown(['---', 'id: t', 'name: T', 'system: heroes-unlimited',
+    'source_book: B', 'category: rcc', 'special_abilities:',
+    '  - name: "One major and three minor"',
+    '    description: "Table C, 01-20."',
+    '    super_abilities: { abilities_starting: 4, abilities_starting_groups: [{ count: 1, tiers: ["major"] }, { count: 3, tiers: ["minor"] }] }',
+    '  - name: "Four minor"',
+    '    description: "Table C, 21-40."',
+    '    super_abilities: { abilities_starting: 4, abilities_starting_groups: [{ count: 4, tiers: ["minor"] }] }',
+    '  - { choose: 1, from: ["One major and three minor", "Four minor"] }',
+    '---', '', '## Lore', '', 'x', ''].join('\n'));
+  check('a class offering packages parses', pkg.ok, JSON.stringify(pkg.errors));
+  check('the option\'s block arrives whole when the class states none', (() => {
+    const out = applyAbilities(pkg.data, ['Four minor']);
+    const g = startingGroups(out, 'super');
+    return g.length === 1 && g[0].count === 4 && g[0].tiers?.[0] === 'minor';
+  })());
+  check('and a class that grants none offers none until one is chosen',
+    startingGroups(pkg.data, 'super').length === 0);
+  check('an option carrying a block is validated like the class\'s own', (() => {
+    const bad = parseClassMarkdown(['---', 'id: t', 'name: T', 'system: heroes-unlimited',
+      'source_book: B', 'category: rcc', 'special_abilities:',
+      '  - name: "X"', '    description: "x"',
+      '    super_abilities: { abilities_starting: 1, tiers_allowed: ["mega"] }',
+      '---', '', '## Lore', '', 'x', ''].join('\n'));
+    return !bad.ok;
+  })());
+
+  // THE SERVER REFUSES WHAT THE PICKER WOULD NOT OFFER. One rule, both sides -
+  // the same posture the psionic category gate has.
+  {
+    const cls = { ...sup(split).data, category: 'rcc' };
+    const catalog = { spell: new Map(), psionic: new Map(), super: new Map([
+      ['growth', { name: 'Growth', tier: 'major', system: 'heroes-unlimited' }],
+      ['heightened sense of smell', { name: 'Heightened Sense of Smell', tier: 'minor', system: 'heroes-unlimited' }],
+    ]) };
+    const base = { cls, level: 1, attributes: {}, skills: [], powerCatalog: catalog,
+                   system: 'heroes-unlimited' };
+    const legal = validateCharacter({ ...base,
+      powers: [{ type: 'super', name: 'Growth' }, { type: 'super', name: 'Heightened Sense of Smell' }] });
+    check('one major and one minor is accepted', legal.violations.length === 0,
+      JSON.stringify(legal.violations));
+    const twoMajor = validateCharacter({ ...base,
+      powers: [{ type: 'super', name: 'Growth' }, { type: 'super', name: 'Growth' }] });
+    check('the same ability twice is refused',
+      twoMajor.violations.some((v) => v.rule === 'duplicate_power'));
+    const overCount = validateCharacter({ ...base, cls: { ...cls,
+      super_abilities: { abilities_starting: 1, abilities_starting_groups: [{ count: 1, tiers: ['minor'] }] } },
+      powers: [{ type: 'super', name: 'Heightened Sense of Smell' }, { type: 'super', name: 'Growth' }] });
+    check('more picks than the allowance is refused',
+      overCount.violations.some((v) => v.rule === 'power_count' && v.kind === 'super'));
+    // The count message pluralises from a MAP: appending an s gives
+    // "super abilitys", which is why the third kind needed one.
+    check('and the message says "super abilities", not "super abilitys"',
+      overCount.violations.some((v) => /super abilities/.test(v.message) && !/abilitys/.test(v.message)));
+    const wrongTier = validateCharacter({ ...base, cls: { ...cls,
+      super_abilities: { abilities_starting: 1, abilities_starting_groups: [{ count: 1, tiers: ['minor'] }] } },
+      powers: [{ type: 'super', name: 'Growth' }] });
+    check('a major pick against a minor-only gate is refused',
+      wrongTier.violations.some((v) => v.rule === 'power_tier' && v.tier === 'major'));
+    const unknown = validateCharacter({ ...base,
+      powers: [{ type: 'super', name: 'Not An Ability' }] });
+    check('a name the catalog does not hold is refused',
+      unknown.violations.some((v) => v.rule === 'power_unknown' && v.kind === 'super'));
+    // Granted outright, not chosen - exempt from the count the way a class's
+    // own spells and psionic powers are.
+    const granted = validateCharacter({ ...base, cls: { ...cls,
+      super_abilities: { abilities: ['Growth'], abilities_starting: 0 } },
+      powers: [{ type: 'super', name: 'Growth' }] });
+    check('an ability the category grants outright is exempt from the count',
+      granted.violations.length === 0, JSON.stringify(granted.violations));
+  }
+
+  // THE THREE CARRIES a new power block needs, checked as source rather than as
+  // behaviour because each one is a place the block could be dropped silently.
+  check('the wizard reads the block', (() => {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    return /startingGroups\(cls, 'super'\)/.test(src)
+      && /startingSuperHtml/.test(src)
+      && /type: 'super'/.test(src);
+  })());
+  check('the sheet groups super abilities apart from psionics', (() => {
+    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    return /KIND_ORDER/.test(src) && /Super abilities \u2014/.test(src);
+  })());
+  check('the boot payload serves the catalog', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      'catalogs.js'), 'utf8');
+    return /FROM super_abilities/.test(src) && /superAbilities: supers\.results/.test(src);
+  })());
+  // 994KB of description across 364 rows would be forty times the rest of the
+  // payload, on every wizard boot and every sheet load.
+  check('and does NOT send the descriptions with it', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      'catalogs.js'), 'utf8');
+    const stmt = (src.match(/SELECT [^`]*FROM super_abilities/) || [''])[0];
+    return stmt.length > 0 && !/description/.test(stmt);
+  })());
+  check('the sheet gets a description from the right table', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'power-picks.js'), 'utf8');
+    return /'superAbilities', 'super_abilities'/.test(src) && /CATALOG_OF/.test(src);
+  })());
+  check('class-check cross-references the names', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'catalog.js'), 'utf8');
+    return /referencedSuperAbilities/.test(src);
+  })());
+  // A super ability name that matches no row is a TRANSCRIPTION ERROR - both
+  // books' lists are imported whole - so nothing stubs one.
+  check('and never stubs one', (() => {
+    const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      '_lib', 'catalog.js'), 'utf8');
+    const stub = src.slice(src.indexOf('export function buildStubStatements'));
+    return !/superAbilities/.test(stub);
+  })());
+}
+
 // ---------- 1c25a0. `per_level` is READ on a choice group ----------
 // BOOK-INGEST-AUDIT.md F80, which also settles the question F25's outcome note
 // left open: "which side is right turns on what `per_level` means on a CHOICE
@@ -4468,8 +4706,8 @@ section('Chosen ability fragments');
   check('a class with fragments parses cleanly', parsed.errors.length === 0, parsed.errors.join('; '));
   const cls = parsed.data;
 
-  check('the grant keys are the three an ability may carry',
-    ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic');
+  check('the grant keys are the four an ability may carry',
+    ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic,super_abilities');
 
   // occ_options: an ability that names occupations (the Godling's Magic
   // Powers) turns its pick into a required occupation choice.

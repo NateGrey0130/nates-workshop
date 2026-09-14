@@ -72,6 +72,11 @@ export const KNOWN_KEYS = new Set([
   // (BOOK-INGEST-AUDIT F62). Read by js/leveling.js's convertsToMdc, which the
   // wizard's pool roll, the validator and the level-up proposal all call.
   'mdc_from_hp_sdc',
+  // Heroes Unlimited's fifth power kind, granted by a Power Category in the
+  // R.C.C. slot. Read by combineClasses and applyAbilities in js/parser.js,
+  // startingGroups in js/leveling.js, the wizard's Powers step, the create
+  // validator and the sheet.
+  'super_abilities',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

@@ -155,6 +155,31 @@ export function restrictionNames(data) {
   return wanted;
 }
 
+// Every super-ability name a class cites: granted outright, named on the
+// block's own list, named by a starting group, and the same three one level
+// deeper inside an ability option's block - which is where a Power Category
+// keeps most of them, because its packages are ability choices.
+//
+// Collected separately from `magic.spells` and `psionics.powers` rather than
+// folded in with them, because the consequence of a miss is different. A spell
+// the catalog lacks is a row to create; a super ability the catalog lacks is a
+// TRANSCRIPTION ERROR, since the whole of both books' ability lists is already
+// imported. So these are reported and never stubbed - see crossReference.
+function referencedSuperAbilities(data) {
+  const blocks = [data?.super_abilities];
+  for (const d of data?.special_abilities || []) {
+    if (d && typeof d === 'object' && d.super_abilities) blocks.push(d.super_abilities);
+  }
+  const out = [];
+  for (const b of blocks) {
+    if (!b) continue;
+    out.push(...nameList(b.abilities), ...nameList(b.abilities_from));
+    for (const g of b.abilities_starting_groups || []) out.push(...nameList(g?.from));
+    for (const g of b.abilities_schedule || []) out.push(...nameList(g?.from));
+  }
+  return out;
+}
+
 async function unresolvedRestrictions(env, data) {
   const wanted = restrictionNames(data);
   if (!wanted.length) return [];
@@ -174,18 +199,23 @@ async function unresolvedRestrictions(env, data) {
 
 
 export async function crossReference(env, requestUrl, data) {
-  const [items, skills, spells, psionics, restrictions, mosSkills] = await Promise.all([
-    missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
-    missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
-    missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
-    missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
-    unresolvedRestrictions(env, data),
-    missingFrom(env, 'skills', 'skills', 'name', referencedMosSkills(data)),
-  ]);
+  const [items, skills, spells, psionics, restrictions, mosSkills, superAbilities]
+    = await Promise.all([
+      missingFrom(env, 'gear', 'gear', 'slug', referencedGear(data)),
+      missingFrom(env, 'skills', 'skills', 'name', referencedSkills(data)),
+      missingFrom(env, 'spells', 'spells', 'name', nameList(data.magic?.spells)),
+      missingFrom(env, 'psionics', 'psionic_powers', 'name', nameList(data.psionics?.powers)),
+      unresolvedRestrictions(env, data),
+      missingFrom(env, 'skills', 'skills', 'name', referencedMosSkills(data)),
+      missingFrom(env, 'superAbilities', 'super_abilities', 'name',
+                  referencedSuperAbilities(data)),
+    ]);
   // `mosSkills` is deliberately its own key rather than folded into `skills`.
   // Callers stub `missing.skills`; nothing should stub this one. See
-  // referencedMosSkills above for why.
-  return { items, skills, spells, psionics, restrictions, mosSkills };
+  // referencedMosSkills above for why. `superAbilities` is the same posture for
+  // a different reason: both books' ability lists are imported whole, so a name
+  // that matches nothing is a misspelling and a stub would enshrine it.
+  return { items, skills, spells, psionics, restrictions, mosSkills, superAbilities };
 }
 
 // ─── stub inference ───

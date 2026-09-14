@@ -388,13 +388,21 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // allowance, and a pick passes the cap checks if ANY applicable pool admits
   // it. That under-enforces at the seams and can never refuse a legal build.
   if (Array.isArray(powers)) {
-    const label = (kind) => (kind === 'spell' ? 'spell' : 'psionic power');
+    const LABELS = { spell: 'spell', psionic: 'psionic power', super: 'super ability' };
+    // "super abilitys" is what appending an s produces, so the plural is stated
+    // rather than derived - the third kind is the first whose name does not
+    // pluralise by suffix.
+    const PLURALS = { spell: 'spells', psionic: 'psionic powers', super: 'super abilities' };
+    const label = (kind) => LABELS[kind] || kind;
+    const plural = (kind, n) => (n === 1 ? label(kind) : (PLURALS[kind] || `${label(kind)}s`));
     const auto = {
       spell: new Set((cls.magic?.spells || []).map(norm).filter(Boolean)),
       psionic: new Set((cls.psionics?.powers || []).map(norm).filter(Boolean)),
+      super: new Set((cls.super_abilities?.abilities || []).map(norm).filter(Boolean)),
     };
+    const KINDS = ['spell', 'psionic', 'super'];
     const entries = powers
-      .filter((p) => p && (p.type === 'spell' || p.type === 'psionic') && norm(p.name))
+      .filter((p) => p && KINDS.includes(p.type) && norm(p.name))
       .map((p) => ({ kind: p.type, name: String(p.name).trim() }));
 
     const seenPowers = new Set();
@@ -407,7 +415,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       seenPowers.add(k);
     }
 
-    const chosen = { spell: [], psionic: [] };
+    const chosen = { spell: [], psionic: [], super: [] };
     for (const e of entries) if (!auto[e.kind].has(norm(e.name))) chosen[e.kind].push(e);
 
     // Everything the character may draw from: the starting selection, plus the
@@ -426,24 +434,31 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
     const pool = {
       spell: [...startingGroups(cls, 'spell'), ...grants.filter((g) => g.kind === 'spell')],
       psionic: [...startingGroups(cls, 'psionic'), ...grants.filter((g) => g.kind === 'psionic')],
+      // `grants` never carries kind 'super' today: powerGrantsFor assembles
+      // spells and psionics only, and no class in the catalog grants a super
+      // ability on levelling. The filter is written the same way anyway so that
+      // wiring the level-up side later is one change in one place rather than a
+      // silently missing pool here.
+      super: [...startingGroups(cls, 'super'), ...grants.filter((g) => g.kind === 'super')],
     };
 
-    for (const kind of ['spell', 'psionic']) {
+    for (const kind of KINDS) {
       const allowance = pool[kind].reduce((n, g) => n + g.count, 0);
       if (chosen[kind].length > allowance) {
         violations.push({ rule: 'power_count', kind, have: chosen[kind].length, allowed: allowance,
           message: allowance === 0
-            ? `${chosen[kind].length} chosen ${label(kind)}${chosen[kind].length === 1 ? '' : 's'}, `
+            ? `${chosen[kind].length} chosen ${plural(kind, chosen[kind].length)}, `
               + `but this class grants none to choose`
-            : `${chosen[kind].length} chosen ${label(kind)}s, but this class allows ${allowance} at level ${level}` });
+            : `${chosen[kind].length} chosen ${plural(kind, chosen[kind].length)}, `
+              + `but this class allows ${allowance} at level ${level}` });
       }
     }
 
     if (powerCatalog) {
       // NULL and 'both' are unrestricted, the same reading every picker applies.
       const inSystem = (row) => !system || !row.system || row.system === system || row.system === 'both';
-      const listNames = { spell: new Set(), psionic: new Set() };
-      for (const kind of ['spell', 'psionic']) {
+      const listNames = { spell: new Set(), psionic: new Set(), super: new Set() };
+      for (const kind of KINDS) {
         for (const g of pool[kind]) for (const n of g.from || []) listNames[kind].add(norm(n));
       }
       // The cap pools are the ones NOT bounded by a named list — a list slot is
@@ -471,8 +486,14 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       // with the starting psionics their own books grant.
       const catAdmits = (row) => catPools.some((g) => !g.categories || categoryAllows(g.categories, row));
       const allowedCatNames = [...new Set(catPools.flatMap((g) => (g.categories || []).map(categoryLabel)))];
+      // The super-ability gate is the TIER, and a tier is a plain string from a
+      // closed set of two - so there is no categoryAllows equivalent to reach
+      // for and no F69 trap to fall into. A pool stating no tiers takes both.
+      const tierPools = pool.super.filter((g) => !(g.from && g.from.length));
+      const tiersOpen = tierPools.some((g) => !g.tiers);
+      const allowedTiers = new Set(tierPools.flatMap((g) => g.tiers || []));
 
-      for (const kind of ['spell', 'psionic']) {
+      for (const kind of KINDS) {
         // With no pool at all, the count violation above already says it all.
         if (!pool[kind].length) continue;
         for (const e of chosen[kind]) {
@@ -514,6 +535,15 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
               violations.push({ rule: 'power_tradition', kind, name: e.name, tradition: row.tradition,
                 message: `${e.name} is ${row.tradition} magic, and this class's spell picks do not draw `
                   + 'from that tradition' });
+            }
+          } else if (kind === 'super') {
+            if (!tierPools.length) {
+              violations.push({ rule: 'power_not_on_list', kind, name: e.name,
+                message: `${e.name} is not on the list this class's super ability picks draw from` });
+            } else if (!tiersOpen && row.tier && !allowedTiers.has(row.tier)) {
+              violations.push({ rule: 'power_tier', name: e.name, tier: row.tier,
+                message: `${e.name} is a ${row.tier} super ability; this class's picks allow `
+                  + [...allowedTiers].join(', ') });
             }
           } else if (!catPools.length) {
             violations.push({ rule: 'power_not_on_list', kind, name: e.name,
