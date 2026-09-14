@@ -53,7 +53,20 @@ export async function onRequestPost({ request, env }) {
   if (!email) return unauthorized();
   const body = await readJson(request);
   if (!body) return json({ error: 'Invalid JSON body' }, 400);
-  if (!body.name || !['rifts', 'palladium-fantasy'].includes(body.system)) {
+  // THE LIST IS HERE AS WELL AS IN THE SCHEMA, and that is the point of this
+  // line rather than an accident: the CHECK refuses a bad value with a 500, and
+  // this refuses it with a 400 that says what was wrong. Both have to move
+  // together - BOOK-INGEST-AUDIT F73's premise audit found this gate AFTER the
+  // finding had been written, because the grep behind it was scoped to
+  // `apps/character-creator/` and this lives under `functions/`. Widening the
+  // schema alone would have shipped a database that accepts a Heroes Unlimited
+  // campaign and an API that still refuses to create one.
+  //
+  // `VALID_SYSTEMS` in js/parser.js is the same four values for classes. Kept as
+  // a literal rather than imported: this is a Worker route and that is a browser
+  // module, and the import would drag the whole parser into every request.
+  if (!body.name
+      || !['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'].includes(body.system)) {
     return json({ error: 'name and a valid system are required' }, 400);
   }
   const row = await env.DB.prepare(

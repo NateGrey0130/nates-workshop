@@ -176,7 +176,11 @@ CREATE TABLE IF NOT EXISTS ff_custom_filaments (
 CREATE TABLE IF NOT EXISTS campaigns (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  system TEXT NOT NULL CHECK (system IN ('rifts', 'palladium-fantasy')),
+  -- FOUR games, not two. `parser.js` has admitted `nightbane` and
+  -- `heroes-unlimited` since PR #996; migration 058 is the table catching up,
+  -- and it had to rebuild sixteen tables to do it because SQLite cannot alter
+  -- a CHECK in place and `campaigns` is referenced six deep.
+  system TEXT NOT NULL CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
   gm_email TEXT NOT NULL,
   description TEXT,
   gm_notes TEXT,                        -- GM-only; stripped from non-GM API responses
@@ -464,7 +468,7 @@ CREATE TABLE IF NOT EXISTS gear (
                                         -- any number of NULLs, and a slugless gear row
                                         -- would join to nothing.
   name TEXT NOT NULL,
-  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'both')),
+  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both')),   -- migration 059
   category TEXT,                        -- weapon | armor | vehicle | cybernetics | gear
   weight_lbs REAL,
   cost INTEGER,                         -- credits (rifts) or gold (palladium-fantasy).
@@ -572,7 +576,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   slug          TEXT NOT NULL UNIQUE,   -- the portable key, as gear.slug is
   name          TEXT NOT NULL,
-  system        TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'both')),
+  system        TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both')),  -- migration 060
   vehicle_class TEXT,                   -- power-armor | robot | drone | borg |
                                         -- vehicle | ship | other. Free text: a
                                         -- CHECK would reject a book rather than
@@ -713,6 +717,30 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totem
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '057-super-abilities.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'super_abilities');
+
+-- 058-060 widen a CHECK, and a CHECK is the one schema feature
+-- `pragma_table_info` cannot see: it reports columns, types, defaults and
+-- nullability, and says nothing about constraints. So these three guards read
+-- `sqlite_master.sql` instead, which is where the constraint text lives, and
+-- test for BOTH new values - a database that had only one of them would be
+-- half-migrated and these would otherwise call it done.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '058-campaign-system-third-game.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'campaigns'
+                AND instr(sql, '''nightbane''') > 0
+                AND instr(sql, '''heroes-unlimited''') > 0);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '059-gear-system-third-game.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'gear'
+                AND instr(sql, '''nightbane''') > 0
+                AND instr(sql, '''heroes-unlimited''') > 0);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '060-vehicle-system-third-game.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'vehicles'
+                AND instr(sql, '''nightbane''') > 0
+                AND instr(sql, '''heroes-unlimited''') > 0);
 
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);

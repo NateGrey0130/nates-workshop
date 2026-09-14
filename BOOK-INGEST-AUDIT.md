@@ -10184,6 +10184,76 @@ Picking three used to store NULL because three WAS all of them; it now stores a
 restriction. That rule is right and its output moves every time a system is
 added, which is worth knowing before the fifth.
 
+**TAKEN AGAIN, 2026-09-14 - THE BLOCKING HALF, AS OPTION A.** The note above
+records the first half, shipped 2026-09-12 as Option C because that was the
+decision already on record for the Nightbane batch. That posture held for two
+days and then stopped being tenable: Heroes Unlimited finished its import with
+fourteen classes, 364 super abilities, 388 skills and 935 spells in production
+and **no campaign any of it could be played in**, and Nightbane had been sitting
+surveyed behind the same constraint since 2026-09-12.
+
+**What shipped:** migrations **058**, **059** and **060**, widening
+`campaigns.system`, `gear.system` and `vehicles.system` to admit `nightbane`
+AND `heroes-unlimited` - both, not just the one being worked on, because
+`parser.js` has accepted both since #996 and adding one would leave the same gap
+open for the other. Plus the two gates this finding did not name, the four
+vocabulary sites that were still two-valued, and the docs.
+
+**THE COST WAS UNDERSTATED TWICE AND THIS IS THE MEASUREMENT.** The options
+table above called it *"a table rebuild on `campaigns`"*, one table. The premise
+audit corrected that to *"roughly 3 parents and 11 children"*. Measured against
+production 2026-09-14, it is **sixteen tables, nineteen indexes and triggers**:
+`campaigns` has six direct children and they are themselves parents of nine
+more. `gear` adds three tables and `vehicles` four.
+
+**A CHEAPER ROUTE EXISTS, AND IT DESTROYS DATA SILENTLY.**
+`PRAGMA legacy_alter_table = ON` should stop `ALTER TABLE ... RENAME` rewriting
+other tables' REFERENCES clauses, which would make this a one-table operation.
+Probed against local D1 with a parent/child pair before anything was written:
+
+    D1 IGNORED IT. The child was rewritten to point at the renamed-aside table,
+    and the DROP that followed took the child's row with it through
+    ON DELETE CASCADE. One row in, zero out, "success": true.
+
+That is a third result beyond the two `047` recorded - `foreign_keys = OFF`
+ignored, `defer_foreign_keys = ON` honoured and still failing - and it is the
+worst of the three, because those two FAILED and left the database untouched.
+A rollback is no defence against an apply that works. **Whatever else is true of
+D1, a pragma that changes DDL semantics cannot be assumed to do anything.**
+
+**THE FOURTH AND FIFTH GATES.** The premise audit found the fourth -
+`campaigns.js:56`, hard-allowlisting two values on the only route that creates a
+campaign, invisible to this finding's `apps/character-creator/`-scoped grep. A
+**fifth** surfaced only when the suite ran: `renderSystem()` in `app.js` draws
+the buttons, and a smoke check derives its list from the endpoint's allowlist and
+went red the moment the endpoint widened. Neither this finding nor its premise
+audit named it. **The check that caught it was written to be list-free on
+purpose** - it compares two derived sets instead of naming systems - and that is
+the whole reason a fifth gate surfaced at all rather than shipping as a wizard
+offering a game it could not save.
+
+**Six smoke checks had to INVERT.** They pinned the narrowness: while
+`gear.system` and `vehicles.system` carried a two-value CHECK, they asserted the
+dropdowns did NOT offer the new values, because offering one would have written
+a row the database refuses. They now assert that the dropdown and the column
+agree - the same invariant, read off both rather than written down twice, so the
+next game moves one place instead of three.
+
+**Verified, not assumed.** All 78 rows across the sixteen affected tables were
+snapshotted before the first apply. The migrations were tested end to end
+against a POPULATED local foreign-key graph - 26 rows across 20 tables - because
+an empty rebuild proves nothing: every hazard in it needs a child row to destroy.
+Nothing was lost, every index and trigger came back, `ON DELETE CASCADE` still
+fires, and a typo is still refused. The comparison script was then shown to FAIL
+on an injected row deletion, so its passing means something. On production every
+one of the sixteen tables matches its pre-migration count, a `heroes-unlimited`
+campaign row writes, and `'heros-unlimited'` is still refused by the CHECK.
+
+**What this does NOT do.** It does not make either game playable on its own -
+Heroes Unlimited still has no Educational Levels, which are the O.C.C. half of
+its slot mapping, and Nightbane has no data imported at all. It removes the
+constraint that made both impossible.
+
 ### F74 - medium - a class states one attribute block, one `sdc_base` and one `hit_points_base`, so a character with two bodies can only describe the second in prose
 
 **Found 2026-09-12** in the Nightbane R.C.C., printed 87.

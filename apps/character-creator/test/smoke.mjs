@@ -424,15 +424,35 @@ for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
   check('and `tier` allows an unrecognised stored value',
     !!(sa && sa.fields.find((f) => f.name === 'tier') || {}).allowOther);
 }
-for (const cat of ['gear', 'vehicles']) {
-  const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
-  check(`${cat}: the system dropdown does NOT offer nightbane (its column has a CHECK)`,
-    !!f && !f.options.includes('nightbane'));
-  check(`${cat}: and does NOT offer heroes-unlimited, for the same reason`,
-    !!f && !f.options.includes('heroes-unlimited'));
-  check(`${cat}: and db/schema.sql still constrains it to two values`,
-    /system\s+TEXT\s+CHECK \(system IN \('rifts', 'palladium-fantasy', 'both'\)\)/
-      .test(readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8')));
+// THE DROPDOWN AND THE COLUMN HAVE TO AGREE, and this is that invariant read
+// off both rather than a list written down twice.
+//
+// It used to assert the opposite: while `gear.system` and `vehicles.system`
+// carried a two-value CHECK, these checks pinned the dropdowns to NOT offer
+// nightbane or heroes-unlimited, because offering one would have produced a row
+// the database refuses. Migrations 059 and 060 widened both columns, so the pin
+// inverts - same invariant, other direction. Written against the schema text
+// now, so the next game to arrive moves one place rather than three.
+{
+  const schemaSrc = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
+  const checkValues = (table) => {
+    // The CREATE for this table, then its `system` column's CHECK list.
+    const create = new RegExp('CREATE TABLE IF NOT EXISTS ' + table + '[\\s\\S]*?\\n\\);')
+      .exec(schemaSrc);
+    if (!create) return null;
+    const m = /system\s+TEXT\s+CHECK \(system IN \(([^)]*)\)\)/.exec(create[0]);
+    return m ? m[1].split(',').map((s) => s.trim().replace(/^'|'$/g, '')).sort() : null;
+  };
+  for (const cat of ['gear', 'vehicles']) {
+    const f = CATALOGS[cat].fields.find((x) => x.name === 'system');
+    const col = checkValues(CATALOGS[cat].table);
+    check(`${cat}: the schema's system CHECK was found`, !!col, String(col));
+    check(`${cat}: the dropdown offers exactly what the column admits`,
+      !!f && !!col && JSON.stringify([...f.options].sort()) === JSON.stringify(col),
+      `${f && f.options} vs ${col}`);
+    check(`${cat}: and that includes both new games`,
+      !!col && col.includes('nightbane') && col.includes('heroes-unlimited'), String(col));
+  }
 }
 
 // codex.js is a classic script and imports nothing, so it keeps its OWN copy of
@@ -454,12 +474,20 @@ for (const cat of ['gear', 'vehicles']) {
 }
 
 // The wizard picker is deliberately NOT widened: S.system feeds the campaign
-// POST, which allowlists two values against a CHECK this change leaves alone.
-// A third button there would offer a system no campaign can be created in.
+// POST, which allowlists the systems `campaigns.system` admits. A button here
+// for a system that endpoint refuses would offer a game no campaign can be
+// created in - and the reverse, an endpoint widened without the picker, is the
+// half the old one-directional form could not see. Migrations 058-060 moved
+// both from two values to four, and this check is what caught the picker.
 {
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-  const picker = appSrc.slice(appSrc.indexOf('function renderSystem()'),
-    appSrc.indexOf('function renderSystem()') + 900);
+  // BOUNDED BY THE NEXT FUNCTION, not by a character count. This read
+  // `+ 900` and that fitted two buttons; the fourth fell outside the window and
+  // the check reported a system the picker does offer as missing. A fixed
+  // length is the wrong bound for the one function this check expects to grow.
+  const pickerStart = appSrc.indexOf('function renderSystem()');
+  const pickerEnd = appSrc.indexOf('\nfunction ', pickerStart + 1);
+  const picker = appSrc.slice(pickerStart, pickerEnd > 0 ? pickerEnd : undefined);
   // DERIVED from the endpoint rather than naming systems, so it cannot rot as
   // systems are added. It named `nightbane` when written and needed a second
   // clause one day later for `heroes-unlimited` - two systems, two edits to a
