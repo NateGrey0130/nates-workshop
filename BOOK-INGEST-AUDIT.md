@@ -11222,6 +11222,80 @@ table. Raised by the not-measured line above.
 rows from one book. If the answer to the not-measured question is "no other
 book", this proposal recommends declining itself in favour of C.
 
+**Taken, 2026-09-15. Option B, in four PRs. 1 of 4 is PR #1084** - storage; the
+remaining three are the catalog declaration, the ledgers, and the class-facing
+grant block. Following `super_abilities`, which shipped as #1025, #1026 and
+#1033 for the same reason: a table, a declaration and a wiring change fail
+differently, and reviewing them together hides which one broke.
+
+**Nate authorised B on a description this finding's own premise audit then
+falsified, and re-authorised it at the real size on 2026-09-15** after being
+shown the four corrections below. Recorded because the first authorisation was
+given against "two cost columns, shaped like `psionic_powers`", and that is not
+what is being built.
+
+**The posture is unchanged and held: additive, no existing table or picker
+changes.**
+
+**"TWO COST COLUMNS" IS WRONG, AND IT IS THE FINDING'S CENTRAL CLAIM.** Counted
+off the cache on 2026-09-15 - printed 106-115, `nightbane-core`, `page_offset`
++1, so cache `p107`-`p116` - there are 25 Talents, 25 `Cost:` lines and 25
+`Limitations:` lines, one of each per Talent. **Only THREE are a clean
+acquire/activate pair**: Anti-Arcane 15/20, Mirror Sight 5/2, Soul Shield 6/4.
+The other 22 carry a third term, in four shapes - a per-unit rate (*"15 to
+activate, plus 15 P.P.E. for each additional minute"*), an upgrade price
+(*"+5 P.P.E. per additional 10 miles"*), a cost paid in S.D.C. rather than
+P.P.E., and two that state **no activation integer at all** (*"P.P.E. cost
+varies as described above"*).
+
+**AND `spells.ppe_note` AND `psionic_powers.isp_note` ALREADY EXIST FOR EXACTLY
+THIS, which the finding never weighs.** Both are commented *"a variable cost's
+schedule in a few words"* with the integer column holding the minimum
+(`db/schema.sql`, search `ppe_note TEXT`, read 2026-09-15), and production
+carries 143 spells and 21 psionic powers using them, counted `--remote` the same
+day. So the shape is **acquire + activation-minimum + schedule**, which is three
+fields and not two, and two of the three are a convention this repo already has.
+
+**THREE MORE CORRECTIONS**, all measured the same day:
+
+- **Form is not a boolean.** The finding says *"most work only in the Morphus
+  form"*. <!-- claim-ok: quoting the premise this note corrects --> The 25
+  `Limitations:` blocks give **morphus 22, facade 1** (Reshape Facade), **both 1**
+  (Mirror Sight) **and one that states no form at all** - its whole line is a
+  range. A `morphus_only` flag would have to invent three answers out of 25.
+- **Five Talents carry a `Prerequisite:` and the finding does not mention it.**
+  Four are Elite Talents gated on a Morphus characteristic; the fifth is Mirror
+  Search, gated on **another Talent**.
+- **The page range is short at both ends, and one of the two reasons is not a
+  problem.** The last two Elite Talents' `Cost:` lines are on printed **115**,
+  not 114, so the section is 106-115. `docs/surveys/nightbane-core.md` carries
+  the same wrong range without citing this finding's number, so no sweep here
+  would have found it. **Printed 114 is a 1-byte page in the cache**, which a
+  premise audit flagged as a hole - it is NOT one: force-OCR'd and rendered at
+  500 dpi on 2026-09-15, printed 114 is a **full-page illustration** with the
+  folio at the bottom and no text on it. Nothing is missing.
+
+**THE NOT-MEASURED QUESTION IS NOW MEASURED, AND IT ANSWERS AGAINST THE
+FINDING.** F76 says *"Not measured: whether any other book here has a two-cost
+power"* and that if the answer is no other book, *"this proposal recommends
+declining itself in favour of C"*. All 21 cached books were swept on 2026-09-15
+and **no other book has a two-cost power as a systematic shape** - the four
+hits outside Nightbane are single clauses inside one spell's prose. **Nate
+overrode the self-declining clause knowingly**, which is why this is recorded
+here rather than treated as a reason to stop.
+
+**WHAT PR #1084 SHIPPED.** Migration 063 creating `talents`, the `CREATE` and a
+guarded seed line in `db/schema.sql`, a row in the `docs/operations.md`
+migration table, and a data-model row plus the table count in the README
+(forty-two to forty-three). Applied to production before the merge and read
+back independently: the table, the index, the `schema_migrations` row, 0 rows,
+and the column list matching the file.
+
+**Its seed line sits beside its `CREATE` rather than in the seeding block**,
+because a guard that runs before its own table never fires. **Proving that
+turned up two existing rows in exactly that state**, which is filed below as its
+own finding rather than fixed inside a PR about a different table.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
@@ -13639,3 +13713,96 @@ documented scroll limitation - so the captures were taken by driving headless
 Chrome over CDP at 1280px and 768px.
 
 **Smoke 2193, up from 2180; regression 438.**
+
+### F99 - medium - two migrations are never recorded on a database built from `db/schema.sql`, because their guard runs before the table it tests for
+
+**Filed 2026-09-15 while taking F76 (PR #1084)**, by testing the placement of a
+new seed line rather than by a check. **Not taken.**
+
+**The rule it breaks is already written down, in the file that breaks it.**
+`db/schema.sql`, search `055-spell-tradition.sql`, carries this note about its
+own row:
+
+> It first sat beside 054's in the block above, where on a single pass `spells`
+> does not exist yet: the guard found no column and a database built from this
+> file alone never recorded 055 - the opposite lie from an unguarded row, and
+> one that makes the migration fail with "duplicate column name" if anyone then
+> runs it.
+
+Read 2026-09-15. Two rows are in that state today.
+
+**Measured, and the measurement is one command.** A one-pass `node:sqlite`
+build of `db/schema.sql` - `db.exec(readFileSync('db/schema.sql','utf8'))` -
+then `SELECT filename FROM schema_migrations`, run 2026-09-15 against `main` at
+`e4cce29`:
+
+```
+migration files: 62  recorded on a one-pass build: 60
+NOT RECORDED: 057-super-abilities.sql, 061-skill-system-bases.sql
+```
+
+**Both are guards placed before their own `CREATE`**, in `db/schema.sql`:
+
+| migration | its guarded seed line | its `CREATE` |
+|---|---|---|
+| `057-super-abilities.sql` | line **734** | `CREATE TABLE IF NOT EXISTS super_abilities` at line **950** |
+| `061-skill-system-bases.sql` | line **765** | `CREATE TABLE IF NOT EXISTS skill_system_bases` at line **852** |
+
+Line numbers rot, so find them by the searchable strings `SELECT
+'057-super-abilities.sql'` and `SELECT '061-skill-system-bases.sql'`. Both read
+`WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ...)`,
+which is the correct guard in the wrong place.
+
+**Two neighbours are correct and are the reason this is a placement bug rather
+than a convention nobody follows**: `056-totems.sql`'s guard is at line 729 and
+`CREATE TABLE IF NOT EXISTS totems` at 654, and `052-character-vehicles.sql`
+carries its row immediately after its own `CREATE` with a comment saying why.
+So the file does it right twice, wrong twice, and explains the rule once.
+
+**What it costs, which is why this is medium and not high.** Nothing in
+production is affected: production ran the migrations, so its
+`schema_migrations` is complete - `drift-check --remote` reported `62 files, 62
+recorded` on 2026-09-15, which is true and is exactly why this has gone
+unnoticed. The damage is confined to a database built the documented way from
+`schema.sql` alone, where the two rows are missing and the record therefore
+understates what the database has. **A person who then runs those two migrations
+against such a database gets `table already exists` and has to decide whether
+that is safe** - which is the failure the 055 note names.
+
+**And it is invisible to every check here.** Two checks in
+`apps/character-creator/test/checks/environment.mjs` cover this ground, read
+2026-09-15: *every migration has a guarded seed line in schema.sql* tests
+`schemaSql.includes("'" + file + "'")`, which is PRESENCE, and *every seed line
+is guarded by a schema feature* tests for a `WHERE EXISTS` within 400 characters
+of the filename, which is SHAPE. **Neither tests position, and position is the
+whole defect** - both of these rows pass both checks today. `drift-check`
+compares files against `schema_migrations` in a database that WAS migrated, so
+it cannot see it either.
+
+*(An earlier draft of this finding put those two checks in
+`documented-counts.mjs`. They are in `environment.mjs`; corrected before filing,
+by opening the file.)*
+
+**Proposal.** Move the two seed lines to sit immediately after their own
+`CREATE`, the way `052`'s and F76's `063` do, and **add one check** that builds
+`db/schema.sql` in a single pass and asserts every migration file is recorded.
+**Posture: a fix plus a new check, and the check FAILS the suite** - unlike most
+of this menu's proposals, this one does ask for a gate, because the defect is
+silent in every other direction and the same mistake has now been made three
+times in one file. Say so back when taking it, and say no if the gate is not
+wanted: moving the two lines is worth doing on its own.
+
+**Evidence:** the one-pass build above, run 2026-09-15 at `e4cce29`; the four
+line numbers read the same day; `drift-check --remote` the same day. The check
+is **not measured** - nothing like it exists yet, and `regression.mjs` builds a
+database from nothing but does not compare that database's `schema_migrations`
+against the migrations directory.
+
+**Confidence: high on the defect** - it was reproduced, not reasoned to, and the
+fix was verified in the same session by placing `063`'s row correctly and
+watching it get recorded on the same build where 057 and 061 still are not.
+**Medium on the check being wanted**, and what would settle that is Nate saying
+whether a build-from-schema check is worth a CI minute.
+
+**Ongoing cost:** one check that builds a SQLite database in memory, which the
+suite already does elsewhere. The two moved lines cost nothing.
