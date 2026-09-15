@@ -12434,3 +12434,181 @@ are three `count(*)`s, and the consequence is quoted from two files in the tree.
 **Ongoing cost:** none. It removes a standing blind spot rather than adding
 something to keep current - and it makes the *next* catalog's absence louder,
 because a book with rows in it will stop reading as a book with none.
+
+### F95 - medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way
+
+**Filed 2026-09-15.** `BOOK-INGEST-AUDIT` F89 repaired three clobbered gear
+citations and **declined to widen into this population in those words**; this is
+that population, measured rather than estimated, with a recommended decision for
+each half.
+
+**Measured 2026-09-15**, `node scripts/repo-vs-live.mjs --table gear
+--offenders` - which builds a scratch database from every data script in
+filename order and diffs it against production:
+
+```
+gear             repo 2162  live 2162   names match
+   SAME NAME, DIFFERENT VALUE: 15 field(s) across 15 row(s)
+     category 14, cost_note 1
+```
+
+**Fifteen, not sixteen.** The brief that sent me here said *15 rows differing in
+`category`* plus one `cost_note`. It is **14** and one. Production holds exactly
+14 gear rows with a NULL category, counted `--remote` the same day, and they are
+the same 14.
+
+#### The 14 categories: THE REPO IS RIGHT, and the cause is a date rather than a rule
+
+Live `NULL`, repo `"gear"`. The rule is one line -
+`apps/character-creator/db/zzz-gear-tidy-3-categories.sql:41`, read 2026-09-15:
+
+```sql
+UPDATE gear SET category = 'gear' WHERE category IS NULL;
+```
+
+An unconditional catch-all with no slug list, so in a rebuild it sweeps up every
+uncategorised row created before it in filename order. **Production simply ran it
+too early.** From `data_script_runs`, `--remote` 2026-09-15:
+
+| script | ran in production |
+|---|---|
+| `zzz-gear-tidy-3-categories.sql` | **2026-08-25** |
+| `add-naruni-repo-bot-class.sql` | 2026-08-31 |
+| `add-salvage-expert-class.sql` | 2026-09-08 |
+| `zzzzzz-underseas-gear-stubs.sql` | 2026-09-08 |
+| `add-fq-gb-reloader-class.sql` | 2026-09-08 |
+
+Every script that created one of the 14 ran **after** the one that would have
+categorised them, and nothing re-runs it. A rebuild has no dates and applies the
+catch-all last, so it gets them all.
+
+**Thirteen of the fourteen are plainly gear** - Duct Tape, Fishing Pole, Wet
+Suit, S.C.U.B.A. Gear, Snorkel Gear, Luggage, Science Kit, Acetylene Torch,
+Soldering Goggles, Electronic Notebook, Laser Communicator, Scaling Knife,
+Fishing Net (Small). Thirteen carry `source_book = 'Estimate - no published
+price found'`.
+
+**THE FOURTEENTH IS NOT, AND THIS IS WHY THE HALF NEEDS A DECISION RATHER THAN
+AN ADOPTION.** `plasma-hand-cannon` - *Plasma Hand Cannon*, from Rifts Dimension
+Book 2: Phase World p.46-48 - is a **stub**, `description = 'STUB - created by
+class import, needs stats'`, created by `add-naruni-repo-bot-class.sql:17` which
+sets no category. The catch-all would file a hand cannon under `gear`. It is one
+of the 6 gear stubs `source-coverage.mjs --remote` reports in its `BACKLOG`
+block, and the row itself has no `damage` and no `cost` to argue from.
+
+**THE PAGE SETTLES IT, AND NOBODY HAD OPENED IT.** Phase World is cached.
+Printed 48 (cache `p048.txt:66`, offset 0, read 2026-09-15) gives the Naruni
+Repo-Bot its *"Standard Equipment: Plasma Hand Cannon (2D6x10 M.D.)"* - so the
+book states a damage, and it is MEGA-damage. **This is a weapon, and the stored
+row is wrong about more than its category:** `damage` is NULL where the book
+prints `2D6x10 M.D.`, and `is_mega_damage` is **0** where the book says M.D.
+
+That last one is the half worth catching. A mega-damage weapon stored as S.D.C.
+is the exact defect `restore-gear-missing-from-repo.sql` is remembered for - 24
+weapons rebuilt as S.D.C. - and this row carries it in PRODUCTION rather than
+only in a rebuild.
+
+**What the page does NOT give is a price or a stat block.** The name appears
+exactly once across all 209 cached pages, in that equipment line; there is no
+weapons entry for it anywhere in the book. So the row stays a stub as to cost
+and range, and stops being a stub as to what kind of thing it is.
+
+**Recommendation: `gear` for the thirteen; for `plasma-hand-cannon`, `weapon`
+AND the two values the page prints** - `damage = '2D6x10 M.D.'` and
+`is_mega_damage = 1`. Adopting the repo side wholesale is the one move that
+quietly files a mega-damage weapon under `gear` as an S.D.C. row, and it is the
+reason this is not a one-line finding.
+
+#### The `cost_note`: PRODUCTION IS RIGHT, and the repo LOSES a reading every rebuild
+
+| | |
+|---|---|
+| live | `60 credits. Rifts World Book 15: Spirit West p.203 prices it at 80 credits.` |
+| repo | `60 credits` |
+
+**This is filename order, and it is the trap this repo already has three names
+for.** Two scripts touch `arrowhead-smoke`:
+
+- `add-triax-gear-c-ammunition.sql:50` **creates** it with `cost_note = '60
+  credits'`.
+- `add-spirit-west-weapons-of-note.sql:54-57` **appends** the second reading,
+  guarded `AND instr(coalesce(cost_note, ''), 'Spirit West') = 0`.
+
+`add-s` sorts **before** `add-t`. So in a rebuild the append runs against a row
+that **does not exist yet**, matches nothing, and the Triax INSERT then writes
+the short note. In production they were applied chronologically - Triax
+2026-09-07, Spirit West 2026-09-11 - so the append landed. Both dates from
+`data_script_runs`, `--remote` 2026-09-15.
+
+**The guard is correct and it is what hides the failure.** It is written to make
+a second run a no-op, and a `WHERE` that matches no row is indistinguishable
+from one that had nothing to do - the `zzzz-dedupe-skill-restrictions.sql`
+lesson in `docs/operations.md`, one file family over.
+
+**AND THE SCRIPT'S OWN READBACK WOULD CATCH IT, IN AN ENVIRONMENT THAT COULD SEE
+IT.** `add-spirit-west-weapons-of-note.sql:68` asserts *"the smoke arrowhead
+keeps its 60 and records the 80"*, `want 1`. On a rebuild that is 0. Nothing
+reports it, because a rebuild applies the whole tree through one
+`wrangler d1 execute --file`, which returns aggregate counts and swallows every
+result set. **Nothing in the test suite pins this note either** - a grep for
+`prices it at 80` across `apps/character-creator/**/*.mjs` on 2026-09-15 returns
+nothing - so `repo-vs-live` is the only thing that has ever said so.
+
+**Recommendation: production wins, and the REPO is what gets repaired.** The
+value in production is the correct one and was correctly derived; what is broken
+is the repo's ability to reproduce it.
+
+#### Proposal
+
+One data script, in the tier that sorts after everything, doing both halves.
+**Posture: REPAIR, and no new gate** - `repo-vs-live`'s content comparison
+already reports this and deliberately does not move its exit code
+(`scripts/repo-vs-live.mjs:39-43`, read 2026-09-15), and that stays true.
+
+1. `UPDATE gear SET category = 'gear' WHERE category IS NULL` - guarded on NULL,
+   so a rebuild (where the catch-all already ran) no-ops and only production
+   moves.
+2. `plasma-hand-cannon` to `weapon` in **both**, which means the guard for that
+   one slug cannot be `category IS NULL` - a rebuild already holds `gear` there.
+   Guard it on the slug plus `category IS NOT 'weapon'`.
+3. Re-apply the Spirit West append under the same guard the original uses, so a
+   rebuild picks it up and production no-ops. **COALESCE both sides**: `NULL ||
+   'text'` is NULL, and an append to an empty column erases it.
+
+**Do NOT edit either original script.** `add-spirit-west-weapons-of-note.sql`
+has been applied to production and an applied script is not edited here; and
+renaming it to sort after Triax would break `drift-check`, which reports
+`RUN BUT NO FILE` for a `data_script_runs` name with no file on disk - the
+`zzzzzzzzzzz-fix-nature-glimpse-name-on-a-rebuild.sql` precedent exactly.
+
+**Evidence:** `repo-vs-live.mjs --table gear --offenders`, run 2026-09-15; the
+four source files at the lines cited, read the same day; the production dates
+from `data_script_runs` `--remote`, same day.
+
+**Prove it both directions before believing it.** `scripts/rebuild-local.mjs`
+reproduces a rebuild without touching production, and the check that matters is
+that `arrowhead-smoke` comes out WITHOUT the Spirit West sentence before the fix
+and WITH it after. A check that only ever passed proves nothing.
+
+**Confidence: high** on the measurement and on both mechanisms - the dates are
+from the bookkeeping table, the sort order is two filenames, and `repo-vs-live`
+disagrees in exactly the direction each mechanism predicts. **High on the
+`plasma-hand-cannon` recommendation too, and it was medium until the page was
+opened.** This finding first said the stub had only its name and its page to
+argue from, and left the call at medium on that basis. Phase World is cached;
+printed 48 gives the damage and the damage type outright, which settles the
+category and turns up two further wrong values besides. The lesson is the cheap
+one: the book was one grep away the whole time.
+
+**Ongoing cost:** none. One more file in a tier that already exists. It does not
+add a check to remember, and it removes the last 15 of a population that
+`repo-vs-live` has been reporting since 2026-08-28.
+
+**This belongs on THIS menu and not on `REBUILD-AUDIT.md`**, whose subject it
+otherwise fits - `F18` there is *"the 64 gear values a rebuild still loses, and
+the four it would wrongly overwrite"* and `F19` is *"the six classes where the
+REBUILD is ahead of production"*, which are this finding's two halves one book
+batch earlier. It goes here because `F89` and `F90` are the adjacent gear
+residue findings and are here, and because that file's header states its own
+findings as a closed range - adding `F21` to it would falsify the header, which
+is the thing `audit-menu` says a header may not carry.
