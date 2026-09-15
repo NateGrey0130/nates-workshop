@@ -3829,9 +3829,11 @@ section('Super abilities');
   // and is pinned here because it is what the code does. `out` is seeded from
   // the race and the branch hands back `occ.X || rcc.X`, so a superseding
   // occupation stating no block leaves the race's standing - and `magic` and
-  // `psionics` behave identically while the comment above `magic` claims the
-  // opposite. BOOK-INGEST-AUDIT.md F81. The new block matches them on purpose,
-  // so a fix is one change rather than three reconciliations.
+  // `psionics` behave identically here. BOOK-INGEST-AUDIT.md F81, taken
+  // 2026-09-15 as a correction to the COMMENT above `magic`, which claimed the
+  // opposite: the code agreed with both user-facing specs and the comment did
+  // not. These checks pinned the behaviour before that was settled and pin it
+  // still.
   check('a superseding occupation does NOT erase the race\'s block (F81)', (() => {
     const race = { ...sup(split).data, id: 'r', name: 'R' };
     const merged = combineClasses(race, { ...plain, supersedes_race: true });
@@ -3843,6 +3845,28 @@ section('Super abilities');
                    psionics: { type: 'major', powers_starting: 2 } };
     const merged = combineClasses(race, { ...plain, supersedes_race: true });
     return merged.magic?.spells_starting === 4 && merged.psionics?.powers_starting === 2;
+  })());
+
+  // THE ASYMMETRY THE THREE BLOCKS DO HAVE, which F81 did not name and nothing
+  // pinned: when the superseding occ STATES a block, magic and super_abilities
+  // take it OUTRIGHT, while psionics merges - promoting the tier and taking the
+  // max of the counts (F10). All three agree about an occ that states nothing;
+  // two of three differ about one that states something. No class reaches this
+  // case, so it is pinned rather than reconciled - and a future change to any
+  // of the three fails here by name instead of silently.
+  check('but a superseding occ that STATES a block is where they differ (F81)', (() => {
+    const race = { id: 'r', name: 'R', skills: { occ_skills: [] },
+                   magic: { type: 'spell', spells_starting: 4 },
+                   psionics: { type: 'major', powers_starting: 2 } };
+    const merged = combineClasses(race, { ...plain, supersedes_race: true,
+                                          magic: { type: 'spell' },
+                                          psionics: { type: 'minor' } });
+    // magic takes the occ's outright, so the race's count is GONE ...
+    const magicTaken = merged.magic?.spells_starting === undefined;
+    // ... while psionics merges, keeping the race's count and its higher tier.
+    const psiMerged = merged.psionics?.powers_starting === 2
+                   && merged.psionics?.type === 'major';
+    return magicTaken && psiMerged;
   })());
   check('a class with no block gains none from the merge', (() => {
     const merged = combineClasses({ id: 'r', name: 'R', skills: { occ_skills: [] } }, plain);

@@ -191,8 +191,10 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
 
 // An O.C.C. that states a pool, a money roll, an experience ladder or attribute
 // dice loses ALL of them to any race that states its own. combineClasses is one
-// branch - js/parser.js:902-906 - so without supersedes_race the race wins every
-// one of the seven, every time it has a value of its own.
+// branch - js/parser.js:1092-1093, the loop over the seven keys; this said
+// 902-906 until 2026-09-15, which had drifted onto an unrelated function - so
+// without supersedes_race the race wins every one of the seven, every time it
+// has a value of its own.
 //
 // This is BOOK-INGEST-AUDIT F11's cheaper alternative, built 2026-09-12. F11
 // shipped the flag; this is the half that "would have said something on the day
