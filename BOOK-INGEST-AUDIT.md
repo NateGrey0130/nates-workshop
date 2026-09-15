@@ -11793,7 +11793,7 @@ spell case and probably belong out; nothing has decided either way in writing.
 unlike `F85`, this one is read rather than measured, and the first run of a
 widened `repo-vs-live` is the thing that would settle its cost.
 
-**Taken, 2026-09-15 (PR #PRNUM), and its central premise was dead before anybody
+**Taken, 2026-09-15 (PR #1076), and its central premise was dead before anybody
 read it.** See the outcome note at the end of this finding.
 
 **Confidence: high on the omissions, low on what they will report.** What would
@@ -11806,7 +11806,7 @@ fail a merge-time check, which is the cost of the check working. For
 `drift-check`, whatever advisory noise 364 super-ability names produce against
 their cited pages - unknown until run, and the `gear` comment is the precedent
 for backing it out if it cries wolf.
-**Taken, 2026-09-15 (PR #PRNUM).** Both halves shipped, the first at two tables
+**Taken, 2026-09-15 (PR #1076).** Both halves shipped, the first at two tables
 rather than three, and **the thing this finding said would settle its cost was
 run for the first time.**
 
