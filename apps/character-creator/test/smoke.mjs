@@ -6623,6 +6623,46 @@ section('Psionic category narrowing');
   const appSrc = readFileSync(join(repoRoot, 'apps', 'character-creator', 'app.js'), 'utf8');
   check('and neither wizard picker still tests membership by hand',
     !/allowed\.includes\(\w+\.category\)/.test(appSrc));
+
+  // ---- and the two keys that WIN over categories_allowed (F91) ----
+  // BOOK-INGEST-AUDIT.md F91, the same hole F88 closed one key over. A schedule
+  // entry's own `categories` and a starting group's both REPLACE
+  // categories_allowed at pick time, and neither was ever handed to
+  // validateCategories - so the branch that wins was the branch nothing
+  // checked, while the IDENTICAL entry on categories_allowed errored.
+  const sched = (cats) => parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\n'
+    + 'source_book: B\ncategory: occ\npsionics:\n  type: "minor"\n  powers_per_level: 1\n'
+    + `  powers_schedule:\n    - { level: 3, count: 1, categories: ${cats} }\n`
+    + '---\n\n## Lore\n\nx\n');
+  const group = (cats) => parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\n'
+    + 'source_book: B\ncategory: occ\npsionics:\n  type: "minor"\n  powers_starting: 4\n'
+    + `  powers_starting_groups:\n    - { count: 4, categories: ${cats} }\n`
+    + '---\n\n## Lore\n\nx\n');
+
+  check('a schedule entry category setting both only and except is refused',
+    !sched('[{ name: "Physical", only: ["Levitation"], except: ["Ectoplasm"] }]').ok);
+  check('a schedule entry category with no name is refused',
+    !sched('[{ only: ["Levitation"] }]').ok);
+  check('and a prefix list on one written as a bare string',
+    !sched('[{ name: "Physical", only_prefix: "Bio-" }]').ok);
+  check('a starting group category entry is refused the same way',
+    !group('[{ name: "Physical", only: ["Levitation"], except: ["Ectoplasm"] }]').ok);
+
+  // THE OTHER DIRECTION, which is what stops this becoming a rule nobody can
+  // satisfy. Both forms below are live in production - 446 schedule and 41
+  // starting-group category entries across 318 classes, --remote 2026-09-15,
+  // zero of them offenders - so either failing here would make classes vanish
+  // from every picker rather than merely erroring.
+  check('while a narrowed schedule entry still parses clean',
+    sched('[{ name: "Sensitive", except: ["Object Read (Psychometry)"] }]').ok);
+  check('and a bare string category is still accepted on both',
+    sched('["Super"]').ok && group('["Physical", "Sensitive"]').ok);
+
+  // The message names the key. Four callers now push into one errors array and
+  // a bare "categories entries need a name" would not say which one.
+  check('and the message names which key was wrong',
+    (sched('[{ only: ["Levitation"] }]').errors || [])
+      .some((m) => m.includes('psionics.powers_schedule.categories')));
 }
 
 section('Magic composition');
