@@ -12634,7 +12634,7 @@ and the population came from the shipped function rather than from a grep.
 **Ongoing cost: none.** It removes the last hand-rolled psionic caption, which
 is the same argument `F69` made for the pickers.
 
-**Taken, 2026-09-15 (PR #PRNUM), as proposed and display-only.** One expression:
+**Taken, 2026-09-15 (PR #1077), as proposed and display-only.** One expression:
 `cats.join(', ')` becomes `cats.map(categoryLabel).join(', ')`, which is what
 `app.js:3708` has always done. `categoryLabel` was already imported. No gate
 changed, no validation added, and the pool a player may pick from is the same
