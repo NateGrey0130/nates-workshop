@@ -77,6 +77,12 @@ export const KNOWN_KEYS = new Set([
   // startingGroups in js/leveling.js, the wizard's Powers step, the create
   // validator and the sheet.
   'super_abilities',
+  // A Horror Factor the character PROJECTS, as a number or as the phrase the
+  // book prints. Modelled in js/parser.js - validated there, carried by
+  // combineClasses, overridable by a variant - and rendered by sheet.js beside
+  // the pools. NOT the save of the same name, which is a `bonuses.saves` key.
+  // BOOK-INGEST-AUDIT F75.
+  'horror_factor',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

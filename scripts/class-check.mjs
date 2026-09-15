@@ -213,7 +213,7 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
 // the flag IS set.
 {
   const LOST_TO_RACE = ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',
-    'ppe_base', 'starting_money', 'xp_table'];
+    'ppe_base', 'starting_money', 'xp_table', 'horror_factor'];
   if (data?.category === 'occ' && data?.supersedes_race !== true) {
     const stated = LOST_TO_RACE.filter((k) => data?.[k] != null);
     if (stated.length) {
