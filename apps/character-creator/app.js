@@ -2052,7 +2052,7 @@ function psiGrantBlock(grant) {
     const listed = Array.isArray(g.from) && g.from.length;
     return `<p class="small" style="margin-top:12px"><b>Level ${g.level}</b> — ${g.count}
       ${g.count === 1 ? 'power' : 'powers'}
-      <span class="muted">from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.join(', ') : 'any category')}</span></p>
+      <span class="muted">from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.map(categoryLabel).join(', ') : 'any category')}</span></p>
       ${note ? `<p class="attr-note">${esc(note)} — the catalog cannot check this one.</p>` : ''}
       ${psiGroupRows(pool, g.count, 'psi-adv', gk)}`;
   }).join('');
