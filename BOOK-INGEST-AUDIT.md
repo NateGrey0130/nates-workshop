@@ -11410,7 +11410,7 @@ characters: the erase is a composition rule, so a character already saved
 against a superseding occupation would recompose without its race's spells. The
 decision is whether that is a correction or a migration.
 
-**THE RULES QUESTION IS ANSWERED, 2026-09-15 (PR #PRNUM): NO. A superseding
+**THE RULES QUESTION IS ANSWERED, 2026-09-15 (PR #1071): NO. A superseding
 class does NOT strip the race's magic or psionics.** Nate's call, asked rather
 than assumed. **Nothing changes in the code** - the behaviour measured above is
 the intended behaviour, the three smoke checks that pin it stay green, and the
@@ -12486,7 +12486,7 @@ are three `count(*)`s, and the consequence is quoted from two files in the tree.
 something to keep current - and it makes the *next* catalog's absence louder,
 because a book with rows in it will stop reading as a book with none.
 
-**WITHDRAWN 2026-09-15 (PR #PRNUM), THE SAME DAY IT WAS FILED. F94 IS A
+**WITHDRAWN 2026-09-15 (PR #1071), THE SAME DAY IT WAS FILED. F94 IS A
 DUPLICATE OF `F85`, WHICH IS OPEN AND IS THE ONE TO TAKE.** Everything above is
 true and none of it is new: `F85` was filed 2026-09-14, says the same thing
 about the same line of the same file, and reaches the same 466 rows across the
