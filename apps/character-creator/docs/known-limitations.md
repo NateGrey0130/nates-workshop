@@ -400,9 +400,9 @@ exactly that, read off the table with no parsing.
 
 | file | lines | |
 |---|---|---|
-| `app.js` | ~3,565 | the wizard; the largest file in the app |
-| `sheet.js` | ~3,100 | |
-| `js/parser.js` | ~2,225 | **third** largest, and not a page script at all |
+| `app.js` | ~4,510 | the wizard; the largest file in the app |
+| `sheet.js` | ~3,850 | |
+| `js/parser.js` | ~2,975 | **third** largest, and not a page script at all |
 | `catalog.js` | ~800 | |
 | `campaign.js` | ~685 | |
 | `dashboard.js` | ~300 | |

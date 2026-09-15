@@ -2602,6 +2602,39 @@ export function parseClassMarkdown(text) {
   // the whole thing.
   for (const [where, block] of psionicBlocks(data)) {
     validateCategories(`${where}.categories_allowed`, block.categories_allowed, errors);
+    // AND THE TWO KEYS THAT WIN OVER IT. BOOK-INGEST-AUDIT.md F91, the same
+    // hole F88 closed one key over. `categories_allowed` is the FALLBACK:
+    // `psionicCategoriesForGrant` (js/leveling.js:617-627) returns a schedule
+    // entry's own `categories` in preference to it, and `startingGroups`
+    // (js/leveling.js:487-488) does the same for a starting group - so the
+    // branch that WINS was the branch nothing checked.
+    //
+    // Both reach `categoryAllows`, and the schedule key reaches it in three
+    // places rather than one: the wizard's level-up picker (app.js:2047 into
+    // :2092), the sheet's own re-implementation (sheet.js:2558 into :2486,
+    // which cannot import the reader), and the SERVER, which ENFORCES it -
+    // functions/api/character-creator/_lib/power-picks.js:191 rejects a pick
+    // outside the grant's categories. A starting group's key reaches one
+    // picker, app.js:3698. All four read 2026-09-15.
+    //
+    // ERRORS rather than warnings, matching the four existing callers - the
+    // posture F91 asks for in those words. Safe because its pre-run was
+    // re-measured rather than trusted: validateCategories over every entry of
+    // both keys, on every psionics block of all 318 published live classes
+    // (--remote, 2026-09-15), is 446 + 41 category entries and ZERO errors.
+    // The harness was proved on an injected offender before the clean run was
+    // believed. Nothing starts failing the day this ships, which matters here
+    // because class-store.js DROPS a class that fails to parse rather than
+    // 4xx-ing, so an error makes a class vanish from every picker AND from its
+    // own saved characters.
+    for (const [key, list] of [['powers_schedule', block.powers_schedule],
+                               ['powers_starting_groups', block.powers_starting_groups]]) {
+      if (!Array.isArray(list)) continue;
+      for (const entry of list) {
+        if (!entry || typeof entry !== 'object') continue;
+        validateCategories(`${where}.${key}.categories`, entry.categories, errors);
+      }
+    }
     for (const c of block.categories_allowed || []) {
       // A percentage is a SKILL idea. A psionic power has an I.S.P. cost and no
       // percentage to raise, so a bonus here would be stored and never read -
