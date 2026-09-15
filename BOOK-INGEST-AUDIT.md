@@ -11681,3 +11681,101 @@ cost**, and the pre-run is what raises it.
 
 **Ongoing cost: none beyond one more call.** `validateCategories` exists, is
 already maintained for three other callers, and gains no new rules here.
+### F89 - medium - three gear rows carry a citation in production that a clean rebuild does not produce, and the only check that compares the two counts rows
+
+Found on 2026-09-14 while chasing a different discrepancy, by dumping `gear`
+from production and from a database built from `schema.sql` plus every data
+script, and diffing them row by row rather than comparing totals.
+
+The totals agree once `fix-hu-back-pack-slug.sql` is applied. Three rows still
+disagree on what they say:
+
+| slug | production `source_book` | a clean rebuild |
+|---|---|---|
+| `ca-1-heavy-dead-boy-armor` | `Rifts Ultimate Edition p.261-265; Rifts World Book 14: New West p.178` | `Rifts Ultimate Edition p.261-265` |
+| `ca-2-light-dead-boy-armor` | `Rifts Ultimate Edition p.261-265; Rifts World Book 14: New West p.178` | `Rifts Ultimate Edition p.261-265` |
+| `meditation-chip` | `Rifts Dimension Book 2: Phase World p.27-28` | `Rifts Dimension Book 2: Phase World p.29` |
+
+**Production is the better record in all three cases** and nothing in the repo
+reproduces it. The two Dead Boy rows cite a second book that also prints them -
+the New West appearance - and a rebuild drops that half. The Meditation Chip
+disagrees about which page inside one book, and `phase-world-survey` records
+that printed 183 is the authority for that book's page numbering, so the
+production figure is not obviously the wrong one either.
+
+**Nothing reports this.** `regression.mjs` pins the clean-run gear TOTAL against
+the table in `docs/operations.md`, and a citation that differs does not move a
+total. `scripts/source-coverage.mjs` asks whether a row has a citation, not
+whether it has the RIGHT one - the `bom-book-of-magic-citations` note already
+records that the ledger sees an absent citation and never a wrong one.
+`drift-check --remote` prints `NO DRIFT` with all three in place.
+
+**Proposal.** Write the three citations into a data script so a rebuild
+reproduces them, in the `zzzz-cite-*` tier that already exists for exactly this
+(`zzzz-cite-rue-rows.sql` and its siblings sort last so the rows they name
+exist and are named correctly first). **Before writing them, settle the
+Meditation Chip page against the book** - the two Dead Boy rows are additive and
+safe, that one is a disagreement and only one side can be right.
+**Posture: a data script, no new gate.**
+
+**Do not widen this into a general repo-vs-live column sweep here.** That is
+`repo-rebuilds-names-not-values` territory - 428 field values were already known
+to diverge - and it needs its own finding and its own decision about which side
+wins. This one names three rows in one column, found while looking at something
+else.
+
+### F90 - medium - nothing refuses a new catalog row on a RETIRED slug, and the check that would have noticed reports a total rather than a row
+
+A slug deleted by a `merge-*.sql` leaves a `catalog_redirects` row behind. It is
+then **absent from the catalog table and still spoken for**, and every collision
+check in the ingest path reads only the table.
+
+This shipped. `add-hu-gear-g-field-and-containers.sql` gave Heroes Unlimited's
+Back Pack the slug `back-pack`; its generator asked production for existing gear
+slugs, found none, and took it. `merge-backpack-duplicate.sql` had retired that
+spelling into `backpack` in August. The consequences ran in two directions:
+
+* **In production** the insert succeeded, so `back-pack` became a live gear slug
+  that is also a redirect `from_key`. It is inert only by luck -
+  `_lib/catalog.js` consults redirects for keys it does NOT find - and
+  `merge-backpack-duplicate.sql`'s own header calls that state "a trap for
+  whoever reads it next".
+* **On a clean rebuild** filename order runs the other way. `add-` sorts before
+  `merge-`, so the row was inserted and then deleted again, on every build.
+
+`fix-hu-back-pack-slug.sql` corrects the row and the import now emits
+`back-pack-hu`, so this instance is closed. Two things about it are not.
+
+**One live case remains, and it is not Heroes Unlimited's.**
+`dead-boy-body-armor` in the Rifts catalog is also a live gear slug that is a
+redirect `from_key`. It does NOT vanish on a rebuild, so it is a latent trap
+rather than a live divergence, and it was deliberately not touched inside a
+Heroes Unlimited pull request:
+
+```sql
+SELECT g.slug, g.system FROM gear g
+  JOIN catalog_redirects r ON r.catalog = 'gear' AND r.from_key = g.slug;
+```
+
+**The check that should have caught this names no row.** `regression.mjs`
+compares the clean-run gear count to the pinned figure and failed with
+*"README says 2010, a clean run produced 2009"*. That is the check working - it
+is the only thing that noticed at all - but a total cannot say WHICH row, and
+the row is the whole finding. It took a scratch build plus a slug-list diff to
+find one row out of two thousand.
+
+**Proposal, two parts and they are independent.**
+
+1. **Refuse the shape.** A row whose slug is a redirect `from_key` is always
+   wrong, in any catalog, at any time. The cheapest honest place for it is the
+   regression suite, beside the redirect checks already there
+   (*"no gear redirect points at a row that no longer exists"* is its exact
+   mirror). Say it for every catalog the redirect table covers, not just gear.
+2. **Make the count name a row.** When a clean-run count misses, print the
+   symmetric difference of the two key lists rather than only the totals. The
+   diff is a second query against a database the suite has already built, and it
+   turns a number nobody can act on into a row somebody can.
+
+**Posture: a test change, no new gate** - `regression.yml` stays reporting-only.
+**Part 1 is the one to take first**; part 2 is a diagnostic improvement to a
+check that already fires.

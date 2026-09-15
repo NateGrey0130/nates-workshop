@@ -316,7 +316,7 @@ local-only script is protected as soon as it says so.
 | per-system skill bases | 87 |
 | spells | 935 |
 | psionic powers | 129 |
-| gear | 1881 |
+| gear | 2010 |
 | vehicles | 171 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
@@ -616,6 +616,26 @@ renames is not idempotent, it is inert** — and it fails silently, because a
 `replace()` that matches nothing is indistinguishable from one that had nothing
 to do. When a `fix-` script guards on a skill or gear name, check what sorts
 between it and the rename.
+
+**A RETIRED SLUG IS ABSENT FROM THE TABLE AND STILL TAKEN,** found the same way
+on 2026-09-14 and the second entry in this section found by looking. An import
+of Heroes Unlimited's containers list gave its Back Pack the slug `back-pack`.
+The generator that wrote it picked slugs by reading **the slugs production
+holds**, and production held none — `merge-backpack-duplicate.sql` had retired
+that spelling into `backpack` long before, deleting the row and leaving a
+`catalog_redirects` row behind. So the slug looked free, and was not. Two
+results, and the second is the one that hid: in production the new row went in
+and `back-pack` became **a live gear slug that is simultaneously a redirect
+`from_key`** — the trap `merge-backpack-duplicate.sql`'s own header warns about
+— while on a clean rebuild `add-` sorts before `merge-`, so the row was created
+and then deleted again, every time. **A rebuilt database held 2009 gear rows
+against production's 2010**, and the only thing that said so was the clean-run
+count in the table above, which reports a total and never names a row. The row
+was found by dumping both slug lists and diffing them.
+`fix-hu-back-pack-slug.sql` moves it to `back-pack-hu`; the import now emits
+that directly, so the fix is a no-op on a fresh build. **A collision check that
+reads only the catalog table cannot see a retired key — read
+`catalog_redirects` too.**
 
 **One more thing about `--file` over `--remote`,** learned applying that script:
 its `changes` and `rows_written` are **import-endpoint aggregates, not row
