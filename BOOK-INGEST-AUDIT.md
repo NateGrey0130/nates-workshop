@@ -11681,6 +11681,51 @@ cost**, and the pre-run is what raises it.
 
 **Ongoing cost: none beyond one more call.** `validateCategories` exists, is
 already maintained for three other callers, and gains no new rules here.
+
+**Taken, 2026-09-15 (PR #1061), as proposed, at ERRORS.** `validateCategories`
+is now called on a choice group's `categories` from `validateSkillEntries`, and
+six smoke checks pin it.
+
+**THE PRE-RUN THIS FINDING ASKED FOR, AND SAID HAD NOT BEEN DONE, CAME BACK
+EMPTY.** `validateCategories` run over every category entry on every
+choice-group-shaped object AT ANY DEPTH, across all 318 published live classes
+(`--remote`, 2026-09-15): **0 errors, 0 groups, 0 classes.** So the WARN-first
+branch this finding wrote for itself never fired, and the ERROR posture matching
+the three existing callers is the one that applies. Re-confirmed after the
+change: 318 classes, 0 failing to parse.
+
+**THE 932 IS A COUNT OF KEYS, NOT OF CATEGORY ENTRIES, and it is the one number
+here that misleads.** It came from F84's sweep, where it is labelled as the four
+narrowing keys ON a category entry. Measured against production 2026-09-15:
+
+| path | groups | category entries | narrowing keys | validated before this |
+|---|---|---|---|---|
+| `skills.occ_related_skills` | 229 | 2873 | 873 | **yes** |
+| `skills.skill_programs` | 1 | 13 | 8 | **yes** |
+| `skills.mos.options[].skills[]` | 137 | 93 | 33 | no |
+| `skills.occ_skills[]` | 666 | 358 | 3 | no |
+| everything else | 692 | 528 | 15 | no |
+
+**881 of the 932 already sat on the two validated callers.** The proposal's real
+new reach is **451 category entries and 36 narrowing keys** - the two arms
+`validateSkillEntries` is called from. The hole is real and about 4% the size the
+headline implies, and *"a choice group is where the overwhelming majority of
+category entries live"* is backwards: `occ_related_skills`, an already-validated
+site, holds 2,873 of the 3,865.
+
+**The `class-store.js` risk is true and understated.** The parse failure is also
+reported in the response body, invisibly - `classes.js` returns
+`{ classes, failures }` at 200 and the only consumer of `failures` is a
+`console.error`. And the damage is wider than the picker: `class-loader.js`
+returns `null` on a parse failure, so an erroring class is lost to the XP,
+level-confirm, picks and variant endpoints for characters that already exist.
+Moot at zero offenders, and the reason the pre-run was not optional.
+
+**A FOURTH UNVALIDATED SITE, filed as F91 rather than folded in here.** The
+psionics power schedule's `categories` are read by `psionicCategoriesForGrant`
+straight into `categoryAllows` and are handed to `validateCategories` by nothing.
+This finding's "the call sites, all of them" is true of `validateCategories`'
+CALLERS and reads as though `validateSkillEntries` were the whole remainder.
 ### F89 - medium - three gear rows carry a citation in production that a clean rebuild does not produce, and the only check that compares the two counts rows
 
 Found on 2026-09-14 while chasing a different discrepancy, by dumping `gear`
@@ -11882,3 +11927,60 @@ redirect whose target has itself been deleted is dead, and a dead redirect must
 not block anyone from reusing the key."* So the check INNER JOINs the target
 rather than testing the `from_key` alone. All 66 redirect rows in production have
 a live target today, which is why this changes nothing now and matters later.
+### F91 - medium - a psionic power schedule's `categories` is read into `categoryAllows` and handed to `validateCategories` by nothing
+
+**Filed 2026-09-15 while taking F88**, one key over from it, and found by the
+premise pass on F88 rather than by any check. Same shape as F88, different
+block - which is the reason it is a finding rather than a footnote: F88's own
+"the call sites, all of them" is true of `validateCategories`' CALLERS and reads
+as though `validateSkillEntries` were the whole remainder.
+
+**It is read.** `apps/character-creator/js/leveling.js:617-627`, read 2026-09-15:
+
+```js
+export function psionicCategoriesForGrant(cls, level, slot = 0) {
+  const psi = cls?.psionics;
+  if (!psi) return null;
+  const entry = entryAt(psi.powers_schedule, level, slot);
+  if (entry && Array.isArray(entry.categories) && entry.categories.length) return entry.categories;
+  return Array.isArray(psi.categories_allowed) && psi.categories_allowed.length
+    ? psi.categories_allowed : null;
+}
+```
+
+and its result reaches `categoryAllows` at `apps/character-creator/app.js:2092`
+and `:3758`. So a schedule entry's `categories` gates which psionic powers a
+character may pick at a level.
+
+**It is not validated.** `validateCategories` is called on the psionics block's
+`categories_allowed` (`js/parser.js:2556`) - the FALLBACK on the last line above
+- and never on a schedule entry's own `categories`, which is the branch that
+wins when both exist. After PR #1061 there are four callers and this is still
+not one of them.
+
+**Size, measured against production 2026-09-15** (`--remote`, 318 published live
+classes):
+
+| path | entries | narrowing keys |
+|---|---|---|
+| `psionics.powers_schedule[].categories` | 428 | 14 |
+| `psionics.powers_starting_groups[].categories` | 37 | 1 |
+
+**Nothing is wrong today.** The same sweep that cleared F88 covered every
+choice-group-shaped object at any depth, these included: **0 errors, 0 classes.**
+This is a hole, not a live defect, and its severity is medium for that reason.
+
+**Proposal.** Add the two calls, at ERRORS, matching PR #1061 and the three
+callers that predate it. **Posture: identical to F88's** - and the pre-run is
+already done and recorded above, so a taker does not need to repeat it unless
+the catalog has moved. `categoryAllows` gates PSIONICS the same way it gates
+skills (`category-entries-may-be-objects` records that it does), so the argument
+for validating the entry is the argument F88 already made.
+
+**Do not widen this into "validate every `categories` everywhere".** That is a
+schema proposal rather than a check, and the reason F88 scoped itself the way it
+did. Two named call sites, both measured.
+
+**Confidence: high** that the call is absent - it is the same grep that backed
+F88, re-read after #1061 landed, plus the reader quoted above. **High on the
+cost:** zero live offenders, measured, and one more call each.

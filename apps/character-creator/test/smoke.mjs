@@ -4091,6 +4091,37 @@ section('Group-level skill restrictions');
     return ['only', 'except', 'only_prefix', 'except_prefix']
       .every((k) => new RegExp(`entry\\.${k}\\b`).test(body));
   })());
+
+  // ── and the entry the refusal insists on is itself validated (F88) ──
+  // F84 moved authors off a form that was silently DEAD and onto one that was
+  // silently UNVALIDATED. These four probes each produced ok=true and zero
+  // errors before the fourth validateCategories caller was added, while the
+  // IDENTICAL entry on occ_related_skills errored - the rule existed, fired,
+  // and was never reached from a choice group.
+  const catErrors = (e) => (entry(e).errors || [])
+    .filter((m) => m.includes('choice-group') && !m.includes('on the GROUP'));
+
+  check('a group category entry setting both only and except is refused',
+    catErrors('{ choose: 1, categories: [{ name: "Technical", only: ["A"], except: ["B"] }] }')
+      .length === 1);
+  check('a prefix list written as a bare string is refused',
+    catErrors('{ choose: 1, categories: [{ name: "Technical", only_prefix: "Language:" }] }')
+      .length === 1);
+  check('a group category entry with no name is refused',
+    catErrors('{ choose: 1, categories: [{ only: ["A"] }] }').length === 1);
+  check('and a bonus that is a string rather than a number',
+    catErrors('{ choose: 1, categories: [{ name: "Technical", bonus: "10%" }] }').length === 1);
+
+  // THE OTHER DIRECTION, which is what stops this becoming a rule nobody can
+  // satisfy: the correct form the F84 message tells authors to write must pass.
+  check('while the well-formed entry F84 asks for still parses clean',
+    entry('{ choose: 1, categories: [{ name: "Technical", except_prefix: ["Language:"] }] }')
+      .ok === true);
+
+  // A bare string category is the commonest form in the catalog and carries no
+  // keys to check; it must not be dragged in by the new caller.
+  check('and a bare string category is still accepted',
+    catErrors('{ choose: 3, categories: ["Technical", "Physical"] }').length === 0);
 }
 
 // ---------- 1c25a1. An attribute-derived skill base ----------
