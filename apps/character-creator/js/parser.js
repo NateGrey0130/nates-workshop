@@ -65,6 +65,13 @@ export const VARIANT_OVERRIDES = [
   'attribute_dice', 'attribute_requirements', 'attribute_maximums',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
   'starting_money',
+  // A Horror Factor a character PROJECTS. BOOK-INGEST-AUDIT F75, and it is on
+  // this list because the finding's own motivating case is a variant case: a
+  // Nightbane's human form projects none and its Morphus projects 6 to 18.
+  // `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` are the
+  // same shape - "none normally, N if revealed". A plain scalar, so it replaces
+  // rather than merging.
+  'horror_factor',
   'bonuses',
   // NOT the skills block. `skill_overrides` below restates numbers on skills
   // the class already grants, which is a different and much smaller power.
@@ -1089,8 +1096,19 @@ export function combineClasses(rcc, occ) {
   // `out` starts as the race spread, so it is carried (BOOK-INGEST-AUDIT F62).
   // An M.D.C. race still keeps its own pool: convertsToMdc yields to mdc_base.
   if (occ.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
+  // `horror_factor` rides this loop rather than the bare spread above, and both
+  // halves of the loop matter for it (F75). Without it: an OCCUPATION that
+  // projects one is silently dropped when the race states none, and a
+  // SUPERSEDING class keeps the race's - which is wrong and had a live
+  // instance, since `cosmo-knight` is the only carrier of `supersedes_race` and
+  // its own prose already states a projected Horror Factor.
+  //
+  // WHEN BOTH STATE ONE AND NEITHER SUPERSEDES, THE RACE'S WINS, and that is
+  // deliberate rather than inherited: a Horror Factor is a property of the
+  // body, so the thing a character IS outranks the job it took. Stated here
+  // because the loop's behaviour is the policy and nothing else says so.
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
-                     'starting_money', 'xp_table']) {
+                     'starting_money', 'xp_table', 'horror_factor']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
     else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
@@ -2609,6 +2627,35 @@ export function parseClassMarkdown(text) {
       errors.push('mdc_from_hp_sdc is a flag and may only be true; omit it otherwise');
     } else if (data.mdc_base != null) {
       warnings.push('mdc_from_hp_sdc is set beside an mdc_base, which wins; the flag does nothing');
+    }
+  }
+  // A Horror Factor the character PROJECTS - BOOK-INGEST-AUDIT F75. NOT the
+  // save of the same name, which lives at `bonuses.saves.horror_factor` and is
+  // a bonus to resist someone ELSE's. Two numbers, two meanings, and nothing
+  // here connects them.
+  //
+  // A STRING OR A NUMBER, exactly as the pool bases are, because the live data
+  // is overwhelmingly not a scalar: `10+1D4`, `none if pretending to be human`,
+  // `8 on foot and 15 on a flying mount`, `10, but only when in sand form`,
+  // `NONE, stated outright`. A number-only field would have served almost none
+  // of the 27 classes that print one - including the Nightbane this was filed
+  // for, whose value is "base 6 in the Morphus, none in the human form".
+  //
+  // DISPLAY ONLY. Nothing rolls it and nothing rolls against it, which is the
+  // posture F75 asks for; `9+1D4` is printed as written rather than resolved,
+  // the way a pool base's formula is shown before it is rolled.
+  //
+  // A WARNING AND NEVER AN ERROR. `class-store.js` DROPS a class that fails to
+  // parse out of GET /classes rather than 4xx-ing, so an error on a new
+  // display-only field would make a class vanish from every picker AND from its
+  // own saved characters - see the note on the psionic category calls below.
+  if (data.horror_factor !== undefined) {
+    const hf = data.horror_factor;
+    const ok = (typeof hf === 'number' && Number.isFinite(hf))
+      || (typeof hf === 'string' && hf.trim() !== '');
+    if (!ok) {
+      warnings.push('horror_factor should be a number or the phrase the book prints, '
+        + 'and this one is neither; it will be shown as given');
     }
   }
   if (data.occ_restrictions !== undefined && data.category !== 'rcc') {

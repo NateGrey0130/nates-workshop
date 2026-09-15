@@ -188,7 +188,14 @@ variants:
 A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice`,
 `attribute_requirements`, `attribute_maximums`, the four pool bases (`hit_points_base`, `sdc_base`,
 `mdc_base`, `ppe_base`), `starting_money`, `bonuses`, `skill_overrides`,
-`skills_additional` and `related_skills_count`.
+`skills_additional`, `related_skills_count` and `horror_factor`.
+
+`horror_factor` is on that list because the shape it exists for is a variant
+shape: a Nightbane projects none in its human form and 6 to 18 in its Morphus,
+and `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` both print
+"none normally, N if revealed". It is the one a character IMPOSES - not the save
+of the same name, which is a `bonuses.saves` key and means the opposite
+(`BOOK-INGEST-AUDIT.md` F75).
 Abilities, lore and equipment stay shared on purpose: a variant that
 could override anything is not a variant, it is a second class wearing the
 first one's name, and the inheritance would obscure rather than explain.

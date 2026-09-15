@@ -11099,6 +11099,85 @@ whether this is one book's problem or an existing one nobody named.
 **Ongoing cost:** one column, one sheet row, one more field a class import can
 forget.
 
+**Taken, 2026-09-15 (PR #1081), on Nate's word, and the premise pass overturned
+the remedy twice.**
+
+**THERE IS NO COLUMN AND THERE IS NO MIGRATION.** This finding calls its remedy
+*"one nullable column"* and its ongoing cost *"one column"*. A class is a
+markdown blob - `imported_classes` has `class_id`, `name`, `system`, `markdown`,
+`status` and the timestamps, read from `db/schema.sql` 2026-09-15 - so a
+class-level field is a **frontmatter key**. No `ALTER`, no `schema.sql` `CREATE`,
+no seed line, none of the five places a column lands. The work is JavaScript.
+
+**AND IT IS NOT A NUMBER.** This is the correction that would have shipped a
+field its own motivating class could not use. The live data is overwhelmingly
+not a scalar - read out of `apps/character-creator/db/*.sql` on 2026-09-15:
+
+| shape | printed as |
+|---|---|
+| dice | `Horror Factor 10+1D4`, `HORROR FACTOR OF 10 +1 per every two levels` |
+| conditional | `none if pretending to be human`; `10, but only when in sand form`; `11 in crystal form` |
+| two-valued | `HORROR FACTOR IS 8 ON FOOT AND 15 ON A FLYING MOUNT` |
+| a stated absence | `HORROR FACTOR: NONE, stated outright rather than omitted` |
+| plain integer | `Horror Factor 10`, `11`, `9` |
+
+**The Nightbane this was filed for is two of those at once** - this finding's own
+sentence says *"base 6 in the Morphus, none in the human form … raised to a
+maximum of 18"*. So `horror_factor` takes **a number or the phrase the book
+prints**, exactly as the pool bases do, and is printed as given. Nothing rolls
+it; `10+1D4` is shown the way a pool base's formula is shown before it is rolled,
+which is what *"display only"* means here.
+
+**A WARNING, NEVER AN ERROR.** `class-store.js` drops a class that fails to parse
+rather than 4xx-ing, so an error on a new display-only field would make a class
+vanish from every picker and from its own saved characters.
+
+**THREE COMPOSITION CASES THE FINDING NEVER ASKS ABOUT, one of which was a live
+wrong answer.** `combineClasses` starts `{ ...rcc }`, so without work:
+
+- a race that projects one and an occupation that does not - carried, correct **by accident**;
+- an **occupation** that projects one and a race that does not - **silently dropped**;
+- a **superseding** class - the race's wins and the occupation's is dropped, which
+  is **wrong**, and `cosmo-knight` is the only carrier of `supersedes_race`.
+  `apps/character-creator/db/add-cosmo-knight-class.sql:86`, read 2026-09-15,
+  already states one: *"None while passing as a normal humanoid; 12 when
+  revealed in full armor; 15 for a knight of evil alignment"*.
+
+`horror_factor` joins the explicit key loop, which expresses the right policy for
+all three. **When both state one and neither supersedes, the RACE wins** - a
+Horror Factor is a property of the body, so what a character IS outranks the job
+it took. That default is now deliberate and written down rather than inherited
+from a spread.
+
+**And a variant may set it**, which the finding does not ask for and which its own
+case requires: a Nightbane's human form projects none and its Morphus 6 to 18,
+and `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` print the
+same *"none normally, N if revealed"* shape.
+
+**Fifteen smoke checks, six of which fail against the unmodified code**,
+including all three composition cases. Smoke 2165 -> 2180.
+
+**WHAT WAS NOT DONE, and each is a deliberate scope line:**
+
+- **The 64 classes are not backfilled.** Production holds 64 of 318 published
+  classes stating a projected Horror Factor in prose, counted `--remote`
+  2026-09-15 - one in five, across many books, so this was never one book's
+  problem as this finding's *not measured* line supposed. Backfilling is an
+  extraction job over free text in a dozen shapes and was not the option chosen.
+- **Awe Factor is not covered.** Six class files print an Awe Factor rather than a
+  Horror Factor and say so - *"An Awe Factor rather than a Horror Factor, which
+  is what the book prints … the sheet has no field for either."* A key named
+  `horror_factor` leaves them exactly where they were. Named here because this
+  finding never mentions Awe and a reader would otherwise assume it was covered.
+- **The twenty stale denial sentences stay.** Twenty class files carry *"the
+  sheet has no field for it"*. They are true until each class is backfilled, and
+  `scripts/retro-check.mjs` is the tool that would catch them going stale - its
+  `PAIRS` list is hand-maintained and no pair was added here.
+- **"No field" was true; "invisible" was not.** The value already renders, as
+  prose, through `natural_abilities`. What this buys is a structured, composable,
+  variant-overridable field beside the pools - not a number a player could not
+  previously see.
+
 ### F76 - low - a power that costs P.P.E. permanently to ACQUIRE and again to USE fits neither `spells` nor `psionic_powers`
 
 **Found 2026-09-12** in the Nightbane Talents, printed 106-114.

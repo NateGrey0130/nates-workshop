@@ -5362,8 +5362,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // twelve days. The warning is what would have caught the Kreeghor
   // Cosmo-Knight on the day it was imported.
   const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
-  check('class-check knows the seven keys combineClasses hands to the race',
-    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table'\];/.test(cc));
+  check('class-check knows the eight keys combineClasses hands to the race',
+    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table', 'horror_factor'\];/.test(cc));
   check('and warns only for an O.C.C. that has not claimed supersedes_race',
     /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
   check('it is a WARNING, so it cannot fire the exit code on the common case',
@@ -5371,8 +5371,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // The list is the one the parser actually branches on. If someone adds an
   // eighth key there, this fails rather than the warning going quietly stale.
   const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table'\]\) \{/.exec(parser);
-  check('and the parser still hands exactly those seven to the race', !!branch);
+  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table', 'horror_factor'\]\) \{/.exec(parser);
+  check('and the parser still hands exactly those eight to the race', !!branch);
   check('occ_skills is deliberately NOT among them, because the lists union',
     !/LOST_TO_RACE[\s\S]{0,200}occ_skills/.test(cc)
     && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
@@ -6606,6 +6606,90 @@ skills:
     const noPe = mk('rcc', 'attribute_dice: { PE: "N/A", PS: "3d6" }');
     return combineClasses(noPe, reborn).attribute_dice.PS === '3d6+32';
   })());
+}
+
+section('A Horror Factor the character PROJECTS (F75)');
+{
+  // BOOK-INGEST-AUDIT F75. `horror_factor` at the top level is the one a
+  // character IMPOSES on others. The save of the same name is a
+  // `bonuses.saves` key and means the opposite - a bonus to resist someone
+  // ELSE's - and nothing connects them.
+  const mk = (fm) => parseClassMarkdown(`---\nid: t\nname: T\nsystem: rifts\n`
+    + `source_book: B\ncategory: occ\n${fm}\n---\n\n## Lore\n\nx\n`);
+
+  check('a numeric horror factor parses clean',
+    mk('horror_factor: 14').ok === true);
+
+  // THE LIVE DATA IS OVERWHELMINGLY NOT A SCALAR, which is why this is a
+  // string-or-number field and not an integer one. Every string below is the
+  // shape of a real class in apps/character-creator/db/.
+  for (const v of ['"10+1D4"', '"none if pretending to be human"',
+                   '"8 on foot and 15 on a flying mount"',
+                   '"10, but only when in sand form"', '"NONE"']) {
+    check(`and the printed phrase ${v} parses clean`,
+      mk(`horror_factor: ${v}`).ok === true);
+  }
+
+  // A WARNING AND NEVER AN ERROR: class-store.js DROPS a class that fails to
+  // parse, so an error on a display-only field would make a class vanish from
+  // every picker and from its own saved characters.
+  check('a nonsense value warns rather than failing the class', (() => {
+    const r = mk('horror_factor: []');
+    return r.ok === true
+      && (r.warnings || []).some((m) => m.includes('horror_factor'));
+  })());
+
+  // IT IS NOT THE SAVE. Two keys, two meanings, and setting one must not
+  // touch the other.
+  check('the projected factor and the save do not collide', (() => {
+    const r = mk('horror_factor: 12\nbonuses:\n  saves: { horror_factor: 3 }');
+    return r.ok === true && r.data.horror_factor === 12
+      && r.data.bonuses.saves.horror_factor === 3;
+  })());
+
+  // ---- composition, which the finding never asks about ----
+  const cls = (cat, fm) => parseClassMarkdown(`---\nid: t-${cat}\nname: T\n`
+    + `system: rifts\nsource_book: B\ncategory: ${cat}\n${fm}\n---\n\n## Lore\n\nx\n`).data;
+
+  check('an OCCUPATION that projects one is not dropped when the race states none',
+    combineClasses(cls('rcc', 'name: R'), cls('occ', 'horror_factor: 9'))
+      .horror_factor === 9);
+
+  // A Horror Factor is a property of the BODY, so the race outranks the job.
+  check('and when both state one, the RACE wins',
+    combineClasses(cls('rcc', 'horror_factor: 14'), cls('occ', 'horror_factor: 9'))
+      .horror_factor === 14);
+
+  // THE SUPERSEDING CASE HAD A LIVE INSTANCE: cosmo-knight is the only carrier
+  // of supersedes_race and its own prose already states a projected factor.
+  check('but a superseding occupation replaces it',
+    combineClasses(cls('rcc', 'horror_factor: 14'),
+                   cls('occ', 'supersedes_race: true\nhorror_factor: 9'))
+      .horror_factor === 9);
+
+  // A VARIANT MAY SET IT, which is the finding's own motivating case: a
+  // Nightbane's human form projects none and its Morphus 6 to 18.
+  check('a variant may override it', (() => {
+    const c = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\n'
+      + 'category: rcc\nhorror_factor: 6\nvariants:\n  - id: morphus\n'
+      + '    name: "Morphus"\n    horror_factor: 18\n---\n\n## Lore\n\nx\n');
+    return c.ok === true
+      && applyVariant(c.data, 'morphus').horror_factor === 18;
+  })());
+
+  // THE SHEET DRAWS IT, and not as a pool: it has no current/max pair, no
+  // stepper and no recovery rate, and POOLS is read by five other sites.
+  const sheetSrcHf = readFileSync(join(repoRoot, 'apps', 'character-creator', 'sheet.js'), 'utf8');
+  check('the sheet renders the projected factor',
+    /C\.cls\?\.horror_factor/.test(sheetSrcHf));
+  check('and it is NOT a member of POOLS',
+    !/POOLS\s*=\s*\[[^\]]*horror_factor/.test(sheetSrcHf));
+
+  // class-check must know the key, or every class using it reports UNMODELLED
+  // and test/checks/class-check-tool.mjs fails the suite.
+  check('class-check knows the key',
+    readFileSync(join(repoRoot, 'scripts', 'class-check-lib.mjs'), 'utf8')
+      .includes("'horror_factor'"));
 }
 
 section('Psionic category narrowing');

@@ -1791,6 +1791,29 @@ function render() {
   const vitals = POOLS.map(([key, label]) =>
     poolCard(key, label, c[key + '_current'], c[key + '_max'], w, true)).join('');
 
+  // A Horror Factor the character PROJECTS - BOOK-INGEST-AUDIT F75. It rides
+  // BESIDE the vitals strip and is deliberately NOT a member of POOLS: it has
+  // no current/max pair, no stepper and no rest-recovery rate, and POOLS is
+  // read by five other sites (the rest preview, the rest panel, the two roll-key
+  // maps and POOL_LABELS) that would each have to special-case it.
+  //
+  // It borrows the `vital` shell so it sits in the strip, and carries no bar
+  // and no `--tone`: there is no fraction to paint. `poolCard` is not reused
+  // because every one of its arguments past the label is a current/max pair.
+  //
+  // PRINTED AS GIVEN. The value is a number or the phrase the book prints -
+  // `10+1D4`, `8 on foot and 15 on a flying mount`, `none if pretending to be
+  // human` - so there is nothing to compute and nothing is rolled. This is the
+  // one a character IMPOSES; the save against someone else's is a SAVE_FIELDS
+  // row at the top of this file, and the two never meet.
+  const hf = C.cls?.horror_factor;
+  const horrorCard = (hf === null || hf === undefined || String(hf).trim() === '')
+    ? ''
+    : `<div class="vital hf" title="A Horror Factor this character imposes on others">
+    <div class="lbl">Horror Factor</div>
+    <div class="val"><b>${escHtml(String(hf))}</b></div>
+  </div>`;
+
   // Display order: spells first, by level then name; psionics after, by
   // category (Healing/Physical/Sensitive/Super — alphabetical IS the book
   // order) then name. Unleveled spells and uncategorized psionics sink to the
@@ -2084,7 +2107,7 @@ function render() {
   ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
 
   <div class="sheet-sticky" data-sticky>
-    ${vitals ? `<div class="vitals vitals-strip">${vitals}</div>
+    ${vitals || horrorCard ? `<div class="vitals vitals-strip">${vitals}${horrorCard}</div>
       <div id="queue-state" class="queue-state noprint"></div>
       <div class="rowline noprint vitals-save">
         ${w ? `<span id="autosave" class="autosave muted small" role="status" aria-live="polite">${autosaveText()}</span>
