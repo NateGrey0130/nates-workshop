@@ -1209,23 +1209,48 @@ export function combineClasses(rcc, occ) {
   // from one side is a half-implementation failing in exactly one direction,
   // and this is the direction nothing would notice.
   //
-  // THE SUPERSEDE BRANCH DOES NOT ERASE, and neither does magic's - which the
-  // comment above magic says it does. `out` is seeded `{ ...rcc }` and the
-  // branch hands back `occ.X || rcc.X`, so a superseding occupation that states
-  // no block of its own - every one of them, since supersedes_race marks a
-  // transformation rather than a caster - leaves the race's standing. Measured
-  // on both existing blocks; see BOOK-INGEST-AUDIT.md F81. Written the same way
-  // here deliberately, so the fix is one change across three blocks rather than
-  // a fourth behaviour to reconcile.
+  // THE SUPERSEDE BRANCH DOES NOT ERASE, and neither does magic's. `out` is
+  // seeded `{ ...rcc }` and the branch hands back `occ.X || rcc.X`, so a
+  // superseding occupation that states no block of its own - every one of them,
+  // since supersedes_race marks a transformation rather than a caster - leaves
+  // the race's standing. Measured on both existing blocks;
+  // BOOK-INGEST-AUDIT.md F81, TAKEN 2026-09-15 as a correction to the comment
+  // above magic, which claimed the opposite. This sentence used to say that
+  // comment was still wrong; it is not, and the full reasoning now lives there.
   if (rcc.super_abilities || occ.super_abilities) {
     out.super_abilities = superseded
       ? (occ.super_abilities || rcc.super_abilities)
       : mergeSuperAbilities(rcc.super_abilities, occ.super_abilities);
   }
   // Magic is what you studied AND what a creature was born with, and the two add
-  // up the same way psionics do (F14). A superseding class is the exception, as
-  // it is everywhere else: a character the book says was remade does not keep
-  // its old race's magic either.
+  // up the same way psionics do (F14).
+  //
+  // THIS COMMENT USED TO SAY A SUPERSEDING CLASS ERASES THE RACE'S MAGIC. It
+  // does not, and BOOK-INGEST-AUDIT.md F81 is the record of the contradiction:
+  // `out` is seeded `{ ...rcc }` and this branch hands back
+  // `occ.magic || rcc.magic`, so a superseding occupation stating no magic of
+  // its own - every one of them, since supersedes_race marks a transformation
+  // rather than a caster - leaves the race's block standing.
+  //
+  // THE CODE IS THE SIDE THAT WAS RIGHT, which is why the sentence went rather
+  // than the behaviour. Two user-facing statements of the rule already agreed
+  // with the code and would have become false: `docs/race-and-occupation.md`'s
+  // superseding table ends `| everything else | unchanged |`, and
+  // `apps/character-creator/README.md` enumerates what the flag inverts - pools,
+  // starting_money, xp_table, occ_skills, attribute_dice - and lists neither
+  // magic nor psionics. One comment disagreed with two specs and the code.
+  //
+  // WHAT `superseded` ACTUALLY BUYS HERE, and it is not nothing: when the occ
+  // DOES state magic, this takes it OUTRIGHT instead of merging, so the race's
+  // `spells_starting` is dropped rather than max'd. `super_abilities` above is
+  // written the same way. PSIONICS IS NOT - it merges unconditionally, and
+  // mergePsionics promotes the tier, takes the max of the counts and unions the
+  // named powers (F10's reason: 89 of 165 pairs carry the LOWER count on the occ
+  // side). So all three agree about a superseding occ that states NOTHING, and
+  // two of the three differ from the third about one that states something.
+  // Nothing in the catalog reaches that case - `cosmo-knight` is the only
+  // carrier of the flag and states none of the three blocks (--remote,
+  // 2026-09-15) - which is why this is written down rather than changed.
   if (occ.magic || rcc.magic) {
     out.magic = superseded ? (occ.magic || rcc.magic) : mergeMagic(rcc.magic, occ.magic);
   }

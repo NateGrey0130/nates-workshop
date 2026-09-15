@@ -10636,6 +10636,52 @@ the table. That is a data pass over thirty classes, it is correction rather than
 tidying, and it is deliberately not in this PR: two of its numbers were repaired
 here by hand and the rest want one sweep rather than thirty judgements.
 
+
+**Taken, 2026-09-15 (PR #1063) - AS A CORRECTION TO THE COMMENT, NOT TO THE
+BEHAVIOUR.** This finding states no proposal: no `Proposal:` paragraph, no
+posture, no confidence line. The direction was settled on the evidence rather
+than inferred from the heading, and the evidence points the other way.
+
+**THREE STATEMENTS OF THE RULE EXIST AND TWO AGREE WITH THE CODE.**
+`apps/character-creator/docs/race-and-occupation.md:210-214` ends the superseding
+table with `| everything else | unchanged |`, and
+`apps/character-creator/README.md:441-447` enumerates what the flag inverts -
+pools, `starting_money`, `xp_table`, `occ_skills`, `attribute_dice` - listing
+neither magic nor psionics. Both read 2026-09-15. One comment disagreed with two
+USER-FACING SPECS and with the code it sits above; making the erase real would
+have falsified both. So *"a rule that is written down, believed, and not
+enforced"* is true of one comment and false of the surrounding documentation,
+which this finding does not mention.
+
+**THE THREE BLOCKS ARE NOT SYMMETRIC, and this finding's "one change across
+three blocks" flattens that.** All three agree about a superseding occ that
+states NOTHING - the race's block stands. When the occ STATES one, `magic` and
+`super_abilities` take it OUTRIGHT (the race's `spells_starting` is dropped)
+while `psionics` merges unconditionally, promoting the tier and taking the max
+of the counts. A one-line copy of the magic shape into psionics would silently
+repeal F10's reasoning - 89 of 165 pairs carry the LOWER count on the occ side -
+and F57's tradition union, for the superseding case. Pinned by a new smoke check
+rather than reconciled, because nothing reaches it.
+
+**IT IS A CORRECTION, NOT A MIGRATION**, which is the question this finding says
+taking it requires an answer to. `--remote`, 2026-09-15: `cosmo-knight` is the
+only published carrier of the flag and states none of the three blocks, so the
+erase branch would strip and never substitute; 4 characters exist and none
+touches it. 49 published R.C.C.s do state magic or psionics and nothing gates
+them against the Cosmo-Knight, so the pairing is reachable and unbuilt - which
+is what this finding's careful *"in a way anyone has built"* already said, and
+why medium was the right severity.
+
+**"Turns three checks red at once" is two.** `test/smoke.mjs:3835` and `:3840`,
+and the second covers magic and psionics in one assertion. A third is added by
+this PR, pinning the asymmetry above so a future change to any of the three
+fails by name.
+
+**THE OTHER READING IS STILL AVAILABLE AND IS NATE'S TO MAKE.** If a
+transformation SHOULD strip the old race's magic and psionics, that is a rules
+decision rather than a code defect, and it costs more than three lines: two
+user-facing docs, two existing checks, and a decision about whether psionics
+keeps `mergePsionics`' tier promotion and count-max when it erases.
 ### F82 - high - `skills.mos.choose` is validated and never honoured, and `skill_programs` cannot express a single Heroes Unlimited skill program
 
 **Found 2026-09-14** while scoping the eleven Educational Levels, which are the
