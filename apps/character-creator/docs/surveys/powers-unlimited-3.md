@@ -159,9 +159,44 @@ Deliberately left:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached with `--force-ocr`, registered, offset +1 verified, F79 filed |
-| 2026-09-13 | — | surveyed in full; the three-column list un-welded and reconciled against the Contents. **No data.** |
+| 2026-09-13 | - | surveyed in full; the three-column list un-welded and reconciled against the Contents. **No data.** |
+| 2026-09-13 | [#1029](https://github.com/NateGrey0130/nates-workshop/pull/1029) | **all 125 super abilities** - 46 minor, 79 major. Catalog total 364. |
+| 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote` reports nothing for this slug: no
-production row cites this book.
+**NOTHING. This book is fully imported**, verified `--remote` 2026-09-15:
+**125 rows**, 46 minor and 79 major, every one citing `Powers Unlimited Three
+p.N` - exactly the split this survey's inventory counted.
+
+**The text layer is no longer a trap, because the cache is not the text layer.**
+`.cache/books/powers-unlimited-3/manifest.json` records `"text_layer": false`
+across all 120 pages, read 2026-09-15, and this survey's own page-offset section
+quotes a median of 5,525 chars/page *after the forced OCR*. The F79 warning
+above stands as the reason the cache is what it is; **it is not an instruction
+to re-cache before reading it.**
+
+**The two exclusions still stand and neither is outstanding work.** The random
+super ability tables on printed 105-111 roll on HU2's category roster rather
+than the Revised core's ten, and D0 excludes them. The `(Reprinted)` entries
+were de-duplicated by the import.
+
+**Re-checked rather than taken from this survey's own inventory.** A marker scan
+across all 120 cached pages on 2026-09-15 finds `O.C.C.`, `R.C.C.`, `Experience
+Table`, `Attribute Requirement`, `Alignment:` and `Educational Level` on **zero
+pages each**. The three apparent exceptions are all false: the single `Character
+Class` hit is a house advertisement on cache p117, outside the content range
+this survey already puts at p002-p113; every `Cost:` hit is a `Personal Cost:`
+or `Life Force Cost:` ability line; every `Weight:` hit is a `Maximum Weight:`
+telekinesis line; and the one `Black Market` hit is the order form on p119.
+
+**THE SENTENCE THAT STOOD HERE WAS TRUE AND MISLEADING**, exactly as its twin in
+`powers-unlimited-1.md` was. It read: *"`node scripts/source-coverage.mjs
+--remote` reports nothing for this slug: no production row cites this book."*
+
+<!-- claim-ok: quoting the sentence this section corrects -->
+Accurate when written, accurate today, and this book has held 125 production
+rows since 2026-09-13 - because `source-coverage.mjs:115` does not walk
+`super_abilities`, read 2026-09-15, and every row this book contributed is in
+that table. This book is the worst case of the gap: **100% of its rows are
+invisible to the coverage report.** Filed as `BOOK-INGEST-AUDIT` F94.
