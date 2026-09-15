@@ -1492,6 +1492,33 @@ function validateCategories(where, categories, errors) {
   }
 }
 
+// A percentage is a SKILL idea, and a psionic category may not carry one.
+// BOOK-INGEST-AUDIT.md F92. This was written inline against `categories_allowed`
+// and F91 then added two more lists that reach the same gate, so it is a
+// function rather than three copies of one `if`.
+//
+// THE REASON THE OLD COMMENT GAVE WAS WRONG, and the message it produced is
+// kept because the message is not. It said a bonus here "would be stored and
+// never read". It is read: `categoryLabel` (this file) renders
+// `Number.isFinite(entry.bonus)` into the picker caption, and four call sites
+// show it on a psionic category - the starting-group picker (app.js:3708), the
+// sheet (sheet.js:2531 via psiCatLabel), the server's rejection text
+// (power-picks.js:194) and validate-character.js:505. What NOTHING does is
+// APPLY it: `categoryBonus` has two call sites and both are skill-side.
+//
+// So the defect is worse than the old comment claimed rather than absent. A
+// stored bonus is not inert - it prints "Super (+10%)" on a power that has no
+// percentage to raise, which is the wizard promising what the sheet cannot
+// give. Read 2026-09-15.
+function refusePsionicBonus(where, categories, errors) {
+  for (const c of categories || []) {
+    if (c && typeof c === 'object' && c.bonus !== undefined) {
+      errors.push(`${where}.${c.name} sets a bonus; `
+        + 'a psionic power has a cost, not a percentage');
+    }
+  }
+}
+
 // A per-category FLOOR on the related-skill picks: "Select 8 other skills, but
 // at least two must be selected from espionage and two from rogue skills"
 // (Phase World printed 83). BOOK-INGEST-AUDIT.md F6.
@@ -2633,18 +2660,16 @@ export function parseClassMarkdown(text) {
       for (const entry of list) {
         if (!entry || typeof entry !== 'object') continue;
         validateCategories(`${where}.${key}.categories`, entry.categories, errors);
+        // F92: and the bonus refusal `categories_allowed` has always carried.
+        // It sits inside the psionicBlocks walk deliberately - that fold covers
+        // a class's own psionics AND any an ability grants, so these are FOUR
+        // surfaces rather than the two F92's table names. A patch written
+        // against `data.psionics` alone would have left the ability-granted
+        // pair open, which is the half F91's own sweep found live.
+        refusePsionicBonus(`${where}.${key}.categories`, entry.categories, errors);
       }
     }
-    for (const c of block.categories_allowed || []) {
-      // A percentage is a SKILL idea. A psionic power has an I.S.P. cost and no
-      // percentage to raise, so a bonus here would be stored and never read -
-      // the same silent no-op that made `bonus` a parse error on
-      // secondary_skills.categories.
-      if (c && typeof c === 'object' && c.bonus !== undefined) {
-        errors.push(`${where}.categories_allowed.${c.name} sets a bonus; `
-          + 'a psionic power has a cost, not a percentage');
-      }
-    }
+    refusePsionicBonus(`${where}.categories_allowed`, block.categories_allowed, errors);
   }
   // SUPER ABILITIES - the fifth power kind, and the third block of the family
   // `magic` and `psionics` already form. A Heroes Unlimited super ability is a

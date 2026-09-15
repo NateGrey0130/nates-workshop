@@ -6663,6 +6663,54 @@ section('Psionic category narrowing');
   check('and the message names which key was wrong',
     (sched('[{ only: ["Levitation"] }]').errors || [])
       .some((m) => m.includes('psionics.powers_schedule.categories')));
+
+  // ---- and a bonus is refused on all THREE lists, not one (F92) ----
+  // `categories_allowed` has refused a bonus since F16. F91 then added two more
+  // lists that reach the same gate and neither refused one, so
+  // `{ name: "Super", bonus: 10 }` parsed clean on a schedule entry while the
+  // identical entry one key over errored. A bonus is not inert either: F92's
+  // premise pass found `categoryLabel` renders it, so the picker printed
+  // "Super (+10%)" on a power that has no percentage to raise.
+  const bonusErrs = (r) => (r.errors || []).filter((m) => m.includes('sets a bonus'));
+
+  check('a bonus on a schedule entry category is refused',
+    bonusErrs(sched('[{ name: "Super", bonus: 10 }]')).length === 1);
+  check('and on a starting group category',
+    bonusErrs(group('[{ name: "Physical", bonus: 10 }]')).length === 1);
+  check('and categories_allowed still refuses one',
+    bonusErrs(parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\n'
+      + 'category: occ\npsionics:\n  type: "minor"\n  categories_allowed:\n'
+      + '    - { name: "Physical", bonus: 10 }\n---\n\n## Lore\n\nx\n')).length === 1);
+
+  // THE ABILITY-GRANTED SURFACES, which F92's own table does not name. The
+  // refusal sits inside the psionicBlocks fold, so a class's own psionics and
+  // any an ability grants are covered by one call rather than two - and a patch
+  // written against `data.psionics` alone would have left these open.
+  const ability = (block) => parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\n'
+    + 'source_book: B\ncategory: occ\nspecial_abilities:\n  - name: "Awakening"\n'
+    + `    description: "d"\n    psionics: { type: master, ${block} }\n`
+    + '---\n\n## Lore\n\nx\n');
+
+  check('an ability-granted schedule entry refuses a bonus too',
+    bonusErrs(ability('powers_schedule: [{ level: 3, count: 1, '
+      + 'categories: [{ name: "Super", bonus: 10 }] }]')).length === 1);
+  check('and an ability-granted starting group',
+    bonusErrs(ability('powers_starting_groups: [{ count: 2, '
+      + 'categories: [{ name: "Super", bonus: 10 }] }]')).length === 1);
+
+  // THE OTHER DIRECTION. A bonus of zero is still a bonus key and still refused;
+  // a category with no bonus at all must stay clean on every list.
+  check('while a schedule entry with no bonus stays clean',
+    sched('[{ name: "Sensitive", except: ["Object Read (Psychometry)"] }]').ok === true
+      && group('["Physical"]').ok === true);
+
+  // One rule, one message. Three lists that disagreed about the same key is what
+  // F92 was filed on, so the wording must not fork.
+  check('and all three lists give the SAME message',
+    new Set([
+      bonusErrs(sched('[{ name: "Super", bonus: 10 }]'))[0],
+      bonusErrs(group('[{ name: "Super", bonus: 10 }]'))[0],
+    ].map((m) => m.replace(/^.*\.Super sets/, 'X sets'))).size === 1);
 }
 
 section('Magic composition');
