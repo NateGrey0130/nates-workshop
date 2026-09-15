@@ -213,6 +213,17 @@ on an O.C.C. says the book describes a transformation rather than a trade
 | fixed skills | the occupation's **alone** - the race's are dropped, not unioned |
 | everything else | unchanged |
 
+**`everything else` INCLUDES MAGIC AND PSIONICS, and that is a decision rather
+than an oversight.** A superseding class does not strip the race's `magic` or
+`psionics` block; a psychic race that becomes a Cosmo-Knight keeps what it was
+born with. Settled 2026-09-15 (`BOOK-INGEST-AUDIT.md` F81) on the book's own
+wording: Phase World printed 102 names exactly one loss - *"the skills of his
+past life are lost"* - while printed 100 explicitly keeps the higher of the
+race's attributes, so the book says when something survives as well as when it
+does not. 47 published races state a magic or psionics block and carry no
+`occ_restrictions`, so this reaches real pairings rather than a hypothetical
+one; measured `--remote` 2026-09-15.
+
 The Cosmo-Knight is the only class that carries it. Phase World printed 100 says
 *"use these die rolls, or the attributes of the character's original race,
 whichever are HIGHER"*, and printed 102 says *"when the character is
