@@ -3966,7 +3966,7 @@ printed 119.
 outcome changes what a Book of Magic caster spends. `Dolphin: Sonic Blast` is
 unaffected either way - it is a third, genuinely different spell.
 
-**Taken, 2026-09-15 (PR #PRNUM). ANSWERED BY READING THE TWO PAGES, AND THE
+**Taken, 2026-09-15 (PR #1072). ANSWERED BY READING THE TWO PAGES, AND THE
 ANSWER IS THAT BOTH ROWS ARE CORRECT AND NOTHING CHANGES.** No correction, no
 merge, no redirect, no rename - the three outcomes this finding listed are all
 wrong, and the fourth possibility it named in passing is the true one: **the
