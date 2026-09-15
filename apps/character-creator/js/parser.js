@@ -2041,6 +2041,50 @@ export function normalizeAbilities(list) {
   return out;
 }
 
+// Which choice group offers a given ability, by index, or -1 for one no group
+// offers - a `{ gm: true }` ruling, or a pick left behind by a class edit.
+//
+// A group's `from` list is the only thing tying a pick to a group: `abilities`
+// is a flat list of NAMES with nothing recording which group each came from,
+// and widening it to carry one would change what every character stores. The
+// first group offering the name wins. That is unambiguous on every class in the
+// catalog - the two classes with more than one group, `hu-aliens` and
+// `hu-experiments`, offer 28 and 29 option names across their groups and no
+// name twice, counted through this parser against production 2026-09-15 - and
+// where a future class does repeat one, attributing the pick to the earlier
+// group is a defined answer rather than a crash.
+export function abilityGroupIndexFor(cls, name) {
+  const key = String(name && name.name ? name.name : name || '').trim().toLowerCase();
+  if (!key) return -1;
+  const groups = (cls?.special_abilities || []).filter(isAbilityChoice);
+  for (let i = 0; i < groups.length; i++) {
+    for (const opt of groups[i].from || []) {
+      const optName = typeof opt === 'string' ? opt : opt?.name;
+      if (optName && String(optName).trim().toLowerCase() === key) return i;
+    }
+  }
+  return -1;
+}
+
+// How many picks each choice group currently holds, parallel to the group list.
+//
+// THE POINT OF THIS FUNCTION IS THAT A COUNT IS PER GROUP AND NOT PER
+// CHARACTER. `abilityPicker` compared the character's TOTAL pick count against
+// ONE group's `choose`, so on a class with more than one group the first pick
+// disabled every remaining `+` button and the other groups became unreachable -
+// the Heroes Unlimited Alien has four groups of `choose: 1` and a player could
+// take one of the four (BOOK-INGEST-AUDIT.md F98). Anything measuring picks
+// against a group's limit calls this rather than reading `abilities.length`.
+export function abilityGroupCounts(cls, chosenNames) {
+  const groups = (cls?.special_abilities || []).filter(isAbilityChoice);
+  const counts = groups.map(() => 0);
+  for (const entry of chosenNames || []) {
+    const i = abilityGroupIndexFor(cls, entry);
+    if (i >= 0) counts[i]++;
+  }
+  return counts;
+}
+
 // Whether taking or dropping this ability changes a pool the wizard has ALREADY
 // ROLLED. Pools are rolled once and the later steps roll again only when there
 // are none, so an ability swapped after the roll otherwise leaves the old

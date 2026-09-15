@@ -550,7 +550,7 @@ import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts, abilityGroupIndexFor, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -2747,6 +2747,79 @@ section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
     outOfRange(as('Earth', 'Air'), 50).length === 0
     && outOfRange(as('Earth', 'Air'), 200).some((x) => x.field === 'mdc_max'),
     JSON.stringify(outOfRange(as('Earth', 'Air'), 200)));
+}
+
+section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
+{
+  // A pick belongs to the group that OFFERS it. `abilityPicker` used to compare
+  // the character's TOTAL pick count against one group's `choose`, so on a
+  // class with more than one group the first pick disabled every remaining `+`
+  // button - the Heroes Unlimited Alien has four groups of `choose: 1` and a
+  // player could take one of the four. Nothing in this suite touched the picker
+  // before F98, which is why a live defect on two published classes was found
+  // by an audit rather than by a run.
+  const cls = parseClassMarkdown(['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b',
+    'category: occ', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"', 'special_abilities:',
+    '  - { choose: 1, from: ["Alpha", "Beta"], note: "Step one." }',
+    '  - { choose: 2, from: ["Gamma", "Delta", "Epsilon"] }',
+    '  - name: "Alpha"', '    description: "a"',
+    '  - name: "Gamma"', '    description: "g"',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+
+  check('a pick is attributed to the group that offers it',
+    abilityGroupIndexFor(cls, 'Alpha') === 0 && abilityGroupIndexFor(cls, 'Delta') === 1);
+  check('and matching ignores case and surrounding space, as every other name lookup here does',
+    abilityGroupIndexFor(cls, '  gAmMa  ') === 1);
+  check('a name no group offers belongs to none, rather than to the first',
+    abilityGroupIndexFor(cls, 'Assigned By The G.M.') === -1);
+
+  check('counts start at zero per group', String(abilityGroupCounts(cls, [])) === '0,0');
+  check('and a pick counts against ITS group only',
+    String(abilityGroupCounts(cls, ['Alpha'])) === '1,0'
+    && String(abilityGroupCounts(cls, ['Alpha', 'Delta'])) === '1,1'
+    && String(abilityGroupCounts(cls, ['Gamma', 'Delta'])) === '0,2');
+  check('an unoffered pick is counted against no group, so it cannot fill one',
+    String(abilityGroupCounts(cls, ['Assigned By The G.M.'])) === '0,0');
+
+  // THE REGRESSION ITSELF, stated as the disagreement rather than as an
+  // outcome: with one pick held, the TOTAL has reached group 0's limit while
+  // group 1 is still empty. The old code read the total here and closed group 1.
+  {
+    const held = ['Alpha'];
+    const groups = cls.special_abilities.filter((e) => e && e.choose);
+    const counts = abilityGroupCounts(cls, held);
+    check('with one pick held the TOTAL has reached group 0 limit - which is what misled the picker',
+      held.length >= (+groups[0].choose || 1));
+    check('but group 1 is still empty and still open, which is the fix',
+      (counts[1] || 0) === 0 && (counts[1] || 0) < (+groups[1].choose || 1));
+    check('and a second group stays open until ITS OWN limit is reached',
+      (abilityGroupCounts(cls, ['Alpha', 'Gamma'])[1] || 0) < 2
+      && (abilityGroupCounts(cls, ['Alpha', 'Gamma', 'Delta'])[1] || 0) === 2);
+  }
+
+  // Two groups offering one name is not a shape any class in the catalog has,
+  // and it has a defined answer rather than an undefined one.
+  const dup = parseClassMarkdown(['---', 'id: d', 'name: D', 'system: rifts', 'source_book: b',
+    'category: occ', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"', 'special_abilities:',
+    '  - { choose: 1, from: ["Shared"] }',
+    '  - { choose: 1, from: ["Shared"] }',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+  check('where two groups offer one name the EARLIER group takes the pick',
+    abilityGroupIndexFor(dup, 'Shared') === 0 && String(abilityGroupCounts(dup, ['Shared'])) === '1,0');
+
+  // The render path is browser-only, so this half is a text check on app.js -
+  // the same compensation `rendered-ui.mjs` makes, and it names its symptom.
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const picker = appSrc.slice(appSrc.indexOf('function abilityPicker()'),
+    appSrc.indexOf('function abilityDef('));
+  check('the picker reads a PER-GROUP count rather than the length of every pick',
+    /abilityGroupCounts\(/.test(picker) && !/const picked = S\.abilities\.length/.test(picker),
+    picker.slice(0, 400));
+  check('and it renders the group note, which twelve live groups carry and none could show',
+    /g\.note/.test(picker));
+  const take = appSrc.slice(appSrc.indexOf('function takeAbility('), appSrc.indexOf('function dropAbility('));
+  check('and taking one is bounded by the OWNING group rather than by the sum of every group',
+    /abilityGroupIndexFor\(/.test(take) && /abilityGroupCounts\(/.test(take), take);
 }
 
 section('Pool formulas');

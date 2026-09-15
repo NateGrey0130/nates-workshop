@@ -13508,3 +13508,134 @@ and `m-20-assault-rifle`. The fourth, `tw-sapper`, reads *"No physical damage.
 Each blast DRAINS P.P.E."* and names M.D. only against a magic barrier, read
 `--remote` 2026-09-15. The count is right and the characterisation covers three
 of four. No row is wrong, so nothing is filed.
+
+### F98 - high - an ability pick is counted against EVERY group at once, so a class with more than one choice group cannot be finished
+
+**Filed 2026-09-15 while auditing F78's premises**, by reading the mechanism
+that `docs/surveys/heroes-unlimited-core.md` calls F78's solution, and finding
+the mechanism broken. **Filed and taken in the same PR on Nate's word** - the
+numbering exists so the decision to take can be separate, and he made it at
+filing time rather than after.
+
+**What the code did.** `abilityPicker` in `apps/character-creator/app.js` -
+search `function abilityPicker()` - computed `const picked = S.abilities.length`,
+which is the character's pick count across **every** choice group, and then
+compared it against **one** group's `choose` inside the per-group loop. Read
+2026-09-15.
+
+**So the first pick closes every group.** The Heroes Unlimited Alien states four
+groups of `choose: 1` - the book's Steps Two, Three, Four and Seven. After one
+pick, `picked >= limit` is true in all four panels, every `+` button is
+disabled, and every panel prints `1 of 1 chosen` although three of them hold
+nothing.
+
+**And the class cannot be finished, which is the part that makes this high.**
+`classBlock` - search `function classBlock()` in the same file - counts the
+**sum** of every group's `choose` and blocks *Confirm and roll* until that many
+are held. With one pick the nav reads *"Choose 3 more powers to continue."*, the
+button is disabled, and there is no enabled control anywhere on the page.
+Measured in a browser against a real server and the real class, 2026-09-15.
+
+**`takeAbility` had the opposite half of the same bug.** Its cap was
+`abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0)` - the sum - so
+it would have accepted four powers from the Alien's first step, a distribution
+no group offers. The two disagreed in both directions at once, and only the
+disabled button kept the second half from being reachable.
+
+**Who is affected, counted through the real parser against production
+2026-09-15** - `parseClassMarkdown` over all 318 published, undeleted classes:
+
+| | |
+|---|---|
+| classes with any ability choice group | 25 |
+| **classes with MORE THAN ONE group** | **2** |
+| `hu-aliens` | four groups, `choose: 1, 1, 1, 1` |
+| `hu-experiments` | three groups, `choose: 1, 1, 3` |
+
+**A second defect in the same function.** The group's own `note` is never
+rendered. Twelve live groups across nine classes carry one, counted the same
+way and the same day. Skill, MOS, totem and program groups all render theirs -
+`apps/character-creator/app.js`, search `the catalog cannot check this one`,
+read 2026-09-15. Every ability panel is headed `Powers`, so the Alien's four
+steps are four identical panels, and `hu-experiments` carries a gating condition
+entirely inside the invisible note: *"Take these ONLY with the Super-Soldier
+Option above."*
+
+**Nothing in the suite touched this.** A grep of `apps/character-creator/test/`
+for `abilityPicker` and `abilityGroups` on 2026-09-15 returns nothing, which is
+why a live defect on two published classes was found by a premise audit rather
+than by a run.
+
+**Proposal.** Count picks **per group**: a pick belongs to the group whose
+`from` offers it. Put the accounting in `js/parser.js` beside the other ability
+helpers so the picker and any later caller cannot disagree, use it in both
+`abilityPicker` and `takeAbility`, and render the group `note`. **Posture: a bug
+fix in the wizard. No schema change, no data change, and no new gate** - in
+particular the server's `ability_count` rule is NOT tightened; see below.
+
+**Evidence:** the two functions read 2026-09-15; the class counts through
+`parseClassMarkdown` against `--remote` the same day; the dead end reproduced in
+a browser on a local server the same day. **Not measured:** whether any saved
+character already holds a distribution the per-group rule would refuse - it
+cannot, because the old picker never let a second pick into a second group.
+
+**Confidence: high.** Both halves were read and the dead end was reproduced.
+
+**Ongoing cost: none.** Two helper functions and a smoke section.
+
+**Taken, 2026-09-15 (PR #1083).** Posture held: a wizard bug fix, no schema
+change, no data change, no new gate.
+
+**The premise audit of this finding is the session that wrote it**, which is
+worth saying rather than leaving as a gap: the usual split - one pass measures,
+another implements - did not happen here, because the finding was filed out of
+an audit of `F78` and taken in the same breath. What stands in for it is that
+every claim above was measured before the fix was written, and the fix was then
+proved by **making the checks fail**.
+
+**Two things the finding did not know, both found while taking it.**
+
+- **Every panel printed `1 of 1 chosen`, not just a disabled button.** The
+  count line uses the same `picked`, so three empty groups each claimed to be
+  full, in the `ok` colour. The screenshot is what showed it; the finding was
+  written from the disabled state alone.
+- **The standing sentence printed four times.** *"Chosen now rather than later:
+  these can add to attributes and pools"* is a property of the step and not of a
+  group, and it repeated once per panel. It now prints on the first panel only.
+
+**What the fix does NOT do, stated so nobody reads it as covered.**
+`functions/api/character-creator/_lib/validate-character.js` - search
+`rule: 'ability_count'` - bounds a saved character by the same **sum**, so a
+crafted API call can still store four powers from one group. That is
+pre-existing, untouched here, and tightening it is a change from a looser gate
+to a stricter one on a **violation**-level rule, which is a decision rather than
+a bug fix. No character can reach that state through the wizard, before or
+after. **Not filed as a new finding** - it is recorded here deliberately, and a
+number can be given to it if Nate wants the server tightened.
+
+**PROVED BY MAKING THE CHECK FAIL, on the grounds that a check which has only
+ever passed proves nothing.** With `app.js` reverted to the pre-fix version and
+the new smoke section run against it:
+
+| | pre-fix | fixed |
+|---|---|---|
+| the ten behavioural checks on the new helpers | pass | pass |
+| *the picker reads a PER-GROUP count* | **FAIL** | pass |
+| *it renders the group note* | **FAIL** | pass |
+| *taking one is bounded by the OWNING group* | **FAIL** | pass |
+
+And in the real wizard, on a local server, on the real `hu-aliens` - one pick
+held, four panels:
+
+| | `+` buttons still enabled, per panel | what each panel said |
+|---|---|---|
+| before | `0, 0, 0, 0` | `1 of 1 chosen` four times |
+| after | `0, 7, 6, 3` | `1 of 1`, then `0 of 1` three times |
+
+All four steps are reachable, each stops at its own limit, and a fifth pick into
+a full group is refused. **The in-app Browser pane could not screenshot this**
+- the page is 22,936px and the picker sits 11,185px down, which is the pane's
+documented scroll limitation - so the captures were taken by driving headless
+Chrome over CDP at 1280px and 768px.
+
+**Smoke 2193, up from 2180; regression 438.**
