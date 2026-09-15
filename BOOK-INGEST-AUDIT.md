@@ -11655,7 +11655,7 @@ other, and folding them in here would hide two decisions inside a one-word fix.
 2026-09-14, eleven hours after this finding was filed at 10:37 the same day.
 Read 2026-09-15. Left standing as the dated record it is; see `F86`'s note.
 
-**Taken, 2026-09-15 (PR #PRNUM), as proposed and at the posture it asked for -
+**Taken, 2026-09-15 (PR #1075), as proposed and at the posture it asked for -
 advisory, exits 0, no new gate, no schema change.**
 
 **The report now covers all eight catalogs**, and every one of the 466 rows
