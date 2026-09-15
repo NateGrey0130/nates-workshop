@@ -12564,7 +12564,7 @@ population, so nothing else can move.
 removes a standing source of false confident suggestions rather than adding
 something to keep current.
 
-**Taken, 2026-09-15 (PR #PRNUM).** The demotion shipped as proposed - drop to
+**Taken, 2026-09-15 (PR #1074).** The demotion shipped as proposed - drop to
 `contains`, never drop the pair - and the premise pass found **two wrong claims
 in this finding and a third thing it never mentioned that the change needs.**
 
