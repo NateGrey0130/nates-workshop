@@ -11648,6 +11648,83 @@ read 2026-09-14: `scripts/drift-check.mjs:181`
 unnumbered, because they answer different questions from this one and from each
 other, and folding them in here would hide two decisions inside a one-word fix.
 
+<!-- claim-ok: quoting this finding's own stale sentence, corrected below -->
+**That last sentence is stale and `F86` carries the same one.** `repo-vs-live`'s
+`TABLES` holds **nine** entries at `scripts/repo-vs-live.mjs:76` today, and
+`['vehicles', 'name', 'slug']` is line 94 - added by `F90` at 22:38 on
+2026-09-14, eleven hours after this finding was filed at 10:37 the same day.
+Read 2026-09-15. Left standing as the dated record it is; see `F86`'s note.
+
+**Taken, 2026-09-15 (PR #1075), as proposed and at the posture it asked for -
+advisory, exits 0, no new gate, no schema change.**
+
+**The report now covers all eight catalogs**, and every one of the 466 rows
+lands where this finding predicted - `--remote`, 2026-09-15:
+
+```
+  super_abilities 364            0              0              0    ... of 364
+  enchantments    62             0              0              0    ... of 62
+  totems          40             0              0              0    ... of 40
+```
+
+**466 traceable, 0 in any other bucket**, which is the result this finding
+measured locally and reverted. Per the report's own standing warning, traceable
+means CHECKABLE and never correct.
+
+**The symptom it was filed on is now visible in one line.** `BY BOOK` before and
+after, same run, same day:
+
+| slug | before | after |
+|---|---|---|
+| `powers-unlimited-3` | **absent from the listing entirely** | **125 / 0** |
+| `powers-unlimited-1` | 9 / 0 | **179 / 0** |
+| `heroes-unlimited-core` | 812 / 0 | **881 / 0** |
+| `pf` | 587 / 1 | **649 / 1** |
+
+**THE PHANTOM WAS -220, NOT -171, AND BOTH DIRECTIONS WERE RUN RATHER THAN
+QUOTED.** `node scripts/source-coverage.mjs --remote --vs-build`, 2026-09-15,
+against the unmodified script and then against the patched one:
+
+| | `rows` remote | `rows` build | delta |
+|---|---|---|---|
+| before | 4153 | 3933 | **-220** |
+| after | 4619 | 4619 | **none** |
+
+The mechanism is exactly what this finding described - the delta IS the live
+vehicles count - so it moved with the table: 171 when the finding was written,
+**220** after the Heroes Unlimited import added 49 vehicles on 2026-09-14. **A
+taker who had trusted the -171 would have re-run it, seen -220, and had every
+reason to read the difference as the regression the phantom hides.**
+
+**And there was real signal underneath it.** With the tables squared up, the
+comparison reports `traceable -2`, `no-page-range +6` and `not-cached -4` - all
+three were there before and the first was buried inside a -222 that was 220
+parts arithmetic. That is `REBUILD-AUDIT` `F4`'s argument made concrete: a
+standing phantom is the noise that hides the next 148.
+
+**The padding is 16 rather than a wider fixed string.** `super_abilities` is 15
+characters against a 14-wide field, and `psionic_powers` is exactly 14 and
+already printed with no gap before its first column - so the header's own
+leading spaces are computed from the width now rather than typed, which is the
+only way the two stay in step.
+
+**WHAT THIS PR DID NOT DO, because it was already done.** This finding's
+evidence is two survey sentences reading *"no production row cites this book"*.
+Both were rewritten on 2026-09-15, in PRs #1068 and #1070, before this was
+taken - `powers-unlimited-1.md`, `powers-unlimited-3.md` and
+`heroes-unlimited-core.md` now quote that sentence as a corrected specimen and
+point at this finding by name. **So no survey was touched here**, and an outcome
+note claiming to have fixed them would have been the exact shape `audit-menu`
+warns about.
+
+**The recurring cost is unchanged and this finding said so.** Both lists are
+still written out by hand, in one file, and a ninth catalog will be omitted from
+both. `F85` declined to make them derive from `catalog-fields.js` and gave its
+reason - that module is a browser file the scripts do not import, and the lists
+disagree about scope on purpose. **A taker who wants the cause rather than the
+recurrence should say so**, which is what this finding asked for and this PR does
+not attempt.
+
 ### F86 - medium - `repo-vs-live` says "all catalogs" and compares five of eight, and `drift-check`'s citation check reads three
 
 **Filed 2026-09-14**, found while measuring `F85`. Neither script is the coverage
