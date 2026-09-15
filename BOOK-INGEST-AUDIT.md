@@ -11831,3 +11831,54 @@ find one row out of two thousand.
 **Posture: a test change, no new gate** - `regression.yml` stays reporting-only.
 **Part 1 is the one to take first**; part 2 is a diagnostic improvement to a
 check that already fires.
+**Taken, 2026-09-14 (PR #1059). Part 1 as proposed; Part 2 adjusted, because its
+mechanism does not exist.** `regression.mjs` now refuses a live catalog row on a
+key a redirect has retired, over every catalog `catalog_redirects` covers, and
+`zzzzzzzzzzzz-f90-clear-retired-key-collisions.sql` clears the rows that had it.
+
+**PROVED BY MAKING IT FAIL**, rather than shipped green: the tree was built twice
+in-process with `node:sqlite`, without the corrective script and with it - two
+offenders, then none.
+
+**TWO LIVE CASES, NOT ONE. THIS FINDING'S OWN SWEEP WAS GEAR-ONLY.** `SCUBA` in
+`skills` is the second, and it is not latent. `merge-scuba-duplicate.sql` retires
+`SCUBA` into `S.C.U.B.A.` and files a merge redirect; `rename-skills-to-rue.sql`
+then renames the SURVIVOR back to `SCUBA`, leaving a redirect whose `from_key` is
+the name of the row it points at. Inert for lookups, which consult redirects only
+for keys they do not find - and NOT inert for writing: `catalogs/rows.js` calls
+`keyClash()` on any PATCH carrying the unique field without comparing it against
+the row's own current value, so saving that skill unrenamed answers **409,
+*"SCUBA" redirects to "SCUBA"***.
+
+**`dead-boy-body-armor` is a redirect defeated by the row it was filed for**,
+which this finding called "a latent trap". `fix-rue-gear-review.sql` files the
+redirect and states that the four classes citing the key mean CA-2 Light - then
+keeps the row, so the redirect never fires and those four resolve to a tombstone
+instead. The intent was in the file; only the deletion was missing. 0 inventory
+rows pointed at it, 4 classes cite it and 0 cite the suit directly, and
+regression's class sweep folds redirect `from_key`s into its known-slug set, so
+all four keep resolving. Gear 2164 -> 2163.
+
+**PART 2 IS NOT IMPLEMENTABLE AS WRITTEN.** It asked the clean-run count check to
+print "the symmetric difference of the two key lists", calling it "a second query
+against a database the suite has already built". That check's two sides are a
+LIST and an INTEGER scraped out of `docs/operations.md`; there is no second key
+list in scope, and `regression.mjs` is sealed off from `--remote` by design.
+Diffing the built database against itself yields nothing. **The capability it
+wanted already ships**: `scripts/repo-vs-live.mjs` diffs names and then every
+column and makes it the exit code - so Part 2 became adding the two pinned
+catalogs it omitted, `vehicles` and `skill_system_bases`, the second of which
+needed composite-key support because a single column identifies nothing in a
+table keyed `(skill_name, system)`.
+
+**THE HEADING IS TOO STRONG.** The admin create/update path DOES refuse a retired
+key, and says so in its own comment (`catalogs/rows.js`). The body's narrower
+claim - that every collision check in the INGEST path reads only the table -
+holds, and is what shipped the bug.
+
+**The rule needed one carve-out the code already states.** A redirect whose
+target has itself been deleted is dead, and `_lib/catalog-redirects.js` says a
+dead redirect must not block anyone from reusing the key - so the check INNER
+JOINs the target rather than testing the `from_key` alone. Every redirect in
+production has a live target today, which is why this changes nothing now and
+matters later.
