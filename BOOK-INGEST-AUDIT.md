@@ -12145,3 +12145,127 @@ did. Two named call sites, both measured.
 **Confidence: high** that the call is absent - it is the same grep that backed
 F88, re-read after #1061 landed, plus the reader quoted above. **High on the
 cost:** zero live offenders, measured, and one more call each.
+
+**Taken, 2026-09-15 (PR #1066).** Shipped as proposed - two
+`validateCategories` calls, at ERRORS, and no widening. The pre-run was
+re-measured rather than trusted, and the premise pass overturned two of the
+finding's own citations.
+
+**The re-measurement does not reproduce F91's table, and the proposal survives
+it.** Every published live class whose markdown carries either key was pulled
+`--remote` on 2026-09-15 and parsed through the real `parseClassMarkdown`, then
+every entry of both keys on every psionics block was handed to the real
+`validateCategories`:
+
+| path | classes | entries carrying `categories` | category entries | errors |
+|---|---|---|---|---|
+| `psionics.powers_schedule[].categories` | 33 live classes hold either key, of 318 | 207 of 297 | **446** | **0** |
+| `psionics.powers_starting_groups[].categories` | | 35 of 39 | **41** | **0** |
+
+F91 states 428 and 37. Neither figure reproduces, and the gap runs the way the
+finding warned it might - the catalog has moved since 2026-09-15 05:29, when
+F91 was filed. The conclusion is unchanged: **zero offenders, so ERRORS is
+safe**, which is the whole load-bearing half.
+
+**The clean run was proved before it was believed.** A harness that reports
+nothing is indistinguishable from a harness that finds nothing, so an offender
+- `[{ only: ["x"], except: ["y"] }]` - was injected into the first entry the
+walk reached, upstream of the validate call, and the run came back with one
+class and two errors. Then the injection was removed.
+
+**Two of F91's three citations are wrong, and both are claims about another
+file.**
+
+<!-- claim-ok: quoting the two citations this note corrects -->
+- F91 says the result *"reaches `categoryAllows` at `apps/character-creator/app.js:2092` and `:3758`."* `:2092` is right. **`app.js:3758` reads neither key**: read 2026-09-15, its `allowed` is built at `app.js:3752` from `psi.cats`, which `psiConfig` (`app.js:2470-2484`) fills from `categories_allowed` - the key that was already validated. `psionicCategoriesForGrant` has exactly one call site in that file, `app.js:2047`. The real reader of a starting group's `categories` is **`app.js:3698`**, inside `startingPsiHtml`, and it is reached only when the split has more than one group.
+- F91 cites the existing caller at `js/parser.js:2556`. That was its line **before** #1061, in a sentence beginning *"After PR #1061"*. It is `js/parser.js:2604` today, and `validateCategories` itself moved from 1401 to `js/parser.js:1449`. Read 2026-09-15.
+
+**Three readers F91 omits, and they make the hole larger than it claims.** Read
+2026-09-15:
+
+- `apps/character-creator/sheet.js:2558` - `psiCategoryCap` re-implements
+  `psionicCategoriesForGrant` line for line, because the sheet cannot import it,
+  and feeds `categoryAllows` at `sheet.js:2486`.
+- `functions/api/character-creator/_lib/power-picks.js:94` calls the reader and
+  `power-picks.js:191` **enforces** it - a pick outside the grant's categories
+  is rejected server-side. So this was never only a picker gate.
+- `power-picks.js:50-61` **persists** the resolved categories as JSON into
+  `pending_power_picks.categories`. Parse-time validation cannot clean a row
+  already banked there; it only stops the next one.
+
+**The two keys are not parallel in reach**, which F91 presents as one
+measurement. The schedule key reaches the wizard, the sheet and the server; a
+starting group's reaches one picker. Both still gate a pick, so both are
+validated.
+
+**What was NOT done, and is F92 instead.** `js/parser.js:2638-2647` refuses a
+`bonus` on a `categories_allowed` entry - *"a psionic power has a cost, not a
+percentage"* - and `validateCategories` on its own only requires a `bonus` to be
+a finite number. So `categories: [{ name: "Super", bonus: 10 }]` on a schedule
+entry still parses clean while the identical entry one key over errors: the
+exact asymmetry F88 was filed on, one layer down. Folding it in would have been
+widening a finding while taking it, which F91 forbids in those words, so it is
+filed as F92 rather than deferred namelessly.
+
+**Seven smoke checks pin it**, including the two directions that stop it
+becoming a rule nobody can satisfy: a narrowed schedule entry and a bare string
+category - both live in production - must still parse clean. All five refusal
+checks were run against the unmodified parser first and all five failed; a
+check that has only ever passed proves nothing.
+
+**One unrelated check went red and is repaired here.** The 33 lines added to
+`js/parser.js` pushed it past the 25% tolerance the *Documented counts* smoke
+section holds the file-size table in `apps/character-creator/docs/known-limitations.md:403-405`
+to - 2,977 actual against a documented ~2,225, 25.3% out, where `main` sat at
+24.4% and passed. The three drifting rows are refreshed to `app.js` ~4,510,
+`sheet.js` ~3,850 and `js/parser.js` ~2,975; `app.js` and `sheet.js` were at
+20.9% and 19.5% and would have tripped the next contributor instead. Measured
+2026-09-15.
+
+Smoke 2142 -> 2149.
+
+### F92 - low - a `bonus` on a psionic schedule category is stored and never read, and only `categories_allowed` refuses one
+
+**Filed 2026-09-15 while taking F91**, which turned it up and declined to fold
+it in: F91 says *"Do not widen this into 'validate every `categories`
+everywhere'"*, and a `bonus` refusal is a second rule rather than the call it
+asks for.
+
+**The asymmetry, read 2026-09-15.** `js/parser.js:2638-2647` loops over
+`categories_allowed` and errors on any entry carrying a `bonus`, with the
+message *"a psionic power has a cost, not a percentage"*. `validateCategories`
+(`js/parser.js:1449-1493`) does not refuse a `bonus` at all - it only requires
+one to be a finite number, because on a SKILL category a bonus is real and
+`resolveSkill` adds it. So after F91:
+
+| where | `{ name: "Super", bonus: 10 }` |
+|---|---|
+| `psionics.categories_allowed` | **parse error** |
+| `psionics.powers_schedule[].categories` | parses clean, stored, never read |
+| `psionics.powers_starting_groups[].categories` | parses clean, stored, never read |
+
+All three lists reach the same gate, `categoryAllows`, and a psionic power has
+an I.S.P. cost and no percentage to raise in any of them. The reason the first
+row errors applies unchanged to the other two.
+
+**Size, measured 2026-09-15** (`--remote`, 318 published live classes, the same
+sweep that cleared F91): **0** entries on either key carry a `bonus`, so there
+is nothing live to repair and nothing to break.
+
+**Proposal.** Extend the existing `categories_allowed` bonus loop at
+`js/parser.js:2638-2647` to the two keys F91 added, reusing its message rather
+than writing a second one. **Posture: ERRORS**, matching the row above it - a
+warning here would be the second standard F88 refused to create. Evidence: the
+two files above, read 2026-09-15, and the production sweep run the same day.
+
+**Do not widen this either.** It is one rule already written, reaching two more
+lists that already reach the same gate. It is not a proposal to teach
+`validateCategories` about psionics, which would make the function's behaviour
+depend on its caller.
+
+**Confidence: high** on the asymmetry - both branches quoted above, from the
+file as it stands after F91. **High on the cost:** zero live entries, measured,
+and the loop is four lines.
+
+**Ongoing cost:** none beyond the rule itself. It removes a difference between
+three lists rather than adding a thing to remember.
