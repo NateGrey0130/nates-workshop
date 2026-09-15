@@ -13208,8 +13208,9 @@ because that is what it is made of, and it neither deals damage nor has an M.D.C
 stated. **Do not sweep it in with the five.** A first draft of this table guessed
 a sixth Underseas row and the query said otherwise.
 
-**The five ordnance rows are the real question, and the damage is not in the
-prose either** - `torpedo-light`'s whole description is *"The second of the
+**The five ordnance rows are the real question, and the damage is in no column
+and in no prose.** All five descriptions were read `--remote` on 2026-09-15;
+`torpedo-light`'s whole description is *"The second of the
 New Navy's four torpedo grades, priced per torpedo."* So a player who buys one
 is told what it costs and nothing about what it does.
 
