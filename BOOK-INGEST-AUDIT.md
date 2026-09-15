@@ -12269,3 +12269,78 @@ and the loop is four lines.
 
 **Ongoing cost:** none beyond the rule itself. It removes a difference between
 three lists rather than adding a thing to remember.
+
+### F93 - medium - the duplicate scorer demotes on `category` and `system`, and `enchantments` is distinguished by neither
+
+**Filed 2026-09-15 while finishing the duplicate-suggestion pass**, which is
+what turned it up: `enchantments` carries **five of the six `certain`
+suggestions in the whole database**, and every one of them is a false positive
+of a shape `findDuplicates` already knows how to demote - just not on the column
+that matters here.
+
+**The two demotions it has**, `functions/api/character-creator/_lib/catalog-merge.js:276-291`,
+read 2026-09-15: `clash` fires when `a.category` and `b.category` differ, and
+`systemClash` fires when two *specific* systems differ. Both drop a pair to the
+`contains` tier rather than hiding it.
+
+**Neither can fire on this catalog.** `enchantments` has **no `category` column
+at all** - `CREATE TABLE enchantments` has `id, slug, name, applies_to, cost,
+cost_note, max_per_item, limits, bonuses, description, system, source_book`,
+read from `sqlite_master` `--remote` on 2026-09-15 - and **all 62 of its rows
+are `palladium-fantasy`**, counted the same day. What separates its rows is
+`applies_to`, which is `weapon | armor | charm`, and nothing in the scorer reads
+it.
+
+**What that costs, measured `--remote` 2026-09-15** by importing the real
+`findDuplicates` and running it over a D1 shim:
+
+| pair | score | tier | why they are two rows |
+|---|---|---|---|
+| `armor-color` / `weapon-color` | 1.00 | certain | 600 gold and 500 gold |
+| `armor-continual-glow` / `weapon-continual-glow` | 1.00 | certain | **1,200 both** - `same_numbers` is true |
+| `armor-impervious-to-fire` / `weapon-impervious-to-fire` | 1.00 | certain | 12,000 and 8,000 |
+| `armor-impervious-to-fire` / `charm-impervious-to-fire` | 1.00 | certain | 12,000 and 30,000 |
+| `charm-impervious-to-fire` / `weapon-impervious-to-fire` | 1.00 | certain | 30,000 and 8,000 |
+| `armor-fire-resistant` / `charm-resist-fire` | 0.95 | likely | 1,500 and 4,000 |
+
+Palladium Fantasy printed 249-250 carries the armour list and the weapon list
+and repeats names across them; printed 253 carries the charms and repeats them
+again. Read in the book's own text on 2026-09-15, not inferred from the rows.
+**`Continual Glow` is the one worth naming**: the numbers agree on both sides,
+so it is the suggestion that looks most convincing and it is still two printed
+entries.
+
+**Proposal.** Add a third demotion beside the two that exist, on `applies_to`,
+in the same form and with the same effect - drop to `contains`, never drop the
+pair. `applies_to` is **already SELECTed**: it is in `CATALOGS.enchantments.fields`
+(`apps/character-creator/js/catalog-fields.js`, read 2026-09-15), and
+`findDuplicates` selects `cat.uniqueField`, `cat.displayField` and every
+`cat.fields` name, so the value is on the row already and no query changes.
+**Posture: DEMOTE, not drop**, matching `clash` and `systemClash` exactly - the
+comment on `clash` gives the reason and it applies unchanged here, that a column
+can also simply be wrong on one of the rows, which is itself worth a look.
+
+**Evidence:** the scan above, run 2026-09-15; the schema and the field list,
+both read the same day.
+
+**This would have emptied the catalog's confident tier without anybody judging
+it**, which is the argument for doing it - but the six pairs are dismissed in
+`zzzzzzzzzzzz-dupes-pass-remaining-catalogs.sql` regardless, because a
+dismissal records a judgement that was made and a demotion only changes how
+loudly a question is asked. **Taking this does not make those rows redundant**
+and they should not be removed with it.
+
+**Do not widen this into a general "demote on every field that differs".** That
+is the opposite of what the scorer is for: `cost` differs on almost every pair
+worth looking at, and demoting on it would empty every tier. The three columns
+that carry *identity* rather than *value* are `category`, `system` and
+`applies_to`, and the third is the only one missing.
+
+**Confidence: high** that the demotion is absent - the two that exist are quoted
+above from the file, and the six pairs are the scan's own output. **High on the
+cost:** no query change, no new column, and the six live pairs are the entire
+population, so nothing else can move.
+
+**Ongoing cost:** one more field name in a scorer that already reads two. It
+removes a standing source of false confident suggestions rather than adding
+something to keep current.
