@@ -833,5 +833,8 @@ true today, with 295 of those books' rows live - because
 `scripts/source-coverage.mjs:115` walks `gear`, `skills`, `spells`,
 `psionic_powers` and `vehicles`, and **`super_abilities` is not among them**,
 read 2026-09-15. A tool blind to the one table those books populate reported
-them as untouched, and three documents repeated it. Filed as `BOOK-INGEST-AUDIT`
-F94.
+them as untouched, and three documents repeated it. That is
+`BOOK-INGEST-AUDIT` **F85**, filed 2026-09-14. (PR #1068 cited it as F94, a
+duplicate filed a day later and withdrawn the same day; F85 is the open
+finding, and it is larger - it also carries a second omitted list and a standing
+phantom -171 in `--vs-build`.)

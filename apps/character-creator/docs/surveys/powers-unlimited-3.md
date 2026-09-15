@@ -199,4 +199,7 @@ Accurate when written, accurate today, and this book has held 125 production
 rows since 2026-09-13 - because `source-coverage.mjs:115` does not walk
 `super_abilities`, read 2026-09-15, and every row this book contributed is in
 that table. This book is the worst case of the gap: **100% of its rows are
-invisible to the coverage report.** Filed as `BOOK-INGEST-AUDIT` F94.
+invisible to the coverage report.** That is `BOOK-INGEST-AUDIT` **F85**, filed
+2026-09-14, which quotes this very sentence and counts the same 125 rows. (PR
+#1068 cited it as F94, a duplicate filed a day later and withdrawn the same day;
+F85 is the open finding.)

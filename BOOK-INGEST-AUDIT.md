@@ -12435,6 +12435,49 @@ are three `count(*)`s, and the consequence is quoted from two files in the tree.
 something to keep current - and it makes the *next* catalog's absence louder,
 because a book with rows in it will stop reading as a book with none.
 
+**WITHDRAWN 2026-09-15 (PR #PRNUM), THE SAME DAY IT WAS FILED. F94 IS A
+DUPLICATE OF `F85`, WHICH IS OPEN AND IS THE ONE TO TAKE.** Everything above is
+true and none of it is new: `F85` was filed 2026-09-14, says the same thing
+about the same line of the same file, and reaches the same 466 rows across the
+same three tables. Read `F85`, not this.
+
+**`F85` IS ALSO STRICTLY LARGER, which is the practical reason to take it
+instead.** Two things it has that F94 missed entirely:
+
+- **A SECOND list, at `scripts/source-coverage.mjs:385`**, inside `--vs-build`,
+  which omits `vehicles` as well. So the build side of that comparison counts one
+  fewer table than the live side it is subtracted from, and the report has been
+  printing a standing **-171** delta that is the vehicles table rather than a
+  regression. F94 proposed fixing one list and would have left that phantom
+  standing.
+- **The padding.** `pad(g.label, 14)` is too narrow for `super_abilities`, so a
+  patched run prints `super_abilities364` with no gap.
+
+`F85` also already names the two sibling scripts carrying the same longhand
+list, and filed them as `F86` rather than folding them in.
+
+**How it happened, because the mechanism is the one `audit-menu` warns about and
+the guard DID run.** The subject grep prescribed under *grep the other menus for
+its subject* was run before filing - and it was written as
+`grep -rn "source-coverage" --include=*AUDIT*.md . | grep -v
+"^./BOOK-INGEST-AUDIT.md:1[0-9][0-9][0-9][0-9]"`. That second filter was meant to
+drop the lines this session had just added. It drops **every line between 10000
+and 19999 of this file**, which is where `F85` lives - and this file is now
+around 12,500 lines, so the filter hid most of the menu being filed into. The
+grep returned `INGESTION-AUDIT` hits only and read like a clean result.
+
+**The rule that would have caught it is the one in the same section: the menu
+you are writing is the row you will forget.** A subject grep that excludes the
+file you are about to append to is not a subject grep. Run it with no filter and
+read the hits.
+
+**Nothing is retracted from PR #1068 except the citation.** The three survey
+corrections it shipped are unaffected in substance - the sentences it replaced
+really were misleading, and `F85`'s own text quotes two of them for the same
+reason. Their pointers are repointed at `F85` in this PR.
+
+**Not to be taken. Take `F85`.**
+
 ### F95 - medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way
 
 **Filed 2026-09-15.** `BOOK-INGEST-AUDIT` F89 repaired three clobbered gear
