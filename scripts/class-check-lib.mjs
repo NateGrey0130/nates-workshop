@@ -95,6 +95,60 @@ export function unmodelledKeys(data) {
 }
 
 /**
+ * The keys the app reads UNDER `skills`.
+ *
+ * Derived from the readers, which is the only way it stays true:
+ *
+ *   occ_skills          parser.js validateSkillEntries, compose.js, app.js
+ *   occ_related_skills  parser.js, _lib/grants.js, app.js
+ *   secondary_skills    app.js `sk.secondary_skills || { count: 0 }`, parser.js
+ *   skill_programs      parser.js, leveling.js
+ *   mos                 parser.js, app.js - the NEWEST, added by F82
+ *
+ * THE TWO EASY TO MISS ARE `mos` AND `skill_programs`. Both hand-written sources
+ * a taker would naturally copy from - `apps/character-creator/js/class-template.js`
+ * and the class-import skill's `reference/frontmatter.md` - list only the first
+ * three, and a list built from either would newly warn on EIGHTEEN correct
+ * published classes: seventeen using `mos`, one using `skill_programs`.
+ * Measured against production 2026-09-15, before this shipped.
+ */
+export const KNOWN_SKILL_KEYS = new Set([
+  'occ_skills', 'occ_related_skills', 'secondary_skills', 'skill_programs', 'mos',
+]);
+
+/**
+ * Keys under `skills` that nothing in the app reads.
+ *
+ * BOOK-INGEST-AUDIT.md F87. `unmodelledKeys` reads `Object.keys(data)` - the TOP
+ * level - and `skills` is in KNOWN_KEYS, so the whole subtree beneath it was
+ * accepted without inspection. Sixteen live classes spelled a key
+ * `occ_secondary_skills`, which nothing reads, and offered zero secondary skills
+ * where their book gives 8 to 12; `class-check` called every one of them
+ * `ready - 0 errors, 0 warnings`. That is this check's own stated purpose
+ * missing its own case.
+ *
+ * A SEPARATE FUNCTION RATHER THAN A WIDER `unmodelledKeys`, because of the other
+ * consumer. `test/checks/class-check-tool.mjs` gates a smoke check - "no shipped
+ * class reports an unmodelled key" - by walking the `add-*-class.sql` files ON
+ * DISK rather than the live catalog. F87's data half shipped as an UPDATE
+ * (`zzzzzzzzzzz-hu-secondary-skills-key.sql`), so production is repaired and
+ * those sixteen SOURCE files still carry the old spelling. Widening
+ * `unmodelledKeys` itself would turn the suite red on sixteen files that must
+ * not be edited - an applied data script is never edited here - to report a
+ * state a later script in the same rebuild already corrects.
+ *
+ * So `class-check` reports this and the corpus gate does not, which is the split
+ * F87 asked for: a warning for the author of a NEW class, and no new gate.
+ * Running `class-check` on one of those sixteen files does now name the key,
+ * which is the right answer for a file somebody is reading.
+ */
+export function unmodelledSkillKeys(data) {
+  const skills = data && typeof data === 'object' ? data.skills : null;
+  if (!skills || typeof skills !== 'object' || Array.isArray(skills)) return [];
+  return Object.keys(skills).filter((k) => !KNOWN_SKILL_KEYS.has(k));
+}
+
+/**
  * Read the class markdown back out of a data script.
  *
  * A class arrives one of two ways: as loose markdown while it is being written,

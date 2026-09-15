@@ -44,7 +44,8 @@ import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
-  extractClassMarkdown, unmodelledKeys, crossCategoryRestrictions, unclosedFlowLines,
+  extractClassMarkdown, unmodelledKeys, unmodelledSkillKeys,
+  crossCategoryRestrictions, unclosedFlowLines,
   parseSourcePages, resolveBookSlug, registryBookSlug, detectPageOffset,
   detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
@@ -253,7 +254,14 @@ if (unclosed.length) {
   console.log('  the failure surfaces later as a misleading shape error.');
 }
 
-const unmodelled = unmodelledKeys(data);
+// BOOK-INGEST-AUDIT.md F87. Reported together, because to the person reading
+// this they are one answer - "you wrote a key nothing reads" - and the level it
+// is at is a detail of where to look. `skills.` is prefixed so the message
+// names the path rather than a bare word that does not appear at the top level.
+const unmodelled = [
+  ...unmodelledKeys(data),
+  ...unmodelledSkillKeys(data).map((k) => `skills.${k}`),
+];
 if (unmodelled.length) {
   console.log(`\nUNMODELLED (${unmodelled.length})`);
   for (const k of unmodelled) {
