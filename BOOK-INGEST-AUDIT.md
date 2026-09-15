@@ -12634,6 +12634,39 @@ and the population came from the shipped function rather than from a grep.
 **Ongoing cost: none.** It removes the last hand-rolled psionic caption, which
 is the same argument `F69` made for the pickers.
 
+**Taken, 2026-09-15 (PR #PRNUM), as proposed and display-only.** One expression:
+`cats.join(', ')` becomes `cats.map(categoryLabel).join(', ')`, which is what
+`app.js:3708` has always done. `categoryLabel` was already imported. No gate
+changed, no validation added, and the pool a player may pick from is the same
+before and after - `categoryAllows` read the object correctly all along.
+
+**What the two affected classes now say**, rendered through the real
+`psionicCategoriesForGrant` and the real `categoryLabel` against production,
+2026-09-15:
+
+| class | before | after |
+|---|---|---|
+| `healing-shaman` | `[object Object]` | `Physical (except Telekinesis)` |
+| `totem-warrior` | `[object Object]` | `Sensitive (except Astral Projection, Clairvoyance)` |
+
+**The caption was not merely ugly - it was the only place the narrowing was
+stated.** Both of these grants EXCLUDE powers the category otherwise contains,
+and the picker's one sentence about why was the string `[object Object]`. A
+player levelling a Totem Warrior was told the grant came from that and nothing
+else.
+
+**Three smoke checks, two of which fail against the unmodified file.** They are
+source checks rather than behavioural ones, and that is a limitation worth
+stating: the caption is a template literal inside a `.map` in a page script,
+with no seam to call. So what is pinned is *"no psionic caption joins raw
+category entries"* and *"the level-up caption goes through `categoryLabel`"* -
+the shape, not the rendered output. The third check is behavioural and tests
+`categoryLabel` itself, so it passes either way by design.
+
+**This was found by F92's premise pass and by nothing else**, which is the part
+worth keeping: it is live, user-facing, on two published classes, and no check
+in the tree had an opinion about it until this one.
+
 ### F93 - medium - the duplicate scorer demotes on `category` and `system`, and `enchantments` is distinguished by neither
 
 **Filed 2026-09-15 while finishing the duplicate-suggestion pass**, which is

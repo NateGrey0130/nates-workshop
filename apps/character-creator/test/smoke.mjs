@@ -6680,6 +6680,29 @@ section('Psionic category narrowing');
   check('and neither wizard picker still tests membership by hand',
     !/allowed\.includes\(\w+\.category\)/.test(appSrc));
 
+  // ---- and no psionic caption renders a category by string coercion (F96) ----
+  // The level-up picker's caption used `cats.join(', ')` where every other
+  // psionic caption uses categoryLabel, so an object category - live on
+  // healing-shaman and totem-warrior - printed "[object Object]". The Totem
+  // Warrior states one category and it is an object, so its WHOLE caption was
+  // "[object Object]". Found by F92's premise pass, not by any check.
+  //
+  // A source check rather than a behavioural one because this is a page script:
+  // the caption is a template literal inside a map, with no seam to call.
+  check('no psionic caption joins raw category entries',
+    !/\bcats\.join\(/.test(appSrc), 'use cats.map(categoryLabel).join instead');
+
+  // And the function that makes it right must actually be reached from there.
+  check('the level-up psionic caption goes through categoryLabel',
+    /cats\.map\(categoryLabel\)\.join\(/.test(appSrc));
+
+  // The defect itself, pinned as the shape rather than the line: a category
+  // object must never stringify into a caption. This is what a reader sees.
+  check('and an object category has a label that is not [object Object]', (() => {
+    const label = categoryLabel({ name: 'Super', only: ['Bio-Manipulation'] });
+    return label.includes('Super') && !label.includes('[object');
+  })());
+
   // ---- and the two keys that WIN over categories_allowed (F91) ----
   // BOOK-INGEST-AUDIT.md F91, the same hole F88 closed one key over. A schedule
   // entry's own `categories` and a starting group's both REPLACE
