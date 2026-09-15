@@ -67,7 +67,29 @@ function cleanup() {
 process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(130); });
 
-const WRANGLER_TIMEOUT_MS = 180000;
+// 180000 UNTIL 2026-09-14, WHEN THE BOOTSTRAP OUTGREW IT. Step [1/7] builds a
+// database from db/schema.sql, db/seed-catalogs.sql and every data script -
+// 682 files, 9.97 MB of SQL in one --file - and that call was measured at
+// 183.2s on the development machine, three seconds past the limit. It failed
+// twice in a row with "cannot build a database" while the SQL was fine.
+//
+// THE COMMENT BELOW USED TO SAY THIS LIMIT SHOULD NOT MOVE, citing SHIP-PR-AUDIT
+// F13. That reason no longer reaches this file. F13 was about a budget spent on
+// something other than the work: `npx wrangler` DOWNLOADING inside the timed
+// region on a cold runner cache, which is why it recommended warming the cache
+// rather than raising the number - so the timeout kept meaning what it said.
+// regression.yml now does exactly that ("warm the npx cache", before the timed
+// step), so the cause F13 named is already treated here, and what is left is
+// 183 seconds of genuine work against a 180-second ceiling. Raising it now is
+// the honest reading of the limit, not a way around a real failure.
+//
+// SIX MINUTES, not three-and-a-bit: the bootstrap grows with every import and a
+// ceiling set just above today's measurement would be crossed again by the next
+// book. It stays far inside regression.yml's own `timeout-minutes: 20`, and the
+// ETIMEDOUT branch below still reports a genuine hang as a timeout rather than a
+// SQL fault. CI is not the constraint either way - the runner builds this in a
+// fraction of the Windows time.
+const WRANGLER_TIMEOUT_MS = 360000;
 
 function wrangler(args) {
   // maxBuffer: the gear-citation sweep at the end pulls every published class's
@@ -92,9 +114,11 @@ function wrangler(args) {
   // "timed out", not "killed": with shell: true the timeout stops the shell, and
   // on Windows wrangler itself keeps running.
   //
-  // This changes no check, no timeout and no exit code. Whether the limit itself
-  // should move is a separate question - SHIP-PR-AUDIT F13 declined to raise the
-  // sibling harness's for a reason that applies here too.
+  // This message changes no check and no exit code; it only names the cause.
+  // THE LIMIT ITSELF DID MOVE, on 2026-09-14, and the reason this paragraph used
+  // to give against that - SHIP-PR-AUDIT F13 - is answered where the constant is
+  // declared above. Reporting a timeout clearly and setting it correctly are
+  // still two separate things, and this half is the first one.
   if (r.error && r.error.code === 'ETIMEDOUT') {
     const secs = Math.round((Date.now() - started) / 1000);
     r.stderr = `error: wrangler timed out after ${secs}s (limit ${WRANGLER_TIMEOUT_MS / 1000}s) - `
