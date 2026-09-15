@@ -11138,8 +11138,10 @@ wrong answer.** `combineClasses` starts `{ ...rcc }`, so without work:
 - a race that projects one and an occupation that does not - carried, correct **by accident**;
 - an **occupation** that projects one and a race that does not - **silently dropped**;
 - a **superseding** class - the race's wins and the occupation's is dropped, which
-  is **wrong**, and `cosmo-knight` is the only carrier of `supersedes_race` and
-  already states a projected factor in its own prose.
+  is **wrong**, and `cosmo-knight` is the only carrier of `supersedes_race`.
+  `apps/character-creator/db/add-cosmo-knight-class.sql:86`, read 2026-09-15,
+  already states one: *"None while passing as a normal humanoid; 12 when
+  revealed in full armor; 15 for a knight of evil alignment"*.
 
 `horror_factor` joins the explicit key loop, which expresses the right policy for
 all three. **When both state one and neither supersedes, the RACE wins** - a
