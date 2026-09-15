@@ -112,18 +112,41 @@ const groups = [
   // look at. The table was touched here only for the no-price count further
   // down, which is what made the omission easy to miss: `vehicles` appeared
   // in this file, just not in the part that checks anything.
-  ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles'].map((t) => ({
+  //
+  // AND THREE MORE, F85, which is F28 again twice over. `catalog-fields.js`
+  // declares EIGHT catalogs and this list held five, so `super_abilities` (364
+  // rows), `enchantments` (62) and `totems` (40) were checked by nothing -
+  // 466 rows, every one carrying a `source_book`, invisible to the one ledger
+  // built to ask whether a shipped row can still be traced to a page.
+  //
+  // WHAT THAT COST IS WORTH READING, because the failure was not abstract: two
+  // Powers Unlimited surveys closed with "no production row cites this book",
+  // which was true of this report and false of production by 295 rows - 100% of
+  // Powers Unlimited Three's, since every row it contributed is a super
+  // ability. A session was then briefed from those sentences to import two
+  // books that had gone in two days earlier.
+  //
+  // The dates say it is a shape rather than an oversight: `totems` landed
+  // 2026-09-10 and `super_abilities` 2026-09-13, both after this file was last
+  // edited on 2026-09-08 - and `enchantments` landed 2026-08-23, four days
+  // BEFORE this file existed, and was never in it. A hand-written list beside a
+  // declared one drifts every time the declared one grows.
+  ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
+      'super_abilities', 'enchantments', 'totems'].map((t) => ({
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
 ];
 
 const pad = (s, n) => String(s).padEnd(n);
-console.log(`COVERAGE        ${BUCKETS.map((b) => pad(b, 15)).join('')}`);
+// 16, not 14. `psionic_powers` is exactly 14 and already prints with no gap
+// before its first column; `super_abilities` is 15 and would run into it. F85.
+const LABEL_W = 16;
+console.log(`COVERAGE${' '.repeat(LABEL_W - 6)}${BUCKETS.map((b) => pad(b, 15)).join('')}`);
 const allOffenders = [];
 for (const g of groups) {
   const s = summarise(g.rows.map((r) => ({ label: r.label, sourceBook: r.sb })), opts);
-  console.log(`  ${pad(g.label, 14)}${BUCKETS.map((b) => pad(s.counts[b], 15)).join('')}`
+  console.log(`  ${pad(g.label, LABEL_W)}${BUCKETS.map((b) => pad(s.counts[b], 15)).join('')}`
     + `  of ${s.total}`);
   for (const b of BUCKETS) {
     for (const o of s.offenders[b]) allOffenders.push({ group: g.label, ...o });
@@ -382,7 +405,24 @@ if (process.argv.includes('--vs-build')) {
           rows: fromBuild(`SELECT class_id AS label, ${FRONTMATTER} AS sb FROM imported_classes `
             + "WHERE deleted_at IS NULL AND status = 'published'"),
         },
-        ...['gear', 'skills', 'spells', 'psionic_powers'].map((t) => ({
+        // THE SAME LIST AGAIN, AND IT IS THE HALF THAT MISREPORTS RATHER THAN
+        // OMITS. F28 added `vehicles` to the live list above and not to this
+        // one, so the build side counted one fewer TABLE than the live side it
+        // is subtracted from, and every run printed a standing negative delta
+        // that was the whole vehicles table rather than a regression. F85
+        // measured it at -171 on 2026-09-14; it is the live vehicles count, so
+        // it had already moved to -220 by the time this shipped.
+        //
+        // That is worse than the omission above, because a reader is told a
+        // number and the number is wrong. `REBUILD-AUDIT.md` F4 built this
+        // comparison to catch 148 lost citations; a standing phantom is exactly
+        // the noise that hides the next 148.
+        //
+        // Kept in step with the list above BY HAND, which is the thing F85
+        // declined to fix and named as its own recurring cost. If a ninth
+        // catalog lands, both lists need it.
+        ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
+            'super_abilities', 'enchantments', 'totems'].map((t) => ({
           label: t,
           rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
         })),
