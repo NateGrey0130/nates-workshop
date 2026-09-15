@@ -13108,7 +13108,7 @@ one: the book was one grep away the whole time.
 add a check to remember, and it removes the last 15 of a population that
 `repo-vs-live` has been reporting since 2026-08-28.
 
-**Taken, 2026-09-15 (PR #PRNUM), both halves, each to the side this finding
+**Taken, 2026-09-15 (PR #1078), both halves, each to the side this finding
 recommended.** `zzzzzzzzzzzzz-f95-gear-repo-vs-live-residue.sql` - a TWELFTH `z`,
 because it has to follow every data script for two independent reasons at once.
 A row was added to the Data scripts table in `docs/operations.md`; without it the
