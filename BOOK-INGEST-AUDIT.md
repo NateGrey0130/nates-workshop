@@ -7071,6 +7071,21 @@ change, no new check. A check would have to detect NUL bytes in source, which is
 one grep nobody will remember to run against a problem that now has no instances.
 **Confidence: high**, both halves executed. **Ongoing cost: none.**
 
+**Taken 2026-08-31 in PR #869, and this note is added 2026-09-15 because it
+never had one.** That PR's subject is *"File and take BOOK-INGEST-AUDIT F48"* -
+filed and taken together, which is the one case this menu's protocol does not
+produce a separate outcome note for, so the finding has read as open ever since
+to anything scanning for one.
+
+**Verified rather than assumed, 2026-09-15:**
+`functions/api/character-creator/_lib/catalog-merge.js:124` reads
+``return `${x}\u0000${y}`;`` - the escape, not the literal - and the file
+contains **zero** NUL bytes. The comment two lines above it names both findings:
+*"`BOOK-INGEST-AUDIT.md` F44 named it; F48 changed it."*
+
+**Nothing else is open here.** No check was added and the finding argued against
+one; that argument stands and is not re-opened by this note.
+
 ### F49 - one skill taken THREE TIMES for three different weapons, and a class may grant it once
 
 **Filed 2026-09-09**, during the `new-west` class import, batch 1.
@@ -11136,6 +11151,31 @@ would want differently.
 declining. Raised, if anyone wants to, by the not-measured line.
 
 **Ongoing cost:** none. That is the argument for it.
+
+**Taken, 2026-09-15 (PR #PRNUM). DECLINED, which is what it proposed for
+itself.** `VALID_CATEGORIES` stays `['rcc', 'occ']`. No third category, no code,
+no data. The finding is the record; this note closes it so the next reader finds
+a decision rather than an open question.
+
+**Re-checked before closing rather than closed on the finding's word**, because
+the whole point of the proposal is that nothing in the app branches on a P.C.C.:
+
+- `VALID_CATEGORIES` is `['rcc', 'occ']` at
+  `apps/character-creator/js/parser.js:23`, read 2026-09-15. **The finding cites
+  `:16`**, which is where it sat on 2026-09-12 - a seven-line drift in three
+  days, and a small illustration of why a finding should cite a searchable
+  string rather than a line.
+- **Production holds ZERO classes with any other category**, counted `--remote`
+  the same day across all 318 published live classes. So nothing is being
+  refused today and nothing is stored as a workaround except the
+  `restrictions:` line the finding names.
+
+**The not-measured line is still not measured**, and that is the honest state:
+nobody has checked whether anything in the app branches on `category` in a way a
+P.C.C. would want differently. It stays declined on `CLASS-AUDIT`'s standing
+decision plus the fact that neither of the two P.C.C.s in the catalog differs
+from an O.C.C. in anything the app reads. **Revisit only on the trigger the
+finding names** - a third book whose P.C.C. differs mechanically.
 
 ### F78 - low - a creation-time roll table that permanently modifies the character has no home, and Nightbane ships nineteen of them
 
