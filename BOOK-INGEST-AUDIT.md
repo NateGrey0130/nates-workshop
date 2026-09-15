@@ -11409,6 +11409,57 @@ turns three checks red at once and each one says what it expected.
 characters: the erase is a composition rule, so a character already saved
 against a superseding occupation would recompose without its race's spells. The
 decision is whether that is a correction or a migration.
+
+**THE RULES QUESTION IS ANSWERED, 2026-09-15 (PR #1071): NO. A superseding
+class does NOT strip the race's magic or psionics.** Nate's call, asked rather
+than assumed. **Nothing changes in the code** - the behaviour measured above is
+the intended behaviour, the three smoke checks that pin it stay green, and the
+comment `F81` corrected in PR #1063 was the whole defect.
+
+**The book is the argument, and it was read before the question was put.** Rifts
+Dimension Book 2: Phase World printed 102 (cache `p102.txt:68-69`, offset 0,
+read 2026-09-15) enumerates exactly one loss:
+
+> O.C.C. Skills: When the character is transformed, the skills of his past life
+> are lost and the character is reborn.
+
+<!-- claim-ok: quoting the book passage this decision rests on -->
+**Skills, named; magic and psionics, not named.** Printed 100 explicitly KEEPS
+the better half of what the race had - *"use these die rolls, or the attributes
+of the character's original race, whichever are HIGHER"* - so the book is
+willing to say when something survives the transformation as well as when it
+does not. And the Fallen Cosmo-Knight, on that same printed 102, is described as
+*"often endowed with magical or psionic powers"*, which reads as the lineage
+carrying them rather than shedding them.
+
+**So the erase branch that never fires is correct to never fire**, and the
+sentence in `docs/race-and-occupation.md` - *"everything else | unchanged"* - is
+right rather than an omission. A line naming the book has been added there so
+the next reader meets the reason and not only the rule.
+
+**The exposure, measured through the real parser rather than with `instr`,
+`--remote` 2026-09-15** - because this is the number that made the question
+worth asking rather than deferring:
+
+| | |
+|---|---|
+| published classes carrying `supersedes_race` | **1** - `cosmo-knight` |
+| published R.C.C.s | 107 |
+| ...stating a magic or psionics block that is not `none` | **49** |
+| ...of those, carrying no `occ_restrictions` at all | **47** |
+
+So 47 race/occupation pairings reach this branch today. It was never
+theoretical; it was only never noticed.
+
+**A METHOD NOTE, because the first pass at that table was wrong in every cell.**
+Counted with `instr(markdown, 'supersedes_race') > 0` it reported **two** classes
+carrying the flag - the Fallen Cosmo-Knight's only occurrence of the word is in
+its own `extraction_notes` prose, explaining that the key exists - and 108
+R.C.C.s, 57 with magic and 50 with psionics, because `magic:` and `psionics:`
+also match prose and match a block whose `type` is `none`. **A doc correction
+saying "two classes carry it" was one keystroke from being written.** Read the
+key through `parseClassMarkdown`; `instr` over a markdown column matches the
+commentary as readily as the field.
 ### F85 - medium - the coverage ledger checks five catalogs and there are eight, so 466 cited rows are verified by nothing; and its second table list checks four, which prints a phantom -171
 
 **Filed 2026-09-14**, at the end of the Heroes Unlimited batch, when the survey's
@@ -12435,7 +12486,7 @@ are three `count(*)`s, and the consequence is quoted from two files in the tree.
 something to keep current - and it makes the *next* catalog's absence louder,
 because a book with rows in it will stop reading as a book with none.
 
-**WITHDRAWN 2026-09-15 (PR #PRNUM), THE SAME DAY IT WAS FILED. F94 IS A
+**WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A
 DUPLICATE OF `F85`, WHICH IS OPEN AND IS THE ONE TO TAKE.** Everything above is
 true and none of it is new: `F85` was filed 2026-09-14, says the same thing
 about the same line of the same file, and reaches the same 466 rows across the
