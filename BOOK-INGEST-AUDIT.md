@@ -11876,9 +11876,9 @@ key, and says so in its own comment (`catalogs/rows.js`). The body's narrower
 claim - that every collision check in the INGEST path reads only the table -
 holds, and is what shipped the bug.
 
-**The rule needed one carve-out the code already states.** A redirect whose
-target has itself been deleted is dead, and `_lib/catalog-redirects.js` says a
-dead redirect must not block anyone from reusing the key - so the check INNER
-JOINs the target rather than testing the `from_key` alone. Every redirect in
-production has a live target today, which is why this changes nothing now and
-matters later.
+**The rule needed one carve-out, and `functions/api/character-creator/_lib/catalog-redirects.js`
+lines 86-100 already state it** - read 2026-09-14: *"INNER JOIN on purpose: a
+redirect whose target has itself been deleted is dead, and a dead redirect must
+not block anyone from reusing the key."* So the check INNER JOINs the target
+rather than testing the `from_key` alone. All 66 redirect rows in production have
+a live target today, which is why this changes nothing now and matters later.
