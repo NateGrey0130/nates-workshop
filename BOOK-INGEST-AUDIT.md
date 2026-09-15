@@ -11602,6 +11602,62 @@ cost and pays it - its entries carry comments saying which reader consumes each
 one. A `skills` list is the same bargain one level down, and the same failure
 mode: a key added to the parser and not to the list produces a warning on a
 correct class.
+
+**Taken, 2026-09-15 (PR #1062), at the posture proposed - a report in
+`class-check`, no new gate.** `unmodelledSkillKeys` and `KNOWN_SKILL_KEYS` in
+`scripts/class-check-lib.mjs`; eight smoke checks pin them. The file this
+finding names now answers
+`ready - 0 errors, 0 warnings, 1 unmodelled key`, naming
+`skills.occ_secondary_skills`.
+
+**A SEPARATE FUNCTION RATHER THAN A WIDER `unmodelledKeys`, because of a second
+consumer this finding does not mention.**
+`apps/character-creator/test/checks/class-check-tool.mjs:97-109` gates a smoke
+check - *"no shipped class reports an unmodelled key"* - by walking the
+`add-*-class.sql` files ON DISK rather than the live catalog. The data half
+shipped as an UPDATE, so production is repaired and **those sixteen SOURCE files
+still carry the old spelling**. Widening `unmodelledKeys` itself turns the suite
+red on sixteen files that must not be edited, to report a state a later script
+in the same rebuild already corrects. The split is the one this finding asked
+for: a warning for the author of a NEW class, and no new gate.
+
+**THE PRE-RUN, which this finding said was not done and a taker should do
+first.** `--remote`, 2026-09-15, 318 published live classes: **ZERO carry a key
+under `skills` outside the five.** Distribution: `occ_skills` 285,
+`secondary_skills` 247, `occ_related_skills` 245, `mos` 17, `skill_programs` 1.
+So the posture argument this finding flagged as mattering *"if the answer is
+large"* does not bite.
+
+**AND THE FALSE POSITIVE IT PREDICTED IS REAL, at exactly two keys.** Both
+hand-written sources a taker would copy the list from -
+`apps/character-creator/js/class-template.js` and the class-import skill's
+`reference/frontmatter.md` - list only `occ_skills`, `occ_related_skills` and
+`secondary_skills`. A list built from either newly warns on **eighteen correct
+published classes**: seventeen using `mos`, one using `skill_programs`. `mos` is
+the newest key, added by F82, which is what makes it the one to forget. The five
+are pinned by NAME rather than by a count that would still pass with one swapped
+out.
+
+**`bonuses` AND `variants[]` DO NOT HAVE THE SAME HOLE**, and this finding's
+stated reason for excluding them is therefore wrong. Both already warn on an
+unknown key one level down, in `js/parser.js` - `bonuses.${k} is not a
+recognised group and will be ignored`, and a variant setting a key it cannot
+override. Only `skill_programs`' interior was genuinely uncovered. The exclusion
+was right; the argument for it was not.
+
+**`magic` HAS THE SAME HOLE AND IS ALREADY DOCUMENTED AS HAVING IT.**
+`js/leveling.js:466-471` records a `from_list` silently ignored under `magic`,
+and says in so many words that `class-check` cannot see it either because
+KNOWN_KEYS validates top-level frontmatter only - `RETRO-AUDIT` R11. Not taken
+here, and now named in two places rather than one.
+
+**Two smaller corrections.** `KNOWN_KEYS` does not carry a reader comment per
+entry - **ten of thirty-eight** do, and the file's own header says it is *"kept
+as a literal list rather than derived from the parser"*, which is the opposite
+posture to the one the finding's cost paragraph attributes to it. And the *"252
+other published classes get it right"* figure could not be reproduced by any
+query on 2026-09-15: it is 247 carrying the key, 231 excluding the sixteen. A
+dated measurement stands as a record, but do not re-quote that number.
 ### F88 - medium - a choice group's own `categories` array is never handed to `validateCategories`, so the entries F84 now insists on are themselves unchecked
 
 **Filed 2026-09-14** while taking `F84`, at the same fix site and one step
