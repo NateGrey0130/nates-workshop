@@ -13138,13 +13138,23 @@ sitting in PRODUCTION rather than only in a rebuild. **It stays a priceless stub
 and an assertion says so, because the name appears exactly once in all 209 cached
 pages and the book prices it nowhere.
 
-**Seven assertions, and two of them are the kind this repo asks for rather than
-the kind that is easy.** *"The Spirit West sentence appears exactly once"* proves
-the guard rather than the write - this file and the original append the same
-sentence under the same condition, so a database that ran both must still hold
-one copy. And *"no gear row claims mega-damage with no damage recorded"* is a
-zero-wrong assertion over the whole table rather than a count, so it holds in
-every environment and cannot go stale the way a total would.
+**Six assertions, and ONE OF THEM WAS WRONG AND FAILED ON PRODUCTION.** It
+asserted `is_mega_damage = 1 AND damage IS NULL` should be zero; production
+answered **16**, and all sixteen are correct. `is_mega_damage` is a UNIT flag -
+it says this row's numbers are mega-damage - and it is **not** a claim that the
+row deals damage. Four body armours and the Glitter Boy carry `mdc` and no
+`damage`; three are protective gear; two are magic armour; one is an unbreakable
+mega-damage PLOUGH.
+
+Two narrower versions were tried and were wrong too. **There is no true blanket
+assertion of that shape**, the data script now records at length why, and the
+third variant became **F97**.
+
+**The data was right throughout.** The other five assertions passed on the first
+apply, and afterwards `repo-vs-live --table gear` prints *"The repo rebuilds the
+live catalog exactly"* with `drift-check --remote` still `NO DRIFT`. What failed
+was a claim about the whole table that this file had no business making - the
+tempting assertion that reads obviously right until the rows are looked at.
 
 **Neither original script was edited**, per the reasoning in the Proposal: both
 are applied, and renaming `add-spirit-west-weapons-of-note.sql` would make
@@ -13158,3 +13168,73 @@ batch earlier. It goes here because `F89` and `F90` are the adjacent gear
 residue findings and are here, and because that file's header states its own
 findings as a closed range - adding `F21` to it would falsify the header, which
 is the thing `audit-menu` says a header may not carry.
+
+### F97 - low - six ordnance rows carry a mega-damage FLAG and no mega-damage NUMBER anywhere
+
+**Filed 2026-09-15 while taking F95**, by an assertion that failed rather than by
+a check - and the assertion was itself wrong, which is the part worth reading.
+
+**What was tried, and why it was wrong.** F95's data script asserted
+`is_mega_damage = 1 AND (damage IS NULL OR trim(damage) = '')` should be **0**.
+Production answered **16**, and **all sixteen are correct**. `is_mega_damage` is
+a UNIT flag - it says this row's numbers are mega-damage - and it is **not** a
+claim that the row deals damage. Four are body armour and one is the Glitter Boy,
+carrying `mdc` and no `damage`; three are protective gear (a communications
+helmet, a field radio, polarized goggles); two are magic armour; one is an
+unbreakable mega-damage PLOUGH.
+
+Two narrower versions were tried and both were wrong too, measured `--remote`
+2026-09-15: `is_mega_damage = 0` with `M.D.` in the damage text answers **4**,
+and all four are mixed weapons whose row is S.D.C. and whose prose names an M.D.
+option - the M-20's grenades, the Horune harpoon's explosive tip.
+
+**The third version is the finding.** Adding `AND mdc IS NULL` - so the row
+claims mega-damage units and records **no mega-damage number of any kind** -
+answers **6** - and only FIVE of them are a question:
+
+| slug | category | cost | `damage` | `mdc` |
+|---|---|---|---|---|
+| `deep-sea-depth-charge` | weapon | 4,500 | NULL | NULL |
+| `torpedo-mini` | weapon | 3,500 | NULL | NULL |
+| `torpedo-light` | weapon | 8,000 | NULL | NULL |
+| `torpedo-medium` | weapon | 10,000 | NULL | NULL |
+| `torpedo-heavy` | weapon | 20,000 | NULL | NULL |
+| `unbreakable-md-plow` | magic | NULL | NULL | NULL |
+
+**Five are Rifts World Book 7: Underseas printed 117; the sixth is not.**
+`unbreakable-md-plow` is Rifts World Book 18: Mystic Russia printed 125 and is
+probably CORRECT as it stands - it is a plough, the book calls it mega-damage
+because that is what it is made of, and it neither deals damage nor has an M.D.C.
+stated. **Do not sweep it in with the five.** A first draft of this table guessed
+a sixth Underseas row and the query said otherwise.
+
+**The five ordnance rows are the real question, and the damage is not in the
+prose either** - `torpedo-light`'s whole description is *"The second of the
+New Navy's four torpedo grades, priced per torpedo."* So a player who buys one
+is told what it costs and nothing about what it does.
+
+**This may be the book's own silence rather than a gap in the import**, and that
+is precisely what has not been checked: nobody has opened printed 117 to see
+whether the four grades are given damages there. **That is the whole of the work
+this finding asks for.**
+
+**Proposal.** Read Rifts World Book 7: Underseas printed 117 off the cache
+(`underseas` is cached, 216 pages, `page_offset: -1`). Then either fill the six
+rows' `damage` from the page, or - if the book really prices them without
+stating a damage - record that in each row's `extraction_notes` and **clear
+`is_mega_damage`**, because a unit flag on a row with no number in any unit says
+nothing and reads as an unfinished import.
+
+**Posture: data only, and whichever way the page falls is the answer.** No
+schema change, no check. Do NOT add a blanket assertion of the shape that
+produced this finding - three were tried and all three were wrong.
+
+**Evidence:** the three counts above, `--remote` 2026-09-15, each run
+separately; `torpedo-light`'s stored description, read the same day. **Not
+measured:** what printed 117 says, which is the one thing that decides it.
+
+**Confidence: high that the six rows are in this state. Low on whether it is a
+defect**, and what would raise it is the page. If the book states damages, this
+is a six-row fill; if it does not, this is a two-column correction and a note.
+
+**Ongoing cost: none either way.** Six rows, once.

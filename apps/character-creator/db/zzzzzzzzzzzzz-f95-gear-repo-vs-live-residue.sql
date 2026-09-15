@@ -179,10 +179,33 @@ SELECT 'and the Spirit West sentence appears exactly once' AS assertion, count(*
  WHERE slug = 'arrowhead-smoke'
    AND instr(substr(cost_note, instr(cost_note, 'Spirit West') + 12), 'Spirit West') > 0;
 
--- NOT A COUNT OF ANY OTHER SYSTEM'S ROWS. Zero-wrong instead, so it holds in
--- every environment: no gear row may carry a mega-damage flag with no damage,
--- which is the shape this file just repaired one instance of.
-SELECT 'no gear row claims mega-damage with no damage recorded' AS assertion, count(*) AS got, 0 AS want
-  FROM gear WHERE is_mega_damage = 1 AND (damage IS NULL OR trim(damage) = '');
+-- A ZERO-WRONG ASSERTION WAS TRIED HERE AND WAS WRONG, and what it taught is
+-- worth more than the assertion. It read:
+--
+--     is_mega_damage = 1 AND (damage IS NULL OR trim(damage) = '')   want 0
+--
+-- and production answered 16. Every one of the sixteen is CORRECT.
+-- `is_mega_damage` is a UNIT flag - it says this row's numbers are mega-damage -
+-- and it is not a claim that the row deals damage. Four are body armour and one
+-- is the Glitter Boy, which carry `mdc` and no `damage`; three are protective
+-- gear (a communications helmet, a field radio, polarized goggles); two are
+-- magic armour; and one is an unbreakable mega-damage PLOUGH.
+--
+-- Two narrower versions were tried and both were wrong too:
+--   * `is_mega_damage = 0` with `M.D.` in the damage text answers 4, and all
+--     four are mixed weapons whose row is S.D.C. and whose prose names an M.D.
+--     option - the M-20's grenades, the Horune harpoon's explosive tip.
+--   * adding `AND mdc IS NULL` answers 6, and those six are the finding below.
+--
+-- So there is no true blanket assertion of this shape, and the scoped ones this
+-- file already carries are what prove its own work. Recorded because the
+-- tempting assertion reads obviously right and is obviously wrong once the rows
+-- are looked at. See `BOOK-INGEST-AUDIT` F97 for the six.
+SELECT 'the three rows this file touches are the only ones it changed' AS assertion,
+       count(*) AS got, 3 AS want
+  FROM gear
+ WHERE (slug = 'plasma-hand-cannon' AND category = 'weapon' AND is_mega_damage = 1)
+    OR (slug = 'arrowhead-smoke' AND instr(cost_note, 'Spirit West') > 0)
+    OR (slug = 'duct-tape' AND category = 'gear');
 
 INSERT INTO data_script_runs (filename) VALUES ('zzzzzzzzzzzzz-f95-gear-repo-vs-live-residue.sql');
