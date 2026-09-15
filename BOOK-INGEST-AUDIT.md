@@ -11033,7 +11033,7 @@ second stat block on the sheet - a product question, not a code one.
 **Ongoing cost:** unknown until the remedy is chosen. Recording it costs
 nothing.
 
-**Taken, 2026-09-15 (PR #PRNUM), at the posture it asked for: RECORD AND STOP.**
+**Taken, 2026-09-15 (PR #1080), at the posture it asked for: RECORD AND STOP.**
 No schema change, no column, no sheet work - the remedy is still undesigned and
 this finding deliberately does not scope it.
 
