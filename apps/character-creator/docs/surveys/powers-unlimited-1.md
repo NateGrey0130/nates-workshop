@@ -222,5 +222,7 @@ That was accurate when written and it is accurate today - and this book has held
 179 production rows since 2026-09-13. `source-coverage.mjs:115` walks `gear`,
 `skills`, `spells`, `psionic_powers` and `vehicles`, read 2026-09-15, and
 `super_abilities` is not among them, so 170 of those 179 rows are invisible to
-it. **Do not re-derive this book's state from that tool.** Filed as
-`BOOK-INGEST-AUDIT` F94.
+it. **Do not re-derive this book's state from that tool.** That is
+`BOOK-INGEST-AUDIT` **F85**, filed 2026-09-14, which quotes this very sentence.
+(PR #1068 cited it as F94, a duplicate filed a day later and withdrawn the same
+day; F85 is the open finding.)
