@@ -177,8 +177,25 @@ console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} r
   + (presentSlugs.length ? ` — ${presentSlugs.join(', ')}` : '')
   + (strays.length ? `; ${strays.length} not in the registry: ${strays.join(', ')}` : ''));
 
-// Three queries, not three per book. ~1,000 rows.
-const CITATION_TABLES = ['spells', 'psionic_powers', 'skills'];
+// Four queries, not four per book.
+//
+// `super_abilities` joins the three on the criterion the NOT-gear comment below
+// already states - "canonical name lists in the book". Revised Heroes Unlimited
+// printed 163 and 169 are alphabetical lists of every minor and major super
+// ability, recorded as one of that book's own authority tables in
+// docs/surveys/heroes-unlimited-core.md. A name absent from the text means
+// something there, which is exactly what the comment asks of a table.
+// BOOK-INGEST-AUDIT F86.
+//
+// `vehicles`, `enchantments` and `totems` STAY OUT, and this is the decision
+// F86 asked to be written down either way rather than left to the next reader:
+// all three are the GEAR case rather than the spell case. A vehicle's catalog
+// name is reworded prose the same way a gear name is - the row says
+// `M-41A3 Walker Bulldog` where the page heading is a stat block - and
+// `enchantments` and `totems` are named by their own row text rather than by a
+// checklist the book prints. A check that cries wolf is worse than no check,
+// which is the whole argument of the comment below.
+const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities'];
 const citationRows = new Map();   // slug -> [{ table, name }]
 for (const table of CITATION_TABLES) {
   for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {

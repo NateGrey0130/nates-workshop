@@ -11793,6 +11793,9 @@ spell case and probably belong out; nothing has decided either way in writing.
 unlike `F85`, this one is read rather than measured, and the first run of a
 widened `repo-vs-live` is the thing that would settle its cost.
 
+**Taken, 2026-09-15 (PR #PRNUM), and its central premise was dead before anybody
+read it.** See the outcome note at the end of this finding.
+
 **Confidence: high on the omissions, low on what they will report.** What would
 raise the second half is running `repo-vs-live` with the three tables added and
 counting the differences; that was not done here because it builds a database and
@@ -11803,6 +11806,71 @@ fail a merge-time check, which is the cost of the check working. For
 `drift-check`, whatever advisory noise 364 super-ability names produce against
 their cited pages - unknown until run, and the `gear` comment is the precedent
 for backing it out if it cries wolf.
+**Taken, 2026-09-15 (PR #PRNUM).** Both halves shipped, the first at two tables
+rather than three, and **the thing this finding said would settle its cost was
+run for the first time.**
+
+**`vehicles` WAS ALREADY THERE, AND THIS FINDING'S GREP EVIDENCE IS FALSIFIED.**
+`TABLES` holds **nine** entries at `scripts/repo-vs-live.mjs:76`, and
+`['vehicles', 'name', 'slug']` is line 94 - character-for-character the triple
+proposed here. `F90` added it at 22:38 on 2026-09-14; this finding was filed at
+10:37 the same day. Read 2026-09-15.
+
+<!-- claim-ok: quoting this finding's own evidence line, falsified above -->
+So the sentence *"`grep -n 'vehicles\|super_abilities\|totems'
+scripts/repo-vs-live.mjs`, 2026-09-14, returns nothing"* now returns that line,
+with a two-paragraph comment above it recording why it was added. **It was true
+when written and it is the premise a taker implements from** - and adding the
+triple a second time would have compared every vehicles row twice and
+double-counted any difference into `problems`, which is the number the exit code
+reads. The line number was also off by one at filing: `:68` is the comment above
+`const TABLES = [`.
+
+**So item 1 is two tables, not three**, and `F85`'s closing paragraph carries the
+same dead sentence; a dated correction sits there too.
+
+**AND THE ROW FIGURE IS WRONG TWICE OVER.** This finding says **575 rows**
+(171 + 364 + 40) sit outside the check. `vehicles` is not outside it, so the
+figure for rows this PR newly covers is **404**; and 171 was stale anyway -
+production holds **220** vehicles, counted `--remote` 2026-09-15, because the
+Heroes Unlimited import added 49 at 21:37 on 2026-09-14, eleven hours after this
+was filed. Neither arithmetic nor the count survived the day it was written on.
+
+**THE FIRST RUN, which this finding says was never done and names as the thing
+that would settle its cost.** `node scripts/repo-vs-live.mjs`, 2026-09-15:
+
+```
+super_abilities  repo  364  live  364   names match
+totems           repo   40  live   40   names match
+```
+
+**Both tables rebuild EXACTLY - names and values.** Neither appears in the
+value-comparison section at all: the 67 differing fields across 66 rows are
+`skills` 16, `spells` 28, `gear` 15 and `imported_classes` 8, exactly as before.
+So the expectation this finding set - *"expect value-level differences on the
+first run, the way the other five started at 413"* - **did not hold, and that is
+the good outcome**: two catalogs of 404 rows join the gate with nothing to fix.
+Exit code 0, unchanged.
+
+**The `drift-check` half does not cry wolf**, which was its whole risk.
+`super_abilities` meets the criterion the NOT-gear comment states - Revised
+Heroes Unlimited printed 163 and 169 are alphabetical lists of every minor and
+major super ability, which that book's survey already records as an authority
+table. Run `--remote` 2026-09-15 with it added: **`NO DRIFT`, and zero new
+advisories.** 364 names checked against their books' text and not one flagged,
+against the 35-of-40 false-positive rate that kept `gear` out.
+
+**The decision this finding asked to be written down either way, written down.**
+`vehicles`, `enchantments` and `totems` **stay out** of `CITATION_TABLES`, and
+the reason is in the code beside the `gear` comment: all three are the gear case
+rather than the spell case. A vehicle's catalog name is reworded prose the same
+way a gear name is, and `enchantments` and `totems` are named by their own row
+text rather than by a checklist the book prints.
+
+**What this did NOT do.** The lists are still longhand and still in four places;
+this finding never proposed deriving them and neither does this PR. `F85`'s note
+carries the same limitation for its own two lists.
+
 ### F87 - high - `unmodelledKeys` reads TOP-LEVEL keys only, so a wrong key one level down is invisible and `class-check` answers `ready`
 
 **Filed 2026-09-14**, after sixteen live classes were found offering zero
