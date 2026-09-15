@@ -11033,6 +11033,37 @@ second stat block on the sheet - a product question, not a code one.
 **Ongoing cost:** unknown until the remedy is chosen. Recording it costs
 nothing.
 
+**Taken, 2026-09-15 (PR #1080), at the posture it asked for: RECORD AND STOP.**
+No schema change, no column, no sheet work - the remedy is still undesigned and
+this finding deliberately does not scope it.
+
+**What was in scope is now written where an importer will meet it.**
+`docs/race-and-occupation.md` gains a block directly under the Goblin Cobbler,
+which is the case that already illustrates the same limit: **`variants` is not a
+second body.** It states why the shape is tempting and wrong - a variant is a
+*kind* of the class picked once at creation, not a state a character changes
+between, so two variants would offer a one-time choice of body and then show
+only one of them forever.
+
+**And it names what the key cannot carry, which the finding did not.**
+`VARIANT_OVERRIDES` (`js/parser.js:64`, read 2026-09-15) admits `attribute_dice`,
+`attribute_requirements`, `attribute_maximums`, the four pool bases,
+`starting_money`, `bonuses`, `skill_overrides` and added skills. It does **not**
+admit `magic`, `psionics`, `natural_abilities`, `special_abilities` or
+`equipment_starting` - so a second form differing in any of those could not be
+expressed this way even if the semantics were right. That is a second,
+independent reason to refuse the shape, and it is checkable rather than a
+judgement.
+
+**The interim instruction is repeated there** rather than left in this file: the
+everyday form is the class's own block, the other form's deltas go in
+`natural_abilities`, and `extraction_notes` cites this finding.
+
+**Nothing is measured here that was not measured before.** The finding's
+own reach claim - no published class states two bodies - was checked by reading
+`VARIANT_OVERRIDES` and is unchanged; this note adds the key list, not a new
+survey.
+
 ### F75 - low - a Horror Factor a character PROJECTS has no field; the only `horror_factor` here is the save against someone else's
 
 **Found 2026-09-12** in the Nightbane R.C.C., printed 87.
