@@ -56,8 +56,13 @@
 -- 68 and 10 suggestions, every one in `contains`. No row is written for either
 -- catalog and that is not an omission: there was no confident suggestion to
 -- answer. The psionics catalog's confident tier was emptied once already, by
--- the `category` demotion `INGESTION-AUDIT` F27 added after `Telekinesis` and
--- `Telekinesis (Super)` scored a perfect 1 - and it is empty again today.
+-- the `category` demotion `clash` in catalog-merge.js - added in commit 5988a2e
+-- on 2026-08-15, under NO finding number, after `Telekinesis` (Physical, 3
+-- I.S.P.) and `Telekinesis (Super)` (Super, 10) scored a perfect 1. It is empty
+-- again today. `INGESTION-AUDIT` F27 is NOT that demotion and this header said
+-- it was until the claim was checked: F27 added the BRACKET demotion, and its
+-- own results table (INGESTION-AUDIT.md:3369) lists the Telekinesis pair as
+-- "already demoted by the category clash; unchanged".
 --
 -- ===================================================================
 -- SPELLS: THREE PAIRS, AND ALL THREE ARE WORD ORDER
