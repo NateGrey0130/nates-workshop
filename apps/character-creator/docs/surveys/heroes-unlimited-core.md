@@ -732,7 +732,7 @@ in nine batches, and the paragraph above is superseded:
 | 224, 226 | helicopter armament systems | 8 gear |
 | 221-225 | conventional and military vehicles | 49 vehicles |
 
-**695 gear rows and 49 vehicles**, with 14 vehicle locations and 12 vehicle
+**703 gear rows and 49 vehicles**, with 14 vehicle locations and 12 vehicle
 weapon systems. Production totals moved to 2164 gear and 220 vehicles, both
 pinned in `docs/operations.md` and enforced by `test/regression.mjs`.
 
