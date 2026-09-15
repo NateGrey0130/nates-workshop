@@ -13389,3 +13389,122 @@ defect**, and what would raise it is the page. If the book states damages, this
 is a six-row fill; if it does not, this is a two-column correction and a note.
 
 **Ongoing cost: none either way.** Six rows, once.
+
+**Taken, 2026-09-15 (PR #1082). THE PAGE IS NOT SILENT**, so this is the fill
+and not the flag-clearing. Five rows gained `damage`, `range` and `mdc`;
+`is_mega_damage` was correct all along and is unchanged on every one of them.
+`unbreakable-md-plow` is untouched, and asserted untouched. **Posture held:
+data only, no schema change, no check, and no new `z` tier.**
+
+**The branch this finding could not choose between.** It offered filling
+`damage` or clearing the flag, and said of printed 117 that *"nobody has opened
+[it] to see whether the four grades are given damages there."*
+<!-- claim-ok: quoting the premise this note answers -->
+The page carries a heading of its own - *Cost & M.D.C. Damage Inflicted by
+Torpedoes & Depth Charges:* - and under it a damage, a range and a cost for each
+of the four grades; a separate *M.D.C. of Torpedoes:* line on the same page
+gives each grade's M.D.C. and the depth charge's. Read off
+`.cache/books/underseas/txt/p117.txt`, 2026-09-15. So **three columns were
+droppable rather than one**, and the flag-clearing branch is dead.
+
+| slug | `damage` | `range` | `mdc` |
+|---|---|---|---|
+| `torpedo-mini` | 1D6x10 M.D. (HE or Plasma) | One mile (1.6 km) | 10 |
+| `torpedo-light` | 2D4x10 M.D. (HE) or 1D6x10 M.D. (Plasma) | 5 miles (8 km) | 15 |
+| `torpedo-medium` | 3D4x10 M.D. (HE) or 2D6x10 M.D. (Plasma) | 10 miles (16 km) | 30 |
+| `torpedo-heavy` | 4D6x10 M.D. (HE or Plasma) | 20 miles (32 km) | 50 |
+| `deep-sea-depth-charge` | 2D4x10 M.D. to 100 ft, +4D6 M.D. to a further 30 ft | two miles (3.2 km) | 5 |
+
+**THIS FINDING SENDS A TAKER TO THE WRONG CACHE PAGE, and that is the
+correction worth carrying forward.** Its Proposal says
+*"`page_offset: -1`"*. <!-- claim-ok: quoting the premise this note corrects -->
+That is the book's top-level value. `scripts/books.json` gives `underseas` a
+`page_offset_exceptions` entry of `[{ "printed_through": 130, "offset": 0 }]` -
+read 2026-09-15 - because printed 131 is missing from the scan. **Printed 117 is
+cache `p117`, not `p116`**, and `p116` holds no torpedo text at all
+(`grep -il torpedo .cache/books/underseas/txt/p1[0-2][0-9].txt`, same day,
+returns p100-p104, p117, p120, p124-p128). A reader following the finding
+literally finds nothing and concludes the book is silent - the exact wrong
+answer, arrived at by obeying the finding. `ocr-book.py` re-rendering the page
+reported `last printed folio 117, offset +0` without being told.
+
+Two smaller things in that same sentence: *"216 pages"* is the **cache** page
+count from `.cache/books/underseas/manifest.json`, while `scripts/books.json`
+gives `printed_pages: 214` - so do not quote 216 as a printed count.
+
+**THE DIGITS WERE CHECKED THREE WAYS, AND TWO OF THEM PROVE NOTHING ALONE.**
+The five stored costs already matched the page exactly, and that is worthless as
+evidence: those costs were extracted from this same cache page, so the agreement
+is circular. What was done instead, all 2026-09-15 - the cached 300 dpi text; a
+fresh **500 dpi** render and re-OCR of the same page into a scratch cache, which
+agrees digit for digit; and the rendered page **image**, read directly for both
+blocks. The digit-cipher rule that governs the Nightbane pages does not reach
+this book: `.cache/books/underseas/manifest.json` records `"text_layer": false`,
+so this is an OCR'd scan rather than a text layer with substituted glyphs.
+
+**THE PROPOSAL AND THE BODY DISAGREED ON SCOPE, AND THE BODY WAS RIGHT.** The
+body says do not sweep `unbreakable-md-plow` in; the Proposal then says *"fill
+the six rows' `damage`"*. <!-- claim-ok: quoting the premise this note corrects -->
+Five is the real scope, and the plough's own page settles what the body only
+guessed: Rifts World Book 18: Mystic Russia printed 125 - cache `p126`, that
+book's offset being +1, read 2026-09-15 - gives it *"P.P.E. Cost: 100"* and no
+damage and no M.D.C. Its NULLs are finished and its flag is a unit. It is
+asserted untouched so that a later reader does not complete it from nothing.
+
+**THE FALLBACK BRANCH NAMED A FIELD `gear` DOES NOT HAVE.** It says to record
+the book's silence *"in each row's `extraction_notes`"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+`gear`'s columns are `id, slug, name, system, category, weight_lbs, cost,
+cost_note, damage, is_mega_damage, range, payload, rate_of_fire, ar, sdc, mdc,
+description, source_book, vehicle_slug` - read from `sqlite_master` `--remote`
+2026-09-15, and no table in the database carries a column of that name.
+`extraction_notes` is a **class frontmatter key**. Moot once the page decided
+it, and recorded so nobody goes looking for it.
+
+**ONE NUMBER THE BOOK GIVES TWICE AND DIFFERENTLY, recorded rather than
+stored.** Printed 117's *Deep Sea Depth Charges* entry says a charge is *-4 to
+strike ... when launched more than a 3000 feet (914 m) above it*; its *Maximum
+Depth* paragraph says depth charges *are -5 to strike ... when launched more
+than 4000 feet (1220 m) away/above*. Both were confirmed in the rendered image,
+so the book disagrees with itself rather than the OCR misreading. Neither is
+written to a row: `gear` has no to-strike column, and inventing one for a figure
+the book prints two ways would be the worse of the two.
+
+**NO NEW TIER, and the reason is that none was needed.** All five slugs were
+grepped across `apps/character-creator/db/*.sql` on 2026-09-15 and exactly one
+file matches, `add-underseas-gear.sql`, which creates them - so the minimum
+correct tier was any `zz-` file. The corrective script joins the thirteen-`z`
+tier beside `zzzzzzzzzzzzz-f95-gear-repo-vs-live-residue.sql` instead, whose
+glob the Data scripts table in `apps/character-creator/docs/operations.md`
+already covers, so no row was added there and no tier was invented.
+`add-underseas-gear.sql` is not edited - it has been applied to every
+environment.
+
+**PROVED BOTH DIRECTIONS ON A CLEAN REBUILD**, not on production and not by
+reasoning - `rebuild-local.mjs` twice, once whole and once `--stop-before` the
+new file:
+
+| | files applied | F97's own query |
+|---|---|---|
+| without | 692 | **6 rows** |
+| with | 693 | **1 row** - the plough |
+
+**The one assertion the posture forbids is not added.** It says *"Do NOT add a
+blanket assertion of the shape that produced this finding - three were tried and
+all three were wrong."* <!-- claim-ok: quoting the posture this note is obeying -->
+The three that failed asserted **zero** over the whole table. The assertion this
+file carries re-runs F97's own query and expects a **non-zero** remainder, which
+is the opposite claim and is why it survives.
+
+**Confidence moved the way the finding said it would.** It rated itself *"Low on
+whether it is a defect"* and named the page as the thing that would raise it.
+The page raises it to high: it was a defect, and a three-column one.
+
+**One thing adjacent to this finding and deliberately not swept in.** The
+`is_mega_damage = 0` count of four that F97 characterises as *"all four ...
+mixed weapons whose row is S.D.C. and whose prose names an M.D. option"* covers
+three of the four - `an-m14-th3-incendiary-hand-grenade`, `horune-harpoon-gun`
+and `m-20-assault-rifle`. The fourth, `tw-sapper`, reads *"No physical damage.
+Each blast DRAINS P.P.E."* and names M.D. only against a magic barrier, read
+`--remote` 2026-09-15. The count is right and the characterisation covers three
+of four. No row is wrong, so nothing is filed.
