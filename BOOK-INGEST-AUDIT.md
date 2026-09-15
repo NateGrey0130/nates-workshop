@@ -3966,6 +3966,62 @@ printed 119.
 outcome changes what a Book of Magic caster spends. `Dolphin: Sonic Blast` is
 unaffected either way - it is a third, genuinely different spell.
 
+**Taken, 2026-09-15 (PR #PRNUM). ANSWERED BY READING THE TWO PAGES, AND THE
+ANSWER IS THAT BOTH ROWS ARE CORRECT AND NOTHING CHANGES.** No correction, no
+merge, no redirect, no rename - the three outcomes this finding listed are all
+wrong, and the fourth possibility it named in passing is the true one: **the
+book prints the spell twice on purpose, for two different spell lists.**
+
+**The finding was right that it could not be decided without reading printed 63
+and printed 119.** Both were read off the cache on 2026-09-15 (`bom`,
+`page_offset: 1`, so cache `p064.txt` and `p120.txt`).
+
+**Both pages print the spell under the bare heading `Sonic Blast`**, with
+identical `Range: 20 foot (6 m) radius`, `Duration: Instant`, `Damage: 4D6 M.D.`,
+`Saving Throw: Standard` and word-for-word identical prose. The only difference
+on the page is the cost: `P.P.E.: Fifteen` on printed 63,
+`P.P.E.: Twenty-Five` on printed 119. **So the name is NOT the distinction the
+book draws. The section is.**
+
+**The section headings settle it**, and they are what nobody had looked for:
+
+| | printed 63 | printed 119 |
+|---|---|---|
+| governing heading | **`Level Five: Air`** (cache `p063.txt:32`) | **`Level Seven (Invocations)`** (cache `p115.txt`) |
+| next heading after it | `Level Six: Air` (cache `p064.txt:72`) | `Level Eight (Invocations)` (cache `p120.txt:95`) |
+| the spell sits at | `p064.txt:30` - between them | `p120.txt:6` - between them |
+| so it is | the Air Warlock elemental list, level 5 | the general invocation list, level 7 |
+
+**Which is exactly how the catalog already stores them.** Read `--remote`
+2026-09-15:
+
+| row | level | P.P.E. | `source_book` |
+|---|---|---|---|
+| `Air: Sonic Blast` | 5 | 15 | `Rifts Book of Magic p.63` |
+| `Sonic Blast` | 7 | 25 | `Rifts Book of Magic p.119` |
+
+Both levels, both costs and both citations match the pages. `Air: Sonic Blast`
+already carries `same_spell_as: 'Sonic Blast'`, which is the linking mechanism
+this repo uses rather than `variant_note`. **The prefix convention is not
+invented for this pair either**: the catalog holds **65** `Air: ` spells, so a
+bare name meaning the invocation list and a prefix meaning a tradition is the
+established shape and not a guess made here.
+
+**This is a THIRD shape, and the finding was right to refuse the F26 link.**
+F26 is one spell that two BOOKS publish at two prices. This is one spell that
+ONE book publishes twice, in two different spell lists, at two different levels
+and costs - which is neither an error nor F26. **Recorded so the next reader
+does not re-open it**, because the rows look like a duplicate from any angle
+except the section heading, and the section heading is on a different page from
+the spell in one of the two cases.
+
+**What was NOT found**, stated so the silence is not read as coverage: no check
+was added. A same-name-different-list pair inside one book is still invisible to
+everything here - `findDuplicates` would score these two a perfect 1 on the
+bare names if both were bare, and the only thing separating them in the catalog
+is a prefix somebody typed. This finding does not propose a check for that, and
+nothing measured how often the shape occurs.
+
 ### F30 - a cached page can be WELDED across the gutter, and nothing detects it
 
 **Filed 2026-09-08**, during the `free-quebec` survey.
