@@ -186,9 +186,41 @@ Deliberately left:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached, registered in `books.json`, offset +2 verified |
-| 2026-09-13 | — | surveyed in full; rosters confirmed by two authorities each; psionics diffed `--remote`. **No data.** |
+| 2026-09-13 | - | surveyed in full; rosters confirmed by two authorities each; psionics diffed `--remote`. **No data.** |
+| 2026-09-13 | [#1028](https://github.com/NateGrey0130/nates-workshop/pull/1028) | **all 170 super abilities** - 125 minor, 45 major. |
+| 2026-09-13 | `af196d9` | **the NEW psionic powers**, of the 21 on printed 87-95. |
+| 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote` reports nothing for this slug: no
-production row cites this book. It belongs here from the first data PR onward.
+**NOTHING. This book is fully imported**, verified `--remote` 2026-09-15.
+
+| what the survey counted | what production holds |
+|---|---|
+| 125 minor + 45 major super abilities | **170**, 125 minor and 45 major, every one citing `Powers Unlimited One p.N` |
+| 21 psionic powers, 13 already matched, 8 new | **all 21 present**; 9 cite this book and 12 cite Rifts Ultimate Edition |
+| no classes, no spells, no gear, no vehicles | nothing to import, re-checked below |
+
+**The "8 new psionics" figure is 9 in the rows**, which is the discrepancy
+`heroes-unlimited-core.md`'s ledger already records against `af196d9`'s subject
+line. The rows are the authority.
+
+**Re-checked rather than taken from this survey's own inventory**, because the
+sentence that used to stand here sent a later session looking for classes that
+do not exist. A marker scan across all 99 cached pages on 2026-09-15 finds
+`O.C.C.`, `R.C.C.`, `Experience Table`, `Experience Levels`, `Attribute
+Requirement`, `Character Class`, `Alignment:`, `Skills of Note` and `Educational
+Level` on **zero pages each**. `Cost:` and `Weight:` appear nowhere; `P.P.E.` on
+2 pages and `M.D.C.` on 1.
+
+**THE SENTENCE THAT STOOD HERE WAS TRUE AND MISLEADING, and it is worth saying
+why.** It read: *"`node scripts/source-coverage.mjs --remote` reports nothing
+for this slug: no production row cites this book."*
+
+<!-- claim-ok: quoting the sentence this section corrects -->
+That was accurate when written and it is accurate today - and this book has held
+179 production rows since 2026-09-13. `source-coverage.mjs:115` walks `gear`,
+`skills`, `spells`, `psionic_powers` and `vehicles`, read 2026-09-15, and
+`super_abilities` is not among them, so 170 of those 179 rows are invisible to
+it. **Do not re-derive this book's state from that tool.** Filed as
+`BOOK-INGEST-AUDIT` F94.

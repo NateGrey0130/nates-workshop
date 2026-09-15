@@ -12344,3 +12344,93 @@ population, so nothing else can move.
 **Ongoing cost:** one more field name in a scorer that already reads two. It
 removes a standing source of false confident suggestions rather than adding
 something to keep current.
+
+### F94 - high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched
+
+**Filed 2026-09-15**, after this gap sent a session looking for content that was
+imported two days earlier. It is `high` not because a row is wrong but because
+**the tool is the one this repo uses to answer "what is left of this book", and
+it answered that question wrongly in three documents at once.**
+
+**What it walks.** `scripts/source-coverage.mjs:115`, read 2026-09-15:
+
+```js
+...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles'].map((t) => ({
+```
+
+Five tables. `apps/character-creator/js/catalog-fields.js` declares **eight**
+catalogs, read the same day, and the three missing from that list all carry a
+`source_book` column and are all fully populated - counted `--remote`
+2026-09-15:
+
+| catalog | rows | rows with NO `source_book` |
+|---|---|---|
+| `super_abilities` | **364** | 0 |
+| `enchantments` | 62 | 0 |
+| `totems` | 40 | 0 |
+
+**466 rows, every one citing a book, and the coverage report reads none of
+them.** Its `BY BOOK` block and its per-table `COVERAGE` grid are both silent
+about all three.
+
+**Two of the three gaps opened AFTER the tool was last touched, and one never
+closed.** Dated from `git log` on 2026-09-15: `source-coverage.mjs` was created
+2026-08-27 (`INGESTION-AUDIT` F5) and last edited 2026-09-08; `totems` landed
+2026-09-10 and `super_abilities` 2026-09-13, both after that. `enchantments`
+landed **2026-08-23, four days BEFORE the tool existed**, and was never in it.
+So this is not one oversight - it is the shape of a hand-written list beside a
+declared one, which is the argument under *Proposal* for deriving it.
+
+**What it cost, which is the reason this is a finding rather than a note.** Both
+Powers Unlimited surveys closed their *What remains* section with the same
+sentence, written from this tool:
+
+<!-- claim-ok: quoting the sentence this finding is about -->
+> `node scripts/source-coverage.mjs --remote` reports nothing for this slug: no
+> production row cites this book.
+
+It was true when written, it is still true today, and on 2026-09-15 those two
+books held **295 production rows between them** - Powers Unlimited One 170 super
+abilities and 9 psionic powers, Powers Unlimited Three 125 super abilities, all
+applied on 2026-09-13 in PRs #1028 and #1029. **Powers Unlimited Three is the
+worst case: 100% of its rows are in `super_abilities`, so the coverage report
+sees exactly none of them.** Powers Unlimited One shows 9 of 179.
+
+That sentence then propagated: `heroes-unlimited-core.md` closed with *"the
+Powers Unlimited One and Three classes"* as outstanding work, and a session was
+briefed from it to import books that were already in. Neither book contains a
+class at all - a marker scan over both caches on 2026-09-15 puts `O.C.C.`,
+`R.C.C.`, `Experience Table` and `Attribute Requirement` on zero pages of
+either - so the wasted work was bounded by the books being empty rather than by
+anything catching it.
+
+**Proposal.** Add the three tables to the list at `source-coverage.mjs:115`.
+**Posture: REPORT ONLY, and move no exit code.** This script has no exit code to
+move and must not gain one - it reports, and a book with uncited rows is a
+question rather than a failure. Whether the `BACKLOG` and stub blocks below it
+should learn about `super_abilities` is a **separate** decision and this
+proposal does not ask for it: those blocks encode per-table ideas of *finished*
+(a spell stub is level 0 and 0 P.P.E.) and a super ability has neither a level
+nor a cost, which is the reason its own table exists.
+
+**Evidence:** the source line and the field list, both read 2026-09-15; the row
+counts, `--remote` the same day; the two surveys' sentences, quoted above from
+the files as they stood before this PR corrected them.
+
+**Derive the list rather than typing a second one, if that is cheap.**
+`CATALOG_KEYS` already enumerates the eight and each entry names its table, so a
+sixth name added by hand here is the same shape of gap one catalog later. Stated
+as a preference and not a requirement: a taker who adds three strings has taken
+this finding.
+
+**What this does NOT claim.** No row is wrong, nothing is missing from any
+catalog, and no count in `docs/operations.md` moves. The defect is entirely in
+what the report can see.
+
+**Confidence: high** on all of it - the list is one line of code, the row counts
+are three `count(*)`s, and the consequence is quoted from two files in the tree.
+**High on the cost:** three strings, no schema change, no new query shape.
+
+**Ongoing cost:** none. It removes a standing blind spot rather than adding
+something to keep current - and it makes the *next* catalog's absence louder,
+because a book with rows in it will stop reading as a book with none.

@@ -794,3 +794,44 @@ regression.yml's cache-warming step.
 out per D7), and the Powers Unlimited One and Three classes - which are a
 different book. `BOOK-INGEST-AUDIT` F79, F81, F87, F88, F89 and F90 are filed
 and not taken.
+
+**THAT PARAGRAPH IS SUPERSEDED, 2026-09-15, AND BOTH HALVES OF IT WERE WRONG.**
+It is left standing because this file is a record; read this one instead.
+
+<!-- claim-ok: quoting the two claims this correction replaces -->
+**There are no "Powers Unlimited One and Three classes".** Neither book contains
+a class of any kind. Both surveys say so in their own inventories -
+`powers-unlimited-1.md` under *What this book has ZERO of*: *"No classes, no
+O.C.C.s, no experience tables"*, and `powers-unlimited-3.md`: *"No new power
+categories, no classes, no experience tables"* - and a marker scan over both
+caches on 2026-09-15 agrees: `O.C.C.`, `R.C.C.`, `Experience Table`, `Attribute
+Requirement`, `Alignment:` and `Educational Level` appear on **zero pages of
+either book**. The one `Character Class` hit in Powers Unlimited Three is a
+house advertisement on cache p117, outside its own content range.
+
+**And both books were already fully imported when that sentence was written.**
+Verified `--remote` 2026-09-15: Powers Unlimited One holds **170** super
+abilities (125 minor, 45 major) plus 9 psionic powers, and Powers Unlimited
+Three holds **125** (46 minor, 79 major) - the exact splits their inventories
+counted. The ledger above records both, in #1028 and #1029, four rows apart from
+this sentence.
+
+**A per-finding state does not belong in a sentence like this**, which is the
+other half of why it went wrong: it named six findings as *filed and not taken*
+and all six have since been taken. Read under each finding's heading in
+`BOOK-INGEST-AUDIT.md`; that is the one place a finding's state cannot disagree
+with itself.
+
+**WHAT IS ACTUALLY LEFT OF THIS BOOK:** the two point-budget builders, G7,
+deliberately out per D7. That is the whole list.
+
+**How the wrong sentence survived, because the mechanism is reusable.** Both
+Powers Unlimited surveys closed their *What remains* sections with *"`node
+scripts/source-coverage.mjs --remote` reports nothing for this slug: no
+production row cites this book."* That was true when written and it is still
+true today, with 295 of those books' rows live - because
+`scripts/source-coverage.mjs:115` walks `gear`, `skills`, `spells`,
+`psionic_powers` and `vehicles`, and **`super_abilities` is not among them**,
+read 2026-09-15. A tool blind to the one table those books populate reported
+them as untouched, and three documents repeated it. Filed as `BOOK-INGEST-AUDIT`
+F94.
