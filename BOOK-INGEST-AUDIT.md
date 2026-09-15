@@ -12377,6 +12377,118 @@ and the loop is four lines.
 **Ongoing cost:** none beyond the rule itself. It removes a difference between
 three lists rather than adding a thing to remember.
 
+**Taken, 2026-09-15 (PR #1073), as written and at ERRORS.** The premise pass
+overturned this finding's own headline reason and widened its surface count, and
+both corrections make it a bigger defect rather than a smaller one.
+
+**"STORED AND NEVER READ" IS FALSE, AND IT IS THIS FINDING'S HEADING.** A bonus
+on a psionic category **is** read: `categoryLabel` (`js/parser.js:1301-1310`,
+read 2026-09-15) renders `Number.isFinite(entry.bonus)` into the label, and four
+call sites show that label on a psionic category - the starting-group picker
+(`app.js:3708`), the sheet (`sheet.js:2531` via `psiCatLabel`), the server's
+rejection text (`power-picks.js:194`) and `validate-character.js:505`.
+
+What nothing does is **apply** it: `categoryBonus` (`js/parser.js:1355`) has
+exactly two call sites, `app.js:4052` and `skill-picks.js:188`, and both are
+skill-side. So the accurate sentence is **stored, DISPLAYED, never applied** -
+the picker prints `Super (+10%)` on a power that has no percentage to raise,
+which is the wizard promising what the sheet cannot give.
+
+**The wrong reason was inherited, not invented here.** It came from the comment
+above the `categories_allowed` loop, which has said *"would be stored and never
+read"* since F16 - so the sentence was wrong about the list that ALREADY
+errored, for as long as that rule has existed. The comment is corrected in this
+PR. **The message is not**, and deliberately: *"a psionic power has a cost, not
+a percentage"* is true, is what a user sees, and no check pins it.
+
+**FOUR SURFACES, NOT THE TWO THE TABLE NAMES.** `psionicBlocks`
+(`js/parser.js:706-715`) folds a class's own `psionics` **and** any
+`special_abilities[].psionics`, so both keys exist twice over. Verified by
+execution before the change: an ability-granted `powers_schedule` entry carrying
+a bonus parsed `ok: true`, while `categories_allowed` on the same ability
+errored. Implementing this against `data.psionics` alone - which is how the
+finding's table reads - would have left the ability-granted pair open, and that
+is the half F91's own sweep found live.
+
+**So the refusal is one FUNCTION now, not three copies of one `if`.**
+`refusePsionicBonus` sits beside `validateCategories` and is called on all three
+lists from inside the `psionicBlocks` walk, which is what makes the surface
+count four without naming it twice.
+
+**Seven smoke checks**, and four of them were run against the unmodified parser
+first and all four failed. The other three are the directions that stop this
+becoming a rule nobody can satisfy: `categories_allowed` must still refuse one
+(it did before, and must not start double-reporting), a category with no bonus
+must stay clean on every list, and **all three lists must give the SAME
+message** - three lists disagreeing about one key is what this finding was filed
+on, so the wording is pinned against forking.
+
+Smoke 2149 -> 2156. **Zero live offenders, re-confirmed**: no data script in
+`apps/character-creator/db/*.sql` writes a bonus on any psionic category list,
+so a rebuilt database has nothing to break either.
+
+### F96 - medium - the level-up psionic picker prints `[object Object]` for an object category, and two published classes hit it
+
+**Filed 2026-09-15 while taking F92**, by its premise pass rather than by any
+check. It is the F69 shape - an object category entry meeting code written for
+strings - in the one psionic caption in the tree that was missed.
+
+**One line.** `apps/character-creator/app.js:2055`, read 2026-09-15, renders the
+level-up grant's caption with:
+
+```js
+from ${esc(listed ? `a list of ${g.from.length}` : cats ? cats.join(', ') : 'any category')}
+```
+
+`cats` is `psionicCategoriesForGrant(...)` (`app.js:2046`), whose entries may be
+objects. **Every other psionic caption uses `categoryLabel`** - the starting-group
+picker at `app.js:3708` does `g.categories.map(categoryLabel).join(', ')`, and
+the sheet and the server both go through it too. This one does not.
+
+**Executed, not inferred**, 2026-09-15:
+
+```
+cats = [{ name: 'Super', only: ['Bio-Manipulation'] }, 'Physical']
+app.js:2055 shape -> "[object Object], Physical"
+app.js:3708 shape -> "Super (Bio-Manipulation only), Physical"
+```
+
+**Two published classes reach it, measured `--remote` 2026-09-15** by running
+the real `psionicCategoriesForGrant` over every published class with a psionics
+block and rendering the caption as `app.js:2055` does:
+
+| class | where the object entry comes from | caption today |
+|---|---|---|
+| `healing-shaman` | `powers_schedule` entries at levels 2-15 | `Healing, [object Object], Sensitive` |
+| `totem-warrior` | `categories_allowed` fallback, schedule at 3/6/9/12/15 | `[object Object]` |
+
+**The Totem Warrior's caption is the whole caption** - it states one category and
+it is an object, so a player levelling that class is told the grant comes from
+`[object Object]` and nothing else.
+
+**The Crazy is NOT affected and a careless count says it is.** It carries two
+object entries on `categories_allowed`, so `psionicCategoriesForGrant` returns
+them - but it has **no `powers_schedule` and no `powers_per_level`**, so no
+level-up psionic grant is ever rendered and this line is never reached for it.
+A first pass at this table said three classes; walking level/slot combinations
+counts classes that have the data but not the grant. Read the schedule, not the
+categories.
+
+**Proposal.** Use `categoryLabel` here, exactly as `app.js:3708` does. One
+expression. **Posture: display only** - no gate changes, no validation, nothing
+about which powers are offered; `categoryAllows` already reads the object
+correctly and the pool is right today. This is the caption above it lying about
+why.
+
+**Evidence:** `app.js:2046`, `:2055` and `:3708` read 2026-09-15; the two shapes
+executed side by side the same day; the two-class figure measured `--remote` the
+same day through the real reader.
+
+**Confidence: high** on all of it - the defect was executed rather than read,
+and the population came from the shipped function rather than from a grep.
+**Ongoing cost: none.** It removes the last hand-rolled psionic caption, which
+is the same argument `F69` made for the pickers.
+
 ### F93 - medium - the duplicate scorer demotes on `category` and `system`, and `enchantments` is distinguished by neither
 
 **Filed 2026-09-15 while finishing the duplicate-suggestion pass**, which is
