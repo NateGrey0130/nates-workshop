@@ -11205,6 +11205,63 @@ measurement, not an assumption, and it belongs to whoever takes this.
 that makes the check FAIL on known-bad input - this repo's rule that a check
 which only ever passed proves nothing - which this book now provides.
 
+
+**Taken, 2026-09-15 (PR #1064) - as C, plus a BETTER A than the one proposed.**
+`text_layer_legibility` and `legibility_report` in `scripts/ocr-book.py`, on both
+the probe and the caching path.
+
+**OPTION A AS WRITTEN DOES NOT WORK, and its cost argument is wrong in both
+halves.** *"the wordlist is already on disk and already read by this script"* -
+it is not. `WORDS` is a path handed to Tesseract as `--user-words`; Python opens
+it nowhere, and that code sits on the OCR branch, hundreds of lines after
+`--probe` returns. And `scripts/palladium-words.txt` is a Tesseract user-words
+file of PROPER NOUNS - 102 lines, two ordinary English words, twelve bare single
+letters once tokenised - so scoring against it rates the KNOWN-BAD book at 39.2%
+and every clean cache at 6.2-15.4%. **A floor on that number fires in the wrong
+direction on the one book that motivated the finding.**
+
+**AND THE MECHANISM IS MISDESCRIBED.** Nothing is "mapped to nothing":
+**79.7% of that text layer is Unicode Private Use Area codepoints**, which is
+exactly why the character count looks healthy - the count is mostly junk.
+`Kev Sebea` is what a terminal shows AFTER something silently discards them. So
+the decisive detector is a private-use rate, needing no wordlist and no
+judgement, and the finding does not list it among its four options:
+
+| | private-use glyphs | stop words |
+|---|---|---|
+| Powers Unlimited 3 (known bad) | **79.7%** | **4.9%** |
+| twelve text-layer caches | 0.00% | 36.8-42.9% |
+| nine OCR caches | 0.00% | 36.4-41.2% |
+
+A stop-word rate rides beside it because a broken `/ToUnicode` mapping glyphs to
+REAL Latin letters produces no private-use characters at all - F36's case - and
+that is what sees it. Both rates print whether or not they fail, and a sample of
+the real text prints under them, which answers this finding's own worry that a
+floor is a threshold. Floors are BOOK-LEVEL: legitimate index and table pages
+run as low as 1.1% stop words.
+
+**THE REFUSAL IS ON THE CACHING PATH AS WELL AS THE PROBE.** A probe is advice a
+reader may not have taken; the caching path is what writes 120 pages of garbage
+and records `text_layer: true` beside them. `main()`'s return value now reaches
+the exit code, which it did not - a discarded return would have made the refusal
+report success.
+
+**NO CACHE NEEDS REDOING**, which this finding left to whoever took it: all
+twelve text-layer caches sit in the 36.8-42.9% band and every one is 0.00%
+private-use. `powers-unlimited-3` is cached as OCR and scores 39.6%, so it was
+force-OCR'd correctly. **Taking this was code-only.**
+
+**Two counts have drifted.** *"the eleven existing text-layer caches"* is
+**twelve** (`mystic-russia` was cached after this was filed), and the same
+sentence is in `book-survey` SKILL.md. *"18 of 20 sampled pages between 1801 and
+6135"* is **17** - three of the twenty sample at 0.
+
+**A COMMITTED PIN CANNOT USE THE REAL BOOK**, which this finding's ongoing-cost
+line assumes it can: `.gitignore` excludes `.cache/`, the PDFs live outside the
+repo, and powers-unlimited-3 is cached as OCR, so the corrupt text exists nowhere
+in the repo. The behaviour was proved by RUNNING it in both directions and the
+smoke pins check what a machine without the book still can - that both floors
+stay in the measured gap, itself proved by widening one and watching it go red.
 ### F80 - medium - `per_level` is READ on a skill entry and validated on neither branch, and this settles the question F25 left open
 
 **Taken, 2026-09-13 (PR #1020), as proposed, in one PR with this filing.**
