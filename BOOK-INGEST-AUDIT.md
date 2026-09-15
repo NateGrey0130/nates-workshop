@@ -11099,7 +11099,7 @@ whether this is one book's problem or an existing one nobody named.
 **Ongoing cost:** one column, one sheet row, one more field a class import can
 forget.
 
-**Taken, 2026-09-15 (PR #PRNUM), on Nate's word, and the premise pass overturned
+**Taken, 2026-09-15 (PR #1081), on Nate's word, and the premise pass overturned
 the remedy twice.**
 
 **THERE IS NO COLUMN AND THERE IS NO MIGRATION.** This finding calls its remedy
