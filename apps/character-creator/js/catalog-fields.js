@@ -293,9 +293,18 @@ export const CATALOGS = {
       { name: 'speed_water', label: 'Water speed', type: 'text' },
       { name: 'dimensions', label: 'Dimensions', type: 'text' },
       { name: 'weight_tons', label: 'Weight', type: 'text' },
-      { name: 'mdc_main_body', label: 'M.D.C. (main body)', type: 'int',
+      { name: 'mdc_main_body', label: 'M.D.C. / S.D.C. (main body)', type: 'int',
         help: 'MAIN BODY ONLY. Every other part is a vehicle_locations row, which this '
-            + 'form does not edit, so a reader wanting a total must sum them.' },
+            + 'form does not edit, so a reader wanting a total must sum them. WHICH UNIT '
+            + 'this is comes from "Mega-damage" below, not from the column name: a Heroes '
+            + 'Unlimited vehicle stores S.D.C. here, and one M.D.C. point absorbs a '
+            + 'hundred S.D.C.' },
+      { name: 'is_mega_damage', label: 'Mega-damage', type: 'int',
+        help: '1 = the main body and this vehicle\'s location rows are M.D.C.; 0 = they are '
+            + 'S.D.C. Defaults to 1, which is what every Rifts vessel is. Migration 062.' },
+      { name: 'ar', label: 'A.R. (Armour Rating)', type: 'int',
+        help: 'A to-hit threshold the rules read, the same number gear.ar holds for body '
+            + 'armour. Leave it EMPTY for an M.D.C. vessel: those do not have one.' },
       { name: 'cost', label: 'Cost', type: 'int',
         help: 'Credits, and the LOW end of a range - the same convention gear.cost follows. '
             + 'LEAVE IT EMPTY when no book prices it: a vessel no market sells is a finished '

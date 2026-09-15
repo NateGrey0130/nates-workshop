@@ -97,7 +97,18 @@ const SECTIONS = [
     title: (r) => r.name,
     meta: (r) => r.vehicle_class || 'Unclassed',
     cost: (r) => money(r.cost, r.system, r.cost_note),
+    // THE MAIN BODY IS LISTED HERE AND DID NOT USED TO BE. While every vessel
+    // in the table was a Rifts machine with a locations block, the number was
+    // reachable through the by-location list; Heroes Unlimited's vehicles mostly
+    // print ONE figure and no breakdown, so 46 of its 49 showed crew, speeds and
+    // dimensions with no durability anywhere on the card.
+    //
+    // THE LABEL IS THE UNIT, which is why it is computed. `mdc_main_body` holds
+    // S.D.C. when `is_mega_damage` is 0 (migration 062), and one M.D.C. point
+    // absorbs a hundred S.D.C. - a fixed "M.D.C." would overstate a Patton's
+    // 1000 a hundredfold.
     stats: (r) => [['Crew', r.crew], ['Passengers', r.passengers],
+                   [vesselUnit(r), r.mdc_main_body], ['A.R.', r.ar],
                    ['Ground speed', r.speed_ground], ['Air speed', r.speed_air],
                    ['Water speed', r.speed_water],
                    ['Dimensions', r.dimensions], ['Weight', r.weight_tons]],
@@ -203,14 +214,22 @@ function damage(r) {
 
 // ── vessel-only blocks ──
 
-// M.D.C. by location, in the book's printed order — which is the array order,
-// because the endpoint spent `ordinal` on its ORDER BY. `mdc` is NULL where a
-// book prints a formula instead and `mdc_note` carries it, so a row shows
-// whichever it has.
+// WHICH UNIT A VESSEL'S NUMBERS ARE IN. `mdc_main_body` and every `mdc` on its
+// location rows are S.D.C. when `is_mega_damage` is 0 — the column names predate
+// migration 062 and are not the unit. Defaults to M.D.C. when the flag is absent,
+// which is what a row loaded from an older payload is.
+function vesselUnit(r) {
+  return r.is_mega_damage === 0 ? 'S.D.C.' : 'M.D.C.';
+}
+
+// Durability by location, in the book's printed order — which is the array
+// order, because the endpoint spent `ordinal` on its ORDER BY. `mdc` is NULL
+// where a book prints a formula instead and `mdc_note` carries it, so a row
+// shows whichever it has. The heading names the unit rather than assuming it.
 function locationsHtml(r) {
   const rows = r.locations || [];
   if (!rows.length) return '';
-  return `<div class="codex-sub">M.D.C. by location</div>
+  return `<div class="codex-sub">${vesselUnit(r)} by location</div>
     <dl class="codex-stats">${rows.map((l) =>
       `<dt>${escHtml(l.location)}</dt><dd>${escHtml(
         l.mdc != null ? String(l.mdc) : (l.mdc_note || '—'))}</dd>`).join('')}</dl>`;

@@ -184,9 +184,15 @@ const SECTIONS = {
   vehicles: async (env) => {
     const [vehicles, locations, weapons] = await Promise.all([
       env.DB.prepare(
+        // `is_mega_damage` TRAVELS WITH `mdc_main_body` AND IS NOT OPTIONAL.
+        // The column name is not the unit (migration 062): a Heroes Unlimited
+        // vehicle stores S.D.C. there, and one M.D.C. point absorbs a hundred
+        // S.D.C. Sending the number without the flag hands a reader 1000 for a
+        // Patton and no way to know it is not a Glitter Boy's 1000. `ar` comes
+        // with it because it is the other half of what an S.D.C. book prints.
         `SELECT slug, name, system, vehicle_class, crew, passengers, speed_ground,
                 speed_air, speed_water, dimensions, weight_tons, mdc_main_body,
-                cost, cost_note, description, source_book
+                is_mega_damage, ar, cost, cost_note, description, source_book
          FROM vehicles ORDER BY name`
       ).all(),
       env.DB.prepare(

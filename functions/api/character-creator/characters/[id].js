@@ -90,7 +90,12 @@ export async function onRequestGet({ request, env, params }) {
             vehicles.vehicle_class, vehicles.system AS vehicle_system,
             vehicles.crew, vehicles.passengers, vehicles.speed_ground,
             vehicles.speed_air, vehicles.speed_water, vehicles.dimensions,
-            vehicles.weight_tons, vehicles.mdc_main_body, vehicles.cost AS vehicle_cost,
+            vehicles.weight_tons, vehicles.mdc_main_body,
+            -- The unit and the A.R. ride with the number (migration 062). A
+            -- sheet showing a Heroes Unlimited vehicle's S.D.C. under an
+            -- M.D.C. heading would overstate it a hundredfold.
+            vehicles.is_mega_damage AS vehicle_is_mega_damage, vehicles.ar AS vehicle_ar,
+            vehicles.cost AS vehicle_cost,
             vehicles.cost_note AS vehicle_cost_note,
             vehicles.description AS vehicle_description,
             vehicles.source_book AS vehicle_source_book

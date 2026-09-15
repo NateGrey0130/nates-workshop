@@ -716,3 +716,81 @@ One and Three classes.
 `js/rules.js` returns `Dollars` for `heroes-unlimited`, and `codex.js`'s
 `money()` prices it in dollars; both arms arrived with F73. Read 2026-09-14.
 Gear imported for this book needs `system = 'heroes-unlimited'` to reach them.
+**THE EQUIPMENT CHAPTER IS IMPORTED, ALL OF IT, 2026-09-14.** Printed 193-227,
+in nine batches, and the paragraph above is superseded:
+
+| printed | what | rows |
+|---|---|---|
+| 193-194 | ancient weapons | 74 gear |
+| 195-198 | oriental and ninja weapons | 40 gear |
+| 201-206 | modern firearms | 47 gear |
+| 207-211 | heavy weapons, energy, explosives, accessories | 87 gear |
+| 212-213 | ammunition, body armour and optics | 88 gear |
+| 214-216 | surveillance, sensory and underwater equipment | 84 gear |
+| 217-218 | lock picking tools, field equipment, containers | 129 gear |
+| 219-221 | acids, clothing, hats, general purpose clothes | 146 gear |
+| 224, 226 | helicopter armament systems | 8 gear |
+| 221-225 | conventional and military vehicles | 49 vehicles |
+
+**695 gear rows and 49 vehicles**, with 14 vehicle locations and 12 vehicle
+weapon systems. Production totals moved to 2164 gear and 220 vehicles, both
+pinned in `docs/operations.md` and enforced by `test/regression.mjs`.
+
+**Printed 227 is not an import.** It is helicopter stunts and flying rules -
+prose about piloting, not an item or a vehicle.
+
+**THE CLOTHING SECTION DOES NOT END WITH PAGE 220,** which is the page-boundary
+trap this book saved for last. Printed 221 opens with fifteen more garments -
+capes, robes, a bathrobe, a security guard's uniform - and only then starts
+`CONVENTIONAL VEHICLES` in its right-hand column. A scope written as "the
+equipment chapter, printed 193-220" leaves those fifteen for whoever imports the
+vehicles to find sitting above the thing they came for.
+
+**The vehicles needed a migration, and it is 062.** This is the first non-Rifts
+book in the `vehicles` table and it does not deal in mega-damage at all: its
+vehicles print an **A.R. and an S.D.C.** One M.D.C. point absorbs a hundred
+S.D.C., and the editor form labels the column *"M.D.C. (main body)"*, so writing
+the Patton's 1000 S.D.C. there would have said on screen that it survives what a
+Glitter Boy survives. `062-vehicle-sdc-and-armor-rating.sql` adds
+`vehicles.ar` and `vehicles.is_mega_damage`, the same flag `gear` has carried
+since it was built. Migration `060` had already opened `vehicles.system` to
+`heroes-unlimited` without giving the table anywhere to put what that game
+prints.
+
+**Three things on these pages look like scan damage and are not**, each settled
+on a render rather than reasoned about:
+
+- **The book's own metric conversions are wrong on printed 225** - the jeep at
+  *"65mph (1000kmph)"*, the M-35 at *"56mph (891kmph)"*, the M-816 at
+  *"52mph (830kmph)"*. The M-88's *"31mph (49kmph)"* is right, which is what
+  makes the other three errors rather than a house style.
+- **`OH-6A CAYUSE ("LOACH")` is an illustration caption**, hand-lettered beside
+  the drawing with no statistics under it, and has no row. `A TYPICAL LIGHT
+  OBSERVATION HELICOPTER`, which reads like a caption and is not, is a full
+  entry and has one.
+- **The OH-23 Raven has no S.D.C.** The other three helicopters print 250, 325
+  and 400; the Raven prints everything else and no S.D.C.
+
+**The M-41A3 Walker Bulldog is on printed 222, not 223** - its illustration and
+caption are on 223 and its stat block is not.
+
+**A slug can be free in the table and still taken.** `add-hu-gear-g` gave its
+Back Pack the slug `back-pack`, which the generator found absent from `gear` and
+which `merge-backpack-duplicate.sql` had retired into `backpack`, leaving a
+`catalog_redirects` row. In production the row went in; on a clean rebuild the
+merge file sorts later and deleted it again, every time. **A rebuilt database
+held 2009 gear rows against production's 2010**, and the only thing that said so
+was a count that named no row - it took a scratch build and a slug-list diff to
+find. `fix-hu-back-pack-slug.sql` corrects it; every generator after batch G
+reads `catalog_redirects` as well as the catalog.
+
+**The regression bootstrap outgrew its timeout during this batch.** Step
+`[1/7]` builds from 682 data scripts, 9.97 MB of SQL in one `--file`, measured
+at 183.2s against a 180s limit. Raised to 360s in #1053; the SHIP-PR-AUDIT F13
+reason the old comment gave against raising it had already been treated here by
+regression.yml's cache-warming step.
+
+**WHAT IS LEFT OF THIS BOOK:** the two point-budget builders (G7, deliberately
+out per D7), and the Powers Unlimited One and Three classes - which are a
+different book. `BOOK-INGEST-AUDIT` F79, F81, F87, F88, F89 and F90 are filed
+and not taken.
