@@ -12516,7 +12516,7 @@ it.
 | pair | score | tier | why they are two rows |
 |---|---|---|---|
 | `armor-color` / `weapon-color` | 1.00 | certain | 600 gold and 500 gold |
-| `armor-continual-glow` / `weapon-continual-glow` | 1.00 | certain | **1,200 both** - `same_numbers` is true |
+| `armor-continual-glow` / `weapon-continual-glow` | 1.00 | certain | **the COST is 1,200 both** (see the correction in the outcome note - `same_numbers` is FALSE) |
 | `armor-impervious-to-fire` / `weapon-impervious-to-fire` | 1.00 | certain | 12,000 and 8,000 |
 | `armor-impervious-to-fire` / `charm-impervious-to-fire` | 1.00 | certain | 12,000 and 30,000 |
 | `charm-impervious-to-fire` / `weapon-impervious-to-fire` | 1.00 | certain | 30,000 and 8,000 |
@@ -12563,6 +12563,70 @@ population, so nothing else can move.
 **Ongoing cost:** one more field name in a scorer that already reads two. It
 removes a standing source of false confident suggestions rather than adding
 something to keep current.
+
+**Taken, 2026-09-15 (PR #1074).** The demotion shipped as proposed - drop to
+`contains`, never drop the pair - and the premise pass found **two wrong claims
+in this finding and a third thing it never mentioned that the change needs.**
+
+**FIRST: "the two demotions it has" is wrong. There are FOUR.**
+`catalog-merge.js`, read 2026-09-15, computes the tier as
+`clash || systemClash || bracketed || variantByNumbers`. `bracketed` and
+`variantByNumbers` are name-based rather than column-based, which is why this
+finding passed over them - but it says *"the two demotions it has"* and *"a third
+demotion beside the two that exist"*, and both sentences are false. **This is the
+third COLUMN demotion and the fifth demotion overall.**
+
+**SECOND: `same_numbers` is FALSE for the Continual Glow pair**, and the table
+above says it is true. `sameNumbers` is `numeric.every(...)` over **every**
+int/real field, and `enchantments` declares two - `cost` AND `max_per_item`.
+Counted `--remote` 2026-09-15: armour rows carry `max_per_item` 4, weapon and
+charm rows carry 3. So `max_per_item` differs on **every** armor-weapon and
+armor-charm pair here, and `same_numbers` cannot be true for any of them.
+
+**The cost really is 1,200 on both sides**, which is the substance of the point
+and is unaffected: the book prints the same enchantment at the same price under
+two headings, so it is still the suggestion that looks most convincing. What was
+wrong is the claim about the FIELD. **It was inferred from the two prices inside
+a table headed "measured"** - the scan this finding cites as its evidence prints
+`tier` and `score` and never prints `same_numbers`.
+
+**The same wrong sentence is in merged data, and only HALF of it is corrected
+here.** `apps/character-creator/db/zzzzzzzzzzzz-dupes-pass-remaining-catalogs.sql`,
+which shipped in PR #1067, says it twice: once in its header prose and once
+inside the `note` column of the `armor-continual-glow` dismissal.
+
+**The header comment is corrected; the `note` string is NOT, deliberately.**
+That string is applied data - the row is in production and the file uses
+`INSERT OR IGNORE`, so editing it would leave production on the old text and a
+rebuild on the new one. That is precisely the repo-versus-live divergence `F95`
+is about, bought for a wording fix, in a table nothing compares. **So the live
+dismissal note still reads "same_numbers is true" and is wrong about the field
+and right about the price.** Named here rather than silently left, because a
+reader who finds it has no other way to learn it was checked.
+
+**THIRD, AND IT IS THE HALF THAT MATTERS AT RUN TIME: the confidence string is
+not optional, and this finding never mentions it.** Each existing demotion sets
+its own human-readable explanation, rendered directly by `catalog.js:387` as the
+tag a person reads. With the demotion added and no new string, a demoted pair
+falls through to **`one name contains the other - check this one`**, which is
+flatly false for `Color` against `Color`: the names are identical. **A demotion
+with no explanation is a worse answer than the confident suggestion it
+replaces**, so a third string went in beside the other two.
+
+**Six smoke checks, on a FIXTURE rather than production, and that is
+deliberate.** All six live pairs were dismissed in PR #1067, and
+`findDuplicates` filters dismissed pairs **before** it computes a tier - so
+re-running the scan `--remote` shows nothing either way and could not tell this
+change from no change. Four of the six were run against the unmodified scorer
+first and all four failed. The other two are the directions that stop the change
+over-reaching: two rows sharing an `applies_to` must stay `certain`, and a
+catalog with no `applies_to` at all must be untouched.
+
+**Nothing else moved.** No query changed - `applies_to` was already SELECTed. No
+other catalog declares the field, so the check is inert on the other seven. The
+six dismissals stay, as this finding said they should: a dismissal records a
+judgement somebody made, and a demotion only changes how loudly the question is
+asked. Smoke 2156 -> 2162.
 
 ### F94 - high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched
 

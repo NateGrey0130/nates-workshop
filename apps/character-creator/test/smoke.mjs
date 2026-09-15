@@ -1243,6 +1243,62 @@ const catalogDb = (rows, dismissals = []) => ({
   },
 });
 
+// ---------- applies_to is a third identity column (F93) ----------
+// `clash` reads `category` and `systemClash` reads `system`. The enchantments
+// catalog has NO category column and one system, so neither could ever fire on
+// it - and what separates its rows is `applies_to`. Palladium Fantasy prints
+// three enchantment lists and repeats names across them at different prices, so
+// five of the SIX `certain` suggestions in the whole database were this shape.
+//
+// A FIXTURE RATHER THAN PRODUCTION, deliberately: the six live pairs were all
+// dismissed in PR #1067, and findDuplicates filters dismissed pairs BEFORE it
+// computes a tier - so re-running the scan against production shows nothing
+// either way and could not tell this change from no change.
+{
+  const ench = async (rows) => findDuplicates(catalogDb(rows), 'enchantments');
+
+  const glow = await ench([
+    { id: 1, slug: 'armor-continual-glow', name: 'Continual Glow', applies_to: 'armor',
+      cost: 1200, max_per_item: 4, system: 'palladium-fantasy' },
+    { id: 2, slug: 'weapon-continual-glow', name: 'Continual Glow', applies_to: 'weapon',
+      cost: 1200, max_per_item: 3, system: 'palladium-fantasy' },
+  ]);
+  check('a same-name pair differing only in applies_to is demoted', glow.length === 1
+    && glow[0].tier === 'contains', JSON.stringify(glow.map((p) => p.tier)));
+  check('and it is still SUGGESTED rather than dropped', glow.length === 1);
+  check('and the flag says which column did it', glow[0].applies_to_clash === true);
+
+  // The string matters as much as the tier. Without it the pair falls through to
+  // "one name contains the other", which is flatly false when the two names are
+  // identical - a demotion with no explanation is worse than the confident
+  // suggestion it replaced.
+  check('and the confidence names both targets rather than the fall-through',
+    glow[0].confidence.includes('armor') && glow[0].confidence.includes('weapon')
+    && !glow[0].confidence.includes('contains the other'), glow[0].confidence);
+
+  // THE OTHER DIRECTION: two rows with the SAME applies_to must not be demoted
+  // by this, or the change would empty a tier it has no business touching.
+  const same = await ench([
+    { id: 1, slug: 'armor-color', name: 'Color', applies_to: 'armor',
+      cost: 600, max_per_item: 4, system: 'palladium-fantasy' },
+    { id: 2, slug: 'armor-colour', name: 'Color', applies_to: 'armor',
+      cost: 600, max_per_item: 4, system: 'palladium-fantasy' },
+  ]);
+  check('while two rows sharing an applies_to stay confident',
+    same.length === 1 && same[0].tier === 'certain', JSON.stringify(same.map((p) => p.tier)));
+
+  // And a catalog with no applies_to at all is untouched - no other catalog
+  // declares the field, so this must be inert everywhere else.
+  const gearPairs = await findDuplicates(catalogDb([
+    { id: 1, slug: 'a', name: 'Large Sack', system: 'rifts', cost: 2 },
+    { id: 2, slug: 'b', name: 'Large Sack', system: 'rifts', cost: 2 },
+  ]), 'gear');
+  check('a catalog with no applies_to is unaffected',
+    gearPairs.length === 1 && gearPairs[0].tier === 'certain'
+    && gearPairs[0].applies_to_clash === false);
+}
+
+
 const psiPairs = await findDuplicates(catalogDb([
   { id: 1, name: 'Telekinesis', category: 'Physical', isp: 3 },
   { id: 2, name: 'Telekinesis (Super)', category: 'Super', isp: 10 },
