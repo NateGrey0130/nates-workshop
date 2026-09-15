@@ -20,7 +20,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
-         abilityOccOptions,
+         abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList } from './js/parser.js';
 import { composeClass } from './js/compose.js';
@@ -1610,9 +1610,15 @@ function abilityPicker() {
     .filter((e) => e && typeof e.name === 'string' && !e.choose)
     .map((d) => [d.name.trim().toLowerCase(), d]));
 
+  // PER GROUP, not per character. `picked` used to be `S.abilities.length` -
+  // the total across every group - and it is compared against ONE group's
+  // `choose`, so on a class with more than one group the first pick disabled
+  // every remaining `+` button in every panel. BOOK-INGEST-AUDIT.md F98.
+  const counts = abilityGroupCounts(S.rcc, S.abilities);
+
   return groups.map((g, gi) => {
     const limit = +g.choose || 1;
-    const picked = S.abilities.length;
+    const picked = counts[gi] || 0;
     const opts = (g.from || []).map((name) => {
       const def = defs.get(String(name).trim().toLowerCase());
       const times = S.abilities.filter((n) => n === name).length;
@@ -1631,10 +1637,22 @@ function abilityPicker() {
       </div>`;
     }).join('');
 
+    // The group's own `note` is rendered, which it was not until F98. Every
+    // panel is headed "Powers", so four groups read as four identical panels
+    // and the note is the only thing distinguishing them - the Alien's four
+    // steps, and the Experiment's "Take these ONLY with the Super-Soldier
+    // Option above", which is a gating condition the player could not see.
+    // Skill, MOS, totem and program groups have always rendered theirs.
+    const note = g.note ? `<p class="attr-note">${esc(g.note)}</p>` : '';
+    // The standing sentence is worth saying once rather than four times.
+    const why = gi === 0
+      ? `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
+        and both are rolled on the next two steps.</p>`
+      : '';
     return `<div class="panel-inset"${gi === 0 ? ' id="ability-picker"' : ''}>
       <h3>Powers <span class="muted small">&mdash; choose ${limit}</span></h3>
-      <p class="muted small">Chosen now rather than later: these can add to attributes and pools,
-        and both are rolled on the next two steps.</p>
+      ${why}
+      ${note}
       <p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>
       ${opts}
     </div>`;
@@ -1662,9 +1680,25 @@ function poolsMayHaveChanged(name) {
   if (abilityTouchesPool(abilityDef(name))) clearRolledPools();
 }
 
+// THE LIMIT IS THE OWNING GROUP'S, not the sum of every group's. This used to
+// read the sum, which disagreed with the picker in both directions at once: the
+// picker refused a legal pick (it compared the total against one group's
+// `choose`) while this would have allowed an illegal one - four powers from the
+// Alien's first step, which no group offers four of. BOOK-INGEST-AUDIT.md F98.
+//
+// A name no group offers keeps the old sum-based cap. That is a `{ gm: true }`
+// ruling or a pick stranded by a class edit, neither of which belongs to a
+// group, and refusing it outright would strand a character who already holds it.
 function takeAbility(name) {
-  const limit = abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0);
-  if (S.abilities.length >= limit) return;
+  const groups = abilityGroups(S.rcc);
+  const gi = abilityGroupIndexFor(S.rcc, name);
+  if (gi >= 0) {
+    const limit = +groups[gi]?.choose || 1;
+    if ((abilityGroupCounts(S.rcc, S.abilities)[gi] || 0) >= limit) return;
+  } else {
+    const total = groups.reduce((n, g) => n + (+g.choose || 0), 0);
+    if (S.abilities.length >= total) return;
+  }
   S.abilities.push(name);
   poolsMayHaveChanged(name);
   render();
