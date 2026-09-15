@@ -589,7 +589,23 @@ CREATE TABLE IF NOT EXISTS vehicles (
   dimensions    TEXT,
   weight_tons   TEXT,
   mdc_main_body INTEGER,                -- main body ONLY; the rest are
-                                        -- vehicle_locations rows
+                                        -- vehicle_locations rows. The UNIT is
+                                        -- is_mega_damage below, not this name:
+                                        -- a Heroes Unlimited vehicle stores
+                                        -- S.D.C. here (migration 062)
+  is_mega_damage INTEGER NOT NULL DEFAULT 1,  -- migration 062. 0 = the numbers
+                                        -- in mdc_main_body AND in this
+                                        -- vehicle's vehicle_locations rows are
+                                        -- S.D.C. One M.D.C. point absorbs a
+                                        -- hundred S.D.C., so this is a unit and
+                                        -- not a label. Defaults to 1 because
+                                        -- every row that existed when it landed
+                                        -- was a Rifts vessel
+  ar            INTEGER,                -- migration 062. Armour Rating: a
+                                        -- to-hit threshold the rules read, the
+                                        -- same number gear.ar holds for body
+                                        -- armour. NULL for M.D.C. vessels,
+                                        -- which do not have one
   cost          INTEGER,                -- credits; a range's LOW end. NULL is a
                                         -- finished row here too - see gear.cost.
                                         -- Vessels make the case better than gear
@@ -749,6 +765,13 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '061-skill-system-bases.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master
                WHERE type = 'table' AND name = 'skill_system_bases');
+
+-- Guarded on BOTH columns 062 adds, not one. They arrive together and a guard
+-- naming only the first would mark a half-applied database as migrated.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '062-vehicle-sdc-and-armor-rating.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('vehicles') WHERE name = 'ar')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('vehicles') WHERE name = 'is_mega_damage');
 
 CREATE INDEX IF NOT EXISTS idx_character_vehicles_character
   ON character_vehicles (character_id);
