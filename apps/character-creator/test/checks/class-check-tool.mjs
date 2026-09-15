@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceSpans,
   fieldTokens, freeTextFields, parseSourcePages, resolveBookSlug, unclosedFlowLines,
-  unmodelledKeys } from '../../../../scripts/class-check-lib.mjs';
+  unmodelledKeys, unmodelledSkillKeys, KNOWN_SKILL_KEYS } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
 import { parseClassMarkdown } from '../../js/parser.js';
@@ -68,6 +68,29 @@ export function run() {
   // The signal that a class wants something the app cannot express yet.
   check('an unmodelled top-level key is reported',
     unmodelledKeys({ id: 'x', name: 'X', elemental_affinity: {} }).join() === 'elemental_affinity');
+
+  // ── one level down, under `skills` (BOOK-INGEST-AUDIT F87) ──
+  // `unmodelledKeys` reads Object.keys(data), and `skills` is in KNOWN_KEYS, so
+  // everything beneath it was accepted unseen. Sixteen live classes wrote
+  // `occ_secondary_skills`, offered zero secondary skills where their book gives
+  // 8 to 12, and class-check called every one of them ready.
+  check('an unmodelled key UNDER skills is reported',
+    unmodelledSkillKeys({ skills: { occ_skills: [], occ_secondary_skills: { count: 8 } } })
+      .join() === 'occ_secondary_skills');
+  check('and a class with no skills block reports nothing',
+    unmodelledSkillKeys({ id: 'x' }).length === 0);
+  check('nor does a skills block that is not an object',
+    unmodelledSkillKeys({ skills: ['occ_skills'] }).length === 0);
+
+  // THE FIVE, NAMED ONE AT A TIME rather than counted. `mos` and
+  // `skill_programs` are the two that get dropped: js/class-template.js and the
+  // class-import skill's frontmatter.md both list only the other three, and a
+  // list copied from either newly warns on eighteen CORRECT published classes.
+  // A count here would still pass with one swapped for a wrong name.
+  for (const k of ['occ_skills', 'occ_related_skills', 'secondary_skills',
+                   'skill_programs', 'mos']) {
+    check(`skills.${k} is known`, KNOWN_SKILL_KEYS.has(k));
+  }
 
   // Every shipped class must come back clean. If one does not, KNOWN_KEYS has
   // gone stale and every future run cries wolf.
