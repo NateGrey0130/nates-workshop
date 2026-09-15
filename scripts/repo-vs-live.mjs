@@ -93,6 +93,23 @@ const TABLES = [
   // find. These two are the last pinned catalogs that had no row-level check.
   ['vehicles', 'name', 'slug'],
   ['skill_system_bases', ['skill_name', 'system'], ['skill_name', 'system']],
+  // THE LAST TWO CATALOGS, and F86 asked for three. `vehicles` is the line
+  // above: F90 added it at 22:38 on 2026-09-14, eleven hours after F86 was
+  // filed, so the finding's own list and its grep evidence were both dead
+  // before anybody read them. Adding its triple a second time would have
+  // compared every vehicles row twice and double-counted any difference into
+  // `problems`, which is the number the exit code reads.
+  //
+  // Both identity columns were read from db/schema.sql rather than assumed -
+  // `totems.slug` and `super_abilities.name` are each NOT NULL UNIQUE - which
+  // is why only the second repeats its name column. This file's own header
+  // records a run lost to assuming `name` identified a row.
+  //
+  // THIS EXTENDS THE EXIT CODE, deliberately: a missing or extra row in either
+  // table now fails the script, where before a rebuild that dropped all 364
+  // super abilities would have printed the same summary as a clean one.
+  ['super_abilities', 'name', 'name'],
+  ['totems', 'name', 'slug'],
   // Written by _lib/catalog-redirects.js when a merge or rename happens in
   // the app, so it drifts the same way the catalogs do and nothing was
   // checking it. `from_key` is unique across the table, which is why it can

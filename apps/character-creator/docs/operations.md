@@ -481,7 +481,7 @@ in both places while the rows differed. It demands that every published **class*
 be creatable from the repo, and nothing made the same demand of catalog rows.
 
 ```bash
-node scripts/repo-vs-live.mjs              # all five catalogs
+node scripts/repo-vs-live.mjs              # every catalog it knows
 node scripts/repo-vs-live.mjs --table gear
 ```
 
