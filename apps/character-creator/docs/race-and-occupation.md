@@ -422,6 +422,28 @@ the Cobbler's whole substance is a `magic` block and an abilities block. It
 needs either a widened variant or a second class, and that is a decision rather
 than a transcription. Recorded in the goblin's `extraction_notes` and GM notes.
 
+**AND THE GENERAL RULE THE COBBLER ILLUSTRATES: `variants` IS NOT A SECOND
+BODY.** A class states one attribute block, one `sdc_base` and one
+`hit_points_base`, and a character with two physical forms - a Nightbane's
+Facade and Morphus, a were-creature, anything the book gives two stat blocks -
+**must not be modelled as two `variants` entries.** It is mechanically close
+enough to look right and it is semantically wrong: a variant is a *kind* of the
+class chosen once at creation, not a state the character changes between, so
+two variants would offer a player a one-time pick between two bodies and then
+show only one of them forever.
+
+`VARIANT_OVERRIDES` (`js/parser.js:64`, read 2026-09-15) admits
+`attribute_dice`, `attribute_requirements`, `attribute_maximums`, the four pool
+bases, `starting_money`, `bonuses`, `skill_overrides`, and skills a variant adds.
+It does **not** admit `magic`, `psionics`, `natural_abilities`,
+`special_abilities` or `equipment_starting` - so a second form that differs in
+any of those cannot be expressed this way even if the semantics were right.
+
+**Until the app can say it**, a class with two forms carries the everyday form
+as its own block, states the other form's deltas in `natural_abilities`, and
+cites `BOOK-INGEST-AUDIT.md` F74 in `extraction_notes`. That is the shape
+`class-import` already prescribes for a mechanic the schema cannot hold.
+
 **Demons, deevils and the other creatures of magic** (printed 313 onward) are
 out of scope for this pass — they are monsters the GM runs, not races a player
 picks, and they are a much larger body of stat blocks.
