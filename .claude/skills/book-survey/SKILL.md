@@ -51,7 +51,7 @@ the wrong figure with it, and nothing about the file looks wrong. Re-run
 `ocr-book.py` on an already-cached book to fill the key in (it recomputes from
 the PDF and skips every page it already has), and read those pages off a
 **render**. `class-check --field-sources` prints a `WELDED` advisory when a
-class's window lands on one. Measured across the eleven text-layer caches on
+class's window lands on one. Measured across the twelve text-layer caches on
 this machine: **42 welded pages in ten of them**, `cb1` the only clean book, and
 `pf` — the most-cited book in the database — carrying six.
 `BOOK-INGEST-AUDIT.md` F30. A hand-rolled probe does none
@@ -102,7 +102,7 @@ manifest, as a **count per page**. `class-check --field-sources` repeats it for
 any page a class was drawn from.
 
 **The count is the point, and so is the fact that it is not a verdict.** Across
-the eleven text-layer caches here, real damage shows up at **3 and 4 hits** as
+the twelve text-layer caches here, real damage shows up at **3 and 4 hits** as
 often as at 30, so there is no threshold to set — one stray character is not
 seven, and both need a human.
 
