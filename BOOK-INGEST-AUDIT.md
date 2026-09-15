@@ -12486,7 +12486,7 @@ are three `count(*)`s, and the consequence is quoted from two files in the tree.
 something to keep current - and it makes the *next* catalog's absence louder,
 because a book with rows in it will stop reading as a book with none.
 
-**WITHDRAWN 2026-09-15 (PR #1071), THE SAME DAY IT WAS FILED. F94 IS A
+**WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A
 DUPLICATE OF `F85`, WHICH IS OPEN AND IS THE ONE TO TAKE.** Everything above is
 true and none of it is new: `F85` was filed 2026-09-14, says the same thing
 about the same line of the same file, and reaches the same 466 rows across the
