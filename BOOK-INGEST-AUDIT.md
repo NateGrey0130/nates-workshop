@@ -11257,11 +11257,13 @@ sentence is in `book-survey` SKILL.md. *"18 of 20 sampled pages between 1801 and
 6135"* is **17** - three of the twenty sample at 0.
 
 **A COMMITTED PIN CANNOT USE THE REAL BOOK**, which this finding's ongoing-cost
-line assumes it can: `.gitignore` excludes `.cache/`, the PDFs live outside the
-repo, and powers-unlimited-3 is cached as OCR, so the corrupt text exists nowhere
-in the repo. The behaviour was proved by RUNNING it in both directions and the
-smoke pins check what a machine without the book still can - that both floors
-stay in the measured gap, itself proved by widening one and watching it go red.
+line assumes it can. Checked 2026-09-15: `.gitignore:24` excludes `.cache/`, the
+PDFs live under `C:\Users\natha\Projects\workshop\books\` and not in the repo,
+and `.cache/books/powers-unlimited-3/manifest.json` records `text_layer: false` -
+so the corrupt text is in no committed file. The behaviour was proved by RUNNING
+it in both directions, and the smoke pins check what a machine without the book
+still can - that both floors stay in the measured gap, itself proved by widening
+one and watching it go red.
 ### F80 - medium - `per_level` is READ on a skill entry and validated on neither branch, and this settles the question F25 left open
 
 **Taken, 2026-09-13 (PR #1020), as proposed, in one PR with this filing.**
