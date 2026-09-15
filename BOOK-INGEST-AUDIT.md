@@ -11724,6 +11724,58 @@ to diverge - and it needs its own finding and its own decision about which side
 wins. This one names three rows in one column, found while looking at something
 else.
 
+
+**Taken, 2026-09-14 (PR #1058) - and SIX of its premises were wrong.** The three
+rows are real and are repaired; almost everything this finding said about them
+is not. `zzzzzzzzzzzz-f89-restore-clobbered-gear-citations.sql`.
+
+**"Nothing in the repo reproduces it" is false. Every string is in the repo.**
+Two are overwritten and two are guarded out:
+
+* `fix-new-west-black-market-armour-prices.sql` lines 35-45 append the New West
+  half to both suits, guarded `instr(cost_note, 'NEW WEST') = 0`. **At that
+  point in a rebuild `cost_note` is NULL** - `merge-rifts-armor-duplicates.sql`,
+  which first fills it, sorts AFTER the `fix-`. `instr(NULL, ...)` is NULL,
+  `NULL = 0` is NULL, and a WHERE that is NULL matches nothing, so both UPDATEs
+  silently no-op. In production they fired because the file was applied BY HAND
+  five weeks later, against a row that already had a note.
+* **Even had they fired, `zzzz-restore-gear-values.sql` sets `source_book` on
+  both rows unconditionally**, and `zzzz-r...` sorts after `zzzz-c...`. **The
+  tier this finding proposed writing into is clobbered by a file in the same
+  tier** - a `zzzz-cite-` file would have verified green against production,
+  where it runs last by hand, and been reverted on every rebuild. The corrective
+  file takes twelve z's for that reason.
+
+**"Nothing reports this", and the heading's "the only check", are also false.**
+`scripts/repo-vs-live.mjs` names all three rows in one command, and this
+finding's own method paragraph re-implements it. Its count is what verified the
+fix: 21 differing fields across 18 rows before, 15 across 15 after, with
+`source_book` divergence now zero.
+
+**THE MEDITATION CHIP WAS NEVER A DISAGREEMENT, and this finding made settling
+it the blocker.** Settled against the book: both sides are right. The row is a
+stub TWO class imports create, and the item is printed in two classes' Standard
+Equipment lists - the Promethean Phase Adept's runs from printed 27 onto 28, the
+Phase Mystic's is on 29. Both are `INSERT OR IGNORE` on the same slug, so
+filename order picks the winner (`add-ph...` before `add-pr...`), which is why a
+rebuild keeps p.29 and production kept p.27-28. Each string was correct and
+incomplete; the row now cites both pages.
+
+**"Production is the better record in all three cases" is an overstatement**,
+and on a fourth column it is backwards: `meditation-chip.category` is NULL live
+and `gear` in the repo. Repaired in the same file, with the rebuild winning.
+
+**The inference from `phase-world-survey` does not follow.** That note's
+authority sentence is about WHICH CLASSES ARE PLAYABLE, not about page
+numbering; the book's `page_offset` is 0 and is verified by folio. The claim was
+the claims-about-another-file shape.
+
+**`cost_note` on the two suits was repaired too** - the other half of the same
+statement the NULL guard killed, and not a widening. `dog-pack-dpm-riot-armor`
+takes the same append from the same file and DOES reproduce, because its guard
+is `cost IS NULL` rather than an `instr()` over a NULL; it is untouched and
+asserted untouched. The remaining 15 divergent fields are `category` NULLs, a
+pre-existing population this finding said not to widen into.
 ### F90 - medium - nothing refuses a new catalog row on a RETIRED slug, and the check that would have noticed reports a total rather than a row
 
 A slug deleted by a `merge-*.sql` leaves a `catalog_redirects` row behind. It is
