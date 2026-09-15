@@ -12321,7 +12321,7 @@ and the loop is four lines.
 **Ongoing cost:** none beyond the rule itself. It removes a difference between
 three lists rather than adding a thing to remember.
 
-**Taken, 2026-09-15 (PR #PRNUM), as written and at ERRORS.** The premise pass
+**Taken, 2026-09-15 (PR #1073), as written and at ERRORS.** The premise pass
 overturned this finding's own headline reason and widened its surface count, and
 both corrections make it a bigger defect rather than a smaller one.
 
