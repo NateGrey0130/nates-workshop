@@ -13108,6 +13108,48 @@ one: the book was one grep away the whole time.
 add a check to remember, and it removes the last 15 of a population that
 `repo-vs-live` has been reporting since 2026-08-28.
 
+**Taken, 2026-09-15 (PR #PRNUM), both halves, each to the side this finding
+recommended.** `zzzzzzzzzzzzz-f95-gear-repo-vs-live-residue.sql` - a TWELFTH `z`,
+because it has to follow every data script for two independent reasons at once.
+A row was added to the Data scripts table in `docs/operations.md`; without it the
+smoke check *"every data script is covered by the Data scripts table"* goes red,
+which it duly did before the row was written.
+
+**PROVED BOTH DIRECTIONS ON A CLEAN REBUILD, not on production and not by
+reasoning.** `scripts/rebuild-local.mjs` twice, once with the file and once
+`--stop-before` it, 2026-09-15:
+
+| | `arrowhead-smoke` `cost_note` | `plasma-hand-cannon` |
+|---|---|---|
+| without | `60 credits` | `gear` / damage NULL / `is_mega_damage` 0 |
+| with | `60 credits. Rifts World Book 15: Spirit West p.203 prices it at 80 credits.` | `weapon` / `2D6x10 M.D.` / `is_mega_damage` 1 |
+
+**Both builds hold ZERO gear rows with a NULL category**, which is the check that
+statement 1 is correctly inert on a rebuild: the catch-all in
+`zzz-gear-tidy-3-categories.sql` has already run by then, and only production was
+ever behind.
+
+**The hand cannon got two values the finding did not originally ask for**, and
+they came from opening the page rather than from the catch-all. Its confidence on
+that recommendation was medium until printed 48 was read; `2D6x10 M.D.` makes it
+a weapon and makes `is_mega_damage = 0` wrong, which is the
+`restore-gear-missing-from-repo.sql` defect - 24 weapons rebuilt as S.D.C. -
+sitting in PRODUCTION rather than only in a rebuild. **It stays a priceless stub**,
+and an assertion says so, because the name appears exactly once in all 209 cached
+pages and the book prices it nowhere.
+
+**Seven assertions, and two of them are the kind this repo asks for rather than
+the kind that is easy.** *"The Spirit West sentence appears exactly once"* proves
+the guard rather than the write - this file and the original append the same
+sentence under the same condition, so a database that ran both must still hold
+one copy. And *"no gear row claims mega-damage with no damage recorded"* is a
+zero-wrong assertion over the whole table rather than a count, so it holds in
+every environment and cannot go stale the way a total would.
+
+**Neither original script was edited**, per the reasoning in the Proposal: both
+are applied, and renaming `add-spirit-west-weapons-of-note.sql` would make
+`drift-check` report `RUN BUT NO FILE` for the name production recorded.
+
 **This belongs on THIS menu and not on `REBUILD-AUDIT.md`**, whose subject it
 otherwise fits - `F18` there is *"the 64 gear values a rebuild still loses, and
 the four it would wrongly overwrite"* and `F19` is *"the six classes where the
