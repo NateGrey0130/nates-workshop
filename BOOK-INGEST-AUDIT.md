@@ -11152,7 +11152,7 @@ declining. Raised, if anyone wants to, by the not-measured line.
 
 **Ongoing cost:** none. That is the argument for it.
 
-**Taken, 2026-09-15 (PR #PRNUM). DECLINED, which is what it proposed for
+**Taken, 2026-09-15 (PR #1079). DECLINED, which is what it proposed for
 itself.** `VALID_CATEGORIES` stays `['rcc', 'occ']`. No third category, no code,
 no data. The finding is the record; this note closes it so the next reader finds
 a decision rather than an open question.
