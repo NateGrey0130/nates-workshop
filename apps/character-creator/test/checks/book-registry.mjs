@@ -446,5 +446,61 @@ export function run() {
     const survey = readFileSync(join(repoRoot, '.claude', 'skills', 'book-survey', 'SKILL.md'), 'utf8');
     check('and book-survey phase 3 shows the --remote form',
       /node scripts\/catalog-diff\.mjs --remote --table/.test(survey));
+
+    // ---------- a text layer that is long and unreadable (F79) ----------
+    // READ OFF THE SOURCE, and that limitation is worth stating rather than
+    // hiding: this suite is Node and never invokes Python, a CI runner has no
+    // pymupdf, and the book PDFs are not in the repo - .gitignore excludes
+    // .cache/ and the only PDF known to carry the fault lives outside it. So
+    // the behaviour was proved by RUNNING it, in both directions, and what is
+    // pinned here is the part a machine without the book can still check:
+    //
+    //   Powers Unlimited 3   79.7% private-use glyphs,  3.1% stop words -> ILLEGIBLE
+    //   Rifts Book of Magic   0.0%                     33.5%            -> clean
+    //   Conversion Book 1     0.0%                     32.4%            -> clean
+    //
+    const ocr = readFileSync(join(repoRoot, 'scripts', 'ocr-book.py'), 'utf8');
+
+    // THE FLOORS MUST STAY IN THE GAP, which is the check here that earns its
+    // place. Both populations were measured and neither is near its floor, so
+    // the way this stops working is an edit that widens one INTO a population -
+    // and a range assertion catches exactly that.
+    const num = (name) => {
+      const m = ocr.match(new RegExp(`^${name}\\s*=\\s*([0-9.]+)`, 'm'));
+      return m ? Number(m[1]) : NaN;
+    };
+    check('the private-use floor sits between the two measured populations',
+      num('PUA_MAX') > 0.001 && num('PUA_MAX') < 0.79);
+    check('and so does the stop-word floor',
+      num('STOPWORD_MIN') > 0.05 && num('STOPWORD_MIN') < 0.36);
+
+    // The refusal has to be on BOTH paths. A probe is advice a reader may not
+    // have taken; the caching path is what writes 120 pages of garbage and
+    // records `text_layer: true` beside them.
+    check('the probe reports legibility, not only length',
+      /if has_text_layer\(samples\):[\s\S]{0,400}legibility_report/.test(ocr));
+    check('and the caching path refuses an illegible layer',
+      /REFUSING to cache an illegible text layer/.test(ocr));
+    check('naming --force-ocr, which is both the remedy and the escape hatch',
+      /Re-run with --force-ocr/.test(ocr));
+
+    // A discarded return value would have made that refusal report success.
+    check('and the refusal reaches the exit code',
+      /sys\.exit\(main\(\) or 0\)/.test(ocr));
+
+    // The wordlist scores this fault BACKWARDS - 39.2% on the known-bad book
+    // against 6.2-15.4% on every clean cache - because it is a Tesseract
+    // user-words file of proper nouns whose tokens include twelve bare letters.
+    // F79 proposed it, believing this script already read it. Pinned so nobody
+    // reaches for it again.
+    // Matched against the CODE, not the docstring - which names WORDS on
+    // purpose, to say why it is the wrong instrument.
+    check('legibility does not score against the Tesseract user-words file', (() => {
+      const fn = ocr.slice(ocr.indexOf('def text_layer_legibility'),
+                           ocr.indexOf('def legibility_report'));
+      if (!fn) return false;
+      const body = fn.slice(fn.indexOf('"""', fn.indexOf('"""') + 3) + 3);
+      return body.length > 0 && !/\bWORDS\b/.test(body);
+    })());
   }
 }

@@ -96,6 +96,35 @@ READ_COLUMNS = os.path.join(REPO, 'scripts', 'read-columns.py')
 TEXT_LAYER_MIN_CHARS = 400
 SAMPLE_PAGES = 20
 
+# A text layer can be long and unreadable. BOOK-INGEST-AUDIT.md F79.
+#
+# Both floors sit in a gap with NOTHING in it, which is the only kind of
+# threshold worth having and the answer to F36's objection that thresholds
+# mislead. Measured 2026-09-15 over every cached book on this machine and the
+# one PDF known to carry the fault:
+#
+#                       private-use glyphs      stop words
+#   Powers Unlimited 3        79.7%                4.9%
+#   twelve text-layer caches   0.0%           36.8% - 42.9%
+#   nine OCR caches            0.0%           36.4% - 41.2%
+#
+# So PUA_MAX could be anything from 0.1% to 79%, and STOPWORD_MIN anything from
+# 5% to 36%. These are set near the middle of each gap rather than close to
+# either population.
+PUA_MAX = 0.02
+STOPWORD_MIN = 0.15
+
+# Ordinary English function words. Deliberately short and deliberately dull:
+# every one appears in any page of English prose, none is Palladium jargon, and
+# the list is not trying to be a dictionary. It has to work on a rules table and
+# an equipment list as well as on a paragraph, which is why the floor is 15% and
+# book-level.
+STOP_WORDS = frozenset("""
+a an and are as at be been but by can for from had has have he her his if in is
+it its more no not of on one or other out so than that the their them then there
+these they this to two up was were what when which who will with would you your
+""".split())
+
 # Book-wide OCR damage. Applied once, at ingest.
 #
 # `bounded` entries only match as whole words. Without that, 'fect'->'feet'
@@ -194,6 +223,84 @@ def sample_text_lengths(doc, n=SAMPLE_PAGES):
 
 def has_text_layer(samples):
     return statistics.median([c for _, c in samples]) >= TEXT_LAYER_MIN_CHARS
+
+
+def text_layer_legibility(doc, n=SAMPLE_PAGES):
+    """Is the text layer READABLE, as opposed to merely long?
+
+    BOOK-INGEST-AUDIT.md F79. `has_text_layer` measures length and nothing else,
+    so a font-encoding fault reads as a healthy text layer. Powers Unlimited 3
+    probes at a median of 5505 chars/page - 13.7x the threshold - and its credits
+    page says `Kev Sebea` where the paper says Kevin Siembieda.
+
+    TWO RATES, because the fault has two shapes and each is blind to the other.
+
+    pua   the share of characters in the Unicode Private Use Area. This IS the
+          Powers Unlimited 3 fault: 79.7% of that layer is PUA, which is exactly
+          why its character count looks healthy - the count is mostly junk. The
+          readable-looking `Kev Sebea` is what a terminal shows AFTER something
+          silently discards those codepoints. Measured across every cached book
+          on this machine: 0.00%, all twenty-one. No threshold judgement is being
+          made here; the populations do not overlap at all.
+
+    stop  the share of word tokens that are ordinary English function words.
+          A broken /ToUnicode that maps glyphs to real Latin letters produces NO
+          PUA - that is F36's case - and this is what sees it. Measured: 4.9% on
+          the Powers Unlimited 3 layer against 36.8-42.9% on all twelve
+          text-layer caches, an eightfold gap with nothing in between.
+
+    NOT THE WORDLIST. `scripts/palladium-words.txt` is a Tesseract --user-words
+    file of proper nouns and jargon - 102 lines, two ordinary English words, and
+    twelve bare single letters once tokenised. Scoring against it rates the
+    KNOWN-BAD book at 39.2% and every clean cache at 6.2-15.4%, which is
+    backwards: the corrupt layer is 88% one-character tokens and those letters
+    are in the list. F79 proposed it, on the belief that this script already read
+    it. It does not - WORDS is a path handed to Tesseract, and Python opens it
+    nowhere.
+
+    Returns (pua_rate, stopword_rate, sample_text). BOOK-LEVEL, deliberately: a
+    per-page floor fires on legitimate index and table pages, which run as low
+    as 1.1% stop words.
+    """
+    total = doc.page_count
+    idx = list(range(total)) if total <= n else sorted(
+        {int(i * (total - 1) / (n - 1)) for i in range(n)})
+    texts = [doc[i].get_text() for i in idx]
+    text = ''.join(texts)
+    if not text:
+        return (0.0, 0.0, '')
+    pua = sum(1 for ch in text if 0xE000 <= ord(ch) <= 0xF8FF)
+    words = re.findall(r"[A-Za-z][A-Za-z'-]*", text)
+    stop = sum(1 for w in words if w.lower() in STOP_WORDS)
+    sample = next((t for t in texts if t.strip()), '')
+    return (pua / len(text), (stop / len(words)) if words else 0.0, sample)
+
+
+def legibility_report(pua, stop, sample):
+    """The two rates, a readable sample, and only then a verdict.
+
+    THE RATES PRINT WHETHER OR NOT THEY FAIL. F36 argues a threshold misleads
+    where a count informs, and F79 repeats it against its own proposal; a reader
+    who can see 79.7% and 4.9% does not have to trust either floor. The sample is
+    the other half of that argument - a person reading `Kev Sebea` needs no
+    number at all, and it is what makes the rates checkable.
+    """
+    out = ['  legible:  %.1f%% private-use glyphs (max %.0f%%), '
+           '%.1f%% stop words (min %.0f%%)'
+           % (pua * 100, PUA_MAX * 100, stop * 100, STOPWORD_MIN * 100)]
+    shown = ''.join(
+        ch if (ch.isprintable() and not (0xE000 <= ord(ch) <= 0xF8FF)) else '?'
+        for ch in sample.replace('\n', ' ')[:160])
+    out.append('  sample:   %s' % shown.strip())
+    if not text_layer_is_legible(pua, stop):
+        out.append('  ILLEGIBLE TEXT LAYER. The characters are there and the words are not -')
+        out.append('  a font-encoding fault. EVERY page is affected, so rendering one does')
+        out.append('  not help: re-run with --force-ocr. BOOK-INGEST-AUDIT F79.')
+    return out
+
+
+def text_layer_is_legible(pua, stop):
+    return pua <= PUA_MAX and stop >= STOPWORD_MIN
 
 
 def detect_folios(pages):
@@ -525,6 +632,20 @@ def main():
     doc = pymupdf.open(a.pdf)
     samples = sample_text_lengths(doc)
     text_layer = has_text_layer(samples) and not a.force_ocr
+
+    # THE REFUSAL HAS TO BE ON THE CACHING PATH TOO, not only in --probe. A
+    # probe is advice a reader may not have taken; this is the step that writes
+    # 120 pages of garbage and records `text_layer: true` beside them, after
+    # which every later check reads clean because the pages exist and hold text.
+    # BOOK-INGEST-AUDIT.md F79. --force-ocr is both the escape hatch and the
+    # remedy, so a reader who disagrees is one flag away.
+    if text_layer and not a.probe:
+        _pua, _stop, _sample = text_layer_legibility(doc)
+        if not text_layer_is_legible(_pua, _stop):
+            for line in legibility_report(_pua, _stop, _sample):
+                print(line)
+            print('REFUSING to cache an illegible text layer. Re-run with --force-ocr.')
+            return 1
     if a.probe:
         print('%s: %d pages, sampled %d' % (slug, doc.page_count, len(samples)))
         for i in range(0, len(samples), 5):
@@ -533,6 +654,18 @@ def main():
         print('  median %d chars/page -> %s (threshold %d)'
               % (median, 'TEXT LAYER' if has_text_layer(samples) else 'SCAN',
                  TEXT_LAYER_MIN_CHARS))
+        # LENGTH IS NOT LEGIBILITY. F79: the median above is 13.7x the threshold
+        # on a book whose every word is gone. Only meaningful where there IS a
+        # text layer - a scan's is empty by definition and would read 0% of
+        # everything.
+        if has_text_layer(samples):
+            pua, stop, sample = text_layer_legibility(doc)
+            for line in legibility_report(pua, stop, sample):
+                print(line)
+            if not text_layer_is_legible(pua, stop):
+                print('  cache it:  python scripts/ocr-book.py "%s" --slug %s --force-ocr'
+                      % (a.pdf, slug))
+                return
         print('  cache it:  python scripts/ocr-book.py "%s" --slug %s'
               % (a.pdf, slug))
         return
@@ -677,4 +810,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # The return value is the exit code, which it was not until 2026-09-15:
+    # main() refuses to cache an illegible text layer (F79) and a discarded
+    # return would have made that refusal report success.
+    sys.exit(main() or 0)
