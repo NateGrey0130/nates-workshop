@@ -280,6 +280,29 @@ export function validateSkillEntries(where, entries, errors, warnings) {
         errors.push(`${where} choice-group sets ${k} on the GROUP, where nothing reads it; `
           + `put it on the category entry - categories: [{ name: "...", ${k}: [...] }]`);
       }
+
+      // AND THEN VALIDATE THE ENTRY THE REFUSAL ABOVE INSISTS ON.
+      // BOOK-INGEST-AUDIT.md F88. F84 pushed authors off a form that was
+      // silently DEAD and onto one that was silently UNVALIDATED: a group's
+      // `categories` was never handed to validateCategories, which had exactly
+      // three callers - categories_allowed, occ_related_skills and
+      // skill_programs - and a choice group was not among them. So an entry
+      // setting both `only` and `except`, an `only_prefix` written as a bare
+      // string, and an entry with no `name` at all each parsed ok=true with
+      // zero errors, while the IDENTICAL entry on occ_related_skills errored.
+      // The rule existed, was written, fired, and was never reached from here.
+      //
+      // ERRORS rather than warnings, matching the three existing callers - a
+      // fourth that warned instead would be a second standard. Safe because
+      // F88's pre-run was done first: validateCategories was run over every
+      // category entry on every choice-group-shaped object at any depth across
+      // all 318 published live classes (--remote, 2026-09-15) and returned ZERO
+      // errors on ZERO classes. Nothing starts failing the day this ships,
+      // which matters more than usual here: class-store.js DROPS a class that
+      // fails to parse out of GET /classes rather than 4xx-ing, and
+      // class-loader.js returns null for it, so an error makes a class vanish
+      // from every picker AND from its own saved characters.
+      validateCategories(`${where} choice-group`, s.categories, errors);
     } else if (!s.name) {
       errors.push(`${where} entries need a name (or choose/from for a choice-group)`);
     } else {
