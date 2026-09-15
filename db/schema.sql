@@ -966,6 +966,59 @@ CREATE TABLE IF NOT EXISTS super_abilities (
 
 CREATE INDEX IF NOT EXISTS idx_super_abilities_tier ON super_abilities (tier);
 
+-- Nightbane Talents: the ninth catalog, and the only power here that costs
+-- something to HAVE as well as something to USE. A Talent is bought once with a
+-- permanent P.P.E. expenditure and then paid for again every activation, so
+-- neither `spells` nor `psionic_powers` can hold it - each has one integer cost
+-- column and a Talent stored in either loses a number. Migration 063, from
+-- `BOOK-INGEST-AUDIT.md` F76, which has the full reading of the 25 Talents and
+-- the three things it got wrong about them.
+--
+-- `ppe` is the activation MINIMUM and `ppe_note` the schedule in words, exactly
+-- as on `spells` - only THREE of the 25 Talents are a clean acquire/activate
+-- pair, so the note is the common case rather than the exception.
+-- `form_required` is free text and not a flag because the book gives four
+-- answers across 25 rows, one of them silence.
+CREATE TABLE IF NOT EXISTS talents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  tier TEXT,                              -- common | elite; NULL = the book does not say
+  acquire_ppe INTEGER NOT NULL DEFAULT 0, -- the permanent price, paid once, for life
+  ppe INTEGER NOT NULL DEFAULT 0,         -- the activation MINIMUM; 0 = varies, see the
+                                          -- note. Same meaning as `spells.ppe`
+  ppe_note TEXT,                          -- the activation schedule in a few words.
+                                          -- 22 of the 25 Talents need one
+  min_character_level INTEGER,            -- NULL = no level gate. 10 of 25 have one
+  form_required TEXT,                     -- morphus | facade | both; NULL = not stated
+  prerequisite TEXT,                      -- another Talent, or a Morphus characteristic
+  source TEXT NOT NULL DEFAULT 'seed',
+  source_book TEXT,
+  system TEXT,                            -- NULL = unrestricted, as everywhere else
+  -- Field names match `spells`, `psionic_powers` and `super_abilities` on
+  -- purpose, so the sheet renders all four the same way.
+  range TEXT,
+  duration TEXT,
+  saving_throw TEXT,
+  description TEXT,
+  variant_note TEXT                       -- what a different book prints instead
+);
+
+CREATE INDEX IF NOT EXISTS idx_talents_tier ON talents (tier);
+
+-- Guarded on the table 063 creates, and placed HERE, immediately after that
+-- CREATE, rather than in the seeding block below.
+--
+-- THAT POSITION IS THE WHOLE POINT. A guard that runs before its own CREATE
+-- finds nothing and never fires, so a database built from this file in one pass
+-- never records the migration - the failure `055-spell-tradition.sql`'s note
+-- further down describes, and the opposite lie from an unguarded row: the
+-- migration then fails with "table already exists" if anyone later runs it.
+-- Verified on a one-pass `node:sqlite` build of this file, 2026-09-15: with the
+-- row here, 063 is recorded.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '063-talents.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'talents');
+
 -- ═══════════════════════════════════════════════════════════════════
 -- Migration seeding. The CREATEs above already contain the columns that
 -- db/migrations/*.sql add, so a database built from this file is current
