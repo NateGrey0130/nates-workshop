@@ -2305,6 +2305,70 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     kept.length === 5, kept.map((r) => r.slug).join(', '));
 }
 
+// ---------- a live catalog row on a RETIRED key ----------
+// BOOK-INGEST-AUDIT.md F90. A key a redirect has retired is ABSENT FROM THE
+// CATALOG AND STILL SPOKEN FOR, and every collision check in the ingest path
+// reads only the table - an `INSERT OR IGNORE` sees the table's UNIQUE
+// constraint and nothing else. So a new row can land on a retired key, and two
+// things follow, neither of which announces itself:
+//
+//   * the redirect stops firing, because _lib/catalog.js consults redirects
+//     only for keys it does NOT find - which silently defeats whatever the
+//     redirect was filed to do;
+//   * on a clean rebuild the file that retired the key usually sorts LATER, so
+//     the new row is created and then deleted again, every build. That is how
+//     `back-pack` reached production and left a rebuilt database one gear row
+//     short, with only a pinned TOTAL to say so and no row named.
+//
+// The block above is the hand-maintained version of this, over seven slugs it
+// lists by name. This is the same rule over every catalog.
+//
+// INNER JOIN ON THE TARGET, mirroring `redirectTarget`. _lib/catalog-redirects.js
+// says it in so many words - "a dead redirect must not block anyone from
+// reusing the key" - so a redirect whose target has itself been deleted must
+// NOT make this fail. Every redirect in production has a live target today, so
+// the join changes nothing now and keeps the check honest when it does not.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    const i = out.indexOf('[');
+    if (i < 0) return [];
+    try { return (JSON.parse(out.slice(i))[0] || {}).results || []; } catch { return []; }
+  };
+
+  // catalog key -> [table, unique column], mirroring js/catalog-fields.js.
+  const CATALOGS = {
+    gear: ['gear', 'slug'],
+    skills: ['skills', 'name'],
+    spells: ['spells', 'name'],
+    psionics: ['psionic_powers', 'name'],
+    enchantments: ['enchantments', 'slug'],
+    vehicles: ['vehicles', 'slug'],
+    totems: ['totems', 'slug'],
+    super_abilities: ['super_abilities', 'name'],
+  };
+
+  // A catalog the redirect table uses that this map does not know would be
+  // skipped IN SILENCE, and a check that can stop covering something without
+  // saying so is the shape regression.yml's own header refuses. Fail loudly.
+  const used = q('SELECT DISTINCT catalog FROM catalog_redirects').map((r) => r.catalog);
+  const unmapped = used.filter((c) => !CATALOGS[c]);
+  check('every catalog the redirect table uses is one this check knows',
+    unmapped.length === 0, unmapped.join(', '));
+
+  const onRetired = [];
+  for (const [cat, [table, key]] of Object.entries(CATALOGS)) {
+    const rows = q(`SELECT t.${key} AS k FROM ${table} t `
+      + `JOIN catalog_redirects r ON r.catalog = '${cat}' AND r.from_key = t.${key} `
+      + `JOIN ${table} live ON live.id = r.to_id`);
+    for (const row of rows) onRetired.push(`${cat}: ${row.k}`);
+  }
+  check('no live catalog row sits on a key a redirect has retired',
+    onRetired.length === 0, onRetired.join(', '));
+}
+
 // ---------- a class that supersedes its race ----------
 // BOOK-INGEST-AUDIT.md F11. The Cosmo-Knight is a transformation: the entry
 // prints its own dice, M.D.C. and P.P.E., and its skills line says the skills

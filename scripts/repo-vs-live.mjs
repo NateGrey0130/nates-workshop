@@ -66,6 +66,13 @@ const ROWS_SHOWN = 8;
 // Glow and Impervious to Fire once per `applies_to`, and gear has two Sleeping
 // Bags - 24 differences reported that were not differences at all. Found by
 // running it against production, not by reading it.
+// A table's set/identity column may be an ARRAY, for a table whose key is
+// composite. `skill_system_bases` is keyed (skill_name, system) - a single
+// column identifies nothing there, and indexing rows by one of them pairs a
+// Heroes Unlimited override with a Rifts one and invents differences.
+const keyOf = (row, col) =>
+  (Array.isArray(col) ? col.map((c) => row[c]).join(' | ') : row[col]);
+
 const TABLES = [
   ['skills', 'name', 'name'],
   ['spells', 'name', 'name'],
@@ -79,6 +86,13 @@ const TABLES = [
   // through that gap - a rebuild citing ten gear slugs no database holds, and
   // duplicated skill restrictions in mystic and burster.
   ['imported_classes', 'class_id', 'class_id'],
+  // Both pinned by the clean-run table in docs/operations.md and neither
+  // compared here until 2026-09-14 (BOOK-INGEST-AUDIT F90). A pinned TOTAL
+  // notices that two databases disagree and can never say WHICH ROW - which is
+  // how a missing gear row cost a scratch build and a hand-written slug diff to
+  // find. These two are the last pinned catalogs that had no row-level check.
+  ['vehicles', 'name', 'slug'],
+  ['skill_system_bases', ['skill_name', 'system'], ['skill_name', 'system']],
   // Written by _lib/catalog-redirects.js when a merge or rename happens in
   // the app, so it drifts the same way the catalogs do and nothing was
   // checking it. `from_key` is unique across the table, which is why it can
@@ -212,17 +226,17 @@ try {
     const cols = [...new Set([
       ...Object.keys(liveRows[0] || {}), ...Object.keys(repoRows[0] || {}),
     ])].filter((c) => !uncomparable(c));
-    const repoBy = new Map(repoRows.map((r) => [r[key], r]));
+    const repoBy = new Map(repoRows.map((r) => [keyOf(r, key), r]));
     const differing = new Map();
     // A key that is not unique pairs the wrong rows and INVENTS differences,
     // which is what `name` did here before the key was split out. Refuse rather
     // than report a number built on a collision.
     if (repoBy.size !== repoRows.length) {
-      console.log(`   CANNOT COMPARE VALUES: ${key} is not unique in ${table} `
+      console.log(`   CANNOT COMPARE VALUES: ${[key].flat().join(' + ')} is not unique in ${table} `
         + `(${repoRows.length} rows, ${repoBy.size} distinct). Fix the key in TABLES.`);
     } else {
       for (const l of liveRows) {
-        const r = repoBy.get(l[key]);
+        const r = repoBy.get(keyOf(l, key));
         if (!r) continue;
         for (const c of cols) {
           if (norm(comparable(l, c)) === norm(comparable(r, c))) continue;
