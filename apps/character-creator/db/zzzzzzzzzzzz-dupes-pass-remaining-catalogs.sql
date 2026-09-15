@@ -121,8 +121,8 @@
 --   Resist Fire                                          charm 4,000
 --
 -- `Continual Glow` is the pair worth naming, because it is the one where the
--- numbers agree: 1,200 on both, so `same_numbers` is true and the suggestion
--- looks its most convincing. The book still prints it twice, once under
+-- PRICE agrees: 1,200 gold on both sides, which is what makes the suggestion
+-- look its most convincing. The book still prints it twice, once under
 -- ENCHANTED ARMOR and once under ENCHANTED WEAPONS, and an armour glow is not
 -- a weapon glow - a character may buy both.
 --

@@ -290,6 +290,28 @@ export async function findDuplicates(env, catalogKey) {
       const systemClash = specific(a.system) && specific(b.system)
         && String(a.system).toLowerCase() !== String(b.system).toLowerCase();
 
+      // THE THIRD COLUMN THAT CARRIES IDENTITY RATHER THAN VALUE.
+      // BOOK-INGEST-AUDIT.md F93. `clash` reads `category` and `systemClash`
+      // reads `system`; `enchantments` has NO `category` column at all and every
+      // one of its 62 rows is `palladium-fantasy`, so neither could ever fire on
+      // it - and what separates its rows is `applies_to`, which is
+      // `weapon | armor | charm`.
+      //
+      // Palladium Fantasy prints three enchantment lists and repeats names
+      // across them at different prices: printed 249-250 gives armour and
+      // weapons, printed 253 gives charms. `Impervious to Fire` is printed three
+      // times at 12,000, 8,000 and 30,000 gold. Before this, five of the SIX
+      // `certain` suggestions in the whole database were that one shape.
+      //
+      // Guarded the way `clash` is, so a fixture omitting the key is unaffected;
+      // on real rows the column is `NOT NULL` with a three-value CHECK.
+      // `applies_to` is already SELECTed - it is in `CATALOGS.enchantments.fields`
+      // and the query is built from those - so no query changes, and no other
+      // catalog declares the field, which makes this inert everywhere else.
+      // Read 2026-09-15.
+      const appliesClash = a.applies_to && b.applies_to
+        && String(a.applies_to).toLowerCase() !== String(b.applies_to).toLowerCase();
+
       // Same shape as `clash`, for the case a category cannot see: the names
       // are identical once normaliseName drops their brackets, and the brackets
       // are the whole distinction. On gear that is 68 pairs across 36 groups -
@@ -326,7 +348,7 @@ export async function findDuplicates(env, catalogKey) {
       // `Gambling (Dirty Tricks)` - is wrong, which is what `bracketed` above
       // now demotes. Do not restore the old claim without re-measuring it.
       // INGESTION-AUDIT F27.
-      const tier = clash || systemClash || bracketed || variantByNumbers ? 'contains'
+      const tier = clash || systemClash || appliesClash || bracketed || variantByNumbers ? 'contains'
         : score >= 1 ? 'certain' : score >= 0.9 ? 'likely' : 'contains';
       pairs.push({
         score: Math.round(score * 100) / 100,
@@ -334,9 +356,16 @@ export async function findDuplicates(env, catalogKey) {
         tier,
         category_clash: !!clash,
         system_clash: !!systemClash,
+        applies_to_clash: !!appliesClash,
         a, b,
         confidence: clash ? `same name, but filed as ${a.category} and ${b.category} — probably different powers`
           : systemClash ? `same name, but ${a.system} and ${b.system} — one row per book, probably deliberate`
+          // WITHOUT THIS LINE the pair falls through to 'one name contains the
+          // other', which is flatly false for `Color` against `Color` - the
+          // names are identical. F93 asked only for the demotion and never
+          // mentioned the string; a demotion with no explanation is a worse
+          // answer than the confident suggestion it replaces.
+          : appliesClash ? `same name, but ${a.applies_to} and ${b.applies_to} — one row per target, probably deliberate`
           : bracketed ? 'same name, but the brackets differ — probably two variants, not one row'
           : variantByNumbers ? 'one name is the other plus a qualifier, and the numbers differ — probably a variant'
           : tier === 'certain' ? 'identical once punctuation is ignored'
