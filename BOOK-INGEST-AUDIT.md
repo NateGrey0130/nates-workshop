@@ -14671,7 +14671,7 @@ and all 4 characters hold 0** - so no existing sheet shows anything different.
 
 **Smoke 2223 -> 2234. Regression 441.**
 
-**2 of 3, 2026-09-16 (PR #__PR__): Talent purchases.** A Nightbane may now BUY
+**2 of 3, 2026-09-16 (PR #1096): Talent purchases.** A Nightbane may now BUY
 Talents, on the rules Nate set: **two at level one and two at every level after,
 no floor** - a character may spend its base to zero - and **an unused purchase
 banks like a free pick**.
