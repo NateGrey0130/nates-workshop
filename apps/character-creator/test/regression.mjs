@@ -2387,6 +2387,21 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   };
 
   // catalog key -> [table, unique column], mirroring js/catalog-fields.js.
+  //
+  // KEYED BY THE CATALOGS KEY, NOT THE TABLE NAME, and that is load-bearing:
+  // `redirectStatements` is called with the CATALOGS key, so
+  // `catalog_redirects.catalog` stores `superAbilities`, never
+  // `super_abilities`. This map carried `super_abilities` until
+  // BOOK-INGEST-AUDIT F100, which meant the first super-ability rename or merge
+  // would have tripped the guard below - and, worse, the retired-key JOIN would
+  // have matched no row and skipped super abilities in silence. It was latent
+  // only because no super-ability redirect exists yet (production, 2026-09-16:
+  // gear 25, psionics 6, skills 27, spells 8).
+  //
+  // `talents` was missing too - the ninth catalog, added to four other hand
+  // lists in F76 and not to this one, which nothing knew was a fifth. The smoke
+  // check `every catalog is in every hand-written catalog list` now reads this
+  // map as text and fails if a CATALOGS key is absent.
   const CATALOGS = {
     gear: ['gear', 'slug'],
     skills: ['skills', 'name'],
@@ -2395,7 +2410,8 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     enchantments: ['enchantments', 'slug'],
     vehicles: ['vehicles', 'slug'],
     totems: ['totems', 'slug'],
-    super_abilities: ['super_abilities', 'name'],
+    superAbilities: ['super_abilities', 'name'],
+    talents: ['talents', 'name'],
   };
 
   // A catalog the redirect table uses that this map does not know would be
