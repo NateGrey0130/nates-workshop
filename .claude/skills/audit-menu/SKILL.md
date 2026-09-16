@@ -434,7 +434,8 @@ directions** — work reported open that had shipped, and work reported closed
 that had not.
 
 **Closed findings may live beside the menu, in `<MENU>.closed.md`** — since
-2026-09-16 `BOOK-INGEST-AUDIT.closed.md` and `SKILL-AUDIT.closed.md` hold every
+2026-09-16 `BOOK-INGEST-AUDIT.closed.md`, `SKILL-AUDIT.closed.md` and
+`META-AUDIT.closed.md` hold every
 finding of those menus whose own section recorded an outcome, text and
 numbering unchanged (a `####` child moves with its parent), and the live file
 keeps a one-line pointer per finding where the heading was. A closed file
