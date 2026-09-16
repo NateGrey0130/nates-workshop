@@ -11560,7 +11560,7 @@ class and no banked Talent picks, counted `--remote` 2026-09-16.
 in more than one place, with one answer missing a kind.** The use button's pool,
 a spent pick's key, and now which kinds a level-up offers.
 
-**Adjusted a fourth time, 2026-09-16 (PR #__PR__). A character holding a chosen
+**Adjusted a fourth time, 2026-09-16 (PR #1095). A character holding a chosen
 Talent could not be created - the validator threw and the create route answered
 500 - and a held Talent's description never reached the sheet.** Found while
 wiring F101's purchased Talents into the same validator, and the second by
