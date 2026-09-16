@@ -14026,6 +14026,98 @@ whether a build-from-schema check is worth a CI minute.
 **Ongoing cost:** one check that builds a SQLite database in memory, which the
 suite already does elsewhere. The two moved lines cost nothing.
 
+**Taken, 2026-09-16 (PR #1089). Both halves, on Nate's word** - the two seed
+rows moved, and a check added. **Posture, said back: the check FAILS the suite
+the way every other check in it does. It is not a required CI status and cannot
+block a merge**, and calling it "a gate" - which this finding does - overstated
+it. `main`'s ruleset has zero required status checks; that is unchanged.
+
+**THE PROPOSAL ASKED FOR MACHINERY THAT ALREADY EXISTS, and the premise audit
+caught it.** F99 proposed "add one check that builds `db/schema.sql` in a single
+pass and asserts every migration file is recorded", and named the two checks in
+`apps/character-creator/test/checks/environment.mjs` it says cannot see this.
+**There is a third check in that same file**, about 470 lines below the two it
+quotes:
+
+> `check('every migration on disk is recorded as applied', missing.length === 0, ...)`
+
+read 2026-09-16, with `recorded` coming from `SELECT filename FROM
+schema_migrations` against the **developer's local D1**. That is exactly the
+comparison the proposal asked to build. It does not fire because a local D1
+**accumulates**: this machine's holds all 64 rows, including both of the two
+this finding is about.
+
+**So what shipped is that check pointed at a different database, not a new one.**
+It went into `apps/character-creator/test/regression.mjs`, immediately after the
+build it already does - `schema.sql` + catalogs + data scripts applied to an
+empty database in one pass - because that is the only place a database built the
+**documented** way exists, and that is the database the defect lives in. It costs
+one query and no second build. This is the `F33` shape caught one step earlier
+than `F33` was: a finding proposing to build something the repo already has.
+
+**The defect, re-measured on current `main` two independent ways on 2026-09-16** -
+`node:sqlite` and wrangler against a fresh `--persist-to` - agreed:
+
+```
+migration files: 64  recorded on a one-pass build: 62
+NOT RECORDED: 057-super-abilities.sql, 061-skill-system-bases.sql
+```
+
+**After the move: 64 of 64, and no orphans.**
+
+**ONE OF THIS FINDING'S OWN CLAIMS WAS WRONG.** It says
+`052-character-vehicles.sql` *"carries its row immediately after its own CREATE
+with a comment saying why"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+The comment is quoted correctly and the material point holds - the row is after
+its own CREATE and explains itself - but **not immediately**: `CREATE TABLE IF
+NOT EXISTS character_vehicles` ends around line 743 and 052's row sits around
+806, with nine other seed rows and an index in between. That mattered, because
+"move them the way 052 does it" and "move them the way 063 does it" are two
+different placements. **The genuinely immediate examples are `063` and `064`**,
+both from F76, and both rows here now sit that way - directly under the CREATE
+(or its index) they are guarded on.
+
+**Every line number in the finding was stale by +22**, which it predicted of
+itself and which two PRs editing `db/schema.sql` duly caused. Find them by the
+searchable strings `SELECT '057-super-abilities.sql'` and
+`SELECT '061-skill-system-bases.sql'` instead.
+
+**`drift-check --remote` now reports 64 files, 64 recorded**, not the 62/62 the
+finding quotes - and the conclusion that number supports is unchanged:
+**production was never affected**, because production RAN the migrations. That
+is precisely why nothing noticed. The damage was confined to a database built
+from `db/schema.sql` alone, where the record understated what the database had -
+and running those two migrations against such a database fails with
+`table already exists`, the opposite lie from an unguarded row.
+
+**PROVED BY MAKING IT FAIL.** With `061`'s row put back where it was and
+everything else unchanged, the new assertion reports:
+
+```
+FAIL and every migration is recorded on a database built from nothing
+  — not recorded: 061-skill-system-bases.sql - each of these has its seed line
+    BEFORE the CREATE it is guarded on, so the guard never fires; move it to sit
+    after that CREATE, the way 063 and 064 do
+```
+
+The message carries the remedy, because the failure is otherwise unreadable: a
+missing row looks like a missing migration rather than a misplaced guard.
+
+**A second assertion rides along in the other direction** - nothing recorded that
+has no file - which catches a migration renamed or deleted after being seeded
+here, breaking the convention that they are immutable. `environment.mjs` already
+has that pair against the local D1; this is the same pair against a fresh one.
+
+**One stale citation corrected in the same PR.** `db/schema.sql`'s `064`
+placement note said *"F99 records the two rows that do not"*
+<!-- claim-ok: quoting the sentence this note corrects --> - true when it was
+written and false the moment these two moved. It now says every seed row in the
+file sits after the thing it is guarded on, and names the check that holds that
+true.
+
+**Regression 438 -> 441.** Smoke unchanged at 2207.
+
 ### F100 - medium - four hand-written catalog lists sit beside one declared list, and the ninth catalog needed all four edited by hand
 
 **Filed 2026-09-15 while taking F76 (3 of 4), PR #1086. Not taken.** It is
