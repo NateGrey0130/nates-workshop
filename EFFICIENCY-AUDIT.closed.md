@@ -1,0 +1,344 @@
+**EFFICIENCY-AUDIT.md, the closed findings - moved here 2026-09-16, text and numbering unchanged.**
+Every block below is a finding whose own section records an outcome (or, where the pointer says so,
+one moved on the menu header's authority), moved verbatim with any sub-heading it carried; the live
+menu keeps a one-line pointer per finding. Nothing here is open. This is a RECORD: do not rewrite a
+measurement (audit-menu). The live menu's status header still governs.
+
+### F1 — the same PR costs 2–7× more late in a session than early, and the loop runs marathon sessions
+
+Cost today: the book sessions carry a median 430K–600K tokens of context per
+API call, p90 ~800K+. Because every call re-carries the whole context, the
+identical unit of work gets steadily more expensive: in the Pantheons session
+the Godling/Demigod correction cost 16 calls / 5.0M cache-read early, while
+the same-shaped "import vehicles, finish the book" cost 80 calls / 49.8M
+late; in the Juicer session "file-size figures" cost 116 calls / **99.7M**.
+The natural experiment is decisive: mid-Pantheons, a context reset dropped
+the per-call carry from ~788K (doc-audit segment) to ~235K (dragon-hatchling
+segment, 29 calls / 6.8M) — a 3.4× cut for the same kind of work, with no
+loss of correctness, because everything the import actually needed was in the
+repo, the skills, and the OCR cache, not in the conversation.
+
+Estimated cost after: PRs executed at the early-session rate (~5–15M each)
+instead of the observed blend — roughly **half of the ~0.5–1.5B cache-read
+tokens a book currently costs**.
+
+One-time cost: a skills edit, ~1 session-hour. Two changes: (a) book-survey
+step 6 writes its inventory + authority table + progress ledger to
+`.cache/books/<slug>/SURVEY.md` (local-only, next to the OCR cache it
+describes, so no commercial text enters the repo); (b) book-survey and
+class-import state the convention: a new session per import batch (every
+2–4 PRs), booted from `SURVEY.md` + `git log --oneline -15`, rather than one
+session per book or longer.
+
+Breaks even: within the first book.
+
+Verification given up: **none.** Every PR still runs the full gates; the only
+thing a fresh session loses is conversational residue, and the two shipped
+errors on record were both made *inside* long sessions with full residue.
+
+Proposal: persist the survey to `.cache/books/<slug>/SURVEY.md` and encode
+"fresh session every 2–4 PRs, booted from the survey file" in book-survey and
+class-import.
+
+- **Taken, 2026-08-25**: as proposed. book-survey gains step 7 — persist the
+  survey (inventory, authority pages + verified offset, diff, plan, progress
+  ledger) to `.cache/books/<slug>/SURVEY.md`, local beside the OCR cache it
+  quotes — and its "what surveyed means" list now includes the file.
+  class-import states the batch convention in its own voice: ledger line on
+  merge, fresh session every 2–4 PRs, booted from the file plus
+  `git log --oneline -15`. No gate changed.
+- **Adjusted 2026-08-28, by `INGESTION-AUDIT` F21.** The survey moved to
+  `apps/character-creator/docs/surveys/<slug>.md`, **tracked**. The reason it
+  was put in `.cache/` — no commercial text in the repo — was real and is
+  answered rather than routed around: a survey now states facts about a book
+  and quotes no prose from it, which is enforced by a smoke check for a
+  markdown blockquote. Of Wormwood's 251 lines, three were quoted prose and all
+  three paraphrased with the fact intact. What this note does not change: the
+  2–7× measurement, the fresh-session cadence, or the fact that no gate moved.
+  What it fixes: the ledger this finding calls durable state was gitignored, so
+  it could not be committed and lived on one machine — three Wormwood PRs each
+  reported that as a deviation they could not avoid.
+
+### F2 — smoke.mjs rebuilds the world on every run: ~45s × ~200 runs per book ≈ 2.4 hours
+
+Cost today: `test/smoke.mjs` (5,625 lines, 1,220 checks) always does all four
+of its jobs, including migrating the schema into a local D1 instance — there
+is no section flag (`grep process.argv` finds nothing). The loop runs it
+~7 times per PR at a measured average of 43.7–51.4s: 198 runs / 2.4h wall in
+the Juicer session, 156 / 2.2h in Pantheons. Mid-loop, what the model
+actually wants ~6 of those 7 times is the parser/compose sections — the
+schema hasn't changed since the last run.
+
+Estimated cost after: `--section parser` (the suite already has `section()`
+boundaries) skipping the wrangler/migration build runs in seconds; mid-loop
+runs drop from ~45s to ~5s, saving **~2h of wall clock per book** and ~30% of
+the test-output tokens.
+
+One-time cost: ~1–2 hours — an argv flag gating which sections run.
+
+Breaks even: first book.
+
+Verification given up: **none, on one condition stated in the same PR**:
+ship-pr's step "always run smoke" keeps meaning the *full* suite, flagless,
+before every merge. The fast path exists only between edits, never at the
+gate.
+
+Proposal: add a `--section <name>` flag to smoke.mjs that skips the D1 build,
+and a line in ship-pr pinning "the merge gate is the flagless full run."
+
+- **Taken, 2026-08-25**: as proposed, but in the harness rather than
+  smoke.mjs — `--section` (case-insensitive substring; repeatable,
+  comma-separated) filters at `section()`/`check()`, and the two checks
+  modules each declare their section list once and skip their whole `run()`
+  when nothing matches, which is what skips wrangler. A partial run labels
+  its summary `PARTIAL SMOKE PASSED ... the merge gate is the flagless run`,
+  and a filter matching nothing exits 1 — a loud failure that also catches a
+  drifted section list. Measured: `--section parser` runs in 1s against 23s
+  (warm) flagless. One stowaway fixed en route: the last bare hand-numbered
+  `console.log` group became a real `section('Variable spell costs')`, so the
+  suite is 86 sections and those checks stop counting against their
+  neighbour. ship-pr step 4 pins the gate.
+
+### F3 — 1,768 D1 round trips at ~11s each, one question per trip
+
+Cost today: `q.mjs` is deliberately one-statement-one-line, so every fact
+becomes its own wrangler invocation (~11s measured average, remote) *and* its
+own API round trip carrying ~450K tokens of cached context. Book sessions ran
+130–290 D1 calls each; ~5h of wall clock and roughly 0.7B cache-read tokens
+across the book sessions are attributable to D1 round trips.
+
+Estimated cost after: a `--batch file.sql` mode (one statement per line,
+numbered JSON results, single wrangler invocation) collapses the common
+verify-after-import volley of 5–10 SELECTs into one call: ~60% fewer D1 round
+trips ≈ **~100M cache-read tokens and ~30–45 min of wall clock per book**.
+
+One-time cost: ~1 hour in `d1-query-lib.mjs` + `q.mjs`. The one-statement
+rule exists because `--command` truncates at newlines — `--file` does not,
+so the batch mode goes through a temp file, keeping the footgun fixed.
+
+Breaks even: first book.
+
+Verification given up: none — same queries, same results, fewer trips.
+Read-only stays convention, as today.
+
+Proposal: add `--batch <file>` to q.mjs, executing all statements in one
+wrangler `--file` invocation and printing numbered results.
+
+- **Taken, 2026-08-25**: as proposed, except the one invocation goes over
+  `--command`, not `--file` — over `--remote`, `--file` goes to D1's import
+  endpoint, which returns aggregate counts and swallows every result set
+  (d1-apply.mjs replays trailing SELECTs for exactly this reason), so a batch
+  of verify SELECTs would have come back empty on the target it exists for.
+  The footgun stays fixed a different way: `batchStatements()`
+  (sql-statements.mjs, smoke-pinned) splits the file and collapses each
+  statement to one line before the join, and `d1Batch()` (d1-query-lib.mjs)
+  spawns wrangler without a shell — the npx-cli.js form d1-apply uses — so the
+  `item_id: "slug"` queries an execSync command line breaks on are legal in a
+  batch. One block per statement comes back numbered, in order. Verified
+  against --local and --remote in one invocation each; read-only stays
+  convention.
+
+### F4 — the README is used as working memory: ~460 reads, 37 of them full
+
+Cost today: `apps/character-creator/README.md` (5,702 lines, ~50K chars per
+full read ≈ 12–13K tokens) was read ~460 times across the sessions — 60 via
+the Read tool (708K chars) and 401 via `cat`/`sed`/`awk` (1.27M chars in book
+sessions). 37 reads were the whole file: the character-creator audit session
+alone read it in full 7 times (337K chars), the Juicer session 21 times by
+shell. Each redundant full read costs ~12K fresh plus millions in re-carry
+(finding 1's multiplier); the full reads alone plausibly account for
+**150–250M cache-read tokens** across the run.
+
+Estimated cost after: with a section-read discipline — `grep -n "^## "` for
+the index, then read one heading-bounded range — the same information costs
+1–3K tokens per visit. Estimated saving ~100–200M tokens per comparable
+50-PR run.
+
+One-time cost: ~30 min: a `scripts/readme-section.mjs "<heading>"` that
+prints exactly one section, bounded by the *next heading of any depth* (the
+rule the 544-line section-eating incident taught), plus one paragraph in
+class-import and claim-audit: never read the whole README; the counts you
+would skim it for are pinned by the test suite anyway.
+
+Breaks even: first book.
+
+Verification given up: none for reading — the doc-accuracy passes still read
+every section they audit; they just stop re-reading the 5,600 lines around it.
+Edits still require reading the section being edited, which the script serves.
+
+Proposal: add `scripts/readme-section.mjs` (heading-bounded section printer)
+and encode "index first, one section at a time, never the whole file" in the
+skills that touch the README.
+
+- **Taken, 2026-08-25**: as proposed. `scripts/readme-section.mjs` prints the
+  heading index with no arguments and one section for a heading — matched
+  case-insensitively, exact before substring, ambiguity refused with the
+  candidates listed — bounded by the next heading of any depth, fence-aware so
+  a `# comment` in a bash block is not a boundary. The section goes to stdout
+  and its line range to stderr, for the bounded-edit case. class-import gains
+  "The README is not working memory" (index first, one section at a time, the
+  counts are test-pinned); claim-audit points its README grep at the section
+  printer for context reads. The file map names the script, which the smoke
+  test enforces.
+
+- **Taken again, 2026-08-26** (PR #309): the section printer solved the reading
+  discipline but left the file itself at 5,754 lines and fifty top-level
+  sections, so *finding* the right section still meant scanning an index of a
+  hundred and twenty-eight headings, and any edit still opened a file where a
+  mis-bounded range could eat a chapter. The README is now an 827-line spine —
+  the intro, a map, and the reference tables — with the other 4,890 lines in
+  eleven topic files under `apps/character-creator/docs/`. Chapters moved whole
+  and verbatim; the losslessness was proved by multiset-diffing every non-blank
+  line against `main` rather than by reading a diffstat, which on a file this
+  size cannot show a missing chapter. `readme-section.mjs` now indexes
+  README.md and every `docs/*.md`, names the file in each hit, and treats a
+  file boundary as a section boundary — without that the split would have made
+  4,890 lines invisible to the tool this finding bought. Six test-pinned
+  strings moved with their chapters and each check now names the one file it
+  moved to, never a corpus read; a seventh pin turned out to have been dead
+  already, satisfied by a table-of-contents entry rather than by its section.
+
+### F5 — the skills are delivered by cat, 73 times, because Downloads sessions cannot see them
+
+Cost today: measured in the lead section — 4 proper Skill invocations vs 73
+`cat`s of `SKILL.md` files (283K chars ≈ 71K tokens fresh, times the re-carry
+multiplier; the Pantheons session cat-ed book-survey whole three times, 63K
+chars). Beyond tokens, a cat is un-triggerable: the skill fires only when the
+model remembers it exists, which is exactly when it is least needed.
+
+Estimated cost after: skills load once, on trigger, like the Cloudflare
+skills already do from `~/.claude/skills`. Saving ~50–150K fresh tokens per
+book plus the multiplier, and the skills start firing at the right moments.
+
+One-time cost: 5 minutes, once per machine:
+`mklink /J %USERPROFILE%\.claude\skills\<name> C:\Users\natha\Projects\nates-apps\.claude\skills\<name>`
+for the five skills (junction, so repo edits propagate; `~/.claude/skills`
+already exists and holds eleven skills). Plus a SETUP.md note.
+
+Breaks even: immediately.
+
+Verification given up: none.
+
+Proposal: junction-link the five repo skills into `~/.claude/skills` and
+record the command in SETUP.md.
+
+- **Taken, 2026-08-25**: as proposed. The five junctions are live on this
+  machine (`New-Item -ItemType Junction`, the PowerShell spelling of
+  `mklink /J`; no admin rights involved) and the skills registered by name in
+  the linking session immediately — ship-pr fired for this very PR. SETUP.md
+  records the loop beside the structure tree that names the skills, plus the
+  one gap the mechanism leaves: a skill added later needs its link added in
+  the same PR, because nothing notices its absence. The links are per-machine
+  state; nothing in the repo changed behavior.
+
+As instruments, the skills themselves earn their cost: book-survey (~5.3K
+tokens) and class-import (~3.5K) encode precisely the two shipped-error
+classes the guardrail section protects, book-survey has already shed its one
+stale fork (the `reference/` copy of read-columns.py, removed), and nothing
+that happens every book is skill-less — the gap is delivery, not content.
+
+### F6 — mid-PR human gates turn 30-minute PRs into 10-hour PRs
+
+Cost today: the repo has no `.claude/settings.json` — no permission
+allowlist — and sessions launched from Downloads would not inherit one
+anyway (same root cause as F5). The transcripts show 73–88 tool results per
+book session arriving more than 60s after they were requested, and the
+sharpest cases are PRs whose API-call count says half an hour but whose wall
+clock says most of a day: Norse classes, 91 calls over 10h29m; file-size
+figures, 116 calls over 4h35m. Some of that is the user being away — but a
+unit of work that hangs on a permission prompt while the user is away is
+exactly an approval boundary interrupting work mid-flight; the work was
+ready to continue and could not.
+
+Estimated cost after: read-only commands (node scripts/*.mjs SELECTs,
+read-columns.py, pdftotext, the test suites, git/gh reads) proceed without a
+prompt; a PR mid-flight only stops for writes, pushes, and D1 `--remote`
+mutations. Hours of latency per book removed; token cost unchanged.
+
+One-time cost: ~30 min — run the existing `/fewer-permission-prompts` scan
+and commit the resulting allowlist as repo `.claude/settings.json` (it takes
+effect for sessions once F5's junction/start-dir story is settled, and
+immediately for any session started in the repo).
+
+Breaks even: first book.
+
+Verification given up: none — the allowlist is read-only commands; every
+write still prompts, and the human "merge it" gate is untouched.
+
+Proposal: generate and commit a read-only-command allowlist in
+`.claude/settings.json` via the fewer-permission-prompts scan.
+
+- **Taken, 2026-08-25**: as proposed. The scan covered the 50 most recent
+  transcripts (27 existed, ~14.9K tool calls deduplicated by message id) and
+  the committed allowlist is the five test suites, the five read-only
+  scripts (q.mjs, drift-check, class-check, repo-vs-live, readme-section),
+  read-columns.py, pdftotext, and `node --check`. Deliberately excluded:
+  `npx wrangler d1 execute` — at 1,132 hits the single biggest prompt
+  source, but the mutation lives in its *argument*, so no prefix pattern
+  admits only the SELECTs and q.mjs `--batch` (F3) is the sanctioned path —
+  d1-apply.mjs, the bare interpreters (`python -c`, `node -e`), `curl`, and
+  every git/gh mutation, which are the human gate this finding preserves.
+  q.mjs read-only stays convention, the trade F3 already accepted. One
+  wrinkle worth recording: the permission classifier refused to let the
+  session write `.claude/settings.json` itself — an agent granting itself
+  permissions is exactly what that gate is for — so the file landed via an
+  explicitly user-approved copy.
+
+### F7 — the starting_money class of error still has no check; buy the guardrail, not just the savings
+
+Cost today: this is the finding that spends a little to keep the rest
+honest. The two on-record errors were cheap-reading errors: two
+`starting_money` figures wrong because reading stopped at a page break
+(fixed in PR #280 — the fix cost 17 API calls / 8.6M tokens plus a human
+catching it), and audit finding D5 withdrawn (c464b65) because a grep was
+reported as a reading. The same season also shipped #262 ("correct the
+Godling and Demigod against the book they were guessed from") and #285
+(blank gear rows) — the measured price of rework PRs is 7–49 API calls and
+2M–33M tokens each, plus a review cycle. Free-text fields (`starting_money`,
+equipment prose) are exactly the fields no test pins.
+
+Estimated cost after: class-check.mjs gains a `--field-sources` mode: for
+each free-text field of a draft, print the OCR-cache lines it was drawn from
+*plus the first lines of the following page* whenever the source span ends
+within N lines of a page boundary. Deterministic, offline, free. The
+page-break error class becomes visible at import time instead of at PR #280
+time. It removes no reading — it makes the reading's completeness checkable,
+which is what F1's fresh sessions and F4's section reads lean on.
+
+One-time cost: ~1–2 hours in class-check-lib.mjs (the OCR cache is already
+page-addressed text).
+
+Breaks even: the first prevented rework PR (~1 per book at the observed
+rate).
+
+Verification given up: negative — this adds a check.
+
+Proposal: add a `--field-sources` mode to class-check.mjs that prints each
+free-text field beside its page-break-aware OCR source lines.
+
+- **Taken, 2026-08-25**: as proposed, with one addition the caches forced. The
+  mode resolves the book from `source_book` (slug as initialism, or the
+  manifest's PDF name), takes the window from the title's `p.N-M` suffix, and
+  prints each field's matched lines grown to their paragraph; a span ending
+  within N lines of the page bottom carries the first lines of the following
+  page — including "that page is not in the cache", which is itself the
+  finding. The addition: the printed-page → PDF-page offset is NOT zero here
+  (pf +2, rue +3, read off the bare page numbers OCR captured, majority vote),
+  so the mode detects it rather than trusting `p.N`, and a window that matches
+  nothing names the strongest-matching pages elsewhere — the wrong-offset
+  signature. All logic in class-check-lib.mjs, pinned by the smoke test;
+  the mode skips the catalog pass, so it is offline as specified. Run against
+  the shipped corpus it reproduces the PR #280 shape live: the Body Fixer's
+  equipment paragraph ends at the bottom of its page and the continuation
+  block prints the eleven items on the next one.
+
+  **Superseded 2026-08-27 by INGESTION-AUDIT F4, in two sentences.** The mode
+  no longer DETECTS the offset as its first move — it reads the recorded one
+  from `scripts/books.json`, then the cache manifest, and detects only when
+  neither has it. And "pf +2" is true of most of that book and not all of it:
+  an extra page at cache p018/p019 makes the offset **+1 for printed 1-16**
+  and +2 for 18-336, which the majority vote quoted above cannot see (287
+  votes to 11). `page_offset_exceptions` in the registry carries the head.
+
+---
+
