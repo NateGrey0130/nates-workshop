@@ -482,7 +482,11 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
     if (powerCatalog) {
       // NULL and 'both' are unrestricted, the same reading every picker applies.
       const inSystem = (row) => !system || !row.system || row.system === system || row.system === 'both';
-      const listNames = { spell: new Set(), psionic: new Set(), super: new Set() };
+      // One set per KIND, derived rather than listed. It was a literal of three
+      // when F76 added 'talent' to KINDS, so the loop below read
+      // `listNames.talent.has` off undefined and THREW for any character created
+      // holding a chosen Talent - the create route answered 500.
+      const listNames = Object.fromEntries(KINDS.map((k) => [k, new Set()]));
       for (const kind of KINDS) {
         for (const g of pool[kind]) for (const n of g.from || []) listNames[kind].add(norm(n));
       }
