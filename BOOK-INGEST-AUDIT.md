@@ -11455,6 +11455,55 @@ seen.**
 Nightbane class, counted `--remote` 2026-09-16, so no character held a Talent to
 press.
 
+**Adjusted again, 2026-09-16 (PR #1093). A SECOND defect in the Talent grant
+this finding shipped, and it was worse than the use button.** A banked Talent
+grant was never consumed.
+
+**The cause was the same shape twice, in the two routes that bank and spend
+picks.** `characters/[id]/level-confirm.js` and `characters/[id]/power-picks.js`
+each rebuilt the key of a spent pick from the power's type -
+`${p.type === 'psionic' ? 'psionic' : 'spell'}:level:slot` - a two-way guess at
+what became a three-way answer the day this finding added `talent`. PR #1087
+fixed the identical coercion inside `resolvePowerPicks` and missed these two. A
+spent Talent was keyed `spell`, matched no `talent` row, and so:
+
+- **at level-up, a Talent was taken AND its grant banked again in full** - a
+  double grant;
+- **in the spend endpoint, a banked Talent row was never decremented**, so the
+  same grant could be spent over and over.
+
+**Reproduced through the real `remainingPowerGrants` before anything changed**:
+after taking one Talent from a level-4 grant, the shipped keying left **1**
+grant still banked and the spend endpoint consumed **0** of the row; the fixed
+keying leaves **0** and consumes **1**.
+
+**The fix is at the root, not the mapping.** Keying on `p.type` would have
+worked for exactly one PR: F101's Talent purchases bank as a different grant
+kind from the power they yield, so no mapping from a power's type can stay
+right. `resolvePowerPicks` already builds the true key from the kind it
+consumes, so it now **returns** that key and both routes use it instead of
+rebuilding one.
+
+**A test was guarding the bug, and is worth recording.** The smoke check *"and
+it is the SAME shape the server already reads on level-confirm"* matched
+level-confirm's `'psionic' : 'spell'` expression literally, so it pinned the
+defective line as the canonical shape and would have failed any correct fix. It
+now checks the shape where it lives - `resolvePowerPicks`' one key function - and
+that level-confirm takes the key rather than building its own.
+
+**Pinned behaviourally**: one pick of each kind against one grant of each kind,
+through the real function on an in-memory `schema.sql`, must leave nothing
+banked. Eight assertions fail against the code that shipped, one of them
+printing the double grant directly.
+
+**Nothing reached a player.** Production holds no `talents` rows and no Nightbane
+class, counted `--remote` 2026-09-16.
+
+**Two defects in one shipped feature, and the pattern is the same both times: a
+question answered in more than one place.** The use button's pool was decided
+twice and the two disagreed; a spent pick's key was built three times and two
+were wrong. Both are now answered once.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a

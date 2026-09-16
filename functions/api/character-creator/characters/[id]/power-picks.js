@@ -66,11 +66,10 @@ export async function onRequestPost({ request, env, params }) {
   // its cap. A row that reaches zero is marked claimed rather than removed, so
   // the history of what was granted survives.
   const statements = [];
-  const spent = new Map();
-  for (const p of resolved.powers) {
-    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}:${p.slot ?? 0}`;
-    spent.set(key, (spent.get(key) || 0) + 1);
-  }
+  // What was consumed, keyed the way the banked rows are - handed out by
+  // resolvePowerPicks rather than rebuilt here from each power's type, which is
+  // what let a banked Talent row go unconsumed and be spent again.
+  const spent = new Map(resolved.spent);
   for (const g of pending) {
     const key = `${g.kind}:${g.granted_at_level}:${g.slot ?? 0}`;
     const take = Math.min(g.count, spent.get(key) || 0);
