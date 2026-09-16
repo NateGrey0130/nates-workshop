@@ -1391,3 +1391,65 @@ commentary as readily as the field.
 - **F94** — high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched — WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F94` heading.
 
 - **F95** — medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way — Taken, 2026-09-15 (PR #1078), both halves, each to the side this finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F95` heading.
+
+## Filed while taking the Nightbane survey's D6, 2026-09-16
+
+### F102 - medium - another game's numbers for a shared W.P. or psionic power have no home, so two games already store the wrong ones silently
+
+**Found 2026-09-16**, deciding the Nightbane survey's D6 and D7 against
+production. Filed, not taken.
+
+**The shape.** Two Palladium games print their OWN numbers for a skill or power
+the catalog already holds from Rifts, under the same name. `BOOK-INGEST-AUDIT`
+F83 met this for skill **percentages** and was taken as option C (PR #1041,
+2026-09-14): `skill_system_bases (skill_name, system, base, per_level)`, consulted
+when composing for that system (`db/schema.sql`, read 2026-09-16). **F83 covered
+percentages and nothing else, by its own scope; it did not weigh a W.P.'s combat
+bonuses or a psionic power's cost.** Both meet the same shape and have no home.
+
+**Evidence, each read 2026-09-16 (`q.mjs --remote` for rows, the caches for the
+books):**
+
+| row | catalog holds | another game prints | who takes the catalog row |
+|---|---|---|---|
+| `W.P. Targeting` | cites Palladium Fantasy; thrown only, "but not bows" | **Heroes Unlimited** (cache `p036`): thrown AND bows, +1 strike at 2, 4, 7, 10, 13, +20 ft per level | **14** `add-hu-*-class.sql` files, no note on the difference |
+| `W.P. Archery` | Rifts Ultimate Edition; bows only, strike and parry at 1 | **Nightbane** (printed 58), as "W.P. Archery and Targeting": thrown and bows, parry at 1, strike from 2 | the Nightbane survey's D6 resolves to it |
+| `Hypnotic Suggestion` | Super, **6 I.S.P.** | **Heroes Unlimited** (cache `p133`): **2 I.S.P.**; **Nightbane**: 2 (Sensitive, printed 77) and 4 (Healer, printed 84) | `add-hu-psionics-class.sql`, `add-hu-aliens-class.sql`; Nightbane D7 |
+
+**Why neither existing mechanism reaches it.** A W.P. is `base 0 / per_level 0`
+and carried wholly by `level_bonuses`; `skill_system_bases` requires a `base` or
+a `per_level` and has no column for bonuses. `psionic_powers` has one `isp` and
+one `category` and no per-system table at all. A distinguished second row is the
+older convention, but `smoke.mjs` pins `W.P. Archery and Targeting` against
+`W.P. Archery` as a REAL clash, and a second `Hypnotic Suggestion` would split the
+name that Heroes Unlimited and Nightbane both print.
+
+**Options:**
+
+| | what | for | against |
+|---|---|---|---|
+| **A (recommended)** | extend F83's option C: a per-system `level_bonuses` on `skill_system_bases`, and a sibling `psionic_system_costs (power_name, system, isp, isp_note)`, both consulted when composing for that system | the shape F83 already chose, so one mechanism rather than three conventions; the rows stay single | two schema changes and two compose paths; `level_bonuses` REPLACES a list rather than overriding a number, so its merge rule must be decided |
+| B | distinguished rows tagged by `systems` / `system` | no code | NULL-tagged Rifts rows stay visible to every game, so a Heroes Unlimited player is offered both; the smoke pin fires |
+| C | record only: a note on each class grant, as Spirit West did | free, and honest | the sheet keeps adding the wrong bonuses and deducting the wrong cost |
+| D | decline | nothing to build | two games already ship the wrong numbers without a word |
+
+**Proposal:** A, for W.P. `level_bonuses` and psionic `isp` only. **Posture:
+additive — no existing row changes, a system with no per-system entry composes
+exactly as today.** Not scoped here: which other catalog columns a third game
+may override, which is the question this finding makes visible and does not
+answer.
+
+**Confidence: high that the numbers differ and are stored wrong** — every row
+and page above was read, not inferred. **Medium on A's merge rule**, raised by
+reading how `js/skill-base.js` applies a per-system base and deciding whether a
+per-system `level_bonuses` replaces the list or is added to it.
+
+**Ongoing cost:** two tables or columns, two compose-time lookups, and one more
+place a book import must remember to write. Against it, the three rows above and
+every future modern-day Palladium game that reprints them.
+
+**Found while measuring, and NOT proposed here:** the D6 premise audit reported
+that `W.P. Targeting`'s citation (Palladium Fantasy p.84) does not match its own
+strike levels, which read as Rifts Ultimate Edition's. Reported by that audit and
+not re-verified, because the page offsets were not checked; a citation belongs to
+a re-provenance pass, not to this finding.
