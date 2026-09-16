@@ -11420,6 +11420,41 @@ count of picks, it reduces the character's P.P.E. base permanently, and it
 touches the pools - which F76's own posture (*"additive; no existing table or
 picker changes"*) rules out.
 
+**Adjusted, 2026-09-16 (PR #1091). The 4-of-4 note above reports the Talent use
+button as working, and it did not work.** The browser verification that note
+describes saw the button **render and enable** off P.P.E.; it never **pressed**
+it. Pressed on a real sheet, it spent nothing.
+
+**The cause was two answers to one question.** The row renderer decided a Talent
+spends P.P.E. and put `data-pool="ppe"` on its button. `usePower` in
+`apps/character-creator/sheet.js` carried its own separate rule, which sent every
+power that was not a spell to I.S.P. A Nightbane has no `isp_current`, so the
+function returned early on a null pool: **P.P.E. unchanged, I.S.P. unchanged, and
+no message.** Found by the premise audit of `F101`, which read the line; confirmed
+here by pressing the button on a local character with P.P.E. at its maximum of
+13, before and after:
+
+| | rendered pool | P.P.E. before -> after | spent |
+|---|---|---|---|
+| the code this note shipped | `ppe` | 13 -> 13 | **0** |
+| the fix | `ppe` | 13 -> 9 | **4**, the Talent's cost |
+
+**The fix is one function, `powerPool`, that both paths now read**, so the render
+path and the spend path cannot disagree again. A smoke section pins it three ways
+- one definition, the spend path reads it, and no other ternary in the sheet
+choosing between the two pools - and all three fail against the code that
+shipped.
+
+**The lesson this note exists to leave**, because it is the same one twice in one
+finding: the `BOX_COL` bug in PR #1087 was found only by looking at a real sheet,
+and this one was missed because the sheet was looked at and the button was not
+pressed. **A control is verified when it has been used, not when it has been
+seen.**
+
+**Nothing reached a player.** Production holds no `talents` rows and no
+Nightbane class, counted `--remote` 2026-09-16, so no character held a Talent to
+press.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
