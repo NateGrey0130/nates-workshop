@@ -463,7 +463,7 @@ excludes skills, so Basic, Resistance/Spook Squad-Trained,
 Nocturne/Seeker/Lightbringer and Warlord cannot be variants of one class. Four
 published classes, or one class and a new mechanism.
 
-**DECIDED 2026-09-16 (PR #PRNUM): one Nightbane R.C.C. plus FOUR PACKAGE O.C.C.s,
+**DECIDED 2026-09-16 (PR #1124): one Nightbane R.C.C. plus FOUR PACKAGE O.C.C.s,
 restricted to each other both ways. No code.** The question offered two answers
 and the right one is a third, which neither half named; the premise pass that
 settled it found both halves of the question out of date.
@@ -582,7 +582,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-13 | [#996](https://github.com/NateGrey0130/nates-workshop/pull/996) | D1 / F73, catalog half: `VALID_SYSTEMS` and the free-text catalogs take `nightbane` (Heroes Unlimited alongside) |
 | 2026-09-14 | [#1037](https://github.com/NateGrey0130/nates-workshop/pull/1037) | F73's blocking half: the three CHECKs, `campaigns.js` and the wizard picker |
 | 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
-| 2026-09-16 | #PRNUM | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
+| 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
 
 ### What remains
 
