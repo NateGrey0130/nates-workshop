@@ -88,7 +88,7 @@ because the render will not help there.
 **Printed 233 is the most valuable page in the book** and it is clean in the
 text layer as well as on a render. The twelve ladders:
 
-**CORRECTED 2026-09-16 (PR #PRNUM): a ladder here is NOT evidence an entry is
+**CORRECTED 2026-09-16 (PR #1125): a ladder here is NOT evidence an entry is
 playable, and the table row above says it is.** New West and Spirit West both
 settled that playability is stated on each entry's own page; this book is a
 fourth where it holds, since the Nightlord and the Priest of Night have ladders
@@ -226,7 +226,7 @@ Phase World settled the same conflict against the ladder when the Royal
 Kreeghor's heading labelled it NPC villains. **Recorded as an open decision,
 not resolved here** — see D3.
 
-**CORRECTED 2026-09-16 (PR #PRNUM), and this section is left standing as the
+**CORRECTED 2026-09-16 (PR #1125), and this section is left standing as the
 record of what the survey believed.** Three things in it are wrong:
 
 - **The flat refusal on printed 162 is the HOUND's**, ending the Hound entry in
@@ -544,7 +544,7 @@ none of it a guess:**
 **D3 — Hound Master and Master Vampire.** Ladder says playable, own page says
 not. Phase World excluded the Royal Kreeghor on the same conflict.
 
-**DECIDED 2026-09-16 (PR #PRNUM): SIX entries are excluded, not two, and 15
+**DECIDED 2026-09-16 (PR #1125): SIX entries are excluded, not two, and 15
 laddered classes are playable.** The question named two entries; reading every
 laddered entry's own page found six, and two of the question's premises false
 (corrected under *The ladder and the prose disagree*, above).
@@ -633,7 +633,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-14 | [#1037](https://github.com/NateGrey0130/nates-workshop/pull/1037) | F73's blocking half: the three CHECKs, `campaigns.js` and the wizard picker |
 | 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
 | 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
-| 2026-09-16 | #PRNUM | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
+| 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
 
 ### What remains
 
