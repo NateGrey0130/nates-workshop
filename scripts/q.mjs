@@ -1,8 +1,14 @@
 // One ad-hoc question to D1, from a shell.
 //
-//   node scripts/q.mjs --local "SELECT name, level FROM spells WHERE level = 9"
-//   node scripts/q.mjs "SELECT count(*) FROM imported_classes"   (--remote)
-//   node scripts/q.mjs --batch checks.sql                        (--remote)
+//   node scripts/q.mjs --local  "SELECT name, level FROM spells WHERE level = 9"
+//   node scripts/q.mjs --remote "SELECT count(*) FROM imported_classes"
+//   node scripts/q.mjs --remote --batch checks.sql
+//
+// THE TARGET IS EXPLICIT. Until 2026-09-16 a missing flag meant --remote, the
+// convention every other script here still follows through targetFromArgv() -
+// and a "local readback" typed without --local read PRODUCTION and reported a
+// freshly applied local change as missing (2026-09-11). Now a missing flag is
+// a usage error, exit 2, before wrangler is spawned.
 //
 // Exists because the alternative kept being a throwaway `node -e` with a
 // dynamic import in it, and those get the quoting wrong on Windows in a
@@ -21,11 +27,20 @@
 // separate calls at ~11s of wrangler start-up each; a batch pays that cost
 // once. Results come back numbered, one block per statement, in order.
 import { readFileSync } from 'node:fs';
-import { d1Batch, d1Query, targetFromArgv } from './d1-query-lib.mjs';
+import { d1Batch, d1Query } from './d1-query-lib.mjs';
 import { batchStatements } from './sql-statements.mjs';
+
+const USAGE = 'usage: node scripts/q.mjs (--local|--remote) "<one SQL statement>"\n'
+  + '       node scripts/q.mjs (--local|--remote) --batch <file.sql>\n'
+  + '       the target is required: there is no default database.';
 
 const args = process.argv.slice(2);
 const batchAt = args.indexOf('--batch');
+const target = args.includes('--local') ? '--local' : args.includes('--remote') ? '--remote' : null;
+if (!target) {
+  console.error(USAGE);
+  process.exit(2);
+}
 
 if (batchAt !== -1) {
   const file = args[batchAt + 1];
@@ -38,7 +53,7 @@ if (batchAt !== -1) {
     console.error(`q.mjs --batch: no statements in ${file}`);
     process.exit(2);
   }
-  const blocks = d1Batch(stmts, { target: targetFromArgv() });
+  const blocks = d1Batch(stmts, { target });
   if (blocks.length !== stmts.length) {
     // Should not happen — wrangler returns one block per statement — but if it
     // ever does, pairing silently by index would caption results with the
@@ -56,5 +71,5 @@ if (batchAt !== -1) {
       + '       node scripts/q.mjs [--local|--remote] --batch <file.sql>');
     process.exit(2);
   }
-  console.log(JSON.stringify(d1Query(sql, { target: targetFromArgv() }), null, 1));
+  console.log(JSON.stringify(d1Query(sql, { target }), null, 1));
 }

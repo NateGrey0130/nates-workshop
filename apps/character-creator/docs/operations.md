@@ -44,7 +44,11 @@ direction); every file is pre-checked for CR and non-ASCII bytes before
 anything runs (both have changed production bytes before); files apply in
 the order given and the run stops at the first failure, so a migration
 always lands before the backfill that needs it; each file's trailing
-verification SELECTs are printed; and remote runs start with a throwaway
+verification SELECTs are re-run and their `assertion` / `got` / `want` rows
+are **enforced** - checked first in a scratch replay of the data directory
+before anything is applied, then again on the target after each file, and a
+mismatch in either place exits non-zero (since 2026-09-16; before that the
+rows were printed and the run carried on); and remote runs start with a throwaway
 `wrangler whoami`, which absorbs the expired-OAuth-token failure
 (`Authentication error [code: 10000]`) that an interactive login hits on
 its first call after idle. A `CLOUDFLARE_API_TOKEN` environment variable

@@ -174,3 +174,23 @@ export function trailingSelects(sql) {
     .filter((t) => /^select\b/i.test(t))
     .map((t) => collapseWhitespace(t) + ';');
 }
+
+// statements() splits on every top-level semicolon, which is right for the
+// data scripts and wrong for schema.sql: a CREATE TRIGGER body holds its own
+// semicolons between BEGIN and END. This re-joins a trigger's body onto its
+// CREATE, so the result can be handed statement by statement to node:sqlite.
+// Shared by rebuild-local.mjs and the read-back pre-flight in readback-lib.mjs;
+// `wrangler --file` never needed it, because wrangler splits for itself.
+export function statementsKeepingTriggers(sql) {
+  const parts = [];
+  let pending = null;
+  for (const stmt of statements(sql)) {
+    pending = pending === null ? stmt : pending + ';\n' + stmt;
+    if (!/\bcreate\s+trigger\b/i.test(pending) || /\bend\s*$/i.test(pending)) {
+      parts.push(pending);
+      pending = null;
+    }
+  }
+  if (pending !== null) parts.push(pending);
+  return parts;
+}

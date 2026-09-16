@@ -32,14 +32,24 @@
 // - Files apply IN THE ORDER GIVEN and the run stops at the first failure,
 //   so a migration always lands before the backfill that needs it and a
 //   failure can't half-apply the tail.
-// - Each file's own trailing verification SELECTs are printed — the scripts
-//   read their results back rather than trusting exit codes, and this is
-//   where those results surface. On --remote that needs a second pass:
-//   `--remote --file` does not run the SQL over the query API, it uploads the
-//   file to D1's IMPORT endpoint, which returns aggregate counts and nothing
-//   else. So the trailing SELECTs are re-run afterwards over --command. They
-//   are read-only by definition, and without this the promise above was
-//   simply false on the target it matters most for.
+// - Each file's own trailing verification SELECTs are re-run after the apply
+//   over --command --json, on BOTH targets, and their ASSERTION rows are
+//   ENFORCED: a row shaped `... AS assertion, ... AS got, ... AS want` whose
+//   got differs from its want stops the run before the next file and exits
+//   non-zero. (--remote --file goes to D1's IMPORT endpoint, which returns
+//   aggregate counts and swallows result sets, so the second pass is the only
+//   way those rows are seen at all on the target that matters.) Until
+//   2026-09-16 the rows were printed and the run carried on - three wrong
+//   claims in one import were caught by a person reading the output, and
+//   `mystic-russia-survey` records that a fourth was not.
+// - And they are enforced BEFORE anything is applied: the data directory is
+//   replayed into node's own SQLite (readback-lib.mjs, the rebuild-local.mjs
+//   replay, ~20s) and each given data script's assertions are evaluated at
+//   its own position in the order. A mismatch there means nothing reaches the
+//   target. Files outside apps/character-creator/db - migrations, schema.sql -
+//   are not replayed (schema.sql already carries every migration) and get the
+//   post-apply enforcement only. `--skip-preflight` exists for the day the
+//   replay is wrong about something, and it says so loudly when used.
 // - One automatic retry per file on the 10000 auth error, in case the token
 //   expires mid-sequence.
 
@@ -47,10 +57,13 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH } from './sql-statements.mjs';
+import { assertionMismatches, preflightReadbacks } from './readback-lib.mjs';
+import { d1Batch, repoRoot } from './d1-query-lib.mjs';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
 const local = args.includes('--local');
+const skipPreflight = args.includes('--skip-preflight');
 // Globs are expanded HERE, not by the shell. PowerShell does not expand them
 // for native commands at all, so `db/*.sql` reaches this script as a literal
 // and dies as 'no such file'. Doing it here means one documented command
@@ -153,6 +166,35 @@ for (const f of files) {
   }
 }
 
+// ── pre-flight: the read-back assertions, in a scratch replay, before any apply ──
+//
+// Each given data script's trailing SELECTs are evaluated right after that
+// script at its own position in a replay of the data directory. At its own
+// position, not at the end: the readbacks assert global counts that later
+// files change on purpose (operations.md, the z-tier table), so an end-state
+// check would fail scripts that are right. A mismatch here means the file
+// does not do what its author read off the page, and nothing has touched the
+// target yet - which is the whole point of doing it here rather than after.
+if (skipPreflight) {
+  console.log('\n!! --skip-preflight: read-back assertions will NOT be checked before applying. !!');
+} else {
+  process.stdout.write('\npre-flight: replaying the data directory to check read-back assertions... ');
+  const t0 = Date.now();
+  const pf = preflightReadbacks(files, { repoRoot, log: (m) => console.log(m) });
+  console.log(`${((Date.now() - t0) / 1000).toFixed(1)}s`);
+  for (const f of pf.skipped) console.log(`  ${f}: not under the data directory - assertions enforced after the apply only`);
+  for (const f of pf.checked) console.log(`  ${f}: replayed, read-backs evaluated`);
+  if (pf.tolerated) console.log(`  (${pf.tolerated} file(s) not given failed in the replay and were tolerated)`);
+  if (pf.failures.length) {
+    for (const x of pf.failures) console.error(`  PRE-FLIGHT FAILED ${x.file}: ${x.detail}`);
+    die(`${pf.failures.length} read-back ${pf.failures.length === 1 ? 'assertion' : 'assertions'} failed in the scratch replay - NOTHING was applied. `
+      + 'Fix the script (or its want) and run again. The replay state at a file is the repo in SORTED order up to that '
+      + 'file, so a new file that sorts before scripts production already has is asserting against an older catalog than '
+      + 'production holds - name it to sort LAST (operations.md, the z-tier table). --skip-preflight bypasses this check '
+      + 'and is the wrong answer unless the replay itself is at fault.');
+  }
+}
+
 // Call npm's own npx-cli.js with this Node, so the child spawns WITHOUT a shell.
 // `shell: true` was load-bearing, not incidental: Windows npx is a .cmd, and Node
 // refuses to spawn .bat/.cmd unshelled (EINVAL, the CVE-2024-27980 guard). But it
@@ -192,25 +234,46 @@ for (const f of files) {
   console.log(r.out.trim());
   if (r.code !== 0) die(`${f} failed — nothing after it was applied.`);
 
-  // Remote applies go through the import endpoint, which reports counts and
-  // swallows result sets. Replay the file's own trailing SELECTs over the
-  // query API so the numbers the script was written to show actually appear.
-  if (remote) {
-    const checks = trailingSelects(readFileSync(f, 'utf8'));
-    if (checks.length) {
-      console.log(`\n-- ${f}: verification --`);
-      // One --command carrying every SELECT, so this is one extra round trip
-      // per file rather than one per statement. trailingSelects() returns them
-      // single-line: --command truncates at the first newline and calls the
-      // remainder `incomplete input`, which reads like bad SQL rather than a
-      // mangled argument. Every verification SELECT here spans several lines.
-      const v = run(['wrangler', 'd1', 'execute', 'DB', '--remote', '--command', checks.join(' ')]);
-      console.log(v.out.trim());
-      // A failed verification is not a failed apply. The rows landed; only the
-      // read-back did not, and saying otherwise would send you rolling back a
-      // migration that is fine.
-      if (v.code !== 0) console.log(`(verification query failed - the apply itself succeeded)`);
+  // Re-run the file's own trailing SELECTs over the query API and ENFORCE their
+  // assertion rows. Remote applies go through the import endpoint, which
+  // reports counts and swallows result sets, so on --remote this is the only
+  // place the rows are seen at all; on --local the --file output above already
+  // showed them, and this is where they are read rather than looked at.
+  const checks = trailingSelects(readFileSync(f, 'utf8'));
+  if (checks.length) {
+    console.log(`\n-- ${f}: verification (${target}) --`);
+    // One --command carrying every SELECT, so this is one extra round trip
+    // per file rather than one per statement. trailingSelects() returns them
+    // single-line: --command truncates at the first newline and calls the
+    // remainder `incomplete input`, which reads like bad SQL rather than a
+    // mangled argument. Every verification SELECT here spans several lines.
+    let blocks;
+    try {
+      blocks = d1Batch(checks, { target });
+    } catch (e) {
+      // The rows landed; only the read-back did not run. Rolling back a
+      // migration over this would be wrong - but so is exiting 0 when the
+      // assertions were never evaluated, so the run stops here and says which.
+      die(`${f}: the read-back query failed, so its assertions were NOT evaluated. `
+        + `The apply itself succeeded - do not roll it back; re-run the SELECTs by hand.\n${e.message}`);
     }
+    const mismatches = [];
+    blocks.forEach((b, i) => {
+      const rows = b?.results ?? [];
+      console.log(`[${i + 1}] ${checks[i]}`);
+      console.log(JSON.stringify(rows));
+      mismatches.push(...assertionMismatches(rows));
+    });
+    if (mismatches.length) {
+      for (const m of mismatches) {
+        console.error(`  ASSERTION FAILED ${JSON.stringify(m.assertion)}: got ${JSON.stringify(m.got)}, want ${JSON.stringify(m.want)}`);
+      }
+      die(`${f}: ${mismatches.length} read-back ${mismatches.length === 1 ? 'assertion' : 'assertions'} failed on ${target}. `
+        + 'The file IS applied; nothing after it was. A one-shot script is not re-run - '
+        + 'write a fix- script that sorts after it (operations.md, the z-tier table)'
+        + (local ? ', unless the local database has simply drifted from the repo (ship-pr: --local is not a mirror)' : '') + '.');
+    }
+    console.log(`  read-backs: ${blocks.length} statement(s), every assertion holds`);
   }
 }
 
