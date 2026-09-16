@@ -440,8 +440,10 @@ CREATE INDEX IF NOT EXISTS idx_pending_power_picks_character
 
 -- Guarded on the CHECK text itself, and placed HERE rather than in the seeding
 -- block, because a guard that runs before its own table never fires - F76's
--- `063` row sits beside its CREATE for the same reason, and F99 records the two
--- rows that do not.
+-- `063` row sits beside its CREATE for the same reason, and `057` and `061`
+-- were moved to join them when F99 was taken. EVERY seed row in this file now
+-- sits after the thing it is guarded on, and `regression.mjs` asserts it on a
+-- database built from nothing.
 --
 -- `pragma_table_info` CANNOT see a CHECK: it reports columns, types, defaults
 -- and nullability and says nothing about constraints, which is why this reads
@@ -752,9 +754,6 @@ SELECT '056-totems.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'totems')
   AND EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'totem');
 
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '057-super-abilities.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'super_abilities');
 
 -- 058-060 widen a CHECK, and a CHECK is the one schema feature
 -- `pragma_table_info` cannot see: it reports columns, types, defaults and
@@ -779,14 +778,6 @@ SELECT '060-vehicle-system-third-game.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE name = 'vehicles'
                 AND instr(sql, '''nightbane''') > 0
                 AND instr(sql, '''heroes-unlimited''') > 0);
-
--- Guarded on the TABLE this migration adds, which is the schema feature it is
--- responsible for. An unconditional row here would mark an un-migrated database
--- as migrated, which is precisely the lie the record exists to prevent.
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '061-skill-system-bases.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master
-               WHERE type = 'table' AND name = 'skill_system_bases');
 
 -- Guarded on BOTH columns 062 adds, not one. They arrive together and a guard
 -- naming only the first would mark a half-applied database as migrated.
@@ -886,6 +877,22 @@ CREATE TABLE IF NOT EXISTS skill_system_bases (
 
 CREATE INDEX IF NOT EXISTS idx_skill_system_bases_system
   ON skill_system_bases(system);
+
+-- Guarded on the TABLE this migration adds, and placed HERE rather than in the
+-- seeding block below, which is where it used to sit.
+--
+-- IT NEVER FIRED THERE. That block runs BEFORE this CREATE, so on a database
+-- built from this file in one pass the guard found no table and the migration
+-- was never recorded - 64 files, 62 recorded, measured two independent ways on
+-- 2026-09-16 (node:sqlite, and wrangler against a fresh --persist-to). That is
+-- the failure 055-spell-tradition.sql's note further down describes, and the
+-- opposite lie from an unguarded row: the migration then fails with
+-- "table already exists" if anyone later runs it against such a database.
+-- BOOK-INGEST-AUDIT F99.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '061-skill-system-bases.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master
+               WHERE type = 'table' AND name = 'skill_system_bases');
 
 CREATE TABLE IF NOT EXISTS spells (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -987,6 +994,14 @@ CREATE TABLE IF NOT EXISTS super_abilities (
 );
 
 CREATE INDEX IF NOT EXISTS idx_super_abilities_tier ON super_abilities (tier);
+
+-- Guarded on the TABLE this migration adds, and placed HERE rather than in the
+-- seeding block below, for the reason 061's row above gives: that block runs
+-- before this CREATE, so the guard never fired and a database built from this
+-- file alone never recorded 057. BOOK-INGEST-AUDIT F99.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '057-super-abilities.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'super_abilities');
 
 -- Nightbane Talents: the ninth catalog, and the only power here that costs
 -- something to HAVE as well as something to USE. A Talent is bought once with a

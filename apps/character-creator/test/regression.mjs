@@ -160,6 +160,54 @@ check('schema + catalogs + data scripts apply to an empty database',
   applied.status === 0, (applied.stderr || applied.stdout || '').slice(-400));
 if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a database)'); process.exit(1); }
 
+// AND THE DATABASE IT JUST BUILT KNOWS WHICH MIGRATIONS IT HAS.
+//
+// db/schema.sql already contains every column the migrations add, so a fresh
+// database does not RUN them - it RECORDS them, each row guarded by the schema
+// feature its migration adds. A guard placed before its own CREATE therefore
+// never fires, and the database comes up understating what it has: run those
+// migrations against it later and they fail with `table already exists`. That
+// is the opposite lie from an unguarded row, and it is silent in every
+// direction.
+//
+// THIS IS NOT NEW MACHINERY. IT IS AN EXISTING CHECK POINTED SOMEWHERE ELSE.
+// `test/checks/environment.mjs` already asserts `every migration on disk is
+// recorded as applied` - against the DEVELOPER's local D1, which accumulates,
+// so it stays quiet on a machine whose database was migrated by hand over
+// time. This file is the only place a database built the DOCUMENTED way
+// exists, and that is the database the defect lives in. The build above has
+// already happened, so the question costs one query and no second build.
+//
+// BOOK-INGEST-AUDIT F99, which found 057-super-abilities.sql and
+// 061-skill-system-bases.sql both guarded from the seeding block while their
+// CREATEs sit ~200 lines below it: a one-pass build recorded 62 of 64.
+// Production was never affected - it RAN the migrations - which is exactly why
+// nothing noticed for as long as nothing looked.
+{
+  const migFile = join(state, 'migrations-recorded.sql');
+  writeFileSync(migFile, 'SELECT filename FROM schema_migrations ORDER BY filename;', 'utf8');
+  const mig = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--file', migFile]);
+  let recorded = null;
+  try { recorded = JSON.parse(mig.stdout)[0].results.map((x) => x.filename); } catch { /* checked below */ }
+  check('the built database can say which migrations it has', Array.isArray(recorded),
+    (mig.stdout || mig.stderr || '').slice(-300));
+  if (Array.isArray(recorded)) {
+    const onDisk = readdirSync(join(repoRoot, 'db', 'migrations'))
+      .filter((f) => f.endsWith('.sql')).sort();
+    const missing = onDisk.filter((f) => !recorded.includes(f));
+    check('and every migration is recorded on a database built from nothing',
+      missing.length === 0,
+      'not recorded: ' + missing.join(', ')
+      + ' - each of these has its seed line BEFORE the CREATE it is guarded on, so the'
+      + ' guard never fires; move it to sit after that CREATE, the way 063 and 064 do');
+    // The other direction: a row with no file means a migration was renamed or
+    // deleted after being seeded here, which breaks their immutability.
+    const orphans = recorded.filter((f) => !onDisk.includes(f));
+    check('and nothing is recorded that has no file', orphans.length === 0,
+      'recorded with no file: ' + orphans.join(', '));
+  }
+}
+
 // ── boot the worker ─────────────────────────────────────────────────────────
 console.log('\n[2/7] Booting the app');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
