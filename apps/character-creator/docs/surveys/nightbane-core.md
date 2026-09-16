@@ -80,7 +80,7 @@ because the render will not help there.
 | printed | table | states |
 |---|---|---|
 | **233** | Experience Tables | which entries are playable, and the canonical spelling of each — **twelve ladders naming twenty-one classes** |
-| **126–127** | An Alphabetical List of Invocations by Level | every spell's level **and** its P.P.E. cost, in one place |
+| **126–127** | An Alphabetical List of Invocations by Level | every spell's level — **and a cost that is WRONG for sixteen spells**; the stat blocks are the authority for cost (corrected by the spell import) |
 | **69** | An Alphabetical List of All Psychic Abilities | every psionic power and its category |
 | **48** | Skill List by Category | every skill and its category |
 | **107** | Alphabetical Nightbane Talents List | the Talent roster, split Common / Elite |
@@ -389,6 +389,36 @@ Temporary Enchantment, Temporary Insanity, Summon Rain, Summon Entity.
 at **level 0** and 150 P.P.E. against this book's level 12 and 250. A level-0
 row with a real cost is a half-finished import that the `spell stubs` backlog
 count — which keys on level 0 **and** cost 0 — cannot see.
+
+**CORRECTED 2026-09-16 (PR #1129), and this section's central finding is
+withdrawn.** It compared the catalog with the book's INDEX (printed 126–127), and
+**the index misprints costs**. Every stat block in the chapter was then read
+(printed 127–150, three extraction slices and a reconcile pass that checked all
+of it), and sixteen of the "cheaper" spells print, in their own stat blocks,
+exactly the cost the catalog holds — See Aura 6, Sense Evil 2, Telekinesis 8,
+Invisibility: Superior 20, Sickness 50, Metamorphosis: Mist 250, and ten more.
+**Nightbane does not set its own cost table.** The comparison that should have
+been run is stat block against catalog, and it gives:
+
+| the book's 131 described spells | count | stored as |
+|---|---|---|
+| identical in level and cost, on a row a Nightbane character sees (`NULL` or `both`) | **92** | nothing — class spell lists name those rows |
+| cost genuinely differs, the index AND the stat block agreeing | **10** | `Nightbane: <name>` beside the established row |
+| identical, but the only catalog row is `rifts`-only (Wards, Summon and Control Rain) | **2** | `Nightbane: <name>` |
+| no catalog row at all | **27** | a plain `nightbane` row |
+
+**131, not 127.** The index stops at level 13; the body goes on to five level 14–15
+spells (Close Rift, Id Barrier, Restoration, Dimensional Portal, Teleport:
+Superior), all already here and identical. And **`Summon Entity` is an index
+entry with no stat block anywhere** — nothing to store, the same shape as the
+psionic `Healing`. Other index-vs-heading spellings: Night Vision / Nightvision,
+Negation / Negation (of Magic), Nightlands Portal / Nightland Portal, Temporary
+Insanity / Curse: Temporary Insanity, Summon Rain / Summon and Control Rain.
+
+**What survives of the section above:** levels agree everywhere, `Swim as Fish`
+is printed twice and both rows exist, and `same_spell_as` is the mechanism for the
+genuine cost differences — decided per pair by `scripts/same-spell-lib.mjs`, which
+approved 9 of 12. The data script's header records the three it refused and why.
 
 ## What the app cannot express yet
 
@@ -735,7 +765,7 @@ written.
 
 Once it is, in this order:
 
-1. **127 spells** from printed 126–150 — two readings each, the index at
+1. **SHIPPED — PR #1129: 39 rows, not the 123 planned here** (see *CORRECTED* under the spell diff). **127 spells** from printed 126–150 — two readings each, the index at
    126–127 and the `P.P.E.:` line in the description. 96 of them get
    `same_spell_as` pointing at the existing row; 27 are new; 4 are the false
    gaps above and are not written at all. Batch by the index's level headings,
@@ -779,6 +809,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 | 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
 | 2026-09-16 | [#1128](https://github.com/NateGrey0130/nates-workshop/pull/1128) | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
+| 2026-09-16 | [#1129](https://github.com/NateGrey0130/nates-workshop/pull/1129) | **Step 1, spells: 39 rows** in `zzzzzzzzzzzzz-nb-spells.sql` - 27 new `nightbane` invocations and 12 `Nightbane:` retellings (9 linked by `same_spell_as`). The survey's cost finding withdrawn: the index misprints, and 92 of 131 spells are already here identical. Applied `--remote` before the merge. |
 
 ### What remains
 
