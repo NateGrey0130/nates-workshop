@@ -11296,6 +11296,50 @@ because a guard that runs before its own table never fires. **Proving that
 turned up two existing rows in exactly that state**, which is filed below as its
 own finding rather than fixed inside a PR about a different table.
 
+**2 of 4 is PR #1085** - the catalog declaration. Fourteen fields in
+`js/catalog-fields.js`, which is what the editor, the write endpoints, the
+importers and `findDuplicates` all build themselves from, so no UI code and no
+SQL. Verified by using it rather than by reading the config: the Talents tab
+appears, the form builds all fourteen controls, and saving Anti-Arcane through
+it wrote a row with `acquire_ppe` 15 and `ppe` 20 read back out of D1 - both
+costs on one row, which is the whole reason the table exists. `findDuplicates`
+needed nothing, confirmed by running the real function against three `talents`
+rows rather than by reading it. A new smoke check asserts every catalog field is
+a real column of its table, which the existing config check could not see.
+
+**3 of 4 is PR #1086** - the ledgers. `talents` added to the two hand-written
+lists in `scripts/source-coverage.mjs`, to `TABLES` in
+`scripts/repo-vs-live.mjs`, and to `CITATION_TABLES` in
+`scripts/drift-check.mjs`. All four run clean against production: the coverage
+ledger prints a ninth `talents` row, `repo-vs-live` reports `talents repo 0 live
+0 names match` at exit 0, `--vs-build` shows `rows 4619 4619` with no phantom
+delta, and `drift-check --remote` still prints `NO DRIFT`.
+
+**F85 PREDICTED THIS PR AND WAS RIGHT.** Its ongoing-cost line reads *"the ninth
+catalog will be omitted too"*.
+<!-- claim-ok: quoting the prediction this note reports on -->
+The ninth catalog was not omitted, and the reason is worth being honest about:
+a person remembered, which is exactly the mechanism that had already failed
+three times. F85 declined to fix the cause and invited a taker to say so in the
+note - **this is a taker saying so, and it is filed as F100 rather than folded
+in here**, because it is a change to three scripts that answer different
+questions and does not belong inside a PR about a ninth catalog.
+
+**One stale sentence was corrected rather than incremented.**
+`scripts/source-coverage.mjs` carried *"`catalog-fields.js` declares EIGHT
+catalogs"* in the comment explaining F85 - true when F85 was taken, false the
+day `talents` landed. <!-- claim-ok: quoting the sentence this note corrects -->
+It no longer states a count at all, per `SKILL-AUDIT` F7's rule that removing an
+ordinal beats incrementing one, because incrementing leaves the trap armed. The
+two occurrences in F85's and F86's own outcome notes are left alone: those are
+dated measurements and this menu's rule is that a record is not rewritten.
+
+**Still to come: 4 of 4**, the class-facing grant block, without which the rows
+are unreachable - `super_abilities` sat unreachable for a day for exactly that
+reason. `functions/api/character-creator/catalogs.js` is deliberately untouched
+so far and is part of that PR, because the wizard has nothing to do with a
+Talent until a class can grant one.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
@@ -13806,3 +13850,109 @@ whether a build-from-schema check is worth a CI minute.
 
 **Ongoing cost:** one check that builds a SQLite database in memory, which the
 suite already does elsewhere. The two moved lines cost nothing.
+
+### F100 - medium - four hand-written catalog lists sit beside one declared list, and the ninth catalog needed all four edited by hand
+
+**Filed 2026-09-15 while taking F76 (3 of 4), PR #1086. Not taken.** It is
+`F85`'s own open question, now carrying the evidence `F85` said it lacked.
+
+**`F85` named this and declined it, in these words:**
+
+> **Whether to derive the list instead of adding four strings is the real
+> question, and this finding does not answer it.** `catalog-fields.js` is a
+> browser module the scripts do not import today, and the three lists that would
+> want it disagree about scope on purpose. Adding the strings is the `F28` fix
+> and fixes `F28`'s recurrence, not its cause; a taker who wants the cause
+> should say so in the note.
+
+<!-- claim-ok: quoting the finding this one continues -->
+
+Read 2026-09-15. **This is a taker saying so.**
+
+**`F85` also predicted what would happen next, and it happened.** Its
+ongoing-cost line reads *"The cost that does not go away is the one `F28`
+already paid and this finding pays again: the ninth catalog will be omitted
+too."* <!-- claim-ok: quoting the prediction this finding reports on --> The
+ninth catalog is `talents`, migration 063, and it landed 2026-09-15. It is in
+all four lists - **because a person remembered**, which is the mechanism that
+failed three times before it and is not a fix.
+
+**The four lists, read 2026-09-15**, all now nine-strong and all maintained by
+hand:
+
+| file | the list | what it is for |
+|---|---|---|
+| `scripts/source-coverage.mjs` | the live-side group list, search `rows: d1(` | can each shipped row be traced to a page |
+| `scripts/source-coverage.mjs` | the build-side list, search `rows: fromBuild(` | the same question for a database built from the repo |
+| `scripts/repo-vs-live.mjs` | `TABLES` | does the repo rebuild the live rows |
+| `scripts/drift-check.mjs` | `CITATION_TABLES` | does a row's cited page exist in the cache |
+
+**The two `source-coverage` lists must agree with each other or the tool lies.**
+That is not a guess: when they disagreed by one table, every run printed a
+standing negative delta that was the whole `vehicles` table rather than a
+regression - `-171` when `F85` measured it, `-220` by the time the fix shipped.
+Two hand-written lists that must stay identical, in one file, is the sharpest
+version of this.
+
+**`CATALOGS` is derivable and the other two are not, which is the whole
+difficulty.** Mapping `catalog-fields.js`'s nine keys to their `table` gives
+exactly the nine `source-coverage` wants, and I checked: every one of the nine
+has both a `name` and a `source_book` column, which is all those queries select.
+But `repo-vs-live`'s `TABLES` carries `imported_classes`, `skill_system_bases`
+and `catalog_redirects`, which are not catalogs, and each entry is a triple
+naming an identity column that `CATALOGS` does not record. And
+`CITATION_TABLES` is a deliberate SUBSET - `gear`, `vehicles` and `enchantments`
+are excluded from it on purpose. So this is not one change; it is a derived base
+list plus two explicit additions and one explicit subtraction.
+
+**Proposal.** Export the catalog table list from `js/catalog-fields.js` - the
+file already exports `CATALOG_KEYS` as `Object.keys(CATALOGS)`, so this is a
+sibling of something that exists - and have the two `source-coverage` lists
+derive from it. Leave `repo-vs-live` and `drift-check` hand-written but make
+each one **state its difference from the derived list rather than restate the
+list**: `[...CATALOG_TABLES, 'imported_classes', ...]` and
+`CATALOG_TABLES.filter(...)`, so a ninth catalog joins them automatically and a
+deliberate exclusion stays visible. **Posture: no new gate, no exit-code
+change.** The tools keep answering what they answer today; only where the list
+comes from changes.
+
+**What would make this WRONG, said plainly**, because the proposal is not
+obviously right: the three lists *"disagree about scope on purpose"* is `F85`'s
+reason for leaving them alone, and deriving a base list makes an accidental
+omission impossible while making a deliberate exclusion easier to lose track of.
+If that trade is not wanted, the honest alternative is a **check** rather than a
+refactor - one assertion that every `CATALOGS` table appears in each of the four
+lists unless a named exclusion says otherwise. That is smaller, keeps the lists
+literal, and is probably the better answer; it is not the proposal only because
+`F85` framed the question as derive-or-not.
+
+**The scripts do not import browser modules today**, which `F85` gives as its
+reason and which is worth testing rather than repeating: `catalog-fields.js` is
+a plain ES module importing only `./parser.js`, and `apps/character-creator/test/smoke.mjs`
+already imports both from Node - `import { CATALOGS, coerceField } from '../js/catalog-fields.js'`,
+read 2026-09-15. So the barrier `F85` names does not exist for the test suite,
+and the boundary question answers itself: **`scripts/class-check.mjs` already
+imports across into `apps/`**, two modules of it -
+`import { parseClassMarkdown } from '../apps/character-creator/js/parser.js'` and
+`isAttributeExpr` from `dice.js`, read 2026-09-15. It is the only `scripts/`
+file that does, so the precedent is one file rather than a habit - but the
+boundary is crossed, and `catalog-fields.js` imports nothing but `parser.js`,
+which that precedent already pulls in.
+
+**Evidence:** the four lists read 2026-09-15 at `7d8792f`; `F85`'s two quoted
+sentences read the same day; the nine-key mapping and the `name`/`source_book`
+check run against `db/schema.sql` the same day; `smoke.mjs`'s and
+`class-check.mjs`'s existing imports read the same day
+(`grep -n "from '\.\./apps/" scripts/*.mjs`, one file, two lines).
+**Not measured:** whether the refactor actually works - nothing was written, and
+this finding asks for a decision rather than reporting an attempt.
+
+**Confidence: high that the four lists exist and drift** - that is four
+recurrences now, `F28`, `F85` twice over, and this one. **Low on the proposal
+being the right shape**, and what would raise it is Nate choosing between the
+refactor and the check above.
+
+**Ongoing cost:** of the refactor, one export and three call sites, and a
+deliberate exclusion that now has to be written as an exclusion. Of the check,
+one assertion and a named-exclusion list to keep current. **Of doing nothing,
+the tenth catalog.**
