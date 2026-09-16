@@ -68,7 +68,7 @@
 // publishes anything.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadBookRegistry } from './books-lib.mjs';
+import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { offsetForPrintedPage } from './class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt, buildUserPromptParts } from './extraction-prompt.mjs';
 import { DB, d1Query, repoRoot } from './d1-query-lib.mjs';
@@ -133,7 +133,7 @@ for (const part of pagesArg.split(',')) {
 }
 if (!printedPages.length) die('no pages resolved from --pages');
 
-const txtDir = join(repoRoot, '.cache', 'books', slug, 'txt');
+const txtDir = join(ocrCacheDir(), slug, 'txt');
 if (!existsSync(txtDir)) {
   die(`no OCR cache for "${slug}" on this machine (${txtDir}).\n`
     + `Build one with scripts/ocr-book.py; the caches are gitignored, and\n`

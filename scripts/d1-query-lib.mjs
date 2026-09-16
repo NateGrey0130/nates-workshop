@@ -6,11 +6,30 @@
 // should exist once.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const DB = 'nates-workshop-media';
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+/**
+ * The extra wrangler arguments that point a `--local` call at the local D1
+ * named by `$WORKSHOP_LOCAL_D1` - `['--persist-to', <dir>]` - and nothing at
+ * all for `--remote` or when the variable is unset. wrangler's default is
+ * `.wrangler/state` under the cwd, which is this repo's root for every caller
+ * here, so a session in the main checkout needs no variable. A git worktree
+ * gets its own empty `.wrangler/state`, which is why the smoke suite's D1
+ * sections failed there (`fresh-worktree-fails-two-checks`); pointing the
+ * variable at the main checkout's `.wrangler\state` makes a worktree read the
+ * same local database. The tests that build their own scratch database under
+ * a temp `--persist-to` (regression.mjs, play-flow.mjs) do not use this and
+ * must not: their isolation is the point.
+ */
+export function localD1Args(target) {
+  const env = process.env.WORKSHOP_LOCAL_D1;
+  if (target !== '--local' || !env || !env.trim()) return [];
+  return ['--persist-to', resolve(env.trim())];
+}
 
 /**
  * Run one SQL statement and return its rows.
@@ -34,7 +53,7 @@ export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 // stray `0` holding wrangler's usage text turned up that way on 2026-09-11;
 // reproduced the same day with `instr(markdown, '"') > 0`.
 export function d1Query(sql, { target = '--remote', db = DB } = {}) {
-  const r = runWrangler(['wrangler', 'd1', 'execute', db, target, '--json', '--command', sql]);
+  const r = runWrangler(['wrangler', 'd1', 'execute', db, target, ...localD1Args(target), '--json', '--command', sql]);
   if (r.status !== 0) {
     throw new Error('wrangler d1 execute failed:\n'
       + ((r.stderr || '') + (r.stdout || '')).slice(-2000));
@@ -78,7 +97,7 @@ function runWrangler(args) {
  * ones a shelled --command breaks on. A real argv array makes them legal.
  */
 export function d1Batch(stmts, { target = '--remote', db = DB } = {}) {
-  const args = ['wrangler', 'd1', 'execute', db, target, '--json', '--command', stmts.join(' ')];
+  const args = ['wrangler', 'd1', 'execute', db, target, ...localD1Args(target), '--json', '--command', stmts.join(' ')];
   const npxCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
   const r = existsSync(npxCli)
     ? spawnSync(process.execPath, [npxCli, ...args],

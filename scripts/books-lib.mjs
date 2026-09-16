@@ -17,6 +17,22 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Where the OCR book caches live: `$WORKSHOP_OCR_CACHE` if set, else
+ * `<repo>/.cache/books`. ONE function, because six files computed the
+ * repo-relative path independently and a git worktree re-rooted every one of
+ * them to itself and found nothing - twenty-one cached books, hours of OCR,
+ * invisible from a checkout twenty feet away (`fresh-worktree-fails-two-checks`,
+ * 2026-09-13). The env var is set for the working directory in
+ * `C:\Users\natha\Projects\workshop\.claude\settings.json`; a session in the
+ * main checkout needs nothing, because the fallback IS that checkout's cache.
+ * `scripts/ocr-book.py` reads the same variable.
+ */
+export function ocrCacheDir() {
+  const env = process.env.WORKSHOP_OCR_CACHE;
+  return env && env.trim() ? path.resolve(env.trim()) : path.join(here, '..', '.cache', 'books');
+}
+
+/**
  * The `books` map out of scripts/books.json — { slug: { title, aliases, ... } }.
  * Throws with the path in the message: every caller of this is a CLI, and a
  * bare ENOENT for a file the caller never named reads as a bug in the caller.

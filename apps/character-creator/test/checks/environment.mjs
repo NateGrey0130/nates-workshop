@@ -14,6 +14,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { batchStatements, trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
+import { localD1Args } from '../../../../scripts/d1-query-lib.mjs';
 
 // The sections this file announces, declared once so a `--section` run can
 // skip the whole module — this is the file that shells out to wrangler, which
@@ -37,7 +38,13 @@ function wrangler(args) {
   // maxBuffer: a result set here can be large - the schema and citation
   // queries pull whole markdown columns back as JSON, which overruns
   // spawnSync's 1 MB default and truncates the output mid-parse.
-  return spawnSync('npx', ['wrangler', ...args], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000, maxBuffer: 1e9 });
+  //
+  // localD1Args: every call here is --local against the shared dev database,
+  // which wrangler keeps under the cwd's .wrangler/state. A git worktree has
+  // an empty one, and this whole section failed there until WORKSHOP_LOCAL_D1
+  // could point it at the main checkout's (`fresh-worktree-fails-two-checks`).
+  const persist = args.includes('--local') ? localD1Args('--local') : [];
+  return spawnSync('npx', ['wrangler', ...args, ...persist], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000, maxBuffer: 1e9 });
 }
 
 const apply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);

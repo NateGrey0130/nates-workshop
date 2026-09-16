@@ -34,7 +34,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { join } from 'node:path';
-import { cacheCoverage, loadBookRegistry } from './books-lib.mjs';
+import { cacheCoverage, loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { registryBookSlug } from './class-check-lib.mjs';
 import { variants } from './catalog-match-lib.mjs';
 
@@ -156,7 +156,7 @@ for (const c of published) {
 // the citation check and `class-check --field-sources` decide which book a row
 // belongs to by running the same function, rather than by two spellings of the
 // same intention that drift apart.
-const cacheDir = join(repoRoot, '.cache', 'books');
+const cacheDir = ocrCacheDir();
 const bookRegistry = loadBookRegistry();
 
 // The cache status, printed ALWAYS - including when there is no cache at all.
