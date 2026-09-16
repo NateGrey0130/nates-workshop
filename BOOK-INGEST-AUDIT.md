@@ -11504,7 +11504,7 @@ question answered in more than one place.** The use button's pool was decided
 twice and the two disagreed; a spent pick's key was built three times and two
 were wrong. Both are now answered once.
 
-**Adjusted a third time, 2026-09-16 (PR #__PR__). The free Talents a level-up
+**Adjusted a third time, 2026-09-16 (PR #1094). The free Talents a level-up
 earned could not be chosen, then or later.** Found while designing F101's Talent
 purchases, which would have been built on the same two panels.
 
