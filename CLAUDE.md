@@ -284,6 +284,16 @@ schema that rejects unrecognised top-level keys, so the `"//"` convention that
 `.claude/launch.json` uses is refused there — which is why this explanation lives
 here instead. See `HEALTH-AUDIT.md` F6.
 
+**Since 2026-09-16 the same file also carries a `PreToolUse` hook.**
+`.claude/hooks/guard-bash.sh` runs before every `Bash` call and exits 2 with a
+one-line reason for five command shapes that used to be prose rules: `git add
+-A` / `git add .`, `sed -i` on a path under the repo, `q.mjs` or `d1-apply.mjs`
+with neither `--local` nor `--remote`, `gh pr merge` sharing a call with anything
+else, and `git commit -m` with a backtick in it. The script's header names the
+incident behind each rule. A refusal starts `guard-bash:` — that is the hook,
+not a permission denial. It is project-scoped like the allowlist above, so it
+governs a session started here and nothing else.
+
 ### And since 2026-09-03 the allowlist is no longer the only thing holding that line
 
 `git push` being absent above stops **an agent in this repo**. It is a
