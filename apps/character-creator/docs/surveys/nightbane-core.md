@@ -390,7 +390,7 @@ at **level 0** and 150 P.P.E. against this book's level 12 and 250. A level-0
 row with a real cost is a half-finished import that the `spell stubs` backlog
 count — which keys on level 0 **and** cost 0 — cannot see.
 
-**CORRECTED 2026-09-16 (PR #PRNUM), and this section's central finding is
+**CORRECTED 2026-09-16 (PR #1129), and this section's central finding is
 withdrawn.** It compared the catalog with the book's INDEX (printed 126–127), and
 **the index misprints costs**. Every stat block in the chapter was then read
 (printed 127–150, three extraction slices and a reconcile pass that checked all
@@ -765,7 +765,7 @@ written.
 
 Once it is, in this order:
 
-1. **SHIPPED — PR #PRNUM: 39 rows, not the 123 planned here** (see *CORRECTED* under the spell diff). **127 spells** from printed 126–150 — two readings each, the index at
+1. **SHIPPED — PR #1129: 39 rows, not the 123 planned here** (see *CORRECTED* under the spell diff). **127 spells** from printed 126–150 — two readings each, the index at
    126–127 and the `P.P.E.:` line in the description. 96 of them get
    `same_spell_as` pointing at the existing row; 27 are new; 4 are the false
    gaps above and are not written at all. Batch by the index's level headings,
@@ -809,7 +809,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 | 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
 | 2026-09-16 | [#1128](https://github.com/NateGrey0130/nates-workshop/pull/1128) | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
-| 2026-09-16 | #PRNUM | **Step 1, spells: 39 rows** in `zzzzzzzzzzzzz-nb-spells.sql` - 27 new `nightbane` invocations and 12 `Nightbane:` retellings (9 linked by `same_spell_as`). The survey's cost finding withdrawn: the index misprints, and 92 of 131 spells are already here identical. Applied `--remote` before the merge. |
+| 2026-09-16 | [#1129](https://github.com/NateGrey0130/nates-workshop/pull/1129) | **Step 1, spells: 39 rows** in `zzzzzzzzzzzzz-nb-spells.sql` - 27 new `nightbane` invocations and 12 `Nightbane:` retellings (9 linked by `same_spell_as`). The survey's cost finding withdrawn: the index misprints, and 92 of 131 spells are already here identical. Applied `--remote` before the merge. |
 
 ### What remains
 
