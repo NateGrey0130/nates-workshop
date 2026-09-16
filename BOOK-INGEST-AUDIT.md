@@ -14757,7 +14757,7 @@ passed, and `sqlite_master` and `schema_migrations` then showed the CHECK admitt
 
 **3 of 3 remains**: the spells in other books that burn the caster's base.
 
-**3 of 3, 2026-09-16 (PR #__PR__): spells that burn the caster's base. F101 is
+**3 of 3, 2026-09-16 (PR #1097): spells that burn the caster's base. F101 is
 taken in full with this.**
 
 **The depth is Nate's answer: automate the P.P.E. NUMBER, leave the conditions,
