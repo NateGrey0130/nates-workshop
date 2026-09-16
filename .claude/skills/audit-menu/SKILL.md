@@ -433,14 +433,14 @@ Grepping for `Taken` has produced false findings here **repeatedly, and in both
 directions** — work reported open that had shipped, and work reported closed
 that had not.
 
-**Closed findings may live beside the menu, in `<MENU>.closed.md`** — since
-2026-09-16 `BOOK-INGEST-AUDIT.closed.md`, `SKILL-AUDIT.closed.md` and
-`META-AUDIT.closed.md` hold every
-finding of those menus whose own section recorded an outcome, text and
-numbering unchanged (a `####` child moves with its parent), and the live file
-keeps a one-line pointer per finding where the heading was. A closed file
-is a RECORD like the menu, the `*AUDIT*.md` glob reaches it, and its findings
-are not open.
+**Closed findings live beside the menu, in `<MENU>.closed.md`** — since
+2026-09-16 each menu whose findings had recorded outcomes carries a closed
+file holding those findings, text and numbering unchanged (a deeper child
+moves with its parent), and the live file keeps a one-line pointer per finding
+where the heading was, plus in full every finding whose own section records
+no outcome. `ls *.closed.md apps/*/*.closed.md` is the list. A closed file is a
+RECORD like the menu, the `*AUDIT*.md` glob reaches it, and its findings are
+not open.
 
 **How many times is not written down on purpose.** This section used to say
 four; two paragraphs earlier the same file said five, and a third place said

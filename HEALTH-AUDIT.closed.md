@@ -1,0 +1,1750 @@
+**HEALTH-AUDIT.md, the closed findings - moved here 2026-09-16, text and numbering unchanged.**
+Every block below is a finding whose own section records an outcome (or, where the pointer says so,
+one moved on the menu header's authority), moved verbatim with any sub-heading it carried; the live
+menu keeps a one-line pointer per finding. Nothing here is open. This is a RECORD: do not rewrite a
+measurement (audit-menu). The live menu's status header still governs.
+
+### F1 — Critical — 6,006 production rows have no backup, no restore path and no runbook, and the repo says so in writing
+
+**Evidence.** `apps/character-creator/docs/operations.md:276-285` states it
+plainly: *"It cannot restore production, by design."* — with a measured table of
+**6,006 rows on 2026-08-28 that no data script creates**: `media_items` 3,639,
+`ff_filaments` 2,051, `ff_brands` 157, `character_items` 111, `claude_usage` 26,
+`characters` 11, `play_events` 6, `campaigns` 3, `character_drafts` 2.
+
+Against that, a sweep of all 77 tracked `.md` files for `backup`, `restore`,
+`roll ?back`, `time travel`, `point in time` and `d1 export` returns **no
+runbook of any kind**. The only two hits on `backup` are
+`operations.md:162`, which names "backup posture" as a hypothetical *reason one
+might someday split the database*, and this file. `rollback` appears once, in
+`REDESIGN-AUDIT.md`, about optimistic UI state.
+
+**Impact.** One `DROP TABLE`, one bad `--remote` apply, one Cloudflare account
+problem and the media library, every character, every campaign and every play
+event are gone with no stated way to get them back. The repo's own rebuild path
+recovers the catalog and class definitions **only** — `operations.md` is
+explicit that this is by design and that "rebuild from the repo" has already
+been misread as "restore production" by at least one audit brief. The exposure
+is documented; the mitigation is not. This is the single largest thing in the
+repo that is only survivable because it has not happened yet.
+
+**Proposal.** One PR adding a `## Recovery` section to
+`apps/character-creator/docs/operations.md`, directly beneath the *"It cannot
+restore production"* paragraph that establishes the need, covering: (a) what D1
+Time Travel actually offers on this account — the retention window and the exact
+`wrangler d1 time-travel` invocation, **verified against the live database, not
+quoted from documentation**; (b) a single copy-pasteable export command and
+where the output should go; (c) which of the nine tables are irreplaceable and
+which the repo can rebuild, reusing the table already in that file. Posture:
+**documentation plus one verified command — no automation, no scheduled job, no
+new dependency.** Automating the export is a separate decision and should be its
+own finding if wanted.
+
+**Effort.** M — the writing is short; verifying Time Travel against the live
+database is the work.
+
+**Ongoing cost.** Near zero as proposed. It is prose plus a command. It carries
+no recurring obligation, which is deliberate: a scheduled export that silently
+stops is worse than a documented manual one.
+
+**Confidence.** High that no runbook exists — the sweep covers every tracked
+`.md`. Medium on what recovery is actually available: D1 Time Travel is the
+obvious candidate and this audit did not run it. Verifying it is step (a).
+
+**Taken, 2026-09-02 (PR #519), with F12 folded in as F12 proposed.** A
+`### Recovery` section in `operations.md`, beneath the paragraph this finding
+named. Posture held: documentation plus verified commands, no automation, no
+scheduled job, no new dependency. `time-travel restore` was **not** run — it
+rewrites the live database and there is no scratch database to rehearse on.
+
+**Step (b) of this proposal was impossible as written.** It asked for "a single
+copy-pasteable export command". `wrangler d1 export` **fails outright on this
+database**:
+
+```
+D1 Export error: cannot export databases with Virtual Tables (fts5)
+```
+
+`journal_fts`, from `026-campaign-notes.sql`, makes the *whole* database
+un-exportable by that path, and no flag skips it. The finding assumed the
+obvious command existed. It does not, and nothing in the repo had ever tried it.
+
+What replaced it is a per-table dump, verified on the largest table rather than
+assumed — 3,639 rows of `media_items`, 2.2 MB, exit 0. The loop over the other
+thirty-three tables is **not** written here: this finding's posture was
+documentation plus one command, and a backup script is a different decision.
+Filed as **F21**.
+
+Two smaller deviations, both recorded in the PR: the section is a `###` rather
+than the `##` proposed, because the placement this finding specified sits inside
+*Standing up a new environment* and a `##` there would have orphaned everything
+after it; and step (c)'s table was written as a three-way comparison of what each
+mechanism covers, because the interesting column turned out to be *survives
+losing the Cloudflare account*, where Time Travel is the one that fails.
+
+---
+
+### F2 — High — the deploy check is correct, and it is a thing to remember once per merge, 48 times a day
+
+**Evidence.** The check works. Every merge commit from `d5280fe` (2026-08-27) to
+the fix in `cf86961` (PR #399, 2026-08-30) was walked this session:
+**65 consecutive merges, every one reporting `Cloudflare Pages=failure`**, then
+`success` on the fix and on all eight most recent merges. The signal was never
+ambiguous and never noisy for those four days.
+
+Nothing read it. The repo merged 25 PRs on 2026-08-27, 39 on 2026-08-28 and 16
+on 2026-08-30 while every one of those merges carried a `failure` conclusion
+that a single API call would have surfaced.
+
+`ship-pr/SKILL.md` step 9 now requires that call, per-merge. Merge volume is
+**48 PRs on 2026-09-01 and 47 on 2026-08-31**; the repo has 511 merged PRs
+total. There is no `.github/` directory, no CI, and no hooks in
+`.claude/settings.json` — nothing runs unprompted.
+
+**Impact.** The control is per-merge and manual, so its reliability is the
+probability of remembering it 48 times in a day. The failure mode it guards is
+**silent in both directions** — the site keeps serving the last good build — so
+a lapse costs a full day of work before anything looks wrong. It already did
+once, and the recovery was four days late.
+
+**Proposal.** One PR adding a **sweep** to `scripts/` — a single command that
+reads the last N merge commits on `origin/main` and prints any whose Pages
+check-run is not `success`, defaulting to 20. Document it in `ship-pr` as the
+end-of-session check that backstops step 9, not a replacement for it. Posture:
+**report only, no exit code, no gate** — matching every other check in this repo
+that reads GitHub or production. One call answers "did anything I merged today
+fail to ship", which is the question step 9 answers 48 times.
+
+**Effort.** S — it is the loop this audit already ran, in a file.
+
+**Ongoing cost.** One command per working session. No new dependency; `gh` is
+already required by the merge loop.
+
+**Confidence.** High. The 65/65 failure sequence and the current 8/8 success
+sequence were both read from the GitHub API this session.
+
+**Taken, 2026-09-02 (PR #517).** As proposed, posture included: `scripts/deploy-sweep.mjs`
+reports and never moves the exit code. `ship-pr` gains it as the end-of-session
+backstop and keeps step 9 unchanged.
+
+Three things the work turned up that the finding did not say:
+
+- **It reports three states, not two.** A merge commit with *no* check-run at
+  all is listed as not deployed. Pages registers one per merge, so an empty list
+  means the deploy never started — and that is indistinguishable from a quiet
+  healthy merge on every other signal. The finding assumed a `failure`
+  conclusion was the only shape.
+- **Validated against the outage rather than reasoned about.** Over the last 130
+  merges it names 23 that did not deploy, all 2026-08-27 and 08-28, none before
+  or since. On the last 10 it reports `NOTHING MISSING`, which is also how PR
+  #516 was confirmed live.
+- **The smoke test failed the first run**, on a check the finding did not know
+  existed: *"every script in `scripts/` is named in the file map"*, a reverse
+  check added after two scripts sat undocumented for several PRs. The README's
+  script map gains an entry. That the gate caught it is the pattern F5 describes
+  working — and the fact that a new script has a documentation step written down
+  nowhere but the test is filed as **F20**.
+
+---
+
+### F3 — High — the method that produced this repo is not in this repo
+
+**Evidence.** `C:\Users\natha\Downloads` holds **sixteen** prompt and brief files
+driving the repo's own work: `REVIEW-BRIEF.md`, `class-audit-prompt.md`,
+`efficiency-audit-prompt.md`, `ui-audit-prompt.md`, `n-findings-prompt.md`,
+`media-vault-isbn-bulk-research-prompt.md`,
+`media-vault-standardization-prompt.md`,
+`filament-forge-standardization-prompt.md`, `gm-grants-prompt.md`,
+`setup-v2-rewrite-prompt.md`, `pick3cut5-claude-code-prompt.md`, and others —
+including `setupv2rewriteprompt.md`, a second copy of one of them under a
+different name. `git ls-files | grep -iE "prompt|brief"` returns exactly one
+tracked file, `scripts/extraction-prompt.mjs`, which is unrelated.
+
+Between them these produced twelve findings menus, 200 numbered findings and the
+`SETUP.md` v2 rewrite. All twelve menus are committed. None of the prompts is.
+
+`REVIEW-BRIEF.md` previously lived only in a session-keyed temp directory and
+was copied to Downloads on 2026-08-28 specifically because a temp cleanup would
+have destroyed it.
+
+**Impact.** The audits are the repo's main quality mechanism, and the inputs to
+them sit untracked, unversioned and unbacked-up in a folder that also holds
+PDFs, 3MF files and pharmacy receipts. Losing that folder loses the ability to
+re-run any audit the same way, to see what an audit was told to look for, or to
+tell why a menu covers what it covers. It has already produced one duplicate
+under two filenames, which is what an unmanaged directory does.
+
+**Proposal.** One PR creating `docs/prompts/` and moving in the briefs that
+produced a committed artefact, each keeping its filename, with a short
+`README.md` mapping prompt → the menu or document it produced. Move, do not
+rewrite: they are records, and the `audit-menu` rule against editing a
+measurement applies to the instructions that produced one. Skip anything
+superseded or personal; `setupv2rewriteprompt.md` and `setup-v2-rewrite-prompt.md`
+should resolve to one file. Posture: **archival, no new process** — nothing
+requires a future prompt to land here.
+
+**Effort.** S — a move and one index file.
+
+**Ongoing cost.** One `cp` when a prompt produces something worth keeping, and
+only then.
+
+**Confidence.** High for the file inventory. Medium on which sixteen are worth
+keeping — that is Nate's call per file, and the PR should list them rather than
+assume.
+
+**Taken, 2026-09-02 (PR #527).** `docs/prompts/`, fifteen briefs plus an index.
+Posture held: archival, no new process, nothing requires a future prompt to land
+there. Scanned for secrets first — none.
+
+**The mapping was derived rather than remembered, and two of three would have
+been wrong from memory.** Each brief was grepped for the artefact filenames it
+names. Three asked for a name that shipped differently:
+`whatbrokeevalprompt.md` offered `DATA-SCRIPT-AUDIT.md` *"(or a name you argue
+for)"* and became `REBUILD-AUDIT.md`, whose own header carries the argument; the
+media-vault brief asked for `MEDIA-VAULT-` prefixed files that shipped without
+the prefix; `REVIEW-BRIEF.md` planned seven tracks and ran one. The index
+records all three, because the gap between what was asked and what was built is
+the part worth keeping.
+
+**Copied, not moved.** The finding says "moving in". Deleting files out of
+`Downloads` is a destructive act on files outside the repo and is Nate's call,
+not a side effect of an archival PR. The originals are untouched and the index
+says so.
+
+One thing this finding was wrong about, in the harmless direction: it worried
+about line endings. `core.autocrlf=true` on this clone, so the object store
+already holds LF for every `.md` here — the prompts are stored byte-consistently
+with `CLAUDE.md` and everything else. There was nothing to reconcile.
+
+---
+
+### F4 — Medium — the skill about not trusting a count states three wrong ones about itself
+
+**Evidence.** `.claude/skills/audit-menu/SKILL.md`:
+
+- Line 8: *"Eight files here are **findings menus**"*. The tree has **twelve**,
+  by the skill's own `find` command four lines further down.
+- Its own table at lines 100–110 lists **ten** rows, omitting
+  `REDESIGN-AUDIT.md` and `UI-AUDIT.md`. The skill flags the table as a snapshot
+  that "has been wrong" — but the *prose count* above it carries no such warning
+  and is a number that moves.
+- `SETUP-v2-CHANGES.md` is a **thirteenth** findings menu — eight numbered
+  changes, closed with *"All eight taken, 2026-09-02 (PR #502)"* — that neither
+  the count, the table, nor the `find` command reaches, because it is not named
+  `*AUDIT*`.
+
+**Impact.** This is the file a session reads before touching any menu, and it
+under-reports the corpus by a third. A session trusting "eight" and the ten-row
+table will not know `REDESIGN-AUDIT` or `UI-AUDIT` exist, and will not find
+`SETUP-v2-CHANGES` by any means the skill offers.
+
+**Proposal.** One PR: replace the "Eight files" sentence with a description that
+does not carry a value — the `find` command is already there and is the right
+answer — add the two missing table rows, and either rename `SETUP-v2-CHANGES.md`
+to match the `*AUDIT*` convention or note in the skill that one menu sits
+outside it. Posture: **describe the row, not its value** — the same fix
+`DOCS-AUDIT` applied in four other places.
+
+**Effort.** S.
+
+**Ongoing cost.** Negative — it removes two numbers that need maintaining.
+
+**Confidence.** High. All three counts were read from the tree this session.
+
+**Taken, 2026-09-02 (PR #523), with F11 folded in as F11 proposed.** Posture
+held: the opening sentence carries no number, and neither does the "six
+prefixes" tally below the table, which `R`, `N` and a prefix-less file had
+already broken.
+
+**The finding's own numbers went stale between filing and taking, which is the
+finding.** It reported eight / ten / twelve. By the time this PR ran, the tree
+held **fourteen** — `HEALTH-AUDIT.md` had joined it. What replaced the sentence
+is that whole sequence rather than a fifth number.
+
+Of the two options offered, **naming rather than renaming**.
+`SETUP-v2-CHANGES.md` keeps its filename: renaming it to fit the `*AUDIT*` glob
+would break the PR #503 record that refers to it by name, in order to make a
+glob correct that this same file argues nobody should rely on. It is now named
+twice — a table row, and a paragraph under the `find` command saying the command
+does not return it and that this is not a bug in the command.
+
+---
+
+### F5 — Medium — `schema-change` quotes a table count that is seven tables stale, because nothing parses a skill
+
+**Evidence.** `.claude/skills/schema-change/SKILL.md:42` quotes the README
+sentence a new table must move as *"Twenty-six tables in one shared D1
+database"*. `apps/character-creator/README.md:178` says **Thirty-three**, and
+`db/schema.sql` contains **33** `CREATE TABLE` statements. The README is right;
+the skill quotes a value it left behind seven tables ago.
+
+The README is correct **because it is parsed**: `apps/character-creator/test/smoke.mjs:6294`
+matches `/([\w-]+) tables in one shared D1 database/` and compares it against
+`schema.sql`. `SETUP.md`'s endpoint count is pinned the same way
+(`test/checks/environment.mjs` §3) and is likewise exact — 35 route files,
+35 claimed. The skill body is parsed by nothing.
+
+This is the pattern `DOCS-AUDIT` named on 2026-08-25 and fixed in four files,
+three of them skills — `ship-pr`, `claim-audit`, `class-import`. It did not
+touch `schema-change`, and the pattern survived there.
+
+**Impact.** Small directly: the number is an illustration, and step 9 works
+whatever value is quoted. It matters as a signal — the doc-rot defence in this
+repo is per-sentence pinning, and skill bodies are the largest body of live
+instruction outside its reach. This is the one instance found; there is no check
+that would find the next.
+
+**Proposal.** One PR: change the quote to describe the row rather than its value
+(*"the sentence stating how many tables are in the shared database"*), and add
+one smoke check asserting that no `.claude/skills/**/*.md` quotes a
+`"… tables in one shared D1 database"` value that disagrees with `schema.sql`.
+Posture: **one narrow check for the one claim that recurs**, not a general
+skill-prose linter — the `audit-menu` skill's argument against pinning things
+whose wording varies applies here and should not be overridden.
+
+**Effort.** S.
+
+**Ongoing cost.** One assertion in a suite that already has thousands.
+
+**Confidence.** High for the stale quote — README, `schema.sql` and the skill
+were all read. Medium on the check being worth it: it pins one sentence shape
+and would not have caught the other four instances `DOCS-AUDIT` fixed.
+
+**Taken, 2026-09-02 (PR #524).** As proposed, posture included: one narrow
+check, not a skill-prose linter, and a skill may still quote the value — it just
+cannot quote a wrong one. Every premise held on re-check (skill *Twenty-six*,
+README *Thirty-three*, `schema.sql` 33).
+
+**The check was verified by watching it fail**, with `Twenty-six` still in place,
+naming the file, the stale word and the real count. A check that has only ever
+passed proves nothing about what it would catch — worth stating because this
+menu's own F15 turns on a smoke check that "passes vacuously on an empty list".
+
+**Then it caught the fix, which is the part worth carrying.** The first rewrite
+still contained the sentence shape — *"N tables in one shared D1 database"* as a
+placeholder — and the check fired on it, correctly: a placeholder is a quoted
+instance, and `num('N')` is not 33. The row is now a description with **no
+instance of the sentence in it at all**, pointing at
+`readme-section.mjs "Data model"` to find the real one.
+
+So *describe the row, not its value* is harder than it reads. The obvious way to
+describe a sentence is to show its shape, and showing its shape is quoting it.
+`DOCS-AUDIT` named this rule in four places and nothing until now could tell
+whether any of the four actually complied.
+
+---
+
+### F6 — Medium — the permission allowlist covers the read-only scripts and not the loop
+
+**Evidence.** `.claude/settings.json` allows 26 Bash patterns. Compared against
+every `node scripts/*.mjs` invocation the skills and `SETUP.md` actually
+instruct: `class-check`, `drift-check`, `q`, `readme-section`, `repo-vs-live`
+and `source-coverage` are allowed; **`audit-citations.mjs`, `catalog-diff.mjs`
+and `d1-apply.mjs` are not**. The file contains **zero** entries for `gh`, `git`
+or `npx` — the three commands the merge loop, the `--remote` queries and the
+health check are built from, across 511 merged PRs.
+
+**Impact.** Friction, concentrated on the highest-frequency work. Every merge,
+every `d1 execute --remote`, every `gh api` check-run call prompts. F2's
+proposed sweep would prompt too. `audit-citations.mjs` is read-only and step 5
+of the `audit-menu` protocol; `catalog-diff.mjs` is read-only and instructed by
+`book-survey`.
+
+`d1-apply.mjs` writing to production is a **correct** omission and should stay
+omitted — the point is that the allowlist reads as an accident of what was run
+on the day it was written rather than a decision about what is safe.
+
+**Proposal.** One PR adding the read-only instructed scripts
+(`audit-citations.mjs`, `catalog-diff.mjs`), the read-only `gh` verbs the loop
+uses (`gh pr list`, `gh pr view`, `gh pr checks`, `gh api repos/…/check-runs`),
+and read-only `git` (`git status`, `git log`, `git diff`, `git ls-files`).
+Posture: **read-only only.** `d1-apply.mjs`, `gh pr merge`, `git push`,
+`git commit` and every `--remote` write stay off the list on purpose, and the
+PR should say so in a comment so the omission is not read as an oversight and
+"fixed" later.
+
+**Effort.** S.
+
+**Ongoing cost.** None. It is a static file.
+
+**Confidence.** High on the contents. Medium on the value — this is Nate's own
+friction, and he is the one who knows whether these actually prompt often enough
+to matter.
+
+**Taken, 2026-09-02 (PR #518).** As proposed, posture included: thirteen
+read-only entries added, every write action left off. `deploy-sweep.mjs` was
+added alongside the two the finding named — it did not exist when F6 was written
+and shipped one PR earlier.
+
+Two things the finding did not anticipate:
+
+- **`settings.json` cannot hold a comment, so the explanation could not go where
+  the proposal put it.** The finding asked for the omission to be stated "in a
+  comment so it is not read as an oversight". A top-level `"//"` key — the
+  convention `.claude/launch.json` already uses, and one the published schema
+  appears to permit through `additionalProperties` — is **rejected**:
+  `Unrecognized field: //`. The explanation is in `CLAUDE.md` instead, which is
+  the better home anyway: it is the one file loaded in every session regardless
+  of working directory. That section also records the constraint, so the next
+  person does not retry the `"//"` key.
+- **The `gh api` entry had to be narrowed to be safe.** A prefix wildcard cannot
+  exclude a `-X DELETE`, so `gh api *` would not have been read-only in any
+  meaningful sense. It is pinned to this repo's `commits/` path, which GitHub
+  exposes no write verbs on. Written into `CLAUDE.md` as *do not widen*.
+
+**Adjusted 2026-09-02 (PR #543).** The decision stands and the reason given for
+it was wrong. A repo `CLAUDE.md` loads only inside its own directory: a session
+started in `Downloads` — which `CLAUDE.md` itself calls the one place the book
+work runs — loaded the six skills, the subagent and not that file. Sixteen
+sessions had been closing the gap by hand with a typed pointer at it.
+
+`CLAUDE.md` is still the right home, for the reason the note gives second: it is
+where the constraint belongs and where a reader of the allowlist will look. What
+has changed is that the claim is now true rather than assumed —
+`~/.claude/CLAUDE.md` was added as a short pointer, and `SETUP.md`'s
+machine-setup block says why it is a pointer and not a copy or a junction. See
+`SKILL-AUDIT.md` F11.
+
+---
+
+### F7 — Medium — port 8788 is hardcoded in three places, and three separate audits found it occupied by something else
+
+**Evidence.** `.claude/launch.json` hardcodes port 8788 in both `pages dev`
+configurations. `apps/character-creator/README.md:796` tells the reader the app
+is at `http://localhost:8788/apps/character-creator/`. Three audits record
+hitting it:
+
+- `apps/character-creator/UI-AUDIT.md:5` — *"**not** 8788, which belongs to
+  another worktree"*
+- `apps/media-vault/BULK-AUDIT.md:31` — ran on **8801**, *"not 8788, which
+  was…"*
+- `apps/media-vault/ISBN-AUDIT.md:26` — *"8788 was already listening, owned by
+  another process"*
+
+No live instruction anywhere mentions this. All three records sit in dated audit
+files, which is exactly where the next person will not look.
+
+**Impact.** The failure is not the collision — it is that a page served from
+*another worktree's* server on 8788 looks identical to your own. Verification
+then passes against code you did not write, and the screenshot proves the wrong
+thing. This repo has already learned once that a UI change can pass 768 smoke
+checks and be broken on screen; verifying against the wrong server is the same
+class of error with no check behind it.
+
+**Proposal.** One PR adding a short note to `SETUP.md`'s local-development
+material and to `.claude/launch.json`'s existing comment block: 8788 is a
+convention, a second worktree makes it ambiguous, and the way to be sure is to
+confirm the served page carries a string from *your* branch before trusting
+anything you see. Posture: **documentation only, no port change** — moving the
+default would invalidate the README line and three audit records and fix
+nothing.
+
+**Effort.** S.
+
+**Ongoing cost.** None.
+
+**Confidence.** High that the three records exist and that nothing live warns.
+Medium that this still happens — nothing was listening on 8788 or 8799 during
+this session, so the collision was not reproduced here.
+
+**Taken, 2026-09-02 (PR #526).** As proposed: documentation only, no port
+change. Every premise held on re-check.
+
+**Placement differs, because the place the finding named does not exist.** It
+asked for "`SETUP.md`'s local-development material"; `SETUP.md` has no
+local-development section — its only `localhost` mentions are the Access
+middleware exemption and the `dev@localhost` auth fallback. The note went where
+the claim being qualified actually lives: the character creator README's
+*Local development* section, beside the sentence stating the URL, plus
+`launch.json`'s comment block as the finding also asked.
+
+One correction to the finding's own text: it says 8788 is hardcoded in "both
+`pages dev` configurations", which is right, but `launch.json` has **three**
+configurations — the third is the standalone Worker on 8799. The heading's
+"three places" counts `launch.json` twice and the README once, which is the
+number that matters and is easy to misread as three files.
+
+Worth carrying: the sharpest part of this was not in the finding either. The
+hazard is not the collision — `pages dev` announces a taken port. It is
+**getting 8788 while it serves another worktree's code**, where everything looks
+right and the verification is against something you did not write. The note ends
+on the only defence: confirm the page carries a string your branch added.
+
+---
+
+### F8 — Medium — no menu states its own status, so establishing that there is no open work costs an audit
+
+**Evidence.** Twelve findings menus, **200 numbered items**, 14,300 lines. Every
+one of the 200 is closed — verified this session by the block-level census
+described under *Method*, plus hand-reading every flagged block.
+
+Establishing that took a purpose-built script, a bug in that script, and four
+hand-reads. The known traps all fired: `INGESTION-AUDIT` F12 and F19 close in a
+retirement table 1,294 lines from their headings; `BOOK-INGEST-AUDIT` F14's note
+was hidden by an inline `**F10 …**` reference; `pick3cut5/AUDIT.md` T6 carries
+its outcome in the heading and nowhere else.
+
+**One file already solves this.** `apps/character-creator/AUDIT.md:12` opens
+with *"**All fourteen items are closed**, re-verified against the tree on
+2026-08-26"* and then a paragraph naming the exact trap — that a `**Fix**:` line
+under a section heading is the outcome for D1–D6 and C1–C2. It records that two
+scans had already reported them open. This audit's first pass made it three, and
+the header is the only reason it took thirty seconds to correct rather than an
+hour. It works, and it is the only file that has one.
+
+**Impact.** The repo's largest documentation category is a closed archive that
+cannot be recognised as closed without re-deriving it. That cost is paid every
+time anyone asks "what is still open" — the `audit-menu` skill says the state
+was reconstructed from the files "nine times before this was written", and this
+is at least the tenth. It also means a genuinely open finding would be
+indistinguishable from the closed ones, which is the direction that actually
+loses work.
+
+**Proposal.** One PR adding a single dated status line to the top of each of the
+other eleven menus, in the shape `apps/character-creator/AUDIT.md` already uses:
+what is closed, as of what date, and — where the file has one — the trap that
+makes a scan disagree. Do not add a check that the line is accurate: the
+`audit-menu` skill's rule against a mechanical reader of these notes is correct
+and this proposal does not overturn it. The line is a claim a human maintains,
+the same as every other measurement in these files. Posture: **one line per
+file, no automation, no reformatting of any finding.**
+
+**Effort.** M — eleven files, and each needs its state read before the line can
+be written honestly. This audit did that reading; the PR should redo the two
+that were subtle rather than trust this file.
+
+**Ongoing cost.** One line updated in the same PR that takes a finding —
+alongside the dated outcome note the protocol already requires, so it is one
+extra line in a commit that is already touching the file.
+
+**Confidence.** High that all 200 are closed. High that the pattern works —
+`AUDIT.md` is the worked example and it demonstrably shortened this audit.
+
+**Taken, 2026-09-02 (PR #531).** Posture held: one line per file, no automation,
+no reformatting of any finding, and **no check asserts any of these lines** —
+the skill's rule against a mechanical reader stands.
+
+Every count was re-measured by a fresh census rather than read out of this file,
+as the finding asked. All 200 remain closed.
+
+**Two corrections, both found by doing it.**
+
+- **Nine files needed a line, not eleven.** `BULK-AUDIT.md` and `ISBN-AUDIT.md`
+  already open with one, and so does `SETUP-v2-CHANGES.md`. This finding counted
+  only `AUDIT.md` because it looked through the `*AUDIT*` glob — **the same
+  blind spot F4 was about**, in the audit that found F4.
+- **`INGESTION-AUDIT` F14 is closed**, in PR #364 — the PR that created
+  `.claude/skills/audit-menu/SKILL.md`. That skill still says *"It is open."*
+  Session 1 never verified that one directly and inherited the skill's claim
+  while separately concluding all 200 were closed; the two statements sat in the
+  same audit without meeting. Filed as **F22**, not fixed here.
+
+`HEALTH-AUDIT.md` deliberately did **not** get a line. It is the live menu, its
+status changes several times an hour, and a count in its header would be the
+moving number F4, F5 and F10 are all about. Its status is the outcome notes
+under each finding.
+
+---
+
+### F9 — Low — `CLAUDE.md` sends a reader to the wrong file for the migration list
+
+**Evidence.** `CLAUDE.md:7-8`: *"App conventions, the data model, and the
+migration list live in `apps/character-creator/README.md`."* The README was split
+on 2026-08-26 (PR #309). It still holds the data model (`## Data model`, line
+176) and the conventions, but the **migration list** — the per-file table
+describing what each migration adds — is now
+`apps/character-creator/docs/operations.md:68-86`. The README's only remaining
+mentions are two lines of directory tree.
+
+`CLAUDE.md` was itself committed on 2026-08-28, two days after the split, so the
+pointer was edited past and not corrected.
+
+**Impact.** Small and real. `CLAUDE.md` is the one file loaded into every
+session regardless of working directory — the smoke suite has a check that
+exists solely to protect that property — so a reader arriving from Downloads
+follows this sentence first. The README's `## Contents` table does list
+`docs/operations.md` with an accurate description, so the reader recovers in one
+hop rather than being stranded.
+
+**Proposal.** One PR changing the sentence to name `docs/operations.md` for
+migrations and keeping the README for the data model and conventions.
+Posture: **one sentence, no restructuring.**
+
+**Effort.** S.
+
+**Ongoing cost.** None.
+
+**Confidence.** High. Both files were read this session.
+
+**Taken, 2026-09-02 (PR #522).** As proposed: one sentence, no restructuring.
+Re-audited first and the premise held exactly — `operations.md` carries **43**
+migration-table rows, the README carries **0**, and the other two things the
+sentence claims (app conventions, `## Data model` at README:176) are still
+there.
+
+Written as a **negative** rather than simply corrected: *"The migration list is
+**not** there."* A reader who half-remembers the old sentence needs to be told
+the thing they are looking for moved, not just shown a different filename.
+
+---
+
+### F10 — Low — the same fact is stated as "four" and as "five" in the same skill
+
+**Evidence.** `.claude/skills/audit-menu/SKILL.md` on how often a mechanical read
+of the outcome notes has been wrong: line 46 *"produced **four** false findings
+here"*, line 68 *"has been wrong **five** times"*, line 174 *"has got this wrong
+**four** times"*.
+
+**Impact.** Trivial in itself. It earns a line because it is the argument the
+skill makes about every other file, appearing inside the file that makes it —
+and because the true figure moved again today: the census under *Method* above
+is the fifth or sixth instance depending on which of the skill's own numbers is
+right.
+
+**Proposal.** One PR settling the three to one value, or — better, and
+consistent with F4 and F5 — replacing the count with the argument, which does
+not move: a mechanical reader of these notes **has been wrong repeatedly and in
+both directions**. Add today's instance if a count is kept. Posture:
+**describe the failure, not its tally.**
+
+**Effort.** S.
+
+**Ongoing cost.** Negative — it removes a number that has already drifted twice
+inside one file.
+
+**Confidence.** High.
+
+**Taken, 2026-09-02 (PR #525),** taking the better of the two options offered:
+describe the failure, not its tally. All three sites now say **repeatedly, and
+in both directions**, which is the half a reader can act on.
+
+The finding said "add today's instance if a count is kept". No count was kept,
+so the instances went in as evidence for *why* — and there were two, both from
+the day this audit ran: the census script that split a block on an inline
+`**F10 …**` cross-reference and called a shipped finding open, and
+`apps/character-creator/AUDIT.md`'s header recording its **third** scan
+misreading D1–D6. **The tally moved twice inside the PR that removed it**, which
+is the argument arriving as its own worked example.
+
+**One site left alone**, deliberately: *"reconstructed from them nine times"* in
+the opening paragraph. That is a different claim — how often the protocol was
+rebuilt out of the files, not how often a grep lied — and this finding named
+three sites, not four. It is a number that moves and a candidate for the same
+treatment; it is not this finding's scope.
+
+---
+
+### F11 — Low — two documents are reachable from nothing
+
+**Evidence.** Every tracked `.md` was checked for an inbound reference by
+filename from any other `.md`. Two have none:
+**`SETUP-v2-CHANGES.md`** (219 lines, a closed eight-item menu) and
+**`apps/character-creator/REDESIGN-AUDIT.md`** (1,110 lines, fifteen closed
+findings, R1–R7 and N1–N8).
+
+The five `docs/surveys/*.md` files that the same check flags are **not** orphans
+— `README.md`'s Contents table links the `docs/surveys/` directory rather than
+each file, which is deliberate. `test/fixtures/long-bowman.md` is a parser
+fixture referenced by code.
+
+Note that internal links are already pinned: `test/checks/environment.mjs`
+asserts *"all internal markdown links resolve"*. That check catches links
+pointing at nothing; nothing catches a file nothing points at.
+
+**Impact.** Low. Both are closed records, so nothing is lost by not finding
+them — but `REDESIGN-AUDIT` is the menu behind roughly twenty of the last
+sixty PRs, and it is invisible to anyone navigating from the README.
+
+**Proposal.** One PR adding both to a list of menus — the `audit-menu` skill's
+table is the natural home and F4 already opens that file, so **fold this into
+F4's PR rather than opening a second one** if F4 is taken. Otherwise, one line
+each in `apps/character-creator/README.md`'s Contents table and `SETUP.md`'s
+structure block. Posture: **make them findable; change neither file's body.**
+
+**Effort.** S.
+
+**Ongoing cost.** None.
+
+**Confidence.** High.
+
+**Taken, 2026-09-02 (PR #523), folded into F4 as this finding proposed.** Both
+orphans are now rows in the `audit-menu` skill's table. Posture held — neither
+file's body was touched.
+
+Verified rather than assumed: the orphan scan was re-run after the edit and
+**neither `SETUP-v2-CHANGES.md` nor `REDESIGN-AUDIT.md` is an orphan any
+more.** The five `docs/surveys/*.md` the same scan still reports are reachable
+through the directory link in the README's Contents table, exactly as this
+finding said when it declined to count them.
+
+---
+
+### F12 — High — the only real recovery is a 30-day rolling window nobody has written down, and the rebuild that is documented reproduces names but not values
+
+**Evidence.** Two commands, both run this session.
+
+`npx wrangler d1 time-travel info nates-workshop-media` returns a current
+bookmark and the exact restore invocation. Retention was probed and is **30
+days** (45 days back: refused; 20 days back: resolves). Nothing in the repo
+mentions it.
+
+`node scripts/repo-vs-live.mjs` completes with:
+
+> *"The repo creates the right ROWS. Some of them hold the wrong VALUES.
+> 32 field(s) across 30 row(s) differ in value."*
+
+and names the two causes it already knows — a `restore-*.sql` carrying 6 of
+`gear`'s 18 columns, and rows enriched through the catalog editor or importer,
+which write straight to D1 and leave nothing in git. It closes with *"Reported,
+not enforced: this does not move the exit code."*
+
+A third command matters for how these read together: `node
+scripts/drift-check.mjs --remote` prints **`NO DRIFT`**. Both are correct.
+`drift-check` compares migrations, tables, columns and class *names*;
+`repo-vs-live` compares *values*. Quoting the first as evidence the repo can
+reproduce production is the misreading available here, and `operations.md`
+records that an audit brief already opened on that assumption once.
+
+**Impact.** Stacking the three: the catalog rebuild recovers the right rows with
+30 wrong field values and no exit code to notice; the other 6,006 rows (F1) it
+cannot recover at all; and the one mechanism that recovers everything expires
+30 days after the damage, is undocumented, and has never been run.
+
+A concrete illustration arrived during this audit rather than being hypothetical.
+`operations.md` measured `characters` at **11 rows on 2026-08-28**. It holds
+**3 today** — a drop of eight, across the window in which PR #480 shipped
+character deletion. That is very probably intentional cleanup of test
+characters. **Nothing in the system can tell Nate whether it was**, and after
+2026-09-27 nothing can undo it either.
+
+**Proposal.** Fold into F1's PR rather than opening a second one, since F1
+already proposes the `## Recovery` section this belongs in. That section should
+carry: the verified 30-day window and that it is **rolling**, the two
+`time-travel` invocations (`info` to find a bookmark, `restore` to use one), the
+fact that the D1-scoped token reaches it, and a plain statement that
+`drift-check`'s `NO DRIFT` and `repo-vs-live`'s value diff answer different
+questions — with the 30-row value gap named as the reason a rebuild is not a
+restore. Posture: **documentation plus verified commands. Do not run
+`time-travel restore` to test it** — it mutates production, and a drill belongs
+on a scratch database if it is wanted at all.
+
+**Effort.** S as a fold-in; the verification is already done and recorded here.
+
+**Ongoing cost.** None. The window is Cloudflare's and needs no maintenance.
+
+**Confidence.** High throughout. Every number was produced by a command this
+session, not quoted.
+
+**Taken, 2026-09-02 (PR #519), folded into F1 as this finding proposed.** The
+`### Recovery` section carries the rolling 30-day window, both `time-travel`
+invocations, that the D1-scoped token reaches them, and the plain statement that
+`NO DRIFT` and the 30-row value diff answer different questions.
+
+**One thing this finding had right and F1 did not, and one it missed.** It was
+right that the recovery story needed the *rolling* qualifier rather than just the
+number. It missed that `wrangler d1 export` does not run here at all — see F1's
+note and **F21**. That failure strengthens this finding rather than weakening it:
+the 30-day window is not merely the *only documented* recovery, it is the only
+recovery reachable by a single command, and it lives inside the same Cloudflare
+account as the thing it protects.
+
+---
+
+### F13 — Medium — a third production secret exists, and the section that enumerates the secrets says there are two
+
+**Evidence.** `SETUP.md` → *Environment configuration (Cloudflare Pages
+dashboard)* opens *"Settings → Environment variables, **both encrypted**"*,
+lists `ANTHROPIC_API_KEY` and `ADMIN_EMAIL`, and then reinforces it: *"the
+dashboard holds only **the two** encrypted secrets above"*.
+
+`functions/api/media-vault/lookup.js:2-3` states that the TMDB key *"lives in the
+**TMDB_API_KEY Pages secret**"*, and `env.TMDB_API_KEY` is read there. Line 16:
+*"TMDB modes fail with a clear 503 when the secret is missing."*
+
+`.dev.vars.example` omits it as well — it lists exactly the same two.
+
+**Impact.** The one document an operator would use to stand up, audit or rotate
+this deployment's secrets is wrong by one, and says "two" twice, so a careful
+reader gets no hint to look further. The failure is graceful — MediaVault's
+video lookup 503s with a well-written error naming the secret — but the operator
+has no inventory to work from, and a rotation performed from `SETUP.md` silently
+covers two of three keys. A fresh local checkout following `.dev.vars.example`
+gets the same gap.
+
+The full inventory, as established this session: **`ANTHROPIC_API_KEY`** (Pages
+*and* the standalone Worker — two places, documented),
+**`ADMIN_EMAIL`** (Pages), **`TMDB_API_KEY`** (Pages, undocumented here), and
+**`CLOUDFLARE_API_TOKEN`** (local User-scope environment variable, documented in
+`CLAUDE.md`). `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are plain vars in
+`wrangler.jsonc`, correctly described as not secrets.
+
+**Proposal.** One PR adding `TMDB_API_KEY` to `SETUP.md`'s environment section
+with the same shape as its neighbours — what reads it, what happens when it is
+missing, and where a new value takes effect — replacing "both encrypted" and
+"the two" with wording that does not carry a count, and adding the same entry to
+`.dev.vars.example`. Posture: **documentation only; no secret is created,
+rotated or moved.**
+
+**Effort.** S.
+
+**Ongoing cost.** None, if the count is removed rather than corrected — the
+current wording is a number that moves, which is this repo's known rot pattern.
+
+**Confidence.** High. All four files were read this session.
+
+**Taken, 2026-09-02 (PR #520).** As proposed, posture included — documentation
+only, no secret created, rotated or moved. `TMDB_API_KEY` is in `SETUP.md` with
+the same shape as its neighbours and in `.dev.vars.example`; both counts were
+removed rather than corrected, since "two" is a number that moves.
+
+**Every premise held on re-check** — the first taken finding in this menu that
+needed no correction. Two things were added that it did not name, both belonging
+where a rotation actually starts:
+
+- **The Anthropic key is a two-place rotation.** The standalone Worker holds its
+  own copy. `SETUP.md` said so two sections up, under *Its secret is separate*,
+  and not in the list an operator would work from.
+- **TMDB's key must be the 32-character v3 key, not a v4 read access token.**
+  `lookup.js:47` knows this well enough to report it by name on a 401. No
+  document said it.
+
+Worth carrying to the next inventory: this secret could sit unlisted because its
+failure is *partial*. Only the three `video-*` modes need it, so an unset key
+takes out part of one app while every other route stays healthy. **An inventory
+omission survives in proportion to how gracefully the thing degrades** — which
+is an argument for auditing secrets from the code that reads them rather than
+from the document that lists them.
+
+---
+
+### F14 — Medium — local wrangler is a full major version ahead of the one that compiles the deploy, and one text check guards one syntax
+
+**Evidence.** `npx wrangler --version` on this machine resolves **4.114.0**.
+`SETUP.md:157` records that the Pages build image ships **3.114.17**, and five
+other files repeat it. There is no `package.json`, no `node_modules` and no
+lockfile, so nothing pins either side: `npx` resolves whatever its cache holds,
+and Cloudflare moves the build image on its own schedule.
+
+The guard that exists is
+`apps/character-creator/test/checks/environment.mjs` §9, a **text** check that
+fails on an import attribute in either spelling or on a reach into `scripts/`.
+`SETUP.md` explains why it is text and not a build, and the reasoning is right:
+building with the wrangler that resolves *here* compiles the broken syntax
+happily and would have passed straight through the four-day outage.
+
+But the reasoning rules out one build, not all builds. **Nothing has been tried
+with the build image's own version pinned**, which is the check the argument
+does not cover.
+
+**Impact.** The 2026-08-30 outage was one syntax form out of a major-version
+gap, and it cost 65 merges (F2). The text check now catches that one form. Every
+other 3.x/4.x divergence — any syntax, config key or bundler behaviour esbuild
+3.x rejects — fails identically and silently, and the local toolchain gives no
+warning because it is a version that accepts everything.
+
+**Proposal.** One PR adding a pre-merge check that runs
+`npx wrangler@3.114.17 pages functions build` into a scratch directory and fails
+on a non-zero exit — pinned to the build image's version explicitly, which is
+the distinction `SETUP.md`'s argument turns on. Keep §9's text check: it is
+faster, it needs no network, and it names the specific hazard. Posture:
+**additive. Do not remove the text check, and do not move any existing exit
+code** — the new check should report until it has run clean for a while, because
+a false failure that blocks a merge is worse here than the thing it guards.
+
+The version literal has to be maintained by hand when Cloudflare moves the build
+image, which is the argument for treating this as a decision rather than an
+obvious win — see the ongoing cost.
+
+**Effort.** M — the check is short; deciding the posture and confirming
+`wrangler@3.114.17` still installs is the work.
+
+**Ongoing cost.** Real, and the reason this may be worth declining: a pinned
+version literal that Cloudflare can invalidate without telling anyone, plus a
+network fetch on every pre-merge run. If the answer is no, the cheaper half is
+worth taking alone — record the current gap (4.114.0 vs 3.114.17) in `SETUP.md`
+beside the outage section, so the next person reads it as *two versions apart*
+rather than as one bad import.
+
+**Confidence.** High on the version gap — both numbers are from this session and
+the file. Medium on the proposal: whether a 3.114.17 build actually reproduces
+the Pages environment closely enough to be worth the maintenance is exactly what
+the trial would establish.
+
+**Taken in part, 2026-09-02 (PR #532). The cheap half only, and the pinned-build
+check is DECLINED**, on Nate's decision and on this finding's own ongoing-cost
+argument: a version literal Cloudflare can invalidate without telling anyone,
+plus a network fetch on every pre-merge run, against a text check in
+`environment.mjs` §9 that already guards the shape which has actually bitten.
+
+The version was re-measured rather than carried over: `npx wrangler --version`
+still resolved **4.114.0** on the day this was taken, against the build image's
+3.114.17. `SETUP.md`'s *When the merge does not deploy* now states both numbers
+where the outage is explained.
+
+The sentence that earns the PR is not the version pair, which will drift, but
+what it means: **the local toolchain is not a preview of the one that decides
+whether a deploy succeeds — it is a more permissive one.** That stays true at
+any two versions, which is why it is written that way.
+
+---
+
+### F15 — Medium — the Access bypass prefix serves the gated landing page to anyone, on any path under it
+
+**Evidence.** Thirteen production paths were fetched unauthenticated this
+session. The wall behaves exactly as documented — `/`,
+`/apps/character-creator/`, `/apps/media-vault/`, `/api/claude`,
+`/api/media-vault/items`, `/api/character-creator/*`,
+`/api/filament-forge/catalog` and `/shared/js/api.js` all **302** to the login
+wall; the four intended bypass paths answer (`/apps/pick3cut5/` 200,
+`/shared/styles.css` 200, `/shared/js/ui.js` 200, `/api/pick3cut5/room` **426**,
+correctly demanding a WebSocket upgrade).
+
+The exception is what happens on a path *under* the bypass prefix that no
+function claims:
+
+```
+GET /api/pick3cut5/zzz-not-a-route  ->  200  text/html  7,255 bytes
+```
+
+That is the site's `index.html` — `<title>Nate's Workshop</title>`,
+`<h1>Nate's Workshop</h1>` — served unauthenticated. `/` itself 302s. The cause
+is documented behaviour the repo already knows: `PUBLIC_PREFIXES` is
+prefix-matched (`_middleware.js:43`), it calls `next()`, no function matches, and
+Pages' static handler answers an unknown path with the landing page at 200 —
+which is why `apps/pick3cut5/test/smoke.mjs` checks content type rather than
+status. The two facts are recorded separately and have not been put together.
+
+**Impact.** Low in content, real in kind. What leaks is `index.html` and, through
+it, `apps/manifest.json`: the four app names, their descriptions, and the
+"More Coming Soon — Model Router and more" teaser. No data, no API, no identity.
+But it is the one place the site's only wall is bypassed by a static fallback
+rather than by a decision, and the same mechanism will serve whatever the landing
+page grows into next. It also means a probe under that prefix cannot distinguish
+"route exists" from "route does not", which is exactly the confusion `/shared/`
+already caused once.
+
+**Proposal.** One PR narrowing `PUBLIC_PREFIXES` from a prefix test to the exact
+route set the app uses — `/api/pick3cut5/room`, `/api/pick3cut5/solo/generate`
+and whatever else `apps/pick3cut5/app.js` calls, derived rather than
+hand-listed — with anything else under the prefix refused by the middleware
+rather than handed to `next()`. Posture: **narrow the hole, change no behaviour
+the game depends on.** The existing smoke test derives the Access destination
+list from `index.html` and its stylesheets; the same derivation should produce
+this list, so the two cannot drift apart.
+
+**Effort.** S.
+
+**Ongoing cost.** None if derived; a maintenance burden if hand-listed, which is
+the argument for deriving it.
+
+**Confidence.** High on the behaviour — reproduced twice with different paths.
+Medium on the proposal shape: whether the route list is cleanly derivable from
+`app.js` was not checked, and if it is not, a hand-maintained list may be worse
+than the prefix.
+
+**Taken, 2026-09-02 (PR #528).** As proposed, posture included: the hole is
+narrowed and nothing the game depends on changed. `PUBLIC_PREFIXES` →
+`PUBLIC_PATHS`, exact match, two entries.
+
+**The open question resolved yes.** Two derivations agree: `app.js` builds every
+call from `const API = '/api/pick3cut5'` as `${API}/room` and `${API}/solo`, and
+`functions/api/pick3cut5/` holds exactly `room.js` and `solo.js`. So the
+hand-maintained list the finding feared was avoidable — the array is literal
+(a Worker cannot read the filesystem) but the **test derives it** from the route
+files and fails on either kind of drift.
+
+Four checks, and **both failure modes were verified by causing them**: a
+temporary third route file, and the prefix restored. A check that has only ever
+passed proves nothing about what it would catch — the same lesson F5 produced,
+applied deliberately this time rather than by accident.
+
+One incidental correction to this menu: an earlier probe treated
+`/api/pick3cut5/solo/generate` as a route. It is not — that is the path *inside*
+the Worker. The Pages route is `/api/pick3cut5/solo`, which is why that probe
+returned the landing page and is itself an instance of the finding.
+
+**A self-inflicted detour worth recording**, because it nearly shipped a partial
+change: reverting a temporary test mutation with
+`git checkout functions/api/_middleware.js` restored the file from the **index**,
+which wiped the real change alongside it. Caught by re-reading the file rather
+than by any check. Do not use `git checkout <path>` on a file carrying
+uncommitted work.
+
+---
+
+### F16 — Medium — the component holding the key, the money path and the rate limiters is the one with 2.5% test coverage, no preview and a manual deploy
+
+**Evidence.** `workers/pick3cut5-room/src/` is **2,072 lines** — `room.js`
+1,226, `generate.js` 437, `anthropic.js` 197, `index.js` 161, `rules.js` 51.
+`apps/pick3cut5/test/game.mjs` imports **`rules.js` only**. The other 2,021
+lines are imported by no test.
+
+That component is simultaneously: the holder of a **second copy** of
+`ANTHROPIC_API_KEY`; the only publicly reachable path that can spend it —
+`claude_usage` shows `pick3cut5-solo` at **21 of 28 calls and 94% of all input
+tokens**, most recently **today**; the only place the rate limit bindings exist,
+because Pages Functions cannot use them; **not deployed by a merge**
+(`npx wrangler deploy --config …`, by hand, and it must run *before* the Pages
+deploy that binds it); and untestable on a preview, because the Access bypass is
+hostname-specific and does not follow the app onto preview URLs — so `SETUP.md`
+states it is *"verified on production immediately after merge."*
+
+By contrast the character creator, which is behind the login wall and cannot
+spend anything without an admin email, carries **11,233 lines** of test.
+
+**Impact.** Every structural safety net this repo has — merge-is-deploy, the
+smoke suite, the preview environment, the login wall — stops at this Worker's
+boundary, and coverage is thinnest exactly where they stop. A regression in
+`generate.js` or the limiter wiring reaches production with nothing between it
+and a stranger, and the first signal would be a spend row or a broken game.
+
+**Proposal.** One PR adding unit coverage for the two pure, high-consequence
+seams in `generate.js`: category validation (what the caller is allowed to ask
+for) and the limiter decision (which bucket a request is charged to, and what
+happens when either is exhausted) — imported directly, the way `game.mjs`
+already imports `rules.js`, with no network and no Worker runtime. Posture:
+**pure-function tests only.** Do not attempt to test the Durable Object, the
+Anthropic call or the WebSocket here; that needs a Worker test runner and is a
+much larger decision.
+
+Extracting whatever is needed to make those two seams importable is part of the
+work and should be kept to the minimum that achieves it.
+
+**Effort.** M.
+
+**Ongoing cost.** Small — it joins a suite that already runs on every merge.
+`game.mjs` proves the import path across the `workers/` boundary works.
+
+**Confidence.** High on the numbers and the structural facts. Medium on the
+proposal: whether those two seams are cleanly extractable was not verified, and
+if `generate.js` is tightly coupled to the Worker runtime the effort is L rather
+than M.
+
+**Taken, 2026-09-02 (PR #529), and fully shipped.** The code merged, and the
+Worker was deployed separately an hour later — see the deploy note at the end,
+written while that deploy was still refused, and the line following it.
+
+Posture held: pure-function tests only. The Durable Object, the Anthropic call
+and the WebSocket are untouched.
+
+**The extractability question resolved better than expected.** The first seam
+needed no extraction at all — `validateCategory` was already exported, already
+pure, and `generate.js` imports cleanly into plain Node. The second needed a
+minimum one: the per-IP and global limiter calls and `ipKey` moved out of the
+fetch handler into `src/limits.js`, and `index.js` now calls
+`soloLimitDecision(env, ip)`. Effort was M, not L.
+
+Twenty-four checks. The one worth naming asserts an **order**: per-IP is
+consulted first and returns before the global bucket is touched, so a caller
+already being refused cannot also burn the budget refusing it. Fake bindings
+record their calls, so the order is asserted rather than assumed — it was a
+comment before and is now a test.
+
+Two checks watch the extraction itself: `index.js` must route through
+`soloLimitDecision`, and must keep **no second copy** of the limiter calls.
+Extracting a guardrail and leaving the caller on its own copy is this finding's
+own failure one level up.
+
+**The deploy is blocked, and this finding is therefore only half shipped.**
+`npx wrangler deploy --config workers/pick3cut5-room/wrangler.jsonc` was refused
+by this session's permission classifier — correctly: it is a production deploy
+of a component holding an API key, and no merge performs it.
+
+So `main` now describes a Worker that production is not running. The change is
+behaviour-preserving, so nothing is broken and no round will play differently —
+but the repo and the deployed Worker have diverged, which is the exact class of
+silent gap this menu exists to close. **It stays open until someone runs that
+command**, and `deploy-sweep.mjs` cannot see it: the sweep reads Pages
+check-runs, and this Worker has none.
+
+**Deployed, 2026-09-02, on Nate's authorisation.** Version
+`baa00f7e-1ffc-407a-ac76-cefc9253a8ca`, confirmed at 100% by
+`wrangler deployments list` rather than by the deploy's own output — which
+printed the expected and misleading `No targets deployed for pick3cut5-room`.
+All bindings resolved on upload: `ROOM`, `DB`, both rate limiters, and the three
+model vars.
+
+Then proved by asking production rather than reading an exit code: a `POST` to
+`/api/pick3cut5/room` returned `{"code":"T7YZ"}`, which exercises Pages → the
+service binding → the Worker's fetch handler → the collision-probe loop → the
+Durable Object namespace, on the new code, and spends nothing. Solo generation
+was deliberately **not** triggered: it is the one path that costs money, and a
+smoke test is not worth ~$0.19 of it.
+
+The paragraph above stands as written because the gap it describes was real for
+about an hour, and because the sentence about `deploy-sweep.mjs` remains true:
+**nothing in this repo watches this Worker's deploy.** That is not a finding
+here yet.
+
+---
+
+### F17 — Low — the spend table is a good instrument that nothing looks at
+
+**Evidence.** Metering works and is honest. Every Claude call in `functions/`
+and both Worker paths write a `claude_usage` row, fail-open. Queried this
+session: 28 calls since 2026-08-24, ~350K input and ~14.5K output tokens across
+five endpoints. Spend to date is negligible.
+
+The guardrails around it are unusually well reasoned. `/api/claude` enforces an
+`ALLOWED_MODELS` allowlist and a `MAX_TOKENS_CEILING` of 16,000
+(`_lib/claude-client.js:10,17,47,77`). The Worker's two rate limiters are **sized
+in money** in their own comment — a verified generation measured at ~57,000 input
+tokens and ~$0.19, a global cap of 12/minute chosen to hold the ceiling under
+~$180/hour rather than the ~$860/hour the original 60/minute allowed.
+
+What is missing is a reader. `SETUP.md` states the posture outright —
+*"Spend visibility, not a cap. Nothing on the request path reads this table,
+there is no budget and no refusal"* — and that is a **deliberate, recorded
+decision this finding does not reopen.** But visibility that nobody looks at is
+not visibility. The three queries `SETUP.md` provides are run when someone
+thinks to run them, and the table has three read-and-remember properties in
+common with the deploy check in F2.
+
+**Impact.** The rate limiter caps the *rate*, not the *total*. At the global
+ceiling, sustained, the documented arithmetic reaches roughly $4,300/day, and
+the only thing that would surface it is someone running a query unprompted. The
+realistic case is far smaller and far more likely: a slow leak — a stuck client,
+a scripted caller under the limit — accumulating quietly for weeks. Nothing
+distinguishes that from silence.
+
+**Proposal.** The cheapest control is not in this repo at all: **a spend limit on
+the Anthropic account itself**, which refuses rather than reports and needs no
+code. That is console work and is listed under *Cannot verify from here*. If a
+repo-side change is wanted instead, one PR adding the `claude_usage` daily
+rollup to whatever end-of-session sweep F2 produces, so one command answers both
+"did anything fail to deploy" and "did anything spend". Posture: **report only —
+do not add a cap, a refusal or a gate on the request path**, which would
+contradict a decision already made and written down.
+
+**Effort.** S, and only if F2 is taken first — this is one query appended to it.
+
+**Ongoing cost.** None beyond F2's.
+
+**Confidence.** High on the measurements and the code. The claim that nobody
+looks is inferred from there being no mechanism, not from evidence that Nate
+does not run the query.
+
+**Closed as NOT CODE, 2026-09-02.** Nate set a **$25 monthly spending limit with
+an email notification at $15** on the Anthropic account. That is the option this
+finding recommended and the reason it recommended it: the cheapest control was
+never in this repo. It **refuses** rather than reports, needs no maintenance, and
+cannot silently stop the way a scheduled job can.
+
+No PR, and the repo-side rollup was **not** taken. The posture said not to add a
+cap, a refusal or a gate on the request path, and a real cap now exists one layer
+up — so the reporting half would be duplicating a control that already works,
+which is the ongoing cost this menu keeps arguing against.
+
+Sizing it against the measurements above: spend since 2026-08-24 is ~350K input
+tokens across 28 calls — comfortably under a dollar — so $25 is not a budget, it
+is a **blast-radius cap**. It sits far under the documented worst case
+(~$180/hour sustained at the global rate limit, ~$4,300/day) and far over any
+honest month. The alert at $15 is the part that catches a slow leak; the cap is
+the part that catches a fast one.
+
+`SETUP.md`'s *"Spend visibility, not a cap"* remains true of **this repo**, which
+is the scope that sentence claims, and is left standing.
+
+---
+
+### F18 — Low — the Worker has observability enabled and the Pages half has nothing configured
+
+**Evidence.** `workers/pick3cut5-room/wrangler.jsonc` sets
+`"observability": { "enabled": true }`, with a comment explaining the choice:
+*"Free on Workers and unavailable on Pages… When a room misbehaves in production
+this is the only way to find out why."* The root `wrangler.jsonc` contains no
+`observability`, `logpush` or `tail` configuration of any kind.
+
+So the API surface behind the login wall — 35 character-creator endpoints, the
+MediaVault CRUD and lookup proxy, FilamentForge's data routes, `/api/claude` —
+produces no queryable log. The failure modes those routes have are real and
+already documented in `SETUP.md`'s troubleshooting section: a 503 naming signing
+keys when `ACCESS_TEAM_DOMAIN` is wrong, a 500 when `ANTHROPIC_API_KEY` is
+unset, a fail-closed 403 when `ADMIN_EMAIL` is missing. Each is diagnosed today
+by a person hitting it and reading the browser console.
+
+**Impact.** Low while the user base is a handful of friends who will say
+something. It sets the floor on how quickly anything is noticed: for the Pages
+half, the detection mechanism is a human complaining.
+
+**Proposal.** This is a **question before it is a change.** The Worker comment
+asserts observability is unavailable on Pages; whether that is still true is
+worth five minutes in the dashboard before any code is written. If it has become
+available, one PR turns it on and the asymmetry closes. If it has not, the honest
+outcome is a line in `SETUP.md`'s troubleshooting section saying the Pages half
+has no logs and the browser console is the tool — which is what the section
+already implies without stating. Posture: **verify first; documentation if the
+answer is no.**
+
+**Effort.** S either way.
+
+**Ongoing cost.** None.
+
+**Confidence.** High that nothing is configured. Low on whether it *can* be —
+that claim comes from a code comment of unknown age and was not verified, which
+is the whole proposal.
+
+**Taken, 2026-09-02 (PR #535), on the second branch.** The low-confidence half
+is now high: **it cannot be**, and the Worker's comment of unknown age is
+correct.
+
+Three independent checks against the Cloudflare API, none of them a dashboard
+screenshot:
+
+- the Pages project's production deployment config exposes **no `observability`
+  key and no `logpush` key** — the surface does not exist for a Pages project,
+  where on a Worker it is valid config;
+- `nates-workshop` does not appear in `workers_list` at all;
+- across seven days of Workers Observability data, the **only** service emitting
+  events is `pick3cut5-room`, with 15.
+
+So the asymmetry is Cloudflare's, not a setting anybody forgot, and the Worker is
+the exception on purpose. `SETUP.md`'s Troubleshooting section now opens by
+saying so — the right home, because every entry in it is already diagnosed by
+reproducing the fault, for exactly this reason.
+
+**The sentence worth keeping** is the one the finding's impact paragraph implied
+and did not state: the floor on how fast anything in the Pages half is noticed is
+*a person hitting it and saying so*.
+
+**Found in passing, and relevant to F14:** the same API read returns
+`build_image_major_version: 3` for this project, which confirms that version gap
+from Cloudflare rather than from documentation. It is not usable as a repo
+check — the `CLOUDFLARE_API_TOKEN` this repo runs under cannot read Pages, as
+`CLAUDE.md` documents — so F14's decline stands.
+
+---
+
+### F19 — Nit — both wrangler configs point `$schema` at a directory this repo does not have
+
+**Evidence.** `wrangler.jsonc:2` and `workers/pick3cut5-room/wrangler.jsonc:2`
+both set `"$schema": "node_modules/wrangler/config-schema.json"`. `CLAUDE.md`
+opens by stating there is no `package.json` and no `node_modules`; both are
+absent, confirmed this session.
+
+**Impact.** None at runtime — `$schema` is an editor hint and wrangler ignores
+it. The two files that configure production carry a path that resolves to
+nothing, in a repo whose stated identity is that it has no dependency tree.
+
+**Proposal.** One PR either removing both lines or pointing them at the
+published URL (`https://unpkg.com/wrangler/config-schema.json`), whichever suits
+how the files are edited. Fold into any other PR touching a wrangler config
+rather than opening one for this. Posture: **cosmetic.**
+
+**Effort.** S.
+
+**Ongoing cost.** None.
+
+**Confidence.** High.
+
+**Taken, 2026-09-02 (PR #533).** Pointed at the published URL rather than
+deleted, of the two options offered — the two files where a config mistake is
+expensive are exactly these, and editor validation is worth more there than a
+removed line. **Verified before asserting it:** the URL returns 200 and 354 KB
+of JSON on unpkg and on jsdelivr, both files still parse, and
+`npx wrangler d1 info` still reads the config it just edited.
+
+One deviation: this finding said to fold it into another PR touching a wrangler
+config. Nothing else in the wave touched one, so it got its own — which is the
+only reason it was ever likely to be done at all, and worth noting as a general
+point about "fold this in" proposals.
+
+A comment now says *why* it is a URL, so the next `wrangler init` habit does not
+quietly restore the path.
+
+---
+
+### F20 — Nit — a new script in `scripts/` has a documentation step that exists only in the test
+
+**Raised.** Taking F2 (PR #517).
+
+**Evidence.** The first merge-gate run on F2's branch failed:
+
+```
+FAIL  every script in scripts/ is named in the file map — deploy-sweep.mjs - add it or delete it
+```
+
+`apps/character-creator/test/smoke.mjs:6346-6358` reads the README's *The
+scripts at the repo root* section and requires every `.mjs`, `.py`, `.txt` and
+`.json` on disk to appear in it. Its comment gives the reason: `read-columns.py`
+and `ocr-fields-lib.mjs` both sat in `scripts/` undocumented for several PRs,
+*"and a file map that quietly stops being a map is worse than none, because the
+count of entries reassures you the list is whole."*
+
+The requirement is written down nowhere else. `schema-change` documents the
+**five** places a column lands and the nine a table needs; `ship-pr` covers the
+merge loop; neither mentions that adding a script has a second place. Nothing in
+`CLAUDE.md` or `SETUP.md` does either.
+
+**Impact.** Nearly none, and this finding argues for its own decline. The check
+is a hard gate, so the map cannot silently rot — which is the failure it was
+built for, and it holds. The cost is one failed test run and one confused minute,
+paid by whoever adds the next script.
+
+The error message already does most of the work a document would: it names the
+file and says *"add it or delete it"*. What it does not say is **where** the map
+is, which is the only part a reader has to go and find.
+
+**Proposal.** The cheapest version is not a document at all — extend the check's
+failure message to name the section and the file, so the answer arrives with the
+question:
+
+```
+deploy-sweep.mjs - add it to "The scripts at the repo root" in
+apps/character-creator/README.md, or delete it
+```
+
+Decline the documentation half. A line in `ship-pr` saying "a new script needs a
+README entry" would be a second place to keep current, describing a rule the
+test already enforces perfectly, in a skill that is read before the merge loop
+rather than before writing a script. Posture: **improve the message, add no
+document.**
+
+**Effort.** S — one string.
+
+**Ongoing cost.** None. It replaces a string with a longer string.
+
+**Confidence.** High. Reproduced by failing the gate, then fixed by adding the
+entry and passing it.
+
+**When — after the waves.** Nothing is blocked by it. Every remaining wave that
+adds a script will hit the same clear failure and recover in a minute, which is
+evidence for the finding rather than a reason to hurry it.
+
+**Closed without being taken, 2026-09-02, as already-solved.** Nothing was
+implemented — not the failure-message change, and not the documentation half it
+argued against.
+
+**What solved it was filing it.** Two PRs later, F21 added `d1-backup.mjs` and
+put its README script-map entry in the *same* PR, before the smoke test asked.
+The gap this finding describes is a discoverability gap, and describing it in a
+place people read closed it for the only reader it had.
+
+**What is honestly not solved**, so the record does not overclaim: the failure
+message still does not name where the map is. The next person to add a script —
+one who has not read this entry — still pays one failed test run and one minute
+of looking. That cost is now accepted rather than unexamined, which is the whole
+difference between this and the state the finding found.
+
+Worth carrying: a finding whose entire value is *someone knowing* can be
+discharged by writing it down. Not every nit needs a PR, and the ongoing-cost
+line on this one — a second document to keep current, describing a rule the test
+already enforces perfectly — was the right argument all along. It just applied to
+the fix rather than only to the alternative.
+
+---
+
+### F21 — Medium — the one-command way to copy this database off Cloudflare does not run, and nothing replaces it
+
+**Raised.** Taking F1 (PR #519).
+
+**Evidence.** `wrangler d1 export nates-workshop-media --remote` fails on this
+database, every time:
+
+```
+D1 Export error: cannot export databases with Virtual Tables (fts5)
+```
+
+The virtual table is `journal_fts` — campaign-note search, created by
+`db/migrations/026-campaign-notes.sql`. One FTS5 table makes the **whole**
+database un-exportable by that path; there is no flag that skips it, and the
+error is a hard refusal rather than a partial export.
+
+The per-table alternative works. Verified against the largest table on
+2026-09-02: `--json --command "SELECT * FROM media_items"` returned all **3,639
+rows**, 2.2 MB, exit 0. The database has **34 tables**; nothing loops them.
+
+**Impact.** F1 and F12 establish that D1 Time Travel is the recovery mechanism
+and that it is a rolling 30 days. What this finding adds is that Time Travel
+lives **inside the same Cloudflare account as the data it protects**, and the
+standard way to hold a copy anywhere else does not run here. So the account
+itself is a single point of failure with no working one-command mitigation — not
+because the data cannot be copied, but because copying it takes a loop nobody has
+written and nobody has run.
+
+This is not urgent in the way F1 reads. The realistic loss is not "Cloudflare
+deletes the account"; it is that the only off-platform copy requires
+thirty-four commands typed by hand at exactly the moment somebody is panicking.
+
+**Proposal.** One PR adding `scripts/d1-backup.mjs`: enumerate the user tables
+from `sqlite_master`, skip the FTS5 virtual table and its four shadow tables
+(`journal_fts_data`, `_idx`, `_docsize`, `_config` — all derived, all rebuilt by
+the triggers in `026`), and write one JSON file per table into a directory the
+caller names. Print a row count per table and a total, so a short file is
+visible rather than silent.
+
+Posture: **manual, report-only, no schedule and no new dependency.** Do not add
+a cron, a hook, or a GitHub Action — F1's posture note applies here too, and a
+scheduled export that quietly stops is worse than a documented manual one. Do not
+attempt to make `d1 export` work by dropping and recreating `journal_fts`; that
+is a production mutation in a recovery tool, which is the wrong shape entirely.
+
+It needs a README script-map entry in the same PR (see **F20**), and the
+`### Recovery` section in `operations.md` should lose its "nothing automates this
+loop" sentence when it lands.
+
+**Effort.** S — a `sqlite_master` query, a loop, and the invocation this session
+already verified.
+
+**Ongoing cost.** Two lines: a file-map entry to keep current, and a script that
+will need touching if a table is ever added whose contents should not be written
+to disk. Running it is the operator's choice, not an obligation.
+
+**Confidence.** High on both halves — the export failure and the per-table
+success were each reproduced this session against production.
+
+**When — before wave 3, if it is taken at all.** Nothing is blocked by it and it
+can wait until after the waves without risk. But it belongs with F1 and F13 in
+the data-protection wave rather than filed among the cleanups: it is the missing
+half of the runbook that just shipped, and the `operations.md` sentence pointing
+at it is written as an open loop.
+
+**Taken, 2026-09-02 (PR #521).** `scripts/d1-backup.mjs`, run against production
+before it was committed: **33 of 33 tables, 8,723 rows, complete**, with the six
+skips resolving exactly as intended (`_cf_KV`, `journal_fts`, and its four
+shadow tables).
+
+Two departures from the proposal, both deliberate:
+
+- **It derives the skip list instead of naming the four shadow tables.** The
+  proposal listed `journal_fts_data`, `_idx`, `_docsize` and `_config` by hand.
+  Virtual tables come out of `CREATE VIRTUAL TABLE` in `sqlite_master`, their
+  shadow tables from a prefix off the virtual table's own name, and Cloudflare's
+  from `_cf_`. A second FTS table added later is covered without editing the
+  file; the hardcoded list would have been wrong the day that happened, silently
+  and in the direction that writes junk into a backup.
+- **It exits non-zero when a table fails**, which reads against the stated
+  report-only posture and is not. Report-only here means it gates nothing and
+  schedules nothing — no cron, no hook, no Action, nothing consuming the exit
+  code. A backup tool that reports success after writing half a database is a
+  defect rather than a posture, and the two ideas were worth separating in the
+  file itself.
+
+Everything else held: manual, no dependency, and `d1 export` was **not** worked
+around by touching `journal_fts` in production. `operations.md`'s Recovery
+section lost its "nothing automates this loop" sentence and points here.
+
+The README script map entry went in with the PR rather than after the smoke test
+asked for it — **F20 being useful one PR after it was filed**, which is a
+small argument that F20 should be closed as already-solved-by-knowing rather
+than taken.
+
+One thing left undone on purpose: `d1-backup.mjs` is **not** in the
+`.claude/settings.json` allowlist. It only reads D1, but it writes files to a
+caller-named path, which is a different question from the read-only rule F6
+settled. Worth a decision rather than a default.
+
+---
+
+### F22 — Low — the `audit-menu` skill says the finding that created it is still open
+
+**Raised.** Taking F8 (PR #531).
+
+**Evidence.** `.claude/skills/audit-menu/SKILL.md`, under *Never grep for the
+outcome note*:
+
+> `INGESTION-AUDIT` **F14**, the finding that *describes this format*, carries
+> the note's own shape inside backticks as an example, so every grep reports it
+> taken. **It is open.**
+
+F14 is not open. `INGESTION-AUDIT.md:320` records it as shipped in **PR #364**,
+with the artefact named: *"`.claude/skills/audit-menu/SKILL.md` — the sixth
+skill, junctioned in the same PR"*. The file's own correction sequence ends
+*"NONE now — the menu is clear"* (line 352). The skill exists.
+
+**So the skill is asserting its own non-existence.** F14 *is* the finding that
+proposed it; the sentence was true while it was being written and outlived the
+thing it described by the length of one PR.
+
+**Impact.** Low and specific. The surrounding paragraph is still correct and
+still valuable — F14 really does carry `**Taken, 2026-08-25**` inside backticks
+as an example, so a grep really does report it taken, and that really is the
+sharpest illustration of why the notes cannot be read mechanically. Only the
+verdict at the end is wrong.
+
+But it is wrong in the expensive direction. A reader who checks the skill's one
+named example against the file finds a contradiction and has no way to tell
+which side is stale, which is exactly the cost `AUDIT.md`'s header was written to
+avoid. It also survived a re-read of this skill during F4 and F10, both of which
+edited within twenty lines of it — twice, because the sentence is about a
+*trap*, and its final clause reads as part of the trap rather than as a claim.
+
+**Proposal.** One PR changing the verdict and keeping the illustration. The
+example is worth more with the ending it actually had: a grep reports F14 taken,
+F14 **is** taken, and the grep was still wrong for four days before it happened
+to become right — a coincidence is not a check. Say that instead of *"It is
+open."* Posture: **one sentence, and do not remove the example.**
+
+Fold it into any other PR that touches this skill rather than opening one for a
+sentence.
+
+**Effort.** S.
+
+**Ongoing cost.** None. It removes a status claim about another file, which is
+the kind of thing that goes stale by definition — the replacement states a fact
+about the past that cannot.
+
+**Confidence.** High. The skill, `INGESTION-AUDIT.md`'s PR table, its correction
+sequence and the existence of the skill file were all read this session.
+
+**When — after the waves.** It misleads a reader who checks, and it has already
+survived two edits nearby, so it will not fix itself. But nothing is blocked by
+it and F8's new status line on `INGESTION-AUDIT.md` now states the truth at the
+other end of the contradiction.
+
+**Taken, 2026-09-02 (PR #534),** in the same session it was raised — the wave had
+room and it is one sentence. Posture held: the verdict changed, the example
+kept.
+
+**Two corrections to this finding, made while taking it.**
+
+- **It says the grep was wrong for "four days". It was two.**
+  `INGESTION-AUDIT.md` is dated 2026-08-26 and PR #364 merged 2026-08-28,
+  both read this session. Four was a guess dressed as a measurement, in a
+  finding about a claim nobody checked — which is the joke writing itself.
+  The number that *is* four-ish belongs elsewhere: the stale sentence stood
+  **five** days after F14 shipped.
+- **The first draft of the fix broke the rule it was fixing.** It retired the
+  old verdict by quoting it, and this skill says outright: *never quote the
+  stale phrase you replace — a note repeating the old wording defeats a grep
+  for it.* Caught by grepping for the phrase after the edit and finding it
+  still present at count 1. Rewritten to describe the old claim rather than
+  reproduce it; count is now 0 and the example is intact.
+
+That second one is worth more than the finding. **The rule is easy to agree with
+and hard to follow**, because the natural way to explain a correction is to show
+what it replaced. Both F5 and this one were caught the same way — by checking the
+fix with the same instrument that found the problem, rather than by reading it.
+
+The example now ends on the fact instead of the verdict: a grep reports F14
+taken, F14 *is* taken, and the grep was still wrong for two days before the world
+moved under it. **A coincidence is not a check.** Better than what it replaced.
+
+---
+
+### F23 — Medium — nothing watches the one component a merge does not deploy
+
+**Raised.** Closing out the audit, 2026-09-02, from the gap F16's outcome note
+names and does not fix.
+
+**Evidence.** `scripts/deploy-sweep.mjs` (F2) answers *did anything merged
+actually ship* by reading each merge commit's **Pages** check-run.
+`workers/pick3cut5-room` has none — it is a standalone Worker, deployed by hand
+with `npx wrangler deploy --config`, and no merge produces a check-run for it.
+So the sweep printing `NOTHING MISSING` is silent about it by construction, and
+says so in no way a reader would notice.
+
+The comparison that would catch it was computed for the first time while writing
+this finding, and it **fired immediately**:
+
+```
+newest Worker-touching commit : 2026-09-02T12:03:32Z   (PR #533, F19)
+active deployment created_on  : 2026-09-02T11:49:49Z   (baa00f7e, 100%)
+STALE by 14 minutes
+```
+
+`main` has carried a Worker directory the deployed Worker does not match since
+the moment F19 merged, and nothing anywhere would ever have said so.
+
+**Two facts that make this cheap, both verified rather than assumed.**
+`wrangler deployments list --config … --json` returns machine-readable
+deployments with `created_on` and the active version's `percentage`. And the
+`CLOUDFLARE_API_TOKEN` this repo runs under **can read them** — `whoami`
+confirms that token is what answered. `CLAUDE.md` documents the token as unable
+to reach R2 or Pages; Workers deployments are neither, and nothing had tested it.
+
+**Impact.** The realistic failure is not the one above. It is a change to
+`room.js` or `generate.js` merged and never deployed: party mode and solo
+generation keep running the previous code, indefinitely, on the component that
+holds its own copy of the Anthropic key and serves the only publicly reachable
+path that spends it. There is no preview to catch it — the Access bypass is
+hostname-specific and does not follow the app onto preview URLs — and the smoke
+suite tests the repo's source, not what is deployed, so **every existing check
+passes while production runs something else.**
+
+That is the 2026-08-30 outage shape with the detection removed. It is Medium
+rather than High only because it requires somebody to merge Worker code and
+forget a documented step, where the Pages outage needed nobody to make a mistake
+at all.
+
+**Proposal.** Extend `scripts/deploy-sweep.mjs` with a second, clearly separated
+section: compare the newest commit touching `workers/pick3cut5-room/` on
+`origin/main` against the active deployment's `created_on`, and print the gap
+when the commit is newer. Report only, no exit code, same posture as the rest of
+that script. It belongs there rather than in a new file because the question is
+identical — *did what I merged actually ship* — and one command should answer it
+for the whole site.
+
+The sweep's summary line must also stop being unqualified: `NOTHING MISSING` is
+currently a claim about Pages wearing the clothes of a claim about the site.
+
+**Scope it to the whole directory, not `src/`.** `wrangler.jsonc` changes are
+deploy-relevant — bindings, vars, the rate-limit numbers — so narrowing to code
+would miss the ones that matter most.
+
+**Effort.** S. The comparison is four lines and is already written in this
+finding.
+
+**Ongoing cost.** Real, and the reason to take this deliberately rather than
+automatically. One network call per sweep. And it will produce **false
+positives**: the very first firing, above, is a `$schema` editor hint that
+wrangler ignores, so the deployed Worker is functionally identical to `main` and
+the check cannot tell. A timestamp knows that something changed, never whether
+it mattered. Anyone taking this should decide in advance that a noisy true
+statement beats a silent gap here — and if that trade is unwelcome, **decline
+this and leave the gap documented instead**, which is the honest alternative.
+
+**Confidence.** High throughout. Every number came from a command run while
+writing this: the commit timestamp from `git log`, the deployment from
+`wrangler deployments list --json`, and the credential from `whoami`.
+
+**When — after the waves, and it is the last thing on this menu.** Nothing is
+blocked by it. The 14-minute staleness it found is inert and was deliberately
+**not** redeployed while filing this: a `$schema` line does not justify a
+production deploy, and taking a finding is not licence to act on what it finds.
+
+**Taken, 2026-09-02 (PR #539),** in the same session it was filed, on Nate's
+word. Posture held: report only, no exit code, whole directory rather than
+`src/`, and the cost stated rather than hidden. Premises re-checked first and
+all held, including the 14-minute staleness.
+
+**All three branches were verified by causing them** — stale on live data, a
+directory with no commits, and an unreadable config. The third one changed the
+code: the catch printed wrangler's *last* 200 characters, which is its
+`logs were written to …` line rather than the error, so a failed check named a
+**log file instead of the fault**. It now prefers the line wrangler marked as an
+error. *An error message that reports less than it knows* is the failure this
+section exists to end, and the first draft of the section committed it.
+
+**One implementation note worth carrying.** The wrangler call runs npm's own
+`npx-cli.js` under this Node rather than through a shell. The first version used
+`shell: true`, which works and emits **DEP0190 on every run** — a deprecation
+warning on a tool meant to be run every session, which is how a useful check
+becomes one people learn to scroll past. The npx-cli trick was already in
+`d1-query-lib` and `d1-apply` for the same Windows `.cmd` reason; reaching for
+the repo's existing answer would have skipped the detour.
+
+**The staleness it reports was deliberately not cleared.** A `$schema` line does
+not justify a production deploy. The check's whole point is that a human decides
+whether the diff matters, and the first thing to do with a new instrument is not
+to silence its first reading.
+
+**What this closes.** `deploy-sweep.mjs` no longer answers a question narrower
+than the one it appears to answer, and `NOTHING MISSING` no longer reads as a
+claim about the site while being a claim about one of its two deploy paths. That
+gap existed for the eleven hours between F2 shipping and this — the tool built
+to catch silent divergence had one.
+
+---
+
+### F24 — Medium — a preview build wedged before `clone_repo` and silently held the production deploy behind it for 32 minutes
+
+**Not an audit finding. An incident, recorded 2026-09-02 while taking
+`SKILL-AUDIT` F2, and filed because nothing in the repo would have explained it.**
+
+**What happened.** The merge of #542 (`9440750`) reported
+`Cloudflare Pages  in_progress` for 32 minutes, where the four merges before it
+completed in 20-35 seconds. It was not the merge. Asking Cloudflare rather than
+GitHub:
+
+| deployment | env | commit | stage | since |
+|---|---|---|---|---|
+| `d36329ae` | **preview** | `4f9bab9`, branch `f2-claim-audit-searches-docs` | `initialize` = **active** | 14:02:50 |
+| `8e2611b4` | production | `9440750` (the merge) | `queued` | 14:03:01 |
+| `011b5457` | preview | `eec0fcc`, branch `f11-...` | `queued` | 14:22:01 |
+
+`d36329ae` passed `queued`, entered `initialize` **220ms** after creation
+(`created_on` 14:02:49.966, `modified_on` 14:02:50.220) and never moved again.
+`clone_repo`, `build` and `deploy` all stayed `idle`. Its build log is **empty**
+- `history/logs` returns `total: 0`. There is no build to have failed.
+
+Deleting it released the queue immediately: `8e2611b4` reached
+`deploy = success` **19 seconds later**, at 14:35:29, and `011b5457` started
+building. Production had been serving `d9451fcf` (#541) throughout, and the
+undelivered change was two markdown files, so nothing user-visible was affected.
+
+**Why it is worth a finding rather than a shrug. Three things this exposed:**
+
+1. **A branch push competes for the build slot with the merge it is about to
+   become.** Every `git push -u origin <branch>` starts a **preview** build, and
+   previews share one serialised queue with production. Here the preview for the
+   F2 branch was created 12 seconds before the production build for the F2
+   merge, wedged, and blocked it. `SETUP.md`'s *How deploys work* and the
+   `ship-pr` skill both describe merging to `main` as the deploy and neither
+   mentions preview builds at all - so the queue they contend for is invisible
+   in the documentation, and the failure looked like "my merge is broken".
+2. **`deploy-sweep.mjs` cannot tell a wedged build from a fresh one.** It buckets
+   any non-`completed` check as `pending` and prints
+   `Pages: 19 deployed, 1 still building, nothing missing.` A build 20 seconds
+   old and one wedged for half an hour produce the identical line. The tool
+   built to catch a deploy that silently did not happen has no notion of *how
+   long*, which is the only signal that separates the two.
+3. **The GitHub check-run's stage is not Cloudflare's.** It said `Building` and
+   `output.title: "Building"` the entire time, while Cloudflare's own
+   `latest_stage` said `queued`, then `initialize`. Reading the check-run alone,
+   the natural conclusion is a slow or hanging *build* - and the repo's one
+   documented Pages failure mode is a compile error under `functions/`, which
+   sends you looking at a diff that in this case touched no code at all.
+
+**To investigate.** Why a deployment enters `initialize` and stops with no log
+output is not answerable from here; the API exposes stage and timing and nothing
+about the scheduler. Worth watching for a recurrence and, if it recurs, worth
+asking Cloudflare with these two deployment IDs
+(`d36329ae-22c1-4a0a-b9d6-768c0b75b643`, and whichever repeats). **A single
+occurrence is not a pattern** and this may be one bad scheduler slot.
+
+**Proposal.** Three parts, independent, take singly:
+
+- **(a)** Teach `deploy-sweep.mjs` the age of a pending check: report a build
+  `in_progress` for more than ~10 minutes separately from one that is merely
+  recent, and name the likely cause - a wedged deployment ahead of it in the
+  queue. Posture: **report only, no exit code**, matching everything else in
+  that script.
+- **(b)** One paragraph in `SETUP.md` -> *How deploys work* saying that branch
+  pushes trigger preview builds, that previews and production share one queue,
+  and that a stalled preview therefore delays a merge. Documentation only.
+- **(c)** Record the diagnosis path, since it is not obvious: the GitHub
+  check-run reports a stage of its own, and Cloudflare's `latest_stage` and
+  `stages[]` on the deployment are what actually say where a build is. See
+  `SKILL-AUDIT` F24 for the access question that makes this reachable at all.
+
+**Effort.** (a) S, (b) XS, (c) XS.
+
+**Evidence.** Live incident, 2026-09-02, timings from the Pages deployments API.
+
+**Taken, 2026-09-02 (PR #566): all three parts.** Posture as proposed —
+`deploy-sweep.mjs` **reports only and still never moves the exit code**,
+confirmed by running it.
+
+**(a)** The sweep now carries `started_at` on every pending check and ages it.
+Under ten minutes prints `still building (Nm)`; over it prints
+`PENDING FOR OVER 10 MINUTES - probably stuck`, names the likely cause and the
+API call that answers it. **The summary line was the real defect and the finding
+under-stated it**: it read `Pages: N deployed, 1 still building, nothing
+missing.` A stalled build is *not* nothing missing — the change it carries is not
+on the site — so a stall now ends `, N STUCK - see above` and the reassuring
+half is withheld. Ten minutes is twenty times the normal 20-35 second run, so
+this is not a tight threshold.
+
+**Proved by making it fail:** the pending branch was forced for every commit and
+the stalled block rendered with its guidance and the `STUCK` summary; restored,
+the sweep returns `Pages: 20 deployed, nothing missing.` and exit 0. A check
+written while nothing is broken has to be broken once on purpose.
+
+**(b)** `SETUP.md` → *How deploys work* gains **A branch push competes with the
+merge it is about to become**: previews and production share one serialised
+queue, a push queues a preview ~10s before the merge queues production, and a
+wedged preview holds the merge behind it. With the incident's timings.
+
+**(c)** The diagnosis path is in both places, because the wrong reading is the
+natural one: **GitHub's check-run says `Building` for a deployment Cloudflare
+has not started.** Cloudflare's `latest_stage` said `queued`, then `initialize`,
+with an empty build log. Reading the check-run alone sends you hunting a compile
+error under `functions/` in a diff that touched no code — which is this repo's
+one documented Pages failure mode, and was the wrong one.
+
+**Still not known: why a deployment stalls before `clone_repo`.** The API exposes
+stage and timing and nothing about the scheduler. Recorded, not solved — one
+occurrence is not a pattern, and the deployment id above is here for a
+recurrence.
+
