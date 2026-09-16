@@ -160,6 +160,8 @@ async function load() {
     // /catalogs with everything else.
     C.powerDescriptions = res.power_descriptions || {};
     C.psiCatalog = catalogs.psionics || [];
+    // `|| []` for a browser holding a warm 304 from before Talents existed.
+    C.talentCatalog = catalogs.talents || [];
     // An inventory row stores enchantment SLUGS; without the definitions a
     // slug renders as a slug.
     C.enchantCatalog = catalogs.enchantments || [];
@@ -2527,7 +2529,8 @@ function levelUpPanel() {
 // showing an empty picker, exactly as the wizard's Advancement step does:
 // "not recorded" and "none" are different answers.
 function powerPickerBlock(p) {
-  const blocks = [powerKindBlock(p.spell_picks, 'spell'), powerKindBlock(p.psionic_picks, 'psionic')]
+  const blocks = [powerKindBlock(p.spell_picks, 'spell'), powerKindBlock(p.psionic_picks, 'psionic'),
+    powerKindBlock(p.talent_picks, 'talent')]
     .filter(Boolean).join('');
   return blocks;
 }
@@ -2552,15 +2555,40 @@ const psiCatLabel = (cats) => (cats || []).map((c) => (globalThis.skillCats
   ? globalThis.skillCats.categoryLabel(c)
   : (typeof c === 'string' ? c : c?.name ?? ''))).join(', ');
 
+// The Talents a grant may be spent on, and the words for its restriction.
+// SHARED by the level-up picker and the banked-picks panel, because the talent
+// rule is the same in both - unlike spells and psionics, whose caps come from
+// the class at level-up and from the banked row afterwards.
+//
+// THE LEVEL GATE MATCHES THE SERVER, deliberately. resolvePowerPicks refuses a
+// Talent whose min_character_level is above the level the GRANT is from, so
+// this offers exactly what that will accept. Offering more would put a choice on
+// screen that the server then refuses, which is the use-button and grant-key
+// failure all over again.
+function talentPoolFor(g, level, held) {
+  const named = Array.isArray(g.from) && g.from.length
+    ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
+  const pool = (C.talentCatalog || [])
+    .filter((x) => !held.has(String(x.name).toLowerCase()))
+    .filter((x) => !x.system || x.system === C.data.campaign_system)
+    .filter((x) => !named || named.has(String(x.name).toLowerCase()))
+    .filter((x) => !Number.isFinite(x.min_character_level) || level >= x.min_character_level);
+  const cap = named ? `a list of ${g.from.length}` : `any Talent available by level ${level}`;
+  return { pool, cap };
+}
+
 function powerKindBlock(grant, kind) {
   if (!grant || !grant.applicable) return '';
   const isSpell = kind === 'spell';
-  const label = isSpell ? 'Spells' : 'Psionic powers';
+  // NAMED, not left to the psionic fallback: this used to be two-way, so a
+  // Talent grant would have been labelled and pooled as psionic powers.
+  const isTalent = kind === 'talent';
+  const label = isSpell ? 'Spells' : isTalent ? 'Talents' : 'Psionic powers';
   if (grant.unknown) {
     return `<h2 class="sub-h">${label}</h2><p class="warn small">This class's definition does not record how
-      many ${isSpell ? 'spells' : 'powers'} it learns per level, so none are offered. Nothing is
+      many ${isSpell ? 'spells' : isTalent ? 'talents' : 'powers'} it learns per level, so none are offered. Nothing is
       guessed — add them by hand, or re-import the class with
-      <code>${isSpell ? 'spells_per_level' : 'powers_per_level'}</code>.</p>`;
+      <code>${isSpell ? 'spells_per_level' : isTalent ? 'talents_schedule' : 'powers_per_level'}</code>.</p>`;
   }
   if (!grant.total) return '';
 
@@ -2569,8 +2597,9 @@ function powerKindBlock(grant, kind) {
   // cap still has to be mirrored from js/leveling.js here.
   const rows = grant.grants.map((g) => {
     const slot = g.slot ?? 0;
+    const talent = isTalent ? talentPoolFor(g, g.level, held) : null;
     const levels = isSpell ? spellLevelCap(g.level, slot) : null;
-    const cats = isSpell ? null : psiCategoryCap(g.level, slot);
+    const cats = isSpell || isTalent ? null : psiCategoryCap(g.level, slot);
     // A named list is the tightest restriction; its cap applies beside it only
     // where the entry asks for one (BOOK-INGEST-AUDIT F61) - spellLevelCap is
     // null for every other list slot. `g.from` is resolved from a from_list by
@@ -2578,14 +2607,14 @@ function powerKindBlock(grant, kind) {
     // grant's list is read too since F65, and replaces its categories.
     const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
-    const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
+    const pool = talent ? talent.pool : (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
       .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase()) && (!levels || levels.includes(x.level)))
                                         : (!levels || levels.includes(x.level))))
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
                                         : psiAdmits(cats, x)));
-    const cap = named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
+    const cap = talent ? talent.cap : named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
       : isSpell
         ? (levels ? `spell levels ${levels.join(', ')}` : 'any spell level')
         : (cats && cats.length ? psiCatLabel(cats) : 'any category');
@@ -2689,11 +2718,13 @@ function pendingPowersPanel() {
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
     const isSpell = g.kind === 'spell';
+    // A banked Talent row offered PSIONIC powers before this, being two-way.
+    const talent = g.kind === 'talent' ? talentPoolFor(g, g.granted_at_level, held) : null;
     // A banked psionic grant keeps its list too (BOOK-INGEST-AUDIT F65), and it
     // replaces the grant's categories, which powerGrantsFor banked as null.
     const named = Array.isArray(g.from) && g.from.length
       ? new Set(g.from.map((n) => String(n).toLowerCase())) : null;
-    const pool = (isSpell ? C.spellCatalog : C.psiCatalog)
+    const pool = talent ? talent.pool : (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
       // The banked row's tradition allowance too (BOOK-INGEST-AUDIT F57), inlined
@@ -2711,7 +2742,7 @@ function pendingPowersPanel() {
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
                                         : psiAdmits(g.categories, x)));
     // The banked row's own restriction, not the class's as it stands today.
-    const cap = named ? `a list of ${g.from.length}${g.spell_levels ? `, spell levels ${g.spell_levels.join(', ')}` : ''}`
+    const cap = talent ? talent.cap : named ? `a list of ${g.from.length}${g.spell_levels ? `, spell levels ${g.spell_levels.join(', ')}` : ''}`
       : isSpell
         ? (g.spell_levels ? `spell levels ${g.spell_levels.join(', ')}` : 'any')
         : (g.categories && g.categories.length ? psiCatLabel(g.categories) : 'any');

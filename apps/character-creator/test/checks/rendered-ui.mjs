@@ -19,6 +19,7 @@ import { join } from 'node:path';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { fixedFormulaValue } from '../../js/dice.js';
 import { parseClassMarkdown } from '../../js/parser.js';
+import { buildProposal } from '../../js/leveling.js';
 
 // Every @media print block's body, brace-matched and concatenated.
 //
@@ -87,6 +88,9 @@ const SECTIONS = [
   'One pool widget, both modes',
   'The sheet body, three column stacks',
   'Presentation is a separate file',
+  'A power spends the pool its button says it spends',
+  'A permanent P.P.E. spend lowers the maximum wherever it is shown',
+  'A Talent earned at level-up can be chosen, then or later',
   'The wizard rail',
   'The GM dashboard',
   'The printed sheet',
@@ -614,6 +618,84 @@ export function run() {
     check('the PATCH clamp reads the spend', /SELECT[^']*ppe_base_spent[^']*FROM characters/.test(idSrc));
     check('and subtracts it from the P.P.E. maximum before clamping',
       /field === 'ppe_current'[\s\S]{0,200}max - \(Number\(current\?\.ppe_base_spent\)/.test(idSrc));
+  }
+
+  // A TALENT EARNED AT LEVEL-UP CAN BE CHOSEN, THERE OR LATER.
+  //
+  // BOOK-INGEST-AUDIT F76 banked Talent grants on a level-up and never put them on
+  // the proposal, and the sheet loaded no Talent catalog. So the free Talents at
+  // levels four, seven, ten and twelve banked with no picker, and the banked-picks
+  // panel - two-way, spell or else psionic - offered PSIONIC POWERS to spend them
+  // on, which the server then refused. Nothing could spend one.
+  //
+  // RUN, not matched: the three functions are cut out of sheet.js and executed
+  // against a stub `C`, because every earlier defect in this feature read correct
+  // as text.
+  section('A Talent earned at level-up can be chosen, then or later');
+  {
+    const cls = { talents: { talents_starting: 1, talents_schedule: [
+      { level: 4, count: 1 }, { level: 7, count: 1 }] } };
+    const prop = buildProposal({ level: 3, hp_max: null, sdc_max: null, skills: [] }, cls, 4);
+    check('the level-up proposal carries the Talent grant',
+      prop.talent_picks?.applicable === true && prop.talent_picks?.total === 1,
+      JSON.stringify(prop.talent_picks));
+
+    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const cut = (from, to) => {
+      const a = sheetSrc.indexOf(from), b = sheetSrc.indexOf(to, a);
+      return a >= 0 && b > a ? sheetSrc.slice(a, b) : '';
+    };
+    const src = cut('function powerPickerBlock(', '// Every power slot the level-up panel')
+      + cut('function pendingPowersPanel(', 'async function claimPowers(');
+    check('the sheet catalog load keeps the Talents', /C\.talentCatalog = catalogs\.talents/.test(sheetSrc));
+
+    const C = {
+      data: { campaign_system: 'nightbane', powers: [{ name: 'Held Talent', type: 'talent' }] },
+      cls, spellCatalog: [], psiCatalog: [{ name: 'Sixth Sense', category: 'Sensitive', system: null }],
+      talentCatalog: [
+        { name: 'Soul Shield', tier: 'common', system: 'nightbane', min_character_level: null },
+        { name: 'Fifth-Level Talent', tier: 'common', system: 'nightbane', min_character_level: 5 },
+        { name: 'Held Talent', tier: 'common', system: 'nightbane', min_character_level: null },
+        { name: 'Other System', tier: 'common', system: 'rifts', min_character_level: null },
+      ],
+      claimingPowers: true,
+      pendingPowers: [{ kind: 'talent', granted_at_level: 4, slot: 0, count: 1 }],
+      pendingPowersTotal: 1,
+    };
+    const esc = (s) => String(s ?? '');
+    let fns = null;
+    try {
+      fns = new Function('C', 'escHtml', 'globalThis',
+        `${src}\nreturn { powerPickerBlock, pendingPowersPanel };`)(C, esc, {});
+    } catch (e) {
+      check('the pickers run outside the page', false, e.message);
+    }
+    const options = (html) => [...html.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+
+    const up = fns ? fns.powerPickerBlock(prop) : '';
+    check('the level-up picker shows a Talents block', /Talents <span/.test(up), up.slice(0, 200));
+    check('and its select is tagged as a talent, so the server consumes the talent grant',
+      /data-kind="talent"/.test(up));
+    check('and it offers Talents - not psionic powers, not one already held, not another system',
+      JSON.stringify(options(up)) === '["Soul Shield"]', JSON.stringify(options(up)));
+
+    const banked = fns ? fns.pendingPowersPanel() : '';
+    check('the banked panel offers Talents for a banked Talent grant, not psionic powers',
+      JSON.stringify(options(banked)) === '["Soul Shield"]', JSON.stringify(options(banked)));
+    check('and tags it a talent too', /data-kind="talent"/.test(banked));
+
+    // The server refuses a Talent whose min_character_level is above the grant's
+    // level, so the picker must not offer one: a level-7 grant can have it.
+    C.pendingPowers = [{ kind: 'talent', granted_at_level: 7, slot: 0, count: 1 }];
+    const later = fns ? fns.pendingPowersPanel() : '';
+    check('a fifth-level Talent waits for a grant from level five or later',
+      JSON.stringify(options(later)) === '["Soul Shield","Fifth-Level Talent"]', JSON.stringify(options(later)));
+
+    // And nothing moved for the two kinds that already worked.
+    C.pendingPowers = [{ kind: 'psionic', granted_at_level: 4, slot: 0, count: 1, categories: null }];
+    const psi = fns ? fns.pendingPowersPanel() : '';
+    check('a banked psionic grant still offers psionic powers',
+      JSON.stringify(options(psi)) === '["Sixth Sense"]', JSON.stringify(options(psi)));
   }
 
   section('The wizard rail');

@@ -8225,8 +8225,14 @@ section('Power grants');
   check('the wizard hands a psionic grant\'s list to its pool', /advPsiPool\(cats, g\.from\)/.test(appSrc));
   check('and the pool offers only the list when there is one',
     /function advPsiPool\(cats = null, from = null\)/.test(appSrc));
+  // Counted INSIDE each picker. This counted the whole file, and a third reader
+  // of `g.from` - talentPoolFor, shared by both pickers for a Talent grant - made
+  // the count three while both pickers were still right.
+  const between = (a, b) => sheetSrc.slice(sheetSrc.indexOf(a), sheetSrc.indexOf(b, sheetSrc.indexOf(a)));
+  const readsList = (body) => /const named = Array\.isArray\(g\.from\) && g\.from\.length/.test(body);
   check('both sheet pickers read a list for psionic grants as well as spells',
-    (sheetSrc.match(/const named = Array\.isArray\(g\.from\) && g\.from\.length/g) || []).length === 2);
+    readsList(between('function powerKindBlock(', 'function psiCategoryCap('))
+    && readsList(between('function pendingPowersPanel(', 'async function claimPowers(')));
 
   // Banking consumes per grant, not from one pool. Spending both level-4 spells
   // must not leave the level-5 grant looking half spent.
