@@ -367,14 +367,18 @@ export async function loadPowerDescriptions(env, powers) {
   // type to the spell table, so a super ability would have been looked up where
   // it cannot be and its description silently dropped - and a description that
   // is merely absent is indistinguishable from a catalog row that has none.
-  const CATALOG_OF = { psionic: 'psionics', super: 'superAbilities', spell: 'spells' };
+  //
+  // And then it did the same to a TALENT, which the map did not name when
+  // BOOK-INGEST-AUDIT F76 added the kind: a Talent's description was looked up in
+  // `spells`, found nothing, and the sheet showed none.
+  const CATALOG_OF = { psionic: 'psionics', super: 'superAbilities', spell: 'spells', talent: 'talents' };
   for (const p of list) {
     const name = String(p?.name ?? '').trim();
     if (name) wanted.set(name.toLowerCase(), CATALOG_OF[p?.type] || 'spells');
   }
 
   for (const [catalogKey, table] of [['spells', 'spells'], ['psionics', 'psionic_powers'],
-                                     ['superAbilities', 'super_abilities']]) {
+                                     ['superAbilities', 'super_abilities'], ['talents', 'talents']]) {
     const names = [...wanted].filter(([, k]) => k === catalogKey).map(([n]) => n);
     if (!names.length) continue;
 

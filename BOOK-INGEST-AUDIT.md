@@ -11560,6 +11560,56 @@ class and no banked Talent picks, counted `--remote` 2026-09-16.
 in more than one place, with one answer missing a kind.** The use button's pool,
 a spent pick's key, and now which kinds a level-up offers.
 
+**Adjusted a fourth time, 2026-09-16 (PR #1095). A character holding a chosen
+Talent could not be created - the validator threw and the create route answered
+500 - and a held Talent's description never reached the sheet.** Found while
+wiring F101's purchased Talents into the same validator, and the second by
+sweeping for the same shape.
+
+**The crash.** `validate-character.js` loops over its power `KINDS` and, once a
+power catalog is loaded, reads a per-kind set of listed names. This finding added
+`'talent'` to `KINDS`, but that set was a literal of three - `{ spell, psionic,
+super }` - so `listNames.talent.has(...)` read off `undefined` and threw
+`TypeError: Cannot read properties of undefined (reading 'has')`. The create
+route always loads the catalog when the character names a power.
+
+**Measured, not reasoned to**, on a local server on its own port 2026-09-16:
+POSTing a Nightbane holding Soul Shield to the create route answered **500**, and
+the dev log printed that `TypeError`. The same request with the fix answered
+**201**.
+
+**So this finding's Talent level gate had never run.** The `power_min_level`
+violation sits below the line that threw. It runs now: Anti-Arcane at level one
+raises `power_min_level`, and at level five raises nothing. **No test anywhere
+had validated a character holding a Talent** - `power_min_level` appeared in no
+test file before this.
+
+**The description.** `loadPowerDescriptions` maps a held power's type to its
+catalog with `{ psionic, super, spell }`, falling back to `spells`. A Talent fell
+through, was looked up in `spells`, matched nothing, and the sheet showed no
+description, though `talents.description` exists (migration 063). Run against
+`schema.sql` in memory: before the fix a held Soul Shield came back with no
+description beside a spell that did.
+
+**Both fixes remove the hand-written list rather than extend it where that was
+possible**: the validator's sets are derived from `KINDS`, so a fifth kind cannot
+miss one; the description map names `talent` and reads the `talents` table.
+Pinned by running the real functions - the four validator checks all fail
+against the shipped code, each printing the `TypeError`, and the description
+check fails with the spell still found.
+
+**The sweep that found the second**: every object literal keyed `psionic:` in
+`functions/` and the app's scripts, and every two-way `=== 'psionic' ?` /
+`=== 'spell' ?` ternary, 2026-09-16. The rest already carry `talent` or do not
+choose between kinds.
+
+**Nothing reached a player.** Production holds no `talents` rows and no Nightbane
+class, counted `--remote` 2026-09-16.
+
+**Five defects now across this finding's shipped work, and all five are one
+shape**: a list of kinds written out in one more place, missing the kind this
+finding added.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a

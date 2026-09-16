@@ -640,7 +640,7 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          grantNote, startingPicksFor, startingGroups, spellTraditionAllowed, talentGrantsFor,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
-import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks } from '../../../functions/api/character-creator/_lib/power-picks.js';
+import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks, loadPowerDescriptions } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
          stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
@@ -2869,6 +2869,61 @@ section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
     outOfRange(as('Earth', 'Air'), 50).length === 0
     && outOfRange(as('Earth', 'Air'), 200).some((x) => x.field === 'mdc_max'),
     JSON.stringify(outOfRange(as('Earth', 'Air'), 200)));
+}
+
+section('A character holding a Talent can be validated');
+{
+  // The validator's per-kind list sets were a literal of THREE -
+  // { spell, psionic, super } - when BOOK-INGEST-AUDIT F76 added 'talent' to the
+  // kinds it loops over. So `listNames.talent.has` read off undefined and THREW
+  // for any character holding a chosen Talent once a power catalog was loaded,
+  // which the create route always loads when the character names a power: a
+  // Nightbane with a Talent could not be saved, and the route answered 500.
+  //
+  // It also meant F76's Talent level gate below it had never once run.
+  const cls = { talents: { talents_starting: 1, talents_schedule: [{ level: 4, count: 1 }] } };
+  const row = (name, min) => ({ name, tier: 'common', acquire_ppe: 6, ppe: 4,
+    system: 'nightbane', min_character_level: min });
+  const powerCatalog = { spell: new Map(), psionic: new Map(), super: new Map(),
+    talent: new Map([['soul shield', row('Soul Shield', null)], ['anti-arcane', row('Anti-Arcane', 5)]]) };
+  const run = (powers, level = 1) => {
+    try {
+      return validateCharacter({ character: { level }, cls, skills: [], abilities: [], attributes: {},
+        catalog: null, powers, pools: {}, system: 'nightbane', powerCatalog }).violations.map((v) => v.rule);
+    } catch (e) { return 'THREW: ' + e.message; }
+  };
+  const ok = run([{ type: 'talent', name: 'Soul Shield' }]);
+  check('a character holding a Talent validates without throwing', Array.isArray(ok), String(ok));
+  check('and a legal one raises nothing', Array.isArray(ok) && ok.length === 0, JSON.stringify(ok));
+  const early = run([{ type: 'talent', name: 'Anti-Arcane' }]);
+  check('a fifth-level Talent at level one is refused by its level gate',
+    Array.isArray(early) && early.includes('power_min_level'), JSON.stringify(early));
+  check('and is allowed at level five', JSON.stringify(run([{ type: 'talent', name: 'Anti-Arcane' }], 5)) === '[]',
+    JSON.stringify(run([{ type: 'talent', name: 'Anti-Arcane' }], 5)));
+}
+
+section('A held Talent brings its description to the sheet');
+{
+  // loadPowerDescriptions maps a power's type to its catalog, and the map named
+  // spell, psionic and super. A Talent fell through to `spells`, matched nothing,
+  // and the sheet showed no description - the same missing-kind shape as the
+  // validator's list sets above. Run against schema.sql in memory.
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'));
+  mem.prepare('INSERT INTO talents (name, tier, acquire_ppe, ppe, system, description) VALUES (?,?,?,?,?,?)')
+    .run('Soul Shield', 'common', 6, 4, 'nightbane', 'A shield of dark energy.');
+  mem.prepare('INSERT INTO spells (name, level, ppe, description) VALUES (?,?,?,?)')
+    .run('Blinding Flash', 1, 1, 'A flash of light.');
+  const env = { DB: { prepare: (sql) => ({
+    bind: (...b) => ({ all: async () => ({ results: mem.prepare(sql).all(...b) }) }),
+    all: async () => ({ results: mem.prepare(sql).all() }),
+  }) } };
+  const out = await loadPowerDescriptions(env, [
+    { type: 'talent', name: 'Soul Shield' }, { type: 'spell', name: 'Blinding Flash' }]);
+  mem.close();
+  check('a Talent held on the sheet gets its description', out['soul shield'] === 'A shield of dark energy.',
+    JSON.stringify(out));
+  check('and a spell still gets its own', out['blinding flash'] === 'A flash of light.', JSON.stringify(out));
 }
 
 section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
