@@ -387,6 +387,30 @@ super_abilities:                # Heroes Unlimited's fifth power kind, granted
   # tradition, a category and a name list - there is nowhere to put a tier, so
   # a banked super-ability grant would come back ungated. BOOK-INGEST-AUDIT F81
   # is a neighbouring finding; the reasoning is in js/leveling.js.
+talents:                        # Nightbane Talents, the ninth catalog. The
+                                # only power here that costs something to HAVE
+                                # as well as to USE - both costs are on the
+                                # catalog row, not on the grant.
+  talents_starting: 1           # the book gives ONE free at first level
+  tiers_allowed: ["common"]     # common | elite - a CLOSED set of two. Elite
+                                # Talents are gated on the character's Morphus,
+                                # which is not modelled, so a class that offers
+                                # them says so here. Omit to allow both.
+  talents: ["Shadow Shield"]    # granted outright, not picked
+  talents_from: ["Doorway", ...]  # the exact list to pick FROM; REPLACES the
+                                  # tier gate, as abilities_from does
+  talents_starting_groups:      # when the level-1 pick splits by tier
+    - { count: 1, tiers: ["common"] }
+  # UNLIKE super abilities, A SCHEDULE IS SUPPORTED, and the difference is
+  # storage rather than taste. Printed 106 gives one free Talent at first
+  # level and one more at levels four, seven, ten and twelve. A banked talent
+  # grant needs NO restriction column - the gate is the catalog row's own
+  # min_character_level and prerequisite, checked when the pick is spent - so
+  # migration 064 widened the `kind` CHECK and added no column.
+  talents_schedule:
+    - { level: 4, count: 1 }
+    - { level: 7, count: 1 }
+  talents_per_level: 1          # or a flat one every level, if a book says so
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
   # An ability the player CHOOSES may carry what it grants, and may be

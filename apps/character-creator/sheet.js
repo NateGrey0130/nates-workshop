@@ -1825,8 +1825,12 @@ function render() {
   // sorted among the psionics and printed under a Psionics heading with an
   // I.S.P. column it has no cost for. Ordered rather than tested: spells first
   // by level, then psionics by category, then super abilities by tier.
-  const KIND_ORDER = { spell: 0, psionic: 1, super: 2 };
-  const kindOf = (x) => (x.type === 'spell' ? 'spell' : x.type === 'super' ? 'super' : 'psionic');
+  const KIND_ORDER = { spell: 0, psionic: 1, super: 2, talent: 3 };
+  // NAMED, not left to the trailing 'psionic'. That fallback is what would
+  // have filed a Talent among the psionics under an I.S.P. column it does not
+  // spend - the exact failure the comment above records for super abilities.
+  const kindOf = (x) => (x.type === 'spell' ? 'spell' : x.type === 'super' ? 'super'
+    : x.type === 'talent' ? 'talent' : 'psionic');
   const powerView = powers.map((p, i) => ({ p, i })).sort((a, b) => {
     const A = a.p, B = b.p;
     const ka = kindOf(A), kb = kindOf(B);
@@ -1851,16 +1855,23 @@ function render() {
     // `cost` is therefore null on every one of them, the cost cell prints the
     // em-dash it already prints for a costless power, and the use button below
     // never renders - it is gated on `cost != null`.
-    const pool = kind === 'spell' ? 'ppe' : kind === 'super' ? null : 'isp';
+    // A TALENT SPENDS P.P.E., like a spell and unlike a super ability, so its
+    // use button renders and deducts from the same pool a caster uses. The
+    // permanent acquisition cost is NOT spent here: it was paid when the
+    // Talent was acquired, and `acquire_cost` rides on the row so the sheet
+    // can say what it cost rather than charge it again.
+    const pool = kind === 'spell' || kind === 'talent' ? 'ppe' : kind === 'super' ? null : 'isp';
     const cost = typeof p.cost === 'number' ? p.cost : null;
     // The group heading carries what the per-row "spell · L3" label used to.
-    const TIER_LABEL = { minor: 'Minor', major: 'Major' };
+    const TIER_LABEL = { minor: 'Minor', major: 'Major', common: 'Common', elite: 'Elite' };
     const group = kind === 'spell'
       ? (p.level != null ? `Spells — Level ${p.level}` : 'Spells — Unleveled')
       : kind === 'super'
         ? (p.category ? `Super abilities — ${TIER_LABEL[p.category] || p.category}`
                       : 'Super abilities')
-        : (p.category ? `Psionics — ${p.category}` : 'Psionics');
+        : kind === 'talent'
+          ? (p.category ? `Talents — ${TIER_LABEL[p.category] || p.category}` : 'Talents')
+          : (p.category ? `Psionics — ${p.category}` : 'Psionics');
     const head = group !== lastPowerGroup ? `<div class="power-group">${escHtml(group)}</div>` : '';
     lastPowerGroup = group;
     // Offered only when the pool can pay for it. shared/styles.css already dims
@@ -1898,6 +1909,8 @@ function render() {
     // the pool by hand for bigger spends, as at a real table.
     return head + `<div class="power-row">
       <span>${nameCell}
+        ${Number.isFinite(p.acquire_cost)
+          ? `<span class="muted small">— ${p.acquire_cost} P.P.E. spent permanently to acquire</span>` : ''}
         ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
       <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
       ${useBtn}
@@ -2282,7 +2295,7 @@ function render() {
   </section>
 
   <section class="tabpanel${C.tab === 'powers' ? ' on' : ''}" data-tab="powers">
-    ${box(powers.some((x) => x.type === 'super') ? 'Powers' : 'Psionics &amp; Magic', (powers.length
+    ${box(powers.some((x) => x.type === 'super' || x.type === 'talent') ? 'Powers' : 'Psionics &amp; Magic', (powers.length
       ? powerRows
       : '<p class="muted small">None.</p>')
       // The held powers carry their own text; everything this character does

@@ -435,6 +435,15 @@ const STARTING_SPEC = {
            groups: 'abilities_starting_groups', from: 'abilities_from',
            gate: 'tiers_allowed', gateKey: 'tiers', granted: 'abilities',
            schedule: 'abilities_schedule', lists: null },
+  // Nightbane Talents. The gate is the TIER for the same reason it is on a
+  // super ability - common against elite - but unlike that one, `schedule` is
+  // REAL here: the book's free Talents arrive at levels four, seven, ten and
+  // twelve, so `talentGrantsFor` below reads it and `startingPicksFor` counts
+  // a level-1 entry as misfiled exactly as it does for a spell.
+  talent: { block: 'talents', count: 'talents_starting',
+            groups: 'talents_starting_groups', from: 'talents_from',
+            gate: 'tiers_allowed', gateKey: 'tiers', granted: 'talents',
+            schedule: 'talents_schedule', lists: null },
 };
 
 const nonEmpty = (v) => (Array.isArray(v) && v.length ? v : null);
@@ -453,7 +462,7 @@ export function startingGroups(cls, kind) {
     count,
     spell_levels: kind === 'spell' ? (from ? null : gate) : null,
     categories: kind === 'psionic' ? (from ? null : gate) : null,
-    tiers: kind === 'super' ? (from ? null : gate) : null,
+    tiers: (kind === 'super' || kind === 'talent') ? (from ? null : gate) : null,
     traditions: blockTraditions,
     from,
     ...(note ? { note } : {}),
@@ -583,6 +592,22 @@ export function spellGrantsFor(cls, fromLevel, toLevel) {
 
 export function psionicGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.psionics, 'powers_per_level', 'powers_schedule', fromLevel, toLevel);
+}
+
+// Nightbane Talents gained on the way up. The book's rule, printed 106: one
+// Talent free at first level and one more at levels four, seven, ten and
+// twelve - so the schedule form is the normal case here and the flat
+// `talents_per_level` exists only for a class that grants one every level.
+//
+// THIS EXISTS WHERE superAbilityGrantsFor DELIBERATELY DOES NOT, and the
+// difference is storage. A banked super-ability grant needs a TIER column
+// `pending_power_picks` has not got. A banked talent grant needs no
+// restriction column at all: the free Talents arrive ungated, and what limits
+// the pick is the catalog row's own `min_character_level` and `prerequisite`,
+// checked when it is spent. Migration 064 widened the `kind` CHECK and added
+// no column, which is the whole reason this one is wirable and that one is not.
+export function talentGrantsFor(cls, fromLevel, toLevel) {
+  return perLevelGrants(cls?.talents, 'talents_per_level', 'talents_schedule', fromLevel, toLevel);
 }
 
 // THERE IS NO superAbilityGrantsFor, AND THAT IS A DECISION. Super abilities are

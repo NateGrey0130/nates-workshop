@@ -542,7 +542,7 @@ import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
-         grantNote, startingPicksFor, startingGroups, spellTraditionAllowed,
+         grantNote, startingPicksFor, startingGroups, spellTraditionAllowed, talentGrantsFor,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
@@ -2774,6 +2774,81 @@ section('Mega-damage conversion from a chosen ability (BOOK-INGEST-AUDIT F64)');
     outOfRange(as('Earth', 'Air'), 50).length === 0
     && outOfRange(as('Earth', 'Air'), 200).some((x) => x.field === 'mdc_max'),
     JSON.stringify(outOfRange(as('Earth', 'Air'), 200)));
+}
+
+section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
+{
+  // The book's own rule, printed 106 under "Acquiring Talents": one Talent free
+  // at first level, and one more at levels four, seven, ten and twelve. That is
+  // a LEVEL SCHEDULE, which is what separates this from super abilities - the
+  // Revised core grants every super ability at creation and js/leveling.js
+  // refuses a per-level one because a banked grant would need a TIER column.
+  const md = (...extra) => parseClassMarkdown(['---', 'id: nb', 'name: Nightbane',
+    'system: nightbane', 'source_book: Nightbane RPG p.106', 'category: rcc',
+    'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"',
+    'talents:', ...extra, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+
+  const nb = md('  talents_starting: 1', '  tiers_allowed: ["common"]',
+    '  talents_schedule:', '    - { level: 4, count: 1 }', '    - { level: 7, count: 1 }',
+    '    - { level: 10, count: 1 }', '    - { level: 12, count: 1 }');
+  check('a talents block parses with a schedule', nb.ok, nb.errors.join('; '));
+  check('and warns about nothing', nb.warnings.length === 0, nb.warnings.join('; '));
+
+  const start = startingPicksFor(nb.data, 'talent');
+  check('one free Talent at creation, gated to the common tier',
+    start.total === 1 && start.groups.length === 1
+    && String(start.groups[0].tiers) === 'common', JSON.stringify(start));
+
+  const at = (from, to) => talentGrantsFor(nb.data, from, to).grants.map((g) => g.level).join(',');
+  check('the free Talents arrive at 4, 7, 10 and 12', at(1, 12) === '4,7,10,12', at(1, 12));
+  check('and a climb collects only the thresholds it passed', at(1, 5) === '4'
+    && at(4, 10) === '7,10' && at(12, 15) === '', `${at(1, 5)} / ${at(4, 10)} / ${at(12, 15)}`);
+
+  // The grant carries NO restriction, which is the whole reason the CHECK could
+  // be widened without a new column. A talent grant that came back with
+  // categories or a spell cap would be one this table cannot store.
+  const banked = powerGrantsFor(nb.data, 1, 7).filter((g) => g.kind === 'talent');
+  check('two talent grants bank between levels 1 and 7', banked.length === 2);
+  check('and every restriction column on them is null',
+    banked.every((g) => g.spell_levels === null && g.categories === null
+      && g.traditions === null && g.from === null), JSON.stringify(banked));
+
+  // A per-level grant is REFUSED for super abilities and ALLOWED here, and the
+  // asymmetry is deliberate - storage, not taste. Pinned so that refusal cannot
+  // quietly be copied onto talents by someone tidying.
+  const superPerLevel = parseClassMarkdown(['---', 'id: s', 'name: S', 'system: heroes-unlimited',
+    'source_book: b', 'category: rcc', 'hit_points_base: "P.E. + 1D6 per level"',
+    'sdc_base: "3D6"', 'super_abilities:', '  abilities_per_level: 1',
+    '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  check('a super ability still refuses a per-level grant',
+    superPerLevel.errors.some((e) => /abilities_per_level is not supported/.test(e)),
+    superPerLevel.errors.join('; '));
+
+  // Validation of the block itself.
+  const bad = md('  talents_starting: 1', '  tiers_allowed: ["major"]');
+  check('a tier the book does not print is refused',
+    bad.errors.some((e) => /tiers_allowed must be common or elite/.test(e)), bad.errors.join('; '));
+  const badSched = md('  talents_schedule:', '    - { level: 0, count: 1 }');
+  check('a schedule entry below level 1 is refused',
+    badSched.errors.some((e) => /talents_schedule entries need a whole level/.test(e)));
+  const empty = md('  tiers_allowed: ["common"]');
+  check('a block that grants nothing warns rather than storing silently',
+    empty.warnings.some((w) => /grants no talents/.test(w)), empty.warnings.join('; '));
+
+  // combineClasses: a race and an occupation that BOTH state talents ADD, the
+  // way super abilities do - F14's lesson, which cost the catalog a whole magic
+  // block when the fold was `occ.magic || rcc.magic`.
+  const rcc = md('  talents_starting: 1', '  talents_schedule:', '    - { level: 4, count: 1 }').data;
+  const occ = parseClassMarkdown(['---', 'id: o', 'name: O', 'system: nightbane',
+    'source_book: b', 'category: occ', 'hit_points_base: "P.E. + 1D6 per level"',
+    'sdc_base: "3D6"', 'talents:', '  talents_starting: 2', '  talents_schedule:',
+    '    - { level: 4, count: 1 }', '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10))).data;
+  const both = combineClasses(rcc, occ);
+  check('two talent blocks ADD their starting picks', both.talents.talents_starting === 3,
+    JSON.stringify(both.talents));
+  check('and their schedules CONCATENATE rather than dedupe, so level 4 grants two',
+    talentGrantsFor(both, 1, 4).grants.reduce((n, g) => n + g.count, 0) === 2,
+    JSON.stringify(talentGrantsFor(both, 1, 4).grants));
 }
 
 section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
@@ -5116,8 +5191,13 @@ section('Chosen ability fragments');
   check('a class with fragments parses cleanly', parsed.errors.length === 0, parsed.errors.join('; '));
   const cls = parsed.data;
 
-  check('the grant keys are the four an ability may carry',
-    ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic,super_abilities');
+  // FIVE since BOOK-INGEST-AUDIT F76 (migration 063). Pinned as a LIST rather
+  // than a count, because the value of this check is that a key cannot be
+  // added without someone reading applyAbilities - which is where a grant that
+  // parses and is never folded in comes from.
+  check('the grant keys are the five an ability may carry',
+    ABILITY_GRANTS.join(',') === 'bonuses,psionics,magic,super_abilities,talents',
+    ABILITY_GRANTS.join(','));
 
   // occ_options: an ability that names occupations (the Godling's Magic
   // Powers) turns its pick into a required occupation choice.

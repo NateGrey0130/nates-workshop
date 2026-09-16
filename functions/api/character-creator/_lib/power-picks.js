@@ -17,7 +17,8 @@ import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         spellGrantsFor, psionicGrantsFor, spellTraditionsAllowed, spellTraditionAllowed } from './leveling.js';
+         spellGrantsFor, psionicGrantsFor, talentGrantsFor, spellTraditionsAllowed,
+         spellTraditionAllowed } from './leveling.js';
 
 export async function listPendingPowers(env, characterId) {
   // No catch here. An earlier version swallowed failures into an empty list to
@@ -96,6 +97,22 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
                  note: grantNote(cls, 'psionic', g.level, g.slot) });
     }
   }
+  // Nightbane Talents. EVERY RESTRICTION COLUMN IS NULL, and that is the shape
+  // rather than an omission: the book's free Talents arrive ungated - "one
+  // additional free ability at levels four, seven, ten and twelve", printed
+  // 106 - and what limits the pick is the catalog row's own
+  // `min_character_level` and `prerequisite`, checked in resolvePowerPicks
+  // when it is spent. A named list on the entry still rides along, because a
+  // class MAY hand out a specific Talent and that is a real restriction.
+  const talents = talentGrantsFor(cls, fromLevel, toLevel);
+  if (talents.applicable && !talents.unknown) {
+    for (const g of talents.grants) {
+      const from = Array.isArray(g.from) && g.from.length ? g.from.map(String) : null;
+      out.push({ ...g, kind: 'talent', spell_levels: null, traditions: null,
+                 categories: null, from,
+                 note: grantNote(cls, 'talent', g.level, g.slot) });
+    }
+  }
   return out;
 }
 
@@ -134,7 +151,13 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 
   for (const pick of picks) {
     const name = String(pick?.name || '').trim();
-    const kind = pick?.kind === 'psionic' ? 'psionic' : 'spell';
+    // THREE-WAY, and it used to be two. The old line read
+    // `pick?.kind === 'psionic' ? 'psionic' : 'spell'`, which coerces anything
+    // unrecognised to a spell - so a talent pick would have been looked up in
+    // the spell catalog and refused as "not in the spell catalog", naming the
+    // wrong catalog for a row that exists.
+    const kind = pick?.kind === 'psionic' ? 'psionic'
+      : pick?.kind === 'talent' ? 'talent' : 'spell';
     const level = Number(pick?.granted_at_level);
     const slot = Number.isFinite(Number(pick?.slot)) ? Number(pick.slot) : 0;
     if (!name) { errors.push('A pick has no name'); continue; }
@@ -179,6 +202,29 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
         errors.push(`${name} is ${row.tradition} magic; the level ${level} grant does not draw from that tradition`);
         continue;
       }
+    } else if (kind === 'talent') {
+      // THE ONLY MECHANICAL GATE ON A TALENT, and it lives on the ROW rather
+      // than on the grant: the book's free Talents arrive ungated and it is the
+      // Talent itself that says "Not available until the character has reached
+      // fifth level". Ten of the core book's 25 say so.
+      //
+      // Compared against the level the GRANT is from, which is the level the
+      // character reaches - so a level-4 grant cannot buy a fifth-level Talent
+      // and a level-7 grant can.
+      if (Number.isFinite(row.min_character_level) && level < row.min_character_level) {
+        errors.push(`${name} is not available until level ${row.min_character_level}; `
+          + `this grant is from level ${level}`);
+        continue;
+      }
+      // `prerequisite` IS DELIBERATELY NOT ENFORCED. It is free text holding two
+      // unlike things - a Morphus characteristic ("At least one biomechanical
+      // characteristic") on four of the five that have one, and another TALENT
+      // on the fifth, Mirror Search requiring Mirror Sight. Matching the second
+      // by name would be a rule that reads prose, which is the shape
+      // BOOK-INGEST-AUDIT F4 records missing one of three language picks; and
+      // nothing can check the first at all, because a Morphus is not modelled.
+      // So it travels to the sheet and the table decides, which is what the
+      // `note` column on a banked grant exists to do for the same reason.
     } else {
       // A psionic grant may name its own categories, and when it does they
       // REPLACE the class's rather than narrowing them - a Mystic's level-4
@@ -198,9 +244,21 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 
     room.set(k, room.get(k) - 1);
     held.add(name.toLowerCase());
+    // A TALENT CARRIES BOTH COSTS, which is the whole reason it has its own
+    // table: `cost` is what an activation spends, the same field a spell and a
+    // psionic power use so the sheet renders all three alike, and
+    // `acquire_cost` is the permanent expenditure that bought it. Dropping the
+    // second here would lose the number migration 063 was written for.
     chosen.push(kind === 'spell'
       ? { type: 'spell', name: row.name, level: row.level, cost: row.ppe,
           ...(row.ppe_note ? { cost_note: row.ppe_note } : {}), gained_at_level: level, slot }
+      : kind === 'talent'
+      ? { type: 'talent', name: row.name, tier: row.tier, cost: row.ppe,
+          acquire_cost: row.acquire_ppe,
+          ...(row.ppe_note ? { cost_note: row.ppe_note } : {}),
+          ...(row.form_required ? { form_required: row.form_required } : {}),
+          ...(row.prerequisite ? { prerequisite: row.prerequisite } : {}),
+          gained_at_level: level, slot }
       : { type: 'psionic', name: row.name, category: row.category, cost: row.isp,
           ...(row.isp_note ? { cost_note: row.isp_note } : {}), gained_at_level: level, slot });
   }
@@ -215,7 +273,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
 // filters per character instead — the audit validates characters from several
 // campaigns against one load. Rows keep their `system` column either way.
 export async function loadPowerCatalog(env, names, system) {
-  const empty = { spell: new Map(), psionic: new Map(), super: new Map() };
+  const empty = { spell: new Map(), psionic: new Map(), super: new Map(), talent: new Map() };
   if (!names.length) return empty;
   // Chunked: D1 binds at most 100 parameters per statement, and a high-level
   // caster holds more than a hundred spells - which is exactly the character
@@ -223,12 +281,13 @@ export async function loadPowerCatalog(env, names, system) {
   const spells = [];
   const psionics = [];
   const supers = [];
+  const talents = [];
   for (const batch of chunks(names)) {
     const placeholders = batch.map(() => '?').join(', ');
     // NO `description` on the super-ability row, for the reason the block
     // comment above gives about the other two: the descriptions are 994KB
     // across 364 rows and the validator needs a name and a tier.
-    const [s, p, a] = await env.DB.batch([
+    const [s, p, a, t] = await env.DB.batch([
       env.DB.prepare(
         `SELECT name, level, ppe, ppe_note, system, tradition FROM spells WHERE name COLLATE NOCASE IN (${placeholders})`
       ).bind(...batch),
@@ -238,16 +297,27 @@ export async function loadPowerCatalog(env, names, system) {
       env.DB.prepare(
         `SELECT name, tier, system FROM super_abilities WHERE name COLLATE NOCASE IN (${placeholders})`
       ).bind(...batch),
+      // BOTH costs and the level gate, which is what separates a Talent from
+      // everything above it. `min_character_level` is enforced below;
+      // `prerequisite` is carried so the sheet can show it and is NOT
+      // enforced - see the note in resolvePowerPicks.
+      env.DB.prepare(
+        `SELECT name, tier, acquire_ppe, ppe, ppe_note, min_character_level,
+                form_required, prerequisite, system
+           FROM talents WHERE name COLLATE NOCASE IN (${placeholders})`
+      ).bind(...batch),
     ]);
     if (s.results?.length) spells.push(...s.results);
     if (p.results?.length) psionics.push(...p.results);
     if (a.results?.length) supers.push(...a.results);
+    if (t.results?.length) talents.push(...t.results);
   }
   // A NULL system is unrestricted, which is how every picker already reads it.
   const keep = (r) => !system || !r.system || r.system === system;
   for (const r of spells.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
   for (const r of psionics.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
   for (const r of supers.filter(keep)) empty.super.set(r.name.toLowerCase(), r);
+  for (const r of talents.filter(keep)) empty.talent.set(r.name.toLowerCase(), r);
   return empty;
 }
 

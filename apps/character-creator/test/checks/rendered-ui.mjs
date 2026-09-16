@@ -351,6 +351,24 @@ export function run() {
     // Titles come from box('...') calls; the name header is a template literal
     // and is deliberately unplaced, so only quoted titles are required to map.
     const titles = [...src.matchAll(/\bbox\('([^']+)'/g)].map((m) => m[1]);
+    // THE POWERS BOX IS NOT IN THAT SWEEP, and that is why this section passed
+    // while a box went unplaced. It chooses its title with a ternary -
+    // `box(cond ? 'Powers' : 'Psionics &amp; Magic', ...)` - so its first
+    // argument is not a plain literal and the pattern above sees neither side.
+    // `psionics-magic` was mapped and `powers` was not.
+    //
+    // An unplaced box is not merely misplaced. `placeable` recurses PAST it to
+    // the leaves and files each leaf into a column separately, which destroys
+    // every `.power-row` wrapper inside it and drops the name of any power whose
+    // name is bare text rather than a description button. Seen on a real sheet,
+    // not predicted: 267 "no column for" warnings and no power names at all.
+    // BOOK-INGEST-AUDIT F76.
+    //
+    // Both slugs are named rather than derived, because deriving them is what
+    // failed: three attempts at a general pattern either missed the ternary or
+    // scraped `field()` labels out of a neighbouring one. A narrow check that
+    // runs beats a general one that cries wolf.
+    titles.push('Powers', 'Psionics &amp; Magic');
     const slug = (t) => t.replace(/<[^>]*>/g, '').replace(/&amp;/g, ' ')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const unplaced = titles.map(slug).filter((s) => !assigned.includes(s));

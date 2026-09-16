@@ -77,6 +77,13 @@ export const KNOWN_KEYS = new Set([
   // startingGroups in js/leveling.js, the wizard's Powers step, the create
   // validator and the sheet.
   'super_abilities',
+  // Nightbane Talents, the NINTH catalog (migration 063, BOOK-INGEST-AUDIT
+  // F76). The only power here that costs something to HAVE as well as to USE,
+  // which is why it is neither a spell nor a psionic power. Read by
+  // combineClasses and applyAbilities in js/parser.js, startingGroups and
+  // talentGrantsFor in js/leveling.js, the wizard's Powers step, the create
+  // validator and the sheet.
+  'talents',
   // A Horror Factor the character PROJECTS, as a number or as the phrase the
   // book prints. Modelled in js/parser.js - validated there, carried by
   // combineClasses, overridable by a variant - and rendered by sheet.js beside

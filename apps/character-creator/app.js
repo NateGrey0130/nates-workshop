@@ -110,6 +110,7 @@ const S = {
   // grants abilities splits them by tier. It exists so the three kinds stay the
   // same shape and `powerList` needs no special case.
   supers: [],
+  talents: [],
   // Step 3. psiRoll is {roll, tier} once rolled — null means not yet rolled,
   // and a tier of null is a real result (26-00, no psionics) rather than an
   // absence, so the two must stay distinguishable.
@@ -142,13 +143,13 @@ const S = {
   // levelPsi is keyed by grant index for the same reason levelSpells is: a
   // psionic grant can name its own CATEGORIES, and the Mystic's level-4 power
   // comes from Super while its starting ones came from Sensitive and Healing.
-  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {}, levelSupers: {},
+  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {}, levelSupers: {}, levelTalents: {},
   // The level-1 picks when the class SPLITS them across restrictions - the
   // Delphi Juicer's "3 Physical + 1 Super". Keyed by group index for the same
   // reason levelSpells is, and separate from the flat `spells`/`psi` on
   // purpose: a class with one starting group keeps writing into those, so no
   // draft saved before this existed changes shape.
-  spellGroups: {}, psiGroups: {}, superGroups: {},
+  spellGroups: {}, psiGroups: {}, superGroups: {}, talentGroups: {},
   // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
   // roll missed. Kept so the assist is visible as one rather than presented as
   // what the dice said first — posted as play events once the character exists.
@@ -165,6 +166,7 @@ const S = {
   // resuming a build should not resume half a search.
   gearFilter: '', relatedFilter: '', secondaryFilter: '', spellFilter: '', psiFilter: '',
   superFilter: '',
+  talentFilter: '',
   classFilter: '',
 };
 
@@ -868,7 +870,7 @@ function wirePickers() {
   for (const [id, key] of [['class-filter', 'classFilter'],
     ['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
     ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter'],
-    ['super-filter', 'superFilter']]) {
+    ['super-filter', 'superFilter'], ['talent-filter', 'talentFilter']]) {
     Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
   }
 
@@ -881,7 +883,8 @@ function wirePickers() {
   // in one box filters every group of that kind, which is what a single
   // `S.psiFilter` meant all along.
   for (const [prefix, key] of [['spell-filter-', 'spellFilter'],
-    ['psi-filter-', 'psiFilter'], ['super-filter-', 'superFilter']]) {
+    ['psi-filter-', 'psiFilter'], ['super-filter-', 'superFilter'],
+    ['talent-filter-', 'talentFilter']]) {
     for (const el of document.querySelectorAll(`[id^="${prefix}"]`)) {
       Picker.wire(el.id, { onInput: (v) => { S[key] = v; render(); } });
     }
@@ -3524,6 +3527,98 @@ function superGroupRows(list, count, kind = 'super', gi = null) {
   }).join('');
 }
 
+// The same rows for a Nightbane Talent. Grouped by TIER - common against elite
+// - and the right-hand column carries BOTH COSTS, which is the one thing this
+// picker must not do the way the other three do. A Talent is bought with a
+// permanent P.P.E. expenditure and paid for again every activation, so a
+// picker showing one number would be showing the wrong one: `15 + 20` reads
+// as fifteen to acquire, twenty to use.
+//
+// A Talent the character is too low to take is shown DISABLED with the level
+// it needs, rather than hidden. Ten of the core book's 25 are level-gated, and
+// hiding them would make the list change size as a character grows with no
+// explanation on screen.
+function talentGroupRows(list, count, kind = 'talent', gi = null, atLevel = 1) {
+  const sorted = [...list].sort((a, b) =>
+    (a.tier || '\uffff').localeCompare(b.tier || '\uffff') || (a.name || '').localeCompare(b.name || ''));
+  const sizes = sorted.reduce((m, x) => { const g = x.tier || 'Untiered';
+    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
+  const label = (t) => (t === 'common' ? 'Common Talents'
+    : t === 'elite' ? 'Elite Talents' : 'Untiered');
+  let last = null;
+  return sorted.map((a) => {
+    const group = a.tier || 'Untiered';
+    const head = group !== last
+      ? `<div class="pick-group">${esc(label(group))}<span class="pick-group-n">${sizes.get(group)}</span></div>`
+      : '';
+    last = group;
+    const sel = powerList(kind, gi);
+    const on = sel.includes(a.name);
+    const tooLow = Number.isFinite(a.min_character_level) && atLevel < a.min_character_level;
+    const blocked = !on && (sel.length >= count || tooLow);
+    const cost = [Number.isFinite(a.acquire_ppe) ? `${a.acquire_ppe}` : null,
+                  Number.isFinite(a.ppe) ? `${a.ppe}` : null]
+      .filter((x) => x !== null).join(' + ');
+    const why = tooLow ? `level ${a.min_character_level}+`
+      : (cost ? `${cost} P.P.E.` : '');
+    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
+      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
+        data-act="power" data-kind="${kind}" data-name="${esc(a.name)}"${
+        gi == null ? '' : ` data-gi="${gi}"`}>
+      <span>${esc(a.name)}${a.prerequisite
+        ? ` <span class="muted small">needs ${esc(a.prerequisite)}</span>` : ''}</span>
+      <span class="pct">${esc(why)}</span></label>`;
+  }).join('');
+}
+
+// The level-1 Talent picks. The book gives ONE free Talent at first level
+// (printed 106), so the single-group shape is the normal case here - but the
+// group form is rendered either way, because an Elite Talent granted by a
+// chosen Morphus characteristic arrives as a second group.
+function startingTalentHtml(groups) {
+  if (!groups.length) return '';
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  const takenAll = () => groups.flatMap((g, i) => powerList('talent-start', i));
+
+  const blocks = groups.map((g, gi) => {
+    const chosen = powerList('talent-start', gi);
+    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
+      .map((n) => String(n).toLowerCase()));
+    const pool = S.talentCatalog.filter((a) => inSystem(a)
+      && (named ? named.has(String(a.name).toLowerCase())
+                : (!g.tiers || g.tiers.includes(a.tier)))
+      && !elsewhere.has(String(a.name).toLowerCase()));
+    const unknownNamed = named
+      ? g.from.filter((n) => !S.talentCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
+    const list = Picker.filter(pool, S.talentFilter)
+      .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S.talentFilter)));
+    const gate = named ? `a list of ${g.from.length}`
+      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
+    return `<p class="small" style="margin-top:12px"><b>${g.count}
+      ${g.count === 1 ? 'talent' : 'talents'}</b> <span class="muted">from ${esc(gate)}</span>
+      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
+      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
+      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
+        ${unknownNamed.length === 1 ? 'talent is' : 'talents are'} not in the catalog yet:
+        ${esc(unknownNamed.join(', '))}.</p>` : '')
+      + Picker.inputHtml({ id: `talent-filter-${gi}`, value: S.talentFilter,
+          placeholder: 'Filter talents\u2026',
+          shown: Picker.filter(pool, S.talentFilter).length, total: pool.length })
+      + talentGroupRows(list, g.count, 'talent-start', gi, 1);
+  }).join('');
+
+  const granted = (psiClass()?.talents?.talents || [])
+    .filter((n) => typeof n === 'string' && n.trim());
+  return (granted.length ? `<h3>Talents &mdash; ${granted.length} granted by the class
+      <span class="muted small">(already on the character)</span></h3>`
+      + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
+    + `<h3>Talents &mdash; ${takenAll().length}/${total}
+    <span class="muted small">(acquire cost + activation cost)</span></h3>`
+    + blocks;
+}
+
 // The level-1 super-ability picks. ALWAYS the group form, because every Power
 // Category that grants any grants them split by tier - "one major super
 // ability, and one minor" (printed 56) - so unlike spells and psionics there is
@@ -3767,9 +3862,10 @@ function renderPowers() {
   // should have called empty.
   const spells = startingSpellHtml();
   const superGroups = startingGroups(cls, 'super');
+  const talentGroups = startingGroups(cls, 'talent');
   let inner = '';
-  if (!spells && !psi && !rolling && !superGroups.length) {
-    inner = `<p class="muted">This class has no spellcasting, psionics or super abilities — carry on.</p>`;
+  if (!spells && !psi && !rolling && !superGroups.length && !talentGroups.length) {
+    inner = `<p class="muted">This class has no spellcasting, psionics, super abilities or talents — carry on.</p>`;
   }
   if (rolling) inner += psiRollHtml();
   inner += spells;
@@ -3821,6 +3917,7 @@ function renderPowers() {
   // its education: the two axes are independent and this is the one the book
   // calls the character's power.
   if (superGroups.length) inner += startingSuperHtml(superGroups);
+  if (talentGroups.length) inner += startingTalentHtml(talentGroups);
   $('app').innerHTML = `
   <div class="panel">
     <h2>${superGroups.length ? 'Powers' : 'Magic &amp; Psionics'}
@@ -3938,6 +4035,12 @@ function powerList(kind, at = null) {
     case 'super': return S.supers;
     case 'super-start': return S.superGroups[at] || (S.superGroups[at] = []);
     case 'super-adv': return S.levelSupers[at] || (S.levelSupers[at] = []);
+    // Nightbane Talents, the same three shapes. The -adv one is REAL here
+    // where super-adv is vestigial: the book grants a free Talent at levels
+    // four, seven, ten and twelve.
+    case 'talent': return S.talents;
+    case 'talent-start': return S.talentGroups[at] || (S.talentGroups[at] = []);
+    case 'talent-adv': return S.levelTalents[at] || (S.levelTalents[at] = []);
     case 'psi-adv': return S.levelPsi[at] || (S.levelPsi[at] = []);
     // NAMED RATHER THAN LEFT TO `default`. The catch-all this replaces returned
     // the level-up PSIONIC list for every unrecognised kind, so a new kind whose
@@ -3965,6 +4068,7 @@ function powersPayload() {
   const autoSpells = auto(cls?.magic?.spells);
   const autoPsi = auto(cls?.psionics?.powers);
   const autoSuper = auto(cls?.super_abilities?.abilities);
+  const autoTalents = auto(cls?.talents?.talents);
   const held = (a, b) => {
     const seen = new Set(a.map((n) => n.toLowerCase()));
     return [...a, ...b.filter((n) => !seen.has(String(n).toLowerCase()))];
@@ -3982,9 +4086,11 @@ function powersPayload() {
   const startSpells = [...S.spells, ...flat(S.spellGroups)];
   const startPsi = [...S.psi, ...flat(S.psiGroups)];
   const startSuper = [...S.supers, ...flat(S.superGroups)];
+  const startTalents = [...S.talents, ...flat(S.talentGroups)];
   const spellNames = held(held(autoSpells, startSpells), flat(S.levelSpells));
   const psiNames = held(held(autoPsi, startPsi), flat(S.levelPsi));
   const superNames = held(held(autoSuper, startSuper), flat(S.levelSupers));
+  const talentNames = held(held(autoTalents, startTalents), flat(S.levelTalents));
   return [
     ...spellNames.map((n) => {
       const sp = S.spellCatalog.find((x) => x.name === n);
@@ -4005,6 +4111,19 @@ function powersPayload() {
     ...superNames.map((n) => {
       const a = S.superCatalog.find((x) => x.name === n);
       return { type: 'super', name: n, category: a?.tier };
+    }),
+    // BOTH costs, which is what makes a Talent a Talent. `cost` is the
+    // activation minimum - the same field a spell and a psionic power use, so
+    // the sheet's use button works unchanged - and `acquire_cost` is the
+    // permanent expenditure that bought it. `category` carries the tier, the
+    // way the super-ability line above does, rather than inventing a fourth
+    // grouping key for the sheet.
+    ...talentNames.map((n) => {
+      const t = S.talentCatalog.find((x) => x.name === n);
+      return { type: 'talent', name: n, category: t?.tier, cost: t?.ppe,
+               acquire_cost: t?.acquire_ppe,
+               ...(t?.ppe_note ? { cost_note: t.ppe_note } : {}),
+               ...(t?.form_required ? { form_required: t.form_required } : {}) };
     }),
   ];
 }
@@ -4288,6 +4407,9 @@ function renderReview() {
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category)} · ${x.cost} I.S.P.</span>`))}
     ${listSection('Super abilities', powersPayload().filter((x) => x.type === 'super')
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category || '')}</span>`))}
+    ${listSection('Talents', powersPayload().filter((x) => x.type === 'talent')
+      .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category || '')} \u00b7 `
+        + `${x.acquire_cost} to acquire, ${x.cost} to activate</span>`))}
     <p class="warn" id="save-msg"></p>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.DETAILS)">&larr; Back</button>
@@ -4453,6 +4575,9 @@ async function boot(first = true) {
     // `.filter` below it would throw. The ETag is a hash of the body, so the
     // first boot after this deploys revalidates and refills it.
     S.superCatalog = catalogsRes.superAbilities || [];
+    // `|| []` for the reason the line above carries one: a browser holding a
+    // warm 304 from before Talents existed gets a payload without the key.
+    S.talentCatalog = catalogsRes.talents || [];
     S.totemCatalog = catalogsRes.totems || [];
     S.items = itemsRes.items;
     S.itemRedirects = itemsRes.redirects || {};

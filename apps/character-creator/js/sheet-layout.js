@@ -148,6 +148,21 @@
     // locations and four weapon systems, which is the longest thing on the
     // Gear tab the moment a character owns one.
     granted: 'b', armor: 'b', equipment: 'b', vessels: 'b',
+    // `powers` AND `psionics-magic` are the SAME BOX under two titles: sheet.js
+    // calls it Powers once the character holds a super ability or a Talent, and
+    // Psionics & Magic otherwise. Only the second was mapped, so the box lost
+    // its data-col the moment the title changed - and a box with no data-col is
+    // not placed as a box at all: `placeable` recurses past it to the LEAVES and
+    // files each one separately, which drops every .power-row wrapper and with
+    // it the name of any power that has no description to make its name a
+    // button. Seen on a real sheet, not reasoned about: 267 `no column for`
+    // warnings and no power names.
+    //
+    // PRE-EXISTING AND LIVE: production character 9922 holds a super ability
+    // (checked --remote 2026-09-16), so this has been happening to that sheet
+    // since super abilities shipped. Found while taking BOOK-INGEST-AUDIT F76,
+    // because a Talent renames the box the same way.
+    powers: 'c',
     'psionics-magic': 'c', background: 'c', bearing: 'c', notes: 'c', journal: 'c',
     'session-log': 'c',
   };

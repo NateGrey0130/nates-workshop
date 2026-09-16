@@ -405,19 +405,22 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // allowance, and a pick passes the cap checks if ANY applicable pool admits
   // it. That under-enforces at the seams and can never refuse a legal build.
   if (Array.isArray(powers)) {
-    const LABELS = { spell: 'spell', psionic: 'psionic power', super: 'super ability' };
+    const LABELS = { spell: 'spell', psionic: 'psionic power', super: 'super ability',
+                     talent: 'talent' };
     // "super abilitys" is what appending an s produces, so the plural is stated
     // rather than derived - the third kind is the first whose name does not
     // pluralise by suffix.
-    const PLURALS = { spell: 'spells', psionic: 'psionic powers', super: 'super abilities' };
+    const PLURALS = { spell: 'spells', psionic: 'psionic powers', super: 'super abilities',
+                      talent: 'talents' };
     const label = (kind) => LABELS[kind] || kind;
     const plural = (kind, n) => (n === 1 ? label(kind) : (PLURALS[kind] || `${label(kind)}s`));
     const auto = {
       spell: new Set((cls.magic?.spells || []).map(norm).filter(Boolean)),
       psionic: new Set((cls.psionics?.powers || []).map(norm).filter(Boolean)),
       super: new Set((cls.super_abilities?.abilities || []).map(norm).filter(Boolean)),
+      talent: new Set((cls.talents?.talents || []).map(norm).filter(Boolean)),
     };
-    const KINDS = ['spell', 'psionic', 'super'];
+    const KINDS = ['spell', 'psionic', 'super', 'talent'];
     const entries = powers
       .filter((p) => p && KINDS.includes(p.type) && norm(p.name))
       .map((p) => ({ kind: p.type, name: String(p.name).trim() }));
@@ -432,7 +435,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       seenPowers.add(k);
     }
 
-    const chosen = { spell: [], psionic: [], super: [] };
+    const chosen = { spell: [], psionic: [], super: [], talent: [] };
     for (const e of entries) if (!auto[e.kind].has(norm(e.name))) chosen[e.kind].push(e);
 
     // Everything the character may draw from: the starting selection, plus the
@@ -457,6 +460,11 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       // wiring the level-up side later is one change in one place rather than a
       // silently missing pool here.
       super: [...startingGroups(cls, 'super'), ...grants.filter((g) => g.kind === 'super')],
+      // Talents DO carry level-up grants, which is the difference from the line
+      // above: the book gives a free Talent at levels four, seven, ten and
+      // twelve, so `grants` really does contain kind 'talent' and a character
+      // built at level 7 is allowed the ones climbed past.
+      talent: [...startingGroups(cls, 'talent'), ...grants.filter((g) => g.kind === 'talent')],
     };
 
     for (const kind of KINDS) {
@@ -562,6 +570,24 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
                 message: `${e.name} is a ${row.tier} super ability; this class's picks allow `
                   + [...allowedTiers].join(', ') });
             }
+          } else if (kind === 'talent') {
+            // THE LEVEL GATE, and it is the only mechanical one a Talent has: the
+            // restriction lives on the ROW rather than on the grant, so it is
+            // checked here rather than against a pool. Ten of the core book's 25
+            // carry one.
+            //
+            // A VIOLATION and not a warning, matching the spell level cap directly
+            // above: a level requirement is a mechanical rule the book states in
+            // numbers, not a table judgement.
+            if (Number.isFinite(row.min_character_level) && level < row.min_character_level) {
+              violations.push({ rule: 'power_min_level', kind, name: e.name,
+                level: row.min_character_level,
+                message: `${e.name} is not available until level ${row.min_character_level}, `
+                  + `and this character is level ${level}` });
+            }
+            // `prerequisite` and `form_required` are NOT checked, for the reason
+            // resolvePowerPicks gives: one is free text naming either another
+            // Talent or a Morphus characteristic, and a Morphus is not modelled.
           } else if (!catPools.length) {
             violations.push({ rule: 'power_not_on_list', kind, name: e.name,
               message: `${e.name} is not on the list this class's psionic picks draw from` });
