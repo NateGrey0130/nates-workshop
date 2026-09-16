@@ -293,6 +293,33 @@ for (const [key, c] of Object.entries(CATALOGS)) {
 }
 check('catalog configs are internally consistent', catalogProblems.length === 0, catalogProblems.join('; '));
 
+// AND EVERY FIELD IS A REAL COLUMN. The check above is internal - it proves the
+// config agrees with itself and says nothing about the database. The write
+// endpoints build their SQL from these names (`catalogs/rows.js`, search
+// `fieldNames(cat)`), so a field naming a column that does not exist is a
+// runtime failure on the first save rather than anything a config check sees.
+//
+// Built from db/schema.sql rather than from a live database, deliberately:
+// this asks whether a FRESH environment agrees with the config, which is the
+// environment the mistake would otherwise be found in. Added with the ninth
+// catalog (`BOOK-INGEST-AUDIT.md` F76), whose entry is 14 fields declared by
+// hand against a table created in another PR - exactly the shape this catches.
+{
+  const schemaText = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(schemaText);
+  const wrong = [];
+  for (const [key, c] of Object.entries(CATALOGS)) {
+    const cols = new Set(mem.prepare('SELECT name FROM pragma_table_info(?)').all(c.table).map((r) => r.name));
+    if (!cols.size) { wrong.push(`${key}: no table "${c.table}" in schema.sql`); continue; }
+    for (const f of c.fields) if (!cols.has(f.name)) wrong.push(`${key}.${f.name} is not a column of ${c.table}`);
+    // `hasSource` makes the endpoints read and write a `source` column.
+    if (c.hasSource && !cols.has('source')) wrong.push(`${key}: hasSource but ${c.table} has no source column`);
+  }
+  mem.close();
+  check('and every catalog field is a real column in schema.sql', wrong.length === 0, wrong.join('; '));
+}
+
 // ---------- 1c. The row form takes its widths from the field type ----------
 // .cat-form was a grid with no grid-template-columns - one column, one field
 // per row, every field the full 1154px whatever it held. Gear measured 1201px

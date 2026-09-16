@@ -155,6 +155,62 @@ export const CATALOGS = {
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
+  talents: {
+    table: 'talents',
+    label: 'Talents',
+    displayField: 'name',
+    uniqueField: 'name',
+    hasSource: true,
+    // TWO costs, and their presence is the entire reason this is not `spells`
+    // or `psionic_powers`. A Nightbane Talent is bought once with a permanent
+    // P.P.E. expenditure and paid for again on every activation, so either of
+    // those tables would silently drop a number. Migration 063,
+    // `BOOK-INGEST-AUDIT.md` F76.
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      // allowOther for the reason psionics' category and super abilities' tier
+      // have it: a later Nightbane sourcebook may print a third division, and a
+      // stored value must never be silently rewritten to fit the list.
+      { name: 'tier', label: 'Tier', type: 'select', allowOther: true,
+        options: ['common', 'elite'],
+        help: 'The only division the core book has. Blank when it does not say.' },
+      // NOT NULL DEFAULT 0 in the schema, so blank has to mean 0 rather than
+      // NULL. Every one of the core book's 25 Talents states a flat integer
+      // here, which is why this is the cost that is never a schedule.
+      { name: 'acquire_ppe', label: 'P.P.E. to acquire', type: 'int', blankAs: 0,
+        help: 'Paid ONCE, permanently, for life - not re-spent on use.' },
+      { name: 'ppe', label: 'P.P.E. to activate', type: 'int', blankAs: 0,
+        help: 'The minimum, paid every activation. 0 when the book says the cost varies '
+          + '- put the schedule in the next field.' },
+      // The common case rather than the exception here: only three of the core
+      // book's 25 Talents are a clean acquire/activate pair, and the other 22
+      // state a third term - a per-minute rate, an upgrade price, or a cost
+      // paid in S.D.C. Same column and same meaning as `spells.ppe_note`.
+      { name: 'ppe_note', label: 'Activation cost varies', type: 'text',
+        help: 'Blank for a flat cost. Otherwise the schedule in a few words, '
+          + 'e.g. "plus 15 per additional minute".' },
+      // An integer because the book is not: the ten level-gated Talents spell
+      // it six different ways, mixing "3rd" with "third" and "fifth".
+      { name: 'min_character_level', label: 'Minimum level', type: 'int',
+        help: 'Blank when the Talent has no level gate, which is most of them.' },
+      // Free text and not a morphus-only flag: the core book's 25 Limitations
+      // blocks give four answers, one of which is saying nothing at all.
+      { name: 'form_required', label: 'Form required', type: 'select', allowOther: true,
+        options: ['morphus', 'facade', 'both'],
+        help: 'Blank when the book states no form.' },
+      { name: 'prerequisite', label: 'Prerequisite', type: 'text',
+        help: 'Another Talent, or a Morphus characteristic the Nightbane must already have.' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+        help: 'Blank means unrestricted — offered to characters in any system.' },
+      // Same field names as spells, psionic powers and super abilities, so the
+      // sheet renders all four the same way.
+      { name: 'range', label: 'Range', type: 'text' },
+      { name: 'duration', label: 'Duration', type: 'text' },
+      { name: 'saving_throw', label: 'Saving throw', type: 'text' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
 
   // What an alchemist puts INTO a sword, as opposed to a sword. A catalog
   // declared here arrives with the editor, the write endpoints and the importer
