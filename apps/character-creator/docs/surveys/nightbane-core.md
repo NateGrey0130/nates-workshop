@@ -324,7 +324,7 @@ Impervious to Cold, Impervious to Fire, Resist Fatigue, Suggestion). That is 55
 listings against 45 unique names, and it is the book's own shape rather than a
 parse error.
 
-**CORRECTED 2026-09-16 (PR #PRNUM): the real gaps are THREE, not five, plus one
+**CORRECTED 2026-09-16 (PR #1128): the real gaps are THREE, not five, plus one
 this section never counted.**
 
 - **`Suggestion` is not a gap** — D7 resolves it to `Hypnotic Suggestion`.
@@ -694,7 +694,7 @@ so this is a picker's answer, not a class import's.
 **D7 — `Suggestion`.** A Sensitive/Healer power here, `Hypnotic Suggestion`
 under Super in the catalog, and this book has no Super category.
 
-**DECIDED 2026-09-16 (PR #PRNUM): `Suggestion` resolves to the existing
+**DECIDED 2026-09-16 (PR #1128): `Suggestion` resolves to the existing
 `Hypnotic Suggestion` row. No new row, no category change.**
 
 **It is the same power, and the book says so twice over.** Both of its entries
@@ -778,7 +778,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
 | 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 | 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
-| 2026-09-16 | #PRNUM | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
+| 2026-09-16 | [#1128](https://github.com/NateGrey0130/nates-workshop/pull/1128) | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
 
 ### What remains
 
