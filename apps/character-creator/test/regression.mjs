@@ -948,6 +948,78 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
   check('the Talent purchase fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── A spell burns P.P.E. out of the caster's base (BOOK-INGEST-AUDIT F101, 3 of 3) ──
+//
+// Six catalog spells carry `ppe_permanent` (migration 067), filled by a data
+// script that must sort AFTER the scripts inserting those spells - so the first
+// question is whether a database built from nothing has all six. Then the real
+// burn route, on a fixture class that grants three spells outright: two that
+// burn and one that does not. Removed again at the end.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((x) => x.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    return [];
+  };
+  const burners = q("SELECT name, ppe_permanent FROM spells WHERE ppe_permanent IS NOT NULL ORDER BY name");
+  check('a database built from nothing carries all six permanent burns',
+    JSON.stringify(burners.map((r) => [r.name, r.ppe_permanent])) === JSON.stringify([
+      ['Bone: Return from the Grave', '3'], ['Close Rift', '2'], ['Enchant Weapon (Minor)', '2D4'],
+      ['Ley Line Restoration', '6D6'], ['Ley Line Resurrection', '2D6'], ['Nature: Sacred Oath', '2D6']]),
+    JSON.stringify(burners));
+
+  const fixture = join(state, 'f101-burner.sql');
+  writeFileSync(fixture,
+    "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) VALUES ('f101-burner', 'F101 Burner', 'rifts', 'published', '---\nid: f101-burner\nname: F101 Burner\nsystem: rifts\nsource_book: Rifts Book of Magic p.150\ncategory: occ\nhit_points_base: \"P.E. + 1D6 per level\"\nsdc_base: \"3D6\"\nmagic:\n  spells: [\"Close Rift\", \"Ley Line Resurrection\", \"Globe of Daylight\"]\n---\n\n## Lore\n\nA regression fixture.\n', 'regression', datetime('now'));\n",
+    'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the spell burn fixture is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const mage = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Rift Closer', class_id: 'f101-burner',
+    attributes: attrs, skills: [], abilities: [],
+    powers: [{ type: 'spell', name: 'Close Rift', level: 14, cost: 200 },
+             { type: 'spell', name: 'Ley Line Resurrection', level: 15, cost: 2000 },
+             { type: 'spell', name: 'Globe of Daylight', level: 1, cost: 2 }],
+    pools: { hp: 20, sdc: 20, ppe: 10 },
+  });
+  check('a character holding burning spells is created', mage.status === 201, JSON.stringify(mage.body).slice(0, 300));
+  const mageId = mage.body.id;
+  const burn = (name) => api('POST', `/characters/${mageId}/ppe-burn`, { name });
+  const read = async () => (await api('GET', `/characters/${mageId}`)).body.character || {};
+
+  const rift = await burn('Close Rift');
+  check('Close Rift burns its 2 out of the base', rift.status === 200 && rift.body.rolled === 2 && rift.body.burned === 2,
+    JSON.stringify(rift.body));
+  const afterRift = await read();
+  check('which lands in ppe_base_spent, with current clamped to the 8 still fillable',
+    afterRift.ppe_base_spent === 2 && afterRift.ppe_max === 10 && afterRift.ppe_current === 8,
+    JSON.stringify({ spent: afterRift.ppe_base_spent, max: afterRift.ppe_max, current: afterRift.ppe_current }));
+
+  const res = await burn('Ley Line Resurrection');
+  check('a dice burn rolls inside its dice and never burns more than the base has left',
+    res.status === 200 && res.body.rolled >= 2 && res.body.rolled <= 12
+    && res.body.burned === Math.min(res.body.rolled, 8),
+    JSON.stringify(res.body));
+  const afterRes = await read();
+  check('and the base agrees with what the route reported',
+    afterRes.ppe_base_spent === 2 + res.body.burned
+    && afterRes.ppe_current === Math.min(8, 10 - afterRes.ppe_base_spent),
+    JSON.stringify({ spent: afterRes.ppe_base_spent, current: afterRes.ppe_current, burned: res.body.burned }));
+
+  check('a held spell that burns nothing is refused', (await burn('Globe of Daylight')).status === 400);
+  check('and a spell the character does not hold is refused', (await burn('Ley Line Restoration')).status === 400);
+
+  const cleanup = join(state, 'f101-burner-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f101-burner';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the spell burn fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 
 // The same fighting style, read at a level the character actually reached.
 // Creation is always level 1 (by design), so this drives the real xp and

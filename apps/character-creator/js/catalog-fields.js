@@ -75,6 +75,11 @@ export const CATALOGS = {
       // says the schedule in a few words. Mirrors psionics' isp_note.
       { name: 'ppe_note', label: 'P.P.E. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words.' },
+      // P.P.E. burned out of the CASTER'S BASE for good - Close Rift's 2, Ley Line
+      // Resurrection's 2D6 (BOOK-INGEST-AUDIT F101, migration 067). The number
+      // only; when it is burned stays in the description.
+      { name: 'ppe_permanent', label: 'Permanent P.P.E. from base', type: 'text',
+        help: 'Blank for most spells. A number or dice, e.g. "2" or "2D6". When it applies goes in the description.' },
       { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of

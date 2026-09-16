@@ -3001,6 +3001,51 @@ section('Talent purchases (BOOK-INGEST-AUDIT F101)');
     rules([T('B', 1)], 1, { talents: { talents_starting: 1 } }).includes('power_count:talent_purchase'));
 }
 
+section('A spell can burn P.P.E. out of the caster\'s base (BOOK-INGEST-AUDIT F101)');
+{
+  // Migration 067 gives `spells` a `ppe_permanent` dice expression; a data script
+  // fills six; a route rolls it into ppe_base_spent; the sheet offers a burn
+  // button beside a spell that has one. The NUMBER is automated and the
+  // condition is not - Nate's answer, 2026-09-16.
+  const spellCfg = CATALOGS.spells.fields.find((f) => f.name === 'ppe_permanent');
+  check('the spell catalog declares ppe_permanent, so the editor can set it', !!spellCfg);
+  const catalogsSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs.js'), 'utf8');
+  check('and the boot catalog selects it, so the sheet can read it',
+    /SELECT [^']*ppe_permanent[^']* FROM spells/.test(catalogsSrc));
+
+  // Every value the data script writes is a dice expression the roller reads. A
+  // value that is not would be refused by the route, never silently rolled as 0.
+  const script = readFileSync(join(appDir, 'db', 'zzzzzzzzzzzzz-f101-spell-ppe-permanent.sql'), 'utf8');
+  const written = [...script.matchAll(/SET ppe_permanent = '([^']+)'\s+WHERE name = '([^']+)'/g)]
+    .map((m) => [m[2], m[1]]);
+  check('the data script writes six burns', written.length === 6, JSON.stringify(written));
+  check('and every one is dice the roller can read', written.every(([, v]) => diceBounds(v)),
+    JSON.stringify(written.filter(([, v]) => !diceBounds(v))));
+
+  // THE SERVER ROLLS. ppe_base_spent is not player-editable (065), so the route
+  // must take only a spell's NAME - an amount from the client would be a way to
+  // set the base to anything.
+  const route = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters',
+    '[id]', 'ppe-burn.js'), 'utf8').replace(/\/\/.*$/gm, '');
+  check('the burn route rolls the catalog dice itself', /evalDice\(row\.ppe_permanent\)/.test(route));
+  check('and reads nothing from the request but the spell name',
+    (route.match(/\bb\??\.(\w+)/g) || []).every((m) => /name$/.test(m)), (route.match(/\bb\??\.(\w+)/g) || []).join(', '));
+  check('and only for a spell the character holds', /type === 'spell'/.test(route) && /not a spell this character knows/.test(route));
+
+  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const burnFn = sheetSrc.slice(sheetSrc.indexOf('async function burnPpe('), sheetSrc.indexOf('async function usePower('));
+  check('the sheet posts only the spell name to the burn route', /jsonReq\('POST', \{ name: p\.name \}\)/.test(burnFn), burnFn.slice(0, 200));
+  check('and asks before burning, it being permanent', /confirm\(/.test(burnFn));
+  const useFn = sheetSrc.slice(sheetSrc.indexOf('async function usePower('), sheetSrc.indexOf('async function usePower(') + 3000);
+  check('and the use button never burns - the two are separate presses', !/ppe-burn|burnPpe/.test(useFn));
+  // The power row is a three-column grid, so a FOURTH child wrapped onto its own line and
+  // stretched across the name column - measured at 467px on a desktop sheet before this.
+  // The two buttons share the last cell instead.
+  check('a row with a burn keeps both buttons in one grid cell',
+    /burnBtn \? `<span class="power-btns">\$\{useBtn\}\$\{burnBtn\}<\/span>` : useBtn/.test(sheetSrc)
+    && /\.power-row \.power-btns \{[^}]*display: inline-flex/.test(readFileSync(join(appDir, 'styles.css'), 'utf8')));
+}
+
 section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
 {
   // The book's own rule, printed 106 under "Acquiring Talents": one Talent free

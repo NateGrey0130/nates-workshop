@@ -14756,3 +14756,84 @@ passed, and `sqlite_master` and `schema_migrations` then showed the CHECK admitt
 `talent_purchase`, 066 recorded, the index back, and 0 rows.
 
 **3 of 3 remains**: the spells in other books that burn the caster's base.
+
+**3 of 3, 2026-09-16 (PR #__PR__): spells that burn the caster's base. F101 is
+taken in full with this.**
+
+**The depth is Nate's answer: automate the P.P.E. NUMBER, leave the conditions,
+hit points, recurrence and any other target as prose.** So `spells` gains one
+dice expression, `ppe_permanent` (migration 067), and nothing about WHEN it
+applies.
+
+**Six spells carry one**, each read from its production row's own description
+2026-09-16: Close Rift `2` (every attempt), Ley Line Resurrection `2D6` (on
+success), Ley Line Restoration `6D6`, Enchant Weapon (Minor) `2D4` (only if made
+permanent), Bone: Return from the Grave `3` (each full moon), Nature: Sacred Oath
+`2D6` (only when repenting). The doubling for a creature of magic, the two hit
+points a moon, the recipient's 4D6% - all prose, as asked.
+
+**The seventh is left NULL, which corrects this finding's own premise list.**
+Summon & Use Stones & Crystals was listed as unquantified. It is not: its
+`ppe_note` prints FOUR burns by what is summoned - a crystal ball 2D6, a control
+crystal 1D6, special stones 1D4, a lesser stone or crystal one point. One
+expression cannot hold four, and choosing one burns the wrong amount for the other
+three, so it stays prose.
+
+**Return from the Grave contradicts itself, and this does not pick a side.** Its
+stat line, printed Mystic Russia 105 (cache p106), reads *"a total of 60 P.P.E.
+and 24 hit points are permanently spent"*; its text says three P.P.E. and two hit
+points each full moon for a year, which is 36 and 24. **Not the digit cipher**:
+that cache's substitution swaps digits for LETTERS, never one digit for another,
+and the page rendered from the PDF reads 60 in the ink. The row stores `3`, what
+one moon burns, and the printed total stays in `ppe_note`. **For Nate: whether the
+total is a misprint is a table ruling, not something the data can settle.**
+
+**How it is burned.** A spell with `ppe_permanent` shows *"burns 2D6 P.P.E. from
+the base, when the spell says so"* and a **burn** button beside its use button -
+never folded into it, because the use button fires on every cast and most of these
+burn only sometimes. The button asks first, then POSTs only the spell's NAME to a
+new route, `characters/[id]/ppe-burn`, which:
+
+- refuses a spell the character does not hold, and one that burns nothing;
+- **rolls the catalog's dice itself** - `ppe_base_spent` is not player-editable
+  (065), so a client that could name the amount could set the base to anything;
+- burns at most what the base has left, adds it to `ppe_base_spent`, and clamps
+  `ppe_current` to what can still be filled;
+- **writes no play event.** An event can be undone, and the undo route restores
+  each recorded `from` value - it would put `ppe_current` back and leave the burn
+  in the base. The book calls the burn permanent, so it has no undo.
+
+**Pinned.** Smoke checks the catalog declaration and boot SELECT, that all six
+written values are dice the roller reads, that the route rolls itself and reads
+nothing from the request but the name (an injected `b.amount` fails two checks),
+that the sheet posts only the name and confirms first, and that the use button
+never burns. **Regression** asks a database built from nothing for its burns -
+which is what proves the data script sorts after the Mystic Russia spell scripts
+it depends on - then drives the route on a fixture class granting three spells:
+Close Rift burned exactly 2 and left current clamped from 10 to the 8 still
+fillable; a Ley Line Resurrection burn rolled inside 2-12 and never burned more
+than the base had left; a held spell that burns nothing, and a spell not held,
+were both refused. **Not proven by injection at the route level** - the smoke
+injection covers the route's one security property, and a second ten-minute
+regression run was not spent on the rest.
+
+**Walked in a browser**, on a local server on its own port, with a local-only
+class granting Close Rift, Ley Line Resurrection and Globe of Daylight:
+
+- the two burning spells showed *burns 2 / 2D6 P.P.E. from the base, when the
+  spell says so* and a burn button; Globe of Daylight showed neither;
+- pressing Close Rift's burn asked first - *"Burn 2 P.P.E. out of the base for
+  good, for Close Rift? ... This cannot be undone."* - and took P.P.E. from 30 / 30
+  to 28 with 2 spent; Ley Line Resurrection's rolled 6, leaving 22 / 22 with 8
+  spent.
+
+**The walk found a layout fault the tests could not.** The power row is a
+three-column grid, so the burn button, a FOURTH child, wrapped onto its own line
+and stretched across the name column - measured at 467px wide on a desktop sheet.
+The two buttons now share the last cell; re-measured, both sit on the row's first
+line inside its right edge at desktop and at tablet width, and a smoke check pins
+the grouping (it fails with the CSS rule removed).
+
+**Nothing reached a player**: no production character holds any of the six
+spells' burns, and none has spent any base (all hold `ppe_base_spent` 0, counted
+`--remote` 2026-09-16). **Applied to production before this merged**, 2026-09-16: migration 067, then the data script, whose three readbacks all passed (six burns, Stones & Crystals NULL, six in all); `schema_migrations` and `data_script_runs` then recorded both, and the six rows read back with the values above.

@@ -956,7 +956,7 @@ CREATE TABLE IF NOT EXISTS spells (
                                           -- for drift, which drift-check cannot do - both
                                           -- rows cite pages that agree with them.
                                           -- See migration 049, BOOK-INGEST-AUDIT F26.
-  tradition TEXT                          -- the family a spell belongs to: warlock,
+  tradition TEXT,                         -- the family a spell belongs to: warlock,
                                           -- ocean, dolphin, spellsong, cloud, shaman.
                                           -- NULL is a general invocation. A class whose
                                           -- pick is a LEVEL RANGE reaches a tradition
@@ -964,6 +964,11 @@ CREATE TABLE IF NOT EXISTS spells (
                                           -- spell_traditions_allowed; a named list is
                                           -- unaffected. A new spell import must set it.
                                           -- See migration 055, BOOK-INGEST-AUDIT F57.
+  ppe_permanent TEXT                      -- P.P.E. burned out of the CASTER'S BASE, as a
+                                          -- dice expression ("2", "2D6"). NULL for a
+                                          -- spell that burns none. The number only: WHEN
+                                          -- it is burned stays in the description. See
+                                          -- migration 067, BOOK-INGEST-AUDIT F101.
 );
 
 CREATE INDEX IF NOT EXISTS idx_spells_same_spell_as ON spells(same_spell_as);
@@ -1445,3 +1450,8 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '055-spell-tradition.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition')
   AND EXISTS (SELECT 1 FROM pragma_table_info('pending_power_picks') WHERE name = 'spell_traditions');
+
+-- 067 (BOOK-INGEST-AUDIT F101). After the spells CREATE, like every guard above.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '067-spell-ppe-permanent.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'ppe_permanent');

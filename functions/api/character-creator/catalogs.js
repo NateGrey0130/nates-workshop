@@ -41,7 +41,9 @@ export async function onRequestGet({ request, env }) {
     // `system` likewise: the wizard filters spells and powers by the campaign's
     // system client-side, the same way it already does skills. `tradition` for
     // the same reason: a level-gated pick filters on it (BOOK-INGEST-AUDIT F57).
-    env.DB.prepare('SELECT name, level, ppe, ppe_note, system, source_book, tradition FROM spells ORDER BY level, name').all(),
+    // `ppe_permanent` so the sheet can offer a spell's permanent burn beside its
+    // use button (BOOK-INGEST-AUDIT F101); NULL on all but a handful of rows.
+    env.DB.prepare('SELECT name, level, ppe, ppe_note, system, source_book, tradition, ppe_permanent FROM spells ORDER BY level, name').all(),
     // min_tier is in the boot projection because the powers picker filters on
     // it client-side; without it there is nothing to gate against.
     env.DB.prepare('SELECT name, category, isp, isp_note, min_tier, system, source_book FROM psionic_powers ORDER BY category, name').all(),
