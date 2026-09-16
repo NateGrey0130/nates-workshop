@@ -610,6 +610,37 @@ export function talentGrantsFor(cls, fromLevel, toLevel) {
   return perLevelGrants(cls?.talents, 'talents_per_level', 'talents_schedule', fromLevel, toLevel);
 }
 
+// Talents a Nightbane may BUY, as opposed to the free ones above. Printed 106:
+// "At level one and upon reaching each subsequent new level of experience, the
+// Nightbane can purchase two additional Talents, but, each purchase will cost
+// the character a permanent expenditure of P.P.E.!" BOOK-INGEST-AUDIT F101
+// (2 of 3).
+//
+// AN ALLOWANCE, NOT A GRANT, and that is why it is a kind of its own. A free
+// Talent is spent by choosing; a purchase is spent by choosing AND paying the
+// Talent's `acquire_ppe` out of the character's base, which resolvePowerPicks
+// refuses when the base cannot cover it. The two bank as separate kinds so a
+// purchase cannot be taken from a free grant or a free Talent from a purchase.
+//
+// LEVEL ONE COUNTS, unlike every per-level grant above: the book gives the
+// purchases "at level one" as well as at each new level, so a span here
+// includes `fromLevel` when it is 0 - which is how creation asks for them.
+// A level-up asks from the level being left, exclusive, like everything else.
+//
+// A flat count only. The book states one rule for every level, so there is no
+// schedule form to read; a class that states no count buys nothing, and that
+// is `applicable: false` rather than `unknown` - the purchases are an optional
+// extra, not a count the class forgot to state.
+export function talentPurchaseGrantsFor(cls, fromLevel, toLevel) {
+  const n = cls?.talents?.talents_purchases_per_level;
+  if (!Number.isInteger(n) || n <= 0) return { applicable: false, unknown: false, grants: [], total: 0 };
+  const grants = [];
+  for (let level = Math.max(1, fromLevel + 1); level <= toLevel; level++) {
+    grants.push({ level, slot: 0, count: n });
+  }
+  return { applicable: true, unknown: false, grants, total: grants.reduce((t, g) => t + g.count, 0) };
+}
+
 // THERE IS NO superAbilityGrantsFor, AND THAT IS A DECISION. Super abilities are
 // a CREATION-time pick only: `startingGroups(cls, 'super')` reads the block and
 // nothing banks a per-level grant of one.
@@ -787,5 +818,7 @@ export function buildProposal(character, cls, toLevel) {
   // the free Talents at levels four, seven, ten and twelve banked silently, and
   // the banked-picks panel then offered PSIONIC powers to spend them with.
   proposal.talent_picks = talentGrantsFor(cls, fromLevel, toLevel);
+  // And the Talents the levels allow the character to BUY (BOOK-INGEST-AUDIT F101).
+  proposal.talent_purchase_picks = talentPurchaseGrantsFor(cls, fromLevel, toLevel);
   return proposal;
 }

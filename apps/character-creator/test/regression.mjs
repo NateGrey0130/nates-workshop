@@ -838,6 +838,116 @@ if (xp.body.proposal) {
 
 const picks = await api('GET', `/characters/${charId}/picks`);
 check('pending skill picks are listed', picks.status === 200 && Array.isArray(picks.body.pending), picks.body);
+// ── Talent purchases are paid for out of the P.P.E. base (BOOK-INGEST-AUDIT F101) ──
+//
+// Printed 106 lets a Nightbane BUY two Talents at level one and at every level
+// after, each for a permanent expenditure of P.P.E. Driven through the three real
+// routes that touch it - create banks the level-one allowance, the spend
+// endpoint charges it, level-confirm charges it against the RAISED maximum - on
+// a fixture class and three fixture Talents that exist only in this scratch
+// database and are removed again at the end, so no later sweep of published
+// classes or catalog rows sees them.
+{
+  const fixture = join(state, 'f101-fixture.sql');
+  writeFileSync(fixture, [
+    "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) VALUES ('f101-probe', 'F101 Probe', 'nightbane', 'published', '---\nid: f101-probe\nname: F101 Probe\nsystem: nightbane\nsource_book: Nightbane RPG p.106\ncategory: rcc\nhit_points_base: \"P.E. + 1D6 per level\"\nsdc_base: \"3D6\"\ntalents:\n  talents_starting: 1\n  talents_purchases_per_level: 2\n  talents_schedule:\n    - { level: 4, count: 1 }\n---\n\n## Lore\n\nA regression fixture.\n', 'regression', datetime('now'))",
+    "INSERT INTO talents (name, tier, acquire_ppe, ppe, min_character_level, system, source_book) VALUES ('F101 Probe Small', 'common', 10, 2, NULL, 'nightbane', 'fixture'), ('F101 Probe Mid', 'common', 15, 2, NULL, 'nightbane', 'fixture'), ('F101 Probe Big', 'common', 25, 2, NULL, 'nightbane', 'fixture'), ('F101 Probe Fifth', 'common', 5, 2, 5, 'nightbane', 'fixture')",
+  ].join(';\n') + ';\n', 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the Talent purchase fixture is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const nbCamp = await api('POST', '/campaigns', { name: 'Regression Nightbane', system: 'nightbane' });
+  const nbCampId = nbCamp.body.id ?? nbCamp.body.campaign?.id;
+  const nb = await api('POST', '/characters', {
+    campaign_id: nbCampId, name: 'Talent Buyer', class_id: 'f101-probe',
+    attributes: attrs, skills: [], abilities: [], powers: [],
+    pools: { hp: 20, sdc: 20, ppe: 30 },
+  });
+  check('a character whose class may buy Talents is created', nb.status === 201, JSON.stringify(nb.body).slice(0, 300));
+  const nbId = nb.body.id;
+  const pendingOf = async () => (await api('GET', `/characters/${nbId}/power-picks`)).body.pending || [];
+  const bought = (rows) => rows.filter((g) => g.kind === 'talent_purchase');
+
+  const atCreate = bought(await pendingOf());
+  check('creation banks the level-one purchase allowance of two',
+    atCreate.length === 1 && atCreate[0].granted_at_level === 1 && atCreate[0].count === 2,
+    JSON.stringify(atCreate));
+
+  const buy = (picks) => api('POST', `/characters/${nbId}/power-picks`, { picks });
+  const P = (name, level = 1) => ({ kind: 'talent_purchase', name, granted_at_level: level, slot: 0 });
+  const readChar = async () => (await api('GET', `/characters/${nbId}`)).body.character || {};
+
+  // 25 + 10 is 35, against a base of 30. Each fits alone; together they do not.
+  const tooMuch = await buy([P('F101 Probe Big'), P('F101 Probe Small')]);
+  check('two purchases the base cannot cover TOGETHER are refused as a whole',
+    tooMuch.status === 422 && /35 permanent P\.P\.E\./.test(JSON.stringify(tooMuch.body)),
+    JSON.stringify(tooMuch.body).slice(0, 300));
+  const untouched = await readChar();
+  check('and nothing was charged or learned',
+    (untouched.ppe_base_spent ?? 0) === 0 && !(untouched.powers || []).some((p) => /F101 Probe/.test(p.name)),
+    JSON.stringify({ spent: untouched.ppe_base_spent, powers: untouched.powers }));
+
+  const early = await buy([P('F101 Probe Fifth')]);
+  check('a fifth-level Talent cannot be bought with a level-one allowance', early.status === 422,
+    JSON.stringify(early.body).slice(0, 200));
+
+  const free = await api('POST', `/characters/${nbId}/power-picks`,
+    { picks: [{ kind: 'talent', name: 'F101 Probe Small', granted_at_level: 1, slot: 0 }] });
+  check('and a purchase allowance cannot be spent as a free Talent', free.status >= 400,
+    JSON.stringify(free.body).slice(0, 200));
+
+  const small = await buy([P('F101 Probe Small')]);
+  check('a purchase the base covers is accepted', small.status === 200 && small.body.ppe_spent === 10,
+    JSON.stringify(small.body).slice(0, 300));
+  const afterSmall = await readChar();
+  check('it is paid out of the base, and current P.P.E. is clamped to what can still be filled',
+    afterSmall.ppe_base_spent === 10 && afterSmall.ppe_max === 30 && afterSmall.ppe_current === 20,
+    JSON.stringify({ max: afterSmall.ppe_max, spent: afterSmall.ppe_base_spent, current: afterSmall.ppe_current }));
+  const smallRow = (afterSmall.powers || []).find((p) => p.name === 'F101 Probe Small');
+  check('and the Talent is stored as bought, with its price',
+    smallRow?.type === 'talent' && smallRow?.purchased === true && smallRow?.acquire_cost === 10,
+    JSON.stringify(smallRow));
+  check('one purchase is left in the level-one allowance',
+    bought(await pendingOf()).reduce((n, g) => n + g.count, 0) === 1);
+
+  // Level two. The allowance grows by two, and the base a purchase is paid from
+  // is the maximum AFTER the level-up less what is already spent: 36 - 10 = 26.
+  await api('POST', `/characters/${nbId}/xp`, { total: 2000 });
+  const overLevel = await api('POST', `/characters/${nbId}/level-confirm`, {
+    to_level: 2, picks: [], pools: { ppe_max: 36 },
+    power_picks: [P('F101 Probe Big', 2), P('F101 Probe Mid', 2)],
+  });
+  check('level-confirm refuses purchases the raised base cannot cover (25 + 15 against 26)',
+    overLevel.status === 422, JSON.stringify(overLevel.body).slice(0, 300));
+  const stillOne = await readChar();
+  check('and the refused level-up did not happen', stillOne.level === 1, 'level ' + stillOne.level);
+
+  const levelled = await api('POST', `/characters/${nbId}/level-confirm`, {
+    to_level: 2, picks: [], pools: { ppe_max: 36 },
+    power_picks: [P('F101 Probe Big', 2)],
+  });
+  check('level-confirm accepts a purchase the raised base covers', levelled.status === 200,
+    JSON.stringify(levelled.body).slice(0, 300));
+  const afterLevel = await readChar();
+  // current was 20 and rose with the maximum by 6 to 26; the effective maximum is
+  // now 36 - 35 = 1, so it clamps to 1.
+  check('it is charged against the new maximum and current is clamped to what is left',
+    afterLevel.level === 2 && afterLevel.ppe_max === 36 && afterLevel.ppe_base_spent === 35
+    && afterLevel.ppe_current === 1,
+    JSON.stringify({ level: afterLevel.level, max: afterLevel.ppe_max, spent: afterLevel.ppe_base_spent,
+                     current: afterLevel.ppe_current }));
+  const leftAfter = bought(await pendingOf());
+  check('and the unspent purchases bank: one from level one, one from level two',
+    JSON.stringify(leftAfter.map((g) => [g.granted_at_level, g.count])) === '[[1,1],[2,1]]',
+    JSON.stringify(leftAfter.map((g) => [g.granted_at_level, g.count])));
+
+  const cleanup = join(state, 'f101-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f101-probe';\n"
+    + "DELETE FROM talents WHERE source_book = 'fixture';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the Talent purchase fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 
 // The same fighting style, read at a level the character actually reached.
 // Creation is always level 1 (by design), so this drives the real xp and

@@ -421,7 +421,13 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   -- and both evaluated when the pick is spent. That is what makes this a CHECK
   -- widening and not a new column, which is the difference between it and the
   -- super-ability grant `js/leveling.js` still refuses.
-  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic', 'talent')),
+  --
+  -- 'talent_purchase' arrived with migration 066 (BOOK-INGEST-AUDIT F101): the
+  -- two Talents a Nightbane may BUY at level one and every level after, paid in
+  -- permanent P.P.E. A kind of its own rather than a 'talent' row, because a
+  -- purchase is spent by choosing AND paying, and the two would otherwise share
+  -- the key `talent:level:slot` at levels four, seven, ten and twelve.
+  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic', 'talent', 'talent_purchase')),
   -- JSON array of SPELL levels this grant may draw from; NULL is unrestricted,
   -- and always NULL for a psionic grant. Copied from the class at grant time,
   -- as pending_skill_picks copies its categories.
@@ -466,6 +472,12 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '064-pending-power-picks-talent.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks'
                 AND instr(sql, '''talent''') > 0);
+
+-- 066 the same way, on its own value.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '066-pending-power-picks-talent-purchase.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks'
+                AND instr(sql, '''talent_purchase''') > 0);
 
 -- Things a table hands out that no class schedule granted: a patron teaches a
 -- skill, an artefact confers a power, an implant adds S.D.C. The G.M. usually

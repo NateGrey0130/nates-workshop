@@ -52,11 +52,15 @@ export async function onRequestPost({ request, env, params }) {
     from: g.from, note: g.note,
   }));
 
+  // What a banked Talent PURCHASE is paid from: the base as it stands now,
+  // `ppe_max - ppe_base_spent` (BOOK-INGEST-AUDIT F101).
+  const baseSpent = Number(character.ppe_base_spent) || 0;
   const resolved = await resolvePowerPicks(env, {
     picks: b.picks,
     grants,
     existingPowers: character.powers,
     system: campaign?.system ?? null,
+    ppeAvailable: character.ppe_max == null ? null : character.ppe_max - baseSpent,
   });
   if (resolved.errors?.length) return powerPickErrors(resolved.errors);
   if (!resolved.powers.length) return json({ error: 'Nothing to spend' }, 400);
@@ -82,9 +86,20 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const powers = character.powers.concat(resolved.powers);
-  statements.unshift(env.DB.prepare(
-    "UPDATE characters SET powers = ?, updated_at = datetime('now') WHERE id = ?"
-  ).bind(JSON.stringify(powers), params.id));
+  // A purchase is paid in the same statement that stores it, and current P.P.E.
+  // is clamped to the maximum the character can still fill - not reduced by the
+  // price, the rule level-confirm applies too.
+  const ppeSpent = resolved.ppeSpent || 0;
+  const cap = character.ppe_max == null ? null : character.ppe_max - baseSpent - ppeSpent;
+  statements.unshift(ppeSpent > 0
+    ? env.DB.prepare(
+        `UPDATE characters SET powers = ?, ppe_base_spent = ?,
+           ppe_current = CASE WHEN ppe_current IS NOT NULL AND ppe_current > ? THEN ? ELSE ppe_current END,
+           updated_at = datetime('now') WHERE id = ?`
+      ).bind(JSON.stringify(powers), baseSpent + ppeSpent, cap, cap, params.id)
+    : env.DB.prepare(
+        "UPDATE characters SET powers = ?, updated_at = datetime('now') WHERE id = ?"
+      ).bind(JSON.stringify(powers), params.id));
 
   // One batch: a power written without its grant consumed can be claimed twice,
   // and a grant consumed without the power written is simply lost.
@@ -94,6 +109,7 @@ export async function onRequestPost({ request, env, params }) {
   return json({
     ok: true,
     gained: resolved.powers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level })),
+    ppe_spent: ppeSpent,
     pending_total: left.reduce((n, g) => n + g.count, 0),
   });
 }

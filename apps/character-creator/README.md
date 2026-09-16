@@ -411,6 +411,11 @@ talents:                        # Nightbane Talents, the ninth catalog. The
     - { level: 4, count: 1 }
     - { level: 7, count: 1 }
   talents_per_level: 1          # or a flat one every level, if a book says so
+  # Talents the character may BUY, at level one and every level after - two,
+  # printed 106 - each for its `acquire_ppe` taken permanently out of the P.P.E.
+  # base (ppe_max - ppe_base_spent). Unused purchases bank as their own
+  # `talent_purchase` grant (migration 066) and are spent on the sheet.
+  talents_purchases_per_level: 2
 special_abilities:
   - { name: "Psi-Sword", description: "..." }
   # An ability the player CHOOSES may carry what it grants, and may be
