@@ -14428,3 +14428,90 @@ have already produced four findings. **Of the `character_grants` alternative,
 one CHECK value and a note.** Of doing nothing: a Nightbane gets five Talents
 over twelve levels instead of five plus however many they bought, and the sheet
 is silent about the difference.
+
+**Taken, 2026-09-16, on Nate's word - the FULL mechanism, which the finding
+recommended against.** In three PRs. **1 of 3 is PR #1092**: storage, and the
+maximum it lowers. 2 of 3 is Talent purchases; 3 of 3 is the spells in other
+books that burn the caster's base.
+
+**The premise audit vindicated the choice over this finding's own
+recommendation.** F101 recommended the `character_grants` route and said
+*"Nightbane is the only book of the nineteen that asks"*.
+<!-- claim-ok: quoting the premise this note corrects -->
+That is false. Read against the catalog `--remote` 2026-09-16, **seven spells
+in three other books take P.P.E. out of the caster's base**: Close Rift, Ley Line
+Resurrection, Ley Line Restoration and Enchant Weapon (Minor) in the Book of
+Magic; Bone: Return from the Grave and Nature: Sacred Oath in Mystic Russia; and
+Summon & Use Stones & Crystals in Wormwood. So a general mechanism was the right
+shape and the `character_grants` route would have been a Talent-only patch.
+
+**A KEYWORD COUNT OVERSTATED THAT BY SIX TIMES, and the method is worth keeping.**
+The first query - spells whose text mentions "permanent" near "P.P.E." - returned
+**43**. Reading each: *"creates a permanent magic item"* makes the ITEM permanent;
+*"30 P.P.E. to make the enchantment permanent"* makes the EFFECT permanent;
+Circle of Concealment *"permanently loses one P.E. attribute point"* is an
+attribute, not P.P.E. Only seven take P.P.E. from the base. A raw sweep of the
+caches for the same phrase returned 145 across twelve books, which is worse
+again. **Count the rows the app acts on, then read them.**
+
+**STORAGE, AND WHY IT IS SAFE.** Migration 065 adds
+`characters.ppe_base_spent INTEGER NOT NULL DEFAULT 0`. `ppe_max` **stays the
+rolled maximum**; the effective maximum is derived as
+`ppe_max - ppe_base_spent`. Nate's choice between that and reducing `ppe_max`
+directly, and the reasoning is what makes it safe:
+
+- **the validator would have refused the character.** `validate-character.js`
+  bounds `ppe_max` against the class formula on both sides, as a violation for a
+  non-G.M. It never reads `ppe_base_spent` (0 references, read 2026-09-16), so a
+  spend cannot trip it;
+- **a re-roll would have erased the spend.** Three server paths write `ppe_max` -
+  create, level-confirm, and the variant re-roll. None references the new column
+  (0 each, same day), so none can erase it.
+
+**AND IT IS SAFE FOR `ppe_current` TOO, which was checked rather than assumed.**
+Level-confirm and the variant re-roll both move current by the SAME delta as the
+maximum rather than setting current to it (`character[curField] + delta`, and
+`(current ?? oldMax) + delta`). So `current <= max - spent` before a level-up
+stays true after it: `current + d <= max + d - spent` is the same inequality.
+*"By construction"* was the phrase used when this was chosen; this is the
+arithmetic that makes it true.
+
+**THE COST OF THE DESIGN, paid here:** every reader that wants the maximum a
+character can actually FILL must subtract. **Four did not, and were found by
+grepping every reader of `ppe_max` rather than the ones expected**:
+
+| reader | what it did wrong |
+|---|---|
+| the PATCH route's clamp on `ppe_current` | clamped to the ROLLED max, so a character could refill past the spend |
+| the sheet's first render (`poolCard`) | showed the rolled max |
+| the sheet's live repaint (`paintPool`) | showed the rolled max after a spend |
+| the rest-recovery preview (`restPreview`) | would preview resting back up past the spend |
+
+The three on the sheet now read one function, `poolMax`, for the reason
+`powerPool` exists: two paths painting one number is how the use button broke.
+
+**PROVED BY USING IT**, on a local character with a rolled maximum of 13 and a
+permanent spend of 5: the sheet shows `/ 8`, and asking the server to set P.P.E.
+to 13 stores **8**. Against the code before this PR the same request stores
+**13**, refilling past the spend and quietly undoing a cost the book calls
+permanent.
+
+**Not player-editable**, deliberately, matching `ppe_max` rather than
+`ppe_current`: a permanent spend is a rules fact, and a free PATCH could set it
+back to 0. It is written by the paths that incur it, which are 2 of 3 and 3 of 3.
+
+**A smoke check that failed in the wrong way first.** Run against the code before
+`poolMax` existed, it failed its first assertion and then **crashed Node** on the
+next line calling the missing function, taking the rest of the suite down. It is
+guarded now: all eleven assertions fail cleanly and the suite completes.
+
+**One text check loosened, because it pinned the wrong thing.** *"and it is asked
+for steppers"* matched the whole `poolCard(...)` call literally, including
+`c[key + '_max']`, so it failed when the maximum started coming from `poolMax`.
+What it exists to check is the last two arguments, `w, true`. It now tests those,
+and still fails if the steppers are dropped or omitted.
+
+**Production after the apply: the column exists with default 0, 065 is recorded,
+and all 4 characters hold 0** - so no existing sheet shows anything different.
+
+**Smoke 2223 -> 2234. Regression 441.**

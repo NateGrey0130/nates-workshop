@@ -85,7 +85,7 @@ const $ = (i) => document.getElementById(i);
 // Presentation lives in js/sheet-layout.js - the pool widget, the box and
 // field helpers, and the table that decides a box's column. Destructured
 // here so this file's call sites read exactly as they did before the split.
-const { POOL_TONES, POOL_LOW, poolCard, boxSlug, BOX_COL, box, field,
+const { POOL_TONES, POOL_LOW, poolCard, poolMax, boxSlug, BOX_COL, box, field,
   trackableRows, stackColumns } = sheetLayout;
 
 // The one binding that is not a straight re-export. sheetLayout.paintPool is
@@ -1608,7 +1608,10 @@ function restPreview() {
     if (C.data[key + '_max'] == null) continue;
     const rate = Math.max(0, Number($(`rest-rate-${key}`)?.value) || 0);
     const cur = C.data[key + '_current'] ?? 0;
-    const max = C.data[key + '_max'];
+    // The EFFECTIVE maximum: P.P.E. burned out of the base for good cannot be
+    // rested back. Reading the rolled ppe_max here would preview recovery past
+    // what the character can hold, and the server would then clamp it away.
+    const max = poolMax(C.data, key);
     const gain = Math.min(Math.round(rate * hours), Math.max(max - cur, 0));
     out.push({ key, label, rate, cur, gain });
   }
@@ -1810,7 +1813,7 @@ function render() {
   // is what poolCard's own comment already promised - "CSS still gates it on
   // body.play-mode, so a sheet-mode render cannot leak steppers".
   const vitals = POOLS.map(([key, label]) =>
-    poolCard(key, label, c[key + '_current'], c[key + '_max'], w, true)).join('');
+    poolCard(key, label, c[key + '_current'], poolMax(c, key), w, true)).join('');
 
   // A Horror Factor the character PROJECTS - BOOK-INGEST-AUDIT F75. It rides
   // BESIDE the vitals strip and is deliberately NOT a member of POOLS: it has

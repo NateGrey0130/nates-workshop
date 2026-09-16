@@ -272,7 +272,7 @@ export async function onRequestPatch({ request, env, params }) {
   // current and max together, and this is the only route that could otherwise
   // leave them inconsistent (e.g. 9999 / 24 on the sheet).
   const current = await env.DB.prepare(
-    'SELECT hp_max, sdc_max, mdc_max, ppe_max, isp_max FROM characters WHERE id = ?'
+    'SELECT hp_max, sdc_max, mdc_max, ppe_max, isp_max, ppe_base_spent FROM characters WHERE id = ?'
   ).bind(params.id).first();
 
   const sets = [], binds = [];
@@ -308,7 +308,16 @@ export async function onRequestPatch({ request, env, params }) {
       v = v === null || v === '' ? null : parseInt(v, 10);
       if (v !== null && !Number.isFinite(v)) return json({ error: `${field} must be a number or null` }, 400);
       if (v !== null) {
-        const max = current?.[field.replace('_current', '_max')];
+        let max = current?.[field.replace('_current', '_max')];
+        // P.P.E. CLAMPS TO THE EFFECTIVE MAXIMUM, not the rolled one.
+        // `ppe_max` stays what was rolled and `ppe_base_spent` records what has
+        // been burned out of the base for good (migration 065,
+        // BOOK-INGEST-AUDIT F101). Clamping to ppe_max alone would let a
+        // character who bought a Talent refill to the maximum it no longer has,
+        // which quietly undoes the cost the book calls permanent.
+        if (field === 'ppe_current' && typeof max === 'number') {
+          max = Math.max(0, max - (Number(current?.ppe_base_spent) || 0));
+        }
         v = Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
       }
     }

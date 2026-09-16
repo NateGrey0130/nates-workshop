@@ -226,6 +226,12 @@ CREATE TABLE IF NOT EXISTS characters (
   sdc_max INTEGER, sdc_current INTEGER,
   mdc_max INTEGER, mdc_current INTEGER,   -- M.D.C. beings (e.g. dragon hatchlings) use this instead of HP/SDC
   ppe_max INTEGER, ppe_current INTEGER,
+  -- P.P.E. taken PERMANENTLY out of the base - bought Talents, and the spells
+  -- that burn the caster's base. ppe_max stays the ROLLED maximum and the
+  -- effective one is ppe_max - ppe_base_spent, so the validator, level-up and
+  -- the variant re-roll - which all read or rewrite ppe_max - cannot refuse or
+  -- erase it. Migration 065, BOOK-INGEST-AUDIT F101.
+  ppe_base_spent INTEGER NOT NULL DEFAULT 0,
   isp_max INTEGER, isp_current INTEGER,
   -- Sheet sections stored as JSON rather than ~40 scalar columns, because the
   -- shapes are sparse and this file only ever CREATEs. See db/migrations/ for
@@ -240,6 +246,14 @@ CREATE TABLE IF NOT EXISTS characters (
 );
 CREATE INDEX IF NOT EXISTS idx_characters_campaign ON characters (campaign_id);
 CREATE INDEX IF NOT EXISTS idx_characters_player ON characters (player_email);
+
+-- Guarded on the COLUMN 065 adds, and placed HERE, directly after the table it
+-- tests, rather than in the seeding block - a guard that runs before its own
+-- CREATE never fires on a database built from this file in one pass, which is
+-- what BOOK-INGEST-AUDIT F99 found in two rows and regression.mjs now asserts.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '065-character-ppe-base-spent.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'ppe_base_spent');
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

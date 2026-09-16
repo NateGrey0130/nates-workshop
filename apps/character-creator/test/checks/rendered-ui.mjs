@@ -200,8 +200,14 @@ export function run() {
     const callers = [...src.matchAll(/poolCard\(/g)].length;
     check('the one render path is its only caller', callers === 2,
       `poolCard appears ${callers} times; expected its definition plus ONE caller`);
+    // WHAT THIS PINS IS THE LAST TWO ARGUMENTS - `w, true`, the steppers - and not
+    // the shape of the ones before them. It used to match the whole call
+    // literally, `c[key + '_max']` included, so it failed the day the maximum
+    // started coming from `poolMax(c, key)` (migration 065, BOOK-INGEST-AUDIT
+    // F101) - a change to where the number comes from, which is not what this
+    // check is about. The message below was always the real subject.
     check('and it is asked for steppers, which CSS then gates',
-      /poolCard\(key, label, c\[key \+ '_current'\], c\[key \+ '_max'\], w, true\)/.test(src),
+      /poolCard\(key, label,[\s\S]*?, w, true\)/.test(src),
       'the sheet no longer renders the steppers play mode reveals');
 
     const poolCardBody = functionBody(src, 'function poolCard(');
@@ -560,6 +566,54 @@ export function run() {
     const second = [...code.matchAll(/\?\s*'ppe'\s*:\s*'isp'|\?\s*'isp'\s*:\s*'ppe'/g)];
     check('and nothing else in the sheet decides it with its own ternary', second.length === 0,
       `${second.length} other ternary choosing between ppe and isp`);
+  }
+
+  // A PERMANENT P.P.E. SPEND LOWERS THE MAXIMUM EVERYWHERE THE MAXIMUM IS SHOWN.
+  //
+  // Migration 065 records P.P.E. burned out of the base as `ppe_base_spent` and
+  // leaves `ppe_max` as the ROLLED value, so the validator and the level-up and
+  // re-roll paths that read or rewrite `ppe_max` cannot refuse or erase the spend.
+  // The cost of that design is that every reader wanting the maximum a character
+  // can actually FILL has to subtract. Three readers on the sheet did not, and
+  // each is pinned here; the server's PATCH clamp is pinned beside them.
+  // BOOK-INGEST-AUDIT F101.
+  section('A permanent P.P.E. spend lowers the maximum wherever it is shown');
+  {
+    const layoutSrc = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+    // The file hangs its exports on the global it is handed, so it can RUN here.
+    const g = {};
+    new Function(`return (globalThis) => { ${layoutSrc} }`)()(g);
+    const { poolMax } = g.sheetLayout;
+    check('sheet-layout exposes poolMax', typeof poolMax === 'function');
+    // GUARDED, so a missing function FAILS the check above rather than throwing
+    // on the next line and taking the rest of the suite down with it. Found by
+    // running this against the code before poolMax existed: it crashed Node.
+    const pm = typeof poolMax === 'function' ? poolMax : () => Symbol('missing');
+    check('P.P.E. subtracts the permanent spend', pm({ ppe_max: 13, ppe_base_spent: 5 }, 'ppe') === 8);
+    check('and a character who has spent nothing is unchanged', pm({ ppe_max: 13 }, 'ppe') === 13
+      && pm({ ppe_max: 13, ppe_base_spent: 0 }, 'ppe') === 13);
+    check('and it never goes below zero', pm({ ppe_max: 4, ppe_base_spent: 10 }, 'ppe') === 0);
+    check('no other pool is touched by a P.P.E. spend',
+      pm({ isp_max: 30, ppe_base_spent: 5 }, 'isp') === 30
+      && pm({ hp_max: 20, ppe_base_spent: 5 }, 'hp') === 20);
+    check('and an absent maximum stays absent rather than becoming a number',
+      pm({ ppe_base_spent: 5 }, 'ppe') === undefined);
+
+    // The three readers. Each used to read `_max` straight off the data.
+    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const paint = layoutSrc.slice(layoutSrc.indexOf('function paintPool('), layoutSrc.indexOf('function paintPool(') + 200);
+    check('the live repaint reads the effective maximum', /poolMax\(data, key\)/.test(paint), paint);
+    check('the first render reads it', /poolCard\(key, label,[^;]*poolMax\(c, key\)/.test(sheetSrc));
+    const rest = sheetSrc.slice(sheetSrc.indexOf('function restPreview('), sheetSrc.indexOf('function updateRestPreview('));
+    check('and the rest-recovery preview reads it, so resting cannot preview a refill past it',
+      /poolMax\(C\.data, key\)/.test(rest), rest.slice(0, 300));
+
+    // And the server, which is what actually stops a refill past the spend.
+    const idSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      'characters', '[id].js'), 'utf8');
+    check('the PATCH clamp reads the spend', /SELECT[^']*ppe_base_spent[^']*FROM characters/.test(idSrc));
+    check('and subtracts it from the P.P.E. maximum before clamping',
+      /field === 'ppe_current'[\s\S]{0,200}max - \(Number\(current\?\.ppe_base_spent\)/.test(idSrc));
   }
 
   section('The wizard rail');
