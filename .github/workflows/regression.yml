@@ -1,10 +1,10 @@
 # The end-to-end regression suite, on EVERY pull request.
 # SKILL-AUDIT.md F32 added it; F36 removed the path filter it was added with.
 #
-# REPORTING ONLY, the same posture as tests.yml. Not a required status check,
-# and `main`'s ruleset carries one `pull_request` rule and ZERO required status
-# checks, so a red run here does not stop a merge. Making it required is a
-# different decision and needs its own finding.
+# REQUIRED SINCE 2026-09-16, the same posture as tests.yml: the `regression`
+# check-run is named by `main`'s ruleset `22209348`, so a red run here stops the
+# merge. From 2026-09-04 to 2026-09-16 it was reporting only. RENAMING THE JOB
+# BREAKS THE GATE - the ruleset names the job id.
 #
 # WHY IT IS SEPARATE FROM tests.yml. It was split off to be filtered, and the
 # filter is gone - but keep the split. The two run CONCURRENTLY, with distinct

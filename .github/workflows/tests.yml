@@ -1,13 +1,13 @@
 # The five smoke suites, on every pull request. REPO-AUDIT.md G8.
 #
-# REPORTING ONLY, AND THAT IS THE POSTURE RATHER THAN AN OVERSIGHT. This
-# workflow is not wired to a required status check. `main` DOES have a ruleset -
-# `22209348`, "main: require a pull request", active since 2026-09-03, five
-# minutes after G8 merged - and it carries one `pull_request` rule and ZERO
-# required status checks, so a red run here still does not stop a merge. G8 was
-# taken on that basis: the repo's rule is warn, do not block. If someone later
-# makes this a required check, that is a different decision and it needs its own
-# finding.
+# REQUIRED SINCE 2026-09-16. Both jobs here - `smoke` and `menus` - are required
+# status checks on `main`'s ruleset `22209348`, "main: require a pull request",
+# alongside `regression` from regression.yml, so a red run stops the merge.
+# From 2026-09-03 (five minutes after G8 merged) to 2026-09-16 the ruleset
+# carried one `pull_request` rule and ZERO required checks and this workflow was
+# reporting only, which was the posture G8 was taken on. RENAMING A JOB HERE
+# BREAKS THE GATE: the ruleset names the check-run, which is the job id, and a
+# renamed job would leave a required check that never reports.
 #
 # This comment denied the ruleset's existence for a day (SKILL-AUDIT F29,
 # 2026-09-04) while the menu-check job's comment below described it correctly -
@@ -118,10 +118,9 @@ jobs:
   # full history the diff walks and `smoke` deliberately does not, and a red
   # menu check should not read as a broken test suite.
   #
-  # REPORTING ONLY, like everything else here. `main`'s ruleset requires a pull
-  # request and no status checks, so this shows a red X and does not stop a
-  # merge. That is the repo's rule - warn, do not block - and making it required
-  # would be a different decision needing its own finding.
+  # REQUIRED SINCE 2026-09-16, like `smoke` above: `main`'s ruleset names this
+  # job's check-run, so a red X here stops the merge. It was reporting only
+  # from 2026-09-04 to 2026-09-16.
   #
   # WHY IT EXISTS: of the four false premises in SHIP-PR-AUDIT.md, every one was
   # a claim about what a DIFFERENT file said, and `audit-menu` already carried

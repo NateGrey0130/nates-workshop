@@ -1,15 +1,14 @@
 # Nate's Workshop — Deployment Reference
 
 This repo is **live**: Cloudflare Pages deploys `main` on every merge — no
-build step, and nothing gates the merge. The five smoke suites do run on every
-pull request since 2026-09-03 (`.github/workflows/tests.yml`, `REPO-AUDIT.md`
-G8), reporting only: no required status check, and a red run does not stop a
-deploy. **`main` does carry a ruleset** — `22209348`, *"main: require a pull
-request"*, active since 2026-09-03 — but it holds one `pull_request` rule and
-**zero** required status checks, so it refuses a direct push and gates nothing
-on CI. This sentence was wrong about it for a day (`SKILL-AUDIT` `F29`,
-2026-09-04); read `gh api repos/NateGrey0130/nates-workshop/rulesets` rather
-than this line.
+build step. **Since 2026-09-16 CI blocks the merge:** `main`'s ruleset
+`22209348`, *"main: require a pull request"*, requires the `smoke` and `menus`
+checks (`.github/workflows/tests.yml`) and `regression` (`regression.yml`) to
+succeed before a PR can merge, and it still refuses a direct push. `play-flow`
+and `deploy-alarm` are reporting only. From 2026-09-03 to 2026-09-16 the ruleset
+carried zero required checks (`SKILL-AUDIT` `F29` for the day this file denied
+it existed); read `gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`
+rather than this line.
 This file describes how the deployment is configured and
 what to touch when adding to it. Guidance for working *in* the repo (D1 auth,
 the apply routine) is in `CLAUDE.md`; the character creator documents itself

@@ -6,37 +6,28 @@ description: Take a change in this repo from branch to deployed, the way this re
 # Shipping a change
 
 **Merging to `main` IS the deploy.** Cloudflare Pages publishes the repo root on
-every merge. There is no build step, and nothing gates the merge. Whatever is on
-`main` is live within a minute or two.
+every merge. There is no build step. Whatever is on `main` is live within a
+minute or two.
 
-That single fact drives everything below: there is no stage where a mistake is
-caught for you, so the checks happen before the merge or they do not happen.
+That single fact drives everything below: nothing after the merge catches a
+mistake, so the checks happen before the merge or they do not happen.
 
-**Step 4 is still yours, even though a workflow now runs the same suites.**
-`.github/workflows/tests.yml` runs the five smoke suites on every pull request
-(`REPO-AUDIT.md` G8), and it is **reporting only** — not a required status
-check, and a red run does not stop a merge. It also
-reports *after* you have opened the PR, which is after the point where step 4
-would have saved you. **Treat it as a second pair of eyes on a run you already
-did, never as the reason to skip one.**
+**Since 2026-09-16 three of those checks are required.** `main`'s ruleset
+`22209348`, *"main: require a pull request"*, requires the `smoke` and `menus`
+check-runs (`.github/workflows/tests.yml`, the five smoke suites and the
+menu-check, `REPO-AUDIT.md` G8) and `regression` (`regression.yml`,
+`SKILL-AUDIT` `F32`/`F36`, unfiltered so a green run means the suite ran) to
+succeed before a PR can merge. The merge button is disabled and `gh pr merge`
+is refused until they do. `play-flow` and `deploy-alarm` are reporting only.
+The ruleset is also what refuses the direct push step 1 describes. From
+2026-09-03 to 2026-09-16 it carried zero required checks, and before that this
+passage denied it existed (`F29`) — ask it rather than this paragraph:
+`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
 
-**`regression.mjs` runs in CI too, since 2026-09-04** — `.github/workflows/regression.yml`,
-`SKILL-AUDIT` `F32`, closing a follow-up `REPO-AUDIT` `G8` deferred. Same
-posture: reporting only, no required check. **On every pull request**, and
-concurrently with the smoke workflow rather than after it, so a run costs the
-slower of the two rather than the sum.
-
-It was path-filtered for part of that day and is not now (`F36`) — **so a green
-regression check means the suite ran**, which is what a filtered one could not
-promise. It still reports *after* the PR is open, so step 4 above is unchanged.
-
-**There IS a ruleset on `main`, and it does not gate CI.** `22209348`, *"main:
-require a pull request"*, active since 2026-09-03 — one `pull_request` rule,
-**zero** required status checks. It is what refuses the direct push step 1
-describes; it is not what a red run runs into. This passage denied its existence
-for a day (`SKILL-AUDIT` `F29`, 2026-09-04), which left a reader who checked
-unable to tell which half of the posture was wrong. Ask it:
-`gh api repos/NateGrey0130/nates-workshop/rulesets`.
+**Step 4 is still yours.** CI reports *after* you have opened the PR, which is
+after the point where step 4 would have saved you, and a required check that
+fails costs a round trip that a local run would not. **Treat it as a second pair
+of eyes on a run you already did, never as the reason to skip one.**
 
 ## The loop
 
@@ -132,7 +123,10 @@ unable to tell which half of the posture was wrong. Ask it:
    prompt for a PR opened in the browser. `--body-file` replaces it, which is
    this path, so **this list is the copy that gets read** and the template
    follows it.
-7. **Merge**, only when asked. It deploys. `--delete-branch` removes the
+7. **Merge**, only when asked. It deploys. **The ruleset owns the gate now:**
+   since 2026-09-16 `gh pr merge` is refused until `smoke`, `menus` and
+   `regression` report success, so read the checks if you like but nothing
+   rests on your reading them. `--delete-branch` removes the
    branch from GitHub *and* locally, so there is nothing left to tidy.
    Since 2026-09-03 the repository also has **`delete_branch_on_merge`** on, so
    the **remote** branch goes whether or not you pass the flag — including on a

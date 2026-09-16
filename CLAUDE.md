@@ -2,22 +2,23 @@
 
 Plain HTML/JS/CSS, zero dependencies, no build step. There is no `package.json`
 and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
-`main` IS the deploy, and **nothing gates that merge**.
+`main` IS the deploy, and **since 2026-09-16 CI blocks that merge**.
 
-Since 2026-09-03 the five smoke suites also run on every pull request
-(`.github/workflows/tests.yml`, `REPO-AUDIT.md` G8). That is **reporting only**:
-it is not a required status check, and a red run does not stop a merge.
+The five smoke suites run on every pull request (`.github/workflows/tests.yml`,
+`REPO-AUDIT.md` G8, since 2026-09-03) and so does `regression.mjs`
+(`regression.yml`, since 2026-09-04). **Their three check-runs — `smoke`,
+`menus`, `regression` — are required status checks** on `main`'s ruleset
+`22209348`, *"main: require a pull request"*: the merge button is disabled and
+`gh pr merge` is refused until all three report success. `play-flow` and
+`deploy-alarm` are still reporting only. From 2026-09-03 to 2026-09-16 the
+ruleset carried **zero** required checks and every line here said so; the
+sentence before that denied the ruleset existed (`SKILL-AUDIT` `F29`). Ask it
+rather than trusting this paragraph —
+`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
 
-**`main` does have a ruleset — it just does not gate on CI.** `22209348`,
-*"main: require a pull request"*, active since 2026-09-03: one `pull_request`
-rule and **zero** required status checks, so a direct push is refused and a red
-run is not. It was created five minutes after `G8` merged, and this sentence was
-wrong about it for a day (`SKILL-AUDIT` `F29`, 2026-09-04). Ask it rather than
-trusting this line — `gh api repos/NateGrey0130/nates-workshop/rulesets`.
-
-So it does not move the rule below — the checks still happen
-before the merge or they do not happen — it only means a skipped run gets
-noticed afterwards instead of never.
+That does not move the rule below — the checks still run
+before the merge, and step 4 of `ship-pr` is still yours — it means a red run
+now stops the merge instead of being noticed afterwards.
 
 App conventions and the data model live in `apps/character-creator/README.md`.
 **The migration list is not there** — it moved to
@@ -303,20 +304,21 @@ client-side convention on one machine, and it stopped nothing else: not a
 session started elsewhere, not a push by hand, not a second machine.
 
 There is now a GitHub **ruleset** on `main` — *"main: require a pull request"* —
-that refuses a direct push server-side (`REPO-AUDIT.md` G1). Exactly one rule,
-and the list of what it does **not** do is the point:
+that refuses a direct push server-side (`REPO-AUDIT.md` G1). Two rules since
+2026-09-16, and the list of what it does **not** do is still the point:
 
 | | |
 |---|---|
 | required approving reviews | **0** — self-merge works |
-| required status checks | **none**, and the `tests` workflow is deliberately not one |
+| required status checks | **`smoke`, `menus`, `regression`** (GitHub Actions), since 2026-09-16; `play-flow` and `deploy-alarm` are not |
+| strict (branch must be up to date with `main`) | **off** — a merge under an open PR does not force a rebase |
 | conversation resolution | not required |
 | linear history, signed commits, deletion, force-push rules | not enabled |
 | bypass actors | **none** |
 
-**So the merge button is exactly as free as it was, and only the bypass is
-gone.** If anything about merging got harder, that is a defect rather than the
-rule working.
+**So the merge button waits for three green checks and is otherwise as free as
+it was.** A merge refused for any other reason is a defect rather than the rule
+working.
 
 **It is not a lock-out.** An admin can delete or disable the ruleset from the
 repository's Rules settings in seconds, which is the escape hatch the emergency
