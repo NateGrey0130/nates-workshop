@@ -320,6 +320,101 @@ check('catalog configs are internally consistent', catalogProblems.length === 0,
   check('and every catalog field is a real column in schema.sql', wrong.length === 0, wrong.join('; '));
 }
 
+// EVERY CATALOG IS IN EVERY HAND-WRITTEN CATALOG LIST. BOOK-INGEST-AUDIT F100.
+//
+// CATALOGS above is the DECLARED list. Five other lists name the catalogs by hand,
+// and nothing tied them to it: the ninth catalog (`talents`, F76) had to be added
+// to each by a person remembering, which had already failed three times - F28,
+// then F85 twice over, where 466 cited rows were verified by nothing for want of
+// three strings. F85 predicted in its own ongoing-cost line that the ninth would
+// be omitted too.
+//
+// A CHECK RATHER THAN A REFACTOR, on Nate's word (2026-09-16). Deriving these
+// lists from CATALOGS was the other option, and it was declined for the reason
+// F85 gave: the lists `disagree about scope on purpose`, and a derived base list
+// makes a deliberate exclusion easy to lose. So each list stays literal, and this
+// asserts it is complete unless an exclusion is NAMED HERE with its reason.
+//
+// The three scripts are read as TEXT. None of them can be imported: all three do
+// their work at module scope - query D1, spawn wrangler, build a scratch database
+// - so importing one from the suite would run a whole ledger.
+{
+  const tables = Object.values(CATALOGS).map((c) => c.table);
+  const keys = Object.keys(CATALOGS);
+  const readRepo = (f) => readFileSync(join(repoRoot, f), 'utf8');
+  const quoted = (s) => [...s.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+
+  // 1 and 2. source-coverage's live-side and build-side group lists. These two
+  // must ALSO agree with each other, which is the sharper half: when they
+  // differed by one table every run printed a standing negative delta the size
+  // of that whole table, and nothing named it (F85: -171, then -220).
+  const sc = readRepo('scripts/source-coverage.mjs');
+  const spreads = [...sc.matchAll(/\.\.\.(\[[^\]]*\])\.map\(/g)].map((m) => quoted(m[1]));
+  check('both source-coverage catalog lists were found', spreads.length === 2, `found ${spreads.length}`);
+  for (const [i, s] of spreads.entries()) {
+    const missing = tables.filter((t) => !s.includes(t));
+    check(`source-coverage list ${i + 1} of 2 names every catalog`, missing.length === 0,
+      'missing: ' + missing.join(', '));
+  }
+  check('and the two source-coverage lists are identical',
+    spreads.length === 2 && JSON.stringify([...spreads[0]].sort()) === JSON.stringify([...spreads[1]].sort()),
+    spreads.map((s) => s.join(',')).join('  VS  '));
+
+  // 3. repo-vs-live's TABLES. A SUPERSET: it also compares imported_classes,
+  // skill_system_bases and catalog_redirects, which are not catalogs, so extras
+  // are expected and only an absence is wrong.
+  const rvl = readRepo('scripts/repo-vs-live.mjs');
+  const tStart = rvl.indexOf('const TABLES = [');
+  const tBlock = rvl.slice(tStart, rvl.indexOf('\n];', tStart));
+  const rvlTables = [...tBlock.matchAll(/^\s*\['([a-z_]+)',/gm)].map((m) => m[1]);
+  check('repo-vs-live TABLES was found', rvlTables.length > 0);
+  const rvlMissing = tables.filter((t) => !rvlTables.includes(t));
+  check('repo-vs-live compares every catalog', rvlMissing.length === 0,
+    'missing: ' + rvlMissing.join(', '));
+
+  // 4. drift-check's CITATION_TABLES. A deliberate SUBSET, and the exclusions are
+  // named here so an OMISSION cannot hide among them. Each is the drift-check
+  // file's own written decision, not this check's:
+  //   gear, vehicles  - a catalog name is reworded prose, not the page heading
+  //   enchantments, totems - named by their own row text, not a printed checklist
+  //
+  // FOUR, NOT THREE. F100 said `gear`, `vehicles` and `enchantments`; drift-check's
+  // comment names `vehicles`, `enchantments` and `totems`, and gear's exclusion is
+  // a separate comment further down. A check written from the finding's sentence
+  // would have gone red on `totems` the first time it ran.
+  const CITATION_EXCLUDED = ['gear', 'vehicles', 'enchantments', 'totems'];
+  const dc = readRepo('scripts/drift-check.mjs');
+  const citTables = quoted((dc.match(/const CITATION_TABLES = (\[[^\]]*\])/) || [])[1] || '');
+  check('drift-check CITATION_TABLES was found', citTables.length > 0);
+  const citMissing = tables.filter((t) => !citTables.includes(t) && !CITATION_EXCLUDED.includes(t));
+  check('drift-check cites every catalog it does not deliberately exclude', citMissing.length === 0,
+    'missing, and not a named exclusion: ' + citMissing.join(', '));
+  // An exclusion that has since been ADDED is stale here, and a stale exclusion
+  // is how a later omission would go unnoticed.
+  const staleExclusion = CITATION_EXCLUDED.filter((t) => citTables.includes(t));
+  check('and no named exclusion is actually cited', staleExclusion.length === 0,
+    'listed as excluded but present: ' + staleExclusion.join(', '));
+  check('and every named exclusion is a real catalog',
+    CITATION_EXCLUDED.every((t) => tables.includes(t)), CITATION_EXCLUDED.join(', '));
+
+  // 5. regression.mjs's redirect-check map - the FIFTH list, which F100 did not
+  // know existed. Keyed by CATALOGS KEY, because catalog_redirects stores the
+  // key; so this compares keys rather than tables, and an extra key is as wrong
+  // as a missing one (that is how `super_abilities` sat there instead of
+  // `superAbilities`, matching no redirect row).
+  const rg = readFileSync(join(appDir, 'test', 'regression.mjs'), 'utf8');
+  const cStart = rg.indexOf('const CATALOGS = {', rg.indexOf('catalog key -> [table, unique column]'));
+  const cBody = rg.slice(cStart, rg.indexOf('\n  };', cStart));
+  const rgKeys = [...cBody.matchAll(/^\s*([A-Za-z_]+):\s*\[/gm)].map((m) => m[1]);
+  check('the regression redirect map was found', rgKeys.length > 0);
+  const rgMissing = keys.filter((k) => !rgKeys.includes(k));
+  const rgExtra = rgKeys.filter((k) => !keys.includes(k));
+  check('the regression redirect map knows every CATALOGS key', rgMissing.length === 0,
+    'missing: ' + rgMissing.join(', '));
+  check('and names none that is not one', rgExtra.length === 0,
+    'not a CATALOGS key (catalog_redirects stores the key, not the table): ' + rgExtra.join(', '));
+}
+
 // ---------- 1c. The row form takes its widths from the field type ----------
 // .cat-form was a grid with no grid-template-columns - one column, one field
 // per row, every field the full 1154px whatever it held. Gear measured 1201px

@@ -44,6 +44,26 @@ either:
 Step 9 is the one that catches the others: `and it matches schema.sql` fires the
 moment the count is stale, which is usually the moment the table lands.
 
+**And a new CATALOG is named by hand in the ledgers too.** Declaring it in
+`js/catalog-fields.js` (step 6) builds the editor and the endpoints, and reaches
+none of these, which keep their own literal lists on purpose - they disagree
+about scope, so they are not derived:
+
+| where | the list |
+|---|---|
+| `scripts/source-coverage.mjs` | the group list, **twice** - live side and build side - and the two must match or every run prints a phantom delta the size of a table |
+| `scripts/repo-vs-live.mjs` | `TABLES` - a triple naming the table's identity column, read from `schema.sql` rather than assumed |
+| `scripts/drift-check.mjs` | `CITATION_TABLES` - only if the catalog's names are the book's own headings; gear-like catalogs are deliberately left out |
+| `apps/character-creator/test/regression.mjs` | the redirect map - keyed by the **CATALOGS key**, not the table name, because that is what `catalog_redirects` stores |
+
+**You do not have to remember these.** The smoke check *"every catalog is in
+every hand-written catalog list"* reads all of them as text and fails, naming the
+list and the catalog, the moment one is missed. It exists because this was
+remembered by hand for the ninth catalog after being forgotten for three before
+it - `BOOK-INGEST-AUDIT` F28, F85 and F100. A deliberate exclusion from
+`CITATION_TABLES` has to be NAMED in that check, with its reason, or it reads as
+an omission.
+
 **This row used to quote the number, and the number went stale.** It said
 twenty-six while the README said thirty-three and `schema.sql` had 33 — in the
 file whose job is to tell you to update that count. The README was fine the

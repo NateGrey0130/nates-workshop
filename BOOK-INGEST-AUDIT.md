@@ -14224,6 +14224,96 @@ deliberate exclusion that now has to be written as an exclusion. Of the check,
 one assertion and a named-exclusion list to keep current. **Of doing nothing,
 the tenth catalog.**
 
+**Taken, 2026-09-16 (PR #1090), as its ALTERNATIVE and not its proposal, on
+Nate's word.** A check, not the derive-from-`CATALOGS` refactor.
+
+**Posture, said back, because the finding never stated one for this option.**
+The *"no new gate, no exit-code change"* line belongs to the REFACTOR, which is
+not what shipped. <!-- claim-ok: quoting the posture this note distinguishes -->
+What shipped is a smoke assertion: it fails the suite the way every other check
+in it does, it is not a required CI status, and it cannot block a merge.
+
+**Each list stays literal.** The refactor was declined for the reason F85 gave -
+the lists *"disagree about scope on purpose"*, and a derived base list makes a
+deliberate exclusion easy to lose. So this asserts every list is complete unless
+an exclusion is **named in the check with its reason**.
+
+**THIS FINDING UNDERSTATED ITS OWN CASE. There are FIVE lists, not four.** The
+premise audit found a fifth at `apps/character-creator/test/regression.mjs`,
+introduced by the comment *"catalog key -> [table, unique column], mirroring
+js/catalog-fields.js"*, read 2026-09-16. **It had already drifted twice:**
+
+- **`talents` was missing** - the ninth catalog, added to the other four by hand
+  in F76 (#1086) and not to this one, because nobody knew it was a list;
+- **its super-ability key was WRONG** - `super_abilities`, where `CATALOGS` keys
+  it `superAbilities`. That matters more than it looks: `redirectStatements` is
+  called with the `CATALOGS` key (`catalogs/rows.js` and `_lib/catalog-merge.js`,
+  read the same day), so `catalog_redirects.catalog` stores `superAbilities`. The
+  first super-ability rename or merge would have tripped this map's own guard,
+  and worse, the retired-key JOIN beside it (`r.catalog = '${cat}'`) would have
+  matched nothing and skipped super abilities **in silence**.
+
+It was latent only because no super-ability redirect exists yet - production
+holds redirects for four catalogs, `gear 25, psionics 6, skills 27, spells 8`,
+`--remote` 2026-09-16. **Both are fixed here**, because the check this PR adds
+cannot pass honestly with either still wrong.
+
+**THIS FINDING ALSO MISCOUNTED ONE EXCLUSION, and the check would have gone red on
+it.** It says *"`gear`, `vehicles` and `enchantments` are excluded from it on
+purpose"*. <!-- claim-ok: quoting the premise this note corrects -->
+`CITATION_TABLES` excludes **four**: `gear`, `vehicles`, `enchantments` **and
+`totems`**. `scripts/drift-check.mjs`'s own comment names `vehicles`,
+`enchantments` and `totems` together, and gear's exclusion is a separate comment
+further down - so the finding swapped `gear` in for `totems`. A check written
+from the finding's sentence would have named three and failed on `totems` the
+first time it ran. The check names all four, each with its reason copied from
+drift-check's own written decision.
+
+**The five lists, and what the check asserts of each**, all read as TEXT:
+
+| list | shape | asserted |
+|---|---|---|
+| `source-coverage.mjs` live side | tables | complete |
+| `source-coverage.mjs` build side | tables | complete, **and identical to the live side** |
+| `repo-vs-live.mjs` `TABLES` | triples | a superset - it also compares three non-catalogs |
+| `drift-check.mjs` `CITATION_TABLES` | tables | complete except four NAMED exclusions; no named exclusion present; every exclusion a real catalog |
+| `regression.mjs` redirect map | CATALOGS keys | exactly the keys - no missing, **no extra** |
+
+**Read as text because none of the three scripts can be imported.** All three do
+their work at module scope - `drift-check` queries D1, `repo-vs-live` spawns
+wrangler to build a scratch database, `source-coverage` reads caches and calls
+`process.exit` - so importing one from the suite would run a whole ledger.
+
+**PROVED BY MAKING IT FAIL, six ways**, each reintroducing the omission one
+assertion exists to catch:
+
+| reintroduced | fired |
+|---|---|
+| `talents` dropped from source-coverage's build-side list | `list 2 of 2 names every catalog - missing: talents` AND `the two source-coverage lists are identical` |
+| `talents` dropped from `repo-vs-live` | `repo-vs-live compares every catalog - missing: talents` |
+| `talents` dropped from `CITATION_TABLES` | `cites every catalog it does not deliberately exclude - missing, and not a named exclusion: talents` |
+| `totems` ADDED to `CITATION_TABLES` while still a named exclusion | `no named exclusion is actually cited - listed as excluded but present: totems` |
+| `super_abilities` restored as the regression map key | `knows every CATALOGS key - missing: superAbilities` AND `names none that is not one - ... super_abilities` |
+| `talents` dropped from the regression map | `knows every CATALOGS key - missing: talents` |
+
+**Worth recording about the proof itself, since it nearly read as a failure of the
+check:** the first harness reported NOTHING firing in any of the six. The check
+was fine; the harness read only stdout, and the smoke suite writes `FAIL` lines
+to stderr. Re-run reading both, five fired - and the sixth was the harness's own
+text filter missing the word "cited". Each was confirmed by hand before being
+believed. A proof that has only ever shown "nothing fired" proves nothing either.
+
+**AND THE CAUSE, not only the recurrence.** `.claude/skills/schema-change/SKILL.md`'s
+*"A whole TABLE needs four more places"* named `catalog-fields.js`, `catalogs.js`,
+`character-json.js` and the README count, and **none of these lists** - so no
+instruction layer told a new-catalog author they exist, which is why "a person
+remembered" was the only mechanism. It now carries them in a table, and says the
+author does not need to remember: the check names the list and the catalog the
+moment one is missed.
+
+**Smoke 2207 -> 2220. Regression 441**, unchanged in count, passing with the
+corrected map.
+
 ### F101 - medium - a Nightbane may BUY two Talents every level with permanent P.P.E., and nothing can spend a pool as a currency
 
 **Filed 2026-09-16 while taking F76 (4 of 4), PR #1087. Not taken.** It is the
