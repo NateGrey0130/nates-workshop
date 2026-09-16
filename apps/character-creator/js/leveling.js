@@ -777,11 +777,15 @@ export function buildProposal(character, cls, toLevel) {
   proposal.skill_picks = skillGrantsFor(cls, fromLevel, toLevel);
   proposal.skill_picks_total = proposal.skill_picks.reduce((n, g) => n + g.count, 0);
 
-  // Spells and psionic powers the levels earn. Reported, and applied only by
-  // the WIZARD's Advancement step — the sheet's live level-up renders named
-  // fields and ignores these, so nothing there promises what it cannot deliver.
-  // Applying them on a live level-up is a follow-up, not this change.
+  // Spells, psionic powers and Talents the levels earn. The sheet's level-up
+  // offers a picker for each (powerKindBlock), and whatever is left unpicked
+  // banks to pending_power_picks.
   proposal.spell_picks = spellGrantsFor(cls, fromLevel, toLevel);
   proposal.psionic_picks = psionicGrantsFor(cls, fromLevel, toLevel);
+  // Talents too, which BOOK-INGEST-AUDIT F76 banked on level-up without ever
+  // putting on the proposal. So the sheet offered no Talent picker at level-up:
+  // the free Talents at levels four, seven, ten and twelve banked silently, and
+  // the banked-picks panel then offered PSIONIC powers to spend them with.
+  proposal.talent_picks = talentGrantsFor(cls, fromLevel, toLevel);
   return proposal;
 }

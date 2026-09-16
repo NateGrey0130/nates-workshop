@@ -11504,6 +11504,62 @@ question answered in more than one place.** The use button's pool was decided
 twice and the two disagreed; a spent pick's key was built three times and two
 were wrong. Both are now answered once.
 
+**Adjusted a third time, 2026-09-16 (PR #1094). The free Talents a level-up
+earned could not be chosen, then or later.** Found while designing F101's Talent
+purchases, which would have been built on the same two panels.
+
+**What was wrong, in two places.** `buildProposal` in `js/leveling.js` put
+`spell_picks` and `psionic_picks` on a level-up proposal and never
+`talent_picks`, and the sheet loaded no Talent catalog. So at levels four, seven,
+ten and twelve the sheet showed no Talent picker, and `level-confirm` banked the
+grant silently. The banked-picks panel then read the row with a two-way test -
+spell, or else psionic - and offered **psionic powers** to spend a Talent grant
+on, which the server refuses. Nothing on the sheet could spend one.
+
+**Measured before the fix**, by running the sheet's own `powerPickerBlock` and
+`pendingPowersPanel` against a stub character holding a banked level-4 Talent
+grant: the level-up picker rendered no Talents block, and the banked panel
+offered `["Sixth Sense"]`, a psionic power.
+
+**The fix.** `buildProposal` carries `talent_picks`; the sheet loads
+`C.talentCatalog`; both pickers take a named `talent` branch sharing one pool
+function, `talentPoolFor`, rather than each deciding the pool. Its level gate is
+the server's: a Talent's `min_character_level` against the level the GRANT is
+from, so a level-4 grant cannot take a fifth-level Talent and a level-7 grant
+can. The picker offers exactly what `resolvePowerPicks` accepts.
+
+**Pinned by running, not matching**: the functions are cut out of `sheet.js` and
+executed in `test/checks/rendered-ui.mjs`. **Seven of its nine checks fail
+against the code that shipped.** One existing text check counted exactly two
+copies of the list-reading line in the whole file and broke on the third, in
+`talentPoolFor`; it now looks inside each picker, and still fails when a picker
+stops reading its list (injected and run).
+
+**Walked in a browser, on a local server on its own port, against a local-only
+Nightbane**: logging XP to level 4 opened a level-up panel with *Talents - 1
+earned*, offering five Talents and leaving out the one already held and the two
+fifth-level ones. Confirmed with the pick left blank, the grant banked as a
+`talent` row; the banked panel then offered the same five, and choosing Soul
+Shield learned it and closed the row (`count` 0, `claimed_at` set). That also
+exercises PR #1093's fix end to end.
+
+**A premise of my own that failed, recorded because it was nearly shipped.**
+While writing this I took the sheet's system test
+(`!x.system || x.system === C.data.campaign_system`) to disagree with the
+server's (`!system || !r.system || r.system === system`) for a character with no
+campaign, changed the Talent pool to match the server, and pinned it. Inserting
+the local test character refuted it: `characters.campaign_id` and
+`campaigns.system` are both `NOT NULL` in `db/schema.sql`, and production's four
+campaigns all carry a system (counted `--remote` 2026-09-16). The two tests
+always agree. The change and its check were reverted before commit.
+
+**Nothing reached a player.** Production holds no `talents` rows, no Nightbane
+class and no banked Talent picks, counted `--remote` 2026-09-16.
+
+**Three defects in one shipped feature, all the same shape: a question answered
+in more than one place, with one answer missing a kind.** The use button's pool,
+a spent pick's key, and now which kinds a level-up offers.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
