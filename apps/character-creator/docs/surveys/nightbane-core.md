@@ -161,7 +161,7 @@ Counted by structure over all 248 cached pages, not by reading prose.
   civilian cars and vans with a price and little else, and printed 232 is
   gadgets. There is no stat block here of the kind that filled 55 rows from
   Triax.
-  **WRONG, corrected 2026-09-16 (PR #PRNUM):** every car and motorcycle on printed
+  **WRONG, corrected 2026-09-16 (PR #1126):** every car and motorcycle on printed
   231 prints A.R., S.D.C., speed, range and cost; printed 232 holds three aircraft
   and five underwater vehicles, with the gadgets only at its foot. Migration 062
   gave `vehicles` an A.R. and S.D.C., and Heroes Unlimited imported these same
@@ -587,7 +587,7 @@ the Nightbane Mystic O.C.C. needs a distinguished id.
 against a catalog that already holds Rifts equivalents of much of it. All of it,
 weapons only, or none.
 
-**DECIDED 2026-09-16 (PR #PRNUM), on Nate's word: import ALL of it as
+**DECIDED 2026-09-16 (PR #1126), on Nate's word: import ALL of it as
 `nightbane` rows — gear AND vehicles — one row per book.** Both of the question's
 premises were wrong, and correcting them is what made this a real choice rather
 than a size estimate.
@@ -692,7 +692,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
 | 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
 | 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
-| 2026-09-16 | #PRNUM | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
+| 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 
 ### What remains
 
