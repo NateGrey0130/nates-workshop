@@ -88,6 +88,13 @@ because the render will not help there.
 **Printed 233 is the most valuable page in the book** and it is clean in the
 text layer as well as on a render. The twelve ladders:
 
+**CORRECTED 2026-09-16 (PR #1125): a ladder here is NOT evidence an entry is
+playable, and the table row above says it is.** New West and Spirit West both
+settled that playability is stated on each entry's own page; this book is a
+fourth where it holds, since the Nightlord and the Priest of Night have ladders
+and are NPC-tagged. Printed 233 settles canonical names and experience; D3
+settles who is playable.
+
 | ladder as printed | covers |
 |---|---|
 | Nightbane & Guardian | Nightbane, Guardian |
@@ -180,16 +187,16 @@ entry's own, read off the cache.
 | Nightbane Sorcerer O.C.C. | 118–119 | Nightbane Sorceror & Nightbane Mystic | |
 | Nightbane Mystic O.C.C. | 119–120 | Nightbane Sorceror & Nightbane Mystic | |
 | Doppleganger R.C.C. | 158–160 | Dopplegangar | |
-| Hound R.C.C. | 161 | Hound & Hunter | |
-| Hound Master R.C.C. | 162–163 | Hound Master | **the prose contradicts the ladder — see below** |
+| Hound R.C.C. | 161 | Hound & Hunter | **excluded — D3** (a flat refusal) |
+| Hound Master R.C.C. | 162–163 | Hound Master | **excluded — D3** (advised against) |
 | Hunter R.C.C. | 164 | Hound & Hunter | |
 | Ashmedai | 165–166 | Ashmedai, Psychic & Sorceror | |
 | Namtar / Hollow Men | 167 | Nemtar/Hollow Men | |
 | Snake Bird R.C.C. | 169 | Snakebird & Mystic | |
-| Nightlord R.C.C. | 173–174 | Nightlord | |
-| Ba'al-Zebul R.C.C. | 175–176 | Nightprince & Vampire | |
-| Priest of Night O.C.C. | 177 | Priest of Night | |
-| Master Vampire R.C.C. | 179–180 | Nightprince & Vampire | **prose contradicts the ladder** |
+| Nightlord R.C.C. | 173–174 | Nightlord | **excluded — D3** (NPC villain, unfit to play) |
+| Ba'al-Zebul R.C.C. | 175–176 | Nightprince & Vampire | **excluded — D3** (discouraged) |
+| Priest of Night O.C.C. | 177 | Priest of Night | **excluded — D3** (tagged NPC Villain) |
+| Master Vampire R.C.C. | 179–180 | Nightprince & Vampire | **excluded — D3** (not recommended) |
 | Secondary Vampire R.C.C. | 181 | Nightprince & Vampire | |
 | Wild Vampire R.C.C. | 182 | Nightprince & Vampire | |
 | Wampyr R.C.C. | 188 | Wampyr | |
@@ -218,6 +225,17 @@ saying they are not for players:
 Phase World settled the same conflict against the ladder when the Royal
 Kreeghor's heading labelled it NPC villains. **Recorded as an open decision,
 not resolved here** — see D3.
+
+**CORRECTED 2026-09-16 (PR #1125), and this section is left standing as the
+record of what the survey believed.** Three things in it are wrong:
+
+- **The flat refusal on printed 162 is the HOUND's**, ending the Hound entry in
+  the left column. The Hound Master's own note, in the right column, only advises
+  against playing one — and goes on to say what a player Hound Master is like.
+- **It is not twice. Six laddered entries speak against being played** — see D3.
+- **The Royal Kreeghor was not this conflict.** Phase World's own survey records
+  that its ladder and its page AGREED it was not playable; there was no ladder to
+  overrule.
 
 ## Catalog diff
 
@@ -526,6 +544,38 @@ none of it a guess:**
 **D3 — Hound Master and Master Vampire.** Ladder says playable, own page says
 not. Phase World excluded the Royal Kreeghor on the same conflict.
 
+**DECIDED 2026-09-16 (PR #1125): SIX entries are excluded, not two, and 15
+laddered classes are playable.** The question named two entries; reading every
+laddered entry's own page found six, and two of the question's premises false
+(corrected under *The ladder and the prose disagree*, above).
+
+| entry | printed | what its own page says | kind | settled by |
+|---|---|---|---|---|
+| Hound | 162 | cannot be a player character | refusal | precedent |
+| Nightlord | 173 | an NPC villain, totally unfit to play | refusal | precedent |
+| Priest of Night | 177 | subheading tags it NPC Villain | tag | precedent |
+| Ba'al-Zebul | 176 | a GM note calls player Night Princes discouraged | advice | **Nate, 2026-09-16** |
+| Hound Master | 162 | not recommended as a player character | advice | **Nate, 2026-09-16** |
+| Master Vampire | 180 | not recommended as player characters | advice | **Nate, 2026-09-16** |
+
+**The rule, and where each half comes from.** A flat refusal or an NPC tag
+excludes an entry whatever its ladder says — New West and Spirit West. Advice
+against playing is a call taken entry by entry, and it has gone both ways here:
+Mystic Russia filtered the Rusalka, and imported the Necromancer, whose page
+recommends it as an NPC villain. **For these three Nate chose exclusion**, the
+Rusalka's answer.
+
+**Where the other 15 stand, so the class import does not re-read them.** Tagged
+optional or allowed on their own pages: Doppleganger (158), Snake Bird (169),
+Secondary Vampire (181), Wild Vampire (182), Wampyr (188), Guardian (189). Silent:
+Psychic, Nightbane R.C.C., Sorcerer, Mystic, Nightbane Sorcerer, Nightbane
+Mystic, Hunter, Ashmedai, Namtar — a keyword search, not a line-by-line read, for
+the last three. Printed 39 leaves any class to the GM and expects most player
+characters to be Nightbane.
+
+**For the class import:** a Rifts class with the id `mystic` already exists, so
+the Nightbane Mystic O.C.C. needs a distinguished id.
+
 **D4 — the ~280 gear entries.** Modern real-world equipment at dollar prices,
 against a catalog that already holds Rifts equivalents of much of it. All of it,
 weapons only, or none.
@@ -583,6 +633,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-14 | [#1037](https://github.com/NateGrey0130/nates-workshop/pull/1037) | F73's blocking half: the three CHECKs, `campaigns.js` and the wizard picker |
 | 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
 | 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
+| 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
 
 ### What remains
 
