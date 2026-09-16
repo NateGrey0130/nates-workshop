@@ -530,6 +530,38 @@ export function run() {
   // twice, because it was written against a seven-step wizard that has not
   // existed for a long time. A hardcoded column count does not fail loudly when
   // the step list changes - it just puts the last steps off the end of the grid.
+  // A POWER'S POOL IS DECIDED IN ONE PLACE, and the render path and the spend path
+  // both use it.
+  //
+  // They used to answer the question separately, and disagreed. The row renderer
+  // put `data-pool="ppe"` on a Talent's use button, so it enabled and disabled off
+  // P.P.E.; `usePower` carried its own copy - `p.type === 'spell' ? 'ppe' : 'isp'`
+  // - which sent every non-spell to I.S.P. Pressed on a real sheet, the button
+  // spent NOTHING: a Nightbane has no `isp_current`, so the function returned early
+  // on a null pool, with P.P.E. unchanged and no message. BOOK-INGEST-AUDIT F76's
+  // outcome note had reported it working, from seeing it render and enable.
+  section('A power spends the pool its button says it spends');
+  {
+    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const defs = (sheetSrc.match(/function powerPool\(/g) || []).length;
+    check('one function decides which pool a power spends', defs === 1, `defined ${defs} times`);
+    const use = sheetSrc.slice(sheetSrc.indexOf('async function usePower('),
+      sheetSrc.indexOf('async function usePower(') + 900);
+    check('and the spend path reads it', /powerPool\(p\)/.test(use), use.slice(0, 200));
+    // THE SHAPE THAT WAS WRONG, named so it cannot come back under another name.
+    // Any ternary choosing between the two pool strings is a second answer to the
+    // question powerPool exists to answer once.
+    //
+    // Line comments are stripped first. The comment above powerPool quotes the old
+    // line on purpose - it is the record of what went wrong - and scanning the raw
+    // source counted that quotation as a second rule, which is the check failing
+    // on its own explanation. Found by running it, not predicted.
+    const code = sheetSrc.replace(/\/\/.*$/gm, '');
+    const second = [...code.matchAll(/\?\s*'ppe'\s*:\s*'isp'|\?\s*'isp'\s*:\s*'ppe'/g)];
+    check('and nothing else in the sheet decides it with its own ternary', second.length === 0,
+      `${second.length} other ternary choosing between ppe and isp`);
+  }
+
   section('The wizard rail');
   {
     const app = readFileSync(join(appDir, 'app.js'), 'utf8');

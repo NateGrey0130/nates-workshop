@@ -549,6 +549,27 @@ function rollD20(kind, name, bonus, target) {
 // targeted DOM update rather than a re-render - see adjustPool below - so a
 // button rendered live stays live after the pool it spends has run out, which
 // is the same false promise one action later. Called wherever a pool moves.
+// WHICH POOL A POWER SPENDS, decided in ONE place.
+//
+// There used to be two answers to this question in this file, and they
+// disagreed. The row renderer said a Talent spends P.P.E. and put
+// `data-pool="ppe"` on its button, so the button enabled and disabled off
+// P.P.E.; `usePower` had its own copy - `p.type === 'spell' ? 'ppe' : 'isp'`
+// - which sent every non-spell to I.S.P. So pressing a Talent's use button
+// deducted its cost from I.S.P., or did nothing at all, because a Nightbane
+// usually has no `isp_current` and the function returns early on a null pool.
+// BOOK-INGEST-AUDIT F76's outcome note reported the button as working; it
+// had been seen rendering and enabled, and never pressed.
+//
+// A spell and a Talent spend P.P.E.; a psionic power spends I.S.P.; a super
+// ability spends nothing, because it is permanent and free - which is why
+// `super_abilities` has no cost column, and why this returns null for it.
+function powerPool(p) {
+  if (p?.type === 'spell' || p?.type === 'talent') return 'ppe';
+  if (p?.type === 'super') return null;
+  return 'isp';
+}
+
 function syncPowerBtns() {
   for (const b of document.querySelectorAll('button[data-pool][data-cost]')) {
     const left = C.data[b.dataset.pool + '_current'];
@@ -1860,7 +1881,7 @@ function render() {
     // permanent acquisition cost is NOT spent here: it was paid when the
     // Talent was acquired, and `acquire_cost` rides on the row so the sheet
     // can say what it cost rather than charge it again.
-    const pool = kind === 'spell' || kind === 'talent' ? 'ppe' : kind === 'super' ? null : 'isp';
+    const pool = powerPool(p);
     const cost = typeof p.cost === 'number' ? p.cost : null;
     // The group heading carries what the per-row "spell · L3" label used to.
     const TIER_LABEL = { minor: 'Minor', major: 'Major', common: 'Common', elite: 'Elite' };
@@ -2984,7 +3005,9 @@ function toggleItemDesc(itemId) {
 async function usePower(index) {
   const p = (C.data.powers || [])[index];
   if (!p || typeof p.cost !== 'number') return;
-  const pool = p.type === 'spell' ? 'ppe' : 'isp';
+  const pool = powerPool(p);
+  // A power with no pool - a super ability - has nothing to spend.
+  if (!pool) return;
   const cur = C.data[pool + '_current'];
   if (cur == null) return;
   if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
