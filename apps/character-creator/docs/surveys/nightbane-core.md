@@ -174,7 +174,7 @@ entry's own, read off the cache.
 | class | printed | ladder | note |
 |---|---|---|---|
 | Psychic **P.C.C.** | 68 | Ashmedai, Psychic & Sorceror | the first P.C.C. this catalog would hold |
-| Nightbane R.C.C. | 87–90 | Nightbane & Guardian | four skill packages |
+| Nightbane R.C.C. | 87–90 | Nightbane & Guardian | four skill packages — **D2: four package O.C.C.s** |
 | Sorcerer O.C.C. | 115–116 | Ashmedai, Psychic & Sorceror | |
 | Mystic O.C.C. | 117–118 | Snakebird & Mystic | |
 | Nightbane Sorcerer O.C.C. | 118–119 | Nightbane Sorceror & Nightbane Mystic | |
@@ -425,8 +425,9 @@ Horror Factor and movement onto a character at creation.
 
 ## Open decisions
 
-Recorded rather than resolved, in the shape `mystic-russia` used. None is
-answered in this survey and none should be assumed by a later session.
+Recorded rather than resolved on 2026-09-12, in the shape `mystic-russia` used.
+**Each decision's answer, once taken, is the `DECIDED` paragraph under its own
+heading** - read there, and assume nothing about a decision that has none.
 
 **D1 — how does a third system land?** The CHECK-constraint migration and the
 ten vocabulary sites, as one PR or several, and whether it ships before any
@@ -450,10 +451,77 @@ two, because `S.system` feeds the campaign POST. A Nightbane class validates and
 stores; it cannot yet be built in the wizard. Lifting that is `campaigns.js:56`,
 the CHECK on `campaigns.system`, and `renderSystem()` — F73 stays open for it.
 
+**SUPERSEDED 2026-09-14 (PR #1037), and the paragraph above is left as the record
+of the day.** F73's deferred half shipped: `campaigns.system`, `gear.system` and
+`vehicles.system` all admit `nightbane` (migrations through 060), `campaigns.js`
+accepts it, and `renderSystem()` offers it. F73 is closed, in
+`BOOK-INGEST-AUDIT.closed.md`. A Nightbane campaign and character can be created;
+until the extraction plan ships, there is nothing to build one from.
+
 **D2 — the four Nightbane skill packages.** `VARIANT_OVERRIDES` deliberately
 excludes skills, so Basic, Resistance/Spook Squad-Trained,
 Nocturne/Seeker/Lightbringer and Warlord cannot be variants of one class. Four
 published classes, or one class and a new mechanism.
+
+**DECIDED 2026-09-16 (PR #PRNUM): one Nightbane R.C.C. plus FOUR PACKAGE O.C.C.s,
+restricted to each other both ways. No code.** The question offered two answers
+and the right one is a third, which neither half named; the premise pass that
+settled it found both halves of the question out of date.
+
+**Why not variants — the conclusion held, the reason did not.** A variant is no
+longer barred from skills: `VARIANT_OVERRIDES` (`apps/character-creator/js/parser.js`,
+read 2026-09-16) now carries `skill_overrides`, `skills_additional` and
+`related_skills_count`. What it still cannot change is the related-skill
+**categories**, their per-category **bonuses** and the level **schedule** — and
+those are exactly where the four packages differ.
+
+**Why not `skills.mos`, the mechanism the question did not know existed.** It is
+precisely "N complete skill packages, pick one" (`RETRO-AUDIT` R2, #714; honoured
+end to end since `BOOK-INGEST-AUDIT` F82), and it works on an R.C.C. — the Demon
+Goblin uses it. But an option can add only fixed skills and choice groups. The
+Demon Goblin fit because its packages carry no related or secondary skills; every
+Nightbane package carries a related block with its own categories, bonuses and
+schedule, and a choice group holds one flat bonus and no schedule.
+
+**Why package O.C.C.s — two precedents, and the book's own structure.** Heroes
+Unlimited hit the same shape with its eleven Educational Levels, tried a variant
+and an ability, found neither can hold a category mix, and shipped them as
+O.C.C.s restricted with `occ_restrictions` (`heroes-unlimited-core.md`, the
+section explaining why they are O.C.C.s). And this book already builds that way:
+the Nightbane Sorcerer and Nightbane Mystic O.C.C.s (printed 118-120) print a full
+skill list on top of the R.C.C.'s natural powers. A Nightbane player therefore
+picks the R.C.C. and one of six O.C.C.s — four packages, Sorcerer, Mystic.
+
+**The packages, measured off the cache (printed 88-90).** Four, including the
+Warlord package the Contents omits. Each is complete apart from secondary skills:
+
+| package | for | related picks |
+|---|---|---|
+| Basic | untrained, most teenage and student Nightbane — the default | 10 |
+| Resistance/Spook Squad-Trained | militant or guerrilla Factions, or ex-military | 8 |
+| Nocturne/Seeker/Lightbringer | magical or scholarly Factions | 8 |
+| Warlord | the Warlords, or an ex-gang member | 6 |
+
+Printed 88 frames them as guidelines, requires one (Basic is the untrained case,
+and there is no no-package option), and lets a GM allow later Faction training to
+add skills. Mutual exclusion is implied, not stated.
+
+**What the class import has to get right — each checked in the code 2026-09-16,
+none of it a guess:**
+
+- **Secondary skills live on the R.C.C.** — six, plus more at 4 and 8, stated once
+  on printed 88. A pairing takes related and secondary skills from the O.C.C.
+  (`combineClasses`, `parser.js:1249-1250`), so **copy them into each package
+  O.C.C.**; left on the R.C.C. they are not what a paired character receives.
+- **Put no `skills.mos` on the R.C.C.** `combineClasses` falls back to the race's
+  `mos` when the occupation has none (`parser.js:1264`), so it would leak into the
+  Sorcerer and Mystic pairings too.
+- **The experience ladder.** When both halves state an `xp_table` the RACE's wins
+  (`parser.js:1164-1170`). The four packages share "Nightbane & Guardian"; the
+  Sorcerer and Mystic have their own. So **state the ladder on each O.C.C., not on
+  the R.C.C.**, or the Sorcerer is levelled on the wrong table.
+- **Restrict both ways** — `occ_restrictions` on the R.C.C. and `race_restrictions`
+  on each package — so a package is never offered to a Rifts race.
 
 **D3 — Hound Master and Master Vampire.** Ladder says playable, own page says
 not. Phase World excluded the Royal Kreeghor on the same conflict.
@@ -510,6 +578,11 @@ One line per shipped PR, appended when it merges.
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-12 | — | cache built (248 pp, text layer), offset +1 verified at four folios |
+| 2026-09-13 | [#991](https://github.com/NateGrey0130/nates-workshop/pull/991) | this survey, `scripts/books.json` registered, `BOOK-INGEST-AUDIT` F73-F78 filed |
+| 2026-09-13 | [#996](https://github.com/NateGrey0130/nates-workshop/pull/996) | D1 / F73, catalog half: `VALID_SYSTEMS` and the free-text catalogs take `nightbane` (Heroes Unlimited alongside) |
+| 2026-09-14 | [#1037](https://github.com/NateGrey0130/nates-workshop/pull/1037) | F73's blocking half: the three CHECKs, `campaigns.js` and the wizard picker |
+| 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
+| 2026-09-16 | #PRNUM | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
 
 ### What remains
 
