@@ -1,0 +1,48 @@
+-- characters.ppe_base_spent: P.P.E. taken PERMANENTLY out of a character's base.
+--
+-- BOOK-INGEST-AUDIT F101. Several things a character does in these books burn
+-- P.P.E. out of the base for good rather than out of the pool for the day. A
+-- Nightbane buys Talents with it - printed 106, "each purchase will cost the
+-- character a permanent expenditure of P.P.E." - and seven spells in the catalog
+-- take it from the caster: Close Rift, Ley Line Resurrection, Ley Line
+-- Restoration, Enchant Weapon (Minor), Bone: Return from the Grave, Nature:
+-- Sacred Oath and Summon & Use Stones & Crystals, read --remote 2026-09-16.
+--
+-- ===================================================================
+-- WHY A SEPARATE COLUMN, AND NOT A REDUCED ppe_max
+-- ===================================================================
+--
+-- Nate's choice, 2026-09-16, and the reasoning is what makes it safe.
+--
+-- `ppe_max` STAYS THE ROLLED MAXIMUM. The spend is recorded beside it, and the
+-- EFFECTIVE maximum is derived as `ppe_max - ppe_base_spent`. The alternative
+-- - writing the reduced number into ppe_max - fails in two places this repo has
+-- already measured:
+--
+--   1. THE VALIDATOR WOULD REFUSE THE CHARACTER. validate-character.js bounds
+--      ppe_max against the class's own formula on BOTH sides, as a violation
+--      for a non-G.M. A Nightbane who had burned 46 P.P.E. would sit below the
+--      bound and be refused with a 422. Unchanged here, because ppe_max is.
+--
+--   2. A RE-ROLL WOULD ERASE THE SPEND. Three server paths write ppe_max -
+--      create, level-confirm, and the variant re-roll in characters/[id]/
+--      variant.js. Every one would have to remember to re-apply the spend, and
+--      the wizard-side recompute paths have already produced four findings for
+--      forgetting things of exactly this shape (F67, F68, F70, F71). None of
+--      them touches this column, so none of them can erase it.
+--
+-- So the design is safe BY CONSTRUCTION rather than by patching each writer.
+--
+-- NOT NAMED FOR TALENTS. F101 was filed as a Talent problem and the premise
+-- audit found the same mechanic in the Book of Magic, Wormwood and Mystic
+-- Russia. One column serves all of them.
+--
+-- NOT PLAYER-EDITABLE, deliberately, and it matches ppe_max rather than
+-- ppe_current. A permanent spend is a rules fact like a rolled maximum, not a
+-- running total a player adjusts at the table; a free PATCH would let it be set
+-- back to 0, undoing a cost the book calls permanent. It is written by the paths
+-- that incur it.
+
+ALTER TABLE characters ADD COLUMN ppe_base_spent INTEGER NOT NULL DEFAULT 0;
+
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('065-character-ppe-base-spent.sql');

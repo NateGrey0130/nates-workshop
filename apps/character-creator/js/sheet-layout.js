@@ -84,9 +84,25 @@
       + half('theirs', c.theirs, 'theirs');
   }
 
+  // A POOL'S MAXIMUM AS THE CHARACTER CAN ACTUALLY FILL IT, decided in ONE place.
+  //
+  // For P.P.E. that is the rolled `ppe_max` minus `ppe_base_spent`, the P.P.E.
+  // burned out of the base for good by a bought Talent or a spell that takes it
+  // (migration 065, BOOK-INGEST-AUDIT F101). Every other pool is its stored max.
+  //
+  // One function because TWO paths paint this number - the first render through
+  // poolCard and the live repaint here - and a pool shown one way on load and
+  // another after a spend is the exact disagreement powerPool was written to end
+  // for the use button. The server's PATCH clamp applies the same subtraction.
+  function poolMax(data, key) {
+    const max = data?.[key + '_max'];
+    if (key !== 'ppe' || typeof max !== 'number') return max;
+    return Math.max(0, max - (Number(data?.ppe_base_spent) || 0));
+  }
+
   function paintPool(key, data, conflicts) {
     if (!data) return;
-    const cur = data[key + '_current'], max = data[key + '_max'];
+    const cur = data[key + '_current'], max = poolMax(data, key);
     const el = document.getElementById('play-cur-' + key);
     if (el) el.textContent = cur ?? '—';
     const card = el && el.closest('.vital');
@@ -306,7 +322,7 @@
     `<span class="val${dim ? ' dim' : ''}">${value}</span></div>`;
 
   global.sheetLayout = {
-    POOL_TONES, POOL_LOW, poolCard, paintPool, boxSlug, BOX_COL, box, field,
+    POOL_TONES, POOL_LOW, poolCard, paintPool, poolMax, boxSlug, BOX_COL, box, field,
     trackableRows, stackColumns,
   };
 })(globalThis);
