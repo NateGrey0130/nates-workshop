@@ -26,7 +26,10 @@ so no glob for that word will find it.
 1. A finding is proposed, numbered, with a `**Proposal:**` paragraph specific
    enough to implement from and a stated **posture**.
 2. **Nate names one** — "take F6". Nothing is taken until he does, and a menu is
-   never worked top to bottom.
+   never worked top to bottom. **Taking is invoked by `/take <MENU> <ID>`**
+   (the `take` skill, since 2026-09-16): it runs the subject grep and the
+   premise audit from *Taking a finding is also AUDITING the finding* below,
+   in that order, and creates the branch last. It adds no rule to this file.
 3. **One PR per finding.** Not two in a PR, not one across two.
 4. A dated outcome note — `**Taken, <date> (PR #N)**` — appended under the
    finding **in the same PR**, including whatever you found that contradicts it.
