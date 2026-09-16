@@ -14838,7 +14838,7 @@ the grouping (it fails with the CSS rule removed).
 spells' burns, and none has spent any base (all hold `ppe_base_spent` 0, counted
 `--remote` 2026-09-16). **Applied to production before this merged**, 2026-09-16: migration 067, then the data script, whose three readbacks all passed (six burns, Stones & Crystals NULL, six in all); `schema_migrations` and `data_script_runs` then recorded both, and the six rows read back with the values above.
 
-**Decided, 2026-09-16 (PR #__PR__): Nate kept all four choices the three PRs made.
+**Decided, 2026-09-16 (PR #1098): Nate kept all four choices the three PRs made.
 Recorded so they are not re-proposed.**
 
 1. **A Talent purchase does not reduce current P.P.E.** It lowers the effective
