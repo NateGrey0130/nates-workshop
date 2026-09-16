@@ -126,7 +126,11 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
 export async function resolvePowerPicks(env, { picks, grants, existingPowers, system }) {
   const errors = [];
   const chosen = [];
-  if (!Array.isArray(picks) || !picks.length) return { powers: [], errors };
+  const spent = new Map();
+  // `spent` is returned alongside the powers: how many picks were taken from each
+  // grant, keyed `kind:level:slot` exactly the way a banked row and
+  // remainingPowerGrants key one. See the note at the return below.
+  if (!Array.isArray(picks) || !picks.length) return { powers: [], errors, spent: new Map() };
 
   const held = new Set((existingPowers || [])
     .map((p) => String(p?.name || '').toLowerCase()).filter(Boolean));
@@ -243,6 +247,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     }
 
     room.set(k, room.get(k) - 1);
+    spent.set(k, (spent.get(k) || 0) + 1);
     held.add(name.toLowerCase());
     // A TALENT CARRIES BOTH COSTS, which is the whole reason it has its own
     // table: `cost` is what an activation spends, the same field a spell and a
@@ -263,7 +268,21 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
           ...(row.isp_note ? { cost_note: row.isp_note } : {}), gained_at_level: level, slot });
   }
 
-  return { powers: chosen, errors };
+  // THE KEY OF WHAT WAS CONSUMED TRAVELS OUT OF HERE, and the callers no longer
+  // rebuild it.
+  //
+  // They used to. level-confirm.js and characters/[id]/power-picks.js each built
+  // `${p.type === 'psionic' ? 'psionic' : 'spell'}:level:slot` from the returned
+  // power - a two-way guess at a three-way answer. A spent TALENT was keyed
+  // `spell`, matched no `talent` row, and so: at level-up the Talent was taken
+  // AND its grant banked again in full, and in the spend endpoint a banked Talent
+  // row was never consumed and could be spent over and over. Both reproduced
+  // through the real remainingPowerGrants before this was changed.
+  //
+  // Rebuilding the key from the power's TYPE was the defect, not the mapping: a
+  // purchased Talent's grant is a different kind from the power it yields, so no
+  // mapping from type could stay right. This loop already holds the true key.
+  return { powers: chosen, errors, spent };
 }
 
 // Only the rows actually named, rather than both catalogs whole: a level-up

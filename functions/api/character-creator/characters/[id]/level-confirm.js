@@ -123,6 +123,7 @@ export async function onRequestPost({ request, env, params }) {
         .bind(character.campaign_id).first()
     : null;
   let pickedPowers = [];
+  let pickedSpent = new Map();
   let powers = character.powers;
   if (powerGrants.length && Array.isArray(b.power_picks) && b.power_picks.length) {
     const resolved = await resolvePowerPicks(env, {
@@ -133,6 +134,7 @@ export async function onRequestPost({ request, env, params }) {
     });
     if (resolved.errors?.length) return powerPickErrors(resolved.errors);
     pickedPowers = resolved.powers;
+    pickedSpent = resolved.spent;
   }
   if (pickedPowers.length) {
     powers = powers.concat(pickedPowers);
@@ -177,11 +179,10 @@ export async function onRequestPost({ request, env, params }) {
   // grant is identified by the level that earned it, and banking two level-4
   // spells against a level-2 grant would hand them the wrong cap when they are
   // eventually spent.
-  const spentByKey = new Map();
-  for (const p of pickedPowers) {
-    const key = `${p.type === 'psionic' ? 'psionic' : 'spell'}:${p.gained_at_level}:${p.slot ?? 0}`;
-    spentByKey.set(key, (spentByKey.get(key) || 0) + 1);
-  }
+  // Handed out by resolvePowerPicks, keyed by the kind it actually consumed.
+  // Rebuilt here from each power's type, a Talent taken at level-up was keyed
+  // `spell`, subtracted from nothing, and its grant banked again in full.
+  const spentByKey = new Map(pickedSpent);
   const powerRemaining = remainingPowerGrants(powerGrants, spentByKey);
   if (powerRemaining.length) {
     statements.push(...insertPowerGrantStatements(env, params.id, powerRemaining));

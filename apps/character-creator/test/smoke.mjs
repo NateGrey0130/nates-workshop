@@ -640,7 +640,7 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          grantNote, startingPicksFor, startingGroups, spellTraditionAllowed, talentGrantsFor,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
-import { powerGrantsFor, remainingPowerGrants } from '../../../functions/api/character-creator/_lib/power-picks.js';
+import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
          stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
@@ -2944,6 +2944,66 @@ section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
   check('and their schedules CONCATENATE rather than dedupe, so level 4 grants two',
     talentGrantsFor(both, 1, 4).grants.reduce((n, g) => n + g.count, 0) === 2,
     JSON.stringify(talentGrantsFor(both, 1, 4).grants));
+}
+
+section('A spent power consumes the grant it was spent against');
+{
+  // resolvePowerPicks RETURNS the key of what it consumed, and the two routes that
+  // bank and spend picks use it instead of rebuilding one.
+  //
+  // They used to rebuild it, as `${p.type === 'psionic' ? 'psionic' : 'spell'}` -
+  // a two-way guess at a three-way answer. A spent TALENT was keyed `spell` and
+  // matched no `talent` row. At level-up the Talent was taken AND its grant
+  // banked again in full; in the spend endpoint a banked Talent row was never
+  // consumed and could be spent over and over. Reproduced through the real
+  // remainingPowerGrants before the fix. Found while starting
+  // BOOK-INGEST-AUDIT F101's Talent purchases, which would have built on it.
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'));
+  mem.prepare('INSERT INTO talents (name, tier, acquire_ppe, ppe, system) VALUES (?,?,?,?,?)')
+    .run('Soul Shield', 'common', 6, 4, 'nightbane');
+  mem.prepare('INSERT INTO spells (name, level, ppe, system) VALUES (?,?,?,?)').run('Blinding Flash', 1, 1, null);
+  mem.prepare('INSERT INTO psionic_powers (name, category, isp, system) VALUES (?,?,?,?)')
+    .run('Sixth Sense', 'Sensitive', 2, null);
+  const wrap = (sql) => ({
+    bind: (...b) => ({ all: async () => ({ results: mem.prepare(sql).all(...b) }) }),
+    all: async () => ({ results: mem.prepare(sql).all() }),
+  });
+  const env = { DB: { prepare: wrap, batch: async (s) => Promise.all(s.map((x) => x.all())) } };
+  const grants = [
+    { kind: 'talent', level: 4, slot: 0, count: 1 },
+    { kind: 'spell', level: 4, slot: 0, count: 1, spell_levels: null },
+    { kind: 'psionic', level: 4, slot: 0, count: 1, categories: null },
+  ];
+  const r = await resolvePowerPicks(env, {
+    picks: [
+      { kind: 'talent', name: 'Soul Shield', granted_at_level: 4 },
+      { kind: 'spell', name: 'Blinding Flash', granted_at_level: 4 },
+      { kind: 'psionic', name: 'Sixth Sense', granted_at_level: 4 },
+    ],
+    grants, existingPowers: [], system: null,
+  });
+  mem.close();
+  check('one pick of each kind resolves', r.errors.length === 0 && r.powers.length === 3, r.errors.join('; '));
+  check('and the key of what was consumed comes back with it', r.spent instanceof Map);
+  check('a Talent is consumed from the TALENT grant, not a spell one',
+    // Were the Talent keyed `spell`, spell:4:0 would read 2 and talent:4:0 nothing.
+    r.spent?.get('talent:4:0') === 1 && r.spent?.get('spell:4:0') === 1,
+    JSON.stringify([...(r.spent || [])]));
+  const left = remainingPowerGrants(grants, r.spent || new Map());
+  check('so nothing is left to bank after one pick of each kind - no double grant',
+    left.reduce((n, g) => n + g.count, 0) === 0, JSON.stringify(left));
+  check('and nothing about the consumption leaks onto the stored powers',
+    r.powers.every((p) => !('spent' in p)));
+
+  // Neither route may go back to rebuilding the key from the power's type.
+  const route = (f) => readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    'characters', '[id]', f), 'utf8').replace(/\/\/.*$/gm, '');
+  for (const f of ['power-picks.js', 'level-confirm.js']) {
+    check(`${f} does not rebuild a spent key from the power's type`,
+      !/'psionic'\s*\?\s*'psionic'\s*:\s*'spell'/.test(route(f)));
+    check(`and uses the one resolvePowerPicks returns`, /resolved\.spent|pickedSpent/.test(route(f)));
+  }
 }
 
 section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
@@ -5666,8 +5726,20 @@ section('A level-up pick is keyed by its grant, not by its position (BOOK-INGEST
   // The whole argument for option A over a key of its own: this string is
   // already what the live level-up path puts on the wire at BOTH ends. If either
   // side is ever re-spelled, this fails rather than the two drifting apart.
-  check('and it is the SAME shape the server already reads on level-confirm',
-    /'psionic' : 'spell'\}:\$\{p\.gained_at_level\}:\$\{p\.slot \?\? 0\}/.test(confirm));
+  // THIS USED TO PIN THE BUG AS THE SHAPE. It matched level-confirm's own
+  // `${p.type === 'psionic' ? 'psionic' : 'spell'}:level:slot` literally - a
+  // two-way guess at a three-way kind, which keyed a spent Talent as `spell` and
+  // let its grant bank twice. Because it matched that exact expression, it
+  // would have FAILED any correct fix, so it was guarding the defect it sat
+  // beside. The shape it exists to protect - kind:level:slot, agreeing with
+  // grantKey - now lives in ONE place, resolvePowerPicks, which hands the key out
+  // rather than letting each route rebuild it. So that is where it is checked.
+  const picksLib = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
+    '_lib', 'power-picks.js'), 'utf8');
+  check('and it is the SAME shape the server keys a consumed grant by',
+    /const key = \(kind, level, slot\) => `\$\{kind\}:\$\{level\}:\$\{slot \?\? 0\}`/.test(picksLib));
+  check('and level-confirm takes that key rather than building its own',
+    /resolved\.spent/.test(confirm) && !/'psionic' : 'spell'\}/.test(confirm.replace(/\/\/.*$/gm, '')));
   check('and the sheet builds its level-up controls off level and slot too',
     /lu-power-\$\{kind\}-\$\{g\.level\}-\$\{slot\}/.test(sheet));
 
