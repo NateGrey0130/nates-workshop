@@ -11528,6 +11528,101 @@ book, against a catalog whose other eighteen books need none. **This proposal
 does not recommend itself** on the evidence available - it is filed so the gap
 is numbered rather than lost inside a survey.
 
+**Taken, 2026-09-16 (PR #1088). DECLINED, on Nate's word, and the finding
+already recommended this for itself** - *"This proposal does not recommend
+itself on the evidence available."*
+<!-- claim-ok: quoting the finding's own recommendation -->
+**Posture: documentation only. No schema, no data, no code.**
+
+**ITS CENTRAL CLAIM IS FALSE, and that is the reason this note is long.** The
+finding says, at HIGH confidence, *"A class's dice are rolled from
+`attribute_dice` and the pools from the pool bases; there is no creation-time
+table that alters either."*
+<!-- claim-ok: quoting the premise this note corrects -->
+**Four already existed when it was written.** Verified 2026-09-16 by reading and
+running each:
+
+| what | where | what it does at creation |
+|---|---|---|
+| `PSIONIC_TABLE` | `js/psionics.js`, search `const PSIONIC_TABLE` | a percentile table - 01-09 major, 10-25 minor, 26-00 none - rolled at creation |
+| `withRolledPsionics` | same file, search `halved_for_major_psionic` | sets a tier, sets an ISP **pool base** (`M.E. + 4d6, +1d6+1 per level`), and **halves** `occ_related_skills.count` |
+| `BACKGROUND_TABLES` | `js/rules.js`, search `const BACKGROUND_TABLES` | **nine** percentile tables - birth order, weight, height, age, disposition, land of origin, environment, family origin, racial bias - with a roller (`rollBackground`) and UI |
+| `rollTotemBonuses` | `app.js`, search `function rollTotemBonuses` | rolls a totem's `bonuses` block and folds the result onto the saved character |
+
+`js/rules.js`'s own comment calls `BACKGROUND_TABLES` *"the same shape as the
+psionics table"*. So the row/roller/UI shape the finding asks for was written
+twice before it was filed.
+
+**The defensible version of the claim is narrower: no creation-time table that
+GRANTS.** `BACKGROUND_TABLES` writes free text into `S.bio` and its comment says
+*"nothing here is required and nothing derives from it."* That is a real gap and
+it is not the one the finding states.
+
+**AND THE SHAPE WAS SOLVED FIFTY-EIGHT MINUTES AFTER THE FINDING WAS FILED.**
+F78 landed at 21:07 on 2026-09-12 (`6408478`); `docs/surveys/heroes-unlimited-core.md`
+landed at 22:05 the same evening (`2a5ac8a`), both read with
+`git log --date=iso` on 2026-09-16. The survey says:
+
+> The random tables that MODIFY a character are ability choice groups too. ...
+> That is the whole of `BOOK-INGEST-AUDIT` F78's problem - a creation-time roll
+> table that permanently modifies the character - solved for this book without
+> the feature F78 asks for, because these tables grant BONUSES and nothing else.
+
+That is live rather than aspirational: `hu-aliens` carries its percentile ranges
+as prose inside each option's `description` - *"Appearance 01-30. A humanoid
+alien so like a human as to be indistinguishable from Earth people."*, read
+`--remote` 2026-09-16 - with the effect in a sibling `bonuses`.
+
+*(An earlier premise pass put the survey **the day after**. It was the same
+evening, under an hour later. Corrected here because this note is the record.)*
+
+**THE GENUINE RESIDUE IS NARROW, AND IT IS WHAT IS BEING DECLINED**, not the
+whole finding. Three things the ability-choice mechanism cannot express, each
+checked against the code rather than inferred:
+
+- **a percentile range as DATA.** Choice-group validation accepts `from` and
+  `choose` and nothing else, so a range lives in prose and a table can be read
+  but not rolled;
+- **three-level nesting.** `isAbilityChoice` fires on either `choose` or `from`,
+  so an entry carrying both a `name` and a `from` is classified as a group and
+  can never be a definition - an option cannot carry a sub-choice, and Nightbane
+  needs Appearance -> Animal Form -> Feline;
+- **"roll twice and combine".** `repeatable`/`on_repeat` mean a thing may be
+  taken twice, not that two results merge, and nothing expresses the exclusion
+  range or the arbitration roll the book prints beside each one.
+
+**Why that is not worth building, stated as a trade rather than a dismissal.**
+It is a character generator for **one** book, against a catalog whose other
+eighteen need none, and the book it is for has no R.C.C. imported: production
+holds **zero** `nightbane` classes, counted `--remote` 2026-09-16. Heroes
+Unlimited demonstrates the cheaper answer works.
+
+**Both dependencies were met before this was declined**, so it is not being
+declined for being blocked: `F73` **Taken, 2026-09-12 (PR #996)** and `F75`
+**Taken, 2026-09-15 (PR #1081)**, read under their own headings.
+
+**ONE THING F75 DID NOT REACH, recorded because it is the part a builder would
+hit first.** `ABILITY_GRANTS` is
+`['bonuses', 'psionics', 'magic', 'super_abilities', 'talents']`
+(`js/parser.js`, read 2026-09-16) and `horror_factor` is **not** in it. A class
+or a variant may state one; a **chosen ability** cannot. The Morphus tables
+raise Horror Factor per result, so if these tables are ever built on the
+ability-choice mechanism, that is a fifth grant key and not a free ride on F75.
+
+**A PRODUCT DECISION THE BOOK FORCES, whoever builds it.** The Animal Form table
+sends `01-07 % Bear` to a *"Bear Table"* and `08-14% Amphibian` to an
+*"Amphibian Table"*, and the book never prints either: both phrases occur
+**exactly once** across all 248 cached pages, at the reference itself
+(`grep -rn "Bear Table\|Amphibian Table" .cache/books/nightbane-core/txt/`,
+2026-09-16). **Fourteen percent of that roll lands on nothing**, and a builder
+has to choose re-roll, drop, or author.
+
+**Revisit only on this trigger:** a Nightbane R.C.C. is imported AND its tables
+are wanted as rollable data rather than as ability choice groups with the ranges
+in prose. Short of that, this is settled and should not be re-proposed - the
+mechanism exists, the cheaper answer is in production, and the expensive one
+serves one book.
+
 ### F79 - high - `--probe` classifies a book by character COUNT alone, so a text layer whose glyphs are dropped reads as clean and caches as garbage
 
 **Found 2026-09-12** by the Heroes Unlimited batch, on its first probe.
