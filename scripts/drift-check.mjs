@@ -195,7 +195,7 @@ console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} r
 // `enchantments` and `totems` are named by their own row text rather than by a
 // checklist the book prints. A check that cries wolf is worse than no check,
 // which is the whole argument of the comment below.
-const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities'];
+const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities', 'talents'];
 const citationRows = new Map();   // slug -> [{ table, name }]
 for (const table of CITATION_TABLES) {
   for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {

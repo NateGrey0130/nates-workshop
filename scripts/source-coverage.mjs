@@ -113,11 +113,19 @@ const groups = [
   // down, which is what made the omission easy to miss: `vehicles` appeared
   // in this file, just not in the part that checks anything.
   //
-  // AND THREE MORE, F85, which is F28 again twice over. `catalog-fields.js`
-  // declares EIGHT catalogs and this list held five, so `super_abilities` (364
-  // rows), `enchantments` (62) and `totems` (40) were checked by nothing -
-  // 466 rows, every one carrying a `source_book`, invisible to the one ledger
-  // built to ask whether a shipped row can still be traced to a page.
+  // AND THREE MORE, F85, which is F28 again twice over. On 2026-09-14 this
+  // list held five of the catalogs `catalog-fields.js` declared, so
+  // `super_abilities` (364 rows), `enchantments` (62) and `totems` (40) were
+  // checked by nothing - 466 rows, every one carrying a `source_book`,
+  // invisible to the one ledger built to ask whether a shipped row can still
+  // be traced to a page.
+  //
+  // NO COUNT OF THE CATALOGS IS WRITTEN HERE, deliberately. This sentence used
+  // to say `catalog-fields.js` declares EIGHT, which was true when F85 was
+  // taken and false the day `talents` landed. `CATALOGS` is the authority and
+  // a number beside it is a second place to be wrong - the same argument
+  // SKILL-AUDIT F7 makes for removing an ordinal rather than incrementing it,
+  // because incrementing leaves the trap armed.
   //
   // WHAT THAT COST IS WORTH READING, because the failure was not abstract: two
   // Powers Unlimited surveys closed with "no production row cites this book",
@@ -131,8 +139,15 @@ const groups = [
   // edited on 2026-09-08 - and `enchantments` landed 2026-08-23, four days
   // BEFORE this file existed, and was never in it. A hand-written list beside a
   // declared one drifts every time the declared one grows.
+  //
+  // F85 PREDICTED THE NINTH WOULD BE OMITTED TOO - `the ninth catalog will be
+  // omitted too`, in its own ongoing-cost line. `talents` landed 2026-09-15
+  // (migration 063, F76) and is in both lists here because a person remembered,
+  // which is exactly the mechanism that failed three times before. Deriving
+  // these lists from `CATALOGS` is the cause rather than the recurrence; F85
+  // declined to and invited a taker to say so, and F100 now carries it.
   ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
-      'super_abilities', 'enchantments', 'totems'].map((t) => ({
+      'super_abilities', 'enchantments', 'totems', 'talents'].map((t) => ({
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
@@ -422,7 +437,7 @@ if (process.argv.includes('--vs-build')) {
         // declined to fix and named as its own recurring cost. If a ninth
         // catalog lands, both lists need it.
         ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
-            'super_abilities', 'enchantments', 'totems'].map((t) => ({
+            'super_abilities', 'enchantments', 'totems', 'talents'].map((t) => ({
           label: t,
           rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
         })),

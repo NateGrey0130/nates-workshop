@@ -110,6 +110,13 @@ const TABLES = [
   // super abilities would have printed the same summary as a clean one.
   ['super_abilities', 'name', 'name'],
   ['totems', 'name', 'slug'],
+  // THE NINTH CATALOG (migration 063, `BOOK-INGEST-AUDIT.md` F76). Identity
+  // column read from db/schema.sql rather than assumed, as the two above were:
+  // `talents.name` is NOT NULL UNIQUE and the table has no slug, which is why
+  // it repeats its name column. Added ONCE - the `vehicles` note above records
+  // what a second triple costs, every row compared twice and any difference
+  // double-counted into `problems`, which is the number the exit code reads.
+  ['talents', 'name', 'name'],
   // Written by _lib/catalog-redirects.js when a merge or rename happens in
   // the app, so it drifts the same way the catalogs do and nothing was
   // checking it. `from_key` is unique across the table, which is why it can
