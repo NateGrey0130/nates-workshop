@@ -11340,6 +11340,86 @@ reason. `functions/api/character-creator/catalogs.js` is deliberately untouched
 so far and is part of that PR, because the wizard has nothing to do with a
 Talent until a class can grant one.
 
+**4 of 4 is PR #1087, and F76 is now CLOSED.** The class-facing grant, without
+which the three PRs before it ship a table no class can reference -
+`super_abilities` sat unreachable for a day for exactly that reason.
+
+**THE BOOK'S RULE IS A LEVEL SCHEDULE, and that is what made this bigger than
+the super-ability grant it otherwise mirrors.** Printed 106, *"Acquiring
+Talents"*, read off the cache 2026-09-16: one Talent free at first level and one
+more at levels four, seven, ten and twelve.
+
+**So it needed a migration, which the finding does not mention and the plan did
+not predict.** `pending_power_picks.kind` was a two-value CHECK, so a grant at
+level four could not be banked at all. Migration 064 widens it. A single-table
+rebuild unlike `058`'s sixteen - nothing references that table, it has one
+index, production held 0 rows - and columns are copied BY NAME, because
+production's column order is `036`'s rebuild plus five later `ALTER`s and a
+positional `SELECT *` would land `note` in `spell_levels`.
+
+**`js/leveling.js` REFUSES a per-level super-ability grant and ALLOWS a talent
+one, and the asymmetry is storage rather than taste.** A banked super-ability
+grant needs a TIER column the table has not got. A banked talent grant needs no
+restriction column at all: the free Talents arrive ungated, and what limits the
+pick is the catalog row's own `min_character_level` and `prerequisite`,
+evaluated when it is spent. That is why 064 widens a CHECK and adds no column.
+Both halves are pinned in the smoke suite so the refusal is not copied across by
+someone tidying.
+
+**What is enforced and what is not, stated because the difference is a
+judgement.** The level gate is enforced in `resolvePowerPicks` and in the create
+validator, both as a violation, matching how a spell's level cap is treated: a
+number the book prints is a mechanical rule. `prerequisite` is **not** enforced.
+It is free text holding two unlike things - a Morphus characteristic on four of
+the five Talents that have one, and another TALENT on the fifth, Mirror Search
+requiring Mirror Sight - and matching the second by name would be a rule that
+reads prose, which is the shape `F4` records missing one of three language
+picks. It travels to the sheet and the table decides.
+
+**AND IT TURNED UP A LIVE BUG THAT HAS NOTHING TO DO WITH TALENTS.** The sheet's
+powers box is titled `Powers` once a character holds a super ability - or now a
+Talent - and `Psionics & Magic` otherwise, and only `psionics-magic` was in
+`BOX_COL`. A box with no `data-col` is not merely misplaced: `placeable` in
+`js/sheet-layout.js` recurses PAST it to the leaves and files each leaf into a
+column separately, which destroys every `.power-row` wrapper inside and drops
+the name of any power whose name is bare text rather than a description button.
+**267 `no column for` warnings and no power names**, counted in the browser.
+
+**It is live in production today**: character 9922 holds a super ability,
+counted `--remote` 2026-09-16, so its sheet has been rendering this way since
+super abilities shipped. Fixed here in one line because a Talent renames the box
+the same way and this PR could not ship without it. **The existing check could
+not see it** - *"every box in the body is assigned a column"* reads `box('...')`
+call sites and this box's title is a ternary, so neither side was ever in its
+list. Both slugs are now named in that check, and removing the fix makes it fail
+with `unplaced: powers`.
+
+**FOUND BY LOOKING AT A REAL SHEET RATHER THAN BY REASONING**, which is the only
+reason it was found at all: every test passed with the box unplaced, and the
+first sign was that a Talent rendered with no name.
+
+**Verified in a browser**, on a port of my own, against local rows and a local
+class - all removed afterwards:
+
+| | |
+|---|---|
+| the picker | both costs as `8 + 4 P.P.E.`; level-gated Talents disabled reading `level 5+`; the Elite one excluded by `tiers_allowed`; `Mirror Search needs Mirror sight` |
+| Review | `Darkwhip  common - 8 to acquire, 4 to activate` |
+| the sheet | grouped `Talents - Common` and `Talents - Elite` after the spells, each with its permanent acquisition cost, its variable-cost note, and a working use button that spends P.P.E. |
+
+**What F76 cost in the end: four PRs and 27 files**, against the finding's *"a
+ninth catalog table, a picker, and a sheet section"* and against the premise
+audit's estimate of four PRs and ~24 files. The estimate was close; what neither
+it nor the finding anticipated was the migration.
+
+**One thing is deliberately NOT built, and it is filed as F101 rather than left
+inside this note.** The book gives a Nightbane two PURCHASED Talents per level
+on top of the free ones, each paid for with a permanent P.P.E. expenditure and
+with no limit on how many. That is a budget spent in a resource rather than a
+count of picks, it reduces the character's P.P.E. base permanently, and it
+touches the pools - which F76's own posture (*"additive; no existing table or
+picker changes"*) rules out.
+
 ### F77 - low - `VALID_CATEGORIES` is `['rcc', 'occ']`, and the one P.C.C. in the catalog says so in a `restrictions:` line
 
 **Found 2026-09-12.** The Nightbane Psychic at printed 68 is a P.C.C., a
@@ -13956,3 +14036,83 @@ refactor and the check above.
 deliberate exclusion that now has to be written as an exclusion. Of the check,
 one assertion and a named-exclusion list to keep current. **Of doing nothing,
 the tenth catalog.**
+
+### F101 - medium - a Nightbane may BUY two Talents every level with permanent P.P.E., and nothing can spend a pool as a currency
+
+**Filed 2026-09-16 while taking F76 (4 of 4), PR #1087. Not taken.** It is the
+half of *"Acquiring Talents"* that F76's posture ruled out, filed rather than
+left inside a closed finding.
+
+**What the book says**, printed 106, read off the cache 2026-09-16
+(`nightbane-core`, `page_offset` +1, so cache `p107`):
+
+> At level one and upon reaching each subsequent new level of experience, the
+> Nightbane can purchase two additional Talents, but, each purchase will cost
+> the character a permanent expenditure of P.P.E.! There is no limit as to how
+> many Talents can be purchased.
+
+**F76 built the FREE half and not this one.** One Talent at first level and one
+more at levels four, seven, ten and twelve is a schedule of counts, which is
+what `talents_schedule` and `pending_power_picks` already express. This is not:
+it is an allowance of **two per level, every level, with no cap**, paid for out
+of a pool rather than out of a count.
+
+**Why it did not ride along.** F76's posture is *"additive; no existing table or
+picker changes"* <!-- claim-ok: quoting the posture this finding works within -->
+and this changes an existing mechanic in the place it is least safe to change
+one: the character's P.P.E. base. Buying a Talent permanently REDUCES it, so the
+number every caster's pool is computed from stops being a function of the class
+and the attributes and becomes a function of the class, the attributes and a
+purchase history. Nothing in `computePools` or the pool-recompute paths expects
+that, and the recompute paths are the ones `F67`, `F68`, `F70` and `F71` were
+all filed against.
+
+**The acquisition cost is already stored and already correct**, which is the
+part that makes this tractable: `talents.acquire_ppe` is NOT NULL on every row
+(migration 063), the picker shows it, the sheet shows it, and a stored pick
+carries it as `acquire_cost`. Nothing spends it.
+
+**What is genuinely missing, read rather than guessed**, all 2026-09-16:
+
+- **A spent-permanently total on the character.** `characters` has pool columns
+  (`ppe_max` and the rest) and no column recording a permanent expenditure, so
+  there is nowhere to put "this character has burned 46 P.P.E. on Talents".
+- **A per-level allowance that is not a grant.** `pending_power_picks` banks a
+  COUNT that is spent by choosing; this is a count of things you may buy, and a
+  buy can fail for want of P.P.E. A banked row with `count: 2` would model the
+  allowance and say nothing about whether the character can afford either.
+- **No cap, which the existing shapes assume.** *"There is no limit as to how
+  many Talents can be purchased"* has no equivalent anywhere in the frontmatter:
+  every grant here is a finite count.
+
+**Proposal.** Not scoped here, deliberately, and this finding does not
+recommend itself. What it asks for first is a decision from Nate on the
+QUESTION rather than the mechanism: **is a pool that a character permanently
+spends down something this app models at all?** Nightbane is the only book of
+the nineteen that asks, and the honest alternative is that a purchased Talent is
+a G.M. ruling entered through `character_grants` - which already exists, already
+records a `reason`, and is already the table for "something a character has that
+no class schedule granted".
+
+**That alternative is probably right**, and it is written here rather than left
+implied: `character_grants`' own CHECK carries eight kinds against one
+implemented, so adding one is not the rebuild 064 just did. A purchased Talent
+is a transaction between a player and a G.M. at a table - the book says the
+process is *"arduous and painful"* and happens in play - which is a poor fit for
+a creation wizard and a good fit for a grant with a reason on it.
+
+**Evidence:** printed 106 read 2026-09-16; `talents.acquire_ppe` and the
+`characters` pool columns read from `db/schema.sql` the same day;
+`pending_power_picks`'s shape read the same day, after 064. **Not measured:**
+what `computePools` would have to change, because nothing was attempted.
+
+**Confidence: high that the book says it and that nothing here can express it.
+Low on it being worth building**, and what would settle that is Nate answering
+the question two paragraphs up.
+
+**Ongoing cost:** of the full mechanism, a column on `characters`, a spend path,
+and a fourth thing for every pool-recompute path to remember - the paths that
+have already produced four findings. **Of the `character_grants` alternative,
+one CHECK value and a note.** Of doing nothing: a Nightbane gets five Talents
+over twelve levels instead of five plus however many they bought, and the sheet
+is silent about the difference.
