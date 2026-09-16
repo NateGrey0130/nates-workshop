@@ -87,7 +87,10 @@ book Palladium still sells.
 import argparse, importlib.util, io, json, os, re, shutil, statistics, subprocess, sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_CACHE = os.path.join(REPO, '.cache', 'books')
+# $WORKSHOP_OCR_CACHE first, so a git worktree (which re-roots REPO to itself
+# and finds no cache) can be pointed at the main checkout's. The same variable
+# is read by scripts/books-lib.mjs ocrCacheDir(); --cache still overrides both.
+DEFAULT_CACHE = (os.environ.get('WORKSHOP_OCR_CACHE') or '').strip() or os.path.join(REPO, '.cache', 'books')
 WORDS = os.path.join(REPO, 'scripts', 'palladium-words.txt')
 READ_COLUMNS = os.path.join(REPO, 'scripts', 'read-columns.py')
 

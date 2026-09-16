@@ -42,7 +42,7 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
-import { loadBookRegistry, loadNotBooks } from './books-lib.mjs';
+import { loadBookRegistry, loadNotBooks, ocrCacheDir } from './books-lib.mjs';
 import { BUCKETS, summarise, summariseValues } from './source-coverage-lib.mjs';
 
 const target = targetFromArgv();
@@ -50,7 +50,7 @@ const showAll = process.argv.includes('--offenders');
 const d1 = (sql) => d1Query(sql, { target, db: DB });
 
 // ── the caches on this machine ──────────────────────────────────────────────
-const cacheDir = join(repoRoot, '.cache', 'books');
+const cacheDir = ocrCacheDir();
 const registry = loadBookRegistry();
 const caches = {};
 const manifests = {};

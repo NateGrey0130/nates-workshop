@@ -10,7 +10,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
-import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks } from '../../../../scripts/books-lib.mjs';
+import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks, ocrCacheDir } from '../../../../scripts/books-lib.mjs';
 import { detectPageOffset, detectPageOffsetRegions, isNotABook, normalizeBookTitle,
   offsetForPrintedPage, registryBookSlug, resolveBookSlug } from '../../../../scripts/class-check-lib.mjs';
 import { buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
@@ -254,7 +254,7 @@ export function run() {
     // region one page out and nothing notices.
     const splitButUnrecorded = [];
     for (const [slug, book] of Object.entries(registry)) {
-      const txtDir = join(repoRoot, '.cache', 'books', slug, 'txt');
+      const txtDir = join(ocrCacheDir(), slug, 'txt');
       if (!existsSync(txtDir)) continue;
       const cachePages = readdirSync(txtDir)
         .map((f) => f.match(/^p(\d+)\.txt$/)).filter(Boolean)

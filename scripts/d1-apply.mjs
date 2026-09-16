@@ -58,7 +58,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH } from './sql-statements.mjs';
 import { assertionMismatches, preflightReadbacks } from './readback-lib.mjs';
-import { d1Batch, repoRoot } from './d1-query-lib.mjs';
+import { d1Batch, localD1Args, repoRoot } from './d1-query-lib.mjs';
 
 const args = process.argv.slice(2);
 const remote = args.includes('--remote');
@@ -224,10 +224,11 @@ if (remote && !process.env.CLOUDFLARE_API_TOKEN) {
 const target = remote ? '--remote' : '--local';
 for (const f of files) {
   console.log(`\n── applying ${f} (${target}) ──`);
-  let r = run(['wrangler', 'd1', 'execute', 'DB', target, '--file', f]);
+  // localD1Args: `--persist-to $WORKSHOP_LOCAL_D1` on --local when set, nothing otherwise.
+  let r = run(['wrangler', 'd1', 'execute', 'DB', target, ...localD1Args(target), '--file', f]);
   if (r.code !== 0 && r.out.includes('code: 10000')) {
     console.log('auth error 10000 — one retry…');
-    r = run(['wrangler', 'd1', 'execute', 'DB', target, '--file', f]);
+    r = run(['wrangler', 'd1', 'execute', 'DB', target, ...localD1Args(target), '--file', f]);
   }
   // Show the run's output either way: on success it carries the file's own
   // verification SELECTs, on failure the reason.

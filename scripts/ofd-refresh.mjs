@@ -26,7 +26,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { DB, d1Query } from './d1-query-lib.mjs';
+import { DB, d1Query, localD1Args } from './d1-query-lib.mjs';
 import { MIN_BRANDS, MIN_FILAMENTS, parseCSV, dedupeById, buildSnapshotSql } from './ofd-refresh-lib.mjs';
 
 const OFD = 'https://api.openfilamentdatabase.org/csv';
@@ -75,7 +75,7 @@ const file = path.join(mkdtempSync(path.join(tmpdir(), 'ofd-refresh-')), 'snapsh
 writeFileSync(file, sql);
 
 console.log(`applying to ${target}…`);
-const r = run(['wrangler', 'd1', 'execute', DB, target, '--file', file]);
+const r = run(['wrangler', 'd1', 'execute', DB, target, ...localD1Args(target), '--file', file]);
 if (r.code !== 0) {
   console.error('wrangler exited non-zero — verifying anyway, exit codes here are advisory:');
   console.error(r.out.slice(-2000));

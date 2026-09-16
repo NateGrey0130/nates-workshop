@@ -50,7 +50,8 @@ import {
   detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
 } from './class-check-lib.mjs';
-import { loadBookRegistry } from './books-lib.mjs';
+import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
+import { localD1Args } from './d1-query-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -283,10 +284,11 @@ if (unmodelled.length) {
 // were both paragraphs that continued past a page break the reading stopped
 // at. Entirely offline: the cache is local text, so this mode skips D1.
 if (fieldSources && data) {
-  const booksDir = path.join(repoRoot, '.cache', 'books');
+  const booksDir = ocrCacheDir();
   if (!existsSync(booksDir)) {
-    die('no OCR cache at .cache/books — --field-sources reads the cached page text '
-      + 'the class was transcribed from, and this machine has none');
+    die(`no OCR cache at ${booksDir} — --field-sources reads the cached page text `
+      + 'the class was transcribed from, and this machine has none (WORKSHOP_OCR_CACHE '
+      + 'points a worktree at another checkout\'s cache)');
   }
   const books = readdirSync(booksDir, { withFileTypes: true })
     .filter((d) => d.isDirectory() && existsSync(path.join(booksDir, d.name, 'txt')))
@@ -298,7 +300,7 @@ if (fieldSources && data) {
       }
       return { slug: d.name, sourcePdf: manifest?.source_pdf ?? null, manifest };
     });
-  if (!books.length) die('no cached books under .cache/books');
+  if (!books.length) die(`no cached books under ${booksDir}`);
 
   const slug = bookFlag ?? resolveBookSlug(data.source_book, books, bookRegistry);
   if (!slug || !books.some((b) => b.slug === slug)) {
@@ -569,7 +571,8 @@ function inline(sql, params) {
 }
 
 function query(sql) {
-  const r = wrangler(['wrangler', 'd1', 'execute', 'DB', remote ? '--remote' : '--local',
+  const target = remote ? '--remote' : '--local';
+  const r = wrangler(['wrangler', 'd1', 'execute', 'DB', target, ...localD1Args(target),
     '--json', '--command', sql.replace(/\s+/g, ' ').trim()]);
   if (r.code !== 0) {
     die(`d1 query failed (${remote ? 'remote' : 'local'}).\n${r.out.trim()}\n\n`

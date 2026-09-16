@@ -765,6 +765,41 @@ does not intervene** — the command still fails identically, and an ordinary ty
 costs nothing because it is not on the list. **If that file ever appears, read it
 before doing anything else**, including reopening the shell. It covers **interactive shells only**: Claude Code runs `powershell.exe -NoProfile`, so nothing an agent launches loads this profile, and no instrumentation put here will ever see agent traffic.
 
+### Worktrees, and the two stores that live under the repo root
+
+Two per-machine stores sit inside the checkout and are gitignored: the OCR book
+caches under `.cache/books/` and wrangler's local D1 under `.wrangler/state/`.
+Every script computed both paths **relative to its own repo root**, so a second
+`git worktree` re-rooted them to itself and found nothing — the smoke suite's D1
+sections failed, `drift-check` saw zero cached books, and a survey run there
+would have re-OCR'd a book that was already cached in the main checkout
+(`fresh-worktree-fails-two-checks`, 2026-09-13).
+
+**Since 2026-09-16 two environment variables override the two paths**, and the
+fallback is the repo-relative path, so a session in the main checkout needs
+neither:
+
+| variable | read by | default |
+|---|---|---|
+| `WORKSHOP_OCR_CACHE` | `scripts/books-lib.mjs` `ocrCacheDir()` — `class-check`, `drift-check`, `extract-class`, `source-coverage`, the smoke suite's book-registry section — and `scripts/ocr-book.py` | `<repo>/.cache/books` |
+| `WORKSHOP_LOCAL_D1` | `scripts/d1-query-lib.mjs` `localD1Args()` — every `--local` wrangler call in `d1-query-lib`, `d1-apply`, `class-check`, `ofd-refresh` and the smoke suite's environment section, passed as `--persist-to` | wrangler's own `.wrangler/state` under the cwd |
+
+They are set for the working directory in
+`C:\Users\natha\Projects\workshop\.claude\settings.json` (`env`), pointing at
+the main checkout's two directories, so a session started there — the book
+work — reads the real caches wherever the code it runs lives. For a worktree
+session, set the same two in that shell or in its own `.claude/settings.local.json`.
+
+**Two things they do not cover.** `regression.mjs` and `play-flow.mjs` build
+their own scratch database under a temp `--persist-to` and must keep doing so.
+And `wrangler pages dev` from `.claude/launch.json` still uses the cwd's
+`.wrangler/state`: a dev server started in a worktree serves that worktree's
+(empty) local D1 unless started by hand with `--persist-to`.
+
+**One session per tree.** A second concurrent session is acceptable only in its
+own worktree with its own dev port; two sessions editing one tree is what
+`one-session-at-a-time` records four instances of, and no variable fixes that.
+
 ### The command-line tools
 
 `node`, `npm`, `git` and `gh` put themselves on PATH and need nothing here.
