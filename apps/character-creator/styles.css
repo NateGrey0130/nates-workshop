@@ -1045,6 +1045,10 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
    one of the two does anything. Accent went on the number and not on the control,
    which is backwards; the cost is metadata beside the name, so --text-secondary. */
 .power-row .cost { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+/* A spell that also burns base P.P.E. has two buttons (BOOK-INGEST-AUDIT F101). They share
+   the grid's last cell: a fourth child wrapped to a new line and stretched across the name
+   column, measured at 467px on a desktop sheet. */
+.power-row .power-btns { display: inline-flex; gap: 4px; justify-self: end; }
 
 /* A power the catalog has text for: the NAME is the control, so the press
    target is the thing a player is already reading rather than a chevron bolted

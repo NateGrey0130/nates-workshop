@@ -1908,6 +1908,13 @@ function render() {
     const left = pool ? c[pool + '_current'] : null;
     const useBtn = w && cost != null && left != null
       ? `<button class="btn btn-sm btn-ghost noprint" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${i})">⚡ use</button>` : '';
+    // A spell that ALSO burns P.P.E. out of the caster's base for good
+    // (BOOK-INGEST-AUDIT F101): Close Rift's 2, Ley Line Resurrection's 2D6. Its
+    // own press, never folded into the use button, because WHEN it burns - on
+    // success, only if made permanent - is the player's call from the description.
+    const burnDice = p.type === 'spell' ? spellBurnDice(p.name) : null;
+    const burnBtn = w && burnDice && c.ppe_max != null
+      ? `<button class="btn btn-sm btn-ghost noprint" onclick="burnPpe(${i})">🔥 burn</button>` : '';
     // What the power DOES, when the catalog knows. It arrives with the
     // character (`power_descriptions`), keyed by the lowercased name this
     // character holds, so a row that resolves shows its text with no second
@@ -1942,9 +1949,10 @@ function render() {
           ? `<span class="muted small">— ${p.purchased
               ? `bought for ${p.acquire_cost} permanent P.P.E.`
               : `free (${p.acquire_cost} P.P.E. if bought)`}</span>` : ''}
-        ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
+        ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}
+        ${burnDice ? `<span class="muted small">— burns ${escHtml(burnDice)} P.P.E. from the base, when the spell says so</span>` : ''}</span>
       <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
-      ${useBtn}
+      ${burnBtn ? `<span class="power-btns">${useBtn}${burnBtn}</span>` : useBtn}
     </div>${desc ? `<div class="power-desc" id="pdesc-${i}"${open ? '' : ' hidden'}>${escHtml(desc)}</div>` : ''}`;
   }).join('');
 
@@ -3071,6 +3079,35 @@ function toggleItemDesc(itemId) {
   else C.openItemDescs.delete(itemId);
   const btn = document.querySelector('[aria-controls="idesc-' + itemId + '"]');
   if (btn) btn.setAttribute('aria-expanded', String(opening));
+}
+
+// The dice a held spell burns out of the base, from the catalog the sheet already
+// loaded (BOOK-INGEST-AUDIT F101). Read at render rather than stored on the
+// power, so a character who learned the spell before migration 067 gets it too.
+function spellBurnDice(name) {
+  const key = String(name ?? '').toLowerCase();
+  const row = (C.spellCatalog || []).find((x) => String(x.name).toLowerCase() === key);
+  return row?.ppe_permanent || null;
+}
+
+// Burn it. The SERVER rolls, because `ppe_base_spent` is not player-editable and
+// a client that named the amount could name any amount; this only names the
+// spell. A confirm first, because it cannot be undone and the book's condition
+// is the player's to judge.
+async function burnPpe(index) {
+  const p = (C.data.powers || [])[index];
+  const dice = p && spellBurnDice(p.name);
+  if (!dice) return;
+  const ask = [`Burn ${dice} P.P.E. out of the base for good, for ${p.name}?`, '',
+    "Only when the spell's own conditions say so - its description has them. This cannot be undone."];
+  if (!confirm(ask.join(String.fromCharCode(10)))) return;
+  try {
+    const res = await api(`characters/${id}/ppe-burn`, jsonReq('POST', { name: p.name }));
+    flash(`${res.spell}: rolled ${res.dice} for ${res.rolled}, burned ${res.burned} P.P.E. from the base.`);
+    await load();
+  } catch (err) {
+    alert('Could not burn it: ' + err.message);
+  }
 }
 
 async function usePower(index) {
