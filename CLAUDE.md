@@ -26,7 +26,7 @@ App conventions and the data model live in `apps/character-creator/README.md`.
 table is the one place each migration says what it adds. This file covers the
 skills and what is easy to get wrong about Cloudflare auth.
 
-## Nine skills, and they load from anywhere on this machine
+## Ten skills, and they load from anywhere on this machine
 
 `.claude/skills/` holds them. They are **directory-scoped** by nature: a session
 started anywhere else — in the working directory, say, with the PDF — would not
@@ -67,6 +67,7 @@ something it just wrote.
 | skill | when |
 |---|---|
 | `audit-menu` | reading or writing an audit file, and whenever a numbered finding is taken |
+| `take` | `/take <MENU> <ID>` — the moment a finding is taken: subject grep across every menu, then the premise auditor, then and only then the branch. Adds no rule; fixes the order |
 | `book-survey` | handed a sourcebook PDF, before extracting anything from it |
 | `class-import` | adding or correcting an O.C.C./R.C.C., or importing skills, spells, psionics or gear |
 | `schema-change` | any new D1 table or column — a column lands in **five** places, a table in nine |
