@@ -433,6 +433,13 @@ Grepping for `Taken` has produced false findings here **repeatedly, and in both
 directions** — work reported open that had shipped, and work reported closed
 that had not.
 
+**Closed findings may live beside the menu, in `<MENU>.closed.md`** — since
+2026-09-16 `BOOK-INGEST-AUDIT.closed.md` holds every finding of that menu whose
+own section recorded an outcome, text and numbering unchanged, and the live
+file keeps a one-line pointer per finding where the heading was. A closed file
+is a RECORD like the menu, the `*AUDIT*.md` glob reaches it, and its findings
+are not open.
+
 **How many times is not written down on purpose.** This section used to say
 four; two paragraphs earlier the same file said five, and a third place said
 four again. The number was wrong somewhere no matter which you believed, and it

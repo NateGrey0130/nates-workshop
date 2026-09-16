@@ -60,9 +60,14 @@ menu in the repo for each of them, plus the memory directory, which no grep of
 the repo reaches:
 
 ```bash
-find . -name '*-AUDIT.md' -not -path './node_modules/*' | xargs grep -n -i '<subject word>'
+find . -name '*AUDIT*.md' -not -path './node_modules/*' -not -path './.cache/*' | xargs grep -n -i '<subject word>'
 grep -rn -i '<subject word>' ~/.claude/projects/*/memory/
 ```
+
+The glob is `*AUDIT*.md`, not `*-AUDIT.md`, because a menu's closed findings
+may live beside it in `<MENU>.closed.md` (`BOOK-INGEST-AUDIT.closed.md` since
+2026-09-16) and a decision recorded there is exactly what this grep exists to
+find.
 
 **Print every hit with its file and line, or print `no hits` in those words.**
 A `### F29 - high -` heading in another menu naming the same endpoint, or a
