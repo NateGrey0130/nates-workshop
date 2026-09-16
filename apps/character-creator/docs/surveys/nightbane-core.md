@@ -324,6 +324,21 @@ Impervious to Cold, Impervious to Fire, Resist Fatigue, Suggestion). That is 55
 listings against 45 unique names, and it is the book's own shape rather than a
 parse error.
 
+**CORRECTED 2026-09-16 (PR #PRNUM): the real gaps are THREE, not five, plus one
+this section never counted.**
+
+- **`Suggestion` is not a gap** — D7 resolves it to `Hypnotic Suggestion`.
+- **`Healing` has no stat block anywhere.** The Healer section (printed 83-84)
+  describes `Healing Touch` and `Increased Healing` and nothing called `Healing`;
+  the name exists only on printed 69's list. The claim above that it is a second
+  power rested on that list alone. There is nothing to import.
+- **So the psionic import is three powers**: Divination, Mediumship/Clairsentience,
+  Induce Pain — each re-checked absent from production 2026-09-16, after the Heroes
+  Unlimited and Powers Unlimited imports.
+- **Uncounted: `Super-Hypnotic Suggestion`**, 20 I.S.P., printed in the vampire
+  powers (printed 185) and exclusive to vampires. It is not on printed 69's list,
+  which is why the 45 names missed it; it belongs with the vampire classes.
+
 ### spells: 127 entries, 96 matched by name, 31 missing — and the costs are a different table
 
 This is the finding that decides how the magic chapter is imported.
@@ -679,6 +694,39 @@ so this is a picker's answer, not a class import's.
 **D7 — `Suggestion`.** A Sensitive/Healer power here, `Hypnotic Suggestion`
 under Super in the catalog, and this book has no Super category.
 
+**DECIDED 2026-09-16 (PR #PRNUM): `Suggestion` resolves to the existing
+`Hypnotic Suggestion` row. No new row, no category change.**
+
+**It is the same power, and the book says so twice over.** Both of its entries
+are headed *Suggestion (Hypnosis)*, and elsewhere — the saving-throw rules, Mind
+Block, and the vampire power list — the book calls it Hypnotic Suggestion by name.
+The Sensitive text is Rifts' almost line for line: same range with eye contact,
+same short duration, same standard save.
+
+**But it prints TWO stat blocks, and neither cost is the catalog's.**
+
+| entry | printed | I.S.P. | range | adds |
+|---|---|---|---|---|
+| Sensitive | 77 | **2** per idea | 12 ft | — |
+| Healer | 84 | **4** per idea | 10 ft | a melee round of meditation first; calls itself identical to the Sensitive one |
+| catalog `Hypnotic Suggestion` | — | **6** | 12 ft | filed under Super |
+
+**Why resolve it anyway — precedent.** Heroes Unlimited met the identical case:
+it prints Hypnotic Suggestion at 2 I.S.P., and its import names the catalog's
+6-I.S.P. Super row in a list (`add-hu-psionics-class.sql`). Its core-psionics
+script states the reasoning — a category from another book is an assignment, and
+a named list replaces the category gate outright (`add-hu-core-psionics.sql`). A
+second row would also split the one name two games print.
+
+**The costs are therefore not stored, and that is a gap, not a choice** —
+`psionic_powers` has one `isp` and no per-system home. It is filed as
+**`BOOK-INGEST-AUDIT` F102**, together with the matching W.P. gap from D6.
+
+**A Nightbane character can reach it.** The book calls the Psychic a master
+psionic (printed 69), and the wizard gives a master all four categories including
+Super (`app.js`, where Super is master-only). A class that names it in a list
+bypasses the category gate regardless.
+
 ## Extraction plan
 
 Phase 4 costs money; everything above was free. **Nothing is extracted until D1
@@ -692,7 +740,9 @@ Once it is, in this order:
    `same_spell_as` pointing at the existing row; 27 are new; 4 are the false
    gaps above and are not written at all. Batch by the index's level headings,
    and carry the level from the index rather than the page position.
-2. **3–5 skills** and **5 psionic powers** — small enough for one pass.
+2. **3–5 skills** and **3 psionic powers** (Divination, Mediumship/Clairsentience,
+   Induce Pain — D7 corrected the five) — small enough for one pass.
+   `Super-Hypnotic Suggestion` ships with the vampire classes, not here.
 3. **25 Talents** from printed 106–114, once D5 and the Talent storage question
    are settled.
 4. **The classes**, one batch per section, cited to the entry's own pages.
@@ -728,6 +778,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
 | 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 | 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
+| 2026-09-16 | #PRNUM | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
 
 ### What remains
 
