@@ -43,5 +43,19 @@
       "Bash(gh pr checks *)",
       "Bash(gh api repos/NateGrey0130/nates-workshop/commits/*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }
