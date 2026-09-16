@@ -14837,3 +14837,18 @@ the grouping (it fails with the CSS rule removed).
 **Nothing reached a player**: no production character holds any of the six
 spells' burns, and none has spent any base (all hold `ppe_base_spent` 0, counted
 `--remote` 2026-09-16). **Applied to production before this merged**, 2026-09-16: migration 067, then the data script, whose three readbacks all passed (six burns, Stones & Crystals NULL, six in all); `schema_migrations` and `data_script_runs` then recorded both, and the six rows read back with the values above.
+
+**Decided, 2026-09-16 (PR #1098): Nate kept all four choices the three PRs made.
+Recorded so they are not re-proposed.**
+
+1. **A Talent purchase does not reduce current P.P.E.** It lowers the effective
+   maximum, and current is clamped to that. Reducing current as well would charge
+   the price twice to a character at full.
+2. **Purchases are not offered in the creation wizard.** They are banked at
+   creation and bought on the sheet; the wizard is still rolling the base they are
+   paid from.
+3. **Bone: Return from the Grave burns 3 per full moon**, what its text says. The
+   stat line's "a total of 60 P.P.E." stays in `ppe_note` and is not treated as the
+   burn.
+4. **Summon & Use Stones & Crystals has no `ppe_permanent`.** Its four burns by
+   what is summoned stay prose; one expression would be wrong for three of them.
