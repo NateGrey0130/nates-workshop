@@ -642,7 +642,7 @@ tier-2 decision Nate takes.
 
 **D6 — `W.P. Archery and Targeting`.** One book row against two catalog rows.
 
-**DECIDED 2026-09-16 (PR #PRNUM): the name resolves to the existing `W.P.
+**DECIDED 2026-09-16 (PR #1127): the name resolves to the existing `W.P.
 Archery` row. No new row.** The framing was wrong — it is not one book row
 against two catalog rows, because neither catalog row, nor the two added
 together, is the book's skill — and the repo had already answered this exact name.
@@ -727,7 +727,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
 | 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
 | 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
-| 2026-09-16 | #PRNUM | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
+| 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
 
 ### What remains
 
