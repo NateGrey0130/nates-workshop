@@ -406,28 +406,40 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // it. That under-enforces at the seams and can never refuse a legal build.
   if (Array.isArray(powers)) {
     const LABELS = { spell: 'spell', psionic: 'psionic power', super: 'super ability',
-                     talent: 'talent' };
+                     talent: 'talent', talent_purchase: 'bought talent' };
     // "super abilitys" is what appending an s produces, so the plural is stated
     // rather than derived - the third kind is the first whose name does not
     // pluralise by suffix.
     const PLURALS = { spell: 'spells', psionic: 'psionic powers', super: 'super abilities',
-                      talent: 'talents' };
+                      talent: 'talents', talent_purchase: 'bought talents' };
     const label = (kind) => LABELS[kind] || kind;
     const plural = (kind, n) => (n === 1 ? label(kind) : (PLURALS[kind] || `${label(kind)}s`));
+    // A BOUGHT Talent is counted apart from the free ones (BOOK-INGEST-AUDIT
+    // F101): it is still `type: 'talent'` on the character, marked `purchased`,
+    // and it draws on the purchase allowance rather than on the free picks. So
+    // the TYPES a stored power may have are four, and the KINDS it is counted
+    // under are five.
+    const TYPES = ['spell', 'psionic', 'super', 'talent'];
+    const KINDS = [...TYPES, 'talent_purchase'];
     const auto = {
       spell: new Set((cls.magic?.spells || []).map(norm).filter(Boolean)),
       psionic: new Set((cls.psionics?.powers || []).map(norm).filter(Boolean)),
       super: new Set((cls.super_abilities?.abilities || []).map(norm).filter(Boolean)),
       talent: new Set((cls.talents?.talents || []).map(norm).filter(Boolean)),
+      // Nothing is granted outright as a purchase.
+      talent_purchase: new Set(),
     };
-    const KINDS = ['spell', 'psionic', 'super', 'talent'];
+    // The catalog a kind is looked up in.
+    const catalogOf = (kind) => (kind === 'talent_purchase' ? 'talent' : kind);
     const entries = powers
-      .filter((p) => p && KINDS.includes(p.type) && norm(p.name))
-      .map((p) => ({ kind: p.type, name: String(p.name).trim() }));
+      .filter((p) => p && TYPES.includes(p.type) && norm(p.name))
+      .map((p) => ({ kind: p.type === 'talent' && p.purchased ? 'talent_purchase' : p.type,
+                     type: p.type, name: String(p.name).trim() }));
 
     const seenPowers = new Set();
     for (const e of entries) {
-      const k = e.kind + ':' + norm(e.name);
+      // By TYPE, so a Talent held both free and bought is still a duplicate.
+      const k = e.type + ':' + norm(e.name);
       if (seenPowers.has(k)) {
         violations.push({ rule: 'duplicate_power', name: e.name,
           message: `${e.name} is listed twice — a power is learned once` });
@@ -435,7 +447,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       seenPowers.add(k);
     }
 
-    const chosen = { spell: [], psionic: [], super: [], talent: [] };
+    const chosen = Object.fromEntries(KINDS.map((k) => [k, []]));
     for (const e of entries) if (!auto[e.kind].has(norm(e.name))) chosen[e.kind].push(e);
 
     // Everything the character may draw from: the starting selection, plus the
@@ -465,6 +477,9 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       // twelve, so `grants` really does contain kind 'talent' and a character
       // built at level 7 is allowed the ones climbed past.
       talent: [...startingGroups(cls, 'talent'), ...grants.filter((g) => g.kind === 'talent')],
+      // The purchases start AT level one (printed 106), which `grants` - asked
+      // from level 1, exclusive - does not include, so they are asked for from 0.
+      talent_purchase: powerGrantsFor(cls, 0, level).filter((g) => g.kind === 'talent_purchase'),
     };
 
     for (const kind of KINDS) {
@@ -526,7 +541,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         // With no pool at all, the count violation above already says it all.
         if (!pool[kind].length) continue;
         for (const e of chosen[kind]) {
-          const row = powerCatalog[kind]?.get(norm(e.name));
+          const row = powerCatalog[catalogOf(kind)]?.get(norm(e.name));
           if (!row) {
             violations.push({ rule: 'power_unknown', kind, name: e.name,
               message: `${e.name} is not in the ${label(kind)} catalog` });
@@ -574,7 +589,7 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
                 message: `${e.name} is a ${row.tier} super ability; this class's picks allow `
                   + [...allowedTiers].join(', ') });
             }
-          } else if (kind === 'talent') {
+          } else if (kind === 'talent' || kind === 'talent_purchase') {
             // THE LEVEL GATE, and it is the only mechanical one a Talent has: the
             // restriction lives on the ROW rather than on the grant, so it is
             // checked here rather than against a pool. Ten of the core book's 25

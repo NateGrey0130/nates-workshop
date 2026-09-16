@@ -782,6 +782,8 @@ function mergeTalents(born, trained) {
   if (starting) out.talents_starting = starting;
   const perLevel = (born.talents_per_level || 0) + (trained.talents_per_level || 0);
   if (perLevel) out.talents_per_level = perLevel;
+  const purchases = (born.talents_purchases_per_level || 0) + (trained.talents_purchases_per_level || 0);
+  if (purchases) out.talents_purchases_per_level = purchases;
   for (const k of ['talents', 'talents_from']) {
     const both = unionByName(born[k], trained[k]);
     if (both.length) out[k] = both;
@@ -2929,7 +2931,10 @@ export function parseClassMarkdown(text) {
       errors.push(`${where} must be a map`);
       continue;
     }
-    for (const k of ['talents_starting', 'talents_per_level']) {
+    // `talents_purchases_per_level` is how many Talents the character may BUY at
+    // level one and at every level after - two, printed 106 - each paid for out
+    // of the P.P.E. base (BOOK-INGEST-AUDIT F101). Read by talentPurchaseGrantsFor.
+    for (const k of ['talents_starting', 'talents_per_level', 'talents_purchases_per_level']) {
       if (block[k] !== undefined && (!Number.isInteger(block[k]) || block[k] < 0)) {
         errors.push(`${where}.${k} must be a whole number of picks, zero or more`);
       }
@@ -2980,6 +2985,7 @@ export function parseClassMarkdown(text) {
     // stores, the sheet grows a heading and the player is offered nothing.
     const grantsSomething = block.talents_starting !== undefined
       || block.talents_per_level !== undefined
+      || block.talents_purchases_per_level !== undefined
       || (block.talents_starting_groups || []).length
       || (block.talents_schedule || []).length
       || (block.talents || []).length;

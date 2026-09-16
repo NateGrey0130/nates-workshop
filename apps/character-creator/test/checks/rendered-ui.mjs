@@ -650,13 +650,14 @@ export function run() {
     check('the sheet catalog load keeps the Talents', /C\.talentCatalog = catalogs\.talents/.test(sheetSrc));
 
     const C = {
-      data: { campaign_system: 'nightbane', powers: [{ name: 'Held Talent', type: 'talent' }] },
+      data: { campaign_system: 'nightbane', powers: [{ name: 'Held Talent', type: 'talent' }],
+              ppe_max: 30, ppe_base_spent: 10 },
       cls, spellCatalog: [], psiCatalog: [{ name: 'Sixth Sense', category: 'Sensitive', system: null }],
       talentCatalog: [
-        { name: 'Soul Shield', tier: 'common', system: 'nightbane', min_character_level: null },
-        { name: 'Fifth-Level Talent', tier: 'common', system: 'nightbane', min_character_level: 5 },
-        { name: 'Held Talent', tier: 'common', system: 'nightbane', min_character_level: null },
-        { name: 'Other System', tier: 'common', system: 'rifts', min_character_level: null },
+        { name: 'Soul Shield', tier: 'common', system: 'nightbane', min_character_level: null, acquire_ppe: 6 },
+        { name: 'Fifth-Level Talent', tier: 'common', system: 'nightbane', min_character_level: 5, acquire_ppe: 15 },
+        { name: 'Held Talent', tier: 'common', system: 'nightbane', min_character_level: null, acquire_ppe: 5 },
+        { name: 'Other System', tier: 'common', system: 'rifts', min_character_level: null, acquire_ppe: 5 },
       ],
       claimingPowers: true,
       pendingPowers: [{ kind: 'talent', granted_at_level: 4, slot: 0, count: 1 }],
@@ -665,8 +666,11 @@ export function run() {
     const esc = (s) => String(s ?? '');
     let fns = null;
     try {
-      fns = new Function('C', 'escHtml', 'globalThis',
-        `${src}\nreturn { powerPickerBlock, pendingPowersPanel };`)(C, esc, {});
+      // poolMax is the sheet-layout helper, stubbed with its P.P.E. rule.
+      const poolMax = (data, key) => (data[key + '_max'] == null ? null
+        : data[key + '_max'] - (key === 'ppe' ? Number(data.ppe_base_spent) || 0 : 0));
+      fns = new Function('C', 'escHtml', 'globalThis', 'poolMax',
+        `${src}\nreturn { powerPickerBlock, pendingPowersPanel };`)(C, esc, {}, poolMax);
     } catch (e) {
       check('the pickers run outside the page', false, e.message);
     }
@@ -696,6 +700,29 @@ export function run() {
     const psi = fns ? fns.pendingPowersPanel() : '';
     check('a banked psionic grant still offers psionic powers',
       JSON.stringify(options(psi)) === '["Sixth Sense"]', JSON.stringify(options(psi)));
+
+    // TALENT PURCHASES (BOOK-INGEST-AUDIT F101): the same pool, a different grant
+    // kind, and the two things a player needs before choosing - each price, and
+    // what is left of the base to pay it from (30 rolled - 10 spent = 20).
+    const buyer = { talents: { talents_starting: 1, talents_purchases_per_level: 2 } };
+    const buyProp = buildProposal({ level: 3, hp_max: null, sdc_max: null, skills: [] }, buyer, 4);
+    const buyUp = fns ? fns.powerPickerBlock(buyProp) : '';
+    check('the level-up offers Talents to buy, tagged as purchases',
+      /Talents to buy/.test(buyUp) && /data-kind="talent_purchase"/.test(buyUp), buyUp.slice(0, 300));
+    check('with each Talent\'s price', /Soul Shield \(6 P\.P\.E\. to buy\)/.test(buyUp), buyUp.slice(0, 600));
+    check('and what is left of the base to pay from', /20 P\.P\.E\. left to spend/.test(buyUp));
+
+    C.claimingPowers = false;
+    C.pendingPowers = [{ kind: 'talent', granted_at_level: 4, slot: 0, count: 1 },
+                       { kind: 'talent_purchase', granted_at_level: 4, slot: 0, count: 2 }];
+    C.pendingPowersTotal = 3;
+    const banner = fns ? fns.pendingPowersPanel() : '';
+    check('the banked banner counts purchases apart from powers that are owed',
+      /1 unspent power · 2 Talent purchases available/.test(banner), banner.replace(/\s+/g, ' ').slice(0, 200));
+    C.claimingPowers = true;
+    const buyBanked = fns ? fns.pendingPowersPanel() : '';
+    check('and the banked panel offers them priced, tagged as purchases',
+      /data-kind="talent_purchase"/.test(buyBanked) && /Soul Shield \(6 P\.P\.E\. to buy\)/.test(buyBanked));
   }
 
   section('The wizard rail');

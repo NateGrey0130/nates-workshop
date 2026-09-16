@@ -638,6 +638,7 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
          grantNote, startingPicksFor, startingGroups, spellTraditionAllowed, talentGrantsFor,
+         talentPurchaseGrantsFor,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks, loadPowerDescriptions } from '../../../functions/api/character-creator/_lib/power-picks.js';
@@ -2924,6 +2925,80 @@ section('A held Talent brings its description to the sheet');
   check('a Talent held on the sheet gets its description', out['soul shield'] === 'A shield of dark energy.',
     JSON.stringify(out));
   check('and a spell still gets its own', out['blinding flash'] === 'A flash of light.', JSON.stringify(out));
+}
+
+section('Talent purchases (BOOK-INGEST-AUDIT F101)');
+{
+  // Printed 106: a Nightbane may BUY two Talents at level one and at every level
+  // after, each for a permanent expenditure of P.P.E. The allowance banks as its
+  // own grant kind, and a purchase is charged against ppe_max - ppe_base_spent.
+  const md = (...extra) => parseClassMarkdown(['---', 'id: nb', 'name: Nightbane',
+    'system: nightbane', 'source_book: Nightbane RPG p.106', 'category: rcc',
+    'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"',
+    'talents:', ...extra, '---', '', '## Lore', '', 'x', ''].join(String.fromCharCode(10)));
+  const nb = md('  talents_starting: 1', '  talents_purchases_per_level: 2');
+  check('talents_purchases_per_level parses', nb.ok && nb.warnings.length === 0, [...nb.errors, ...nb.warnings].join('; '));
+  check('and must be a whole number', !md('  talents_purchases_per_level: -1').ok);
+  check('and alone is a block that grants something', md('  talents_purchases_per_level: 2').warnings.length === 0,
+    md('  talents_purchases_per_level: 2').warnings.join('; '));
+
+  const at = (from, to) => JSON.stringify(talentPurchaseGrantsFor(nb.data, from, to).grants.map((g) => [g.level, g.count]));
+  check('creation, asked from 0, includes level one', at(0, 1) === '[[1,2]]', at(0, 1));
+  check('a level-up collects two per level crossed and not the level left', at(3, 5) === '[[4,2],[5,2]]', at(3, 5));
+  check('a class stating no purchases buys nothing, and is not unknown',
+    JSON.stringify(talentPurchaseGrantsFor({ talents: { talents_starting: 1 } }, 0, 5)) === '{"applicable":false,"unknown":false,"grants":[],"total":0}');
+  check('powerGrantsFor banks them as their own kind, beside the free Talent at level four',
+    JSON.stringify(powerGrantsFor({ talents: { talents_purchases_per_level: 2, talents_schedule: [{ level: 4, count: 1 }] } }, 3, 4)
+      .map((g) => [g.kind, g.level, g.count])) === '[["talent",4,1],["talent_purchase",4,2]]');
+  check('the level-up proposal carries the purchases',
+    buildProposal({ level: 3, hp_max: null, skills: [] }, nb.data, 4).talent_purchase_picks?.total === 2);
+
+  // The charge, through the real resolver on schema.sql in memory.
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'));
+  const ins = mem.prepare('INSERT INTO talents (name, tier, acquire_ppe, ppe, min_character_level, system) VALUES (?,?,?,?,?,?)');
+  ins.run('Small', 'common', 10, 2, null, 'nightbane');
+  ins.run('Big', 'common', 25, 2, null, 'nightbane');
+  const env = { DB: { prepare: (sql) => ({
+    bind: (...b) => ({ all: async () => ({ results: mem.prepare(sql).all(...b) }) }),
+    all: async () => ({ results: mem.prepare(sql).all() }),
+  }), batch: async (s) => Promise.all(s.map((x) => x.all())) } };
+  const grants = [{ kind: 'talent_purchase', level: 1, slot: 0, count: 2 }, { kind: 'talent', level: 1, slot: 0, count: 1 }];
+  const buy = (names, ppeAvailable, kind = 'talent_purchase') => resolvePowerPicks(env, {
+    picks: names.map((name) => ({ kind, name, granted_at_level: 1 })),
+    grants, existingPowers: [], system: 'nightbane', ppeAvailable });
+  const one = await buy(['Small'], 30);
+  check('a purchase the base covers resolves and reports its price',
+    one.errors.length === 0 && one.ppeSpent === 10 && one.spent.get('talent_purchase:1:0') === 1, JSON.stringify(one.errors));
+  check('and yields a Talent marked as bought, with its price',
+    one.powers[0]?.type === 'talent' && one.powers[0]?.purchased === true && one.powers[0]?.acquire_cost === 10,
+    JSON.stringify(one.powers[0]));
+  const both = await buy(['Small', 'Big'], 30);
+  check('two purchases that each fit and together do not are refused',
+    both.errors.some((e) => /35 permanent P\.P\.E\..*30 left/.test(e)), both.errors.join('; '));
+  const none = await buy(['Small'], null);
+  check('a character with no P.P.E. can buy nothing', none.errors.length === 1, none.errors.join('; '));
+  const asFree = await buy(['Small'], 30, 'talent');
+  check('a free Talent costs nothing and is not marked bought',
+    asFree.errors.length === 0 && asFree.ppeSpent === 0 && !asFree.powers[0]?.purchased, JSON.stringify(asFree));
+  mem.close();
+
+  // The validator counts bought Talents apart from free ones.
+  const row = (name, min) => ({ name, tier: 'common', acquire_ppe: 6, ppe: 4, system: 'nightbane', min_character_level: min });
+  const powerCatalog = { spell: new Map(), psionic: new Map(), super: new Map(),
+    talent: new Map(['A', 'B', 'C', 'D'].map((n) => [n.toLowerCase(), row(n, null)]).concat([['e', row('E', 5)]])) };
+  const T = (name, purchased) => ({ type: 'talent', name, ...(purchased ? { purchased: true } : {}) });
+  const rules = (powers, level = 1, cls = nb.data) => validateCharacter({ character: { level }, cls, skills: [],
+    abilities: [], attributes: {}, catalog: null, powers, pools: {}, system: 'nightbane', powerCatalog })
+    .violations.map((v) => v.rule + ':' + (v.kind || ''));
+  check('one free and two bought Talents at level one is legal',
+    JSON.stringify(rules([T('A'), T('B', 1), T('C', 1)])) === '[]', JSON.stringify(rules([T('A'), T('B', 1), T('C', 1)])));
+  check('a third bought Talent at level one is over the purchase allowance',
+    rules([T('A'), T('B', 1), T('C', 1), T('D', 1)]).includes('power_count:talent_purchase'));
+  check('and bought ones do not use up the free pick', !rules([T('A'), T('B', 1)]).includes('power_count:talent'));
+  check('a bought Talent still passes its level gate', rules([T('E', 1)]).includes('power_min_level:talent_purchase'));
+  check('a class with no purchase allowance may hold no bought Talent',
+    rules([T('B', 1)], 1, { talents: { talents_starting: 1 } }).includes('power_count:talent_purchase'));
 }
 
 section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
@@ -8316,10 +8391,10 @@ section('Power picks are enforced server-side');
   // The picker filters, but a request does not have to come from the picker.
   // Every one of these is a rejection a client could otherwise walk past.
   for (const [what, pattern] of [
-    ['a grant that does not exist', /has no \$\{kind\} grant from level/],
+    ['a grant that does not exist', /has no \$\{what\} grant from level/],
     ['a grant with no room', /is already full/],
     ['a power already known', /already known/],
-    ['a name not in the catalog', /is not in the \$\{kind\} catalog/],
+    ['a name not in the catalog', /is not in the \$\{isTalent \? 'talent' : kind\} catalog/],
     ['a spell above the grant cap', /is a level \$\{row\.level\} spell/],
     ['a power outside the grant categories', /power; the level \$\{level\} grant allows/],
   ]) {

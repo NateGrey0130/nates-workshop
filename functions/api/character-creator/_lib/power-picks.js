@@ -17,7 +17,7 @@ import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         spellGrantsFor, psionicGrantsFor, talentGrantsFor, spellTraditionsAllowed,
+         spellGrantsFor, psionicGrantsFor, talentGrantsFor, talentPurchaseGrantsFor, spellTraditionsAllowed,
          spellTraditionAllowed } from './leveling.js';
 
 export async function listPendingPowers(env, characterId) {
@@ -113,6 +113,14 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
                  note: grantNote(cls, 'talent', g.level, g.slot) });
     }
   }
+  // Talents the character may BUY with permanent P.P.E. (BOOK-INGEST-AUDIT F101).
+  // Their own kind, so a purchase is never taken from a free grant: the two are
+  // spent differently, one by choosing and one by choosing and paying.
+  const purchases = talentPurchaseGrantsFor(cls, fromLevel, toLevel);
+  for (const g of purchases.grants) {
+    out.push({ ...g, kind: 'talent_purchase', spell_levels: null, traditions: null,
+               categories: null, from: null, note: null });
+  }
   return out;
 }
 
@@ -123,14 +131,23 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
 // spell — that the spell's level is inside the cap that grant carries. The cap
 // is ENFORCED rather than advised, the same way a psychic tier is: a spell's
 // level is a mechanical rule, not a table judgement.
-export async function resolvePowerPicks(env, { picks, grants, existingPowers, system }) {
+//
+// `ppeAvailable` is what a Talent PURCHASE may be paid from: the character's
+// effective P.P.E. base, `ppe_max - ppe_base_spent`, at the level the picks are
+// made. Every purchase in one request is paid from it together, and the whole
+// request is refused if they cost more than it holds - two purchases that each
+// fit and together do not are not half-allowed. `null` pays for nothing.
+// `ppeSpent` comes back as what the purchases cost, for the caller to add to
+// `ppe_base_spent` in the same batch that stores the Talents.
+export async function resolvePowerPicks(env, { picks, grants, existingPowers, system, ppeAvailable = null }) {
   const errors = [];
   const chosen = [];
   const spent = new Map();
+  let ppeSpent = 0;
   // `spent` is returned alongside the powers: how many picks were taken from each
   // grant, keyed `kind:level:slot` exactly the way a banked row and
   // remainingPowerGrants key one. See the note at the return below.
-  if (!Array.isArray(picks) || !picks.length) return { powers: [], errors, spent: new Map() };
+  if (!Array.isArray(picks) || !picks.length) return { powers: [], errors, spent: new Map(), ppeSpent };
 
   const held = new Set((existingPowers || [])
     .map((p) => String(p?.name || '').toLowerCase()).filter(Boolean));
@@ -161,27 +178,32 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     // the spell catalog and refused as "not in the spell catalog", naming the
     // wrong catalog for a row that exists.
     const kind = pick?.kind === 'psionic' ? 'psionic'
-      : pick?.kind === 'talent' ? 'talent' : 'spell';
+      : pick?.kind === 'talent' ? 'talent'
+      : pick?.kind === 'talent_purchase' ? 'talent_purchase' : 'spell';
+    // A purchase YIELDS a Talent, so it reads the Talent catalog and passes the
+    // Talent gates; only the grant it consumes and the price differ.
+    const isTalent = kind === 'talent' || kind === 'talent_purchase';
+    const what = kind === 'talent_purchase' ? 'Talent purchase' : kind;
     const level = Number(pick?.granted_at_level);
     const slot = Number.isFinite(Number(pick?.slot)) ? Number(pick.slot) : 0;
     if (!name) { errors.push('A pick has no name'); continue; }
 
     const k = key(kind, level, slot);
     if (!room.has(k)) {
-      errors.push(`${name}: this character has no ${kind} grant from level ${level}`);
+      errors.push(`${name}: this character has no ${what} grant from level ${level}`);
       continue;
     }
     if (room.get(k) <= 0) {
-      errors.push(`${name}: the level ${level} ${kind} grant is already full`);
+      errors.push(`${name}: the level ${level} ${what} grant is already full`);
       continue;
     }
     if (held.has(name.toLowerCase())) {
       errors.push(`${name} is already known — a power is learned once`);
       continue;
     }
-    const row = catalog[kind].get(name.toLowerCase());
+    const row = catalog[isTalent ? 'talent' : kind].get(name.toLowerCase());
     if (!row) {
-      errors.push(`${name} is not in the ${kind} catalog`);
+      errors.push(`${name} is not in the ${isTalent ? 'talent' : kind} catalog`);
       continue;
     }
     // A named list is the tightest restriction there is, so it is checked
@@ -206,7 +228,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
         errors.push(`${name} is ${row.tradition} magic; the level ${level} grant does not draw from that tradition`);
         continue;
       }
-    } else if (kind === 'talent') {
+    } else if (isTalent) {
       // THE ONLY MECHANICAL GATE ON A TALENT, and it lives on the ROW rather
       // than on the grant: the book's free Talents arrive ungated and it is the
       // Talent itself that says "Not available until the character has reached
@@ -246,6 +268,19 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       }
     }
 
+    // THE PRICE, charged against the whole request below rather than pick by pick.
+    // `acquire_ppe` is NOT NULL on every row (migration 063), so a purchase always
+    // has one; the Number() guards a row a hand-edit broke rather than pricing it
+    // at nothing.
+    if (kind === 'talent_purchase') {
+      const price = Number(row.acquire_ppe);
+      if (!Number.isFinite(price) || price < 0) {
+        errors.push(`${name} has no acquisition cost in the catalog, so it cannot be bought`);
+        continue;
+      }
+      ppeSpent += price;
+    }
+
     room.set(k, room.get(k) - 1);
     spent.set(k, (spent.get(k) || 0) + 1);
     held.add(name.toLowerCase());
@@ -257,9 +292,12 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     chosen.push(kind === 'spell'
       ? { type: 'spell', name: row.name, level: row.level, cost: row.ppe,
           ...(row.ppe_note ? { cost_note: row.ppe_note } : {}), gained_at_level: level, slot }
-      : kind === 'talent'
+      : isTalent
       ? { type: 'talent', name: row.name, tier: row.tier, cost: row.ppe,
           acquire_cost: row.acquire_ppe,
+          // Bought rather than granted free. The validator counts the two apart,
+          // and the sheet says which a Talent was.
+          ...(kind === 'talent_purchase' ? { purchased: true } : {}),
           ...(row.ppe_note ? { cost_note: row.ppe_note } : {}),
           ...(row.form_required ? { form_required: row.form_required } : {}),
           ...(row.prerequisite ? { prerequisite: row.prerequisite } : {}),
@@ -282,7 +320,15 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
   // Rebuilding the key from the power's TYPE was the defect, not the mapping: a
   // purchased Talent's grant is a different kind from the power it yields, so no
   // mapping from type could stay right. This loop already holds the true key.
-  return { powers: chosen, errors, spent };
+  //
+  // THE BASE HAS TO COVER EVERY PURCHASE TOGETHER. No floor beyond that, which
+  // was Nate's answer (2026-09-16): a character may buy its base down to zero.
+  const available = Number.isFinite(ppeAvailable) ? Math.max(0, ppeAvailable) : 0;
+  if (ppeSpent > available) {
+    errors.push(`Those Talent purchases cost ${ppeSpent} permanent P.P.E., and this character `
+      + `has ${available} left to spend`);
+  }
+  return { powers: chosen, errors, spent, ppeSpent };
 }
 
 // Only the rows actually named, rather than both catalogs whole: a level-up

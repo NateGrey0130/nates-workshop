@@ -124,22 +124,50 @@ export async function onRequestPost({ request, env, params }) {
     : null;
   let pickedPowers = [];
   let pickedSpent = new Map();
+  let ppeSpent = 0;
   let powers = character.powers;
+  // The P.P.E. maximum AFTER this level-up, which is what a Talent bought at
+  // this level is paid from (BOOK-INGEST-AUDIT F101): the pools loop above may
+  // have just raised it, under the same condition that loop applies.
+  const ppeMaxAfter = typeof b.pools?.ppe_max === 'number' && character.ppe_max != null
+    ? b.pools.ppe_max : character.ppe_max;
+  const baseSpent = Number(character.ppe_base_spent) || 0;
   if (powerGrants.length && Array.isArray(b.power_picks) && b.power_picks.length) {
     const resolved = await resolvePowerPicks(env, {
       picks: b.power_picks,
       grants: powerGrants,
       existingPowers: powers,
       system: campaign?.system ?? null,
+      ppeAvailable: ppeMaxAfter == null ? null : ppeMaxAfter - baseSpent,
     });
     if (resolved.errors?.length) return powerPickErrors(resolved.errors);
     pickedPowers = resolved.powers;
     pickedSpent = resolved.spent;
+    ppeSpent = resolved.ppeSpent || 0;
   }
   if (pickedPowers.length) {
     powers = powers.concat(pickedPowers);
     sets.push('powers = ?'); binds.push(JSON.stringify(powers));
-    changes.powers = pickedPowers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level }));
+    changes.powers = pickedPowers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level,
+      ...(p.purchased ? { purchased: true, ppe: p.acquire_cost } : {}) }));
+  }
+  // A purchase lowers the base for good, and current P.P.E. cannot sit above the
+  // maximum the character can now fill. CLAMPED rather than reduced by the
+  // price: a character at 10 of 40 who buys a 6-point Talent is at 10 of 34.
+  //
+  // `sets` and `binds` pair one to one up to here - every entry so far has one
+  // placeholder - which is what lets a ppe_current the pools loop already set be
+  // found and lowered in place rather than written twice.
+  if (ppeSpent > 0) {
+    sets.push('ppe_base_spent = ?'); binds.push(baseSpent + ppeSpent);
+    const cap = ppeMaxAfter - baseSpent - ppeSpent;
+    const at = sets.indexOf('ppe_current = ?');
+    const current = at >= 0 ? binds[at] : character.ppe_current;
+    if (current != null && current > cap) {
+      if (at >= 0) binds[at] = cap;
+      else { sets.push('ppe_current = ?'); binds.push(cap); }
+    }
+    changes.ppe_base_spent = { from: baseSpent, to: baseSpent + ppeSpent };
   }
 
   // Check the result, not the request: the allowance grows with the level being

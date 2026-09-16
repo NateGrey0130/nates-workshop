@@ -14670,3 +14670,89 @@ and still fails if the steppers are dropped or omitted.
 and all 4 characters hold 0** - so no existing sheet shows anything different.
 
 **Smoke 2223 -> 2234. Regression 441.**
+
+**2 of 3, 2026-09-16 (PR #1096): Talent purchases.** A Nightbane may now BUY
+Talents, on the rules Nate set: **two at level one and two at every level after,
+no floor** - a character may spend its base to zero - and **an unused purchase
+banks like a free pick**.
+
+**How it is stored.** A class states `talents.talents_purchases_per_level: 2`.
+The allowance banks in `pending_power_picks` as a new kind, `talent_purchase`
+(migration 066, a CHECK widening - the same single-table rebuild as 064,
+re-measured `--remote` the same day: no table references it, one index, 0 rows,
+13 columns). **A kind of its own, not a `talent` row**: a purchase is spent by
+choosing AND paying, and at levels four, seven, ten and twelve a free grant and a
+purchase allowance would otherwise share the key `talent:level:slot`. #1093 had
+already recorded that this was coming, which is why it made `resolvePowerPicks`
+hand out the key it consumed rather than let callers rebuild one from a type.
+
+**How it is paid.** `resolvePowerPicks` reads the Talent catalog for a purchase,
+applies the same level gate a free Talent gets, and adds the row's `acquire_ppe`
+to a total. **Every purchase in one request is paid from the base together**:
+two that each fit and together do not are refused as a whole, rather than one
+being half-allowed. The base is `ppe_max - ppe_base_spent` (1 of 3's column) -
+at level-up, the maximum AFTER the level-up. The stored Talent carries
+`purchased: true` and its price.
+
+- **The spend endpoint and level-confirm** add the total to `ppe_base_spent` in
+  the same batch that stores the Talent, and clamp `ppe_current` to what the
+  character can still fill. **Clamped, not reduced by the price** - a character
+  at 10 of 40 who buys a 6-point Talent is at 10 of 34. That was a judgement,
+  stated here so it can be reversed: the book says the expenditure is permanent
+  and says nothing of the current pool.
+- **Creation banks the level-one allowance** (and every level's, for a character
+  built above level one) rather than offering purchases in the wizard. A purchase
+  is optional and paid from a base the wizard is still rolling; the sheet's
+  banked panel spends them.
+- **The validator counts bought Talents apart from free ones**: a stored Talent
+  marked `purchased` draws on the purchase allowance, still passes its level
+  gate, and a Talent held both free and bought is a duplicate.
+
+**On the sheet**, both panels offer purchases from the same pool as a free
+Talent, with each option's price and how much of the base is left to spend. The
+banked banner counts purchases apart from powers that are owed - two arrive every
+level and nobody owes them, so folding them into "unspent powers" would nag
+forever. **And one line on the powers list was false and is corrected**: every
+Talent read "N P.P.E. spent permanently to acquire", including free ones, which
+cost nothing. It now says "free" or "bought for N permanent P.P.E.".
+
+**Pinned by running, in three layers.**
+- **Smoke** runs the parser, the grant builder, the resolver against
+  `schema.sql` in memory, the validator, and the sheet's own panels cut out of
+  `sheet.js`. Two injected defects - the combined-budget refusal switched off,
+  and a bought Talent counted as free - fail seven checks; the sheet as merged
+  on main fails five.
+- **Regression** drives the three real routes on a fixture class and Talents
+  that exist only in its scratch database: creation banks two; a pair costing 35
+  against a base of 30 is refused and charges nothing; a fifth-level Talent and
+  a free-Talent pick against a purchase are refused; a 10-point purchase leaves
+  `ppe_base_spent` 10 and current clamped from 30 to 20; at level two, 25 + 15
+  against the raised base of 26 refuses the whole level-up, and 25 alone lands
+  with current clamped to 1.
+
+**Walked in a browser**, on a local server on its own port, against a local-only
+Nightbane class given `talents_purchases_per_level: 2`:
+
+- a character created holding one free Talent opened with a banner reading *2
+  Talent purchases available* and P.P.E. 30 / 30;
+- the banked panel offered the four Talents a level-one purchase allows, each
+  priced, under *30 P.P.E. left to spend*. Buying Darkwhip (8) and Mirror Search
+  (10) left the base spent at 18 and P.P.E. at 12 / 12, each Talent reading
+  *bought for N permanent P.P.E.*, and the banked row closed;
+- logging XP to level two opened the level-up with *Talents to buy - 2 may be
+  bought* and *12 P.P.E. left to spend*. Buying Shadow Shield (7) and Mirror Sight
+  (5) - exactly the 12 left - was accepted, **the no-floor case**: P.P.E. 0 / 0,
+  base spent 30.
+
+Screenshotted at desktop and tablet width. One wording on the sheet changed as a
+result: a free Talent read *free; 6 P.P.E. to buy*, which reads as a price still
+owed, and now reads *free (6 P.P.E. if bought)*. That change is a one-line string
+and was not re-walked.
+
+**Nothing reached a player.** Production holds no `talents` rows, no Nightbane
+class and no banked picks of any kind, counted `--remote` 2026-09-16. **Migration
+066 was applied to production before this merged**, 2026-09-16: all four readbacks
+passed, and `sqlite_master` and `schema_migrations` then showed the CHECK admitting
+`talent_purchase`, 066 recorded, the index back, and 0 rows.
+
+**3 of 3 remains**: the spells in other books that burn the caster's base.

@@ -9,7 +9,7 @@ import { getUserEmail, unauthorized, json, readJson, campaignAccess } from './_l
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
-import { loadPowerCatalog } from './_lib/power-picks.js';
+import { loadPowerCatalog, powerGrantsFor, insertPowerGrantStatements } from './_lib/power-picks.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc, mosList } from '../../../apps/character-creator/js/parser.js';
@@ -269,6 +269,17 @@ export async function onRequestPost({ request, env }) {
     const remaining = remainingGrants(grants, spent);
     pending = remaining.reduce((n, g) => n + g.count, 0);
     statements.push(...insertGrantStatements(env, row.id, remaining));
+  }
+
+  // Talents the character may BUY with permanent P.P.E. - two at level one and
+  // two more at every level after, printed 106 (BOOK-INGEST-AUDIT F101). BANKED
+  // at creation for every level from one up, rather than offered by the wizard:
+  // a purchase is optional and paid out of a base the wizard is still rolling,
+  // and Nate's answer (2026-09-16) was that an unused purchase banks like a free
+  // pick. The sheet's banked-picks panel spends them.
+  if (cls) {
+    const purchases = powerGrantsFor(cls, 0, level).filter((g) => g.kind === 'talent_purchase');
+    statements.push(...insertPowerGrantStatements(env, row.id, purchases));
   }
 
   if (statements.length) await env.DB.batch(statements);

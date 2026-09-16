@@ -1936,7 +1936,12 @@ function render() {
     return head + `<div class="power-row">
       <span>${nameCell}
         ${Number.isFinite(p.acquire_cost)
-          ? `<span class="muted small">— ${p.acquire_cost} P.P.E. spent permanently to acquire</span>` : ''}
+          // BOUGHT OR FREE, said apart (BOOK-INGEST-AUDIT F101). This read
+          // "spent permanently to acquire" on every Talent, which was false of a
+          // free one: only a purchase takes the price out of the base.
+          ? `<span class="muted small">— ${p.purchased
+              ? `bought for ${p.acquire_cost} permanent P.P.E.`
+              : `free (${p.acquire_cost} P.P.E. if bought)`}</span>` : ''}
         ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}</span>
       <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
       ${useBtn}
@@ -2530,7 +2535,7 @@ function levelUpPanel() {
 // "not recorded" and "none" are different answers.
 function powerPickerBlock(p) {
   const blocks = [powerKindBlock(p.spell_picks, 'spell'), powerKindBlock(p.psionic_picks, 'psionic'),
-    powerKindBlock(p.talent_picks, 'talent')]
+    powerKindBlock(p.talent_picks, 'talent'), powerKindBlock(p.talent_purchase_picks, 'talent_purchase')]
     .filter(Boolean).join('');
   return blocks;
 }
@@ -2577,13 +2582,29 @@ function talentPoolFor(g, level, held) {
   return { pool, cap };
 }
 
+// A Talent PURCHASE (BOOK-INGEST-AUDIT F101) is offered from the same pool as a
+// free Talent, and differs in two things the player has to see before choosing:
+// each option's PRICE, and how much of the base is left to pay it from. The
+// server refuses a set of purchases the base cannot cover all together, so the
+// number shown is the one it checks - the effective base, `poolMax`.
+const talentPriceLabel = (x) => (Number.isFinite(Number(x.acquire_ppe))
+  ? ` (${x.acquire_ppe} P.P.E. to buy)` : '');
+const purchaseNote = () => {
+  const left = poolMax(C.data, 'ppe');
+  return `<p class="muted small">Each costs permanent P.P.E., taken out of the base for good.
+    ${left == null ? 'This character has no P.P.E. to spend.' : `${left} P.P.E. left to spend.`}</p>`;
+};
+
 function powerKindBlock(grant, kind) {
   if (!grant || !grant.applicable) return '';
   const isSpell = kind === 'spell';
   // NAMED, not left to the psionic fallback: this used to be two-way, so a
   // Talent grant would have been labelled and pooled as psionic powers.
-  const isTalent = kind === 'talent';
-  const label = isSpell ? 'Spells' : isTalent ? 'Talents' : 'Psionic powers';
+  // A purchase is a Talent for the pool and the gates, and a separate kind for
+  // the grant it spends and the price it shows.
+  const isPurchase = kind === 'talent_purchase';
+  const isTalent = kind === 'talent' || isPurchase;
+  const label = isSpell ? 'Spells' : isPurchase ? 'Talents to buy' : isTalent ? 'Talents' : 'Psionic powers';
   if (grant.unknown) {
     return `<h2 class="sub-h">${label}</h2><p class="warn small">This class's definition does not record how
       many ${isSpell ? 'spells' : isTalent ? 'talents' : 'powers'} it learns per level, so none are offered. Nothing is
@@ -2628,13 +2649,16 @@ function powerKindBlock(grant, kind) {
           data-level="${g.level}" data-slot="${slot}" data-kind="${kind}">
           <option value="">— leave for later —</option>
           ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
-            isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
+            isSpell && x.level != null ? ` (level ${x.level})` : ''}${
+            isPurchase ? escHtml(talentPriceLabel(x)) : ''}</option>`).join('')}
         </select>
         <span class="muted small">from ${escHtml(cap)}</span>
       </div>`).join('');
   }).join('');
 
-  return `<h2 class="sub-h">${label} <span class="muted small">— ${grant.total} earned</span></h2>
+  return `<h2 class="sub-h">${label} <span class="muted small">— ${grant.total} ${
+      isPurchase ? 'may be bought' : 'earned'}</span></h2>
+    ${isPurchase ? purchaseNote() : ''}
     <p class="muted small">Anything left blank is banked and waits on the sheet.</p>${rows}`;
 }
 
@@ -2706,20 +2730,31 @@ function collectPowerPicks() {
 // what that level allowed - not what the character's CURRENT level would.
 function pendingPowersPanel() {
   const n = C.pendingPowersTotal;
+  // Talent PURCHASES are counted apart (BOOK-INGEST-AUDIT F101). They are
+  // optional and two arrive every level, so reading them as "unspent powers"
+  // would nag forever about something nobody owes.
+  const bought = C.pendingPowers.filter((g) => g.kind === 'talent_purchase')
+    .reduce((t, g) => t + g.count, 0);
+  const owed = n - bought;
   if (!C.claimingPowers) {
+    const parts = [
+      owed ? `${owed} unspent ${owed > 1 ? 'powers' : 'power'}` : '',
+      bought ? `${bought} Talent ${bought > 1 ? 'purchases' : 'purchase'} available` : '',
+    ].filter(Boolean).join(' · ');
     return `
     <div class="levelup noprint">
-      <h2 class="sub-h" style="margin-top:0">✨ ${n} unspent ${n > 1 ? 'powers' : 'power'}
-        <span class="muted small">— earned at ${
-          C.pendingPowers.map((g) => 'level ' + g.granted_at_level).join(', ')}</span></h3>
+      <h2 class="sub-h" style="margin-top:0">✨ ${parts}
+        <span class="muted small">— earned at ${[...new Set(
+          C.pendingPowers.map((g) => 'level ' + g.granted_at_level))].join(', ')}</span></h2>
       <button class="btn" onclick="C.claimingPowers = true; render()">Choose now</button>
     </div>`;
   }
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
     const isSpell = g.kind === 'spell';
-    // A banked Talent row offered PSIONIC powers before this, being two-way.
-    const talent = g.kind === 'talent' ? talentPoolFor(g, g.granted_at_level, held) : null;
+    const isPurchase = g.kind === 'talent_purchase';
+    // A banked Talent row offered PSIONIC powers before #1094, being two-way.
+    const talent = g.kind === 'talent' || isPurchase ? talentPoolFor(g, g.granted_at_level, held) : null;
     // A banked psionic grant keeps its list too (BOOK-INGEST-AUDIT F65), and it
     // replaces the grant's categories, which powerGrantsFor banked as null.
     const named = Array.isArray(g.from) && g.from.length
@@ -2755,14 +2790,16 @@ function pendingPowersPanel() {
           data-level="${g.granted_at_level}" data-slot="${g.slot ?? 0}" data-kind="${g.kind}">
           <option value="">— not yet —</option>
           ${pool.map((x) => `<option value="${escHtml(x.name)}">${escHtml(x.name)}${
-            isSpell && x.level != null ? ` (level ${x.level})` : ''}</option>`).join('')}
+            isSpell && x.level != null ? ` (level ${x.level})` : ''}${
+            isPurchase ? escHtml(talentPriceLabel(x)) : ''}</option>`).join('')}
         </select>
-        <span class="muted small">from ${escHtml(cap)}</span>
+        <span class="muted small">${isPurchase ? 'buy ' : ''}from ${escHtml(cap)}</span>
       </div>`).join('');
   }).join('');
   return `
   <div class="levelup noprint">
-    <h2 class="sub-h" style="margin-top:0">✨ Choose ${n} ${n > 1 ? 'powers' : 'power'}</h2>
+    <h2 class="sub-h" style="margin-top:0">✨ Choose ${owed ? `${owed} ${owed > 1 ? 'powers' : 'power'}` : 'Talents to buy'}</h2>
+    ${bought ? purchaseNote() : ''}
     ${rows}
     <div class="rowline" style="margin-top:10px">
       <button class="btn btn-primary" onclick="claimPowers()">Learn these</button>
