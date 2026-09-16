@@ -147,7 +147,7 @@ Counted by structure over all 248 cached pages, not by reading prose.
 | **Magic** | 121–150 | **127 invocations, levels 1–13** |
 | Denizens, Nightlords, Vampires, Guardians | 158–192 | 17 more class entries |
 | Enemies and minor NPCs | 198–201 | five templates, **no ladders** |
-| **Weapons and equipment** | 204–232 | **~280 priced entries** |
+| **Weapons and equipment** | 204–232 | **~640–690 priced items** (first surveyed as ~280; corrected by D4) |
 | **Experience Tables** | 233 | the playability authority |
 
 ### Things this book has zero of, checked rather than assumed
@@ -161,6 +161,11 @@ Counted by structure over all 248 cached pages, not by reading prose.
   civilian cars and vans with a price and little else, and printed 232 is
   gadgets. There is no stat block here of the kind that filled 55 rows from
   Triax.
+  **WRONG, corrected 2026-09-16 (PR #1126):** every car and motorcycle on printed
+  231 prints A.R., S.D.C., speed, range and cost; printed 232 holds three aircraft
+  and five underwater vehicles, with the gadgets only at its foot. Migration 062
+  gave `vehicles` an A.R. and S.D.C., and Heroes Unlimited imported these same
+  vehicles as rows. See D4.
 
 ### Currency is US dollars
 
@@ -408,6 +413,8 @@ about the rest.** Left standing as the record; what is true now:
 - **Two of the five `options:` arrays deliberately still say two.**
   `gear.system` and `vehicles.system` are the CHECK-constrained columns, so
   offering a third value would put something in the editor the database refuses.
+  **No longer true since 2026-09-14 (PR #1037):** migrations 059 and 060 widened
+  both CHECKs, and all five dropdowns now offer every system.
 
 ### 2. There is no P.C.C.
 
@@ -580,6 +587,54 @@ the Nightbane Mystic O.C.C. needs a distinguished id.
 against a catalog that already holds Rifts equivalents of much of it. All of it,
 weapons only, or none.
 
+**DECIDED 2026-09-16 (PR #1126), on Nate's word: import ALL of it as
+`nightbane` rows — gear AND vehicles — one row per book.** Both of the question's
+premises were wrong, and correcting them is what made this a real choice rather
+than a size estimate.
+
+**The count was not ~280.** That figure counted lines containing `Cost`, and it
+misses every table priced without the word — both ancient-weapon tables, the
+holsters, ammunition, body armour, the optics tables, containers and the clothing
+lists. Read page by page, the chapter is **~640–690 priced items**: roughly 117
+ancient and oriental weapons, 51 firearms, ~30 heavy, special and energy weapons
+with their clips, ~21 incendiaries, gases and explosives, ~19 miscellaneous
+weapons, ~37 accessories, ~15 ammunition, 17 body armours, ~32 optics, ~84
+communications and sensor items, 36 containers, ~69 miscellaneous, ~111 clothing,
+26 priced vehicles plus 8 unpriced, and 8 Special Gimmicks. **Weapons and armour
+alone are ~255.** A range, because variants and consumables are counted apart;
+the count is the artefact the import must reproduce, not this sentence.
+
+**The overlap is Heroes Unlimited, not Rifts, and it is nearly total.** Palladium
+reprints this chapter section for section in Heroes Unlimited, and HU imported all
+of it: **703 gear rows and 49 vehicles** under `heroes-unlimited` (`--remote`,
+2026-09-16). Sampled against Nightbane's pages, prices and damage agree almost
+everywhere. Rifts shares two items at most. **But a Nightbane campaign cannot see
+any of HU's rows:** the items endpoint returns only `system IS NULL`, the
+campaign's own system, or `both` (`functions/api/character-creator/items.js:19`),
+and retagging them `both` would hand dollar prices to Rifts and Palladium
+Fantasy characters. Sharing HU's rows with a Nightbane campaign — a code change —
+was offered and declined in favour of the book's own rows.
+
+**How the import must work — measured, not guessed:**
+
+- **Read every value off Nightbane's page. Do not copy HU's row.** They diverge
+  where it matters: the Bo Staff's table price and HU's corrected one differ; HU's
+  Guisarme and all five shotguns carry no damage where the page prints it.
+- **Four firearms HU skipped are here too**: Browning GP 35, FN 140 Double-Action,
+  Barracuda, .38 Trident Super 4 — HU prints them, its import missed them. And the
+  **eight Special Gimmicks** are in no HU gear row.
+- **Slugs take `-nb`, the way HU's took `-hu`.** `gear.slug` and `vehicles.slug`
+  are UNIQUE while names are not; HU kept each shared name and suffixed the slug
+  (`arab-mace-hu`). Same name, slug `<name>-nb`.
+- **Both cache faults are in this chapter, and the detector sees only one.**
+  `corrupt_pages` lists nine cache pages inside it (205, 206, 209, 210, 216, 219,
+  220, 223, 226 — cache numbering, so printed one lower); render those.
+  `substituted_digits` lists NONE here, yet the cipher is present (a price reading
+  `$4S0.00`), so read every figure as the number it can only be.
+- **Gear before the classes that cite it.** The Sorcerer, Mystic and Namtar name
+  specific equipment in their standard kit, and a class resolves gear by slug; a
+  class citing a slug that does not exist yet fails the gear-citation check.
+
 **D5 — the Morphus generator.** File as a `BOOK-INGEST-AUDIT` finding and ship
 the Nightbane R.C.C. without it, per the standing rule that data ships with its
 book and unasked-for code waits — or treat it as in scope, which makes it a
@@ -607,7 +662,8 @@ Once it is, in this order:
 3. **25 Talents** from printed 106–114, once D5 and the Talent storage question
    are settled.
 4. **The classes**, one batch per section, cited to the entry's own pages.
-5. **Gear**, only if D4 says so.
+5. **Gear and vehicles, all of it** — D4: ~640–690 `nightbane` rows off printed
+   204–232, in section batches, before any class that cites gear by slug.
 
 What is deliberately left, with the reason for each:
 
@@ -617,7 +673,9 @@ What is deliberately left, with the reason for each:
 - **Waste Coyote and The Lizard King** — no ladder, an `Experience Level:` line
   instead.
 - **Printed 231–232**, the cars and the gadgets — a price and a sentence each,
-  with none of the stat block that justifies a `vehicles` row.
+  with none of the stat block that justifies a `vehicles` row. **Wrong, and moved
+  into step 5 by D4**: they carry full vehicle stat blocks, and HU imported the same
+  vehicles as rows.
 - **Printed 202–203**, the chapter on using other Palladium books inside
   Nightbane — a conversion note, not content.
 
@@ -634,6 +692,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-15/16 | #1079-#1081, #1084-#1088, #1092, #1094-#1098 | app side of F74-F78 and F101: F74 recorded, F75 projected Horror Factor, F76 the `talents` catalog and its grants, F101 Talent purchases and permanent P.P.E.; F77 and F78 DECLINED. **No Nightbane rows** — these rows were added on 2026-09-16, when the ledger had not been kept |
 | 2026-09-16 | [#1124](https://github.com/NateGrey0130/nates-workshop/pull/1124) | **D2 decided**: one R.C.C. plus four package O.C.C.s, no code. Survey only |
 | 2026-09-16 | [#1125](https://github.com/NateGrey0130/nates-workshop/pull/1125) | **D3 decided**: six entries excluded (three by the book's refusal or tag, three on Nate's word), 15 playable. Survey only |
+| 2026-09-16 | [#1126](https://github.com/NateGrey0130/nates-workshop/pull/1126) | **D4 decided**: all ~640–690 items as `nightbane` gear and vehicle rows, on Nate's word; the chapter count and the vehicles exclusion corrected. Survey and `docs/catalog.md` only |
 
 ### What remains
 
