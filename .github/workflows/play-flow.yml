@@ -1,9 +1,9 @@
 # Play mode's queue, executed rather than read. On EVERY pull request.
 #
-# REPORTING ONLY, the same posture as tests.yml and regression.yml. Not a
-# required status check, and `main`'s ruleset carries one `pull_request` rule
-# and ZERO required status checks, so a red run here does not stop a merge.
-# Making it required is a different decision and needs its own finding.
+# REPORTING ONLY. Not a required status check: since 2026-09-16 `main`'s
+# ruleset requires `smoke`, `menus` and `regression` and deliberately not this
+# one, so a red run here does not stop a merge. Making it required is a
+# different decision and needs its own finding.
 #
 # WHY IT EXISTS. Everything else that checks the queue reads sheet.js as TEXT -
 # smoke.mjs's "Changes that could not be sent" section is fifteen regexes. They
