@@ -398,7 +398,16 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   granted_at_level INTEGER NOT NULL,
   count INTEGER NOT NULL,
-  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic')),
+  -- 'talent' arrived with migration 064 (BOOK-INGEST-AUDIT F76). A Nightbane's
+  -- FREE Talents are a level schedule - one at first level and one more at
+  -- levels four, seven, ten and twelve, printed 106 - so a talent grant banks
+  -- here like any other. It needs none of the restriction columns below: a
+  -- Talent's gate is its own `min_character_level` and `prerequisite`, both
+  -- properties of the catalog row and the character rather than of the grant,
+  -- and both evaluated when the pick is spent. That is what makes this a CHECK
+  -- widening and not a new column, which is the difference between it and the
+  -- super-ability grant `js/leveling.js` still refuses.
+  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic', 'talent')),
   -- JSON array of SPELL levels this grant may draw from; NULL is unrestricted,
   -- and always NULL for a psionic grant. Copied from the class at grant time,
   -- as pending_skill_picks copies its categories.
@@ -428,6 +437,19 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
 );
 CREATE INDEX IF NOT EXISTS idx_pending_power_picks_character
   ON pending_power_picks (character_id, claimed_at);
+
+-- Guarded on the CHECK text itself, and placed HERE rather than in the seeding
+-- block, because a guard that runs before its own table never fires - F76's
+-- `063` row sits beside its CREATE for the same reason, and F99 records the two
+-- rows that do not.
+--
+-- `pragma_table_info` CANNOT see a CHECK: it reports columns, types, defaults
+-- and nullability and says nothing about constraints, which is why this reads
+-- `sqlite_master.sql` the way 058-060's guards do.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '064-pending-power-picks-talent.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks'
+                AND instr(sql, '''talent''') > 0);
 
 -- Things a table hands out that no class schedule granted: a patron teaches a
 -- skill, an artefact confers a power, an implant adds S.D.C. The G.M. usually

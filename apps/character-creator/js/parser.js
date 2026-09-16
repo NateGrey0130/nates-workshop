@@ -746,6 +746,60 @@ function superAbilityBlocks(data) {
 // to compute and nothing here ranks them.
 const SUPER_ABILITY_TIERS = ['minor', 'major'];
 
+// The same shape for Nightbane Talents, whose block is `talents`. A Talent is
+// the only power here that costs something to HAVE as well as to USE, and both
+// costs live on the catalog row (migration 063) rather than on the grant - so a
+// grant says only how many, and at creation of which tier.
+function talentBlocks(data) {
+  const out = [];
+  if (data?.talents) out.push(['talents', data.talents]);
+  for (const d of data?.special_abilities || []) {
+    if (d && typeof d === 'object' && d.talents) {
+      out.push([`special_abilities.${d.name}.talents`, d.talents]);
+    }
+  }
+  return out;
+}
+
+// The two the book prints, printed 106: "Common" Talents are available to all
+// Nightbane; "Elite" Talents are restricted to a few types and tied to the
+// character's Morphus. NOT A LADDER, for the reason the super-ability tiers are
+// not one - an Elite is not a stronger Common, it is a different set gated on
+// what the character's Morphus already is.
+const TALENT_TIERS = ['common', 'elite'];
+
+// Two talent blocks added together - the class's own plus whatever a chosen
+// ability grants. Counts ADD, lists union and schedules concatenate, exactly as
+// mergeSuperAbilities does and for the same reason: no tier to rank and no kind
+// to prefer, so nothing here can silently drop a grant.
+function mergeTalents(born, trained) {
+  if (!born) return trained;
+  if (!trained) return born;
+  const out = { ...born };
+  for (const [k, v] of Object.entries(trained)) if (v !== undefined) out[k] = v;
+
+  const starting = (born.talents_starting || 0) + (trained.talents_starting || 0);
+  if (starting) out.talents_starting = starting;
+  const perLevel = (born.talents_per_level || 0) + (trained.talents_per_level || 0);
+  if (perLevel) out.talents_per_level = perLevel;
+  for (const k of ['talents', 'talents_from']) {
+    const both = unionByName(born[k], trained[k]);
+    if (both.length) out[k] = both;
+  }
+  const groups = [...(born.talents_starting_groups || []),
+                  ...(trained.talents_starting_groups || [])];
+  if (groups.length) out.talents_starting_groups = groups;
+  // Schedules CONCATENATE rather than union: two blocks each granting a free
+  // Talent at level four is two Talents at level four, and `perLevelGrants`
+  // gives each its own slot. Deduplicating would silently halve it.
+  const schedule = [...(born.talents_schedule || []), ...(trained.talents_schedule || [])];
+  if (schedule.length) out.talents_schedule = schedule;
+  const tiers = [...new Set([...(born.tiers_allowed || []),
+                             ...(trained.tiers_allowed || [])])];
+  if (tiers.length) out.tiers_allowed = tiers;
+  return out;
+}
+
 // Two super-ability blocks added together - the class's own plus whatever a
 // chosen ability grants. Counts ADD and lists union, which is the whole of it:
 // with no tier to rank and no kind to prefer there is nothing here that could
@@ -1239,6 +1293,14 @@ export function combineClasses(rcc, occ) {
     out.super_abilities = superseded
       ? (occ.super_abilities || rcc.super_abilities)
       : mergeSuperAbilities(rcc.super_abilities, occ.super_abilities);
+  }
+  // Talents fold the same way, and follow `supersedes_race` for the same
+  // reason: a superseding occupation is a transformation into something else,
+  // so what the race could do is what it USED to be able to do.
+  if (rcc.talents || occ.talents) {
+    out.talents = superseded
+      ? (occ.talents || rcc.talents)
+      : mergeTalents(rcc.talents, occ.talents);
   }
   // Magic is what you studied AND what a creature was born with, and the two add
   // up the same way psionics do (F14).
@@ -1982,7 +2044,7 @@ export function isAbilityChoice(entry) {
 // M.D.C. arrives as a pool BONUS rather than an override, which is why pool
 // bonuses had to exist first — the ability adds to whatever the class already
 // rolls, it does not replace the formula.
-export const ABILITY_GRANTS = ['bonuses', 'psionics', 'magic', 'super_abilities'];
+export const ABILITY_GRANTS = ['bonuses', 'psionics', 'magic', 'super_abilities', 'talents'];
 
 // A named ability definition, as opposed to a choice group.
 export function isAbilityDefinition(entry) {
@@ -2158,6 +2220,12 @@ export function applyAbilities(cls, chosen) {
     // arrives whole.
     if (def.super_abilities) {
       out.super_abilities = mergeSuperAbilities(out.super_abilities, def.super_abilities);
+    }
+
+    // The same fold for Talents, so an Elite Talent granted by a chosen
+    // Morphus characteristic arrives whole when the class itself grants none.
+    if (def.talents) {
+      out.talents = mergeTalents(out.talents, def.talents);
     }
     // An ability that changes HOW MANY O.C.C. Related Skills the class grants.
     // BOOK-INGEST-AUDIT.md F24: the Gypsy Gifted rolls one of four psychic
@@ -2841,6 +2909,83 @@ export function parseClassMarkdown(text) {
     if (!grantsSomething) {
       warnings.push(`${where} grants no super abilities - state abilities_starting, `
         + 'abilities, or a group, or drop the block');
+    }
+  }
+
+  // Nightbane Talents. These keys pair name for name with STARTING_SPEC.talent
+  // in js/leveling.js; anything added here has to be added there too, or it
+  // parses, stores and is never read.
+  //
+  // UNLIKE super abilities, A PER-LEVEL GRANT IS SUPPORTED, and the difference
+  // is storage rather than taste. A banked super-ability grant needs a TIER
+  // column `pending_power_picks` does not have. A banked TALENT grant needs
+  // nothing: the book's free Talents arrive unrestricted - "one additional free
+  // ability at levels four, seven, ten and twelve", printed 106 - and what
+  // limits the pick is the ROW's own `min_character_level` and `prerequisite`,
+  // evaluated when it is spent. Migration 064 widened the `kind` CHECK and
+  // added no column, which is exactly why this is allowed and that is not.
+  for (const [where, block] of talentBlocks(data)) {
+    if (typeof block !== 'object' || Array.isArray(block)) {
+      errors.push(`${where} must be a map`);
+      continue;
+    }
+    for (const k of ['talents_starting', 'talents_per_level']) {
+      if (block[k] !== undefined && (!Number.isInteger(block[k]) || block[k] < 0)) {
+        errors.push(`${where}.${k} must be a whole number of picks, zero or more`);
+      }
+    }
+    // A CLOSED set of two, for the reason tiers_allowed is closed on a super
+    // ability block: there are exactly two tiers, so a typo is a rule nothing
+    // can satisfy and the picker comes back empty rather than wrong.
+    for (const t of block.tiers_allowed || []) {
+      if (!TALENT_TIERS.includes(t)) {
+        errors.push(`${where}.tiers_allowed must be ${TALENT_TIERS.join(' or ')}, got: ${t}`);
+      }
+    }
+    if (block.tiers_allowed !== undefined
+        && (!Array.isArray(block.tiers_allowed) || !block.tiers_allowed.length)) {
+      errors.push(`${where}.tiers_allowed must be a non-empty list; omit it to allow both tiers`);
+    }
+    for (const k of ['talents', 'talents_from']) {
+      if (block[k] !== undefined
+          && (!Array.isArray(block[k]) || block[k].some((n) => typeof n !== 'string'))) {
+        errors.push(`${where}.${k} must be a list of talent names`);
+      }
+    }
+    for (const g of block.talents_starting_groups || []) {
+      if (!g || typeof g !== 'object' || !Number.isInteger(g.count) || g.count < 1) {
+        errors.push(`${where}.talents_starting_groups entries need a whole count above zero`);
+        continue;
+      }
+      for (const t of g.tiers || []) {
+        if (!TALENT_TIERS.includes(t)) {
+          errors.push(`${where}.talents_starting_groups tiers must be `
+            + `${TALENT_TIERS.join(' or ')}, got: ${t}`);
+        }
+      }
+    }
+    if (block.talents_schedule !== undefined && !Array.isArray(block.talents_schedule)) {
+      errors.push(`${where}.talents_schedule must be a list of { level, count } entries`);
+    }
+    for (const e of Array.isArray(block.talents_schedule) ? block.talents_schedule : []) {
+      if (!e || typeof e !== 'object' || !Number.isInteger(e.level) || e.level < 1) {
+        errors.push(`${where}.talents_schedule entries need a whole level of 1 or more`);
+        continue;
+      }
+      if (e.count !== undefined && (!Number.isInteger(e.count) || e.count < 1)) {
+        errors.push(`${where}.talents_schedule entries need a whole count above zero`);
+      }
+    }
+    // A block that grants nothing is the silent-storage shape: it parses, it
+    // stores, the sheet grows a heading and the player is offered nothing.
+    const grantsSomething = block.talents_starting !== undefined
+      || block.talents_per_level !== undefined
+      || (block.talents_starting_groups || []).length
+      || (block.talents_schedule || []).length
+      || (block.talents || []).length;
+    if (!grantsSomething) {
+      warnings.push(`${where} grants no talents - state talents_starting, talents, `
+        + 'a schedule, or a group, or drop the block');
     }
   }
 

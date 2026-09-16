@@ -24,7 +24,7 @@ export async function onRequestGet({ request, env }) {
   // ETag is a hash of the BODY, so the two answers cache apart on their own.
   const system = new URL(request.url).searchParams.get('system') || null;
 
-  const [skills, spells, psionics, supers, enchantments, totems, systemBases] = await Promise.all([
+  const [skills, spells, psionics, supers, talents, enchantments, totems, systemBases] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -59,6 +59,23 @@ export async function onRequestGet({ request, env }) {
     // `tier` is what the picker GATES on, the way min_tier gates psionics - a
     // category granting "one major and one minor" filters this list twice.
     env.DB.prepare('SELECT name, tier, system, source_book, range, duration, damage FROM super_abilities ORDER BY tier, name').all(),
+    // Talents, the ninth catalog (migration 063, BOOK-INGEST-AUDIT F76). BOTH
+    // costs ride along because both are what the picker has to show: a player
+    // choosing a Talent is spending permanent P.P.E. to acquire it and will
+    // spend more every time it is used, and a picker showing one number would
+    // be showing the wrong one.
+    //
+    // `min_character_level` GATES the picker the way `tier` gates a super
+    // ability, and `prerequisite` and `form_required` are shown rather than
+    // enforced - neither is checkable here, and a Morphus is not modelled at
+    // all. NO `description`, for the reason the three catalogs above give: the
+    // picker needs a name, the costs and the gates, and descriptions travel
+    // with the character through loadPowerDescriptions.
+    env.DB.prepare(
+      `SELECT name, tier, acquire_ppe, ppe, ppe_note, min_character_level,
+              form_required, prerequisite, system, source_book, range, duration
+         FROM talents ORDER BY tier, name`
+    ).all(),
     // Enchantments are small - 62 rows carrying about 5KB of description text,
     // production, 2026-09-05 - and the SHEET is what needs them: an item
     // carries slugs, and a slug without its definition renders as a slug.
@@ -99,6 +116,7 @@ export async function onRequestGet({ request, env }) {
     spells: spells.results,
     psionics: psionics.results,
     superAbilities: supers.results,
+    talents: talents.results,
     // `bonuses` is stored as a JSON string, decoded here so every caller does
     // not have to remember to - the same courtesy `systems` gets above.
     enchantments: enchantments.results.map((e) => ({
