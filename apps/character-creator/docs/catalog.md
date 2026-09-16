@@ -58,7 +58,7 @@ spell lists.
 |---|---|---|
 | skills | `systems` | JSON array — `["rifts"]` |
 | spells, psionics, enchantments | `system` | one of `rifts`, `palladium-fantasy`, `nightbane`, `heroes-unlimited`, `both` |
-| gear, vehicles | `system` | one of `rifts`, `palladium-fantasy`, `both` — **these two carry a SQLite CHECK** |
+| gear, vehicles | `system` | one of `rifts`, `palladium-fantasy`, `nightbane`, `heroes-unlimited`, `both` — **these two carry a SQLite CHECK** (widened by migrations 059 and 060) |
 
 **NULL means unrestricted, everywhere.** That is how `skills.systems` has always
 read, and it is the honest answer when the operator does not know or the book
@@ -73,6 +73,15 @@ stop at two while the other three take `nightbane` and `heroes-unlimited`. The
 same rule keeps the wizard's system picker at two: `S.system` feeds the campaign
 POST, and `campaigns.system` is a third CHECK. `BOOK-INGEST-AUDIT` F73 has the
 decision and what it would take to lift it.
+
+**Lifted 2026-09-14 (PR #1037), and the paragraph above is kept as the record of
+the split.** Migrations 058-060 rebuilt all three CHECKs to admit `nightbane` and
+`heroes-unlimited`, every editor dropdown offers them, `campaigns.js` accepts them
+and the wizard's picker offers them. **One thing the widening did not change:** a
+campaign still sees gear only of its OWN system, `NULL` or `both`
+(`functions/api/character-creator/items.js`). Two games printing the same
+equipment chapter do not share rows — Heroes Unlimited's 703 are invisible to a
+Nightbane campaign, which is why Nightbane imports its own (its survey, D4).
 
 **Heroes Unlimited was added the same way and on the same terms**, one day
 later: catalog and classes only, no migration, the two CHECK-constrained
