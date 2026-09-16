@@ -669,7 +669,9 @@ itself.
 ```
 scripts/
 ├── d1-apply.mjs            Apply .sql to --local or --remote, in sorted order.
-│                           Refuses non-ASCII and honours `-- local-only`
+│                           Refuses non-ASCII, honours `-- local-only`, and
+│                           enforces each script's read-back assertions - in a
+│                           scratch replay before applying, and on the target after
 ├── d1-query-lib.mjs        One statement, one line, rows back. The banner-skip
 │                           and buffer size that every caller needs
 ├── d1-backup.mjs           One JSON file per table, on disk, because
@@ -738,6 +740,10 @@ scripts/
 │                           one file at a time so a failure names its file.
 │                           node:sqlite, not workerd - a DEVELOPMENT tool;
 │                           repo-vs-live.mjs stays the authority
+├── readback-lib.mjs        A data script's read-back assertions (`AS assertion`,
+│                           `AS got`, `AS want`) and the scratch replay that
+│                           evaluates them at the script's own position, which
+│                           d1-apply runs BEFORE applying anything
 ├── trace-row.mjs           Replay a rebuild and print every file that changes
 │                           ONE row. Finds the guard that matched nothing
 │                           because an earlier script renamed its string
@@ -830,7 +836,8 @@ scripts/
 │                           alternative kept being a throwaway `node -e` that
 │                           got the Windows quoting wrong a new way each time.
 │                           `--batch file.sql` runs many statements in ONE
-│                           wrangler invocation, numbered results back
+│                           wrangler invocation, numbered results back.
+│                           --local or --remote is REQUIRED; no default
 └── sql-statements.mjs      Splitting SQL for wrangler, which truncates a
                             --command at the first newline
 ```

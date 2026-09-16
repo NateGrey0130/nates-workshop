@@ -33,9 +33,16 @@
 //
 //   2. `sql-statements.mjs` splits on every top-level semicolon, which is right
 //      for the data scripts and wrong for `schema.sql`: a CREATE TRIGGER body
-//      holds its own semicolons between BEGIN and END. They are re-joined
-//      below. `wrangler --file` does not have this problem, which is the other
-//      reason it stays the authority.
+//      holds its own semicolons between BEGIN and END. They are re-joined by
+//      `statementsKeepingTriggers()` in sql-statements.mjs. `wrangler --file`
+//      does not have this problem, which is the other reason it stays the
+//      authority.
+//
+// Since 2026-09-16 the same replay - same plan, same splitter, in memory - is
+// what `d1-apply.mjs` runs as a pre-flight to evaluate a data script's
+// read-back assertions BEFORE applying anything (`readback-lib.mjs`). That
+// does not make this file a gate: the shared parts live in the two libs, and
+// this CLI still reports and exits 0.
 //
 // It never touches `.wrangler/state`. The output is a plain .sqlite file
 // wherever you point it, so the WAL-restore hazard that comes with backing up
@@ -44,7 +51,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { statements } from './sql-statements.mjs';
+import { statementsKeepingTriggers } from './sql-statements.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dataDir = join(repoRoot, 'apps', 'character-creator', 'db');
@@ -70,19 +77,7 @@ for (const suffix of ['', '-wal', '-shm']) {
 }
 
 // See caveat 2. A trigger's body is re-joined onto its CREATE.
-function splitSql(sql) {
-  const parts = [];
-  let pending = null;
-  for (const stmt of statements(sql)) {
-    pending = pending === null ? stmt : pending + ';\n' + stmt;
-    if (!/\bcreate\s+trigger\b/i.test(pending) || /\bend\s*$/i.test(pending)) {
-      parts.push(pending);
-      pending = null;
-    }
-  }
-  if (pending !== null) parts.push(pending);
-  return parts;
-}
+const splitSql = statementsKeepingTriggers;
 
 const plan = [join(repoRoot, 'db', 'schema.sql'), join(repoRoot, 'db', 'seed-catalogs.sql')];
 for (const f of readdirSync(dataDir).filter((x) => x.endsWith('.sql')).sort()) {

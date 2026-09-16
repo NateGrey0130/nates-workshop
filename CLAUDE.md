@@ -259,8 +259,10 @@ node scripts/d1-apply.mjs --remote db/migrations/021-x.sql apps/character-creato
 ```
 
 It requires an explicit `--remote` or `--local`, pre-flights every file (exists,
-pure ASCII, no CR) before running any of them, applies in the order given, and
-stops at the first failure. Under `CLOUDFLARE_API_TOKEN` it prints
+pure ASCII, no CR, and since 2026-09-16 its read-back assertions evaluated in a
+scratch replay of the data directory) before running any of them, applies in
+the order given, and stops at the first failure — including a read-back
+assertion that fails on the target after its file is applied. Under `CLOUDFLARE_API_TOKEN` it prints
 `skipping auth warm-up` and goes straight to applying — expected, not a warning.
 
 ## The permission allowlist is read-only, and its gaps are the point
