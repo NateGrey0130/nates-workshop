@@ -326,8 +326,8 @@ local-only script is protected as soon as it says so.
 | per-system skill bases | 89 |
 | spells | 974 |
 | psionic powers | 132 |
-| gear | 2162 |
-| vehicles | 220 |
+| gear | 2817 |
+| vehicles | 255 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
 honestly check them: it builds a database from nothing under a scratch directory
