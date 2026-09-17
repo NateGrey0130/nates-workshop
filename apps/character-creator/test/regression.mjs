@@ -1671,6 +1671,62 @@ check('a hit on armour the character does not have is refused', noArmor.status =
   check('and a player who is no admin can read them', asPlayer.status === 200, asPlayer.status);
 }
 
+// docs/plans/22 D1: super abilities are the one section that is LIST-THEN-DETAIL,
+// because with their text they are 323 KB gzipped. The check that matters most
+// is the absence one - a `description` key on any list row means the whole
+// catalog's text is travelling on tab open again, and nothing else would notice:
+// the page would simply work, slowly, on a phone.
+{
+  const cxIndex = await api('GET', '/codex?section=index');
+  const cxSupers = await api('GET', '/codex?section=super-abilities');
+  const rows = cxSupers.body['super-abilities'] || [];
+  check('the codex counts super abilities, and the scratch catalog has some',
+    typeof cxIndex.body.counts?.['super-abilities'] === 'number' && cxIndex.body.counts['super-abilities'] > 0,
+    cxIndex.body.counts);
+  check('the codex lists every super ability it counts',
+    cxSupers.status === 200 && rows.length === cxIndex.body.counts?.['super-abilities'],
+    `${rows.length} vs ${cxIndex.body.counts?.['super-abilities']}`);
+  check('and exactly the ones the picker is sent',
+    JSON.stringify(rows.map((p) => p.name).sort())
+      === JSON.stringify((catalogs.body.superAbilities || []).map((p) => p.name).sort()),
+    `${rows.length} in the codex vs ${(catalogs.body.superAbilities || []).length} in /catalogs`);
+  check('WITHOUT their descriptions - no list row carries one',
+    rows.length > 0 && rows.every((p) => !('description' in p)),
+    JSON.stringify(rows.find((p) => 'description' in p) || {}).slice(0, 120));
+  check('but each says whether it has text',
+    rows.every((p) => p.has_text === 0 || p.has_text === 1), JSON.stringify(rows[0] || {}).slice(0, 200));
+
+  // A name with a colon AND one with an ampersand: the first is a third of the
+  // catalog's shape (`Family: Name`), the second is the one that breaks a query
+  // string built without encodeURIComponent.
+  for (const probe of [rows.find((p) => p.has_text && p.name.includes(':')),
+                       rows.find((p) => p.has_text && p.name.includes('&'))]) {
+    if (!probe) { check('the scratch catalog has a super ability named with a colon and one with an ampersand', false); continue; }
+    const one = await api('GET', '/codex?section=super-ability&name=' + encodeURIComponent(probe.name));
+    check(`one entry's text is served by name - ${probe.name}`,
+      one.status === 200 && one.body['super-ability']?.name === probe.name
+        && String(one.body['super-ability']?.description || '').trim().length > 0,
+      JSON.stringify(one.body).slice(0, 160));
+  }
+
+  const noName = await api('GET', '/codex?section=super-ability');
+  check('a text request with no name is a 400', noName.status === 400, noName.status);
+  const unknown = await api('GET', '/codex?section=super-ability&name=' + encodeURIComponent('No Such Power'));
+  check('and an unknown name is a 404, not an empty 200', unknown.status === 404, unknown.status);
+
+  const first = rows.find((p) => p.has_text);
+  const path = `${BASE}/codex?section=super-ability&name=` + encodeURIComponent(first?.name || '');
+  const hit = await fetch(path);
+  const tag = hit.headers.get('etag');
+  check('an entry sends a validator', !!tag, 'no ETag header');
+  const again = await fetch(path, { headers: { 'If-None-Match': tag || '' } });
+  check('and revalidates to a 304', again.status === 304, again.status);
+
+  const asPlayer = await apiAs('stranger@example.com', 'GET',
+    '/codex?section=super-ability&name=' + encodeURIComponent(first?.name || ''));
+  check('and a player who is no admin can read one', asPlayer.status === 200, asPlayer.status);
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);

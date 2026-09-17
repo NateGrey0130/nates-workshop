@@ -129,6 +129,34 @@ in PR 1, because at `12px` seven tabs sit 3+3+1 with a stranded last tab, and
   validator, and a non-admin read. `test/checks/rendered-ui.mjs` pins that the
   page never asks for super ability descriptions in bulk.
 
+**As built (PR 2).** Four places it differs from the list above, none of them a
+change of decision:
+
+- **The name is not in the `ETag`; it is in the body the tag is a hash of.** The
+  plan said *"with the section and the name in it"*. A name is free text — 16 of
+  the 364 carry an ampersand, and nothing stops one carrying a quote — and a
+  quote inside an `ETag` is a malformed header. The body is `{name,
+  description}`, so two entries cannot hash alike unless they are the same
+  entry, which is the property the plan was after.
+- **An error response carries no validator at all.** A section may now answer
+  with a `Response` of its own, which the route passes through; the 400 and the
+  404 are those. Nothing should be able to revalidate its way back to an error.
+- **The page gained two helpers and not just a hook.** `detail` names the
+  request; `textOf()` and `hasText()` are what keep every reader of a
+  description — the entry, the *"N with text"* counter — from having to know
+  which kind of section it is in. A row the list says has no text is never
+  asked for.
+- **The retry is closing the row and opening it again**, as planned — but the
+  plan called it *clicking the row again*, which is one click short: the first
+  click closes it.
+
+Measured in a browser against a database built from the branch: *Loading…* and
+then 7,275 characters for `Alter Physical Structure: Fire`; `Generate Fog &
+Smoke` opens (the ampersand case); a simulated outage shows inside the entry
+with no page-level panel, and the next open recovers; reopening an entry makes
+no second request. At 375px the eight tabs sit 3+3+2 in 161px with the 12px
+rule, and the list starts at the same 387px it did with seven.
+
 ## Out of scope
 
 - The Morphus tables (173 rows, migration 068) have no codex tab either. A
