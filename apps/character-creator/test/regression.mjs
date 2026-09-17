@@ -986,6 +986,138 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
   check('the Talent purchase fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74) ──
+//
+// Nightbane survey D5. A fixture class states a `second_form`; a character is
+// created holding two REAL Morphus table results (the catalog's data script is
+// in the bootstrap) with every die pre-rolled, so the numbers the sheet
+// endpoint folds are known exactly. Each form's current S.D.C. is then written
+// on its own, and the sheet endpoint is read back to prove neither touched the
+// other. smoke.mjs pins the fold; this proves the routes, the column and the
+// catalog join agree with it.
+{
+  const fixture = join(state, 'f74-fixture.sql');
+  const md = '---\nid: f74-probe\nname: F74 Probe\nsystem: nightbane\nsource_book: Nightbane RPG p.87\n'
+    + 'category: rcc\nhit_points_base: "P.E. + 1D6 per level"\nsdc_base: 30\nsecond_form:\n'
+    + '  name: "Morphus"\n  first_name: "Facade"\n  bonuses:\n'
+    + '    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }\n    pools: { sdc: "2d6x10" }\n'
+    + '    combat: { initiative: 1, strike: 2, parry: 2, dodge: 2, attacks: 1 }\n'
+    + '    saves: { psionics: 3, horror_factor: 3 }\n'
+    + '  hit_points_base: "P.E. x2 + 2d6 per level"\n  horror_factor: 6\n  horror_factor_max: 18\n'
+    + '  traits_from: morphus\n---\n\n## Lore\n\nA regression fixture.\n';
+  writeFileSync(fixture, "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) "
+    + `VALUES ('f74-probe', 'F74 Probe', 'nightbane', 'published', '${md.replace(/'/g, "''")}', 'regression', datetime('now'));\n`, 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the second-body fixture class is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const sfCamp = await api('POST', '/campaigns', { name: 'Regression Morphus', system: 'nightbane' });
+  const sfCampId = sfCamp.body.id ?? sfCamp.body.campaign?.id;
+  const form = {
+    active: 'first',
+    form_rolls: { pools: { sdc: 70 } },
+    hp_rolls: [7],
+    results: [
+      { key: 'Unearthly Beauty: Physical Perfection', sub_choice: null,
+        rolls: { attributes: { PB: 2, PE: 3, PS: 1 }, pools: { sdc: 14 } } },
+      { key: 'Stigmata: Missing Skin', sub_choice: 'patches of skin missing',
+        rolls: { horror_factor: 4, pools: { sdc: 10 } } },
+    ],
+    sdc_current: null, hp_current: null,
+  };
+  const body = (second_form) => ({
+    campaign_id: sfCampId, name: 'Two Bodies', class_id: 'f74-probe',
+    attributes: attrs, skills: [], abilities: [], powers: [], pools: { hp: 20, sdc: 30, ppe: 20 },
+    ...(second_form ? { second_form } : {}),
+  });
+  const rules = (r) => (r.body?.violations || []).map((v) => v.rule);
+
+  const badKey = await api('POST', '/characters', body({ ...form, results: [{ key: 'Stigmata: Not A Stigma', rolls: {} }] }));
+  check('create refuses a result that is no Morphus table entry',
+    badKey.status === 422 && rules(badKey).includes('second_form_result_unknown'), JSON.stringify(badKey.body).slice(0, 300));
+  const badRoll = await api('POST', '/characters', body({ ...form,
+    results: [form.results[0], { ...form.results[1], rolls: { horror_factor: 6, pools: { sdc: 10 } } }] }));
+  check('create refuses a roll its dice cannot make (1d4+1 rolling 6)',
+    badRoll.status === 422 && rules(badRoll).includes('second_form_roll_out_of_range'), JSON.stringify(badRoll.body).slice(0, 300));
+  const badCurrent = await api('POST', '/characters', body({ ...form, sdc_current: 500 }));
+  check('create refuses a current S.D.C. above the form\'s maximum',
+    badCurrent.status === 422 && rules(badCurrent).includes('second_form_current_above_max'), JSON.stringify(badCurrent.body).slice(0, 300));
+  const oneBody = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'One Body', class_id: cls.id, attributes: attrs, skills: occSkills,
+    abilities: [], pools: { hp: 30, sdc: 40, ppe: 20, isp: 0 }, second_form: form,
+  });
+  check('create refuses a second body on a class that states none',
+    oneBody.status === 422 && rules(oneBody).includes('second_form_not_allowed'), JSON.stringify(oneBody.body).slice(0, 300));
+
+  const sf = await api('POST', '/characters', body(form));
+  check('a character with a second body is created', sf.status === 201, JSON.stringify(sf.body).slice(0, 300));
+  const sfId = sf.body.id;
+  const read = async () => (await api('GET', `/characters/${sfId}`)).body;
+
+  let r = await read();
+  const v = r.second_form;
+  // P.E. 16 + 10 + 3 = 29: hit points 29 x 2 + 7. S.D.C. 30 + 70 + 14 + 10.
+  // Physical Perfection SETS the Horror Factor to 6, Missing Skin adds its 4.
+  check('the sheet endpoint folds the form: hit points on the Morphus P.E. (29 x 2 + 7 = 65)',
+    v?.hp_max === 65 && v?.attributes?.PE === 29 && v?.attributes?.PS === 27, JSON.stringify(v).slice(0, 300));
+  check('S.D.C. is the Facade\'s 30 plus every rolled bonus (124)', v?.sdc_max === 124 && v?.sdc_current === 124,
+    JSON.stringify({ max: v?.sdc_max, cur: v?.sdc_current }));
+  check('the Horror Factor is the set 6 plus the rolled 4', v?.horror_factor === 10, JSON.stringify(v?.horror_factor_parts));
+  check('both results resolve against the catalog, table and all',
+    v?.results?.length === 2 && v.results.every((x) => x.found) && v.results[1].table === 'Stigmata',
+    JSON.stringify(v?.results));
+  check('the form\'s bonuses reach the sheet', v?.form_bonuses?.combat?.strike === 2 && v?.active === 'first');
+
+  // Each form's damage on its own.
+  const facadeHit = await api('PATCH', `/characters/${sfId}`, { sdc_current: 12 });
+  check('the Facade\'s S.D.C. is written', facadeHit.status === 200, JSON.stringify(facadeHit.body));
+  const morphusHit = await api('PATCH', `/characters/${sfId}`, { second_form: { sdc_current: 100 } });
+  check('the Morphus\'s S.D.C. is written on its own', morphusHit.status === 200, JSON.stringify(morphusHit.body));
+  r = await read();
+  check('and neither touched the other: Facade 12 of 30, Morphus 100 of 124',
+    r.character.sdc_current === 12 && r.character.sdc_max === 30
+    && r.second_form.sdc_current === 100 && r.second_form.sdc_max === 124,
+    JSON.stringify({ facade: r.character.sdc_current, morphus: r.second_form.sdc_current }));
+  check('and the stored results survived the field-by-field write',
+    r.character.second_form?.results?.length === 2 && r.character.second_form.form_rolls?.pools?.sdc === 70,
+    JSON.stringify(r.character.second_form).slice(0, 300));
+
+  await api('PATCH', `/characters/${sfId}`, { sdc_current: 30 });
+  r = await read();
+  check('healing the Facade leaves the Morphus where it was', r.second_form.sdc_current === 100 && r.character.sdc_current === 30);
+
+  const over = await api('PATCH', `/characters/${sfId}`, { second_form: { sdc_current: 999, hp_current: -4, active: 'second' } });
+  r = await read();
+  check('a Morphus value above its maximum is clamped, and below zero floored',
+    over.status === 200 && r.second_form.sdc_current === 124 && r.second_form.hp_current === 0,
+    JSON.stringify({ sdc: r.second_form.sdc_current, hp: r.second_form.hp_current }));
+  check('and the form shown is saved', r.second_form.active === 'second' && r.character.second_form.active === 'second');
+  const rolls = await api('PATCH', `/characters/${sfId}`, { second_form: { results: [] } });
+  check('the PATCH will not rewrite the rolls or results', rolls.status === 400, JSON.stringify(rolls.body));
+  const noForm = await api('PATCH', `/characters/${charId}`, { second_form: { sdc_current: 5 } });
+  check('nor write a second body onto a character whose class has none', noForm.status === 400, JSON.stringify(noForm.body));
+
+  // Level two: one more 2D6 for the Morphus's hit points.
+  await api('PATCH', `/characters/${sfId}`, { second_form: { hp_current: 50 } });
+  const xp = await api('POST', `/characters/${sfId}/xp`, { total: 2000 });
+  const extra = xp.body?.proposal?.second_form?.hp_rolls;
+  check('the level-up proposal rolls the Morphus\'s hit points',
+    Array.isArray(extra) && extra.length === 1 && extra[0] >= 2 && extra[0] <= 12, JSON.stringify(xp.body?.proposal?.second_form));
+  const badLevel = await api('POST', `/characters/${sfId}/level-confirm`, { to_level: 2, pools: {}, picks: [], second_form_hp_rolls: [13] });
+  check('level-confirm refuses a roll 2D6 cannot make', badLevel.status === 400, JSON.stringify(badLevel.body).slice(0, 200));
+  const lvl = await api('POST', `/characters/${sfId}/level-confirm`, { to_level: 2, pools: {}, picks: [],
+    second_form_hp_rolls: extra });
+  r = await read();
+  check('level-confirm appends it, raising the maximum and the current value by the roll',
+    lvl.status === 200 && r.character.second_form.hp_rolls.length === 2
+    && r.second_form.hp_max === 65 + extra[0] && r.second_form.hp_current === 50 + extra[0],
+    JSON.stringify({ status: lvl.status, rolls: r.character.second_form?.hp_rolls, max: r.second_form?.hp_max, cur: r.second_form?.hp_current }));
+
+  const cleanup = join(state, 'f74-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f74-probe';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the second-body fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // ── A spell burns P.P.E. out of the caster's base (BOOK-INGEST-AUDIT F101, 3 of 3) ──
 //
 // Six catalog spells carry `ppe_permanent` (migration 067), filled by a data

@@ -15,6 +15,9 @@ import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
 import { loadTotem } from '../_lib/class-loader.js';
 import { skillLevelNotes, skillConditionalBonuses } from '../../../../apps/character-creator/js/parser.js';
 import { xpTableFor, levelForXp, thresholdFor } from '../_lib/leveling.js';
+import { secondFormView, FORM_NAMES } from '../../../../apps/character-creator/js/second-form.js';
+import { loadTraitRows, traitKeysOf } from '../_lib/second-form.js';
+import { loadCharacterClass } from '../_lib/class-loader.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
@@ -242,8 +245,20 @@ export async function onRequestGet({ request, env, params }) {
   // nowhere near a boot payload. See docs/plans/20-power-descriptions.md.
   const power_descriptions = await loadPowerDescriptions(env, character.powers);
 
+  // THE SECOND BODY, FOLDED (BOOK-INGEST-AUDIT F74, survey D5): the form's
+  // attributes, its S.D.C. and hit point maxima and current values, its Horror
+  // Factor and the results it holds, on the same composed class the sheet
+  // reads. Null for a class with no second form, which is every class but the
+  // ones that state one - so a one-body sheet gets exactly what it got before.
+  // Folded here because js/second-form.js is a module and sheet.js is not.
+  const second_form = cls?.second_form
+    ? secondFormView({ cls, character,
+        rows: await loadTraitRows(env, cls.second_form, traitKeysOf(character.second_form)) })
+    : null;
+
   return json({
     character, items, vehicles, can_write, class: cls, skill_level_notes, weapon_bonuses,
+    second_form,
     is_gm: email === character.campaign_gm,
     pending_picks,
     pending_picks_total: pending_picks.reduce((n, g) => n + g.count, 0),
@@ -332,6 +347,55 @@ export async function onRequestPatch({ request, env, params }) {
     if (!okShape) return json({ error: `${section} must be ${kind === 'array' ? 'an array' : 'an object'}` }, 400);
     sets.push(`${section} = ?`);
     binds.push(JSON.stringify(v));
+  }
+
+  // A SECOND FORM'S OWN DAMAGE, AND WHICH FORM IS SHOWING (F74, survey D5).
+  // Only those three: the rolls and results are the create boundary's, where
+  // they are validated against their dice, and this route has no business
+  // rewriting them. Each current value is CLAMPED to 0..the form's maximum,
+  // exactly as the first form's columns are above - the maximum folded from
+  // the stored rolls by the same function the sheet's numbers come from.
+  //
+  // Written with json_set, one field at a time, INSIDE the UPDATE: a read-
+  // modify-write of the whole column would let a stepper press in one tab
+  // erase a result another request had stored.
+  if ('second_form' in body) {
+    const sf = body.second_form;
+    if (!sf || typeof sf !== 'object' || Array.isArray(sf)) {
+      return json({ error: 'second_form must be an object of active, sdc_current and hp_current' }, 400);
+    }
+    const bad = Object.keys(sf).filter((k) => !['active', 'sdc_current', 'hp_current'].includes(k));
+    if (bad.length) {
+      return json({ error: `second_form.${bad.join(', ')} cannot be changed here - only active, sdc_current and hp_current` }, 400);
+    }
+    const row = await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first();
+    decodeCharacter(row);
+    const cls = row ? await loadCharacterClass(env, request.url, row) : null;
+    if (!cls?.second_form) {
+      return json({ error: "This character's class has no second form" }, 400);
+    }
+    const view = secondFormView({ cls, character: row,
+      rows: await loadTraitRows(env, cls.second_form, traitKeysOf(row.second_form)) });
+    const paths = [], vals = [];
+    if ('active' in sf) {
+      if (!FORM_NAMES.includes(sf.active)) {
+        return json({ error: 'second_form.active must be "first" or "second"' }, 400);
+      }
+      paths.push("'$.active', ?"); vals.push(sf.active);
+    }
+    for (const pool of ['sdc', 'hp']) {
+      const k = pool + '_current';
+      if (!(k in sf)) continue;
+      let v = sf[k] === null || sf[k] === '' ? null : parseInt(sf[k], 10);
+      if (v !== null && !Number.isFinite(v)) return json({ error: `second_form.${k} must be a number or null` }, 400);
+      const max = view[pool + '_max'];
+      if (v !== null) v = Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+      paths.push(`'$.${k}', ?`); vals.push(v);
+    }
+    if (paths.length) {
+      sets.push(`second_form = json_set(CASE WHEN json_valid(second_form) THEN second_form ELSE '{}' END, ${paths.join(', ')})`);
+      binds.push(...vals);
+    }
   }
 
   if (!sets.length) return json({ error: 'No editable fields in body' }, 400);

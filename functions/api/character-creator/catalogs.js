@@ -69,8 +69,9 @@ export async function onRequestGet({ request, env }) {
     //
     // `min_character_level` GATES the picker the way `tier` gates a super
     // ability, and `prerequisite` and `form_required` are shown rather than
-    // enforced - neither is checkable here, and a Morphus is not modelled at
-    // all. NO `description`, for the reason the three catalogs above give: the
+    // enforced - neither is checkable here: a Morphus is stored per character
+    // since migration 069, but nothing matches a prerequisite's prose against
+    // its results yet. NO `description`, for the reason the three catalogs above give: the
     // picker needs a name, the costs and the gates, and descriptions travel
     // with the character through loadPowerDescriptions.
     env.DB.prepare(

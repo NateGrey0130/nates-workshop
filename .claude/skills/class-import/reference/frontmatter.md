@@ -501,6 +501,36 @@ A variant may override only `attribute_dice`, `attribute_requirements`,
 stay shared — an override naming anything else is reported and ignored.
 `docs/leveling.md` carries the full list, and a test pins it against the code.
 
+**A variant is not a second body.** Two forms a character changes between in play
+- a Nightbane's Facade and Morphus - are `second_form`, below.
+
+## A second body — `second_form`
+
+```yaml
+second_form:
+  name: "Morphus"                 # required; the sheet's toggle label
+  first_name: "Facade"            # required; what the class's own block is called
+  bonuses:                        # a bonuses block, in the second form only, ON TOP
+    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }   # of the first form's
+    pools: { sdc: "2d6x10" }      # sdc and hp ONLY; at_level is refused
+    combat: { initiative: 1, strike: 2, parry: 2, dodge: 2, roll: 3, pull_punch: 3, attacks: 1 }
+    saves: { spell_magic: 4, ritual_magic: 4, psionics: 3, disease: 3, horror_factor: 3 }
+  hit_points_base: "P.E. x2 + 2d6 per level"   # REPLACES hit points, read against
+                                               # the second form's P.E.
+  horror_factor: 6                # the second form's base; results add to it
+  horror_factor_max: 18
+  traits_from: morphus            # the catalog its generated results come from
+```
+
+The class's own block (`attribute_dice`, `sdc_base`, `hit_points_base`, a
+top-level `horror_factor` if the first form projects one) is the **first** form.
+Every malformed key is a parse ERROR. `combat` and `saves` keys here must be ones
+the sheet draws, like any class bonus - the same smoke check reads them. Composed
+like `horror_factor` (race wins; an O.C.C.'s falls through; a superseding one
+replaces it); not overridable by a variant. What a character rolled for it lives
+in `characters.second_form`. Full reference:
+`apps/character-creator/docs/race-and-occupation.md` → *A second body*.
+
 ## What a skill itself grants
 
 Not frontmatter — it lives on the catalog row, in `skills.bonuses`, in this

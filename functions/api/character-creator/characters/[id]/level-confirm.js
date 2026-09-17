@@ -16,7 +16,9 @@
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
-import { xpTableFor, thresholdFor, skillGrantsFor } from '../../_lib/leveling.js';
+import { xpTableFor, thresholdFor, skillGrantsFor, secondFormHitPointDice,
+         rollSecondFormHitPoints } from '../../_lib/leveling.js';
+import { diceBounds } from '../../../../../apps/character-creator/js/dice.js';
 import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
@@ -55,6 +57,40 @@ export async function onRequestPost({ request, env, params }) {
     const curField = field.replace('_max', '_current');
     if (character[curField] != null) {
       sets.push(`${curField} = ?`); binds.push(character[curField] + delta);
+    }
+  }
+
+  // A SECOND FORM'S HIT POINTS (BOOK-INGEST-AUDIT F74, survey D5). The proposal
+  // rolled one die per level gained on the form's own formula; they arrive as
+  // `second_form_hp_rolls` and are appended to what the form holds, the way the
+  // first form's maximum above takes the proposal's number. Unlike that number
+  // they are CHECKED - there is no "tweak if your G.M. says so" for a roll the
+  // sheet never shows as editable - and a request that sends none (a client
+  // older than this) has them rolled here, so a level is never confirmed
+  // without them. The form's current hit points rise by what was added, as the
+  // first form's current value rises with its maximum.
+  const form = cls?.second_form;
+  const formState = character.second_form && typeof character.second_form === 'object'
+    ? character.second_form : null;
+  if (form && Array.isArray(formState?.hp_rolls) && formState.hp_rolls.length) {
+    const { per } = secondFormHitPointDice(form.hit_points_base);
+    if (per) {
+      const gained = toLevel - character.level;
+      let rolls = b.second_form_hp_rolls;
+      if (rolls === undefined || rolls === null) {
+        rolls = rollSecondFormHitPoints(form.hit_points_base, character.level, toLevel);
+      } else {
+        const bounds = diceBounds(per);
+        if (!Array.isArray(rolls) || rolls.length !== gained
+            || rolls.some((v) => !Number.isInteger(v) || v < bounds.min || v > bounds.max)) {
+          return json({ error: `second_form_hp_rolls must be ${gained} roll(s) of ${per} (${bounds.min}-${bounds.max} each)` }, 400);
+        }
+      }
+      const added = rolls.reduce((a, v) => a + v, 0);
+      const next = { ...formState, hp_rolls: [...formState.hp_rolls, ...rolls] };
+      if (Number.isInteger(formState.hp_current)) next.hp_current = formState.hp_current + added;
+      changes.second_form = { name: form.name, hp_rolls: rolls, hp_added: added };
+      sets.push('second_form = ?'); binds.push(JSON.stringify(next));
     }
   }
 

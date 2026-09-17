@@ -13,6 +13,8 @@ import { loadPowerCatalog, powerGrantsFor, insertPowerGrantStatements } from './
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc, mosList } from '../../../apps/character-creator/js/parser.js';
+import { rollSecondForm, isEmptySecondForm } from '../../../apps/character-creator/js/second-form.js';
+import { loadTraitRows, traitKeysOf } from './_lib/second-form.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
@@ -189,10 +191,24 @@ export async function onRequestPost({ request, env }) {
   // resolvePowerPicks did not cover — and the pool maxima are checked against
   // what the class formulas can actually roll (advisory: the audit is where
   // those surface).
+  // A SECOND BODY (BOOK-INGEST-AUDIT F74, survey D5). The wizard's generator
+  // sends one, rolled; a class that states a second form and a request that
+  // sends none gets the form's own dice rolled HERE, with no table results yet,
+  // so the character is never created holding a toggle with nothing behind it.
+  // A request sending one for a class with none is refused by the validator
+  // rather than quietly dropped.
+  const secondForm = !isEmptySecondForm(b.second_form) ? b.second_form
+    : (cls?.second_form ? rollSecondForm(cls.second_form, level) : {});
+  const traitRows = cls?.second_form && !isEmptySecondForm(secondForm)
+    ? await loadTraitRows(env, cls.second_form, traitKeysOf(secondForm)) : null;
+
   const powerNames = [...new Set((b.powers || [])
     .map((pw) => String(pw?.name || '').trim()).filter(Boolean))];
   const { violations } = validateCharacter({
-    character: { level, psychic_shape: psychicShape, mos, totem: totemKept, occ_class_id: occId },
+    character: { level, psychic_shape: psychicShape, mos, totem: totemKept, occ_class_id: occId,
+                 attribute_bonuses: b.attribute_bonuses || {}, rolled_bonuses: b.rolled_bonuses || {},
+                 hp_max: p.hp ?? null, sdc_max: p.sdc ?? null },
+    secondForm, traitRows,
     cls,
     skills: b.skills || [],
     abilities: b.abilities || [],
@@ -223,8 +239,8 @@ export async function onRequestPost({ request, env }) {
        attributes, attribute_bonuses, rolled_bonuses, skills, powers, abilities,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
-       bio, combat, saves, armor, notes
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       bio, combat, saves, armor, notes, second_form
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
     b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, mos, totemKept, tier, tier ? psychicShape : null,
@@ -236,7 +252,8 @@ export async function onRequestPost({ request, env }) {
     p.hp ?? null, p.hp ?? null, p.sdc ?? null, p.sdc ?? null, p.mdc ?? null, p.mdc ?? null,
     p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,
     JSON.stringify(b.bio || {}), JSON.stringify(b.combat || {}),
-    JSON.stringify(b.saves || {}), JSON.stringify(b.armor || []), b.notes ?? null
+    JSON.stringify(b.saves || {}), JSON.stringify(b.armor || []), b.notes ?? null,
+    JSON.stringify(secondForm)
   ).first();
 
   const items = (b.items || []).filter((it) => it.item_id || it.custom_name);

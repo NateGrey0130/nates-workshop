@@ -358,6 +358,59 @@
     return out;
   }
 
+  // Two numeric bonus blocks - what classBonuses returns - added together. The
+  // second form's own delta and its table results arrive in this shape
+  // (js/second-form.js) and ride ON TOP of the first form's block, so the two
+  // are summed rather than one replacing the other. Floors keep the stricter.
+  function sumBonuses(a, b) {
+    const out = { attributes: {}, combat: {}, saves: {}, attribute_minimums: {} };
+    for (const block of [a, b]) {
+      for (const g of ['attributes', 'combat', 'saves']) {
+        for (const [k, v] of Object.entries(block?.[g] || {})) {
+          if (typeof v === 'number' && Number.isFinite(v)) out[g][k] = (out[g][k] || 0) + v;
+        }
+      }
+      for (const [k, v] of Object.entries(block?.attribute_minimums || {})) {
+        if (typeof v === 'number' && Number.isFinite(v)) {
+          out.attribute_minimums[k] = Math.max(out.attribute_minimums[k] ?? 0, v);
+        }
+      }
+    }
+    return out;
+  }
+
+  // A derived section as the SECOND form shows it (BOOK-INGEST-AUDIT F74).
+  //
+  // The first form's numbers are the derived table plus whatever a human typed
+  // over it - `combat` and `saves` hold overrides only. A second form has no
+  // overrides of its own, and dropping the first form's would lose a typed
+  // attacks-per-melee the Hand to Hand tables never derived. So the second form
+  // shows the FIRST form's number plus the difference the form makes: the table
+  // read against the second form's attributes and bonuses, less the same table
+  // read against the first form's. An override that is not a number (a punch
+  // typed as "1D4") is shown as typed.
+  function inForm(kind, attrs, stored, firstBonuses, formBonuses, psychicTier) {
+    const both = sumBonuses(firstBonuses, formBonuses);
+    const read = (b) => (kind === 'saves' ? global.derive.saves(attrs, null, psychicTier, b)
+      : kind === 'bio' ? global.derive.bio(attrs, null, b)
+      : global.derive.combat(attrs, null, b));
+    const first = read(firstBonuses);
+    const second = read(both);
+    const shown = kind === 'saves' ? global.derive.saves(attrs, stored, psychicTier, firstBonuses)
+      : kind === 'bio' ? global.derive.bio(attrs, stored, firstBonuses)
+      : global.derive.combat(attrs, stored, firstBonuses);
+    const out = { ...shown };
+    for (const [k, v] of Object.entries(second)) {
+      const delta = (typeof v === 'number' ? v : 0) - (typeof first[k] === 'number' ? first[k] : 0);
+      const base = out[k];
+      const num = typeof base === 'number' ? base
+        : (typeof base === 'string' && /^-?\d+$/.test(base.trim()) ? Number(base) : null);
+      if (num !== null) out[k] = num + delta;
+      else if (base === undefined) out[k] = v;
+    }
+    return out;
+  }
+
   function addBonus(derived, block) {
     if (!block) return derived;
     const out = { ...derived };
@@ -402,6 +455,8 @@
     diceBonuses,
     diceBonusesByGroup,
     effective,
+    sumBonuses,
+    inForm,
 
     // What made a number what it is, for the sheet's hover text: how much came
     // from the attribute tables, how much from the class, and how much from the

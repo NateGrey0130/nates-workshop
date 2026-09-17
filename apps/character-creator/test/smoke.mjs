@@ -642,8 +642,10 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
          grantNote, startingPicksFor, startingGroups, spellTraditionAllowed, talentGrantsFor,
-         talentPurchaseGrantsFor,
+         talentPurchaseGrantsFor, secondFormHitPointDice, rollSecondFormHitPoints,
          spellTraditionsAllowed } from '../../../functions/api/character-creator/_lib/leveling.js';
+import { secondFormView, secondFormViolations, rollSecondForm, rollTraitResult }
+  from '../js/second-form.js';
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks, loadPowerDescriptions } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
@@ -5876,17 +5878,17 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // twelve days. The warning is what would have caught the Kreeghor
   // Cosmo-Knight on the day it was imported.
   const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
-  check('class-check knows the eight keys combineClasses hands to the race',
-    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table', 'horror_factor'\];/.test(cc));
+  check('class-check knows the nine keys combineClasses hands to the race',
+    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table', 'horror_factor', 'second_form'\];/.test(cc));
   check('and warns only for an O.C.C. that has not claimed supersedes_race',
     /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
   check('it is a WARNING, so it cannot fire the exit code on the common case',
     /warnings\.push\(stated\.length/.test(cc));
   // The list is the one the parser actually branches on. If someone adds an
-  // eighth key there, this fails rather than the warning going quietly stale.
+  // tenth key there, this fails rather than the warning going quietly stale.
   const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table', 'horror_factor'\]\) \{/.exec(parser);
-  check('and the parser still hands exactly those eight to the race', !!branch);
+  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table', 'horror_factor', 'second_form'\]\) \{/.exec(parser);
+  check('and the parser still hands exactly those nine to the race', !!branch);
   check('occ_skills is deliberately NOT among them, because the lists union',
     !/LOST_TO_RACE[\s\S]{0,200}occ_skills/.test(cc)
     && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
@@ -7261,8 +7263,9 @@ section('A Horror Factor the character PROJECTS (F75)');
                    cls('occ', 'supersedes_race: true\nhorror_factor: 9'))
       .horror_factor === 9);
 
-  // A VARIANT MAY SET IT, which is the finding's own motivating case: a
-  // Nightbane's human form projects none and its Morphus 6 to 18.
+  // A VARIANT MAY SET IT. The finding argued this from the Nightbane's two
+  // forms, which are `second_form` now (F74); the variant override stays for
+  // "none normally, N if revealed".
   check('a variant may override it', (() => {
     const c = parseClassMarkdown('---\nid: t\nname: T\nsystem: rifts\nsource_book: B\n'
       + 'category: rcc\nhorror_factor: 6\nvariants:\n  - id: morphus\n'
@@ -7284,6 +7287,227 @@ section('A Horror Factor the character PROJECTS (F75)');
   check('class-check knows the key',
     readFileSync(join(repoRoot, 'scripts', 'class-check-lib.mjs'), 'utf8')
       .includes("'horror_factor'"));
+}
+
+section('A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)');
+{
+  // Nightbane survey D5. A class states how its second form differs in a
+  // `second_form` block; a character stores what it ROLLED for that form in
+  // `characters.second_form`; js/second-form.js folds the two with the traits
+  // catalog's rows into the numbers the sheet's form toggle draws.
+  const FORM = [
+    'second_form:',
+    '  name: "Morphus"',
+    '  first_name: "Facade"',
+    '  bonuses:',
+    '    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }',
+    '    pools: { sdc: "2d6x10" }',
+    '    combat: { initiative: 1, strike: 2, parry: 2, dodge: 2, attacks: 1 }',
+    '    saves: { psionics: 3, horror_factor: 3 }',
+    '  hit_points_base: "P.E. x2 + 2d6 per level"',
+    '  horror_factor: 6',
+    '  horror_factor_max: 18',
+    '  traits_from: morphus',
+  ].join('\n');
+  const mk = (fm, cat = 'rcc', id = 'sf') => parseClassMarkdown(`---\nid: ${id}\nname: SF ${cat}\nsystem: nightbane\n`
+    + `source_book: B\ncategory: ${cat}\nhit_points_base: "P.E. + 1D6 per level"\nsdc_base: 30\n${fm}\n---\n\n## Lore\n\nx\n`);
+
+  // ---- the parser ----
+  const good = mk('bonuses:\n  attributes: { PS: 2 }\n' + FORM);
+  check('a second_form block parses clean', good.ok === true && good.warnings.length === 0,
+    JSON.stringify([good.errors, good.warnings]));
+  check('and keeps its shape',
+    good.data?.second_form?.name === 'Morphus' && good.data.second_form.bonuses.pools.sdc === '2d6x10'
+    && good.data.second_form.horror_factor_max === 18);
+  const refused = (fm, re) => {
+    const r = mk(fm);
+    return r.ok === false && r.errors.some((e) => re.test(e));
+  };
+  check('a form without its names is refused',
+    refused('second_form:\n  horror_factor: 6', /second_form\.name is required/)
+    && refused('second_form:\n  name: "M"', /second_form\.first_name is required/));
+  check('its bonuses go through validateBonuses, re-rooted',
+    refused('second_form:\n  name: M\n  first_name: F\n  bonuses:\n    attributes: { STR: 2 }',
+      /^second_form\.bonuses\.attributes\.STR is not an attribute/));
+  check('a pool other than S.D.C. and hit points is refused',
+    refused('second_form:\n  name: M\n  first_name: F\n  bonuses:\n    pools: { ppe: 10 }',
+      /pools\.ppe is not a second form's pool/));
+  check('a level-gated form bonus is refused rather than ignored',
+    refused('second_form:\n  name: M\n  first_name: F\n  bonuses:\n    at_level:\n      - { level: 3, combat: { strike: 1 } }',
+      /at_level is not supported/));
+  check('an unreadable hit point formula is refused',
+    refused('second_form:\n  name: M\n  first_name: F\n  hit_points_base: "lots"', /not a formula/));
+  check('a maximum below the base is refused',
+    refused('second_form:\n  name: M\n  first_name: F\n  horror_factor: 10\n  horror_factor_max: 8', /below its base/));
+  check('traits_from must name a traits catalog',
+    refused('second_form:\n  name: M\n  first_name: F\n  traits_from: spells', /traits_from must name/));
+  check('a variant cannot carry one, and says so',
+    parseClassMarkdown('---\nid: v\nname: V\nsystem: nightbane\nsource_book: B\ncategory: rcc\n'
+      + 'variants:\n  - id: a\n    name: A\n    second_form: { name: M }\n---\n\n## Lore\n\nx\n')
+      .warnings.some((w) => /sets second_form, which a variant cannot override/.test(w)));
+  check('class-check knows the key',
+    readFileSync(join(repoRoot, 'scripts', 'class-check-lib.mjs'), 'utf8').includes("'second_form'"));
+
+  // ---- composition ----
+  const rcc = good.data;
+  const occ = mk('', 'occ', 'job').data;
+  const occForm = mk(FORM.replace('"Morphus"', '"Beast"'), 'occ', 'job').data;
+  check('an O.C.C. stating none leaves the race\'s form standing',
+    combineClasses(rcc, occ).second_form?.name === 'Morphus');
+  check('and it survives composeClass, abilities and all',
+    composeClass({ rcc, occ, character: {} })?.second_form?.name === 'Morphus');
+  check('an O.C.C. that states one is not dropped when the race states none',
+    combineClasses(mk('', 'rcc', 'race').data, occForm).second_form?.name === 'Beast');
+  check('the race wins when both state one',
+    combineClasses(rcc, occForm).second_form?.name === 'Morphus');
+  check('and a superseding occupation replaces it',
+    combineClasses(rcc, { ...occForm, supersedes_race: true }).second_form?.name === 'Beast');
+
+  // ---- the fold, with every die pre-rolled ----
+  const rows = new Map([
+    ['Unearthly Beauty: Physical Perfection', { key: 'Unearthly Beauty: Physical Perfection',
+      table_name: 'Unearthly Beauty', name: 'Physical Perfection', kind: 'effect',
+      bonuses: '{"attributes": {"PB": "1d4", "PE": "1d4", "PS": "1d4"}, "pools": {"sdc": "4d6"}}',
+      horror_factor: null, horror_factor_set: 6, sub_choices: null }],
+    ['Stigmata: Test Stigma', { key: 'Stigmata: Test Stigma', table_name: 'Stigmata', name: 'Test Stigma',
+      kind: 'effect', bonuses: { combat: { initiative: 1 }, pools: { sdc: '1d6x10' } },
+      horror_factor: '1d4', horror_factor_set: null, sub_choices: '["left", "right"]' }],
+    ['Appearance: Appearance Table', { key: 'Appearance: Appearance Table', table_name: 'Appearance',
+      name: 'Appearance Table', kind: 'intro', bonuses: null }],
+  ]);
+  const state = {
+    active: 'second',
+    form_rolls: { pools: { sdc: 70 } },
+    hp_rolls: [7, 9],
+    results: [
+      { key: 'Unearthly Beauty: Physical Perfection', sub_choice: null,
+        rolls: { attributes: { PB: 2, PE: 3, PS: 1 }, pools: { sdc: 14 } } },
+      { key: 'Stigmata: Test Stigma', sub_choice: 'left', rolls: { horror_factor: 3, pools: { sdc: 40 } } },
+    ],
+    sdc_current: 100, hp_current: null,
+  };
+  const character = { level: 2, attributes: { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 12, PB: 10, Spd: 10 },
+    attribute_bonuses: {}, rolled_bonuses: {}, sdc_max: 30, hp_max: 20, second_form: state };
+  const view = secondFormView({ cls: rcc, character, rows });
+  // P.S. 10 + class 2 + form 10 + result 1; P.E. 12 + 10 + 3.
+  check('attributes are the first form\'s, plus the form, plus its results',
+    view.attributes.PS === 23 && view.attributes.PE === 25 && view.attributes.PP === 16
+    && view.attributes.Spd === 20 && view.attributes.PB === 12, JSON.stringify(view.attributes));
+  check('hit points read the formula against the SECOND form\'s P.E. (25 x 2 + 7 + 9)',
+    view.hp_max === 66, `got ${view.hp_max}`);
+  check('S.D.C. is the first form\'s maximum plus every rolled bonus (30 + 70 + 14 + 40)',
+    view.sdc_max === 154, `got ${view.sdc_max}`);
+  check('each form keeps its own current value, and an unset one is full',
+    view.sdc_current === 100 && view.hp_current === 66);
+  // Physical Perfection SETS 6, the stigma adds its rolled 3.
+  check('a set replaces the base and what results add still lands on top',
+    view.horror_factor === 9 && view.horror_factor_parts.set === 6, JSON.stringify(view.horror_factor_parts));
+  const withSet = (set) => secondFormView({ cls: rcc, rows: new Map([...rows,
+    ['Unearthly Beauty: Physical Perfection', { ...rows.get('Unearthly Beauty: Physical Perfection'), horror_factor_set: set }]]),
+    character });
+  check('a higher set raises it (10 + 3)', withSet(10).horror_factor === 13);
+  check('and the form\'s maximum caps it (17 + 3 is 18, not 20)', withSet(17).horror_factor === 18);
+  check('with no set, the form\'s base is where it starts (6 + 3)', withSet(null).horror_factor === 9
+    && withSet(null).horror_factor_parts.set === null);
+  check('the results\' and the form\'s combat bonuses fold, and nothing is unrolled',
+    view.form_bonuses.combat.initiative === 2 && view.form_bonuses.combat.strike === 2
+    && view.form_bonuses.saves.horror_factor === 3 && view.unrolled.length === 0, JSON.stringify(view));
+  check('an unrolled die counts nothing and is reported',
+    secondFormView({ cls: rcc, rows, character: { ...character, second_form: { ...state, form_rolls: {} } } })
+      .sdc_max === 84 && secondFormView({ cls: rcc, rows, character: { ...character, second_form: { ...state, form_rolls: {} } } })
+      .unrolled.some((u) => /pools\.sdc/.test(u)));
+  check('a class with no second form folds to null', secondFormView({ cls: occ, character }) === null);
+
+  // derive: the second form's combat is the first form's shown number plus the
+  // difference the form makes - so a typed override survives the toggle.
+  const firstB = D.classBonuses(rcc, 2, {});
+  const combat2 = D.inForm('combat', character.attributes, { strike: '5' }, firstB, view.form_bonuses);
+  // P.P. 10 -> 16 is +1 strike on the chart; +2 from the form.
+  check('the form adds its difference to a typed override (5 + 1 + 2)', combat2.strike === 8, JSON.stringify(combat2));
+  check('and to a derived value (initiative 0 + 2)', combat2.initiative === 2);
+  check('run speed reads the second form\'s Spd (20 x 5)', combat2.run_yards_per_melee === 100);
+  check('sumBonuses adds two blocks', D.sumBonuses({ combat: { strike: 1 } }, { combat: { strike: 2 } }).combat.strike === 3);
+
+  // ---- the create boundary ----
+  const vio = (s, cls = rcc, ch = character) => secondFormViolations({ cls, character: ch, state: s, rows });
+  check('the stored form passes', vio(state).length === 0, JSON.stringify(vio(state)));
+  check('an empty form passes on any class', vio({}, occ).length === 0 && vio({}).length === 0);
+  const rule = (s, r, cls, ch) => vio(s, cls, ch).some((v) => v.rule === r);
+  check('a class with no second form cannot carry one', rule(state, 'second_form_not_allowed', occ));
+  check('a result naming no catalog entry is refused',
+    rule({ ...state, results: [{ key: 'Stigmata: Nothing', rolls: {} }] }, 'second_form_result_unknown'));
+  check('and so is a table\'s intro row',
+    rule({ ...state, results: [{ key: 'Appearance: Appearance Table', rolls: {} }] }, 'second_form_result_unknown'));
+  check('a roll outside its dice is refused (P.E. 5 on 1d4)',
+    rule({ ...state, results: [{ ...state.results[0], rolls: { attributes: { PB: 2, PE: 5, PS: 1 }, pools: { sdc: 14 } } }, state.results[1]] },
+      'second_form_roll_out_of_range'));
+  check('a missing roll is refused',
+    rule({ ...state, results: [{ ...state.results[1], rolls: { pools: { sdc: 40 } } }] }, 'second_form_roll_missing'));
+  check('a roll with no dice behind it is refused',
+    rule({ ...state, form_rolls: { pools: { sdc: 70 }, combat: { strike: 3 } } }, 'second_form_roll_unexpected'));
+  check('the form\'s own roll is held to its dice (2d6x10 cannot roll 130)',
+    rule({ ...state, form_rolls: { pools: { sdc: 130 } } }, 'second_form_roll_out_of_range'));
+  check('a level-2 form holds exactly two hit point rolls',
+    rule({ ...state, hp_rolls: [7] }, 'second_form_hp_rolls')
+    && rule({ ...state, hp_rolls: [7, 13] }, 'second_form_roll_out_of_range'));
+  check('a sub-choice the entry does not offer is refused',
+    rule({ ...state, results: [state.results[0], { ...state.results[1], sub_choice: 'middle' }] }, 'second_form_sub_choice'));
+  check('a current value above the form\'s maximum is refused',
+    rule({ ...state, sdc_current: 155 }, 'second_form_current_above_max')
+    && !rule({ ...state, sdc_current: 154 }, 'second_form_current_above_max'));
+  check('an unknown key or form name is refused',
+    rule({ ...state, total_sdc: 9 }, 'second_form_shape') && rule({ ...state, active: 'morphus' }, 'second_form_shape'));
+  check('the server validator carries it',
+    validateCharacter({ character: { level: 2, ...character }, cls: occ, skills: [], attributes: character.attributes,
+      secondForm: state, traitRows: rows }).violations.some((v) => v.rule === 'second_form_not_allowed'));
+
+  // ---- rolling, and leveling ----
+  const made = rollSecondForm(rcc.second_form, 3);
+  check('a new form rolls its own dice and one hit point roll per level, and validates',
+    made.hp_rolls.length === 3 && made.form_rolls.pools.sdc % 10 === 0 && made.active === 'first'
+    && vio(made, rcc, { ...character, level: 3, second_form: made }).length === 0, JSON.stringify(made));
+  const rolled = rollTraitResult(rows.get('Stigmata: Test Stigma'), 'right');
+  check('a result rolls every die it carries',
+    rolled.rolls.horror_factor >= 1 && rolled.rolls.horror_factor <= 4 && rolled.rolls.pools.sdc >= 10
+    && rolled.sub_choice === 'right');
+  const hpd = secondFormHitPointDice('P.E. x2 + 2d6 per level');
+  check('the hit point dice are read off the formula',
+    hpd.first === '2d6' && hpd.per === '2d6' && hpd.count(4) === 4
+    && secondFormHitPointDice('P.E. x 10').count(4) === 0 && secondFormHitPointDice('3d6x10').count(4) === 1);
+  check('a flat formula grows by nothing', rollSecondFormHitPoints('3d6x10', 1, 3).length === 0);
+  const prop = buildProposal({ ...character, skills: [] }, rcc, 4);
+  check('the level-up proposal rolls the second form\'s hit points for each level gained',
+    prop.second_form?.hp_rolls?.length === 2 && prop.second_form.hp_rolls.every((v) => v >= 2 && v <= 12)
+    && prop.second_form.name === 'Morphus', JSON.stringify(prop.second_form));
+  check('and proposes none for a character whose form was never made',
+    buildProposal({ ...character, skills: [], second_form: {} }, rcc, 4).second_form === undefined);
+
+  // ---- storage, the routes and the sheet, read as source ----
+  const charJsonSf = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'character-json.js'), 'utf8');
+  check('second_form is a decoded JSON column whose empty value is an object',
+    CHARACTER_JSON_COLUMNS.includes('second_form')
+    && !/ARRAY_COLUMNS\s*=\s*new Set\(\[[^\]]*'second_form'/.test(charJsonSf));
+  const sfRoute = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters', '[id].js'), 'utf8');
+  check('the sheet endpoint folds the form for the sheet',
+    /const second_form = cls\?\.second_form\s*\?\s*secondFormView\(/.test(sfRoute) && /\n\s*second_form,\n/.test(sfRoute.replace(/\r/g, '')));
+  check('the PATCH writes a form field by field and clamps to the folded maximum',
+    /second_form = json_set\(/.test(sfRoute) && /Math\.min\(v, max\)/.test(sfRoute));
+  const sfCreate = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters.js'), 'utf8');
+  check('the create endpoint validates and stores it',
+    /secondForm, traitRows,/.test(sfCreate) && /JSON\.stringify\(secondForm\)/.test(sfCreate));
+  const sfConfirm = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters', '[id]', 'level-confirm.js'), 'utf8');
+  check('level-confirm appends the form\'s hit point rolls, checked against their dice',
+    /hp_rolls: \[\.\.\.formState\.hp_rolls, \.\.\.rolls\]/.test(sfConfirm) && /v < bounds\.min \|\| v > bounds\.max/.test(sfConfirm));
+  const sfSheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  check('the sheet draws a toggle only for a class with a second form',
+    /const formToggle = !F \? '' :/.test(sfSheet) && /onclick="setForm\('\$\{k\}'\)"/.test(sfSheet));
+  check('and paints pools from the form showing',
+    /const paintPool = \(key\) => sheetLayout\.paintPool\(key, poolData\(\), C\.conflicts\);/.test(sfSheet));
+  check('autosave does not own a second-form pool, so one body\'s damage cannot land on the other',
+    /if \(m && formOn\(\) && FORM_POOLS\.includes\(m\[1\]\)\) return null;/.test(sfSheet));
+  check('the stepper and Damage route a second-form hit to its own storage',
+    /if \(formOn\(\) && FORM_POOLS\.includes\(key\)\)/.test(sfSheet) && /const formPatch = derive\.damageCascade\(poolData\(\), amt\);/.test(sfSheet));
+  check('level-up sends the form\'s rolls to be confirmed', /second_form_hp_rolls: p\.second_form\.hp_rolls/.test(sfSheet));
 }
 
 section('Psionic category narrowing');
@@ -9119,8 +9343,9 @@ section('A class cannot write a bonus the sheet will not draw');
     const res = parseClassMarkdown(md);
     if (!res?.ok || !res.data) continue;
     parsed++;
+    // A second form's bonuses are drawn by the same two lists, in its form.
     const groups = [res.data.bonuses, ...(res.data.bonuses?.at_level || []),
-      ...(res.data.variants || []).map((v) => v.bonuses)].filter(Boolean);
+      ...(res.data.variants || []).map((v) => v.bonuses), res.data.second_form?.bonuses].filter(Boolean);
     for (const g of groups) {
       for (const kind of ['combat', 'saves']) {
         for (const key of Object.keys(g[kind] || {})) {

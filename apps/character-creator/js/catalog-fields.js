@@ -226,8 +226,10 @@ export const CATALOGS = {
 
   // The Morphus tables: one row per ENTRY of Nightbane's 19 percentile tables
   // (printed 91-106), plus an `intro` row per table. Migration 068, survey D5.
-  // Nothing reads these yet - the second body and the wizard's generator are
-  // later PRs - so this entry is the editor and the write path, and no more.
+  // READ since migration 069: a character's `second_form.results` names rows
+  // by `key`, folded by js/second-form.js and loaded (renames followed through
+  // catalog_redirects) by functions/.../_lib/second-form.js. The wizard's
+  // generator is the next PR.
   //
   // KEYED ON A STORED `key`, NOT ON A COMPOSITE. An entry is identified by
   // (table_name, roll_low, name) and `uniqueField` is one column, read as one
@@ -241,7 +243,8 @@ export const CATALOGS = {
   // NO `MERGE_REFS` ENTRY, for the reason vehicles gives below, and a sharper
   // one: two rows sharing a name in different tables are different entries by
   // construction, so duplicate review would propose exactly the pairs that are
-  // never duplicates. Nothing references a row yet for a merge to repoint.
+  // never duplicates. And a merge has no repointing to do for a character: a
+  // stored result names a KEY, which a rename's redirect already resolves.
   morphus: {
     table: 'morphus_characteristics',
     label: 'Morphus tables',

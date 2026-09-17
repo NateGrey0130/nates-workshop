@@ -61,6 +61,7 @@ import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator
 import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
 import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
 import { powerGrantsFor } from './power-picks.js';
+import { secondFormViolations } from '../../../../apps/character-creator/js/second-form.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
@@ -72,6 +73,7 @@ export async function loadSkillCategories(env) {
 
 export function validateCharacter({ character, cls, skills, attributes, abilities, catalog,
                                     powers, pools, system, powerCatalog,
+                                    secondForm, traitRows = null,
                                     enforcePools = false }) {
   // No class definition means no rules to check against. A character whose
   // class was retired must still be saveable — PR 2 made that survivable on
@@ -606,7 +608,8 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
             }
             // `prerequisite` and `form_required` are NOT checked, for the reason
             // resolvePowerPicks gives: one is free text naming either another
-            // Talent or a Morphus characteristic, and a Morphus is not modelled.
+            // Talent or a Morphus characteristic, and nothing matches one against
+            // a stored Morphus's results yet (migration 069 stores them).
           } else if (!catPools.length) {
             violations.push({ rule: 'power_not_on_list', kind, name: e.name,
               message: `${e.name} is not on the list this class's psionic picks draw from` });
@@ -746,6 +749,21 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
         message: `${attr} is ${have}, above the ${cap} this class allows `
           + '- the book caps it, so check with your GM' });
     }
+  }
+
+  // ── a second body (BOOK-INGEST-AUDIT F74, survey D5) ──────────────────────
+  // When the caller supplies one: a stored form on a class that states none, a
+  // result that names no catalog entry, a roll its dice could not have made, the
+  // wrong number of hit point rolls for the level, and a current pool above the
+  // form's maximum. VIOLATIONS, not warnings, and for the G.M. too: unlike a
+  // pool maximum there is no table ruling a roll of 13 on 2D6 could be, and a
+  // G.M. who wants a different Morphus picks a different result. The rules live
+  // in js/second-form.js beside the fold they check against.
+  if (secondForm !== undefined) {
+    violations.push(...secondFormViolations({
+      cls, state: secondForm, rows: traitRows,
+      character: { ...(character || {}), attributes: attributes || character?.attributes || {}, level },
+    }));
   }
 
   return { skipped: false, violations, warnings };

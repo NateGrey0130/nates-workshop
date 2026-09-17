@@ -902,6 +902,11 @@ body.play-mode .vital.conflict .val > input,
 .vital .val b { display: none; }
 body.play-mode .vital .val input { display: none; }
 body.play-mode .vital .val b { display: inline; }
+/* The Horror Factor card has no input to edit, so its <b> is the only value it
+   has, in both modes. Hidden by the rule above, it drew an empty card in sheet
+   mode - found 2026-09-17 on the second form's toggle (BOOK-INGEST-AUDIT F74),
+   whose Horror Factor is one of the numbers the toggle exists to redraw. */
+.vital.hf .val b { display: inline; }
 
 /* The bar shows in both modes - it is the one thing that says "nearly out" at
    a glance rather than by arithmetic. Its width comes from sheet.js, because
@@ -1907,6 +1912,32 @@ body.show-play-keys .play-keys { display: block; }
 /* The autosave status carries its own Keep mine / Use theirs pair on a
    conflict (UI-AUDIT F38); the row's gap does not reach inside the span. */
 .vitals-save .autosave .btn { margin-left: 6px; }
+
+/* THE FORM TOGGLE (BOOK-INGEST-AUDIT F74) - a Facade/Morphus switch for a class
+   that states `second_form`, and absent for every other class. It takes a whole
+   row of the vitals grid so the pools below it keep their columns, and it
+   borrows the tab bar's segmented look and its 44px finger target, because it
+   is pressed mid-fight like a tab. While the second form shows, each card's
+   sides and bottom take the accent - its top edge keeps the pool's own tone -
+   because the pools are a different body's, and that should be visible without
+   reading the toggle. */
+.form-toggle {
+  grid-column: 1 / -1;
+  display: flex; gap: 6px; align-items: center;
+}
+.form-toggle .form-btn {
+  flex: 1 1 0; min-height: 44px; padding: 6px 14px;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-family: var(--font-display); font-stretch: 75%; font-size: 14px;
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.form-toggle .form-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+.form-toggle .form-btn.on { color: var(--text-primary); border-color: var(--accent); background: var(--accent-glow); }
+.vitals-strip.form-second .vital {
+  border-left-color: var(--accent); border-right-color: var(--accent); border-bottom-color: var(--accent);
+}
 
 /* ---------- home view (UI-AUDIT F39) ----------
    One row per character or campaign, a line each for the reason UI-AUDIT F9
