@@ -204,6 +204,49 @@ skills:
 - **Related and secondary skills come from the O.C.C.** An R.C.C. with neither
   is correct.
 
+### `hand_to_hand` — what the class charges for a fighting style
+
+Nearly every class page prints it: *"Hand to Hand: Basic can be changed to
+Expert at the cost of one O.C.C. Related Skill, or Martial Arts (or Assassin if
+evil) for the cost of two."* **That sentence is data, not a note.** Keep the
+note — it is what the player reads — and write the block beside it:
+
+```yaml
+skills:
+  hand_to_hand: { costs: { expert: 1, martial_arts: 2, assassin: 2 }, conditions: { assassin: "evil alignment" } }
+  occ_skills:
+    - { name: "Hand to Hand: Basic", base: 0, per_level: 0, note: "Can be changed to Expert at the cost of one ..." }
+```
+
+- **One line, and BARE keys** — `martial_arts`, never `"Hand to Hand: Martial
+  Arts"`. The parser keeps the quotes on a quoted key, which then matches
+  nothing; it is refused at parse time for that reason. The key is the style's
+  name after `Hand to Hand: `, lower-cased, spaces to `_`.
+- **Costs are related-skill picks. `0` is a price** — the Crazy "may be changed
+  to Assassin if an evil alignment" with no price stated, which is a free change.
+- **A style that is ABSENT is NOT OFFERED.** The book lists what the class
+  sells. *"Basic ONLY. No upgrade at any price"* is `costs: {}`. Do not list the
+  style the class already grants.
+- **No block at all means the class states no price**, and any style costs the
+  one pick it occupies. That is the right answer for a class whose page says
+  nothing — and the WRONG one for a class that prints a price, which
+  `test/regression.mjs` fails: a class whose Hand to Hand entry note prints a
+  cost must carry the block.
+- A class that grants **no** style and sells all of them — the Scholar, the
+  Nightbane packages — prices `basic` too: `{ basic: 1, expert: 2, martial_arts: 3 }`.
+- `conditions` is the book's condition in words. **Shown, never enforced** —
+  alignment is chosen four steps after skills. A condition on a style that is
+  not in `costs` is a parse error.
+- `creation_only: true` for *"only when the character is being initially
+  created"* (the Combat Cyborg). The sheet and the level-up endpoints then offer
+  nothing.
+- A character holds **one** style: a pick replaces the one held, after a
+  confirm, and a later GRANT (an MOS's free upgrade) replaces an earlier one.
+  `js/hand-to-hand.js` is the rule and says why it is not a ranking.
+- **A new fighting style is named `Hand to Hand: <style>`.** The rule recognises
+  a style by name, and the regression suite fails any skill row that states
+  `attacks_base` under another spelling — it would stack.
+
 ## Equipment
 
 ```yaml

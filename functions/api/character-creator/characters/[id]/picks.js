@@ -6,7 +6,7 @@
 // until the player comes back to it. Owner/GM only, same as any character write.
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
-import { listPending, resolvePicks, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { listPending, resolvePicks, mergePicked, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
@@ -54,6 +54,10 @@ export async function onRequestPost({ request, env, params }) {
   // zero related allowance - the moment banked picks were spent.
   const character = await loadCharacter(env, params.id);
   const skills = character.skills;
+  // Loaded BEFORE the picks are resolved, not after: the composed class is what
+  // prices a Hand to Hand style, as well as what the merged list is validated
+  // against below.
+  const cls = await loadCharacterClass(env, request.url, character);
 
   const picked = await resolvePicks(env, {
     // The character's own GAME may print different percentages
@@ -71,14 +75,16 @@ export async function onRequestPost({ request, env, params }) {
     // A skill whose base is derived from an attribute needs them to resolve at
     // all — without this it stores 0 and climbs from 0 (F18).
     attributes: character.attributes,
+    cls,
   });
   if (picked.errors?.length) return pickErrors(picked.errors);
   if (!picked.skills.length) return json({ error: 'Nothing to apply' }, 400);
 
   // The picks endpoint checks its own allowance and categories, but the same
   // boundary applies here as everywhere else — one place decides what is legal.
-  const merged = skills.concat(picked.skills);
-  const cls = await loadCharacterClass(env, request.url, character);
+  // mergePicked, not concat: a Hand to Hand style picked here replaces the one
+  // the character holds rather than joining it.
+  const { skills: merged, replaced } = mergePicked(skills, picked.skills);
   const { violations } = validateCharacter({
     character: { level: character.level }, cls, skills: merged, attributes: character.attributes,
     abilities: character.abilities,
@@ -93,13 +99,15 @@ export async function onRequestPost({ request, env, params }) {
   await env.DB.batch([
     env.DB.prepare("UPDATE characters SET skills = ?, updated_at = datetime('now') WHERE id = ?")
       .bind(JSON.stringify(merged), params.id),
-    ...claimStatements(env, pending, picked.skills.length),
+    // `spent`, not the row count: a Hand to Hand style can cost several picks.
+    ...claimStatements(env, pending, picked.spent),
   ]);
 
   const left = await listPending(env, params.id);
   return json({
     ok: true,
     applied: picked.skills.map((s) => ({ name: s.name, pct: s.pct, override: !!s.override })),
+    replaced,
     pending: left,
     remaining: left.reduce((n, g) => n + g.count, 0),
   });

@@ -19,7 +19,7 @@ import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor, secondFormHitPointDice,
          rollSecondFormHitPoints } from '../../_lib/leveling.js';
 import { diceBounds } from '../../../../../apps/character-creator/js/dice.js';
-import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, remainingGrants, resolvePicks, mergePicked, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
          powerPickErrors } from '../../_lib/power-picks.js';
@@ -136,13 +136,18 @@ export async function onRequestPost({ request, env, params }) {
     // A skill whose base is derived from an attribute needs them to resolve at
     // all — without this it stores 0 and climbs from 0 (F18).
     attributes: character.attributes,
+    cls,
   });
   if (picked.errors?.length) return pickErrors(picked.errors);
 
   if (picked.skills.length) {
-    skills = skills.concat(picked.skills);
+    // mergePicked, not concat: a Hand to Hand style picked at this level
+    // replaces the one the character holds rather than joining it.
+    const merged = mergePicked(skills, picked.skills);
+    skills = merged.skills;
     skillsChanged = true;
     changes.picked = picked.skills.map((s) => ({ name: s.name, pct: s.pct, override: !!s.override }));
+    if (merged.replaced.length) changes.replaced = merged.replaced;
   }
   if (skillsChanged) { sets.push('skills = ?'); binds.push(JSON.stringify(skills)); }
 
@@ -233,10 +238,11 @@ export async function onRequestPost({ request, env, params }) {
   // Bank only what was not spent in this same request. The consume-from-the-
   // earliest rule is shared with the create path, which banks the same way for
   // a character that starts above level 1.
-  const unspent = allowance - picked.skills.length;
+  // `spent`, not the row count: a Hand to Hand style can cost several picks.
+  const unspent = allowance - picked.spent;
   if (unspent > 0) {
     statements.push(...insertGrantStatements(env, params.id,
-      remainingGrants(grants, picked.skills.length)));
+      remainingGrants(grants, picked.spent)));
   }
 
   // The same for powers, counted PER GRANT rather than as one total: a spell
@@ -259,7 +265,7 @@ export async function onRequestPost({ request, env, params }) {
     level: toLevel,
     changes,
     picks_granted: allowance,
-    picks_spent: picked.skills.length,
+    picks_spent: picked.spent,
     picks_pending: unspent,
     powers_granted: powerGrants.reduce((n, g) => n + g.count, 0),
     powers_spent: pickedPowers.length,

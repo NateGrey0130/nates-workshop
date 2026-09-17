@@ -28,6 +28,10 @@ system: ${system}                 # rifts | palladium-fantasy | nightbane | hero
 source_book: "${sourceBook}"`;
 
   const skillsBlock = `skills:
+  # What the class charges to change its Hand to Hand style, in related-skill
+  # picks. ONE line, bare keys. A style left out is NOT OFFERED; omit the whole
+  # line only if the page prints no price at all.
+  # hand_to_hand: { costs: { expert: 1, martial_arts: 2, assassin: 2 }, conditions: { assassin: "evil alignment" } }
   occ_skills:                     # skills every character of this class gets
     - { name: "Basic Math", base: 60, per_level: 5 }
     # A choice-group instead of a name means "pick N of these":

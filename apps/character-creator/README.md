@@ -110,6 +110,12 @@ apps/character-creator/
 ├── js/language-skills.js  The "once per language" rule for BOTH families (ES
 │                             module — the server validator imports it, and the
 │                             sheet reads its globalThis mirror via a module tag)
+├── js/hand-to-hand.js        One Hand to Hand style per character, bought at the
+│                             class's price: a style picked replaces the one
+│                             held, after asking, and costs what
+│                             `skills.hand_to_hand` says (ES module — both pick
+│                             endpoints and the validator import it, and the
+│                             sheet reads its globalThis mirror the same way)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below
 ├── docs/rules-audit.md       Where each implemented rule comes from, by page
@@ -162,10 +168,11 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Nine modules are imported by both the browser and the Workers runtime:
+Ten modules are imported by both the browser and the Workers runtime:
 `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
 `js/psionics.js` (transitively, through compose), `js/language-skills.js`,
-`js/leveling.js`, `js/second-form.js` and `js/skill-base.js`. `skill-base.js`
+`js/hand-to-hand.js`, `js/leveling.js`, `js/second-form.js` and
+`js/skill-base.js`. `skill-base.js`
 resolves a skill's starting percentage, including one game's own where it
 differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
 character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
