@@ -103,8 +103,19 @@ export async function onRequestPost({ request, env }) {
     if (/UNIQUE/i.test(e.message || '')) {
       return json({ error: `A row with that ${cat.uniqueField} already exists` }, 409);
     }
+    const refused = checkRefusal(e);
+    if (refused) return refused;
     throw e;
   }
+}
+
+// A table CHECK is a rule about the row the config cannot state field by field -
+// `morphus_characteristics.key` must equal '<table_name>: <name>' (migration
+// 068). Refused input, so a 422 carrying the constraint, not a 500 the editor
+// can only report as "something went wrong".
+function checkRefusal(e) {
+  const m = /CHECK constraint failed:?\s*(.*)/i.exec(e.message || '');
+  return m ? json({ error: `The row breaks a rule the database enforces: ${m[1].trim() || 'a CHECK constraint'}` }, 422) : null;
 }
 
 export async function onRequestPatch({ request, env }) {
@@ -158,6 +169,8 @@ export async function onRequestPatch({ request, env }) {
     if (/UNIQUE/i.test(e.message || '')) {
       return json({ error: `A row with that ${cat.uniqueField} already exists` }, 409);
     }
+    const refused = checkRefusal(e);
+    if (refused) return refused;
     throw e;
   }
 }

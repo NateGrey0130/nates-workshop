@@ -1777,7 +1777,9 @@ const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 // assumption that books always print them that way; the Godling's "+1D4 on
 // initiative" is the counter-example, and it was a hard parse error.
 const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
-const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
+// Exported for the catalog write path (js/catalog-fields.js, the `dice` field
+// type), so a catalog column holding a roll accepts exactly what a bonus does.
+export const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
 // An equipment quantity: a plain count, or a roll the book prints — the Priest
 // of Light's 1D6 vials of holy water. The wizard rolls the dice form once at
