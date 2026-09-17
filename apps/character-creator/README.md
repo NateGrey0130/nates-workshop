@@ -128,6 +128,8 @@ apps/character-creator/
     │                         schedules, spell text, gear shape, provenance
     ├── regression.mjs        End-to-end: builds a throwaway D1, boots the
     │                         worker, drives the real endpoints over HTTP
+    ├── dev-server.mjs        Free port, owner of a taken one, and proof the
+    │                         server answering is the one this run started
     └── fixtures/*.md         Three real class files, parser test input only
 
 functions/api/
@@ -1036,12 +1038,23 @@ node apps/character-creator/test/regression.mjs
 ```
 
 It builds its own D1 in a scratch `--persist-to` directory from `schema.sql`,
-`seed-catalogs.sql` and every data script, boots `wrangler pages dev` on port
-**8799** so your own dev server can stay up, then drives the real endpoints:
+`seed-catalogs.sql` and every data script, boots `wrangler pages dev` on a
+**free port the OS picks for that run**, so your own dev server and another
+worktree's run can both stay up, then drives the real endpoints:
 the wizard's boot calls, a campaign, a validated character, inventory (added,
 updated, soft-removed, and the refusals), XP crossing a threshold, a confirmed
 level-up, play events with an undo, journal, drafts, paging and the admin audit.
 It deletes the scratch database afterwards and never touches yours.
+
+**It refuses to test a server it did not start.** Until 2026-09-17 it took a
+fixed 8799 and accepted any 200 from `/me`, so a stale `workerd` left on that
+port by another worktree's run answered for it, and the suite reported *that*
+tree's catalog counts and a block of FAILs as a regression in this one. Now it
+writes a per-run marker row into the database it builds and does not start
+until the answering server returns it; `REGRESSION_PORT` pins a port, and a
+pinned port that is taken is refused before anything is built, naming the
+process that holds it. `play-flow.mjs` does the same (`PLAY_FLOW_PORT`). See
+`test/dev-server.mjs`.
 
 **This is the layer `smoke.mjs` does not cover.** That suite proves the parser,
 the dice and the composition rules are right, which is not the same as proving a
