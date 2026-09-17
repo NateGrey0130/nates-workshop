@@ -9805,6 +9805,48 @@ section('A class cannot write a bonus the sheet will not draw');
     `${offenders.join('; ')} - add it to COMBAT_FIELDS/SAVE_FIELDS in sheet.js, or use saves.other / a special_ability`);
 }
 
+// ---------- The checks modules declare the sections they run ----------
+// Each module under test/checks/ opens run() with
+// `if (!SECTIONS.some(wantSection)) return;` so a --section run can skip the
+// whole module without reading it (harness.mjs; EFFICIENCY-AUDIT F2). That
+// list is typed by hand, and a section() call the list does not carry is
+// unreachable by name: the gate returns before the section is announced, and
+// the run ends in "no section matched", which reads as a typo in the filter.
+// rendered-ui.mjs carried two such names on 2026-09-17 - 'The codex' and 'The
+// sheet reads only item fields its endpoint sends' - and the only way to run
+// either was to pair it with a declared one. The flagless run never consults
+// the gate, so nothing failed. Both directions are read out of each file's
+// own text here: a call the list lacks, and a listed name no call announces.
+// A call whose name is not a plain string literal fails too, because it is
+// one this reader cannot see and the next drift would hide behind it.
+section('The checks modules declare the sections they run');
+{
+  const checksDir = join(appDir, 'test', 'checks');
+  const modules = readdirSync(checksDir).filter((f) => f.endsWith('.mjs')).sort();
+  check('there are checks modules to read', modules.length > 0);
+  const literal = /(['"])((?:(?!\1)[^\\]|\\.)*)\1/g;
+  for (const f of modules) {
+    const src = readFileSync(join(checksDir, f), 'utf8');
+    const called = [...src.matchAll(/\bsection\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*\)/g)].map((m) => m[2]);
+    const every = (src.match(/\bsection\(/g) || []).length;
+    check(`${f}: every section() call names its section with a string literal`,
+      called.length === every, `${every} calls, ${called.length} readable`);
+    if (every === 0) continue;
+    check(`${f} gates run() on its declared list`, src.includes('SECTIONS.some(wantSection)'));
+    const decl = src.match(/const SECTIONS = \[([\s\S]*?)\];/);
+    check(`${f} declares SECTIONS`, !!decl);
+    if (!decl) continue;
+    const declared = [...decl[1].matchAll(literal)].map((m) => m[2]);
+    const missing = called.filter((c) => !declared.includes(c));
+    const stale = declared.filter((d) => !called.includes(d));
+    check(`${f}: every section it announces is in its declared list`,
+      missing.length === 0, missing.map((s) => `'${s}'`).join(', '));
+    check(`${f}: every declared name is announced by a section() call`,
+      stale.length === 0, stale.map((s) => `'${s}'`).join(', '));
+    check(`${f} declares no name twice`, new Set(declared).size === declared.length);
+  }
+}
+
 instructionPathChecks();
 
 // slow one - it shells out to wrangler.

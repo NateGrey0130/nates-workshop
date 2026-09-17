@@ -100,6 +100,8 @@ const SECTIONS = [
   'Two people, one character',
   'The front door agrees with the rooms',
   'Changes that could not be sent',
+  'The sheet reads only item fields its endpoint sends',
+  'The codex',
 ];
 
 export function run() {
