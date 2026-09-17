@@ -837,6 +837,35 @@ What is deliberately left, with the reason for each:
 - **Printed 202–203**, the chapter on using other Palladium books inside
   Nightbane — a conversion note, not content.
 
+## Follow-up decisions after the import (2026-09-17)
+
+Nate took eight judgment calls left open by #1129-#1141, each offered with a
+recommendation. **Kept as shipped:**
+
+- **A duplicate Morphus result is rerolled** (and hidden when picking). The book
+  does not say so; it reads the G.M.'s licence to reroll a ridiculous result
+  (printed 91-92).
+- **An Animal Form combination gives EVERY bonus to one animal by 1D6**, not only
+  attributes, and Horror Factors still add (printed 93-94).
+- **Morphus save bonuses stay stored as the difference** over the Facade's, so the
+  sheet shows the book's printed Morphus totals.
+- **The Wakizashi's $300** (the Katana's low price its line points to) **and the
+  shotguns' damage and range** (the all-shotguns note on printed 217) stay.
+
+**Changed, one PR each, in this order:**
+
+1. **The Nightbane Sorcerer's Talent message** - a bug, not a call: an explicit
+   `talents_per_level: 0` now reads as "none after the first".
+2. **The multi-characteristic "ignore 61% or higher" (printed 92) is read as 81%+**,
+   the likely erratum, so Unnatural Limbs stays reachable in a multi-roll.
+3. **The Secondary Vampire gets 2D6x10 I.S.P.**, between the Wild (1D6x10) and the
+   Master (3D6x10), marked as a house figure: the book prints none.
+4. **An R.C.C. may carry `xp_table` when its book prints a ladder for the race**,
+   used when the race is played alone; an O.C.C.'s ladder still wins a pairing. The
+   nine Nightbane race ladders move out of their notes.
+5. **Damage, healing and rest apply to the active form**, and a Morphus pool can go
+   below zero into hit points like the Facade's.
+
 ## Ledger
 
 One line per shipped PR, appended when it merges.
@@ -865,6 +894,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-17 | [#1139](https://github.com/NateGrey0130/nates-workshop/pull/1139) | **D5, PR 2 of 4: the second body** (F74's remedy). A `second_form` class block (the form's delta as one `bonuses` block, its hit point formula, base and maximum Horror Factor, `traits_from: morphus`), riding `combineClasses` like `horror_factor`; migration 069 `characters.second_form` storing rolls, never totals; validation on create, PATCH and level-confirm; and the Facade/Morphus sheet toggle with damage tracked separately per form, per Nate. Nothing states `second_form` yet. Migration applied `--remote` before the merge. |
 | 2026-09-17 | [#1140](https://github.com/NateGrey0130/nates-workshop/pull/1140) | **D5, PR 3 of 4: the Morphus generator.** `js/morphus.js` (a pure engine rebuilt from the player's decisions: routes, combinations, rolls kept once) with the book's reroll/ignore rules as an explicit map checked against the catalog; Bear/Amphibian rerolled and never offered; an `omit` per result so an Animal Form combination gives each bonus to one animal by 1D6, as printed. A wizard step (roll, pick, or mix; undo; a preview matching the sheet) for any class whose `second_form` draws on `morphus`. Code only. |
 | 2026-09-17 | [#1141](https://github.com/NateGrey0130/nates-workshop/pull/1141) | **D5, PR 4 of 4, and the last of step 5: the Nightbane R.C.C.** (`nb-nightbane`, printed 85-89: the Facade as the class, the Morphus as `second_form` drawing on `morphus`, its saves stored as the difference over the Facade's because the fold adds them) **with its four package O.C.C.s** (`nb-package-basic/-resistance/-nocturne/-warlord`) **and the Nightbane Sorcerer and Mystic** (`nb-nightbane-sorcerer/-mystic`). Talents split: the R.C.C. carries only the two purchases per level, and each O.C.C. its own free schedule, because race and occupation Talent blocks ADD. Regression's human-case rule gains a named exemption for these six Nightbane-only O.C.C.s. **All 19 Nightbane classes published.** Classes 330 -> 337. Applied `--remote` before the merge. |
+| 2026-09-17 | [#1143](https://github.com/NateGrey0130/nates-workshop/pull/1143) | **Follow-ups 1 of 5: the Nightbane Sorcerer's Talent message.** `perLevelGrants` read a Talent block with no schedule and no positive per-level count as unrecorded, so the Sorcerer (one free Talent, printed 118) told players to add Talents by hand. An explicit `talents_per_level: 0` now reads as known and empty; `fix-nb-nightbane-sorcerer-talents.sql` adds it. Also records Nate's eight follow-up decisions above. Applied `--remote` before the merge. |
 
 ### What remains
 

@@ -196,6 +196,13 @@ export function grantKey(kind, g) {
 //   unknown:    true   it has them, and states no per-level rule
 //   grants:     [{ level, count }] itemised by the level that earned each
 //
+// AN EXPLICIT ZERO IS A RULE, NOT A GAP. `talents_per_level: 0` with no
+// schedule says "none after the first", and it reads as known and empty rather
+// than `unknown`. The Nightbane Sorcerer (Nightbane RPG printed 118) gets one
+// free Talent and never another; before this, its block looked exactly like a
+// class nobody had re-imported and the sheet said so. Only an explicit 0 counts
+// - a missing key is still `unknown`.
+//
 // A `*_schedule` is the COMPLETE statement when present and a flat
 // `*_per_level` is ignored alongside it — two keys that combine is a rule
 // nobody remembers correctly six months later.
@@ -207,7 +214,7 @@ function perLevelGrants(block, flatKey, scheduleKey, fromLevel, toLevel) {
   const hasSchedule = Array.isArray(schedule) && schedule.length > 0;
   const hasFlat = Number.isFinite(flat) && flat > 0;
   if (!hasSchedule && !hasFlat) {
-    return { applicable: true, unknown: true, grants: [], total: 0 };
+    return { applicable: true, unknown: flat !== 0, grants: [], total: 0 };
   }
 
   const grants = [];

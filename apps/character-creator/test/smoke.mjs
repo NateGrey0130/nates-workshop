@@ -3143,6 +3143,21 @@ section('Nightbane Talents (BOOK-INGEST-AUDIT F76)');
   check('and their schedules CONCATENATE rather than dedupe, so level 4 grants two',
     talentGrantsFor(both, 1, 4).grants.reduce((n, g) => n + g.count, 0) === 2,
     JSON.stringify(talentGrantsFor(both, 1, 4).grants));
+
+  // An explicit talents_per_level: 0 is "none after the first" (the Nightbane
+  // Sorcerer, printed 118), not a class that forgot to say - and it must stay
+  // that way through a pairing with a race whose block states no schedule.
+  const none = md('  talents_starting: 1', '  talents_per_level: 0').data;
+  const noneGrant = talentGrantsFor(none, 1, 5);
+  check('an explicit talents_per_level: 0 is known and empty, not unknown',
+    noneGrant.applicable && !noneGrant.unknown && noneGrant.total === 0, JSON.stringify(noneGrant));
+  const silent = md('  talents_starting: 1').data;
+  check('while a block stating no per-level rule at all is still unknown',
+    talentGrantsFor(silent, 1, 5).unknown === true, JSON.stringify(talentGrantsFor(silent, 1, 5)));
+  const racePurchases = md('  talents_purchases_per_level: 2').data;
+  const paired = combineClasses(racePurchases, none);
+  check('and the explicit 0 survives a pairing with a race that states none',
+    talentGrantsFor(paired, 1, 5).unknown === false, JSON.stringify(paired.talents));
 }
 
 section('A spent power consumes the grant it was spent against');
