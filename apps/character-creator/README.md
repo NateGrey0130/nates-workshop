@@ -23,7 +23,7 @@ under [`docs/`](docs/).
 | [`docs/spell-and-psionic-imports.md`](docs/spell-and-psionic-imports.md) | The catalog gaps per-level spell and psionic grants uncovered, and what closing them cost. |
 | [`docs/race-and-occupation.md`](docs/race-and-occupation.md) | The R.C.C.-first wizard, how a race and an occupation compose, and the MOS packages that sit on top of an O.C.C. |
 | [`docs/language-and-enchantments.md`](docs/language-and-enchantments.md) | Two rule families the catalog models as data rather than as code. |
-| [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the ten-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
+| [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the eleven-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
 | [`docs/campaign-and-play.md`](docs/campaign-and-play.md) | Everything that happens at the table rather than during creation. |
 | [`docs/catalog.md`](docs/catalog.md) | How catalog rows are shaped, filtered, matched and merged. |
 | [`docs/importing-from-pdfs.md`](docs/importing-from-pdfs.md) | How a book becomes catalog rows now: cache, survey, extract or transcribe, check, data script. The in-app importer it used to describe was retired unused. |
@@ -55,7 +55,7 @@ Everything the app reads at runtime is in D1. There are no static content files
 
 ```
 apps/character-creator/
-├── index.html / app.js       Creation wizard (10 steps). app.js is an ES module.
+├── index.html / app.js       Creation wizard (11 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster (with the G.M.'s pool, damage,
 │                             undo and party-XP controls), GM notes, campaign journal
@@ -77,6 +77,9 @@ apps/character-creator/
 │                             the character's rolls and the Morphus rows folded
 │                             (ES module - the sheet endpoint, PATCH and create
 │                             validator all read it)
+├── js/morphus.js             The Morphus generator: the "Creating the Nightbane"
+│                             tables as a procedure, with its reroll rules as a
+│                             map (ES module - the wizard and the tests; pure)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
 │                             editor, the write endpoints and the importers all
 │                             build themselves from it). SIX catalogs: skills,
@@ -534,6 +537,7 @@ writes are gated (see [Permissions](#permissions)).
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on. Sends an `ETag`, so a warm load revalidates to an empty 304 instead of re-sending ~25KB gzipped. The validator is a **hash of the body**, not the count-and-`max(updated_at)` aggregate `classes` uses: no catalog table has a timestamp column, and the editor's PATCH changes a value in place without moving a count or a max id |
 | `codex` | GET | `?section=<name>` — one catalog **with its descriptions and stat blocks** — what `catalogs` deliberately omits. Sections are `spells`, `psionics`, `gear`, `vehicles`, `skills`, `classes` (a summary — name, type, system, book and a lore excerpt, never the markdown; UI-AUDIT F48), and `index` (one count per tab, so the tab bar is labelled before any catalog is fetched). Any authenticated reader, not just an admin: it only reads. Its own route rather than a wider `catalogs`, because that payload is paid on every wizard boot and every sheet load and this one is paid by whoever opens the codex. **One section per request**, because all four in one response is 261 KB gzipped against a 25 KB boot payload. **`section` is required** — a missing or unknown one is a 400 naming every section, since a default would be a second contract to keep working and silently serving the wrong catalog is worse than an error. Body-hash `ETag` **with the section in it**, so two catalogs that serialise identically (two empty ones, on a fresh database) cannot revalidate into each other. See [plan 20](docs/plans/20-power-descriptions.md) |
+| `catalogs/traits` | GET | `?catalog=morphus` - every row of a catalog a class's `second_form.traits_from` may name, JSON decoded, descriptions included. **Not** in `catalogs`: 22KB gzipped that the wizard fetches only when its Morphus step first renders, instead of every boot and sheet load paying for it. Any authenticated reader; refuses any other catalog. Body-hash `ETag`. See [A second body](docs/race-and-occupation.md#a-second-body) |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |

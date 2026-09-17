@@ -1118,6 +1118,101 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
   check('the second-body fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── The Morphus generator, through create and back (survey D5, PR 3 of 4) ──
+//
+// The wizard's generator is js/morphus.js over the rows `catalogs/traits` serves.
+// Here the same module builds a Morphus from those served rows - an Animal Form
+// combination whose 1D6s send bonuses to one animal, a sub-choice, and
+// Stigmata's Biomechanical route with its +1 - and the result goes through the
+// create endpoint and back out of the sheet endpoint. smoke.mjs pins the rules;
+// this proves the endpoint serves what the engine needs, create accepts what the
+// engine sends (`omit` included), and the sheet folds it to the numbers the
+// wizard's preview computes from the same inputs.
+{
+  const fixture = join(state, 'gen-fixture.sql');
+  const md = '---\nid: gen-probe\nname: Generator Probe\nsystem: nightbane\nsource_book: Nightbane RPG p.87\n'
+    + 'category: rcc\nhit_points_base: "P.E. + 1D6 per level"\nsdc_base: 30\nsecond_form:\n'
+    + '  name: "Morphus"\n  first_name: "Facade"\n  bonuses:\n'
+    + '    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }\n    pools: { sdc: "2d6x10" }\n'
+    + '  hit_points_base: "P.E. x2 + 2d6 per level"\n  horror_factor: 6\n  horror_factor_max: 18\n'
+    + '  traits_from: morphus\n---\n\n## Lore\n\nA regression fixture for the generator.\n';
+  writeFileSync(fixture, "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) "
+    + `VALUES ('gen-probe', 'Generator Probe', 'nightbane', 'published', '${md.replace(/'/g, "''")}', 'regression', datetime('now'));\n`, 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the generator fixture class is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const traits = await api('GET', '/catalogs/traits?catalog=morphus');
+  check('catalogs/traits serves every Morphus row, JSON decoded',
+    traits.status === 200 && traits.body.rows?.length === 173
+    && Array.isArray(traits.body.rows.find((r) => r.key === 'Appearance: Bizarre')?.routes),
+    JSON.stringify(traits.body).slice(0, 200));
+  const traitsRes = await fetch(BASE + '/catalogs/traits?catalog=morphus');
+  const etag = traitsRes.headers.get('etag');
+  await traitsRes.arrayBuffer();
+  const again = etag ? await fetch(BASE + '/catalogs/traits?catalog=morphus', { headers: { 'If-None-Match': etag } }) : null;
+  check('and revalidates to a 304 on its ETag', !!etag && again?.status === 304, `etag ${etag}, status ${again?.status}`);
+  const notTraits = await api('GET', '/catalogs/traits?catalog=spells');
+  check('but serves no catalog a second form cannot draw on', notTraits.status === 400, JSON.stringify(notTraits.body));
+
+  const { morphusTables, pickNext, decide, chooseSub, morphusResults, replayMorphus } = await import('../js/morphus.js');
+  const { secondFormView, rollTraitResult } = await import('../js/second-form.js');
+  const T = morphusTables(traits.body.rows || []);
+  const atMax = (row) => {
+    const real = Math.random;
+    Math.random = () => 0.999999;
+    try { return rollTraitResult(row); } finally { Math.random = real; }
+  };
+  const opts = { rollResult: atMax };
+  let dec = [];
+  for (const key of ['Appearance: Monstrous Lycanthrope', 'Animal Form: Combination of Two', 'Animal Form: Canine',
+    'Canine: Were-Canine', 'Animal Form: Arachnid']) dec = pickNext(T, dec, key, opts);
+  // Eight bonuses between the two, sorted: PE PP PS Spd attacks initiative perception sdc.
+  const d6 = [1, 6, 1, 6, 6, 1, 6, 1].map((v) => (v - 0.5) / 6);
+  dec = decide(T, dec, { key: 'Arachnid: Were-Arachnid', how: 'pick' }, { ...opts, rng: () => d6.shift() });
+  dec = chooseSub(T, dec, dec.length - 1, 'scorpion');
+  for (const key of ['Stigmata: Biomechanical', 'Biomechanical: Armorgraft', 'Nightbane Characteristics: Alien Creature',
+    'Alien Shape: Thorns']) dec = pickNext(T, dec, key, opts);
+  const results = morphusResults(T, dec);
+  check('the engine builds a finished Morphus from the served rows, with an animal\'s bonuses omitted',
+    replayMorphus(T, dec).done && results.length === 10 && results.some((r) => Array.isArray(r.omit) && r.omit.length),
+    JSON.stringify(replayMorphus(T, dec).problems));
+
+  const genCamp = await api('POST', '/campaigns', { name: 'Regression Generator', system: 'nightbane' });
+  const genCampId = genCamp.body.id ?? genCamp.body.campaign?.id;
+  const second_form = { active: 'first', form_rolls: { pools: { sdc: 70 } }, hp_rolls: [7], results,
+    sdc_current: null, hp_current: null };
+  const made = await api('POST', '/characters', {
+    campaign_id: genCampId, name: 'Generated', class_id: 'gen-probe', attributes: attrs,
+    skills: [], abilities: [], powers: [], pools: { hp: 20, sdc: 30 }, second_form,
+  });
+  check('a character holding the generated Morphus is created', made.status === 201, JSON.stringify(made.body).slice(0, 300));
+  const read = await api('GET', `/characters/${made.body.id}`);
+  const stored = read.body?.character?.second_form;
+  check('and stores the results exactly as sent, `omit` and sub-choice included',
+    JSON.stringify(stored?.results) === JSON.stringify(results) && JSON.stringify(stored?.form_rolls) === '{"pools":{"sdc":70}}',
+    JSON.stringify(stored).slice(0, 300));
+  const view = read.body?.second_form;
+  // The preview's own call, on the class and character the sheet endpoint returned.
+  const local = secondFormView({ cls: read.body?.class, character: read.body?.character, rows: T.byKey });
+  check('the sheet endpoint folds it to the numbers the wizard previews',
+    !!view && view.horror_factor === local.horror_factor && view.sdc_max === local.sdc_max && view.hp_max === local.hp_max
+    && JSON.stringify(view.attributes) === JSON.stringify(local.attributes) && view.unrolled.length === 0,
+    JSON.stringify({ sheet: [view?.horror_factor, view?.sdc_max, view?.hp_max], wizard: [local.horror_factor, local.sdc_max, local.hp_max] }));
+  // P.S. 16 + form 10 + ONE animal's bonus: die 1 on P.S. names the Were-Canine's +4, not +4 + +2.
+  // Horror Factor 6 + Were-Canine 5 + Were-Arachnid 6 + Stigmata route 1 + Armorgraft 2 + Thorns 4 = 24, capped 18.
+  check('one animal\'s bonus per attribute, and the Horror Factor capped at the form\'s 18',
+    view?.attributes?.PS === 30 && view?.horror_factor === 18 && view.horror_factor_parts.added === 18,
+    JSON.stringify({ attrs: view?.attributes, hf: view?.horror_factor_parts }));
+  check('every result resolves against the catalog, the route rows among them',
+    view?.results?.length === 10 && view.results.every((r) => r.found)
+    && view.results.some((r) => r.key === 'Stigmata: Biomechanical' && r.table === 'Stigmata'));
+
+  const cleanup = join(state, 'gen-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'gen-probe';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the generator fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // ── A spell burns P.P.E. out of the caster's base (BOOK-INGEST-AUDIT F101, 3 of 3) ──
 //
 // Six catalog spells carry `ppe_permanent` (migration 067), filled by a data

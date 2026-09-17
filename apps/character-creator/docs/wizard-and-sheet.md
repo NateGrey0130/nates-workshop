@@ -1,6 +1,6 @@
 # The wizard and the sheet
 
-How the ten-step wizard and the character sheet behave: tabs, pickers, drafts,
+How the eleven-step wizard and the character sheet behave: tabs, pickers, drafts,
 blocked steps, and what the server refuses to take on trust.
 
 Part of the [character creator](../README.md) documentation.
@@ -173,7 +173,7 @@ than claiming a row that no longer exists.
 
 ## Unfinished builds are saved
 
-The wizard is ten steps and step 3 **rolls**. A refresh, a stray back-gesture
+The wizard is eleven steps and step 3 **rolls**. A refresh, a stray back-gesture
 or a closed tab used to lose all of it — and a roll is the one thing you cannot
 honestly redo: you either accept different numbers or re-roll until you like
 them.

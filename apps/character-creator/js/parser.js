@@ -2052,8 +2052,10 @@ export function validateBonuses(bonuses, errors, warnings, opts = {}) {
 // forbids. class-check shows the error before anything is published.
 //
 // The catalogs a form's traits may come from. A literal list here rather than
-// read from js/catalog-fields.js, which imports this file.
-const SECOND_FORM_TRAIT_CATALOGS = ['morphus'];
+// read from js/catalog-fields.js, which imports this file. Exported for the
+// wizard's lazy fetch of a form's tables (functions/.../catalogs/traits.js),
+// which serves exactly these catalogs and no other.
+export const SECOND_FORM_TRAIT_CATALOGS = ['morphus'];
 // The pools a second form may add to. Hit points and S.D.C. are the body's; the
 // book's Morphus keeps the Facade's P.P.E. (printed 87).
 export const SECOND_FORM_POOLS = ['sdc', 'hp'];
