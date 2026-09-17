@@ -669,6 +669,12 @@ export const CORE_SDC_BY_CLASS = {
   'nb-psychic': '3D6',
   'nb-sorcerer': '3D6',
   'nb-mystic': '3D6',
+  // The Doppleganger R.C.C. (printed 158-160) prints only "add 20 to the total
+  // S.D.C." - a pool bonus, stored as one - over a base it never states. A race
+  // here is otherwise 1D6, but Nightbane's printed 36 gives every non-military
+  // character 3D6 and names no separate figure for a race, so the book's own
+  // rule wins. The Hunter, Ashmedai, Namtar and Snake Bird state sdc_base.
+  'nb-doppleganger': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
