@@ -59,6 +59,13 @@
 -- entry prints Country, Calibre, Type, Feed, Weight, Barrel Length and Cost and
 -- stops. `damage` is NULL on those five and the description says why.
 --
+-- CORRECTED 2026-09-16 by fix-hu-gear-page-check.sql, which sorts after this
+-- file: printed 206 sets a note under the SHOTGUNS heading giving all five a
+-- range of 100ft (30m) and damage of 4D6 buckshot / 5D6 solid slug. That file
+-- also adds the four handguns this one missed - three in the right column of
+-- printed 200, and the Trident on 201, which prints no `Country:` for the count
+-- above to find. This file's own rows and readbacks are left as they were applied.
+--
 -- THE DRAGUNOV HAS NO WEIGHT, AND THE BOOK IS WHAT OMITS IT. Printed 205 reads
 -- `Weight: 4.3,` with no unit - confirmed on a 210 dpi render, so this is the
 -- page and not the cache. Every neighbouring rifle is in kg and 4.3kg (9.5 lbs)

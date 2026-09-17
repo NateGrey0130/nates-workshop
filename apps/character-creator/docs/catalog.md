@@ -80,7 +80,7 @@ the split.** Migrations 058-060 rebuilt all three CHECKs to admit `nightbane` an
 and the wizard's picker offers them. **One thing the widening did not change:** a
 campaign still sees gear only of its OWN system, `NULL` or `both`
 (`functions/api/character-creator/items.js`). Two games printing the same
-equipment chapter do not share rows — Heroes Unlimited's 703 are invisible to a
+equipment chapter do not share rows — Heroes Unlimited's 708 are invisible to a
 Nightbane campaign, which is why Nightbane imports its own (its survey, D4).
 
 **Heroes Unlimited was added the same way and on the same terms**, one day
