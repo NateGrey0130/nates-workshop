@@ -310,6 +310,11 @@ What it offers (phase 1 of four):
   absorb to the body (**Apply N to body** on the roll bar) rather than applying
   it; a vessel location goes below zero, as its own route has always allowed.
   Both go through the events route, so both undo and queue.
+  **A character with a second body** (a Nightbane's Morphus) takes the steppers,
+  Damage and rest on **whichever form is active**, by these same rules — its own
+  S.D.C., then its own hit points, below zero — through the same route, the
+  other form's pools untouched; the log names the form. See
+  [Damage, healing and rest land on the active form](race-and-occupation.md#damage-healing-and-rest-land-on-the-active-form).
 - **Every derived number is a tappable roll.** Skills roll d100 against the
   percentage; saves and combat bonuses roll d20 + bonus, against a target
   where one is derived (the psionic save) and bonus-only where the book
@@ -527,6 +532,10 @@ roster row carries its pools with − and +, a Damage running the same
 `derive.damageCascade` the sheet does, and ↶ for that character's last change,
 all through that character's events route; a toolbar awards XP to the whole
 party through each character's XP route, reporting any level-up it proposes.
+A character holding a second body shows **the active form's name and pools**
+in its row — the roster endpoint folds them for a `campaign_id` list — and the
+row's −/+, Damage and ↶ act on that form, through the same `derive` helpers the
+sheet uses.
 
 Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand

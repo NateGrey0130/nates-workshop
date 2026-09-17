@@ -12,14 +12,28 @@
 //      server-side); what the event adds is atomicity and the undo trail. A
 //      roll has no changes and is a pure record.
 //
+//      And {second_form: {sdc_current: {from, to}, hp_current: {from, to}}}:
+//      the ACTIVE second form's own pools (Nightbane follow-up 5, 2026-09-17),
+//      applied by the same rules as `character` - as given, unclamped, guarded
+//      per field on replay - and written into `characters.second_form` field by
+//      field. The note is stamped with the form's name, so the log says which
+//      body took it.
+//
 // Events are commentary, not a ledger: the character row stays the source of
 // truth, and nothing replays these to derive state.
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
+import { decodeCharacter } from '../../_lib/character-json.js';
+import { loadCharacterClass } from '../../_lib/class-loader.js';
+import { loadTraitRows, traitKeysOf } from '../../_lib/second-form.js';
+import { secondFormView } from '../../../../../apps/character-creator/js/second-form.js';
 
 // The character columns a play event may touch. Anything else is the sheet
 // lens's business and goes through PATCH, where the field list lives.
 const POOL_FIELDS = new Set(['hp_current', 'sdc_current', 'mdc_current', 'ppe_current', 'isp_current']);
+// The pools a second form tracks on its own. P.P.E., I.S.P. and M.D.C. are one
+// pool both forms share, and stay under `character`.
+const FORM_POOL_FIELDS = new Set(['sdc_current', 'hp_current']);
 const KINDS = new Set(['damage', 'pool', 'power', 'ammo', 'roll', 'recap']);
 
 export async function onRequestGet({ request, env, params }) {
@@ -58,6 +72,38 @@ export async function onRequestPost({ request, env, params }) {
     }
     sets.push(`${field} = ?`); binds.push(fv.to);
   }
+
+  // THE ACTIVE SECOND FORM'S OWN POOLS (Nightbane follow-up 5). Validated like
+  // the first form's, and written with json_set one field at a time INSIDE the
+  // same UPDATE - the PATCH's reason: a read-modify-write of the whole column
+  // could erase a result another request had stored. Not clamped, because the
+  // first form's play writes are not: a Morphus runs below zero into hit points
+  // on exactly the Facade's rule.
+  //
+  // The class is loaded, as the PATCH loads it, to refuse a second body on a
+  // character whose class has none, to name the form in the log, and - on a
+  // guarded replay - to read a never-stored current value as the full pool it
+  // means.
+  const formFields = changes.second_form || {};
+  let formView = null, formRow = null;
+  if (Object.keys(formFields).length) {
+    for (const [field, fv] of Object.entries(formFields)) {
+      if (!FORM_POOL_FIELDS.has(field)) return json({ error: `second_form.${field} is not a play-adjustable field` }, 400);
+      if (typeof fv?.to !== 'number' || typeof fv?.from !== 'number') {
+        return json({ error: `second_form.${field} needs numeric from and to` }, 400);
+      }
+    }
+    formRow = decodeCharacter(await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first());
+    const cls = formRow ? await loadCharacterClass(env, request.url, formRow) : null;
+    if (!cls?.second_form) return json({ error: "This character's class has no second form" }, 400);
+    formView = secondFormView({ cls, character: formRow,
+      rows: await loadTraitRows(env, cls.second_form, traitKeysOf(formRow.second_form)) });
+    const paths = [];
+    for (const [field, fv] of Object.entries(formFields)) {
+      paths.push(`'$.${field}', ?`); binds.push(Math.trunc(fv.to));
+    }
+    sets.push(`second_form = json_set(CASE WHEN json_valid(second_form) THEN second_form ELSE '{}' END, ${paths.join(', ')})`);
+  }
   // GUARDED REPLAY. `from` has always been sent and validated and never used:
   // it is the client's belief about where the pool was, kept for undo. A queued
   // event replayed after a spell offline may be replaying onto a pool someone
@@ -70,12 +116,20 @@ export async function onRequestPost({ request, env, params }) {
   // clash and a per-field one does not.
   //
   // Opt-in via `guard`, so every existing caller keeps the behaviour it has.
+  //
+  // A second form's field is guarded on the value STORED in the JSON, which
+  // may be null - never written, meaning full - so the comparison below reads
+  // it through the fold, and the WHERE binds the stored value itself.
   if (sets.length) {
     const guards = [], guardBinds = [];
     if (b.guard) {
       for (const [field, fv] of Object.entries(charFields)) {
         guards.push(`${field} IS ?`);
         guardBinds.push(fv.from);
+      }
+      for (const field of Object.keys(formFields)) {
+        guards.push(`json_extract(second_form, '$.${field}') IS ?`);
+        guardBinds.push(formRow?.second_form?.[field] ?? null);
       }
     }
     statements.push(env.DB.prepare(
@@ -89,12 +143,13 @@ export async function onRequestPost({ request, env, params }) {
   // happened.
   if (b.guard && sets.length) {
     const cols = Object.keys(charFields);
-    const current = await env.DB.prepare(
+    const current = cols.length ? await env.DB.prepare(
       `SELECT ${cols.join(', ')} FROM characters WHERE id = ?`
-    ).bind(params.id).first();
+    ).bind(params.id).first() : {};
     if (!current) return json({ error: 'Character not found' }, 404);
     const moved = cols.filter((f) => current[f] !== charFields[f].from);
-    if (moved.length) {
+    const formMoved = Object.keys(formFields).filter((f) => formView?.[f] !== formFields[f].from);
+    if (moved.length || formMoved.length) {
       return json({
         error: 'These pools changed somewhere else since this was queued',
         conflict: true,
@@ -102,6 +157,10 @@ export async function onRequestPost({ request, env, params }) {
         // picking one on the player's behalf.
         fields: Object.fromEntries(moved.map((f) => [f, {
           mine: charFields[f].to, theirs: current[f], base: charFields[f].from,
+        }])),
+        // The second form's, apart: the same two field names mean the other body.
+        form_fields: Object.fromEntries(formMoved.map((f) => [f, {
+          mine: formFields[f].to, theirs: formView[f], base: formFields[f].from,
         }])),
       }, 409);
     }
@@ -163,7 +222,13 @@ export async function onRequestPost({ request, env, params }) {
       .bind(JSON.stringify(cur), v.id));
   }
 
-  const payload = JSON.stringify({ note: typeof b.note === 'string' ? b.note.slice(0, 300) : undefined, changes });
+  // WHICH BODY TOOK IT. A change to a second form's pools says so in the note
+  // the log, the undo and the G.M. read, and in `form` for anything that reads
+  // the payload rather than the sentence. A first-form event is untouched.
+  let note = typeof b.note === 'string' ? b.note.slice(0, 300) : undefined;
+  const form = formView?.name || undefined;
+  if (form) note = `${note || b.kind} (${form})`;
+  const payload = JSON.stringify({ note, form, changes });
   statements.push(env.DB.prepare(
     'INSERT INTO play_events (character_id, actor_email, kind, payload) VALUES (?, ?, ?, ?)'
   ).bind(params.id, email, b.kind, payload));

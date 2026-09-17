@@ -549,15 +549,55 @@ with the class and the catalog rows on every read:
   the form's maximum.
 - **PATCH** takes `second_form: { active, sdc_current, hp_current }` and nothing
   else, clamps each current value to 0 through the folded maximum, and writes
-  field by field with `json_set`, so a stepper press cannot erase a stored result.
+  field by field with `json_set`, so a typed value cannot erase a stored result.
+  That clamp is the first form's too: a value typed into either body's card is
+  floored at 0 by the PATCH, and only play presses go below it.
+- **Play events** take `changes.second_form: { sdc_current, hp_current }`, each
+  `{from, to}`, beside `changes.character` — the **active form's** pools, applied
+  by the first form's rules: as given, unclamped, guarded per field on a queued
+  replay (a clash comes back as `form_fields`), and undone field by field. The
+  class is loaded to refuse a second body its class does not state, and the note
+  is stamped with the form's name — `took 12 (Morphus)` — with `form` beside it
+  in the payload.
 - **Level-up** proposes one roll of the per-level dice for each level gained;
   level-confirm checks them against the dice (or rolls them for a client that
   sends none), appends them, and raises the form's current hit points by the
   same amount.
 - **The sheet** draws a Facade/Morphus toggle for such a class only. The second
   form redraws attributes, S.D.C., hit points, Horror Factor, run speed, combat
-  and saves; its combat and saves are read-only, and its pool cards, steppers and
-  Damage write the second form's own values.
+  and saves; its combat and saves are read-only, and its pool cards show the
+  second form's own values.
+
+### Damage, healing and rest land on the active form
+
+Nate's follow-up call (Nightbane survey, *Follow-up decisions after the import*,
+2026-09-17): **damage, healing and rest apply to whichever form is active**, and
+a Morphus pool goes below zero into hit points like the Facade's. Damage is
+still tracked separately — a hit on one body never touches the other's pools,
+and **changing form moves nothing**; a press lands on the form active when it
+was made, and a queued one replays onto that form.
+
+The routing is three pure functions in `js/derive.js`, read by the sheet and the
+G.M. dashboard alike: `activePools` (the character, with the active second
+form's S.D.C. and hit points standing in), `playChanges` (a patch of new values
+split into `character` and `second_form`, each with its `from`) and
+`applyPlayChanges`. `damageCascade` is unchanged and runs over `activePools`, so
+the Morphus takes S.D.C. first, then hit points, with **no floor** — the rule
+the Facade has always had (*Nothing clamps: negative H.P. is a real Palladium
+state*). `restGain` caps a rest at the active form's own folded maximum and
+climbs back through zero. M.D.C., P.P.E. and I.S.P. are one pool both forms share
+and stay under `character`.
+
+| path | on the second form, active |
+|---|---|
+| sheet steppers, Damage, rest | the events route with `second_form` changes — so they undo, queue and reach the log |
+| the offline queue | the entry carries `second_form` beside `fields`; replay, conflicts and resolution treat each body apart |
+| undo | restores `restored.second_form` into the form |
+| G.M. dashboard | the roster (`characters?campaign_id=`) carries each such character's `second_form` — names, `active`, and that form's pools, folded by `secondFormView` — and shows the active form's name and pools; its −/+, Damage and ↶ route through the same helpers |
+| a typed value in a pool card | the PATCH, clamped 0..max, as a typed first-form value is |
+
+A character with no second form, or with the first form active, sends exactly
+the changes it sent before.
 
 ### The wizard generates the Morphus
 
@@ -622,10 +662,7 @@ die did not name has that path in `omit`. Read literally: a die naming an animal
 that prints no such bonus gives the character none. Horror Factor is not an
 attribute bonus and still adds, as every other combination's does.
 
-**Not yet:** play events, the offline queue, rest and the G.M. dashboard's
-damage all move the **first** form's columns only, and a second form's current
-values stop at 0 rather than going negative. Talents' Morphus prerequisites are
-still shown and not checked.
+**Not yet:** Talents' Morphus prerequisites are still shown and not checked.
 
 ---
 

@@ -31,7 +31,7 @@ export async function onRequestPost({ request, env, params }) {
   try { payload = JSON.parse(ev.payload); } catch { payload = {}; }
   const changes = payload.changes || {};
   const statements = [];
-  const restored = { character: {}, item: null, armor: null, vehicle: null };
+  const restored = { character: {}, second_form: {}, item: null, armor: null, vehicle: null };
 
   const charFields = changes.character || {};
   const sets = [], binds = [];
@@ -39,6 +39,18 @@ export async function onRequestPost({ request, env, params }) {
     if (typeof fv?.from !== 'number') continue;
     sets.push(`${field} = ?`); binds.push(fv.from);
     restored.character[field] = fv.from;
+  }
+  // A second form's own pools (Nightbane follow-up 5): back to the value the
+  // press replaced, field by field inside the JSON, as the events route wrote
+  // them. Only the two pools that route accepts are ever restored.
+  const formPaths = [];
+  for (const [field, fv] of Object.entries(changes.second_form || {})) {
+    if (!['sdc_current', 'hp_current'].includes(field) || typeof fv?.from !== 'number') continue;
+    formPaths.push(`'$.${field}', ?`); binds.push(fv.from);
+    restored.second_form[field] = fv.from;
+  }
+  if (formPaths.length) {
+    sets.push(`second_form = json_set(CASE WHEN json_valid(second_form) THEN second_form ELSE '{}' END, ${formPaths.join(', ')})`);
   }
   if (sets.length) {
     statements.push(env.DB.prepare(

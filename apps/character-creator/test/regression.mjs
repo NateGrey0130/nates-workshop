@@ -1130,6 +1130,112 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
     && r.second_form.hp_max === 65 + extra[0] && r.second_form.hp_current === 50 + extra[0],
     JSON.stringify({ status: lvl.status, rolls: r.character.second_form?.hp_rolls, max: r.second_form?.hp_max, cur: r.second_form?.hp_current }));
 
+  // ── Damage, healing and rest on the ACTIVE form (Nightbane follow-up 5) ──
+  //
+  // Nate, 2026-09-17: they apply to whichever form is active, and a Morphus
+  // pool goes below zero into hit points like the Facade's. Each press is built
+  // the way the sheet builds it - derive.damageCascade over derive.activePools,
+  // routed by derive.playChanges - and sent through the real events route; the
+  // sheet endpoint is read back after each to see which body moved.
+  await import('../js/derive.js');  // a classic script: installs globalThis.derive
+  const D = globalThis.derive;
+  const press = async (kind, note, patchOf) => {
+    const cur = await read();
+    const changes = D.playChanges(cur.character, cur.second_form, patchOf(D.activePools(cur.character, cur.second_form)));
+    return { res: await api('POST', `/characters/${sfId}/events`, { kind, note, changes }), changes };
+  };
+  r = await read();
+  const facade0 = { sdc: r.character.sdc_current, hp: r.character.hp_current };
+  const morph0 = { sdc: r.second_form.sdc_current, hp: r.second_form.hp_current, hpMax: r.second_form.hp_max };
+  check('the fixture is in its Morphus, with both bodies holding their own pools',
+    r.second_form.active === 'second' && morph0.sdc === 124 && morph0.hp > 0,
+    JSON.stringify({ facade0, morph0 }));
+
+  // A hit 7 past everything the Morphus has left: S.D.C. to 0, hit points to -7.
+  const bigHit = morph0.sdc + morph0.hp + 7;
+  const dmg = await press('damage', `took ${bigHit}`, (p) => D.damageCascade(p, bigHit));
+  r = await read();
+  check('Damage in the Morphus goes through the events route, as a second-form change',
+    dmg.res.status === 200 && !!dmg.changes.second_form && !dmg.changes.character, JSON.stringify(dmg.res.body));
+  check('it runs the Morphus\'s S.D.C. to 0 and its hit points below zero (-7)',
+    r.second_form.sdc_current === 0 && r.second_form.hp_current === -7
+    && r.character.second_form.sdc_current === 0 && r.character.second_form.hp_current === -7,
+    JSON.stringify({ sdc: r.second_form.sdc_current, hp: r.second_form.hp_current }));
+  check('and only the Morphus: the Facade\'s pools did not move',
+    r.character.sdc_current === facade0.sdc && r.character.hp_current === facade0.hp,
+    JSON.stringify({ facade0, now: { sdc: r.character.sdc_current, hp: r.character.hp_current } }));
+  check('the stored results survived the event write',
+    r.character.second_form.results?.length === 2 && r.character.second_form.hp_rolls?.length === 2);
+
+  const log = (await api('GET', `/characters/${sfId}/events?limit=5`)).body?.events || [];
+  const last = log[log.length - 1];
+  check('the log says which form took it', last?.kind === 'damage' && last.payload?.note === `took ${bigHit} (Morphus)`
+    && last.payload?.form === 'Morphus', JSON.stringify(last?.payload));
+
+  // Undo puts the Morphus back, and still not the Facade.
+  const und = await api('POST', `/characters/${sfId}/events/undo`);
+  r = await read();
+  check('undo restores the Morphus\'s pools and reports them as the second form\'s',
+    und.status === 200 && r.second_form.sdc_current === morph0.sdc && r.second_form.hp_current === morph0.hp
+    && und.body?.restored?.second_form?.hp_current === morph0.hp && r.character.sdc_current === facade0.sdc,
+    JSON.stringify(und.body));
+  await press('damage', `took ${bigHit}`, (p) => D.damageCascade(p, bigHit));
+
+  // A guarded replay onto a Morphus pool someone else moved is a conflict, on
+  // the form's side, and applies nothing.
+  const stale = await api('POST', `/characters/${sfId}/events`, { kind: 'damage', note: 'queued', guard: true,
+    changes: { second_form: { hp_current: { from: 12, to: 2 } } } });
+  r = await read();
+  check('a queued Morphus change onto a moved pool is refused as a conflict on the form',
+    stale.status === 409 && stale.body?.form_fields?.hp_current?.theirs === -7 && r.second_form.hp_current === -7,
+    JSON.stringify(stale.body));
+  const fresh = await api('POST', `/characters/${sfId}/events`, { kind: 'pool', note: 'queued', guard: true,
+    changes: { second_form: { hp_current: { from: -7, to: -5 } } } });
+  r = await read();
+  check('and one whose pool did not move replays', fresh.status === 200 && r.second_form.hp_current === -5,
+    JSON.stringify(fresh.body));
+
+  // Rest, capped at the Morphus's OWN maximum and climbing back through zero.
+  const rest = await press('pool', 'rested 8h', (p) => ({
+    hp_current: p.hp_current + D.restGain(p.hp_current, p.hp_max, 20, 8),
+    sdc_current: p.sdc_current + D.restGain(p.sdc_current, p.sdc_max, 5, 8),
+  }));
+  r = await read();
+  check('rest in the Morphus recovers its hit points from below zero to its own maximum, and 40 S.D.C.',
+    rest.res.status === 200 && r.second_form.hp_current === morph0.hpMax && r.second_form.sdc_current === 40,
+    JSON.stringify({ hp: r.second_form.hp_current, max: morph0.hpMax, sdc: r.second_form.sdc_current }));
+  check('and the Facade rested nothing', r.character.sdc_current === facade0.sdc && r.character.hp_current === facade0.hp);
+
+  // The G.M. dashboard's roster carries the active form and its pools.
+  const roster = (await api('GET', `/characters?campaign_id=${sfCampId}`)).body?.characters || [];
+  const row = roster.find((x) => x.id === sfId);
+  check('the campaign roster shows the Morphus active, with its own pools',
+    row?.second_form?.active === 'second' && row.second_form.name === 'Morphus'
+    && row.second_form.hp_current === morph0.hpMax && row.second_form.sdc_current === 40
+    && row.sdc_current === facade0.sdc, JSON.stringify(row?.second_form));
+  const plainRoster = (await api('GET', `/characters?campaign_id=${campaignId}`)).body?.characters || [];
+  check('a one-body character\'s roster row is unchanged: no second_form',
+    plainRoster.length > 0 && plainRoster.every((x) => !('second_form' in x)), JSON.stringify(plainRoster[0]).slice(0, 200));
+  const refused = await api('POST', `/characters/${charId}/events`, { kind: 'damage', note: 'x',
+    changes: { second_form: { sdc_current: { from: 5, to: 1 } } } });
+  check('and the events route refuses a second-form change for a class with none', refused.status === 400,
+    JSON.stringify(refused.body));
+
+  // Back to the Facade: nothing moves on the switch, and damage lands there.
+  await api('PATCH', `/characters/${sfId}`, { second_form: { active: 'first' } });
+  r = await read();
+  check('switching to the Facade moves no damage between the forms',
+    r.second_form.active === 'first' && r.second_form.sdc_current === 40 && r.character.sdc_current === facade0.sdc);
+  const facadeHit2 = await press('damage', 'took 5', (p) => D.damageCascade(p, 5));
+  r = await read();
+  check('and Damage in the Facade lands on the Facade, leaving the Morphus as it was',
+    facadeHit2.res.status === 200 && !facadeHit2.changes.second_form
+    && r.character.sdc_current === facade0.sdc - 5 && r.second_form.sdc_current === 40
+    && r.second_form.hp_current === morph0.hpMax, JSON.stringify({ facade: r.character.sdc_current, morphus: r.second_form }));
+  const facadeLog = (await api('GET', `/characters/${sfId}/events?limit=1`)).body?.events?.[0];
+  check('and its log note names no form', facadeLog?.payload?.note === 'took 5' && facadeLog.payload.form === undefined,
+    JSON.stringify(facadeLog?.payload));
+
   const cleanup = join(state, 'f74-cleanup.sql');
   writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f74-probe';\n", 'utf8');
   const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
