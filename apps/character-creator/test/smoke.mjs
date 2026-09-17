@@ -2232,8 +2232,8 @@ section('Starting XP');
   // -- an OCCUPATION's curve has to survive composition ----------------------
   //
   // Palladium names its experience charts by O.C.C. - "Knight & Noble", "Thief
-  // & Merchant" - and a RACE has none, because experience comes from what you
-  // do. `combineClasses` carries a named list of keys forward from the
+  // & Merchant" - because experience comes from what you do. `combineClasses`
+  // carries a named list of keys forward from the
   // occupation, and `xp_table` was not on it, so since #210 (race primary,
   // occupation second) a Knight's curve was dropped on EVERY Palladium
   // character and the race's absent table won. Measured here rather than read
@@ -2249,11 +2249,24 @@ section('Starting XP');
   check('and it is the table the level thresholds come from',
     thresholdFor(xpTableFor(composed), 2) === 2100);
 
-  // The race still wins where it HAS an opinion - a dragon's curve is the
-  // dragon's - and silence on both sides still falls back to the house rule.
-  const dragon = composeClass({ rcc: { ...race, xp_table: [0, 1, 2] }, occ, character: {} });
-  check('a race that states its own curve still wins',
-    JSON.stringify(dragon.xp_table) === '[0,1,2]');
+  // A race MAY state its own ladder - Nightbane printed 233 prints one for the
+  // Hunter, the Wampyr and the vampires - and it is used when the race is played
+  // ALONE. In a pairing the OCCUPATION's ladder wins, because Palladium names
+  // its charts by O.C.C. Nate's call, 2026-09-17 (docs/surveys/nightbane-core.md,
+  // "Follow-up decisions after the import"). This check read 'a race that
+  // states its own curve still wins' until then.
+  const ladderRace = { ...race, xp_table: [0, 5001, 10001, 20001] };
+  const paired = composeClass({ rcc: ladderRace, occ, character: {} });
+  check('when both halves state a ladder, the occupation’s wins',
+    JSON.stringify(paired.xp_table) === JSON.stringify(occ.xp_table),
+    JSON.stringify(paired.xp_table));
+  const alone = composeClass({ rcc: ladderRace, character: {} });
+  check('a race played alone levels on its own ladder',
+    thresholdFor(xpTableFor(alone), 2) === 5001 && thresholdFor(xpTableFor(alone), 4) === 20001,
+    JSON.stringify(alone?.xp_table));
+  const silentJob = composeClass({ rcc: ladderRace, occ: { ...occ, xp_table: undefined }, character: {} });
+  check('and so does a race paired with an occupation that states none',
+    thresholdFor(xpTableFor(silentJob), 2) === 5001, JSON.stringify(silentJob?.xp_table));
   const neither = composeClass({ rcc: race, occ: { ...occ, xp_table: undefined }, character: {} });
   check('and neither stating one falls back to the default',
     thresholdFor(xpTableFor(neither), 2) === thresholdFor(xpTableFor({}), 2));
@@ -5911,17 +5924,24 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // twelve days. The warning is what would have caught the Kreeghor
   // Cosmo-Knight on the day it was imported.
   const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
-  check('class-check knows the nine keys combineClasses hands to the race',
-    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'xp_table', 'horror_factor', 'second_form'\];/.test(cc));
+  check('class-check knows the eight keys combineClasses hands to the race',
+    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'horror_factor', 'second_form'\];/.test(cc));
   check('and warns only for an O.C.C. that has not claimed supersedes_race',
     /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
   check('it is a WARNING, so it cannot fire the exit code on the common case',
     /warnings\.push\(stated\.length/.test(cc));
   // The list is the one the parser actually branches on. If someone adds an
-  // tenth key there, this fails rather than the warning going quietly stale.
+  // ninth key there, this fails rather than the warning going quietly stale.
   const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'xp_table', 'horror_factor', 'second_form'\]\) \{/.exec(parser);
-  check('and the parser still hands exactly those nine to the race', !!branch);
+  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'horror_factor', 'second_form'\]\) \{/.exec(parser);
+  check('and the parser still hands exactly those eight to the race', !!branch);
+  // `xp_table` rode that loop - and this list - until 2026-09-17, when an
+  // occupation's ladder started winning a pairing (Nate's decision in
+  // docs/surveys/nightbane-core.md). A race discards nothing of it now, so an
+  // O.C.C. stating one must not be warned that it will be lost.
+  check('xp_table is NOT among them: the occupation’s ladder wins a pairing',
+    !/LOST_TO_RACE[\s\S]{0,200}xp_table/.test(cc)
+    && /if \(occ\.xp_table != null\) out\.xp_table = occ\.xp_table;/.test(parser));
   check('occ_skills is deliberately NOT among them, because the lists union',
     !/LOST_TO_RACE[\s\S]{0,200}occ_skills/.test(cc)
     && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));

@@ -21,7 +21,7 @@ overridable.
 | Skills gained on level-up | Start at the catalog's base percentage — a skill learned at level 6 is still new | `skills.occ_related_skills.schedule` |
 | Skill percentage cap | 98% — book rule (p.22), applied at creation and on level-up | — |
 
-### Experience is the occupation's, not the race's
+### Experience is the occupation's, and a race's only when played alone
 
 Palladium Fantasy printed 336 prints **15 experience charts, 15 levels each**,
 and names them by O.C.C. — *Knight & Noble*, *Thief & Merchant*. All 25
@@ -33,13 +33,20 @@ the two names on that page without a row here are the Monk, which is
 `levelForXp` compares against — the printed *"2,181-4,360"* for level 2 becomes
 `2181`.
 
-**The fourteen R.C.C.s get nothing, and that is correct rather than missing.** A
-race has no experience table, because experience comes from what you do. That is
-precisely why an occupation's table has to survive composition: `combineClasses`
-carries a named list of keys forward from the occupation, and `xp_table` was not
-on it, so since #210 a Knight's chart was dropped on **every Palladium
-character** while the race's absence won. A race that *does* state a curve still
-wins — a dragon's is the dragon's.
+**The fourteen Palladium R.C.C.s get nothing, and that is correct rather than
+missing.** Their book prints no ladder for a race, because experience comes from
+what you do. That is precisely why an occupation's table has to survive
+composition: `combineClasses` carries a named list of keys forward from the
+occupation, and `xp_table` was not on it, so since #210 a Knight's chart was
+dropped on **every Palladium character** while the race's absence won.
+
+**When both halves state a ladder, the occupation's wins.** A race carries one
+only when its book prints a ladder for the race itself — Nightbane printed 233
+prints nine, from *Hound & Hunter* to *Nightprince & Vampire* — and it applies
+when that race is played alone, or beside an occupation that states none. Nate's
+decision, 2026-09-17 ([survey](surveys/nightbane-core.md), *Follow-up decisions
+after the import*). Until then a race that stated a curve won the pairing, which
+is why no R.C.C. was allowed to carry one.
 
 **This is fidelity, not a bug fix.** The house-rule default sits inside the
 book's range at every level: at 15 the book spans 290,001 (Vagabond) to 370,201

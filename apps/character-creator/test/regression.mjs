@@ -2520,16 +2520,72 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and each is 15 levels, starting at 0, strictly rising',
     misshapen.length === 0, misshapen.map((c) => c.id).join(', '));
 
-  // A race has no experience table, because experience comes from what you do.
-  // This is the invariant the composition fix in #222 depends on being true.
+  // -- a race MAY carry a ladder, and an occupation's still wins a pairing ----
+  //
+  // This block asserted "and no R.C.C. carries one" until 2026-09-17, and #222's
+  // composition fix leaned on it: the race won `xp_table` in a pairing, so a
+  // race carrying one would have dropped its occupation's chart. Nate's call
+  // that day (docs/surveys/nightbane-core.md, "Follow-up decisions after the
+  // import"): an R.C.C. carries the ladder its book prints for the race, used
+  // when the race is played alone, and an O.C.C.'s ladder wins a pairing.
+  // Nightbane printed 233 prints nine such race ladders. So the invariant moved
+  // from "none carries one" to "whatever carries one is a real ladder, and
+  // never beats an occupation's".
   const rccWithTable = rccs.filter((c) => c.xp_table !== undefined);
-  check('and no R.C.C. carries one', rccWithTable.length === 0,
-    rccWithTable.map((c) => c.id).join(', '));
+  const rccMisshapen = rccWithTable.filter((c) => {
+    const t = c.xp_table;
+    return !Array.isArray(t) || t.length !== 15 || t[0] !== 0
+      || t.some((n, i) => !Number.isInteger(n) || (i > 0 && n <= t[i - 1]));
+  });
+  check('every R.C.C. that carries a ladder carries 15 levels, starting at 0, strictly rising',
+    rccMisshapen.length === 0, rccMisshapen.map((c) => c.id).join(', '));
+
+  // Pinned by name, both ways: the nine races whose ladders moved out of their
+  // extraction notes, and the Nightbane R.C.C. that deliberately states none -
+  // its package O.C.C.s carry "Nightbane & Guardian", and a Nightbane is never
+  // played without one.
+  const nbRaceLadders = ['nb-doppleganger', 'nb-hunter', 'nb-ashmedai', 'nb-namtar',
+    'nb-snake-bird', 'nb-secondary-vampire', 'nb-wild-vampire', 'nb-wampyr', 'nb-guardian'];
+  const nbMissing = nbRaceLadders.filter((id) => !rccWithTable.some((c) => c.id === id));
+  check('the nine Nightbane races with a printed ladder carry it',
+    nbMissing.length === 0, nbMissing.join(', '));
+  check('and the Nightbane R.C.C. itself still carries none',
+    classes.some((c) => c.id === 'nb-nightbane')
+    && classes.find((c) => c.id === 'nb-nightbane').xp_table === undefined);
+
+  // The composition half, over every race that carries one rather than a
+  // fixture: paired with an O.C.C. whose ladder DIFFERS from the race's, the
+  // occupation's is the one the character levels on - and alone, the race's.
+  const occWithTable = classes.filter((c) => c.category === 'occ' && Array.isArray(c.xp_table));
+  const raceWonPairing = [];
+  const raceLostAlone = [];
+  let paired = 0;
+  for (const r of rccWithTable) {
+    const job = occWithTable.find((o) => JSON.stringify(o.xp_table) !== JSON.stringify(r.xp_table));
+    if (!job) continue;
+    paired++;
+    if (JSON.stringify(combineClasses(r, job).xp_table) !== JSON.stringify(job.xp_table)) {
+      raceWonPairing.push(`${r.id}+${job.id}`);
+    }
+    if (JSON.stringify(composeClass({ rcc: r, character: {} })?.xp_table) !== JSON.stringify(r.xp_table)) {
+      raceLostAlone.push(r.id);
+    }
+  }
+  check('the ladder composition was actually exercised on real races',
+    paired >= nbRaceLadders.length, `paired ${paired}`);
+  check('paired with an O.C.C. that states a ladder, the occupation’s wins',
+    raceWonPairing.length === 0, raceWonPairing.join(', '));
+  check('and a race played alone keeps its own',
+    raceLostAlone.length === 0, raceLostAlone.join(', '));
 
   // The pairs the book prints together must stay together - "Knight & Noble" is
   // one chart, and two classes drifting apart means a transcription went wrong.
+  // Nightbane printed 233 names a race and an occupation on one chart three
+  // times, so the pairing rule reaches across the R.C.C./O.C.C. line there.
   for (const [a, b] of [['knight', 'noble'], ['thief', 'merchant'],
-    ['mind-mage', 'wizard'], ['priest-of-light', 'priest-of-darkness']]) {
+    ['mind-mage', 'wizard'], ['priest-of-light', 'priest-of-darkness'],
+    ['nb-ashmedai', 'nb-psychic'], ['nb-ashmedai', 'nb-sorcerer'],
+    ['nb-snake-bird', 'nb-mystic'], ['nb-guardian', 'nb-package-basic']]) {
     const ta = classes.find((c) => c.id === a)?.xp_table;
     const tb = classes.find((c) => c.id === b)?.xp_table;
     check(`${a} and ${b} share the chart the book prints for both`,

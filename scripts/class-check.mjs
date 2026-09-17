@@ -190,13 +190,16 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
   }
 }
 
-// An O.C.C. that states a pool, a money roll, an experience ladder or attribute
-// dice loses ALL of them to any race that states its own. combineClasses is one
-// branch - the key loop in js/parser.js's combineClasses; this cited line
-// numbers until 2026-09-16, which drift, and counted "seven" keys while the
-// loop had eight - so without supersedes_race the race wins every key listed
-// below, every time it has a value of its own. The smoke suite pins this list
-// to the parser's.
+// An O.C.C. that states a pool, a money roll or attribute dice loses ALL of
+// them to any race that states its own. combineClasses is one branch - the key
+// loop in js/parser.js's combineClasses; this cited line numbers until
+// 2026-09-16, which drift, and counted "seven" keys while the loop had eight -
+// so without supersedes_race the race wins every key listed below, every time
+// it has a value of its own. The smoke suite pins this list to the parser's.
+//
+// An experience ladder is NOT on it since 2026-09-17: `xp_table` left the loop,
+// and an occupation's ladder now wins a pairing over a race's (Nate's decision
+// in docs/surveys/nightbane-core.md), so a race discards nothing of it.
 //
 // This is BOOK-INGEST-AUDIT F11's cheaper alternative, built 2026-09-12. F11
 // shipped the flag; this is the half that "would have said something on the day
@@ -215,7 +218,7 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
 // the flag IS set.
 {
   const LOST_TO_RACE = ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',
-    'ppe_base', 'starting_money', 'xp_table', 'horror_factor', 'second_form'];
+    'ppe_base', 'starting_money', 'horror_factor', 'second_form'];
   if (data?.category === 'occ' && data?.supersedes_race !== true) {
     const stated = LOST_TO_RACE.filter((k) => data?.[k] != null);
     if (stated.length) {

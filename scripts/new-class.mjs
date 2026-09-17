@@ -42,7 +42,7 @@ if (!argv.length || argv.includes('--help') || !['occ', 'rcc'].includes(kind)) {
   console.error('usage: node scripts/new-class.mjs <occ|rcc> [--name N] [--id I] [--system S] [--book B]');
   console.error('');
   console.error('  occ  a character class: attribute MINIMUMS, hit points');
-  console.error('  rcc  a race: attribute DICE, usually M.D.C., and no xp_table');
+  console.error('  rcc  a race: attribute DICE, usually M.D.C., and no xp_table unless its book prints a race ladder');
   console.error('');
   console.error('The two are genuinely different shapes, which is why there are two');
   console.error('templates rather than one that would be half wrong either way.');

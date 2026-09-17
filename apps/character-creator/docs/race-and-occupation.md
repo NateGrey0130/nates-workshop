@@ -185,16 +185,26 @@ pool bases as before — none of them knows a character can have two classes.
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
+| experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's (see below) |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
 | magic | **both** - merged, the occupation setting the KIND (see below) |
 | equipment, abilities, level progression | **both** |
 
-Three rules earned by getting them wrong first:
+Four rules earned by getting them wrong first:
 
 - **A pool the race does not mention falls through to the occupation** — but an
   M.D.C. race keeps no hit points. Silence means "not applicable" for a creature
   that tracks M.D.C. and "no opinion" for one that simply omits the line.
+- **The experience ladder runs the other way: the occupation's wins.** Palladium
+  names its charts by O.C.C. — *Knight & Noble*, *Thief & Merchant* — because
+  experience comes from what you do. A race carries one only when its book
+  prints a ladder for the race played without an occupation (Nightbane printed
+  233 prints nine), and that ladder applies when the race is played alone or
+  beside an occupation that states none. Nate's decision, 2026-09-17
+  ([survey](surveys/nightbane-core.md), *Follow-up decisions after the import*).
+  Until then `xp_table` sat with the pools, the race won, and a regression
+  invariant that no R.C.C. carried one was all that kept a Knight's chart alive.
 - **A skill both classes grant is held once**, at the higher base. Concatenating
   blindly produced a character holding Wilderness Survival twice, which the
   validator correctly refused to save. Choice-groups are *not* collapsed — they

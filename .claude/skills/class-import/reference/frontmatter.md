@@ -71,7 +71,7 @@ and fails the regression run — so read this section rather than discovering it
 
 ```yaml
 occ_group: men-of-arms            # occ ONLY — one of five, listed below
-xp_table: [0, 2100, 4200, ... ]   # palladium-fantasy occ ONLY — 15 entries
+xp_table: [0, 2100, 4200, ... ]   # every palladium-fantasy occ; a race only when its book prints one — 15 entries
 ```
 
 ### `occ_group` — every O.C.C., not just the Palladium ones
@@ -88,27 +88,45 @@ Two more rules the same block enforces: the value must be one of the five above,
 and **a group belongs on an O.C.C. and a restriction on a race, never the other
 way round.**
 
-### `xp_table` — every Palladium Fantasy O.C.C., and NO race ever
+### `xp_table` — every Palladium Fantasy O.C.C., and a race only when its book prints one
 
 The check is `every Palladium O.C.C. has its own experience table`, and it
 applies when `system: palladium-fantasy` and `category: occ`. Fifteen integers,
 the **lower bound** of each band, starting at 0 and strictly rising — that is
-what `levelForXp` compares against. A Rifts O.C.C. does not need one.
+what `levelForXp` compares against. A Rifts O.C.C. does not need one. Where the
+book misprints a lower bound as the previous band's upper bound (*"level 12
+ends at 225,920, level 13 starts at 225,920"*), store that number plus one and
+say so in `extraction_notes`.
 
-**A race must never carry one.** Experience comes from what you do, and
-Palladium names its charts by occupation — "Knight & Noble", "Thief &
-Merchant". Composition is race-primary since #210 and falls an absent key
-through to the occupation, so a race that carries its own table **wins over the
-occupation's and silently drops it**, levelling the character on the house-rule
-default. That is the invariant `and no R.C.C. carries one` exists to hold, and
-it is what cost a rebuild during the Wormwood import.
+**A race carries one only when its book prints a ladder FOR THE RACE** — Nightbane
+printed 233 prints nine, *"Hound & Hunter"*, *"Wampyr"*, *"Nightprince &
+Vampire"* among them, beside the O.C.C. charts. Nate's decision, 2026-09-17
+(`apps/character-creator/docs/surveys/nightbane-core.md`, *Follow-up decisions
+after the import*). Do not invent one for a race whose book prints none:
+experience comes from what you do, and Palladium names its charts by occupation
+— "Knight & Noble", "Thief & Merchant".
 
-Where a book prints an experience ladder for a *race*, record it in
-`extraction_notes` — not in `xp_table`.
+**In a pairing the occupation's ladder wins.** `combineClasses` takes `xp_table`
+from the O.C.C. whenever it states one, so a race's ladder applies only when the
+race is played alone, or beside an occupation that states none. **This rule ran
+the other way until 2026-09-17**: `xp_table` rode the race-wins key loop, a
+race carrying a table dropped its occupation's, and the regression invariant
+`and no R.C.C. carries one` existed to keep that from happening — it cost a
+rebuild during the Wormwood import. Race ladders written into
+`extraction_notes` before that date say *"not stored in xp_table"* for that
+reason. The invariant is now `every R.C.C. that carries a ladder carries 15
+levels, starting at 0, strictly rising`, plus a composition check over every
+race that carries one.
+
+A race that is never played without an occupation states none even when its book
+prints a ladder under its name: `nb-nightbane` leaves the *"Nightbane &
+Guardian"* chart to its package O.C.C.s, and regression pins that.
 
 Two more the same block enforces: the pairs a book prints together must stay
 together (`knight`/`noble`, `thief`/`merchant`, `mind-mage`/`wizard`,
-`priest-of-light`/`priest-of-darkness` — two classes drifting apart means a
+`priest-of-light`/`priest-of-darkness`, and across the race/occupation line
+`nb-ashmedai`/`nb-psychic`/`nb-sorcerer`, `nb-snake-bird`/`nb-mystic`,
+`nb-guardian`/`nb-package-basic` — two classes drifting apart means a
 transcription went wrong), and the **Warlock is the standing exception**: its
 row is the Rifts printing, so its Palladium figures go in its delta section and
 its `xp_table` stays undefined.
@@ -121,7 +139,7 @@ Verified by running them, because the failure message is not the rule:
 |---|---|---|
 | `occ_group: warriors` | **ERROR**, and names all five legal values | — |
 | an O.C.C. with no `occ_group` | `PARSE ok` — **silent** | fails |
-| an R.C.C. carrying `xp_table` | `PARSE ok` — **silent** | fails |
+| an R.C.C. carrying an `xp_table` that is not 15 rising levels from 0 | `PARSE ok` — **silent** | fails |
 
 So the *value* is checked at parse time and the *presence* is not. The two that
 cost time during Wormwood are both in the silent row, and neither the smoke
