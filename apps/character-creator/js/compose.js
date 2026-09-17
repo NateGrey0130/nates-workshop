@@ -661,6 +661,37 @@ export const CORE_SDC_BY_CLASS = {
   'hu-alien-edu-science-specialist': '1D6',
   'hu-alien-edu-combat-specialist': '1D6',
   'hu-alien-edu-engineer': '1D6',
+  // Nightbane RPG. The book's own rule (printed 36) is not the men-of-arms
+  // split this table was built on: a character with a military, police,
+  // detective or athletic occupation or background rolls 1D4x10, and ALL
+  // others roll 3D6. The Psychic P.C.C. (printed 68-69), Sorcerer (115-117)
+  // and Mystic (117-118) print no S.D.C. and are none of those four, so 3D6.
+  'nb-psychic': '3D6',
+  'nb-sorcerer': '3D6',
+  'nb-mystic': '3D6',
+  // The Doppleganger R.C.C. (printed 158-160) prints only "add 20 to the total
+  // S.D.C." - a pool bonus, stored as one - over a base it never states. A race
+  // here is otherwise 1D6, but Nightbane's printed 36 gives every non-military
+  // character 3D6 and names no separate figure for a race, so the book's own
+  // rule wins. The Hunter, Ashmedai, Namtar and Snake Bird state sdc_base.
+  'nb-doppleganger': '3D6',
+  // The Wampyr R.C.C. (printed 188-189) prints "2D6x10+20 plus those gained
+  // before the transformation" - a racial pool bonus over an unstated base, as
+  // the Doppleganger's is - so the base is printed 36's 3D6. The two vampires
+  // state sdc_base 0 (hit points only) and the Guardian states its own.
+  'nb-wampyr': '3D6',
+  // The Nightbane's six O.C.C.s (printed 88-90 and 118-120) print no S.D.C.;
+  // they are only ever paired with the Nightbane R.C.C., whose Facade states
+  // sdc_base 30 and wins, so these fire only for an O.C.C. read alone, which
+  // their race_restrictions never allow. Printed 36 would give the ex-military
+  // Resistance/Spook Squad package 1D4x10, but that entry can never fire and
+  // this table has only ever held 1D6 and 3D6, so all six are 3D6.
+  'nb-package-basic': '3D6',
+  'nb-package-resistance': '3D6',
+  'nb-package-nocturne': '3D6',
+  'nb-package-warlord': '3D6',
+  'nb-nightbane-sorcerer': '3D6',
+  'nb-nightbane-mystic': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

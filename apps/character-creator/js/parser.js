@@ -1,4 +1,4 @@
-import { diceBounds, isAbsentAttribute } from './dice.js';
+import { diceBounds, isAbsentAttribute, poolFormulaBounds } from './dice.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
@@ -65,12 +65,16 @@ export const VARIANT_OVERRIDES = [
   'attribute_dice', 'attribute_requirements', 'attribute_maximums',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
   'starting_money',
-  // A Horror Factor a character PROJECTS. BOOK-INGEST-AUDIT F75, and it is on
-  // this list because the finding's own motivating case is a variant case: a
-  // Nightbane's human form projects none and its Morphus projects 6 to 18.
-  // `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` are the
-  // same shape - "none normally, N if revealed". A plain scalar, so it replaces
-  // rather than merging.
+  // A Horror Factor a character PROJECTS. BOOK-INGEST-AUDIT F75. It was put on
+  // this list with the Nightbane's two forms as its motivating case; that case
+  // is `second_form.horror_factor` now (F74, survey D5), because a Morphus is a
+  // state and not a variant. `add-cosmo-knight-class.sql` and
+  // `add-asgardian-dwarf-class.sql` print "none normally, N if revealed". A
+  // plain scalar, so it replaces rather than merging.
+  //
+  // `second_form` IS DELIBERATELY NOT ON THIS LIST. No staged class prints a
+  // second body that differs by stage, and a variant naming one is warned about
+  // below as a key a variant cannot override rather than silently ignored.
   'horror_factor',
   'bonuses',
   // NOT the skills block. `skill_overrides` below restates numbers on skills
@@ -1163,8 +1167,15 @@ export function combineClasses(rcc, occ) {
   // deliberate rather than inherited: a Horror Factor is a property of the
   // body, so the thing a character IS outranks the job it took. Stated here
   // because the loop's behaviour is the policy and nothing else says so.
+  //
+  // `second_form` rides it for the same reason and with the same policy
+  // (BOOK-INGEST-AUDIT F74, survey D5). A second body is the BODY's: a Nightbane
+  // R.C.C. states it and pairs with package O.C.C.s that state none, which the
+  // `{ ...rcc }` spread already carries - but an occupation that is itself the
+  // transformation would be dropped without the loop, and a superseding one
+  // must replace the race's. Race wins when both state one.
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
-                     'starting_money', 'xp_table', 'horror_factor']) {
+                     'starting_money', 'xp_table', 'horror_factor', 'second_form']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
     else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
@@ -1777,7 +1788,9 @@ const BONUS_GROUPS = ['attributes', 'combat', 'saves'];
 // assumption that books always print them that way; the Godling's "+1D4 on
 // initiative" is the counter-example, and it was a hard parse error.
 const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
-const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
+// Exported for the catalog write path (js/catalog-fields.js, the `dice` field
+// type), so a catalog column holding a roll accepts exactly what a bonus does.
+export const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
 // An equipment quantity: a plain count, or a roll the book prints — the Priest
 // of Light's 1D6 vials of holy water. The wizard rolls the dice form once at
@@ -1994,6 +2007,121 @@ export function validateBonuses(bonuses, errors, warnings, opts = {}) {
           + 'pools are rolled once at creation; state per-level growth in the pool formula '
           + 'itself ("P.E. x 5 plus 2D6 per level")');
       }
+    }
+  }
+}
+
+// ─── a second body ───
+//
+// A class whose character has TWO physical forms and changes between them in
+// play: the Nightbane's Facade and Morphus (printed 87), and anything later that
+// prints the same shape. BOOK-INGEST-AUDIT F74 recorded the gap; Nightbane survey
+// D5 built it, on Nate's word that the sheet TOGGLES between the forms and
+// tracks each form's damage separately.
+//
+// NOT `variants`, and F74's closure says why at length: a variant is a KIND of
+// the class picked once at creation, and these are two STATES of one character.
+// So the class's own block is the FIRST form, unchanged, and this block states
+// only how the second one differs from it:
+//
+//   second_form:
+//     name: "Morphus"                     the second form, as the sheet labels it
+//     first_name: "Facade"                what the class's own block is called
+//     bonuses:                            a class `bonuses` block, applying ONLY in
+//       attributes: { PS: 10, PE: 10 }    the second form, ON TOP of the first
+//       pools: { sdc: "2d6x10" }          form's. `pools` takes sdc and hp only -
+//       combat: { strike: 2 }             P.P.E. and I.S.P. are the first form's -
+//       saves: { psionics: 3 }            and dice are rolled ONCE and stored
+//     hit_points_base: "P.E. x2 + 2d6 per level"
+//                                         REPLACES the class's hit points for the
+//                                         second form, read against ITS P.E.
+//     horror_factor: 6                    the second form's projected Horror
+//     horror_factor_max: 18               Factor, and the most results may raise it
+//     traits_from: morphus                the catalog whose rows are the form's
+//                                         generated traits
+//
+// `bonuses` rather than separate attribute and S.D.C. keys because a table
+// result already IS a `bonuses` block (migration 068), so the form's own delta
+// and every result it collects are one shape, folded by one function
+// (js/second-form.js) and validated by one validator.
+//
+// ERRORS, not warnings, on a malformed block - the posture `bonuses` has.
+// class-store.js drops a class that fails to parse, but a block no published
+// class carries yet cannot make a live class vanish, and a second body that
+// parses with half its numbers ignored is the silent storage class-import
+// forbids. class-check shows the error before anything is published.
+//
+// The catalogs a form's traits may come from. A literal list here rather than
+// read from js/catalog-fields.js, which imports this file. Exported for the
+// wizard's lazy fetch of a form's tables (functions/.../catalogs/traits.js),
+// which serves exactly these catalogs and no other.
+export const SECOND_FORM_TRAIT_CATALOGS = ['morphus'];
+// The pools a second form may add to. Hit points and S.D.C. are the body's; the
+// book's Morphus keeps the Facade's P.P.E. (printed 87).
+export const SECOND_FORM_POOLS = ['sdc', 'hp'];
+const SECOND_FORM_KEYS = ['name', 'first_name', 'bonuses', 'hit_points_base', 'horror_factor',
+  'horror_factor_max', 'traits_from'];
+
+function validateSecondForm(sf, errors, warnings) {
+  if (!sf || typeof sf !== 'object' || Array.isArray(sf)) {
+    errors.push('second_form must be a map (' + SECOND_FORM_KEYS.join(', ') + ')');
+    return;
+  }
+  for (const k of ['name', 'first_name']) {
+    if (typeof sf[k] !== 'string' || !sf[k].trim()) {
+      errors.push(`second_form.${k} is required - it is what the sheet's form toggle says`);
+    }
+  }
+  if (sf.bonuses !== undefined) {
+    // Through the SAME validator a class's bonuses go through, with its
+    // messages re-rooted so an error names the block it came from.
+    const e = [], w = [];
+    validateBonuses(sf.bonuses, e, w);
+    errors.push(...e.map((m) => 'second_form.' + m));
+    warnings.push(...w.map((m) => 'second_form.' + m));
+    if (sf.bonuses && typeof sf.bonuses === 'object' && !Array.isArray(sf.bonuses)) {
+      const pools = sf.bonuses.pools;
+      for (const k of Object.keys(pools && typeof pools === 'object' ? pools : {})) {
+        if (POOL_BONUS_KEYS.includes(k) && !SECOND_FORM_POOLS.includes(k)) {
+          errors.push(`second_form.bonuses.pools.${k} is not a second form's pool - only `
+            + `${SECOND_FORM_POOLS.join(' and ')} differ between forms`);
+        }
+      }
+      // A level-gated form bonus has no moment to be rolled at: the form's dice
+      // are rolled once, when the form is made. Refused rather than ignored.
+      if (sf.bonuses.at_level !== undefined) {
+        errors.push('second_form.bonuses.at_level is not supported - a second form\'s bonuses '
+          + 'apply from level 1; state a level-gated one in the class\'s own bonuses');
+      }
+    }
+  }
+  if (sf.hit_points_base !== undefined) {
+    const probe = { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 10, PB: 10, Spd: 10 };
+    if (poolFormulaBounds(sf.hit_points_base, probe) == null) {
+      errors.push(`second_form.hit_points_base "${sf.hit_points_base}" is not a formula the pools `
+        + 'read - a number, dice, or an attribute plus dice ("P.E. x2 + 2d6 per level")');
+    }
+  }
+  const isCount = (v) => Number.isInteger(v) && v >= 0;
+  if (sf.horror_factor !== undefined && !isCount(sf.horror_factor)) {
+    errors.push('second_form.horror_factor must be a whole number - the second form\'s BASE, '
+      + 'which table results add to');
+  }
+  if (sf.horror_factor_max !== undefined) {
+    if (!isCount(sf.horror_factor_max)) {
+      errors.push('second_form.horror_factor_max must be a whole number');
+    } else if (isCount(sf.horror_factor) && sf.horror_factor_max < sf.horror_factor) {
+      errors.push(`second_form.horror_factor_max is ${sf.horror_factor_max}, below its base of `
+        + `${sf.horror_factor}`);
+    }
+  }
+  if (sf.traits_from !== undefined && !SECOND_FORM_TRAIT_CATALOGS.includes(sf.traits_from)) {
+    errors.push('second_form.traits_from must name a catalog a form\'s traits come from '
+      + `(${SECOND_FORM_TRAIT_CATALOGS.join(', ')}), got: ${sf.traits_from}`);
+  }
+  for (const k of Object.keys(sf)) {
+    if (!SECOND_FORM_KEYS.includes(k)) {
+      warnings.push(`second_form.${k} is not read (${SECOND_FORM_KEYS.join(', ')}) and will be ignored`);
     }
   }
 }
@@ -2772,6 +2900,9 @@ export function parseClassMarkdown(text) {
         + 'and this one is neither; it will be shown as given');
     }
   }
+  // A SECOND BODY - BOOK-INGEST-AUDIT F74, built by Nightbane survey D5. See
+  // validateSecondForm for the shape and why it is not `variants`.
+  if (data.second_form !== undefined) validateSecondForm(data.second_form, errors, warnings);
   if (data.occ_restrictions !== undefined && data.category !== 'rcc') {
     warnings.push('occ_restrictions is set on something that is not a race and will do nothing');
   }

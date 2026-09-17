@@ -248,7 +248,9 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
       // on the fifth, Mirror Search requiring Mirror Sight. Matching the second
       // by name would be a rule that reads prose, which is the shape
       // BOOK-INGEST-AUDIT F4 records missing one of three language picks; and
-      // nothing can check the first at all, because a Morphus is not modelled.
+      // the first is not checked either: a Morphus is stored since migration
+      // 069, but matching "at least one biomechanical characteristic" against
+      // its results is a rule nobody has written yet.
       // So it travels to the sheet and the table decides, which is what the
       // `note` column on a banked grant exists to do for the same reason.
     } else {

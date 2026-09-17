@@ -240,6 +240,10 @@ CREATE TABLE IF NOT EXISTS characters (
   combat TEXT NOT NULL DEFAULT '{}',     -- attacks, initiative, strike/parry/dodge, punches
   saves TEXT NOT NULL DEFAULT '{}',      -- save vs magic, psionics, poison, insanity, …
   armor TEXT NOT NULL DEFAULT '[]',      -- [{ name, ar, mdc_max, mdc_current, weight, cost, prowl }]
+  -- The SECOND BODY a class's `second_form` block describes - what was rolled
+  -- for it, and its own current S.D.C. and hit points. `{}` for a character
+  -- with one body. Migration 069, BOOK-INGEST-AUDIT F74, js/second-form.js.
+  second_form TEXT NOT NULL DEFAULT '{}',
   notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -254,6 +258,11 @@ CREATE INDEX IF NOT EXISTS idx_characters_player ON characters (player_email);
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '065-character-ppe-base-spent.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'ppe_base_spent');
+
+-- 069 the same way, directly after the table its column is on.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '069-character-second-form.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'second_form');
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1086,6 +1095,52 @@ CREATE INDEX IF NOT EXISTS idx_talents_tier ON talents (tier);
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '063-talents.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'talents');
+
+-- The Morphus tables: the tenth catalog, one row per ENTRY of the 19 percentile
+-- tables Nightbane prints on 91-106 (154 entries), plus one `intro` row per
+-- table for its preamble. Migration 068, from D5 of
+-- apps/character-creator/docs/surveys/nightbane-core.md, which has the reading
+-- of the tables; the migration has the reasons for each column.
+--
+-- `key` exists because `catalog-fields.js` keys a catalog on ONE column and an
+-- entry is identified by three. The CHECK keeps it equal to what it is built
+-- from, so a rename in the editor cannot leave it stale. `bonuses` is a class
+-- `bonuses` block through the same validateBonuses; `routes` and `sub_choices`
+-- are JSON lists; Horror Factor is two columns because three entries SET it,
+-- and the added one is TEXT because 73 entries add a roll rather than a number.
+CREATE TABLE IF NOT EXISTS morphus_characteristics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,               -- '<table_name>: <name>'
+  table_name TEXT NOT NULL,               -- one of the printed tables; no CHECK,
+                                          -- a later book may print another
+  roll_low INTEGER NOT NULL,              -- 1-100, with 00 as 100; intro rows 0
+  roll_high INTEGER NOT NULL,             -- 1-100; intro rows 0
+  name TEXT NOT NULL,                     -- an intro row's is the printed heading
+  kind TEXT NOT NULL,                     -- effect | route | combination | intro
+  routes TEXT,                            -- JSON [{"table": name, "count": n}]; a
+                                          -- table may be one the book never prints
+  route_rule TEXT,
+  bonuses TEXT,                           -- JSON, a class `bonuses` block
+  horror_factor TEXT,                     -- ADDED: a number or dice ("1d4+1"),
+                                          -- rolled once when the Morphus is made
+  horror_factor_set INTEGER,              -- SETS it instead
+  sub_choices TEXT,                       -- JSON list of strings
+  description TEXT,
+  note TEXT,
+  source TEXT NOT NULL DEFAULT 'seed',
+  source_book TEXT,
+  system TEXT,                            -- NULL = unrestricted, as everywhere else
+  UNIQUE (table_name, roll_low, name),
+  CHECK (key = table_name || ': ' || name)
+);
+
+-- Beside its CREATE, for the reason 063's row above gives: a guard that runs
+-- before its own table never fires on a one-pass build. Verified on a one-pass
+-- `node:sqlite` build of this file, 2026-09-16: with the row here, 068 is
+-- recorded.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '068-morphus-characteristics.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'morphus_characteristics');
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Migration seeding. The CREATEs above already contain the columns that

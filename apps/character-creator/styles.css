@@ -267,7 +267,7 @@ th {
    not .rail: .sheet-grid.rail is a different thing on the sheet. */
 .stepper { margin: 0; }
 .stepper .step-rail {
-  display: grid; grid-template-columns: repeat(10, 1fr);
+  display: grid; grid-template-columns: repeat(11, 1fr);
   gap: 2px;
 }
 .stepper .step-rail .st {
@@ -386,6 +386,13 @@ th {
 
    font-size: 0 hides the text without display:none, so the <button> keeps
    its accessible name and a screen reader still reads the step. */
+/* ELEVEN steps since the Morphus joined (survey D5), and the longest label -
+   ADVANCEMENT - measured exactly its 86px column at a 1024px viewport, 2px from
+   touching DETAILS, and past it below that. Between here and the phone rail
+   the labels step down a size rather than run into each other. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .stepper .step-rail .st { font-size: 13px; letter-spacing: 0.02em; }
+}
 @media (max-width: 900px) {
   .stepper .step-rail { gap: 3px; }
   /* Every bar needs a track, or the pattern is not ten bars - it is however
@@ -412,6 +419,21 @@ th {
 .lvl-row > summary::-webkit-details-marker { display: none; }
 .lvl-row > summary::before { content: '\25B8 '; color: var(--text-muted); }
 .lvl-row[open] > summary::before { content: '\25BE '; }
+
+/* The Morphus step (Nightbane survey D5). The resolved results read as a numbered
+   log - the order they were decided in is the order the book walks - and the
+   preview is a three-column table, the first form beside the second, so what a
+   result changed is read across a row rather than remembered from a step ago. */
+.morphus-steps { margin: 6px 0 0; padding-left: 22px; }
+.morphus-step { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.morphus-step:last-child { border-bottom: 0; }
+.morphus-step s { color: var(--text-muted); }
+.morphus-step select.needs-choice { border-color: var(--warning); }
+.morphus-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 4px 12px; margin: 6px 0; }
+.morphus-stat { font-size: 13px; font-variant-numeric: tabular-nums; }
+.morphus-stat .k { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.morphus-pick { flex-wrap: wrap; border-top: 1px solid var(--border); padding: 6px 0; }
+.morphus-pick details, .morphus-step details { margin-top: 2px; }
 
 /* Class cards. The gap and the padding both went up: at 12px and 16px the
    cards read as one dense block rather than as separate things to choose
@@ -902,6 +924,11 @@ body.play-mode .vital.conflict .val > input,
 .vital .val b { display: none; }
 body.play-mode .vital .val input { display: none; }
 body.play-mode .vital .val b { display: inline; }
+/* The Horror Factor card has no input to edit, so its <b> is the only value it
+   has, in both modes. Hidden by the rule above, it drew an empty card in sheet
+   mode - found 2026-09-17 on the second form's toggle (BOOK-INGEST-AUDIT F74),
+   whose Horror Factor is one of the numbers the toggle exists to redraw. */
+.vital.hf .val b { display: inline; }
 
 /* The bar shows in both modes - it is the one thing that says "nearly out" at
    a glance rather than by arithmetic. Its width comes from sheet.js, because
@@ -1342,12 +1369,14 @@ textarea.mono { min-height: 460px; }
 .cat-field[data-type="text"] { grid-column: span 4; }
 .cat-field[data-type="int"],
 .cat-field[data-type="real"],
+.cat-field[data-type="dice"],
 .cat-field[data-type="bool"] { grid-column: span 2; }
 .cat-field[data-type="select"] { grid-column: span 3; }
 .cat-field[data-type="systems"] { grid-column: span 6; }
 .cat-field[data-type="longtext"],
 .cat-field[data-type="bonuses"],
 .cat-field[data-type="skill_list"],
+.cat-field[data-type="json_list"],
 .cat-field[data-type="kv"] { grid-column: span 12; }
 
 /* Help text is what actually sets a field's height. `cost` is an integer with
@@ -1364,6 +1393,7 @@ textarea.mono { min-height: 460px; }
 .cat-field[data-type="longtext"][data-help],
 .cat-field[data-type="bonuses"][data-help],
 .cat-field[data-type="skill_list"][data-help],
+.cat-field[data-type="json_list"][data-help],
 .cat-field[data-type="kv"][data-help] { grid-column: span 12; }
 
 .cat-field > label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
@@ -1379,11 +1409,13 @@ textarea.mono { min-height: 460px; }
   .cat-form .cat-field[data-type] { grid-column: span 3; }
   .cat-form .cat-field[data-type="int"],
   .cat-form .cat-field[data-type="real"],
+  .cat-form .cat-field[data-type="dice"],
   .cat-form .cat-field[data-type="bool"] { grid-column: span 2; }
   .cat-form .cat-field[data-type="systems"],
   .cat-form .cat-field[data-type="longtext"],
   .cat-form .cat-field[data-type="bonuses"],
   .cat-form .cat-field[data-type="skill_list"],
+  .cat-form .cat-field[data-type="json_list"],
   .cat-form .cat-field[data-type="kv"] { grid-column: 1 / -1; }
 }
 @media (max-width: 700px) {
@@ -1902,6 +1934,32 @@ body.show-play-keys .play-keys { display: block; }
 /* The autosave status carries its own Keep mine / Use theirs pair on a
    conflict (UI-AUDIT F38); the row's gap does not reach inside the span. */
 .vitals-save .autosave .btn { margin-left: 6px; }
+
+/* THE FORM TOGGLE (BOOK-INGEST-AUDIT F74) - a Facade/Morphus switch for a class
+   that states `second_form`, and absent for every other class. It takes a whole
+   row of the vitals grid so the pools below it keep their columns, and it
+   borrows the tab bar's segmented look and its 44px finger target, because it
+   is pressed mid-fight like a tab. While the second form shows, each card's
+   sides and bottom take the accent - its top edge keeps the pool's own tone -
+   because the pools are a different body's, and that should be visible without
+   reading the toggle. */
+.form-toggle {
+  grid-column: 1 / -1;
+  display: flex; gap: 6px; align-items: center;
+}
+.form-toggle .form-btn {
+  flex: 1 1 0; min-height: 44px; padding: 6px 14px;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-family: var(--font-display); font-stretch: 75%; font-size: 14px;
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.form-toggle .form-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+.form-toggle .form-btn.on { color: var(--text-primary); border-color: var(--accent); background: var(--accent-glow); }
+.vitals-strip.form-second .vital {
+  border-left-color: var(--accent); border-right-color: var(--accent); border-bottom-color: var(--accent);
+}
 
 /* ---------- home view (UI-AUDIT F39) ----------
    One row per character or campaign, a line each for the reason UI-AUDIT F9

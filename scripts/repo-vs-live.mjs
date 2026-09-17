@@ -117,6 +117,12 @@ const TABLES = [
   // what a second triple costs, every row compared twice and any difference
   // double-counted into `problems`, which is the number the exit code reads.
   ['talents', 'name', 'name'],
+  // THE TENTH (migration 068). `key` for BOTH columns, and `name` would be
+  // wrong for both: an entry's name repeats across tables - "Combination of
+  // Two" is in four - so a SET of names collapses them and a name-keyed join
+  // pairs rows from different tables. `key` is '<table_name>: <name>', NOT NULL
+  // UNIQUE, held to its parts by a CHECK - read from db/schema.sql.
+  ['morphus_characteristics', 'key', 'key'],
   // Written by _lib/catalog-redirects.js when a merge or rename happens in
   // the app, so it drifts the same way the catalogs do and nothing was
   // checking it. `from_key` is unique across the table, which is why it can

@@ -1,5 +1,5 @@
 // Character creation wizard: system → race → attributes → occupation →
-// skills → equipment → powers → details → review/save.
+// (morphus) → skills → equipment → powers → details → review/save.
 //
 // The race comes first and the roll comes before the occupation, because that
 // is the order a Palladium character is actually made: you are a dragon, you
@@ -28,10 +28,14 @@ import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCa
          spellNamesForGrant, grantNote,
          skillGrantsFor, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
          startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
-         spellTraditionAllowed } from './js/leveling.js';
+         spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
+import { rollSecondForm, secondFormView } from './js/second-form.js';
+import { morphusTables, replayMorphus, entriesFor, rollNext, pickNext, skipNext, undoLast,
+         rollUntilBlocked, chooseSub, morphusResults, animalCombinations, effectParts,
+         horrorPart } from './js/morphus.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
-const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Skills', 'Equipment', 'Powers',
+const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Morphus', 'Skills', 'Equipment', 'Powers',
                'Advancement', 'Details', 'Review'];
 // Steps by name. Every transition used to be a bare index — goStep(3) — and
 // splitting Class into two meant finding all fourteen of them by eye. Named
@@ -157,6 +161,16 @@ const S = {
   // Abilities picked from a class's choice group. A LIST, not a set: some are
   // repeatable and the second take means something different.
   abilities: [],
+  // The Morphus (Nightbane survey D5): the generator's DECISIONS, in order, and
+  // the second form's own rolls. Everything else - what is resolved, what is
+  // pending - is replayed from the decisions by js/morphus.js, so undo is
+  // dropping the last one and the draft holds nothing derived. `formSig` is the
+  // composed class's second_form as JSON, so a different occupation that brings
+  // a different form re-rolls the form's dice and keeps the table results.
+  morphus: { decisions: [], form: null, formSig: null },
+  // The traits catalog's rows, fetched the first time the Morphus step renders
+  // and never persisted: a catalog, not the build.
+  traitTables: null, traitError: null, morphusError: null,
   pools: null, savedId: null, saving: false,
   skillCatalog: [], items: [], campaigns: [], existing: [],
   // Retired gear slugs → the slug they resolve to now. See findItem().
@@ -458,6 +472,7 @@ const DRAFT_KEYS = [
   'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
   'spellGroups', 'psiGroups',
   'supers', 'superGroups', 'levelSupers',
+  'morphus',
 ];
 
 // Bumped whenever STEPS changes shape, because a draft stores `step` as an
@@ -466,7 +481,8 @@ const DRAFT_KEYS = [
 //   1  the original eight steps, with one combined Class step
 //   2  Class split into Race and Occupation, Attributes between them
 //   3  Advancement inserted after Powers, for characters starting above level 1
-const STEPS_VERSION = 3;
+//   4  Morphus inserted after Occupation, for a class with a second body
+const STEPS_VERSION = 4;
 
 // An old draft's step index, mapped onto the current list. A draft stopped on
 // the old Class step resumes on Race, which is right: it had not committed to
@@ -479,6 +495,8 @@ const STEPS_VERSION = 3;
 //        and Skills onward shift by one.
 //   2→3  Advancement inserted at 7; everything up to Powers keeps its index
 //        and Details and Review shift by one.
+//   3→4  Morphus inserted at 4; everything up to Occupation keeps its index
+//        and Skills onward shift by one.
 //
 // Drafts are unfinished builds a player expects to come back to, so this is a
 // mapping rather than a discard — and the resume OFFER reads the migrated index
@@ -486,6 +504,7 @@ const STEPS_VERSION = 3;
 const STEP_MIGRATIONS = [
   (i) => (i <= 2 ? i : i + 1),   // from version 1
   (i) => (i <= 6 ? i : i + 1),   // from version 2
+  (i) => (i <= 3 ? i : i + 1),   // from version 3
 ];
 
 function migrateDraft(d) {
@@ -838,7 +857,7 @@ function render() {
   // an ability dropped on a step that made the next one moot.
   if (!stepApplies(S.step)) S.step = seekStep(S.step, 1);
   renderStepper();
-  [renderSystem, renderRace, renderAttributes, renderOccupation, renderSkills,
+  [renderSystem, renderRace, renderAttributes, renderOccupation, renderMorphus, renderSkills,
    renderEquipment, renderPowers, renderAdvancement, renderDetails, renderReview][S.step]();
   wirePickers();
   queueDraftSave();
@@ -912,6 +931,9 @@ function stepApplies(i) {
   // Nothing to advance through for a character that starts where everyone
   // starts, which is the overwhelmingly common case.
   if (i === ST.ADVANCEMENT) return S.level > 1;
+  // A class with a second body whose traits come off the Morphus tables - and
+  // the COMPOSED class, so a form an occupation brings counts too.
+  if (i === ST.MORPHUS) return !!morphusForm();
   if (i !== ST.OCCUPATION) return true;
   if (!S.rcc) return true;
   // An ability that names practitioners claims the step whatever the category.
@@ -1043,6 +1065,7 @@ function resetBuild() {
   S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
   S.spellGroups = {}; S.psiGroups = {};
   S.supers = []; S.superGroups = {}; S.levelSupers = {};
+  S.morphus = { decisions: [], form: null, formSig: null }; S.morphusError = null;
 }
 
 // Step 1 — the race (browse | guided)
@@ -1864,6 +1887,308 @@ function confirmRace() {
   goStep(ST.ATTRIBUTES);
 }
 
+// ---------- the Morphus (Nightbane survey D5, PR 3 of 4) ----------
+//
+// A class whose `second_form.traits_from` is `morphus` builds its second body
+// off the "Creating the Nightbane" tables (printed 91-106). The procedure, the
+// reroll rules and what is stored are js/morphus.js, which is pure; this is only
+// the step that drives it. Placed after Occupation because the form may come
+// from the occupation, and after Attributes because the preview reads them.
+//
+// Every table is "Roll or select" (printed 85, 91): each pending table offers a
+// roll and a picker, and the player may use either for any step - all rolled,
+// all picked, or mixed.
+
+const morphusForm = () => (S.cls?.second_form?.traits_from === 'morphus' ? S.cls.second_form : null);
+
+// The second form's own dice - its S.D.C. roll and one hit point roll per level
+// - rolled once and kept. Re-rolled only when the composed class's form itself
+// changed; a different starting level keeps the rolls already made and rolls or
+// drops only the difference, so the table results never move under the player.
+function ensureMorphusForm() {
+  const form = morphusForm();
+  if (!form) return null;
+  const m = S.morphus || (S.morphus = { decisions: [], form: null, formSig: null });
+  if (!Array.isArray(m.decisions)) m.decisions = [];
+  const sig = JSON.stringify(form);
+  if (!m.form || m.formSig !== sig) {
+    const made = rollSecondForm(form, S.level);
+    m.form = { form_rolls: made.form_rolls, hp_rolls: made.hp_rolls };
+    m.formSig = sig;
+  }
+  const dice = secondFormHitPointDice(form.hit_points_base);
+  const want = dice.count(S.level);
+  const have = Array.isArray(m.form.hp_rolls) ? m.form.hp_rolls.slice(0, want) : [];
+  while (have.length < want) have.push(evalDice(have.length === 0 ? dice.first : dice.per));
+  m.form.hp_rolls = have;
+  return form;
+}
+
+// Fetched once, when first needed. Not in the boot payload - see
+// functions/api/character-creator/catalogs/traits.js for the measurement.
+let traitLoad = null;
+function loadMorphusTables() {
+  if (S.traitTables) return Promise.resolve(S.traitTables);
+  if (!traitLoad) {
+    traitLoad = api('catalogs/traits?catalog=morphus')
+      .then((res) => { S.traitTables = morphusTables(res.rows || []); S.traitError = null; return S.traitTables; })
+      .catch((err) => { S.traitError = err.message || String(err); throw err; })
+      .finally(() => { traitLoad = null; });
+  }
+  return traitLoad;
+}
+
+// What `characters.second_form` is created holding: the form's rolls and every
+// resolved table entry with its sub-choice and dice. Undefined for a class with
+// no Morphus, so the create request is the same as it always was.
+function secondFormPayload() {
+  const form = ensureMorphusForm();
+  if (!form) return undefined;
+  return {
+    active: 'first',
+    form_rolls: S.morphus.form.form_rolls,
+    hp_rolls: S.morphus.form.hp_rolls,
+    results: S.traitTables ? morphusResults(S.traitTables, S.morphus.decisions) : [],
+    sdc_current: null, hp_current: null,
+  };
+}
+
+// Why the step cannot be left yet, or null. The tables are part of the class:
+// a half-generated Morphus is not a character the book describes.
+function morphusBlocker() {
+  if (!morphusForm()) return null;
+  if (!S.traitTables) return S.traitError ? 'The Morphus tables did not load' : 'Loading the Morphus tables';
+  const st = replayMorphus(S.traitTables, S.morphus.decisions);
+  if (st.problems.length) return 'This Morphus no longer matches the tables: start over';
+  if (st.awaiting != null) return `Choose how ${st.steps[st.awaiting].row.name} looks`;
+  if (!st.done) {
+    // What is queued NOW: a route resolved later can add more.
+    const left = st.queue.filter((q) => !q.optional).length;
+    return st.next?.optional ? 'Roll again, or skip it' : `${left} table${left === 1 ? '' : 's'} still to resolve so far`;
+  }
+  return null;
+}
+
+// Every handler goes through here: the engine throws, with a reason, on anything
+// its rules refuse, and the reason is shown rather than swallowed.
+function morphusAct(fn) {
+  try {
+    ensureMorphusForm();
+    S.morphus.decisions = fn(S.traitTables, S.morphus.decisions);
+    S.morphusError = null;
+  } catch (err) {
+    S.morphusError = err.message || String(err);
+  }
+  render();
+}
+const morphusRoll = () => morphusAct((T, d) => rollNext(T, d));
+const morphusRollAll = () => morphusAct((T, d) => rollUntilBlocked(T, d));
+const morphusPick = (key) => morphusAct((T, d) => pickNext(T, d, key));
+const morphusSkip = () => morphusAct((T, d) => skipNext(T, d));
+const morphusUndo = () => morphusAct((T, d) => undoLast(d));
+function morphusSub(index, choice) {
+  morphusAct((T, d) => {
+    const row = replayMorphus(T, d).steps[index]?.row;
+    return chooseSub(T, d, index, row?.sub_choices?.[+choice]);
+  });
+}
+function morphusRestart() {
+  if (S.morphus.decisions.length && !confirm('Start the Morphus over? Every table result and its rolls are discarded.')) return;
+  morphusAct(() => []);
+}
+
+// An entry's own choice - spider or scorpion, where the nails are - as a select.
+// Drawn in its result, and again in the Next panel while it is the choice the
+// generator is waiting on, so the control is where the player is looking.
+function subChoiceSelect(step, id) {
+  const r = step.row;
+  const d = step.decision;
+  if (!Array.isArray(r?.sub_choices) || !r.sub_choices.length) return '';
+  return `<div class="rowline"><label class="small" for="${id}">Choose</label>
+    <select id="${id}" onchange="morphusSub(${step.index}, this.value)"
+      ${d.sub_choice == null ? 'class="needs-choice"' : ''}>
+      <option value=""${d.sub_choice == null ? ' selected' : ''} disabled>&mdash; choose &mdash;</option>
+      ${r.sub_choices.map((c, ci) => `<option value="${ci}"${c === d.sub_choice ? ' selected' : ''}>${esc(c)}</option>`).join('')}
+    </select></div>`;
+}
+
+const band = (r) => `${String(r.roll_low).padStart(2, '0')}-${r.roll_high === 100 ? '00' : String(r.roll_high).padStart(2, '0')}%`;
+const pageRef = (r) => (r?.page ? `<span class="muted small">p.${esc(r.page)}</span>` : '');
+
+// One entry's effects and Horror Factor, in words.
+function morphusEffects(row, rolls = {}, omit = []) {
+  const parts = effectParts(row, rolls, omit).map((p) => (p.omitted
+    ? `<s title="The 1D6 gave this bonus to another animal">${esc(p.text)}</s>` : esc(p.text)));
+  const hf = horrorPart(row, rolls);
+  if (hf) parts.push(`<b>${esc(hf)}</b>`);
+  if (row.kind === 'route' || row.kind === 'combination') {
+    const to = (row.routes || []).map((r) => `${r.count > 1 ? `${r.count}&times; ` : ''}${esc(r.table)}`).join(', ');
+    if (to) parts.unshift(`&rarr; ${to}`);
+  }
+  return parts.join(' &middot; ');
+}
+
+function morphusBook(row) {
+  const text = [row.description, row.route_rule, row.note].filter(Boolean);
+  if (!text.length) return '';
+  return `<details class="small"><summary class="muted">What the book says</summary>
+    ${text.map((t) => `<p class="small">${esc(t)}</p>`).join('')}</details>`;
+}
+
+// The running Morphus, through the SAME fold the sheet endpoint uses, so the
+// numbers here are the numbers the sheet's Morphus toggle will draw.
+function morphusPreview(form) {
+  if (!S.pools) computePools();
+  const rolled = rolledAll();
+  const p = poolsPayload();
+  const character = {
+    level: S.level, attributes: S.attrs, attribute_bonuses: rolled.attributes,
+    rolled_bonuses: { combat: rolled.combat, saves: rolled.saves },
+    hp_max: p.hp ?? null, sdc_max: p.sdc ?? null, second_form: secondFormPayload(),
+  };
+  const view = secondFormView({ cls: S.cls, character, rows: S.traitTables.byKey });
+  if (!view) return '';
+  const facade = derive.effective(S.attrs || {}, derive.classBonuses(S.cls, S.level,
+    { attributes: rolled.attributes, combat: rolled.combat, saves: rolled.saves }));
+  const first = esc(form.first_name || 'first form');
+  const second = esc(form.name || 'second form');
+  const hf = view.horror_factor_parts;
+  // One compact cell per number, first form beside second, so the step's own
+  // controls stay above the fold - a ten-row table here pushed the Roll button
+  // off a 1024px screen in the first render.
+  const cell = (k, a, b) => `<div class="morphus-stat"><span class="k">${k}</span>
+    <span class="v">${a ?? '&mdash;'} &rarr; <b>${b ?? '&mdash;'}</b></span></div>`;
+  return `<div class="panel-inset morphus-preview">
+    <h3>${second} so far <span class="muted small">&mdash; ${first} &rarr; ${second}, as the sheet's toggle will show</span></h3>
+    <div class="morphus-stats">
+      ${ATTRS.map((a) => cell(a, facade[a], view.attributes[a])).join('')}
+      ${cell('S.D.C.', p.sdc, view.sdc_max)}${cell('H.P.', p.hp, view.hp_max)}
+      ${cell('Horror Factor', null, view.horror_factor)}
+    </div>
+    <p class="muted small">Horror Factor: ${hf.set != null ? `set to ${hf.set} by a result` : `base ${hf.base ?? 0}`}${
+      hf.added ? ` + ${hf.added} from the tables` : ''}${hf.max != null ? `, capped at ${hf.max}` : ''}.
+      The ${second}'s own dice: ${Object.entries(S.morphus.form.form_rolls?.pools || {}).map(([k, v]) => `${k === 'sdc' ? 'S.D.C.' : k} ${v}`).join(', ') || 'none'};
+      hit point rolls ${(S.morphus.form.hp_rolls || []).join(', ') || 'none'}.</p>
+  </div>`;
+}
+
+function renderMorphus() {
+  const form = ensureMorphusForm();
+  const nav = (blocker) => `<div class="nav"><button class="btn btn-ghost" onclick="prevStep()">&larr; Back</button>
+    ${blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
+    <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">Skills &rarr;</button></div>`;
+  if (!form) { $('app').innerHTML = nav(null); return; }
+  if (!S.traitTables) {
+    $('app').innerHTML = `<div class="panel"><h2>${esc(form.name || 'Morphus')}</h2>
+      ${S.traitError
+        ? `<p class="err">The tables did not load: ${esc(S.traitError)}</p>
+           <p><button class="btn" onclick="S.traitError = null; render()">Try again</button></p>`
+        : '<p class="muted">Loading the tables&hellip;</p>'}</div>${nav(morphusBlocker())}`;
+    if (!S.traitError) loadMorphusTables().then(() => { if (S.step === ST.MORPHUS) render(); }, () => render());
+    return;
+  }
+
+  const T = S.traitTables;
+  const decisions = S.morphus.decisions;
+  const st = replayMorphus(T, decisions);
+  const results = morphusResults(T, decisions);
+  const omitOf = new Map();
+  st.steps.filter((s) => s.row).forEach((s, i) => omitOf.set(s.index, results[i]?.omit || []));
+  const combos = new Map(animalCombinations(T, decisions).map((c) => [c.index, c]));
+  const label = (s) => (s.row ? s.row.name : 'nothing');
+
+  const resolved = st.steps.map((s) => {
+    const d = s.decision;
+    const from = s.item.origin != null ? `for ${esc(label(st.steps[s.item.origin]))}` : 'where every Morphus starts';
+    if (s.skipped) {
+      return `<li class="morphus-step"><span class="muted small">${esc(s.item.table)} Table, ${from}</span>
+        <div>Skipped the optional roll.</div></li>`;
+    }
+    const r = s.row;
+    const how = d.how === 'roll' ? `rolled <b>${d.roll ?? '?'}</b>` : 'picked';
+    const ignored = (d.rerolls || []).length
+      ? `<div class="muted small">Ignored: ${d.rerolls.map((x) => `${x.roll}${x.key ? ` (${esc(T.byKey.get(x.key)?.name || x.key)})` : ''}`).join(', ')}
+         &mdash; ${esc([...new Set(d.rerolls.map((x) => x.why))].join('; '))}</div>` : '';
+    const choices = subChoiceSelect(s, `morphus-sub-${s.index}`);
+    const combo = combos.get(s.index);
+    const comboHtml = combo?.bonuses
+      ? `<div class="small">1D6 for each bonus (printed 93-94; not added together):
+          ${combo.bonuses.map((b) => {
+            const animal = combo.slots[b.slot].find((x) => x.row.kind === 'effect') || combo.slots[b.slot][0];
+            // The label effectParts gives the same bonus, so the two lines agree.
+            const [g, k] = b.path.split('.');
+            const name = effectParts({ bonuses: { [g]: { [k]: 0 } } })[0]?.text.replace(/ \+0$/, '') || k;
+            return `${esc(name)} ${b.die} &rarr; ${esc(animal?.row?.name || `animal ${b.slot + 1}`)}`;
+          }).join('; ')}</div>`
+      : combo ? '<div class="muted small">Its bonuses are settled by 1D6 each once every animal is rolled.</div>' : '';
+    return `<li class="morphus-step">
+      <span class="muted small">${esc(r.table_name)} Table, ${from} &middot; ${how}</span>
+      <div><b>${esc(r.name)}</b> <span class="muted small">${band(r)}</span> ${pageRef(r)}</div>
+      <div class="small">${morphusEffects(r, d.rolls, omitOf.get(s.index)) || '<span class="muted">No number a sheet adds</span>'}</div>
+      ${ignored}${choices}${comboHtml}${morphusBook(r)}
+    </li>`;
+  }).join('');
+
+  let current = '';
+  if (st.problems.length) {
+    current = `<div class="advisory"><b>This Morphus no longer replays against the tables</b>, which have
+      changed since it was built: ${esc(st.problems[0])}. Start over to build it again.</div>`;
+  } else if (st.awaiting != null) {
+    const waiting = st.steps[st.awaiting];
+    current = `<div class="panel-inset" id="morphus-next">
+      <h3>Choose for ${esc(waiting.row.name)} ${pageRef(waiting.row)}</h3>
+      <p class="muted small">The book leaves this to the player, and nothing more is rolled or picked until it is answered.</p>
+      ${subChoiceSelect(waiting, 'morphus-sub-now')}
+    </div>`;
+  } else if (st.next) {
+    const item = st.next;
+    const originRow = item.origin != null ? st.steps[item.origin]?.row : null;
+    const { offered, excluded } = entriesFor(T, st.steps, item);
+    const intro = T.intro.get(item.table);
+    const later = st.queue.slice(1).filter((q) => !q.optional).map((q) => q.table);
+    const why = [...new Map(excluded.map((e) => [e.says, e])).values()].map((e) =>
+      `<li>${excluded.filter((x) => x.says === e.says).map((x) => `${esc(x.row.name)} <span class="muted">${band(x.row)}</span>`).join(', ')}
+        &mdash; ${esc(e.says)} <span class="muted">(printed ${esc(e.page)})</span></li>`).join('');
+    current = `<div class="panel-inset" id="morphus-next">
+      <h3>Next: the ${esc(item.table)} Table ${intro ? pageRef(intro) : ''}</h3>
+      <p class="muted small">${originRow ? `For <b>${esc(originRow.name)}</b>${originRow.kind === 'combination' ? ` (roll ${item.slot + 1})` : ''}.` : 'Every Morphus starts here.'}
+        ${item.optional ? 'This roll is optional.' : ''}
+        ${later.length ? `Still to come: ${later.map(esc).join(', ')}.` : ''}</p>
+      ${intro?.description ? `<p class="small">${esc(intro.description)}</p>` : ''}
+      <p><button class="btn btn-primary" onclick="morphusRoll()">🎲 Roll on this table</button>
+        ${item.optional ? '<button class="btn btn-ghost" onclick="morphusSkip()">Skip it</button>'
+          : '<button class="btn btn-ghost" onclick="morphusRollAll()">Roll the rest</button>'}</p>
+      <p class="small">Or pick one:</p>
+      <div class="morphus-picks">${offered.map((r) => `<div class="chkrow morphus-pick">
+        <button class="btn btn-sm" data-key="${esc(r.key)}" onclick="morphusPick(this.dataset.key)">Take</button>
+        <span><b>${esc(r.name)}</b> <span class="muted small">${band(r)}</span></span>
+        <div class="small" style="flex-basis:100%">${morphusEffects(r) || '<span class="muted">No number a sheet adds</span>'}</div>
+        <div style="flex-basis:100%">${morphusBook(r)}</div>
+      </div>`).join('')}</div>
+      ${why ? `<p class="muted small" style="margin-top:8px">Not offered, and rerolled if the dice land on them:</p><ul class="small">${why}</ul>` : ''}
+    </div>`;
+  } else {
+    current = '<p class="ok">Every table is resolved.</p>';
+  }
+
+  $('app').innerHTML = `
+  <div class="panel">
+    <h2>${esc(form.name || 'Morphus')} <span class="muted small">&mdash; the tables, printed 91-106</span></h2>
+    <p class="muted small">Every table is &ldquo;roll or select&rdquo; (printed 91): roll any step, pick any step, or mix
+      the two. Wherever an entry sends you, that table comes next.</p>
+    ${morphusPreview(form)}
+    ${S.morphusError ? `<p class="err">${esc(S.morphusError)}</p>` : ''}
+    ${current}
+    <p style="margin-top:10px">
+      <button class="btn btn-sm btn-ghost" ${decisions.length ? '' : 'disabled'} onclick="morphusUndo()">&#8630; Undo last</button>
+      <button class="btn btn-sm btn-ghost" ${decisions.length ? '' : 'disabled'} onclick="morphusRestart()">Start over</button>
+    </p>
+    ${resolved ? `<h3>Results <span class="muted small">&mdash; in the order they were decided</span></h3>
+      <ol class="morphus-steps">${resolved}</ol>` : ''}
+  </div>
+  ${nav(morphusBlocker())}`;
+}
+
 // Step 7 — everything the levels above 1 earn.
 //
 // Placed AFTER Powers rather than woven through the earlier steps, because by
@@ -2219,7 +2544,8 @@ function renderOccupation() {
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.ATTRIBUTES)">&larr; Back</button>
   ${blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
-  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">Skills &rarr;</button></div>`;
+  <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">${
+    stepApplies(ST.MORPHUS) ? esc(morphusForm().name || 'Morphus') : 'Skills'} &rarr;</button></div>`;
 }
 
 // What blocks this step: the ability's occupation pick, and a class minimum the
@@ -2434,7 +2760,8 @@ function renderAttributes() {
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.RACE)">&larr; Back</button>
   ${attrWhy ? `<span class="nav-why">${esc(attrWhy)}</span>` : ''}
   <button class="btn btn-primary" ${canNext ? '' : 'disabled'} onclick="nextStep()">${
-    stepApplies(ST.OCCUPATION) ? 'Occupation' : 'Skills'} &rarr;</button></div>`;
+    stepApplies(ST.OCCUPATION) ? 'Occupation' : stepApplies(ST.MORPHUS) ? esc(morphusForm().name || 'Morphus')
+      : 'Skills'} &rarr;</button></div>`;
 }
 // A roll's breakdown is cleared whenever the value stops being that roll —
 // otherwise "exceptional +4" hangs beside a number the player typed by hand.
@@ -4410,6 +4737,12 @@ function renderReview() {
     ${listSection('Talents', powersPayload().filter((x) => x.type === 'talent')
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category || '')} \u00b7 `
         + `${x.acquire_cost} to acquire, ${x.cost} to activate</span>`))}
+    ${morphusForm() && S.traitTables ? listSection(morphusForm().name || 'Morphus',
+      morphusResults(S.traitTables, S.morphus.decisions).map((r) => {
+        const row = S.traitTables.byKey.get(r.key);
+        return `${esc(row?.name || r.key)} <span class="muted">${esc(row?.table_name || '')}${
+          r.sub_choice ? ` · ${esc(r.sub_choice)}` : ''}</span>`;
+      })) : ''}
     <p class="warn" id="save-msg"></p>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.DETAILS)">&larr; Back</button>
@@ -4427,6 +4760,13 @@ async function save() {
   if (!S.bio.alignment) {
     msg.textContent = 'Choose an alignment on the Details step — the book requires one, and there is no neutral.';
     return;
+  }
+  // A Morphus is replayed from its decisions against the tables, so a build
+  // resumed straight onto Review needs them fetched before it can be sent.
+  if (morphusForm()) {
+    try { await loadMorphusTables(); } catch { /* the blocker below says so */ }
+    const why = morphusBlocker();
+    if (why) { msg.textContent = `${morphusForm().name || 'Morphus'}: ${why} - go back to that step.`; return; }
   }
   S.saving = true; msg.textContent = 'Saving…';
   try {
@@ -4460,6 +4800,10 @@ async function save() {
       attributes: S.attrs, attribute_bonuses: rolled.attributes,
       rolled_bonuses: { combat: rolled.combat, saves: rolled.saves }, abilities: S.abilities,
       skills: skillsPayload(), powers: powersPayload(), pools: poolsPayload(),
+      // The generated Morphus (survey D5): the form's rolls and every table
+      // result with its dice. Sent, so the create endpoint validates and stores
+      // it instead of rolling an empty form of its own.
+      second_form: secondFormPayload(),
       bio: S.bio,
       items: equipmentPayload().map((e) => ({ item_id: e.item_id, custom_name: e.custom_name, qty: e.qty, notes: e.notes })),
     };
@@ -4662,6 +5006,8 @@ Object.assign(window, {
   deleteCharacter,
   goHome, newCharacter, continueBuild,
   groupUi,
+  // The Morphus step's buttons (survey D5).
+  morphusRoll, morphusRollAll, morphusPick, morphusSkip, morphusUndo, morphusRestart, morphusSub,
 });
 
 boot();

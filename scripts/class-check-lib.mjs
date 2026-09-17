@@ -90,6 +90,12 @@ export const KNOWN_KEYS = new Set([
   // the pools. NOT the save of the same name, which is a `bonuses.saves` key.
   // BOOK-INGEST-AUDIT F75.
   'horror_factor',
+  // A second body the character changes into in play - the Nightbane's Morphus
+  // (BOOK-INGEST-AUDIT F74, survey D5). Validated in js/parser.js, carried by
+  // combineClasses, folded into numbers by js/second-form.js, stored on
+  // `characters.second_form` (migration 069), levelled by js/leveling.js and
+  // drawn by sheet.js behind its form toggle.
+  'second_form',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

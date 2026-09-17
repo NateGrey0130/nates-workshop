@@ -23,7 +23,7 @@ under [`docs/`](docs/).
 | [`docs/spell-and-psionic-imports.md`](docs/spell-and-psionic-imports.md) | The catalog gaps per-level spell and psionic grants uncovered, and what closing them cost. |
 | [`docs/race-and-occupation.md`](docs/race-and-occupation.md) | The R.C.C.-first wizard, how a race and an occupation compose, and the MOS packages that sit on top of an O.C.C. |
 | [`docs/language-and-enchantments.md`](docs/language-and-enchantments.md) | Two rule families the catalog models as data rather than as code. |
-| [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the ten-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
+| [`docs/wizard-and-sheet.md`](docs/wizard-and-sheet.md) | How the eleven-step wizard and the character sheet behave: tabs, pickers, drafts, blocked steps, and what the server refuses to take on trust. |
 | [`docs/campaign-and-play.md`](docs/campaign-and-play.md) | Everything that happens at the table rather than during creation. |
 | [`docs/catalog.md`](docs/catalog.md) | How catalog rows are shaped, filtered, matched and merged. |
 | [`docs/importing-from-pdfs.md`](docs/importing-from-pdfs.md) | How a book becomes catalog rows now: cache, survey, extract or transcribe, check, data script. The in-app importer it used to describe was retired unused. |
@@ -55,7 +55,7 @@ Everything the app reads at runtime is in D1. There are no static content files
 
 ```
 apps/character-creator/
-├── index.html / app.js       Creation wizard (10 steps). app.js is an ES module.
+├── index.html / app.js       Creation wizard (11 steps). app.js is an ES module.
 ├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
 ├── dashboard.html / dashboard.js  GM dashboard: roster (with the G.M.'s pool, damage,
 │                             undo and party-XP controls), GM notes, campaign journal
@@ -73,6 +73,13 @@ apps/character-creator/
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
 │                             re-exports it; the wizard builds characters that
 │                             start above level 1 from the same engine)
+├── js/second-form.js         A second body as numbers - the class's second_form,
+│                             the character's rolls and the Morphus rows folded
+│                             (ES module - the sheet endpoint, PATCH and create
+│                             validator all read it)
+├── js/morphus.js             The Morphus generator: the "Creating the Nightbane"
+│                             tables as a procedure, with its reroll rules as a
+│                             map (ES module - the wizard and the tests; pure)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
 │                             editor, the write endpoints and the importers all
 │                             build themselves from it). SIX catalogs: skills,
@@ -153,11 +160,15 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Seven modules are imported by both the browser and the Workers runtime:
+Nine modules are imported by both the browser and the Workers runtime:
 `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
-`js/psionics.js` (transitively, through compose), `js/language-skills.js`, and
-`js/skill-base.js` - which resolves a skill's starting percentage, including
-one game's own where it differs from the catalog's (`BOOK-INGEST-AUDIT` F83).
+`js/psionics.js` (transitively, through compose), `js/language-skills.js`,
+`js/leveling.js`, `js/second-form.js` and `js/skill-base.js`. `skill-base.js`
+resolves a skill's starting percentage, including one game's own where it
+differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
+character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
+classic script `js/derive.js` for its side effect, so the Workers runtime runs
+that file too and reads it off `globalThis.derive`.
 That is why `app.js` and
 `catalog.js` are loaded as `<script type="module">` while the other pages are
 classic scripts — and why inline handlers in the wizard need explicit `window`
@@ -187,7 +198,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-three tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-four tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -218,7 +229,7 @@ database bookkeeping shared by all; the rest are this app.
 | `npc_sweeps` | Which entries the sweep has already read. Written only after a successful call, so a failed one is retried rather than skipped. |
 | `npc_proposals_dismissed` | Names a human has said are not people. Without it the sweep proposes `the guard` again every time and the button becomes noise. |
 
-`characters` stores ten JSON columns rather than a very wide table — the list
+`characters` stores eleven JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 
 | Column | Shape |
@@ -233,11 +244,12 @@ lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 | `combat` | attacks, initiative, strike, parry, dodge, punches — **overrides only** |
 | `saves` | save vs magic, psionics, poison, insanity … — **overrides only** |
 | `armor` | `[{ name, ar, mdc_current, mdc_max, weight, cost, prowl }]` |
+| `second_form` | `{}`, or a second body's state (migration 069): `{ active: "first"\|"second", form_rolls, hp_rolls: [7, 9], results: [{ key, sub_choice, rolls }], sdc_current, hp_current }`. **Rolls, never totals** — see [A second body](docs/race-and-occupation.md#a-second-body) |
 
 `combat` and `saves` hold **only what a human typed**. A missing or blank key
 falls back to the value derived from the attributes, so nothing goes stale when
 an attribute changes. Paired `*_max` / `*_current` columns cover hp, sdc, mdc,
-ppe and isp.
+ppe and isp — for the FIRST form; a second form's pools live in `second_form`.
 
 **Content catalogs** — all editable at runtime
 
@@ -255,6 +267,7 @@ ppe and isp.
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
 | `super_abilities` | name, tier (minor/major), plus range, duration, damage, saving throw and description - the same field names spells and psionic powers use. **Neither a cost nor a level**, which is what separates these from both: a Heroes Unlimited super ability is a permanent trait, and the stat block describes it in use rather than pricing it. `variant_note` carries what an earlier book states instead, as in `psionic_powers`. Added by migration 057 for decision D3 of the Heroes Unlimited batch, and declared in `js/catalog-fields.js`, so the editor, the write endpoints and the importers all read it from there. |
 | `talents` | name, tier (common/elite), plus range, duration, saving throw and description - the same field names spells, psionic powers and super abilities use. **Two costs, which is what separates these from all three**: a Nightbane Talent is bought once with a permanent P.P.E. expenditure (`acquire_ppe`) and paid for again on every activation (`ppe`), so a Talent stored in `spells` or `psionic_powers` silently loses a number. `ppe` is the activation MINIMUM and `ppe_note` carries the schedule, exactly as on `spells` - only three of the 25 Talents are a clean acquire/activate pair and the other 22 state a third term, so the note is the common case here rather than the exception. `form_required` (morphus/facade/both) is free text because the book gives four answers across 25 rows, one of them silence; `min_character_level` is an integer because the ten level-gated Talents spell the level six different ways; `prerequisite` is another Talent or a Morphus characteristic. Added by migration 063 for `BOOK-INGEST-AUDIT.md` F76, and declared in `js/catalog-fields.js`, so the editor, the write endpoints and the importers all read it from there - the ninth catalog to do so. |
+| `morphus_characteristics` | The Nightbane Morphus tables (migration 068, survey D5): one row per **entry** of the 19 percentile tables on printed 91-106, plus an `intro` row per table for its preamble, with `roll_low`/`roll_high` as the band (0/0 on an intro row). `kind` is effect, route, combination or intro. `bonuses` is a class `bonuses` block through the same `validateBonuses`; `horror_factor` is added and `horror_factor_set` replaces, because a few entries set it; `horror_factor` is TEXT, a whole number or a dice expression (`1d4+1`) rolled once when the Morphus is made. `routes` is a JSON list of `{table, count}` - a table the book never prints (Bear, Amphibian) is still named, and the generator rerolls it - and `sub_choices` a JSON list of strings. **Keyed on `key`**, `<table_name>: <name>`, because an entry's name repeats across tables and the catalog editor keys on one column; a CHECK keeps it equal to its parts. Nothing reads the table yet - the second body and the generator are later PRs. |
 
 Every catalog carries `source_book`, so an entry's provenance is visible and
 the same skill from two books can coexist under distinguished names. The
@@ -393,8 +406,9 @@ talents:                        # Nightbane Talents, the ninth catalog. The
                                 # catalog row, not on the grant.
   talents_starting: 1           # the book gives ONE free at first level
   tiers_allowed: ["common"]     # common | elite - a CLOSED set of two. Elite
-                                # Talents are gated on the character's Morphus,
-                                # which is not modelled, so a class that offers
+                                # Talents are gated on the character's Morphus
+                                # results, which nothing checks yet (the Morphus
+                                # is stored - see second_form), so a class that offers
                                 # them says so here. Omit to allow both.
   talents: ["Shadow Shield"]    # granted outright, not picked
   talents_from: ["Doorway", ...]  # the exact list to pick FROM; REPLACES the
@@ -441,6 +455,18 @@ bonuses:                      # mechanical grants — see the section below
   at_level: [{ level: 5, combat: { attacks: 1 } }]
 level_progression:
   - { level: 2, grants: ["+1 attack per melee"] }
+second_form:                  # a SECOND BODY the character changes into in play -
+  name: "Morphus"             # the Nightbane's Morphus. The class's own block is
+  first_name: "Facade"        # the first form; this says how the second differs
+  bonuses:                    # a bonuses block, ON TOP of the first form's, in
+    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }   # the second form only
+    pools: { sdc: "2d6x10" }  # sdc and hp only; dice rolled once and stored
+    combat: { strike: 2 }
+  hit_points_base: "P.E. x2 + 2d6 per level"   # REPLACES hit points, read
+                                               # against the second form's P.E.
+  horror_factor: 6            # the second form's base, and the most its
+  horror_factor_max: 18       # table results may raise it to
+  traits_from: morphus        # the catalog its results are rows of
 restrictions: ["..."]
 side_effects: "Free text — substantial drawback mechanics. Display only."
 extraction_notes: "Free text — anything the importer could not map cleanly."
@@ -476,6 +502,15 @@ the occupation's, its `occ_skills` replace the race's rather than unioning, and
 Cosmo-Knight is the only class that carries it. See
 [Race and occupation](docs/race-and-occupation.md).
 
+`second_form` **is** enforced, end to end: the parser refuses a malformed block,
+composition keeps the race's (an occupation's falls through, a superseding one
+replaces it), `characters.second_form` stores what was rolled for it, the create
+endpoint refuses a roll its dice could not make, level-up rolls the form's own
+hit point dice, and the sheet toggles between the two forms with each form's
+S.D.C. and hit points tracked separately. **It is not `variants`**, which is a
+kind of the class picked once. See
+[A second body](docs/race-and-occupation.md#a-second-body).
+
 `occ_related_skills.minimums` **is** enforced. It is the only floor in the block
 - `count`, `categories`, `only` and `except` are all ceilings - and it exists
 because classes across several books print a rule like *"select 8 other
@@ -502,6 +537,7 @@ writes are gated (see [Permissions](#permissions)).
 | `classes` | GET | Published classes, parsed. `?system=` `?category=` `?include_retired=1`; `?names=1` is the id→name label projection (unfiltered, retired included). Sends an `ETag`, so a warm boot revalidates to an empty 304 instead of re-downloading ~750KB of markdown |
 | `catalogs` | GET | Skills, spells, psionic powers in one call — trimmed projection the wizard boots on. Sends an `ETag`, so a warm load revalidates to an empty 304 instead of re-sending ~25KB gzipped. The validator is a **hash of the body**, not the count-and-`max(updated_at)` aggregate `classes` uses: no catalog table has a timestamp column, and the editor's PATCH changes a value in place without moving a count or a max id |
 | `codex` | GET | `?section=<name>` — one catalog **with its descriptions and stat blocks** — what `catalogs` deliberately omits. Sections are `spells`, `psionics`, `gear`, `vehicles`, `skills`, `classes` (a summary — name, type, system, book and a lore excerpt, never the markdown; UI-AUDIT F48), and `index` (one count per tab, so the tab bar is labelled before any catalog is fetched). Any authenticated reader, not just an admin: it only reads. Its own route rather than a wider `catalogs`, because that payload is paid on every wizard boot and every sheet load and this one is paid by whoever opens the codex. **One section per request**, because all four in one response is 261 KB gzipped against a 25 KB boot payload. **`section` is required** — a missing or unknown one is a 400 naming every section, since a default would be a second contract to keep working and silently serving the wrong catalog is worse than an error. Body-hash `ETag` **with the section in it**, so two catalogs that serialise identically (two empty ones, on a fresh database) cannot revalidate into each other. See [plan 20](docs/plans/20-power-descriptions.md) |
+| `catalogs/traits` | GET | `?catalog=morphus` - every row of a catalog a class's `second_form.traits_from` may name, JSON decoded, descriptions included. **Not** in `catalogs`: 22KB gzipped that the wizard fetches only when its Morphus step first renders, instead of every boot and sheet load paying for it. Any authenticated reader; refuses any other catalog. Body-hash `ETag`. See [A second body](docs/race-and-occupation.md#a-second-body) |
 | `catalogs/rows` | GET / POST / PATCH | Admin. Whole rows for one catalog (`?catalog=`), create, and update (`&id=`). No delete |
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
@@ -627,7 +663,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. One-hundred-and-fifty-eight of three-hundred-and-eighteen published classes state no hit point
+`hp_max` NULL. One-hundred-and-sixty-seven of three-hundred-and-thirty-seven published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.

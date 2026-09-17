@@ -526,8 +526,12 @@ export function run() {
     check('paintPool is handed the data instead of fetching it',
       /function paintPool\(key, data(, conflicts)?\)/.test(layout),
       'paintPool still reaches for C');
+    // `poolData()` since BOOK-INGEST-AUDIT F74: still ONE place, and it hands
+    // back C.data itself unless a second form's pools are showing.
     check('and sheet.js supplies it in one place, not seven',
-      /const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data[^)]*\);/.test(sheet),
+      (/const paintPool = \(key\) => sheetLayout\.paintPool\(key, C\.data[^)]*\);/.test(sheet)
+        || (/const paintPool = \(key\) => sheetLayout\.paintPool\(key, poolData\(\), C\.conflicts\);/.test(sheet)
+          && /if \(!formOn\(\)\) return C\.data;/.test(sheet))),
       'each call site supplies the character data separately');
   }
 
@@ -607,7 +611,8 @@ export function run() {
     const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
     const paint = layoutSrc.slice(layoutSrc.indexOf('function paintPool('), layoutSrc.indexOf('function paintPool(') + 200);
     check('the live repaint reads the effective maximum', /poolMax\(data, key\)/.test(paint), paint);
-    check('the first render reads it', /poolCard\(key, label,[^;]*poolMax\(c, key\)/.test(sheetSrc));
+    // `pd` is poolData() - the character, or it with a second form's pools (F74).
+    check('the first render reads it', /poolCard\(key, label,[^;]*poolMax\((c|pd), key\)/.test(sheetSrc));
     const rest = sheetSrc.slice(sheetSrc.indexOf('function restPreview('), sheetSrc.indexOf('function updateRestPreview('));
     check('and the rest-recovery preview reads it, so resting cannot preview a refill past it',
       /poolMax\(C\.data, key\)/.test(rest), rest.slice(0, 300));

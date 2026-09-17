@@ -14,12 +14,13 @@ you roll to find out what kind of dragon, and then you decide what the dragon
 studied.
 
 ```
-System → Race → Attributes → Occupation → Skills → Equipment → Powers → (Advancement) → Details → Review
+System → Race → Attributes → Occupation → (Morphus) → Skills → Equipment → Powers → (Advancement) → Details → Review
 ```
 
 Advancement appears only when the starting level is above 1 — see
 [Starting above level 1](starting-above-level-1.md#starting-above-level-1); at level 1 the stepper
-walks past it.
+walks past it. Morphus appears only for a class whose `second_form` draws its
+traits from the Morphus tables — see [A second body](#a-second-body).
 
 The **Race** step is a briefing rather than a row in a list. Before committing,
 the player reads what the R.C.C. grants: the attribute dice it will roll per
@@ -113,14 +114,16 @@ Changing occupation re-rolls its half and leaves the race's alone.
 
 Which means changing `STEPS` silently re-points every draft in flight. Drafts
 carry `steps_version`; version 1 is the eight-step list with one combined Class
-step, version 2 split Class into Race and Occupation (nine steps), and
-version 3 — the list above — inserted Advancement after Powers.
+step, version 2 split Class into Race and Occupation (nine steps), version 3
+inserted Advancement after Powers, and version 4 — the list above — inserted
+Morphus after Occupation.
 
 `migrateDraft()` maps an old index forward, one insertion per version, so the
-migrations **chain**: a version-1 draft runs through both. Only the steps
+migrations **chain**: a version-1 draft runs through all three. Only the steps
 **after** an inserted step move — for 1→2, System (0), Class→Race (1) and
 Attributes (2) keep their index and Skills onward shift by one; for 2→3,
-everything up to Powers keeps its index and Details and Review shift by one.
+everything up to Powers keeps its index and Details and Review shift by one;
+for 3→4, everything up to Occupation keeps its index and Skills onward shift.
 A draft stopped on the old Class step resumes on Race, which is right — it had
 not committed to an occupation in any way the new step could trust. The resume
 *offer* reads the migrated index too, or it would name the wrong step in the
@@ -439,14 +442,180 @@ It does **not** admit `magic`, `psionics`, `natural_abilities`,
 `special_abilities` or `equipment_starting` - so a second form that differs in
 any of those cannot be expressed this way even if the semantics were right.
 
-**Until the app can say it**, a class with two forms carries the everyday form
-as its own block, states the other form's deltas in `natural_abilities`, and
-cites `BOOK-INGEST-AUDIT.md` F74 in `extraction_notes`. That is the shape
-`class-import` already prescribes for a mechanic the schema cannot hold.
+**The app can say it now** - a `second_form` block, below in
+[A second body](#a-second-body). This paragraph used to prescribe the interim
+shape (the everyday form as the class's block, the other form's deltas as prose
+in `natural_abilities`, F74 cited in `extraction_notes`); that shape is for a
+book whose second form differs in something `second_form` cannot hold - magic,
+psionics, abilities or equipment.
 
 **Demons, deevils and the other creatures of magic** (printed 313 onward) are
 out of scope for this pass — they are monsters the GM runs, not races a player
 picks, and they are a much larger body of stat blocks.
+
+---
+
+## A second body
+
+A Nightbane has a **Facade** and a **Morphus** (Nightbane RPG printed 87), and
+changes between them in a melee round. `BOOK-INGEST-AUDIT.md` F74 recorded that
+a class could not say so; Nightbane survey D5 built it, on Nate's three answers:
+the sheet **toggles** between the forms, **damage is tracked separately per
+form**, and the wizard rolls or picks the Morphus tables.
+
+### The class says how the second form differs
+
+```yaml
+second_form:
+  name: "Morphus"
+  first_name: "Facade"
+  bonuses:
+    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }
+    pools: { sdc: "2d6x10" }
+    combat: { initiative: 1, strike: 2, parry: 2, dodge: 2, roll: 3, pull_punch: 3, attacks: 1 }
+    saves: { spell_magic: 4, ritual_magic: 4, psionics: 3, disease: 3, horror_factor: 3 }
+  hit_points_base: "P.E. x2 + 2d6 per level"
+  horror_factor: 6
+  horror_factor_max: 18
+  traits_from: morphus
+```
+
+The class's own block is the **first** form, unchanged. `bonuses` is a class
+bonuses block through the same `validateBonuses`, applying only in the second
+form and **on top of** the first form's numbers; its `pools` take `sdc` and `hp`
+only, since the book's Morphus keeps the Facade's P.P.E., and `at_level` is
+refused. `hit_points_base` **replaces** the class's hit points for the second
+form and is read against the second form's P.E.; without one, the second form
+tracks its own damage against the first form's maximum. `horror_factor` is the
+second form's base, `horror_factor_max` its cap, and `traits_from` names the
+catalog its generated results are rows of (`morphus`, migration 068). Every
+malformed key is a parse **error**, as `bonuses` is.
+
+**Composition** carries it like `horror_factor`: the race's wins, an
+occupation's falls through when the race states none, and a superseding
+occupation replaces it. **Not in `VARIANT_OVERRIDES`**: a variant naming it is
+warned about and ignored.
+
+### The character stores what was rolled
+
+`characters.second_form` (migration 069), `{}` for a one-body character:
+
+```json
+{ "active": "second",
+  "form_rolls": { "pools": { "sdc": 70 } },
+  "hp_rolls": [7, 9],
+  "results": [ { "key": "Stigmata: Bleeding Eyes", "sub_choice": null,
+                 "rolls": { "horror_factor": 3, "pools": { "sdc": 12 } } } ],
+  "sdc_current": 84, "hp_current": null }
+```
+
+**Rolls, never totals.** `form_rolls` and each result's `rolls` mirror a bonuses
+block group by group, plus `horror_factor`. A result may also carry `omit`, the
+bonus paths (`"attributes.PS"`) its entry prints and this character does not
+get because a combination rule gave them to another result — see the Animal
+Form rule under *The wizard generates the Morphus*. The dice behind an omitted
+bonus are still rolled and stored, and simply not counted. `hp_rolls` holds one roll per
+level: index 0 is the formula's first dice, and each later one a level's
+per-level dice. A null current value means full. `js/second-form.js` folds these
+with the class and the catalog rows on every read:
+
+| number | how |
+|---|---|
+| attributes | the first form's (rolled + class + skills) + the form's bonus + every result's |
+| hit points | the formula's attribute term against the SECOND form's attributes + every `hp_rolls` + any `pools.hp` |
+| S.D.C. | the first form's `sdc_max` + the form's rolled `pools.sdc` + every result's |
+| Horror Factor | the base, or the highest a result SETS; + what results add (flat or rolled); capped at the maximum |
+| combat, saves, speed | the first form's number **as shown, typed overrides included**, + the difference the form makes (`derive.inForm`) |
+
+### Who enforces what
+
+- **Create** rolls the form's own dice and hit point dice when a class states a
+  form and the request sends none — a form the request DOES send, which is what
+  the wizard sends, is taken instead — and refuses a form on a class with none, a
+  result key that is no catalog entry (or an intro row), a sub-choice the entry
+  does not offer, an `omit` naming a bonus the entry does not print, a roll
+  missing, outside its dice or with no dice behind it,
+  the wrong number of hit point rolls for the level, and a current value above
+  the form's maximum.
+- **PATCH** takes `second_form: { active, sdc_current, hp_current }` and nothing
+  else, clamps each current value to 0 through the folded maximum, and writes
+  field by field with `json_set`, so a stepper press cannot erase a stored result.
+- **Level-up** proposes one roll of the per-level dice for each level gained;
+  level-confirm checks them against the dice (or rolls them for a client that
+  sends none), appends them, and raises the form's current hit points by the
+  same amount.
+- **The sheet** draws a Facade/Morphus toggle for such a class only. The second
+  form redraws attributes, S.D.C., hit points, Horror Factor, run speed, combat
+  and saves; its combat and saves are read-only, and its pool cards, steppers and
+  Damage write the second form's own values.
+
+### The wizard generates the Morphus
+
+The **Morphus** step (after Occupation, so a form an occupation brings counts,
+and after Attributes, which its preview reads) walks "Creating the Nightbane"
+(Nightbane RPG printed 91-106) over the `morphus_characteristics` rows, fetched
+from `catalogs/traits?catalog=morphus` the first time the step renders rather
+than on every boot. The procedure is `js/morphus.js`, pure and driven by the
+smoke suite with injected dice.
+
+- **Every step is a roll or a pick**, the book's three modes (printed 85, 91): a
+  Roll button, a "Roll the rest", and a picker of every entry the rules allow.
+  Start at Appearance; an entry's `routes` go to the front of the queue in the
+  order it prints them (depth first), and a combination rolls its own table
+  again `count` times. Undo drops the last decision; Start over drops them all.
+- **What is stored is the list of decisions** (`S.morphus` in the draft):
+  the entry, roll or pick, the d100 and any rolls it ignored, the sub-choice, and
+  every die the entry carries rolled once through `rollTraitResult`. What is
+  resolved and pending is replayed from that list, never stored.
+- **What the character gets** is `second_form.results`: every resolved entry,
+  routes and combinations included — the path is part of the Morphus (four Elite
+  Talents gate on the table a result came from), and a route row can carry its
+  own Horror Factor. The step shows each result's page, effects, rolls and
+  Horror Factor, and a preview folded through `secondFormView`, the sheet
+  endpoint's fold, so the numbers match the sheet's toggle.
+- **A sub-choice blocks the next step** until answered. Two of them decide
+  whether more rolls follow, and one rule is simpler than two.
+- The step cannot be left, and the character cannot be saved, until every table
+  is resolved.
+
+**The rules are a map, `MORPHUS_RULES`, keyed by the entry whose rule it is** —
+never parsed from `route_rule`, which stays the book's sentence for people. An
+excluded entry is **rerolled** when the dice land on it and **not offered** when
+picking:
+
+| rule | printed |
+|---|---|
+| Almost human: a Characteristics result asking for more than one characteristic | 92 |
+| Two/Three/Four characteristics: any result of 61% or higher, **as printed** — which shuts out Unnatural Limbs too, probably an erratum for 81%. The "1D6x10%" alternative is not offered separately | 92 |
+| Unearthly Beauty Combination of Two and Other: 91% or higher; Other's "GM/player-invented form of beauty" sub-choice rolls nothing more | 93 |
+| Animal Form Combination of Two/Three: 96% or higher | 93, 94 |
+| Stigmata Combination of Two: 97% or higher (Horror Factors add) | 102 |
+| Stigmata's Biomechanical route: +1 Horror Factor — carried by the route row's own `horror_factor`, so it counts because the row is stored | 102 |
+| Unusual Facial Features Two/Three: 96% or higher; Skull Face's 91-00% look queues an **optional** extra roll on the table | 103 |
+| Alien Shape Combination of Two: 96% or higher | 104 |
+| A route to a table the book never prints — Bear, Amphibian (Nate, D5) | 93 |
+| The same **effect** entry twice in one Morphus. Not printed: the app's reading of the G.M.'s reroll for a ridiculous result. Routes are exempt ("roll twice on that table") | 91-92 |
+
+`rulesDisagreeWithRows` holds the map to the rows — a band a rule starts at, a
+sub-choice it matches, the +1 the route row carries, a page — and the smoke suite
+fails when they drift.
+
+**Animal Form combinations are honoured, with one addition to the stored
+shape.** The book rolls 1D6 **per attribute** to choose which animal's bonus
+applies — of two, 1-3 the first and 4-6 the second; of three, 1-2, 3-4, 5-6 —
+and the bonuses are not added together (printed 93-94). The fold sums every
+result, so as #1139 shipped it the stored results could not say that. A result
+now carries `omit`: once every animal under a combination is resolved, 1D6 is
+rolled for each bonus path any of them prints (`attributes`, `combat`,
+`saves`, `pools`), kept on the decision that finished it, and each animal the
+die did not name has that path in `omit`. Read literally: a die naming an animal
+that prints no such bonus gives the character none. Horror Factor is not an
+attribute bonus and still adds, as every other combination's does.
+
+**Not yet:** play events, the offline queue, rest and the G.M. dashboard's
+damage all move the **first** form's columns only, and a second form's current
+values stop at 0 rather than going negative. Talents' Morphus prerequisites are
+still shown and not checked.
 
 ---
 

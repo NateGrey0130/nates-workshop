@@ -1,0 +1,37 @@
+-- characters.second_form: the SECOND BODY a character changes into in play.
+--
+-- BOOK-INGEST-AUDIT F74, built by Nightbane survey D5 (PR 2 of 4, after the
+-- Morphus catalog in 068). A Nightbane has a Facade and a Morphus (printed 87),
+-- and Nate's answers fix the shape: ONE sheet with a form toggle that redraws
+-- attributes, pools, Horror Factor, speed and bonuses, and DAMAGE TRACKED
+-- SEPARATELY PER FORM.
+--
+-- The class states how the form differs - a `second_form` frontmatter block,
+-- validated in js/parser.js. This column holds what the CHARACTER rolled for it,
+-- as JSON, and `{}` for every character whose class has no second body:
+--
+--   { "active": "first" | "second",
+--     "form_rolls": { "pools": { "sdc": 70 } },
+--     "hp_rolls": [7, 9],
+--     "results": [ { "key": "<table>: <name>", "sub_choice": null,
+--                    "rolls": { "horror_factor": 3, "pools": { "sdc": 12 } } } ],
+--     "sdc_current": 84, "hp_current": 31 }
+--
+-- WHY ROLLS AND NOT TOTALS. Every dice value is rolled ONCE and kept, the rule
+-- `rolled_bonuses` and `hp_max` follow. The second form's maxima are FOLDED from
+-- these rolls on read (js/second-form.js), because its hit points are read
+-- against the second form's P.E., and that moves when a result is added.
+--
+-- WHY ONE JSON COLUMN AND NOT hp2_max, sdc2_current... The first form keeps the
+-- existing columns untouched, so every path that reads or writes them - play
+-- events, rest, the G.M. dashboard, level-up, the validator - behaves exactly as
+-- before for every character, and a one-body character cannot be affected. The
+-- second form is sparse: one book's classes carry it.
+--
+-- `results[].key` names a `morphus_characteristics.key` (the class's
+-- `second_form.traits_from` names the catalog). The create boundary refuses a
+-- key that is not an entry, a roll outside its dice, and a current value above
+-- the form's maximum; the PATCH clamps.
+ALTER TABLE characters ADD COLUMN second_form TEXT NOT NULL DEFAULT '{}';
+
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('069-character-second-form.sql');

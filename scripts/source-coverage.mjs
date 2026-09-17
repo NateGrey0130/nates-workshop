@@ -146,8 +146,14 @@ const groups = [
   // which is exactly the mechanism that failed three times before. Deriving
   // these lists from `CATALOGS` is the cause rather than the recurrence; F85
   // declined to and invited a taker to say so, and F100 now carries it.
+  //
+  // The tenth, `morphus_characteristics` (migration 068), landed after F100's
+  // smoke check did, so it is here because that check failed until it was.
+  // `name` labels its rows like every other group, though names repeat across
+  // its tables: a label is what an offender is printed as, not a key.
   ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
-      'super_abilities', 'enchantments', 'totems', 'talents'].map((t) => ({
+      'super_abilities', 'enchantments', 'totems', 'talents',
+      'morphus_characteristics'].map((t) => ({
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
@@ -156,7 +162,9 @@ const groups = [
 const pad = (s, n) => String(s).padEnd(n);
 // 16, not 14. `psionic_powers` is exactly 14 and already prints with no gap
 // before its first column; `super_abilities` is 15 and would run into it. F85.
-const LABEL_W = 16;
+// 25 since migration 068: `morphus_characteristics` is 23, and padEnd never
+// truncates, so at 16 its first count would print glued to its name.
+const LABEL_W = 25;
 console.log(`COVERAGE${' '.repeat(LABEL_W - 6)}${BUCKETS.map((b) => pad(b, 15)).join('')}`);
 const allOffenders = [];
 for (const g of groups) {
@@ -437,7 +445,8 @@ if (process.argv.includes('--vs-build')) {
         // declined to fix and named as its own recurring cost. If a ninth
         // catalog lands, both lists need it.
         ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
-            'super_abilities', 'enchantments', 'totems', 'talents'].map((t) => ({
+            'super_abilities', 'enchantments', 'totems', 'talents',
+            'morphus_characteristics'].map((t) => ({
           label: t,
           rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
         })),

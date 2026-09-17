@@ -58,7 +58,12 @@ export function decodeVehicleMdc(rows) {
   return rows;
 }
 
-export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'rolled_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor'];
+export const CHARACTER_JSON_COLUMNS = ['attributes', 'attribute_bonuses', 'rolled_bonuses', 'skills', 'powers', 'abilities', 'bio', 'combat', 'saves', 'armor',
+  // A second body's rolls and its own damage (migration 069, js/second-form.js).
+  // An OBJECT, and `{}` when the class has one body - never `[]`, which would
+  // read as a form with no keys and still iterate, and never null, which
+  // `state.results` would throw on.
+  'second_form'];
 
 // Parse, or fall back. Never throws — a malformed column should degrade to
 // empty, not take down the request.
