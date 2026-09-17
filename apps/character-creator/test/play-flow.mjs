@@ -52,17 +52,21 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import vm from 'node:vm';
+import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
 const repoRoot = join(appDir, '..', '..');
-// Not 8788 (a dev server may be up), not 8799 (regression.mjs and the
-// pick3cut5-room entry in launch.json both take it).
-const PORT = 8797;
+// Was a fixed 8797, the shape that let a stale server from another worktree
+// answer for regression.mjs on 2026-09-16. The OS picks a free port per run;
+// PLAY_FLOW_PORT pins one, refused with its owner named if taken. See
+// dev-server.mjs.
+const PORT = await choosePort('PLAY_FLOW_PORT');
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 const BASE = `${ORIGIN}/api/character-creator`;
 const CHAR = 901;
 const ITEM = 901;
+const marker = runMarker();
 
 let failures = 0;
 let checks = 0;
@@ -135,6 +139,20 @@ function wrangler(args) {
   });
 }
 
+// Before the build as well as before the spawn, so a pinned port that is taken
+// refuses at once.
+async function portGate() {
+  try {
+    await refuseIfTaken(PORT);
+  } catch (e) {
+    check('port ' + PORT + ' is free before the app is spawned', false);
+    console.log('  ' + e.message);
+    console.log('\nPLAY FLOW FAILED (port ' + PORT + ' is already in use)');
+    process.exit(1);
+  }
+}
+await portGate();
+
 console.log('[1/4] Building a database from nothing');
 
 // schema + catalogs only. The data scripts are 500-odd files that add classes
@@ -161,6 +179,7 @@ writeFileSync(bootstrap, [
   readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'),
   readFileSync(join(repoRoot, 'db', 'seed-catalogs.sql'), 'utf8'),
   fixture,
+  marker.sql,          // proves at boot that the server reads THIS database
 ].join('\n;\n'), 'utf8');
 
 const applied = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', bootstrap]);
@@ -170,24 +189,20 @@ if (applied.status !== 0) { console.log('\nPLAY FLOW FAILED (cannot build a data
 
 // ── boot the worker ─────────────────────────────────────────────────────────
 console.log('\n[2/4] Booting the app');
+await portGate();
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
   { cwd: repoRoot, shell: true, stdio: 'ignore' });
 
-async function waitForBoot(ms = 90000) {
-  const started = Date.now();
-  while (Date.now() - started < ms) {
-    try { if ((await fetch(`${BASE}/me`)).ok) return true; } catch { /* not up yet */ }
-    await new Promise((r) => setTimeout(r, 700));
-  }
-  return false;
+// Answering 200 on /me is not enough - ANY server does that, including another
+// run's. The marker draft exists only in the database built above.
+const boot = await waitForOwnServer({ base: BASE, child: server, marker, port: PORT });
+check('the worker answers on port ' + PORT + ' and serves the database this run built', boot.ok);
+if (!boot.ok) {
+  console.log('  ' + boot.why);
+  console.log('\nPLAY FLOW FAILED (worker never came up as this run\'s own)'); process.exit(1);
 }
-if (!await waitForBoot()) {
-  check('the worker answers on port ' + PORT, false, 'timed out waiting for /me');
-  console.log('\nPLAY FLOW FAILED (worker never came up)'); process.exit(1);
-}
-check('the worker answers on port ' + PORT, true);
 
 // ── reading the database back ───────────────────────────────────────────────
 // Through the app's own endpoints, so an assertion exercises the read path too.

@@ -26,12 +26,19 @@ import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE
 import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
+import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const appDir = join(testDir, '..');
 const repoRoot = join(appDir, '..', '..');
-const PORT = 8799;                       // not 8788, so a dev server can stay up
+// NOT 8799 ANY MORE. A fixed port let a stale workerd from another worktree's
+// run answer for this one, and the suite reported that tree's counts as a
+// regression in this one (2026-09-16). The OS picks a free port per run;
+// REGRESSION_PORT pins one, and is refused with its owner named if it is taken.
+// See dev-server.mjs.
+const PORT = await choosePort('REGRESSION_PORT');
 const BASE = `http://127.0.0.1:${PORT}/api/character-creator`;
+const marker = runMarker();
 
 let failures = 0;
 let checks = 0;
@@ -138,6 +145,20 @@ function cleanErr(text) {
   return (lines.join(' | ') || raw.trim()).slice(0, 300) || 'no output';
 }
 
+// Before the build as well as before the spawn, so a pinned port that is taken
+// refuses in a second rather than after minutes of building a database.
+async function portGate() {
+  try {
+    await refuseIfTaken(PORT);
+  } catch (e) {
+    check('port ' + PORT + ' is free before the app is spawned', false);
+    console.log('  ' + e.message);
+    console.log('\nREGRESSION FAILED (port ' + PORT + ' is already in use)');
+    process.exit(1);
+  }
+}
+await portGate();
+
 console.log('[1/7] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
@@ -152,6 +173,7 @@ for (const f of readdirSync(dataDir).filter((x) => x.endsWith('.sql')).sort()) {
   if (/^--\s*local-only\b/m.test(sql)) continue;      // seed-dev: unguarded inserts
   parts.push(sql);
 }
+parts.push(marker.sql);          // proves at boot that the server reads THIS database
 const bootstrap = join(state, 'bootstrap.sql');
 writeFileSync(bootstrap, parts.join('\n;\n'), 'utf8');
 
@@ -210,25 +232,21 @@ if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a dat
 
 // ── boot the worker ─────────────────────────────────────────────────────────
 console.log('\n[2/7] Booting the app');
+await portGate();              // again: the build above takes minutes
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
   { cwd: repoRoot, shell: true, stdio: 'ignore' });
 
-async function waitForBoot(ms = 90000) {
-  const started = Date.now();
-  while (Date.now() - started < ms) {
-    try {
-      const r = await fetch(`${BASE}/me`);
-      if (r.ok) return true;
-    } catch { /* not up yet */ }
-    await new Promise((r) => setTimeout(r, 700));
-  }
-  return false;
+// Answering 200 on /me is not enough - ANY server does that, including another
+// run's. The marker draft exists only in the database built above.
+const boot = await waitForOwnServer({ base: BASE, child: server, marker, port: PORT });
+check('the worker answers on port ' + PORT + ' and serves the database this run built', boot.ok);
+if (!boot.ok) {
+  console.log('  ' + boot.why);
+  console.log('\nREGRESSION FAILED (worker never came up as this run\'s own)');
+  process.exit(1);
 }
-const booted = await waitForBoot();
-check('the worker answers on port ' + PORT, booted, 'timed out waiting for /me');
-if (!booted) { console.log('\nREGRESSION FAILED (worker never came up)'); process.exit(1); }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 async function api(method, path, body) {
