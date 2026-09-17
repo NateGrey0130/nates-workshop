@@ -79,22 +79,23 @@ export const MORPHUS_RULES = {
     page: '92', children: { kinds: ['combination'] },
     says: 'Almost human allows one characteristic: a result asking for more is ignored and rerolled',
   },
-  // "Ignore any result of 61% or higher" - AS PRINTED. That also shuts out
-  // 61-80% Unnatural Limbs from a multi-roll, which is probably an erratum for
-  // 81%; the data script records the reading and so does this. The book's
-  // alternative ("roll 1D6x10%") lands on the same three tables and is not
-  // offered separately.
+  // "Ignore any result of 61% or higher" is READ AS 81% (Nate, 2026-09-17; the
+  // Nightbane survey's follow-up decisions). As printed it also shuts out 61-80%
+  // Unnatural Limbs, so a multi-roll could never reach a whole table - almost
+  // certainly an erratum for 81%, the band where the multi-characteristic rows
+  // begin. So only those rows are ignored and rerolled. The book's alternative
+  // ("roll 1D6x10%") is not offered: it was written around the printed 61%.
   'Nightbane Characteristics: Two characteristics': {
-    page: '92', children: { from: 61 },
-    says: 'several characteristics: a result of 61% or higher is ignored, as printed',
+    page: '92', children: { from: 81 },
+    says: 'several characteristics: a result asking for more characteristics (81% or higher) is ignored - the printed 61% read as an erratum',
   },
   'Nightbane Characteristics: Three characteristics': {
-    page: '92', children: { from: 61 },
-    says: 'several characteristics: a result of 61% or higher is ignored, as printed',
+    page: '92', children: { from: 81 },
+    says: 'several characteristics: a result asking for more characteristics (81% or higher) is ignored - the printed 61% read as an erratum',
   },
   'Nightbane Characteristics: Four Characteristics': {
-    page: '92', children: { from: 61 },
-    says: 'several characteristics: a result of 61% or higher is ignored, as printed',
+    page: '92', children: { from: 81 },
+    says: 'several characteristics: a result asking for more characteristics (81% or higher) is ignored - the printed 61% read as an erratum',
   },
   // Every combination rerolls its own combination bands.
   'Unearthly Beauty: Combination of Two': {

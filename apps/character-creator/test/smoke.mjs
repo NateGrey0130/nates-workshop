@@ -7621,12 +7621,15 @@ section('The Morphus generator (survey D5, PR 3 of 4)');
     offeredKeys(pick([], 'Appearance: Inhuman Shape', 'Stigmata: Bones')).length === 7);
 
   const two = pick([], 'Appearance: Inhuman Shape', 'Stigmata: Bones', 'Nightbane Characteristics: Two characteristics');
-  check('several characteristics (printed 92) ignore 61% or higher, as printed: Unnatural Limbs is not offered',
+  // Printed 92 says "ignore 61% or higher"; Nate (2026-09-17) reads it as 81%,
+  // so Unnatural Limbs stays reachable and only the multi-characteristic rows go.
+  check('several characteristics (printed 92) ignore 81% or higher: Unnatural Limbs IS offered',
     JSON.stringify(offeredKeys(two)) === JSON.stringify(['Nightbane Characteristics: Unusual Facial Features',
-      'Nightbane Characteristics: Biomechanical', 'Nightbane Characteristics: Alien Creature']), offeredKeys(two).join(', '));
-  const twoRoll = rolled(two, 70, 99, 10);
-  check('and a 70 and a 99 are rerolled', twoRoll?.key === 'Nightbane Characteristics: Unusual Facial Features'
-    && twoRoll.rerolls.length === 2, JSON.stringify(twoRoll));
+      'Nightbane Characteristics: Biomechanical', 'Nightbane Characteristics: Alien Creature',
+      'Nightbane Characteristics: Unnatural Limbs']), offeredKeys(two).join(', '));
+  const twoRoll = rolled(two, 85, 99, 70);
+  check('and an 85 and a 99 are rerolled, landing on a 70 (Unnatural Limbs)',
+    twoRoll?.key === 'Nightbane Characteristics: Unnatural Limbs' && twoRoll.rerolls.length === 2, JSON.stringify(twoRoll));
 
   // Each combination rerolls its own combination bands.
   const combos = [
