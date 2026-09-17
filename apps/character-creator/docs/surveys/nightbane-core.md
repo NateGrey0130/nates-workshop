@@ -770,7 +770,7 @@ Once it is, in this order:
    `same_spell_as` pointing at the existing row; 27 are new; 4 are the false
    gaps above and are not written at all. Batch by the index's level headings,
    and carry the level from the index rather than the page position.
-2. **3–5 skills** and **3 psionic powers** (Divination, Mediumship/Clairsentience,
+2. **SHIPPED — PR #PRNUM: 1 skill, 2 per-system bases, 5 re-citations, 3 psionic powers.** **3–5 skills** and **3 psionic powers** (Divination, Mediumship/Clairsentience,
    Induce Pain — D7 corrected the five) — small enough for one pass.
    `Super-Hypnotic Suggestion` ships with the vampire classes, not here.
 3. **25 Talents** from printed 106–114, once D5 and the Talent storage question
@@ -810,6 +810,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1127](https://github.com/NateGrey0130/nates-workshop/pull/1127) | **D6 decided**: `W.P. Archery and Targeting` resolves to `W.P. Archery` (Spirit West precedent), no new row; the per-system combat-bonus gap filed as `BOOK-INGEST-AUDIT` F102. Survey and menu only |
 | 2026-09-16 | [#1128](https://github.com/NateGrey0130/nates-workshop/pull/1128) | **D7 decided**: `Suggestion` resolves to `Hypnotic Suggestion` (Heroes Unlimited precedent), no new row; the psionic gaps corrected from five to three, and `Super-Hypnotic Suggestion` counted. **All seven decisions taken.** Survey only |
 | 2026-09-16 | [#1129](https://github.com/NateGrey0130/nates-workshop/pull/1129) | **Step 1, spells: 39 rows** in `zzzzzzzzzzzzz-nb-spells.sql` - 27 new `nightbane` invocations and 12 `Nightbane:` retellings (9 linked by `same_spell_as`). The survey's cost finding withdrawn: the index misprints, and 92 of 131 spells are already here identical. Applied `--remote` before the merge. |
+| 2026-09-16 | #PRNUM | **Step 2, skills and psionics.** All 130 skill descriptions compared with the catalog: 88 identical, 27 W.P./hand-to-hand, the rest spelling. Wrote **Lore: Geomancy or Lines of Power** (30/+5), two `nightbane` rows in `skill_system_bases` (Lore: Demons & Monsters 35/+5, Research 50/+5), and **re-cited five skills off `Rifts Skill List`** to printed 52 and 57, where the full descriptions carry the same percentages (`rifts-skill-list` 34 -> 29). Psionics: 42 of 54 stat blocks match on cost; wrote **Divination, Mediumship/Clairsentience, Induce Pain**. Applied `--remote` before the merge. |
 
 ### What remains
 
