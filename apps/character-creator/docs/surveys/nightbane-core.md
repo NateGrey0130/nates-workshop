@@ -819,7 +819,7 @@ Once it is, in this order:
 3. **SHIPPED — PR #1131: all 25 Talents.** **25 Talents** from printed 106–115 (not 114: Swarm Self's tail
    and all of Lord/Lady of the Wild are on 115). The storage question was settled by F76; D5 did not block,
    because a prerequisite naming a Morphus table is free text.
-4. **The classes**, one batch per section, cited to the entry's own pages.
+4. **IN PROGRESS - #1135: Psychic, Sorcerer, Mystic.** **The classes**, one batch per section, cited to the entry's own pages. The Nightbane R.C.C. and its pairings wait for D5's generator.
 5. **SHIPPED — PR #1132: 655 gear rows and 35 vehicles**, taken before the classes. **Gear and vehicles, all of it** — D4: ~640–690 `nightbane` rows off printed
    204–232, in section batches, before any class that cites gear by slug.
 
@@ -858,6 +858,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1131](https://github.com/NateGrey0130/nates-workshop/pull/1131) | **Step 3, Talents: 25 rows** in `zzzzzzzzzzzzz-nb-talents.sql` - 21 Common, 4 Elite; names from printed 107's list (`Shroud`, `Nightbringer`). Activation `ppe` is the minimum, 0 on the two that vary (Storm Maker, Lord/Lady of the Wild); three clean cost pairs. The chapter runs to printed 115, not 114. A reconcile pass checked every row against the page. Applied `--remote` before the merge. |
 | 2026-09-16 | [#1132](https://github.com/NateGrey0130/nates-workshop/pull/1132) | **Step 4, equipment: 655 gear rows and 35 vehicles** in eight section scripts (`zzzzzzzzzzzzz-nb-gear-a..g`, `zzzzzzzzzzzzz-nb-vehicles.sql`), shaped on HU's and diffed row by row against them. Printed 225's communications/surveillance section, never extracted, read here (29 rows). Nightbane disagrees with HU on a handful of values - Heavy Machinegun $6000, 90mm Recoilless 2D4x100, the shotguns' printed damage - and prints none of HU's camping/lock-pick list or military vehicles. Three reconcile passes over every row found two defects, fixed before the apply. `books.json`'s substituted_digits note corrected. Applied `--remote` before the merge. |
 | 2026-09-16 | [#1133](https://github.com/NateGrey0130/nates-workshop/pull/1133) | **D5 decided, on Nate's word: build the Morphus generator first**, and with it F74's second body. Tables measured: 19 tables and 154 entries on printed 91-106; Bear and Amphibian are routed to but never printed. Nate's answers: a Facade/Morphus sheet toggle, a reroll for the unprinted tables, and roll/pick/mix generation. The Nightbane R.C.C. and its pairings wait; every other class ships ahead. |
+| 2026-09-16 | [#1135](https://github.com/NateGrey0130/nates-workshop/pull/1135) | **Step 5 begins: the three human classes** - Psychic P.C.C. (`nb-psychic`, printed 68-69), Sorcerer (`nb-sorcerer`, 115-117), Mystic (`nb-mystic`, 117-118). Spells and psionics as named lists; ladders read off renders of printed 233, whose text layer mixes columns. `CORE_SDC_BY_CLASS` at 3D6 per printed 36 (not the men-of-arms split). 7 gear stubs. Classes 318 -> 321. Applied `--remote` before the merge. |
 
 ### What remains
 
