@@ -322,11 +322,11 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 326 |
+| classes (published, live) | 330 |
 | skills | 390 |
 | per-system skill bases | 89 |
 | spells | 974 |
-| psionic powers | 132 |
+| psionic powers | 133 |
 | gear | 2825 |
 | vehicles | 255 |
 

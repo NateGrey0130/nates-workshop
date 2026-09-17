@@ -675,6 +675,11 @@ export const CORE_SDC_BY_CLASS = {
   // character 3D6 and names no separate figure for a race, so the book's own
   // rule wins. The Hunter, Ashmedai, Namtar and Snake Bird state sdc_base.
   'nb-doppleganger': '3D6',
+  // The Wampyr R.C.C. (printed 188-189) prints "2D6x10+20 plus those gained
+  // before the transformation" - a racial pool bonus over an unstated base, as
+  // the Doppleganger's is - so the base is printed 36's 3D6. The two vampires
+  // state sdc_base 0 (hit points only) and the Guardian states its own.
+  'nb-wampyr': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
