@@ -777,7 +777,7 @@ Once it is, in this order:
    and all of Lord/Lady of the Wild are on 115). The storage question was settled by F76; D5 did not block,
    because a prerequisite naming a Morphus table is free text.
 4. **The classes**, one batch per section, cited to the entry's own pages.
-5. **Gear and vehicles, all of it** — D4: ~640–690 `nightbane` rows off printed
+5. **SHIPPED — PR #1132: 655 gear rows and 35 vehicles**, taken before the classes. **Gear and vehicles, all of it** — D4: ~640–690 `nightbane` rows off printed
    204–232, in section batches, before any class that cites gear by slug.
 
 What is deliberately left, with the reason for each:
@@ -813,6 +813,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-16 | [#1129](https://github.com/NateGrey0130/nates-workshop/pull/1129) | **Step 1, spells: 39 rows** in `zzzzzzzzzzzzz-nb-spells.sql` - 27 new `nightbane` invocations and 12 `Nightbane:` retellings (9 linked by `same_spell_as`). The survey's cost finding withdrawn: the index misprints, and 92 of 131 spells are already here identical. Applied `--remote` before the merge. |
 | 2026-09-16 | [#1130](https://github.com/NateGrey0130/nates-workshop/pull/1130) | **Step 2, skills and psionics.** All 130 skill descriptions compared with the catalog: 88 identical, 27 W.P./hand-to-hand, the rest spelling. Wrote **Lore: Geomancy or Lines of Power** (30/+5), two `nightbane` rows in `skill_system_bases` (Lore: Demons & Monsters 35/+5, Research 50/+5), and **re-cited five skills off `Rifts Skill List`** to printed 52 and 57, where the full descriptions carry the same percentages (`rifts-skill-list` 34 -> 29). Psionics: 42 of 54 stat blocks match on cost; wrote **Divination, Mediumship/Clairsentience, Induce Pain**. Applied `--remote` before the merge. |
 | 2026-09-16 | [#1131](https://github.com/NateGrey0130/nates-workshop/pull/1131) | **Step 3, Talents: 25 rows** in `zzzzzzzzzzzzz-nb-talents.sql` - 21 Common, 4 Elite; names from printed 107's list (`Shroud`, `Nightbringer`). Activation `ppe` is the minimum, 0 on the two that vary (Storm Maker, Lord/Lady of the Wild); three clean cost pairs. The chapter runs to printed 115, not 114. A reconcile pass checked every row against the page. Applied `--remote` before the merge. |
+| 2026-09-16 | [#1132](https://github.com/NateGrey0130/nates-workshop/pull/1132) | **Step 4, equipment: 655 gear rows and 35 vehicles** in eight section scripts (`zzzzzzzzzzzzz-nb-gear-a..g`, `zzzzzzzzzzzzz-nb-vehicles.sql`), shaped on HU's and diffed row by row against them. Printed 225's communications/surveillance section, never extracted, read here (29 rows). Nightbane disagrees with HU on a handful of values - Heavy Machinegun $6000, 90mm Recoilless 2D4x100, the shotguns' printed damage - and prints none of HU's camping/lock-pick list or military vehicles. Three reconcile passes over every row found two defects, fixed before the apply. `books.json`'s substituted_digits note corrected. Applied `--remote` before the merge. |
 
 ### What remains
 
