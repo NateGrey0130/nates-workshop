@@ -16,6 +16,7 @@ import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
+import { isHandToHand, oneHandToHand, replacePrompt } from './js/hand-to-hand.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -2301,6 +2302,10 @@ function skillPickBlock(grants) {
 
 function setLevelPick(gk, slot, name) {
   const list = S.levelPicks[gk] || (S.levelPicks[gk] = []);
+  // The slot being written is excepted, so changing it from one Hand to Hand
+  // style to another is not asked to replace the value it is overwriting.
+  const mine = (r) => r.at === 'level' && r.gk === gk && r.slot === slot;
+  if (name && !makeRoomForHandToHand(name, { except: mine })) { render(); return; }
   list[slot] = name || null;
   render();
 }
@@ -2940,6 +2945,80 @@ function takenNames() {
   const groups = Object.values(S.groupPicks).flat().map((n) => String(n).toLowerCase());
   return new Set([...occ, ...groups, ...S.related.map((n) => n.toLowerCase()), ...S.secondary.map((n) => n.toLowerCase())]);
 }
+
+// Every Hand to Hand style on the character, by every route, IN THE ORDER
+// skillsPayload() emits its rows - fixed class skills, choice-group picks,
+// related, secondary, programs, then the picks later levels earned. The order
+// is the contract: oneHandToHand() keeps the last of equals, so reading the
+// routes in a different order here would have the Skills step strike through
+// one style while the save kept the other. `at` is where the row lives, so a
+// replaced PICK can be taken back out of the list it was made on.
+function handToHandHeld() {
+  if (!S.cls) return [];
+  const occ = S.cls.skills?.occ_skills || [];
+  const rows = [];
+  for (const s of occ) {
+    if (!isGroup(s) && isHandToHand(s.name)) rows.push({ name: s.name, type: 'occ', at: 'class' });
+  }
+  occ.forEach((s, gi) => {
+    if (!isGroup(s)) return;
+    for (const n of S.groupPicks[gi] || []) {
+      if (isHandToHand(n)) rows.push({ name: n, type: 'occ', at: 'group', gi });
+    }
+  });
+  for (const n of S.related) if (isHandToHand(n)) rows.push({ name: n, type: 'related', at: 'related' });
+  for (const n of S.secondary) if (isHandToHand(n)) rows.push({ name: n, type: 'secondary', at: 'secondary' });
+  for (const r of programSkills()) if (isHandToHand(r.name)) rows.push({ name: r.name, type: 'program', at: 'program' });
+  for (const [gk, list] of Object.entries(S.levelPicks || {})) {
+    (list || []).forEach((n, slot) => {
+      if (n && isHandToHand(n)) rows.push({ name: n, type: 'related', at: 'level', gk, slot });
+    });
+  }
+  return rows;
+}
+
+// The styles that are on the character's lists and will NOT be on the saved
+// character, lower-cased, mapped to what replaced each. Derived, never stored:
+// a class-granted style cannot be removed from the class, so "replaced" has to
+// be something the save works out - and working it out every time means a
+// restored draft, a changed class or an un-ticked pick cannot leave a stale
+// answer behind. Un-tick the upgrade and the granted style is simply back.
+function handToHandReplaced() {
+  const { kept, dropped } = oneHandToHand(handToHandHeld());
+  return new Map(dropped.map((r) => [String(r.name).toLowerCase(), kept.name]));
+}
+
+// Asked at the moment a Hand to Hand style is about to be taken while another
+// is held. False means the player said no and nothing may change.
+//
+// `except` names the slot being written, so changing a level pick from Expert
+// to Martial Arts is not asked to replace the Expert it is overwriting.
+//
+// A CHOICE-GROUP pick is a grant, and a style the player spent a pick on beats
+// a grant - so ticking one while a chosen style stands replaces nothing, and
+// is not asked about. The Skills step shows it struck through instead.
+//
+// On yes, every other style the player CHOSE comes off the list it was made on
+// and its pick is free again. A granted one stays where it is - it belongs to
+// the class - and handToHandReplaced() keeps it off the character.
+function makeRoomForHandToHand(name, { granted = false, except = () => false } = {}) {
+  if (!isHandToHand(name)) return true;
+  const others = handToHandHeld().filter((r) => !except(r));
+  const standing = oneHandToHand(others).kept;
+  if (!standing) return true;
+  const standingChosen = standing.type === 'related' || standing.type === 'secondary';
+  if (granted && standingChosen) return true;
+  if (!window.confirm(replacePrompt(standing.name, name, !standingChosen))) return false;
+  if (granted) return true;
+  for (const r of others) {
+    // Spliced in place: toggleSkill() is holding a reference to the list.
+    const list = r.at === 'related' ? S.related : r.at === 'secondary' ? S.secondary : null;
+    if (list) list.splice(list.indexOf(r.name), 1);
+    else if (r.at === 'level') S.levelPicks[r.gk][r.slot] = null;
+  }
+  return true;
+}
+
 // The class with the bonuses its SKILLS grant folded in.
 //
 // Boxing is "+1 attack per melee, +2 parry & dodge, +1 roll, +2 P.S." The sheet
@@ -2959,6 +3038,14 @@ function takenNames() {
 function skillBonusClass() {
   if (!S.cls) return S.cls;
   const held = takenNames();
+  // A replaced Hand to Hand style is still on the class's list and is not on
+  // the character, so its schedule must not be summed in with its successor's.
+  // The successor is added by name because it may be a pick a later level
+  // earned, which takenNames() does not span.
+  for (const [gone, kept] of handToHandReplaced()) {
+    held.delete(gone);
+    held.add(String(kept).toLowerCase());
+  }
   const rows = (S.skillCatalog || []).filter((sk) => held.has(String(sk.name).toLowerCase()));
   // The wizard only ever builds a level 1 character, so that is what the
   // Hand to Hand schedule is read at. Levelling up goes through the sheet,
@@ -3074,6 +3161,14 @@ function renderSkills() {
   // how a list was folded is not part of the character.
   S.groupUi ||= {};
   const GROUP_SHORT = 8;
+  const hthReplaced = handToHandReplaced();
+  const hthStanding = oneHandToHand(handToHandHeld()).kept;
+  // "Hand to Hand: Basic" -> "Hand to Hand: Basic (replaced by ...)", for the
+  // places a choice-group pick is shown by name.
+  const hthLabel = (n) => {
+    const by = hthReplaced.get(String(n).toLowerCase());
+    return by ? `${n} (replaced by ${by})` : n;
+  };
   const occParts = (sk.occ_skills || []).map((s, gi) => {
     const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
     if (!isGroup(s)) {
@@ -3085,6 +3180,16 @@ function renderSkills() {
       const times = s.choose || (Array.isArray(s.with) ? s.with.length : 0);
       const withHtml = Array.isArray(s.with) && s.with.length
         ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(pairedWith(s.with))}</div>` : '';
+      // A Hand to Hand style the player traded up from. Still the class's to
+      // grant, so it stays listed - struck through, and saying what took its
+      // place - rather than vanishing from a list headed "automatic".
+      const gone = hthReplaced.get(String(s.name).toLowerCase());
+      if (gone) {
+        return { fixed: true, noted: !!(s.note || withHtml), replaced: `${s.name} replaced by ${gone}`,
+          html: `<div class="chkrow muted">✘ <span><s>${esc(s.name)}</s>
+            <span class="small">— replaced by ${esc(gone)}</span></span>
+            <span class="pct">—</span></div>${withHtml}${noteHtml}` };
+      }
       return { fixed: true, noted: !!(s.note || withHtml), html: `<div class="chkrow">✔ <span>${esc(s.name)}${times > 1 ? ` ×${times}` : ''}</span>
         <span class="pct">${r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—'}</span></div>${withHtml}${noteHtml}` };
     }
@@ -3122,7 +3227,7 @@ function renderSkills() {
     // Satisfied and not reopened: what it chose, and the way back in.
     if (done && !ui.open) {
       return { fixed: false, html: `${head}${noteHtml}<div class="grp-done">
-        <span>✔ ${esc(picked.join(', '))}</span>
+        <span>✔ ${esc(picked.map(hthLabel).join(', '))}</span>
         <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi(${gi}, 'open', true)">Change</button></div>` };
     }
     const hits = new Set(Picker.filter(available.map((name) => ({ name })), ui.filter).map((r) => r.name));
@@ -3145,7 +3250,7 @@ function renderSkills() {
       return `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}; margin-left:18px">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="group" data-group="${gi}" data-limit="${s.choose}" data-name="${esc(name)}">
-        <span>${esc(name)}${hint}</span>
+        <span>${esc(hthLabel(name))}${hint}</span>
         <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
     }).join('');
     const filterBox = available.length > GROUP_SHORT
@@ -3171,7 +3276,11 @@ function renderSkills() {
       + `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi('occ', 'open', false)">Hide the automatic skills</button>`
     : `<div class="grp-done">
         <span>✔ ${fixedParts.length} skill${fixedParts.length === 1 ? '' : 's'} granted by the class${
-          noted ? ` <span class="muted small">· ${noted} with a note</span>` : ''}</span>
+          noted ? ` <span class="muted small">· ${noted} with a note</span>` : ''}${
+          // Folded away, a replacement would be invisible on the very step it
+          // was made on - so it is named on the fold, like the note count.
+          fixedParts.filter((p) => p.replaced).map((p) =>
+            ` <span class="muted small">· ${esc(p.replaced)}</span>`).join('')}</span>
         <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi('occ', 'open', true)">Show</button></div>`;
   const occRows = fixedHtml + occParts.filter((p) => !p.fixed).map((p) => p.html).join('');
 
@@ -3234,10 +3343,20 @@ function renderSkills() {
       // on a different list - takenNames() spans the O.C.C. skills, the group
       // picks and both pick lists. Only that branch earns a reason on the row.
       const held = !on && taken.has(s.name.toLowerCase());
-      const blocked = held || (!on && chosen.length >= limit);
+      // A Hand to Hand style taken while another stands REPLACES it
+      // (js/hand-to-hand.js), and the row says so before it is clicked - the
+      // confirm that follows should not be the first the player hears of it.
+      // When the one it replaces is a pick on THIS list the swap frees the
+      // slot it fills, so a full list does not block it.
+      const swapsFor = !on && !held && isHandToHand(s.name) ? hthStanding : null;
+      const swapInList = swapsFor && chosen.includes(swapsFor.name);
+      const blocked = held || (!on && chosen.length >= limit && !swapInList);
+      const gone = held && hthReplaced.get(s.name.toLowerCase());
       const hint = isRepeatableRow(s.name)
         ? ' <span class="muted small">— once per language; you will be asked which</span>'
-        : held ? ' <span class="muted small">— already on this character</span>' : '';
+        : gone ? ` <span class="muted small">— granted by the class, replaced by ${esc(gone)}</span>`
+        : held ? ' <span class="muted small">— already on this character</span>'
+        : swapsFor ? ` <span class="muted small">— replaces ${esc(swapsFor.name)}</span>` : '';
       // The category is the heading now, so the row carries only its numbers.
       return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
@@ -3421,7 +3540,9 @@ function toggleGroupPick(groupIndex, name, limit) {
   }
   const i = list.indexOf(name);
   if (i >= 0) list.splice(i, 1);
-  else if (list.length < limit) list.push(name);
+  // A declined replacement still re-renders: the browser has already ticked
+  // the box, and only a render puts it back.
+  else if (list.length < limit && makeRoomForHandToHand(name, { granted: true })) list.push(name);
   render();
 }
 
@@ -3443,7 +3564,10 @@ function toggleSkill(kind, name) {
     return;
   }
   const i = list.indexOf(name);
-  if (i >= 0) list.splice(i, 1); else list.push(name);
+  if (i >= 0) list.splice(i, 1);
+  // Asked BEFORE the push, and a no still re-renders - the browser has already
+  // ticked the box, and only a render puts it back.
+  else if (makeRoomForHandToHand(name)) list.push(name);
   render();
 }
 
@@ -4482,6 +4606,7 @@ function skillsAtLevelOne() {
   const find = (n) => skillByName().get(n)
     || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
+  const replaced = handToHandReplaced();
   const iq = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll())).iq_skill_bonus_pct || 0;
 
   // pct stays the true current percentage, because level-up increments it and
@@ -4552,7 +4677,11 @@ function skillsAtLevelOne() {
       per_level: +psiClass().skills.skill_programs.per_level || 0,
       type: 'program',
     })),
-  ].map(withIq);
+    // One Hand to Hand style (js/hand-to-hand.js). A replaced one is still on
+    // the class's list, or still ticked in a choice group, and is not on the
+    // character - so this is where it stops, which is every consumer at once:
+    // the Review step, the level-up proposal, the draft and the save.
+  ].filter((row) => !replaced.has(String(row.name).toLowerCase())).map(withIq);
 }
 
 // What actually gets saved: the level-1 skills advanced to the starting level,
@@ -4569,7 +4698,10 @@ function skillsPayload() {
   const advanced = rows.map((sk) => (sk.pct && sk.per_level
     ? { ...sk, pct: Math.min(SKILL_PCT_CAP, sk.pct + sk.per_level * gained) }
     : sk));
-  return [...advanced, ...levelPickRows()];
+  // Filtered like the level-1 rows, and defensively: setLevelPick() never
+  // leaves two chosen styles standing, but a draft saved before it asked can.
+  const replaced = handToHandReplaced();
+  return [...advanced, ...levelPickRows().filter((row) => !replaced.has(String(row.name).toLowerCase()))];
 }
 
 // Skills chosen with the picks the levels granted. `gained_at_level` records

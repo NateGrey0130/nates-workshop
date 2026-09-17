@@ -6,7 +6,7 @@
 // until the player comes back to it. Owner/GM only, same as any character write.
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
-import { listPending, resolvePicks, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { listPending, resolvePicks, mergePicked, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
@@ -77,7 +77,9 @@ export async function onRequestPost({ request, env, params }) {
 
   // The picks endpoint checks its own allowance and categories, but the same
   // boundary applies here as everywhere else — one place decides what is legal.
-  const merged = skills.concat(picked.skills);
+  // mergePicked, not concat: a Hand to Hand style picked here replaces the one
+  // the character holds rather than joining it.
+  const { skills: merged, replaced } = mergePicked(skills, picked.skills);
   const cls = await loadCharacterClass(env, request.url, character);
   const { violations } = validateCharacter({
     character: { level: character.level }, cls, skills: merged, attributes: character.attributes,
@@ -100,6 +102,7 @@ export async function onRequestPost({ request, env, params }) {
   return json({
     ok: true,
     applied: picked.skills.map((s) => ({ name: s.name, pct: s.pct, override: !!s.override })),
+    replaced,
     pending: left,
     remaining: left.reduce((n, g) => n + g.count, 0),
   });

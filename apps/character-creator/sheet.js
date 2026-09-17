@@ -3100,7 +3100,7 @@ function pickerBlock(grants, total, prefix) {
     const lang = C.pickLangs[`${prefix}-${i}`] || '';
     return `
     <div class="rowline">
-      <select id="${prefix}-pick-${i}" onchange="C.pickValues['${prefix}-${i}'] = this.value; render()">
+      <select id="${prefix}-pick-${i}" onchange="setSkillPick('${prefix}', ${i}, this.value)">
         <option value="">— skip —</option>${extra}${chosen ? opts : rowOptions}</select>
       ${isSecondary ? '<span class="muted small">secondary — any category</span>' : ''}
       ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}"
@@ -3121,6 +3121,35 @@ function pickerBlock(grants, total, prefix) {
     <input type="checkbox" ${showAll ? 'checked' : ''} onchange="C.pickShowAll = this.checked; render()">
     show all skills (${hiddenCount} outside this grant's categories — picking one is flagged as an override)
   </label>` : ''}`;
+}
+
+// One row of the picker changed.
+//
+// A character holds ONE Hand to Hand style (js/hand-to-hand.js), and the server
+// enforces that by replacing the held one when a new one is picked. So this is
+// where the player is told, and asked - before the pick exists, not after the
+// sheet has quietly lost a skill. A no leaves the row as it was; the re-render
+// is what puts the <select> back, since the browser has already changed it.
+//
+// What it replaces is the style standing on the sheet, or the one chosen in
+// ANOTHER row of this same block - the server refuses two in one request, so
+// the other row is cleared rather than left to fail at submit.
+function setSkillPick(prefix, i, value) {
+  const key = `${prefix}-${i}`;
+  const hth = globalThis.handToHand;
+  if (value && hth?.isHandToHand(value)) {
+    const otherRows = Object.keys(C.pickValues)
+      .filter((k) => k !== key && k.startsWith(`${prefix}-`) && hth.isHandToHand(C.pickValues[k]));
+    const onSheet = hth.oneHandToHand((C.data.skills || []).filter((s) => hth.isHandToHand(s.name))).kept;
+    const standing = otherRows.length ? { name: C.pickValues[otherRows[0]], type: 'related' } : onSheet;
+    if (standing && standing.name !== value) {
+      const granted = standing.type !== 'related' && standing.type !== 'secondary';
+      if (!window.confirm(hth.replacePrompt(standing.name, value, granted))) { render(); return; }
+      for (const k of otherRows) delete C.pickValues[k];
+    }
+  }
+  C.pickValues[key] = value;
+  render();
 }
 
 // Collect whatever the picker selected. A blank stays unspent.
@@ -3193,7 +3222,8 @@ async function claimPicks() {
     C.pickFilter = ''; C.pickValues = {}; C.pickLangs = {};
     C.claiming = false;
     await load();
-    flash(`Added ${res.applied.map((a) => a.name).join(', ')}.`);
+    flash(`Added ${res.applied.map((a) => a.name).join(', ')}.${
+      (res.replaced || []).map((r) => ` ${r.name} was replaced by ${r.by}.`).join('')}`);
   } catch (err) { flash('Could not add: ' + err.message, true); }
 }
 

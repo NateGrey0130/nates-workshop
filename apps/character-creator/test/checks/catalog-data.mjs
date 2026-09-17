@@ -17,6 +17,7 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
+import { isHandToHand, oneHandToHand, replacePrompt } from '../../js/hand-to-hand.js';
 
 // Declared once for the same skip-the-module contract as environment.mjs —
 // see the note there for why drift in either direction fails loud.
@@ -238,6 +239,76 @@ check('and only +3 parry at level 11', at(expert, 11).parry === 3, at(expert, 11
 const two = bonusesFromSkills([expert, h2h.find((r) => r.name.endsWith('Assassin'))], 1);
 check('two fighting styles take the better start, not the sum',
   two.combat.attacks_base === 4, two.combat.attacks_base);
+
+// ...and everything ELSE about two styles did stack - strike, parry, dodge and
+// damage were summed, because only attacks_base takes the larger. A character
+// holds ONE style (js/hand-to-hand.js): a class grants Basic or Expert, and the
+// book lets the player CHANGE it to a better one, not add one.
+check('every Hand to Hand table is a name the one-style rule recognises',
+  parsed.every((t) => isHandToHand(t.name)), parsed.map((t) => t.name).join(', '));
+check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Sword')
+  && !isHandToHand('Wrestling') && !isHandToHand('') && !isHandToHand(null));
+{
+  const occ = (name) => ({ name, type: 'occ' });
+  const swim = { name: 'Swimming', type: 'related' };
+  const one = [occ('Hand to Hand: Basic'), swim];
+  check('a list with one style comes back untouched', oneHandToHand(one).skills === one
+    && oneHandToHand(one).dropped.length === 0);
+  const up = oneHandToHand([occ('Hand to Hand: Basic'), swim, { name: 'Hand to Hand: Expert', type: 'related' }]);
+  check('a chosen style replaces the one the class granted',
+    up.kept.name === 'Hand to Hand: Expert' && up.dropped.map((d) => d.name).join() === 'Hand to Hand: Basic'
+    && up.skills.map((s) => s.name).join() === 'Swimming,Hand to Hand: Expert',
+    JSON.stringify(up.skills.map((s) => s.name)));
+  // The order the wizard emits rows in is fixed, and a program row comes AFTER
+  // the related picks - so "the last row wins" alone would let a program's
+  // grant overrule the style the player deliberately spent a pick on.
+  const late = oneHandToHand([{ name: 'Hand to Hand: Martial Arts', type: 'related' },
+    { name: 'Hand to Hand: Basic', type: 'program' }]);
+  check('a chosen style beats a granted one even when the grant comes later',
+    late.kept.name === 'Hand to Hand: Martial Arts', late.kept.name);
+  const again = oneHandToHand([{ name: 'Hand to Hand: Expert', type: 'related' },
+    { name: 'Hand to Hand: Commando', type: 'related', gained_at_level: 4 }]);
+  check('and of two chosen styles the later pick stands',
+    again.kept.name === 'Hand to Hand: Commando' && again.skills.length === 1, again.kept.name);
+  // The point of all of it: the numbers.
+  const held = oneHandToHand([{ ...expert, type: 'occ' },
+    { ...h2h.find((r) => r.name.endsWith('Commando')), type: 'related' }]).skills;
+  const alone = bonusesFromSkills([h2h.find((r) => r.name.endsWith('Commando'))], 5);
+  check('so a Commando who was granted Expert fights as a Commando, not as both',
+    JSON.stringify(bonusesFromSkills(held, 5)) === JSON.stringify(alone),
+    JSON.stringify(bonusesFromSkills(held, 5)?.combat));
+  check('the prompt names both styles and says whose the old one was',
+    /Hand to Hand: Basic, granted by the class/.test(replacePrompt('Hand to Hand: Basic', 'Hand to Hand: Expert', true))
+    && !/granted by the class/.test(replacePrompt('Hand to Hand: Basic', 'Hand to Hand: Expert', false)));
+
+  // Every route a second style can arrive by has to go through the rule, and
+  // they are separate functions in three files.
+  const src = (f) => readFileSync(join(f.startsWith('functions') ? repoRoot : appDir, f), 'utf8');
+  const fnOf = (text, name) => {
+    const at = text.indexOf(`function ${name}(`);
+    return at < 0 ? '' : text.slice(at, text.indexOf('\n}', at));
+  };
+  const app = src('app.js');
+  for (const name of ['toggleSkill', 'toggleGroupPick', 'setLevelPick']) {
+    check(`${name} asks before a Hand to Hand style is replaced`,
+      fnOf(app, name).includes('makeRoomForHandToHand'));
+  }
+  check('the wizard asks with a confirm', fnOf(app, 'makeRoomForHandToHand').includes('window.confirm'));
+  check('the saved skills leave the replaced style out',
+    fnOf(app, 'skillsAtLevelOne').includes('replaced.has') && fnOf(app, 'skillsPayload').includes('replaced.has'));
+  check('and so do the bonuses the wizard previews',
+    fnOf(app, 'skillBonusClass').includes('handToHandReplaced'));
+  check('the sheet asks too, on both of its pickers',
+    fnOf(src('sheet.js'), 'setSkillPick').includes('window.confirm')
+    && src('sheet.js').includes('onchange="setSkillPick('));
+  check('and loads the rule it asks with', src('sheet.html').includes('js/hand-to-hand.js'));
+  const base = 'functions/api/character-creator/';
+  for (const f of ['characters/[id]/picks.js', 'characters/[id]/level-confirm.js']) {
+    const text = src(base + f);
+    check(`${f} merges picks through the rule, not concat`,
+      text.includes('mergePicked(') && !/skills\.concat\(picked/.test(text));
+  }
+}
 
 // The notes are the bulk of what the tables say.
 const notes = skillLevelNotes([expert], 7);

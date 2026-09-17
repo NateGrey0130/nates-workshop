@@ -1430,6 +1430,37 @@ if (globalThis.__h2hId) {
     check('and has more moves to read than at level 1',
       (after.body.skill_level_notes || []).length > globalThis.__h2hNotes1,
       (after.body.skill_level_notes || []).length + ' vs ' + globalThis.__h2hNotes1);
+
+    // ONE STYLE (js/hand-to-hand.js). The picks that level-up banked are spent
+    // on a second Hand to Hand, which is exactly how a live Juicer came to hold
+    // Expert and Commando side by side with both schedules summed. The pick
+    // must REPLACE the Expert, and say that it did.
+    const bank = await api('GET', `/characters/${id}/picks`);
+    if ((bank.body.total || 0) > 0) {
+      if (bank.body.total >= 2) {
+        const both = await api('POST', `/characters/${id}/picks`, { picks: [
+          { name: 'Hand to Hand: Martial Arts', override: true },
+          { name: 'Hand to Hand: Commando', override: true },
+        ] });
+        check('two Hand to Hand styles in one request are refused', both.status === 422,
+          both.status + ' ' + JSON.stringify(both.body).slice(0, 200));
+      }
+      const swap = await api('POST', `/characters/${id}/picks`,
+        { picks: [{ name: 'Hand to Hand: Martial Arts', override: true }] });
+      check('a Hand to Hand pick is accepted while another style is held', swap.status === 200,
+        swap.status + ' ' + JSON.stringify(swap.body).slice(0, 300));
+      check('and the response names what it replaced',
+        (swap.body.replaced || []).some((r) => r.name === 'Hand to Hand: Expert'
+          && r.by === 'Hand to Hand: Martial Arts'), JSON.stringify(swap.body.replaced));
+      const swapped = await api('GET', `/characters/${id}`);
+      const styles = (swapped.body.character.skills || [])
+        .filter((s) => /^hand to hand/i.test(s.name)).map((s) => s.name);
+      check('leaving the character exactly one style, the one picked',
+        styles.length === 1 && styles[0] === 'Hand to Hand: Martial Arts', JSON.stringify(styles));
+    } else {
+      check('the levelled Hand to Hand character banked a pick to spend', false,
+        'no pending picks - this class grants none, so the replacement is unproven here');
+    }
   } else {
     check('the Hand to Hand character can be levelled', false, JSON.stringify(gain.body).slice(0, 200));
   }

@@ -19,7 +19,7 @@ import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor, secondFormHitPointDice,
          rollSecondFormHitPoints } from '../../_lib/leveling.js';
 import { diceBounds } from '../../../../../apps/character-creator/js/dice.js';
-import { insertGrantStatements, remainingGrants, resolvePicks, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, remainingGrants, resolvePicks, mergePicked, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
          powerPickErrors } from '../../_lib/power-picks.js';
@@ -140,9 +140,13 @@ export async function onRequestPost({ request, env, params }) {
   if (picked.errors?.length) return pickErrors(picked.errors);
 
   if (picked.skills.length) {
-    skills = skills.concat(picked.skills);
+    // mergePicked, not concat: a Hand to Hand style picked at this level
+    // replaces the one the character holds rather than joining it.
+    const merged = mergePicked(skills, picked.skills);
+    skills = merged.skills;
     skillsChanged = true;
     changes.picked = picked.skills.map((s) => ({ name: s.name, pct: s.pct, override: !!s.override }));
+    if (merged.replaced.length) changes.replaced = merged.replaced;
   }
   if (skillsChanged) { sets.push('skills = ?'); binds.push(JSON.stringify(skills)); }
 

@@ -13,6 +13,7 @@ import { safeParse } from './character-json.js';
 import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { isHandToHand, oneHandToHand } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { selectInChunks } from './sql-chunk.js';
 
 export async function listPending(env, characterId) {
@@ -116,6 +117,14 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     seen.add(key);
   }
 
+  // One Hand to Hand style per character (js/hand-to-hand.js). A style picked
+  // here REPLACES the one held - mergePicked() below does that - so two in one
+  // request would spend a pick on a skill the same request then discards.
+  const styles = names.filter(isHandToHand);
+  if (styles.length > 1) {
+    return { errors: [`Only one Hand to Hand style can be held: ${styles.join(', ')}`] };
+  }
+
   const held = new Set((existingSkills || []).map((s) => String(s.name).toLowerCase()));
   const alreadyHave = names.filter((n) => held.has(n.toLowerCase()));
   if (alreadyHave.length) {
@@ -201,6 +210,25 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
   }
 
   return { skills, errors };
+}
+
+// The character's skills with the resolved picks added - the ONE way either
+// endpoint does it, because a plain `concat` is how a Juicer granted Hand to
+// Hand: Expert came to hold Commando beside it, with both schedules summed.
+//
+// ONLY WHEN A STYLE WAS PICKED. A character saved before this rule existed may
+// hold two, and spending a pick on Swimming is not the moment to take one of
+// them away unasked - the sheet asks before a Hand to Hand pick is sent, and
+// nothing asks before any other.
+//
+// `replaced` is what the pick displaced, for the response and the level-up
+// record: a skill leaving a sheet is not something to do silently, even when
+// the player was asked first.
+export function mergePicked(existingSkills, pickedSkills) {
+  const merged = (existingSkills || []).concat(pickedSkills || []);
+  if (!(pickedSkills || []).some((s) => isHandToHand(s.name))) return { skills: merged, replaced: [] };
+  const { skills, kept, dropped } = oneHandToHand(merged);
+  return { skills, replaced: dropped.map((d) => ({ name: d.name, by: kept.name })) };
 }
 
 // Marks grants claimed, oldest first, consuming `spent` picks. A grant only
