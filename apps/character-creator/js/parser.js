@@ -1124,12 +1124,7 @@ export function combineClasses(rcc, occ) {
   // would leave the character with no hit points at all. So a pool the race
   // does not mention falls through to the occupation.
   //
-  // `xp_table` is on this list for a different reason from the pools, and a
-  // stronger one. Palladium names its experience charts by O.C.C. - "Knight &
-  // Noble", "Thief & Merchant" - and a RACE has none, because experience comes
-  // from what you do. Left off, an occupation's table was dropped on every
-  // Palladium character (race primary, occupation second since #210) and the
-  // race's absent table won, silently falling back to the house-rule default.
+  // `xp_table` is NOT on this list; it has its own rule, straight after it.
   //
   // UNLESS THE OCCUPATION SUPERSEDES THE RACE (F11). The Cosmo-Knight is not a
   // trade the character takes up, it is a transformation: the Cosmic Forge
@@ -1175,10 +1170,28 @@ export function combineClasses(rcc, occ) {
   // transformation would be dropped without the loop, and a superseding one
   // must replace the race's. Race wins when both state one.
   for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
-                     'starting_money', 'xp_table', 'horror_factor', 'second_form']) {
+                     'starting_money', 'horror_factor', 'second_form']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
     else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
+  // `xp_table` runs the OTHER way: when both halves state one, the OCCUPATION's
+  // wins, superseding or not. Palladium names its experience charts by O.C.C. -
+  // "Knight & Noble", "Thief & Merchant" - because experience comes from what
+  // you do, so a character who takes up a trade levels on the trade's chart.
+  // Left to the race, an occupation's table was dropped on every Palladium
+  // character (race primary, occupation second since #210).
+  //
+  // A race may still carry one, and it is not dead weight: some books also print
+  // a ladder for a race played WITHOUT an occupation - Nightbane printed 233 has
+  // "Hound & Hunter", "Wampyr" and "Nightprince & Vampire" beside the O.C.C.
+  // charts. Nate's call, 2026-09-17 (docs/surveys/nightbane-core.md, "Follow-up
+  // decisions after the import"): the race's ladder applies when it is played
+  // alone, which needs nothing here - `combineClasses` is not reached without an
+  // occupation, and the `{ ...rcc }` spread carries it into a pairing whose
+  // occupation states none - and an O.C.C.'s ladder wins a pairing. Until then
+  // this key rode the loop above, where the race won, and the one thing keeping
+  // that harmless was a regression invariant that no R.C.C. carried a table.
+  if (occ.xp_table != null) out.xp_table = occ.xp_table;
   // The attributes are the ONE field the book carves out, and it does not say
   // replace - it says "use these die rolls, or the attributes of the
   // character's original race, WHICHEVER ARE HIGHER". Per attribute, because
