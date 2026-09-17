@@ -586,7 +586,7 @@ picking:
 | rule | printed |
 |---|---|
 | Almost human: a Characteristics result asking for more than one characteristic | 92 |
-| Two/Three/Four characteristics: any result of 61% or higher, **as printed** — which shuts out Unnatural Limbs too, probably an erratum for 81%. The "1D6x10%" alternative is not offered separately | 92 |
+| Two/Three/Four characteristics: any result of 81% or higher. **The book prints 61%**, which would shut out Unnatural Limbs too; Nate (2026-09-17) reads it as an erratum for 81%. The "1D6x10%" alternative is not offered | 92 |
 | Unearthly Beauty Combination of Two and Other: 91% or higher; Other's "GM/player-invented form of beauty" sub-choice rolls nothing more | 93 |
 | Animal Form Combination of Two/Three: 96% or higher | 93, 94 |
 | Stigmata Combination of Two: 97% or higher (Horror Factors add) | 102 |
