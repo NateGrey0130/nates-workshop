@@ -12,8 +12,8 @@
 // ONE MODULE, READ BY EVERY SIDE. The GET endpoint folds a character's form into
 // the numbers the sheet draws; the PATCH endpoint clamps each form's current
 // pools to the maximum folded here; the create validator refuses a stored form
-// whose rolls could not have come off the dice; and the wizard's generator (the
-// next PR in D5) rolls through `rollSecondForm` and `rollTraitResult`. Two
+// whose rolls could not have come off the dice; and the wizard's generator
+// (js/morphus.js) rolls through `rollSecondForm` and `rollTraitResult`. Two
 // implementations of "what is this Morphus's S.D.C." is the pair that drifts.
 //
 // WHAT IS STORED IS WHAT WAS ROLLED, never a total. Every dice value - the
@@ -37,6 +37,16 @@
 //
 // `rolls` mirrors a `bonuses` block group by group - attributes, combat, saves,
 // pools - plus `horror_factor`, so a roll is found where its dice were written.
+//
+// A result MAY also carry `omit`: bonus paths ("attributes.PS", "pools.sdc")
+// its row prints but this character does not get, because a combination rule
+// gave that bonus to another result. One rule needs it today - the Animal Form
+// Table's Combination of Two/Three (printed 93-94) rolls 1D6 PER ATTRIBUTE to
+// decide which animal's bonus applies, so the animals' bonuses are never added
+// together. Without it every result's bonuses are summed, which is exactly what
+// that rule forbids. The dice behind an omitted bonus are still rolled and
+// stored - rolled once, like everything else - and simply not counted.
+// js/morphus.js writes it; the fold and the validator below read it.
 
 // derive.js is a classic script that installs `globalThis.derive`. Imported for
 // that side effect, so the fold below reads a character's first-form bonuses
@@ -48,7 +58,7 @@ import { secondFormHitPointDice } from './leveling.js';
 
 const GROUPS = ['attributes', 'combat', 'saves'];
 const SECOND_FORM_STATE_KEYS = ['active', 'form_rolls', 'hp_rolls', 'results', 'sdc_current', 'hp_current'];
-const RESULT_KEYS = ['key', 'sub_choice', 'rolls'];
+const RESULT_KEYS = ['key', 'sub_choice', 'rolls', 'omit'];
 export const FORM_NAMES = ['first', 'second'];
 
 const D = () => globalThis.derive;
@@ -90,6 +100,27 @@ function diceIn(bonuses) {
   return out;
 }
 
+// Every bonus a block ADDS, as "group.key" paths - a number or a dice value, in
+// the groups and pools the fold counts. What a result's `omit` may name, and
+// what js/morphus.js rolls 1D6 over for an Animal Form combination, so the two
+// cannot disagree about what "a bonus" is.
+export function bonusPaths(bonuses) {
+  const b = decodeTraitRow({ bonuses })?.bonuses;
+  const out = [];
+  if (!isObj(b)) return out;
+  for (const g of GROUPS) {
+    for (const [k, v] of Object.entries(isObj(b[g]) ? b[g] : {})) {
+      if (g === 'saves' && k === 'other') continue;
+      if (finite(v) || isDiceBonus(v)) out.push(`${g}.${k}`);
+    }
+  }
+  const pools = isObj(b.pools) ? b.pools : {};
+  for (const k of SECOND_FORM_POOLS) {
+    if (finite(pools[k]) || isDiceBonus(pools[k])) out.push(`pools.${k}`);
+  }
+  return out;
+}
+
 function rollBlock(bonuses) {
   const rolls = {};
   for (const { group, key, dice } of diceIn(bonuses)) {
@@ -123,11 +154,15 @@ export function rollSecondForm(form, level = 1) {
 // Add a bonuses block's numbers into `out`: a number counts itself, a dice value
 // counts what it rolled, and an unrolled one counts nothing and is REPORTED -
 // the rule classBonuses follows, never an average.
-function foldBlock(bonuses, rolls, out, unrolled, where) {
+// A path in `omit` counts nothing (see the header: a combination rule gave it
+// to another result).
+function foldBlock(bonuses, rolls, out, unrolled, where, omit = null) {
   if (!isObj(bonuses)) return;
+  const skip = (path) => !!omit && omit.includes(path);
   for (const g of GROUPS) {
     for (const [k, v] of Object.entries(isObj(bonuses[g]) ? bonuses[g] : {})) {
       if (g === 'saves' && k === 'other') continue;
+      if (skip(`${g}.${k}`)) continue;
       if (finite(v)) out[g][k] = (out[g][k] || 0) + v;
       else if (isDiceBonus(v)) {
         const r = rolls?.[g]?.[k];
@@ -142,6 +177,7 @@ function foldBlock(bonuses, rolls, out, unrolled, where) {
   const pools = isObj(bonuses.pools) ? bonuses.pools : {};
   for (const k of SECOND_FORM_POOLS) {
     const v = pools[k];
+    if (skip(`pools.${k}`)) continue;
     if (finite(v)) out.pools[k] += v;
     else if (isDiceBonus(v)) {
       const r = rolls?.pools?.[k];
@@ -219,7 +255,7 @@ export function secondFormView({ cls, character, rows = null }) {
       sub_choice: r.sub_choice ?? null, found: !!row,
     });
     if (!row) continue;
-    foldBlock(row.bonuses, r.rolls, bonus, unrolled, row.key);
+    foldBlock(row.bonuses, r.rolls, bonus, unrolled, row.key, Array.isArray(r.omit) ? r.omit : null);
     hfAdded += horrorAdded(row, r.rolls, unrolled);
     if (Number.isInteger(row.horror_factor_set)) sets.push(row.horror_factor_set);
   }
@@ -280,7 +316,8 @@ export function secondFormView({ cls, character, rows = null }) {
 //
 // Refused: a form on a class that has none; a result naming no catalog entry
 // (or an intro row, which is a table's preamble rather than a result); a
-// sub-choice the entry does not offer; any roll missing, outside its dice, or
+// sub-choice the entry does not offer; an `omit` naming a bonus the entry does
+// not print; any roll missing, outside its dice, or
 // with no dice behind it; the wrong number of hit point rolls for the level;
 // and a current value above the form's maximum.
 export function secondFormViolations({ cls, character, state, rows = null }) {
@@ -385,6 +422,20 @@ export function secondFormViolations({ cls, character, state, rows = null }) {
       push('second_form_sub_choice', offered.length
         ? `"${r.sub_choice}" is not one of ${r.key}'s choices (${offered.join('; ')})`
         : `${r.key} offers no choice, so it cannot carry "${r.sub_choice}"`, { key: r.key });
+    }
+    // `omit` names bonuses the row prints, once each - a path the row does not
+    // carry would be a claim about a bonus nobody could have had.
+    if (r.omit !== undefined && r.omit !== null) {
+      const carried = bonusPaths(row.bonuses);
+      if (!Array.isArray(r.omit) || r.omit.some((p) => typeof p !== 'string')) {
+        push('second_form_shape', `second_form.results[${i}].omit must be a list of bonus paths`, { key: r.key });
+      } else {
+        const bad = r.omit.filter((p, j) => !carried.includes(p) || r.omit.indexOf(p) !== j);
+        if (bad.length) {
+          push('second_form_omit', `${r.key} cannot omit ${bad.join(', ')}: `
+            + (carried.length ? `it adds only ${carried.join(', ')}, each once` : 'it adds no bonus'), { key: r.key });
+        }
+      }
     }
     checkRolls(row.bonuses, r.rolls, r.key, row.horror_factor);
   }

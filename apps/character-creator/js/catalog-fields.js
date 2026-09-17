@@ -229,7 +229,7 @@ export const CATALOGS = {
   // READ since migration 069: a character's `second_form.results` names rows
   // by `key`, folded by js/second-form.js and loaded (renames followed through
   // catalog_redirects) by functions/.../_lib/second-form.js. The wizard's
-  // generator is the next PR.
+  // generator (js/morphus.js) walks them, fetched through catalogs/traits.
   //
   // KEYED ON A STORED `key`, NOT ON A COMPOSITE. An entry is identified by
   // (table_name, roll_low, name) and `uniqueField` is one column, read as one
