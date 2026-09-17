@@ -402,6 +402,44 @@ check('and the forty totems, their JSON decoded',
     }
   }
 
+  // The Morphus tables (migration 068) arrive the way vessels did: one config
+  // entry, no endpoint. What smoke cannot see is the WRITE PATH against a real
+  // D1 - that the stored key's CHECK refuses a drifted key as a 422 rather than
+  // a 500, that a JSON list is validated on the way in, and that duplicate
+  // review stays out, as it does for vessels. The fixture row is deleted again.
+  {
+    const entry = {
+      key: 'Canine: Regression Probe', table_name: 'Canine', name: 'Regression Probe',
+      roll_low: 21, roll_high: 45, kind: 'effect', source_book: 'fixture',
+      bonuses: '{"attributes":{"PS":"1d6"},"pools":{"sdc":"1d4x10"}}',
+      routes: '[{"table":"Bear","count":1}]', sub_choices: '["Wolf","Fox"]', horror_factor: '1d4+1',
+    };
+    const made = await api('POST', '/catalogs/rows?catalog=morphus', entry);
+    check('an admin can create a Morphus table entry', made.status === 201, made.body);
+    const listed = await api('GET', '/catalogs/rows?catalog=morphus');
+    const back = (listed.body.rows || []).find((r) => r.key === entry.key);
+    check('and it reads back with its JSON intact',
+      back?.routes === entry.routes && back?.sub_choices === entry.sub_choices
+      && back?.bonuses === entry.bonuses && back?.horror_factor === '1d4+1'
+      && back?.source === 'manual', back);
+
+    const drifted = await api('PATCH', `/catalogs/rows?catalog=morphus&id=${made.body.id}`,
+      { name: 'Renamed Without Its Key' });
+    check('a rename that leaves the key behind is refused as a 422, not a 500',
+      drifted.status === 422 && /CHECK/.test(drifted.body.error || ''), drifted);
+    const badRoute = await api('POST', '/catalogs/rows?catalog=morphus',
+      { ...entry, key: 'Canine: Probe Two', name: 'Probe Two', routes: '[{"table":"Bear","count":0}]' });
+    check('and a route with no count is refused before it reaches the database',
+      badRoute.status === 422 && /Routes/.test(badRoute.body.error || ''), badRoute);
+    const dupes = await api('GET', '/catalogs/duplicates?counts_only=1&catalog=morphus');
+    check('duplicate review declines the Morphus tables cleanly, as it does vessels',
+      dupes.status === 400, dupes.status);
+
+    const removed = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--command',
+      `"DELETE FROM morphus_characteristics WHERE source_book = 'fixture'"`]);
+    check('the Morphus fixture row is removed again', removed.status === 0, cleanErr(removed.stderr || ''));
+  }
+
   // Change a percentage in place: no row added, no id moved, nothing a count
   // or a max(id) could see. The validator has to move anyway.
   const rows = await api('GET', '/catalogs/rows?catalog=skills');
@@ -2594,6 +2632,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     totems: ['totems', 'slug'],
     superAbilities: ['super_abilities', 'name'],
     talents: ['talents', 'name'],
+    // Keyed on `key`, not `name`: a Morphus entry's name repeats across tables
+    // (migration 068), so a retired name would match rows in other tables.
+    morphus: ['morphus_characteristics', 'key'],
   };
 
   // A catalog the redirect table uses that this map does not know would be

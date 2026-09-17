@@ -289,6 +289,10 @@ for (const [key, c] of Object.entries(CATALOGS)) {
   for (const f of c.fields) {
     if (!f.label || !f.type) catalogProblems.push(`${key}.${f.name}: missing label or type`);
     if (f.type === 'select' && !Array.isArray(f.options)) catalogProblems.push(`${key}.${f.name}: select without options`);
+    // A json_list with no `of` would validate every entry against nothing.
+    if (f.type === 'json_list' && !(f.of === 'string' || (f.of && typeof f.of === 'object'))) {
+      catalogProblems.push(`${key}.${f.name}: json_list without an 'of' shape`);
+    }
   }
 }
 check('catalog configs are internally consistent', catalogProblems.length === 0, catalogProblems.join('; '));
@@ -6583,6 +6587,74 @@ section('Totem animals (BOOK-INGEST-AUDIT F56)');
     !!coerceField(tf('skills'), '[{"name":"X","base":5,"bonus":5}]').error);
   check('while a skill\'s own bonuses stay flat-only',
     !!coerceField(CATALOGS.skills.fields.find((f) => f.name === 'bonuses'), '{"attributes":{"PS":"1d4"}}').error);
+}
+
+// The Morphus tables (migration 068, Nightbane survey D5). One row per ENTRY of
+// a percentile table, and an entry's name repeats across tables - so the three
+// decisions pinned here are the ones a tidy-up would undo: the stored `key` and
+// the CHECK that holds it to its parts, bonuses through the class validator,
+// and the JSON lists validated rather than stored as whatever text arrived.
+section('Morphus tables catalog');
+{
+  const mo = CATALOGS.morphus;
+  check('morphus exists and points at morphus_characteristics',
+    !!mo && mo.table === 'morphus_characteristics');
+  const f = (n) => (mo ? mo.fields : []).find((x) => x.name === n);
+  check('and is keyed and displayed on the stored key, not on a name that repeats',
+    !!mo && mo.uniqueField === 'key' && mo.displayField === 'key');
+  check('and `kind` is a select that keeps an unrecognised stored value',
+    f('kind')?.type === 'select' && f('kind').allowOther === true
+    && ['effect', 'route', 'combination', 'intro'].every((k) => f('kind').options.includes(k)));
+
+  // The SAME validateBonuses a class goes through, with dice and pools allowed:
+  // an accepted pool dice form and a refused one prove the validator ran.
+  check('bonuses go through validateBonuses and accept dice and pools',
+    f('bonuses')?.type === 'bonuses'
+    && !coerceField(f('bonuses'), '{"attributes":{"PS":"1d6"},"pools":{"sdc":"1d4x10"}}').error);
+  check('and refuse what that validator refuses',
+    !!coerceField(f('bonuses'), '{"pools":{"sdc":"1d4*10"}}').error);
+
+  const routes = f('routes');
+  check('routes accept a list of {table, count}, including a table the book never prints',
+    coerceField(routes, '[{"table":"Bear","count":1}]').value === '[{"table":"Bear","count":1}]');
+  check('and refuse a count below one',
+    !!coerceField(routes, '[{"table":"Canine","count":0}]').error);
+  check('and a key no reader knows', !!coerceField(routes, '[{"table":"Canine","count":1,"odds":5}]').error);
+  check('and a value that is not a list', !!coerceField(routes, '{"table":"Canine","count":1}').error);
+  check('and store NULL for blank or empty, so "has routes" is IS NOT NULL',
+    coerceField(routes, '').value === null && coerceField(routes, '[]').value === null);
+  // TEXT, because 73 entries add a roll. The same isDiceBonus a bonus value goes
+  // through, so the two cannot disagree about what a roll looks like.
+  const hf = f('horror_factor');
+  check('horror_factor takes dice, stored as written',
+    hf?.type === 'dice' && ['1d4', '1d6', '1d4+1', '1d4+2'].every((d) => coerceField(hf, d).value === d));
+  check('and a whole number, stored as text', coerceField(hf, 2).value === '2' && coerceField(hf, ' 3 ').value === '3');
+  check('and refuses anything else', ['1d', 'd6', 'lots', '1.5'].every((v) => !!coerceField(hf, v).error)
+    && !!coerceField(hf, 1.5).error);
+  check('while horror_factor_set stays a plain integer', f('horror_factor_set')?.type === 'int');
+  check('sub_choices accept strings and refuse anything else',
+    coerceField(f('sub_choices'), '["Wolf","Fox"]').value === '["Wolf","Fox"]'
+    && !!coerceField(f('sub_choices'), '["Wolf", 3]').error);
+
+  // The key is only as good as the CHECK behind it. Built from schema.sql, as
+  // the column check above is, so this is what a FRESH database enforces.
+  const mem = new DatabaseSync(':memory:');
+  mem.exec(readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8'));
+  const ins = mem.prepare('INSERT INTO morphus_characteristics (key, table_name, roll_low, roll_high, name, kind) VALUES (?,?,?,?,?,?)');
+  const refuses = (...args) => { try { ins.run(...args); return false; } catch { return true; } };
+  check('a row whose key is "<table_name>: <name>" is accepted',
+    !refuses('Canine: Were-Canine', 'Canine', 21, 45, 'Were-Canine', 'effect'));
+  check('and one whose key disagrees with its parts is refused',
+    refuses('Canine: Canine Head', 'Canine', 81, 100, 'Were-Canine', 'effect'));
+  check('the same name in ANOTHER table is a different entry',
+    !refuses('Feline: Were-Canine', 'Feline', 1, 10, 'Were-Canine', 'effect'));
+  check('and a fresh build records migration 068',
+    !!mem.prepare("SELECT 1 FROM schema_migrations WHERE filename = '068-morphus-characteristics.sql'").get());
+  mem.close();
+
+  // A table CHECK is refused input, not a server fault.
+  check('the catalog write path answers a CHECK failure with a 422',
+    /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
 }
 
 section('Ability validation');

@@ -195,7 +195,15 @@ console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} r
 // `enchantments` and `totems` are named by their own row text rather than by a
 // checklist the book prints. A check that cries wolf is worse than no check,
 // which is the whole argument of the comment below.
-const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities', 'talents'];
+//
+// `morphus_characteristics` IS IN, on the same criterion (migration 068). Its
+// names are the book's own entry headings, printed as a list down each of the
+// 19 tables on 91-106 ("46-60% Lycanthrope:"), and an intro row is named by
+// the table's printed heading ("Canine Table") - so a name absent from the text
+// means something. Names repeat ACROSS tables ("Combination of Two"), which
+// costs nothing here: a name is looked for in the book, not in a table.
+const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities', 'talents',
+  'morphus_characteristics'];
 const citationRows = new Map();   // slug -> [{ table, name }]
 for (const table of CITATION_TABLES) {
   for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {

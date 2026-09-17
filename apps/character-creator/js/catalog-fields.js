@@ -25,12 +25,19 @@
 //   bonuses   a class-shaped `bonuses` block, through validateBonuses. Flat
 //             numbers only, unless the field says `flatOnly: false`
 //   skill_list an `occ_skills`-shaped JSON list, through validateSkillEntries
+//   json_list a JSON list whose entries are the shape `of` names: 'string', or
+//             an object mapping each key to 'string' or 'count'. Checked here
+//             and nowhere else - a list no parser owns, so there is no second
+//             validator to reuse. NULL when blank or empty
+//   dice      a whole number or a dice expression ("2", "1d4+1", "1d4x10"),
+//             stored as TEXT, through the parser's own isDiceBonus - so it
+//             accepts exactly what a `bonuses` value does
 //
 // `blankAs` mirrors a NOT NULL DEFAULT in the schema. Several numeric columns
 // are NOT NULL DEFAULT 0, so coercing an empty form field to NULL fails the
 // insert. Where the column cannot hold NULL, say what empty means instead.
 
-import { validateBonuses, validateSkillEntries } from './parser.js';
+import { validateBonuses, validateSkillEntries, isDiceBonus } from './parser.js';
 
 export const CATALOGS = {
   skills: {
@@ -213,6 +220,75 @@ export const CATALOGS = {
       { name: 'duration', label: 'Duration', type: 'text' },
       { name: 'saving_throw', label: 'Saving throw', type: 'text' },
       { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
+
+  // The Morphus tables: one row per ENTRY of Nightbane's 19 percentile tables
+  // (printed 91-106), plus an `intro` row per table. Migration 068, survey D5.
+  // Nothing reads these yet - the second body and the wizard's generator are
+  // later PRs - so this entry is the editor and the write path, and no more.
+  //
+  // KEYED ON A STORED `key`, NOT ON A COMPOSITE. An entry is identified by
+  // (table_name, roll_low, name) and `uniqueField` is one column, read as one
+  // by the clash check, the rename redirect and the pair dismissal. So the row
+  // stores '<table_name>: <name>' and a CHECK in the schema holds it to those
+  // two columns; a save that edits one and not the other is refused. It is the
+  // display field too, because a bare name is ambiguous - "Combination of Two"
+  // is an entry in four tables - and a redirect filed from a display name
+  // would be ambiguous the same way.
+  //
+  // NO `MERGE_REFS` ENTRY, for the reason vehicles gives below, and a sharper
+  // one: two rows sharing a name in different tables are different entries by
+  // construction, so duplicate review would propose exactly the pairs that are
+  // never duplicates. Nothing references a row yet for a merge to repoint.
+  morphus: {
+    table: 'morphus_characteristics',
+    label: 'Morphus tables',
+    displayField: 'key',
+    uniqueField: 'key',
+    hasSource: true,
+    fields: [
+      { name: 'key', label: 'Key', type: 'text', required: true,
+        help: 'Exactly "<table>: <name>", e.g. "Canine: Were-Canine". The database refuses any other.' },
+      { name: 'table_name', label: 'Table', type: 'text', required: true,
+        help: 'The printed table without the word "Table": Appearance, Animal Form, Stigmata...' },
+      { name: 'name', label: 'Name', type: 'text', required: true,
+        help: 'The entry as printed. An intro row takes the table\'s heading, e.g. "Canine Table".' },
+      // Required rather than blankAs: 0 is a real value here, the intro row's,
+      // and a blank band on an effect row is a mistake rather than a default.
+      { name: 'roll_low', label: 'Roll from', type: 'int', required: true,
+        help: '1-100, 00 as 100. 0 on an intro row.' },
+      { name: 'roll_high', label: 'Roll to', type: 'int', required: true },
+      // allowOther for the reason talents' tier has it: a later book may print
+      // an entry that does something these four do not name.
+      { name: 'kind', label: 'Kind', type: 'select', allowOther: true, required: true,
+        options: ['effect', 'route', 'combination', 'intro'],
+        help: 'route sends the roll to another table; combination rolls this one again.' },
+      // The same validator a class's bonuses go through. Dice and pools are
+      // allowed, as on totems: a Morphus is generated once, and "1D4x10 to
+      // S.D.C." is rolled then rather than re-read on every render.
+      { name: 'bonuses', label: 'Bonuses', type: 'bonuses', flatOnly: false,
+        help: 'JSON, a class bonuses block: {"attributes":{"PS":"1d6"},"combat":{"initiative":1},"pools":{"sdc":"1d4x10"}}. '
+          + 'Natural weapons, senses and restrictions go in the description.' },
+      // A roll as often as a number: 73 entries add "1d4", "1d6", "1d4+1" or
+      // "1d4+2", and a few a fixed integer. Rolled once at creation, the way a
+      // dice attribute bonus is rolled into `rolled_bonuses`.
+      { name: 'horror_factor', label: 'Horror Factor +', type: 'dice',
+        help: 'Added to the Morphus\'s Horror Factor: a whole number or dice, e.g. "2" or "1d4+1".' },
+      { name: 'horror_factor_set', label: 'Horror Factor set to', type: 'int',
+        help: 'Only for the entries that SET it rather than adding.' },
+      { name: 'routes', label: 'Routes', type: 'json_list', of: { table: 'string', count: 'count' },
+        help: 'JSON: [{"table":"Canine","count":1}]. A table the book never prints (Bear, Amphibian) '
+          + 'is still written here - the generator rerolls it.' },
+      { name: 'route_rule', label: 'Route rule', type: 'text',
+        help: 'What the book says around the roll, e.g. "ignore and reroll 96-00".' },
+      { name: 'sub_choices', label: 'Sub-choices', type: 'json_list', of: 'string',
+        help: 'JSON list of strings, when the entry offers options inside itself.' },
+      { name: 'description', label: 'Description', type: 'longtext' },
+      { name: 'note', label: 'Note', type: 'longtext' },
+      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+        help: 'Blank means unrestricted — offered to characters in any system.' },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
@@ -514,6 +590,33 @@ export function coerceField(field, raw) {
       if (errors.length) return { error: errors[0] };
       return { value: JSON.stringify(list) };
     }
+    case 'json_list': {
+      // NULL for blank AND for an empty list, so "has routes" stays a plain
+      // IS NOT NULL in SQL - the reason bonuses stores NULL rather than '{}'.
+      if (blank) return { value: null };
+      let list = raw;
+      if (typeof raw === 'string') {
+        try { list = JSON.parse(raw); } catch { return { error: `${field.label} is not valid JSON` }; }
+      }
+      if (list === null) return { value: null };
+      if (!Array.isArray(list)) return { error: `${field.label} must be a list` };
+      if (!list.length) return { value: null };
+      const bad = listEntryError(field.of, list);
+      if (bad) return { error: `${field.label}: ${bad}` };
+      return { value: JSON.stringify(list) };
+    }
+    case 'dice': {
+      // TEXT either way, so an integer is stored in the same column shape as
+      // a roll and a reader does not branch on SQLite's storage class.
+      if (blank) return { value: null };
+      if (typeof raw === 'number') {
+        return Number.isInteger(raw) ? { value: String(raw) } : { error: `${field.label} must be a whole number or dice` };
+      }
+      const s = String(raw).trim();
+      if (/^-?\d+$/.test(s)) return { value: String(parseInt(s, 10)) };
+      if (isDiceBonus(s)) return { value: s };
+      return { error: `${field.label} must be a whole number or a dice expression like "1d4+1"` };
+    }
     case 'select': {
       if (blank) return { value: null };
       const v = String(raw);
@@ -542,6 +645,29 @@ export function decodeRow(cat, row) {
   }
   if (cat.hasSource) out.source = row.source;
   return out;
+}
+
+// The first entry of a json_list that is not the shape `of` names, as a
+// sentence, or null. Unknown keys are refused rather than kept: a stored key no
+// reader knows is a value that silently does nothing.
+function listEntryError(of, list) {
+  for (const [i, e] of list.entries()) {
+    const at = `entry ${i + 1}`;
+    if (of === 'string') {
+      if (typeof e !== 'string' || !e.trim()) return `${at} must be a non-empty string`;
+      continue;
+    }
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return `${at} must be an object`;
+    for (const k of Object.keys(e)) {
+      if (!Object.prototype.hasOwnProperty.call(of, k)) return `${at} has an unknown key "${k}"`;
+    }
+    for (const [k, kind] of Object.entries(of)) {
+      const v = e[k];
+      if (kind === 'string' && (typeof v !== 'string' || !v.trim())) return `${at} needs "${k}" as a non-empty string`;
+      if (kind === 'count' && !(Number.isInteger(v) && v >= 1)) return `${at} needs "${k}" as a whole number of at least 1`;
+    }
+  }
+  return null;
 }
 
 function safeParse(text, fallback) {
