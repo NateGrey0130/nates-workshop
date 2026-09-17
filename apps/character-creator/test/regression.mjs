@@ -3455,9 +3455,25 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Every bar in the catalog admits the human case, and a new one that forgets
   // to is a real bug rather than a moving number - so this compares the two
   // populations instead of counting either.
+  //
+  // EXCEPT the O.C.C.s that are one race's OWN training, which the book offers
+  // to nobody else. The Nightbane's four skill packages and the Nightbane
+  // Sorcerer and Mystic (Nightbane RPG printed 88-90, 118-120) exist only as a
+  // Nightbane's half of a pairing - survey D2, DECIDED in #1124, restricts them
+  // both ways - and a human cannot be one, so admitting RACE_NONE would offer a
+  // human character a Nightbane package. NAMED, so a new bar that forgets the
+  // human case still fails here; an exemption has to be argued into this list.
+  const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
+    'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic'];
+  const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
-    humanOnly.length === restricted.length,
-    `${humanOnly.length} of ${restricted.length}`);
+    humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
+    `${humanOnly.length} of ${barsHumans.length}`);
+  const ownTrainingShipped = restricted.filter((c) => RACE_OWN_TRAINING.includes(c.id));
+  check('and the race-own-training O.C.C.s refuse a character with no race',
+    ownTrainingShipped.length === RACE_OWN_TRAINING.length
+      && ownTrainingShipped.every((c) => !raceAllowedForOcc(c, null).allowed),
+    ownTrainingShipped.map((c) => c.id).join(', '));
 
   // The rule itself. A Juicer with no race is a human Juicer and is fine; a
   // Juicer paired with any of the three Rifts races is not.
