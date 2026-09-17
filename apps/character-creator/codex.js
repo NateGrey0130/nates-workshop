@@ -149,6 +149,33 @@ const SECTIONS = [
     notes: () => [],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
   },
+  // Nightbane Talents (docs/plans/22-codex-powers-and-talents.md). Appended, for
+  // the reason F48's two were.
+  //
+  // THE COST SLOT CARRIES TWO NUMBERS HERE, and that is the point of the row: a
+  // Talent is bought once with PERMANENT P.P.E. and paid for again at every
+  // use, which is why it has a table of its own (migration 063). One figure in
+  // that column would be the wrong one whichever it was. `ppe` is the activation
+  // MINIMUM and 0 means the book prints a schedule instead, so 0 reads as
+  // "varies" and the schedule is in the notes - 22 of the 25 have one.
+  {
+    id: 'talents',
+    label: 'Talents',
+    key: (r) => String(r.name).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => TALENT_TIER[r.tier] || '',
+    cost: (r) => `${r.acquire_ppe} to acquire · ${talentUse(r)}`,
+    stats: (r) => [['To acquire', `${r.acquire_ppe} P.P.E., permanently`],
+                   ['To use', talentUse(r)],
+                   ['Minimum level', r.min_character_level],
+                   ['Form', TALENT_FORM[r.form_required] || r.form_required],
+                   ['Requires', r.prerequisite],
+                   ['Range', r.range], ['Duration', r.duration],
+                   ['Saving throw', r.saving_throw]],
+    notes: (r) => [r.ppe_note && `Cost to use — ${r.ppe_note}`,
+                   r.variant_note && `A different book prints: ${r.variant_note}`],
+    hay: (r) => `${r.name} ${r.source_book || ''} ${r.tier || ''}`,
+  },
 ];
 
 const byId = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
@@ -210,6 +237,22 @@ function damage(r) {
   if (!r.damage) return null;
   const d = String(r.damage);
   return r.is_mega_damage && !/M\.?D\.?/i.test(d) ? `${d} (M.D.)` : d;
+}
+
+// ── Talent-only labels ──
+
+// `tier` and `form_required` are stored as the lowercase words the schema lists.
+// An unlisted value falls through to the stored word (form) or to nothing
+// (tier) rather than to a guess: `form_required` is free text on purpose,
+// because the book gives four answers across 25 rows and a later one may give a
+// fifth.
+const TALENT_TIER = { common: 'Common', elite: 'Elite' };
+const TALENT_FORM = { morphus: 'Morphus only', facade: 'Facade only', both: 'Either form' };
+
+// What one use costs. 0 is not free - it is "the book prints a schedule", and
+// the schedule is `ppe_note`, which the entry's notes carry in full.
+function talentUse(r) {
+  return r.ppe ? `${r.ppe}${r.ppe_note ? '+' : ''} P.P.E.` : 'varies';
 }
 
 // ── vessel-only blocks ──
@@ -430,7 +473,7 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'codex-system') { S.system = e.target.value; S.filterFocused = false; render(); }
 });
 
-// A link may arrive pointed at any of the six.
+// A link may arrive pointed at any section.
 const fromHash = location.hash.replace(/^#/, '');
 if (SECTIONS.some((s) => s.id === fromHash)) S.tab = fromHash;
 

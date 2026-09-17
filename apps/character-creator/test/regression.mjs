@@ -1643,6 +1643,34 @@ check('a hit on armour the character does not have is refused', noArmor.status =
     JSON.stringify(first).slice(0, 200));
 }
 
+// docs/plans/22: the codex reads Nightbane Talents. The count is held against
+// `catalogs` as well as against the index, because those are the two readers of
+// one table and a codex missing a Talent the picker offers is the failure worth
+// catching. BOTH costs are asserted on every row: a Talent stored with one
+// number is the defect migration 063 exists to prevent, and a projection that
+// dropped `acquire_ppe` would put it straight back.
+{
+  const cxIndex = await api('GET', '/codex?section=index');
+  const cxTalents = await api('GET', '/codex?section=talents');
+  const rows = cxTalents.body.talents || [];
+  check('the codex counts Talents, and the scratch catalog has some',
+    typeof cxIndex.body.counts?.talents === 'number' && cxIndex.body.counts.talents > 0,
+    cxIndex.body.counts);
+  check('the codex serves every Talent it counts',
+    cxTalents.status === 200 && rows.length === cxIndex.body.counts?.talents,
+    `${rows.length} vs ${cxIndex.body.counts?.talents}`);
+  check('and exactly the Talents the picker is sent',
+    JSON.stringify(rows.map((t) => t.name).sort())
+      === JSON.stringify((catalogs.body.talents || []).map((t) => t.name).sort()),
+    `${rows.length} in the codex vs ${(catalogs.body.talents || []).length} in /catalogs`);
+  check('each with BOTH of its costs and its text',
+    rows.every((t) => Number.isInteger(t.acquire_ppe) && Number.isInteger(t.ppe)
+      && t.description && String(t.description).trim()),
+    JSON.stringify(rows.find((t) => !Number.isInteger(t.acquire_ppe) || !t.description) || {}).slice(0, 200));
+  const asPlayer = await apiAs('stranger@example.com', 'GET', '/codex?section=talents');
+  check('and a player who is no admin can read them', asPlayer.status === 200, asPlayer.status);
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
