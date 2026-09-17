@@ -685,6 +685,49 @@ the Nightbane R.C.C. without it, per the standing rule that data ships with its
 book and unasked-for code waits — or treat it as in scope, which makes it a
 tier-2 decision Nate takes.
 
+**DECIDED 2026-09-16 (PR #PRNUM), on Nate's word: BUILD THE GENERATOR FIRST.** The
+Nightbane R.C.C., its four package O.C.C.s and the Nightbane Sorcerer and Mystic wait
+for it; every other class in the book does not, and ships ahead.
+
+**Building it means building the second body too.** A Morphus result is a set of
+bonuses to a form the app cannot hold - `BOOK-INGEST-AUDIT` F74, taken 2026-09-15 at
+record-and-stop with the remedy undesigned. A generator that stores results nothing
+applies is the "silent storage" `class-import` forbids, so F74's remedy is in scope
+here as well.
+
+**The tables, measured off the cache and renders (2026-09-16), and two things the
+question did not know:**
+
+- **19 tables, 154 entries, printed 91-106** - one page past this survey's 91-105:
+  Gun Limbs, the last Biomechanical entry, heads printed 106. 36 entries route or
+  combine; 118 carry effects. Every one is `Roll or select`.
+- **Two tables the book routes to do not exist.** Animal Form 01-07 sends to a Bear
+  Table and 08-14 to an Amphibian Table; neither is printed anywhere in the book.
+- **The effects are mostly numbers a sheet can add:** Horror Factor on ~108 entries
+  (base 6, cap 18, three entries SET it), S.D.C. ~75, P.S./P.P./P.E. ~46/34/34, speed
+  ~31, initiative ~33, perception ~34, extra attacks ~13. Natural weapons are dice
+  attacks; senses, size and ~29 restrictions are prose. No P.P.E. or save bonuses.
+- **Four Elite Talents gate on the table a result came from** (Stigmata, Biomechanical,
+  Animal Form), so a stored Morphus records its table, not just its effects.
+
+**Nate's three answers (2026-09-16), which fix the product shape:**
+
+1. **The sheet toggles between Facade and Morphus.** One sheet, a form switch;
+   attributes, pools, Horror Factor, speed and bonuses redraw for the form. Not two
+   blocks side by side.
+2. **A route to a table the book does not print is a reroll** in random mode and is
+   not offered in pick mode. Nothing is invented; the gap is recorded on the catalog
+   row.
+3. **Roll, pick, or mix** - the book's own three modes (printed 85, 91). Every step
+   offers a roll and a picker, and the routes are followed either way.
+
+**The build, as separate PRs, each merged before the next:** (1) a Morphus catalog -
+schema, catalog config and the 154 entries as data; (2) the second body - the
+Facade/Morphus delta on the class, the Morphus stored on the character, and the sheet
+toggle; (3) the wizard generator; (4) the Nightbane R.C.C. and the classes that pair
+with it. `variants` stays refused for the second body, for the reasons F74's closure
+records.
+
 **D6 — `W.P. Archery and Targeting`.** One book row against two catalog rows.
 
 **DECIDED 2026-09-16 (PR #1127): the name resolves to the existing `W.P.
