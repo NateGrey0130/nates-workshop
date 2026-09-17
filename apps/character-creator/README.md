@@ -663,7 +663,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. One-hundred-and-sixty-one of three-hundred-and-thirty published classes state no hit point
+`hp_max` NULL. One-hundred-and-sixty-seven of three-hundred-and-thirty-seven published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.

@@ -680,6 +680,18 @@ export const CORE_SDC_BY_CLASS = {
   // the Doppleganger's is - so the base is printed 36's 3D6. The two vampires
   // state sdc_base 0 (hit points only) and the Guardian states its own.
   'nb-wampyr': '3D6',
+  // The Nightbane's six O.C.C.s (printed 88-90 and 118-120) print no S.D.C.;
+  // they are only ever paired with the Nightbane R.C.C., whose Facade states
+  // sdc_base 30 and wins, so these fire only for an O.C.C. read alone, which
+  // their race_restrictions never allow. Printed 36 would give the ex-military
+  // Resistance/Spook Squad package 1D4x10, but that entry can never fire and
+  // this table has only ever held 1D6 and 3D6, so all six are 3D6.
+  'nb-package-basic': '3D6',
+  'nb-package-resistance': '3D6',
+  'nb-package-nocturne': '3D6',
+  'nb-package-warlord': '3D6',
+  'nb-nightbane-sorcerer': '3D6',
+  'nb-nightbane-mystic': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence
