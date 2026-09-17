@@ -240,6 +240,10 @@ CREATE TABLE IF NOT EXISTS characters (
   combat TEXT NOT NULL DEFAULT '{}',     -- attacks, initiative, strike/parry/dodge, punches
   saves TEXT NOT NULL DEFAULT '{}',      -- save vs magic, psionics, poison, insanity, …
   armor TEXT NOT NULL DEFAULT '[]',      -- [{ name, ar, mdc_max, mdc_current, weight, cost, prowl }]
+  -- The SECOND BODY a class's `second_form` block describes - what was rolled
+  -- for it, and its own current S.D.C. and hit points. `{}` for a character
+  -- with one body. Migration 069, BOOK-INGEST-AUDIT F74, js/second-form.js.
+  second_form TEXT NOT NULL DEFAULT '{}',
   notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -254,6 +258,11 @@ CREATE INDEX IF NOT EXISTS idx_characters_player ON characters (player_email);
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '065-character-ppe-base-spent.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'ppe_base_spent');
+
+-- 069 the same way, directly after the table its column is on.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '069-character-second-form.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'second_form');
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

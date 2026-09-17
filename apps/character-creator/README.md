@@ -73,6 +73,10 @@ apps/character-creator/
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
 │                             re-exports it; the wizard builds characters that
 │                             start above level 1 from the same engine)
+├── js/second-form.js         A second body as numbers - the class's second_form,
+│                             the character's rolls and the Morphus rows folded
+│                             (ES module - the sheet endpoint, PATCH and create
+│                             validator all read it)
 ├── js/catalog-fields.js      What every catalog row looks like (ES module — the
 │                             editor, the write endpoints and the importers all
 │                             build themselves from it). SIX catalogs: skills,
@@ -153,11 +157,15 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Seven modules are imported by both the browser and the Workers runtime:
+Nine modules are imported by both the browser and the Workers runtime:
 `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
-`js/psionics.js` (transitively, through compose), `js/language-skills.js`, and
-`js/skill-base.js` - which resolves a skill's starting percentage, including
-one game's own where it differs from the catalog's (`BOOK-INGEST-AUDIT` F83).
+`js/psionics.js` (transitively, through compose), `js/language-skills.js`,
+`js/leveling.js`, `js/second-form.js` and `js/skill-base.js`. `skill-base.js`
+resolves a skill's starting percentage, including one game's own where it
+differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
+character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
+classic script `js/derive.js` for its side effect, so the Workers runtime runs
+that file too and reads it off `globalThis.derive`.
 That is why `app.js` and
 `catalog.js` are loaded as `<script type="module">` while the other pages are
 classic scripts — and why inline handlers in the wizard need explicit `window`
@@ -218,7 +226,7 @@ database bookkeeping shared by all; the rest are this app.
 | `npc_sweeps` | Which entries the sweep has already read. Written only after a successful call, so a failed one is retried rather than skipped. |
 | `npc_proposals_dismissed` | Names a human has said are not people. Without it the sweep proposes `the guard` again every time and the button becomes noise. |
 
-`characters` stores ten JSON columns rather than a very wide table — the list
+`characters` stores eleven JSON columns rather than a very wide table — the list
 lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 
 | Column | Shape |
@@ -233,11 +241,12 @@ lives in `_lib/character-json.js` as `CHARACTER_JSON_COLUMNS`:
 | `combat` | attacks, initiative, strike, parry, dodge, punches — **overrides only** |
 | `saves` | save vs magic, psionics, poison, insanity … — **overrides only** |
 | `armor` | `[{ name, ar, mdc_current, mdc_max, weight, cost, prowl }]` |
+| `second_form` | `{}`, or a second body's state (migration 069): `{ active: "first"\|"second", form_rolls, hp_rolls: [7, 9], results: [{ key, sub_choice, rolls }], sdc_current, hp_current }`. **Rolls, never totals** — see [A second body](docs/race-and-occupation.md#a-second-body) |
 
 `combat` and `saves` hold **only what a human typed**. A missing or blank key
 falls back to the value derived from the attributes, so nothing goes stale when
 an attribute changes. Paired `*_max` / `*_current` columns cover hp, sdc, mdc,
-ppe and isp.
+ppe and isp — for the FIRST form; a second form's pools live in `second_form`.
 
 **Content catalogs** — all editable at runtime
 
@@ -394,8 +403,9 @@ talents:                        # Nightbane Talents, the ninth catalog. The
                                 # catalog row, not on the grant.
   talents_starting: 1           # the book gives ONE free at first level
   tiers_allowed: ["common"]     # common | elite - a CLOSED set of two. Elite
-                                # Talents are gated on the character's Morphus,
-                                # which is not modelled, so a class that offers
+                                # Talents are gated on the character's Morphus
+                                # results, which nothing checks yet (the Morphus
+                                # is stored - see second_form), so a class that offers
                                 # them says so here. Omit to allow both.
   talents: ["Shadow Shield"]    # granted outright, not picked
   talents_from: ["Doorway", ...]  # the exact list to pick FROM; REPLACES the
@@ -442,6 +452,18 @@ bonuses:                      # mechanical grants — see the section below
   at_level: [{ level: 5, combat: { attacks: 1 } }]
 level_progression:
   - { level: 2, grants: ["+1 attack per melee"] }
+second_form:                  # a SECOND BODY the character changes into in play -
+  name: "Morphus"             # the Nightbane's Morphus. The class's own block is
+  first_name: "Facade"        # the first form; this says how the second differs
+  bonuses:                    # a bonuses block, ON TOP of the first form's, in
+    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }   # the second form only
+    pools: { sdc: "2d6x10" }  # sdc and hp only; dice rolled once and stored
+    combat: { strike: 2 }
+  hit_points_base: "P.E. x2 + 2d6 per level"   # REPLACES hit points, read
+                                               # against the second form's P.E.
+  horror_factor: 6            # the second form's base, and the most its
+  horror_factor_max: 18       # table results may raise it to
+  traits_from: morphus        # the catalog its results are rows of
 restrictions: ["..."]
 side_effects: "Free text — substantial drawback mechanics. Display only."
 extraction_notes: "Free text — anything the importer could not map cleanly."
@@ -476,6 +498,15 @@ the occupation's, its `occ_skills` replace the race's rather than unioning, and
 `attribute_dice` are compared per attribute and the higher kept. The
 Cosmo-Knight is the only class that carries it. See
 [Race and occupation](docs/race-and-occupation.md).
+
+`second_form` **is** enforced, end to end: the parser refuses a malformed block,
+composition keeps the race's (an occupation's falls through, a superseding one
+replaces it), `characters.second_form` stores what was rolled for it, the create
+endpoint refuses a roll its dice could not make, level-up rolls the form's own
+hit point dice, and the sheet toggles between the two forms with each form's
+S.D.C. and hit points tracked separately. **It is not `variants`**, which is a
+kind of the class picked once. See
+[A second body](docs/race-and-occupation.md#a-second-body).
 
 `occ_related_skills.minimums` **is** enforced. It is the only floor in the block
 - `count`, `categories`, `only` and `except` are all ceilings - and it exists

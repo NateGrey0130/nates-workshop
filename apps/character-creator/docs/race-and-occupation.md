@@ -439,14 +439,111 @@ It does **not** admit `magic`, `psionics`, `natural_abilities`,
 `special_abilities` or `equipment_starting` - so a second form that differs in
 any of those cannot be expressed this way even if the semantics were right.
 
-**Until the app can say it**, a class with two forms carries the everyday form
-as its own block, states the other form's deltas in `natural_abilities`, and
-cites `BOOK-INGEST-AUDIT.md` F74 in `extraction_notes`. That is the shape
-`class-import` already prescribes for a mechanic the schema cannot hold.
+**The app can say it now** - a `second_form` block, below in
+[A second body](#a-second-body). This paragraph used to prescribe the interim
+shape (the everyday form as the class's block, the other form's deltas as prose
+in `natural_abilities`, F74 cited in `extraction_notes`); that shape is for a
+book whose second form differs in something `second_form` cannot hold - magic,
+psionics, abilities or equipment.
 
 **Demons, deevils and the other creatures of magic** (printed 313 onward) are
 out of scope for this pass — they are monsters the GM runs, not races a player
 picks, and they are a much larger body of stat blocks.
+
+---
+
+## A second body
+
+A Nightbane has a **Facade** and a **Morphus** (Nightbane RPG printed 87), and
+changes between them in a melee round. `BOOK-INGEST-AUDIT.md` F74 recorded that
+a class could not say so; Nightbane survey D5 built it, on Nate's three answers:
+the sheet **toggles** between the forms, **damage is tracked separately per
+form**, and the wizard rolls or picks the Morphus tables (the next PR).
+
+### The class says how the second form differs
+
+```yaml
+second_form:
+  name: "Morphus"
+  first_name: "Facade"
+  bonuses:
+    attributes: { PS: 10, PE: 10, Spd: 10, PP: 6 }
+    pools: { sdc: "2d6x10" }
+    combat: { initiative: 1, strike: 2, parry: 2, dodge: 2, roll: 3, pull_punch: 3, attacks: 1 }
+    saves: { spell_magic: 4, ritual_magic: 4, psionics: 3, disease: 3, horror_factor: 3 }
+  hit_points_base: "P.E. x2 + 2d6 per level"
+  horror_factor: 6
+  horror_factor_max: 18
+  traits_from: morphus
+```
+
+The class's own block is the **first** form, unchanged. `bonuses` is a class
+bonuses block through the same `validateBonuses`, applying only in the second
+form and **on top of** the first form's numbers; its `pools` take `sdc` and `hp`
+only, since the book's Morphus keeps the Facade's P.P.E., and `at_level` is
+refused. `hit_points_base` **replaces** the class's hit points for the second
+form and is read against the second form's P.E.; without one, the second form
+tracks its own damage against the first form's maximum. `horror_factor` is the
+second form's base, `horror_factor_max` its cap, and `traits_from` names the
+catalog its generated results are rows of (`morphus`, migration 068). Every
+malformed key is a parse **error**, as `bonuses` is.
+
+**Composition** carries it like `horror_factor`: the race's wins, an
+occupation's falls through when the race states none, and a superseding
+occupation replaces it. **Not in `VARIANT_OVERRIDES`**: a variant naming it is
+warned about and ignored.
+
+### The character stores what was rolled
+
+`characters.second_form` (migration 069), `{}` for a one-body character:
+
+```json
+{ "active": "second",
+  "form_rolls": { "pools": { "sdc": 70 } },
+  "hp_rolls": [7, 9],
+  "results": [ { "key": "Stigmata: Bleeding Eyes", "sub_choice": null,
+                 "rolls": { "horror_factor": 3, "pools": { "sdc": 12 } } } ],
+  "sdc_current": 84, "hp_current": null }
+```
+
+**Rolls, never totals.** `form_rolls` and each result's `rolls` mirror a bonuses
+block group by group, plus `horror_factor`. `hp_rolls` holds one roll per
+level: index 0 is the formula's first dice, and each later one a level's
+per-level dice. A null current value means full. `js/second-form.js` folds these
+with the class and the catalog rows on every read:
+
+| number | how |
+|---|---|
+| attributes | the first form's (rolled + class + skills) + the form's bonus + every result's |
+| hit points | the formula's attribute term against the SECOND form's attributes + every `hp_rolls` + any `pools.hp` |
+| S.D.C. | the first form's `sdc_max` + the form's rolled `pools.sdc` + every result's |
+| Horror Factor | the base, or the highest a result SETS; + what results add (flat or rolled); capped at the maximum |
+| combat, saves, speed | the first form's number **as shown, typed overrides included**, + the difference the form makes (`derive.inForm`) |
+
+### Who enforces what
+
+- **Create** rolls the form's own dice and hit point dice when a class states a
+  form and the request sends none, and refuses a form on a class with none, a
+  result key that is no catalog entry (or an intro row), a sub-choice the entry
+  does not offer, a roll missing, outside its dice or with no dice behind it,
+  the wrong number of hit point rolls for the level, and a current value above
+  the form's maximum.
+- **PATCH** takes `second_form: { active, sdc_current, hp_current }` and nothing
+  else, clamps each current value to 0 through the folded maximum, and writes
+  field by field with `json_set`, so a stepper press cannot erase a stored result.
+- **Level-up** proposes one roll of the per-level dice for each level gained;
+  level-confirm checks them against the dice (or rolls them for a client that
+  sends none), appends them, and raises the form's current hit points by the
+  same amount.
+- **The sheet** draws a Facade/Morphus toggle for such a class only. The second
+  form redraws attributes, S.D.C., hit points, Horror Factor, run speed, combat
+  and saves; its combat and saves are read-only, and its pool cards, steppers and
+  Damage write the second form's own values.
+
+**Not yet:** play events, the offline queue, rest and the G.M. dashboard's
+damage all move the **first** form's columns only, and a second form's current
+values stop at 0 rather than going negative. Talents' Morphus prerequisites are
+still shown and not checked.
 
 ---
 

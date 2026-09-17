@@ -84,6 +84,38 @@ export function perLevelDiceOf(formula) {
   return m ? m[1] : null;
 }
 
+// THE DICE A SECOND FORM'S HIT POINTS ARE ROLLED ON, level by level
+// (BOOK-INGEST-AUDIT F74, survey D5). `characters.second_form.hp_rolls` holds
+// one number per roll: index 0 is the formula's first dice expression, rolled
+// when the form is made, and every later index is one level's `per`. So a
+// Nightbane's "P.E. x2 + 2D6 per level" at level 3 stores three 2D6 rolls, and
+// its maximum is the P.E. term plus their sum - the same arithmetic the first
+// form's `hp_max` column holds, kept as its parts because the P.E. it is read
+// against is the SECOND form's, which moves when a result is added.
+//
+// Here rather than in js/second-form.js because buildProposal below rolls
+// them, and second-form.js imports this file.
+//
+// `count(level)` is how many rolls a character at that level holds: none for a
+// formula with no dice, one for dice with no per-level part, `level` otherwise.
+export function secondFormHitPointDice(formula) {
+  if (formula == null) return { first: null, per: null, count: () => 0 };
+  const m = String(formula).match(/\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i);
+  const first = m ? m[0] : null;
+  const per = first ? perLevelDiceOf(formula) : null;
+  return { first, per, count: (level) => (!first ? 0 : per ? Math.max(1, level) : 1) };
+}
+
+// Rolls for levels `fromLevel + 1` through `toLevel` - what a level-up appends.
+// Empty when the formula does not grow.
+export function rollSecondFormHitPoints(formula, fromLevel, toLevel) {
+  const { per } = secondFormHitPointDice(formula);
+  const out = [];
+  if (!per) return out;
+  for (let lvl = fromLevel + 1; lvl <= toLevel; lvl++) out.push(evalDice(per));
+  return out;
+}
+
 const SKILL_PCT_CAP = 98; // Palladium convention: 98% is the practical ceiling
 
 // Extra skill picks the class grants for crossing levels, from
@@ -767,6 +799,24 @@ export function buildProposal(character, cls, toLevel) {
       if (dice) for (let i = 0; i < gained; i++) add += evalDice(dice);
     }
     if (add) proposal.pools.mdc_max = { from: character.mdc_max, to: character.mdc_max + add };
+  }
+
+  // A SECOND FORM'S HIT POINTS GROW TOO, on their own dice (F74, survey D5).
+  // Rolled HERE with the first form's, stored nowhere until the level is
+  // confirmed, and appended to `second_form.hp_rolls` by level-confirm. Only for
+  // a character that already holds rolls - one whose form was never made has
+  // nothing a level's roll could be added to.
+  const form = cls.second_form;
+  const held = character.second_form?.hp_rolls;
+  if (form && Array.isArray(held) && held.length) {
+    const rolls = rollSecondFormHitPoints(form.hit_points_base, fromLevel, toLevel);
+    if (rolls.length) {
+      proposal.second_form = {
+        name: form.name,
+        dice: secondFormHitPointDice(form.hit_points_base).per,
+        hp_rolls: rolls,
+      };
+    }
   }
 
   for (const s of Array.isArray(character.skills) ? character.skills : []) {

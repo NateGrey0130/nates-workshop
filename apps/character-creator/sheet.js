@@ -92,7 +92,80 @@ const { POOL_TONES, POOL_LOW, poolCard, poolMax, boxSlug, BOX_COL, box, field,
 // pure - it paints whatever data it is handed and knows nothing about C -
 // so the app's copy of the character is supplied here, once, rather than by
 // each of the seven mutation paths that call it.
-const paintPool = (key) => sheetLayout.paintPool(key, C.data, C.conflicts);
+//
+// It paints the pools OF THE FORM SHOWING (BOOK-INGEST-AUDIT F74). A character
+// whose class states a `second_form` - a Nightbane's Morphus - tracks that
+// form's S.D.C. and hit points separately (Nate, survey D5), and they arrive
+// folded as `C.secondForm`. poolData() hands every painter the character with
+// those two pools swapped in while the second form is showing, and hands back
+// C.data itself otherwise, so a one-body character is painted exactly as before.
+const FORM_POOLS = ['hp', 'sdc'];
+const formOn = () => !!(C.secondForm && C.secondForm.active === 'second');
+function poolData() {
+  if (!formOn()) return C.data;
+  const f = C.secondForm;
+  return { ...C.data, hp_current: f.hp_current, hp_max: f.hp_max, sdc_current: f.sdc_current, sdc_max: f.sdc_max };
+}
+const paintPool = (key) => sheetLayout.paintPool(key, poolData(), C.conflicts);
+
+// Which form the sheet shows. Saved for a writer, local for a reader - a player
+// looking at someone else's Morphus can flip it without writing anything.
+//
+// WHAT IS TYPED IS SAVED FIRST. The second form draws combat and saves read-only
+// (overrides are the first form's), so their inputs leave the page on the
+// toggle, and pendingValues() skips a section whose inputs are gone - a typed
+// strike would otherwise be marked saved and never sent.
+async function setForm(which) {
+  const f = C.secondForm;
+  if (!f || f.active === which || !['first', 'second'].includes(which)) return;
+  if (C.canWrite) await saveNow();
+  f.active = which;
+  render();
+  if (!C.canWrite) return;
+  try {
+    const res = await api('characters/' + id, jsonReq('PATCH', { second_form: { active: which } }));
+    if (res?.updated_at) C.data.updated_at = res.updated_at;
+  } catch (err) {
+    flash('The form shown was not saved: ' + err.message, true);
+  }
+}
+
+// Write the second form's own pools. NOT through play events or the queue:
+// those move the first form's columns and guard on them, and the second form's
+// values live in `characters.second_form`, which only the PATCH writes -
+// field by field, so this cannot clobber a stored result. Clamped to 0..max
+// here exactly as the server clamps, so the screen shows what was stored.
+async function saveFormPools(values) {
+  const f = C.secondForm;
+  if (!f) return;
+  const prev = {};
+  for (const [k, v] of Object.entries(values)) {
+    prev[k] = f[k];
+    const max = f[k.replace(/_current$/, '_max')];
+    f[k] = v == null ? max : Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+    paintPool(k.replace(/_current$/, ''));
+  }
+  try {
+    const res = await api('characters/' + id, jsonReq('PATCH', { second_form: values }));
+    if (res?.updated_at) C.data.updated_at = res.updated_at;
+  } catch (err) {
+    for (const k of Object.keys(prev)) {
+      f[k] = prev[k];
+      paintPool(k.replace(/_current$/, ''));
+    }
+    alert('Failed: ' + err.message);
+  }
+}
+
+// A typed value in a second-form pool card. Autosave does not own these inputs
+// while the second form shows (autosaveKey below), so this is their save.
+document.addEventListener('change', (ev) => {
+  if (!formOn() || !C.canWrite) return;
+  const m = /^stat-(hp|sdc)$/.exec(ev.target?.id || '');
+  if (!m) return;
+  const raw = ev.target.value;
+  saveFormPools({ [m[1] + '_current']: raw === '' ? null : Math.trunc(Number(raw)) });
+});
 
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -118,6 +191,9 @@ async function load() {
     // a variant: applyVariant lives in parser.js, a module, and this file is a
     // classic script.
     C.cls = res.class || null;
+    // The second body, folded server-side (js/second-form.js is a module this
+    // classic script cannot import). Null for every class that states none.
+    C.secondForm = res.second_form || null;
     campaignLink();
     // Known on load now, not only after an XP log (UI-AUDIT F42).
     C.nextThreshold = res.next_threshold ?? null;
@@ -583,6 +659,12 @@ function syncPowerBtns() {
 // No clamping - negative H.P. is a real Palladium state (coma), and a G.M.
 // may allow over-maximum; arithmetic is offered, never enforced.
 async function adjustPool(key, delta) {
+  // The second form's own S.D.C. and hit points (F74) go to its own storage.
+  if (formOn() && FORM_POOLS.includes(key)) {
+    const now = C.secondForm[key + '_current'];
+    if (now == null) return;
+    return saveFormPools({ [key + '_current']: now + delta });
+  }
   const cur = C.data[key + '_current'];
   if (cur == null) return;
   const next = cur + delta;
@@ -839,6 +921,14 @@ async function quickDamage() {
 async function bodyDamage(amt) {
   // The rule itself lives in js/derive.js since UI-AUDIT F46, because the G.M.
   // dashboard applies it too and two copies would drift.
+  // A hit on the second form runs the same cascade over THAT form's pools and
+  // leaves the first form's untouched - damage is tracked per form (F74).
+  if (formOn()) {
+    const formPatch = derive.damageCascade(poolData(), amt);
+    if (Object.keys(formPatch).every((k) => FORM_POOLS.includes(k.replace(/_current$/, '')))) {
+      return saveFormPools(formPatch);
+    }
+  }
   const patch = derive.damageCascade(C.data, amt);
   const prev = {};
   for (const k of Object.keys(patch)) {
@@ -1814,8 +1904,26 @@ function render() {
   // have to be IN it; styles.css shows them only under body.play-mode, which
   // is what poolCard's own comment already promised - "CSS still gates it on
   // body.play-mode, so a sheet-mode render cannot leak steppers".
+  //
+  // poolData() is `c` itself unless a second form is showing, when its own
+  // S.D.C. and hit points stand in for the first form's (F74).
+  const F = C.secondForm;
+  const inSecond = formOn();
+  const pd = poolData();
   const vitals = POOLS.map(([key, label]) =>
-    poolCard(key, label, c[key + '_current'], poolMax(c, key), w, true)).join('');
+    poolCard(key, label, pd[key + '_current'], poolMax(pd, key), w, true)).join('');
+
+  // THE FORM TOGGLE (BOOK-INGEST-AUDIT F74, Nate's answer 1 in survey D5): one
+  // sheet, and a switch that redraws attributes, pools, Horror Factor, speed and
+  // bonuses for the form chosen. Only for a class that states `second_form`.
+  // The two values handed to setForm are literals, never data, so nothing here
+  // needs escJs; the names are data and go through escHtml.
+  const formToggle = !F ? '' : `<div class="form-toggle" role="group" aria-label="Form">
+    ${[['first', F.first_name], ['second', F.name]].map(([k, label]) =>
+      `<button type="button" class="form-btn noprint${F.active === k ? ' on' : ''}" aria-pressed="${F.active === k}"
+         onclick="setForm('${k}')">${escHtml(label || k)}</button>`).join('')}
+    <b class="print-only">${escHtml((inSecond ? F.name : F.first_name) || '')}</b>
+  </div>`;
 
   // A Horror Factor the character PROJECTS - BOOK-INGEST-AUDIT F75. It rides
   // BESIDE the vitals strip and is deliberately NOT a member of POOLS: it has
@@ -1832,10 +1940,18 @@ function render() {
   // human` - so there is nothing to compute and nothing is rolled. This is the
   // one a character IMPOSES; the save against someone else's is a SAVE_FIELDS
   // row at the top of this file, and the two never meet.
-  const hf = C.cls?.horror_factor;
+  //
+  // THE SECOND FORM'S IS A NUMBER, folded from its base, its results and its
+  // cap (js/second-form.js), and it replaces the class's printed phrase while
+  // that form shows - a Nightbane's Facade projects none.
+  const hfParts = inSecond ? F.horror_factor_parts || {} : null;
+  const hf = inSecond ? F.horror_factor : C.cls?.horror_factor;
+  const hfTitle = !inSecond ? 'A Horror Factor this character imposes on others'
+    : `${F.name}: ${hfParts.set != null ? `set to ${hfParts.set} by a result` : `base ${hfParts.base ?? 0}`}`
+      + `${hfParts.added ? `, +${hfParts.added} from results` : ''}${hfParts.max != null ? `, at most ${hfParts.max}` : ''}`;
   const horrorCard = (hf === null || hf === undefined || String(hf).trim() === '')
     ? ''
-    : `<div class="vital hf" title="A Horror Factor this character imposes on others">
+    : `<div class="vital hf" title="${escHtml(hfTitle)}">
     <div class="lbl">Horror Factor</div>
     <div class="val"><b>${escHtml(String(hf))}</b></div>
   </div>`;
@@ -2003,16 +2119,25 @@ function render() {
     combat: c.rolled_bonuses?.combat || {},
     saves: c.rolled_bonuses?.saves || {},
   });
-  const effAttrs = derive.effective(attrs, bonuses);
+  // THE SECOND FORM'S OWN BONUSES - its delta plus every table result's, folded
+  // server-side - ride on top of the first form's block while it shows (F74).
+  // `formB` is null otherwise, and every line below reads exactly as it did.
+  const formB = inSecond ? F.form_bonuses : null;
+  const shownBonuses = formB ? derive.sumBonuses(bonuses, formB) : bonuses;
+  const effAttrs = derive.effective(attrs, shownBonuses);
   const combatParts = derive.parts('combat', attrs, bonuses, undefined, classOnly);
   const savesParts = derive.parts('saves', attrs, bonuses, cls.psionics?.type, classOnly);
 
-  const bio = derive.bio(attrs, c.bio, bonuses);
-  const combat = derive.combat(attrs, c.combat, bonuses);
+  // In the second form each number is the first form's as shown - typed
+  // overrides included - plus the difference the form makes (derive.inForm).
+  const bio = formB ? derive.inForm('bio', attrs, c.bio, bonuses, formB) : derive.bio(attrs, c.bio, bonuses);
+  const combat = formB ? derive.inForm('combat', attrs, c.combat, bonuses, formB)
+    : derive.combat(attrs, c.combat, bonuses);
   // The class supplies the psychic tier, which only affects the psionic save
   // TARGET. A character with no psionics block is not psychic and gets 15+,
   // which is the right number for them anyway.
-  const saves = derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
+  const saves = formB ? derive.inForm('saves', attrs, c.saves, bonuses, formB, cls.psionics?.type)
+    : derive.saves(attrs, c.saves, cls.psionics?.type, bonuses);
   const armorList = Array.isArray(c.armor) ? c.armor : [];
 
   // An editable field: an input for owner/GM, plain text otherwise. Values that
@@ -2035,7 +2160,13 @@ function render() {
   const editField = (section, key, label, value, stored, opts = {}) => {
     const isDerived = derive.isDerived(stored, key);
     const suffix = opts.suffix || '';
-    const why = isDerived ? explain(opts.parts, key) : 'Set manually';
+    // The second form's combat and saves are READ-ONLY (F74): an override is
+    // typed in the first form, and the second shows it plus the form's
+    // difference. No input means autosave cannot read one back as a blank.
+    const formRow = inSecond && (section === 'combat' || section === 'saves');
+    const why = formRow
+      ? `${F.name}: the ${F.first_name}'s number plus what the ${F.name} adds - type overrides in the ${F.first_name}`
+      : isDerived ? explain(opts.parts, key) : 'Set manually';
     // A class contribution is worth seeing without hovering, so it is marked.
     // Marked whichever it came from - the styling says "this number was raised",
     // and a skill raising it is no less worth seeing without hovering.
@@ -2047,7 +2178,7 @@ function render() {
     // real <button> so a keyboard can reach it, and the global print rule hides
     // every button - which is why the row's own markup could not become one.
     const roll = opts.roll ? rollBtn(opts.roll) : '';
-    if (!w) {
+    if (!w || formRow) {
       return `<div class="field"><span class="lbl">${label}</span><span class="dots"></span>
         <span class="val${isDerived ? ' dim' : ''}${fromClass}" title="${escHtml(why)}">${escHtml(String(value ?? '—'))}${suffix}</span>${roll}</div>`;
     }
@@ -2159,7 +2290,7 @@ function render() {
   ${w && !C.proposal && C.pendingPowersTotal ? pendingPowersPanel() : ''}
 
   <div class="sheet-sticky" data-sticky>
-    ${vitals || horrorCard ? `<div class="vitals vitals-strip">${vitals}${horrorCard}</div>
+    ${vitals || horrorCard || formToggle ? `<div class="vitals vitals-strip${inSecond ? ' form-second' : ''}">${formToggle}${vitals}${horrorCard}</div>
       <div id="queue-state" class="queue-state noprint"></div>
       <div class="rowline noprint vitals-save">
         ${w ? `<span id="autosave" class="autosave muted small" role="status" aria-live="polite">${autosaveText()}</span>
@@ -2182,11 +2313,16 @@ function render() {
   <div class="sheet-grid rail" style="margin-top:12px">
     ${box('Attributes', `<div class="attr-stack">
       ${ATTRS.map((a) => {
-        const add = bonuses.attributes[a];
+        // In the second form the form's own and its results' bonus rides here
+        // too, and is named as the form's (F74). `addForm` is 0 otherwise.
+        const add = shownBonuses.attributes[a];
+        const addForm = formB?.attributes?.[a] || 0;
         const addClass = classOnly.attributes[a] || 0;
-        const addSkills = (add || 0) - addClass;
-        const src = !addSkills ? (cls.name || 'the class')
+        const addSkills = (add || 0) - addClass - addForm;
+        const base = !addSkills ? (cls.name || 'the class')
           : (!addClass ? 'skills taken' : `${cls.name || 'the class'} + skills taken`);
+        const src = !addForm ? base
+          : (!addClass && !addSkills ? F.name : `${base} + ${F.name}`);
         // The stored attribute is what was rolled; the class bonus rides
         // alongside it so both stay legible, and effAttrs is what the tables read.
         return field(a, attrs[a] == null ? '—'
@@ -2515,11 +2651,17 @@ function levelUpPanel() {
      <td>→ <input type="number" id="lu-skill-${i}" value="${s.to}">%</td></tr>`).join('');
   const grants = p.grants.map((g) =>
     `<li class="small">Level ${g.level}: ${g.grants.map(escHtml).join('; ')}</li>`).join('');
+  // The second form's hit points, rolled on its own dice (F74). Shown, not
+  // editable: they are rolls, checked against their dice on confirmation.
+  const sf = p.second_form;
+  const formHpRow = sf?.hp_rolls?.length
+    ? `<tr><td>${escHtml(sf.name || 'Second form')} H.P.</td><td>${escHtml(sf.dice || '')}</td>
+       <td>+ ${sf.hp_rolls.map(Number).join(' + ')}</td></tr>` : '';
   return `
   <div class="levelup noprint">
     <h2 class="sub-h" style="margin-top:0">⬆ Level up! ${p.from_level} → ${p.to_level}
       <span class="muted small">— review, tweak if your GM says so, then confirm</span></h3>
-    <table>${poolRows}${skillRows}</table>
+    <table>${poolRows}${formHpRow}${skillRows}</table>
     ${grants ? `<h3>New abilities</h3><ul style="margin-left:18px">${grants}</ul>` : ''}
     ${p.skill_picks_total ? pickerBlock(p.skill_picks, p.skill_picks_total, 'lu') : ''}
     ${powerPickerBlock(p)}
@@ -3017,6 +3159,7 @@ async function confirmLevelUp() {
   try {
     await api(`characters/${id}/level-confirm`, jsonReq('POST', {
       to_level: p.to_level, pools, skills, grants: p.grants, picks, power_picks,
+      ...(p.second_form?.hp_rolls ? { second_form_hp_rolls: p.second_form.hp_rolls } : {}),
     }));
     C.proposal = null;
     C.pickShowAll = false;
@@ -3610,6 +3753,10 @@ function autosaveKey(el) {
   if (el.dataset.armor != null) return 'armor';
   if (el.id === 'stat-notes') return 'notes';
   const m = /^stat-(\w+)$/.exec(el.id || '');
+  // While a second form shows, its S.D.C. and hit point cards hold THAT form's
+  // values, and saving them as the first form's columns would put one body's
+  // damage on the other. saveFormPools owns them then (F74).
+  if (m && formOn() && FORM_POOLS.includes(m[1])) return null;
   return m && POOLS.some(([k]) => k === m[1]) ? m[1] + '_current' : null;
 }
 

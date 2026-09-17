@@ -190,9 +190,12 @@ A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice
 `mdc_base`, `ppe_base`), `starting_money`, `bonuses`, `skill_overrides`,
 `skills_additional`, `related_skills_count` and `horror_factor`.
 
-`horror_factor` is on that list because the shape it exists for is a variant
-shape: a Nightbane projects none in its human form and 6 to 18 in its Morphus,
-and `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` both print
+`horror_factor` is on that list for classes that print "none normally, N if
+revealed". It was first argued from the Nightbane, which projects none in its
+human form and 6 to 18 in its Morphus - but that is two states of one character,
+not two kinds of the class, and it is `second_form.horror_factor` now (see
+[A second body](race-and-occupation.md#a-second-body)).
+`add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` both print
 "none normally, N if revealed". It is the one a character IMPOSES - not the save
 of the same name, which is a `bonuses.saves` key and means the opposite
 (`BOOK-INGEST-AUDIT.md` F75).
