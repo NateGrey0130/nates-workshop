@@ -661,6 +661,14 @@ export const CORE_SDC_BY_CLASS = {
   'hu-alien-edu-science-specialist': '1D6',
   'hu-alien-edu-combat-specialist': '1D6',
   'hu-alien-edu-engineer': '1D6',
+  // Nightbane RPG. The book's own rule (printed 36) is not the men-of-arms
+  // split this table was built on: a character with a military, police,
+  // detective or athletic occupation or background rolls 1D4x10, and ALL
+  // others roll 3D6. The Psychic P.C.C. (printed 68-69), Sorcerer (115-117)
+  // and Mystic (117-118) print no S.D.C. and are none of those four, so 3D6.
+  'nb-psychic': '3D6',
+  'nb-sorcerer': '3D6',
+  'nb-mystic': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

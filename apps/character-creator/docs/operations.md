@@ -321,12 +321,12 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 318 |
+| classes (published, live) | 321 |
 | skills | 390 |
 | per-system skill bases | 89 |
 | spells | 974 |
 | psionic powers | 132 |
-| gear | 2817 |
+| gear | 2824 |
 | vehicles | 255 |
 
 **These are pinned by `test/regression.mjs`**, which is the only thing that can
