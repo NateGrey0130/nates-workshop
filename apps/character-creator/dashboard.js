@@ -32,11 +32,26 @@ async function load() {
   }
 }
 
+// THE ACTIVE FORM (Nightbane follow-up 5, 2026-09-17). A roster row whose
+// character holds a second body carries `second_form` - its names, which form
+// is active, and that form's own S.D.C. and hit points - and while the second
+// form is active its pools are the ones shown, stepped and damaged, through
+// derive.activePools / playChanges, the pair the sheet routes through. A row
+// without one is drawn from `c` exactly as before.
+const pools = (c) => derive.activePools(c, c.second_form);
+function formTag(c) {
+  const f = c.second_form;
+  if (!f) return '';
+  const name = f.active === 'second' ? f.name : f.first_name;
+  return name ? `<span class="tag" title="The form this character is in">${escHtml(name)}</span> ` : '';
+}
+
 function poolsCell(c) {
+  const p = pools(c);
   const parts = POOLS
-    .filter(([k]) => c[k + '_max'] != null || c[k + '_current'] != null)
-    .map(([k, label]) => `${label} ${c[k + '_current'] ?? '—'}/${c[k + '_max'] ?? '—'}`);
-  return parts.join(' · ') || '—';
+    .filter(([k]) => p[k + '_max'] != null || p[k + '_current'] != null)
+    .map(([k, label]) => `${label} ${p[k + '_current'] ?? '—'}/${p[k + '_max'] ?? '—'}`);
+  return formTag(c) + (parts.join(' · ') || '—');
 }
 
 // ---------- the G.M.'s table view (UI-AUDIT F46) ----------
@@ -60,10 +75,11 @@ function rosterRowHtml(c) {
 }
 
 function gmPoolsCell(c) {
-  const pools = POOLS.filter(([k]) => c[k + '_max'] != null || c[k + '_current'] != null);
-  if (!pools.length) return '—';
-  return `<div class="gm-pools">${pools.map(([k, label]) => `<span class="gm-pool">
-        <span class="muted small">${label}</span> <b>${c[k + '_current'] ?? '—'}</b><span class="muted small">/${c[k + '_max'] ?? '—'}</span>
+  const p = pools(c);
+  const shown = POOLS.filter(([k]) => p[k + '_max'] != null || p[k + '_current'] != null);
+  if (!shown.length) return '—';
+  return `<div class="gm-pools">${formTag(c)}${shown.map(([k, label]) => `<span class="gm-pool">
+        <span class="muted small">${label}</span> <b>${p[k + '_current'] ?? '—'}</b><span class="muted small">/${p[k + '_max'] ?? '—'}</span>
         <button type="button" class="gm-step" aria-label="${escHtml(c.name)} ${label} down" onclick="gmStep(${c.id}, '${k}', -1)">−</button>
         <button type="button" class="gm-step" aria-label="${escHtml(c.name)} ${label} up" onclick="gmStep(${c.id}, '${k}', 1)">+</button>
       </span>`).join('')}
@@ -114,17 +130,20 @@ const postJson = (path, body) => api(path, {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
 });
 
+// The server names the form in the event's note; the message here says it too,
+// so the G.M. sees which body took it without opening the log.
+const formLabel = (c) => (c.second_form?.active === 'second' && c.second_form.name ? ` (${c.second_form.name})` : '');
+
 async function gmStep(id, key, sign) {
   const c = D.roster.find((x) => x.id === id);
-  if (!c || c[key + '_current'] == null) return;
-  const from = c[key + '_current'];
-  const to = from + sign * D.amt;
+  const from = c ? pools(c)[key + '_current'] : null;
+  if (!c || from == null) return;
+  const changes = derive.playChanges(c, c.second_form, { [key + '_current']: from + sign * D.amt });
   try {
     await postJson(`characters/${id}/events`, {
-      kind: 'pool', note: `G.M.: ${key.toUpperCase()} ${sign > 0 ? '+' : '−'}${D.amt}`,
-      changes: { character: { [key + '_current']: { from, to } } },
+      kind: 'pool', note: `G.M.: ${key.toUpperCase()} ${sign > 0 ? '+' : '−'}${D.amt}`, changes,
     });
-    c[key + '_current'] = to;
+    derive.applyPlayChanges(c, c.second_form, changes);
     repaintRow(c);
   } catch (err) { gmMsg(`${c.name}: ${err.message}`, true); }
 }
@@ -132,14 +151,14 @@ async function gmStep(id, key, sign) {
 async function gmDamage(id) {
   const c = D.roster.find((x) => x.id === id);
   if (!c) return;
-  const patch = derive.damageCascade(c, D.amt);
-  const fields = Object.fromEntries(Object.entries(patch).map(([k, to]) => [k, { from: c[k] ?? 0, to }]));
-  if (!Object.keys(fields).length) return;
+  const patch = derive.damageCascade(pools(c), D.amt);
+  if (!Object.keys(patch).length) return;
+  const changes = derive.playChanges(c, c.second_form, patch);
   try {
-    await postJson(`characters/${id}/events`, { kind: 'damage', note: `G.M.: took ${D.amt}`, changes: { character: fields } });
-    Object.assign(c, patch);
+    await postJson(`characters/${id}/events`, { kind: 'damage', note: `G.M.: took ${D.amt}`, changes });
+    derive.applyPlayChanges(c, c.second_form, changes);
     repaintRow(c);
-    gmMsg(`${c.name} took ${D.amt}.`);
+    gmMsg(`${c.name}${formLabel(c)} took ${D.amt}.`);
   } catch (err) { gmMsg(`${c.name}: ${err.message}`, true); }
 }
 
@@ -148,7 +167,8 @@ async function gmUndo(id) {
   if (!c) return;
   try {
     const res = await postJson(`characters/${id}/events/undo`, {});
-    Object.assign(c, res.restored?.character || {});
+    derive.applyPlayChanges(c, c.second_form,
+      { character: res.restored?.character, second_form: res.restored?.second_form }, null);
     repaintRow(c);
     gmMsg(`${c.name}: took back ${res.undone?.note || res.undone?.kind || 'the last change'}.`);
   } catch (err) {

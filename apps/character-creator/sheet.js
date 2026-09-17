@@ -99,12 +99,16 @@ const { POOL_TONES, POOL_LOW, poolCard, poolMax, boxSlug, BOX_COL, box, field,
 // folded as `C.secondForm`. poolData() hands every painter the character with
 // those two pools swapped in while the second form is showing, and hands back
 // C.data itself otherwise, so a one-body character is painted exactly as before.
+//
+// And every play press READS these pools and writes where they came from
+// (Nightbane follow-up 5, 2026-09-17): Damage, the steppers and rest act on the
+// form that is active, through derive.activePools / playChanges - the same two
+// functions the G.M. dashboard routes through.
 const FORM_POOLS = ['hp', 'sdc'];
 const formOn = () => !!(C.secondForm && C.secondForm.active === 'second');
 function poolData() {
   if (!formOn()) return C.data;
-  const f = C.secondForm;
-  return { ...C.data, hp_current: f.hp_current, hp_max: f.hp_max, sdc_current: f.sdc_current, sdc_max: f.sdc_max };
+  return derive.activePools(C.data, C.secondForm);
 }
 const paintPool = (key) => sheetLayout.paintPool(key, poolData(), C.conflicts);
 
@@ -130,11 +134,12 @@ async function setForm(which) {
   }
 }
 
-// Write the second form's own pools. NOT through play events or the queue:
-// those move the first form's columns and guard on them, and the second form's
-// values live in `characters.second_form`, which only the PATCH writes -
-// field by field, so this cannot clobber a stored result. Clamped to 0..max
-// here exactly as the server clamps, so the screen shows what was stored.
+// A value TYPED into the second form's pool card, saved through the PATCH -
+// field by field, so it cannot clobber a stored result - and clamped to 0..max
+// here exactly as the server clamps it, which is also exactly what a value typed
+// into the first form's card gets. The play presses (Damage, steppers, rest) do
+// not come here: they go through the events route like the first form's, which
+// does not clamp, and so undo and queue.
 async function saveFormPools(values) {
   const f = C.secondForm;
   if (!f) return;
@@ -658,22 +663,18 @@ function syncPowerBtns() {
 // Quick pool arithmetic: optimistic, targeted DOM update, PATCH behind it.
 // No clamping - negative H.P. is a real Palladium state (coma), and a G.M.
 // may allow over-maximum; arithmetic is offered, never enforced.
+//
+// ON THE ACTIVE FORM. A Morphus showing takes the press on its own S.D.C. and
+// hit points, by this same rule and through this same events route - so it
+// undoes, queues and reaches the log like the Facade's (Nightbane follow-up 5).
 async function adjustPool(key, delta) {
-  // The second form's own S.D.C. and hit points (F74) go to its own storage.
-  if (formOn() && FORM_POOLS.includes(key)) {
-    const now = C.secondForm[key + '_current'];
-    if (now == null) return;
-    return saveFormPools({ [key + '_current']: now + delta });
-  }
-  const cur = C.data[key + '_current'];
+  const cur = poolData()[key + '_current'];
   if (cur == null) return;
-  const next = cur + delta;
-  const prev = cur;
-  C.data[key + '_current'] = next;
-  paintPool(key);
-  syncPowerBtns();
+  const changes = derive.playChanges(C.data, C.secondForm, { [key + '_current']: cur + delta });
+  const note = `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`;
+  applyChanges(changes, 'to');
   try {
-    await postEvent('pool', `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`, { character: { [key + '_current']: { from: prev, to: next } } });
+    await postEvent('pool', note, changes);
   } catch (err) {
     // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS. err.status means the
     // server answered and said no - a bad field, a gone character - and the
@@ -681,17 +682,27 @@ async function adjustPool(key, delta) {
     // status means the request never arrived: the change is fine and the
     // wi-fi is not, so it stands on screen and waits in the queue.
     if (err.status === undefined && await queueChange('pool',
-      `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`,
-      { [key + '_current']: { from: prev, to: next } })) {
+      note, changes.character || {}, null, formExtra(changes))) {
       renderQueueState();
       return;
     }
-    C.data[key + '_current'] = prev;
-    paintPool(key);
-    syncPowerBtns();
+    applyChanges(changes, 'from');
     alert('Failed: ' + err.message);
   }
 }
+
+// A play change written into the sheet's own copies - `to`, or `from` to roll
+// it back - and every pool it moved repainted. The change says which copy each
+// field belongs to, so a rollback lands on the form the press was made in even
+// if the toggle moved since.
+function applyChanges(changes, side) {
+  for (const key of derive.applyPlayChanges(C.data, C.secondForm, changes, side)) paintPool(key);
+  syncPowerBtns();
+}
+
+// A second form's pools ride in a queue entry beside the first form's, the way
+// an armour or vessel hit does.
+const formExtra = (changes) => (changes?.second_form ? { second_form: changes.second_form } : undefined);
 
 // ---------- the queue ----------
 // See js/play-queue.js for what this does and does not promise. The short
@@ -762,6 +773,7 @@ async function flushQueue() {
         guard: true,
         changes: {
           character: entryFields(e),
+          ...(e.second_form ? { second_form: e.second_form } : {}),
           ...(e.item ? { item: e.item } : {}),
           ...(e.armor ? { armor: e.armor } : {}),
           ...(e.vehicle ? { vehicle: e.vehicle } : {}),
@@ -780,7 +792,7 @@ async function flushQueue() {
         // the last one is answered. A 409 naming none of our fields is not
         // something the player can act on, so it falls through and is treated
         // as the refusal it is.
-        if (noteConflicts(e, err.detail.fields)) return;
+        if (noteConflicts(e, err.detail.fields, err.detail.form_fields)) return;
       }
       if (err.status === undefined) { renderQueueState(); return; }  // still offline
       // The server refused it on its merits. It will never succeed, so it
@@ -808,15 +820,21 @@ async function flushQueue() {
 // card. Returns whether anything was recorded: a 409 that names none of the
 // fields we sent is not a choice the player can make, and the caller treats it
 // as a refusal rather than stalling the queue on a conflict nobody can see.
-function noteConflicts(entry, reported) {
+//
+// A second form's pools clash apart (`form_fields`), and each choice remembers
+// which body it is about, so answering it writes that body's value.
+function noteConflicts(entry, reported, reportedForm) {
   let any = false;
-  for (const field of Object.keys(entryFields(entry))) {
-    const f = reported?.[field];
-    if (!f) continue;
-    const key = field.replace('_current', '');
-    C.conflicts[key] = { mine: f.mine, theirs: f.theirs, seq: entry.seq, field };
-    paintPool(key);
-    any = true;
+  for (const [group, fields, rep] of [['character', entryFields(entry), reported],
+    ['second_form', entry.second_form || {}, reportedForm]]) {
+    for (const field of Object.keys(fields)) {
+      const f = rep?.[field];
+      if (!f) continue;
+      const key = field.replace('_current', '');
+      C.conflicts[key] = { mine: f.mine, theirs: f.theirs, seq: entry.seq, field, group };
+      paintPool(key);
+      any = true;
+    }
   }
   if (any) renderQueueState();
   return any;
@@ -863,8 +881,10 @@ async function resolveConflict(key, side) {
   // waits in `resolved` for the rest of its press.
   delete C.conflicts[key];
   const answers = C.resolved[c.seq] || (C.resolved[c.seq] = {});
-  answers[c.field] = { base: c.theirs, to: chosen };
-  C.data[key + '_current'] = chosen;
+  const group = c.group || 'character';
+  answers[`${group}.${c.field}`] = { base: c.theirs, to: chosen };
+  if (group === 'second_form' && C.secondForm) C.secondForm[c.field] = chosen;
+  else C.data[key + '_current'] = chosen;
   paintPool(key);
   if (Object.values(C.conflicts).some((x) => x.seq === c.seq)) {
     renderQueueState();
@@ -879,17 +899,22 @@ async function resolveConflict(key, side) {
       // with, because its guard matched and that IS what the server holds.
       // A field that ends where it already is needs no write at all, which is
       // what makes "theirs" free.
-      const changes = {};
-      for (const [field, fv] of Object.entries(entryFields(entry))) {
-        const a = answers[field];
-        const from = a ? a.base : fv.from;
-        const to = a ? a.to : fv.to;
-        if (from !== to) changes[field] = { from, to };
-      }
-      if (Object.keys(changes).length) {
+      const rebase = (group, fields) => {
+        const out = {};
+        for (const [field, fv] of Object.entries(fields || {})) {
+          const a = answers[`${group}.${field}`];
+          const from = a ? a.base : fv.from;
+          const to = a ? a.to : fv.to;
+          if (from !== to) out[field] = { from, to };
+        }
+        return out;
+      };
+      const changes = rebase('character', entryFields(entry));
+      const formChanges = rebase('second_form', entry.second_form);
+      if (Object.keys(changes).length || Object.keys(formChanges).length) {
         await api(`characters/${id}/events`, jsonReq('POST', {
           kind: entry.kind || 'pool', note: `${entry.note} (resolved)`, guard: true,
-          changes: { character: changes },
+          changes: { character: changes, ...(Object.keys(formChanges).length ? { second_form: formChanges } : {}) },
         }));
       }
       await playQueue.remove(c.seq);
@@ -921,38 +946,27 @@ async function quickDamage() {
 async function bodyDamage(amt) {
   // The rule itself lives in js/derive.js since UI-AUDIT F46, because the G.M.
   // dashboard applies it too and two copies would drift.
-  // A hit on the second form runs the same cascade over THAT form's pools and
-  // leaves the first form's untouched - damage is tracked per form (F74).
-  if (formOn()) {
-    const formPatch = derive.damageCascade(poolData(), amt);
-    if (Object.keys(formPatch).every((k) => FORM_POOLS.includes(k.replace(/_current$/, '')))) {
-      return saveFormPools(formPatch);
-    }
-  }
-  const patch = derive.damageCascade(C.data, amt);
-  const prev = {};
-  for (const k of Object.keys(patch)) {
-    prev[k] = C.data[k];
-    C.data[k] = patch[k];
-    paintPool(k.replace('_current', ''));
-  }
-  const fields = Object.fromEntries(Object.keys(patch).map((k) => [k, { from: prev[k], to: patch[k] }]));
+  // It runs over the ACTIVE form's pools and writes back where each came from:
+  // a Morphus showing takes the hit on its own S.D.C. and then its own hit
+  // points, below zero as the Facade's go, and the Facade's are untouched -
+  // damage is tracked per form (F74, Nightbane follow-up 5).
+  const patch = derive.damageCascade(poolData(), amt);
+  const changes = derive.playChanges(C.data, C.secondForm, patch);
+  applyChanges(changes, 'to');
   try {
-    await postEvent('damage', `took ${amt}`, { character: fields });
+    await postEvent('damage', `took ${amt}`, changes);
   } catch (err) {
     // THE SAME SPLIT THE +/- BUTTONS MAKE, and for the same reason: a hit that
     // the server refused was never valid and rolls back, but a hit the wi-fi
     // ate happened at the table and stands. Damage is the press this matters
     // most for - it is the one a player cannot simply do again, because doing
     // it again means deciding a second time how much came off.
-    if (err.status === undefined && await queueChange('damage', `took ${amt}`, fields)) {
+    if (err.status === undefined && await queueChange('damage', `took ${amt}`,
+      changes.character || {}, null, formExtra(changes))) {
       renderQueueState();
       return;
     }
-    for (const k of Object.keys(prev)) {
-      C.data[k] = prev[k];
-      paintPool(k.replace('_current', ''));
-    }
+    applyChanges(changes, 'from');
     alert('Failed: ' + err.message);
   }
 }
@@ -1160,10 +1174,9 @@ function rollNote(r) {
 async function undoLast() {
   try {
     const res = await api(`characters/${id}/events/undo`, jsonReq('POST', {}));
-    for (const [field, v] of Object.entries(res.restored.character || {})) {
-      C.data[field] = v;
-      paintPool(field.replace('_current', ''));
-    }
+    // Each form's pools back into its own copy - a Morphus hit undoes onto the
+    // Morphus whichever form is showing now.
+    applyChanges({ character: res.restored.character, second_form: res.restored.second_form }, null);
     // An armour or vessel hit, put back exactly (UI-AUDIT F40).
     if (res.restored.armor) {
       const { index, mdc_current: back } = res.restored.armor;
@@ -1693,18 +1706,23 @@ function saveRestPrefs(p) {
 
 // Recovery = rate x hours per pool, clamped to the pool's max (recovering
 // past full is not recovery; the steppers still allow over-max by hand).
+//
+// THE ACTIVE FORM'S POOLS (Nightbane follow-up 5): `pd` is poolData(), so a
+// Morphus rests its own S.D.C. and hit points up to its own maxima, and the
+// shared P.P.E. and I.S.P. are what they always were.
 function restPreview() {
   const hours = Math.max(0, Number($('rest-hours')?.value) || 0);
   const out = [];
+  const pd = poolData();
   for (const [key, label] of POOLS) {
-    if (C.data[key + '_max'] == null) continue;
+    if (pd[key + '_max'] == null) continue;
     const rate = Math.max(0, Number($(`rest-rate-${key}`)?.value) || 0);
-    const cur = C.data[key + '_current'] ?? 0;
+    const cur = pd[key + '_current'] ?? 0;
     // The EFFECTIVE maximum: P.P.E. burned out of the base for good cannot be
     // rested back. Reading the rolled ppe_max here would preview recovery past
     // what the character can hold, and the server would then clamp it away.
-    const max = poolMax(C.data, key);
-    const gain = Math.min(Math.round(rate * hours), Math.max(max - cur, 0));
+    const max = poolMax(pd, key);
+    const gain = derive.restGain(cur, max, rate, hours);
     out.push({ key, label, rate, cur, gain });
   }
   return { hours, pools: out };
@@ -1721,23 +1739,20 @@ function updateRestPreview() {
 
 async function applyRest() {
   const { hours, pools } = restPreview();
-  const changes = { character: {} };
+  const patch = {};
   const applied = [];
   for (const p of pools) {
     if (p.gain <= 0) continue;
-    changes.character[p.key + '_current'] = { from: p.cur, to: p.cur + p.gain };
+    patch[p.key + '_current'] = p.cur + p.gain;
     applied.push(`${p.label} +${p.gain}`);
   }
   if (!applied.length) { recordRoll('rest', 'Rest', { note: 'nothing to recover' }); return; }
-  const prev = {};
-  for (const [field, v] of Object.entries(changes.character)) {
-    prev[field] = C.data[field];
-    C.data[field] = v.to;
-    paintPool(field.replace('_current', ''));
-  }
+  // Each pool back to where it came from: the active form's S.D.C. and hit
+  // points, and the character's own P.P.E. and I.S.P., in ONE event.
+  const changes = derive.playChanges(C.data, C.secondForm, patch);
   // A rest recovers P.P.E. and I.S.P. as well as H.P., so it can bring a ⚡
-  // button back to life.
-  syncPowerBtns();
+  // button back to life - applyChanges re-syncs them.
+  applyChanges(changes, 'to');
   try {
     await postEvent('pool', `rested ${hours}h: ${applied.join(', ')}`, changes);
     recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
@@ -1746,16 +1761,12 @@ async function applyRest() {
     // takes, so it queues for the same reason Damage does: a refusal was never
     // valid and rolls back, a drop happened at the table and stands.
     if (err.status === undefined && await queueChange('pool',
-      `rested ${hours}h: ${applied.join(', ')}`, changes.character)) {
+      `rested ${hours}h: ${applied.join(', ')}`, changes.character || {}, null, formExtra(changes))) {
       recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
       renderQueueState();
       return;
     }
-    for (const [field, v] of Object.entries(prev)) {
-      C.data[field] = v;
-      paintPool(field.replace('_current', ''));
-    }
-    syncPowerBtns();
+    applyChanges(changes, 'from');
     alert('Failed: ' + err.message);
   }
 }

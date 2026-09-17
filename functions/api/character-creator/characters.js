@@ -13,8 +13,10 @@ import { loadPowerCatalog, powerGrantsFor, insertPowerGrantStatements } from './
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
 import { parseClassMarkdown, occAllowedForRace, raceAllowedForOcc, mosList } from '../../../apps/character-creator/js/parser.js';
-import { rollSecondForm, isEmptySecondForm } from '../../../apps/character-creator/js/second-form.js';
+import { rollSecondForm, isEmptySecondForm, secondFormView } from '../../../apps/character-creator/js/second-form.js';
 import { loadTraitRows, traitKeysOf } from './_lib/second-form.js';
+import { decodeCharacter } from './_lib/character-json.js';
+import { selectInChunks } from './_lib/sql-chunk.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
@@ -50,6 +52,35 @@ export async function onRequestGet({ request, env }) {
     rowsBinds: binds,
     limit, offset,
   });
+
+  // A CAMPAIGN ROSTER SHOWS EACH CHARACTER'S ACTIVE FORM (Nightbane follow-up 5,
+  // 2026-09-17). The G.M. dashboard damages and heals from this list, and a
+  // Nightbane in their Morphus takes it on the Morphus's own pools - so a row
+  // whose character holds a second body carries `second_form`: the form's
+  // names, which is active, and its S.D.C. and hit points folded by the same
+  // secondFormView the sheet reads. Every other row is exactly what it was.
+  //
+  // Only for ?campaign_id=, the roster: folding means loading each such
+  // character's class, and ?mine=1 lists a player's characters across every
+  // campaign, where nothing reads a pool.
+  if (campaignId && page.results.length) {
+    const held = await selectInChunks(page.results.map((r) => r.id), (batch) => env.DB.prepare(
+      `SELECT * FROM characters WHERE id IN (${batch.map(() => '?').join(',')})
+       AND json_valid(second_form) AND second_form <> '{}'`
+    ).bind(...batch));
+    for (const row of held) {
+      decodeCharacter(row);
+      const cls = await loadCharacterClass(env, request.url, row);
+      if (!cls?.second_form) continue;
+      const v = secondFormView({ cls, character: row,
+        rows: await loadTraitRows(env, cls.second_form, traitKeysOf(row.second_form)) });
+      const target = page.results.find((r) => r.id === row.id);
+      if (target && v) {
+        target.second_form = { name: v.name, first_name: v.first_name, active: v.active,
+          sdc_current: v.sdc_current, sdc_max: v.sdc_max, hp_current: v.hp_current, hp_max: v.hp_max };
+      }
+    }
+  }
 
   return json(pageBody('characters', page));
 }

@@ -13,6 +13,8 @@
 
 (function (global) {
   const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  // The pools a second form tracks on its own (see activePools, at the end).
+  const FORM_POOL_FIELDS = ['sdc_current', 'hp_current'];
 
   // ─── the attribute bonus chart ───
   //
@@ -535,5 +537,70 @@
       }
       return patch;
     },
+
+    // What a rest recovers in one pool: rate x hours, never past the maximum
+    // (recovering past full is not recovery; the steppers still allow over-max
+    // by hand). From below zero it climbs back through zero like any other
+    // number. The maximum is the ACTIVE form's - activePools below hands it in.
+    restGain: (cur, max, rate, hours) =>
+      Math.min(Math.round(n(rate) * n(hours)), Math.max(n(max) - n(cur), 0)),
+
+    // ─── the ACTIVE FORM's pools (Nightbane follow-up 5, 2026-09-17) ───
+    //
+    // A character whose class states a `second_form` - a Nightbane's Morphus -
+    // tracks that form's S.D.C. and hit points on their own (survey D5), and
+    // Nate's later call was that damage, healing and rest land on WHICHEVER form
+    // is active. These are that routing, shared by the sheet and the G.M.
+    // dashboard so the two cannot disagree about where a hit went.
+    //
+    // `form` is the fold the server hands out (js/second-form.js's
+    // secondFormView, or the roster's summary of it): `active`, and the form's
+    // own `sdc_current`/`sdc_max`/`hp_current`/`hp_max`. Null, or active
+    // "first", and each function below treats `data` exactly as before - a
+    // one-body character is what it was.
+    //
+    // The pools a press reads: the character, with the second form's S.D.C. and
+    // hit points standing in for the first form's while that form is active.
+    // Everything else - M.D.C., P.P.E., I.S.P. - is one pool both forms share.
+    activePools: (data, form) => {
+      if (!form || form.active !== 'second') return data;
+      return { ...data, hp_current: form.hp_current, hp_max: form.hp_max,
+        sdc_current: form.sdc_current, sdc_max: form.sdc_max };
+    },
+
+    // A patch of new values ({ sdc_current: 0, hp_current: -2 }) as the change
+    // the events route takes: `character` for the first form's columns,
+    // `second_form` for the active second form's own pools, each field with the
+    // `from` it replaces. The same rules either way - nothing here clamps, as
+    // damageCascade does not, so a Morphus goes below zero into hit points
+    // exactly as a Facade does. A form switch moves nothing: the target is
+    // decided by the form active when the press is made.
+    playChanges: (data, form, patch) => {
+      const onForm = !!form && form.active === 'second';
+      const out = {};
+      for (const [field, to] of Object.entries(patch || {})) {
+        const own = onForm && FORM_POOL_FIELDS.includes(field);
+        const from = own ? form[field] : data?.[field];
+        (out[own ? 'second_form' : 'character'] ||= {})[field] = { from: from ?? 0, to };
+      }
+      return out;
+    },
+
+    // Write a change's `to` - or its `from`, to roll it back - into the objects
+    // it was built from, and return the pool keys it moved so the caller can
+    // repaint them. The undo route's `restored` ({ character: { f: v },
+    // second_form: { f: v } }) carries bare values, and goes in with side null.
+    applyPlayChanges: (data, form, changes, side = 'to') => {
+      const moved = [];
+      for (const [group, target] of [['character', data], ['second_form', form]]) {
+        if (!target) continue;
+        for (const [field, v] of Object.entries(changes?.[group] || {})) {
+          target[field] = side ? v?.[side] : v;
+          moved.push(field.replace(/_current$/, ''));
+        }
+      }
+      return moved;
+    },
+    formPoolFields: FORM_POOL_FIELDS,
   };
 })(globalThis);

@@ -7558,9 +7558,122 @@ section('A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)');
     /const paintPool = \(key\) => sheetLayout\.paintPool\(key, poolData\(\), C\.conflicts\);/.test(sfSheet));
   check('autosave does not own a second-form pool, so one body\'s damage cannot land on the other',
     /if \(m && formOn\(\) && FORM_POOLS\.includes\(m\[1\]\)\) return null;/.test(sfSheet));
-  check('the stepper and Damage route a second-form hit to its own storage',
-    /if \(formOn\(\) && FORM_POOLS\.includes\(key\)\)/.test(sfSheet) && /const formPatch = derive\.damageCascade\(poolData\(\), amt\);/.test(sfSheet));
+  check('the stepper, Damage and rest read the active form and route each pool back where it came from',
+    /const cur = poolData\(\)\[key \+ '_current'\];\s*\n?\s*if \(cur == null\) return;\s*\n?\s*const changes = derive\.playChanges\(C\.data, C\.secondForm,/.test(sfSheet.replace(/\r/g, ''))
+    && /const patch = derive\.damageCascade\(poolData\(\), amt\);\s*\n\s*const changes = derive\.playChanges\(C\.data, C\.secondForm, patch\);/.test(sfSheet.replace(/\r/g, ''))
+    && /const changes = derive\.playChanges\(C\.data, C\.secondForm, patch\);\s*\n\s*\/\/ A rest recovers/.test(sfSheet.replace(/\r/g, '')));
   check('level-up sends the form\'s rolls to be confirmed', /second_form_hp_rolls: p\.second_form\.hp_rolls/.test(sfSheet));
+}
+
+section('Damage, healing and rest on the active form (Nightbane follow-up 5)');
+{
+  // Nate, 2026-09-17: damage, healing and rest apply to whichever form is
+  // active, and a Morphus pool goes below zero into hit points like the
+  // Facade's. The sheet and the G.M. dashboard both route through these three
+  // pure functions in js/derive.js, so they are driven here for BOTH forms.
+  const facade = () => ({ hp_current: 20, hp_max: 20, sdc_current: 30, sdc_max: 30, ppe_current: 10, ppe_max: 20 });
+  const morphus = (active = 'second') => ({ name: 'Morphus', first_name: 'Facade', active,
+    hp_current: 65, hp_max: 65, sdc_current: 124, sdc_max: 124 });
+  // One press through the helpers, exactly as the sheet makes it.
+  const hit = (data, form, amt) => {
+    const changes = D.playChanges(data, form, D.damageCascade(D.activePools(data, form), amt));
+    D.applyPlayChanges(data, form, changes);
+    return changes;
+  };
+
+  // ---- a one-body character is unchanged ----
+  {
+    const c = facade();
+    check('with no second form the pools are the character itself', D.activePools(c, null) === c
+      && D.activePools(c, undefined) === c);
+    const ch = hit(c, null, 40);
+    check('a one-body hit runs S.D.C. down then hit points, below zero, all under character',
+      c.sdc_current === 0 && c.hp_current === 10 && !ch.second_form
+      && ch.character.sdc_current.from === 30 && ch.character.sdc_current.to === 0
+      && ch.character.hp_current.from === 20 && ch.character.hp_current.to === 10, JSON.stringify(ch));
+    hit(c, null, 25);
+    check('and it keeps going below zero, as it always did', c.hp_current === -15 && c.sdc_current === 0);
+    check('the change is the same one the old sheet sent: from/to per field, nothing else',
+      JSON.stringify(D.playChanges(facade(), null, { hp_current: 12 })) === JSON.stringify({ character: { hp_current: { from: 20, to: 12 } } }));
+  }
+
+  // ---- the first form active: the second form is not touched ----
+  {
+    const c = facade(), f = morphus('first');
+    check('with the first form active the pools are the character itself', D.activePools(c, f) === c);
+    const ch = hit(c, f, 35);
+    check('a hit in the Facade lands on the Facade and leaves the Morphus whole',
+      c.sdc_current === 0 && c.hp_current === 15 && f.sdc_current === 124 && f.hp_current === 65 && !ch.second_form,
+      JSON.stringify({ c, f, ch }));
+  }
+
+  // ---- the second form active ----
+  {
+    const c = facade(), f = morphus();
+    const view = D.activePools(c, f);
+    check('with the second form active its S.D.C. and hit points stand in, and the shared pools stay',
+      view.sdc_current === 124 && view.hp_max === 65 && view.ppe_current === 10 && view !== c);
+    let ch = hit(c, f, 130);
+    check('a Morphus hit runs ITS S.D.C. down first and the rest reaches ITS hit points',
+      f.sdc_current === 0 && f.hp_current === 59 && ch.second_form.sdc_current.from === 124
+      && ch.second_form.hp_current.to === 59 && !ch.character, JSON.stringify(ch));
+    check('and the Facade\'s pools are untouched', c.sdc_current === 30 && c.hp_current === 20);
+    ch = hit(c, f, 70);
+    check('a Morphus pool goes below zero into hit points like the Facade\'s', f.hp_current === -11 && f.sdc_current === 0
+      && ch.second_form.hp_current.from === 59 && ch.second_form.hp_current.to === -11, JSON.stringify(f));
+    // Healing back: a stepper press, and a rest capped at the form's own maximum.
+    const heal = D.playChanges(c, f, { hp_current: D.activePools(c, f).hp_current + 5 });
+    D.applyPlayChanges(c, f, heal);
+    check('a stepper heal on the Morphus lands on the Morphus', f.hp_current === -6 && c.hp_current === 20
+      && heal.second_form.hp_current.from === -11);
+    const gain = D.restGain(f.hp_current, f.hp_max, 10, 8);
+    check('rest climbs back through zero and stops at the form\'s own maximum (-6 + 71 = 65, not 80)', gain === 71,
+      `gain ${gain}`);
+    const rest = D.playChanges(c, f, { hp_current: f.hp_current + gain, ppe_current: 10 + D.restGain(10, 20, 1, 8) });
+    D.applyPlayChanges(c, f, rest);
+    check('one rest moves the Morphus\'s hit points and the shared P.P.E., each where it lives',
+      f.hp_current === 65 && c.ppe_current === 18 && c.hp_current === 20
+      && rest.second_form.hp_current.to === 65 && rest.character.ppe_current.to === 18, JSON.stringify(rest));
+    check('rest past full recovers nothing', D.restGain(65, 65, 10, 8) === 0 && D.restGain(20, 20, 5, 1) === 0);
+    // Rolled back: `from` goes back into the copy the change names.
+    D.applyPlayChanges(c, f, rest, 'from');
+    check('a rollback restores each body from its own group', f.hp_current === -6 && c.ppe_current === 10);
+    // The undo route's `restored` carries bare values.
+    D.applyPlayChanges(c, f, { character: {}, second_form: { sdc_current: 40 } }, null);
+    check('an undo\'s restored values land on the form', f.sdc_current === 40 && c.sdc_current === 30);
+    // Changing form moves nothing.
+    f.active = 'first';
+    check('switching back to the Facade moves no damage between the forms',
+      D.activePools(c, f).hp_current === 20 && f.hp_current === -6 && f.sdc_current === 40);
+    hit(c, f, 5);
+    check('and a hit in the Facade now lands there', c.sdc_current === 25 && f.sdc_current === 40);
+  }
+
+  // ---- M.D.C. is one pool both forms share ----
+  {
+    const c = { ...facade(), mdc_current: 50, mdc_max: 50 }, f = morphus();
+    const ch = hit(c, f, 10);
+    check('an M.D.C. being in its second form takes it on the shared M.D.C.',
+      c.mdc_current === 40 && f.sdc_current === 124 && ch.character.mdc_current.to === 40 && !ch.second_form);
+  }
+
+  // ---- the routes, read as source ----
+  const evSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters', '[id]', 'events.js'), 'utf8');
+  check('the events route takes a second form\'s pools and writes them field by field',
+    /const FORM_POOL_FIELDS = new Set\(\['sdc_current', 'hp_current'\]\);/.test(evSrc)
+    && /second_form = json_set\(/.test(evSrc) && !/Math\.max\(0,/.test(evSrc));
+  check('guards them on the stored value, and names the form in the note',
+    /json_extract\(second_form, '\$\.\$\{field\}'\) IS \?/.test(evSrc) && /note = `\$\{note \|\| b\.kind\} \(\$\{form\}\)`/.test(evSrc));
+  const undoSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters', '[id]', 'events', 'undo.js'), 'utf8');
+  check('undo restores them', /restored\.second_form\[field\] = fv\.from;/.test(undoSrc));
+  const listSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters.js'), 'utf8');
+  check('a campaign roster carries each character\'s active form',
+    /if \(campaignId && page\.results\.length\)/.test(listSrc) && /target\.second_form = \{ name: v\.name/.test(listSrc));
+  const dashSrc = readFileSync(join(appDir, 'dashboard.js'), 'utf8');
+  check('the G.M. dashboard damages, steps and undoes the active form through the same helpers',
+    /const patch = derive\.damageCascade\(pools\(c\), D\.amt\);/.test(dashSrc)
+    && /derive\.playChanges\(c, c\.second_form, \{ \[key \+ '_current'\]/.test(dashSrc)
+    && /second_form: res\.restored\?\.second_form/.test(dashSrc));
 }
 
 section('The Morphus generator (survey D5, PR 3 of 4)');

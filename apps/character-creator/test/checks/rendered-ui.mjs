@@ -614,8 +614,9 @@ export function run() {
     // `pd` is poolData() - the character, or it with a second form's pools (F74).
     check('the first render reads it', /poolCard\(key, label,[^;]*poolMax\((c|pd), key\)/.test(sheetSrc));
     const rest = sheetSrc.slice(sheetSrc.indexOf('function restPreview('), sheetSrc.indexOf('function updateRestPreview('));
+    // `pd` again: a second form active rests its own pools to its own maxima.
     check('and the rest-recovery preview reads it, so resting cannot preview a refill past it',
-      /poolMax\(C\.data, key\)/.test(rest), rest.slice(0, 300));
+      /poolMax\(C\.data, key\)/.test(rest) || /const pd = poolData\(\);[\s\S]*poolMax\(pd, key\)/.test(rest), rest.slice(0, 300));
 
     // And the server, which is what actually stops a refill past the spend.
     const idSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
