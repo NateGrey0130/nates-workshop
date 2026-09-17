@@ -136,6 +136,7 @@ export async function onRequestPost({ request, env, params }) {
     // A skill whose base is derived from an attribute needs them to resolve at
     // all — without this it stores 0 and climbs from 0 (F18).
     attributes: character.attributes,
+    cls,
   });
   if (picked.errors?.length) return pickErrors(picked.errors);
 
@@ -237,10 +238,11 @@ export async function onRequestPost({ request, env, params }) {
   // Bank only what was not spent in this same request. The consume-from-the-
   // earliest rule is shared with the create path, which banks the same way for
   // a character that starts above level 1.
-  const unspent = allowance - picked.skills.length;
+  // `spent`, not the row count: a Hand to Hand style can cost several picks.
+  const unspent = allowance - picked.spent;
   if (unspent > 0) {
     statements.push(...insertGrantStatements(env, params.id,
-      remainingGrants(grants, picked.skills.length)));
+      remainingGrants(grants, picked.spent)));
   }
 
   // The same for powers, counted PER GRANT rather than as one total: a spell
@@ -263,7 +265,7 @@ export async function onRequestPost({ request, env, params }) {
     level: toLevel,
     changes,
     picks_granted: allowance,
-    picks_spent: picked.skills.length,
+    picks_spent: picked.spent,
     picks_pending: unspent,
     powers_granted: powerGrants.reduce((n, g) => n + g.count, 0),
     powers_spent: pickedPowers.length,

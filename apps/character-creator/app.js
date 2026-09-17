@@ -16,7 +16,8 @@ import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
-import { isHandToHand, oneHandToHand, replacePrompt } from './js/hand-to-hand.js';
+import { isHandToHand, oneHandToHand, replacePrompt, handToHandCost, handToHandCondition,
+         handToHandSurcharge, costLabel } from './js/hand-to-hand.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -2270,6 +2271,14 @@ function skillPickBlock(grants) {
       const options = S.skillCatalog
         .filter((sk) => inSystem(sk))
         .filter((sk) => !g.categories || categoryAllows(g.categories, sk))
+        // A Hand to Hand style is offered here only where it costs exactly the
+        // one pick a slot is: a class that states no price, or prices it at 1.
+        // Anything dearer, free, or not offered is bought on the Skills step,
+        // where the related allowance can be charged properly - the note under
+        // the heading says so. A slot cannot hold "two picks" and this step is
+        // not where to invent the control that could.
+        .filter((sk) => !isHandToHand(sk.name) || sk.name === chosen[slot]
+          || [undefined, 1].includes(handToHandCost(psiClass(), sk.name)))
         .filter((sk) => {
           const key = String(sk.name).toLowerCase();
           return (!taken.has(key) && !mine.has(key)) || sk.name === chosen[slot];
@@ -2296,6 +2305,8 @@ function skillPickBlock(grants) {
   return `<div class="panel-inset" id="level-skill-picks">
     <h3>Skill picks <span class="muted small">— ${spent} of ${total} chosen</span></h3>
     <p class="muted small">Anything left blank is banked and waits on the character sheet.</p>
+    ${psiClass().skills?.hand_to_hand ? `<p class="muted small">A Hand to Hand style this class
+      prices at more than one pick is bought on the Skills step, not here.</p>` : ''}
     ${body}
   </div>`;
 }
@@ -3008,7 +3019,12 @@ function makeRoomForHandToHand(name, { granted = false, except = () => false } =
   if (!standing) return true;
   const standingChosen = standing.type === 'related' || standing.type === 'secondary';
   if (granted && standingChosen) return true;
-  if (!window.confirm(replacePrompt(standing.name, name, !standingChosen))) return false;
+  // The price rides along for a style being BOUGHT. A choice-group pick is the
+  // class handing the style over, and costs what any group pick costs: nothing.
+  const terms = granted ? {} : {
+    cost: handToHandCost(psiClass(), name), condition: handToHandCondition(psiClass(), name),
+  };
+  if (!window.confirm(replacePrompt(standing.name, name, !standingChosen, terms))) return false;
   if (granted) return true;
   for (const r of others) {
     // Spliced in place: toggleSkill() is holding a reference to the list.
@@ -3163,6 +3179,12 @@ function renderSkills() {
   const GROUP_SHORT = 8;
   const hthReplaced = handToHandReplaced();
   const hthStanding = oneHandToHand(handToHandHeld()).kept;
+  // What the chosen style costs BEYOND the row it sits in - the class's price
+  // less one, so -1 for a free change (js/hand-to-hand.js). The related counter
+  // and every row's "can this still be afforded" read picks SPENT, not rows.
+  const hthSurchargeOf = (names) =>
+    handToHandSurcharge(effective, names.map((name) => ({ name, type: 'related' })));
+  const hthExtra = hthSurchargeOf(S.related);
   // "Hand to Hand: Basic" -> "Hand to Hand: Basic (replaced by ...)", for the
   // places a choice-group pick is shown by name.
   const hthLabel = (n) => {
@@ -3348,15 +3370,37 @@ function renderSkills() {
       // confirm that follows should not be the first the player hears of it.
       // When the one it replaces is a pick on THIS list the swap frees the
       // slot it fills, so a full list does not block it.
-      const swapsFor = !on && !held && isHandToHand(s.name) ? hthStanding : null;
+      const style = isHandToHand(s.name);
+      const swapsFor = !on && !held && style ? hthStanding : null;
       const swapInList = swapsFor && chosen.includes(swapsFor.name);
-      const blocked = held || (!on && chosen.length >= limit && !swapInList);
+      // THE CLASS'S PRICE. `undefined` is a class that states none, and the
+      // style costs the one pick it occupies, as every skill does. `null` is a
+      // class that lists what it sells and does not list this. A number is
+      // charged against RELATED picks - which is why a priced class does not
+      // sell styles from the secondary list at all: the book says "at the cost
+      // of two O.C.C. Related Skills", and a secondary pick is not one.
+      const price = style ? handToHandCost(effective, s.name) : undefined;
+      const priced = typeof price === 'number';
+      const wrongList = style && price !== undefined && kind !== 'related';
+      const notOffered = style && price === null && !on;
+      // What is left to spend if this row were ticked: the allowance, less every
+      // OTHER row's pick, less nothing for a style this one would replace.
+      const others = chosen.filter((n) => n !== s.name && !(swapInList && n === swapsFor.name));
+      const left = limit - others.length - hthSurchargeOf(others);
+      const tooDear = !on && priced && price > left;
+      const full = !on && !priced && left < 1;
+      const blocked = held || full || tooDear || notOffered || (wrongList && !on);
       const gone = held && hthReplaced.get(s.name.toLowerCase());
+      const condition = style ? handToHandCondition(effective, s.name) : '';
+      const terms = priced ? ` · ${costLabel(price)}${condition ? ` · ${condition} only` : ''}` : '';
       const hint = isRepeatableRow(s.name)
         ? ' <span class="muted small">— once per language; you will be asked which</span>'
         : gone ? ` <span class="muted small">— granted by the class, replaced by ${esc(gone)}</span>`
         : held ? ' <span class="muted small">— already on this character</span>'
-        : swapsFor ? ` <span class="muted small">— replaces ${esc(swapsFor.name)}</span>` : '';
+        : wrongList ? ' <span class="muted small">— this class sells Hand to Hand for related skills, not secondary</span>'
+        : notOffered ? ' <span class="muted small">— not a style this class offers</span>'
+        : swapsFor ? ` <span class="muted small">— replaces ${esc(swapsFor.name)}${esc(terms)}</span>`
+        : priced ? ` <span class="muted small">—${esc(terms.replace(/^ ·/, ''))}${tooDear ? ' · not enough picks left' : ''}</span>` : '';
       // The category is the heading now, so the row carries only its numbers.
       return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
@@ -3424,7 +3468,10 @@ function renderSkills() {
     ${programsHtml}
     <div class="cols" style="margin-top:14px">
       <div>
-        <h3>Related skills — ${S.related.length}/${relatedCfg.count}</h3>
+        <h3>Related skills — ${S.related.length + hthExtra}/${relatedCfg.count}</h3>
+        ${hthExtra ? `<p class="attr-note">${esc(S.related.find(isHandToHand))} ${hthExtra > 0
+          ? `costs this class ${esc(costLabel(hthExtra + 1))}, so it counts for ${hthExtra + 1} here.`
+          : 'is a free change for this class, so it does not count here.'}</p>` : ''}
         <p class="muted small">Allowed: ${esc((relatedCfg.categories || []).map(categoryLabel).join(', ') || '—')}</p>
         ${floorsHtml(effective)}
         ${schedule.length ? `<p class="attr-note">Also grants ${schedule.map((s) => `+${s.count} at level ${s.level}`).join(', ')}

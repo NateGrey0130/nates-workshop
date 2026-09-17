@@ -13,7 +13,7 @@ import { safeParse } from './character-json.js';
 import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
-import { isHandToHand, oneHandToHand } from '../../../../apps/character-creator/js/hand-to-hand.js';
+import { isHandToHand, oneHandToHand, handToHandCost, costLabel } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { selectInChunks } from './sql-chunk.js';
 
 export async function listPending(env, characterId) {
@@ -101,8 +101,13 @@ export function dedupeCategories(entries) {
 // is P.P. x5 (BOOK-INGEST-AUDIT F2). Without it that skill is stored at 0 and,
 // because js/leveling.js advances from the stored `pct`, climbs from 0 forever
 // (F18). Both callers already have the character loaded, so this costs no query.
-export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0, attributes = {}, systemBases = null }) {
-  if (!Array.isArray(picks) || !picks.length) return { skills: [], errors: [] };
+// `cls` is the COMPOSED class, and it is here for one thing: what the class
+// charges for a Hand to Hand style (js/hand-to-hand.js). A style priced at N
+// spends N picks, so `spent` - not `skills.length` - is what a caller claims
+// against its grants. Omit `cls` and every style costs its one pick, which is
+// what this did before the price was data.
+export async function resolvePicks(env, { picks, existingSkills, allowance, categories, level, secondaryAllowance = 0, attributes = {}, systemBases = null, cls = null }) {
+  if (!Array.isArray(picks) || !picks.length) return { skills: [], errors: [], spent: 0 };
   if (picks.length > allowance) {
     return { errors: [`That is ${picks.length} picks but only ${allowance} are available`] };
   }
@@ -123,6 +128,25 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
   const styles = names.filter(isHandToHand);
   if (styles.length > 1) {
     return { errors: [`Only one Hand to Hand style can be held: ${styles.join(', ')}`] };
+  }
+  // The class's price. `atCreation: false` - this is a level-up or a banked
+  // pick, and a class whose book allows the change only at creation offers
+  // nothing here. A GM's `override` buys a style the class does not offer, at
+  // the one pick it occupies: the flag already means "a human insisted".
+  let surcharge = 0;
+  for (const p of picks) {
+    if (!isHandToHand(p?.name)) continue;
+    const cost = handToHandCost(cls, p.name, { atCreation: false });
+    if (cost === null && !p.override) {
+      return { errors: [`${String(p.name).trim()} is not a Hand to Hand style this class offers`
+        + (cls?.skills?.hand_to_hand?.creation_only ? ' after creation' : '')] };
+    }
+    if (typeof cost === 'number') surcharge += cost - 1;
+  }
+  if (picks.length + surcharge > allowance) {
+    const style = styles[0];
+    return { errors: [`${style} costs this class ${costLabel(handToHandCost(cls, style, { atCreation: false }))}, `
+      + `so these picks need ${picks.length + surcharge} and only ${allowance} are available`] };
   }
 
   const held = new Set((existingSkills || []).map((s) => String(s.name).toLowerCase()));
@@ -209,7 +233,7 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     });
   }
 
-  return { skills, errors };
+  return { skills, errors, spent: Math.max(0, skills.length + surcharge) };
 }
 
 // The character's skills with the resolved picks added - the ONE way either

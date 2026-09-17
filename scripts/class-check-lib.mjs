@@ -133,6 +133,9 @@ export function unmodelledKeys(data) {
  */
 export const KNOWN_SKILL_KEYS = new Set([
   'occ_skills', 'occ_related_skills', 'secondary_skills', 'skill_programs', 'mos',
+  // js/hand-to-hand.js, parser.js, app.js, sheet.js, _lib/skill-picks.js - the
+  // class's price list for changing or buying a Hand to Hand style.
+  'hand_to_hand',
 ]);
 
 /**

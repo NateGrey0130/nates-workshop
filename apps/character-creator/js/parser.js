@@ -1280,6 +1280,13 @@ export function combineClasses(rcc, occ) {
   // very class it was built for, silently, with every test still passing.
   const programs = occ.skills?.skill_programs ?? rcc.skills?.skill_programs;
   if (programs) out.skills.skill_programs = programs;
+  // The Hand to Hand price list (js/hand-to-hand.js) is bought out of RELATED
+  // skills, and related skills are the occupation's - so the occupation's list
+  // governs, and the race's is the fallback for a racial class played alone in
+  // the second slot. Carried by name for the reason the two above are: this
+  // rebuilds `skills` from the race, and nearly every block is on an O.C.C.
+  const h2h = occ.skills?.hand_to_hand ?? rcc.skills?.hand_to_hand;
+  if (h2h) out.skills.hand_to_hand = h2h;
   // An MOS belongs to the OCCUPATION - it is a military specialty, and the
   // Coalition classes that have one are all O.C.C.s. Carried across the merge
   // because this rebuilds `skills` wholesale, and without it a Technical
@@ -3217,6 +3224,48 @@ export function parseClassMarkdown(text) {
         if (c && typeof c === 'object' && c.bonus !== undefined) {
           errors.push(`skills.skill_programs.categories.${c.name} sets a bonus; `
             + 'a program grants one fixed percentage and nothing reads it');
+        }
+      }
+    }
+    // What the class charges to change or buy a Hand to Hand style
+    // (js/hand-to-hand.js). The keys are checked for SHAPE, not against a list
+    // of styles: a book may print one the catalog gains later, and a key that
+    // names no style is simply never asked for. What is refused is what would
+    // be read WRONG - a quoted key keeps its quotes through this parser and
+    // would match nothing, so every style would silently read "not offered".
+    const h2h = data.skills.hand_to_hand;
+    if (h2h !== undefined) {
+      if (!h2h || typeof h2h !== 'object' || Array.isArray(h2h)) {
+        errors.push('skills.hand_to_hand must be a block: { costs: { expert: 1, ... } }');
+      } else {
+        const known = new Set(['costs', 'conditions', 'creation_only']);
+        for (const k of Object.keys(h2h)) {
+          if (!known.has(k)) errors.push(`skills.hand_to_hand.${k} is not a key anything reads`);
+        }
+        if (!h2h.costs || typeof h2h.costs !== 'object' || Array.isArray(h2h.costs)) {
+          errors.push('skills.hand_to_hand.costs must be a map of style to picks - {} when nothing is offered');
+        }
+        for (const group of ['costs', 'conditions']) {
+          for (const [k, v] of Object.entries((h2h[group] && typeof h2h[group] === 'object') ? h2h[group] : {})) {
+            if (!/^[a-z0-9_]+$/.test(k)) {
+              errors.push(`skills.hand_to_hand.${group}.${k} must be a bare lower-case style key `
+                + '(martial_arts, not "Hand to Hand: Martial Arts") - a quoted key keeps its quotes');
+            }
+            if (group === 'costs' && !(Number.isInteger(v) && v >= 0)) {
+              errors.push(`skills.hand_to_hand.costs.${k} must be a whole number of picks, 0 or more`);
+            }
+            if (group === 'conditions' && (typeof v !== 'string' || !v.trim())) {
+              errors.push(`skills.hand_to_hand.conditions.${k} must be the book's condition, in words`);
+            }
+          }
+        }
+        for (const k of Object.keys((h2h.conditions && typeof h2h.conditions === 'object') ? h2h.conditions : {})) {
+          if (h2h.costs && typeof h2h.costs === 'object' && !(k in h2h.costs)) {
+            errors.push(`skills.hand_to_hand.conditions.${k} is a condition on a style the class does not price`);
+          }
+        }
+        if (h2h.creation_only !== undefined && typeof h2h.creation_only !== 'boolean') {
+          errors.push('skills.hand_to_hand.creation_only must be true or false');
         }
       }
     }

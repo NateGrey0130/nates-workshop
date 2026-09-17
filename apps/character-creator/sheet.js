@@ -3100,7 +3100,7 @@ function pickerBlock(grants, total, prefix) {
     const lang = C.pickLangs[`${prefix}-${i}`] || '';
     return `
     <div class="rowline">
-      <select id="${prefix}-pick-${i}" onchange="setSkillPick('${prefix}', ${i}, this.value)">
+      <select id="${prefix}-pick-${i}" onchange="setSkillPick('${prefix}', ${i}, this.value, ${total})">
         <option value="">— skip —</option>${extra}${chosen ? opts : rowOptions}</select>
       ${isSecondary ? '<span class="muted small">secondary — any category</span>' : ''}
       ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}"
@@ -3134,18 +3134,47 @@ function pickerBlock(grants, total, prefix) {
 // What it replaces is the style standing on the sheet, or the one chosen in
 // ANOTHER row of this same block - the server refuses two in one request, so
 // the other row is cleared rather than left to fail at submit.
-function setSkillPick(prefix, i, value) {
+//
+// THE PRICE is the class's (`skills.hand_to_hand`), and the server charges it:
+// a style at three picks spends three of the grant. So a style the class does
+// not offer is refused here rather than at submit, and one that costs more
+// than its row says so - the rows it pays with have to be left blank, and a
+// 422 after the fact is a poor way to learn that. "Show all skills" is the
+// GM's override and lifts the first of those, exactly as it does a category.
+function setSkillPick(prefix, i, value, total) {
   const key = `${prefix}-${i}`;
   const hth = globalThis.handToHand;
   if (value && hth?.isHandToHand(value)) {
     const otherRows = Object.keys(C.pickValues)
       .filter((k) => k !== key && k.startsWith(`${prefix}-`) && hth.isHandToHand(C.pickValues[k]));
+    const cost = hth.handToHandCost(C.cls, value, { atCreation: false });
+    if (cost === null && !C.pickShowAll) {
+      alert(`${value} is not a Hand to Hand style ${C.cls?.name || 'this class'} offers`
+        + `${C.cls?.skills?.hand_to_hand?.creation_only ? ' after creation' : ''}.`);
+      render(); return;
+    }
+    const priced = typeof cost === 'number';
+    const others = Object.keys(C.pickValues)
+      .filter((k) => k !== key && k.startsWith(`${prefix}-`) && C.pickValues[k] && !otherRows.includes(k)).length;
+    if (priced && Number.isFinite(total) && others + cost > total) {
+      alert(`${value} costs this class ${hth.costLabel(cost)}, and only ${total - others} `
+        + `${total - others === 1 ? 'is' : 'are'} free here.`);
+      render(); return;
+    }
+    const terms = priced ? { cost, condition: hth.handToHandCondition(C.cls, value) } : {};
     const onSheet = hth.oneHandToHand((C.data.skills || []).filter((s) => hth.isHandToHand(s.name))).kept;
     const standing = otherRows.length ? { name: C.pickValues[otherRows[0]], type: 'related' } : onSheet;
     if (standing && standing.name !== value) {
       const granted = standing.type !== 'related' && standing.type !== 'secondary';
-      if (!window.confirm(hth.replacePrompt(standing.name, value, granted))) { render(); return; }
+      if (!window.confirm(hth.replacePrompt(standing.name, value, granted, terms))) { render(); return; }
       for (const k of otherRows) delete C.pickValues[k];
+    } else if (priced && cost !== 1) {
+      // Nothing to replace, but still not a one-pick skill: say what it spends.
+      if (!window.confirm(`${value} costs this class ${hth.costLabel(cost)}`
+        + `${terms.condition ? ` (${terms.condition} only)` : ''}.`
+        + `${cost > 1 ? ` Leave ${cost - 1} other row${cost === 2 ? '' : 's'} blank to pay for it.` : ''}\n\nTake it?`)) {
+        render(); return;
+      }
     }
   }
   C.pickValues[key] = value;

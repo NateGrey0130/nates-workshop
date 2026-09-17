@@ -1466,6 +1466,79 @@ if (globalThis.__h2hId) {
   }
 }
 
+// ── the price of a Hand to Hand style ───────────────────────────────────────
+// `skills.hand_to_hand` is the class's price list (js/hand-to-hand.js), loaded
+// into 199 classes by zzzzzzzzzzzzzz-hand-to-hand-prices.sql. Three things can
+// rot, and each fails silently: a fighting style imported under a name the
+// one-style rule does not recognise STACKS; a class imported with its price in
+// a note and no block charges ONE pick whatever it prints; and an endpoint that
+// stops passing the class to resolvePicks charges one pick for everything.
+{
+  const { isHandToHand, handToHandCost } = await import('../js/hand-to-hand.js');
+
+  // What makes a row a fighting style is that it STATES the attacks the
+  // character starts with. The rule recognises a style by name, so the two
+  // have to agree - in the catalog as built, not in one data script.
+  const stating = (catalogs.body.skills || []).filter((s) =>
+    /attacks_base/.test(JSON.stringify([s.bonuses ?? null, s.level_bonuses ?? null])));
+  check('the catalog holds fighting styles to look at', stating.length >= 5, stating.length);
+  const misnamed = stating.filter((s) => !isHandToHand(s.name)).map((s) => s.name);
+  check('every skill that states attacks_base is named Hand to Hand: <style>',
+    misnamed.length === 0,
+    `${misnamed.join(', ')} - the one-style rule matches by name, so a style under another `
+      + 'spelling is held ALONGSIDE the class\'s own and both schedules are summed');
+
+  // A class whose Hand to Hand entry prints a price carries the block. Read off
+  // the NOTE, which is where an import puts the sentence.
+  const PRICE = /\b(cost of|costs?|for) (the cost of )?(no|one|two|three|four)\b|at no cost/i;
+  const live = (await api('GET', '/classes')).body.classes || [];
+  const printing = live.filter((c) => (c.skills?.occ_skills || [])
+    .some((e) => isHandToHand(e?.name) && PRICE.test(String(e?.note || ''))));
+  check('the sweep found classes that print a price', printing.length > 100, printing.length);
+  const unpriced = printing.filter((c) => !c.skills?.hand_to_hand).map((c) => c.id);
+  check('every class that prints a Hand to Hand price carries skills.hand_to_hand',
+    unpriced.length === 0,
+    `${unpriced.join(', ')} - add the block, or the app charges one pick whatever the book says`);
+
+  // And the price is CHARGED, on the real route. The Ley Line Walker is granted
+  // Basic and sells Expert for one pick and Martial Arts for two.
+  const llw = live.find((c) => c.id === 'ley-line-walker');
+  check('the Ley Line Walker prices Martial Arts at two picks and does not sell Commando',
+    handToHandCost(llw, 'Hand to Hand: Martial Arts') === 2
+    && handToHandCost(llw, 'Hand to Hand: Commando') === null,
+    JSON.stringify(llw?.skills?.hand_to_hand));
+  const walker = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Priced Fighter', class_id: 'ley-line-walker', level: 1,
+    attributes: attrs, skills: [{ name: 'Hand to Hand: Basic', pct: 0, per_level: 0, type: 'occ' }],
+    abilities: [],
+  });
+  if (walker.status === 200 || walker.status === 201) {
+    const id = walker.body.id;
+    const gain = await api('POST', `/characters/${id}/xp`, { total: 100000 });
+    const target = gain.body?.proposal?.to_level ?? null;
+    if (target) await api('POST', `/characters/${id}/level-confirm`, { to_level: target, picks: [] });
+    const bank = await api('GET', `/characters/${id}/picks`);
+    const total = bank.body.total || 0;
+    if (total >= 2) {
+      const barred = await api('POST', `/characters/${id}/picks`, { picks: [{ name: 'Hand to Hand: Commando' }] });
+      check('a style the class does not offer is refused', barred.status === 422
+        && /not a Hand to Hand style this class offers/.test(JSON.stringify(barred.body)),
+        barred.status + ' ' + JSON.stringify(barred.body).slice(0, 200));
+      const bought = await api('POST', `/characters/${id}/picks`, { picks: [{ name: 'Hand to Hand: Martial Arts' }] });
+      check('a two-pick style is accepted', bought.status === 200,
+        bought.status + ' ' + JSON.stringify(bought.body).slice(0, 300));
+      check('and spends TWO of the banked picks, not one', bought.body.remaining === total - 2,
+        `banked ${total}, remaining ${bought.body.remaining}`);
+      check('replacing the Basic the class granted',
+        (bought.body.replaced || []).some((r) => r.name === 'Hand to Hand: Basic'), JSON.stringify(bought.body.replaced));
+    } else {
+      check('the priced character banked two picks to spend', false, `banked ${total}`);
+    }
+  } else {
+    check('a Ley Line Walker can be created', false, JSON.stringify(walker.body).slice(0, 300));
+  }
+}
+
 
 // ── play mode ───────────────────────────────────────────────────────────────
 const before = await api('GET', `/characters/${charId}`);

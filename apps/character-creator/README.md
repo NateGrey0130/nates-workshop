@@ -110,9 +110,11 @@ apps/character-creator/
 ├── js/language-skills.js  The "once per language" rule for BOTH families (ES
 │                             module — the server validator imports it, and the
 │                             sheet reads its globalThis mirror via a module tag)
-├── js/hand-to-hand.js        One Hand to Hand style per character: a style
-│                             picked replaces the one held, after asking (ES
-│                             module — both pick endpoints import it, and the
+├── js/hand-to-hand.js        One Hand to Hand style per character, bought at the
+│                             class's price: a style picked replaces the one
+│                             held, after asking, and costs what
+│                             `skills.hand_to_hand` says (ES module — both pick
+│                             endpoints and the validator import it, and the
 │                             sheet reads its globalThis mirror the same way)
 ├── db/*.sql                  One-shot SQL. NOT migrations — these change rows,
 │                             not schema. See Data scripts below

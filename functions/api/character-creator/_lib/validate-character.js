@@ -58,6 +58,7 @@ import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
 // `test/smoke.mjs` are unchanged.
 export { relatedAllowance, secondaryAllowance };
 import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
+import { isHandToHand, handToHandCost, handToHandSurcharge } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
 import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
 import { powerGrantsFor } from './power-picks.js';
@@ -232,9 +233,37 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // untouched when nothing was chosen, so a character with no abilities is
   // unaffected.
   const relatedMax = relatedAllowance(applyAbilities(cls, abilities), level);
-  if (related.length > relatedMax) {
-    violations.push({ rule: 'related_count', have: related.length, allowed: relatedMax,
-      message: `${related.length} related skills, but this class allows ${relatedMax} at level ${level}` });
+  // A Hand to Hand style the class changes FOR FREE - the Crazy's Assassin, "if
+  // an evil alignment" and at no stated price - sits in a related row and spent
+  // no pick, so it is not counted against the allowance. Only the refund is
+  // applied here; a style that costs MORE than its row is advisory, below.
+  const h2hExtra = handToHandSurcharge(cls, list);
+  const relatedHeld = related.length + Math.min(0, h2hExtra);
+  if (relatedHeld > relatedMax) {
+    violations.push({ rule: 'related_count', have: relatedHeld, allowed: relatedMax,
+      message: `${relatedHeld} related skills, but this class allows ${relatedMax} at level ${level}` });
+  }
+
+  // ─── the price of a Hand to Hand style (advisory) ───
+  // A class may charge more than the one pick a style occupies - "Expert at the
+  // cost of two O.C.C. Related Skills, or Martial Arts for three"
+  // (js/hand-to-hand.js). The price is charged where the style is BOUGHT: the
+  // wizard's Skills step and the two pick endpoints. Here it is REPORTED and
+  // never enforced, for the reason the choice groups below are not: every
+  // character saved before the price was data paid one pick, and a violation
+  // would refuse those characters every later pick they are owed - for a
+  // decision nobody offered them the chance to make differently.
+  for (const s of list) {
+    if ((s.type !== 'related' && s.type !== 'secondary') || !isHandToHand(s.name)) continue;
+    if (handToHandCost(cls, s.name) === null && !s.override) {
+      warnings.push({ rule: 'hand_to_hand_not_offered', skill: s.name,
+        message: `${s.name} is not a Hand to Hand style ${cls.name || 'this class'} offers` });
+    }
+  }
+  if (h2hExtra > 0 &&related.length + h2hExtra > relatedMax) {
+    warnings.push({ rule: 'hand_to_hand_cost', have: related.length + h2hExtra, allowed: relatedMax,
+      message: `${related.length} related skills plus ${h2hExtra} more for the Hand to Hand style's price is `
+        + `${related.length + h2hExtra}, and this class allows ${relatedMax} at level ${level}` });
   }
 
   const secondaryMax = secondaryAllowance(cls, level);
