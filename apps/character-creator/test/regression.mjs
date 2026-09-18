@@ -1798,6 +1798,41 @@ check('a hit on armour the character does not have is refused', noArmor.status =
   }
 }
 
+// A psionic power's GAME TAG, on a database built from nothing. Two untag
+// scripts end in an UPDATE that names no row - `SET system = NULL WHERE system
+// IS NOT NULL` - so on a rebuild they also cleared 29 tags that imports sorting
+// before them had set on purpose: Heroes Unlimited's and Nightbane's powers
+// belong to their game, and the Phase powers are tagged rifts. Production ran
+// the files in the order written and kept all 32; a rebuild kept 3, and only
+// repo-vs-live noticed. zzzzzzzzzzzzzzz-retag-game-psionics.sql restores them.
+// This holds the next import from those books to the same rule, and the untag
+// decision to everything else.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((b) => b.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    throw new Error(cleanErr(r.stderr || out));
+  };
+
+  let rows = [];
+  let err = '';
+  try { rows = q('SELECT name, system, source_book FROM psionic_powers'); }
+  catch (e) { err = e.message; }
+  check('psionic powers are readable for the game-tag check', rows.length > 0, err || 'no rows');
+
+  const gameOf = (book) => (/^(Powers Unlimited |Revised Heroes Unlimited)/.test(book || '') ? 'heroes-unlimited'
+    : /^Nightbane RPG/.test(book || '') ? 'nightbane'
+      : /^Rifts Dimension Book 2: Phase World/.test(book || '') ? 'rifts' : null);
+  const wrong = rows.filter((r) => (r.system ?? null) !== gameOf(r.source_book));
+  check('every psionic power from a single-game book carries that game, and every other one none',
+    wrong.length === 0, wrong.map((r) => `${r.name}: ${r.system ?? 'NULL'}`).join(', '));
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
