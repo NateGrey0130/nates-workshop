@@ -2163,6 +2163,13 @@ body.show-play-keys .play-keys { display: block; }
    every width without depending on rule order. */
 .tabbar.codex-tabs { display: flex; }
 
+/* The campaign page's four tabs are the same case, and were hidden on every
+   desktop from 2026-09-01 - the day after that page adopted the sheet's bar -
+   until this rule: People, the party stash and the currency ledger could not
+   be reached on a desktop at all. Wraps for the codex's reason. */
+.tabbar.campaign-tabs { display: flex; flex-wrap: wrap; }
+@media print { .tabbar.campaign-tabs { display: none !important; } }
+
 /* AND THEY WRAP AT EVERY WIDTH, not only under 620px. The sheet's bar wraps on
    a phone and is hidden above 820px, so the band between never mattered much
    there. Here the bar is always shown, and a seventh tab made it 759px wide:

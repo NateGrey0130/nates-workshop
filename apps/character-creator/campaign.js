@@ -27,6 +27,11 @@ const D = {
   answer: null, asking: false,
   tab: 'notes',
   composer: { title: '', body: '', session_date: '' },
+  // The G.M.'s NPC roller (migration 070). `classes` loads the first time the
+  // form opens - the full list is the heaviest response in the app, and only a
+  // G.M. who asks for the form needs it.
+  gen: { open: false, classes: null, cls: '', occ: '', level: 1, count: 1, name: '',
+         busy: false, msg: '', err: false },
 };
 
 async function load() {
@@ -62,6 +67,13 @@ async function load() {
     D.balances = currency.balances; D.ledger = currency.ledger;
     D.roster = roster.characters;
     D.npcs = npcs.npcs;
+    // Labels for the G.M.'s statted-NPC list: the id-and-name projection, not
+    // the full class list, which only loads if the roller is opened.
+    if (D.isGm && !D.classNames) {
+      try {
+        D.classNames = Object.fromEntries((await api('classes?names=1')).classes.map((c) => [c.id, c.name]));
+      } catch { D.classNames = {}; }
+    }
     render();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
@@ -84,6 +96,12 @@ function render() {
   // tablist/tab/aria-selected roles the toggle never had. It sits OUTSIDE the
   // panel, as the sheet's does, because `.tabbar` is sticky and paints itself in
   // --bg-primary — inside a card it would smear the wrong colour on scroll.
+  //
+  // `campaign-tabs` keeps it VISIBLE ON A DESKTOP. The sheet's bar is hidden
+  // above 820px, where the sheet shows every panel at once (styles.css, since
+  // 2026-09-01); these four panels are never all shown, so without the class a
+  // desktop saw Notes and no way to reach People, the stash or the ledger. The
+  // codex hit the same rule and has `codex-tabs` for the same reason.
   const tabs = [['notes', 'Notes', D.entriesTotal],
                 ['people', 'People', D.npcs.length],
                 ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
@@ -92,7 +110,7 @@ function render() {
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
     </div>
-    <nav class="tabbar" role="tablist">${tabs.map(([k, label, n]) =>
+    <nav class="tabbar campaign-tabs" role="tablist">${tabs.map(([k, label, n]) =>
       `<button class="tab${D.tab === k ? ' on' : ''}" role="tab" aria-selected="${D.tab === k}"
          onclick="setTab('${k}')">${esc(label)}${
          n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}</nav>
@@ -341,7 +359,159 @@ function peopleView() {
     </div>
     <p id="npc-msg" class="small"></p>
   </div>
+  ${D.isGm ? npcSheetsPanel() : ''}
   ${sweepPanel()}`;
+}
+
+// ---------- statted NPCs (G.M. only) ----------
+//
+// A dossier is what the table knows about someone; a statted NPC is what the
+// G.M. rolls for them - a characters row with kind = 'npc' that the server shows
+// to nobody else. The list comes from the roster request the page already
+// makes: the server includes NPC rows only for the G.M., so a player's copy of
+// this page never holds one to hide.
+const npcSheets = () => (D.roster || []).filter((c) => c.kind === 'npc');
+
+function npcSheetsPanel() {
+  const sheets = npcSheets();
+  return `<div class="panel">
+    <h3>Statted NPCs <span class="muted small">— only you can see these</span></h3>
+    ${D.gen.open ? genForm()
+      : `<div class="rowline" style="margin-top:6px">
+          <button class="btn btn-sm" onclick="openGen()">🎲 Roll NPCs from a class</button></div>`}
+    <div style="margin-top:10px">${sheets.length ? sheets.map(npcSheetRow).join('')
+      : '<p class="muted small">None yet. Roll some, then link one to a dossier from its page.</p>'}</div>
+  </div>`;
+}
+
+function npcSheetRow(c) {
+  return `<div class="chkrow">
+    <span><a href="sheet.html?id=${c.id}"><b>${esc(c.name)}</b></a>
+      <span class="muted small"> — ${esc(className(c.class_id))}${
+        c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''}, level ${c.level}</span></span>
+    <span class="rowline">
+      <a class="btn btn-sm btn-ghost" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
+      <button class="btn btn-sm btn-ghost" onclick="deleteNpcSheet(${c.id})">delete</button>
+    </span>
+  </div>`;
+}
+
+const className = (id) => D.classNames?.[id] || id;
+
+// A race whose entry grants no related or secondary skills takes an occupation,
+// and the server refuses one without it - so the form asks rather than letting
+// the refusal be the first the G.M. hears of it. The same test js/parser.js
+// needsOccupation() applies.
+const takesOccupation = (c) => c?.category === 'rcc'
+  && !(c.skills?.occ_related_skills?.count) && !(c.skills?.secondary_skills?.count);
+
+function genForm() {
+  const g = D.gen;
+  if (!g.classes) return '<p class="muted small" style="margin-top:10px">Loading classes…</p>';
+  const option = (c, sel) => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`;
+  const races = g.classes.filter((c) => c.category === 'rcc');
+  const jobs = g.classes.filter((c) => c.category !== 'rcc');
+  const chosen = g.classes.find((c) => c.id === g.cls);
+  const needsJob = takesOccupation(chosen);
+  return `<div class="panel-inset" style="margin-top:10px">
+    <div class="rowline" style="flex-wrap:wrap">
+      <label class="small">Class
+        <select onchange="genSet('cls', this.value, true)">
+          <option value="">— choose —</option>
+          <optgroup label="Races (R.C.C.)">${races.map((c) => option(c, g.cls)).join('')}</optgroup>
+          <optgroup label="Occupations (O.C.C.)">${jobs.map((c) => option(c, g.cls)).join('')}</optgroup>
+        </select></label>
+      ${chosen?.category === 'rcc' ? `<label class="small">Occupation${needsJob ? '' : ' <span class="muted">(optional)</span>'}
+        <select onchange="genSet('occ', this.value, true)">
+          <option value="">${needsJob ? '— choose one —' : '— none —'}</option>
+          ${jobs.map((c) => option(c, g.occ)).join('')}
+        </select></label>` : ''}
+    </div>
+    <div class="rowline" style="flex-wrap:wrap;margin-top:8px">
+      <label class="small">Level <input type="number" min="1" max="20" value="${g.level}" style="width:4.5em"
+        onchange="genSet('level', this.value)"></label>
+      <label class="small">How many <input type="number" min="1" max="10" value="${g.count}" style="width:4.5em"
+        onchange="genSet('count', this.value)"></label>
+      <input type="text" class="picker-input" placeholder="Name (optional)" value="${esc(g.name)}"
+        onchange="genSet('name', this.value)">
+    </div>
+    <div class="rowline" style="margin-top:8px">
+      <button class="btn btn-sm btn-primary" onclick="rollNpcs()"
+        ${g.busy || !g.cls || (needsJob && !g.occ) ? 'disabled' : ''}>${g.busy ? 'Rolling…' : 'Roll'}</button>
+      <button class="btn btn-sm btn-ghost" onclick="closeGen()">close</button>
+    </div>
+    <p class="small muted">Every choice is made at random and checked against the class like a
+      player's character. Spells and psionic powers the class lets them <em>choose</em> are banked on
+      the sheet for you to pick. A class the roller cannot build legally is refused, with the reason.</p>
+    ${g.msg ? `<p class="small${g.err ? ' err' : ''}">${esc(g.msg)}</p>` : ''}
+  </div>`;
+}
+
+async function openGen() {
+  D.gen.open = true;
+  render();
+  if (D.gen.classes) return;
+  try {
+    const res = await api(`classes?system=${encodeURIComponent(D.campaign.system)}`);
+    D.gen.classes = [...res.classes].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  } catch (err) { D.gen.msg = 'Could not load classes: ' + err.message; D.gen.err = true; D.gen.classes = []; }
+  render();
+}
+function closeGen() { D.gen.open = false; D.gen.msg = ''; render(); }
+
+// Selects re-render (the occupation control appears with a race, and the Roll
+// button waits for one); typed inputs only store, so a keystroke never rebuilds
+// the field being typed in.
+function genSet(key, value, rerender = false) {
+  const g = D.gen;
+  if (key === 'level') g.level = Math.max(1, Math.trunc(Number(value) || 1));
+  else if (key === 'count') g.count = Math.max(1, Math.min(10, Math.trunc(Number(value) || 1)));
+  else g[key] = value;
+  if (key === 'cls') { g.occ = ''; g.msg = ''; g.err = false; }
+  if (rerender) render();
+}
+
+async function rollNpcs() {
+  const g = D.gen;
+  g.busy = true; g.msg = ''; g.err = false;
+  render();
+  try {
+    const res = await api(`campaigns/${campaignId}/npcs/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ class_id: g.cls, occ_class_id: g.occ || null,
+                             level: g.level, count: g.count, name: g.name.trim() || null }),
+    });
+    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
+    const banked = res.npcs.reduce((n, x) => n + (x.powers_banked || 0) + (x.picks_pending || 0), 0);
+    g.msg = `Rolled ${res.npcs.length}: ${res.npcs.map((x) => x.name).join(', ')}.`
+      + (banked ? ` ${banked} pick${banked === 1 ? '' : 's'} banked on their sheets for you to choose.` : '')
+      + (res.refused ? ` Stopped there: ${res.refused.error}` : '');
+    g.err = !!res.refused;
+  } catch (err) {
+    g.msg = err.message; g.err = true;
+  }
+  g.busy = false;
+  render();
+}
+
+async function deleteNpcSheet(id) {
+  if (!confirm('Delete this statted NPC? A dossier linked to it keeps everything but the link.')) return;
+  try {
+    await api(`characters/${id}`, { method: 'DELETE' });
+    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
+    render();
+  } catch (err) { alert('Failed: ' + err.message); }
+}
+
+async function linkSheet(npcId, value) {
+  try {
+    const res = await api(`campaigns/${campaignId}/npcs/${npcId}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ character_id: value ? Number(value) : null }),
+    });
+    D.npc.npc = res.npc;
+    render();
+  } catch (err) { alert('Failed: ' + err.message); }
 }
 
 const statusLabel = (s) => ({ alive: 'Alive', dead: 'Dead', unknown: 'Status unknown',
@@ -443,6 +613,15 @@ function dossierView() {
       value="${esc((n.aliases || []).join(', '))}" onchange="editNpc(${n.id}, 'aliases', this.value)">
     <textarea rows="3" style="width:100%;margin-top:8px" placeholder="What do we know?"
       onchange="editNpc(${n.id}, 'description', this.value)">${esc(n.description || '')}</textarea>
+    ${D.isGm ? `<div class="rowline" style="margin-top:8px">
+      <label class="small">Statted sheet <span class="muted">(only you see this)</span>
+        <select onchange="linkSheet(${n.id}, this.value)">
+          <option value="">— none —</option>
+          ${npcSheets().map((c) => `<option value="${c.id}"${n.character_id === c.id ? ' selected' : ''}>${
+            esc(c.name)} (level ${c.level})</option>`).join('')}
+        </select></label>
+      ${n.character_id ? `<a class="btn btn-sm btn-ghost" href="sheet.html?id=${n.character_id}">open sheet</a>` : ''}
+    </div>` : ''}
     <div class="rowline" style="margin-top:8px">
       <button class="btn btn-sm btn-ghost" onclick="deleteNpc(${n.id})">delete dossier</button>
       <span class="muted small">Deleting the dossier leaves the notes alone — the @ in the text is just text.</span>

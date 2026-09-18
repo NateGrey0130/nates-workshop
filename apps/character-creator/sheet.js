@@ -2266,7 +2266,7 @@ function render() {
   const armorRows = armorList.map((a, i) => armorSlotHtml(a, i, w)).join('');
 
   $('app').innerHTML = `
-  ${box(`${escHtml(c.name)}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
+  ${box(`${escHtml(c.name)}${c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
     <div class="sheet-grid cols-2">
       <div>
         ${field('O.C.C.', escHtml(cls.name || c.class_id))}
