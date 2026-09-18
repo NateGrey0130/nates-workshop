@@ -21,7 +21,7 @@ import { isHandToHand, oneHandToHand, replacePrompt, handToHandCost, handToHandC
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, categoryLabel, categoryName, categoryBonus, needsOccupation,
+         categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList } from './js/parser.js';
@@ -2813,10 +2813,12 @@ function inSystem(row) {
 // A forbidden skill is never offered rather than offered and rejected: the
 // books state these limits per category, so a player should not be able to
 // build most of a character before being told a pick was never legal.
+// Another game's skill is offered only when these categories NAME it in an
+// `only` list - the class's own word, for this grant alone (namedByOnly).
 function catalogFor(categories) {
   return S.skillCatalog.filter((sk) =>
     categoryAllows(categories, sk) &&
-    (!sk.systems || sk.systems.includes(S.system)));
+    (!sk.systems || sk.systems.includes(S.system) || namedByOnly(categories, sk)));
 }
 // Single definition, shared with the server-side validator — the two copies
 // drifted once already.

@@ -35,7 +35,7 @@
 
 import { rollAttribute, rollPoolFormula, evalDice } from './dice.js';
 import { skillBase } from './skill-base.js';
-import { isChoiceGroup, isAbilityChoice, categoryAllows, categoryBonus, categoryName,
+import { isChoiceGroup, isAbilityChoice, categoryAllows, namedByOnly, categoryBonus, categoryName,
          relatedFloorStatus } from './parser.js';
 import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
          startingPicksFor } from './leveling.js';
@@ -157,7 +157,8 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
     // ("Hand to Hand: Basic or Expert"), so a style is offered here - but only
     // while the character holds none, and only one is ever taken.
     const holdsStyle = [...taken].some(isHandToHand);
-    const all = groupOptions(group, rows);
+    const all = groupOptions(group,
+      Array.isArray(group.categories) ? usableCatalog(catalog, system, group.categories) : rows);
     const options = all.filter((n) => !taken.has(norm(n))
       && (!isHandToHand(n) || (!holdsStyle && want === 1)));
     // Options the character already HOLDS count toward the group: a class that
@@ -191,7 +192,8 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   // never be starved by the random ones.
   const relatedCats = cls.skills?.occ_related_skills?.categories || [];
   const relatedAt1 = relatedAllowance(cls, 1);
-  const relatedPool = rows.filter((r) => pickable(r, taken) && categoryAllows(relatedCats, r));
+  const relatedPool = usableCatalog(catalog, system, relatedCats)
+    .filter((r) => pickable(r, taken) && categoryAllows(relatedCats, r));
   const relatedChosen = [];
   const floors = relatedFloorStatus(cls, [], relatedAt1).floors || [];
   for (const f of floors) {
@@ -237,7 +239,8 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
 
     for (const g of skillGrantsFor(cls, 1, level)) {
       const cats = g.kind === 'secondary' ? null : g.categories;
-      const pool = rows.filter((r) => pickable(r, taken) && (!cats || categoryAllows(cats, r)));
+      const pool = (cats ? usableCatalog(catalog, system, cats) : rows)
+        .filter((r) => pickable(r, taken) && (!cats || categoryAllows(cats, r)));
       const chosen = [];
       fill(chosen, g.count, pool, g.kind, cats, g.level);
       for (const r of chosen) {
@@ -448,11 +451,14 @@ function pickable(row, taken) {
   return !taken.has(norm(row.name)) && !isHandToHand(row.name) && !isRepeatableRow(row.name);
 }
 
-// The catalog as this game offers it. `systems` NULL means every game.
-function usableCatalog(catalog, system) {
+// The catalog as this game offers it. `systems` NULL means every game. With
+// `categories`, a skill those categories NAME in an `only` list is offered
+// whatever its game - the wizard's catalogFor, rule for rule (namedByOnly).
+function usableCatalog(catalog, system, categories = null) {
   return (catalog || []).filter((r) => {
     if (!r?.name) return false;
     if (!system || r.systems == null) return true;
+    if (categories && namedByOnly(categories, r)) return true;
     let list = r.systems;
     if (typeof list === 'string') { try { list = JSON.parse(list); } catch { return true; } }
     return !Array.isArray(list) || !list.length || list.includes(system);
@@ -502,9 +508,12 @@ function groupOptions(group, rows) {
     }
     return [...new Set(out)];
   }
+  // categoryAllows, as the wizard's group picker does: a category entry may be
+  // an object whose `only`/`except` narrows it. This read the category NAMES
+  // alone until 2026-09-18, so five classes' groups rolled from the whole
+  // category - the Night Witch's lore-only Technical pick included.
   if (Array.isArray(group.categories)) {
-    const cats = new Set(group.categories.map((c) => norm(categoryName(c))));
-    return rows.filter((r) => cats.has(norm(r.category)) && !isRepeatableRow(r.name)).map((r) => r.name);
+    return rows.filter((r) => categoryAllows(group.categories, r) && !isRepeatableRow(r.name)).map((r) => r.name);
   }
   return [];
 }

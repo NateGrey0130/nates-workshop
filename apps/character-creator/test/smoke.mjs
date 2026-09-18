@@ -683,7 +683,7 @@ import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts, abilityGroupIndexFor, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts, abilityGroupIndexFor, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -4168,6 +4168,20 @@ section('Category restrictions');
   // An empty or absent list means "any", which is what most classes state.
   check('no list restricts nothing',
     categoryAllows([], { name: 'X', category: 'Y' }) && categoryAllows(null, { name: 'X', category: 'Y' }));
+
+  // A skill named in an `only` list reaches past the game filter for that grant
+  // (the Chiang-Ku Dragon's modern W.P.s). Named is not "in the category": an
+  // unrestricted or except-narrowed category names nothing.
+  check('namedByOnly is true only for a name an only-list states',
+    namedByOnly(cats, { name: ' escape artist', category: 'Espionage' })
+    && !namedByOnly(cats, { name: 'Cook', category: 'Domestic' })
+    && !namedByOnly(cats, { name: 'Climbing', category: 'Physical' })
+    && !namedByOnly(null, { name: 'Escape Artist' }));
+  check('the wizard and the NPC generator both let an only-named skill past the game filter', (() => {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const gen = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
+    return /namedByOnly\(categories, sk\)/.test(app) && /namedByOnly\(categories, r\)/.test(gen);
+  })());
 
   check('a label says what the restriction is', (() => {
     const l = cats.map(categoryLabel);
