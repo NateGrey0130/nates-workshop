@@ -1484,6 +1484,19 @@ export function categoryBonus(categories, skill) {
   return Number.isFinite(entry.bonus) ? entry.bonus : 0;
 }
 
+// Does this category list name `skill` in an `only` list? A class that names a
+// skill outright is its book's own word that the skill may be taken, so the
+// pickers let it past the game filter (`skills.systems`) - for THIS grant only.
+// The Chiang-Ku Dragon is a Palladium Fantasy class whose book grants "three
+// modern weapon proficiencies", and Palladium Fantasy's own tag holds none.
+// Callers still test categoryAllows; this answers only the game question.
+export function namedByOnly(categories, skill) {
+  if (!Array.isArray(categories)) return false;
+  const name = normName(skill?.name);
+  return !!name && categories.some((c) => c && typeof c === 'object'
+    && Array.isArray(c.only) && c.only.some((n) => normName(n) === name));
+}
+
 // Does this category list admit `skill` — an object with `name` and `category`?
 // An empty or absent list restricts nothing, which is what "any" means.
 export function categoryAllows(categories, skill) {
