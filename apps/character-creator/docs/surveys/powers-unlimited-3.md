@@ -161,6 +161,7 @@ Deliberately left:
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached with `--force-ocr`, registered, offset +1 verified, F79 filed |
 | 2026-09-13 | - | surveyed in full; the three-column list un-welded and reconciled against the Contents. **No data.** |
 | 2026-09-13 | [#1029](https://github.com/NateGrey0130/nates-workshop/pull/1029) | **all 125 super abilities** - 46 minor, 79 major. Catalog total 364. |
+| 2026-09-18 | this PR | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **76 of the 125** rows, almost all two-digit page numbers inside the text, often splitting a hyphenated word. The new-major roster read onto the end of `Without Sustenance`; `Zombie Flesh`'s regeneration rate put back where the scan lifted it from. Applied `--remote` before the merge. |
 | 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains

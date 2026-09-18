@@ -1727,6 +1727,42 @@ check('a hit on armour the character does not have is refused', noArmor.status =
   check('and a player who is no admin can read one', asPlayer.status === 200, asPlayer.status);
 }
 
+// What that entry SAYS. The codex is the first reader to show a whole super
+// ability description, and on its first day it showed 198 of the 364 carrying
+// OCR damage: a page number or the next entry's heading on the end, a picture
+// read as text, the Revised core's bullets read as "@". Every row passed the
+// import's own assertions, which counted rows and never read one to its end.
+// fix-super-ability-ocr-text.sql repaired them; this holds the next import to
+// the same shapes. Super abilities only: the other catalogs came through the
+// same OCR and have NOT been swept, so a check there would fail on arrival.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+      '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((b) => b.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    throw new Error(cleanErr(r.stderr || out));
+  };
+
+  let rows = [];
+  let err = '';
+  try { rows = q('SELECT name, description FROM super_abilities'); }
+  catch (e) { err = e.message; }
+  check('super ability descriptions are readable for the OCR sweep', rows.length > 0, err || 'no rows');
+
+  const names = (bad) => bad.map((r) => r.name).join(', ');
+  const pageEnd = rows.filter((r) => / \d{1,3}$/.test(r.description || ''));
+  check('no super ability description ends in a printed page number', pageEnd.length === 0, names(pageEnd));
+  const headingEnd = rows.filter((r) =>
+    /(Alter Physical Structure:|Energy Expulsion:| Impervious to| Immune to| Charge Object with)$/.test(r.description || ''));
+  check('or in the heading of the entry after it', headingEnd.length === 0, names(headingEnd));
+  const junk = rows.filter((r) => /[@{}~|\\<>]/.test(r.description || ''));
+  check('and none carries a bullet read as "@" or scan junk', junk.length === 0, names(junk));
+}
+
 const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);

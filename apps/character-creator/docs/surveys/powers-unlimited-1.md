@@ -189,6 +189,7 @@ Deliberately left:
 | 2026-09-13 | - | surveyed in full; rosters confirmed by two authorities each; psionics diffed `--remote`. **No data.** |
 | 2026-09-13 | [#1028](https://github.com/NateGrey0130/nates-workshop/pull/1028) | **all 170 super abilities** - 125 minor, 45 major. |
 | 2026-09-13 | `af196d9` | **the NEW psionic powers**, of the 21 on printed 87-95. |
+| 2026-09-18 | this PR | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **81 of the 170** rows. Mostly two-digit page numbers inside the text, which the core's folio fix deliberately left alone; plus illustration junk on eight endings and the major roster (printed 51) read onto the end of `Whip Attack`. `Weapon Melding` stopped at the page turn and is completed from printed 87. Applied `--remote` before the merge. |
 | 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains
