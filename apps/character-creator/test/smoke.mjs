@@ -6788,7 +6788,7 @@ section('Ability validation');
 // Now a fixed entry's qty may be a dice expression, rolled ONCE at creation
 // behind the wizard's equipInit guard. A choice's qty stays a plain number -
 // it is re-derived every render, so a die there would re-roll each paint.
-console.log(String.fromCharCode(10) + '[1c25i] Dice equipment quantities');
+section('Dice-valued equipment quantities');
 {
   check('a plain number passes through', rollQuantity(4) === 4);
   check('a missing qty is one item, not zero', rollQuantity(undefined) === 1);
@@ -6871,7 +6871,7 @@ section('Natural abilities rendering');
 // `curses` save key for the number to land on. It borrows the P.E. magic row,
 // because a curse is magic - the same reasoning that gave illusionary magic
 // its key.
-console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
+section('Level-scheduled save bonuses, and the curses key');
 {
   const cursed = parseClassMarkdown([
     '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
@@ -6914,7 +6914,7 @@ console.log(String.fromCharCode(10) + '[1c25j] at_level curses');
 // Faerie magic and disease were added because four Palladium Fantasy player
 // races grant bonuses to them; fatigue is the newest, for the Operator's
 // "+2 to save vs fatigue and disease" (RUE printed 92).
-console.log(String.fromCharCode(10) + '[1c25j2] the save list');
+section('The save list');
 {
   const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
   const saves = D.saves({ PE: 10, ME: 10 }, null);
@@ -6969,7 +6969,7 @@ console.log(String.fromCharCode(10) + '[1c25j2] the save list');
 // only be stored wrong: a flat number spends the wrong amount, a zero reads
 // as free and matches the stub heuristic. Migration 020's isp_note carries
 // the schedule; isp keeps the minimum, which is what the use button deducts.
-console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
+section('Variable psionic costs');
 {
   const psiFields = CATALOGS.psionics.fields.map((f) => f.name);
   check('the catalog editor offers the note field', psiFields.includes('isp_note'));
@@ -7001,10 +7001,18 @@ console.log(String.fromCharCode(10) + '[1c25k] Variable psionic costs');
 // only read as free while matching the stub heuristic. Same convention, same
 // surfaces: ppe keeps the minimum, ppe_note says the schedule.
 //
-// This was the last bare hand-numbered console.log — the style the harness
-// replaced because the numbers stopped matching execution order. As a bare
-// log its checks counted against the PREVIOUS section, and it printed into
-// every --section run regardless of the filter.
+// This section was the first of the hand-numbered ones converted to section(),
+// and the comment here then claimed it had been the last bare console.log
+// left. It was not: the four sections above it - dice-valued quantities, the
+// curses key, the save list and the psionic costs - stayed bare until
+// 2026-09-17, printing into every --section run regardless of the filter,
+// with their checks counted against whichever section had announced itself
+// last. Measured before the conversion: a run filtered to "Natural abilities
+// rendering" reported 26 checks in 1 section, and 21 of those were the three
+// bare sections' after it (7, 9 and 5); its own are 5. A bare log sits at
+// column 0 where every check() is indented, so `grep -n '^console.log'` on
+// this file is how to know whether any remain, and as of that date it finds
+// none.
 section('Variable spell costs');
 {
   const spFields = CATALOGS.spells.fields.map((f) => f.name);
@@ -7012,10 +7020,10 @@ section('Variable spell costs');
   check('placed beside the cost it qualifies',
     spFields.indexOf('ppe_note') === spFields.indexOf('ppe') + 1);
 
-  // Same as 1c25k: the import spec pinned here left with the importer, and
-  // the field it qualified did not.
+  // Same as the psionic section above: the import spec pinned here left with
+  // the importer, and the field it qualified did not.
 
-  // The spell picker and payload, pinned like the psionic ones in 1c25k. The
+  // The spell picker and payload, pinned like the psionic ones above. The
   // sheet needs no pin of its own: powerRows reads cost_note for spells and
   // psionics through the same path.
   const appSrcL = readFileSync(join(appDir, 'app.js'), 'utf8');
