@@ -2144,12 +2144,22 @@ check('and none of them with ?mine=1',
   console.log(`      (${all.length} classes: ${tally.built} NPCs built and accepted, ${tally.refused} refused by name)`);
   check('every published class either builds an NPC its validator accepts, or refuses by name',
     bad.length === 0 && tally.built > 0, bad.slice(0, 6).join(' | '));
-  // The catalog cannot say which game a skill is from (skills.systems is NULL
-  // on every row), and this is what went wrong before the rule: a Palladium
+  // What went wrong while skills.systems was NULL on every row: a Palladium
   // Fantasy mercenary rolled W.P. Heavy Military Weapons and Language: Gargoyle.
-  // Its random picks now come from the skills Palladium Fantasy classes name.
+  // The catalog is tagged now, and random picks still prefer, within the game,
+  // the skills Palladium Fantasy classes name.
   check('a Palladium Fantasy NPC\'s random skill picks are ones Palladium Fantasy classes name',
     pfPicks > 0 && pfStray.size === 0, `${pfPicks} picks; outside the game: ${[...pfStray].slice(0, 8).join(', ')}`);
+
+  // A skill with systems NULL is offered to EVERY game. That is right for the
+  // 54 all four games print and the 25-row Language:/Literacy: family, and it
+  // is the leak zzzzzzzzzzzzzzzz-tag-skill-systems.sql closed for everything
+  // else - so a new skill that arrives untagged fails here rather than quietly
+  // reopening it. A new language, or a skill every game really does print,
+  // moves this number on purpose.
+  const untagged = q('SELECT name FROM skills WHERE systems IS NULL').map((r) => r.name);
+  check('only the four-game skills and the language family are left untagged (skills.systems NULL)',
+    untagged.length === 79, `${untagged.length} untagged, want 79 - tag a new skill with its game(s)`);
 }
 
 // ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────

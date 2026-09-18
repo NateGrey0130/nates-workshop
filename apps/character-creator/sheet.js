@@ -3050,7 +3050,14 @@ function pickerBlock(grants, total, prefix) {
 
   const held = new Set((C.data.skills || []).map((s) => s.name));
   const showAll = C.pickShowAll;
-  const unheld = (C.skillCatalog || []).filter((s) => !held.has(s.name));
+  // Only this game's skills, as the wizard's catalogFor offers them: `systems`
+  // absent means every game (zzzzzzzzzzzzzzzz-tag-skill-systems.sql). Filtered
+  // HERE rather than in the catalog request, because C.skillCatalog also
+  // resolves the skills a character already holds, and those keep resolving
+  // whatever game they came from. "Show all" widens categories, never games.
+  const sys = C.data.campaign_system;
+  const inGame = (s) => !sys || !Array.isArray(s.systems) || s.systems.includes(sys);
+  const unheld = (C.skillCatalog || []).filter((s) => !held.has(s.name) && inGame(s));
   // categoryAllows, not a plain `includes` — an entry may be an OBJECT narrowing
   // what it admits, and ten of one live grant's thirteen categories are objects.
   // `includes` would drop all ten and offer three categories where the class

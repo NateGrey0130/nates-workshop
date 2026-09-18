@@ -318,16 +318,14 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
  * The catalog skills one game's classes NAME, lower-cased - what a random pick
  * for an NPC in that game may draw from.
  *
- * WHY THIS EXISTS: `skills.systems` is NULL on every one of the 390 catalog rows
- * (measured --remote, 2026-09-18), so the catalog cannot say which game a skill
- * belongs to, and the wizard offers every skill to every game. A player does
- * not choose W.P. Heavy Military Weapons for a Palladium Fantasy mercenary; a
- * random roller did, along with Demolitions and Language: Gargoyle, and the
- * validator - which has no game rule to apply - accepted it. The real fix is to
- * tag the catalog, which also changes what the wizard offers players, and is a
- * decision of its own. Until then, the classes are the best statement of a game
- * the data holds: a skill a Palladium Fantasy class names somewhere belongs in
- * Palladium Fantasy.
+ * WHY THIS EXISTS: it was written while `skills.systems` was NULL on every
+ * catalog row, when a random roller gave a Palladium Fantasy mercenary W.P.
+ * Heavy Military Weapons, Demolitions and Language: Gargoyle. The catalog is
+ * tagged now (zzzzzzzzzzzzzzzz-tag-skill-systems.sql), and `usableCatalog`
+ * below already drops another game's skills. This stays as the NARROWER
+ * preference inside that: a game's tag also counts the skills its core skill
+ * list prints, and an NPC reads more like its book when it takes the ones the
+ * game's own classes actually name.
  *
  * Read as QUOTED strings, one regex pass, because class frontmatter quotes the
  * skills it names. A bare substring search reads prose too - "truck", "art" and

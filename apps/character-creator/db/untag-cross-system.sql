@@ -1,3 +1,9 @@
+-- SUPERSEDED FOR SKILLS on 2026-09-18 by zzzzzzzzzzzzzzzz-tag-skill-systems.sql,
+-- which tags each skill with the games whose books print it (Nate's decision,
+-- once the catalog held four games). Its header has the rule. The psionics half
+-- below still stands, apart from what zzzzzzzzzzzzzzz-retag-game-psionics.sql
+-- restores. This file is left as it ran; only this note is new.
+--
 -- Skills and psionic powers are available in every system.
 --
 -- Rifts and Palladium Fantasy share a multiverse: dimensional rifts open onto
