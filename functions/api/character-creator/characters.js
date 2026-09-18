@@ -20,7 +20,9 @@ import { selectInChunks } from './_lib/sql-chunk.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
-// ?limit= and ?offset= page (default 200, max 500).
+// ?limit= and ?offset= page (default 200, max 500). NPCs appear only to their
+// campaign's G.M., and every row carries `kind` so that G.M.'s view can tell
+// them apart.
 //
 // `mine` is filtered HERE rather than by the page (UI-AUDIT F39): the list is
 // paged at 200 and ordered newest first, so a client-side filter over one page
@@ -37,16 +39,22 @@ export async function onRequestGet({ request, env }) {
                        characters.xp, characters.player_email, characters.campaign_id,
                        characters.hp_current, characters.hp_max, characters.sdc_current, characters.sdc_max,
                        characters.mdc_current, characters.mdc_max, characters.ppe_current, characters.ppe_max,
-                       characters.isp_current, characters.isp_max,
+                       characters.isp_current, characters.isp_max, characters.kind,
                        campaigns.name AS campaign_name, campaigns.system AS campaign_system
                 FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id`;
-  const conds = [], binds = [];
+  // An NPC (migration 070) lists for its campaign's G.M. and nobody else - the
+  // same rule characterAccess applies to a single read, and for the same F39
+  // reason as `mine`, applied HERE: a client-side filter over one 200-row page
+  // would both lose rows and ship the hidden ones to the browser first.
+  const conds = ["(characters.kind = 'pc' OR campaigns.gm_email = ?)"], binds = [email];
   if (campaignId) { conds.push('characters.campaign_id = ?'); binds.push(campaignId); }
   if (mine) { conds.push('characters.player_email = ?'); binds.push(email); }
-  const where = conds.length ? ' WHERE ' + conds.join(' AND ') : '';
+  const where = ' WHERE ' + conds.join(' AND ');
 
   const page = await pagedQuery(env, {
-    countSql: `SELECT count(*) AS n FROM characters${where}`,
+    // The count joins campaigns now too, because the NPC condition reads
+    // gm_email - a count that skipped it would page over rows the list hides.
+    countSql: `SELECT count(*) AS n FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id${where}`,
     countBinds: binds,
     rowsSql: base + where + ' ORDER BY characters.id DESC',
     rowsBinds: binds,

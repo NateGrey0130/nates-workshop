@@ -1,9 +1,10 @@
 // GET   /api/character-creator/characters/:id — character + current inventory.
-//       Reads are open to any authenticated friend; can_write/is_gm flags tell
+//       Reads are open to any authenticated friend - except an NPC, which only
+//       its campaign's G.M. can read (migration 070); can_write/is_gm flags tell
 //       the client whether to show edit controls (server enforces regardless).
 // PATCH /api/character-creator/characters/:id — owner/GM only; current stats + notes.
 
-import { getUserEmail, unauthorized, json, readJson, requireCharacter } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, requireCharacter, isHiddenNpc } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { listPendingPowers, loadPowerDescriptions } from '../_lib/power-picks.js';
 import { listGrants } from '../_lib/grants.js';
@@ -29,7 +30,11 @@ export async function onRequestGet({ request, env, params }) {
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
      WHERE characters.id = ?`
   ).bind(params.id).first();
-  if (!character) return json({ error: 'Character not found' }, 404);
+  // An NPC is its G.M.'s alone, and to anyone else it is simply not there -
+  // see isHiddenNpc. This read does not go through characterAccess, so it asks.
+  if (!character || isHiddenNpc(character.kind, character.campaign_gm, email)) {
+    return json({ error: 'Character not found' }, 404);
+  }
 
   const { results: items } = await env.DB.prepare(
     // THE WHOLE STAT BLOCK rides along, per held item, and is deliberately NOT

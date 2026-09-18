@@ -6,7 +6,7 @@
 // POST   …/items/:itemId with { claim_for_character_id } — move it onto a
 //        character's sheet. See below: this is the one that has to be atomic.
 
-import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, isHiddenNpc } from '../../../_lib/auth.js';
 
 export async function onRequestPatch({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id);
@@ -61,10 +61,15 @@ export async function onRequestPost({ request, env, params }) {
   // The character must be in THIS campaign, and the claimer must be allowed to
   // write to it — otherwise a member could push party loot onto someone else's
   // sheet, which is a table argument the app should not be able to start.
+  //
+  // An NPC reads as absent to anyone but the G.M. (isHiddenNpc): the 403 below
+  // would otherwise confirm that an id a player guessed is one of the G.M.'s.
   const character = await env.DB.prepare(
-    'SELECT id, name, player_email, campaign_id FROM characters WHERE id = ? AND campaign_id = ?'
+    'SELECT id, name, player_email, campaign_id, kind FROM characters WHERE id = ? AND campaign_id = ?'
   ).bind(characterId, params.id).first();
-  if (!character) return json({ error: 'That character is not in this campaign' }, 404);
+  if (!character || isHiddenNpc(character.kind, guard.access.campaign.gm_email, guard.email)) {
+    return json({ error: 'That character is not in this campaign' }, 404);
+  }
   if (character.player_email !== guard.email && !guard.access.isGm) {
     return json({ error: 'Only that character’s owner or the GM can claim an item for it' }, 403);
   }

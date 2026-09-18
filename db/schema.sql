@@ -244,6 +244,9 @@ CREATE TABLE IF NOT EXISTS characters (
   -- for it, and its own current S.D.C. and hit points. `{}` for a character
   -- with one body. Migration 069, BOOK-INGEST-AUDIT F74, js/second-form.js.
   second_form TEXT NOT NULL DEFAULT '{}',
+  -- 'pc' or 'npc'. An NPC is a character row the campaign's G.M. statted and
+  -- owns, readable by that G.M. alone. No CHECK - see migration 070.
+  kind TEXT NOT NULL DEFAULT 'pc',
   notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -263,6 +266,11 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'ppe_ba
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '069-character-second-form.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'second_form');
+
+-- 070 the same way.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '070-character-kind.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'kind');
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -350,6 +358,9 @@ CREATE TABLE IF NOT EXISTS npcs (
     CHECK (status IN ('alive', 'dead', 'unknown', 'never-met')),
   description TEXT,
   portrait_key TEXT,                     -- R2 object key; NULL = no portrait
+  -- The statted sheet behind this person, a characters row with kind = 'npc'.
+  -- Optional, and SET NULL on delete so the dossier outlives it. Migration 071.
+  character_id INTEGER REFERENCES characters(id) ON DELETE SET NULL,
   created_by TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -359,6 +370,11 @@ CREATE INDEX IF NOT EXISTS idx_npcs_campaign ON npcs (campaign_id);
 -- rather than to three near-identical rows nobody merges.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_npcs_campaign_name
   ON npcs (campaign_id, name COLLATE NOCASE);
+
+-- 071 directly after the table its column is on, as 065, 069 and 070 are.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '071-npc-character-link.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('npcs') WHERE name = 'character_id');
 
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.

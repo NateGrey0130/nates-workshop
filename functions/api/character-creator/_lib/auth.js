@@ -58,14 +58,33 @@ export function forbidden() {
 // Write-permission model (reads stay open to any authenticated friend):
 // a character is writable by its owner (player_email) or its campaign's GM;
 // campaign-level actions are GM-only.
+//
+// THE ONE EXCEPTION TO OPEN READS: an NPC. A character row with kind = 'npc'
+// (migration 070) is a G.M.'s statted NPC - the villain's M.D.C., the twist
+// character's real O.C.C. - and it exists to anyone but that campaign's G.M.
+// exactly as much as a character id nobody has used: NOT FOUND. Not 403,
+// for the reason requireCharacter gives below - a refusal that differs from
+// "missing" tells a stranger probing ids which ones are real, and here it
+// would also tell a player how many NPCs the G.M. has prepared.
+//
+// Every character endpoint reaches this through characterAccess or
+// requireCharacter, so hiding it here hides it from all of them at once. The
+// three that read a character row WITHOUT this function call isHiddenNpc
+// themselves: the sheet GET, the character list, and a stash claim.
+export function isHiddenNpc(kind, gmEmail, email) {
+  return kind === 'npc' && email !== gmEmail;
+}
 
 export async function characterAccess(env, characterId, email) {
   const row = await env.DB.prepare(
-    `SELECT characters.id, characters.player_email, characters.campaign_id, campaigns.gm_email
+    `SELECT characters.id, characters.player_email, characters.campaign_id, characters.kind,
+            campaigns.gm_email
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
      WHERE characters.id = ?`
   ).bind(characterId).first();
-  if (!row) return { found: false, canWrite: false, isGm: false };
+  if (!row || isHiddenNpc(row.kind, row.gm_email, email)) {
+    return { found: false, canWrite: false, isGm: false };
+  }
   return {
     found: true,
     canWrite: email === row.player_email || email === row.gm_email,
