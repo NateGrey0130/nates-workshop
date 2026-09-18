@@ -23,6 +23,16 @@
 --     prints too.
 -- A skill in all four games stays NULL, which the wizard reads as every game.
 --
+-- THE LANGUAGE AND LITERACY FAMILY STAYS NULL TOO (25 rows, every Language: and
+-- Literacy: row except Language: All (magical), which is a skill rather than a
+-- language). A class picks a language through "Language: Other" or "Literacy:
+-- Other" and names the member afterwards, so no class names Dwarven, Gobblely
+-- or Troll/Giant and the rule above tagged Palladium's own languages rifts +
+-- heroes-unlimited. Tagged that way, the NPC generator's sweep refused 80 more
+-- class builds - the Long Bowman, the Squire, the Chiang-Ku - for want of a
+-- language to pick; untagged, it refuses exactly the ones it did before.
+-- Which languages a world speaks is not something these rows say.
+--
 -- Decisions taken with it (the proposal is in the PR that adds this file):
 --   - skills in three of the four games are tagged with those three;
 --   - Hunting and Locksmith leave Palladium Fantasy, whose own list prints
@@ -46,7 +56,7 @@
 --
 --   node scripts/d1-apply.mjs --local apps/character-creator/db/zzzzzzzzzzzzzzzz-tag-skill-systems.sql
 
--- ["rifts"]: 168
+-- ["rifts"]: 165
 UPDATE skills SET systems = '["rifts"]'
  WHERE systems IS NULL
    AND name IN (
@@ -111,9 +121,6 @@ UPDATE skills SET systems = '["rifts"]'
     'Law',
     'Law: CCW',
     'Leather Working',
-    'Literacy: Euro',
-    'Literacy: Gypsy',
-    'Literacy: Russian',
     'Lore: American Indians',
     'Lore: Cattle & Animals',
     'Lore: D-Bee',
@@ -264,7 +271,7 @@ UPDATE skills SET systems = '["rifts","nightbane","heroes-unlimited"]'
     'Weapon Systems'
   );
 
--- ["rifts","palladium-fantasy"]: 38
+-- ["rifts","palladium-fantasy"]: 37
 UPDATE skills SET systems = '["rifts","palladium-fantasy"]'
  WHERE systems IS NULL
    AND name IN (
@@ -286,7 +293,6 @@ UPDATE skills SET systems = '["rifts","palladium-fantasy"]'
     'History',
     'Horsemanship: Exotic Animals',
     'Horsemanship: Knight',
-    'Literacy: Dragonese/Elven',
     'Locate Secret Compartments',
     'Lore: Astral',
     'Lore: Dimensions',
@@ -306,46 +312,6 @@ UPDATE skills SET systems = '["rifts","palladium-fantasy"]'
     'W.P. Shield',
     'W.P. Spear',
     'Whittling & Sculpting'
-  );
-
--- ["rifts","heroes-unlimited"]: 34
-UPDATE skills SET systems = '["rifts","heroes-unlimited"]'
- WHERE systems IS NULL
-   AND name IN (
-    'Astrophysics',
-    'Fencing',
-    'Language: Ancient Greek',
-    'Language: Brodkil',
-    'Language: Chinese',
-    'Language: Demongogian',
-    'Language: Dolphin/Whale',
-    'Language: Dwarven',
-    'Language: Euro',
-    'Language: Gargoyle',
-    'Language: Gobblely',
-    'Language: Gypsy',
-    'Language: Mongolian',
-    'Language: Old Norse',
-    'Language: Russian',
-    'Language: Spanish',
-    'Language: Trade Five/Reptile',
-    'Language: Trade Four',
-    'Language: Trade One',
-    'Language: Trade Six',
-    'Language: Trade Three',
-    'Language: Trade Two',
-    'Language: Troll/Giant',
-    'Laser Communications',
-    'Military: Combat Helicopter',
-    'Military: Jet Fighters',
-    'Military: Tanks & APCs',
-    'Navigation: Stellar',
-    'Robot Electronics',
-    'Robot Mechanics',
-    'Space: Small Spacecraft',
-    'W.P. Energy Pistol',
-    'W.P. Energy Rifle',
-    'W.P. Rifles'
   );
 
 -- ["rifts","palladium-fantasy","nightbane"]: 19
@@ -371,6 +337,25 @@ UPDATE skills SET systems = '["rifts","palladium-fantasy","nightbane"]'
     'Streetwise',
     'W.P. Pole Arm',
     'W.P. Whip'
+  );
+
+-- ["rifts","heroes-unlimited"]: 13
+UPDATE skills SET systems = '["rifts","heroes-unlimited"]'
+ WHERE systems IS NULL
+   AND name IN (
+    'Astrophysics',
+    'Fencing',
+    'Laser Communications',
+    'Military: Combat Helicopter',
+    'Military: Jet Fighters',
+    'Military: Tanks & APCs',
+    'Navigation: Stellar',
+    'Robot Electronics',
+    'Robot Mechanics',
+    'Space: Small Spacecraft',
+    'W.P. Energy Pistol',
+    'W.P. Energy Rifle',
+    'W.P. Rifles'
   );
 
 -- ["rifts","nightbane"]: 13
@@ -450,20 +435,20 @@ UPDATE skills SET systems = '["palladium-fantasy","nightbane"]'
 
 -- ASSERTIONS.
 
-SELECT 'skills tagged ["rifts"]' AS assertion, count(*) AS got, 168 AS want
+SELECT 'skills tagged ["rifts"]' AS assertion, count(*) AS got, 165 AS want
   FROM skills WHERE systems = '["rifts"]';
 
 SELECT 'skills tagged ["rifts","nightbane","heroes-unlimited"]' AS assertion, count(*) AS got, 38 AS want
   FROM skills WHERE systems = '["rifts","nightbane","heroes-unlimited"]';
 
-SELECT 'skills tagged ["rifts","palladium-fantasy"]' AS assertion, count(*) AS got, 38 AS want
+SELECT 'skills tagged ["rifts","palladium-fantasy"]' AS assertion, count(*) AS got, 37 AS want
   FROM skills WHERE systems = '["rifts","palladium-fantasy"]';
-
-SELECT 'skills tagged ["rifts","heroes-unlimited"]' AS assertion, count(*) AS got, 34 AS want
-  FROM skills WHERE systems = '["rifts","heroes-unlimited"]';
 
 SELECT 'skills tagged ["rifts","palladium-fantasy","nightbane"]' AS assertion, count(*) AS got, 19 AS want
   FROM skills WHERE systems = '["rifts","palladium-fantasy","nightbane"]';
+
+SELECT 'skills tagged ["rifts","heroes-unlimited"]' AS assertion, count(*) AS got, 13 AS want
+  FROM skills WHERE systems = '["rifts","heroes-unlimited"]';
 
 SELECT 'skills tagged ["rifts","nightbane"]' AS assertion, count(*) AS got, 13 AS want
   FROM skills WHERE systems = '["rifts","nightbane"]';
@@ -484,10 +469,10 @@ SELECT 'skills tagged ["palladium-fantasy","nightbane"]' AS assertion, count(*) 
   FROM skills WHERE systems = '["palladium-fantasy","nightbane"]';
 
 -- The four-game set, left NULL on purpose.
-SELECT 'skills every game offers stay NULL' AS assertion, count(*) AS got, 54 AS want
+SELECT 'skills every game offers stay NULL' AS assertion, count(*) AS got, 79 AS want
   FROM skills WHERE systems IS NULL;
 
 SELECT 'nothing is tagged with a value this file did not write' AS assertion, count(*) AS got, 0 AS want
-  FROM skills WHERE systems IS NOT NULL AND systems NOT IN ('["rifts"]', '["rifts","nightbane","heroes-unlimited"]', '["rifts","palladium-fantasy"]', '["rifts","heroes-unlimited"]', '["rifts","palladium-fantasy","nightbane"]', '["rifts","nightbane"]', '["heroes-unlimited"]', '["rifts","palladium-fantasy","heroes-unlimited"]', '["palladium-fantasy"]', '["nightbane"]', '["palladium-fantasy","nightbane"]');
+  FROM skills WHERE systems IS NOT NULL AND systems NOT IN ('["rifts"]', '["rifts","nightbane","heroes-unlimited"]', '["rifts","palladium-fantasy"]', '["rifts","palladium-fantasy","nightbane"]', '["rifts","heroes-unlimited"]', '["rifts","nightbane"]', '["heroes-unlimited"]', '["rifts","palladium-fantasy","heroes-unlimited"]', '["palladium-fantasy"]', '["nightbane"]', '["palladium-fantasy","nightbane"]');
 
 INSERT INTO data_script_runs (filename) VALUES ('zzzzzzzzzzzzzzzz-tag-skill-systems.sql');

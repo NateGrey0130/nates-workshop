@@ -26,10 +26,15 @@ in a game when:
 - it has a `skill_system_bases` row for that game; or
 - its `source_book` is that game's book.
 
-A skill all four games print stays NULL. 336 skills were tagged and 54 left
-NULL. `regression.mjs` pins the 54, so a new skill that arrives untagged fails
-the run instead of reopening the leak. The class importer's stubs are tagged
-with the importing class's game.
+A skill all four games print stays NULL. So does the `Language:` / `Literacy:`
+family (25 rows; Language: All (magical) is a skill and is tagged). Classes
+pick a language through "Language: Other" and name it afterwards, so no class
+names Dwarven or Gobblely, and tagging them by the rule shut Palladium Fantasy
+out of its own languages. The NPC sweep refused 80 more class builds before
+they were left alone. 311 skills were tagged and 79 left NULL. `regression.mjs`
+pins the 79, so a new skill that arrives untagged fails the run instead of
+reopening the leak. The class importer's stubs are tagged with the importing
+class's game.
 
 **Still, do not tag from `source_book` alone.** Of the rule's four signals,
 it is the only one that never takes a game away. 118 skills cite RUE p.302-303,
