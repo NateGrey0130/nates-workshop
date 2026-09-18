@@ -1913,6 +1913,75 @@ check('and none of them with ?mine=1',
   Array.isArray(strangerMine.characters) && strangerMine.characters.length === 0
     && strangerMine.total === 0, strangerMine);
 
+// ── An NPC is its G.M.'s alone (migration 070) ──────────────────────────────
+//
+// Character reads are open to any signed-in user, and kind = 'npc' is the one
+// exception: to anyone but the campaign's G.M. an NPC is NOT FOUND, never 403,
+// on every route that can reach one. Nothing in the API writes 'npc' yet, so
+// the row is flipped directly, the way the P.P.E.-burn fixture below writes
+// what no route can. Every check runs as a STRANGER as well as the G.M. -
+// this file's default caller is the G.M. of everything, and a privacy rule
+// exercised only as the person it admits proves nothing.
+{
+  const made = await api('POST', '/characters', {
+    campaign_id: campaignId, name: 'Hidden Villain', class_id: cls.id,
+    attributes: attrs, skills: occSkills, abilities: [],
+    pools: { hp: 30, sdc: 40, ppe: 20, isp: 0 }, bio: { alignment: 'Diabolic' },
+  });
+  const npcId = made.body.id;
+  check('a character for the NPC checks is created', made.status === 201 && !!npcId,
+    JSON.stringify(made.body).slice(0, 200));
+  const asPc = await api('GET', `/characters/${npcId}`);
+  check('and a character is a PLAYER character unless something says otherwise',
+    asPc.body.character?.kind === 'pc', asPc.body.character?.kind);
+
+  const countBefore = (await apiAs('stranger@example.com', 'GET', '/campaigns')).body.campaigns
+    ?.find((c) => c.id === campaignId)?.character_count;
+
+  const flipped = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--command',
+    `"UPDATE characters SET kind = 'npc' WHERE id = ${Number(npcId)}"`]);
+  check('the row is flipped to an NPC', flipped.status === 0, cleanErr(flipped.stderr || ''));
+
+  const gmSheet = await api('GET', `/characters/${npcId}`);
+  check('its G.M. still reads the sheet, marked as an NPC',
+    gmSheet.status === 200 && gmSheet.body.character?.kind === 'npc', gmSheet.status);
+
+  const stranger = (method, path, body) => apiAs('stranger@example.com', method, path, body);
+  const sheetAs = await stranger('GET', `/characters/${npcId}`);
+  check('a stranger reading the NPC\'s sheet gets 404, exactly as for a missing id',
+    sheetAs.status === 404 && sheetAs.body.error === missing.body.error, sheetAs);
+  const grantsAs = await stranger('GET', `/characters/${npcId}/grants`);
+  check('and every route under it answers the same - its grants',
+    grantsAs.status === 404, grantsAs.status);
+  const picksAs = await stranger('GET', `/characters/${npcId}/picks`);
+  check('its pending picks', picksAs.status === 404, picksAs.status);
+  const eventsAs = await stranger('GET', `/characters/${npcId}/events`);
+  check('its play log', eventsAs.status === 404, eventsAs.status);
+  const patchAs = await stranger('PATCH', `/characters/${npcId}`, { notes: 'probe' });
+  check('and a write is 404 too, not the 403 that would confirm the id is real',
+    patchAs.status === 404, patchAs.status);
+
+  const listedAs = await stranger('GET', `/characters?campaign_id=${campaignId}`);
+  check('the character list leaves it out for anyone but the G.M.',
+    listedAs.status === 200 && !(listedAs.body.characters || []).some((c) => c.id === npcId),
+    (listedAs.body.characters || []).map((c) => c.id));
+  check('and the total it pages over leaves it out too',
+    listedAs.body.total === (listedAs.body.characters || []).length, listedAs.body.total);
+  const listedGm = await api('GET', `/characters?campaign_id=${campaignId}`);
+  const npcRow = (listedGm.body.characters || []).find((c) => c.id === npcId);
+  check('while the G.M.\'s own list carries it, marked',
+    npcRow?.kind === 'npc', JSON.stringify(npcRow));
+
+  const countAfter = (await apiAs('stranger@example.com', 'GET', '/campaigns')).body.campaigns
+    ?.find((c) => c.id === campaignId)?.character_count;
+  check('and the campaign list\'s character count does not count NPCs',
+    typeof countBefore === 'number' && countAfter === countBefore - 1,
+    JSON.stringify({ countBefore, countAfter }));
+
+  const removed = await api('DELETE', `/characters/${npcId}`);
+  check('its G.M. can delete it', removed.status === 200 || removed.status === 204, removed.status);
+}
+
 // UI-AUDIT F52: the table's rest rates live on the campaign, set by its G.M.
 // A zero is dropped, a pool that is not one is refused, and null clears.
 {
