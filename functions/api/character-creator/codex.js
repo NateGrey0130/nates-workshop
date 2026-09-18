@@ -1,9 +1,10 @@
 // GET /api/character-creator/codex?section=<name> — one catalog, WITH the text
 // and the stat block that say what a thing is.
 //
-// Seven sections: `spells`, `psionics`, `gear`, `vehicles`, since UI-AUDIT F48
+// Eight sections: `spells`, `psionics`, `gear`, `vehicles`, since UI-AUDIT F48
 // `skills` and `classes`, and since docs/plans/22-codex-powers-and-talents.md
-// `talents`.
+// `talents` and `super-abilities` - the last with a ninth route beside it,
+// `super-ability`, for the reason under ONE SECTION CROSSED THE LINE below.
 //
 // The second half of docs/plans/20-power-descriptions.md, widened to the two
 // catalogs that had no reader at all. The first half put a held power's
@@ -43,6 +44,22 @@
 // expansion would save 69 KB on a fetch that happens once per page life, at the
 // cost of a round trip per expansion. Plan 20 explicitly valued "no round trip
 // on a bad connection". Revisit if any one section passes ~250 KB gzipped.
+//
+// ── ONE SECTION CROSSED THE LINE, AND IT IS LIST-THEN-DETAIL ──
+//
+// Super abilities, measured on production 2026-09-17, same method as above:
+//
+//   364 rows with their descriptions     323.4 KB gzip   (1,050.9 KB raw)
+//   the same rows without `description`    5.6 KB gzip
+//   one description                        median 2,118 characters, longest 13,369
+//
+// That is more than the four sections above cost TOGETHER, for a catalog whose
+// rows mostly have no stat block at all - the text is the entry. So
+// `super-abilities` sends the list with no description, and `super-ability`
+// sends ONE row's text when the page opens it. A round trip per expansion is
+// the price, paid by the one catalog that crosses the line and by no other;
+// plan 22 has the alternatives that were rejected (send it all, a 400-character
+// excerpt, split by tier).
 //
 // A separate endpoint rather than the catalog editor's routes, too:
 // `catalogs/rows` is `requireAdmin` at every method because it WRITES, and
@@ -89,6 +106,7 @@ const SECTIONS = {
               (SELECT count(*) FROM vehicles)       AS vehicles,
               (SELECT count(*) FROM skills)         AS skills,
               (SELECT count(*) FROM talents)        AS talents,
+              (SELECT count(*) FROM super_abilities) AS "super-abilities",
               (SELECT count(*) FROM imported_classes
                  WHERE status = 'published' AND deleted_at IS NULL) AS classes`
     ).first()),
@@ -198,6 +216,38 @@ const SECTIONS = {
     ).all()).results,
   }),
 
+  // Heroes Unlimited super abilities, as a LIST (plan 22 D1): every column but
+  // the description. `has_text` stands in for it so the page can still say
+  // "N with text" and can tell "not imported yet" from "not fetched yet" without
+  // asking. The key is the tab's id, hyphen and all, because the page reads
+  // `res[id]` and `counts[id]` and a second spelling would be a second contract.
+  'super-abilities': async (env) => ({
+    'super-abilities': (await env.DB.prepare(
+      `SELECT name, tier, range, duration, damage, saving_throw, variant_note,
+              system, source_book,
+              (description IS NOT NULL AND trim(description) <> '') AS has_text
+       FROM super_abilities ORDER BY tier, name`
+    ).all()).results,
+  }),
+
+  // ONE super ability's text, fetched when its row is opened.
+  //
+  // Looked up by `name`, which is UNIQUE, and never by `id`: an id is insertion
+  // order and means nothing in another database - the argument `gear` makes
+  // about slugs above. A missing name is a 400 and an unknown one a 404, so the
+  // page can tell a bad request from a row the catalog editor renamed under it.
+  // The name rides in the BODY as well, which is what keeps two entries with
+  // identical text from revalidating into each other through the body hash.
+  'super-ability': async (env, params) => {
+    const name = params.get('name');
+    if (!name) return json({ error: 'A super ability is asked for by name: ?section=super-ability&name=<name>' }, 400);
+    const row = await env.DB.prepare(
+      'SELECT name, description FROM super_abilities WHERE name = ?'
+    ).bind(name).first();
+    if (!row) return json({ error: 'No super ability by that name' }, 404);
+    return { 'super-ability': row };
+  },
+
   // THREE tables, because a vessel is not a row: M.D.C. arrives BY LOCATION and
   // weapon systems arrive as a numbered list. They are NESTED into their vessel
   // here rather than sent as three flat arrays — it is smaller (1,873 repeated
@@ -253,12 +303,19 @@ const SECTIONS = {
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
 
-  const section = new URL(request.url).searchParams.get('section');
+  const params = new URL(request.url).searchParams;
+  const section = params.get('section');
   if (!section || !Object.hasOwn(SECTIONS, section)) {
     return json({ error: 'Unknown codex section', sections: Object.keys(SECTIONS) }, 400);
   }
 
-  const body = JSON.stringify(await SECTIONS[section](env));
+  // A section may answer with a Response of its own - `super-ability` does, for
+  // a missing or unknown name. It is passed through unvalidated on purpose: an
+  // error has no business being stored against an ETag.
+  const result = await SECTIONS[section](env, params);
+  if (result instanceof Response) return result;
+
+  const body = JSON.stringify(result);
 
   // Same validator as /catalogs, and for the same reason: a hash of the body,
   // because no catalog table has a timestamp column and the editor's PATCH

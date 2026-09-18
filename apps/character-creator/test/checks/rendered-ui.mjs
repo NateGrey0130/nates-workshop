@@ -1527,6 +1527,15 @@ export function run() {
     check('and it fetches one section at a time, not the whole codex',
       !/api\('codex'\)/.test(js) && /section=' \+ encodeURIComponent/.test(js),
       'codex.js is asking for the whole codex in one request again');
+    // Plan 22 D1. Super abilities are 323 KB gzipped with their text, so the
+    // list travels without it and ONE entry's is fetched when its row opens.
+    // regression.mjs holds the endpoint to that; this holds the page to asking
+    // by name, ENCODED - 16 of the 364 names carry an ampersand (production,
+    // 2026-09-17), and an unencoded one asks for "Generate Fog " and gets a 404
+    // that reads like missing data.
+    check('and a super ability\'s text is asked for one entry at a time, its name encoded',
+      /'codex\?section=super-ability&name=' \+ encodeURIComponent\(r\.name\)/.test(js),
+      'codex.js no longer fetches a super ability by encoded name');
 
     // THE TRAP: .tabbar is display:none above 820px, because the SHEET's tabs
     // are a narrow-screen affordance. Reusing the class without this rule makes

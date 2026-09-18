@@ -1,5 +1,6 @@
-// The codex — every spell, psionic power, piece of gear and vessel, and what
-// each one is.
+// The codex — every spell, psionic power, piece of gear, vessel, skill, class,
+// Talent and super ability, and what each one is. SECTIONS below is the list;
+// this sentence has gone stale before.
 //
 // Read-only by construction: this file makes only GETs and has no write path to
 // leave out. That is the point of it being its own page rather than the catalog
@@ -27,7 +28,8 @@
 // A WORD ON THE `cost` SLOT, because it does NOT mean the same thing in all
 // four: for spells it is P.P.E., for psionics I.S.P., for gear a PRICE in
 // credits or gold, and for a vessel a price too. It is the right-hand column of
-// a row, not a currency. A section returns '' when it has nothing to put there.
+// a row, not a currency. A section returns '' when it has nothing to put there
+// - Classes and Super Abilities always do - and Talents put TWO figures in it.
 
 const SECTIONS = [
   {
@@ -176,6 +178,36 @@ const SECTIONS = [
                    r.variant_note && `A different book prints: ${r.variant_note}`],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.tier || ''}`,
   },
+  // Heroes Unlimited super abilities (plan 22), and THE ONE SECTION WHOSE TEXT
+  // DOES NOT ARRIVE WITH ITS LIST. 364 rows with their descriptions are 323 KB
+  // gzipped, more than the first four sections together, so the list comes
+  // without them and `detail` names the request that fetches one when its row
+  // is opened - see loadDetail(). No other section defines `detail`, and
+  // everything that reads a description goes through textOf() and hasText() so
+  // that stays the only difference.
+  //
+  // No cost: a super ability is a permanent trait and has nothing to pay. Most
+  // have no stat block either (41, 30, 22 and 7 rows carry a range, duration,
+  // damage and save), which is why statBlock() printing only what a row HAS
+  // matters more here than anywhere.
+  //
+  // 83 of them are named `Family: Name` - 36 under Alter Physical Structure
+  // alone. There is no grouping UI, deliberately: the all-terms filter already
+  // is one, and typing "alter physical" is the group.
+  {
+    id: 'super-abilities',
+    label: 'Super Abilities',
+    key: (r) => String(r.name).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => SUPER_TIER[r.tier] || '',
+    cost: () => '',
+    stats: (r) => [['Range', r.range], ['Duration', r.duration], ['Damage', r.damage],
+                   ['Saving throw', r.saving_throw]],
+    notes: (r) => [r.variant_note && `An earlier book prints: ${r.variant_note}`],
+    hay: (r) => `${r.name} ${r.source_book || ''} ${r.tier || ''}`,
+    detail: (r) => 'codex?section=super-ability&name=' + encodeURIComponent(r.name),
+    detailText: (res) => (res['super-ability'] || {}).description,
+  },
 ];
 
 const byId = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
@@ -189,6 +221,10 @@ const S = {
   loading: {},          // section id -> a fetch is in flight
   error: {},            // section id -> what went wrong
   counts: null,         // from ?section=index, so the tabs are labelled at once
+  // Only a section with a `detail` hook uses these three, keyed like `open`.
+  text: {},             // "<section>:<key>" -> the entry's text, once fetched
+  textLoading: {},      // -> a fetch for it is in flight
+  textError: {},        // -> what went wrong; cleared by the next attempt
 };
 
 const $ = (id) => document.getElementById(id);
@@ -239,7 +275,7 @@ function damage(r) {
   return r.is_mega_damage && !/M\.?D\.?/i.test(d) ? `${d} (M.D.)` : d;
 }
 
-// ── Talent-only labels ──
+// ── Talent and super ability labels ──
 
 // `tier` and `form_required` are stored as the lowercase words the schema lists.
 // An unlisted value falls through to the stored word (form) or to nothing
@@ -248,6 +284,7 @@ function damage(r) {
 // fifth.
 const TALENT_TIER = { common: 'Common', elite: 'Elite' };
 const TALENT_FORM = { morphus: 'Morphus only', facade: 'Facade only', both: 'Either form' };
+const SUPER_TIER = { minor: 'Minor', major: 'Major' };
 
 // What one use costs. 0 is not free - it is "the book prints a schedule", and
 // the schedule is `ppe_note`, which the entry's notes carry in full.
@@ -329,6 +366,44 @@ async function loadIndex() {
   render();
 }
 
+// One ENTRY's text, the first time its row is opened, for the one section that
+// does not send text with its list (plan 22 D1). Kept for the life of the page,
+// like a section; the browser revalidates it the same way.
+//
+// A failure is recorded against the ENTRY and shown inside it. The list loaded
+// fine, so an error panel over the whole section would be the wrong size of
+// apology - and the record is cleared on the next attempt, so closing the row
+// and opening it again is the retry, with nothing extra to press.
+//
+// A row the list says has no text is never asked for: `has_text` already
+// answered, and the entry says "not imported yet" without a round trip.
+async function loadDetail(sec, r) {
+  const key = sec.id + ':' + sec.key(r);
+  if (!sec.detail || !r.has_text || S.text[key] != null || S.textLoading[key]) return;
+  S.textLoading[key] = true;
+  delete S.textError[key];
+  render();
+  try {
+    S.text[key] = sec.detailText(await api(sec.detail(r))) || '';
+  } catch (err) {
+    S.textError[key] = err.message;
+  }
+  delete S.textLoading[key];
+  render();
+}
+
+// What an entry has to read, wherever it came from: with the row, or fetched.
+function textOf(sec, r) {
+  const t = sec.detail ? S.text[sec.id + ':' + sec.key(r)] : r.description;
+  return t && String(t).trim() ? String(t) : '';
+}
+
+// Whether the catalog HOLDS text for a row - which for a `detail` section is
+// known before any of it has been fetched.
+function hasText(sec, r) {
+  return sec.detail ? !!r.has_text : !!(r.description && String(r.description).trim());
+}
+
 // ── filtering ──
 
 // Name, source book and the section's own category field; all terms required,
@@ -363,8 +438,15 @@ function statBlock(sec, r) {
 function entry(sec, r) {
   const key = sec.id + ':' + sec.key(r);
   const open = S.open.has(key);
-  const text = r.description && String(r.description).trim();
+  const text = textOf(sec, r);
   const cost = sec.cost(r);
+  // Three things an open entry with no text can mean, and only a `detail`
+  // section can mean the first two: still on its way, failed to arrive, or not
+  // in the catalog at all.
+  const textHtml = text ? `<p class="codex-text">${escHtml(text)}</p>`
+    : S.textLoading[key] ? '<p class="codex-text muted">Loading…</p>'
+    : S.textError[key] ? `<p class="err">Could not load this entry: ${escHtml(S.textError[key])}. Close it and open it again to retry.</p>`
+    : sec.noText ? '' : '<p class="codex-text muted">No description imported yet.</p>';
   // A row with no text still lists — its stat block is worth having, and hiding
   // it would make the codex quietly disagree with the pickers about what
   // exists. It says so instead, which is also the visible edge of the Book of
@@ -378,8 +460,7 @@ function entry(sec, r) {
     ${open ? `<div class="codex-body">
       ${statBlock(sec, r)}
       ${sec.extra ? sec.extra(r) : ''}
-      ${text ? `<p class="codex-text">${escHtml(r.description)}</p>`
-             : sec.noText ? '' : '<p class="codex-text muted">No description imported yet.</p>'}
+      ${textHtml}
       ${sec.notes(r).filter(Boolean)
         .map((n) => `<p class="note small">${escHtml(n)}</p>`).join('')}
       <p class="muted small">${escHtml(r.source_book || 'source not recorded')}</p>
@@ -407,7 +488,7 @@ function listHtml(sec) {
 
   const shown = visible();
   const total = rowsFor(sec.id).length;
-  const withText = shown.filter((r) => r.description && String(r.description).trim()).length;
+  const withText = shown.filter((r) => hasText(sec, r)).length;
 
   return `<div class="codex-toolbar">
       <input type="search" id="codex-filter" class="pick-filter" placeholder="Filter by name or book…"
@@ -459,9 +540,18 @@ document.addEventListener('click', (e) => {
   const head = e.target.closest('.codex-head');
   if (head) {
     const key = head.dataset.key;
-    if (S.open.has(key)) S.open.delete(key); else S.open.add(key);
+    const opening = !S.open.has(key);
+    if (opening) S.open.add(key); else S.open.delete(key);
     S.filterFocused = false;
     render();
+    // A `detail` section's text is fetched by the act of opening the row. The
+    // row is found again from the key rather than carried on the element: the
+    // key is already the delegated handler's whole contract (see the header).
+    const sec = byId(S.tab);
+    if (opening && sec.detail) {
+      const row = rowsFor(sec.id).find((r) => sec.id + ':' + sec.key(r) === key);
+      if (row) loadDetail(sec, row);
+    }
   }
 });
 

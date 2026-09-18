@@ -2172,6 +2172,15 @@ body.show-play-keys .play-keys { display: block; }
    tabs fit on one row, which is every desktop. Plan 22. */
 .tabbar.codex-tabs { flex-wrap: wrap; }
 
+/* EIGHT TABS ON A PHONE. At the shared 18px side padding they take FOUR rows at
+   375px (2+3+2+1, 211px of bar before anything to read); at 12px they take
+   three (3+3+2, 161px), which is what six tabs took before plan 22. Measured
+   2026-09-17. The height stays 44px - this gives up air beside the label, not
+   the size of the target. Codex only: the sheet has six tabs and wraps fine. */
+@media (max-width: 620px) {
+  .tabbar.codex-tabs .tab { padding: 8px 12px; }
+}
+
 .codex-toolbar {
   display: flex; align-items: center; gap: 8px;
   margin: 10px 0 4px; flex-wrap: wrap;
