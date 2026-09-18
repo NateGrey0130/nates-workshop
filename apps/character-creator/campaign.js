@@ -32,6 +32,9 @@ const D = {
   // G.M. who asks for the form needs it.
   gen: { open: false, classes: null, cls: '', occ: '', level: 1, count: 1, name: '',
          busy: false, msg: '', err: false },
+  // Placing a notable NPC from the books (notable_npcs, migration 072): the
+  // codex's `notables` section, loaded the first time the form opens.
+  book: { open: false, rows: null, slug: '', name: '', busy: false, msg: '', err: false },
 };
 
 async function load() {
@@ -376,9 +379,10 @@ function npcSheetsPanel() {
   const sheets = npcSheets();
   return `<div class="panel">
     <h3>Statted NPCs <span class="muted small">— only you can see these</span></h3>
-    ${D.gen.open ? genForm()
+    ${D.gen.open ? genForm() : D.book.open ? bookForm()
       : `<div class="rowline" style="margin-top:6px">
-          <button class="btn btn-sm" onclick="openGen()">🎲 Roll NPCs from a class</button></div>`}
+          <button class="btn btn-sm" onclick="openGen()">🎲 Roll NPCs from a class</button>
+          <button class="btn btn-sm" onclick="openBook()">📖 Place a notable NPC from the books</button></div>`}
     <div style="margin-top:10px">${sheets.length ? sheets.map(npcSheetRow).join('')
       : '<p class="muted small">None yet. Roll some, then link one to a dossier from its page.</p>'}</div>
   </div>`;
@@ -396,7 +400,10 @@ function npcSheetRow(c) {
   </div>`;
 }
 
-const className = (id) => D.classNames?.[id] || id;
+// A book NPC's class id is `notable:<slug>` (from-notable) - it names where the
+// sheet came from, not a class, so it reads as that.
+const className = (id) => (String(id).startsWith('notable:') ? 'from the books'
+  : D.classNames?.[id] || id);
 
 // A race whose entry grants no related or secondary skills takes an occupation,
 // and the server refuses one without it - so the form asks rather than letting
@@ -458,6 +465,76 @@ async function openGen() {
   render();
 }
 function closeGen() { D.gen.open = false; D.gen.msg = ''; render(); }
+
+// ---------- a notable NPC from the books ----------
+//
+// The named people the books stat (the codex's Notable NPCs). Placing one COPIES
+// the book's numbers into this campaign as a statted NPC - one-way, so a fight
+// changes this table's copy and never the book. Offered from this campaign's
+// game, plus any a book marks as belonging to every game.
+function bookForm() {
+  const b = D.book;
+  if (!b.rows) return '<p class="muted small" style="margin-top:10px">Loading the books…</p>';
+  const rows = b.rows.filter((r) => !r.system || r.system === 'both' || r.system === D.campaign.system);
+  if (!rows.length) {
+    return `<div class="panel-inset" style="margin-top:10px">
+      <p class="muted small">No notable NPCs from ${esc(D.campaign.system)} books have been imported yet.</p>
+      <button class="btn btn-sm btn-ghost" onclick="closeBook()">close</button></div>`;
+  }
+  return `<div class="panel-inset" style="margin-top:10px">
+    <div class="rowline" style="flex-wrap:wrap">
+      <label class="small">From the books
+        <select onchange="bookSet('slug', this.value, true)">
+          <option value="">— choose —</option>
+          ${rows.map((r) => `<option value="${esc(r.slug)}"${r.slug === b.slug ? ' selected' : ''}>${
+            esc(r.name)}${r.title ? ` — ${esc(r.title)}` : ''} (${esc(r.source_book || '')})</option>`).join('')}
+        </select></label>
+      <input type="text" class="picker-input" placeholder="Name in this campaign (optional)" value="${esc(b.name)}"
+        onchange="bookSet('name', this.value)">
+    </div>
+    <div class="rowline" style="margin-top:8px">
+      <button class="btn btn-sm btn-primary" onclick="placeNotable()" ${b.busy || !b.slug ? 'disabled' : ''}>
+        ${b.busy ? 'Placing…' : 'Place in this campaign'}</button>
+      <button class="btn btn-sm btn-ghost" onclick="closeBook()">close</button>
+    </div>
+    <p class="small muted">The book's own numbers for this person, copied. Its attacks, powers and gear go in the
+      sheet's notes. Changes to the copy never touch the book.</p>
+    ${b.msg ? `<p class="small${b.err ? ' err' : ''}">${esc(b.msg)}</p>` : ''}
+  </div>`;
+}
+
+async function openBook() {
+  D.book.open = true;
+  render();
+  if (D.book.rows) return;
+  try {
+    D.book.rows = (await api('codex?section=notables')).notables || [];
+  } catch (err) { D.book.msg = 'Could not load them: ' + err.message; D.book.err = true; D.book.rows = []; }
+  render();
+}
+function closeBook() { D.book.open = false; D.book.msg = ''; render(); }
+function bookSet(key, value, rerender = false) {
+  D.book[key] = value;
+  if (key === 'slug') { D.book.msg = ''; D.book.err = false; }
+  if (rerender) render();
+}
+
+async function placeNotable() {
+  const b = D.book;
+  b.busy = true; b.msg = ''; b.err = false;
+  render();
+  try {
+    const res = await api(`campaigns/${campaignId}/npcs/from-notable`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: b.slug, name: b.name.trim() || null }),
+    });
+    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
+    b.msg = `Placed ${res.name}.`;
+    b.name = '';
+  } catch (err) { b.msg = err.message; b.err = true; }
+  b.busy = false;
+  render();
+}
 
 // Selects re-render (the occupation control appears with a race, and the Roll
 // button waits for one); typed inputs only store, so a keystroke never rebuilds

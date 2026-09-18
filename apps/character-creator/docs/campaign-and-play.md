@@ -334,6 +334,15 @@ sheet behind it - G.M. only, only to an NPC sheet in the same campaign, and
 backlinks. Both halves are optional: most dossiers have no stats, and six rolled
 bandits need no dossiers.
 
+**From the books.** The People tab also offers *Place a notable NPC from the books*: the named people
+the books stat - a mayor, a cult leader, a Lord Magus - held in `notable_npcs` (migration 072) and
+readable in the codex. Placing one COPIES the book's numbers for that person into the campaign as a
+statted NPC (`POST campaigns/:id/npcs/from-notable`), with class_id `notable:<slug>`. It does not go
+through the class validator: a book prints one person's totals with every bonus folded in, and
+composing a class over them would count those bonuses twice - the book's numbers are the ruling. Its
+attacks (`stat_attacks`, migration 073) and its prose - magic, psionics, super powers, gear - land in the
+sheet's notes. One-way: a fight or a rename changes this table's copy, never the book.
+
 **Where they show.** On the People tab and in the G.M.'s dashboard roster,
 after the party and tagged NPC, with the same damage controls - *Award XP to
 party* skips them. Not on the home screen's list of your characters (`?mine=1`

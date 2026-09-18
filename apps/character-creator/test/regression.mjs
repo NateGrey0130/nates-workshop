@@ -2152,6 +2152,82 @@ check('and none of them with ?mine=1',
     pfPicks > 0 && pfStray.size === 0, `${pfPicks} picks; outside the game: ${[...pfStray].slice(0, 8).join(', ')}`);
 }
 
+// ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────
+//
+// A book prints FIXED numbers for one person, and a G.M. copies that person
+// into a campaign. A fixture row and one attack are written directly - no
+// route writes the catalog but the admin editor - and removed at the end. The
+// copy is read back off the real sheet route, because a class_id no class can
+// load (`notable:<slug>`) is exactly the case a sheet could crash on.
+{
+  // Through a FILE, as the fixtures above are: the JSON columns are full of
+  // double quotes, and a --command argument goes through the Windows shell.
+  const exec = (name, sql) => {
+    const file = join(state, name);
+    writeFileSync(file, sql);
+    return wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', file]);
+  };
+  const seeded = exec('notable-fixture.sql', [
+    "INSERT INTO notable_npcs (slug, name, title, system, race, occ, level, alignment,",
+    "  attributes, hp, sdc, ppe, horror_factor, combat, skills, magic, source_book) VALUES",
+    "  ('fixture-mayor', 'Fixture Mayor', 'Mayor', 'rifts', 'Human', '7th level Fixture', 7, 'Scrupulous',",
+    '   \'{"IQ":14,"ME":12,"MA":20,"PS":11,"PP":13,"PE":12,"PB":15,"Spd":10}\',',
+    '   41, 30, 12, 9, \'{"attacks":5,"strike":2,"parry":3}\',',
+    '   \'[{"name":"Public Speaking","pct":85}]\', \'Knows two fixture spells.\', \'fixture p.1\');',
+    "INSERT INTO stat_attacks (owner_kind, owner_slug, name, damage, is_mega_damage, sort) VALUES",
+    "  ('notable_npc', 'fixture-mayor', 'Fixture Pistol', '2D6 M.D.', 1, 0);",
+  ].join('\n'));
+  check('a notable NPC and its attack can be written to a database built from nothing',
+    seeded.status === 0, cleanErr(seeded.stderr || ''));
+
+  const index = await api('GET', '/codex?section=index');
+  check('the codex counts the notable NPCs', index.body.counts?.notables >= 1, JSON.stringify(index.body.counts));
+  const codex = await api('GET', '/codex?section=notables');
+  const row = (codex.body.notables || []).find((r) => r.slug === 'fixture-mayor');
+  check('and serves one with its JSON decoded and its attacks folded in',
+    row?.attributes?.MA === 20 && row?.combat?.attacks === 5 && row?.skills?.[0]?.pct === 85
+      && row?.attacks?.[0]?.name === 'Fixture Pistol', JSON.stringify(row).slice(0, 300));
+
+  const place = (body, who = null) => (who
+    ? apiAs(who, 'POST', `/campaigns/${campaignId}/npcs/from-notable`, body)
+    : api('POST', `/campaigns/${campaignId}/npcs/from-notable`, body));
+  const barred = await place({ slug: 'fixture-mayor' }, 'stranger@example.com');
+  check('only the campaign\'s G.M. can place a notable NPC', barred.status === 403, barred.status);
+  const unknown = await place({ slug: 'nobody-at-all' });
+  check('and an unknown one is a 404, not an empty copy', unknown.status === 404, unknown.status);
+
+  const placed = await place({ slug: 'fixture-mayor', name: 'Mayor of Fixtureville' });
+  check('the G.M. places one in the campaign, under the name given',
+    placed.status === 201 && placed.body.name === 'Mayor of Fixtureville', JSON.stringify(placed.body));
+  if (placed.body.id) {
+    const sheet = await api('GET', `/characters/${placed.body.id}`);
+    const c = sheet.body.character || {};
+    check('its sheet loads, though no class can be loaded for it',
+      sheet.status === 200 && c.class_id === 'notable:fixture-mayor', JSON.stringify({ s: sheet.status, id: c.class_id }));
+    check('as a G.M.-only NPC at the book\'s level, holding the book\'s numbers',
+      c.kind === 'npc' && c.level === 7 && c.attributes?.MA === 20 && c.hp_max === 41 && c.sdc_max === 30
+        && c.ppe_max === 12 && c.combat?.attacks === 5 && c.combat?.parry === 3,
+      JSON.stringify({ kind: c.kind, level: c.level, attrs: c.attributes, hp: c.hp_max, combat: c.combat }));
+    check('with the book\'s skills at the book\'s figures',
+      (c.skills || []).some((s) => s.name === 'Public Speaking' && s.pct === 85), JSON.stringify(c.skills));
+    check('and its attacks and prose in the notes',
+      /Fixture Pistol: 2D6 M\.D\./.test(c.notes || '') && /Magic: Knows two fixture spells/.test(c.notes || '')
+        && /Horror Factor: 9/.test(c.notes || ''), String(c.notes).slice(0, 300));
+    const hidden = await apiAs('stranger@example.com', 'GET', `/characters/${placed.body.id}`);
+    check('and to anyone else it does not exist', hidden.status === 404, hidden.status);
+
+    // One-way: the copy is the table's. Damage it and the book is untouched.
+    await api('PATCH', `/characters/${placed.body.id}`, { hp_current: 10 });
+    const again = (await api('GET', '/codex?section=notables')).body.notables.find((r) => r.slug === 'fixture-mayor');
+    check('a change to the copy never reaches the book', again?.hp === 41, again?.hp);
+    await api('DELETE', `/characters/${placed.body.id}`);
+  }
+
+  const cleaned = exec('notable-cleanup.sql', "DELETE FROM stat_attacks WHERE owner_slug = 'fixture-mayor';\n"
+    + "DELETE FROM notable_npcs WHERE slug = 'fixture-mayor';\n");
+  check('the notable NPC fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // UI-AUDIT F52: the table's rest rates live on the campaign, set by its G.M.
 // A zero is dropped, a pool that is not one is refused, and null clears.
 {
@@ -3575,6 +3651,7 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // Keyed on `key`, not `name`: a Morphus entry's name repeats across tables
     // (migration 068), so a retired name would match rows in other tables.
     morphus: ['morphus_characteristics', 'key'],
+    notableNpcs: ['notable_npcs', 'slug'],
   };
 
   // A catalog the redirect table uses that this map does not know would be

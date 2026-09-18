@@ -2269,7 +2269,10 @@ function render() {
   ${box(`${escHtml(c.name)}${c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}${w ? '' : ' <span class="tag ro">read-only</span>'}${C.isGm ? ' <span class="tag gm">GM</span>' : ''}`, `
     <div class="sheet-grid cols-2">
       <div>
-        ${field('O.C.C.', escHtml(cls.name || c.class_id))}
+        ${/* A book NPC's class id is notable:<slug> (from-notable) - a source, not
+             a class. What the book printed for this person is in bio.occupation. */ ''}
+        ${field('O.C.C.', escHtml(cls.name
+          || (String(c.class_id).startsWith('notable:') ? (c.bio?.occupation || 'From the books') : c.class_id)))}
         ${/* A Military Occupational Specialty is part of what the character IS,
               not a skill-list detail: two Technical Officers with different
               specialties share no MOS skills at all. Shown beside the O.C.C.

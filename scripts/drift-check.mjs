@@ -202,8 +202,12 @@ console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} r
 // the table's printed heading ("Canine Table") - so a name absent from the text
 // means something. Names repeat ACROSS tables ("Combination of Two"), which
 // costs nothing here: a name is looked for in the book, not in a table.
+//
+// `notable_npcs` IS IN too (migration 072): its `name` is the name the book
+// prints over that person's stat block - "Gwen Severson", "Power Master" - so
+// a name absent from the cited book's text is a mistranscription worth seeing.
 const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities', 'talents',
-  'morphus_characteristics'];
+  'morphus_characteristics', 'notable_npcs'];
 const citationRows = new Map();   // slug -> [{ table, name }]
 for (const table of CITATION_TABLES) {
   for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {

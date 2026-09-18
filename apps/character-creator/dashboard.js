@@ -76,7 +76,8 @@ function rosterRowHtml(c) {
   return `<tr id="roster-${c.id}">
       <td><a href="sheet.html?id=${c.id}">${escHtml(c.name)}</a>${
         c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}</td>
-      <td>${escHtml(D.classNames[c.class_id] || c.class_id)}${c.occ_class_id ? ' ' + escHtml(D.classNames[c.occ_class_id] || c.occ_class_id) : ''}</td>
+      <td>${escHtml(String(c.class_id).startsWith('notable:') ? 'From the books'
+        : D.classNames[c.class_id] || c.class_id)}${c.occ_class_id ? ' ' + escHtml(D.classNames[c.occ_class_id] || c.occ_class_id) : ''}</td>
       <td>${c.level} <span class="muted small">(${c.xp} XP)</span></td>
       <td class="muted small">${escHtml(c.player_email)}</td>
       <td class="pools-cell">${D.isGm ? gmPoolsCell(c) : poolsCell(c)}</td>

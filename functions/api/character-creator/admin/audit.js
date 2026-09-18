@@ -92,8 +92,14 @@ export async function onRequestGet({ request, env }) {
     });
 
     if (skipped) {
+      // A `notable:<slug>` class id is a book NPC copied into a campaign
+      // (campaigns/:id/npcs/from-notable): it has no class ON PURPOSE, because
+      // the book's printed numbers are the ruling. Said so, rather than listed
+      // alongside characters whose class genuinely went missing.
       unvalidatable.push({ id: row.id, name: row.name, class_id: row.class_id,
-        reason: 'No class definition resolves for that class_id' });
+        reason: String(row.class_id).startsWith('notable:')
+          ? 'A book NPC copied from notable_npcs - its printed numbers are the ruling, and no class applies'
+          : 'No class definition resolves for that class_id' });
       continue;
     }
     if (violations.length || warnings.length) {
