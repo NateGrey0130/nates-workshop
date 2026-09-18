@@ -21,7 +21,10 @@ import { localD1Args } from '../../../../scripts/d1-query-lib.mjs';
 // is nearly all of the suite's wall clock. Drift in either direction fails
 // loud at use: a section added below but not here makes its filter match
 // nothing, and a name listed here but renamed below runs the module and still
-// matches nothing. Both end in "no section matched", which is a failure.
+// matches nothing. Both end in "no section matched", which is a failure - but
+// only for the person who typed that name, and it reads as their typo. The
+// flagless run catches both directions in every module first (smoke.mjs,
+// 'The checks modules declare the sections they run', since 2026-09-17).
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
   'Skills stay true', 'Book surveys', 'Migration state',

@@ -23,8 +23,12 @@ const sections = [];
 // itself on wantSection and is skipped entirely when no filter asks for it.
 // The merge gate stays the FLAGLESS run, and a partial run labels its summary
 // line PARTIAL so its output cannot pass for the gate's. A filter matching
-// nothing is a failure, not a quiet green: the likeliest cause is a typo, and
-// the next likeliest is a checks module whose declared section list drifted.
+// nothing is a failure, not a quiet green: the likeliest cause is a typo. The
+// next likeliest used to be a checks module whose declared section list had
+// drifted - rendered-ui.mjs announced two sections its list did not carry
+// until 2026-09-17 - and since then the flagless run reads every module's
+// list against its section() calls (smoke.mjs, 'The checks modules declare
+// the sections they run'), so on a green main a no-match is the typo.
 const filters = [];
 for (let i = 2; i < process.argv.length; i++) {
   if (process.argv[i] === '--section' && process.argv[i + 1]) {
