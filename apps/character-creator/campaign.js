@@ -483,8 +483,10 @@ function bookForm() {
   }
   return `<div class="panel-inset" style="margin-top:10px">
     <div class="rowline" style="flex-wrap:wrap">
-      <label class="small">From the books
-        <select onchange="bookSet('slug', this.value, true)">
+      ${/* An option carries name, title and citation, so a select sized to its
+           longest option overran the panel on desktop; it takes the row instead. */ ''}
+      <label class="small" style="flex:1 1 100%;min-width:0">From the books
+        <select style="width:100%" onchange="bookSet('slug', this.value, true)">
           <option value="">— choose —</option>
           ${rows.map((r) => `<option value="${esc(r.slug)}"${r.slug === b.slug ? ' selected' : ''}>${
             esc(r.name)}${r.title ? ` — ${esc(r.title)}` : ''} (${esc(r.source_book || '')})</option>`).join('')}
