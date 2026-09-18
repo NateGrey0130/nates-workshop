@@ -53,6 +53,10 @@ UPDATE gear SET cost = 650, weight_lbs = COALESCE(weight_lbs, 45)
 UPDATE gear SET category = 'armor' WHERE category = 'Armor';
 
 -- ---- 3. Two skills tagged to one system -------------------------------------
+-- SUPERSEDED 2026-09-18: zzzzzzzzzzzzzzzz-tag-skill-systems.sql now tags every
+-- skill by game (W.P. Lance and Horsemanship: Knight are rifts and
+-- palladium-fantasy: classes of both games name them). It sorts after this file
+-- so the UPDATE below cannot clear it.
 -- untag-cross-system.sql set every skills.systems to NULL on purpose: Rifts and
 -- Palladium Fantasy share a multiverse and a skill is not bound to the book it
 -- was printed in. add-knight-class.sql then inserted Horsemanship: Knight and

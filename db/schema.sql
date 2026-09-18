@@ -888,7 +888,7 @@ CREATE TABLE IF NOT EXISTS skills (
   -- above keeps its meaning and stays the fallback; see migration 042.
   base_formula TEXT,
   per_level INTEGER NOT NULL DEFAULT 0,
-  systems TEXT,                           -- JSON array; NULL means both systems
+  systems TEXT,                           -- JSON array of games; NULL means every game
   source TEXT NOT NULL DEFAULT 'seed',    -- seed | import
   source_book TEXT,
   note TEXT,                              -- "40%/30% climb/rappel", "counts as two skills"

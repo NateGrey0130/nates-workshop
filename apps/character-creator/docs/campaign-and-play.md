@@ -314,15 +314,15 @@ picks, an M.O.S., abilities, a totem, and the levels above one.
   picked: they land in `pending_power_picks` and the sheet's banked-picks panel
   spends them under every list and level rule. Powers the class *grants* are
   held from the start.
-- **Random picks prefer skills this game's classes name.** `skills.systems` is
-  NULL on every catalog row, so the catalog cannot say which game a skill is
-  from - the wizard offers every skill to every game too, and a player simply
-  does not pick W.P. Heavy Military Weapons for a Palladium Fantasy mercenary.
-  A roller did. `skillsNamedByClasses()` reads the skill names a game's own
-  classes quote, and a random pick draws from those first, reaching past them
-  only for what a class requires that its game's classes never name. **Tagging
-  the catalog is the real fix**, and it would change what the wizard offers
-  players, so it is a decision of its own.
+- **Random picks stay inside the game, and prefer skills its classes name.**
+  `skills.systems` says which games print a skill (see
+  [the catalog](catalog.md#which-system-a-catalog-row-belongs-to)), and the
+  generator drops every other game's skills, as the wizard does. Before the
+  catalog was tagged, a roller gave a Palladium Fantasy mercenary W.P. Heavy
+  Military Weapons. Inside the game, `skillsNamedByClasses()` reads the skill
+  names a game's own classes quote, and a random pick draws from those first,
+  reaching past them only for what a class requires that its game's classes
+  never name.
 
 `regression.mjs` sweeps every published class through the generator and the
 create validator: each either builds an NPC the validator accepts or refuses by

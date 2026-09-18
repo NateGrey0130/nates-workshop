@@ -12,6 +12,9 @@ import { resolveKeys } from './catalog-redirects.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
+// The games a skills.systems array may name (parser.js VALID_SYSTEMS).
+const SKILL_GAMES = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
+
 // Every skill name the class references: fixed occ_skills plus every option
 // inside an enumerated choice-group (any of them could be picked, so all must
 // exist). Category-based groups resolve against the catalog at pick time.
@@ -340,12 +343,17 @@ export function buildStubStatements(env, missing, { system, sourceBook }) {
        VALUES (?, ?, ?, ?, ?)`
     ).bind(slug, titleize(slug), system, 'STUB — created by class import, needs stats', book));
   }
+  // A stub skill is tagged with the importing class's game. The class naming it
+  // is the evidence zzzzzzzzzzzzzzzz-tag-skill-systems.sql tagged every other
+  // row by, and an untagged row is offered to every game's picker - the leak
+  // that file closed. A class with no recognised game leaves it NULL.
+  const skillSystems = SKILL_GAMES.includes(system) ? JSON.stringify([system]) : null;
   for (const name of missing.skills) {
     const category = matchCategory(SKILL_PATTERNS, name);
     created.skills.push({ name, category });
     statements.push(env.DB.prepare(
-      'INSERT OR IGNORE INTO skills (name, category, base, per_level, source, source_book) VALUES (?, ?, 0, 0, ?, ?)'
-    ).bind(name, category, 'import', book));
+      'INSERT OR IGNORE INTO skills (name, category, base, per_level, systems, source, source_book) VALUES (?, ?, 0, 0, ?, ?, ?)'
+    ).bind(name, category, skillSystems, 'import', book));
   }
   for (const name of missing.spells) {
     created.spells.push({ name });

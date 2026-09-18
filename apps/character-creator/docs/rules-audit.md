@@ -375,11 +375,15 @@ They are converted anyway, because these scripts are meant to be re-runnable.
 
 ## Setting decisions, not book rules
 
-**Skills and psionic powers are available in every system.** The two lines share
-a multiverse, so a campaign can hold both and a psychic is a psychic whichever
-realm they walk into. Both catalogs are untagged on purpose; gear is not, since
-a laser rifle in a medieval realm is an event in play rather than a creation
-choice. See the README for why tagging skills from `source_book` is a trap.
+**Psionic powers are available in every system; skills are not, since
+2026-09-18.** The psionics chapters stay untagged: the two lines share a
+multiverse, and a psychic is a psychic whichever realm they walk into. Skills
+were untagged on the same grounds until
+`zzzzzzzzzzzzzzzz-tag-skill-systems.sql` tagged each one with the games whose
+books print it, so a Palladium Fantasy character is offered Palladium's skills.
+Gear stays tagged, since a laser rifle in a medieval realm is an event in play
+rather than a creation choice. See [the catalog](catalog.md) for the rule, and
+for why `source_book` alone is still a trap.
 
 ## Play-time values not currently derived
 

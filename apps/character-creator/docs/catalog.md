@@ -9,21 +9,41 @@ Part of the [character creator](../README.md) documentation.
 ## Which system a catalog row belongs to
 
 
-**Skills and psionic powers are deliberately cross-system.** Rifts and Palladium
-Fantasy share a multiverse — rifts open onto the Palladium world — so a campaign
-can legitimately hold both, and a skill or a psychic power is not bound to the
-book it was first printed in. Both catalogs are left untagged on purpose, which
-the pickers already read as "every system".
+**Skills are tagged with the games whose books print them, since 2026-09-18.**
+Until then both skills and psionic powers were deliberately left untagged
+(`untag-cross-system.sql`, PR #62): Rifts and Palladium Fantasy share a
+multiverse, so a skill was not bound to the book it was first printed in. That
+was decided when the catalog held two games. By 2026-09-18 it held four, the
+wizard had never let a class into another game's build, and every skill was
+offered to every game. A Palladium Fantasy mercenary could pick W.P. Heavy
+Military Weapons.
+[`db/zzzzzzzzzzzzzzzz-tag-skill-systems.sql`](../db/zzzzzzzzzzzzzzzz-tag-skill-systems.sql)
+reverses it for skills, and its header states the rule. In short, a skill is
+in a game when:
 
-**Do not tag them from `source_book`.** It looks like an obvious cleanup and it
-is wrong: eighty skills carry a Rifts source book, and roughly half of those are
-Carpentry, Sniper, First Aid, Hunting, Horsemanship, Locksmith and Lore — Faerie.
-Tagging by source would strip them from Palladium characters, including skills
-the Long Bowman's own O.C.C. list grants.
+- a class of that game names it;
+- the game's core skill list prints it;
+- it has a `skill_system_bases` row for that game; or
+- its `source_book` is that game's book.
 
-Untagging the psionics is also what makes a major psionic's "eight powers from
-one category" possible in Palladium at all: the largest category visible there
-held six.
+A skill all four games print stays NULL. 336 skills were tagged and 54 left
+NULL. `regression.mjs` pins the 54, so a new skill that arrives untagged fails
+the run instead of reopening the leak. The class importer's stubs are tagged
+with the importing class's game.
+
+**Still, do not tag from `source_book` alone.** Of the rule's four signals,
+it is the only one that never takes a game away. 118 skills cite RUE p.302-303,
+including Carpentry, Sniper, First Aid and Horsemanship, which Palladium
+Fantasy prints too. Tagging by source would strip them from Palladium
+characters.
+
+**What Palladium Fantasy gave up, on purpose:** Hunting and Locksmith. Its own
+list prints Track & Trap Animals and Pick Locks, and those stay.
+
+Untagging the psionics is what makes a major psionic's "eight powers from one
+category" possible in Palladium at all: the largest category visible there held
+six. The psionics chapters stay untagged apart from the game-specific powers
+`zzzzzzzzzzzzzzz-retag-game-psionics.sql` restores.
 
 **Gear is the exception and stays tagged.** A laser rifle turning up in a
 medieval realm is an event in play, not something every character picks off the
@@ -61,9 +81,10 @@ spell lists.
 | gear, vehicles | `system` | one of `rifts`, `palladium-fantasy`, `nightbane`, `heroes-unlimited`, `both` — **these two carry a SQLite CHECK** (widened by migrations 059 and 060) |
 
 **NULL means unrestricted, everywhere.** That is how `skills.systems` has always
-read, and it is the honest answer when the operator does not know or the book
-covers every system — `both` and *unset* both store NULL rather than inventing a
-restriction.
+read, and it is the honest answer when the book covers every system — `both`
+and *unset* both store NULL rather than inventing a restriction. For skills it
+is no longer the answer for "the operator does not know": an untagged skill is
+offered to all four games, and `regression.mjs` counts them.
 
 **There are FOUR systems as of 2026-09-13, and the last row above is why they
 are split.** `gear.system` and `vehicles.system` are the only two catalog
