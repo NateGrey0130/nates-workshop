@@ -136,9 +136,11 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   // The class's own fixed skills, at the percentages the class or the catalog
   // states - resolveSkill() in the wizard, rule for rule.
   //
-  // A name the class lists TWICE is taken once. Body Fixer's own entry does
-  // this ("duplicate listing in source"), and a second row is a duplicate_skill
-  // violation the validator refuses - the wizard included.
+  // A name the class lists TWICE is taken once, because a second row is a
+  // duplicate_skill violation the validator refuses. The Body Fixer carried
+  // Outdoorsmanship twice until PR #1159 found RUE p.87 prints it once; the
+  // skip stays so a transcription slip like that costs one skill here rather
+  // than a refused NPC.
   const occ = cls.skills?.occ_skills || [];
   for (const s of occ) {
     if (isChoiceGroup(s) || !s?.name || taken.has(norm(s.name))) continue;
