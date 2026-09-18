@@ -1,12 +1,14 @@
 // GET    …/npcs/:npcId — the dossier, plus every entry that mentions them, in
 //        date order. The backlinks are the point: they are what actually
 //        answers "what do we know about him?".
-// PATCH  …/npcs/:npcId — edit the fields.
+// PATCH  …/npcs/:npcId — edit the fields. `character_id` links the dossier to
+//        the G.M.'s statted NPC sheet (migration 071): G.M. only, and only to a
+//        kind = 'npc' character in this campaign; null unlinks.
 // DELETE …/npcs/:npcId — remove the dossier. Its mentions cascade; the notes
 //        themselves are untouched, because the @ in the text is just text.
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
-import { STATUSES, trim, serialiseAliases, parseAliases } from '../npcs.js';
+import { STATUSES, trim, serialiseAliases, parseAliases, forViewer } from '../npcs.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id, { write: false });
@@ -24,7 +26,7 @@ export async function onRequestGet({ request, env, params }) {
      WHERE m.npc_id = ? ORDER BY j.created_at, j.id`
   ).bind(params.npcId).all();
 
-  return json({ npc, mentions: results, can_write: guard.access.isMember });
+  return json({ npc: forViewer(npc, guard.access.isGm), mentions: results, can_write: guard.access.isMember });
 }
 
 export async function onRequestPatch({ request, env, params }) {
@@ -62,6 +64,24 @@ export async function onRequestPatch({ request, env, params }) {
     }
     sets.push('status = ?'); binds.push(b.status);
   }
+  // The statted sheet behind this person. G.M. only: a player can edit a
+  // dossier's prose, but which NPC sheet stands behind it is the G.M.'s
+  // preparation. And only a kind = 'npc' character in THIS campaign - a
+  // player's own character is not somebody's NPC, and another campaign's
+  // sheet is not this table's business.
+  if ('character_id' in b) {
+    if (!guard.access.isGm) return json({ error: 'Only the campaign GM can link a statted NPC' }, 403);
+    if (b.character_id === null) {
+      sets.push('character_id = NULL');
+    } else {
+      const cid = Number.isInteger(Number(b.character_id)) ? Number(b.character_id) : null;
+      const sheet = cid && await env.DB.prepare(
+        "SELECT id FROM characters WHERE id = ? AND campaign_id = ? AND kind = 'npc'"
+      ).bind(cid, params.id).first();
+      if (!sheet) return json({ error: 'character_id must be an NPC sheet in this campaign' }, 400);
+      sets.push('character_id = ?'); binds.push(cid);
+    }
+  }
   if (!sets.length) return json({ error: 'Nothing to update' }, 400);
   sets.push("updated_at = datetime('now')");
 
@@ -69,7 +89,7 @@ export async function onRequestPatch({ request, env, params }) {
     `UPDATE npcs SET ${sets.join(', ')} WHERE id = ? RETURNING *`
   ).bind(...binds, params.npcId).first();
   row.aliases = parseAliases(row.aliases);
-  return json({ npc: row });
+  return json({ npc: forViewer(row, guard.access.isGm) });
 }
 
 export async function onRequestDelete({ request, env, params }) {

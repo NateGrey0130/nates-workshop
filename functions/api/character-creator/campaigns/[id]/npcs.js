@@ -12,6 +12,16 @@ import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 export const STATUSES = ['alive', 'dead', 'unknown', 'never-met'];
 
+// `character_id` (migration 071) is the G.M.'s statted sheet behind a dossier,
+// and a dossier is read by every player in the campaign. The sheet itself is
+// already invisible to them (isHiddenNpc), but its id would still say that the
+// G.M. has statted this person - which is the thing being kept. So it leaves
+// every dossier response for anyone but the G.M.
+export function forViewer(row, isGm) {
+  if (row && !isGm) delete row.character_id;
+  return row;
+}
+
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id, { write: false });
   if (guard.res) return guard.res;
@@ -48,7 +58,10 @@ export async function onRequestGet({ request, env, params }) {
     rowsBinds: binds,
     limit, offset,
   });
-  for (const row of page.results) row.aliases = parseAliases(row.aliases);
+  for (const row of page.results) {
+    row.aliases = parseAliases(row.aliases);
+    forViewer(row, guard.access.isGm);
+  }
   return json(pageBody('npcs', page));
 }
 

@@ -169,11 +169,11 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Ten modules are imported by both the browser and the Workers runtime:
-`js/parser.js`, `js/dice.js`, `js/catalog-fields.js`, `js/compose.js`, and
-`js/psionics.js` (transitively, through compose), `js/language-skills.js`,
-`js/hand-to-hand.js`, `js/leveling.js`, `js/second-form.js` and
-`js/skill-base.js`. `skill-base.js`
+Twelve modules are imported by both the browser and the Workers runtime, or
+written to be: `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`,
+`js/compose.js`, `js/psionics.js` (through compose), `js/language-skills.js`,
+`js/hand-to-hand.js`, `js/leveling.js`, `js/second-form.js`, `js/derive.js`,
+`js/npc-generate.js` (server-only today) and `js/skill-base.js`. `skill-base.js`
 resolves a skill's starting percentage, including one game's own where it
 differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
 character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
@@ -564,6 +564,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs/[npcId]` | GET / PATCH / DELETE | The dossier **and every entry that mentions them, oldest first**; edit; delete (the notes are untouched) |
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
+| `campaigns/[id]/npcs/generate` | POST | **G.M. only.** Roll statted NPCs: `{ class_id, class_variant?, occ_class_id?, occ_class_variant?, level?, count? (1-10), name? }`. Each is a `characters` row with `kind = 'npc'`, owned by the G.M. and invisible to everyone else, written by the same `createCharacter()` a player's character goes through - so it is validated against its class the same way. Dice and choices are `js/npc-generate.js`. Spells, psionics and Talents the class lets the NPC choose are **banked** for the sheet's picks panel; powers it grants are held. A class it cannot build legally is a **422 naming what stopped it** (`code`: `needs_occupation`, `second_form`, `pool_exhausted`, ...) - never a padded pick |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](docs/wizard-and-sheet.md#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?mine=1` for the caller's own, `?limit=`, `?offset=`); create at the starting level — **validated against the class rules, creation-time powers included, pool maxima capped to the class formulas for non-GM creators** — and refused 403 in a closed campaign unless the caller is its GM or already a member |
 | `characters/[id]` | GET / PATCH / DELETE | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule) — and `power_descriptions`, what each HELD power does, keyed by the lowercased name the character holds it under and resolved through `catalog_redirects`. Only this character's powers: the two catalogs' whole description corpus is sixteen times bigger and deliberately stays out of `catalogs`. See [plan 20](docs/plans/20-power-descriptions.md). DELETE removes the character — owner or GM — and **keeps their journal entries**, detaching them to campaign-level first rather than letting the foreign key cascade a player's posts out of a log everyone reads |
