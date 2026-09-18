@@ -1982,6 +1982,176 @@ check('and none of them with ?mine=1',
   check('its G.M. can delete it', removed.status === 200 || removed.status === 204, removed.status);
 }
 
+// ── The NPC generator (js/npc-generate.js, campaigns/:id/npcs/generate) ──────
+//
+// A G.M. rolls statted NPCs from a class. The roll is a pure module; the WRITE
+// is createCharacter(), the path a player's character takes - so the endpoint
+// below is checked through the real route, and the module is swept across
+// every class this database publishes, through the create endpoint's own
+// validator, in-process.
+{
+  const { generateNpc, chooseClassOptions, NpcGap, skillsNamedByClasses } = await import('../js/npc-generate.js');
+  const { validateCharacter } = await import('../../../functions/api/character-creator/_lib/validate-character.js');
+  const { needsOccupation } = await import('../js/parser.js');
+  const { xpTableFor, thresholdFor } = await import('../js/leveling.js');
+  await import('../js/derive.js');  // a classic script: installs globalThis.derive
+  const D = globalThis.derive;
+
+  const gen = (body, who = null) => (who
+    ? apiAs(who, 'POST', `/campaigns/${campaignId}/npcs/generate`, body)
+    : api('POST', `/campaigns/${campaignId}/npcs/generate`, body));
+
+  const refused = await gen({ class_id: cls.id, level: 3 }, 'stranger@example.com');
+  check('only the campaign\'s G.M. can roll an NPC', refused.status === 403, refused.status);
+
+  const rolled = await gen({ class_id: cls.id, level: 3, count: 2, name: 'Checkpoint Guard' });
+  const made = rolled.body.npcs || [];
+  check('the G.M. rolls two level-3 NPCs of a class in one request',
+    rolled.status === 201 && made.length === 2 && made.every((n) => n.level === 3),
+    JSON.stringify(rolled.body).slice(0, 300));
+  check('and each is named from the name given, numbered',
+    made.map((n) => n.name).join('|') === 'Checkpoint Guard 1|Checkpoint Guard 2', made.map((n) => n.name));
+
+  if (made[0]) {
+    const sheet = await api('GET', `/characters/${made[0].id}`);
+    const c = sheet.body.character || {};
+    check('an NPC\'s sheet reads back as an NPC the G.M. owns',
+      sheet.status === 200 && c.kind === 'npc' && c.player_email === me.body.email,
+      JSON.stringify({ status: sheet.status, kind: c.kind, owner: c.player_email }));
+    check('at the level asked for, with the XP that level starts at',
+      c.level === 3 && c.xp === (thresholdFor(xpTableFor(sheet.body.class || {}), 3) ?? c.xp),
+      JSON.stringify({ level: c.level, xp: c.xp }));
+    check('holding every attribute rolled and every O.C.C. skill its class grants',
+      ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'].every((a) => Number.isFinite(c.attributes?.[a]))
+        && (cls.skills?.occ_skills || []).filter((s) => s?.name)
+          .every((s) => (c.skills || []).some((k) => k.name.toLowerCase() === s.name.toLowerCase())),
+      JSON.stringify({ attrs: c.attributes, skills: (c.skills || []).map((k) => k.name) }).slice(0, 300));
+    const hidden = await apiAs('stranger@example.com', 'GET', `/characters/${made[0].id}`);
+    check('and to anyone else it does not exist', hidden.status === 404, hidden.status);
+
+    // The dossier link (migration 071): a plan-16 dossier points at the sheet.
+    const dossier = await api('POST', `/campaigns/${campaignId}/npcs`, { name: 'Sergeant Voss' });
+    const npcDossierId = dossier.body.npc?.id ?? dossier.body.id;
+    const linked = await api('PATCH', `/campaigns/${campaignId}/npcs/${npcDossierId}`, { character_id: made[0].id });
+    check('the G.M. can link a dossier to the NPC sheet behind it',
+      linked.status === 200 && linked.body.npc?.character_id === made[0].id, JSON.stringify(linked.body).slice(0, 200));
+    const toPc = await api('PATCH', `/campaigns/${campaignId}/npcs/${npcDossierId}`, { character_id: charId });
+    check('but not to a player\'s character - only to an NPC sheet in this campaign',
+      toPc.status === 400, toPc.status);
+    const unlinked = await api('PATCH', `/campaigns/${campaignId}/npcs/${npcDossierId}`, { character_id: null });
+    check('and null unlinks it', unlinked.status === 200 && unlinked.body.npc?.character_id === null, unlinked.body.npc);
+    await api('DELETE', `/campaigns/${campaignId}/npcs/${npcDossierId}`);
+  }
+  for (const n of made) await api('DELETE', `/characters/${n.id}`);
+
+  // Named refusals, never a guess. A race whose entry grants no related or
+  // secondary skills is built WITH an occupation, and which one is the G.M.'s.
+  const race = classes.body.classes.find((c) => needsOccupation(c));
+  if (race) {
+    const r = await gen({ class_id: race.id });
+    check('a race that takes an occupation is refused without one, by name',
+      r.status === 422 && r.body.code === 'needs_occupation', JSON.stringify(r.body).slice(0, 200));
+  }
+  // The Nightbane is ALSO a race that takes an occupation, and that refusal
+  // comes first - so it is given one, to reach the refusal this checks.
+  const twoBodies = classes.body.classes.find((c) => c.second_form);
+  if (twoBodies) {
+    const job = needsOccupation(twoBodies)
+      ? classes.body.classes.find((o) => o.category === 'occ' && o.system === twoBodies.system
+          && occAllowedForRace(twoBodies, o).allowed && raceAllowedForOcc(o, twoBodies).allowed)
+      : null;
+    const r = await gen({ class_id: twoBodies.id, occ_class_id: job?.id ?? null });
+    check('a class with a second form is refused, naming it, rather than built with half a body',
+      r.status === 422 && r.body.code === 'second_form', JSON.stringify(r.body).slice(0, 200));
+  }
+
+  // The sweep. Every published class, at level one and at five: the generator
+  // either builds an NPC the create validator ACCEPTS, or refuses by name. A
+  // violation is the generator and the validator disagreeing about what a
+  // character may hold, and a crash is neither - both fail this. No count of
+  // refusals is pinned: a class import can legitimately add one.
+  const all = classes.body.classes;
+  const occs = all.filter((c) => c.category === 'occ');
+  const cat = catalogs.body;
+  const catalogMap = new Map((cat.skills || []).map((r) => [String(r.name).trim().toLowerCase(), r.category]));
+  const byName = (rows) => new Map((rows || []).map((r) => [String(r.name).toLowerCase(), r]));
+  const powerCatalog = { spell: byName(cat.spells), psionic: byName(cat.psionics),
+                         super: byName(cat.superAbilities), talent: byName(cat.talents) };
+  const tally = { built: 0, refused: 0 };
+  const bad = [];
+  // Each game's own skill names, from its classes' raw markdown - the rule the
+  // endpoint applies (skillsNamedByClasses). Read back out of the database the
+  // same way, so this checks the rule against data built from nothing.
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((x) => x.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    return [];
+  };
+  const mdRows = q("SELECT system, markdown FROM imported_classes WHERE status = 'published' AND deleted_at IS NULL");
+  const gameSkillsBy = new Map();
+  for (const sys of new Set(mdRows.map((r) => r.system))) {
+    gameSkillsBy.set(sys, skillsNamedByClasses(mdRows.filter((r) => r.system === sys).map((r) => r.markdown), cat.skills));
+  }
+  let pfPicks = 0;
+  const pfStray = new Set();
+  for (const c of all) {
+    let occ = null;
+    if (needsOccupation(c)) {
+      const fits = occs.filter((o) => o.system === c.system && occAllowedForRace(c, o).allowed
+        && raceAllowedForOcc(o, c).allowed);
+      if (!fits.length) continue;
+      occ = fits[0];
+    }
+    for (const level of [1, 5]) {
+      try {
+        const first = composeClass({ rcc: c, occ, character: {} });
+        const chosen = chooseClassOptions(first, { totems: cat.totems || [] });
+        const totem = chosen.totem ? (cat.totems || []).find((t) => t.slug === chosen.totem) : null;
+        const composed = composeClass({ rcc: c, occ, totem,
+          character: { mos: chosen.mos, abilities: chosen.abilities, totem: chosen.totem } });
+        const at = Math.min(level, xpTableFor(composed).length || 1);
+        const gameSkills = gameSkillsBy.get(c.system) ?? null;
+        const body = generateNpc({ cls: composed, level: at, catalog: cat.skills, derive: D,
+          system: c.system, chosen, powerCatalog, gameSkills });
+        if (c.system === 'palladium-fantasy' && gameSkills) {
+          for (const s of body.skills.filter((k) => k.type !== 'occ')) {
+            pfPicks++;
+            if (!gameSkills.has(s.name.toLowerCase())) pfStray.add(s.name);
+          }
+        }
+        const p = body.pools;
+        const { violations } = validateCharacter({
+          character: { level: at, mos: chosen.mos, totem: chosen.totem, occ_class_id: occ?.id ?? null,
+            attribute_bonuses: body.attribute_bonuses, rolled_bonuses: body.rolled_bonuses,
+            hp_max: p.hp ?? null, sdc_max: p.sdc ?? null },
+          secondForm: {}, cls: composed, skills: body.skills, abilities: chosen.abilities,
+          attributes: body.attributes, catalog: catalogMap, powers: body.powers,
+          pools: { hp_max: p.hp, sdc_max: p.sdc, mdc_max: p.mdc, ppe_max: p.ppe, isp_max: p.isp },
+          enforcePools: true, system: c.system, powerCatalog: body.powers.length ? powerCatalog : null,
+        });
+        if (violations.length) bad.push(`${c.id}@${at}: ${violations.map((v) => v.rule).join(', ')}`);
+        else tally.built++;
+      } catch (e) {
+        if (e instanceof NpcGap) tally.refused++;
+        else bad.push(`${c.id}@${level}: CRASH ${e.message}`);
+      }
+    }
+  }
+  console.log(`      (${all.length} classes: ${tally.built} NPCs built and accepted, ${tally.refused} refused by name)`);
+  check('every published class either builds an NPC its validator accepts, or refuses by name',
+    bad.length === 0 && tally.built > 0, bad.slice(0, 6).join(' | '));
+  // The catalog cannot say which game a skill is from (skills.systems is NULL
+  // on every row), and this is what went wrong before the rule: a Palladium
+  // Fantasy mercenary rolled W.P. Heavy Military Weapons and Language: Gargoyle.
+  // Its random picks now come from the skills Palladium Fantasy classes name.
+  check('a Palladium Fantasy NPC\'s random skill picks are ones Palladium Fantasy classes name',
+    pfPicks > 0 && pfStray.size === 0, `${pfPicks} picks; outside the game: ${[...pfStray].slice(0, 8).join(', ')}`);
+}
+
 // UI-AUDIT F52: the table's rest rates live on the campaign, set by its G.M.
 // A zero is dropped, a pool that is not one is refused, and null clears.
 {

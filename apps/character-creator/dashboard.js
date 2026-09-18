@@ -22,7 +22,7 @@ async function load() {
       api('classes?names=1'),
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
-    D.roster = rosterRes.characters;
+    D.roster = partyFirst(rosterRes.characters);
     D.journal = journalRes.entries;
     D.journalTotal = journalRes.total ?? journalRes.entries.length;
     D.classNames = Object.fromEntries(classesRes.classes.map((c) => [c.id, c.name]));
@@ -64,9 +64,18 @@ function poolsCell(c) {
 // log and their undo exactly as a press on their sheet would, and the note says
 // the G.M. made it. Party-wide initiative stays out: docs/campaign-and-play.md
 // records it as deliberately unbuilt, and this does not reopen it.
+// The G.M.'s statted NPCs (migration 070) ride in the same roster - the server
+// sends them to the G.M. alone - so a fight's hit points are tracked here with
+// the same controls. Listed AFTER the party and tagged, so "the party" still
+// reads as the party.
+function partyFirst(list) {
+  return [...(list || [])].sort((a, b) => (a.kind === 'npc') - (b.kind === 'npc'));
+}
+
 function rosterRowHtml(c) {
   return `<tr id="roster-${c.id}">
-      <td><a href="sheet.html?id=${c.id}">${escHtml(c.name)}</a></td>
+      <td><a href="sheet.html?id=${c.id}">${escHtml(c.name)}</a>${
+        c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}</td>
       <td>${escHtml(D.classNames[c.class_id] || c.class_id)}${c.occ_class_id ? ' ' + escHtml(D.classNames[c.occ_class_id] || c.occ_class_id) : ''}</td>
       <td>${c.level} <span class="muted small">(${c.xp} XP)</span></td>
       <td class="muted small">${escHtml(c.player_email)}</td>
@@ -183,9 +192,12 @@ async function gmUndo(id) {
 async function awardPartyXp() {
   const delta = parseInt($('gm-xp')?.value, 10);
   if (!Number.isFinite(delta) || !delta) { gmMsg('Enter an amount of XP to award.', true); return; }
-  if (!confirm(`Award ${delta} XP to each of the ${D.roster.length} characters in this campaign?`)) return;
+  // The PARTY: the G.M.'s statted NPCs share this roster for hit-point
+  // tracking, and do not earn the party's experience.
+  const party = D.roster.filter((c) => c.kind !== 'npc');
+  if (!confirm(`Award ${delta} XP to each of the ${party.length} characters in this campaign?`)) return;
   const ready = [], failed = [];
-  for (const c of D.roster) {
+  for (const c of party) {
     try {
       const res = await postJson(`characters/${c.id}/xp`, { delta });
       c.xp = res.xp;
@@ -194,7 +206,7 @@ async function awardPartyXp() {
     } catch (err) { failed.push(`${c.name} (${err.message})`); }
   }
   const f = $('gm-xp'); if (f) f.value = '';
-  gmMsg(`Awarded ${delta} XP to ${D.roster.length - failed.length} of ${D.roster.length}.`
+  gmMsg(`Awarded ${delta} XP to ${party.length - failed.length} of ${party.length}.`
     + (ready.length ? ` A level-up is waiting on the sheet of ${ready.join(', ')}.` : '')
     + (failed.length ? ` Failed: ${failed.join('; ')}.` : ''), failed.length > 0);
 }
@@ -207,7 +219,7 @@ async function refreshRoster() {
   if (!campaignId || !D.campaign || document.visibilityState === 'hidden') return;
   try {
     const res = await api('characters?campaign_id=' + campaignId);
-    D.roster = res.characters;
+    D.roster = partyFirst(res.characters);
     const body = $('roster-rows');
     if (body) body.innerHTML = D.roster.map(rosterRowHtml).join('');
   } catch { /* keep what is on screen */ }

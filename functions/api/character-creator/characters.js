@@ -48,7 +48,10 @@ export async function onRequestGet({ request, env }) {
   // would both lose rows and ship the hidden ones to the browser first.
   const conds = ["(characters.kind = 'pc' OR campaigns.gm_email = ?)"], binds = [email];
   if (campaignId) { conds.push('characters.campaign_id = ?'); binds.push(campaignId); }
-  if (mine) { conds.push('characters.player_email = ?'); binds.push(email); }
+  // `mine` is the characters the caller PLAYS - the home screen's list. A G.M.'s
+  // statted NPCs are owned by them and played by nobody, and six rolled bandits
+  // do not belong beside their own character; they are on the campaign page.
+  if (mine) { conds.push("characters.player_email = ? AND characters.kind = 'pc'"); binds.push(email); }
   const where = ' WHERE ' + conds.join(' AND ');
 
   const page = await pagedQuery(env, {
@@ -119,11 +122,32 @@ export async function onRequestPost({ request, env }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  const r = await createCharacter(env, request, email, b);
+  return json(r.body, r.status);
+}
+
+// Validate and save one character, returning { status, body } rather than a
+// Response so a second caller can act on the outcome.
+//
+// There are two callers, and that is the point of it being one function: the
+// POST above, for a player's character, and campaigns/[id]/npcs/generate, for
+// an NPC the G.M. rolled. An NPC is validated against its class, inserted, and
+// has its level picks banked by EXACTLY the code a player's character goes
+// through, so the two cannot drift into different rules.
+//
+// `kind` is never read from the body - a player cannot make their character an
+// NPC, or anything else, by saying so. Only a caller passes it.
+// `bankPowers` are extra pending_power_picks rows to write with the character,
+// in the shape insertPowerGrantStatements takes - the generator banks the
+// spells, psionics and Talents an NPC's class lets it choose. A player's
+// character passes none; the wizard spent them.
+export async function createCharacter(env, request, email, b, { kind = 'pc', bankPowers = [] } = {}) {
+  const out = (body, status) => ({ body, status });
   for (const field of ['campaign_id', 'name', 'class_id']) {
-    if (!b[field]) return json({ error: `Missing required field: ${field}` }, 400);
+    if (!b[field]) return out({ error: `Missing required field: ${field}` }, 400);
   }
   const campaign = await env.DB.prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
-  if (!campaign) return json({ error: 'Campaign not found' }, 404);
+  if (!campaign) return out({ error: 'Campaign not found' }, 404);
 
   // Creating a character in a campaign is how you JOIN it — membership is
   // "owns a character here", so an ungated create was an ungated door onto the
@@ -134,7 +158,7 @@ export async function onRequestPost({ request, env }) {
   if (!campaign.open) {
     const access = await campaignAccess(env, b.campaign_id, email);
     if (!access.isMember) {
-      return json({ error: 'This campaign is closed to new characters — ask its GM to open it' }, 403);
+      return out({ error: 'This campaign is closed to new characters — ask its GM to open it' }, 403);
     }
   }
 
@@ -196,7 +220,7 @@ export async function onRequestPost({ request, env }) {
   // them and no longer knows which half was which.
   if (occId && b.class_id && occId !== b.class_id) {
     const verdict = await occRestrictionFor(env, b.class_id, occId);
-    if (verdict && !verdict.allowed) return json({ error: verdict.reason }, 400);
+    if (verdict && !verdict.allowed) return out({ error: verdict.reason }, 400);
   }
 
   // A class that grants psionics has already answered the question, so a rolled
@@ -269,7 +293,7 @@ export async function onRequestPost({ request, env }) {
     powerCatalog: cls && powerNames.length ? await loadPowerCatalog(env, powerNames, null) : null,
   });
   if (violations.length) {
-    return json({ error: 'This character breaks its class rules', violations }, 422);
+    return out({ error: 'This character breaks its class rules', violations }, 422);
   }
   const row = await env.DB.prepare(
     `INSERT INTO characters (
@@ -278,8 +302,8 @@ export async function onRequestPost({ request, env }) {
        attributes, attribute_bonuses, rolled_bonuses, skills, powers, abilities,
        hp_max, hp_current, sdc_max, sdc_current, mdc_max, mdc_current,
        ppe_max, ppe_current, isp_max, isp_current,
-       bio, combat, saves, armor, notes, second_form
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       bio, combat, saves, armor, notes, second_form, kind
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`
   ).bind(
     b.campaign_id, email, b.name, b.class_id, variant, occId, occVariant, mos, totemKept, tier, tier ? psychicShape : null,
@@ -292,7 +316,7 @@ export async function onRequestPost({ request, env }) {
     p.ppe ?? null, p.ppe ?? null, p.isp ?? null, p.isp ?? null,
     JSON.stringify(b.bio || {}), JSON.stringify(b.combat || {}),
     JSON.stringify(b.saves || {}), JSON.stringify(b.armor || []), b.notes ?? null,
-    JSON.stringify(secondForm)
+    JSON.stringify(secondForm), kind === 'npc' ? 'npc' : 'pc'
   ).first();
 
   const items = (b.items || []).filter((it) => it.item_id || it.custom_name);
@@ -338,6 +362,11 @@ export async function onRequestPost({ request, env }) {
     statements.push(...insertPowerGrantStatements(env, row.id, purchases));
   }
 
+  // The caller's extra grants - a generated NPC's spells, psionics and Talents
+  // to choose, banked for the sheet's picks panel. Empty for a player's
+  // character, whose wizard spent its own.
+  if (bankPowers.length) statements.push(...insertPowerGrantStatements(env, row.id, bankPowers));
+
   if (statements.length) await env.DB.batch(statements);
-  return json({ id: row.id, level, xp, picks_pending: pending }, 201);
+  return out({ id: row.id, level, xp, picks_pending: pending }, 201);
 }
