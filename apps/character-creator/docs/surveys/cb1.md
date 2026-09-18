@@ -12,11 +12,15 @@ and registered but never surveyed.
 ## Page offset
 
 `page_offset: 1` from `scripts/books.json` — cache file page = printed folio + 1.
-`printed_pages: 172`, `cached_range` `p001-p200`, all 200 cached.
+`printed_pages: 192`, `cached_range` `p001-p200`, all 200 cached.
 
-**The PDF has 200 pages and the book has 172.** The tail is a Palladium
-catalogue and order form the book does not number, so the last folio is 172 and
-`printed_pages` says 172 rather than 200. `dag` has the same appended catalogue.
+**The PDF has 200 pages and the book has 192.** The tail is a Palladium
+catalogue and order form the book does not number, so the last folio is 192 (file
+p193) and `printed_pages` says 192 rather than 200. `dag` has the same appended
+catalogue. **This said 172 until 2026-09-18**: the text layer prints the last
+folios with an interior space (`1 91`, `1 92`), and the derived figure stopped
+twenty pages short, in the middle of the monster section. The render of file
+p193 shows 192.
 
 ## The book's authority tables
 
