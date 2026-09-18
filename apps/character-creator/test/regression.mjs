@@ -1733,8 +1733,8 @@ check('a hit on armour the character does not have is refused', noArmor.status =
 // read as text, the Revised core's bullets read as "@". Every row passed the
 // import's own assertions, which counted rows and never read one to its end.
 // fix-super-ability-ocr-text.sql repaired them; this holds the next import to
-// the same shapes. Super abilities only: the other catalogs came through the
-// same OCR and have NOT been swept, so a check there would fail on arrival.
+// the same shapes. The same sweep over spells, psionic powers and talents is
+// the loop at the end of this block.
 {
   const q = (sql) => {
     const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
@@ -1749,7 +1749,7 @@ check('a hit on armour the character does not have is refused', noArmor.status =
 
   let rows = [];
   let err = '';
-  try { rows = q('SELECT name, description FROM super_abilities'); }
+  try { rows = q('SELECT * FROM super_abilities'); }
   catch (e) { err = e.message; }
   check('super ability descriptions are readable for the OCR sweep', rows.length > 0, err || 'no rows');
 
@@ -1761,6 +1761,41 @@ check('a hit on armour the character does not have is refused', noArmor.status =
   check('or in the heading of the entry after it', headingEnd.length === 0, names(headingEnd));
   const junk = rows.filter((r) => /[@{}~|\\<>]/.test(r.description || ''));
   check('and none carries a bullet read as "@" or scan junk', junk.length === 0, names(junk));
+
+  // The digit cipher every text-layer cache carries: 1D6x10 set as "!D6xlO",
+  // 40ft as "4O0ft". Read across EVERY text column, because the import files
+  // dice into `damage` as often as into the description. Case-sensitive on
+  // purpose - the note on the cipher says LIKE over-reports it.
+  const CIPHER = /!D\d|\dD\dx[lO!][O0-9]|\d[OQ]\d/;
+  const inCipher = (r) => Object.values(r).some((v) => typeof v === 'string' && CIPHER.test(v));
+  const saCipher = rows.filter(inCipher);
+  check('and no super ability carries a number in the digit cipher', saCipher.length === 0, names(saCipher));
+
+  // The same sweep, run over three more catalogs on 2026-09-18, found 46 spells,
+  // 1 psionic power and 2 more super abilities: Mystic Russia's "Level Two"
+  // headings read onto the last spell of each level, a psionic power ending in
+  // the next section's heading, page numbers, the cipher.
+  // zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql repaired them. Skills are not
+  // read here: their notes are written by hand, not scanned. ONE ending that
+  // looks like a page number is printed that way - the last cell of Crawling
+  // Bones' table - and is named rather than tolerated.
+  const PRINTED_NUMBER_END = new Set(['Bone: Crawling Bones']);
+  const NEXT_SECTION = / Level (One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen)$| (Sensitive|Physical|Healing|Super) Psionics$/;
+  for (const [table, label] of [['spells', 'spell'], ['psionic_powers', 'psionic power'], ['talents', 'talent']]) {
+    let trows = [];
+    let terr = '';
+    try { trows = q(`SELECT * FROM ${table}`); }
+    catch (e) { terr = e.message; }
+    check(`${label} descriptions are readable for the OCR sweep`, trows.length > 0, terr || 'no rows');
+    const tPage = trows.filter((r) => / \d{1,3}$/.test(r.description || '') && !PRINTED_NUMBER_END.has(r.name));
+    check(`no ${label} description ends in a printed page number`, tPage.length === 0, names(tPage));
+    const tNext = trows.filter((r) => NEXT_SECTION.test(r.description || ''));
+    check(`or in the heading of the ${label} section after it`, tNext.length === 0, names(tNext));
+    const tJunk = trows.filter((r) => /[@{}~|\\<>]/.test(r.description || ''));
+    check(`and no ${label} description carries scan junk`, tJunk.length === 0, names(tJunk));
+    const tCipher = trows.filter(inCipher);
+    check(`and no ${label} carries a number in the digit cipher`, tCipher.length === 0, names(tCipher));
+  }
 }
 
 const events = await api('GET', `/characters/${charId}/events`);
