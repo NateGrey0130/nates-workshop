@@ -2163,6 +2163,15 @@ body.show-play-keys .play-keys { display: block; }
    every width without depending on rule order. */
 .tabbar.codex-tabs { display: flex; }
 
+/* AND THEY WRAP AT EVERY WIDTH, not only under 620px. The sheet's bar wraps on
+   a phone and is hidden above 820px, so the band between never mattered much
+   there. Here the bar is always shown, and a seventh tab made it 759px wide:
+   measured 2026-09-17, a 768px tablet gives the strip 706 and Talents sat 53px
+   off the edge with a scrollbar as the only hint - the failure the phone rule
+   above was written to end, one breakpoint up. Wrapping is inert wherever the
+   tabs fit on one row, which is every desktop. Plan 22. */
+.tabbar.codex-tabs { flex-wrap: wrap; }
+
 .codex-toolbar {
   display: flex; align-items: center; gap: 8px;
   margin: 10px 0 4px; flex-wrap: wrap;

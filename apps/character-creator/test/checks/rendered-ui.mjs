@@ -1535,6 +1535,14 @@ export function run() {
       /\.tabbar\.codex-tabs \{ display: flex; \}/.test(css),
       '.tabbar is display:none above 820px and the codex would show no tabs there');
 
+    // Plan 22. `.tabbar` wraps only under 620px, and seven tabs need 759px: at
+    // a 768px tablet the strip is 706, so the last tab sat behind a horizontal
+    // scrollbar. Measured in a browser 2026-09-17; this only pins the rule that
+    // fixed it, and a text check cannot tell you the bar still fits - look.
+    check('and wrap at every width, so a tablet cannot scroll one out of sight',
+      /\.tabbar\.codex-tabs \{ flex-wrap: wrap; \}/.test(css),
+      'above 620px the codex tab bar scrolls sideways again and hides its last tab');
+
     // Same lesson as .power-toggle on the sheet: the shared print block hides
     // every button, and the codex row IS a button. A codex is a reference
     // document, so unlike the sheet it prints its prose.

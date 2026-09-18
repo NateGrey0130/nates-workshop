@@ -98,6 +98,7 @@ binding**, as shared infrastructure rather than a character-creator private.
 | 19 | [G.M. grants](19-gm-grants.md) — skills, spells, psionics, abilities and stats a table hands out, entered by the player and recorded with who and why | — |
 | 20 | [Reading what a power does](20-power-descriptions.md) — descriptions for held powers ride with the character and expand inline; a read-only codex covers the rest | — · **both halves built**, Book of Magic backfill outstanding |
 | 21 | [Gear and vessels, read and owned](21-gear-and-vessels.md) — a codex section per catalog, held-item stat blocks on the sheet, and a table for the vessel a character owns | 20 · **a RECORD, not a specification** — written after the work, because decisions made from measurements need the measurements written down |
+| 22 | [Super abilities and Talents in the codex](22-codex-powers-and-talents.md) — two more tabs; Talents travel whole, super abilities as a list whose text is fetched when a row is opened, because that one catalog is 323 KB gzipped | 20 · **Talents built, super abilities to follow** |
 
 It is a specification rather than a record, so read it the way plans 13–16 were
 read before they were built: the rejected alternatives in it were rejected on

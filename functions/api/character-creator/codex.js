@@ -1,8 +1,9 @@
 // GET /api/character-creator/codex?section=<name> — one catalog, WITH the text
 // and the stat block that say what a thing is.
 //
-// Six sections: `spells`, `psionics`, `gear`, `vehicles`, and since UI-AUDIT F48
-// `skills` and `classes`.
+// Seven sections: `spells`, `psionics`, `gear`, `vehicles`, since UI-AUDIT F48
+// `skills` and `classes`, and since docs/plans/22-codex-powers-and-talents.md
+// `talents`.
 //
 // The second half of docs/plans/20-power-descriptions.md, widened to the two
 // catalogs that had no reader at all. The first half put a held power's
@@ -32,8 +33,10 @@
 //
 // `section` is REQUIRED rather than defaulting to the old spells+psionics body.
 // A default would be a second contract to keep working, and this site has one
-// client. A missing or unknown section is a 400 naming the four, which is a
-// better failure than silently serving the wrong catalog.
+// client. A missing or unknown section is a 400 naming every section there is
+// (it prints the keys of SECTIONS, so that list cannot go stale the way a count
+// written here did), which is a better failure than silently serving the wrong
+// catalog.
 //
 // LIST-THEN-DETAIL WAS CONSIDERED AND REJECTED for `vehicles`: sending the 127
 // vessels alone is 37.6 KB and fetching each one's locations and weapons on
@@ -76,8 +79,8 @@ const SECTIONS = {
   // to hold both catalogs, so it could label the tabs from what it had. Now it
   // holds none until you click one, and a tab bar that fills its numbers in as
   // you visit tabs reads like a page still loading. One tiny fetch on open
-  // keeps the labels honest and complete from the first paint, and it is four
-  // COUNT(*)s rather than a fifth catalog.
+  // keeps the labels honest and complete from the first paint, and it is one
+  // COUNT(*) per tab rather than another catalog.
   index: async (env) => ({
     counts: (await env.DB.prepare(
       `SELECT (SELECT count(*) FROM spells)         AS spells,
@@ -85,6 +88,7 @@ const SECTIONS = {
               (SELECT count(*) FROM gear)           AS gear,
               (SELECT count(*) FROM vehicles)       AS vehicles,
               (SELECT count(*) FROM skills)         AS skills,
+              (SELECT count(*) FROM talents)        AS talents,
               (SELECT count(*) FROM imported_classes
                  WHERE status = 'published' AND deleted_at IS NULL) AS classes`
     ).first()),
@@ -175,6 +179,24 @@ const SECTIONS = {
       })).sort((a, b) => String(a.name).localeCompare(String(b.name))),
     };
   },
+
+  // Nightbane Talents, whole (plan 22). BOTH costs travel, for the reason the
+  // table exists at all (migration 063): a Talent is paid for once to HAVE and
+  // again every time it is USED, and a reader shown one number is shown the
+  // wrong one. The gates - level, form, prerequisite - come too, because a
+  // player reading ahead wants to know whether they can take it yet.
+  //
+  // Sent with its descriptions, unlike the section plan 22 adds after it: 25
+  // rows carry 23.6 KB of text (production, 2026-09-17), which is well inside
+  // what every other section here already pays on tab open.
+  talents: async (env) => ({
+    talents: (await env.DB.prepare(
+      `SELECT name, tier, acquire_ppe, ppe, ppe_note, min_character_level,
+              form_required, prerequisite, range, duration, saving_throw,
+              description, variant_note, system, source_book
+       FROM talents ORDER BY tier, name`
+    ).all()).results,
+  }),
 
   // THREE tables, because a vessel is not a row: M.D.C. arrives BY LOCATION and
   // weapon systems arrive as a numbered list. They are NESTED into their vessel
