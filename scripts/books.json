@@ -110,9 +110,9 @@
       "aliases": [],
       "source_pdf": "595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
-      "printed_pages": 172,
+      "printed_pages": 192,
       "page_offset": 1,
-      "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number; the last folio is 172."
+      "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number. The last folio is 192 (file p193, the Zavor), read off a render on 2026-09-18; this said 172 until then. Its one reader, cacheCoverage, passes either way (all 200 pages are cached), but a reader scoping the book by it stopped twenty pages short, in the middle of the monsters. The cache manifest records 172 as well; the text layer prints the late folios with an interior space ('1 91', '1 92')."
     },
 
     "dag": {
