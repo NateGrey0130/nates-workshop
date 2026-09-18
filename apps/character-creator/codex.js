@@ -208,7 +208,64 @@ const SECTIONS = [
     detail: (r) => 'codex?section=super-ability&name=' + encodeURIComponent(r.name),
     detailText: (res) => (res['super-ability'] || {}).description,
   },
+  // The named people the books stat (migration 072). The book's own numbers
+  // for one person, then what it hits with (stat_attacks), then its prose. A
+  // G.M. puts one in a campaign from the campaign page's People tab.
+  {
+    id: 'notables',
+    label: 'Notable NPCs',
+    key: (r) => String(r.slug).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => r.title || r.occ || '',
+    cost: (r) => (r.level ? `Level ${r.level}` : ''),
+    stats: (r) => [['Real name', r.real_name], ['Race', r.race], ['Occupation', r.occ],
+                   ['Alignment', r.alignment], ['Age', r.age],
+                   ['Attributes', attributeLine(r.attributes)],
+                   ['Hit points', r.hp], ['S.D.C.', r.sdc], ['M.D.C.', r.mdc],
+                   ['P.P.E.', r.ppe], ['I.S.P.', r.isp], ['A.R.', r.ar],
+                   ['Horror Factor', r.horror_factor], ['Combat', combatLine(r.combat)]],
+    extra: (r) => notableSkillsHtml(r) + notableAttacksHtml(r),
+    notes: (r) => [r.bonuses_note && `Bonuses: ${r.bonuses_note}`,
+                   r.skills_note && `Other skills: ${r.skills_note}`,
+                   r.natural_abilities && `Natural abilities: ${r.natural_abilities}`,
+                   r.magic && `Magic: ${r.magic}`, r.psionics && `Psionics: ${r.psionics}`,
+                   r.super_powers && `Super powers: ${r.super_powers}`,
+                   r.cybernetics && `Cybernetics: ${r.cybernetics}`,
+                   r.weapons_and_equipment && `Weapons and equipment: ${r.weapons_and_equipment}`,
+                   r.disposition && `Disposition: ${r.disposition}`],
+    hay: (r) => `${r.name} ${r.real_name || ''} ${r.title || ''} ${r.occ || ''} ${r.source_book || ''}`,
+  },
 ];
+
+// A notable NPC's eight attributes on one line, in the sheet's order and with
+// the book's abbreviations.
+const ATTR_LABELS = [['IQ', 'I.Q.'], ['ME', 'M.E.'], ['MA', 'M.A.'], ['PS', 'P.S.'],
+                     ['PP', 'P.P.'], ['PE', 'P.E.'], ['PB', 'P.B.'], ['Spd', 'Spd.']];
+function attributeLine(a) {
+  if (!a || typeof a !== 'object') return '';
+  return ATTR_LABELS.filter(([k]) => a[k] != null).map(([k, label]) => `${label} ${a[k]}`).join(', ');
+}
+// The combat totals as the book prints them: attacks, then each bonus signed.
+const COMBAT_LABELS = [['attacks', 'attacks per melee'], ['initiative', 'initiative'], ['strike', 'strike'],
+                       ['parry', 'parry'], ['dodge', 'dodge'], ['roll', 'roll'], ['pull', 'pull punch'],
+                       ['disarm', 'disarm'], ['entangle', 'entangle'], ['damage', 'damage']];
+function combatLine(c) {
+  if (!c || typeof c !== 'object') return '';
+  return COMBAT_LABELS.filter(([k]) => c[k] != null)
+    .map(([k, label]) => (k === 'attacks' ? `${c[k]} ${label}` : `${c[k] >= 0 ? '+' : ''}${c[k]} ${label}`))
+    .join(', ');
+}
+function notableSkillsHtml(r) {
+  if (!Array.isArray(r.skills) || !r.skills.length) return '';
+  return `<p class="small"><b>Skills:</b> ${r.skills
+    .map((s) => `${escHtml(s.name)} ${escHtml(s.pct)}%`).join(', ')}</p>`;
+}
+function notableAttacksHtml(r) {
+  if (!Array.isArray(r.attacks) || !r.attacks.length) return '';
+  return `<ul class="small codex-attacks">${r.attacks.map((a) => `<li><b>${escHtml(a.name)}</b>${
+    a.damage ? ` — ${escHtml(a.damage)}${a.is_mega_damage && !/M\.?D/.test(a.damage) ? ' M.D.' : ''}` : ''}${
+    a.range ? `, range ${escHtml(a.range)}` : ''}${a.note ? ` (${escHtml(a.note)})` : ''}</li>`).join('')}</ul>`;
+}
 
 const byId = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
 

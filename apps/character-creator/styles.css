@@ -2249,6 +2249,9 @@ body.show-play-keys .play-keys { display: block; }
 .codex-weapon { margin: 0 0 8px 10px; }
 .codex-weapon-name { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 2px; }
 .codex-weapon .codex-stats { margin-bottom: 0; }
+/* A notable NPC's attacks (stat_attacks). The browser's default list indent put
+   the bullets outside the entry's left rule; this keeps them inside it. */
+.codex-attacks { margin: 6px 0; padding-left: 18px; }
 
 /* pre-wrap for the same reason .power-desc uses it: the catalog holds the
    book's own paragraph breaks, and escHtml plus pre-wrap shows them without

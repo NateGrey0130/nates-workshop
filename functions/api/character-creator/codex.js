@@ -4,7 +4,8 @@
 // Eight sections: `spells`, `psionics`, `gear`, `vehicles`, since UI-AUDIT F48
 // `skills` and `classes`, and since docs/plans/22-codex-powers-and-talents.md
 // `talents` and `super-abilities` - the last with a ninth route beside it,
-// `super-ability`, for the reason under ONE SECTION CROSSED THE LINE below.
+// `super-ability`, for the reason under ONE SECTION CROSSED THE LINE below -
+// and `notables`, the named people the books stat (migration 072).
 //
 // The second half of docs/plans/20-power-descriptions.md, widened to the two
 // catalogs that had no reader at all. The first half put a held power's
@@ -107,6 +108,7 @@ const SECTIONS = {
               (SELECT count(*) FROM skills)         AS skills,
               (SELECT count(*) FROM talents)        AS talents,
               (SELECT count(*) FROM super_abilities) AS "super-abilities",
+              (SELECT count(*) FROM notable_npcs)   AS notables,
               (SELECT count(*) FROM imported_classes
                  WHERE status = 'published' AND deleted_at IS NULL) AS classes`
     ).first()),
@@ -253,6 +255,31 @@ const SECTIONS = {
   // here rather than sent as three flat arrays — it is smaller (1,873 repeated
   // `vehicle_slug` values do not travel) and it is the shape a renderer wants,
   // so no client has to re-implement the grouping.
+  // The named people the books stat (migration 072), each with the attacks its
+  // stat block lists (stat_attacks, migration 073) folded in, in printed order.
+  // Small - one row per person a book names - so the whole stat block travels
+  // and there is no list/detail split. The JSON columns are decoded here so the
+  // client does not have to know they were ever text.
+  notables: async (env) => {
+    const [rows, attacks] = await Promise.all([
+      env.DB.prepare('SELECT * FROM notable_npcs ORDER BY name').all(),
+      env.DB.prepare(
+        `SELECT owner_slug, name, damage, is_mega_damage, range, note
+         FROM stat_attacks WHERE owner_kind = 'notable_npc' ORDER BY owner_slug, sort, id`
+      ).all(),
+    ]);
+    const parse = (v, fallback) => { try { return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
+    const bySlug = new Map((rows.results || []).map((r) => [r.slug, {
+      ...r, attributes: parse(r.attributes, {}), combat: parse(r.combat, {}),
+      skills: parse(r.skills, []), attacks: [],
+    }]));
+    for (const a of attacks.results || []) {
+      const { owner_slug, ...rest } = a;
+      bySlug.get(owner_slug)?.attacks.push(rest);
+    }
+    return { notables: [...bySlug.values()] };
+  },
+
   vehicles: async (env) => {
     const [vehicles, locations, weapons] = await Promise.all([
       env.DB.prepare(

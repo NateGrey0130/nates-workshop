@@ -489,6 +489,74 @@ export const CATALOGS = {
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
+
+  // The named people the books stat (migration 072). A G.M. copies one into a
+  // campaign as a kind = 'npc' character, so the structured fields are the ones
+  // a sheet reads and the rest is the book's prose. Attacks are stat_attacks
+  // rows (migration 073), which this form does not edit - the vessels'
+  // location rows are the precedent.
+  //
+  // NO `MERGE_REFS` ENTRY: nothing references a notable NPC by slug except its
+  // own stat_attacks rows and the `notable:<slug>` class id of a campaign copy,
+  // and a copy is deliberately a copy - renaming the catalog row must not
+  // reach into a campaign.
+  notableNpcs: {
+    table: 'notable_npcs',
+    label: 'Notable NPCs',
+    displayField: 'name',
+    uniqueField: 'slug',
+    hasSource: false,
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true,
+        help: 'What the book calls them - "Power Master", "Mayor Gwen Severson".' },
+      { name: 'slug', label: 'Slug', type: 'text', required: true,
+        help: 'The portable key. A campaign copy records it as class_id notable:<slug>.' },
+      { name: 'real_name', label: 'Real name', type: 'text' },
+      { name: 'title', label: 'Title', type: 'text' },
+      { name: 'system', label: 'System', type: 'select',
+        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+      { name: 'race', label: 'Race', type: 'text' },
+      { name: 'occ', label: 'O.C.C. / occupation', type: 'text',
+        help: 'As printed - "24th level Lord Magus". Not a class id: the book\'s numbers '
+            + 'are this person\'s, and no class rules are applied over them.' },
+      { name: 'level', label: 'Level', type: 'int' },
+      { name: 'alignment', label: 'Alignment', type: 'text' },
+      { name: 'age', label: 'Age', type: 'text' },
+      { name: 'height', label: 'Height', type: 'text' },
+      { name: 'weight', label: 'Weight', type: 'text' },
+      { name: 'attributes', label: 'Attributes', type: 'kv',
+        help: 'JSON with the sheet\'s eight keys: {"IQ":14,"ME":12,"MA":10,"PS":18,"PP":15,"PE":16,"PB":11,"Spd":22}' },
+      { name: 'hp', label: 'Hit points', type: 'int' },
+      { name: 'sdc', label: 'S.D.C.', type: 'int' },
+      { name: 'mdc', label: 'M.D.C.', type: 'int' },
+      { name: 'ppe', label: 'P.P.E.', type: 'int' },
+      { name: 'isp', label: 'I.S.P.', type: 'int' },
+      { name: 'ar', label: 'A.R.', type: 'int' },
+      { name: 'horror_factor', label: 'Horror Factor', type: 'int' },
+      { name: 'combat', label: 'Combat', type: 'kv',
+        help: 'JSON with the sheet\'s combat keys, as the book totals them: '
+            + '{"attacks":5,"initiative":2,"strike":3,"parry":4,"dodge":4,"roll":3,"pull":3}' },
+      { name: 'bonuses_note', label: 'Other bonuses', type: 'longtext',
+        help: 'What the combat block cannot hold - saves, "+2 to strike with a sword".' },
+      { name: 'skills', label: 'Skills', type: 'json_list', of: { name: 'string', pct: 'count' },
+        help: 'Percentile skills: [{"name":"Pilot Hovercraft","pct":88}]. W.P.s and '
+            + 'Hand to Hand go in the note below.' },
+      { name: 'skills_note', label: 'Other skills', type: 'longtext' },
+      { name: 'natural_abilities', label: 'Natural abilities', type: 'longtext' },
+      { name: 'magic', label: 'Magic', type: 'longtext' },
+      { name: 'psionics', label: 'Psionics', type: 'longtext' },
+      { name: 'super_powers', label: 'Super powers', type: 'longtext' },
+      { name: 'cybernetics', label: 'Cybernetics', type: 'longtext' },
+      { name: 'weapons_and_equipment', label: 'Weapons and equipment', type: 'longtext' },
+      { name: 'money', label: 'Money', type: 'text' },
+      { name: 'disposition', label: 'Disposition', type: 'longtext' },
+      { name: 'allies', label: 'Allies', type: 'longtext' },
+      { name: 'enemies', label: 'Enemies', type: 'longtext' },
+      { name: 'description', label: 'Description', type: 'longtext',
+        help: 'A short factual paraphrase citing the printed page - never the book\'s own sentences.' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
 };
 
 export const CATALOG_KEYS = Object.keys(CATALOGS);

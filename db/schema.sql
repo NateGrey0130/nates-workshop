@@ -1158,6 +1158,75 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '068-morphus-characteristics.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'morphus_characteristics');
 
+-- The named people the books stat, one row each: a catalog a G.M. copies into
+-- a campaign as a kind = 'npc' character (campaigns/:id/npcs/from-notable).
+-- The book's FIXED numbers for one person, structured where a sheet reads them
+-- (attributes, pools, combat, skills as JSON) and prose where the book writes
+-- prose. Migration 072, which explains the filing rule and every choice.
+CREATE TABLE IF NOT EXISTS notable_npcs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,                   -- what the book calls them: "Power Master"
+  real_name TEXT,
+  title TEXT,                           -- "Mayor", "Prime Minister of Free Quebec"
+  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both')),
+  race TEXT,
+  occ TEXT,                             -- as printed: "24th level Lord Magus"
+  level INTEGER,
+  alignment TEXT,
+  age TEXT,
+  height TEXT,
+  weight TEXT,
+  attributes TEXT,                      -- JSON { IQ, ME, MA, PS, PP, PE, PB, Spd }
+  hp INTEGER,
+  sdc INTEGER,
+  mdc INTEGER,
+  ppe INTEGER,
+  isp INTEGER,
+  ar INTEGER,
+  horror_factor INTEGER,
+  combat TEXT,                          -- JSON, the sheet's combat keys: attacks, strike, ...
+  bonuses_note TEXT,                    -- what the combat block cannot hold
+  skills TEXT,                          -- JSON [{ name, pct }]
+  skills_note TEXT,
+  natural_abilities TEXT,
+  magic TEXT,                           -- prose, by decision - not catalog links
+  psionics TEXT,
+  super_powers TEXT,
+  cybernetics TEXT,
+  weapons_and_equipment TEXT,
+  money TEXT,
+  disposition TEXT,
+  allies TEXT,
+  enemies TEXT,
+  description TEXT,                     -- a short cited paraphrase, never the book's prose
+  source_book TEXT
+);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '072-notable-npcs.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'notable_npcs');
+
+-- A stat block's attacks, for any owner: 'notable_npc' now, 'creature' when
+-- the bestiary lands. No foreign key, gear.vehicle_slug's reason. Migration 073.
+CREATE TABLE IF NOT EXISTS stat_attacks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_kind TEXT NOT NULL,
+  owner_slug TEXT NOT NULL,
+  name TEXT NOT NULL,
+  damage TEXT,
+  is_mega_damage INTEGER NOT NULL DEFAULT 0,
+  range TEXT,
+  note TEXT,
+  sort INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (owner_kind, owner_slug, name)
+);
+CREATE INDEX IF NOT EXISTS idx_stat_attacks_owner ON stat_attacks (owner_kind, owner_slug);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '073-stat-attacks.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'stat_attacks');
+
 -- ═══════════════════════════════════════════════════════════════════
 -- Migration seeding. The CREATEs above already contain the columns that
 -- db/migrations/*.sql add, so a database built from this file is current
