@@ -13,6 +13,9 @@
 > is true again. Status for any finding lives under its own heading; this line
 > deliberately does not count them.
 >
+> **Adjusted 2026-09-19.** The line above stopped being true when `F35` was
+> filed at the foot of this file. Read under each heading for what is open.
+>
 > **Two that misread, in opposite directions.** `F12`, `F16` and `F19` close as
 > **moot** in a retirement table roughly 1,300 lines from their headings, so
 > reading only under the heading reports three open that are not. And `F14` —
@@ -954,3 +957,73 @@ it.**
 - **F33** — low — `Gas Mask` and `Gas Mask (human-size)` are the same mask — Taken, 2026-09-06 (`zzzzzz-ingestion-f33-gas-mask.sql`), and it does one thing — full text in `INGESTION-AUDIT.closed.md` under its own `### F33` heading.
 
 - **F34** — low — `Gas Mask and Air Filter` exists twice, and the note saying so is itself wrong — Adjusted 2026-09-06 and RE-SCOPED before being taken. This finding read the — full text in `INGESTION-AUDIT.closed.md` under its own `### F34` heading.
+
+## Filed 2026-09-19, from F23's own note
+
+### F35 — low — `claude_usage` records how many tokens a call processed, and cannot say what it cost
+
+**Filed on Nate's word, 2026-09-19**, from the paragraph in `F23` that ends
+*"Worth its own number if you want the ledger to answer cost rather than
+volume"* (this file, under the `F23` heading). He asked for the number and for
+the columns that paragraph names. Filed here and taken in a separate PR, as
+`audit-menu` → *When not to* requires.
+
+**What is true today, each read 2026-09-19.**
+
+- `claude_usage` (`db/schema.sql:62`) has `input_tokens` and `output_tokens` and
+  nothing about the prompt cache.
+- Three places write it. `scripts/extract-class.mjs:307` stores `input_tokens`
+  as the SUM of fresh, cache-write and cache-read tokens, and prints the split
+  to the console, where nothing keeps it. `functions/api/_lib/claude-client.js:117`
+  (the Pages proxy and the campaign Ask) and `workers/pick3cut5-room/src/anthropic.js:69`
+  store `usage.input_tokens` alone, which counts only the UNCACHED part of a
+  prompt.
+- Only the extractor sends a cache breakpoint: `git grep -n cache_control -- functions workers apps scripts`
+  returns `scripts/extract-class.mjs:266` and no other code, 2026-09-19. So the
+  other two writers' rows are complete today, and would undercount the day
+  either gained one.
+- Production holds **28 rows**, and **one** involved the cache — the single
+  `cc-extract-class` row, 2026-08-28, 21,581 input tokens.
+  (`q.mjs --remote`, grouped by `endpoint`, 2026-09-19.)
+
+**Why it matters, as `F23` put it.** A cached read bills at 0.1x and a cache
+write at 1.25x, so an `input_tokens` of 21,581 is three different prices and the
+row cannot say which. The table answers *how much* and not *how much it cost*.
+
+**Proposal:** a migration adding two nullable INTEGER columns to `claude_usage`,
+`cache_write_tokens` and `cache_read_tokens`, taken from the response's
+`usage.cache_creation_input_tokens` and `usage.cache_read_input_tokens`. Both
+Pages-side writers fill them: the extractor (which already computes both) and
+`recordUsage` in `claude-client.js`. That second writer also sums them into
+`input_tokens` the way the extractor does, so the column means the same thing
+from every writer. NULL means the response carried no figure; 0 means it said
+zero. `SETUP.md`'s spend queries (around line 545) gain the two columns. The
+five schema places per the `schema-change` skill. **Evidence:** the three
+writers and the schema were read 2026-09-19; the row counts are from
+`q.mjs --remote` the same day. **Not measured:** whether the proxy's callers
+will ever send a breakpoint.
+
+**Posture: record only.** Nothing reads these on a request path, nothing caps
+or blocks on them, and `input_tokens` keeps its current meaning. A missing
+column must not break a call: both writers are fail-open already
+(`claude-client.js:97`, *"metering that can break the call it measures"*),
+and that stays.
+
+**Not proposed: the Pick 3 Cut 5 Worker.** It sends no breakpoint, so its
+rows are complete as they stand. And a merge does not deploy it — the
+`pick3cut5` skill and `SETUP.md` say it ships by hand — so changing it costs a
+separate deploy for no row that exists. If it ever gains a breakpoint, this
+finding's proposal applies to it unchanged. This is a deliberate drop, not a
+deferral.
+
+**Confidence: high** that the table cannot express cost, because the schema has
+no such column. **Low on value**: one row in production ever carried cached
+tokens, so the columns record almost nothing until extraction runs regularly
+again. What would raise it: a second book extracted through
+`extract-class.mjs`, or a breakpoint added to any proxy caller.
+
+**Ongoing cost:** two columns in five places, once, and every future writer of
+`claude_usage` has two more fields to fill, each of which fails silent (NULL)
+when forgotten. **The case for declining** is that one row in the table's life
+would have used them. Nate has asked for it anyway, on the grounds `F23` gives:
+the ledger should answer cost.
