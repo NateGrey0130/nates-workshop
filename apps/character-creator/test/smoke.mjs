@@ -9396,6 +9396,28 @@ section('Access JWT verification');
   const askSrc = readFileSync(join(fnDir, 'character-creator', 'campaigns', '[id]', 'ask.js'), 'utf8');
   check('and so does the campaign Ask', /recordUsage\(/.test(askSrc));
 
+  // What a call COST, not only its tokens (INGESTION-AUDIT F35, migration 077).
+  // Run against a fake D1 rather than read as text: the row is the contract.
+  {
+    const { recordUsage } = await import('../../../functions/api/_lib/claude-client.js');
+    const rows = [];
+    const env = { DB: { prepare: (sql) => ({ bind: (...args) => ({ run: async () => rows.push({ sql, args }) }) }) } };
+    const reply = (usage) => ({ status: 200, text: JSON.stringify({ model: 'm', usage }) });
+    await recordUsage(env, { email: 'a@b', endpoint: 'proxy', model: 'm',
+      upstream: reply({ input_tokens: 100, output_tokens: 7, cache_creation_input_tokens: 900, cache_read_input_tokens: 4000 }) });
+    await recordUsage(env, { email: 'a@b', endpoint: 'proxy', model: 'm',
+      upstream: reply({ input_tokens: 100, output_tokens: 7 }) });
+    const [cached, plain] = rows.map((r) => r.args);
+    check('a cached call records its total input and the split beside it',
+      /cache_write_tokens, cache_read_tokens/.test(rows[0]?.sql || '')
+        && cached?.[3] === 5000 && cached?.[6] === 900 && cached?.[7] === 4000);
+    check('and a call with no cache records NULL for both, not zero',
+      plain?.[3] === 100 && plain?.[6] === null && plain?.[7] === null);
+    const extractor = readFileSync(join(repoRoot, 'scripts', 'extract-class.mjs'), 'utf8');
+    check('the extractor writes the same two columns',
+      /cache_write_tokens, cache_read_tokens\) `/.test(extractor));
+  }
+
   // Every remaining Claude call. Extraction sends a whole PDF page and is the
   // most expensive call in the repo; it was also the only one with no number
   // attached, which made "what did this book cost" unanswerable while the

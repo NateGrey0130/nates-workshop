@@ -64,11 +64,16 @@ CREATE TABLE IF NOT EXISTS claude_usage (
   email TEXT,                            -- Cloudflare Access identity; NULL on local dev
   endpoint TEXT NOT NULL,                -- 'proxy' | 'campaign-ask' | ...
   model TEXT,
-  input_tokens INTEGER,
+  input_tokens INTEGER,                  -- everything the call processed, cached or not
   output_tokens INTEGER,
   status INTEGER,                        -- upstream HTTP status; a 4xx/5xx row is a
                                          -- failed call that still cost an attempt
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- The cached part of input_tokens, split by how it bills: a write at 1.25x,
+  -- a read at 0.1x. NULL = the response carried no figure. Migration 077,
+  -- INGESTION-AUDIT F35.
+  cache_write_tokens INTEGER,
+  cache_read_tokens INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_claude_usage_email ON claude_usage (email, created_at);
 
@@ -1635,6 +1640,12 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'open');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '038-claude-usage.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'claude_usage');
+
+-- 077 beside 038, on the column it adds. claude_usage's CREATE is near the top
+-- of this file, so this block runs after it.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '077-claude-usage-cache-tokens.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('claude_usage') WHERE name = 'cache_read_tokens');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '039-filament-forge.sql'

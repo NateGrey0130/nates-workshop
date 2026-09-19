@@ -113,12 +113,23 @@ export async function recordUsage(env, { email, endpoint, model, upstream }) {
       usage = payload?.usage ?? null;
       servedModel = payload?.model ?? servedModel;
     } catch { /* an upstream error body is still a recorded attempt */ }
+    // With a cache breakpoint, `usage.input_tokens` counts only the UNCACHED
+    // part; the cached span arrives as a write or a read beside it. The row's
+    // `input_tokens` is the total the call processed, as the extractor has
+    // recorded it since INGESTION-AUDIT F23, and the split is kept because the
+    // two bill differently (F35, migration 077). No caller sends a breakpoint
+    // today, so both come back absent and are stored NULL.
+    const count = (v) => (Number.isFinite(v) ? v : null);
+    const cacheWrite = count(usage?.cache_creation_input_tokens);
+    const cacheRead = count(usage?.cache_read_input_tokens);
+    const fresh = count(usage?.input_tokens);
     await env.DB.prepare(
-      `INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status,
+                                 cache_write_tokens, cache_read_tokens)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(email ?? null, endpoint, servedModel,
-      Number.isFinite(usage?.input_tokens) ? usage.input_tokens : null,
-      Number.isFinite(usage?.output_tokens) ? usage.output_tokens : null,
-      upstream?.status ?? null).run();
+      fresh === null ? null : fresh + (cacheWrite ?? 0) + (cacheRead ?? 0),
+      count(usage?.output_tokens),
+      upstream?.status ?? null, cacheWrite, cacheRead).run();
   } catch { /* see above — never the caller's problem */ }
 }
