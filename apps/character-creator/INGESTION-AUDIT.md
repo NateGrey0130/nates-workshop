@@ -975,16 +975,21 @@ the columns that paragraph names. Filed here and taken in a separate PR, as
 - Three places write it. `scripts/extract-class.mjs:307` stores `input_tokens`
   as the SUM of fresh, cache-write and cache-read tokens, and prints the split
   to the console, where nothing keeps it. `functions/api/_lib/claude-client.js:117`
-  (the Pages proxy and the campaign Ask) and `workers/pick3cut5-room/src/anthropic.js:69`
+  (through `recordUsage`, whose three callers are the Pages proxy, the campaign Ask
+  and the NPC sweep - `git grep -n "recordUsage(" -- functions`) and `workers/pick3cut5-room/src/anthropic.js:69`
   store `usage.input_tokens` alone, which counts only the UNCACHED part of a
   prompt.
 - Only the extractor sends a cache breakpoint: `git grep -n cache_control -- functions workers apps scripts`
   returns `scripts/extract-class.mjs:266` and no other code, 2026-09-19. So the
   other two writers' rows are complete today, and would undercount the day
   either gained one.
-- Production holds **28 rows**, and **one** involved the cache — the single
-  `cc-extract-class` row, 2026-08-28, 21,581 input tokens.
-  (`q.mjs --remote`, grouped by `endpoint`, 2026-09-19.)
+- Production holds **28 rows**, and **none** involved the cache.
+  (`q.mjs --remote`, grouped by `endpoint`, 2026-09-19.) The one extractor row,
+  `cc-extract-class` at 21,581 input tokens, was written at 00:23:40 UTC on
+  2026-08-28 - about five hours BEFORE the breakpoint existed: commit `4f5a249`,
+  2026-08-28 01:31 -0400 (`git log -S cache_control -- scripts/extract-class.mjs`).
+  `F23` says the same of that row. This line said "one" when first written, and
+  the take-time premise audit corrected it before the finding merged.
 
 **Why it matters, as `F23` put it.** A cached read bills at 0.1x and a cache
 write at 1.25x, so an `input_tokens` of 21,581 is three different prices and the
@@ -1017,13 +1022,13 @@ finding's proposal applies to it unchanged. This is a deliberate drop, not a
 deferral.
 
 **Confidence: high** that the table cannot express cost, because the schema has
-no such column. **Low on value**: one row in production ever carried cached
+no such column. **Low on value**: no row in production has ever carried cached
 tokens, so the columns record almost nothing until extraction runs regularly
 again. What would raise it: a second book extracted through
 `extract-class.mjs`, or a breakpoint added to any proxy caller.
 
 **Ongoing cost:** two columns in five places, once, and every future writer of
 `claude_usage` has two more fields to fill, each of which fails silent (NULL)
-when forgotten. **The case for declining** is that one row in the table's life
+when forgotten. **The case for declining** is that no row in the table's life
 would have used them. Nate has asked for it anyway, on the grounds `F23` gives:
 the ledger should answer cost.
