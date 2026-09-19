@@ -1032,3 +1032,23 @@ again. What would raise it: a second book extracted through
 when forgotten. **The case for declining** is that no row in the table's life
 would have used them. Nate has asked for it anyway, on the grounds `F23` gives:
 the ledger should answer cost.
+
+**Taken, 2026-09-19 (PR #PRNUM), as written - scope and posture both.** Migration
+077 adds `cache_write_tokens` and `cache_read_tokens` to `claude_usage`. The
+extractor stores the split it already computed, and `recordUsage` in
+`claude-client.js` now stores it too and sums it into `input_tokens`, so that
+column means the total a call processed from every Pages-side writer. NULL for
+no figure, which is every existing row. `SETUP.md`'s spend queries carry the
+two columns and a paragraph saying what they price. The extractor's comment
+that the table "cannot hold it yet" is corrected in the same change. The Pick 3
+Cut 5 Worker is untouched, as the proposal dropped it.
+
+**Posture held: record only.** Nothing reads the columns on a request path, and
+both writers are still fail-open. Migration 077 was applied `--remote` BEFORE
+this merged, because an INSERT naming a missing column would have been
+swallowed by that same fail-open catch and dropped rows without a word.
+
+**Premise corrections, from the take-time audit, made in PR #1185 before this
+finding merged:** no production row has ever used the cache (it said one), and
+`recordUsage` has three callers, not two - the NPC sweep is the third. Neither
+changed the scope. Everything else the finding cites held, line numbers included.

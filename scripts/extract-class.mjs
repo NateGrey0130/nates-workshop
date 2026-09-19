@@ -295,19 +295,22 @@ try {
   //
   // So the column keeps meaning what it has always meant: input tokens this
   // call processed. It is NOT a cost - a cached read is billed at 0.1x and a
-  // write at 1.25x - and claude_usage has no column for that split. The run
-  // prints it; the table cannot hold it yet.
+  // write at 1.25x - so the split goes in its own two columns since migration
+  // 077 (INGESTION-AUDIT F35), NULL where the response carried no figure.
   const nz = (v) => (Number.isInteger(v) ? v : 0);
+  const orNull = (v) => (Number.isInteger(v) ? v : 'NULL');
   const cacheWrite = nz(u.cache_creation_input_tokens);
   const cacheRead = nz(u.cache_read_input_tokens);
   const inputTotal = Number.isInteger(u.input_tokens)
     ? u.input_tokens + cacheWrite + cacheRead
     : null;
 
-  d1(`INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status) `
+  d1(`INSERT INTO claude_usage (email, endpoint, model, input_tokens, output_tokens, status, `
+    + `cache_write_tokens, cache_read_tokens) `
     + `VALUES (NULL, 'cc-extract-class', ${esc(model)}, `
     + `${inputTotal === null ? 'NULL' : inputTotal}, `
-    + `${Number.isInteger(u.output_tokens) ? u.output_tokens : 'NULL'}, ${res.status})`);
+    + `${orNull(u.output_tokens)}, ${res.status}, `
+    + `${orNull(u.cache_creation_input_tokens)}, ${orNull(u.cache_read_input_tokens)})`);
   console.log(`metered:   cc-extract-class -> claude_usage (${target})`);
   console.log(`tokens:    ${inputTotal ?? '?'} in / ${u.output_tokens ?? '?'} out`
     + `  [fresh ${nz(u.input_tokens)}, cache write ${cacheWrite}, cache read ${cacheRead}]`);

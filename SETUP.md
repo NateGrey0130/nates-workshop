@@ -542,14 +542,20 @@ go out whether or not the reply parses.
 What a book costs, by endpoint:
 
 ```bash
-node scripts/q.mjs --remote "SELECT endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output, min(created_at) AS first, max(created_at) AS last FROM claude_usage GROUP BY endpoint ORDER BY input DESC"
+node scripts/q.mjs --remote "SELECT endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(cache_write_tokens) AS cache_write, sum(cache_read_tokens) AS cache_read, sum(output_tokens) AS output, min(created_at) AS first, max(created_at) AS last FROM claude_usage GROUP BY endpoint ORDER BY input DESC"
 ```
 
 The same spend by day, which is how an import session reads:
 
 ```bash
-node scripts/q.mjs --remote "SELECT date(created_at) AS day, endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output FROM claude_usage GROUP BY day, endpoint ORDER BY day DESC LIMIT 30"
+node scripts/q.mjs --remote "SELECT date(created_at) AS day, endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(cache_write_tokens) AS cache_write, sum(cache_read_tokens) AS cache_read, sum(output_tokens) AS output FROM claude_usage GROUP BY day, endpoint ORDER BY day DESC LIMIT 30"
 ```
+
+`input` is every input token the calls processed. `cache_write` and `cache_read`
+are the parts of it that went through the prompt cache, and they are what turn
+a token count into a cost: a write bills at 1.25x the input price, a read at
+0.1x. Both are NULL on every row written before migration 077
+(`INGESTION-AUDIT` F35), and on any call whose response reported no cache.
 
 And who spent it:
 
