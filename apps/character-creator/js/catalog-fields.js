@@ -590,8 +590,9 @@ export const CATALOGS = {
         help: 'The book offers it as a player character. A catalog fact, not a class.' },
       { name: 'alignment', label: 'Alignment', type: 'text' },
       { name: 'attributes', label: 'Attributes', type: 'kv',
-        help: 'JSON of the sheet\'s keys to FORMULAS: {"IQ":"2D6","PS":"4D6","PB":"N/A","Spd":"2D6x10"}. '
-            + '"N/A" is an attribute the species does not have; leave out one the book does not print.' },
+        help: 'JSON of the sheet\'s keys to FORMULAS: {"IQ":"2D6","PS":"4D6 min 17","PB":"N/A","Spd":"2D6x10"}. '
+            + '"min 17" is a floor the book prints ("never lower than 17"); "N/A" is an attribute the species '
+            + 'does not have; leave out one the book does not print.' },
       { name: 'hp', label: 'Hit points', type: 'text', help: FORMULA_HELP },
       { name: 'sdc', label: 'S.D.C.', type: 'text', help: FORMULA_HELP },
       { name: 'mdc', label: 'M.D.C.', type: 'text', help: FORMULA_HELP },

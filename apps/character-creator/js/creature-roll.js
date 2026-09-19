@@ -21,6 +21,13 @@
 //   attribute  PE    PEx10    (IQ ME MA PS PP PE PB Spd, stops allowed: P.E.)
 // Case and spaces do not matter. "N/A" is an attribute the species does not
 // have (dice.js's rule, BOOK-INGEST-AUDIT.md F5) and rolls to null.
+//
+// AN ATTRIBUTE MAY CARRY A FLOOR: "4D6 min 17". Books print these as "I.Q.,
+// M.E. and P.S. never lower than 17" or "P.B. has a minimum of 16" - nineteen
+// of Conversion Book One's first 77 species do - and without one the sheet
+// shows a number the book rules out: a Lizard Mage rolled I.Q. 10 in the first
+// live test. A roll under the floor is raised to it. Attributes only; a pool
+// states its own shape in its dice.
 
 import { d } from './dice.js';
 
@@ -61,6 +68,13 @@ function isCreatureFormula(formula, { attrOk = true } = {}) {
 }
 
 const isAbsent = (v) => typeof v === 'string' && /^N\/A$/i.test(v.trim());
+
+// An attribute spec split into its formula and its floor (null when none).
+const FLOOR = /^(.*?)\s+min\s+(\d+)$/i;
+function splitFloor(spec) {
+  const m = typeof spec === 'string' ? spec.trim().match(FLOOR) : null;
+  return m ? { formula: m[1], floor: +m[2] } : { formula: spec, floor: null };
+}
 
 // One roll of a formula. `attrs` supplies the rolled attributes it may name;
 // `die(sides)` supplies each die, so tests can pin it. Throws a CreatureGap
@@ -103,10 +117,12 @@ export function rollCreature(row, die = d) {
     if (!(key in specs)) continue;
     const spec = specs[key];
     if (isAbsent(spec)) { attributes[key] = null; continue; }
-    if (!isCreatureFormula(spec, { attrOk: false })) {
+    const { formula, floor } = splitFloor(spec);
+    if (!isCreatureFormula(formula, { attrOk: false })) {
       throw new CreatureGap(`attributes.${key}`, `"${spec}" is not a formula this can roll`);
     }
-    attributes[key] = rollCreatureFormula(spec, {}, die, `attributes.${key}`);
+    const rolled = rollCreatureFormula(formula, {}, die, `attributes.${key}`);
+    attributes[key] = floor == null ? rolled : Math.max(rolled, floor);
   }
   const pools = {};
   for (const key of POOLS) {
@@ -126,7 +142,7 @@ export function creatureFormulaGaps(row) {
   } catch { return [{ field: 'attributes', formula: String(row.attributes) }]; }
   for (const [key, spec] of Object.entries(specs || {})) {
     if (!ATTR_KEYS.includes(key)) gaps.push({ field: `attributes.${key}`, formula: 'not a sheet attribute' });
-    else if (!isCreatureFormula(spec, { attrOk: false })) gaps.push({ field: `attributes.${key}`, formula: spec });
+    else if (!isCreatureFormula(splitFloor(spec).formula, { attrOk: false })) gaps.push({ field: `attributes.${key}`, formula: spec });
   }
   for (const key of POOLS) {
     const spec = row[key];
