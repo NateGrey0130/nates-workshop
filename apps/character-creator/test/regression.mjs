@@ -2256,7 +2256,7 @@ check('and none of them with ?mine=1',
     "INSERT INTO creatures (slug, name, category, system, playable, alignment, attributes,",
     "  hp, sdc, ppe, ar, horror_factor, combat, natural_abilities, source_book) VALUES",
     "  ('fixture-beast', 'Fixture Beast', 'monster', 'rifts', 1, 'Any',",
-    '   \'{"IQ":"2D6","ME":"2D6","MA":"1D6","PS":"4D6","PP":"3D6","PE":"2D6","PB":"N/A","Spd":"2D6x10"}\',',
+    '   \'{"IQ":"2D6","ME":"2D6 min 11","MA":"1D6","PS":"4D6","PP":"3D6","PE":"2D6","PB":"N/A","Spd":"2D6x10"}\',',
     "   'PE+20', 'P.E. x 10', '3D6', 5, 10, '{\"attacks\":3,\"dodge\":4}', 'Flies; sees in the dark.', 'fixture p.2'),",
     "  ('fixture-broken', 'Fixture Broken', 'monster', 'rifts', 0, 'Any',",
     '   \'{"IQ":"2D6"}\', \'2D6 on foot\', NULL, NULL, NULL, NULL, NULL, NULL, \'fixture p.3\');',
@@ -2307,8 +2307,9 @@ check('and none of them with ?mine=1',
   check('each sheet loads as a G.M.-only NPC of the species',
     sheets.length === 3 && sheets.every((c) => c.kind === 'npc' && c.class_id === 'creature:fixture-beast'
       && c.bio?.race === 'Fixture Beast'), JSON.stringify(sheets.map((c) => [c.kind, c.class_id, c.bio])));
-  check('with every attribute inside its dice, and the one it lacks as null',
+  check('with every attribute inside its dice, a floored one never under its floor, and the one it lacks as null',
     sheets.every((c) => inRange(c.attributes?.PS, 4, 24) && inRange(c.attributes?.MA, 1, 6)
+      && inRange(c.attributes?.ME, 11, 12)
       && inRange(c.attributes?.Spd, 20, 120) && c.attributes?.Spd % 10 === 0 && c.attributes?.PB === null),
     JSON.stringify(sheets.map((c) => c.attributes)));
   check('and each pool rolled from its OWN attributes',
