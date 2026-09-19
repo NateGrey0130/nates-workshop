@@ -235,6 +235,32 @@ const SECTIONS = [
                    r.disposition && `Disposition: ${r.disposition}`],
     hay: (r) => `${r.name} ${r.real_name || ''} ${r.title || ''} ${r.occ || ''} ${r.source_book || ''}`,
   },
+  // The species the books stat (migration 074). Its numbers are the book's
+  // DICE ("I.Q. 2D6", hit points "PE+20"): a G.M. rolls individuals from them
+  // on the campaign page's People tab, and each one rolls separately.
+  {
+    id: 'creatures',
+    label: 'Creatures',
+    key: (r) => String(r.slug).toLowerCase(),
+    title: (r) => r.name,
+    meta: (r) => [r.category, r.playable ? 'playable' : ''].filter(Boolean).join(' · '),
+    cost: (r) => (r.horror_factor != null ? `H.F. ${r.horror_factor}` : ''),
+    stats: (r) => [['Alignment', r.alignment], ['Attributes', attributeLine(r.attributes)],
+                   ['Hit points', r.hp], ['S.D.C.', r.sdc], ['M.D.C.', r.mdc],
+                   ['P.P.E.', r.ppe], ['I.S.P.', r.isp], ['Natural A.R.', r.ar],
+                   ['Horror Factor', r.horror_factor], ['Combat', combatLine(r.combat)],
+                   ['Size', r.size], ['Weight', r.weight], ['Life span', r.life_span],
+                   ['Habitat', r.habitat]],
+    extra: (r) => notableAttacksHtml(r),
+    notes: (r) => [r.pools_note && `Pools as printed: ${r.pools_note}`,
+                   r.bonuses_note && `Bonuses: ${r.bonuses_note}`,
+                   r.skills_note && `Skills: ${r.skills_note}`,
+                   r.natural_abilities && `Natural abilities: ${r.natural_abilities}`,
+                   r.magic && `Magic: ${r.magic}`, r.psionics && `Psionics: ${r.psionics}`,
+                   r.occ_note && `O.C.C.s: ${r.occ_note}`,
+                   r.allies && `Allies: ${r.allies}`, r.enemies && `Enemies: ${r.enemies}`],
+    hay: (r) => `${r.name} ${r.category || ''} ${r.habitat || ''} ${r.source_book || ''}`,
+  },
 ];
 
 // A notable NPC's eight attributes on one line, in the sheet's order and with

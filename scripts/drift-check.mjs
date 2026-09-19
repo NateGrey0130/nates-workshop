@@ -206,8 +206,10 @@ console.log(`caches:       ${presentSlugs.length} of ${registeredSlugs.length} r
 // `notable_npcs` IS IN too (migration 072): its `name` is the name the book
 // prints over that person's stat block - "Gwen Severson", "Power Master" - so
 // a name absent from the cited book's text is a mistranscription worth seeing.
+// `creatures` is in for the same reason (migration 074): its `name` is the
+// heading the book prints over the species' stat block - "Feathered Death".
 const CITATION_TABLES = ['spells', 'psionic_powers', 'skills', 'super_abilities', 'talents',
-  'morphus_characteristics', 'notable_npcs'];
+  'morphus_characteristics', 'notable_npcs', 'creatures'];
 const citationRows = new Map();   // slug -> [{ table, name }]
 for (const table of CITATION_TABLES) {
   for (const r of d1(`SELECT name, source_book FROM ${table} WHERE source_book IS NOT NULL`)) {

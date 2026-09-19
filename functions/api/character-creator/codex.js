@@ -5,7 +5,8 @@
 // `skills` and `classes`, and since docs/plans/22-codex-powers-and-talents.md
 // `talents` and `super-abilities` - the last with a ninth route beside it,
 // `super-ability`, for the reason under ONE SECTION CROSSED THE LINE below -
-// and `notables`, the named people the books stat (migration 072).
+// `notables`, the named people the books stat (migration 072), and
+// `creatures`, the species they stat (migration 074).
 //
 // The second half of docs/plans/20-power-descriptions.md, widened to the two
 // catalogs that had no reader at all. The first half put a held power's
@@ -109,6 +110,7 @@ const SECTIONS = {
               (SELECT count(*) FROM talents)        AS talents,
               (SELECT count(*) FROM super_abilities) AS "super-abilities",
               (SELECT count(*) FROM notable_npcs)   AS notables,
+              (SELECT count(*) FROM creatures)      AS creatures,
               (SELECT count(*) FROM imported_classes
                  WHERE status = 'published' AND deleted_at IS NULL) AS classes`
     ).first()),
@@ -278,6 +280,29 @@ const SECTIONS = {
       bySlug.get(owner_slug)?.attacks.push(rest);
     }
     return { notables: [...bySlug.values()] };
+  },
+
+  // The species the books stat (migration 074), shaped as `notables` is: the
+  // whole stat block with its attacks folded in. `attributes` holds FORMULAS
+  // ("2D6", "N/A") here, not numbers - the individual a campaign places is
+  // rolled from them by campaigns/:id/npcs/from-creature.
+  creatures: async (env) => {
+    const [rows, attacks] = await Promise.all([
+      env.DB.prepare('SELECT * FROM creatures ORDER BY name').all(),
+      env.DB.prepare(
+        `SELECT owner_slug, name, damage, is_mega_damage, range, note
+         FROM stat_attacks WHERE owner_kind = 'creature' ORDER BY owner_slug, sort, id`
+      ).all(),
+    ]);
+    const parse = (v, fallback) => { try { return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
+    const bySlug = new Map((rows.results || []).map((r) => [r.slug, {
+      ...r, attributes: parse(r.attributes, {}), combat: parse(r.combat, {}), attacks: [],
+    }]));
+    for (const a of attacks.results || []) {
+      const { owner_slug, ...rest } = a;
+      bySlug.get(owner_slug)?.attacks.push(rest);
+    }
+    return { creatures: [...bySlug.values()] };
   },
 
   vehicles: async (env) => {

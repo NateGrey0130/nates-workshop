@@ -343,6 +343,13 @@ composing a class over them would count those bonuses twice - the book's numbers
 attacks (`stat_attacks`, migration 073) and its prose - magic, psionics, super powers, gear - land in the
 sheet's notes. One-way: a fight or a rename changes this table's copy, never the book.
 
+**Creatures from the books.** Beside it, *Roll creatures from the books* does the same for a
+SPECIES - a Feathered Death, a Grimbor - held in `creatures` (migration 074). A species prints dice
+rather than one creature's numbers, so placing it ROLLS them (`POST campaigns/:id/npcs/from-creature`,
+up to twelve at once, each rolled separately) with class_id `creature:<slug>`. The grammar is strict on
+purpose (`js/creature-roll.js`): a formula it cannot read is refused with its name, and nothing is
+placed, rather than rolled as something the book never printed.
+
 **Where they show.** On the People tab and in the G.M.'s dashboard roster,
 after the party and tagged NPC, with the same damage controls - *Award XP to
 party* skips them. Not on the home screen's list of your characters (`?mine=1`

@@ -113,6 +113,9 @@ const TABLES = [
   // The ELEVENTH catalog (migration 072). `notable_npcs.slug` is NOT NULL UNIQUE,
   // read from db/schema.sql, and names can repeat across books - so slug keys it.
   ['notable_npcs', 'name', 'slug'],
+  // The TWELFTH catalog (migration 074). `creatures.slug` is NOT NULL UNIQUE,
+  // read from db/schema.sql, and a species' name can repeat across books.
+  ['creatures', 'name', 'slug'],
   // THE NINTH CATALOG (migration 063, `BOOK-INGEST-AUDIT.md` F76). Identity
   // column read from db/schema.sql rather than assumed, as the two above were:
   // `talents.name` is NOT NULL UNIQUE and the table has no slug, which is why

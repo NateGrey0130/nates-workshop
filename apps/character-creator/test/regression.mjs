@@ -26,6 +26,7 @@ import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE
 import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
+import { creatureFormulaGaps } from '../js/creature-roll.js';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -2238,6 +2239,96 @@ check('and none of them with ?mine=1',
   check('the notable NPC fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── Creatures from the books (migration 074, from-creature) ─────────────────
+//
+// A species prints DICE, and a G.M. rolls individuals from them. Two fixtures:
+// one the grammar can roll, and one it cannot - which must be refused by name
+// with nothing written, never rolled as a number the book did not print
+// (decided 2026-09-17). Each individual's pools are checked against its OWN
+// rolled attributes, which is the point of rolling attributes first.
+{
+  const exec = (name, sql) => {
+    const file = join(state, name);
+    writeFileSync(file, sql);
+    return wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', file]);
+  };
+  const seeded = exec('creature-fixture.sql', [
+    "INSERT INTO creatures (slug, name, category, system, playable, alignment, attributes,",
+    "  hp, sdc, ppe, ar, horror_factor, combat, natural_abilities, source_book) VALUES",
+    "  ('fixture-beast', 'Fixture Beast', 'monster', 'rifts', 1, 'Any',",
+    '   \'{"IQ":"2D6","ME":"2D6","MA":"1D6","PS":"4D6","PP":"3D6","PE":"2D6","PB":"N/A","Spd":"2D6x10"}\',',
+    "   'PE+20', 'P.E. x 10', '3D6', 5, 10, '{\"attacks\":3,\"dodge\":4}', 'Flies; sees in the dark.', 'fixture p.2'),",
+    "  ('fixture-broken', 'Fixture Broken', 'monster', 'rifts', 0, 'Any',",
+    '   \'{"IQ":"2D6"}\', \'2D6 on foot\', NULL, NULL, NULL, NULL, NULL, NULL, \'fixture p.3\');',
+    "INSERT INTO stat_attacks (owner_kind, owner_slug, name, damage, is_mega_damage, sort) VALUES",
+    "  ('creature', 'fixture-beast', 'Fixture Claws', '1D6 S.D.C.', 0, 0);",
+  ].join('\n'));
+  check('a creature and its attack can be written to a database built from nothing',
+    seeded.status === 0, cleanErr(seeded.stderr || ''));
+
+  const index = await api('GET', '/codex?section=index');
+  check('the codex counts the creatures', index.body.counts?.creatures >= 2, JSON.stringify(index.body.counts));
+  const codex = await api('GET', '/codex?section=creatures');
+  const row = (codex.body.creatures || []).find((r) => r.slug === 'fixture-beast');
+  check('and serves one with its formulas decoded and its attacks folded in',
+    row?.attributes?.PS === '4D6' && row?.attributes?.PB === 'N/A' && row?.hp === 'PE+20'
+      && row?.combat?.attacks === 3 && row?.attacks?.[0]?.name === 'Fixture Claws', JSON.stringify(row).slice(0, 300));
+  const unrollable = (codex.body.creatures || []).filter((r) => !r.slug.startsWith('fixture-'))
+    .flatMap((r) => creatureFormulaGaps(r).map((g) => `${r.slug} ${g.field}: ${g.formula}`));
+  check('every creature in the catalog has only formulas the grammar can roll',
+    unrollable.length === 0, unrollable.slice(0, 6).join('; '));
+
+  const roll = (body, who = null) => (who
+    ? apiAs(who, 'POST', `/campaigns/${campaignId}/npcs/from-creature`, body)
+    : api('POST', `/campaigns/${campaignId}/npcs/from-creature`, body));
+  const barred = await roll({ slug: 'fixture-beast' }, 'stranger@example.com');
+  check('only the campaign\'s G.M. can roll creatures', barred.status === 403, barred.status);
+  const unknown = await roll({ slug: 'nothing-like-it' });
+  check('an unknown species is a 404', unknown.status === 404, unknown.status);
+  const tooMany = await roll({ slug: 'fixture-beast', count: 13 });
+  check('and more than twelve at once is a 400', tooMany.status === 400, tooMany.status);
+
+  const before = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters?.length;
+  const broken = await roll({ slug: 'fixture-broken', count: 2 });
+  const after = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters?.length;
+  check('a formula outside the grammar is refused by name, not rolled as something else',
+    broken.status === 422 && broken.body.field === 'hp' && /2D6 on foot/.test(broken.body.error || ''),
+    JSON.stringify(broken.body));
+  check('and nothing is placed when it is', before === after, `${before} -> ${after}`);
+
+  const placed = await roll({ slug: 'fixture-beast', count: 3 });
+  const made = placed.body.characters || [];
+  check('the G.M. rolls three at once, numbered',
+    placed.status === 201 && made.map((c) => c.name).join('|') === 'Fixture Beast 1|Fixture Beast 2|Fixture Beast 3',
+    JSON.stringify(placed.body));
+  const sheets = [];
+  for (const m of made) sheets.push((await api('GET', `/characters/${m.id}`)).body.character || {});
+  const inRange = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+  check('each sheet loads as a G.M.-only NPC of the species',
+    sheets.length === 3 && sheets.every((c) => c.kind === 'npc' && c.class_id === 'creature:fixture-beast'
+      && c.bio?.race === 'Fixture Beast'), JSON.stringify(sheets.map((c) => [c.kind, c.class_id, c.bio])));
+  check('with every attribute inside its dice, and the one it lacks as null',
+    sheets.every((c) => inRange(c.attributes?.PS, 4, 24) && inRange(c.attributes?.MA, 1, 6)
+      && inRange(c.attributes?.Spd, 20, 120) && c.attributes?.Spd % 10 === 0 && c.attributes?.PB === null),
+    JSON.stringify(sheets.map((c) => c.attributes)));
+  check('and each pool rolled from its OWN attributes',
+    sheets.every((c) => c.hp_max === c.attributes.PE + 20 && c.sdc_max === c.attributes.PE * 10
+      && inRange(c.ppe_max, 3, 18) && c.mdc_max == null),
+    JSON.stringify(sheets.map((c) => ({ PE: c.attributes?.PE, hp: c.hp_max, sdc: c.sdc_max, ppe: c.ppe_max }))));
+  check('its attacks and abilities in the notes',
+    sheets.every((c) => /Fixture Claws: 1D6 S\.D\.C\./.test(c.notes || '') && /Natural abilities: Flies/.test(c.notes || '')
+      && /Horror Factor: 10/.test(c.notes || '')), String(sheets[0]?.notes).slice(0, 300));
+  if (made[0]) {
+    const hidden = await apiAs('stranger@example.com', 'GET', `/characters/${made[0].id}`);
+    check('and to anyone else a creature does not exist', hidden.status === 404, hidden.status);
+  }
+  for (const m of made) await api('DELETE', `/characters/${m.id}`);
+
+  const cleaned = exec('creature-cleanup.sql', "DELETE FROM stat_attacks WHERE owner_kind = 'creature' AND owner_slug IN ('fixture-beast', 'fixture-broken');\n"
+    + "DELETE FROM creatures WHERE slug IN ('fixture-beast', 'fixture-broken');\n");
+  check('the creature fixtures are removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // UI-AUDIT F52: the table's rest rates live on the campaign, set by its G.M.
 // A zero is dropped, a pool that is not one is refused, and null clears.
 {
@@ -3662,6 +3753,7 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // (migration 068), so a retired name would match rows in other tables.
     morphus: ['morphus_characteristics', 'key'],
     notableNpcs: ['notable_npcs', 'slug'],
+    creatures: ['creatures', 'slug'],
   };
 
   // A catalog the redirect table uses that this map does not know would be

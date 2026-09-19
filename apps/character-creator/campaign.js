@@ -35,6 +35,9 @@ const D = {
   // Placing a notable NPC from the books (notable_npcs, migration 072): the
   // codex's `notables` section, loaded the first time the form opens.
   book: { open: false, rows: null, slug: '', name: '', busy: false, msg: '', err: false },
+  // Rolling creatures from the books (creatures, migration 074): the codex's
+  // `creatures` section, loaded the first time the form opens.
+  beast: { open: false, rows: null, slug: '', count: 1, name: '', busy: false, msg: '', err: false },
 };
 
 async function load() {
@@ -379,10 +382,11 @@ function npcSheetsPanel() {
   const sheets = npcSheets();
   return `<div class="panel">
     <h3>Statted NPCs <span class="muted small">— only you can see these</span></h3>
-    ${D.gen.open ? genForm() : D.book.open ? bookForm()
-      : `<div class="rowline" style="margin-top:6px">
+    ${D.gen.open ? genForm() : D.book.open ? bookForm() : D.beast.open ? beastForm()
+      : `<div class="rowline" style="margin-top:6px;flex-wrap:wrap">
           <button class="btn btn-sm" onclick="openGen()">🎲 Roll NPCs from a class</button>
-          <button class="btn btn-sm" onclick="openBook()">📖 Place a notable NPC from the books</button></div>`}
+          <button class="btn btn-sm" onclick="openBook()">📖 Place a notable NPC from the books</button>
+          <button class="btn btn-sm" onclick="openBeast()">🐾 Roll creatures from the books</button></div>`}
     <div style="margin-top:10px">${sheets.length ? sheets.map(npcSheetRow).join('')
       : '<p class="muted small">None yet. Roll some, then link one to a dossier from its page.</p>'}</div>
   </div>`;
@@ -402,7 +406,9 @@ function npcSheetRow(c) {
 
 // A book NPC's class id is `notable:<slug>` (from-notable) - it names where the
 // sheet came from, not a class, so it reads as that.
+// A creature's is `creature:<slug>` (from-creature), for the same reason.
 const className = (id) => (String(id).startsWith('notable:') ? 'from the books'
+  : String(id).startsWith('creature:') ? 'a creature from the books'
   : D.classNames?.[id] || id);
 
 // A race whose entry grants no related or secondary skills takes an occupation,
@@ -532,6 +538,82 @@ async function placeNotable() {
     });
     D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
     b.msg = `Placed ${res.name}.`;
+    b.name = '';
+  } catch (err) { b.msg = err.message; b.err = true; }
+  b.busy = false;
+  render();
+}
+
+// ---------- creatures from the books ----------
+//
+// The species the books stat (the codex's Creatures). Each individual is ROLLED
+// from the book's dice, separately - six wolves are six rolls. A formula the
+// server cannot roll is refused with its name, and nothing is placed.
+function beastForm() {
+  const b = D.beast;
+  if (!b.rows) return '<p class="muted small" style="margin-top:10px">Loading the books…</p>';
+  const rows = b.rows.filter((r) => !r.system || r.system === 'both' || r.system === D.campaign.system);
+  if (!rows.length) {
+    return `<div class="panel-inset" style="margin-top:10px">
+      <p class="muted small">No creatures from ${esc(D.campaign.system)} books have been imported yet.</p>
+      <button class="btn btn-sm btn-ghost" onclick="closeBeast()">close</button></div>`;
+  }
+  return `<div class="panel-inset" style="margin-top:10px">
+    <div class="rowline" style="flex-wrap:wrap">
+      ${/* Sized to the row, not its longest option - the notable form's fix. */ ''}
+      <label class="small" style="flex:1 1 100%;min-width:0">From the books
+        <select style="width:100%" onchange="beastSet('slug', this.value, true)">
+          <option value="">— choose —</option>
+          ${rows.map((r) => `<option value="${esc(r.slug)}"${r.slug === b.slug ? ' selected' : ''}>${
+            esc(r.name)}${r.category ? ` — ${esc(r.category)}` : ''} (${esc(r.source_book || '')})</option>`).join('')}
+        </select></label>
+      <label class="small">How many
+        <input type="number" min="1" max="12" value="${b.count}" style="width:5em"
+          onchange="beastSet('count', this.value)"></label>
+      <input type="text" class="picker-input" placeholder="Name in this campaign (optional)" value="${esc(b.name)}"
+        onchange="beastSet('name', this.value)">
+    </div>
+    <div class="rowline" style="margin-top:8px">
+      <button class="btn btn-sm btn-primary" onclick="placeCreatures()" ${b.busy || !b.slug ? 'disabled' : ''}>
+        ${b.busy ? 'Rolling…' : 'Roll into this campaign'}</button>
+      <button class="btn btn-sm btn-ghost" onclick="closeBeast()">close</button>
+    </div>
+    <p class="small muted">Each one is rolled from the book's dice. Its attacks and abilities go in the sheet's
+      notes. Changes to a creature never touch the book.</p>
+    ${b.msg ? `<p class="small${b.err ? ' err' : ''}">${esc(b.msg)}</p>` : ''}
+  </div>`;
+}
+
+async function openBeast() {
+  D.beast.open = true;
+  render();
+  if (D.beast.rows) return;
+  try {
+    D.beast.rows = (await api('codex?section=creatures')).creatures || [];
+  } catch (err) { D.beast.msg = 'Could not load them: ' + err.message; D.beast.err = true; D.beast.rows = []; }
+  render();
+}
+function closeBeast() { D.beast.open = false; D.beast.msg = ''; render(); }
+function beastSet(key, value, rerender = false) {
+  const b = D.beast;
+  if (key === 'count') b.count = Math.max(1, Math.min(12, Math.trunc(Number(value) || 1)));
+  else b[key] = value;
+  if (key === 'slug') { b.msg = ''; b.err = false; }
+  if (rerender) render();
+}
+
+async function placeCreatures() {
+  const b = D.beast;
+  b.busy = true; b.msg = ''; b.err = false;
+  render();
+  try {
+    const res = await api(`campaigns/${campaignId}/npcs/from-creature`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: b.slug, count: b.count, name: b.name.trim() || null }),
+    });
+    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
+    const made = res.characters || [];
+    b.msg = made.length === 1 ? `Rolled ${made[0].name}.` : `Rolled ${made.length}: ${made.map((c) => c.name).join(', ')}.`;
     b.name = '';
   } catch (err) { b.msg = err.message; b.err = true; }
   b.busy = false;

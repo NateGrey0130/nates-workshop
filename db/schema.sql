@@ -1227,6 +1227,47 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '073-stat-attacks.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'stat_attacks');
 
+-- The species the books stat, as formulas a campaign copy ROLLS (Phase 3 of the
+-- NPC / bestiary work). One grammar for every formula - js/creature-roll.js -
+-- so a formula is rollable or refused, never guessed. Migration 074.
+CREATE TABLE IF NOT EXISTS creatures (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  category TEXT,                        -- free text: animal, monster, demon, faerie...
+  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both')),
+  playable INTEGER NOT NULL DEFAULT 0,  -- the book offers it as an optional player race
+  alignment TEXT,
+  attributes TEXT,                      -- JSON: sheet key -> formula, or "N/A"
+  hp TEXT,                              -- formulas, e.g. "PE+20", "PEx10", "1D4x100"
+  sdc TEXT,
+  mdc TEXT,
+  ppe TEXT,
+  isp TEXT,
+  pools_note TEXT,                      -- printed wording a formula simplified
+  ar INTEGER,
+  horror_factor INTEGER,
+  combat TEXT,                          -- JSON: the sheet's combat keys, fixed numbers
+  bonuses_note TEXT,
+  skills_note TEXT,
+  natural_abilities TEXT,
+  magic TEXT,
+  psionics TEXT,
+  size TEXT,
+  weight TEXT,
+  life_span TEXT,
+  habitat TEXT,
+  allies TEXT,
+  enemies TEXT,
+  occ_note TEXT,                        -- the optional O.C.C.s the book allows
+  description TEXT,                     -- a short cited paraphrase, never the book's prose
+  source_book TEXT
+);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '074-creatures.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'creatures');
+
 -- ═══════════════════════════════════════════════════════════════════
 -- Migration seeding. The CREATEs above already contain the columns that
 -- db/migrations/*.sql add, so a database built from this file is current
