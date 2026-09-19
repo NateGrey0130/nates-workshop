@@ -457,3 +457,107 @@ body {
 /* ─── SPINNER KEYFRAMES (app sizes its own .spinner) ─── */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ─── APP SWITCHER AND CONTEXT CHIP (shared/js/appnav.js) ───
+   Five apps grew inside one, and every page navigated with its own ad-hoc set
+   of `home-link` anchors naming whatever that page happened to need. This is
+   the one header they all get.
+
+   IT IS CHROME, AND THE PAGE IS THE WORK. The switcher sits at the same size
+   and colour as the links it replaces rather than announcing itself; on the
+   sheet it has a tab bar directly beneath it, and two bands competing is worse
+   than the ad-hoc links were. Depth here is the lit edge the token block
+   describes - --border-strong on the top edge, --border on the other three -
+   because this stylesheet casts no shadows at all. */
+.appnav { display: flex; align-items: center; gap: 12px; }
+
+.appnav-switch { position: relative; }
+
+.appnav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.appnav-btn:hover { color: var(--text-primary); border-color: var(--border); }
+.appnav-btn[aria-expanded="true"] { color: var(--text-primary); border-color: var(--border-strong); }
+.appnav-chev { transition: transform var(--transition); }
+.appnav-btn[aria-expanded="true"] .appnav-chev { transform: rotate(180deg); }
+
+.appnav-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  min-width: 232px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.appnav-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.appnav-item:hover { background: var(--bg-tertiary); }
+.appnav-item.on { background: var(--bg-tertiary); }
+/* The current app keeps a mark you can see without colour: the label carries
+   the accent, and aria-current says it to a screen reader. */
+.appnav-item.on .appnav-label { color: var(--accent-link); }
+
+.appnav-label { display: block; font-size: 13px; font-weight: 500; }
+/* --text-muted on --bg-secondary, which the token block measures above the
+   floor; it is never the only thing naming a destination. */
+.appnav-hint { display: block; font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+/* A destination that cannot work yet says so instead of vanishing. Play has
+   nothing to open until a character is chosen, and a menu that changes shape
+   per page never teaches what the suite contains. */
+.appnav-item.is-disabled { color: var(--text-muted); cursor: not-allowed; }
+.appnav-item.is-disabled:hover { background: none; }
+.appnav-item.is-disabled .appnav-hint { color: var(--text-secondary); }
+
+.appnav-chip {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-radius: var(--radius-sm);
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appnav-chip:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.appnav-chip-sep { color: var(--text-muted); }
+
+/* The sheet prints. Navigation has no business on paper, and the sheet's own
+   `noprint` convention covers only what that page drew itself. */
+@media print { .appnav { display: none; } }
+
+/* At phone width the chip is the first thing to go: the switcher still names
+   every app, and the page under it already says which character it is about. */
+@media (max-width: 560px) {
+  .appnav-chip { display: none; }
+  .appnav-menu { min-width: 200px; }
+}

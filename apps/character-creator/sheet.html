@@ -33,11 +33,7 @@
       <button class="btn btn-sm" id="play-toggle" onclick="togglePlay()" style="display:none">▶ Play</button>
       <button class="btn btn-sm noprint" id="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
     </span>
-    <span class="header-group">
-      <a href="codex.html" class="home-link" id="codex-link">codex</a>
-      <a href="/apps/character-creator/" class="home-link">← your characters</a>
-      <a href="/" class="home-link">← workshop</a>
-    </span>
+    <div class="appnav" data-appnav data-app="play"></div>
   </div>
 </header>
 
@@ -46,6 +42,7 @@
 </main>
 
 <script src="/shared/js/ui.js"></script>
+<script src="/shared/js/appnav.js"></script>
 <script src="js/play-queue.js"></script>
 <script src="js/sticky.js"></script>
 <script src="js/sheet-layout.js"></script>
