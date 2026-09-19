@@ -512,6 +512,22 @@ export function detectPageOffsetRegions(pages, { minVotes = 3 } = {}) {
       break;
     }
   }
+  // A folio printed on TWO cache pages at two offsets is a duplicated page,
+  // and says nothing about which region it belongs to. `pf` prints "17" on
+  // both p018 and p019 (p019 is p018 again plus a table) - so a vote for each
+  // would stretch the +1 region to printed 17, and whichever sorted first
+  // would win. That is a question `scripts/books.json` answers deliberately
+  // (printed 17 goes to p019, the fuller copy), not one a vote can settle.
+  // Seen once the pf cache was rebuilt through ocr-book.py on 2026-09-19; the
+  // earlier hand-built cache carried no folio on p018.
+  const offsetsAt = new Map();
+  for (const v of votes) {
+    if (!offsetsAt.has(v.printed)) offsetsAt.set(v.printed, new Set());
+    offsetsAt.get(v.printed).add(v.offset);
+  }
+  for (let i = votes.length - 1; i >= 0; i--) {
+    if (offsetsAt.get(votes[i].printed).size > 1) votes.splice(i, 1);
+  }
   votes.sort((a, b) => a.printed - b.printed);
 
   const runs = [];
