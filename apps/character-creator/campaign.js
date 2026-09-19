@@ -51,10 +51,11 @@ async function load() {
     }
     return;
   }
-  $('dash-link').href = `/apps/character-creator/dashboard.html?campaign_id=${campaignId}`;
+  window.appnav?.setContext({ campaignId });
   try {
     const camp = await api('campaigns/' + campaignId);
     D.campaign = camp.campaign; D.isGm = camp.is_gm; D.isMember = camp.is_member;
+    window.appnav?.setContext({ campaignId, campaignName: D.campaign?.name });
 
     // A non-member gets the campaign's name and nothing else. Everything below
     // this line is member-gated server-side too — this only avoids four

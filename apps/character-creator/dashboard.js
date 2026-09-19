@@ -22,6 +22,7 @@ async function load() {
       api('classes?names=1'),
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
+    window.appnav?.setContext({ campaignId, campaignName: D.campaign?.name });
     D.roster = partyFirst(rosterRes.characters);
     D.journal = journalRes.entries;
     D.journalTotal = journalRes.total ?? journalRes.entries.length;

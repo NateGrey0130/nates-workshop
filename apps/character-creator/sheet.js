@@ -256,19 +256,20 @@ async function load() {
   }
 }
 
-// The campaign this character is in, from the header (UI-AUDIT F39). The sheet
-// linked codex, creator and workshop, so a player reached the campaign's stash,
-// ledger, NPCs and Ask only by typing its URL. Added once the character has
-// loaded, since the header is static and the campaign is not known before.
+// Tell the shared header who and where this is (shared/js/appnav.js). The
+// sheet used to add one 'campaign' anchor of its own here, because its header
+// was static and linked only codex, creator and workshop - so a player reached
+// the stash, the ledger and Ask by typing a URL. The switcher owns every
+// destination now; what the sheet still owns is the NAMES, which exist only
+// once the character has loaded.
 function campaignLink() {
-  if (!C.data?.campaign_id || $('campaign-link')) return;
-  const a = document.createElement('a');
-  a.id = 'campaign-link';
-  a.className = 'home-link';
-  a.href = `dashboard.html?campaign_id=${C.data.campaign_id}`;
-  a.textContent = 'campaign';
-  a.title = C.data.campaign_name || '';
-  $('codex-link')?.insertAdjacentElement('beforebegin', a);
+  if (!C.data) return;
+  window.appnav?.setContext({
+    characterId: C.data.id,
+    characterName: C.data.name,
+    campaignId: C.data.campaign_id,
+    campaignName: C.data.campaign_name,
+  });
 }
 
 function flash(text, isError) {

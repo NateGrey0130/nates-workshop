@@ -102,6 +102,7 @@ const SECTIONS = [
   'Changes that could not be sent',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
+  'One header for five apps',
 ];
 
 export function run() {
@@ -1561,8 +1562,76 @@ export function run() {
 
     check('the sheet points at it from the powers tab',
       /codex\.html/.test(sheet), 'nothing on the sheet mentions the codex');
-    check('and both pages carry a header link',
-      /codex\.html/.test(sheetHtml) && /codex\.html/.test(wizardHtml),
+    // This pinned a literal `codex.html` anchor in both headers until the app
+    // switcher replaced every page's ad-hoc links (shared/js/appnav.js). What
+    // the check was ever FOR is that neither page leaves the codex reachable
+    // only by typing a URL, so it now asks for the switcher that carries it -
+    // the rule, not the markup that used to satisfy it.
+    const nav = readFileSync(join(repoRoot, 'shared', 'js', 'appnav.js'), 'utf8');
+    check('and both pages carry the switcher that reaches it',
+      /data-appnav/.test(sheetHtml) && /data-appnav/.test(wizardHtml)
+        && /appnav\.js/.test(sheetHtml) && /appnav\.js/.test(wizardHtml)
+        && /codex\.html/.test(nav),
       'the codex is reachable only by typing the URL');
+  }
+
+  // ---------- One header for five apps ----------
+  // The character creator is five jobs - build, play, look up, keep notes, run
+  // a table - and every page navigated with its own ad-hoc `home-link` list
+  // naming whatever that page happened to need. The sheet offered codex and
+  // creator, the dashboard offered neither, and nothing named the five at all.
+  // shared/js/appnav.js is the one header they share; P1 of the split, before
+  // any URL moves.
+  section('One header for five apps');
+  {
+    const navSrc = readFileSync(join(repoRoot, 'shared', 'js', 'appnav.js'), 'utf8');
+    const sharedCss = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
+    const PAGES = ['index.html', 'sheet.html', 'codex.html', 'campaign.html',
+                   'dashboard.html', 'catalog.html'];
+    const pages = Object.fromEntries(PAGES.map((p) => [p, readFileSync(join(appDir, p), 'utf8')]));
+
+    // A page that loads the script without the mount renders no header at all,
+    // and a mount without the script renders an empty box - so both, per page.
+    const missing = PAGES.filter((p) => !/data-appnav/.test(pages[p]) || !/shared\/js\/appnav\.js/.test(pages[p]));
+    check('every page mounts the shared header and loads it', missing.length === 0, missing.join(', '));
+
+    // The mount names which app it is, and the names are the five agreed with
+    // Nate: Creator, Play, Codex, Campaign, GM Tools. catalog.html is Codex's
+    // admin face and marks Codex, deliberately.
+    const marked = Object.fromEntries(PAGES.map((p) =>
+      [p, (/data-app="([a-z]+)"/.exec(pages[p]) || [])[1]]));
+    check('and says which of the five it is',
+      marked['index.html'] === 'creator' && marked['sheet.html'] === 'play'
+      && marked['codex.html'] === 'codex' && marked['catalog.html'] === 'codex'
+      && marked['campaign.html'] === 'campaign' && marked['dashboard.html'] === 'gm',
+      JSON.stringify(marked));
+    for (const id of ['creator', 'play', 'codex', 'campaign', 'gm']) {
+      check(`the switcher offers ${id}`, new RegExp(`id: '${id}'`).test(navSrc));
+    }
+
+    // The ad-hoc links are GONE rather than left beside the switcher: two
+    // mechanisms for one job is how the sheet ended up with a hand-built
+    // 'campaign' anchor nothing else knew about.
+    const leftovers = PAGES.filter((p) => /class="home-link"/.test(pages[p]));
+    check('and no page keeps its own ad-hoc link list', leftovers.length === 0, leftovers.join(', '));
+
+    // The sheet prints. Its own `noprint` convention covers what that page
+    // drew; the shared header is not that page's, so it hides itself.
+    check('the header hides itself on paper',
+      /@media print \{ \.appnav \{ display: none; \} \}/.test(sharedCss));
+
+    // A menu button, not a <details> - the same answer W3 reached for the bulk
+    // bar - and a disabled destination rather than a vanishing one.
+    check('the switcher is a menu button with a real expanded state',
+      /aria-expanded="false"/.test(navSrc) && /aria-haspopup/.test(navSrc)
+      && !/<details/.test(navSrc));
+    check('and Play is disabled rather than hidden with no character',
+      /aria-disabled="true"/.test(navSrc) && /Choose a character first/.test(navSrc));
+
+    // The URL is the truth. A link sent to a player must open on THAT
+    // character, so storage may only fill what the URL leaves unsaid.
+    check('the URL wins over the remembered context',
+      /params\.get\('id'\)/.test(navSrc) && /params\.get\('campaign_id'\)/.test(navSrc)
+      && navSrc.indexOf('readStore()') < navSrc.indexOf("params.get('id')"));
   }
 }
