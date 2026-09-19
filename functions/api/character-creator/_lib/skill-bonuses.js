@@ -12,6 +12,7 @@
 
 import { resolveKeys } from './catalog-redirects.js';
 import { selectInChunks } from './sql-chunk.js';
+import { loadSystemBases, applySystemBases } from './system-bases.js';
 
 const LOOKUP_BATCH = 50;
 
@@ -60,5 +61,37 @@ export async function loadSkillBonuses(env, character) {
       rows.push(...results);
     }
   }
-  return rows;
+  return applyGameSchedules(env, character, names, rows);
+}
+
+// This game's own W.P. schedule where its book prints one (BOOK-INGEST-AUDIT.md
+// F102). A W.P.'s bonuses live in `level_bonuses`, so this loader is the one
+// server path that reads a skill's schedule off the catalog, and the one that
+// has to substitute - the wizard and the NPC generator already go through
+// `applySystemBases` on the whole catalog.
+//
+// The character's game is read off the row where the caller already joined it
+// (the sheet selects `campaign_system`), and looked up by campaign otherwise.
+// No game, or a game with no schedules, and the rows come back untouched.
+async function applyGameSchedules(env, character, names, rows) {
+  let system = character?.campaign_system ?? null;
+  if (!system && character?.campaign_id != null) {
+    system = (await env.DB.prepare('SELECT system FROM campaigns WHERE id = ?')
+      .bind(character.campaign_id).first())?.system ?? null;
+  }
+  const overrides = await loadSystemBases(env, system);
+  if (!overrides.size) return rows;
+  // A held skill whose catalog row carries no schedule of its own, but whose
+  // game prints one, was filtered out by the query above - bring it back so the
+  // override has a row to land on.
+  const have = new Set(rows.map((r) => String(r.name).trim().toLowerCase()));
+  for (const n of names) {
+    const key = n.trim().toLowerCase();
+    const o = overrides.get(key);
+    if (o?.level_bonuses != null && !have.has(key)) {
+      rows.push({ name: o.skill_name ?? n, bonuses: null, level_bonuses: null });
+      have.add(key);
+    }
+  }
+  return applySystemBases(rows, overrides);
 }

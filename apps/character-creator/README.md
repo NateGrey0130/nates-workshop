@@ -169,14 +169,16 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Thirteen modules are imported by both the browser and the Workers runtime, or
-written to be: `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`,
-`js/compose.js`, `js/psionics.js` (through compose), `js/language-skills.js`,
-`js/hand-to-hand.js`, `js/leveling.js`, `js/second-form.js`, `js/derive.js`,
-`js/npc-generate.js` and `js/creature-roll.js` (both server-only today) and
-`js/skill-base.js`. `skill-base.js`
+Fourteen modules are imported by both the browser and the Workers runtime, or
+written to be: `js/parser.js`, `js/dice.js`, `js/skill-base.js`,
+`js/psionic-costs.js`, `js/catalog-fields.js`, `js/compose.js`, `js/psionics.js`
+(through compose), `js/language-skills.js`, `js/hand-to-hand.js`,
+`js/leveling.js`, `js/second-form.js`, `js/derive.js`, and `js/npc-generate.js`
+and `js/creature-roll.js` (both server-only today). `skill-base.js`
 resolves a skill's starting percentage, including one game's own where it
-differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
+differs from the catalog's (`BOOK-INGEST-AUDIT` F83), and since F102 a W.P.'s
+bonus schedule the same way; `psionic-costs.js` does it for a psionic power's
+I.S.P. price. `second-form.js` folds a
 character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
 classic script `js/derive.js` for its side effect, so the Workers runtime runs
 that file too and reads it off `globalThis.derive`.
@@ -209,7 +211,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-eight tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -273,7 +275,8 @@ ppe and isp — for the FIRST form; a second form's pools live in `second_form`.
 | `vehicle_weapons` | The numbered weapon systems a vessel carries - five to eight of them, each with its own damage, rate of fire, range and payload, where `gear` has one of each column. `ordinal` is the book's own numbering. |
 | `totems` | The totem animals Spirit West prints on printed 96-105, one row each, shared by every class whose frontmatter says `totem:`. `skills` is JSON shaped like an `occ_skills` list, and `bonuses` a class bonuses block with dice and pools allowed, because a totem's apply at creation the way a class's do. `bonus_note` holds what that block cannot. `powers` is the Totem Warrior's giant-form text, shown only where the class key says `powers: true`. Slug-keyed: `characters.totem` holds the slug, with no foreign key. Migration 056, `BOOK-INGEST-AUDIT.md` F56. |
 | `skills` | `base` 0 means non-percentile (W.P.s, hand to hand). `base_formula` overrides it with an attribute-derived percentage such as `PP*5`, for a book that states one that way; `base` stays the fallback. `systems` is a JSON array; NULL means both. `note` carries oddities like `40%/30% climb/rappel`. `bonuses` applies always; `level_bonuses` is a per-level schedule — see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule). |
-| `skill_system_bases` | A skill's percentage where one GAME prints a different one (`BOOK-INGEST-AUDIT` F83, migration 061). Keyed `(skill_name, system)`; `base` and `per_level` are each nullable, so a book that changes only the per-level gain states only that and the reader coalesces. Keyed on the NAME because `skills.id` is AUTOINCREMENT and differs per environment, with `ON UPDATE CASCADE` so a rename carries the override. Heroes Unlimited is the only game with rows here: it prints its own figure for every skill and disagrees with the catalog on nearly every shared name. **The row count belongs in `docs/operations.md`'s clean-run table, which `test/regression.mjs` pins.** Prose copies of it are not kept here any more: every copy that existed on 2026-09-14 said 48 while the table held 59. |
+| `skill_system_bases` | A skill's percentage where one GAME prints a different one (`BOOK-INGEST-AUDIT` F83, migration 061). Keyed `(skill_name, system)`; `base` and `per_level` are each nullable, so a book that changes only the per-level gain states only that and the reader coalesces. Keyed on the NAME because `skills.id` is AUTOINCREMENT and differs per environment, with `ON UPDATE CASCADE` so a rename carries the override. Heroes Unlimited prints its own figure for every skill and disagrees with the catalog on nearly every shared name. Since migration 075 (`BOOK-INGEST-AUDIT` F102) a row may instead carry `level_bonuses`, a W.P.'s whole schedule in that game, which REPLACES the skill's own rather than merging into it - a W.P. is `base 0 / per_level 0`, so this is the only column its override can use. **The row count belongs in `docs/operations.md`'s clean-run table, which `test/regression.mjs` pins.** Prose copies of it are not kept here any more: every copy that existed on 2026-09-14 said 48 while the table held 59. |
+| `psionic_system_costs` | A psionic power's I.S.P. price where one GAME prints a different one (`BOOK-INGEST-AUDIT` F102, migration 076) - the sibling of `skill_system_bases`. Keyed `(power_name, system)` on the NAME, `ON UPDATE CASCADE`. `isp` and `isp_note` mean what they mean on `psionic_powers`, and NULL in either is the catalog's own, so a book printing two prices for one power stores the lower as `isp` and the other in the note. Applied to the ROW (`js/psionic-costs.js`), so every path that turns a power into a character's stored cost reads this game's price without knowing the table exists. |
 | `spells` | `system` NULL means unrestricted. name, level, ppe, plus a stat block (range, duration, damage, saving throw, area of effect, casting time, description). The stat block is TEXT — books write "100 feet per level" as often as a number. `tradition` (migration 055) names the family - warlock, ocean, dolphin, spellsong, cloud, shaman - and NULL is a general invocation; a level-gated pick reaches a tradition only if the class's `magic.spell_traditions_allowed` names it. `ppe_permanent` (migration 067) is P.P.E. the spell burns out of the CASTER'S base, as a dice expression; the sheet rolls it into `characters.ppe_base_spent` when the player says the spell's condition was met, and the condition itself stays in the description. `BOOK-INGEST-AUDIT.md` F101. |
 | `psionic_powers` | name, category (Healing/Physical/Sensitive/Super), isp, plus range, duration, saving throw and description — the same field names spells use. `min_tier` is the psychic tier a book states is required; NULL means no restriction beyond the category. `variant_note` carries what an older book states instead — the later book is authoritative (RUE over the Book of Magic, either over Palladium Fantasy) and the losing number is kept rather than discarded. |
 | `super_abilities` | name, tier (minor/major), plus range, duration, damage, saving throw and description - the same field names spells and psionic powers use. **Neither a cost nor a level**, which is what separates these from both: a Heroes Unlimited super ability is a permanent trait, and the stat block describes it in use rather than pricing it. `variant_note` carries what an earlier book states instead, as in `psionic_powers`. Added by migration 057 for decision D3 of the Heroes Unlimited batch, and declared in `js/catalog-fields.js`, so the editor, the write endpoints and the importers all read it from there. |

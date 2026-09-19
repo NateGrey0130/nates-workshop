@@ -7,6 +7,7 @@
 
 import { getUserEmail, unauthorized } from './_lib/auth.js';
 import { applySystemBases, systemBaseMap } from '../../../apps/character-creator/js/skill-base.js';
+import { applyPsionicCosts, psionicCostMap } from '../../../apps/character-creator/js/psionic-costs.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -24,7 +25,7 @@ export async function onRequestGet({ request, env }) {
   // ETag is a hash of the BODY, so the two answers cache apart on their own.
   const system = new URL(request.url).searchParams.get('system') || null;
 
-  const [skills, spells, psionics, supers, talents, enchantments, totems, systemBases] = await Promise.all([
+  const [skills, spells, psionics, supers, talents, enchantments, totems, systemBases, psionicCosts] = await Promise.all([
     // source_book rides along in all three so the pickers can filter on it —
     // typing "rifts main" should narrow a list the same way a name does.
     // `bonuses` travels with the row so the wizard can apply what a skill grants
@@ -100,10 +101,16 @@ export async function onRequestGet({ request, env }) {
     // because this endpoint is called ONCE at boot and the wizard does not yet
     // know which game the player is about to build in - the same reason
     // `skills.systems` is filtered client-side rather than in the query.
-    // Small, and all of them Heroes Unlimited's today. The row count lives in
+    // Small. The row count lives in
     // `docs/operations.md`'s clean-run table, which a test pins; this comment
     // carried its own copy and was wrong about it.
-    env.DB.prepare('SELECT skill_name, system, base, per_level, note, source_book FROM skill_system_bases ORDER BY system, skill_name').all(),
+    // `level_bonuses` since F102: a game's own W.P. schedule rides the same rows.
+    env.DB.prepare('SELECT skill_name, system, base, per_level, level_bonuses, note, source_book FROM skill_system_bases ORDER BY system, skill_name').all(),
+    // A psionic power's price where one GAME prints a different one
+    // (BOOK-INGEST-AUDIT.md F102). Every system's rows ship, for the reason
+    // `skill_system_bases` gives just above: the wizard boots before it knows
+    // the game. A handful of rows.
+    env.DB.prepare('SELECT power_name, system, isp, isp_note, note, source_book FROM psionic_system_costs ORDER BY system, power_name').all(),
   ]);
 
   const body = JSON.stringify({
@@ -117,7 +124,12 @@ export async function onRequestGet({ request, env }) {
     // Ordered by system, so a reader building one system's map walks a run.
     skillSystemBases: systemBases.results,
     spells: spells.results,
-    psionics: psionics.results,
+    // The sheet passes `?system=` and gets its game's prices substituted; the
+    // wizard passes none and derives from `psionicSystemCosts` itself.
+    psionics: applyPsionicCosts(psionics.results, psionicCostMap(
+      system ? psionicCosts.results.filter((c) => c.system === system) : [],
+    )),
+    psionicSystemCosts: psionicCosts.results,
     superAbilities: supers.results,
     talents: talents.results,
     // `bonuses` is stored as a JSON string, decoded here so every caller does

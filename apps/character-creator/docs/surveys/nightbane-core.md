@@ -759,6 +759,11 @@ a choice.** Migration 061's `skill_system_bases` holds a per-game `base` and
 Filed as **`BOOK-INGEST-AUDIT` F102**, which also finds Heroes Unlimited's 14
 classes granting a `W.P. Targeting` whose numbers are not the ones HU prints.
 
+**Stored since 2026-09-19** (F102 taken as option A): migration 075 gave
+`skill_system_bases` a `level_bonuses` column, and a `nightbane` row now carries
+printed 58's schedule for `W.P. Archery`, replacing the Rifts one for a Nightbane
+character. The row resolution above stands - still one row, no new name.
+
 **Why it costs little today.** No Nightbane class names this W.P. — a sweep of
 every class page, printed 68–192, finds the word only on the skill list, its
 description and the record sheet. Classes offer weapon proficiencies generically,
@@ -794,6 +799,11 @@ second row would also split the one name two games print.
 **The costs are therefore not stored, and that is a gap, not a choice** —
 `psionic_powers` has one `isp` and no per-system home. It is filed as
 **`BOOK-INGEST-AUDIT` F102**, together with the matching W.P. gap from D6.
+
+**Stored since 2026-09-19** (F102 taken as option A): migration 076's
+`psionic_system_costs` prices `Hypnotic Suggestion` at 2 for Nightbane, with the
+Healer's 4 as its note, and `Death Trance`'s Sensitive 2 as a note beside the
+catalog's 1. The resolution above stands - still one row, no category change.
 
 **A Nightbane character can reach it.** The book calls the Psychic a master
 psionic (printed 69), and the wizard gives a master all four categories including

@@ -13,8 +13,9 @@
 // is only the I/O the wizard does not need.
 
 import { systemBaseMap, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { psionicCostMap, applyPsionicCosts } from '../../../../apps/character-creator/js/psionic-costs.js';
 
-export { applySystemBases };
+export { applySystemBases, applyPsionicCosts };
 
 /**
  * The system a character is played in, from its campaign, or null.
@@ -44,7 +45,21 @@ export async function systemForCharacter(env, characterId) {
 export async function loadSystemBases(env, system) {
   if (!system) return new Map();
   const { results } = await env.DB.prepare(
-    'SELECT skill_name, base, per_level, source_book FROM skill_system_bases WHERE system = ?'
+    'SELECT skill_name, base, per_level, level_bonuses, source_book FROM skill_system_bases WHERE system = ?'
   ).bind(system).all();
   return systemBaseMap(results);
+}
+
+/**
+ * One system's own psionic costs, as `applyPsionicCosts` wants them
+ * (BOOK-INGEST-AUDIT.md F102). An empty map for a null system, for the reason
+ * `loadSystemBases` gives: the catalog's own price is what every character
+ * paid before this table existed.
+ */
+export async function loadPsionicCosts(env, system) {
+  if (!system) return new Map();
+  const { results } = await env.DB.prepare(
+    'SELECT power_name, isp, isp_note, source_book FROM psionic_system_costs WHERE system = ?'
+  ).bind(system).all();
+  return psionicCostMap(results);
 }

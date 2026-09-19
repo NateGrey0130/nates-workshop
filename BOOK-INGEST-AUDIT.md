@@ -1453,3 +1453,50 @@ that `W.P. Targeting`'s citation (Palladium Fantasy p.84) does not match its own
 strike levels, which read as Rifts Ultimate Edition's. Reported by that audit and
 not re-verified, because the page offsets were not checked; a citation belongs to
 a re-provenance pass, not to this finding.
+
+**Taken, 2026-09-19 (PR #PRNUM), as option A - on Nate's word, after he first
+chose B.** B was re-scoped by the take-time premise audit before anything was
+built, and he switched: a second row needs a second NAME (`skills.name` and
+`psionic_powers.name` are both UNIQUE), the fourteen Heroes Unlimited classes
+offer `W.P. Targeting` from a named `from:` list the wizard shows without a game
+filter, so every one of them would have needed editing to reach the new row; and
+`psionic_powers.system` holds ONE game, so the 6-I.S.P. row could not be kept for
+Rifts and Palladium Fantasy while hidden from the other two without a schema
+change anyway. B also reversed the Nightbane survey's D6 and D7 ("No new row")
+and the namespaced-name option F83 had weighed and passed over.
+
+**What shipped.** Migration 075 rebuilds `skill_system_bases` with a
+`level_bonuses` column (`json_valid`) and a CHECK that admits a row carrying only
+that - a rebuild because 061's CHECK refused one, measured first `--remote`:
+nothing references the table, one index, 89 rows. Migration 076 adds
+`psionic_system_costs (power_name, system, isp, isp_note)`, the sibling. Both are
+applied to the ROW, as F83's are: `applySystemBases` (js/skill-base.js) now
+substitutes `level_bonuses`, and `applyPsionicCosts` (js/psionic-costs.js) does
+`isp` and `isp_note`. The readers: `/catalogs` (the sheet's `?system=`, and every
+game's rows for the wizard), the wizard's `applySkillSystem`, `loadPowerCatalog`
+(level-up picks and the NPC generator), and `loadSkillBonuses` - the sheet's
+server path, and the one reader of a W.P. schedule that did not already go
+through `applySystemBases`. The data script
+`zzzzzzzzzzzzzzzz-f102-per-system-wp-isp.sql` writes five rows, every figure read
+off the rebuilt caches: HU `W.P. Targeting` (printed 36), Nightbane `W.P. Archery`
+(printed 58), HU `Hypnotic Suggestion` 2 (printed 133), Nightbane `Hypnotic
+Suggestion` 2 with the Healer's 4 as its note (printed 77, 84), and Nightbane
+`Death Trance` - the catalog's 1 kept, the Sensitive 2 as a note (printed 72, 78).
+
+**The merge rule this finding left at medium confidence: REPLACE.** A book that
+prints a W.P. prints its whole progression; merged, a level-7 Heroes Unlimited
+character would hold both games' strike bonuses. Pinned in the smoke section
+*Per-system W.P. schedules and psionic costs*.
+
+**Premise corrections, from the take-time audit.** (1) *"the smoke pin fires"* was
+false - `smoke.mjs` pins `similarity()` on two literal strings and never reads the
+catalog; the check that would really have caught a distinguished row is
+`findDuplicates`, in its `certain` tier. Moot under A. (2) `Death Trance` was the
+psionic half's third row and was missing from the evidence table; the Nightbane
+psionics script had already named it as this finding's. (3) The evidence table's
+rows otherwise held, re-read from the rebuilt caches.
+
+**Not done, and not this finding:** which catalog columns beyond these two a third
+game may override; a power's CATEGORY per game (D7 left it alone on purpose); and
+the `W.P. Targeting` citation question in the paragraph above, which still belongs
+to a re-provenance pass.
