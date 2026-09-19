@@ -15,6 +15,7 @@ import { json } from './auth.js';
 import { chunks, selectInChunks } from './sql-chunk.js';
 import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
+import { loadPsionicCosts, applyPsionicCosts } from './system-bases.js';
 import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          spellGrantsFor, psionicGrantsFor, talentGrantsFor, talentPurchaseGrantsFor, spellTraditionsAllowed,
@@ -381,8 +382,13 @@ export async function loadPowerCatalog(env, names, system) {
   }
   // A NULL system is unrestricted, which is how every picker already reads it.
   const keep = (r) => !system || !r.system || r.system === system;
+  // This game's own price for a power another game also prints
+  // (BOOK-INGEST-AUDIT.md F102). Applied to the row, so the `cost` a pick
+  // stores below is the one this character's book charges. No system, no
+  // substitution - the audit and create paths load without one on purpose.
+  const costs = await loadPsionicCosts(env, system);
   for (const r of spells.filter(keep)) empty.spell.set(r.name.toLowerCase(), r);
-  for (const r of psionics.filter(keep)) empty.psionic.set(r.name.toLowerCase(), r);
+  for (const r of applyPsionicCosts(psionics.filter(keep), costs)) empty.psionic.set(r.name.toLowerCase(), r);
   for (const r of supers.filter(keep)) empty.super.set(r.name.toLowerCase(), r);
   for (const r of talents.filter(keep)) empty.talent.set(r.name.toLowerCase(), r);
   return empty;

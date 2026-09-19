@@ -93,6 +93,9 @@ const TABLES = [
   // find. These two are the last pinned catalogs that had no row-level check.
   ['vehicles', 'name', 'slug'],
   ['skill_system_bases', ['skill_name', 'system'], ['skill_name', 'system']],
+  // Its psionic sibling (migration 076, BOOK-INGEST-AUDIT F102), keyed the same
+  // composite way for the same reason.
+  ['psionic_system_costs', ['power_name', 'system'], ['power_name', 'system']],
   // THE LAST TWO CATALOGS, and F86 asked for three. `vehicles` is the line
   // above: F90 added it at 22:38 on 2026-09-14, eleven hours after F86 was
   // filed, so the finding's own list and its grep evidence were both dead

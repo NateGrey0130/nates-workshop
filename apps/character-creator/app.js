@@ -14,6 +14,7 @@
 import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute } from './js/dice.js';
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
+import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
 import { isHandToHand, oneHandToHand, replacePrompt, handToHandCost, handToHandCondition,
@@ -2854,6 +2855,13 @@ function applySkillSystem() {
   S.skillCatalog = applySystemBases(raw, systemBaseMap(mine));
   // The index is name -> row, and the rows have just been replaced.
   _skillIndex = null;
+  // And this game's own I.S.P. prices (BOOK-INGEST-AUDIT.md F102) - Hypnotic
+  // Suggestion is 6 in Rifts and 2 in Heroes Unlimited. Same rule as above:
+  // derived from the raw rows every time. Every psionic picker reads
+  // S.psiCatalog and stores `p.isp` as the pick's cost, so substituting here
+  // is the whole of the wizard's half.
+  const costs = (S.psionicSystemCosts || []).filter((c) => c.system === S.system);
+  S.psiCatalog = applyPsionicCosts(S.psiCatalogRaw || [], psionicCostMap(costs));
 }
 
 // How each of a class's related-skill FLOORS is doing, given the picks made so
@@ -5092,9 +5100,12 @@ async function boot(first = true) {
     // derives the working catalog whenever the system becomes known or changes.
     S.skillCatalogRaw = catalogsRes.skills;
     S.skillSystemBases = catalogsRes.skillSystemBases || [];
+    // Psionic prices the same way (F102), so it is set before the derivation.
+    // `|| []` for a browser holding a warm 304 from before the key existed.
+    S.psiCatalogRaw = catalogsRes.psionics;
+    S.psionicSystemCosts = catalogsRes.psionicSystemCosts || [];
     applySkillSystem();
     S.spellCatalog = catalogsRes.spells;
-    S.psiCatalog = catalogsRes.psionics;
     // `|| []` because a browser holding a warm 304 from before super abilities
     // joined this payload would otherwise set the catalog to undefined and every
     // `.filter` below it would throw. The ETag is a hash of the body, so the

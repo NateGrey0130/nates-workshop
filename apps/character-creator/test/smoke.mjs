@@ -680,6 +680,8 @@ import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuanti
          isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos, validateTotem, mosList } from '../js/parser.js';
 import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js/skill-base.js';
+import { applyPsionicCosts, psionicCostMap } from '../js/psionic-costs.js';
+import { skillConditionalBonuses } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
@@ -4903,6 +4905,77 @@ section('Attribute-derived skill base');
     check('and the endpoint honours it',
       /const system = new URL\(request\.url\)\.searchParams\.get\('system'\)/.test(catSrc)
         && /skills: applySystemBases\(skills\.results, systemBaseMap\(/.test(catSrc));
+  }
+
+  // ── ONE GAME'S OWN W.P. SCHEDULE AND PSIONIC PRICE (BOOK-INGEST-AUDIT.md F102)
+  //
+  // F83's table held a percentage and nothing else, and a W.P. is carried
+  // wholly by `level_bonuses`; `psionic_powers` held one `isp`. So Heroes
+  // Unlimited's W.P. Targeting and its 2-I.S.P. Hypnotic Suggestion both
+  // arrived at another game's numbers without a word.
+  section('Per-system W.P. schedules and psionic costs');
+  {
+    const pf = '[{"level":1,"applies_when":"thrown","combat":{"strike":1}},{"level":3,"applies_when":"thrown","combat":{"strike":1}}]';
+    const hu = '[{"level":2,"applies_when":"thrown or bow","combat":{"strike":1}}]';
+    const cat = [{ name: 'W.P. Targeting', base: 0, per_level: 0, level_bonuses: pf },
+                 { name: 'W.P. Sword', base: 0, per_level: 0, level_bonuses: '[]' }];
+    const out = applySystemBases(cat, systemBaseMap([
+      { skill_name: 'W.P. Targeting', base: null, per_level: null, level_bonuses: hu }]));
+    // REPLACED, never merged: merged, a level-3 character would hold both
+    // games' strike bonuses, which is neither book.
+    check('a schedule replaces the row\'s schedule outright',
+      out[0].level_bonuses === hu);
+    check('while base and per_level, stated null, keep the row\'s',
+      out[0].base === 0 && out[0].per_level === 0);
+    check('a W.P. with no override keeps its own schedule',
+      out[1].level_bonuses === '[]');
+    check('and the raw catalog row is left alone', cat[0].level_bonuses === pf);
+    // The server's sheet path reads the schedule through bonusesFromSkills, so
+    // the level-2 strike has to come out of the SUBSTITUTED row.
+    check('the substituted schedule is what the bonus reader sees',
+      skillConditionalBonuses([out[0]], 3).length === 1
+        && skillConditionalBonuses([out[0]], 3)[0].combat.strike === 1
+        && skillConditionalBonuses([cat[0]], 3)[0].combat.strike === 2);
+
+    const psi = [{ name: 'Hypnotic Suggestion', category: 'Super', isp: 6, isp_note: null },
+                 { name: 'Death Trance', category: 'Physical', isp: 1, isp_note: null },
+                 { name: 'Mind Block', category: 'Sensitive', isp: 4, isp_note: null }];
+    const nb = psionicCostMap([
+      { power_name: 'Hypnotic Suggestion', isp: 2, isp_note: '4 as a Healer power', source_book: 'NB p.77' },
+      { power_name: 'Death Trance', isp: null, isp_note: '2 as a Sensitive power' }]);
+    const po = applyPsionicCosts(psi, nb);
+    check('a game\'s price is substituted, with its note',
+      po[0].isp === 2 && po[0].isp_note === '4 as a Healer power' && po[0].system_cost_source === 'NB p.77');
+    check('a null isp keeps the catalog\'s minimum and takes the note',
+      po[1].isp === 1 && po[1].isp_note === '2 as a Sensitive power');
+    check('a power with no row is untouched', po[2] === psi[2]);
+    check('the raw psionic rows are left alone', psi[0].isp === 6 && psi[0].isp_note === null);
+    check('no costs returns the rows unchanged',
+      applyPsionicCosts(psi, new Map()) === psi && applyPsionicCosts(psi, null) === psi);
+    check('psionicCostMap reads power_name or name, case-insensitively',
+      psionicCostMap([{ name: 'Mind Block', isp: 1 }]).get('mind block').isp === 1
+        && psionicCostMap([{ power_name: 'MIND BLOCK', isp: 2 }]).get('mind block').isp === 2);
+
+    // Every path that turns a catalog row into a character's numbers, named -
+    // F83's own section says why: F18 was a resolver one server path never called.
+    const fnDir = join(repoRoot, 'functions', 'api', 'character-creator');
+    const src = (f) => readFileSync(join(fnDir, f), 'utf8');
+    check('the sheet\'s bonus loader applies the game\'s schedule',
+      /applySystemBases\(rows, overrides\)/.test(src('_lib/skill-bonuses.js')), '_lib/skill-bonuses.js');
+    check('the server loads level_bonuses with the other override columns',
+      /SELECT skill_name, base, per_level, level_bonuses, source_book FROM skill_system_bases/
+        .test(src('_lib/system-bases.js')), '_lib/system-bases.js');
+    check('every server power pick is priced in the character\'s game',
+      /applyPsionicCosts\(psionics\.filter\(keep\), costs\)/.test(src('_lib/power-picks.js')), '_lib/power-picks.js');
+    const catSrc102 = src('catalogs.js');
+    check('/catalogs ships every game\'s prices, and substitutes the one asked for',
+      /FROM psionic_system_costs/.test(catSrc102)
+        && /psionics: applyPsionicCosts\(psionics\.results, psionicCostMap\(/.test(catSrc102)
+        && /level_bonuses, note, source_book FROM skill_system_bases/.test(catSrc102));
+    const wiz102 = readFileSync(join(appDir, 'app.js'), 'utf8');
+    check('the wizard derives its psionic prices from the raw rows',
+      /S\.psiCatalogRaw = catalogsRes\.psionics;/.test(wiz102)
+        && /S\.psiCatalog = applyPsionicCosts\(S\.psiCatalogRaw \|\| \[\], psionicCostMap\(costs\)\)/.test(wiz102));
   }
 
   check('isBaseFormula admits the one shape and nothing else',

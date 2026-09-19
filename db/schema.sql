@@ -920,9 +920,14 @@ CREATE TABLE IF NOT EXISTS skill_system_bases (
     CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
   base INTEGER,                           -- NULL = this game does not change it
   per_level INTEGER,                      -- NULL = same
+  -- A W.P.'s own schedule in this game, REPLACING skills.level_bonuses (migration
+  -- 075, BOOK-INGEST-AUDIT.md F102). A W.P. is base 0 / per_level 0, so this is
+  -- the only column its override can use - which is why the CHECK below admits it.
+  level_bonuses TEXT                      -- NULL = same
+    CHECK (level_bonuses IS NULL OR json_valid(level_bonuses)),
   note TEXT,
   source_book TEXT,
-  CHECK (base IS NOT NULL OR per_level IS NOT NULL),
+  CHECK (base IS NOT NULL OR per_level IS NOT NULL OR level_bonuses IS NOT NULL),
   PRIMARY KEY (skill_name, system)
 );
 
@@ -944,6 +949,12 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '061-skill-system-bases.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master
                WHERE type = 'table' AND name = 'skill_system_bases');
+
+-- 075 rebuilt the table to add `level_bonuses` and widen the CHECK, so it is
+-- guarded on the column, and sits here for the same reason 061's line does.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '075-skill-system-bases-level-bonuses.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('skill_system_bases') WHERE name = 'level_bonuses');
 
 CREATE TABLE IF NOT EXISTS spells (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1025,6 +1036,36 @@ CREATE TABLE IF NOT EXISTS psionic_powers (
   -- this yet — that needs real imported data behind it first.
   min_tier TEXT
 );
+
+-- A psionic power's I.S.P. price where one GAME prints a different one
+-- (migration 076, BOOK-INGEST-AUDIT.md F102). The sibling of
+-- skill_system_bases above, for the same reasons: a second row per game would
+-- split the one name every game prints, so the price belongs to (power, system).
+-- `isp` and `isp_note` mean what they mean on psionic_powers - the minimum, and
+-- the variable schedule in a few words - and NULL in either is "the catalog's
+-- own". Keyed on the name, ON UPDATE CASCADE, as skill_system_bases is.
+CREATE TABLE IF NOT EXISTS psionic_system_costs (
+  power_name TEXT NOT NULL
+    REFERENCES psionic_powers(name) ON DELETE CASCADE ON UPDATE CASCADE,
+  system TEXT NOT NULL
+    CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
+  isp INTEGER,                            -- NULL = this game charges the catalog's price
+  isp_note TEXT,                          -- NULL = same
+  note TEXT,
+  source_book TEXT,
+  CHECK (isp IS NOT NULL OR isp_note IS NOT NULL),
+  PRIMARY KEY (power_name, system)
+);
+
+CREATE INDEX IF NOT EXISTS idx_psionic_system_costs_system
+  ON psionic_system_costs(system);
+
+-- Guarded on the table, and placed after its CREATE, for the reason 061's line
+-- gives (BOOK-INGEST-AUDIT F99).
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '076-psionic-system-costs.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master
+               WHERE type = 'table' AND name = 'psionic_system_costs');
 
 -- Super abilities: the fifth kind of power here, after spells, psionics, skills
 -- and enchantments, and the one that has NEITHER a cost NOR a level. A Heroes
