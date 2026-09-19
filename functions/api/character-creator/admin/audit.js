@@ -99,7 +99,9 @@ export async function onRequestGet({ request, env }) {
       unvalidatable.push({ id: row.id, name: row.name, class_id: row.class_id,
         reason: String(row.class_id).startsWith('notable:')
           ? 'A book NPC copied from notable_npcs - its printed numbers are the ruling, and no class applies'
-          : 'No class definition resolves for that class_id' });
+          : String(row.class_id).startsWith('creature:')
+            ? 'A creature rolled from the creatures catalog - its printed dice are the ruling, and no class applies'
+            : 'No class definition resolves for that class_id' });
       continue;
     }
     if (violations.length || warnings.length) {

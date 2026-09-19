@@ -153,7 +153,7 @@ const groups = [
   // its tables: a label is what an offender is printed as, not a key.
   ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
       'super_abilities', 'enchantments', 'totems', 'talents',
-      'morphus_characteristics', 'notable_npcs'].map((t) => ({
+      'morphus_characteristics', 'notable_npcs', 'creatures'].map((t) => ({
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
@@ -446,7 +446,7 @@ if (process.argv.includes('--vs-build')) {
         // catalog lands, both lists need it.
         ...['gear', 'skills', 'spells', 'psionic_powers', 'vehicles',
             'super_abilities', 'enchantments', 'totems', 'talents',
-            'morphus_characteristics', 'notable_npcs'].map((t) => ({
+            'morphus_characteristics', 'notable_npcs', 'creatures'].map((t) => ({
           label: t,
           rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
         })),

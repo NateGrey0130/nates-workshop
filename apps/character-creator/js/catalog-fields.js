@@ -39,6 +39,10 @@
 
 import { validateBonuses, validateSkillEntries, isDiceBonus } from './parser.js';
 
+// The creature pool grammar (js/creature-roll.js), stated where a form shows it.
+const FORMULA_HELP = 'A formula: dice, whole numbers and attributes joined by + or - - '
+  + '"3D6", "1D4x10", "PE+20", "PEx10". Anything else is refused when the creature is rolled.';
+
 export const CATALOGS = {
   skills: {
     table: 'skills',
@@ -552,6 +556,65 @@ export const CATALOGS = {
       { name: 'disposition', label: 'Disposition', type: 'longtext' },
       { name: 'allies', label: 'Allies', type: 'longtext' },
       { name: 'enemies', label: 'Enemies', type: 'longtext' },
+      { name: 'description', label: 'Description', type: 'longtext',
+        help: 'A short factual paraphrase citing the printed page - never the book\'s own sentences.' },
+      { name: 'source_book', label: 'Source book', type: 'text' },
+    ],
+  },
+
+  // The species the books stat (migration 074). Where a notable NPC holds the
+  // book's NUMBERS, a creature holds its FORMULAS, and a campaign copy rolls
+  // them (campaigns/:id/npcs/from-creature). Every formula field is `text`
+  // rather than `dice`: the `dice` type reads class dice, and a creature's hit
+  // points are as often "PE+20" as "3D6". js/creature-roll.js is the grammar,
+  // and it REFUSES what it cannot read - so the help below states it.
+  //
+  // NO `MERGE_REFS` ENTRY, for notableNpcs' reason: a campaign copy's
+  // `creature:<slug>` class id is a copy, not a reference to keep in step.
+  creatures: {
+    table: 'creatures',
+    label: 'Creatures',
+    displayField: 'name',
+    uniqueField: 'slug',
+    hasSource: false,
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true,
+        help: 'The species as the book heads it - "Feathered Death", "Grimbor".' },
+      { name: 'slug', label: 'Slug', type: 'text', required: true,
+        help: 'The portable key. A campaign copy records it as class_id creature:<slug>.' },
+      { name: 'category', label: 'Category', type: 'text',
+        help: 'Free text: animal, monster, demon, faerie, dragon...' },
+      { name: 'system', label: 'System', type: 'select',
+        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+      { name: 'playable', label: 'Optional player race', type: 'bool', blankAs: 0,
+        help: 'The book offers it as a player character. A catalog fact, not a class.' },
+      { name: 'alignment', label: 'Alignment', type: 'text' },
+      { name: 'attributes', label: 'Attributes', type: 'kv',
+        help: 'JSON of the sheet\'s keys to FORMULAS: {"IQ":"2D6","PS":"4D6","PB":"N/A","Spd":"2D6x10"}. '
+            + '"N/A" is an attribute the species does not have; leave out one the book does not print.' },
+      { name: 'hp', label: 'Hit points', type: 'text', help: FORMULA_HELP },
+      { name: 'sdc', label: 'S.D.C.', type: 'text', help: FORMULA_HELP },
+      { name: 'mdc', label: 'M.D.C.', type: 'text', help: FORMULA_HELP },
+      { name: 'ppe', label: 'P.P.E.', type: 'text', help: FORMULA_HELP },
+      { name: 'isp', label: 'I.S.P.', type: 'text', help: FORMULA_HELP },
+      { name: 'pools_note', label: 'Pools as printed', type: 'longtext',
+        help: 'Any wording a formula above simplified - "gives most the equivalent of 1 or 2 M.D.C."' },
+      { name: 'ar', label: 'Natural A.R.', type: 'int' },
+      { name: 'horror_factor', label: 'Horror Factor', type: 'int' },
+      { name: 'combat', label: 'Combat', type: 'kv',
+        help: 'JSON of the sheet\'s combat keys, fixed numbers: {"attacks":3,"initiative":1,"strike":2,"dodge":4}' },
+      { name: 'bonuses_note', label: 'Other bonuses', type: 'longtext' },
+      { name: 'skills_note', label: 'Skills', type: 'longtext', help: 'Its R.C.C. skills, as the book lists them.' },
+      { name: 'natural_abilities', label: 'Natural abilities', type: 'longtext' },
+      { name: 'magic', label: 'Magic', type: 'longtext' },
+      { name: 'psionics', label: 'Psionics', type: 'longtext' },
+      { name: 'size', label: 'Size', type: 'text' },
+      { name: 'weight', label: 'Weight', type: 'text' },
+      { name: 'life_span', label: 'Life span', type: 'text' },
+      { name: 'habitat', label: 'Habitat', type: 'longtext' },
+      { name: 'allies', label: 'Allies', type: 'longtext' },
+      { name: 'enemies', label: 'Enemies', type: 'longtext' },
+      { name: 'occ_note', label: 'Optional O.C.C.s', type: 'longtext' },
       { name: 'description', label: 'Description', type: 'longtext',
         help: 'A short factual paraphrase citing the printed page - never the book\'s own sentences.' },
       { name: 'source_book', label: 'Source book', type: 'text' },

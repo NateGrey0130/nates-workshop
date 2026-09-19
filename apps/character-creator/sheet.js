@@ -2271,8 +2271,11 @@ function render() {
       <div>
         ${/* A book NPC's class id is notable:<slug> (from-notable) - a source, not
              a class. What the book printed for this person is in bio.occupation. */ ''}
+        ${/* A creature's is creature:<slug> (from-creature): the species is in bio.race. */ ''}
         ${field('O.C.C.', escHtml(cls.name
-          || (String(c.class_id).startsWith('notable:') ? (c.bio?.occupation || 'From the books') : c.class_id)))}
+          || (String(c.class_id).startsWith('notable:') ? (c.bio?.occupation || 'From the books')
+            : String(c.class_id).startsWith('creature:') ? (c.bio?.race ? `${c.bio.race} (creature)` : 'A creature')
+            : c.class_id)))}
         ${/* A Military Occupational Specialty is part of what the character IS,
               not a skill-list detail: two Technical Officers with different
               specialties share no MOS skills at all. Shown beside the O.C.C.

@@ -169,11 +169,12 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Twelve modules are imported by both the browser and the Workers runtime, or
+Thirteen modules are imported by both the browser and the Workers runtime, or
 written to be: `js/parser.js`, `js/dice.js`, `js/catalog-fields.js`,
 `js/compose.js`, `js/psionics.js` (through compose), `js/language-skills.js`,
 `js/hand-to-hand.js`, `js/leveling.js`, `js/second-form.js`, `js/derive.js`,
-`js/npc-generate.js` (server-only today) and `js/skill-base.js`. `skill-base.js`
+`js/npc-generate.js` and `js/creature-roll.js` (both server-only today) and
+`js/skill-base.js`. `skill-base.js`
 resolves a skill's starting percentage, including one game's own where it
 differs from the catalog's (`BOOK-INGEST-AUDIT` F83). `second-form.js` folds a
 character's second body into numbers (`BOOK-INGEST-AUDIT` F74), and imports the
@@ -208,7 +209,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -280,6 +281,7 @@ ppe and isp — for the FIRST form; a second form's pools live in `second_form`.
 | `morphus_characteristics` | The Nightbane Morphus tables (migration 068, survey D5): one row per **entry** of the 19 percentile tables on printed 91-106, plus an `intro` row per table for its preamble, with `roll_low`/`roll_high` as the band (0/0 on an intro row). `kind` is effect, route, combination or intro. `bonuses` is a class `bonuses` block through the same `validateBonuses`; `horror_factor` is added and `horror_factor_set` replaces, because a few entries set it; `horror_factor` is TEXT, a whole number or a dice expression (`1d4+1`) rolled once when the Morphus is made. `routes` is a JSON list of `{table, count}` - a table the book never prints (Bear, Amphibian) is still named, and the generator rerolls it - and `sub_choices` a JSON list of strings. **Keyed on `key`**, `<table_name>: <name>`, because an entry's name repeats across tables and the catalog editor keys on one column; a CHECK keeps it equal to its parts. Nothing reads the table yet - the second body and the generator are later PRs. |
 | `notable_npcs` | The named people the books stat, one row each (migration 072) - the mayor, the cult leader, the Lord Magus. The book's FIXED numbers for one person: `attributes`, `combat` and `skills` (`[{ name, pct }]`) are JSON a sheet reads, the pools are columns, and magic, psionics, super powers and gear are prose. `campaigns/[id]/npcs/from-notable` copies one into a campaign as a `kind = 'npc'` character with class_id `notable:<slug>`, one-way and with no class rules applied. Read in the codex's `notables` section. |
 | `stat_attacks` | A stat block's attacks, one row each (migration 073), for any owner: `(owner_kind, owner_slug)` is `notable_npc` now and `creature` when the bestiary lands. No foreign key; `UNIQUE (owner_kind, owner_slug, name)`. |
+| `creatures` | The species the books stat, one row each (migration 074) - the Feathered Death, the Grimbor. The book's DICE for a kind of creature, where `notable_npcs` holds one person's numbers: `attributes` is JSON of the sheet's keys to formulas (`"2D6"`, or `"N/A"` for an attribute the species lacks), and hp / sdc / mdc / ppe / isp are formulas that may name an attribute (`"PE+20"`, `"PEx10"`), in the one strict grammar of `js/creature-roll.js`. `combat`, `ar` and `horror_factor` are fixed numbers; `playable` marks a species the book offers as a player race. Attacks are `stat_attacks` rows with `owner_kind = 'creature'`. `campaigns/[id]/npcs/from-creature` rolls individuals from it. |
 
 Every catalog carries `source_book`, so an entry's provenance is visible and
 the same skill from two books can coexist under distinguished names. The
@@ -568,6 +570,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `campaigns/[id]/npcs/generate` | POST | **G.M. only.** Roll statted NPCs: `{ class_id, class_variant?, occ_class_id?, occ_class_variant?, level?, count? (1-10), name? }`. Each is a `characters` row with `kind = 'npc'`, owned by the G.M. and invisible to everyone else, written by the same `createCharacter()` a player's character goes through - so it is validated against its class the same way. Dice and choices are `js/npc-generate.js`. Spells, psionics and Talents the class lets the NPC choose are **banked** for the sheet's picks panel; powers it grants are held. A class it cannot build legally is a **422 naming what stopped it** (`code`: `needs_occupation`, `second_form`, `pool_exhausted`, ...) - never a padded pick |
 | `campaigns/[id]/npcs/from-notable` | POST | **G.M. only.** `{ slug, name? }` - copy a `notable_npcs` row into this campaign as a `kind = 'npc'` character: the book's attributes, pools, combat numbers and skills as printed, class_id `notable:<slug>`, and its attacks and prose in the sheet's notes. **Not** through `createCharacter()`: a book NPC has no class to validate against, and composing one over the book's totals would count its bonuses twice. One-way - the copy is the table's |
+| `campaigns/[id]/npcs/from-creature` | POST | **G.M. only.** `{ slug, count? (1-12), name? }` - roll `count` individuals of a `creatures` row into this campaign, each separately: its attribute and pool formulas rolled through `js/creature-roll.js`, class_id `creature:<slug>`, `kind = 'npc'`, and its attacks and prose in the sheet's notes. **Refuses** 422 naming the field when a formula is outside the grammar, and writes nothing - never a substitute number. Not through `createCharacter()`, for from-notable's reason. |
 | `draft` | GET / PUT / DELETE | The caller's own unfinished wizard build. No id in the route — a draft belongs to a person, not a collection. One each. **PUT states the version it is replacing** in `expect_updated_at` and is refused 409 otherwise; see [Two tabs cannot overwrite each other](docs/wizard-and-sheet.md#two-tabs-cannot-overwrite-each-other) |
 | `characters` | GET / POST | List (`?campaign_id=`, `?mine=1` for the caller's own, `?limit=`, `?offset=`); create at the starting level — **validated against the class rules, creation-time powers included, pool maxima capped to the class formulas for non-GM creators** — and refused 403 in a closed campaign unless the caller is its GM or already a member |
 | `characters/[id]` | GET / PATCH / DELETE | Sheet + inventory, with `can_write` / `is_gm`; edit pools, notes, and the bio/combat/saves/armor sections. Also returns `skill_level_notes` and `weapon_bonuses` — what a skill grants that is not a summable number; see [A fighting style is a level schedule](docs/leveling.md#a-fighting-style-is-a-level-schedule) — and `power_descriptions`, what each HELD power does, keyed by the lowercased name the character holds it under and resolved through `catalog_redirects`. Only this character's powers: the two catalogs' whole description corpus is sixteen times bigger and deliberately stays out of `catalogs`. See [plan 20](docs/plans/20-power-descriptions.md). DELETE removes the character — owner or GM — and **keeps their journal entries**, detaching them to campaign-level first rather than letting the foreign key cascade a player's posts out of a log everyone reads |
