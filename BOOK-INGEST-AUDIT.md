@@ -1454,7 +1454,7 @@ strike levels, which read as Rifts Ultimate Edition's. Reported by that audit an
 not re-verified, because the page offsets were not checked; a citation belongs to
 a re-provenance pass, not to this finding.
 
-**Taken, 2026-09-19 (PR #PRNUM), as option A - on Nate's word, after he first
+**Taken, 2026-09-19 (PR #1184), as option A - on Nate's word, after he first
 chose B.** B was re-scoped by the take-time premise audit before anything was
 built, and he switched: a second row needs a second NAME (`skills.name` and
 `psionic_powers.name` are both UNIQUE), the fourteen Heroes Unlimited classes
