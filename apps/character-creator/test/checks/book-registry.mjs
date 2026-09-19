@@ -218,6 +218,19 @@ export function run() {
     check('and a majority vote flattens it to the wrong one for the minority region',
       detectPageOffset(pfPages).offset === 2);
 
+    // pf's duplicated page, as the rebuilt cache shows it: printed 17 on BOTH
+    // p018 and p019. Neither copy may claim the folio for its region, or the +1
+    // head grows to 17 and disagrees with the registry's deliberate choice.
+    const dupPages = [
+      ...[14, 15, 16, 17, 18].map((p) => ({ page: p, lines: ['prose', String(p - 1)] })),
+      ...[19, 20, 21, 22].map((p) => ({ page: p, lines: ['prose', String(p - 2)] })),
+    ];
+    const dupRegions = detectPageOffsetRegions(dupPages);
+    check('a folio printed on two cache pages belongs to neither region',
+      dupRegions.length === 2
+      && dupRegions[0].offset === 1 && dupRegions[0].toPrinted === 16
+      && dupRegions[1].offset === 2 && dupRegions[1].fromPrinted === 18);
+
     // `fom` has one page voting -3 and `rue` two voting +33 and +38, all single
     // votes in front matter. A stray bare number is not a pagination, and the
     // runs it splits must be re-joined or every book looks split.
