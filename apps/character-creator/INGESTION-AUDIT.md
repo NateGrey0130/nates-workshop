@@ -1033,7 +1033,7 @@ when forgotten. **The case for declining** is that no row in the table's life
 would have used them. Nate has asked for it anyway, on the grounds `F23` gives:
 the ledger should answer cost.
 
-**Taken, 2026-09-19 (PR #PRNUM), as written - scope and posture both.** Migration
+**Taken, 2026-09-19 (PR #1186), as written - scope and posture both.** Migration
 077 adds `cache_write_tokens` and `cache_read_tokens` to `claude_usage`. The
 extractor stores the split it already computed, and `recordUsage` in
 `claude-client.js` now stores it too and sums it into `input_tokens`, so that
