@@ -34,6 +34,14 @@
     // block under the header, and `scroll-margin-top` needs one number.
     const s = document.querySelector('[data-sticky]');
     if (s) document.documentElement.style.setProperty('--sticky-h', s.offsetHeight + 'px');
+    // And the fixed bar at the BOTTOM, for the same reason at the other end:
+    // play mode reserves room so the bar cannot cover the last row of the
+    // sheet, and since P5e that bar carries the controls, so its height is no
+    // longer a constant anyone can write down. Measured on render and on
+    // resize, which deliberately excludes the roll history's transient
+    // expansion - that overlays, as it always has.
+    const b = document.querySelector('#play-roll-bar');
+    if (b) document.documentElement.style.setProperty('--play-bar-h', b.offsetHeight + 'px');
   }
 
   window.addEventListener('resize', sizeSticky);

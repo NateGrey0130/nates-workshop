@@ -1722,8 +1722,12 @@ body.play-mode #print-btn { display: none; }
 body:not(.play-mode) #play-controls,
 body:not(.play-mode) #play-roll-bar { display: none; }
 
-/* Room for the fixed roll bar so it cannot cover the last row of the sheet. */
-body.play-mode { padding-bottom: 72px; }
+/* Room for the fixed bar so it cannot cover the last row of the sheet. It was
+   72px, a constant, and the bar carries the combat controls now - so the
+   height is measured from the rendered bar by js/sticky.js, for the same
+   reason --header-h is measured rather than written down. The 72px stays as
+   the fallback for the render before the first measurement. */
+body.play-mode { padding-bottom: calc(var(--play-bar-h, 72px) + 12px); }
 
 /* Record-keeping does not belong at the table. These four are the boxes play
    mode never showed; everything else the sheet has - attributes, armor, gear,
@@ -1846,10 +1850,12 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
 }
 /* 44, not 40 (P5d, 2026-09-20). The play-mode header says "44px tap targets"
-   and the .play-dice comment below says "Same 44px target as the amount
-   buttons"; both rules said 40, so the claim was wrong in two places about a
-   third. Measured at 375x812 in play mode: 65 of 94 visible controls were
-   under 44px in some dimension, and these are the ones pressed most. */
+   and the .play-dice rule said "Same 44px target as the amount buttons" while
+   both rules said 40 - the claim was wrong in two places about a third. That
+   second rule is gone now (P5e folded the percentile into this strip), so this
+   rule is the one that carries the size for both. Measured at 375x812 in play
+   mode: 65 of 94 visible controls were under 44px in some dimension, and these
+   are the ones pressed most. */
 .play-amt button {
   min-width: 44px; min-height: 44px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
@@ -1861,26 +1867,18 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   border-color: var(--accent-secondary); color: var(--accent-secondary);
 }
 
-/* THE BARE PERCENTILE. Its own row rather than a fifth button on the amount
-   strip above, for two reasons that are both about what that strip is: it is
-   gated on write access, and every button on it is arithmetic against this
-   character's pools. A roll is neither - it changes nothing, and a read-only
-   viewer at the table rolls their own dice, which is the same argument that
-   leaves .roll-btn ungated.
+/* THE BARE PERCENTILE, which used to be a row of its own under the amount
+   strip. It is a button in the bar now (P5e) and it kept the reason it was
+   separate: the amount group is arithmetic against this character's pools and
+   is gated on write access, and a roll is neither - it changes nothing, and a
+   read-only viewer at the table rolls their own dice, the same argument that
+   leaves .roll-btn ungated. So `w` gates the group beside it, never the bar.
 
-   Same 44px target and the same tones as the amount buttons, because it is the
-   same kind of control in the same strip; only the row is different. It needs
-   no hiding rule of its own - it is inside #play-controls, which
-   body:not(.play-mode) hides and the print block hides again. */
-.play-dice {
-  display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
-}
-.play-dice button {
-  min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: var(--radius-sm);
-  background: var(--bg-tertiary); border: 1px solid var(--border);
-  color: var(--text-secondary); font-size: 15px; cursor: pointer;
-}
-.play-dice button:active { background: var(--accent-glow); border-color: var(--accent); }
+   `.play-dice` and its two rules are GONE rather than left behind: nothing
+   renders that class any more, and an unused rule is the thing F16 declined to
+   copy and F56 named as dead CSS to delete. */
+#play-actions .pct { color: var(--text-secondary); padding: 0 12px; }
+#play-actions .pct:active { background: var(--accent-glow); border-color: var(--accent); }
 
 /* UI-AUDIT F40: where the hit lands, beside Damage. */
 .play-hit-to { min-height: 44px; max-width: 240px; }
@@ -1906,12 +1904,29 @@ body.show-play-keys .play-keys { display: block; }
   border-bottom: 1px solid var(--border); user-select: none;
 }
 
+/* THE BAR CARRIES THE CONTROLS NOW (P5e, 2026-09-20). It was a read-only strip
+   of text in the only band a thumb can always reach, while Damage and the
+   amount chips scrolled away with the rest of the page: measured on the Gear
+   tab at 375 wide, 2,873px, Damage was gone by the halfway mark and the chips
+   by the bottom. The thumb zone was spent on the one thing you cannot press.
+
+   Two children, and the split is what makes it work: #roll-line is what a roll
+   rewrites, so pressing Damage never rebuilds the button that was pressed. */
 #play-roll-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: var(--bg-secondary); border-top: 1px solid var(--accent);
   font-size: 16px; text-align: center;
 }
+#roll-line { margin-bottom: 8px; }
+/* The roll line is the one thing here that can be long - a skill name, its
+   target and the verdict - and it must not push the controls off a phone. */
+#play-roll-bar #play-actions .play-amt {
+  justify-content: center; margin-bottom: 0; gap: 6px;
+}
+/* A bare percentile alone on the row, for a read-only viewer, should not sit
+   hard left as though something were missing beside it. */
+#play-roll-bar #play-actions .play-amt:only-child { justify-content: center; }
 #play-roll-bar.empty { border-top-color: var(--border); }
 /* The success/miss tones on the roll result. These were a mint #5dd39e and a
    coral #e2606c, left from the scheme before Rust & Ash: phase 1 retoned by

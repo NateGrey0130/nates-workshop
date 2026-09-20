@@ -555,13 +555,18 @@ function recordRoll(kind, name, entry) {
   if (kind === 'skill' || kind === 'save' || kind === 'combat' || kind === 'attack' || kind === 'damage'
     || kind === 'percentile') persistRoll(rollNote(r));
   if (C.rollLog.length > 50) C.rollLog.shift();
-  const bar = $('play-roll-bar');
-  if (bar) { bar.innerHTML = rollBarHtml(); bar.classList.remove('empty'); }
+  const bar = $('roll-line');
+  if (bar) { bar.innerHTML = rollBarHtml(); bar.parentElement?.classList.remove('empty'); }
 }
 
 function rollBarHtml() {
   const r = C.lastRoll;
-  if (!r) return '<span class="muted">Tap a skill, save or combat bonus to roll, or Percentile for a bare d100.</span>';
+  // Short enough for ONE line at 375px. It used to end "…or Percentile for a
+  // bare d100", which cost a second line to name a button that is now three
+  // centimetres to the right of the sentence (P5e). Two lines of standing
+  // instruction in a fixed bar is rent, and the bar pays it on every screen
+  // until the first roll of the session.
+  if (!r) return '<span class="muted">Tap a skill, save or bonus to roll.</span>';
   // UI-AUDIT F44: the log kept fifty rolls and the bar showed one. The last ten
   // open from the bar itself, newest first, and close the same way.
   const n = Math.min(C.rollLog.length, 10);
@@ -1082,7 +1087,7 @@ async function hitArmor(i, amt) {
   recordRoll('overflow', label, { note: excess > 0 ? `absorbed ${took}; ${excess} not absorbed` : `absorbed ${took} (${to} left)` });
   // After recordRoll, which clears any older offer: this one is the live one.
   C.overflow = excess > 0 ? { amount: excess, label } : null;
-  const bar = $('play-roll-bar');
+  const bar = $('roll-line');
   if (bar) bar.innerHTML = rollBarHtml();
 }
 
@@ -1561,7 +1566,7 @@ function rememberPlaySec(el) {
 
 function toggleRollHistory() {
   C.showRollHist = !C.showRollHist;
-  const bar = $('play-roll-bar');
+  const bar = $('roll-line');
   if (bar) bar.innerHTML = rollBarHtml();
 }
 
@@ -1641,20 +1646,57 @@ function rollBtn(r) {
 // switching modes is a class flip rather than a re-render - which is what lets
 // togglePlay stop rebuilding the page and stop eating a half-typed note, the
 // same reason pickTab toggles classes instead of re-rendering.
-function playControlsHtml(w, combat) {
-  // What the keys and a redrawn weapon section need, without a render (F44/F45).
-  C.meleeAttacks = Number(combat.attacks) || 0;
-  C.playStrike = Number(combat.strike) || 0;
+// WHAT YOU PRESS REPEATEDLY, IN THE ONE PLACE THAT NEVER SCROLLS AWAY.
+//
+// Measured on the Gear tab at 375 wide, 2,873px of page: Damage was off screen
+// by the halfway mark and the amount chips by the bottom, while the fixed strip
+// at the bottom - the only band a thumb can always reach - held a read-only
+// roll result and NOTHING pressable. So the thumb zone was spent on the one
+// thing you cannot press, and the thing you press most was 1,000px away.
+//
+// These MOVED into the bar rather than being copied into it. Two copies of the
+// amount chips would be two places to keep in step, which is the drift this app
+// has already paid for twice - the save list that diverged between the sheet
+// and play mode, and the two pool widgets. There is one Damage button.
+//
+// `hitToHtml()` comes with it, because UI-AUDIT F40 put where-the-hit-lands
+// BESIDE Damage deliberately, and leaving it behind would undo that. It renders
+// nothing at all for a character with no armour or vessel, which is most.
+//
+// What stays up top: End session (once a session), and the round row, which is
+// mostly the STATUS "Round 1 - attack 1 of 2" and is read rather than pressed.
+// THE PERCENTILE IS NOT GATED ON WRITE ACCESS, and that is inherited rather
+// than decided here. The row it used to live in carried the reason: the amount
+// strip is arithmetic against this character's pools and needs write access; a
+// roll changes nothing, and "a read-only viewer at the table rolls their own
+// dice" - the same argument that leaves .roll-btn ungated. It moved into this
+// bar and it kept that, so the group above it is what `w` gates, not the bar.
+function playActionsHtml(w) {
   const amts = [1, 5, 10, 20].map((n) =>
     `<button data-amt="${n}" class="${n === C.playAmt ? 'on' : ''}" onclick="setPlayAmt(${n})">${n}</button>`).join('');
   const typed = [1, 5, 10, 20].includes(C.playAmt) ? '' : C.playAmt;
-  return `<div id="play-controls" class="noprint">
-    ${w ? `<div class="play-amt"><span class="muted small">Amount</span>${amts}
+  const damage = w
+    ? `<span class="muted small">Amount</span>${amts}
       <input type="number" id="play-amt-custom" class="play-amt-custom" min="1" inputmode="numeric"
         value="${typed}" placeholder="#" aria-label="Any other amount; Enter applies Damage">
       ${hitToHtml()}
       <button class="dmg" onclick="quickDamage()">💥 Damage</button>
-      <button onclick="undoLast()" aria-label="Undo the last change" title="Undo the last change">↶</button>
+      <button onclick="undoLast()" aria-label="Undo the last change" title="Undo the last change">↶</button>`
+    : '';
+  return `<div id="play-actions">
+    <div class="play-amt">${damage}
+      <button type="button" class="pct" onclick="rollPercentile()" aria-label="Roll a bare percentile, d100"
+        title="Percentile (d100)">🎲 d100</button>
+    </div>
+  </div>`;
+}
+
+function playControlsHtml(w, combat) {
+  // What the keys and a redrawn weapon section need, without a render (F44/F45).
+  C.meleeAttacks = Number(combat.attacks) || 0;
+  C.playStrike = Number(combat.strike) || 0;
+  return `<div id="play-controls" class="noprint">
+    ${w ? `<div class="play-amt play-amt-session">
       <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-melee">
       <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
@@ -1663,10 +1705,6 @@ function playControlsHtml(w, combat) {
         <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>
         <button class="ghost" onclick="resetMelee(${Number(combat.attacks) || 0})">⟲</button>
       </span>
-    </div>
-    <div class="play-dice">
-      <span class="muted small">G.M. call</span>
-      <button type="button" onclick="rollPercentile()">🎲 Percentile (d100)</button>
     </div>
     <p class="muted small play-keys">Keys: <kbd>D</kbd> damage · <kbd>U</kbd> undo ·
       <kbd>P</kbd> percentile · <kbd>N</kbd> next attack · <kbd>R</kbd> new round · <kbd>?</kbd> this list</p>
@@ -2701,7 +2739,13 @@ function render() {
   </section>
   </div>
 
-  <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">${rollBarHtml()}</div>`;
+  ${/* The bar has two children now, and the split is what lets the controls
+        live here at all: a roll rewrites #roll-line, never the whole bar, so
+        pressing Damage does not rebuild the button that was pressed. */''}
+  <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">
+    <div id="roll-line">${rollBarHtml()}</div>
+    ${playActionsHtml(w)}
+  </div>`;
 
   // Before anything measures the page: the three column stacks are built by
   // moving nodes, and sizeSticky() reads rendered heights.
