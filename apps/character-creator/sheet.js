@@ -4135,9 +4135,97 @@ async function addJournal() {
 }
 
 if (!id) {
-  $('app').innerHTML = '<div class="panel"><p class="err">No character id — open a sheet from the character list.</p></div>';
+  roster();
 } else {
   load();
+}
+
+// ─── the roster: Play with no character named ───
+//
+// Your characters, which used to be the wizard's home view. A player opens
+// this app far more often than they build, so the list lives where the work
+// is; the Creator keeps the unfinished draft and nothing else.
+//
+// Only the caller's own, as that list has been since UI-AUDIT F39 - a friend's
+// sheet is one link away through the campaign they share. The class NAMES come
+// from the projection dashboard.js uses for the same reason: this page turns a
+// class_id into a label and the full list is ~750KB of parsed markdown.
+async function roster() {
+  document.title = 'Your characters — Nate\'s Workshop';
+  // The page says what it is. This file's header is written for a sheet -
+  // "Character Sheet", and a Print button that would print the list itself -
+  // and neither is true of the roster.
+  const logo = document.querySelector('.logo');
+  const sub = document.querySelector('.logo-sub');
+  if (logo) logo.textContent = 'Your characters';
+  if (sub) sub.textContent = 'pick one to play';
+  const printBtn = $('print-btn');
+  if (printBtn) printBtn.style.display = 'none';
+  $('app').innerHTML = '<p class="muted">Loading your characters…</p>';
+  let mine = [];
+  let names = {};
+  try {
+    const [chars, classes] = await Promise.all([
+      api('characters?mine=1'),
+      api('classes?names=1'),
+    ]);
+    mine = chars.characters || [];
+    names = Object.fromEntries((classes.classes || []).map((c) => [c.id, c.name]));
+  } catch (err) {
+    $('app').innerHTML = `<div class="panel"><p class="err">Could not load your characters: ${escHtml(err.message)}</p></div>`;
+    return;
+  }
+  R.mine = mine; R.names = names;
+  renderRoster();
+}
+
+const R = { mine: [], names: {} };
+
+function renderRoster() {
+  const label = (c) => [R.names[c.class_id], c.occ_class_id ? R.names[c.occ_class_id] : null]
+    .filter(Boolean).join(' ') || c.class_id;
+  const rows = R.mine.map((c) => `<li class="home-row">
+      <span class="home-what">
+        <a href="sheet.html?id=${c.id}"><b>${escHtml(c.name)}</b></a>
+        <span class="muted small">${escHtml(label(c))} · L${c.level} · ${escHtml(c.campaign_name || '')}</span>
+      </span>
+      <span class="home-acts">
+        <a class="btn btn-sm" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
+        <button type="button" class="btn btn-sm btn-danger" onclick="deleteFromRoster(${c.id})"
+          aria-label="Delete ${escHtml(c.name)}">Delete</button>
+      </span>
+    </li>`).join('');
+  // No heading in here: the page's own <h1> says "Your characters" already,
+  // and the panel repeating it read as two lists rather than one.
+  $('app').innerHTML = `<div class="panel">
+    <div class="home-head">
+      <span class="muted small">${R.mine.length} character${R.mine.length === 1 ? '' : 's'}</span>
+      <a class="btn btn-primary" href="/apps/character-creator/">+ New character</a>
+    </div>
+    ${rows ? `<ul class="home-list">${rows}</ul>`
+      : '<p class="muted">No characters yet. <b>New character</b> opens the Creator.</p>'}
+  </div>`;
+}
+
+// The same confirmation the wizard's list asked, because it is the same
+// deletion and the same consequences - what goes, what comes back, what stays.
+async function deleteFromRoster(cid) {
+  const c = R.mine.find((x) => x.id === cid);
+  if (!c) return;
+  if (!confirm(`Delete ${c.name} (level ${c.level})? This cannot be undone.\n\n`
+    + `Their inventory, level history, unspent picks and play log go with them. `
+    + `Anything they had claimed from the campaign stash returns to it.\n\n`
+    + `Journal entries they wrote stay in the campaign log.`)) return;
+  try {
+    await api('characters/' + cid, { method: 'DELETE' });
+  } catch (err) {
+    alert('Could not delete ' + c.name + ': ' + err.message);
+    return;
+  }
+  R.mine = R.mine.filter((x) => x.id !== cid);
+  // A deleted character must not stay in the header's context chip.
+  if (String(window.appnav?.context().characterId) === String(cid)) window.appnav.clear('character');
+  renderRoster();
 }
 
 // ─── changing stage ───

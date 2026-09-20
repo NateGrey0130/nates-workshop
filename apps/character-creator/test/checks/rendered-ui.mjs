@@ -1625,8 +1625,26 @@ export function run() {
     check('the switcher is a menu button with a real expanded state',
       /aria-expanded="false"/.test(navSrc) && /aria-haspopup/.test(navSrc)
       && !/<details/.test(navSrc));
-    check('and Play is disabled rather than hidden with no character',
-      /aria-disabled="true"/.test(navSrc) && /Choose a character first/.test(navSrc));
+    // Play opens the roster when no character is named, so no entry is dead.
+    // This asked for a DISABLED Play for one day, which was the honest answer
+    // while the sheet had no landing of its own; the roster moved there on
+    // 2026-09-19 and the entry stopped needing an excuse. The disabled state
+    // itself stays in the module for the next entry that earns it.
+    check('no switcher entry is a dead end',
+      !/href: null/.test(navSrc) && /is-disabled/.test(navSrc));
+    check('and Play with no character opens the roster',
+      /base \+ 'sheet\.html'/.test(navSrc));
+    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    check('which the sheet draws instead of refusing',
+      /if \(!id\) \{\s*roster\(\);/.test(sheetSrc)
+      && /characters\?mine=1/.test(sheetSrc) && /classes\?names=1/.test(sheetSrc));
+    // And the Creator stops being the place you go to do everything except
+    // create: its home view no longer draws either list.
+    const wizSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+    check('the Creator keeps building and hands the lists over',
+      /<h2>Start a character<\/h2>/.test(wizSrc)
+      && !/<h2>Your characters<\/h2>/.test(wizSrc)
+      && !/<h2>Your campaigns<\/h2>/.test(wizSrc));
 
     // The URL is the truth. A link sent to a player must open on THAT
     // character, so storage may only fill what the URL leaves unsaid.

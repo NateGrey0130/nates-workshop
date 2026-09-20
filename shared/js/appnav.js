@@ -55,9 +55,14 @@
     return [
       { id: 'creator', label: 'Creator', href: base,
         hint: 'Build a character' },
+      // With no character in hand this opens the roster rather than nothing:
+      // the sheet lists your characters when asked for none (sheet.js). It was
+      // a disabled entry for one day, which was honest while Play had no
+      // landing of its own and is now just a dead end nobody needs.
       { id: 'play', label: 'Play',
-        href: ctx.characterId ? base + 'sheet.html?id=' + encodeURIComponent(ctx.characterId) : null,
-        hint: ctx.characterId ? 'Your character sheet' : 'Choose a character first' },
+        href: ctx.characterId ? base + 'sheet.html?id=' + encodeURIComponent(ctx.characterId)
+          : base + 'sheet.html',
+        hint: ctx.characterId ? 'Your character sheet' : 'Your characters' },
       { id: 'codex', label: 'Codex', href: base + 'codex.html',
         hint: 'Skills, spells, gear and the rest' },
       { id: 'campaign', label: 'Campaign', href: withCamp('campaign.html'),
