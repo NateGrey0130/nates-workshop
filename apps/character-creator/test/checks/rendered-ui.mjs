@@ -536,7 +536,11 @@ export function run() {
     // HEIGHT outside the shared header.
     const target44 = [
       ['the amount chips and Damage', /\.play-amt button \{\s*min-width: 44px; min-height: 44px;/],
-      ['the bare percentile', /\.play-dice button \{\s*min-width: 44px; min-height: 44px;/],
+      // The percentile lost its own row in P5e and now takes the amount
+      // strip's size, which is the rule directly above. What it must not lose
+      // is the 44px, so this asserts it is in that strip rather than styled
+      // loose somewhere with its own number.
+      ['the bare percentile', /#play-actions \.pct \{ color: var\(--text-secondary\); padding: 0 12px; \}/],
       ['any other amount', /\.play-amt-custom \{ width: 64px; min-height: 44px;/],
       ['where the hit lands', /\.play-hit-to \{ min-height: 44px;/],
       ['the melee reset glyph', /\.play-melee button\.ghost \{ color: var\(--text-secondary\); min-width: 44px; \}/],
@@ -560,6 +564,35 @@ export function run() {
     check('but the SHEET keeps its density',
       !/^\.mini-in \{[^}]*min-height: 44px/m.test(css),
       'the 44px went global and the sheet grew by a column');
+
+    // ── THE BAR CARRIES THE CONTROLS (P5e, 2026-09-20) ──
+    //
+    // Measured on the Gear tab at 375 wide, 2,873px of page: Damage was off
+    // screen by the halfway mark and the amount chips by the bottom, while the
+    // fixed strip - the only band a thumb can always reach - held a read-only
+    // roll result and NOTHING pressable.
+    check('the combat controls live in the fixed bar',
+      /<div id="play-roll-bar"[\s\S]{0,200}<div id="roll-line">/.test(src)
+      && /\$\{playActionsHtml\(w\)\}/.test(src),
+      'the bar is a text strip again and Damage scrolls away');
+    // MOVED, NOT COPIED. Two amount strips would be two places to keep in
+    // step, which is the drift this app paid for with the save list and the
+    // pool widgets. There is one Damage button in the file.
+    check('and they moved rather than being duplicated',
+      (src.match(/onclick="quickDamage\(\)"/g) || []).length === 1
+      && (src.match(/onclick="setPlayAmt\(/g) || []).length === 1,
+      'there are two Damage buttons or two amount strips to keep in step');
+    // A roll rewrites the LINE, never the bar - otherwise pressing Damage
+    // rebuilds the button that was pressed, mid-press.
+    check('a roll rewrites the line and not the bar',
+      !/\$\('play-roll-bar'\)/.test(src) && (src.match(/\$\('roll-line'\)/g) || []).length === 3,
+      'a roll rebuilds the controls it was triggered from');
+    // The height is measured, not written down: the bar is two rows on a phone
+    // and one on a laptop, so no constant is right at both.
+    check('and the page reserves the height it actually has',
+      /body\.play-mode \{ padding-bottom: calc\(var\(--play-bar-h, 72px\) \+ 12px\); \}/.test(css)
+      && /--play-bar-h/.test(readFileSync(join(appDir, 'js', 'sticky.js'), 'utf8')),
+      'play mode reserves a constant 72px for a bar that is 144px on a phone');
 
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
@@ -1234,9 +1267,10 @@ export function run() {
     const rollLineBody = functionBody(sheet, 'function rollLineHtml(');
     const recordRollBody = functionBody(sheet, 'function recordRoll(');
     const playControlsBody = functionBody(sheet, 'function playControlsHtml(');
-    check('all five bodies the percentile checks read can be located',
+    const playActionsBody = functionBody(sheet, 'function playActionsHtml(');
+    check('all six bodies the percentile checks read can be located',
       rollNoteBody !== null && rollBarBody !== null && rollLineBody !== null
-      && recordRollBody !== null && playControlsBody !== null,
+      && recordRollBody !== null && playControlsBody !== null && playActionsBody !== null,
       'a signature moved - the checks below would read the whole file and pass vacuously');
     check('the sheet can roll a bare percentile',
       /function rollPercentile\(\)/.test(sheet),
@@ -1253,9 +1287,18 @@ export function run() {
     check('a percentile is persisted like every other roll',
       /kind === 'percentile'/.test(recordRollBody ?? ''),
       'the percentile never reaches the session log');
-    check('and its control sits inside the play block, so print never sees it',
-      /rollPercentile\(\)/.test(playControlsBody ?? ''),
-      'the percentile button escaped #play-controls and will reach paper');
+    // It moved out of #play-controls and into the fixed bar (P5e), so the
+    // containment this asserted is no longer where it lives. What the check was
+    // FOR is unchanged and is asserted directly instead: whichever block holds
+    // it, print must hide that block. Both are named in the same print rule,
+    // so the button cannot reach paper from either.
+    check('the percentile lives in the bar that never scrolls away',
+      /rollPercentile\(\)/.test(playActionsBody ?? '')
+      && !/rollPercentile\(\)/.test(playControlsBody ?? ''),
+      'the percentile is back up the page with the things that scroll off');
+    check('and print hides the block it lives in',
+      /@media print \{ #play-controls, #play-roll-bar, \.roll-btn \{ display: none !important; \} \}/.test(css),
+      'the percentile button will reach paper');
 
     // SHIPPED BROKEN ONCE. .skill-table is `table-layout: fixed` with its last
     // numeric column pinned at 40px, so a 44px control in that cell does not
