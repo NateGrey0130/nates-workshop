@@ -381,6 +381,58 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '071-npc-character-link.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('npcs') WHERE name = 'character_id');
 
+-- The GM's own pages, and the pictures they show the table (migration 078).
+--
+-- An ENTRY is the GM's and is never revealed - title and body stay behind the
+-- GM check for as long as it exists. An IMAGE can be revealed one at a time,
+-- and its CAPTION is the only text a player ever reads from here. That is why
+-- `revealed_at` sits on the image and not on the entry: a map of the city gets
+-- shown while the notes behind it do not.
+CREATE TABLE IF NOT EXISTS campaign_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL DEFAULT 'lore'
+    CHECK (kind IN ('place', 'faction', 'lore', 'handout', 'prep')),
+  title TEXT NOT NULL,
+  body TEXT,                             -- GM-only, always. Never revealed.
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_entries_campaign
+  ON campaign_entries (campaign_id, kind);
+
+-- `revealed_at` is a timestamp rather than a flag: "what have I shown them,
+-- and when" is a question asked mid-session. NULL means never shown.
+-- `entry_id` is nullable so a picture can exist with no page behind it, and
+-- ON DELETE CASCADE takes the ROWS with a deleted page - the R2 OBJECTS are
+-- deleted by the endpoint in the same request, because a cascade cannot reach
+-- a bucket. npcs.portrait_key learned that first.
+CREATE TABLE IF NOT EXISTS campaign_images (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  entry_id INTEGER REFERENCES campaign_entries(id) ON DELETE CASCADE,
+  r2_key TEXT NOT NULL,
+  content_type TEXT,
+  byte_size INTEGER,
+  caption TEXT,                          -- the one thing a player reads from here
+  revealed_at TEXT,                      -- NULL = the GM's alone; a timestamp = shown
+  sort INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_images_revealed
+  ON campaign_images (campaign_id, revealed_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_images_entry
+  ON campaign_images (entry_id, sort);
+
+-- Guarded on the tables, directly after them, per BOOK-INGEST-AUDIT F99.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '078-campaign-entries.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_images');
+
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.
 CREATE TABLE IF NOT EXISTS npc_mentions (

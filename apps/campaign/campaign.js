@@ -13,6 +13,9 @@ const D = {
   campaign: null, isGm: false, isMember: false,
   entries: [], entriesTotal: 0,
   items: [], balances: [], ledger: [],
+  // The pictures the GM has revealed (migration 078). Captions only: the page
+  // behind a handout is the GM's and never comes over the wire.
+  handouts: [],
   roster: [], gear: [],
   // The NPC roster, the dossier currently open, and the sweep's proposals.
   // Proposals live in state rather than being written down: a proposal is not
@@ -62,18 +65,20 @@ async function load() {
     // requests that would each come back 403.
     if (!D.isMember) return render();
 
-    const [entries, items, currency, roster, npcs] = await Promise.all([
+    const [entries, items, currency, roster, npcs, handouts] = await Promise.all([
       api(`journal?campaign_id=${campaignId}`),
       api(`campaigns/${campaignId}/items`),
       api(`campaigns/${campaignId}/currency`),
       api(`characters?campaign_id=${campaignId}`),
       api(`campaigns/${campaignId}/npcs`),
+      api(`campaigns/${campaignId}/handouts`),
     ]);
     D.entries = entries.entries; D.entriesTotal = entries.total ?? entries.entries.length;
     D.items = items.items;
     D.balances = currency.balances; D.ledger = currency.ledger;
     D.roster = roster.characters;
     D.npcs = npcs.npcs;
+    D.handouts = handouts.handouts || [];
     // Labels for the G.M.'s statted-NPC list: the id-and-name projection, not
     // the full class list, which only loads if the roller is opened.
     if (D.isGm && !D.classNames) {
@@ -112,7 +117,8 @@ function render() {
   const tabs = [['notes', 'Notes', D.entriesTotal],
                 ['people', 'People', D.npcs.length],
                 ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
-                ['money', 'Currency', 0]];
+                ['money', 'Currency', 0],
+                ['handouts', 'Handouts', D.handouts.length]];
   $('app').innerHTML = `
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
@@ -123,11 +129,41 @@ function render() {
          n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}</nav>
     ${D.tab === 'notes' ? notesView()
       : D.tab === 'people' ? peopleView()
-      : D.tab === 'stash' ? stashView() : moneyView()}`;
+      : D.tab === 'stash' ? stashView()
+      : D.tab === 'handouts' ? handoutsView() : moneyView()}`;
   wireSearch();
 }
 
 function setTab(t) { D.tab = t; D.npc = null; render(); }
+
+// ---------- handouts ----------
+//
+// What the GM has shown the party: a picture and its caption, newest first.
+// There is no title and no body here because there is none to have - an entry
+// is the GM's notebook and only the IMAGE is ever revealed (migration 078).
+// A player who has seen nothing gets a sentence saying so rather than an empty
+// panel, because "nothing yet" and "this is broken" look identical otherwise.
+function handoutsView() {
+  if (!D.handouts.length) {
+    return `<div class="panel">
+      <h3 style="margin-top:0">Handouts</h3>
+      <p class="muted">Nothing yet. What the GM shows the party — a map, a portrait, a page
+        from a book — turns up here.</p>
+    </div>`;
+  }
+  return `<div class="panel">
+    <h3 style="margin-top:0">Handouts <span class="muted small">(newest first)</span></h3>
+    <ul class="handouts">
+      ${D.handouts.map((h) => `<li class="handout">
+        <figure style="margin:0">
+          <img src="/api/character-creator/campaigns/${campaignId}/images/${h.id}"
+               alt="${esc(h.caption || 'A handout from the GM')}" loading="lazy">
+          ${h.caption ? `<figcaption>${esc(h.caption)}</figcaption>` : ''}
+        </figure>
+      </li>`).join('')}
+    </ul>
+  </div>`;
+}
 
 // ---------- notes ----------
 function notesView() {

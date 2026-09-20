@@ -2274,3 +2274,71 @@ body.show-play-keys .play-keys { display: block; }
   .codex-entry { break-inside: avoid; }
   .codex-text, .codex-stats dd { color: #222 !important; }
 }
+
+/* ─── THE SETTING: the GM's pages and the pictures shown from them ───
+   Migration 078. The editor lives inside the GM rail on /apps/gm-tools/, and
+   the revealed pictures appear to players on /apps/campaign/.
+
+   A picture is the content here, so the row gives it real size rather than a
+   thumbnail: a map you cannot read is not a map. Depth is the lit edge this
+   stylesheet uses everywhere - --border-strong on the top edge - because
+   nothing here casts a shadow. */
+.setting-editor {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.setting-pics { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+
+.setting-pic {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.setting-pic img {
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+}
+
+.setting-pic-meta { display: grid; gap: 6px; }
+
+/* One column on a phone: 180px of picture beside a caption field leaves
+   neither usable, and this is a page a GM opens on a tablet at the table. */
+@media (max-width: 560px) {
+  .setting-pic { grid-template-columns: 1fr; }
+  .setting-pic img { max-height: 220px; }
+}
+
+/* The players' side: what the party has been shown, newest first. Bigger than
+   the editor's strip, because here the picture IS the page rather than a row
+   in a list of work. */
+.handouts { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+
+/* Fit, never stretch. `width: 100%` blew a 200px sketch up to the panel's
+   width and let a tall photo run for three screens; a handout is looked at
+   whole, so it takes its own size up to the panel and 70vh. */
+.handout img {
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-top-color: var(--border-strong);
+}
+
+.handout figcaption { margin-top: 6px; color: var(--text-secondary); font-size: 13px; }
