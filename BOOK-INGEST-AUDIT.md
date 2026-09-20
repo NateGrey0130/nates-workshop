@@ -1598,3 +1598,68 @@ plus `SETUP-v2-CHANGES.md`, the surveys and the memory store, for
 `REBUILD-AUDIT` `F14`'s *left alone*, `F102`'s deferral, and the Nightbane
 survey's `D6`, which decided `W.P. Archery and Targeting` resolves to
 `W.P. Archery` and is about a different row.
+
+**Taken, 2026-09-20 (PR #1202), both halves in one script as proposed.**
+Postures as written: *"a data script, one row, no schema"* and *"data only, and
+the replace semantics `F102` pinned"*. Applied `--remote` before the merge, per
+`ship-pr`'s ordering rule.
+
+**THE PALLADIUM FANTASY PAGE IN THIS FINDING IS WRONG. It is printed 61, not
+49**, and the error is worth recording because of where it came from: the cache
+page is `pf/txt/p063.txt`, and the shell that printed the finding's page numbers
+did `$((063 - 2))`, where a leading zero means **octal**. `063` is 51, so it
+printed 49. The same shell errored outright on `069` earlier in the same pass -
+"value too great for base" - which was the warning that went unread. Checked
+this time against each page's OWN printed folio rather than against an offset:
+`p063` carries `61`, `p086` carries `84`, and RUE's `p331` carries `328`.
+"35 printed pages earlier" is therefore **23** (84 - 61).
+<!-- claim-ok: quoting the numbers this note corrects -->
+
+**And "F102 shipped five such rows" was wrong.** It wrote five rows across TWO
+tables - two `skill_system_bases` schedules and three `psionic_system_costs`
+prices. This is the **third** schedule and the **92nd** `skill_system_bases` row
+(`scripts/q.mjs --remote`, 2026-09-20: 91 rows, 2 with a schedule, none for
+`palladium-fantasy`).
+
+**THE PRE-FLIGHT FOUND SOMETHING THIS FINDING NEVER SAW, and it is the best
+result of taking it.** The script's first `UPDATE` was guarded on the old value
+`'Palladium Fantasy RPG Main Book p.84'`, which is what **production** holds. A
+database built from this repo holds **`'Rifts Ultimate Edition'`, with no
+page** - so the guard fired on production and silently did nothing in a fresh
+build, and `d1-apply`'s scratch replay failed the script's own read-back before
+anything was applied anywhere. **That disagreement is `REBUILD-AUDIT` `F14`'s
+subject**, recorded there and left alone; nobody had noticed that the rebuild
+was citing the right book all along, just without a page. The `UPDATE` is
+guarded on the name alone now, and **converges the two for the first time.**
+
+**What else moved, because taking this falsified three live claims:**
+
+- `apps/character-creator/js/skill-base.js` said Heroes Unlimited strikes at 2,
+  4, 7, 10, 13 *"where Palladium Fantasy's strikes at 1, 3, 7 and 10"*. That
+  1/3/7/10 is **Rifts Ultimate Edition's**. Corrected, with the reason.
+- `functions/api/character-creator/_lib/system-bases.js` said *"only Heroes
+  Unlimited has any, so every Rifts and Palladium Fantasy request takes the
+  empty path"*. Three games have rows now; Rifts has none **by design**, since
+  the catalog rows are already Rifts'. Corrected.
+- `apps/character-creator/docs/operations.md` pinned **91** per-system skill
+  bases, and `test/regression.mjs` asserts that count against the doc - so the
+  92nd row would have failed the suite. Updated to 92 in the same PR. The
+  finding's *Ongoing cost* paragraph missed this step; the premise audit caught
+  it.
+
+**`db/migrations/075-…` carries the same 1/3/7/10 claim and is LEFT STANDING**,
+because a migration is a record of what was true when it was applied - the same
+reason this menu never rewrites a measurement.
+
+**What is dropped, as the proposal said:** Palladium Fantasy's second bonus
+(+1 to strike at 2, 5 and 10 when the character also holds W.P. bow, crossbow
+or spear) is prose in the override's note and nowhere else. `level_bonuses`
+cannot express a bonus conditional on holding another skill. **Not deferred -
+dropped**, and the note says so on the row itself.
+
+**One caveat nobody had stated:** `systemForCharacter` reads the system from the
+character's **campaign**, so a character with no campaign gets an empty override
+map and keeps the catalog row's schedule. A campaign-less Palladium Fantasy
+character therefore still reads RUE's four. That is the existing design of
+`loadSystemBases`, not something this finding changed, and it is recorded here
+rather than fixed.
