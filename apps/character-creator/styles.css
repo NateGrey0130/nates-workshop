@@ -1588,6 +1588,10 @@ input.class-boosted { border-bottom-width: 2px; }
   a { color: #000; text-decoration: none; }
   header, .header, button, input, textarea, select, #msg, .noprint { display: none !important; }
   .print-only { display: inline; }
+  /* Same job as .print-only and a name that says it: the value shown wherever
+     its control is not. Paper hides every input outright two lines up, so a
+     gear row would print its quantity blank without this. */
+  .read-value { display: inline; }
   .panel, .box {
     background: #fff !important; border: 1px solid #999; border-radius: 0;
     padding: 0; margin-bottom: 8px; break-inside: avoid;
@@ -1677,6 +1681,37 @@ body.play-mode .box[data-box="journal"],
 body.play-mode .box[data-box="session-log"],
 body.play-mode .box[data-box="background"],
 body.play-mode .box[data-box="bearing"] { display: none; }
+
+/* ── AND THE EDITING INSIDE THE BOXES IT KEEPS (P5b, 2026-09-20) ──────────
+   The rule above hides four whole boxes, so "play mode only adds" was never
+   true. What it never subtracted is the EDITING inside the boxes it keeps,
+   and on the Gear tab that is most of what is on screen: a quantity input, an
+   equipped checkbox and a remove button on every row, then a six-field add
+   form under the table. Measured at 1440x900 on a level-12 character, play
+   mode is 4,200px against the sheet's 3,700 - it is barely shorter than the
+   document it is supposed to be the action-first lens on.
+
+   THE BOX STAYS AND THE EDITOR GOES, which is the line the comment above
+   already draws: gear is "lookup a player does mid-session" and that is still
+   true - what you are carrying is exactly the thing you check mid-fight. What
+   is not mid-fight is changing it. Nate's call, 2026-09-20, asked directly.
+
+   `upkeep` marks a control that belongs between sessions; `read-value` is the
+   value that takes its place, so a hidden input never means a hidden number.
+   That pairing is not new either - `body.play-mode .vital .val input` does it
+   for the pools, and the gear row's mirror already existed for paper under
+   the name `print-only`. Paper was just the first place the control had to go.
+
+   Editing is one press away the whole time: the Sheet/Play toggle is in the
+   header, and the line under the table says so rather than leaving a player
+   hunting for a form that is not there. */
+body.play-mode .upkeep { display: none; }
+
+.read-value { display: none; }
+body.play-mode .read-value { display: inline; }
+
+.play-only { display: none; }
+body.play-mode .play-only { display: block; }
 
 /* THE ROLL CONTROL. Hidden until play mode, then a 44px target sitting beside
    the number it rolls. It is a real <button> - a keyboard reaches it, and the

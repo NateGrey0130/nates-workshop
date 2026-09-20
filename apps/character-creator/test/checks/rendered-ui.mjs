@@ -431,6 +431,51 @@ export function run() {
       /^\.box > \.box-title > h2 \{ margin: 0; font: inherit;/m.test(css),
       'the h2 brings its own size or margin');
 
+    // ── PLAY MODE SUBTRACTS THE EDITING TOO (P5b, 2026-09-20) ──
+    //
+    // It already hid four record-keeping boxes, so "play mode only adds" was
+    // never true - what it never subtracted is the editing inside the boxes it
+    // KEEPS. On the Gear tab that was most of the screen: a quantity input, an
+    // equipped checkbox, a remove button and an enchantment link on all 23
+    // rows, then a six-field add form. Measured at 1350px on a level-12
+    // character: the Equipment box is 2,803px on the sheet and 1,146px in play,
+    // a row 111.6px against 44.9px, and 95 upkeep controls against none.
+    check('play mode hides the controls that belong between sessions',
+      /^body\.play-mode \.upkeep \{ display: none; \}/m.test(css),
+      'the upkeep hook is gone and play mode shows the whole editor again');
+    // THE BOX STAYS. Gear is "lookup a player does mid-session" per the rule
+    // that hides the other four, and that is still true - what you carry is
+    // exactly what you check mid-fight. Only the editing goes.
+    check('and does NOT hide the boxes themselves',
+      !/body\.play-mode \.box\[data-box="equipment"\]/.test(css)
+      && !/body\.play-mode \.box\[data-box="armor"\]/.test(css),
+      'play mode now hides gear or armor outright, which is not what was agreed');
+    // A hidden input must never mean a hidden number. Same pairing as the pool
+    // widget, and the gear row's mirror already existed for paper.
+    check('a hidden control leaves its value on screen',
+      /^\.read-value \{ display: none; \}/m.test(css)
+      && /^body\.play-mode \.read-value \{ display: inline; \}/m.test(css),
+      'the value mirror is gone, so play mode hides the quantity itself');
+    check('and paper still gets that value too',
+      /\.read-value \{ display: inline; \}/.test(printCss(css)),
+      'the print block hides every input and no mirror replaces it');
+    const rowSrc = functionBody(src, 'function inventoryRowsHtml()');
+    check('inventoryRowsHtml is readable', !!rowSrc);
+    const marked = (rowSrc || '').match(/class="upkeep"|btn-ghost upkeep/g) || [];
+    check('the quantity, the equipped box and the remove button are all marked',
+      marked.length >= 3, `${marked.length} marked — a gear row still leaves an editing control at the table`);
+    // Armour takes damage at the table, so its stats stay editable and only the
+    // destructive control is upkeep. Checked because the obvious sweep would
+    // have marked the whole box.
+    check('but armour keeps the stats a hit changes',
+      /data-armor-remove="\$\{i\}"/.test(src.slice(src.indexOf('function armorSlotHtml')))
+      && !/data-key="mdc_current"[^>]*upkeep/.test(src),
+      'the armour stats went with the remove button');
+    check('and the player is told where the editing went',
+      /class="muted small play-only"/.test(src)
+      && /^body\.play-mode \.play-only \{ display: block; \}/m.test(css),
+      'the editor vanishes with nothing saying how to get it back');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
