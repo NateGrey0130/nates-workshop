@@ -650,11 +650,18 @@ async function dismissDraft() {
 // question, so a returning player could not reach a character they had already
 // made without first deciding the fate of a build they may only have browsed.
 //
-// The draft is a card on it now, not a gate in front of it. "Your characters"
-// is the caller's own (Nate's call, 2026-09-10) - a friend's sheet is still one
-// link away through the campaign they share. "Your campaigns" is every campaign
-// the caller runs or has a character in; step 1 listed only the ones they ran,
-// so a player was never shown theirs at all.
+// The draft is a card on it now, not a gate in front of it.
+//
+// THE LISTS MOVED OUT, 2026-09-19. This view carried "Your characters" and
+// "Your campaigns", which made the Creator the place you went to do everything
+// except create - and left the sheet a dead end when opened without one, and
+// the campaign pages reachable mainly from here. The roster is Play's
+// (sheet.js) and the campaigns are Campaign's, which both show them when
+// opened with nothing named. What is left here is the one job this app has:
+// starting a character, and finishing the one already under way.
+//
+// S.existing is still loaded: the count below links to the roster, and
+// canDeleteCharacter and the campaign picker in the Details step read it.
 function renderHome() {
   const d = S.draftOffer;
   const building = !d && S.rcc && !S.savedId;
@@ -680,30 +687,16 @@ function renderHome() {
     </div>`;
   }
 
-  const rows = S.existing.map((c) => `<li class="home-row">
-      <span class="home-what">
-        <a href="sheet.html?id=${c.id}"><b>${esc(c.name)}</b></a>
-        <span class="muted small">${esc(className(c.class_id))}${c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''}
-          · L${c.level} · ${esc(c.campaign_name)}</span>
-      </span>
-      <span class="home-acts">
-        <a class="btn btn-sm" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
-        ${canDeleteCharacter(c) ? `<button type="button" class="btn btn-sm btn-danger"
-          onclick="deleteCharacter(${c.id})" aria-label="Delete ${esc(c.name)}">Delete</button>` : ''}
-      </span>
-    </li>`).join('');
-
   $('app').innerHTML = `
   ${card}
   <div class="panel">
     <div class="home-head">
-      <h2>Your characters</h2>
+      <h2>Start a character</h2>
       <button type="button" class="btn ${card ? '' : 'btn-primary'}" onclick="newCharacter()">+ New character</button>
     </div>
-    ${rows ? `<ul class="home-list">${rows}</ul>`
-      : '<p class="muted">No characters yet. <b>New character</b> starts one.</p>'}
-    <h2>Your campaigns</h2>
-    ${campaignList.html(campaignList.pick(S.campaigns, S.existing, S.me), shortDate)}
+    <p class="muted">${S.existing.length
+      ? `You have <a href="sheet.html">${S.existing.length} character${S.existing.length === 1 ? '' : 's'}</a> to play.`
+      : 'Eleven steps, and the dice decide most of them.'}</p>
     ${S.isAdmin ? `<h3>Admin</h3>
     <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
       <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
