@@ -636,6 +636,45 @@ export function run() {
     check('the copy says what now happens',
       !/Up to 5MB each/.test(dashSrc) && /shrunk to\s*\$\{downscale\.MAX_EDGE\}px/.test(dashSrc),
       'the upload hint still promises a cap the GM rarely meets');
+    // ── UI-AUDIT F59: the other half, in a different app ──
+    //
+    // F57 fixed campaign pictures. NPC portraits upload from apps/campaign and
+    // were left at full size, painted at 34px and 120px. The check above reads
+    // apps/gm-tools/index.html ONLY, so it could not have noticed.
+    const campHtml = readFileSync(join(repoRoot, 'apps', 'campaign', 'index.html'), 'utf8');
+    const campSrc = readFileSync(join(repoRoot, 'apps', 'campaign', 'campaign.js'), 'utf8');
+    // THE PATH IS THE PART THE FINDING GOT WRONG. It proposed `js/downscale.js`,
+    // and apps/campaign has no js/ directory - that tag 404s, leaves `downscale`
+    // undefined, and every portrait upload dies in uploadPortrait's own catch.
+    // Matched as a script tag with the absolute src, so a relative one fails
+    // here rather than in a GM's browser.
+    const campTagAt = (f) => campHtml.indexOf(`<script src="${f}"`);
+    check('the campaign page loads the downscaler by absolute path',
+      campTagAt('/apps/character-creator/js/downscale.js') > 0
+      && campTagAt('/apps/character-creator/js/downscale.js') < campTagAt('campaign.js'),
+      'downscale.js is missing, relative, or loads after campaign.js');
+    // The same three-places rule as F57: the server reads this one header for
+    // the R2 key's extension, the stored content_type and what it serves back.
+    const portraitUp = functionBody(campSrc, 'async function uploadPortrait(');
+    check('the portrait upload describes what it actually sends',
+      !!portraitUp
+      && /const body = await downscale\.toUpload\(file, PORTRAIT_MAX_EDGE\);/.test(portraitUp)
+      && /'Content-Type': body\.type/.test(portraitUp)
+      && !/'Content-Type': file\.type/.test(portraitUp),
+      'the portrait request still names the original file type');
+    // A PORTRAIT WANTS A SMALLER CAP THAN A MAP, and the cap is destructive -
+    // the object in R2 is the only copy. A named constant beside the two paint
+    // sizes, not a literal at the call site.
+    const portraitCap = /const PORTRAIT_MAX_EDGE = (\d+);/.exec(campSrc);
+    check('the portrait cap is named, and smaller than the picture cap',
+      !!portraitCap && Number(portraitCap[1]) < 2048 && Number(portraitCap[1]) >= 360,
+      'the portrait cap is missing, is the map cap, or is under the 120px square at DPR 3');
+    // The helper's second parameter is what makes that possible. If it loses
+    // its default, gm-tools starts uploading undefined-sized pictures.
+    check('the helper still takes a cap and still has a default',
+      /async function toUpload\(file, maxEdge = MAX_EDGE\)/.test(down),
+      'toUpload no longer takes a per-caller cap, or lost its default');
+
     // ── THE BAR CARRIES THE CONTROLS (P5e, 2026-09-20) ──
     //
     // Measured on the Gear tab at 375 wide, 2,873px of page: Damage was off

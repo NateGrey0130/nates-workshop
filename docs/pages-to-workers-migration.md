@@ -37,7 +37,7 @@ Not theory — these map onto things already worked around by hand in this repo.
 | **Cron Triggers** | ✅ | ❌ | `ofd-refresh.mjs`, `drift-check.mjs`, and `repo-vs-live.mjs` are all run by hand today. |
 | **Queue consumers** | ✅ | ❌ | The character creator's book imports, OCR extracts, and `npcs/sweep` are long-running LLM jobs currently squeezed into a request lifetime. |
 | **Gradual deployments** | ✅ | ❌ | Every merge is currently all-or-nothing across the whole site. |
-| **Image Resizing binding** | ✅ | ❌ | NPC portraits are served out of R2 at full size. |
+| **Image Resizing binding** | ✅ | ❌ | Every picture is served out of R2 at whatever size it was uploaded, and one size is all there is — no thumbnail, no `srcset`. UI-AUDIT `F57` and `F59` answered that in the browser instead, capping the longest edge *before* the POST (2048 for a campaign picture, 512 for an NPC portrait), which is the only place in this stack where the bytes can be made smaller. It is a cap at upload and not resizing: the stored object is the only copy, so the 34px roster thumbnail still downloads the 512. This row used to read *"NPC portraits are served out of R2 at full size"*, which was the worked example until `F59` shipped. |
 
 Cloudflare's own posture is worth reading plainly: the Pages docs now open with
 a banner asking *"Are you sure you want to use Pages?"*, and the Workers
