@@ -2570,7 +2570,7 @@ function render() {
 
     ${box('Armor', `<div id="armor-list">${armorRows}</div>` +
       (armorRows ? '' : '<p class="muted small" id="armor-empty">No armor recorded.</p>') +
-      (w ? `<div class="rowline noprint" style="margin-top:8px">
+      (w ? `<div class="rowline noprint upkeep" style="margin-top:8px">
         <button class="btn btn-sm" onclick="addArmor()">+ Add armor</button></div>` : ''))}
   </div>
 
@@ -2624,7 +2624,8 @@ function render() {
     ${box('Equipment', `
       <table><thead><tr><th>Item</th><th>Qty</th><th>Eq</th><th>Notes</th><th></th></tr></thead>
         <tbody id="inv-rows">${invRows || '<tr><td class="muted" colspan="5">Empty.</td></tr>'}</tbody></table>
-      ${w ? `<div class="noprint" style="margin-top:8px">
+      ${w ? `<p class="muted small play-only">What you carry, while you are playing. Leave Play to change it.</p>` : ''}
+      ${w ? `<div class="noprint upkeep" style="margin-top:8px">
         ${C.catalog.length ? Picker.inputHtml({ id: 'inv-filter', value: C.invFilter,
           placeholder: 'Filter catalog by name, category or book…',
           shown: invMatches.length, total: C.catalog.length }) : ''}
@@ -2641,7 +2642,7 @@ function render() {
 
     ${box('Vessels', `
       <div id="vessel-list">${vesselsHtml()}</div>
-      ${w ? `<div class="noprint" style="margin-top:8px">
+      ${w ? `<div class="noprint upkeep" style="margin-top:8px">
         <div class="rowline">
           <select id="add-vessel" onfocus="openVesselPicker()"><option value="">— catalog —</option></select>
           <input type="text" id="add-vessel-name" placeholder="or custom vessel">
@@ -3530,7 +3531,10 @@ function armorSlotHtml(a, i, w) {
           <div class="field"><span class="lbl">${ARMOR_LABELS[k]}</span>
             <span class="val">${w ? `<input class="mini-in" data-armor="${i}" data-key="${k}" value="${escHtml(a[k] ?? '')}">` : escHtml(String(a[k] ?? '—'))}</span></div>`).join('')}
       </div>
-      ${w ? `<button class="btn btn-sm btn-ghost noprint" data-armor-remove="${i}" onclick="removeArmor(+this.dataset.armorRemove)">Remove</button>` : ''}
+      ${/* The armor STATS stay editable in play mode on purpose: mdc_current is
+            what a hit lowers, and taking damage is the most at-the-table thing
+            on this box. Only the destructive control is upkeep. */''}
+      ${w ? `<button class="btn btn-sm btn-ghost noprint upkeep" data-armor-remove="${i}" onclick="removeArmor(+this.dataset.armorRemove)">Remove</button>` : ''}
     </div>`;
 }
 
@@ -3570,7 +3574,7 @@ function enchantHtml(it) {
     if (!e) return '';
     const effect = enchantEffect(e);
     const drop = C.canWrite
-      ? ` <button class="btn btn-sm btn-ghost" title="Remove this enchantment"
+      ? ` <button class="btn btn-sm btn-ghost upkeep" title="Remove this enchantment"
            onclick="removeEnchantment(${it.id}, '${escHtml(slug)}')">✕</button>`
       : '';
     return `<div class="attr-note" style="margin-left:12px">↳ ${escHtml(e.name)}${
@@ -3578,7 +3582,7 @@ function enchantHtml(it) {
   }).filter(Boolean).join('');
 
   const add = C.canWrite && (C.enchantCatalog || []).length
-    ? `<div style="margin-left:12px"><button class="btn btn-sm btn-ghost"
+    ? `<div class="upkeep" style="margin-left:12px"><button class="btn btn-sm btn-ghost"
          onclick="addEnchantment(${it.id})">+ enchantment</button></div>`
     : '';
   return rows + add;
@@ -3610,17 +3614,23 @@ function inventoryRowsHtml() {
       ? `<button type="button" class="power-toggle" aria-expanded="${open}"
            aria-controls="idesc-${it.id}" onclick="toggleItemDesc(${it.id})">${name}</button>`
       : name;
+    // `upkeep` and `read-value` are the pair that makes a row READABLE while
+    // the editing is away (P5b). The mirror already existed for paper, under
+    // the name `print-only`, and paper was simply the first place the control
+    // had to go - play mode is the second. Same trade the pool widget already
+    // makes at `body.play-mode .vital .val input`: hide the control, show the
+    // value node, never leave the number invisible.
     const qty = w
-      ? `<input type="number" min="1" value="${it.qty}" onchange="patchItem(${it.id}, {qty: this.value})"><span class="print-only">×${it.qty}</span>`
+      ? `<input type="number" class="upkeep" min="1" value="${it.qty}" onchange="patchItem(${it.id}, {qty: this.value})"><span class="read-value">×${it.qty}</span>`
       : `×${it.qty}`;
     const eq = w
-      ? `<input type="checkbox" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="print-only">${it.equipped ? '✔' : '—'}</span>`
+      ? `<input type="checkbox" class="upkeep" ${it.equipped ? 'checked' : ''} onchange="patchItem(${it.id}, {equipped: this.checked})"><span class="read-value">${it.equipped ? '✔' : '—'}</span>`
       : (it.equipped ? '✔' : '');
     // Same as the wizard's equipment table: the glyph was the whole accessible
     // name, on every row. `name` is already escaped for an attribute - escHtml
     // escapes the quote now - so this needs no second pass.
     const rmLabel = `Remove ${name}`;
-    const rm = w ? `<td><button class="btn btn-sm btn-ghost" aria-label="${rmLabel}" title="${rmLabel}"
+    const rm = w ? `<td><button class="btn btn-sm btn-ghost upkeep" aria-label="${rmLabel}" title="${rmLabel}"
       onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
     // The block is its own row spanning the table rather than living inside the
     // name cell: a stat block in a 5-column table's first column would set the
