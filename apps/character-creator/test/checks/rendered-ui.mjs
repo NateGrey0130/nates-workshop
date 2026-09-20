@@ -1638,6 +1638,14 @@ export function run() {
     check('which the sheet draws instead of refusing',
       /if \(!id\) \{\s*roster\(\);/.test(sheetSrc)
       && /characters\?mine=1/.test(sheetSrc) && /classes\?names=1/.test(sheetSrc));
+    // A character that does not load must not keep its name - or its id - in
+    // the header. Seen on production: ?id=1 named no character there, the chip
+    // read "Character 1" from the URL alone, and carried that into GM Tools.
+    const failedAt = sheetSrc.indexOf('Failed to load');
+    const clearedAt = sheetSrc.indexOf("appnav?.clear('character')");
+    check('and a sheet that fails to load stops naming that character',
+      failedAt > 0 && clearedAt > failedAt && (clearedAt - failedAt) < 900,
+      'the chip keeps a character the sheet could not open');
     // And the Creator stops being the place you go to do everything except
     // create: its home view no longer draws either list.
     const wizSrc = readFileSync(join(appDir, 'app.js'), 'utf8');

@@ -252,7 +252,13 @@ async function load() {
     if (held) carryHeldEdits(held);
     render();
   } catch (err) {
-    $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
+    $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p>
+      <p><a href="/apps/character-sheet/">Your characters</a></p></div>`;
+    // The header must not keep naming a character that did not load. The id in
+    // the URL is enough for the chip to say "Character 7" and to carry that id
+    // into the next app, so a deleted character - or a link to someone else's -
+    // followed you around the suite as a name for a thing that is not there.
+    window.appnav?.clear('character');
   }
 }
 
