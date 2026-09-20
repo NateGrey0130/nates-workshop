@@ -16,7 +16,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
 import { fixedFormulaValue } from '../../js/dice.js';
 import { parseClassMarkdown } from '../../js/parser.js';
 import { buildProposal } from '../../js/leveling.js';
@@ -146,7 +146,7 @@ export function run() {
     const win = {};
     new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(win, win);
     const derived = Object.keys(win.derive.combat({ PP: 12, PS: 12, Spd: 12 }));
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const block2 = sheet.slice(sheet.indexOf('const COMBAT_FIELDS'),
       sheet.indexOf('];', sheet.indexOf('const COMBAT_FIELDS')));
     const shown = [...block2.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
@@ -193,7 +193,7 @@ export function run() {
   {
     // The sheet's presentation lives in js/sheet-layout.js and its data logic
     // in sheet.js. This contract spans both, so both are read.
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+    const src = readFileSync(appPath('sheet.js'), 'utf8')
       + readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
 
@@ -316,10 +316,10 @@ export function run() {
   {
     // The sheet's presentation lives in js/sheet-layout.js and its data logic
     // in sheet.js. This contract spans both, so both are read.
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+    const src = readFileSync(appPath('sheet.js'), 'utf8')
       + readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-    const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+    const html = readFileSync(appPath('sheet.html'), 'utf8');
 
     check('the sheet has its own container',
       /\.wrap\.wrap-sheet \{ max-width: 1640px; \}/.test(css), 'wrap-sheet is gone');
@@ -498,9 +498,9 @@ export function run() {
   // learn about application state.
   section('Presentation is a separate file');
   {
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
-    const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+    const html = readFileSync(appPath('sheet.html'), 'utf8');
 
     check('the module exposes one global, like derive.js and rules.js',
       /global\.sheetLayout = \{/.test(layout), 'sheetLayout is not exposed');
@@ -559,7 +559,7 @@ export function run() {
   // outcome note had reported it working, from seeing it render and enable.
   section('A power spends the pool its button says it spends');
   {
-    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
     const defs = (sheetSrc.match(/function powerPool\(/g) || []).length;
     check('one function decides which pool a power spends', defs === 1, `defined ${defs} times`);
     const use = sheetSrc.slice(sheetSrc.indexOf('async function usePower('),
@@ -611,7 +611,7 @@ export function run() {
       pm({ ppe_base_spent: 5 }, 'ppe') === undefined);
 
     // The three readers. Each used to read `_max` straight off the data.
-    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
     const paint = layoutSrc.slice(layoutSrc.indexOf('function paintPool('), layoutSrc.indexOf('function paintPool(') + 200);
     check('the live repaint reads the effective maximum', /poolMax\(data, key\)/.test(paint), paint);
     // `pd` is poolData() - the character, or it with a second form's pools (F74).
@@ -649,7 +649,7 @@ export function run() {
       prop.talent_picks?.applicable === true && prop.talent_picks?.total === 1,
       JSON.stringify(prop.talent_picks));
 
-    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
     const cut = (from, to) => {
       const a = sheetSrc.indexOf(from), b = sheetSrc.indexOf(to, a);
       return a >= 0 && b > a ? sheetSrc.slice(a, b) : '';
@@ -785,13 +785,13 @@ export function run() {
     // The rail sticks under a header whose height is measured, not assumed.
     check('sizeSticky is shared rather than copied',
       existsSync(join(appDir, 'js', 'sticky.js')), 'js/sticky.js is missing');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     check('and neither page keeps its own copy',
       !/function sizeSticky\(/.test(sheet) && !/function sizeSticky\(/.test(app),
       'a page still defines its own sizeSticky');
     for (const page of ['index.html', 'sheet.html']) {
       check(`${page} loads it`,
-        readFileSync(join(appDir, page), 'utf8').includes('js/sticky.js'),
+        readFileSync(appPath(page), 'utf8').includes('js/sticky.js'),
         `${page} sticks against an unset --header-h`);
     }
     check('the wizard measures the header on render',
@@ -818,9 +818,9 @@ export function run() {
   // worth more than the layout they describe.
   section('The GM dashboard');
   {
-    const js = readFileSync(join(appDir, 'dashboard.js'), 'utf8');
+    const js = readFileSync(appPath('dashboard.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-    const html = readFileSync(join(appDir, 'dashboard.html'), 'utf8');
+    const html = readFileSync(appPath('dashboard.html'), 'utf8');
 
     check('the dashboard has its own container',
       /\.wrap\.wrap-dash \{ max-width: 1280px; \}/.test(css), 'wrap-dash is gone');
@@ -955,7 +955,7 @@ export function run() {
   // phase 3 already fixed once, when two pool widgets disagreed.
   section('Play mode is a mode, not a layout');
   {
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
 
     check('there is no second render path',
@@ -1069,7 +1069,7 @@ export function run() {
   section('Trackable resources');
   {
     const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const fmDoc = readFileSync(join(repoRoot, '.claude', 'skills', 'class-import',
       'reference', 'frontmatter.md'), 'utf8');
 
@@ -1169,7 +1169,7 @@ export function run() {
   // account and cannot be edited, the other is prose and can.
   section('The session log');
   {
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
 
@@ -1215,7 +1215,7 @@ export function run() {
   {
     const src = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
       'characters', '[id].js'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
 
     check('a caller may say which version it is changing',
       /body\.expect_updated_at/.test(src), 'the PATCH takes no expected version');
@@ -1333,10 +1333,10 @@ export function run() {
   section('Changes that could not be sent');
   {
     const queue = readFileSync(join(appDir, 'js', 'play-queue.js'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-    const html = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+    const html = readFileSync(appPath('sheet.html'), 'utf8');
     const events = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
       'characters', '[id]', 'events.js'), 'utf8');
 
@@ -1482,7 +1482,7 @@ export function run() {
     // bug this check exists for carries a comment SAYING `it.item_id`, and
     // scanning raw text failed on the prose explaining the fix. A check that
     // cannot tell code from the note about the code is worse than none.
-    const code = readFileSync(join(appDir, 'sheet.js'), 'utf8')
+    const code = readFileSync(appPath('sheet.js'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, ' ')
       .replace(/^\s*\/\/.*$/gm, ' ');
     const read = new Set([...code.matchAll(/\bit(?:em)?\.(item_[a-z_]+)/g)].map((m) => m[1]));
@@ -1501,12 +1501,12 @@ export function run() {
   // by construction.
   section('The codex');
   {
-    const html = readFileSync(join(appDir, 'codex.html'), 'utf8');
-    const js = readFileSync(join(appDir, 'codex.js'), 'utf8');
+    const html = readFileSync(appPath('codex.html'), 'utf8');
+    const js = readFileSync(appPath('codex.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-    const sheetHtml = readFileSync(join(appDir, 'sheet.html'), 'utf8');
+    const sheetHtml = readFileSync(appPath('sheet.html'), 'utf8');
     const wizardHtml = readFileSync(join(appDir, 'index.html'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
 
     check('the page exists and loads its script',
       /src="codex\.js"/.test(html) && /js\/api\.js/.test(html), 'codex.html does not load codex.js');
@@ -1561,7 +1561,7 @@ export function run() {
       'the blanket button rule leaves the printed codex as stat blocks with no names');
 
     check('the sheet points at it from the powers tab',
-      /codex\.html/.test(sheet), 'nothing on the sheet mentions the codex');
+      /\/apps\/codex\//.test(sheet), 'nothing on the sheet mentions the codex');
     // This pinned a literal `codex.html` anchor in both headers until the app
     // switcher replaced every page's ad-hoc links (shared/js/appnav.js). What
     // the check was ever FOR is that neither page leaves the codex reachable
@@ -1571,7 +1571,7 @@ export function run() {
     check('and both pages carry the switcher that reaches it',
       /data-appnav/.test(sheetHtml) && /data-appnav/.test(wizardHtml)
         && /appnav\.js/.test(sheetHtml) && /appnav\.js/.test(wizardHtml)
-        && /codex\.html/.test(nav),
+        && /codex: '\/apps\/codex\/'/.test(nav),
       'the codex is reachable only by typing the URL');
   }
 
@@ -1588,7 +1588,7 @@ export function run() {
     const sharedCss = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
     const PAGES = ['index.html', 'sheet.html', 'codex.html', 'campaign.html',
                    'dashboard.html', 'catalog.html'];
-    const pages = Object.fromEntries(PAGES.map((p) => [p, readFileSync(join(appDir, p), 'utf8')]));
+    const pages = Object.fromEntries(PAGES.map((p) => [p, readFileSync(appPath(p), 'utf8')]));
 
     // A page that loads the script without the mount renders no header at all,
     // and a mount without the script renders an empty box - so both, per page.
@@ -1633,8 +1633,8 @@ export function run() {
     check('no switcher entry is a dead end',
       !/href: null/.test(navSrc) && /is-disabled/.test(navSrc));
     check('and Play with no character opens the roster',
-      /base \+ 'sheet\.html'/.test(navSrc));
-    const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+      /play: '\/apps\/character-sheet\/'/.test(navSrc) && /: APP\.play,/.test(navSrc));
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
     check('which the sheet draws instead of refusing',
       /if \(!id\) \{\s*roster\(\);/.test(sheetSrc)
       && /characters\?mine=1/.test(sheetSrc) && /classes\?names=1/.test(sheetSrc));
@@ -1645,6 +1645,34 @@ export function run() {
       /<h2>Start a character<\/h2>/.test(wizSrc)
       && !/<h2>Your characters<\/h2>/.test(wizSrc)
       && !/<h2>Your campaigns<\/h2>/.test(wizSrc));
+
+    // ── five apps, five URLs, and the old ones still work ──
+    // The pages moved out on 2026-09-19. Three things have to hold together or
+    // the split is half done: the app exists, the hub offers it, and the path
+    // it used to live at still takes a bookmark somewhere useful.
+    const manifest = JSON.parse(readFileSync(join(repoRoot, 'apps', 'manifest.json'), 'utf8'));
+    const tiles = Object.fromEntries(manifest.apps.filter((a) => a.slug).map((a) => [a.slug, a]));
+    for (const slug of ['character-creator', 'character-sheet', 'codex', 'campaign', 'gm-tools']) {
+      const index = join(repoRoot, 'apps', slug, 'index.html');
+      check(`${slug} is an app with its own page`,
+        existsSync(index) && /data-appnav/.test(readFileSync(index, 'utf8')));
+      check(`and the hub offers it`,
+        tiles[slug]?.status === 'live' && /^<svg /.test(tiles[slug]?.icon || ''),
+        slug + ' has no live tile with an icon');
+    }
+    // A stub that drops the query string loses the character or the campaign,
+    // which is the whole of what those URLs carry.
+    for (const [old, to] of [['sheet.html', '/apps/character-sheet/'],
+                             ['codex.html', '/apps/codex/'],
+                             ['catalog.html', '/apps/codex/catalog.html'],
+                             ['campaign.html', '/apps/campaign/'],
+                             ['dashboard.html', '/apps/gm-tools/']]) {
+      const stub = readFileSync(join(appDir, old), 'utf8');
+      check(`${old} still takes a bookmark to ${to}`,
+        stub.includes(`location.replace('${to}' + location.search + location.hash)`)
+        && stub.includes(`href="${to}"`),
+        old + ' no longer forwards, or drops the query string');
+    }
 
     // The URL is the truth. A link sent to a player must open on THAT
     // character, so storage may only fill what the URL leaves unsaid.

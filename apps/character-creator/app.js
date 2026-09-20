@@ -695,10 +695,10 @@ function renderHome() {
       <button type="button" class="btn ${card ? '' : 'btn-primary'}" onclick="newCharacter()">+ New character</button>
     </div>
     <p class="muted">${S.existing.length
-      ? `You have <a href="sheet.html">${S.existing.length} character${S.existing.length === 1 ? '' : 's'}</a> to play.`
+      ? `You have <a href="/apps/character-sheet/">${S.existing.length} character${S.existing.length === 1 ? '' : 's'}</a> to play.`
       : 'Eleven steps, and the dice decide most of them.'}</p>
     ${S.isAdmin ? `<h3>Admin</h3>
-    <p class="small"><a href="catalog.html">✏️ Edit catalogs</a>
+    <p class="small"><a href="/apps/codex/catalog.html">✏️ Edit catalogs</a>
       <span class="muted">— fix skills, spells, psionics and gear by hand</span></p>` : ''}
   </div>`;
 }
@@ -5034,7 +5034,7 @@ async function renderSaved() {
       <p class="small">${items.map((it) => esc(it.item_name || it.custom_name) + (it.qty > 1 ? ` ×${it.qty}` : '')).join(' · ') || '—'}</p>
     </div>
     <div class="nav">
-      <a class="btn btn-primary" href="sheet.html?id=${c.id}">📜 Open full sheet</a>
+      <a class="btn btn-primary" href="/apps/character-sheet/?id=${c.id}">📜 Open full sheet</a>
       <button class="btn" onclick="startOver()">+ Create another character</button>
       <button class="btn btn-ghost" onclick="goHome()">Your characters</button>
     </div>`;

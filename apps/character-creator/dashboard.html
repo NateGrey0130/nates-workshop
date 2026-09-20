@@ -2,46 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campaign Dashboard — Nate's Workshop</title>
-<!-- Home-screen and tab icon. The art is one square, full-bleed slate, in
-     four sizes; /favicon.ico carries 16/32/48 for the tab. iOS reads
-     apple-touch-icon for Add to Home Screen and ignores everything else here.
+<title>GM Tools moved — Nate's Workshop</title>
+<link rel="canonical" href="/apps/gm-tools/">
+<meta name="robots" content="noindex">
+<!-- GM Tools moved to /apps/gm-tools/ when the character creator was split into five apps.
+     This stub stays indefinitely: it is what a bookmark, a link in someone's
+     notes, or a sheet URL sent to a player still resolves to.
 
-     apps/pick3cut5 deliberately has NO icon links. Its Access bypass is a list
-     of exact paths, all five destination slots are in use, and its smoke test
-     derives the list from this very head - a link here would demand a sixth
-     slot that does not exist. See apps/pick3cut5/test/smoke.mjs. -->
-<link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
-<meta name="theme-color" content="#0F1412">
-<link rel="stylesheet" href="/shared/styles.css">
-<link rel="stylesheet" href="styles.css">
+     A script rather than <meta http-equiv="refresh"> because the QUERY STRING
+     is the character or the campaign - ?id=, ?campaign_id= - and a meta refresh
+     can only carry a URL fixed at write time. replace() rather than assign()
+     so Back does not bounce off this page. -->
+<script>
+  location.replace('/apps/gm-tools/' + location.search + location.hash);
+</script>
 </head>
 <body>
-
-<header class="header">
-  <div class="header-left">
-    <div>
-      <h1 class="logo">Campaign Dashboard</h1>
-      <div class="logo-sub">party roster &amp; journal</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="appnav" data-appnav data-app="gm"></div>
-  </div>
-</header>
-
-<main class="wrap wrap-dash">
-  <div id="app"><p class="muted">Loading dashboard…</p></div>
-</main>
-
-<script src="/shared/js/ui.js"></script>
-<script src="/shared/js/appnav.js"></script>
-<script src="js/api.js"></script>
-<script src="js/campaign-list.js"></script>
-<script src="js/derive.js"></script>
-<script src="dashboard.js"></script>
+<p>GM Tools has moved to <a href="/apps/gm-tools/">/apps/gm-tools/</a>.</p>
 </body>
 </html>

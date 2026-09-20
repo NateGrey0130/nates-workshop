@@ -11,7 +11,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
 import { CHARACTER_JSON_COLUMNS } from '../../../../functions/api/character-creator/_lib/character-json.js';
 import { VARIANT_OVERRIDES, parseClassMarkdown } from '../../js/parser.js';
 
@@ -96,10 +96,14 @@ export function run() {
     // curl-only by accident rather than by decision, and so exercised by nothing.
     // The routes built dynamically (`import/${mode}/extract`) are why this names
     // one endpoint rather than sweeping them all.
-    const pageScripts = readdirSync(appDir)
-      .filter((f) => f.endsWith('.js'))
-      .map((f) => readFileSync(join(appDir, f), 'utf8'))
-      .join('\n');
+    // Every page script of the five apps, not just the Creator's: the sheet,
+    // the codex, the notes and the dashboard moved out on 2026-09-19 and a
+    // readdir of one folder stopped seeing four of them - which would have
+    // reported this endpoint as unreachable while sheet.js was still calling it.
+    const pageScripts = [
+      ...readdirSync(appDir).filter((f) => f.endsWith('.js')).map((f) => appPath(f)),
+      ...['sheet.js', 'codex.js', 'catalog.js', 'campaign.js', 'dashboard.js'].map(appPath),
+    ].map((f) => readFileSync(f, 'utf8')).join('\n');
     check('the character audit is reachable from the UI',
       pageScripts.includes("'admin/audit'"),
       'no page script calls it — it is an endpoint nobody can run');
@@ -389,7 +393,7 @@ export function run() {
       const off = [];
       for (const [, file, claimed] of rows) {
         const want = Number(claimed.replace(/,/g, ''));
-        const actual = readFileSync(join(appDir, file), 'utf8').split('\n').length;
+        const actual = readFileSync(appPath(file), 'utf8').split('\n').length;
         if (Math.abs(actual - want) / actual > TOLERANCE) {
           off.push(`${file}: README ~${want}, actually ${actual}`);
         }
@@ -399,7 +403,7 @@ export function run() {
 
       // The ordering claim is the one that was flatly wrong, and it is cheap to
       // hold: the table is printed largest first.
-      const sizes = rows.map(([, f]) => readFileSync(join(appDir, f), 'utf8').split('\n').length);
+      const sizes = rows.map(([, f]) => readFileSync(appPath(f), 'utf8').split('\n').length);
       check('and the table is still in descending order of size',
         sizes.every((n, i) => i === 0 || sizes[i - 1] >= n),
         rows.map(([, f], i) => `${f}=${sizes[i]}`).join(' '));
@@ -413,7 +417,7 @@ export function run() {
       // moves next, one of these fails and the paragraph gets reread.
       const moduleTag = (html, src) =>
         new RegExp(`<script[^>]*\\btype="module"[^>]*\\bsrc="${src}"|<script[^>]*\\bsrc="${src}"[^>]*\\btype="module"`)
-          .test(readFileSync(join(appDir, html), 'utf8'));
+          .test(readFileSync(appPath(html), 'utf8'));
       check('app.js is still a module, as known-limitations.md says it is',
         moduleTag('index.html', 'app\\.js'),
         'index.html no longer loads app.js as type="module" - the split-cost paragraph now overstates the cost');

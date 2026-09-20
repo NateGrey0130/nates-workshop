@@ -2,72 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Character Sheet — Nate's Workshop</title>
-<!-- Home-screen and tab icon. The art is one square, full-bleed slate, in
-     four sizes; /favicon.ico carries 16/32/48 for the tab. iOS reads
-     apple-touch-icon for Add to Home Screen and ignores everything else here.
+<title>Character Sheet moved — Nate's Workshop</title>
+<link rel="canonical" href="/apps/character-sheet/">
+<meta name="robots" content="noindex">
+<!-- Character Sheet moved to /apps/character-sheet/ when the character creator was split into five apps.
+     This stub stays indefinitely: it is what a bookmark, a link in someone's
+     notes, or a sheet URL sent to a player still resolves to.
 
-     apps/pick3cut5 deliberately has NO icon links. Its Access bypass is a list
-     of exact paths, all five destination slots are in use, and its smoke test
-     derives the list from this very head - a link here would demand a sixth
-     slot that does not exist. See apps/pick3cut5/test/smoke.mjs. -->
-<link rel="icon" href="/favicon.ico" sizes="32x32">
-<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
-<meta name="theme-color" content="#0F1412">
-<link rel="stylesheet" href="/shared/styles.css">
-<link rel="stylesheet" href="styles.css">
+     A script rather than <meta http-equiv="refresh"> because the QUERY STRING
+     is the character or the campaign - ?id=, ?campaign_id= - and a meta refresh
+     can only carry a URL fixed at write time. replace() rather than assign()
+     so Back does not bounce off this page. -->
+<script>
+  location.replace('/apps/character-sheet/' + location.search + location.hash);
+</script>
 </head>
 <body>
-
-<header class="header">
-  <div class="header-left">
-    <div>
-      <h1 class="logo">Character Sheet</h1>
-      <div class="logo-sub">palladium &amp; rifts</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <span class="header-group">
-      <button class="btn btn-sm" id="play-toggle" onclick="togglePlay()" style="display:none">▶ Play</button>
-      <button class="btn btn-sm noprint" id="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
-    </span>
-    <div class="appnav" data-appnav data-app="play"></div>
-  </div>
-</header>
-
-<main class="wrap wrap-sheet">
-  <div id="app"><p class="muted">Loading sheet…</p></div>
-</main>
-
-<script src="/shared/js/ui.js"></script>
-<script src="/shared/js/appnav.js"></script>
-<script src="js/play-queue.js"></script>
-<script src="js/sticky.js"></script>
-<script src="js/sheet-layout.js"></script>
-<script src="js/derive.js"></script>
-<script src="js/rules.js"></script>
-<script src="js/picker.js"></script>
-<script src="js/api.js"></script>
-<script type="module" src="js/language-skills.js"></script>
-<!-- One Hand to Hand style per character: the level-up and banked-pick pickers
-     ask before a pick replaces the one held. Read off globalThis.handToHand,
-     the same arrangement as language-skills above. -->
-<script type="module" src="js/hand-to-hand.js"></script>
-<script type="module" src="js/dice.js"></script>
-<!-- The banked-picks picker filters the catalog by a grant's categories, and an
-     entry may be an OBJECT narrowing what it admits -
-     {"name":"Physical","except":["Acrobatics",...]}. A plain `includes` matches
-     only the plain-string entries: one live grant carries thirteen categories of
-     which TEN are objects, so ten categories would vanish from the picker.
-     `categoryAllows` is the matcher the server, the wizard and the validator
-     already share - the sheet uses it rather than keeping a fourth copy of the
-     rule. UI-AUDIT F30. -->
-<script type="module">
-  import { categoryAllows, categoryLabel } from './js/parser.js';
-  globalThis.skillCats = { categoryAllows, categoryLabel };
-</script>
-<script src="sheet.js"></script>
+<p>Character Sheet has moved to <a href="/apps/character-sheet/">/apps/character-sheet/</a>.</p>
 </body>
 </html>

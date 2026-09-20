@@ -2495,7 +2495,7 @@ function render() {
       // NOT have lives in the codex. Marked noprint: a link is useless on paper.
       + `<p class="muted small noprint" style="margin-top:10px">
            Looking for something this character does not have?
-           <a href="codex.html">Browse the codex</a>.</p>`)}
+           <a href="/apps/codex/">Browse the codex</a>.</p>`)}
 
   </section>
 
@@ -4186,11 +4186,11 @@ function renderRoster() {
     .filter(Boolean).join(' ') || c.class_id;
   const rows = R.mine.map((c) => `<li class="home-row">
       <span class="home-what">
-        <a href="sheet.html?id=${c.id}"><b>${escHtml(c.name)}</b></a>
+        <a href="/apps/character-sheet/?id=${c.id}"><b>${escHtml(c.name)}</b></a>
         <span class="muted small">${escHtml(label(c))} · L${c.level} · ${escHtml(c.campaign_name || '')}</span>
       </span>
       <span class="home-acts">
-        <a class="btn btn-sm" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
+        <a class="btn btn-sm" href="/apps/character-sheet/?id=${c.id}&amp;play=1">▶ Play</a>
         <button type="button" class="btn btn-sm btn-danger" onclick="deleteFromRoster(${c.id})"
           aria-label="Delete ${escHtml(c.name)}">Delete</button>
       </span>

@@ -13,7 +13,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { statements } from '../../../../scripts/sql-statements.mjs';
-import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, combineClasses, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
@@ -285,7 +285,7 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
 
   // Every route a second style can arrive by has to go through the rule, and
   // they are separate functions in three files.
-  const src = (f) => readFileSync(join(f.startsWith('functions') ? repoRoot : appDir, f), 'utf8');
+  const src = (f) => readFileSync(f.startsWith('functions') ? join(repoRoot, f) : appPath(f), 'utf8');
   const fnOf = (text, name) => {
     const at = text.indexOf(`function ${name}(`);
     return at < 0 ? '' : text.slice(at, text.indexOf('\n}', at));
@@ -415,7 +415,7 @@ check('the Assassin\'s weapon-specific bonuses stay in the note',
   conditional.length >= 3, conditional.length);
 
 // derive.js has to know the keys, or a bonus is computed and never shown.
-const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
 const usedKeys = new Set();
 for (const t of parsed) {
   for (const e of t.entries) for (const k of Object.keys(e.combat || {})) usedKeys.add(k);
