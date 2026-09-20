@@ -516,6 +516,23 @@ the recipe in `print-render-headless-chrome.md` cannot see it. That gap does not
 change the outcome, because the trigger above is about reachability rather than
 about the ink.
 
+**Adjusted 2026-09-20, while taking `F58`.** The sentence above about
+`--print-to-pdf` is **wrong on this Chrome, and the record stands as written
+above because that is what an audit file is.** Measured by extracting the
+colour operators from the PDF's own content streams rather than by looking at a
+render: `--print-to-pdf` emits `0.933 0.933 0.933` for `.box > .box-title`'s
+`#eee` and, before `F58` was taken, `0.039 0.059 0.055` for `.sheet-sticky`'s
+`--bg-primary`. **Backgrounds print.** No `print-color-adjust` exists anywhere
+in this repo, so nothing else explains it.
+<!-- claim-ok: naming the sentence this correction is about -->
+
+What that does to **this** finding: its *"not settled"* half is now settleable
+with the recipe it said could not see it, and the two backgrounds it asks about
+- `.lvl-row` and `.cat-row.open` - would print. **It changes nothing about
+`F56`'s outcome**, which turned on reachability: the wizard and the catalog
+still have no print affordance, so the ink is still unreachable and the finding
+is still correctly closed.
+
 **Ongoing cost:** none.
 
 **Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
@@ -666,3 +683,52 @@ selectors, closed as unreachable) and `F56` (its remainder, closed on a
 re-measurement). **Neither is about the pool strip**, and `F56`'s note records
 that the headless method falsified `F17` outright - which is the same method
 that found this. Nothing has weighed it.
+
+**Taken, 2026-09-20 (PR #1200). Posture as written: print-only, no screen
+change.** Two CSS rules in the later print block, no screen rule touched.
+
+**FIVE OF THIS FINDING'S OWN PREMISES WERE WRONG**, and the take-time premise
+audit caught all five before anything was built. Recorded here because the
+finding was filed the same day by the same session, which is the case
+`audit-menu` says the auditor exists for.
+
+1. **The band is not the cards.** It is `.sheet-sticky`, whose
+   `background: var(--bg-primary)` no print rule reset; the two empty tracks
+   that three pools leave in a five-column strip are what show it. Implementing
+   the proposal as written - whitening `.vital` alone - would have left a black
+   band with three white holes punched in it.
+2. **`.vital` does not use `--bg-card`.** It is `--bg-tertiary`
+   (`styles.css:927-934`). `--bg-card` is the token the print block already
+   neutralises, so a taker checking the finding's claim would have found it
+   handled and called the finding stale.
+3. **"The cards were not considered" is false.** `.vital` is named in five
+   print rules across two print blocks.
+4. **The labels needed nothing.** They read as invisible because the ground was
+   black; `.vital .lbl` is already `#333` from the print block, which is 12.6:1
+   on white. The proposal's `#000` would have edited a rule that also governs
+   `.field > .lbl` and `.skill-head th`, moving two other things.
+5. **`--tone` was never a fill.** It is a 2px top border, and
+   `.vital { border-color: #999 }` in the print block already destroyed it on
+   paper - so "keep the tone as a thin rule" described something that was
+   already gone. Re-asserting `border-top-color` is the one thing here that
+   ADDS to the page rather than removing from it.
+
+**Measured from the PDF's own content streams, not from a screenshot**
+(`--print-to-pdf`, colour operators extracted, 2026-09-20):
+
+| | before | after |
+|---|---|---|
+| the 720x51pt band | `0.039 0.059 0.055` (#0A0F0E, `--bg-primary`) | `1 1 1` |
+| the three cards | `0.118 0.153 0.141` (#1E2724, `--bg-tertiary`) | absent |
+| per-pool tone on paper | absent | `--danger`, `--warning`, `--success` all present |
+
+**The empty remainder needed no work.** The finding asked what should be done
+about the two blank grid tracks; once the parent is white they are white, and
+the `repeat(5, 1fr)` was never the problem.
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+**And it falsified a claim on this menu.** `F56`'s note says *"`--print-to-pdf`
+defaults [printBackground] off, so the recipe in `print-render-headless-chrome.md`
+cannot see it."* **That is false on this Chrome** - see the dated correction
+under `F56`, measured in the same pass.
