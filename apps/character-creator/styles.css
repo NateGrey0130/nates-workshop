@@ -1759,6 +1759,33 @@ body.play-mode .box[data-box="bearing"] { display: none; }
    hunting for a form that is not there. */
 body.play-mode .upkeep { display: none; }
 
+/* ── A FINGER, NOT A POINTER (P5d, 2026-09-20) ─────────────────────────────
+   The play-mode header has claimed "44px tap targets" since play mode shipped.
+   Measured at 375x812 with a level-12 character, in play mode: 65 of the 94
+   visible interactive controls were under 44px in at least one dimension. The
+   claim held for the tab strip and the roll buttons, which is where it was
+   written, and nowhere else.
+
+   The two groups below are the bulk of the miss: 33 dashed override inputs at
+   66x33 - the saving throws and combat bonuses, which are exactly what a G.M.
+   asks you to change mid-scene - and the small buttons at 27px tall, which is
+   where Draw lives.
+
+   IN PLAY MODE ONLY, and that is the whole reason this is two rules rather
+   than a change to .mini-in. The sheet is read and edited with a pointer as
+   often as with a thumb, and 44px on 33 inputs adds ~360px to the column that
+   is already the longest thing on the page. Play mode is the mode that says
+   it is for a table; it is the one that pays for it. */
+body.play-mode .mini-in { min-height: 44px; }
+body.play-mode .btn.btn-sm { min-height: 44px; }
+/* The name of an item or a power IS the control that opens its text - the
+   biggest target in the row, which was the argument for making it the
+   control. It was 17px tall. inline-flex rather than a height alone, so the
+   text stays on its line and the box grows around it. */
+body.play-mode .power-toggle { min-height: 44px; display: inline-flex; align-items: center; }
+/* Rest & recovery's per-hour rates. */
+body.play-mode .rest-row input { min-height: 44px; }
+
 .read-value { display: none; }
 body.play-mode .read-value { display: inline; }
 
@@ -1818,8 +1845,13 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
 .play-amt {
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
 }
+/* 44, not 40 (P5d, 2026-09-20). The play-mode header says "44px tap targets"
+   and the .play-dice comment below says "Same 44px target as the amount
+   buttons"; both rules said 40, so the claim was wrong in two places about a
+   third. Measured at 375x812 in play mode: 65 of 94 visible controls were
+   under 44px in some dimension, and these are the ones pressed most. */
 .play-amt button {
-  min-width: 44px; min-height: 40px; border-radius: var(--radius-sm);
+  min-width: 44px; min-height: 44px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-secondary); font-size: 15px; cursor: pointer;
 }
@@ -1844,17 +1876,17 @@ body.play-mode .skill-table .roll-btn { margin-left: 6px; vertical-align: middle
   display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
 }
 .play-dice button {
-  min-width: 44px; min-height: 40px; padding: 0 14px; border-radius: var(--radius-sm);
+  min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-secondary); font-size: 15px; cursor: pointer;
 }
 .play-dice button:active { background: var(--accent-glow); border-color: var(--accent); }
 
 /* UI-AUDIT F40: where the hit lands, beside Damage. */
-.play-hit-to { min-height: 40px; max-width: 240px; }
+.play-hit-to { min-height: 44px; max-width: 240px; }
 #play-roll-bar .rb-apply { color: var(--text-primary); border-color: var(--accent-secondary); }
 /* UI-AUDIT F44: any other amount, beside the chips, at their row height. */
-.play-amt-custom { width: 64px; min-height: 40px; text-align: center; }
+.play-amt-custom { width: 64px; min-height: 44px; text-align: center; }
 /* The key list: shown where there is a keyboard to press them, and by `?`
    anywhere. A phone gets no line of shortcuts it cannot use. */
 .play-keys { display: none; margin: -4px 0 10px; }
@@ -1930,7 +1962,7 @@ body.show-play-keys .play-keys { display: block; }
    one for the weapon in hand. The lit state borrows the amount chips' tones. */
 .pw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .pw-chip {
-  min-height: 40px; padding: 0 12px; border-radius: var(--radius-sm); font-size: 13px;
+  min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); font-size: 13px;
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-secondary); cursor: pointer;
 }
@@ -1976,11 +2008,13 @@ body.show-play-keys .play-keys { display: block; }
   font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 13px;
 }
 .play-melee button {
-  min-height: 40px; padding: 0 12px; border-radius: var(--radius-sm);
+  min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
   background: var(--bg-tertiary); border: 1px solid var(--border);
   color: var(--text-primary); font-size: 14px; cursor: pointer;
 }
-.play-melee button.ghost { color: var(--text-secondary); min-width: 40px; }
+/* 44, not 40 (P5d): the reset beside Next attack is a glyph, so nothing in it
+   grows the target the way a word does in its neighbours. */
+.play-melee button.ghost { color: var(--text-secondary); min-width: 44px; }
 .play-melee button:active { background: var(--accent-glow); }
 
 .rest-row {

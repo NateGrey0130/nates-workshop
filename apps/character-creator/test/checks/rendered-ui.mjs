@@ -525,6 +525,42 @@ export function run() {
       /\.box\[data-col="a"\] > \.box-title,\s*\.box\[data-col="c"\] > \.box-title \{ color: #000; \}/.test(printed),
       'a printed label is grey because a screen needed a hierarchy');
 
+    // ── 44px MEANS 44px (P5d, 2026-09-20) ──
+    //
+    // The play-mode header has claimed "44px tap targets" since play mode
+    // shipped, and the .play-dice comment says "Same 44px target as the amount
+    // buttons". Both rules said 40. Measured at 375x812 in play mode on a
+    // level-12 character: 65 of 94 visible controls were under 44px in some
+    // dimension - the claim held for the tab strip and the roll buttons, which
+    // is where it was written, and nowhere else. After this: ZERO under 44 in
+    // HEIGHT outside the shared header.
+    const target44 = [
+      ['the amount chips and Damage', /\.play-amt button \{\s*min-width: 44px; min-height: 44px;/],
+      ['the bare percentile', /\.play-dice button \{\s*min-width: 44px; min-height: 44px;/],
+      ['any other amount', /\.play-amt-custom \{ width: 64px; min-height: 44px;/],
+      ['where the hit lands', /\.play-hit-to \{ min-height: 44px;/],
+      ['the melee reset glyph', /\.play-melee button\.ghost \{ color: var\(--text-secondary\); min-width: 44px; \}/],
+      ['a power chip', /\.pw-chip \{\s*min-height: 44px;/],
+      ['the weapon buttons', /\.play-melee button \{\s*min-height: 44px;/],
+    ];
+    for (const [what, re] of target44) {
+      check(`${what} is a 44px target`, re.test(css), 'still 40px, against the claim two comments make');
+    }
+    // The two big groups, and they are play-mode only ON PURPOSE: 44px on 33
+    // override inputs adds ~360px to the column that is already the longest
+    // thing on the page, and the sheet is read with a pointer as often as a
+    // thumb. Play mode is the mode that says it is for a table.
+    check('the override inputs and small buttons grow for a thumb',
+      /^body\.play-mode \.mini-in \{ min-height: 44px; \}/m.test(css)
+      && /^body\.play-mode \.btn\.btn-sm \{ min-height: 44px; \}/m.test(css),
+      'the 33 dashed override inputs are 33px tall again');
+    check('and so does the name that opens an item',
+      /^body\.play-mode \.power-toggle \{ min-height: 44px; display: inline-flex;/m.test(css),
+      'the control that opens a spell is 17px tall again');
+    check('but the SHEET keeps its density',
+      !/^\.mini-in \{[^}]*min-height: 44px/m.test(css),
+      'the 44px went global and the sheet grew by a column');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
