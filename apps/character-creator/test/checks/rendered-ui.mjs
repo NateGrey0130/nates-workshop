@@ -476,6 +476,55 @@ export function run() {
       && /^body\.play-mode \.play-only \{ display: block; \}/m.test(css),
       'the editor vanishes with nothing saying how to get it back');
 
+    // ── HIERARCHY: SPEND THE RANK data-col ALREADY CARRIES (P5c, 2026-09-20) ──
+    //
+    // BOX_COL has ranked every box since the column stacks shipped - `a` read
+    // constantly, `b` scanned, `c` read a paragraph of - and spent all of it on
+    // grid-column. Three ranks, one appearance.
+    check('the three columns read as three ranks',
+      /^\.box\[data-col="a"\] > \.box-title \{ color: var\(--text-primary\); \}/m.test(css)
+      && /^\.box\[data-col="c"\] > \.box-title \{ color: var\(--text-muted\); \}/m.test(css),
+      'the rank is back to being placement only');
+    // Contrast on --bg-secondary, which is what a box title sits on:
+    // --text-primary 14.18, --text-secondary 6.58, --text-muted 5.45. A 10px
+    // 800-weight label is SMALL text and needs 4.5:1, so the quiet end keeps
+    // 21% of headroom. The quiet end is the one to watch if this is ever
+    // pushed further.
+    check('and the quiet end still clears 4.5:1',
+      !/\.box\[data-col="c"\] > \.box-title \{ color: var\(--text-(secondary|primary)\)/.test(css),
+      'the ranks collapsed rather than separated');
+    // This file reserves --accent for what you can act on and says so twice.
+    // A heading is not clickable, so the rank may not be spent on colour.
+    check('and no rank is spent on the accent',
+      !/\.box\[data-col="[ac]"\] > \.box-title \{ color: var\(--accent/.test(css),
+      'a section label took the colour the Use button needs');
+    check('prose gets a reading size to go with its measure',
+      /^\.box\[data-col="c"\] \.box-body \{ font-size: 14px;/m.test(css),
+      'three paragraphs of background still render at a skill table size');
+
+    // THE DOCUMENT'S SUBJECT. The name went through box() like every other
+    // title, so it rendered at 10px uppercase tracked to 0.18em - the same
+    // treatment as "Bearing" - while the page's <h1> is the app's name.
+    check('the character name is the identity box, hooked by a class',
+      /const box = \(title, body, extra = '', cls = ''\)/.test(layout)
+      && /class="box\$\{cls \? ' ' \+ cls : ''\}"/.test(layout)
+      && /`, '', 'identity'\)\}/.test(src),
+      'the name box has no stable hook again - data-box is derived from the title');
+    check('and the name is a name rather than a label',
+      /^\.box\.identity > \.box-title > h2 \{[\s\S]*?text-transform: none;/m.test(css)
+      && /^\.box\.identity > \.box-title > h2 \{[\s\S]*?font-size: 26px;/m.test(css),
+      'the character name is uppercase and 10px again');
+
+    // PAPER IS NOT A SCREEN. Both of the above have to stop at the print block:
+    // a 26px name on a 10pt sheet, and three ink weights where ink is ink.
+    const printed = printCss(css);
+    check('the name prints at a size paper can afford',
+      /\.box\.identity > \.box-title > h2 \{ font-size: 13pt;/.test(printed),
+      'the 26px name reaches paper');
+    check('and the three ranks collapse to ink',
+      /\.box\[data-col="a"\] > \.box-title,\s*\.box\[data-col="c"\] > \.box-title \{ color: #000; \}/.test(printed),
+      'a printed label is grey because a screen needed a hierarchy');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);

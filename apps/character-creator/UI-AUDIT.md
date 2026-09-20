@@ -609,3 +609,60 @@ database, not about what size leaves the bucket, and option B above is the
 version of it that would inherit the objection.
 `apps/character-creator/UI-AUDIT.closed.md:1334` is about not resizing equipment
 row buttons. Nothing on any menu has weighed this.
+
+## Filed while shipping P5c, 2026-09-20
+
+Found by rendering the print stylesheet rather than reading it, which is the
+thing `verify-ui` §4 exists to insist on. Filed, not fixed: P5c is about
+hierarchy on screen and this is a paper defect with its own cause.
+
+### F58 - medium - the pool strip prints as a black band with its labels invisible, and takes a quarter-page of ink with it
+
+**What the render shows.** `--print-to-pdf` on the sheet, rasterised at 100dpi,
+`main` @ `5ac8c0d`, 2026-09-20. Page 1 of 4: the three pool cards sit in a
+**solid black band** running the full text width. The numbers survive - `14 /
+14`, `11 / 11`, `1 / 13` are legible - but **the labels H.P., S.D.C. and P.P.E.
+are dark grey on black and cannot be read**, and the band continues as an empty
+black rectangle across the ~45% of the width the three cards do not fill.
+
+**It is not P5c's, and that was checked rather than assumed.** The same page
+was rendered twice, once with the P5c working tree stashed and once with it
+applied: the band is byte-identical in both and the only difference on the page
+is the character's name. Both PNGs are in that session's scratch directory;
+the method is the A/B, not the artefacts.
+
+**The likely cause, and it is a guess flagged as one.** The print block resets
+`.panel, .box` to a white background and `.box > .box-title` to `#eee`, and
+`.vital` is neither - it keeps `--bg-card` and its `--tone` top rule, so it
+prints whatever the screen palette says. `.vitals-strip` IS named in the print
+block, for `padding-top` and `break-inside`, so the strip was considered and
+the cards inside it were not. **Not verified by editing the rule** - that is
+the taker's first step.
+
+**Proposal.** Give `.vital` the same paper treatment the boxes already get: a
+white ground, `#000` label and value, and the `--tone` rule kept as a thin rule
+rather than a fill, since which pool is which is the one thing the tone
+carries. Then decide what the empty remainder of the band should be - the grid
+is `auto-fit` at a 84px minimum, and on paper five columns of three cards
+leaves two columns of nothing. **Posture: print-only, no screen change**, which
+is the part to hold: the strip on screen is the sheet's strongest element and
+this finding is not an argument to touch it.
+
+**Evidence:** two headless renders, stashed and applied, 2026-09-20; the print
+block read at `apps/character-creator/styles.css` in the same pass. The cause
+is **inferred from reading the print block**, not measured.
+
+**Confidence: high that it prints this way** - it was looked at twice, in two
+tree states. **Low on the cause**, and what raises it is one edit: give
+`.vital` a white background in the print block and re-render.
+
+**Ongoing cost:** a handful of print rules, in a block that already carries
+~40. No new mechanism.
+
+**Subject grep, 2026-09-20:** every `*AUDIT*.md` at the root and under `apps/`
+plus the memory store for `vital`, `vitals-strip`, `print` and `@media print`.
+The print block's own history is in `UI-AUDIT.closed.md` `F17` (ink on four
+selectors, closed as unreachable) and `F56` (its remainder, closed on a
+re-measurement). **Neither is about the pool strip**, and `F56`'s note records
+that the headless method falsified `F17` outright - which is the same method
+that found this. Nothing has weighed it.
