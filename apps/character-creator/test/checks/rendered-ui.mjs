@@ -103,6 +103,7 @@ const SECTIONS = [
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
+  'Present mode shows without revealing',
 ];
 
 export function run() {
@@ -1687,5 +1688,114 @@ export function run() {
     check('the URL wins over the remembered context',
       /params\.get\('id'\)/.test(navSrc) && /params\.get\('campaign_id'\)/.test(navSrc)
       && navSrc.indexOf('readStore()') < navSrc.indexOf("params.get('id')"));
+  }
+
+  // ---------- the screen turned round at the table ----------
+  //
+  // P4b, 2026-09-20. P4a gave the GM pages of pictures and one switch that
+  // hands a picture to the players for good. It had no answer for the
+  // commonest thing that happens at a table - turning the laptop round so the
+  // party can LOOK at a map that stays the GM's - so a GM wanting to do that
+  // had to reveal it, which is a different and permanent decision.
+  //
+  // SHOWING IS NOT REVEALING is therefore the rule this section exists for.
+  // present.html reads the GM's own pictures through the GM-only entry
+  // endpoint and writes nothing; one button reveals, and it is the only place
+  // in the file a write comes from. That is a rule a comment states and a
+  // refactor quietly breaks, which is why it is asserted rather than
+  // described - the argument `instructions-do-not-fire-by-themselves` makes.
+  section('Present mode shows without revealing');
+  {
+    const gmDir = join(repoRoot, 'apps', 'gm-tools');
+    const presentHtml = readFileSync(join(gmDir, 'present.html'), 'utf8');
+    const presentJs = readFileSync(join(gmDir, 'present.js'), 'utf8');
+    const dash = readFileSync(appPath('dashboard.js'), 'utf8');
+    const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+
+    // ── the one write, and where it is allowed to come from ──
+    const reveal = functionBody(presentJs, 'async function toggleReveal()');
+    check('present.js has a toggleReveal to read', !!reveal);
+    const patches = (presentJs.match(/method: 'PATCH'/g) || []).length;
+    check('and the whole file sends exactly one PATCH', patches === 1, patches + ' of them');
+    check('which is inside it', !!reveal && /method: 'PATCH'/.test(reveal));
+    const wired = [...presentJs.matchAll(/\$\('(\w+)'\)\.addEventListener\('\w+', toggleReveal\)/g)]
+      .map((m) => m[1]);
+    check('and one control is wired to it', wired.length === 1 && wired[0] === 'reveal',
+      wired.join(', ') || 'nothing calls it');
+
+    // Every arrow, every button and the initial load funnel into show(). A
+    // reveal that crept in there would hand the party a picture for the rest
+    // of the campaign because the GM pressed the right arrow.
+    const show = functionBody(presentJs, 'function show()');
+    check('present.js has a show() to read', !!show);
+    check('and moving between pictures sends nothing', !!show && !/\bapi\(/.test(show),
+      'show() talks to the API');
+    const goTo = functionBody(presentJs, 'function goTo(at)');
+    check('nor does stepping to a picture', !!goTo && !/toggleReveal/.test(goTo));
+
+    // The keys: arrows, and the two a presenter's clicker sends. NOT the space
+    // bar - space activates whatever button has focus, and the button most
+    // likely to have it on this page is the one that reveals.
+    const fromKeydown = presentJs.slice(presentJs.indexOf("addEventListener('keydown'"));
+    const keyBlock = fromKeydown.slice(0, fromKeydown.indexOf('});'));
+    check('the keydown handler is readable', keyBlock.length > 0 && keyBlock.length < 1200);
+    check('arrows and a clicker move through the page',
+      /ArrowRight/.test(keyBlock) && /ArrowLeft/.test(keyBlock)
+      && /PageDown/.test(keyBlock) && /PageUp/.test(keyBlock));
+    check('Escape leaves', /e\.key === 'Escape'/.test(keyBlock) && /function leave\(\)/.test(presentJs));
+    check('and no key press reveals anything',
+      !/toggleReveal/.test(keyBlock) && !/' '/.test(keyBlock) && !/Spacebar|'Space'/.test(keyBlock));
+
+    // ── no chrome, and the omissions are the feature ──
+    // Every other page of the five mounts the shared header. This one must
+    // not: what is on the screen is what the party is looking at. Asserted
+    // rather than left to a comment, for the reason index.html's missing
+    // stylesheet is asserted above.
+    //
+    // ALL THREE MATCH CODE RATHER THAN THE WORD - the attribute inside a tag,
+    // the script tag, the property access. Written as bare word searches they
+    // failed on the very comments in those files that explain the omissions,
+    // which is a check policing prose. Both halves of that were true at once
+    // and only the loud half showed.
+    check('present mode mounts no app switcher',
+      !/<[^>]*data-appnav/.test(presentHtml) && !/<script[^>]+appnav\.js/.test(presentHtml));
+    // A caption is the one piece of the GM's text that reaches a screen the
+    // party can see. It is set as textContent, and the page loads no escaping
+    // helper because it writes no markup at all.
+    check('the page writes no markup',
+      !/\.innerHTML/.test(presentJs) && !/<script[^>]+ui\.js/.test(presentHtml));
+    check('and the caption is set as text', /\$\('caption'\)\.textContent/.test(presentJs));
+    check('it reads the GM-only entry endpoint',
+      /api\(`campaigns\/\$\{campaignId\}\/entries\/\$\{entryId\}`\)/.test(presentJs));
+
+    // ── the way in, and the way back ──
+    check('the dashboard offers Present on a picture and on a page',
+      /presentUrl\(i\.id\)/.test(dash) && /presentUrl\(\)/.test(dash));
+    check('and the link carries the campaign and the page',
+      /present\.html\?campaign_id=\$\{encodeURIComponent\(campaignId\)\}&entry_id=/.test(dash));
+    // Leaving lands on the page that was being presented rather than at the
+    // top of the roster, which takes both ends: present.js names the page in
+    // the URL it goes back to, and the dashboard opens what it is handed.
+    check('leaving returns to the page it was presenting',
+      /q\.set\('entry_id', entryId\)/.test(presentJs) && /'\/apps\/gm-tools\/'/.test(presentJs));
+    check('and the dashboard reopens that page',
+      /const openEntryId = /.test(dash) && /if \(D\.isGm && openEntryId\) await openEntry\(openEntryId\)/.test(dash));
+
+    // ── the stage ──
+    // The slice runs to the end of the file, which is where this block sits. A
+    // section appended after it would be judged by these three as well - a
+    // false failure, and the loud kind, which is the trade printCss's header
+    // argues for over a slice that silently stops matching.
+    const stage = css.slice(css.indexOf('body.present {'));
+    check('the present-mode block is in the shared stylesheet', stage.length > 0);
+    // Black rather than --bg-primary, and the only page in the suite that
+    // departs from the palette: this background is the surround of a
+    // photograph rather than a surface the UI stands on.
+    check('the stage is black and the picture is fitted, never cropped',
+      /background:\s*#000/.test(stage) && /object-fit:\s*contain/.test(stage)
+      && /max-height:\s*100dvh/.test(stage));
+    check('and it still casts no shadow', !/box-shadow/.test(stage));
+    check('the chrome fades when nothing is happening',
+      /body\.present\.idle \.present-chrome \{ opacity: 0; \}/.test(stage));
   }
 }

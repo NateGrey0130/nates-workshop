@@ -87,7 +87,15 @@ apps/campaign/                CAMPAIGN
 │                             the currency ledger
 apps/gm-tools/                GM TOOLS
 ├── index.html / dashboard.js Roster (with the G.M.'s pool, damage, undo and
-│                             party-XP controls), GM notes, campaign journal
+│                             party-XP controls), GM notes, campaign journal,
+│                             and the Setting — the GM's own pages and the
+│                             pictures hanging off them (migration 078)
+├── present.html / present.js Present mode: the screen turned round at the
+│                             table. Black, no shared header, one picture
+│                             fitted to it, arrow keys through that page.
+│                             SHOWING IS NOT REVEALING — it reads the GM's own
+│                             pictures and writes nothing until the reveal
+│                             button on it is pressed
 │
 apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
