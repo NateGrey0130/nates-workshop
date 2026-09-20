@@ -39,8 +39,11 @@ export async function systemForCharacter(env, characterId) {
  *
  * An empty map for a null system and for a system with no rows, which are the
  * same thing to every caller: `applySystemBases` returns its input untouched.
- * Today only Heroes Unlimited has any, so every Rifts and Palladium Fantasy
- * request takes the empty path.
+ * Heroes Unlimited, Nightbane (F102) and Palladium Fantasy (F103) have rows;
+ * RIFTS HAS NONE, and that is the design rather than a gap - the catalog rows
+ * themselves are Rifts', so a Rifts request has nothing to override and takes
+ * the empty path. This said "only Heroes Unlimited has any" until F103, by
+ * which time two other games did.
  */
 export async function loadSystemBases(env, system) {
   if (!system) return new Map();

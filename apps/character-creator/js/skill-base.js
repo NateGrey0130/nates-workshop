@@ -97,9 +97,15 @@ export function systemBaseMap(rows) {
  * `level_bonuses` REPLACES the row's schedule, it is never merged into it
  * (BOOK-INGEST-AUDIT.md F102). A W.P. is carried wholly by that list, and a book
  * that prints its own W.P. prints the whole progression - Heroes Unlimited's
- * W.P. Targeting strikes at 2, 4, 7, 10 and 13 where Palladium Fantasy's
+ * W.P. Targeting strikes at 2, 4, 7, 10 and 13 where Rifts Ultimate Edition's
  * strikes at 1, 3, 7 and 10. Merging the two would hand a character both
- * games' bonuses at level 7 and 10, which is neither book. The override is the
+ * games' bonuses at level 7 and 10, which is neither book.
+ *
+ * THAT 1, 3, 7, 10 IS RIFTS ULTIMATE EDITION'S, NOT PALLADIUM FANTASY'S, and
+ * this comment said Palladium Fantasy's until BOOK-INGEST-AUDIT F103. The
+ * catalog row is RUE's entry word for word; Palladium Fantasy prints six, at
+ * 1, 3, 5, 7, 10 and 13, and now has an override row of its own carrying them.
+ * The override is the
  * stored JSON text, the same shape the column on `skills` holds, so every
  * reader of `level_bonuses` parses it exactly as it already does.
  *

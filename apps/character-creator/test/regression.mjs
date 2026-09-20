@@ -617,6 +617,30 @@ for (const [label, got] of Object.entries(actual)) {
                   : `README says ${want}, a clean run produced ${got}`);
 }
 
+// BOOK-INGEST-AUDIT F103. The count above moves for any reason; this pins the
+// ROW, because the thing that was wrong was a rules difference and not a
+// tally. The catalog row is Rifts Ultimate Edition's entry - four strike
+// bonuses - and Palladium Fantasy prints six, so a PF character reading the
+// catalog row alone was short two.
+{
+  const bases = catalogs.body.skillSystemBases || [];
+  const pfWp = bases.find((b) => b.skill_name === 'W.P. Targeting' && b.system === 'palladium-fantasy');
+  check('Palladium Fantasy has its own W.P. Targeting schedule', !!pfWp,
+    'a PF character is back on Rifts Ultimate Edition\'s four strike bonuses');
+  const strikes = (t) => { try { return JSON.parse(t || '[]').filter((e) => e?.combat?.strike).length; } catch { return -1; } };
+  check('and it prints six strike bonuses where the catalog row prints four',
+    strikes(pfWp?.level_bonuses) === 6
+    && strikes((catalogs.body.skills.find((s) => s.name === 'W.P. Targeting') || {}).level_bonuses) === 4,
+    `override ${strikes(pfWp?.level_bonuses)}, catalog row ${strikes((catalogs.body.skills.find((s) => s.name === 'W.P. Targeting') || {}).level_bonuses)}`);
+  // The citation the finding was named for: the row holds RUE's text, so it
+  // cites RUE. Production and a fresh build disagreed about this until F103 -
+  // production said Palladium Fantasy p.84, a rebuild said Rifts Ultimate
+  // Edition with no page - and this is the first check that pins either.
+  const wp = catalogs.body.skills.find((s) => s.name === 'W.P. Targeting');
+  check('and the catalog row cites the book its text came from',
+    wp?.source_book === 'Rifts Ultimate Edition p.328', wp?.source_book);
+}
+
 
 // ── a character, end to end ─────────────────────────────────────────────────
 console.log('\n[4/7] Creating a campaign and a character');
