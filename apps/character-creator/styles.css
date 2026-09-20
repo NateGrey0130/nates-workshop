@@ -2240,6 +2240,35 @@ body.show-play-keys .play-keys { display: block; }
      prints blank, which is a failure only paper would show. */
   [data-sticky] { position: static !important; }
   .vitals-strip { padding-top: 0; break-inside: avoid; }
+
+  /* ── UI-AUDIT F58: THE POOL STRIP PRINTED AS A BLACK BAND ────────────────
+     Read off the PDF's own content streams rather than a screenshot, 2026-09-20
+     (`--print-to-pdf`, colour operators extracted): a 720x51pt rectangle filled
+     `0.039 0.059 0.055` - #0A0F0E, which is --bg-primary - with the three cards
+     on it at `0.118 0.153 0.141`, #1E2724, --bg-tertiary.
+
+     THE BAND IS .sheet-sticky, NOT THE CARDS, and the finding said otherwise.
+     `.panel, .box` are reset to #fff above; `.sheet-sticky` is the one dark
+     ground in that subtree no print rule touched, and it shows through the two
+     empty grid tracks that three pools leave in a five-column strip. Whitening
+     only `.vital` - which is what F58 proposed - would have left a black band
+     with three white holes punched in it.
+
+     The LABELS need nothing. They read as invisible because the ground was
+     black; `.field > .lbl, .skill-head th, .vital .lbl { color: #333 }` above
+     already sets them, and #333 on white is 12.6:1. F58 proposed #000 and that
+     rule governs two other things, so it is deliberately left alone.
+
+     The TONE is re-asserted rather than preserved. `.vital { border-color: #999 }`
+     above is later than the screen rule and equal in specificity, so on paper
+     the per-pool top edge was already gone today - which pool is which was
+     being carried by nothing. Re-asserting the top colour is the only thing
+     here that ADDS information to the page. */
+  .sheet-sticky { background: #fff !important; }
+  .vital {
+    background: #fff !important;
+    border-top-color: var(--tone, #999);
+  }
   /* Five pools, five columns. On screen this is auto-fit at a 84px minimum,
      which on a 700px page resolves to eight tracks for five items and leaves
      three empty. Paper knows exactly how many there are. */

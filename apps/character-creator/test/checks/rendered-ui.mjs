@@ -561,6 +561,32 @@ export function run() {
       !/^\.mini-in \{[^}]*min-height: 44px/m.test(css),
       'the 44px went global and the sheet grew by a column');
 
+    // ── UI-AUDIT F58: the pool strip on paper (2026-09-20) ──
+    //
+    // Measured from the PDF's own content streams, not a screenshot: a
+    // 720x51pt rect filled `0.039 0.059 0.055` - #0A0F0E, --bg-primary - with
+    // the three cards on it at #1E2724. THE BAND WAS .sheet-sticky, not the
+    // cards, which is why the parent is the rule that matters: whitening
+    // .vital alone would have left three white holes punched in a black band.
+    check('the sticky block does not print its screen ground',
+      /\.sheet-sticky \{ background: #fff !important; \}/.test(printed),
+      'the pool strip prints as a black band again');
+    check('and neither do the pool cards',
+      /\.vital \{\s*background: #fff !important;/.test(printed),
+      'the three cards print dark on white paper');
+    // The one thing here that ADDS to the page. `.vital { border-color: #999 }`
+    // in the same block is later than the screen rule and equal in
+    // specificity, so on paper which pool is which was carried by nothing.
+    check('but the per-pool tone is re-asserted on paper',
+      /\.vital \{[^}]*border-top-color: var\(--tone, #999\);/.test(printed),
+      'the H.P./S.D.C./P.P.E. edges print grey and say nothing');
+    // The labels were never the problem - they read as invisible against a
+    // black ground. #333 on white is 12.6:1, and that rule governs two other
+    // selectors, so F58's proposed #000 is deliberately NOT taken.
+    check('and the shared label rule is left alone',
+      /\.field > \.lbl, \.skill-head th, \.vital \.lbl \{ color: #333 !important; \}/.test(printed),
+      'the label colour moved, taking .field and .skill-head with it');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
