@@ -182,3 +182,93 @@ more once they have removed the ways a selection goes wrong. B5 and B6 are the
 two that cost real work — B5 breaks two smoke checks and a README line by
 design; B6 wants a schema column and shares its lookup loop with the ISBN
 audit's F9, so it should follow that work rather than lead it.
+
+## Filed 2026-09-20, from a hand-over note rather than from a run of this menu
+
+**On this menu rather than a new one, and rather than ISBN-AUDIT or
+SHARE-AUDIT**, because the subject is the same one `B1`'s note argues about —
+a second copy of the library living outside D1. `BULK-AUDIT.closed.md:38`
+declines to write deleted rows to localStorage as *"exactly the
+second-copy-of-the-truth"* problem; this is the last surviving instance of that
+copy and whether it was ever put away. A menu holding one finding would be
+worse than a slightly loose fit, per `audit-menu` → *When not to*.
+<!-- claim-ok: quoting the note that makes this the right menu -->
+
+## B10 — the one-shot that retires localStorage reports success or failure to nobody, and one of its failure modes is permanent and silent
+
+**The code is correct, and that is the point of filing this.** Read on `main`
+@ `f61c537`, 2026-09-20:
+
+- `apps/media-vault/app.js:2154` `migrateLocalIfNeeded` reads `mv_library`,
+  POSTs it, and removes the key **after** the await.
+- `apps/media-vault/app.js:2111` `apiFetch` **throws** on a non-2xx, so a
+  failed migration never reaches the `removeItem`. The comment above
+  `migrateLocalIfNeeded` promises exactly that and it is kept — no data is at
+  risk and this finding proposes no fix to either function.
+- `apps/media-vault/app.js:2339` `initApp` wraps the call in its own
+  `try`/`catch` whose body is a single `console.error`. **So the failure signal
+  is a console line in the affected person's own browser**, and the affected
+  person is `lillcreeper@gmail.com`, not Nate.
+
+**Nothing on the server distinguishes ran from never-ran.**
+`functions/api/media-vault/migrate.js` inserts through the shared `UPSERT_SQL`
+and returns `{ imported, skipped }` to the caller. No row, column or log
+survives the request, so the question *"did lillcreeper's browser ever hand its
+cache over"* has no answer available from here — by construction, not by
+oversight.
+
+**And the cloud row count cannot answer it either.** `media_items` on
+production, `scripts/q.mjs --remote` 2026-09-20: `lillcreeper@gmail.com`
+**3,444 rows**, `nathanrapert@gmail.com` **2**. Those rows are consistent with
+the migration having run *and* with it never having run, because the app's
+previous design pushed the whole library to D1 on a debounce — the README's
+*Storage: D1, and only D1* section describes that reversal. A library that
+arrived by the old sync looks identical to one that arrived by the merge.
+
+**The permanent failure mode, which is the part worth acting on.**
+`migrate.js` refuses with a **400** when the merged total would exceed
+`MAX_ITEMS` (5000, `functions/api/media-vault/_lib/common.js:108`). A 400
+throws, so the key stays, so the next load retries, so it 400s again — forever,
+logging to a console nobody reads. Today's headroom is **1,556 rows**, which
+makes this unlikely rather than impossible, and the likelihood is not knowable
+without seeing what that browser still holds.
+
+**Proposal — two options, and the cheap one may well be enough.**
+
+- **A (recommended): answer the question once, by hand, and then delete the
+  path.** Ask Nate to have lillcreeper open MediaVault and read
+  `localStorage.getItem('mv_library')` in the browser console: `null` means the
+  migration ran (or there was never a cache) and **the whole code path can be
+  deleted** — `migrateLocalIfNeeded`, `migrate.js`, `planMigration`, its nine
+  smoke checks and the README section. A non-null value means it never
+  completed, and the length says whether the cap is why. **Posture: a question,
+  then either a deletion PR or a real bug.** It is the only option that can end
+  this rather than instrument it.
+- **B: make the failure visible** — surface a failed migration in the UI
+  instead of the console, or return the counts somewhere durable. **Posture:
+  report only, no gate.** This is worth doing only if A comes back non-null and
+  the cause is not the cap.
+
+**Evidence:** the four source locations above, read 2026-09-20 on `f61c537`;
+the two production counts by `scripts/q.mjs --remote`, same day. **The one
+thing that is inferred** is that the path has never been exercised in
+production — it is *unobservable*, which is the finding, and must not be
+written down as *unused*.
+
+**Confidence: high that the state is unknowable from here. No confidence at all
+about which state it is in**, and there is exactly one thing that would settle
+it, named as option A. **Do not take B first**: instrumenting a path that may
+have completed a year ago is the expensive way to answer a question a console
+read answers for free.
+
+**Ongoing cost.** A: none, and it *removes* ongoing cost — a one-shot nobody
+can retire is a permanent line item in every reading of this app. B: one more
+UI state to maintain.
+
+**Subject grep, 2026-09-20:** `apps/media-vault/**` and the memory store for
+`lillcreeper`, `localStorage`, `mv_library` and `migrate`. The hits are this
+app's README, `ISBN-AUDIT.closed.md:64` and `:367` (both about the migration
+path holding a new column's default so old payloads still merge — a
+compatibility point, not this question), `SHARE-AUDIT.md:91`'s row counts, and
+the memory note `app-work-ledger`, which records that the library is
+lillcreeper's and says nothing about the migration. Nothing has weighed this.
