@@ -3,6 +3,10 @@
 'use strict';
 
 const campaignId = new URLSearchParams(location.search).get('campaign_id');
+// Which Setting page to open on arrival, if any. present.html sends the GM
+// back here naming the page they were presenting, so leaving the room view
+// lands on that page rather than at the top of the roster (P4b).
+const openEntryId = new URLSearchParams(location.search).get('entry_id');
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
 const D = { campaign: null, isGm: false, roster: [], journal: [], classNames: {}, amt: 5,
             // The GM's own pages (migration 078) and the one open in the editor.
@@ -33,6 +37,11 @@ async function load() {
     // whether to ask at all - a player's dashboard makes no request for it.
     await loadEntries();
     render();
+    // After that first render, so a page that will not open has somewhere to
+    // say so: setMsg writes into markup that does not exist until now. Gated
+    // on isGm for the same reason loadEntries is - a player handed this URL
+    // makes no request for a page they could not be shown anyway.
+    if (D.isGm && openEntryId) await openEntry(openEntryId);
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
   }
@@ -305,8 +314,19 @@ function render() {
 // at a time, and its CAPTION is the only text a player reads (migration 078).
 // So the editor below puts the reveal switch on the picture, never on the page,
 // and the caption field sits beside it rather than under the body.
+//
+// PRESENT MODE (P4b) IS A PAGE OF ITS OWN - present.html, black and
+// chromeless, one picture fitted to the screen. It is a LINK rather than a
+// button so a GM with a second screen can open it there. Presenting a picture
+// does NOT reveal it: the switch below is still the only thing that does, and
+// present.html carries its own copy of that switch for the same reason the
+// caption field sits beside the picture here.
 const KINDS = ['place', 'faction', 'lore', 'handout', 'prep'];
 const KIND_LABEL = { place: 'Place', faction: 'Faction', lore: 'Lore', handout: 'Handout', prep: 'Session prep' };
+
+const presentUrl = (imageId) =>
+  `present.html?campaign_id=${encodeURIComponent(campaignId)}&entry_id=${D.entry.id}`
+  + (imageId ? `&image_id=${imageId}` : '');
 
 function settingHtml() {
   const rows = D.entries.map((e) => `<li class="home-row${D.entry?.id === e.id ? ' on' : ''}">
@@ -342,6 +362,7 @@ function entryEditorHtml() {
         <input class="mini-in wide" value="${escHtml(i.caption || '')}" placeholder="Caption — the one thing players read"
                onchange="saveCaption(${i.id}, this.value)">
         <div class="rowline">
+          <a class="btn btn-sm" href="${presentUrl(i.id)}" title="Show this on a screen at the table. It does not reveal it.">▶ Present</a>
           <button class="btn btn-sm ${i.revealed_at ? '' : 'btn-primary'}" onclick="toggleReveal(${i.id}, ${i.revealed_at ? 'false' : 'true'})">
             ${i.revealed_at ? '🙈 Hide from players' : '👁 Reveal to players'}</button>
           <span class="muted small">${i.revealed_at ? 'shown ' + escHtml(i.revealed_at) : 'only you can see this'}</span>
@@ -357,6 +378,7 @@ function entryEditorHtml() {
         ${KINDS.map((k) => `<option value="${k}" ${k === e.kind ? 'selected' : ''}>${escHtml(KIND_LABEL[k])}</option>`).join('')}
       </select>
       <button class="btn btn-primary" onclick="saveEntry()">💾 Save</button>
+      ${D.entryImages.length ? `<a class="btn" href="${presentUrl()}">▶ Present page</a>` : ''}
       <button class="btn btn-sm" onclick="closeEntry()">Close</button>
       <button class="btn btn-sm btn-danger" onclick="deleteEntry()">Delete page</button>
       <span id="edit-msg" class="muted small"></span>
@@ -366,7 +388,9 @@ function entryEditorHtml() {
       <label class="btn btn-sm">📷 Add a picture
         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none"
                onchange="uploadPicture(this)"></label>
-      <span class="muted small">Up to 5MB each, jpg/png/webp/gif. A picture arrives hidden; reveal it when the table should see it.</span>
+      <span class="muted small">Up to 5MB each, jpg/png/webp/gif. A picture arrives hidden.
+        <b>Present</b> shows it on a screen at the table and changes nothing;
+        <b>Reveal</b> puts it in the players' Handouts to keep.</span>
       <span id="upload-msg" class="muted small"></span>
     </div>
     ${pics ? `<ul class="setting-pics">${pics}</ul>` : ''}

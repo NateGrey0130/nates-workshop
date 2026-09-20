@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Present — Nate's Workshop</title>
+<!-- Icons as every other page carries them; see index.html for why
+     apps/pick3cut5 deliberately has none. theme-color is BLACK here rather
+     than the suite's slate, because this page is the only one whose
+     background is not --bg-primary: a phone drawing its status bar in the
+     app's colour would put a slate band beside a black picture. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#000000">
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="/apps/character-creator/styles.css">
+</head>
+<!--
+  PRESENT MODE (P4b). The GM's screen turned round at the table.
+
+  NO SHARED HEADER, AND THAT IS THE FEATURE. Every other page of the five
+  mounts the app switcher; this one must not, because the whole point is a
+  picture with nothing around it. The omission is asserted in
+  apps/character-creator/test/checks/rendered-ui.mjs rather than left to this
+  comment, for the reason that file gives about index.html's stylesheet.
+
+  SHOW IS NOT REVEAL. Opening this page, and moving through it, changes
+  nothing a player can see - it reads the GM's own pictures through the
+  GM-only entry endpoint and writes nothing. Revealing is a separate,
+  deliberate press of the one button that does it, which is here because at a
+  table those two things often happen together and the GM should not have to
+  leave the room view to do the second.
+
+  THE MARKUP IS STATIC AND present.js ONLY FILLS IT. No innerHTML anywhere in
+  that file: a caption reaches this page as textContent and an image as a src,
+  so there is no path from a caption into markup at all.
+-->
+<body class="present">
+
+<main class="present-stage" id="stage">
+  <figure class="present-frame" id="frame" hidden>
+    <img id="pic" alt="">
+  </figure>
+
+  <p class="present-state" id="state">Loading…</p>
+
+  <!-- Everything that is not the picture. It fades out when nothing has been
+       touched for a few seconds and comes back on any movement, key or tap,
+       so the screen a player looks at is the picture alone. -->
+  <div class="present-chrome" id="chrome">
+    <div class="present-top">
+      <span class="present-title" id="title"></span>
+      <span class="present-count" id="count"></span>
+      <button type="button" class="btn btn-sm" id="fullscreen" title="Fill the screen">⛶ Fullscreen</button>
+      <button type="button" class="btn btn-sm" id="close" title="Back to the dashboard (Esc)">✕ Close</button>
+    </div>
+
+    <button type="button" class="present-arrow present-prev" id="prev" aria-label="Previous picture">‹</button>
+    <button type="button" class="present-arrow present-next" id="next" aria-label="Next picture">›</button>
+
+    <div class="present-bottom">
+      <p class="present-caption" id="caption"></p>
+      <div class="present-actions">
+        <!-- The reveal affordance. NO KEY REACHES IT, deliberately: arrows and
+             a presenter's clicker move through the pictures and nothing a
+             keyboard sends can show one to the party by accident. -->
+        <button type="button" class="btn btn-primary" id="reveal"></button>
+        <span class="present-shown" id="shown"></span>
+        <span class="present-msg" id="msg"></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- No /shared/js/ui.js. Every other page loads it for escHtml(), and this one
+     writes no markup to escape - which is the point, and is why the omission
+     is here rather than looking like something that was forgotten. -->
+<script src="/apps/character-creator/js/api.js"></script>
+<script src="present.js"></script>
+</body>
+</html>
