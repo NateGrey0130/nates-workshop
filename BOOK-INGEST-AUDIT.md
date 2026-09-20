@@ -1576,8 +1576,9 @@ on holding another skill, which `level_bonuses` has no way to express. It is
 **dropped**, not postponed - the row's note can say so in prose, as other
 conditional bonuses do. **And the name difference** - PF prints
 `W.P. Targeting/Missile Weapons` - is the same shape as the Nightbane survey's
-`D6`, which resolved to the existing row and no new name; this follows that
-precedent and proposes no rename.
+`D6` (`apps/character-creator/docs/surveys/nightbane-core.md:893`, read
+2026-09-20), which resolved `W.P. Archery and Targeting` to `W.P. Archery` with
+no new row; this follows that precedent and proposes no rename.
 
 **Evidence:** the production row by `scripts/q.mjs --remote`, 2026-09-20; both
 book pages read out of the caches the same day, with the offsets applied from
