@@ -388,7 +388,14 @@ function entryEditorHtml() {
       <label class="btn btn-sm">📷 Add a picture
         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none"
                onchange="uploadPicture(this)"></label>
-      <span class="muted small">Up to 5MB each, jpg/png/webp/gif. A picture arrives hidden.
+      ${/* This used to lead with the server's byte cap, which stopped being the
+            thing a GM runs into: a big photo is shrunk to 2048px on its longest
+            edge before it is sent (UI-AUDIT F57), so that cap is now reached by
+            very few pictures rather than by every phone photo. An animated gif
+            is sent as it is, because re-encoding one flattens it. */''}
+      <span class="muted small">jpg/png/webp/gif. Big pictures are shrunk to
+        ${downscale.MAX_EDGE}px before they upload; a gif is sent as it is.
+        A picture arrives hidden.
         <b>Present</b> shows it on a screen at the table and changes nothing;
         <b>Reveal</b> puts it in the players' Handouts to keep.</span>
       <span id="upload-msg" class="muted small"></span>
@@ -462,8 +469,16 @@ async function uploadPicture(input) {
   input.value = '';
   setMsg('upload-msg', `Uploading ${file.name}…`);
   try {
+    // UI-AUDIT F57 option A: shrink it here, because nothing downstream can.
+    // THE HEADER COMES FROM WHAT IS SENT, not from the File - the server reads
+    // this one header to pick the R2 key's extension, the stored content_type
+    // AND the Content-Type it serves back later, so describing a re-encoded
+    // blob with the original file's type would be wrong in three places.
+    // `toUpload` hands the original back untouched whenever it cannot do
+    // better, so this is the same request it always was in that case.
+    const body = await downscale.toUpload(file);
     const res = await api(`campaigns/${campaignId}/entries/${D.entry.id}/images`, {
-      method: 'POST', headers: { 'Content-Type': file.type }, body: file,
+      method: 'POST', headers: { 'Content-Type': body.type }, body,
     });
     D.entryImages.push(res.image);
     await loadEntries();

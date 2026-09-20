@@ -516,6 +516,23 @@ the recipe in `print-render-headless-chrome.md` cannot see it. That gap does not
 change the outcome, because the trigger above is about reachability rather than
 about the ink.
 
+**Adjusted 2026-09-20, while taking `F58`.** The sentence above about
+`--print-to-pdf` is **wrong on this Chrome, and the record stands as written
+above because that is what an audit file is.** Measured by extracting the
+colour operators from the PDF's own content streams rather than by looking at a
+render: `--print-to-pdf` emits `0.933 0.933 0.933` for `.box > .box-title`'s
+`#eee` and, before `F58` was taken, `0.039 0.059 0.055` for `.sheet-sticky`'s
+`--bg-primary`. **Backgrounds print.** No `print-color-adjust` exists anywhere
+in this repo, so nothing else explains it.
+<!-- claim-ok: naming the sentence this correction is about -->
+
+What that does to **this** finding: its *"not settled"* half is now settleable
+with the recipe it said could not see it, and the two backgrounds it asks about
+- `.lvl-row` and `.cat-row.open` - would print. **It changes nothing about
+`F56`'s outcome**, which turned on reachability: the wizard and the catalog
+still have no print affordance, so the ink is still unreachable and the finding
+is still correctly closed.
+
 **Ongoing cost:** none.
 
 **Subject grep, 2026-09-12:** every `*AUDIT*.md` (root and under `apps/`) plus
@@ -610,6 +627,102 @@ version of it that would inherit the objection.
 `apps/character-creator/UI-AUDIT.closed.md:1334` is about not resizing equipment
 row buttons. Nothing on any menu has weighed this.
 
+**Taken as option A, 2026-09-20 (PR #1201), on Nate's word.** Posture as
+written: *"a cap at upload, nothing stored changes, no existing row is touched,
+and no server code moves."* All four hold — the change is one new browser-side
+file, two lines of `uploadPicture` and a line of copy.
+
+**The production counts were re-run before building** and still read zero:
+`campaign_images` 0, `campaign_entries` 0, `npcs` 0, and `npcs` with a
+`portrait_key` 0 (`scripts/q.mjs --remote`, 2026-09-20). Nothing to migrate,
+which is what made "now" the cheap moment.
+
+**What shipped.** `apps/character-creator/js/downscale.js`, a classic script
+with one global, loaded before `dashboard.js`. `downscale.toUpload(file)`
+decodes with `createImageBitmap`, and when the longest edge is over 2048 draws
+it to a canvas at that cap and re-encodes **in the same type it arrived in**.
+Everything else hands the original `File` straight back.
+
+**FIVE CORRECTIONS FROM THE TAKE-TIME PREMISE AUDIT, four of which changed the
+code that was written:**
+
+1. **The header must come from the BLOB, not the File**, and option A's text
+   never said so. The server reads that one header to pick the R2 key's
+   extension, the stored `content_type` and the `Content-Type` it serves back
+   later, so sending a re-encoded blob described by `file.type` would have been
+   wrong in three places at once. `uploadPicture` now sends `body.type`.
+2. **`canvas.toBlob` cannot produce `image/gif`** — browsers fall back to PNG —
+   so re-encoding an animated gif silently flattens it to one frame. The upload
+   allowlist accepts gif, so gif is excluded from re-encoding outright. The
+   finding's stated trade was only the loss of zoom detail; losing animation was
+   a second, unnamed loss.
+3. **A small PNG can come out LARGER from a re-encode**, which would have pushed
+   a picture towards the 5MB cap rather than away from it. A blob bigger than
+   its original is discarded and the original sent.
+4. **The type is preserved rather than chosen.** A PNG re-encoded to JPEG loses
+   its transparency, and these are maps and portraits rather than photographs to
+   optimise — the point is the pixel count, not the codec.
+5. **The posture sentence undersold one behaviour change.** A photo over 5MB
+   used to be refused by the server outright; it now usually downscales under
+   the cap and succeeds. That is an improvement, but it falsified the UI copy
+   *"Up to 5MB each"*, which has been rewritten to say what actually happens.
+
+**And the finding's own title overreached.** It says *"every campaign picture
+**and NPC portrait**"*, but option A names only `uploadPicture` in
+`apps/gm-tools/dashboard.js`. NPC portraits are uploaded by a different
+function in a different app — `uploadPortrait`, `apps/campaign/campaign.js` —
+which this PR does not touch. **That half is filed as `F59` below rather than
+quietly widened into this one or quietly dropped**, per `audit-menu` → *A
+deferral is work*.
+
+<!-- claim-ok: quoting the premises and the title this note corrects -->
+
+**Not done, and deliberately:** options B and C are untouched. B remains the
+only option that keeps the original bytes, and this one throws them away at the
+door — which is the trade the finding named and Nate chose.
+
+## Filed while taking UI-AUDIT F57, 2026-09-20
+
+### F59 - low - NPC portraits upload from a different app and were left at full size when F57 was taken
+
+**Why this exists.** `F57`'s title claims campaign pictures *and* NPC
+portraits; its option A names one function, in one app, and that function has
+nothing to do with portraits. Taking `F57` fixed half of what it said it
+covered, and this is the other half with a number on it rather than a sentence
+inside a closed finding.
+
+**What is true.** `uploadPortrait` in `apps/campaign/campaign.js` POSTs the raw
+`File` to `campaigns/:id/npcs/:npcId/portrait` with `Content-Type: file.type` —
+the same shape `uploadPicture` had before `F57`. Read 2026-09-20 while taking
+`F57`; the premise audit for that finding located it.
+
+**And the ratio is worse than anything in `F57`'s table.** A portrait is painted
+at **34px** in the roster row and **120px** in the dossier
+(`apps/campaign/campaign.js`, both inline styles, same read). `F57` counted
+three views and missed these two; they are the smallest consumers in the app.
+
+**Proposal.** Call the helper `F57` already shipped:
+`downscale.toUpload(file)` in `uploadPortrait`, take the `Content-Type` from
+what it returns, and load `js/downscale.js` in `apps/campaign/index.html`.
+**Posture: identical to `F57` option A** — a cap at upload, nothing stored
+changes, no existing row is touched, no server code moves. A portrait wants a
+smaller cap than a map does, and picking one is the only decision here.
+
+**Evidence:** the two files above, read 2026-09-20. `npcs` holds **0 rows** in
+production with **0** portraits (`scripts/q.mjs --remote`, same day), so as with
+`F57` there is nothing to migrate and the cheap moment is now.
+
+**Confidence: high** — the mechanism is the one just shipped and tested one app
+over. **What would raise it further:** nothing worth waiting for.
+
+**Ongoing cost:** one line in `uploadPortrait`, one script tag. The helper and
+its cap already exist.
+
+**Subject grep, 2026-09-20:** the same sweep `F57` records, plus `uploadPortrait`
+and `portrait_key` across every `*AUDIT*.md` and the memory store. The only hits
+are `F57` itself and `README.md`'s schema table describing `portrait_key` as an
+R2 object key. Nothing has weighed it.
+
 ## Filed while shipping P5c, 2026-09-20
 
 Found by rendering the print stylesheet rather than reading it, which is the
@@ -666,3 +779,52 @@ selectors, closed as unreachable) and `F56` (its remainder, closed on a
 re-measurement). **Neither is about the pool strip**, and `F56`'s note records
 that the headless method falsified `F17` outright - which is the same method
 that found this. Nothing has weighed it.
+
+**Taken, 2026-09-20 (PR #1200). Posture as written: print-only, no screen
+change.** Two CSS rules in the later print block, no screen rule touched.
+
+**FIVE OF THIS FINDING'S OWN PREMISES WERE WRONG**, and the take-time premise
+audit caught all five before anything was built. Recorded here because the
+finding was filed the same day by the same session, which is the case
+`audit-menu` says the auditor exists for.
+
+1. **The band is not the cards.** It is `.sheet-sticky`, whose
+   `background: var(--bg-primary)` no print rule reset; the two empty tracks
+   that three pools leave in a five-column strip are what show it. Implementing
+   the proposal as written - whitening `.vital` alone - would have left a black
+   band with three white holes punched in it.
+2. **`.vital` does not use `--bg-card`.** It is `--bg-tertiary`
+   (`styles.css:927-934`). `--bg-card` is the token the print block already
+   neutralises, so a taker checking the finding's claim would have found it
+   handled and called the finding stale.
+3. **"The cards were not considered" is false.** `.vital` is named in five
+   print rules across two print blocks.
+4. **The labels needed nothing.** They read as invisible because the ground was
+   black; `.vital .lbl` is already `#333` from the print block, which is 12.6:1
+   on white. The proposal's `#000` would have edited a rule that also governs
+   `.field > .lbl` and `.skill-head th`, moving two other things.
+5. **`--tone` was never a fill.** It is a 2px top border, and
+   `.vital { border-color: #999 }` in the print block already destroyed it on
+   paper - so "keep the tone as a thin rule" described something that was
+   already gone. Re-asserting `border-top-color` is the one thing here that
+   ADDS to the page rather than removing from it.
+
+**Measured from the PDF's own content streams, not from a screenshot**
+(`--print-to-pdf`, colour operators extracted, 2026-09-20):
+
+| | before | after |
+|---|---|---|
+| the 720x51pt band | `0.039 0.059 0.055` (#0A0F0E, `--bg-primary`) | `1 1 1` |
+| the three cards | `0.118 0.153 0.141` (#1E2724, `--bg-tertiary`) | absent |
+| per-pool tone on paper | absent | `--danger`, `--warning`, `--success` all present |
+
+**The empty remainder needed no work.** The finding asked what should be done
+about the two blank grid tracks; once the parent is white they are white, and
+the `repeat(5, 1fr)` was never the problem.
+
+<!-- claim-ok: quoting the premises this note corrects -->
+
+**And it falsified a claim on this menu.** `F56`'s note says *"`--print-to-pdf`
+defaults [printBackground] off, so the recipe in `print-render-headless-chrome.md`
+cannot see it."* **That is false on this Chrome** - see the dated correction
+under `F56`, measured in the same pass.
