@@ -723,6 +723,63 @@ and `portrait_key` across every `*AUDIT*.md` and the memory store. The only hits
 are `F57` itself and `README.md`'s schema table describing `portrait_key` as an
 R2 object key. Nothing has weighed it.
 
+**Taken, 2026-09-20 (PR #1203).** Posture kept as written — a cap at upload,
+nothing stored changed, no existing row touched, no server code moved.
+
+**The cap is 512**, which is the one decision the proposal left open. A portrait
+has two consumers and no others — 34px in the roster row, 120px in the dossier,
+both confirmed at `apps/campaign/campaign.js:735` and `:785` on 2026-09-20 — and
+there is no full-screen view of one the way present mode is one for a campaign
+picture. 512 covers the 120px square at a device pixel ratio of 4 and leaves
+room for a dossier portrait that doubles in size. It is named at the call site
+rather than inside the helper, because the cap belongs to the view and only the
+caller knows the view; `apps/gm-tools` passes nothing and still gets 2048.
+
+**THE PROPOSAL'S SCRIPT PATH WAS WRONG, and implementing it literally would have
+broken every portrait upload.** The proposal says *"load `js/downscale.js` in
+`apps/campaign/index.html`"* — there is no `js/` directory under
+`apps/campaign/`, which holds two files (`ls apps/campaign/`, 2026-09-20). That
+tag resolves to `/apps/campaign/js/downscale.js`, 404s, leaves `downscale`
+undefined, and `uploadPortrait` then dies in its own `catch` painting
+*"Failed: downscale is not defined"* into `#portrait-msg`. The tag that shipped
+is the absolute one, `/apps/character-creator/js/downscale.js`, matching the
+three character-creator scripts `apps/campaign/index.html:42-44` already loads
+that way. Found by the `audit-premise-auditor` before anything was written.
+<!-- claim-ok: quoting the proposal sentence this note corrects; paths and the ls date are in the same paragraph -->
+
+**"Nothing has weighed it" was too strong**, and the correction supports the
+finding rather than opposing it. `docs/plans/16-npc-dossiers.md:193` — the plan
+that built this feature — specifies portraits *"resized client-side to a sane
+bound before upload"*. It was never built. Nothing in that sentence is a
+decision against this; what it means is that the subject grep above was scoped
+to `*AUDIT*.md` and the memory store, and `docs/plans/` is outside both. **That
+plan sentence becomes true with this PR**, so it is left standing rather than
+corrected.
+<!-- claim-ok: quoting this finding's own subject-grep sentence, with the file and line that falsify it -->
+
+**Two sentences this change made stale, corrected in the same PR.**
+`apps/character-creator/js/downscale.js` described the portrait upload as *"the
+second caller waiting to happen — see UI-AUDIT F59, which is that half, filed
+rather than taken"*, and `docs/pages-to-workers-migration.md:40` used *"NPC
+portraits are served out of R2 at full size"* as the worked example for the
+missing Image Resizing binding. The platform row is still true; the example is
+not.
+<!-- claim-ok: quoting the two sentences this PR corrects, both with their file and one with its line -->
+
+**What was measured**, in a browser on the campaign page itself rather than
+reasoned from the source (`verify-ui`): a 4032×3024 JPEG uploads as 512×384 and
+**13.4× smaller**, a 1200×1600 as 384×512, a 1024×1024 WebP as 512×512, an
+800×600 PNG as 512×384; a gif and anything already under 512 go up untouched.
+The `npcs` production counts in the evidence above were **not re-run** — local
+D1 holds 2 rows with 0 portraits, which contradicts neither half, and nothing
+here migrates a stored object in any case.
+
+**Four smoke checks now hold it**, and each was proved by breaking what it
+guards: the section reported `PARTIAL SMOKE FAILED (4 of 86)` with exactly those
+four red. The path check is the one worth naming — it matches the **script tag
+with its absolute src**, so the relative form the proposal asked for fails in
+the suite rather than in a GM's browser.
+
 ## Filed while shipping P5c, 2026-09-20
 
 Found by rendering the print stylesheet rather than reading it, which is the
