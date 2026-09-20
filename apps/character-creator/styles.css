@@ -2045,6 +2045,68 @@ body.show-play-keys .play-keys { display: block; }
   .tabpanel.on { display: block; }
 }
 
+/* ── THE SAME STRIP, AS NAVIGATION: A THIRD MODE (P5a, 2026-09-20) ─────────
+   The block above has two states and the page has three. Measured on
+   `main` @ e6bb3fc, 2026-09-20, Aelric at level 12 in the pane at 1440x900:
+   the dissolved layout is **3,687px - 4.1 screens - with THREE headings in
+   the whole document** and no way to reach a section but the wheel.
+
+   THE ANSWER IS NOT TO HIDE PANELS ON A LAPTOP. That is the state the block
+   above was written to end, and it stays ended: a mouse on a wide screen sees
+   every panel, exactly as it does today. What is added is a strip OVER those
+   already-visible panels, where pressing one SCROLLS to it and hides nothing.
+
+   `tabbar-sections` is what says which of the two a visible strip is, and
+   sheet.js adds it when the tab-mode query does NOT match - so the default
+   `.tabbar { display: none; }` above is untouched, and a bar over visible
+   panels is never an accident. Same specificity trick, and the same reason, as
+   `.tabbar.codex-tabs` further down. */
+.tabbar.tabbar-sections { display: flex; }
+
+/* NOTHING IS SELECTED IN THIS MODE, AND THE STRIP MUST NOT SAY OTHERWISE.
+   `.on` is still set on one entry - pickTab keeps the tab state so a phone and
+   a laptop can share a URL and a saved position - and `.tabbar .tab.on` paints
+   it with the accent. Here that is a lie: every panel is on screen, so an
+   entry drawn as "the one you are looking at" names nothing. Seen on the page,
+   with Gear lit while all seven panels were visible.
+
+   Unset rather than unstyled, so the selected entry looks exactly like its five
+   neighbours and the only thing the strip communicates is that it is a way to
+   get somewhere. */
+.tabbar-sections .tab.on {
+  color: var(--text-secondary);
+  border-color: var(--border);
+  background: transparent;
+}
+.tabbar-sections .tab.on:hover { color: var(--text-primary); border-color: var(--accent); }
+.tabbar-sections .tab.on .tab-n { background: var(--bg-tertiary); color: var(--text-secondary); }
+
+/* What a section scrolls TO. The sticky block covers the top of the page -
+   header plus the pools, 486px measured at 1440x900 with a level-12 character
+   - so anything scrolled to 0 lands behind it. Both numbers are published by
+   js/sticky.js from the rendered elements, because .header wraps and the
+   strip's height moves with the pools.
+
+   ON .box AND NOT ON .tabpanel. The panel is `display: contents` in this mode
+   and generates no box at all, so a scroll-margin there is applied to nothing
+   - the same reason sheet.js scrolls to the first box rather than the slice.
+   Every box carrying it is not collateral: it is what makes a link to any box
+   land below the header too. */
+.box { scroll-margin-top: calc(var(--header-h, 0px) + var(--sticky-h, 0px) + 16px); }
+
+/* THE BOX TITLE IS A REAL HEADING NOW and must not look like one. The <h2>
+   sheet-layout.js wraps the title in carries a UA font-size and margin; both
+   are cancelled here so the change is semantic and nothing on screen moves.
+   The styling stays on `.box > .box-title`, which is still the flex row that
+   holds the title and its buttons. */
+.box > .box-title > h2 { margin: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+
+/* Where a press lands. The box takes focus so a keyboard carries on from the
+   section it just asked for, and :focus-visible keeps the ring off a mouse
+   press - a box given tabindex="-1" is focused by script, never tabbed to. */
+.box:focus { outline: none; }
+.box:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
 @media print {
   .tabbar { display: none !important; }
   .tabpanel { display: contents !important; }

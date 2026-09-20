@@ -1811,6 +1811,36 @@ function restPanelHtml() {
 // The label is the part a player reads; the id is the part they saved.
 const TAB_IDS = ['vitals', 'skills', 'powers', 'gear', 'bio', 'notes'];
 
+// One label per id, because two places read it now: the strip, and the heading
+// at the top of each panel (P5a). They named the same section in two string
+// literals for about ten minutes and that is long enough.
+const TAB_LABEL = { vitals: 'Core', skills: 'Skills', powers: 'Powers',
+                    gear: 'Gear', bio: 'Bio', notes: 'Notes' };
+
+// THE OUTLINE THIS PAGE WAS MISSING IS NOT HERE, and the first attempt put it
+// here. A heading per PANEL is the obvious shape and it is wrong on this page:
+// stackColumns redistributes every box into three column stacks by how often
+// it is looked up, so a panel is not a band across the page - it is a run of
+// boxes inside one column - and an <h2> added to a panel has no data-col, is
+// collected as a STRAY, and lands filed under column b with a console warning
+// per section. Measured: seven .tabpanel nodes became ten and the page grew
+// 568px. The heading belongs on the BOX, which is a real place, already has a
+// title, and is where sheet-layout.js now writes it.
+
+// THE CONDITION THAT DECIDES WHICH OF TWO THINGS THE STRIP IS, and it is a
+// copy - styles.css carries the same string, and the two must stay identical
+// or the strip and the panels disagree about which layout is on. That pairing
+// is what the stylesheet's own comment warns about; the smoke suite pins the
+// two strings equal so the copy cannot drift silently.
+//
+// MATCHES: a phone, or any touch screen at any width. One panel at a time and
+//          the strip is a tablist - the behaviour that has always been here.
+// DOES NOT MATCH: a mouse on a wide screen. Every panel is visible and the
+//          strip is NAVIGATION - pressing one scrolls to it and hides nothing.
+const TAB_MODE = '(max-width: 820px), (pointer: coarse)';
+const tabModeMq = window.matchMedia(TAB_MODE);
+const inTabMode = () => tabModeMq.matches;
+
 // The hash wins over the stored tab, so a link ending #gear opens on gear.
 function readTab() {
   const h = location.hash.slice(1);
@@ -1827,6 +1857,10 @@ function readTab() {
 // player is a half-typed note.
 function pickTab(tab) {
   if (!TAB_IDS.includes(tab)) return;
+  // In navigation mode the panels are all on screen already, so switching one
+  // on would hide the other five - which is the layout the stylesheet's tab
+  // block exists to keep off a laptop. Scroll instead and change nothing.
+  if (!inTabMode()) { gotoSection(tab); return; }
   C.tab = tab;
   try { localStorage.setItem('sheet-tab-' + id, tab); } catch { /* see readTab */ }
   history.replaceState(null, '', '#' + tab);
@@ -1840,6 +1874,87 @@ function pickTab(tab) {
   }
   window.scrollTo({ top: 0 });
 }
+
+// ─── THE STRIP AS NAVIGATION (P5a) ───
+//
+// Aelric at level 12 is 3,687px at 1440x900 - four screens - and the document
+// carried three headings, so a mouse had no way to reach Spells but the wheel.
+// The fix is not to hide panels on a laptop; it is to give the page an outline
+// and a way to jump down it. Nothing is hidden and nothing is lost by pressing.
+//
+// `scroll-margin-top` on the panel does the arithmetic, from --header-h and
+// --sticky-h, so the heading lands below the pools rather than under them -
+// and because it is CSS rather than a number passed to scrollIntoView, the
+// same offset applies to a pasted #gear link and to keyboard focus.
+// THE TARGET IS THE FIRST BOX, NEVER THE SLICE, and that is not a preference.
+// `.tabpanel { display: contents; }` is what dissolves the panels in this mode,
+// and an element with `display: contents` GENERATES NO BOX: its
+// getBoundingClientRect is 0,0,0,0, scrollIntoView does nothing, a
+// scroll-margin-top on it does nothing, and an IntersectionObserver watching it
+// never fires. The first version of this aimed at the slice and measured
+// exactly that - every press "scrolled" to 0 and the panel sat 486px behind
+// the sticky header. A box is a real element with a real position.
+const sectionTarget = (tab) =>
+  document.querySelector(`.tabpanel[data-tab="${tab}"] > .box`)
+  || document.querySelector(`.tabpanel[data-tab="${tab}"] .box`);
+
+function gotoSection(tab) {
+  const target = sectionTarget(tab);
+  if (!target) return;
+  history.replaceState(null, '', '#' + tab);
+  target.scrollIntoView({ block: 'start',
+    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  // Focus follows the scroll, or the next Tab press starts again from the top
+  // of the document. The box takes it, so what a screen reader reads on
+  // arrival is that box's heading - the one sheet-layout.js just made real.
+  target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+}
+
+// NOTHING IS LIT IN THIS MODE, AND THAT IS THE HONEST ANSWER RATHER THAN A
+// MISSING FEATURE. The obvious companion to a section nav is a scroll-spy
+// marking where you are - it was built, and measuring it is what killed it:
+// stackColumns puts Attributes in column a and Class Skills in column b, SIDE
+// BY SIDE at the same height, so at any scroll position two or three sections
+// are equally "current" and whichever the observer reported first won. Pressing
+// Skills lit Core, on the page, because both were in the band.
+//
+// A three-column stack has no single current section to name, so the strip
+// names none: it is navigation, and its feedback is that the page moved. If
+// this layout ever becomes one column at this width, a spy starts meaning
+// something and belongs here.
+
+// The strip is a tablist in one mode and a nav in the other, and the roles have
+// to say so: `role="tab"` on a control that scrolls promises a panel swap that
+// never comes, and aria-selected on it is a lie about state. Re-applied on
+// every render and whenever the query flips, because a laptop with a touch
+// screen can cross it without a reload.
+function syncStripMode() {
+  const nav = document.querySelector('.tabbar');
+  if (!nav) return;
+  const tabs = inTabMode();
+  nav.classList.toggle('tabbar-sections', !tabs);
+  nav.setAttribute('aria-label', tabs ? 'Sheet sections' : 'Jump to a section');
+  if (tabs) nav.setAttribute('role', 'tablist'); else nav.removeAttribute('role');
+  for (const el of document.querySelectorAll('.tabbar .tab')) {
+    if (tabs) {
+      el.setAttribute('role', 'tab');
+      el.setAttribute('aria-selected', String(el.dataset.tab === C.tab));
+      el.removeAttribute('aria-current');
+    } else {
+      el.removeAttribute('role');
+      el.removeAttribute('aria-selected');
+    }
+  }
+  // RE-MEASURE, and the order is the whole point. The strip lives INSIDE the
+  // sticky block, so showing it makes that block taller - and sizeSticky ran
+  // before this did. Measured at 1440x900: --sticky-h was 185px against a real
+  // sticky bottom of 345, so every press landed its box 57px BEHIND the header
+  // it was supposed to clear.
+  sticky.sizeSticky();
+}
+
+tabModeMq.addEventListener('change', syncStripMode);
 
 // Changing only the hash is a same-document navigation - no reload, so without
 // this a pasted or hand-edited '#gear' would leave the sheet on whatever tab it
@@ -2321,11 +2436,11 @@ function render() {
         <span id="msg"></span>` : ''}
         <span class="muted small">current / max</span></div>` : ''}
     <nav class="tabbar noprint" role="tablist">
-      ${[['vitals', 'Core', 0], ['skills', 'Skills', skills.length],
-         ['powers', 'Powers', powers.length], ['gear', 'Gear', C.items.length],
-         ['bio', 'Bio', 0], ['notes', 'Notes', C.journal.length]].map(([tid, label, n]) =>
+      ${[['vitals', 0], ['skills', skills.length],
+         ['powers', powers.length], ['gear', C.items.length],
+         ['bio', 0], ['notes', C.journal.length]].map(([tid, n]) =>
         `<button class="tab${C.tab === tid ? ' on' : ''}" data-tab="${tid}" role="tab"
-           aria-selected="${C.tab === tid}" onclick="pickTab('${tid}')">${label}${
+           aria-selected="${C.tab === tid}" onclick="pickTab('${tid}')">${TAB_LABEL[tid]}${
            n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}
     </nav>
   </div>
@@ -2593,6 +2708,9 @@ function render() {
 
   wirePickers();
   sticky.sizeSticky();
+  // After sizeSticky, because the spy's band and the panels' scroll-margin are
+  // both measured from the sticky block this just published the height of.
+  syncStripMode();
   // A tab reopened after a drop has a queue and no 'online' event coming.
   flushQueue();
   // The count is filterSkills' job, so there is one implementation of it rather

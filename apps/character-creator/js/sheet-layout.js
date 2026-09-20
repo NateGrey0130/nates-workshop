@@ -277,8 +277,23 @@
   const box = (title, body, extra = '') => {
     const slug = boxSlug(title);
     const col = BOX_COL[slug];
+    // THE TITLE IS AN <h2>, NOT A <span> (P5a, 2026-09-20). Measured on
+    // `main` @ e6bb3fc: the whole sheet rendered THREE headings - the app's
+    // own <h1> and two inside the powers box - so a 4.1-screen document had no
+    // outline. A screen reader had nothing to jump by and neither did anyone
+    // else.
+    //
+    // Here rather than as a heading per PANEL, because a panel is not a place
+    // on this page: stackColumns redistributes every box into three column
+    // stacks by how often it is looked up, so "Gear" is a run of boxes in
+    // column b and not a band across the page. The box IS the section, and it
+    // already had a title; this only stops that title lying about what it is.
+    //
+    // The <h2> wraps the title ALONE and not `extra`, which is where the
+    // buttons ride - a heading that contains a control is a heading nobody can
+    // read out. styles.css gives it `font: inherit` so nothing moves.
     return `<div class="box" data-box="${slug}"${col ? ` data-col="${col}"` : ''}>` +
-      `<div class="box-title"><span>${title}</span>${extra}</div><div class="box-body">${body}</div></div>`;
+      `<div class="box-title"><h2>${title}</h2>${extra}</div><div class="box-body">${body}</div></div>`;
   };
 
   // What a class hands out that is not a pool, a skill or a power - doses,
