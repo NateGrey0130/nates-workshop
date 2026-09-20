@@ -232,7 +232,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-eight tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Fifty tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault and the six prefixed `ff_` belong
 to FilamentForge — that prefix is the collision boundary, because this app's
@@ -259,6 +259,8 @@ database bookkeeping shared by all; the rest are this app.
 | `campaign_currency` | Party money as an append-only **ledger**. The balance is `SUM(delta)`, so no stored total can disagree with its own history. `currency` is free text — the two systems use different coin. |
 | `journal_fts` | FTS5 index over `journal_entries`. External-content: it holds no copy of the text, and three triggers keep it current. |
 | `npcs` | One dossier per person per campaign — `UNIQUE (campaign_id, name COLLATE NOCASE)` is what makes `@Kevik` resolve to a person rather than three rows. `portrait_key` is an R2 object key. `character_id` (migration 071) is the statted `kind = 'npc'` sheet behind the dossier, when there is one; `ON DELETE SET NULL`. |
+| `campaign_entries` | The GM's own pages (migration 078): `kind` is place / faction / lore / handout / prep, plus a title and a body. **GM-only for as long as it exists** - `entries` refuses a non-GM outright rather than returning a trimmed row, because nothing here is ever revealed. The pictures hang off it, or off nothing at all. |
+| `campaign_images` | The pictures (migration 078), each an R2 object like `npcs.portrait_key`. `revealed_at` NULL is the GM's alone and a timestamp is shown-to-the-party; `caption` is **the only text a player ever reads from this feature**. `entry_id` is nullable for a handout with no page behind it. The bytes are served by `campaigns/[id]/images/[imageId]`, which refuses an unrevealed image to a player with a 404 - not a 403, which would tell them it exists. |
 | `npc_mentions` | Which entries mention whom. `source` is `'mention'` (a person typed `@`) or `'ai'` (the sweep inferred it) — a decision made by software should be visible as one. |
 | `npc_sweeps` | Which entries the sweep has already read. Written only after a successful call, so a failed one is retried rather than skipped. |
 | `npc_proposals_dismissed` | Names a human has said are not people. Without it the sweep proposes `the guard` again every time and the button becomes noise. |
@@ -591,6 +593,11 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/npcs` | GET / POST | The dossier roster (`?status=`, `?faction=`, `?q=`), with a mention count; create one by hand |
 | `campaigns/[id]/npcs/[npcId]` | GET / PATCH / DELETE | The dossier **and every entry that mentions them, oldest first**; edit; delete (the notes are untouched) |
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
+| `campaigns/[id]/entries` | GET / POST | The GM's own pages (`?kind=`, `?q=`), with each one's picture and revealed counts; write one. **GM only, both verbs** |
+| `campaigns/[id]/entries/[entryId]` | GET / PATCH / DELETE | One page with its pictures; edit; delete - which removes its images' **R2 objects** in the same request, because no cascade reaches a bucket. **GM only** |
+| `campaigns/[id]/entries/[entryId]/images` | POST | Add a picture (raw `image/*` body, 5MB, max 20 a page). It arrives **unrevealed**. **GM only** |
+| `campaigns/[id]/images/[imageId]` | GET / PATCH / DELETE | The bytes - **the GM always, a member only once revealed, and an unrevealed one is a 404 to them rather than a 403**; caption, order and reveal; delete with its object |
+| `campaigns/[id]/handouts` | GET | What the party has been shown: revealed pictures and captions, newest first. Members only, and **no title or body ever** |
 | `campaigns/[id]/npcs/sweep` | POST | Propose the people nobody tagged. `?accept=1` creates the dossier a proposal named; `?dismiss=1` stops offering that name |
 | `campaigns/[id]/npcs/generate` | POST | **G.M. only.** Roll statted NPCs: `{ class_id, class_variant?, occ_class_id?, occ_class_variant?, level?, count? (1-10), name? }`. Each is a `characters` row with `kind = 'npc'`, owned by the G.M. and invisible to everyone else, written by the same `createCharacter()` a player's character goes through - so it is validated against its class the same way. Dice and choices are `js/npc-generate.js`. Spells, psionics and Talents the class lets the NPC choose are **banked** for the sheet's picks panel; powers it grants are held. A class it cannot build legally is a **422 naming what stopped it** (`code`: `needs_occupation`, `second_form`, `pool_exhausted`, ...) - never a padded pick |
 | `campaigns/[id]/npcs/from-notable` | POST | **G.M. only.** `{ slug, name? }` - copy a `notable_npcs` row into this campaign as a `kind = 'npc'` character: the book's attributes, pools, combat numbers and skills as printed, class_id `notable:<slug>`, and its attacks and prose in the sheet's notes. **Not** through `createCharacter()`: a book NPC has no class to validate against, and composing one over the book's totals would count its bonuses twice. One-way - the copy is the table's |

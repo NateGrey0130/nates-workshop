@@ -403,9 +403,9 @@ exactly that, read off the table with no parsing.
 | `app.js` | ~4,510 | the wizard; the largest file in the app |
 | `sheet.js` | ~3,850 | |
 | `js/parser.js` | ~2,975 | **third** largest, and not a page script at all |
-| `campaign.js` | ~935 | |
+| `campaign.js` | ~1,135 | |
 | `catalog.js` | ~800 | |
-| `dashboard.js` | ~375 | |
+| `dashboard.js` | ~565 | |
 
 **A smoke check now holds these to 25%**, because the previous two sets of
 figures both went stale in the same way. The set before this one said `app.js`

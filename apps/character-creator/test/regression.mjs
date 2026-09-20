@@ -726,6 +726,87 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
 
   // Back to open, so nothing downstream inherits the closed state.
   await api('PATCH', `/campaigns/${campaignId}`, { open: true });
+
+  // ── the GM's pages, and the pictures shown from them (migration 078) ──
+  //
+  // THE RULE THIS PROVES: an entry is the GM's for as long as it exists, and an
+  // image does not exist for a player until it is revealed. Both are checked as
+  // somebody else - player2@example.com joined above and is a member, not the
+  // GM - because a permission exercised only as the GM proves nothing.
+  const entry = await api('POST', `/campaigns/${campaignId}/entries`,
+    { title: 'Port Ferris', kind: 'place', body: 'The harbourmaster is on the take.' });
+  check('the GM can write a setting page', entry.status === 201, JSON.stringify(entry.body).slice(0, 200));
+  const entryId = entry.body.entry?.id;
+
+  const asMember = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/entries`);
+  check('a member cannot read the GM\'s pages at all', asMember.status === 403, asMember.status);
+  const onePage = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/entries/${entryId}`);
+  check('nor one of them by id', onePage.status === 403, onePage.status);
+
+  // A 1x1 PNG, raw body - the shape the endpoint takes. api() sends JSON, so
+  // this one goes through fetch directly.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64');
+  const upRes = await fetch(BASE + `/campaigns/${campaignId}/entries/${entryId}/images?caption=The%20east%20docks`,
+    { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png });
+  const up = { status: upRes.status, body: await upRes.json().catch(() => ({})) };
+  // R2 is bound in dev, and 501 means this environment has no bucket - worth
+  // saying rather than failing as if the rule were broken.
+  check('a picture uploads to the page', up.status === 201 || up.status === 501,
+    JSON.stringify(up.body).slice(0, 200));
+
+  if (up.status === 201) {
+    const imageId = up.body.image.id;
+    check('and arrives unrevealed', up.body.image.revealed_at === null, up.body.image.revealed_at);
+
+    const hidden = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/images/${imageId}`);
+    // 404 rather than 403 on purpose: a refusal that says "not for you" tells a
+    // player the picture exists and is being held back.
+    check('a member cannot fetch an unrevealed picture, and is not told it exists',
+      hidden.status === 404, hidden.status);
+    const gmSees = await fetch(BASE + `/campaigns/${campaignId}/images/${imageId}`);
+    check('while the GM can', gmSees.status === 200 && (gmSees.headers.get('content-type') || '').startsWith('image/'),
+      gmSees.status + ' ' + gmSees.headers.get('content-type'));
+    const emptyList = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/handouts`);
+    check('and it is in no handout list yet', (emptyList.body.handouts || []).length === 0,
+      JSON.stringify(emptyList.body).slice(0, 120));
+
+    const revealed = await api('PATCH', `/campaigns/${campaignId}/images/${imageId}`, { revealed: true });
+    check('the GM reveals it', revealed.status === 200 && !!revealed.body.image.revealed_at,
+      JSON.stringify(revealed.body).slice(0, 160));
+    const shownAt = revealed.body.image.revealed_at;
+
+    const nowSees = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/images/${imageId}`);
+    check('now the member can fetch it', nowSees.status === 200, nowSees.status);
+    const list = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/handouts`);
+    const handout = (list.body.handouts || [])[0];
+    check('and it is in their handouts, with its caption',
+      handout?.id === imageId && handout?.caption === 'The east docks', JSON.stringify(handout));
+    // The page behind it is the GM's. A handout carries no title, no body, and
+    // not even the id of the entry it came from.
+    check('carrying nothing of the page behind it',
+      handout && !('title' in handout) && !('body' in handout) && !('entry_id' in handout),
+      Object.keys(handout || {}).join(', '));
+
+    const again = await api('PATCH', `/campaigns/${campaignId}/images/${imageId}`, { revealed: true });
+    check('revealing twice does not move the moment they first saw it',
+      again.body.image.revealed_at === shownAt, again.body.image.revealed_at + ' vs ' + shownAt);
+
+    const hiddenAgain = await api('PATCH', `/campaigns/${campaignId}/images/${imageId}`, { revealed: false });
+    check('and it can be taken back', hiddenAgain.body.image.revealed_at === null,
+      hiddenAgain.body.image.revealed_at);
+    const goneAgain = await apiAs('player2@example.com', 'GET', `/campaigns/${campaignId}/images/${imageId}`);
+    check('after which the member cannot see it again', goneAgain.status === 404, goneAgain.status);
+  }
+
+  const memberWrite = await apiAs('player2@example.com', 'POST', `/campaigns/${campaignId}/entries`,
+    { title: 'A page of my own' });
+  check('a member cannot write a setting page', memberWrite.status === 403, memberWrite.status);
+
+  const gone = await api('DELETE', `/campaigns/${campaignId}/entries/${entryId}`);
+  check('the GM deletes the page, and its pictures go with it',
+    gone.status === 200 && gone.body.images_deleted >= 0, JSON.stringify(gone.body));
 }
 
 // ── inventory ───────────────────────────────────────────────────────────────
