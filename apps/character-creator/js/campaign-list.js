@@ -49,10 +49,10 @@ window.campaignList = {
       ].filter(Boolean);
       return `<li class="home-row">
         <span class="home-what">
-          <a href="dashboard.html?campaign_id=${c.id}"><b>🗺 ${escHtml(c.name)}</b></a>
+          <a href="/apps/gm-tools/?campaign_id=${c.id}"><b>🗺 ${escHtml(c.name)}</b></a>
           <span class="muted small">${escHtml(c.system)} · ${escHtml(bits.join(' · '))}</span>
         </span>
-        <span class="home-acts"><a class="btn btn-sm" href="campaign.html?campaign_id=${c.id}">Notes</a></span>
+        <span class="home-acts"><a class="btn btn-sm" href="/apps/campaign/?campaign_id=${c.id}">Notes</a></span>
       </li>`;
     }).join('')}</ul>`;
   },

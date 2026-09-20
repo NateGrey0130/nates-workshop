@@ -395,11 +395,11 @@ function npcSheetsPanel() {
 
 function npcSheetRow(c) {
   return `<div class="chkrow">
-    <span><a href="sheet.html?id=${c.id}"><b>${esc(c.name)}</b></a>
+    <span><a href="/apps/character-sheet/?id=${c.id}"><b>${esc(c.name)}</b></a>
       <span class="muted small"> — ${esc(className(c.class_id))}${
         c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''}, level ${c.level}</span></span>
     <span class="rowline">
-      <a class="btn btn-sm btn-ghost" href="sheet.html?id=${c.id}&amp;play=1">▶ Play</a>
+      <a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${c.id}&amp;play=1">▶ Play</a>
       <button class="btn btn-sm btn-ghost" onclick="deleteNpcSheet(${c.id})">delete</button>
     </span>
   </div>`;
@@ -782,7 +782,7 @@ function dossierView() {
           ${npcSheets().map((c) => `<option value="${c.id}"${n.character_id === c.id ? ' selected' : ''}>${
             esc(c.name)} (level ${c.level})</option>`).join('')}
         </select></label>
-      ${n.character_id ? `<a class="btn btn-sm btn-ghost" href="sheet.html?id=${n.character_id}">open sheet</a>` : ''}
+      ${n.character_id ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.character_id}">open sheet</a>` : ''}
     </div>` : ''}
     <div class="rowline" style="margin-top:8px">
       <button class="btn btn-sm btn-ghost" onclick="deleteNpc(${n.id})">delete dossier</button>

@@ -31,7 +31,7 @@ section('The browser entry points parse');
   const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-parse-' + process.pid);
   const parses = (file, ext) => {
     const copy = stem + '-' + file.replace(/\W/g, '-') + '.' + ext;
-    writeFileSync(copy, readFileSync(join(appDir, file), 'utf8'));
+    writeFileSync(copy, readFileSync(appPath(file), 'utf8'));
     const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
     rmSync(copy, { force: true });
     return { ok: r.status === 0, err: (r.stderr || '').split('\n').find((l) => /Error/.test(l)) || '' };
@@ -186,11 +186,15 @@ section('Browser scripts parse');
   const scripts = [
     ...readdirSync(appDir).filter((f) => f.endsWith('.js')).map((f) => join(appDir, f)),
     ...readdirSync(join(appDir, 'js')).filter((f) => f.endsWith('.js')).map((f) => join(appDir, 'js', f)),
+    // The four apps the pages moved to. Without these this check quietly
+    // stopped opening sheet.js, codex.js, campaign.js and dashboard.js - four
+    // page scripts whose syntax errors nothing else in the suite would catch.
+    ...siblingAppDirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.js')).map((f) => join(d, f))),
   ];
-  check('found the page scripts', scripts.length >= 6, `only ${scripts.length}`);
+  check('found the page scripts', scripts.length >= 10, `only ${scripts.length}`);
   for (const path of scripts) {
     const res = spawnSync(process.execPath, ['--check', path], { encoding: 'utf8' });
-    const name = path.slice(appDir.length + 1).replace(/\\/g, '/');
+    const name = path.slice(join(appDir, '..').length + 1).replace(/\\/g, '/');
     check(`${name} parses`, res.status === 0,
       (res.stderr || '').split('\n').slice(0, 3).join(' ').trim());
   }
@@ -263,7 +267,7 @@ section('Escaping a value into markup');
   // comment SAYING what the workaround was, which reads to a naive search
   // exactly like the workaround - the same trap the landing-page check names.
   const consumers = ['sheet.js', 'app.js', 'campaign.js', 'catalog.js']
-    .map((f) => readFileSync(join(appDir, f), 'utf8'))
+    .map((f) => readFileSync(appPath(f), 'utf8'))
     .join('\n')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '');
@@ -432,7 +436,7 @@ check('catalog configs are internally consistent', catalogProblems.length === 0,
 section('The row form takes its widths from the field type');
 {
   const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-  const cat = readFileSync(join(appDir, 'catalog.js'), 'utf8');
+  const cat = readFileSync(appPath('catalog.js'), 'utf8');
 
   check('the form is a grid of columns, not of one column',
     /\.cat-form \{[\s\S]*?grid-template-columns: repeat\(12, 1fr\);/.test(css),
@@ -591,7 +595,7 @@ for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
       .map((x) => x[1] || x[2]).sort() : null;
   };
   const appKeys = keysOfLabelMap(readFileSync(join(appDir, 'app.js'), 'utf8'));
-  const codexKeys = keysOfLabelMap(readFileSync(join(appDir, 'codex.js'), 'utf8'));
+  const codexKeys = keysOfLabelMap(readFileSync(appPath('codex.js'), 'utf8'));
   check('both SYSTEM_LABEL maps were found', !!appKeys && !!codexKeys);
   check('app.js and codex.js name the same systems',
     JSON.stringify(appKeys) === JSON.stringify(codexKeys), `${appKeys} vs ${codexKeys}`);
@@ -692,7 +696,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { appDir, repoRoot, check, section, summary } from './harness.mjs';
+import { appDir, repoRoot, check, section, summary, appPath, siblingAppDirs } from './harness.mjs';
 import { run as environmentChecks } from './checks/environment.mjs';
 import { run as catalogDataChecks } from './checks/catalog-data.mjs';
 import { run as documentedCountsChecks } from './checks/documented-counts.mjs';
@@ -1944,7 +1948,7 @@ section('Per-level spells and psionics');
     // The wizard and the sheet cannot share the filter - the sheet is a classic
     // script - so their shapes are pinned: a list AND its cap, both.
     const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const sheetText = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheetText = readFileSync(appPath('sheet.js'), 'utf8');
     check('the wizard\'s level-up picker applies a list and its cap together',
       /named \? \(named\.has\(String\(sp\.name\)\.toLowerCase\(\)\) && \(!levels \|\| levels\.includes\(sp\.level\)\)\)/.test(appText));
     check('so does the sheet\'s live level-up picker',
@@ -3071,7 +3075,7 @@ section('A spell can burn P.P.E. out of the caster\'s base (BOOK-INGEST-AUDIT F1
     (route.match(/\bb\??\.(\w+)/g) || []).every((m) => /name$/.test(m)), (route.match(/\bb\??\.(\w+)/g) || []).join(', '));
   check('and only for a spell the character holds', /type === 'spell'/.test(route) && /not a spell this character knows/.test(route));
 
-  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   const burnFn = sheetSrc.slice(sheetSrc.indexOf('async function burnPpe('), sheetSrc.indexOf('async function usePower('));
   check('the sheet posts only the spell name to the burn route', /jsonReq\('POST', \{ name: p\.name \}\)/.test(burnFn), burnFn.slice(0, 200));
   check('and asks before burning, it being permanent', /confirm\(/.test(burnFn));
@@ -3746,12 +3750,12 @@ section('Alignments');
   // The sheet reads edited fields out of the DOM by selector. Alignment is the
   // first <select> among them, and matching only inputs would drop it silently.
   check('the sheet collects selects, not just inputs', (() => {
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const src = readFileSync(appPath('sheet.js'), 'utf8');
     return /querySelectorAll\('input\[data-sec\], select\[data-sec\]'\)/.test(src);
   })());
   // Both pages must actually load the shared list.
   check('both pages load rules.js', ['index.html', 'sheet.html'].every((f) =>
-    readFileSync(join(appDir, f), 'utf8').includes('js/rules.js')));
+    readFileSync(appPath(f), 'utf8').includes('js/rules.js')));
 
   // ── starting money (p.22) ──
   check('currency is named per system',
@@ -3975,7 +3979,7 @@ section('Bonus keys');
 
   // The sheet has to list them, or the value is computed and never shown.
   check('the sheet prints all three', (() => {
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const src = readFileSync(appPath('sheet.js'), 'utf8');
     return ['pull_punch', 'illusionary_magic', 'mind_control'].every((k) => src.includes(`'${k}'`));
   })());
 
@@ -4062,7 +4066,7 @@ section('Dice attribute bonuses');
   // The sheet has to pass the character's rolled values through, or a Juicer's
   // +2D6 P.S. silently contributes nothing there.
   check('the sheet passes rolled bonuses to classBonuses', (() => {
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const src = readFileSync(appPath('sheet.js'), 'utf8');
     // Grouped now, so a class's DICE combat and save bonuses count on the sheet
     // as well as its attribute ones.
     return /classBonuses\(cls, c\.level, \{/.test(src)
@@ -4346,7 +4350,7 @@ section('Skill programs');
   // The sheet renders skills by an explicit list of types, so a type it does
   // not name is SAVED AND INVISIBLE.
   check('the sheet renders the program type', (() => {
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const src = readFileSync(appPath('sheet.js'), 'utf8');
     return /byType\('program'\)/.test(src);
   })());
   // A program's restriction names have to be checked like any other, and the
@@ -4588,7 +4592,7 @@ section('Super abilities');
       && /type: 'super'/.test(src);
   })());
   check('the sheet groups super abilities apart from psionics', (() => {
-    const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const src = readFileSync(appPath('sheet.js'), 'utf8');
     return /KIND_ORDER/.test(src) && /Super abilities \u2014/.test(src);
   })());
   check('the boot payload serves the catalog', (() => {
@@ -4897,7 +4901,7 @@ section('Attribute-derived skill base');
     // It asks the ENDPOINT to substitute rather than doing it itself, because
     // sheet.js is a classic script and cannot import the helper - and a hand
     // copy of the rule is the pair that drifts.
-    const sheetF83 = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheetF83 = readFileSync(appPath('sheet.js'), 'utf8');
     const catSrc = readFileSync(join(fnDir, 'catalogs.js'), 'utf8');
     check('the sheet asks /catalogs for its own system',
       /api\('catalogs\?system=' \+ encodeURIComponent\(C\.data\.campaign_system/.test(sheetF83),
@@ -5803,7 +5807,7 @@ section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-
 
   // sheet.js is a classic script that cannot be imported, so its two pickers
   // are pinned as source - the shape F61 and F65 pinned for the same reason.
-  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet has one psionic category matcher, reached through the bridge',
     /const psiAdmits = \(cats, power\)/.test(sheetSrc)
     && /globalThis\.skillCats[\s\S]{0,40}categoryAllows\(cats, power\)/.test(sheetSrc));
@@ -5815,7 +5819,7 @@ section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-
     (sheetSrc.match(/psiCatLabel\(/g) || []).length === 2);
   check('and the bridge exports the label helper those captions need',
     /globalThis\.skillCats = \{ categoryAllows, categoryLabel \}/
-      .test(readFileSync(join(appDir, 'sheet.html'), 'utf8')));
+      .test(readFileSync(appPath('sheet.html'), 'utf8')));
 }
 
 section('An ability that changes a pool clears the rolled pools (BOOK-INGEST-AUDIT F67)');
@@ -6038,7 +6042,7 @@ section('A level-up pick is keyed by its grant, not by its position (BOOK-INGEST
 {
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
   const lvl = readFileSync(join(appDir, 'js', 'leveling.js'), 'utf8');
-  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheet = readFileSync(appPath('sheet.js'), 'utf8');
   const confirm = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator',
     'characters', '[id]', 'level-confirm.js'), 'utf8');
 
@@ -6575,7 +6579,7 @@ section('MOS');
     const charactersSrc = readFileSync(join(fnDir, 'characters.js'), 'utf8');
     const charJsonSrc = readFileSync(join(fnDir, '_lib', 'character-json.js'), 'utf8');
     const mosAppSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const mosSheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const mosSheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
 
     check('the create endpoint reads mos through mosList',
       /const mosPicked = mosList\(b\.mos\)/.test(charactersSrc), 'characters.js');
@@ -6939,7 +6943,7 @@ section('Natural abilities rendering');
   // The sheet lists them beside the chosen powers, and the wizard's class
   // detail shows them to a player still deciding. Source pins, same idiom as
   // 1c25f: the render path is browser-only, so the test reads the source.
-  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet renders natural abilities',
     /function naturalAbilities\(cls\)/.test(sheetSrc)
       && /\$\{naturalAbilities\(cls\)\}/.test(sheetSrc));
@@ -6987,7 +6991,7 @@ section('Level-scheduled save bonuses, and the curses key');
   check('a class granting nothing still shows the row, at the table value',
     plain.curses === 0);
 
-  const sheetSrcJ = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrcJ = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet lists vs Curses', sheetSrcJ.includes("['curses', 'vs Curses']"));
 }
 
@@ -7003,7 +7007,7 @@ section('Level-scheduled save bonuses, and the curses key');
 // "+2 to save vs fatigue and disease" (RUE printed 92).
 section('The save list');
 {
-  const src = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const src = readFileSync(appPath('sheet.js'), 'utf8');
   const saves = D.saves({ PE: 10, ME: 10 }, null);
 
   // Every save derive produces has a label, or it is computed and never shown.
@@ -7077,7 +7081,7 @@ section('Variable psionic costs');
     appSrcK.includes("p.isp_note && p.isp > 0 ? '+' : ''") && appSrcK.includes('esc(p.isp_note)'));
   check('the wizard stores cost_note on the character',
     appSrcK.includes('cost_note: p.isp_note'));
-  const sheetSrcK = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrcK = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet shows the note beside the use button',
     sheetSrcK.includes('escHtml(p.cost_note)') && sheetSrcK.includes("p.cost_note && cost > 0 ? '+' : ''"));
 }
@@ -7424,7 +7428,7 @@ section('A Horror Factor the character PROJECTS (F75)');
 
   // THE SHEET DRAWS IT, and not as a pool: it has no current/max pair, no
   // stepper and no recovery rate, and POOLS is read by five other sites.
-  const sheetSrcHf = readFileSync(join(repoRoot, 'apps', 'character-creator', 'sheet.js'), 'utf8');
+  const sheetSrcHf = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet renders the projected factor',
     /C\.cls\?\.horror_factor/.test(sheetSrcHf));
   check('and it is NOT a member of POOLS',
@@ -7646,7 +7650,7 @@ section('A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)');
   const sfConfirm = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters', '[id]', 'level-confirm.js'), 'utf8');
   check('level-confirm appends the form\'s hit point rolls, checked against their dice',
     /hp_rolls: \[\.\.\.formState\.hp_rolls, \.\.\.rolls\]/.test(sfConfirm) && /v < bounds\.min \|\| v > bounds\.max/.test(sfConfirm));
-  const sfSheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sfSheet = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet draws a toggle only for a class with a second form',
     /const formToggle = !F \? '' :/.test(sfSheet) && /onclick="setForm\('\$\{k\}'\)"/.test(sfSheet));
   check('and paints pools from the form showing',
@@ -7764,7 +7768,7 @@ section('Damage, healing and rest on the active form (Nightbane follow-up 5)');
   const listSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'characters.js'), 'utf8');
   check('a campaign roster carries each character\'s active form',
     /if \(campaignId && page\.results\.length\)/.test(listSrc) && /target\.second_form = \{ name: v\.name/.test(listSrc));
-  const dashSrc = readFileSync(join(appDir, 'dashboard.js'), 'utf8');
+  const dashSrc = readFileSync(appPath('dashboard.js'), 'utf8');
   check('the G.M. dashboard damages, steps and undoes the active form through the same helpers',
     /const patch = derive\.damageCascade\(pools\(c\), D\.amt\);/.test(dashSrc)
     && /derive\.playChanges\(c, c\.second_form, \{ \[key \+ '_current'\]/.test(dashSrc)
@@ -8794,7 +8798,7 @@ section('Background tables');
   // disposition has nowhere to show.
   check('the wizard and the sheet both carry the new fields', (() => {
     const app = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     return ['birth_order', 'land_of_origin', 'disposition', 'racial_bias']
       .every((k) => app.includes(`'${k}'`) && sheet.includes(`'${k}'`));
   })());
@@ -8802,7 +8806,7 @@ section('Background tables');
   // side longer every time the list grew.
   check('the bio columns split evenly on both pages', (() => {
     const app = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
     return /BIO_FIELDS\.length \/ 2/.test(app) && /BIO_FIELDS\.length \/ 2/.test(sheet);
   })());
 }
@@ -8882,6 +8886,7 @@ variants:
         .filter((e) => e.isFile() && e.name.endsWith('.js'))
         .map((e) => join(appDir, e.name)),
       ...walk(join(appDir, 'js')),
+      ...siblingAppDirs.flatMap(walk),
       ...walk(join(appDir, '..', '..', 'functions', 'api', 'character-creator')),
     ].filter((f) => !exempt.has(f));
     const bad = files.filter((f) => readFileSync(f, 'utf8').includes('combineClasses('));
@@ -8947,7 +8952,7 @@ section('Search snippets are not markup');
 {
   const searchSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
     'campaigns', '[id]', 'search.js'), 'utf8');
-  const pageSrc = readFileSync(join(appDir, 'campaign.js'), 'utf8');
+  const pageSrc = readFileSync(appPath('campaign.js'), 'utf8');
 
   // snippet() wraps matches in whatever it is given and the text AROUND them is
   // a note somebody typed. Asking for '<mark>' means building HTML out of user
@@ -9099,7 +9104,7 @@ section('Portraits are never public');
 
   // A stable URL with an immutable cache header needs the query to change, or
   // a replaced portrait is never seen again.
-  const pageSrc = readFileSync(join(appDir, 'campaign.js'), 'utf8');
+  const pageSrc = readFileSync(appPath('campaign.js'), 'utf8');
   check('the page busts the cache with the object key', /portrait_key \|\| ''\)/.test(pageSrc));
   check('and encodes it', /encodeURIComponent/.test(pageSrc));
   check('no img src interpolates a raw timestamp', !/portrait\?v=\$\{esc\(n\.updated_at\)\}/.test(pageSrc));
@@ -9231,7 +9236,7 @@ section('Power grants');
   // The two readers that cannot import the grant builder read `from` off the
   // grant: the wizard's Advancement pool and the sheet's two pickers.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   check('the wizard hands a psionic grant\'s list to its pool', /advPsiPool\(cats, g\.from\)/.test(appSrc));
   check('and the pool offers only the list when there is one',
     /function advPsiPool\(cats = null, from = null\)/.test(appSrc));
@@ -9307,7 +9312,7 @@ section('Power picks are enforced server-side');
   check('listPendingPowers does not swallow query failures',
     !/\.all\(\)\.catch\(/.test(lib));
 
-  const sheet = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheet = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet sends the power picks with the level-up', /power_picks,/.test(sheet));
   check('and offers the banked ones afterwards', /claimPowers/.test(sheet));
 }
@@ -9871,7 +9876,7 @@ section('A class cannot write a bonus the sheet will not draw');
   // `{ }` match reads that very note's prose as data and reports a key that
   // is not there - which is what happened while F1 was being taken, and is
   // CLASS-AUDIT F17's shape.
-  const sheetSrc = readFileSync(join(appDir, 'sheet.js'), 'utf8');
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
   const listKeys = (name) => {
     const b = sheetSrc.slice(sheetSrc.indexOf(`const ${name}`),
       sheetSrc.indexOf('];', sheetSrc.indexOf(`const ${name}`)));

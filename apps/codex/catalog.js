@@ -218,7 +218,7 @@ function auditPanel() {
   const offender = (o) => `
     <div class="audit-row${o.violations.length ? '' : ' warn-only'}">
       <div class="audit-head">
-        <a class="dupe-name" href="sheet.html?id=${o.id}">${escHtml(o.name || '(unnamed)')}</a>
+        <a class="dupe-name" href="/apps/character-sheet/?id=${o.id}">${escHtml(o.name || '(unnamed)')}</a>
         <span class="muted small">${escHtml(o.class_id || '—')} · L${o.level}</span>
         <span class="tag${o.violations.length ? ' ro' : ''}">${
           o.violations.length ? `${o.violations.length} blocking` : `${o.warnings.length} warning${o.warnings.length === 1 ? '' : 's'}`}</span>
@@ -234,7 +234,7 @@ function auditPanel() {
       applied. They load and save normally; this is what retiring a class is supposed to do.</p>
     ${a.unvalidatable.map((u) => `<div class="audit-row">
       <div class="audit-head">
-        <a class="dupe-name" href="sheet.html?id=${u.id}">${escHtml(u.name || '(unnamed)')}</a>
+        <a class="dupe-name" href="/apps/character-sheet/?id=${u.id}">${escHtml(u.name || '(unnamed)')}</a>
         <span class="muted small">${escHtml(u.class_id || '—')}</span>
       </div></div>`).join('')}` : '';
 

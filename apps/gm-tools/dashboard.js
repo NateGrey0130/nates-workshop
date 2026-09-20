@@ -75,7 +75,7 @@ function partyFirst(list) {
 
 function rosterRowHtml(c) {
   return `<tr id="roster-${c.id}">
-      <td><a href="sheet.html?id=${c.id}">${escHtml(c.name)}</a>${
+      <td><a href="/apps/character-sheet/?id=${c.id}">${escHtml(c.name)}</a>${
         c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}</td>
       <td>${escHtml(String(c.class_id).startsWith('notable:') ? 'From the books'
         : String(c.class_id).startsWith('creature:') ? 'A creature from the books'
@@ -287,7 +287,7 @@ function render() {
     <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
     ${journalHtml}
     ${journalMore}
-    <p class="small"><a href="campaign.html?campaign_id=${campaignId}">🗒 Open campaign notes</a>
+    <p class="small"><a href="/apps/campaign/?campaign_id=${campaignId}">🗒 Open campaign notes</a>
       <span class="muted">— search the log, ask a question of it, and track what the party holds</span></p>
   </div>`;
 }

@@ -342,7 +342,8 @@ for (const f of [
   join(appDir, 'js', 'rules.js'),
   join(appDir, 'js', 'picker.js'),
   join(appDir, 'js', 'api.js'),
-  join(appDir, 'sheet.js'),
+  // The sheet moved to its own app on 2026-09-19; the modules it loads did not.
+  join(appDir, '..', 'character-sheet', 'sheet.js'),
 ]) {
   try { vm.runInContext(readFileSync(f, 'utf8'), sandbox, { filename: f }); }
   catch (e) {

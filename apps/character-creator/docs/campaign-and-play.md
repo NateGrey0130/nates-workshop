@@ -13,7 +13,7 @@ only the G.M. could write a campaign-level entry. There was no campaign-level
 place to read the log, no search over it, and nothing tracking what the party
 held together.
 
-[`campaign.html`](../campaign.html) is the campaign's own page: the note feed with
+[`/apps/campaign/`](../../campaign/index.html) is the campaign's own page: the note feed with
 a composer, the search box with an **Ask** button beside it, the party stash and
 the currency ledger.
 
@@ -361,7 +361,7 @@ is the characters you play).
 ## Play mode
 
 The sheet through an **action-first lens**, shaped for a phone or tablet at
-the table: `sheet.html?play=1`, toggled by the header button. Same page, same
+the table: `/apps/character-sheet/?play=1`, toggled by the header button. Same page, same
 data, same endpoints, and **one render** — the sheet draws the play controls
 and the roll buttons every time, `togglePlay()` flips `body.play-mode`, and
 CSS reveals them. That is the whole design, and it is two decisions rather

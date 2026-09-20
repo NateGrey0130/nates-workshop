@@ -46,28 +46,35 @@
   if (urlCamp) { ctx.campaignId = urlCamp; if (ctx.campaignId !== readStore().campaignId) ctx.campaignName = null; }
   if (urlChar || urlCamp) writeStore(ctx);
 
-  const base = '/apps/character-creator/';
-  const withCamp = (page) => base + page + (ctx.campaignId ? '?campaign_id=' + encodeURIComponent(ctx.campaignId) : '');
+  // One URL per app since the split (P3). The engine still lives under
+  // /apps/character-creator/js/, which is why the Creator keeps that slug.
+  const APP = {
+    creator: '/apps/character-creator/',
+    play: '/apps/character-sheet/',
+    codex: '/apps/codex/',
+    campaign: '/apps/campaign/',
+    gm: '/apps/gm-tools/',
+  };
+  const withCamp = (url) => url + (ctx.campaignId ? '?campaign_id=' + encodeURIComponent(ctx.campaignId) : '');
 
   // The five, in the order the work happens: make a character, play it, look
   // something up, write the table down, run the table.
   function apps() {
     return [
-      { id: 'creator', label: 'Creator', href: base,
+      { id: 'creator', label: 'Creator', href: APP.creator,
         hint: 'Build a character' },
       // With no character in hand this opens the roster rather than nothing:
       // the sheet lists your characters when asked for none (sheet.js). It was
       // a disabled entry for one day, which was honest while Play had no
       // landing of its own and is now just a dead end nobody needs.
       { id: 'play', label: 'Play',
-        href: ctx.characterId ? base + 'sheet.html?id=' + encodeURIComponent(ctx.characterId)
-          : base + 'sheet.html',
+        href: ctx.characterId ? APP.play + '?id=' + encodeURIComponent(ctx.characterId) : APP.play,
         hint: ctx.characterId ? 'Your character sheet' : 'Your characters' },
-      { id: 'codex', label: 'Codex', href: base + 'codex.html',
+      { id: 'codex', label: 'Codex', href: APP.codex,
         hint: 'Skills, spells, gear and the rest' },
-      { id: 'campaign', label: 'Campaign', href: withCamp('campaign.html'),
+      { id: 'campaign', label: 'Campaign', href: withCamp(APP.campaign),
         hint: 'Notes, stash and the ledger' },
-      { id: 'gm', label: 'GM Tools', href: withCamp('dashboard.html'),
+      { id: 'gm', label: 'GM Tools', href: withCamp(APP.gm),
         hint: 'Roster, pools and rolling NPCs' },
     ];
   }
@@ -108,7 +115,7 @@
           }).join('')}
         </ul>
       </div>
-      <a class="appnav-chip" href="${base}" title="Change character or campaign">${chipText()}</a>
+      <a class="appnav-chip" href="${APP.play}" title="Change character or campaign">${chipText()}</a>
       <a class="home-link appnav-out" href="/">← workshop</a>`;
     if (here) host.setAttribute('data-current', here.id);
 

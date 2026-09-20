@@ -54,21 +54,42 @@ Everything the app reads at runtime is in D1. There are no static content files
 — adding a class, a skill, a spell, or an item needs no commit and no redeploy.
 
 ```
+FIVE APPS, ONE ENGINE. The wizard grew into five jobs and, on 2026-09-19, five
+URLs with a tile each on the workshop hub. The PAGES moved; the shared modules
+did NOT, because the Pages Functions import them from here by path - so
+apps/character-creator/js is still where the engine lives and the other four
+apps reach it by absolute URL. The old page paths stay as redirect stubs that
+forward the query string, because a sheet URL is something you send to a player.
+
 apps/character-creator/
 ├── index.html / app.js       Creation wizard (11 steps). app.js is an ES module.
-├── sheet.html / sheet.js     Character sheet, laid out after the printed Rifts sheet
-├── dashboard.html / dashboard.js  GM dashboard: roster (with the G.M.'s pool, damage,
-│                             undo and party-XP controls), GM notes, campaign journal
-├── campaign.html / campaign.js  Campaign notes: the log with search and Ask,
-│                             the party stash and the currency ledger
-├── catalog.html / catalog.js Admin-only catalog editor, generated from the
-│                             field config. catalog.js is an ES module.
-├── codex.html / codex.js     Every spell, power, item, vessel, skill, class,
+│                             The Creator: the draft, and starting a character.
+├── sheet.html                → /apps/character-sheet/ (redirect stub)
+├── dashboard.html            → /apps/gm-tools/ (redirect stub)
+├── campaign.html             → /apps/campaign/ (redirect stub)
+├── catalog.html              → /apps/codex/catalog.html (redirect stub)
+├── codex.html                → /apps/codex/ (redirect stub)
+├── styles.css                Every page of all five apps, on /shared/styles.css
+│
+apps/character-sheet/         PLAY
+├── index.html / sheet.js     Your characters when asked for none; otherwise the
+│                             sheet, laid out after the printed Rifts sheet
+apps/codex/                   CODEX
+├── index.html / codex.js     Every spell, power, item, vessel, skill, class,
 │                             Talent and super ability, with its text and stat
 │                             block, for anyone. Read-only by construction —
 │                             GETs only, no write path. One section per
 │                             request. See plans 20 and 22 in docs/plans/
-├── styles.css                All six pages, layered on /shared/styles.css
+├── catalog.html / catalog.js Admin-only catalog editor, generated from the
+│                             field config. catalog.js is an ES module.
+apps/campaign/                CAMPAIGN
+├── index.html / campaign.js  The log with search and Ask, the party stash and
+│                             the currency ledger
+apps/gm-tools/                GM TOOLS
+├── index.html / dashboard.js Roster (with the G.M.'s pool, damage, undo and
+│                             party-XP controls), GM notes, campaign journal
+│
+apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)
 ├── js/dice.js                Dice evaluator (ES module — also used by the API)
 ├── js/leveling.js            XP curve and the level-up diff (ES module — the API
