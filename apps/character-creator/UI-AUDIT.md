@@ -627,6 +627,102 @@ version of it that would inherit the objection.
 `apps/character-creator/UI-AUDIT.closed.md:1334` is about not resizing equipment
 row buttons. Nothing on any menu has weighed this.
 
+**Taken as option A, 2026-09-20 (PR #1201), on Nate's word.** Posture as
+written: *"a cap at upload, nothing stored changes, no existing row is touched,
+and no server code moves."* All four hold — the change is one new browser-side
+file, two lines of `uploadPicture` and a line of copy.
+
+**The production counts were re-run before building** and still read zero:
+`campaign_images` 0, `campaign_entries` 0, `npcs` 0, and `npcs` with a
+`portrait_key` 0 (`scripts/q.mjs --remote`, 2026-09-20). Nothing to migrate,
+which is what made "now" the cheap moment.
+
+**What shipped.** `apps/character-creator/js/downscale.js`, a classic script
+with one global, loaded before `dashboard.js`. `downscale.toUpload(file)`
+decodes with `createImageBitmap`, and when the longest edge is over 2048 draws
+it to a canvas at that cap and re-encodes **in the same type it arrived in**.
+Everything else hands the original `File` straight back.
+
+**FIVE CORRECTIONS FROM THE TAKE-TIME PREMISE AUDIT, four of which changed the
+code that was written:**
+
+1. **The header must come from the BLOB, not the File**, and option A's text
+   never said so. The server reads that one header to pick the R2 key's
+   extension, the stored `content_type` and the `Content-Type` it serves back
+   later, so sending a re-encoded blob described by `file.type` would have been
+   wrong in three places at once. `uploadPicture` now sends `body.type`.
+2. **`canvas.toBlob` cannot produce `image/gif`** — browsers fall back to PNG —
+   so re-encoding an animated gif silently flattens it to one frame. The upload
+   allowlist accepts gif, so gif is excluded from re-encoding outright. The
+   finding's stated trade was only the loss of zoom detail; losing animation was
+   a second, unnamed loss.
+3. **A small PNG can come out LARGER from a re-encode**, which would have pushed
+   a picture towards the 5MB cap rather than away from it. A blob bigger than
+   its original is discarded and the original sent.
+4. **The type is preserved rather than chosen.** A PNG re-encoded to JPEG loses
+   its transparency, and these are maps and portraits rather than photographs to
+   optimise — the point is the pixel count, not the codec.
+5. **The posture sentence undersold one behaviour change.** A photo over 5MB
+   used to be refused by the server outright; it now usually downscales under
+   the cap and succeeds. That is an improvement, but it falsified the UI copy
+   *"Up to 5MB each"*, which has been rewritten to say what actually happens.
+
+**And the finding's own title overreached.** It says *"every campaign picture
+**and NPC portrait**"*, but option A names only `uploadPicture` in
+`apps/gm-tools/dashboard.js`. NPC portraits are uploaded by a different
+function in a different app — `uploadPortrait`, `apps/campaign/campaign.js` —
+which this PR does not touch. **That half is filed as `F59` below rather than
+quietly widened into this one or quietly dropped**, per `audit-menu` → *A
+deferral is work*.
+
+<!-- claim-ok: quoting the premises and the title this note corrects -->
+
+**Not done, and deliberately:** options B and C are untouched. B remains the
+only option that keeps the original bytes, and this one throws them away at the
+door — which is the trade the finding named and Nate chose.
+
+## Filed while taking UI-AUDIT F57, 2026-09-20
+
+### F59 - low - NPC portraits upload from a different app and were left at full size when F57 was taken
+
+**Why this exists.** `F57`'s title claims campaign pictures *and* NPC
+portraits; its option A names one function, in one app, and that function has
+nothing to do with portraits. Taking `F57` fixed half of what it said it
+covered, and this is the other half with a number on it rather than a sentence
+inside a closed finding.
+
+**What is true.** `uploadPortrait` in `apps/campaign/campaign.js` POSTs the raw
+`File` to `campaigns/:id/npcs/:npcId/portrait` with `Content-Type: file.type` —
+the same shape `uploadPicture` had before `F57`. Read 2026-09-20 while taking
+`F57`; the premise audit for that finding located it.
+
+**And the ratio is worse than anything in `F57`'s table.** A portrait is painted
+at **34px** in the roster row and **120px** in the dossier
+(`apps/campaign/campaign.js`, both inline styles, same read). `F57` counted
+three views and missed these two; they are the smallest consumers in the app.
+
+**Proposal.** Call the helper `F57` already shipped:
+`downscale.toUpload(file)` in `uploadPortrait`, take the `Content-Type` from
+what it returns, and load `js/downscale.js` in `apps/campaign/index.html`.
+**Posture: identical to `F57` option A** — a cap at upload, nothing stored
+changes, no existing row is touched, no server code moves. A portrait wants a
+smaller cap than a map does, and picking one is the only decision here.
+
+**Evidence:** the two files above, read 2026-09-20. `npcs` holds **0 rows** in
+production with **0** portraits (`scripts/q.mjs --remote`, same day), so as with
+`F57` there is nothing to migrate and the cheap moment is now.
+
+**Confidence: high** — the mechanism is the one just shipped and tested one app
+over. **What would raise it further:** nothing worth waiting for.
+
+**Ongoing cost:** one line in `uploadPortrait`, one script tag. The helper and
+its cap already exist.
+
+**Subject grep, 2026-09-20:** the same sweep `F57` records, plus `uploadPortrait`
+and `portrait_key` across every `*AUDIT*.md` and the memory store. The only hits
+are `F57` itself and `README.md`'s schema table describing `portrait_key` as an
+R2 object key. Nothing has weighed it.
+
 ## Filed while shipping P5c, 2026-09-20
 
 Found by rendering the print stylesheet rather than reading it, which is the

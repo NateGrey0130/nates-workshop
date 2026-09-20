@@ -587,6 +587,52 @@ export function run() {
       /\.field > \.lbl, \.skill-head th, \.vital \.lbl \{ color: #333 !important; \}/.test(printed),
       'the label colour moved, taking .field and .skill-head with it');
 
+    // ── UI-AUDIT F57 option A: shrink it before it is uploaded ──
+    //
+    // This platform cannot resize an image (docs/pages-to-workers-migration.md
+    // row: Workers yes, Pages no), so the only place the bytes can be made
+    // smaller is before they leave the browser.
+    const down = readFileSync(join(appDir, 'js', 'downscale.js'), 'utf8');
+    const gmHtml = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'index.html'), 'utf8');
+    // Matched as SCRIPT TAGS, not as bare filenames: the comment above the tag
+    // names dashboard.js, and a plain indexOf found that first and reported the
+    // order backwards. The same shape of mistake the appnav checks make.
+    const tagAt = (f) => gmHtml.indexOf(`<script src="${f}"`);
+    check('the downscaler is loaded before the page that uses it',
+      tagAt('/apps/character-creator/js/downscale.js') > 0
+      && tagAt('/apps/character-creator/js/downscale.js') < tagAt('dashboard.js'),
+      'downscale.js is missing or loads after dashboard.js');
+    // THE HEADER COMES FROM THE BLOB. The server reads that one header for the
+    // R2 key's extension, the stored content_type AND the Content-Type it
+    // serves later, so a re-encoded blob described by the original file's type
+    // is wrong in three places at once. The finding's text omitted this.
+    const dashSrc = readFileSync(appPath('dashboard.js'), 'utf8');
+    const upload = functionBody(dashSrc, 'async function uploadPicture(');
+    check('the upload describes what it actually sends',
+      !!upload && /const body = await downscale\.toUpload\(file\);/.test(upload)
+      && /'Content-Type': body\.type/.test(upload) && !/'Content-Type': file\.type/.test(upload),
+      'the request still names the original file type');
+    // GIF IS NEVER RE-ENCODED: canvas.toBlob cannot write image/gif, browsers
+    // fall back to PNG, and an animated gif would be flattened to one frame.
+    check('gif is left alone rather than flattened',
+      /REENCODABLE = new Set\(\['image\/jpeg', 'image\/png', 'image\/webp'\]\)/.test(down),
+      'gif can reach the canvas, and an animated one comes back as one frame');
+    check('the type survives the round trip',
+      /blobFrom\(canvas, file\.type\)/.test(down),
+      'a PNG can come back as a JPEG, losing its transparency');
+    // A small PNG re-encoded can come out BIGGER, which would push a picture
+    // towards the 5MB cap rather than away from it.
+    check('a re-encode that made things worse is discarded',
+      /if \(!out \|\| out\.size >= file\.size\) return file;/.test(down),
+      'a bigger blob can be uploaded in place of the original');
+    check('and nothing here can block an upload',
+      /catch \{\s*return file;/.test(down) && /if \(longest <= maxEdge\) \{ bmp\.close\?\.\(\); return file; \}/.test(down),
+      'a canvas that misbehaves now costs the GM their picture');
+    // The copy said "Up to 5MB each", which stopped being what a GM runs into.
+    check('the copy says what now happens',
+      !/Up to 5MB each/.test(dashSrc) && /shrunk to\s*\$\{downscale\.MAX_EDGE\}px/.test(dashSrc),
+      'the upload hint still promises a cap the GM rarely meets');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
