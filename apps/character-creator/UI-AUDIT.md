@@ -524,3 +524,88 @@ about the ink.
 The memory store has `print-render-headless-chrome.md`, cited above, which
 records that the headless method **falsified `F17` outright** and says nothing
 about the ink remainder. Nothing to argue past.
+
+## Filed while shipping P4b, 2026-09-20
+
+Present mode (PR #1193) puts a campaign picture on a whole screen for the first
+time, which is where the byte question stops being an abstraction. Filed rather
+than fixed on sight, and filed rather than left as a remark, per `META-AUDIT`
+`A16`.
+
+### F57 - low - every campaign picture and NPC portrait is served at the size it was uploaded, two of the three views that show one want a fraction of it, and this platform cannot resize an image
+
+**What the code does.** `functions/api/character-creator/campaigns/[id]/images/[imageId].js`
+returns `object.body` straight out of R2 with the stored content type and no
+transform; `campaigns/[id]/npcs/[npcId]/portrait.js` does the same. Read on
+`main` @ `f61c537`, 2026-09-20. The caps are **5MB per picture and 20 pictures
+per page** (`campaigns/[id]/entries/[entryId]/images.js`, `MAX_BYTES` /
+`MAX_PER_ENTRY`), so one page of maps is allowed to be 100MB of bytes that
+every member fetching the Handouts tab pulls in full.
+
+**Three views show a picture and only one of them wants the pixels.** The GM's
+editor strip caps a picture at 160px tall (`.setting-pic img`,
+`apps/character-creator/styles.css`), the players' Handouts tab at 70vh
+(`.handout img`), and present mode fills the screen (`.present-frame img`). The
+first two download the whole file to paint a fraction of it. `loading="lazy"`
+on both list views defers that fetch; it does not shrink it.
+
+**A server-side resize is not available here, and the repo already says so in
+the place where it matters.** `docs/pages-to-workers-migration.md:40` is a
+gains-table row reading **Image Resizing binding — Workers yes, Pages no**,
+whose "why it matters here" column is *"NPC portraits are served out of R2 at
+full size"* (read 2026-09-20). So this is a reason on the migration's side of
+the ledger rather than something a Function here can be taught to do.
+<!-- claim-ok: quoting the row this finding rests on -->
+
+**Nobody has paid this cost yet, which is the whole reason to file it now.**
+Measured against production, 2026-09-20, `scripts/q.mjs --remote`:
+`campaign_images` **0 rows**, `campaign_entries` **0 rows**, `npcs` **0 rows**.
+There is no picture in production to migrate, so every option below is
+cheaper today than it will ever be again.
+
+**Proposal — three options, and they are not equivalent.**
+
+- **A (recommended): downscale in the browser before the POST.** `uploadPicture`
+  in `apps/gm-tools/dashboard.js` already has the `File`; draw it through a
+  canvas with the longest edge capped (2048px is more than any table screen
+  resolves, and present mode is the only view that wants more than 1000),
+  re-encode, and send that. **Posture: a cap at upload, nothing stored changes,
+  no existing row is touched, and no server code moves.** The trade is
+  information loss that cannot be undone — a GM who wants to zoom into a map has
+  no zoom in present mode today, so the loss is theoretical until one exists.
+- **B: store a second, smaller object per picture** and serve it to the two list
+  views behind a `?size=` parameter, falling back to the full object when the
+  small one is absent. **Posture: additive.** It is the only option that keeps
+  the original bytes. It costs a second R2 object per picture, a key convention
+  or a column, and a fallback branch that stays forever.
+- **C: documentation only.** Record the cost beside the 5MB cap in
+  `apps/character-creator/README.md` so the next person does not find it on a
+  phone at a table. **Posture: no code.**
+
+**Evidence:** the four source files above, read 2026-09-20 on `f61c537`; the
+three production counts by `scripts/q.mjs --remote`, same day; the migration
+doc's row, same day. Nothing here is inferred.
+
+**Confidence: high on the mechanism, and deliberately low on whether it
+matters.** No picture has ever been stored in production, so the impact is a
+prediction about how Nate will use the feature — one 5MB scan of a two-page map
+spread is the case that hurts, and a handful of 300KB portraits is not. **What
+would raise it: a month of real use, then the same three counts and
+`sum(byte_size)` again.** That is also the argument for A over B: A is a
+20-line change that stops the bad case without needing to know whether it will
+happen.
+
+**Ongoing cost.** A: one browser-side function, and a cap someone will
+eventually want to raise. B: a second object per picture forever, plus the
+fallback branch. C: a sentence that has to stay true.
+
+**Subject grep, 2026-09-20:** every `*AUDIT*.md` at the root and under `apps/`,
+plus `SETUP-v2-CHANGES.md` and the memory store, for `thumbnail`, `resize`,
+`downscal`, `srcset`, `byte_size` and `portrait_key`. Two hits worth naming, and
+**neither settles this**. `apps/character-creator/docs/campaign-and-play.md:253-254`
+rejects base64 data URIs in D1 partly because *"thumbnails only is a rule nobody
+remembers in six months"* — that is an argument about storing images in the
+database, not about what size leaves the bucket, and option B above is the
+version of it that would inherit the objection.
+`apps/character-creator/UI-AUDIT.closed.md:1334` is about not resizing equipment
+row buttons. Nothing on any menu has weighed this.

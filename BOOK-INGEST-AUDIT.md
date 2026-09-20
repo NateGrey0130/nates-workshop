@@ -1500,3 +1500,100 @@ rows otherwise held, re-read from the rebuilt caches.
 game may override; a power's CATEGORY per game (D7 left it alone on purpose); and
 the `W.P. Targeting` citation question in the paragraph above, which still belongs
 to a re-provenance pass.
+
+### F103 - medium - `W.P. Targeting` is Rifts Ultimate Edition's entry, word for word, filed under Palladium Fantasy - so every Palladium Fantasy character gets four strike bonuses where the book prints six
+
+**This is `F102`'s deferral, given the number `META-AUDIT` `A16` says it needs.**
+`F102`'s note ends *"the `W.P. Targeting` citation question in the paragraph
+above, which still belongs to a re-provenance pass"*, and the paragraph it
+points at says the question was *"reported by that audit and not re-verified,
+because the page offsets were not checked"*. They are checked below.
+<!-- claim-ok: quoting the deferral this finding takes over -->
+
+**A decision already exists on this and it is weaker than it looks.**
+`apps/character-creator/REBUILD-AUDIT.closed.md:966-971`, under `### F14`, reads
+the difference and leaves it: *"PF printed 84 lists the skill inside an O.C.C.'s
+skill list rather than defining it, and the skill appears in RUE too. Both
+defensible, neither is the entry. **Left alone** - picking one without reading
+both books properly is how a wrong citation becomes a permanent one."* **That
+was the right call on the evidence it had, and the reading it asked for has now
+been done** - which is what this finding adds rather than reverses.
+<!-- claim-ok: quoting the decision this finding argues past -->
+
+**What production holds.** `scripts/q.mjs --remote`, 2026-09-20:
+
+| column | value |
+|---|---|
+| `source_book` | `Palladium Fantasy RPG Main Book p.84` |
+| `systems` | `["rifts","palladium-fantasy","heroes-unlimited"]` |
+| `level_bonuses` | +1 strike at levels **1, 3, 7, 10**, `applies_when` *"with a thrown or projectile weapon"* |
+| its level-1 note | *"Sling, slingshot, boomerangs, shurikens, throwing knives, sticks, small axes and spears, even siege weapons - but not bows, crossbows or guns. Requires any one W.P. for a missile weapon... Can also throw two small items at one target simultaneously."* |
+
+**What the two books print.** Read out of the caches on this machine,
+2026-09-20, offsets from `scripts/books.json`:
+
+- **RUE**, printed **328** (cache `rue/txt/p331.txt`, offset 3):
+  *"W.P. Targeting. Expertise with thrown and projectile weapons (but not bows
+  and arrows, crossbows, or guns), such as the sling, slingshot, boomerangs,
+  shurikens, throwing knives, throwing sticks, axes (small) and spears, even
+  siege weapons. Bonuses: +1 to strike at levels 1, 3, 7 and 10... Can also
+  throw two small items... simultaneously at the same target. Requires: Any one
+  W.P. for a missile weapon."*
+- **Palladium Fantasy**, printed **49** (cache `pf/txt/p063.txt`, offset 2):
+  the skill is called **`W.P. Targeting/Missile Weapons`**, and its bonuses are
+  *"+1 to strike at levels 1, 3, 5, 7, 10, and 13"*, plus a separate *"+1 to
+  strike at levels 2, 5, and 10"* for a character who also has W.P. bow,
+  crossbow or spear.
+- **Palladium Fantasy printed 84** (cache `pf/txt/p086.txt`) carries the string
+  `W.P. Targeting` on one line and nothing else about it - `REBUILD-AUDIT`
+  `F14`'s reading confirmed.
+
+**So three things are true at once, and only the third is a rules problem.**
+(1) The stored row is RUE's entry - the levels, the exclusions, the two-items
+clause and the Requires line all match RUE word for word. (2) Its `source_book`
+names a book and a page that do not define it; Palladium Fantasy defines it 35
+printed pages earlier under a different name. (3) **`systems` claims
+`palladium-fantasy`, so a Palladium Fantasy character who takes this skill is
+given RUE's four-step schedule instead of the six PF prints** - missing levels
+5 and 13, and missing the separate bonus PF grants for pairing it with a bow.
+
+**Proposal.** Two halves, and they should be one PR because the second is
+meaningless without the first.
+
+- **Correct the provenance.** `source_book` becomes RUE's entry at printed 328,
+  because that is the text the row holds. **Posture: a data script, one row, no
+  schema.**
+- **Give Palladium Fantasy its own schedule through the machinery `F102` built
+  for exactly this.** `skill_system_bases.level_bonuses` (migration 075) already
+  holds a per-game schedule that REPLACES the row's, and `F102` shipped five
+  such rows. A sixth - `W.P. Targeting` / `palladium-fantasy` / levels 1, 3, 5,
+  7, 10, 13 - closes the gap with no new mechanism. **Posture: data only, and
+  the replace semantics `F102` pinned.**
+
+**Left out on purpose, and named rather than deferred silently:** PF's *second*
+bonus (the +1 at 2, 5, 10 for pairing with a bow or spear W.P.) is conditional
+on holding another skill, which `level_bonuses` has no way to express. It is
+**dropped**, not postponed - the row's note can say so in prose, as other
+conditional bonuses do. **And the name difference** - PF prints
+`W.P. Targeting/Missile Weapons` - is the same shape as the Nightbane survey's
+`D6`, which resolved to the existing row and no new name; this follows that
+precedent and proposes no rename.
+
+**Evidence:** the production row by `scripts/q.mjs --remote`, 2026-09-20; both
+book pages read out of the caches the same day, with the offsets applied from
+`scripts/books.json`. Nothing inferred.
+
+**Confidence: high.** Both entries were read in full rather than searched for a
+number, and the stored text is RUE's to the clause. **The one thing that would
+change the answer** is a Palladium Fantasy printing whose page 49 differs from
+the cached one - the same caveat every citation here carries.
+
+**Ongoing cost:** one more `skill_system_bases` row, which is the cost `F102`
+already accepted, and one corrected citation. No new column, no new reader.
+
+**Subject grep, 2026-09-20:** every `*AUDIT*.md` at the root and under `apps/`,
+plus `SETUP-v2-CHANGES.md`, the surveys and the memory store, for
+`W.P. Targeting` and `Targeting`. Three hits that bear on it, all named above:
+`REBUILD-AUDIT` `F14`'s *left alone*, `F102`'s deferral, and the Nightbane
+survey's `D6`, which decided `W.P. Archery and Targeting` resolves to
+`W.P. Archery` and is about a different row.
