@@ -23,6 +23,17 @@
   function sizeSticky() {
     const h = document.querySelector('.header');
     if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+    // AND THE STICKY BLOCK'S OWN HEIGHT, for the same reason and by the same
+    // argument this file already makes about the header: anything that scrolls
+    // a heading to the top of the page has to know what is covering the top of
+    // the page, and the sheet's vitals strip is 140px of it. A second place
+    // measuring this is the pattern the paragraph above says this app has
+    // already had to undo twice.
+    //
+    // The first [data-sticky] rather than all of them: a page has one sticky
+    // block under the header, and `scroll-margin-top` needs one number.
+    const s = document.querySelector('[data-sticky]');
+    if (s) document.documentElement.style.setProperty('--sticky-h', s.offsetHeight + 'px');
   }
 
   window.addEventListener('resize', sizeSticky);

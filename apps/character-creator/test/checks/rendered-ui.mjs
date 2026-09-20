@@ -357,6 +357,80 @@ export function run() {
       /@media \(pointer: coarse\) and \(min-width: 900px\) \{\s*\.sheet-grid\.sheet-3 \{ max-width: 900px;/.test(css),
       'an iPad in landscape drags a skills table across 1376px');
 
+    // ── THE THIRD MODE: THE STRIP AS NAVIGATION (P5a, 2026-09-20) ──
+    //
+    // The two checks above are the two states this page had. A mouse on a wide
+    // screen got the second one and no way to reach a section: 3,687px at
+    // 1440x900 with a level-12 character, 4.1 screens, and THREE headings in
+    // the whole document. The answer is not to hide panels on a laptop - the
+    // check above still pins that it does not - so the strip is shown OVER the
+    // already-visible panels and pressing one scrolls.
+    check('the strip can be navigation instead of tabs',
+      /^\.tabbar\.tabbar-sections \{ display: flex; \}/m.test(css),
+      'the third mode is gone, so a laptop has no way to reach a section');
+    // The class is what distinguishes the two visible states, so a bar over
+    // visible panels can never be an accident of a media query.
+    check('and only that class shows a bar over visible panels',
+      /nav\.classList\.toggle\('tabbar-sections', !tabs\)/.test(src),
+      'nothing adds the class, or something else does');
+
+    // ONE CONDITION, THREE COPIES, AND THEY MUST BE ONE STRING. The stylesheet
+    // warns that the bar and the panels disagreeing about which layout is on is
+    // the failure here; sheet.js now carries a copy of the same query to decide
+    // which of the two the strip is. Pinned rather than trusted.
+    const TAB_MODE = '(max-width: 820px), (pointer: coarse)';
+    const cssCopies = (css.match(/@media \(max-width: 820px\), \(pointer: coarse\)/g) || []).length;
+    check('every copy of the tab-mode condition is the same string',
+      cssCopies >= 2 && src.includes(`const TAB_MODE = '${TAB_MODE}'`),
+      `${cssCopies} in the stylesheet, and sheet.js must hold the identical string`);
+    check('and sheet.js decides the mode from it rather than from a width',
+      /const tabModeMq = window\.matchMedia\(TAB_MODE\)/.test(src)
+      && !/innerWidth\s*[<>]=?\s*820/.test(src),
+      'a second, hand-rolled idea of where the breakpoint is');
+
+    // THE TARGET IS A BOX, NEVER THE SLICE. `.tabpanel` is display: contents in
+    // this mode, so it generates NO BOX: scrollIntoView does nothing, a
+    // scroll-margin on it applies to nothing, and its rect is 0,0,0,0. Built
+    // that way first and measured: every press "scrolled" to 0 and left the
+    // section 486px behind the sticky header.
+    check('a section scrolls to its first box, not to the slice',
+      /\.tabpanel\[data-tab="\$\{tab\}"\] > \.box/.test(src)
+      && /const target = sectionTarget\(tab\)/.test(src),
+      'the scroll target is the display: contents element again');
+    check('and the scroll offset is on .box for the same reason',
+      /^\.box \{ scroll-margin-top: calc\(var\(--header-h, 0px\) \+ var\(--sticky-h, 0px\)/m.test(css)
+      && !/^\.tabpanel \{ scroll-margin-top/m.test(css),
+      'scroll-margin sits on an element that generates no box');
+    // The strip lives inside the sticky block, so showing it makes that block
+    // taller than the height sizeSticky already published. Measured: 185px
+    // recorded against a real bottom of 345, and every press landed 57px behind
+    // the header.
+    check('and the sticky height is re-measured after the strip appears',
+      /sticky\.sizeSticky\(\);\s*\}/.test(src.slice(src.indexOf('function syncStripMode'))),
+      'syncStripMode shows the bar and leaves --sticky-h stale');
+
+    // A control that scrolls must not claim to be a tab: role="tab" promises a
+    // panel swap, and aria-selected on it is a lie about state.
+    check('the strip drops its tab roles when it is a nav',
+      /el\.removeAttribute\('role'\);\s*el\.removeAttribute\('aria-selected'\);/.test(src),
+      'the buttons still say role="tab" while they scroll');
+
+    // THE OUTLINE. Three headings on a four-screen document, and the fix is not
+    // a heading per panel: stackColumns files an element with no data-col as a
+    // stray, so an <h2> added to a panel lands in column b with a console
+    // warning. Measured: 7 panels became 10 and the page grew 568px. The box is
+    // the section here, and it already had a title.
+    const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+    check('every box title is a real heading',
+      /<div class="box-title"><h2>\$\{title\}<\/h2>\$\{extra\}<\/div>/.test(layout),
+      'the box title is a span again and the sheet has no outline');
+    check('and the heading wraps the title alone, never the buttons',
+      !/<h2>\$\{title\}\$\{extra\}/.test(layout),
+      'the extra controls are inside the heading');
+    check('and it is styled to change nothing on screen',
+      /^\.box > \.box-title > h2 \{ margin: 0; font: inherit;/m.test(css),
+      'the h2 brings its own size or margin');
+
     // Column assignment. Every box the body holds must be placed.
     const colBlock = src.slice(src.indexOf('const BOX_COL'), src.indexOf('};', src.indexOf('const BOX_COL')));
     const assigned = [...colBlock.matchAll(/'?([a-z-]+)'?\s*:\s*'([abc])'/g)].map((m) => m[1]);
