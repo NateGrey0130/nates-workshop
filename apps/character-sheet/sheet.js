@@ -2420,7 +2420,7 @@ function render() {
         ${field('Player', escHtml(c.player_email), true)}
       </div>
     </div>
-    `)}
+    `, '', 'identity')}
 
   ${w && C.proposal ? levelUpPanel() : ''}
   ${w && !C.proposal && C.levelUpReady && !C.levelUpDeferred ? levelUpReadyBanner() : ''}

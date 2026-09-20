@@ -274,7 +274,11 @@
     for (const c of SHEET_COLS) body.appendChild(cols.get(c));
   }
 
-  const box = (title, body, extra = '') => {
+  // `cls` is for a box that is not like the others, and there is exactly one:
+  // the identity header, whose title is the CHARACTER'S NAME. Every other box
+  // is hooked by data-box, which is derived from the title - and a hook derived
+  // from the title is no hook at all when the title is "Aelric Dawnthistle".
+  const box = (title, body, extra = '', cls = '') => {
     const slug = boxSlug(title);
     const col = BOX_COL[slug];
     // THE TITLE IS AN <h2>, NOT A <span> (P5a, 2026-09-20). Measured on
@@ -292,7 +296,7 @@
     // The <h2> wraps the title ALONE and not `extra`, which is where the
     // buttons ride - a heading that contains a control is a heading nobody can
     // read out. styles.css gives it `font: inherit` so nothing moves.
-    return `<div class="box" data-box="${slug}"${col ? ` data-col="${col}"` : ''}>` +
+    return `<div class="box${cls ? ' ' + cls : ''}" data-box="${slug}"${col ? ` data-col="${col}"` : ''}>` +
       `<div class="box-title"><h2>${title}</h2>${extra}</div><div class="box-body">${body}</div></div>`;
   };
 

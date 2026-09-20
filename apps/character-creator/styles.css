@@ -813,6 +813,49 @@ body.play-mode .vital.conflict .val > input,
   justify-content: space-between;
   gap: 8px;
 }
+
+/* ── HIERARCHY: THE SHEET ALREADY KNEW IT AND DID NOT SHOW IT (P5c) ────────
+   `data-col` has carried a ranking since the column stacks shipped, and the
+   BOX_COL comment in js/sheet-layout.js states it outright: `a` is what you
+   read constantly, `b` is the lists you scan, `c` is what you read a
+   paragraph of. Every bit of that was spent on `grid-column: 1 / 2 / 3`.
+   Three ranks, one appearance - so the box of numbers you check every round
+   looked exactly like the box holding where your character grew up.
+
+   THE RANK IS SPENT ON CONTRAST AND NOTHING ELSE. Not on --accent, which this
+   file reserves for what you can act on and says so twice; not on a shadow,
+   because nothing here casts one; not on size, because a 10px label that grew
+   would start competing with the numbers it labels.
+
+   Measured on --bg-secondary, which is what a box title sits on:
+   --text-primary 14.18, --text-secondary 6.58, --text-muted 5.45. A 10px
+   800-weight label is small text and needs 4.5:1, so the quiet end has 21%
+   of headroom rather than a rounding error. */
+.box[data-col="a"] > .box-title { color: var(--text-primary); }
+.box[data-col="c"] > .box-title { color: var(--text-muted); }
+
+/* And prose is READ rather than scanned, so it gets a reading size to go with
+   the 66ch measure it already had. 13px is right for a table of skills and
+   too small for three paragraphs about where someone grew up. */
+.box[data-col="c"] .box-body { font-size: 14px; line-height: 1.55; }
+
+/* ── THE DOCUMENT'S SUBJECT IS THE CHARACTER ───────────────────────────────
+   The name went through box() like everything else, so it rendered at 10px,
+   uppercase, tracked out to 0.18em - the same treatment as "Bearing". The
+   page's <h1> is "Character Sheet", which is the app's name and not this
+   document's subject.
+
+   Neither uppercase nor tracked: a name is a name. The tags beside it set
+   their own 10px, which is why the <h2> wraps the title alone. */
+.box.identity > .box-title { padding: 10px 12px; }
+.box.identity > .box-title > h2 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
 /* Scrolls the CONTENT, never the box. A table wider than its column - the
    equipment table is 367px inside 332px at 390px wide - was cut by .box's own
    `overflow: hidden`, which offers no scrollbar to recover what it hid, and the
@@ -1601,6 +1644,15 @@ input.class-boosted { border-bottom-width: 2px; }
     background: #eee !important; color: #000; border-bottom: 1px solid #999;
     padding: 3px 8px; font-size: 8.5pt;
   }
+  /* The name still leads on paper, at a size paper can afford. Without this
+     the identity rule above prints a 26px name on a 10pt sheet. */
+  .box.identity > .box-title { padding: 3px 8px; }
+  .box.identity > .box-title > h2 { font-size: 13pt; color: #000; }
+  /* And the three ranks collapse: ink is ink, and a printed sheet has no
+     hover, no scroll and no "what do I look at first" problem to solve. */
+  .box[data-col="a"] > .box-title,
+  .box[data-col="c"] > .box-title { color: #000; }
+  .box[data-col="c"] .box-body { font-size: inherit; line-height: inherit; }
   .box > .box-body { padding: 6px 8px; }
   .sheet-grid { gap: 8px; }
   .field > .dots { border-bottom-color: #bbb; }
