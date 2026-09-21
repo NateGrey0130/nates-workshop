@@ -7,13 +7,15 @@
 > is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
 > **There is open work on this menu.** Read each finding's own heading for its
-> state and its PR number. Two later passes have added sections after the
-> original one, each under its own dated `##` heading at the end of the file:
+> state and its PR number. Later passes have added sections after the original
+> one, each under its own dated `##` heading at the end of the file:
 > **`## Opened by the protocol retrospective, 2026-09-04`**, then
-> **`## Opened by the audit retrospective, 2026-09-06`**. The original pass was
-> filed 2026-09-03 against `main` @ `3332349` (the merge of #641), the protocol
-> retrospective against `2eed604` (the merge of #699), and the audit
-> retrospective against `c54a794` (the merge of #750). Findings are
+> **`## Opened by the audit retrospective, 2026-09-06`**, then
+> **`## Opened by the A13 revisit, 2026-09-21`**. The original pass was filed
+> 2026-09-03 against `main` @ `3332349` (the merge of #641), the protocol
+> retrospective against `2eed604` (the merge of #699), the audit retrospective
+> against `c54a794` (the merge of #750), and the A13 revisit against `55235b3`
+> (the merge of #1208). Findings are
 > `### A<n> — <severity> — <title>`, severity lowercase, and they run in each
 > pass's own order rather than in severity order across the file.
 >
@@ -977,3 +979,98 @@ one.* It was caught by checking the PR rather than by re-reading, which is the
 only reason it is here as a correction and not as a finding.
 
 **Ongoing cost:** none. Nothing here is maintained.
+
+## Opened by the A13 revisit, 2026-09-21
+
+Nate asked for `A13` to be revisited after two menu headers were corrected on
+2026-09-21 (PR #1206). **Half of what prompted it turned out not to be evidence
+about `A13`**, which is recorded here rather than quietly dropped, because the
+finding below rests on what is left.
+
+### A19 — low — `A13` ruled a check out for a reason the narrow one does not meet, and one post-`A13` header has since rotted
+
+`A13` shipped *What a status header may carry, and what it may not* on
+2026-09-04 (`61c29fb`) and closed with *"No retrofit, no check, and no count in
+this rule"*, ruling a check out because *"the notes vary in wording by design and
+a mechanical reader keeps getting this wrong."*
+<!-- claim-ok: quoting A13's own closing paragraph, re-read in the skill 2026-09-21 -->
+
+**That reason is about reading an outcome note in order to decide a state.** The
+check proposed here reads no outcome note and decides no state. It asks one
+question of a line a pull request **adds** to a menu's leading blockquote: does
+it name a finding-number token. Whether the claim around that token is true stays
+a judgement, exactly as `A13` says it must.
+
+**What prompted the revisit, dated, because one of the two does not count.**
+Both corrected headers were dated with `git log -S` on 2026-09-21:
+
+| header | written | against `A13` |
+|---|---|---|
+| `BULK-AUDIT`'s *"Every finding here is now closed"* | 2026-08-26, `109c9ca` | **nine days before** `A13` |
+| `UI-AUDIT`'s *"Three remarks were left open inside closed findings"* | 2026-09-10, `95fc9be` | six days **after** `A13` |
+
+`A13` does not retrofit, and says so, so a pre-`A13` header being found wrong is
+the rule working rather than failing. **The evidence is therefore one instance,
+not two** — and the one that counts is the shape `A13` predicts: `UI-AUDIT`'s
+clause gave three findings their state in a header, `F17`'s remainder was
+numbered `F56` on 2026-09-12, and the clause stayed wrong for nine days until a
+person read it.
+
+**Measured 2026-09-21, with a throwaway probe over `git show --unified=0` across
+`HEAD~250..HEAD` (573 commits); the two dating commands above are the
+reproducible half.**
+
+- **A retrofit is out.** `A13`’s own closing paragraph rules it out at
+  `.claude/skills/audit-menu/SKILL.md:560`, read 2026-09-21 — *"Existing
+  headers are records and stay as they are."* Across every menu the tree
+  glob returns plus `SETUP-v2-CHANGES.md`, the leading blockquotes hold 589
+  lines, and 18 files' headers name a finding number — 227 tokens. This menu's
+  own header is one of them and already says so.
+- **Added lines are a different corpus.** Of those 573 commits, **33** add any
+  blockquote line to a menu and **6** would be flagged. Two of the six are the
+  same `SKILL-AUDIT` `F44` header line being written and then rewritten —
+  per-finding state in a header, the shape `A13` forbids. The other four are a
+  dated `**Adjusted**` statement, which `A13` permits outright, and blockquotes
+  sitting inside finding bodies rather than headers, which a header-scoped
+  extractor would not look at. **The probe used "any blockquote line" as its
+  proxy and therefore overstates the false-positive rate.**
+
+**Proposal:** add one rule to `scripts/menu-check.mjs` rather than a new script.
+That file already diffs the lines a branch adds against `origin/main`, already
+scopes itself to menus with `MENU_GLOBS`, and already carries
+`<!-- claim-ok: why -->` as its escape hatch — all three read at
+`scripts/menu-check.mjs` lines 95, 98 and 146 on 2026-09-21. The rule: a line
+added inside a menu's leading blockquote that names a finding-number token is
+flagged, with `A13`'s permitted list quoted back — a dated historical statement,
+an instruction to a taker, or arrangement — and `claim-ok` silences it.
+
+**Posture: the same gate `menu-check` already is, escapable.** Stated plainly
+because it is the half most likely to be misread: `menus` is a required check,
+so this **blocks a merge** until the line is changed or marked. The alternative
+posture is report-only, which costs nothing and fires into a log nobody reads —
+the trade `A13`'s own *"rules that are read do not fire; a job that runs does"*
+argument already weighed for a different rule.
+
+**Evidence:** the two `git log -S` commands above, run 2026-09-21; the corpus
+and added-line counts from the probe described above, same day. The probe is not
+committed. **Nothing here was inferred.**
+
+**Confidence: medium.** What would raise it: a **second** post-`A13` instance,
+or building the header-scoped extractor and re-running it over the same 573
+commits to replace the proxy's false-positive rate with a real one. Neither was
+done here, deliberately — building the extractor is most of taking the finding.
+
+**Ongoing cost:** one more rule inside a check that already runs, and the
+`claim-ok` habit extended from claims-about-files to headers. On the proxy
+measurement that is roughly one spurious flag per 190 commits, and fewer once
+the extractor is header-scoped.
+
+**And the case for declining, which is real.** One instance in seventeen days is
+thin, and `A13` was a considered decision rather than an oversight. The check
+also cannot reach the worse half of the problem: `A17` records that
+`SHIP-PR-AUDIT`'s *"None of these is taken"* carries **no finding number at
+all**, so a numberless claim about numbered work stays invisible to this rule
+exactly as it is invisible to every other sweep here. A check that covers the
+detectable half may make the undetectable half easier to forget. **If that is
+the reading, decline it and record the measurement above** — the corpus counts
+are worth keeping either way.
