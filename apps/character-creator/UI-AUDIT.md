@@ -16,11 +16,28 @@
 > named exactly one until 2026-09-09, by which time there were three, which is
 > the same trap the paragraph below describes one level down.
 >
-> **Three remarks were left open inside closed findings, and none was ever given
-> a number**, which is why this line does not say "nothing is open": `F2`'s note
-> leaves reconciling its behaviours (1) and (2) unstarted, `F6`'s leaves
-> `--border` untouched, and `F17`'s leaves its print-ink observation standing.
-> Each needs filing as a finding of its own before it can be taken.
+> **TWO remarks are left open inside closed findings with no number of their
+> own**, which is why this line does not say "nothing is open": `F2`'s note
+> leaves reconciling its behaviours (1) and (2) *"open and unstarted"*, and
+> `F6`'s ends *"`--border` was not touched and stays open"*. Each needs filing
+> as a finding of its own before it can be taken. Both re-read in
+> `UI-AUDIT.closed.md` on 2026-09-21.
+> <!-- claim-ok: quoting the two notes this line summarises, both re-read the same day -->
+>
+> **It said THREE until 2026-09-21, and the third had been numbered for nine
+> days.** `F17`'s print-ink observation is `F56` — *"F17's print-ink remainder,
+> re-measured"*, filed and **closed** 2026-09-12 on the re-measurement, at line
+> 461 of this file. The clause was written before `F56` existed and the PR that
+> filed `F56` did not come back to it. That is the same failure the paragraph
+> below already records happening twice in this header, which is the argument
+> for reading a finding's own note rather than any sentence up here.
+>
+> **`F6`'s remainder is open but its MEASUREMENT is two palettes stale.** It
+> quotes `--border` at `#2a2f3e`, a value that exists nowhere today: the token
+> is `#2C3733` in `shared/styles.css` and `#D6DBD5` in
+> `apps/character-creator/styles.css` (read 2026-09-21), because Ley Verdigris
+> replaced the scheme it was measured against and Board & Tissue then split the
+> token in two. Whoever numbers it re-measures first, against both.
 >
 > *(Until 2026-09-06 this paragraph read "Nothing is open" and named a closed
 > range plus `F30`. That was true from 2026-09-03 until two findings were filed

@@ -6,11 +6,28 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-A feature menu, findings `B1`…`B9`, to be taken one at a time. **Every finding here is now
-closed**, across PRs #315–#325 — B1–B8 built, **B9 declined** as it recommended. **B6 was the largest item and
+A feature menu, taken one at a time. **`B10` IS OPEN** — filed 2026-09-20,
+under its own dated heading at the end of this file, and it is the reason this
+header no longer opens by saying everything is closed.
+
+`B1`…`B9` are all closed, across PRs #315–#325 — B1–B8 built, **B9 declined**
+as it recommended. **B6 was the largest item and
 took two of them** — #323 for its layer 1, which is the ISBN file's `F7`, then
 #324 for the rest. Each outcome note sits under its own finding, and the
 evidence throughout describes the app as it stood **before** any of this landed.
+
+*(Until 2026-09-21 the paragraph above read **"Every finding here is now
+closed"** and scoped itself to `B1`…`B9`, which is per-finding state written
+into a header — the thing `audit-menu` forbids, for this exact reason. It was
+true when written and stopped being true the day `B10` was appended beneath it,
+in a PR that did not come back here. `UI-AUDIT`'s header records the same
+failure happening to it three times. Read each finding's own note.)*
+<!-- claim-ok: quoting the sentence this paragraph replaces, with the date it stopped being true -->
+
+**`B10` has been premise-audited but NOT taken** — 2026-09-21, by the
+`audit-premise-auditor`, at Nate's word to file rather than build. The
+corrections are recorded under the finding itself so nobody implements it from
+its original text.
 
 **Investigated 2026-08-26** against `9d16e9a` (`main`). The live ISBN bug is a
 separate file, `ISBN-AUDIT.md`, whose findings are numbered
@@ -272,3 +289,74 @@ path holding a new column's default so old payloads still merge — a
 compatibility point, not this question), `SHARE-AUDIT.md:91`'s row counts, and
 the memory note `app-work-ledger`, which records that the library is
 lillcreeper's and says nothing about the migration. Nothing has weighed this.
+
+### Premise audit, 2026-09-21 — NOT taken, corrections recorded first
+
+Run by the `audit-premise-auditor` before asking Nate the question option A
+asks for. **The five code premises above all hold**, re-read on `main` @
+`bd5cc51` where `B10` was filed against `f61c537`: `app.js:2154`, `:2111`,
+`:2339`, the `UPSERT_SQL` / `{ imported, skipped }` / nothing-persisted claim in
+`migrate.js`, and the cap 400 at `migrate.js:78-80` against `MAX_ITEMS = 5000`
+at `_lib/common.js:108`. Three things option A rests on and does not state also
+hold: the call is **not gated** (`initApp()` runs unconditionally at
+`app.js:2542` and again from the Retry button at `index.html:147`), **nothing
+else touches `mv_library`** (three references, all in `app.js`, no
+`setItem` anywhere, pinned by `smoke.mjs:561`), and `planMigration` has one
+non-test consumer. Six corrections:
+
+**1. "Nothing has weighed this" is wrong, and it moves the odds.** The memory
+note `app-work-ledger.md:17-18` does not merely record whose library it is — it
+ends *"and their one-time migration has not run."* Dated 2026-08-26, no basis
+given, and any load since could have run it, so **it does not settle the
+question**; what it does is make option A's non-null branch the likely one
+rather than the coin-flip this finding describes. Read it before asking, and
+correct it in the PR that closes `B10`.
+<!-- claim-ok: quoting the memory line that falsifies this finding's own subject-grep sentence, with its path and lines -->
+
+**2. "Its nine smoke checks" undercounts the deletion by about half.**
+`test/smoke.mjs`'s `section('The migration planner')` (lines 82-142) holds
+**twelve** `check(` calls; nine is the number of *lines mentioning*
+`planMigration`, which is what a grep returns. Two more live outside it at
+`:562` and `:564`, and two README pins at `:633` and `:635`. **One of them
+would pass vacuously rather than fail:** `:860` does
+`appSrc.slice(appSrc.indexOf('migrateLocalIfNeeded'))`, so with the function
+gone `indexOf` returns `-1` and the check inspects the file's last character. A
+deletion PR that only watches for red misses it. And `:19` imports
+`{ mergeKey, planMigration }` from `migrate.js` at module level, so deleting
+that file breaks the whole suite at import — `mergeKey` actually lives in
+`_lib/common.js` and is only re-exported, and the duplicate-scanner check at
+`:981-982` still needs it, so that import must be **repointed, not removed**.
+
+**3. The deletion list omits a pinned count and two README structures.**
+`smoke.mjs:585-586` asserts *"the endpoint files are exactly the nine
+documented"*; deleting `migrate.js` makes it eight, and the check above it ties
+that to the README's file map. So option A also moves `README.md:44`, the
+endpoint-table row at `:441`, and the `## The one-time migration` section at
+`:485-500` — not just "the README section". Nothing outside this app pins it.
+
+**4. The permanent-400 is wider than the cap, which STRENGTHENS the finding.**
+Two more permanent 400s on the same path, neither bounded by headroom:
+`migrate.js:66` — `sanitizeItem` returns `null` for an item with a missing or
+blank `title` (`_lib/common.js:112-113`), and one such item 400s the whole
+batch; and `migrate.js:59` — an array longer than `MAX_ITEMS` 400s before the
+merge is planned. So *"unlikely rather than impossible"* is too generous: a
+single old cached row with a blank title is a forever-retry on any library size.
+
+**5. The `null` reading is three-valued, not two.** `app.js:2161-2163` removes
+the key with **no POST at all** when the parsed value is not an array or is
+empty, and a `JSON.parse` failure reaches the same branch. So `null` means
+migrated, *or* never cached, *or* the browser cleared a corrupt value by itself.
+The deletion decision is unaffected; the diagnostic sentence is incomplete.
+
+**6. This menu's header said nothing was open.** Fixed in the same PR as this
+note; see the header.
+
+**Nothing cites `B10` by number** — `grep -rn "B10"` across the repo returns
+only its own heading, and the memory store has none. Two memory files cite the
+*menu* and go stale while it is open. The count the auditor could not settle is
+the production row count: three values are recorded — **3,544** on 2026-08-26
+(`app-work-ledger.md:17`), **3,637** on 2026-09-08 (`SHARE-AUDIT.md:91`),
+**3,444** in this finding on 2026-09-20 — non-monotonic, because the library is
+actively edited. **The argument does not depend on which is right**: the count
+cannot distinguish ran from never-ran in either direction, and only the derived
+headroom moves.
