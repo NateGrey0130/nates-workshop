@@ -2187,14 +2187,22 @@ function render() {
           : (p.category ? `Psionics — ${p.category}` : 'Psionics');
     const head = group !== lastPowerGroup ? `<div class="power-group">${escHtml(group)}</div>` : '';
     lastPowerGroup = group;
-    // Offered only when the pool can pay for it. shared/styles.css already dims
-    // :disabled to 0.45 and sets cursor: not-allowed, so this needs no styling
-    // of its own, and usePower keeps its guard for the call arriving by hand.
-    // A variable-cost power is judged on its minimum - the same number usePower
-    // deducts - so the button stays live and the G.M. adjusts for the rest.
+    // Offered only when the pool can pay for it. usePower keeps its guard for
+    // the call arriving by hand. A variable-cost power is judged on its
+    // minimum - the same number usePower deducts - so the button stays live
+    // and the G.M. adjusts for the rest.
     const left = pool ? c[pool + '_current'] : null;
     const useBtn = w && cost != null && left != null
       ? `<button class="btn btn-sm btn-ghost noprint" data-pool="${pool}" data-cost="${cost}"${left < cost ? ' disabled' : ''} onclick="usePower(${i})">⚡ use</button>` : '';
+    // OUT OF REACH, AS A MARK. This used to be carried by the disabled
+    // button alone, which shared/styles.css dims to opacity 0.45 - the
+    // mechanism .st.na and .card-soon both refuse by name, because a
+    // composited 0.45 takes the text under the contrast floor. Same condition,
+    // said in the row itself; styles.css's .power-row.short block carries why.
+    //
+    // NOT gated on `w`. A sheet you cannot write to still answers "can she
+    // cast this", and that is most of what the question is for.
+    const short = cost != null && left != null && left < cost;
     // A spell that ALSO burns P.P.E. out of the caster's base for good
     // (BOOK-INGEST-AUDIT F101): Close Rift's 2, Ley Line Resurrection's 2D6. Its
     // own press, never folded into the use button, because WHEN it burns - on
@@ -2227,7 +2235,7 @@ function render() {
     // A cost_note marks a variable cost: `cost` is the minimum, the use button
     // deducts it, and the note says how the real spend grows — the G.M. adjusts
     // the pool by hand for bigger spends, as at a real table.
-    return head + `<div class="power-row">
+    return head + `<div class="power-row${short ? ' short' : ''}">
       <span>${nameCell}
         ${Number.isFinite(p.acquire_cost)
           // BOUGHT OR FREE, said apart (BOOK-INGEST-AUDIT F101). This read
@@ -2238,7 +2246,7 @@ function render() {
               : `free (${p.acquire_cost} P.P.E. if bought)`}</span>` : ''}
         ${p.cost_note ? `<span class="muted small">— ${escHtml(p.cost_note)}</span>` : ''}
         ${burnDice ? `<span class="muted small">— burns ${escHtml(burnDice)} P.P.E. from the base, when the spell says so</span>` : ''}</span>
-      <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}</span>
+      <span class="cost">${cost != null ? cost + (p.cost_note && cost > 0 ? '+' : '') + (pool === 'ppe' ? ' P.P.E.' : ' I.S.P.') : '—'}${short ? ` <span class="short-by">short ${cost - left}</span>` : ''}</span>
       ${burnBtn ? `<span class="power-btns">${useBtn}${burnBtn}</span>` : useBtn}
     </div>${desc ? `<div class="power-desc" id="pdesc-${i}"${open ? '' : ' hidden'}>${escHtml(desc)}</div>` : ''}`;
   }).join('');

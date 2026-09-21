@@ -42,11 +42,24 @@
   //   w        can this viewer write
   //   stepper  offer the +/- pair. CSS still gates it on body.play-mode, so a
   //            sheet-mode render cannot leak steppers even if this is true.
+  // HOW MANY DIGITS THE VALUE IS, which styles.css turns into a font size.
+  // A four-digit pool overflowed the input that clips it at every card width
+  // the grid can produce, and did so before the figure face as well - the
+  // widget is where that gets fixed, because the alternative is a track size
+  // wide enough for a number almost nobody has.
+  //
+  // The CURRENT value only. The maximum beside it is 13px and has never been
+  // the thing that overflowed. A minus sign is not a digit and is not counted;
+  // nothing here goes negative today, and if something starts to, it will want
+  // its own decision rather than a silently smaller number.
+  const digitsOf = (v) => (v == null ? 0 : String(v).replace(/[^0-9]/g, '').length);
+
   function poolCard(key, label, cur, max, w, stepper) {
     if (max == null && cur == null) return '';
     const pct = fraction(cur, max);
     const low = max > 0 && cur != null && pct <= POOL_LOW;
-    return `<div class="vital${low ? ' low' : ''}" style="--tone: var(${POOL_TONES[key]})">
+    const digits = digitsOf(cur);
+    return `<div class="vital${low ? ' low' : ''}"${digits >= 4 ? ` data-digits="${Math.min(digits, 5)}"` : ''} style="--tone: var(${POOL_TONES[key]})">
     <div class="lbl">${label}</div>
     <div class="val">${w ? `<input type="number" id="stat-${key}" value="${cur ?? ''}">` : ''}<b id="play-cur-${key}">${cur ?? '—'}</b> <span class="max">/ ${max ?? '—'}</span></div>
     <div class="bar"><i style="width:${Math.round(pct * 100)}%"></i></div>
@@ -128,6 +141,14 @@
     const bar = card.querySelector('.bar > i');
     if (bar) bar.style.width = Math.round(pct * 100) + '%';
     card.classList.toggle('low', max > 0 && cur != null && pct <= POOL_LOW);
+    // The digit count has to move WITH the value, not just with a render. This
+    // function is what a stepper, a damage press and a queued change all land
+    // in, so a pool crossing 999 either way would otherwise keep whatever size
+    // it was first drawn at - shrinking the one case the size exists for, or
+    // leaving a two-digit number at 26px after a heal.
+    const digits = digitsOf(cur);
+    if (digits >= 4) card.setAttribute('data-digits', String(Math.min(digits, 5)));
+    else card.removeAttribute('data-digits');
     const inp = card.querySelector('input');
     if (inp) inp.value = cur ?? '';
   }
