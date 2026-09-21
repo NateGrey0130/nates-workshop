@@ -13,6 +13,36 @@
 // wrangler-backed environment half, which is nearly all of the wall clock.
 // The merge gate is the FLAGLESS run — a partial run says PARTIAL in its
 // summary line so its output cannot be quoted as the gate's.
+//
+// ── WHEN THIS FILE NEEDS SPLITTING AGAIN ─────────────────────────────────────
+//
+// It has been split twice. `checks/environment.mjs` came out when it passed
+// 4,000 lines; it grew back to 10,000, and `checks/second-body.mjs` took four
+// Nightbane sections out. It will grow again, so this records where to cut
+// rather than leaving the next person to re-derive it.
+//
+// THE TEST FOR A GOOD CUT, which is what made the last one cheap: a run of
+// ADJACENT sections that are ONE SUBJECT and whose imports are their own.
+// second-body scored 26 bindings used there and nowhere else, so nothing had
+// to be shared out or duplicated. Derive that list, do not eyeball it - and
+// derive it by counting occurrences outside the import block, not by
+// analysing scope, because four scope-aware passes written while doing this
+// each returned a confidently wrong answer.
+//
+// THE CANDIDATE TODAY is the validation pair - `Character validation` and
+// `Creation validation`, adjacent, ~480 lines, one subject. Only four
+// bindings are exclusive to it (`poolFormulaBounds`, `attributeCeiling`,
+// `isAttributeExpr`, `isAbsentAttribute`, all from js/dice.js), so it is a
+// weaker cut than the last one but a real one.
+//
+// AND ITS TRAP, which is the reason this paragraph exists. `Psychic tiers`
+// sits between those two sections and the rest of the file, and it is where
+// `D` is BUILT - js/derive.js is a classic script, evaluated against a
+// stand-in global rather than imported. `D` is then used in 95 places as far
+// down as the last few hundred lines. **Do not let `Psychic tiers` travel
+// with a split**, or hoist the four lines that build `D` above whatever
+// moves. The same shape - a local that no import analysis can see - is what
+// broke the second-body cut on its first run.
 
 function parseFile(name) {
   return parseClassMarkdown(readFileSync(join(appDir, 'test', 'fixtures', name), 'utf8'));
