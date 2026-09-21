@@ -6,9 +6,10 @@
 > in full every finding whose own section records no outcome. The closed file
 > is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **There is open work on this menu.** Read each finding's own heading for its
-> state and its PR number. Later passes have added sections after the original
-> one, each under its own dated `##` heading at the end of the file:
+> **Nothing is open on this menu, as of 2026-09-21.** Read each finding's own
+> heading for its state and its PR number; this line does not give it. Later
+> passes have added sections after the original one, each under its own dated
+> `##` heading at the end of the file:
 > **`## Opened by the protocol retrospective, 2026-09-04`**, then
 > **`## Opened by the audit retrospective, 2026-09-06`**, then
 > **`## Opened by the A13 revisit, 2026-09-21`**. The original pass was filed
@@ -21,6 +22,14 @@
 >
 > **`A18` is an information item that proposes nothing**, which is worth knowing
 > before reading it as outstanding — it is a dated snapshot and says so.
+>
+> **This line read "There is open work on this menu" from 2026-09-06 until
+> 2026-09-21**, when `A19` was declined and the last item that could be called
+> open stopped being one. It was true on every one of those days. **It names no
+> finding number**, so the tree-wide grep for `A19` that went with that decline
+> could not reach it, and did not — it was caught by reading the header. `A17`
+> is the finding about precisely that shape, and this is an instance of it on
+> the menu `A17` was filed on.
 >
 > **This header does not comply with the rule `A13` shipped, and is deliberately
 > not retrofitted to.** `A13` added *What a status header may carry, and what it
