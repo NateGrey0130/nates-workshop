@@ -705,6 +705,7 @@ import { run as renderedUiChecks } from './checks/rendered-ui.mjs';
 import { run as classCheckToolChecks } from './checks/class-check-tool.mjs';
 import { run as catalogMatchingChecks } from './checks/catalog-matching.mjs';
 import { run as instructionPathChecks } from './checks/instruction-paths.mjs';
+import { run as machineInstructionChecks } from './checks/machine-instructions.mjs';
 // ---------- 1c2. Level-up skill grants ----------
 // occ_related_skills.schedule recorded these for a long time and nothing read
 // them. The itemisation matters: a grant knows which level earned it.
@@ -9989,6 +9990,7 @@ section('The checks modules declare the sections they run');
 }
 
 instructionPathChecks();
+machineInstructionChecks();
 
 // slow one - it shells out to wrangler.
 environmentChecks();

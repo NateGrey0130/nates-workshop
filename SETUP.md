@@ -703,15 +703,34 @@ the file has to sit *at* `~/.claude/CLAUDE.md` rather than in a directory of its
 own. **Keep it short and scoped to pointing**: it loads for every session on this
 machine, including work that has nothing to do with this repo.
 
-**It is checked in nowhere, so nothing on earth updates it but a hand.** No test
-reads it, no grep of this tree reaches it, and no other document mentions it
-except this paragraph. That is the price of the pointer being a pointer, and it
-comes due whenever something it names changes: **it names the working directory
-and the skill count, and both have moved before.** On 2026-09-02 it was wrong
-about both at once — it named the previous working directory, and undercounted
-the skills by three (`MACHINE-AUDIT.md` `M12`). A fresh machine writes it
-alongside running the block above; an existing machine edits it by hand, in the
-same PR that moves whatever it names.
+**It is checked in nowhere, so nothing updates it but a hand.** No grep of this
+tree reaches it and no other document mentions it except this paragraph. That is
+the price of the pointer being a pointer, and it comes due whenever something it
+names changes: **it names the working directory, and that has moved before.** On
+2026-09-02 it was wrong twice at once — it named the previous working directory,
+and undercounted the skills by three (`MACHINE-AUDIT.md` `M12`). A fresh machine
+writes it alongside running the block above; an existing machine edits it by
+hand, in the same PR that moves whatever it names.
+
+**Since 2026-09-21 one test does read it**, which is the half of *"no test reads
+it"* that could be fixed —
+`apps/character-creator/test/checks/machine-instructions.mjs`, in the local smoke
+run. It asserts two things: that the file names no individual skill or agent of
+this repo, and that it states no count of them. Those are the shapes that have
+actually gone stale, most recently on **2026-09-20**, when it said *"ten skills"*
+and called `book-reconcile` **the** subagent — by then one of the five files
+under `.claude/agents/`.
+
+**It cannot be a required check, and that is not a defect.** The file is outside
+the repo and absent on a CI runner, where the section states that it is asserting
+nothing rather than passing quietly. So it fires at `ship-pr` step 4 instead of
+at the merge gate, and a session that never runs smoke never sees it.
+
+**The rule it enforces is the one `M19` arrived at**: where this file would state
+a fact the repo owns, it points instead. A count belongs where a check pins it —
+the repo's own `CLAUDE.md`, pinned by `documented-counts.mjs` at *'and says how
+many there are'* — and a second, unpinned copy of that number is exactly the
+liability it had been twice.
 
 **`launch.json` exists twice, and the second copy is untracked on purpose.**
 `.claude/launch.json` is tracked and machine-independent. The *working
