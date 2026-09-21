@@ -1074,3 +1074,46 @@ exactly as it is invisible to every other sweep here. A check that covers the
 detectable half may make the undetectable half easier to forget. **If that is
 the reading, decline it and record the measurement above** — the corpus counts
 are worth keeping either way.
+
+**DECLINED 2026-09-21, on Nate's word, the day it was filed. The measurement
+stays; the check does not.**
+
+**The distinction this finding rested on does not survive the corpus.** It
+argued that `A13` ruled out a mechanical reader of STATE, and that asking
+whether a header line names a finding number needs no such reader. Both halves
+are true and the conclusion still fails, because the two classes are not
+separable by the presence of a number:
+
+- `SKILL-AUDIT.md:9`, read 2026-09-21, carries *"`F44` was taken 2026-09-11
+  (PR #957)"*. It is dated, and a taken finding stays taken, so it cannot rot.
+  `A13` permits it outright as *"a dated historical statement, marked as one."*
+- `UI-AUDIT`'s carried *"Three remarks were left open … and none was ever given
+  a number"* — undated, present tense, and it rotted.
+<!-- claim-ok: quoting the two header lines this note contrasts, both read 2026-09-21 -->
+
+Both name finding numbers. What separates them is **tense and dating**, which is
+wording analysis — the thing `A13` ruled out, and ruled out correctly. A
+detector that flags the first in order to catch the second taxes exactly the
+writing `A13` tells a header to carry more of.
+
+**And the escape hatch was measured, on the case that prompted this finding.**
+PR #1206 (commit `1100731`, 2026-09-21) added the replacement clause to
+`UI-AUDIT`'s header. `menu-check`'s existing claims-about-another-file rule
+fired on it, and the line was silenced in the same commit with
+`<!-- claim-ok: quoting the two notes this line summarises… -->`. **The claim
+was still false** — `F54` and `F55` had numbered those two remarks on
+2026-09-12. A second rule sharing that same hatch would have been silenced by
+the same marker in the same commit: a flag, not a defence.
+
+**What the evidence points at instead.** `audit-menu` already requires that when
+a finding is taken, the whole tree is grepped for its number
+(`.claude/skills/audit-menu/SKILL.md:382`, read 2026-09-21). `UI-AUDIT`'s clause
+went stale because `F54`, `F55` and `F56` numbered three remarks on 2026-09-12
+and nothing came back to the header saying they had none. **That rule was in
+force and did not fire.** Making it fire is a different proposal from this one,
+and it is deliberately not made here — filing it in this note would repeat the
+thing this finding got wrong once already.
+
+**Kept:** the corpus and added-line counts under *Measured*. They are a dated
+record, they cost nothing standing, and re-deriving them would cost the same
+afternoon twice.
