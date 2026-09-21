@@ -220,7 +220,40 @@ for (const table of CITATION_TABLES) {
   }
 }
 
+// ── rows checked against the book BY HAND and found correct ────────────────
+// The matcher searches a flattened copy of the book's OCR text for the row's
+// name. When it misses, the usual reason is not a wrong citation - it is that
+// the book prints the name differently, or the OCR read it differently. This
+// list is the rows somebody has already opened the book for, so the next
+// reader does not repeat the work.
+//
+// WHY A LIST AND NOT A LOOSER MATCHER. Every miss below is a different fuzz -
+// "or" against a slash, a curly apostrophe, and twice an OCR stroke confusion -
+// and absorbing all three means treating `/`, `l`, `I` and `1` as
+// interchangeable and allowing elided conjunctions. That silences these four
+// and quietly silences the next genuinely wrong citation too. The matcher stays
+// strict; the exceptions are named, dated, and carry what the book actually
+// prints.
+//
+// KEYED ON THE BOOK AS WELL AS THE NAME, which is the part that keeps this
+// honest: re-cite one of these rows to a DIFFERENT book and it drops out of
+// this list and is flagged again. An entry excuses one row's claim on one
+// book, not the row forever.
+//
+// All four verified 2026-09-21 against the cached page text.
+const CLEARED_CITATIONS = [
+  { table: 'spells', name: 'Water: Summon Sharks/Whales', book: 'Rifts Book of Magic',
+    printed: 'Summon Sharks or Whales (50) — p.87. The book writes "or" where the catalog writes "/".' },
+  { table: 'creatures', name: "Monster Naut'Yll", book: 'Rifts World Book 7: Underseas',
+    printed: 'Monster Naut’YIl — p.45 and p.146. Curly apostrophe, and the OCR reads the second "l" as a capital I.' },
+  { table: 'morphus_characteristics', name: 'Full Horse/Bovine/Deer Form', book: 'Nightbane RPG',
+    printed: 'Full Horse/BovinelDeer Form — p.98. The OCR read the SECOND slash as an "l"; the first survived.' },
+  { table: 'morphus_characteristics', name: 'Half-Man, Half-Animal/Were-Animal/Minotaur', book: 'Nightbane RPG',
+    printed: 'Half-Man, Half-Animal/Were-AnimallMinotaur: — the same slash-as-l, in the same book.' },
+];
+
 let citationChecked = 0;
+let citationCleared = 0;
 let citationSkipped = false;
 const citationSuspects = [];
 for (const slug of Object.keys(bookRegistry)) {
@@ -313,12 +346,25 @@ for (const slug of Object.keys(bookRegistry)) {
   // an index, a skill list - so a name absent from the text means something.
   citationChecked += rows.length;
   for (const r of rows.filter((x) => !found(x.name))) {
+    const cleared = CLEARED_CITATIONS.find(
+      (c) => c.table === r.table && c.name === r.name && c.book === book);
+    if (cleared) { citationCleared++; continue; }
     citationSuspects.push(`${r.table}.${r.name} claims "${book}" — name absent from its text`);
   }
 }
 if (citationChecked) {
   console.log(`citations:    ${citationChecked} row(s) checked, `
-    + `${citationSuspects.length} worth a look`);
+    + `${citationSuspects.length} worth a look`
+    + (citationCleared ? `, ${citationCleared} cleared by hand (see CLEARED_CITATIONS)` : ''));
+  // Said out loud rather than left implicit: a silent allowlist is how a
+  // check stops meaning anything. If this number drifts from the length of
+  // the list, an entry has stopped matching a row - which is either a rename
+  // or a re-citation, and both are worth knowing about.
+  if (citationCleared && citationCleared !== CLEARED_CITATIONS.length) {
+    console.log(`              ! ${CLEARED_CITATIONS.length - citationCleared} cleared entr`
+      + `${CLEARED_CITATIONS.length - citationCleared === 1 ? 'y' : 'ies'} matched nothing this run `
+      + '— a row was renamed, re-cited, or is no longer missing. Re-check that entry.');
+  }
   // ADVISORY, deliberately not drift. Whether a citation is right is a
   // different question from whether the repo can rebuild the database, and
   // wiring it into the exit code would fail every run over a name the book
