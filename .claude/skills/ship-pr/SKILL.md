@@ -5,6 +5,16 @@ description: Take a change in this repo from branch to deployed, the way this re
 
 # Shipping a change
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`. Four
+> runnable lines are pinned too: that it merges with `--delete-branch`, that
+> it records the one-time `git config remote.origin.prune true`, and that it
+> no longer teaches the manual prune.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 **Merging to `main` IS the deploy.** Cloudflare Pages publishes the repo root on
 every merge. There is no build step. Whatever is on `main` is live within a
 minute or two.

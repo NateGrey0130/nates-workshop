@@ -5,6 +5,13 @@ description: The shell traps on this Windows machine that corrupt a file, a comm
 
 # Shell traps on this machine
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 Every one of these **succeeds**. Nothing exits non-zero, nothing warns, and in
 three cases the obvious check reports clean. They are collected here because
 each cost a session or reached production.

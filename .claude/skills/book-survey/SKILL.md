@@ -5,6 +5,15 @@ description: Survey a whole sourcebook PDF before importing any of it, so the im
 
 # Surveying a book before importing it
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+> `book-registry.mjs` also pins that phase 3 shows the `--remote` form of
+> `scripts/catalog-diff.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 A 360-page sourcebook does not fit in one model call and should not be fed to
 one. **Read the book's structure offline first, decide what is worth importing,
 then extract only that.** Every step below exists because skipping it produced a

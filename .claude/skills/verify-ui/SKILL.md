@@ -5,6 +5,13 @@ description: Prove a visual change in this repo actually looks right, on this ma
 
 # Verifying a change you can see
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 **A measured DOM number is not a substitute for looking at the page**, and every
 rule below is a case where the numbers said one thing and the render said
 another. `ship-pr` step 4 says *"changed anything visible: drive it in a

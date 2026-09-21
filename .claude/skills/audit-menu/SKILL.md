@@ -5,6 +5,15 @@ description: Run this repo's audit-menu protocol — how a finding is numbered, 
 
 # The audit-menu protocol
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+> `smoke.mjs` also pins that this file requires correcting every class note
+> citing a finding, and that it points at `scripts/audit-citations.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 A **findings menu** is a dated record of an investigation, carrying numbered
 findings taken one at a time, on a separate word, one PR each. Several files
 here are one. Nothing enforces any of it — it lived only in the files, and was

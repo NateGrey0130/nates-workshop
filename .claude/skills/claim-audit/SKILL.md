@@ -5,6 +5,13 @@ description: Check what this repo says about itself against what it does — REA
 
 # Auditing what the repo claims about itself
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 This repo explains itself unusually well, and that is the hazard. A README and
 thirteen topic files under `docs/`, comments that argue their case, and class
 markdown carrying `extraction_notes` about what the app cannot do — all of it
