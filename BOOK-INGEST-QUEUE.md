@@ -17,7 +17,7 @@ the human view of the same thing plus the import status.
 | `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
 | `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
 | `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **imported** |
-| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | **surveyed** |
+| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | **imported** |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
 
@@ -30,8 +30,26 @@ shipping in batches across many sessions. **That state is empty again as of
 said it was, from the day `underseas` entered it. The
 survey at `apps/character-creator/docs/surveys/phase-world.md` remains the
 record of what went in and what was deliberately left; its ledger is the
-authority. The other six books are cache-only: the kickoff session caches and
-registers, by design.
+authority.
+
+**ALL SEVEN ARE IMPORTED, as of 2026-09-21.** This paragraph used to end "the
+other six books are cache-only: the kickoff session caches and registers, by
+design", which was true the day it was written and had not been true for weeks.
+
+**`mystic-russia`'s row said `surveyed` until 2026-09-21 and had been wrong
+since 2026-09-13**, when its own survey recorded **FULLY IMPORTED (PRs
+#983-#1019)**. The two files sat one directory apart disagreeing for eight
+days. Measured against production on the day this was corrected: **23 classes**
+carrying `source_book: Rifts World Book 18`, plus **146 spells, 53 gear, 26
+creatures and 7 skills** citing that book. Nothing was missing; only this table
+said otherwise.
+
+**The lesson is the direction of the check.** A survey is written at the end of
+an import and is the thing a session updates last; this table is the thing a
+session reads FIRST. Nothing walked from one to the other, so the file with the
+authority was right and the file with the traffic was wrong. When they
+disagree, the survey wins - and this row is the reason to look rather than to
+assume they agree.
 
 ### `phase-world` progress, 2026-08-31
 
