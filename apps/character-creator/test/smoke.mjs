@@ -219,6 +219,91 @@ section('Browser scripts parse');
 // These are behavioural rather than textual: the two functions are pure now,
 // so the test runs them, decodes the result the way a browser would, and
 // requires the value that comes back out to be the value that went in.
+// ---------- Composing a row's source_book ----------
+// `scripts/source-book-lib.mjs` has one export and its own header says "its
+// only reader is the smoke test". THAT WAS NOT TRUE: this file imported
+// `composeSourceBook` and never called it, so the module was referenced but
+// never exercised, and the import was the only thing keeping the export off
+// the 'no export is named nowhere else' check.
+//
+// Dropping the import instead would have been the tidy-looking move and the
+// wrong one. The file is deliberately retained - it was moved out of
+// `functions/_lib/` because Pages' esbuild cannot parse the `with { type:
+// 'json' }` attribute Node requires, which broke every production deploy for
+// two days, and its header ends "Keep it out. A route that needs this again
+// should import it from here." Deleting it would throw that away; propping it
+// up with an unused import would keep lying about who reads it. So it gets a
+// reader.
+//
+// The cases are the ones its doc comment argues for, which had no test behind
+// them until now.
+section('Composing a row\'s source_book');
+{
+  check('no session book at all is null, not an empty string',
+    composeSourceBook('', 'p. 12') === null && composeSourceBook(null, null) === null,
+    JSON.stringify([composeSourceBook('', 'p. 12'), composeSourceBook(null, null)]));
+
+  // A not_books marker says where a value came from INSTEAD of a book, so
+  // composing pages onto it would claim a printing that does not exist.
+  const marker = 'Estimate - no published price found';
+  check('a not_books marker comes back verbatim, pages and all ignored',
+    composeSourceBook(marker, 'p. 88') === marker,
+    composeSourceBook(marker, 'p. 88'));
+
+  // Resolved THROUGH books.json rather than taken verbatim: the alias is the
+  // point, since a session is labelled by hand.
+  const oneRow = composeSourceBook('Rifts Ultimate Edition', 'p. 180');
+  check('a registry book resolves to its canonical title with a single page',
+    typeof oneRow === 'string' && / p\.180$/.test(oneRow), oneRow);
+
+  const rangeRow = composeSourceBook('Rifts Ultimate Edition', 'p. 180-190');
+  check('and a range renders as p.first-last',
+    typeof rangeRow === 'string' && / p\.180-190$/.test(rangeRow), rangeRow);
+
+  // THE POINT OF THE FUNCTION, and the one assertion here that had to be
+  // rewritten before it meant anything. It first read the canonical title back
+  // out of a canonical title, which passes whether or not the registry is ever
+  // consulted. An ALIAS cannot: `Wormwood` only becomes `Rifts Dimension Book
+  // 1: Wormwood` by going through books.json.
+  const viaAlias = composeSourceBook('Wormwood', 'p. 12');
+  check('an alias resolves through books.json to the canonical title',
+    viaAlias === 'Rifts Dimension Book 1: Wormwood p.12', viaAlias);
+
+  const viaAmpersand = composeSourceBook('Triax & The NGR', 'p. 12');
+  check('and an alias the registry spells differently resolves too',
+    viaAmpersand === 'Rifts World Book 5: Triax and the NGR p.12', viaAmpersand);
+
+  check('a single page and a range agree on the title they compose onto',
+    rangeRow.replace(/ p\..*$/, '') === oneRow.replace(/ p\..*$/, ''),
+    `${oneRow} / ${rangeRow}`);
+
+  // One session covers many page ranges, so the ROW's label wins - but a
+  // range-less row still lands on the session's own pages rather than losing
+  // them.
+  check('a row with no pages falls back to the range on the session label',
+    / p\.180-190$/.test(composeSourceBook('Rifts Ultimate Edition p.180-190', null)),
+    composeSourceBook('Rifts Ultimate Edition p.180-190', null));
+
+  check('and the row\'s own label beats the session\'s',
+    / p\.7$/.test(composeSourceBook('Rifts Ultimate Edition p.180-190', 'p. 7')),
+    composeSourceBook('Rifts Ultimate Edition p.180-190', 'p. 7'));
+
+  check('a book with no pages anywhere is the bare title',
+    !/ p\./.test(composeSourceBook('Rifts Ultimate Edition', null)),
+    composeSourceBook('Rifts Ultimate Edition', null));
+
+  // A backwards range is stored the way it reads, not the way it was typed.
+  check('a reversed range is normalised rather than echoed',
+    / p\.10-20$/.test(composeSourceBook('Rifts Ultimate Edition', 'p. 20-10')),
+    composeSourceBook('Rifts Ultimate Edition', 'p. 20-10'));
+
+  // Unknown books keep their own words, minus a page range that would
+  // otherwise be written twice.
+  const unknown = composeSourceBook('Some Book Nobody Registered p.5', 'p. 5');
+  check('an unregistered book keeps its text and its range is not doubled',
+    unknown === 'Some Book Nobody Registered p.5', unknown);
+}
+
 section('Escaping a value into markup');
 {
   const ui = readFileSync(join(repoRoot, 'shared', 'js', 'ui.js'), 'utf8');
@@ -641,7 +726,6 @@ import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNa
 import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
 import { CHARACTER_JSON_COLUMNS } from '../../../functions/api/character-creator/_lib/character-json.js';
-import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
 import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor,
          xpTableFor, thresholdFor, spellLevelsForGrant,
          psionicCategoriesForGrant, spellNamesForGrant,
@@ -654,31 +738,20 @@ import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicG
 import { toMatchQuery } from '../../../functions/api/character-creator/campaigns/[id]/search.js';
 import { powerGrantsFor, remainingPowerGrants, resolvePowerPicks, loadPowerDescriptions } from '../../../functions/api/character-creator/_lib/power-picks.js';
 import { resolvePicks } from '../../../functions/api/character-creator/_lib/skill-picks.js';
-import { aliasCounts, buildIndex, diffCatalog, loose, match, nearest, normalise,
-         stem, variants, vocabularyWarnings } from '../../../scripts/catalog-match-lib.mjs';
-import { dice, isMegaDamage, isVariableCost, money, weightLbs }
-  from '../../../scripts/ocr-fields-lib.mjs';
+import { composeSourceBook } from '../../../scripts/source-book-lib.mjs';
+import { match, nearest, normalise, stem, variants } from '../../../scripts/catalog-match-lib.mjs';
+import { dice, money } from '../../../scripts/ocr-fields-lib.mjs';
 import { parseMentions } from '../../../functions/api/character-creator/_lib/mentions.js';
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
-import {
-  crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, unclosedFlowLines,
-  parseSourcePages, resolveBookSlug, registryBookSlug, normalizeBookTitle, detectPageOffset,
-  detectPageOffsetRegions, offsetForPrintedPage, isNotABook,
-  freeTextFields, fieldTokens,
-  fieldSourceSpans, bestMatchingPages,
-} from '../../../scripts/class-check-lib.mjs';
-import { bookSpellings, bookTitles, cacheCoverage, loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
-import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings }
-  from '../../../scripts/source-coverage-lib.mjs';
+import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
 import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
-import { collapseWhitespace, statements, stripComments, trailingSelects, expressionDepth, D1_MAX_EXPR_DEPTH } from '../../../scripts/sql-statements.mjs';
+import { statements, expressionDepth, D1_MAX_EXPR_DEPTH } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
-import { evalDice, fixedFormulaValue, rollAttribute, rollPoolFormula, rollQuantity,
-         poolFormulaBounds, diceBounds, attributeCeiling,
-         isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
+import { evalDice, rollAttribute, rollPoolFormula, rollQuantity, poolFormulaBounds,
+         diceBounds, attributeCeiling, isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos, validateTotem, mosList } from '../js/parser.js';
 import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from '../js/psionic-costs.js';
@@ -686,13 +759,16 @@ import { skillConditionalBonuses } from '../js/parser.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
-import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts, abilityGroupIndexFor, abilityOccOptions, abilityOptions, applyAbilities, applyVariant, bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel, combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
+import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
+         abilityGroupIndexFor, abilityOccOptions, applyAbilities, applyVariant,
+         bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
+         combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml,
+         relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { appDir, repoRoot, check, section, summary, appPath, siblingAppDirs } from './harness.mjs';
 import { run as environmentChecks } from './checks/environment.mjs';
 import { run as catalogDataChecks } from './checks/catalog-data.mjs';
