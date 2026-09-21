@@ -54,6 +54,57 @@ function check(label, cond, detail = '') {
   }
 }
 
+// ── how much of the suite to run ────────────────────────────────────────────
+// `--upto <stage>`, for iterating between edits. The smoke test grew a
+// `--section` flag first (EFFICIENCY-AUDIT F2) and the obvious move was to copy
+// it here. IT WOULD HAVE BEEN WRONG, and the reason is the only thing in this
+// block worth reading.
+//
+// THIS SUITE IS A PIPELINE, NOT A SET OF SECTIONS. Every stage inherits the
+// character state the stage before it built. Step [5/7] posts gear to
+// `/characters/<id>/items`; step [7/7] then fetches that character and asserts
+// `an unenchanted inventory row decodes to an empty array` against
+// `items[0]`. Skip [5/7] and that row does not exist, so the check does not
+// test enchantment decoding any more - it tests an empty inventory, and reports
+// on a state no real run ever has.
+//
+// So a flag that skips a MIDDLE stage can make a later check assert against
+// state that never existed. A flag that stops EARLY cannot: every check that
+// runs, runs with exactly the state a full run would have given it. Truncation
+// preserves the semantics; omission does not. That is why this is `--upto` and
+// why there is deliberately no way to ask for [7/7] without [5/7].
+//
+//   --upto setup   steps 1-4 only          ~183s
+//   --upto play    steps 1-6, skips [7/7]  ~249s
+//   (no flag)      everything              ~325s
+//
+// STEPS 1-4 ALWAYS RUN. They build the database, boot the server and create the
+// campaign and character every later check reads, and they were 183 of this
+// suite's 325 seconds measured on 2026-09-21 - step [1/7] alone was 172. The
+// floor for any truncated run is therefore about three minutes, and the most
+// this flag can save is roughly 142 seconds. Worth knowing before reaching for
+// it: it is a smaller win than the smoke test's flag and for a structural
+// reason, not a fixable one.
+//
+// THE MERGE GATE IS THE FLAGLESS RUN, and `regression.yml` passes no flag. A
+// truncated run labels itself PARTIAL for the same reason the smoke test's
+// does: so its output cannot be pasted into a PR as step 4 of `ship-pr`.
+const STAGES = ['setup', 'play', 'data'];   // cumulative, in pipeline order
+let uptoArg = null;
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '--upto' && process.argv[i + 1]) uptoArg = process.argv[++i].trim().toLowerCase();
+}
+if (uptoArg !== null && !STAGES.includes(uptoArg)) {
+  console.error(`unknown --upto ${uptoArg} - known stages, in order: ${STAGES.join(', ')}`);
+  process.exit(2);
+}
+const uptoIndex = uptoArg === null ? STAGES.length - 1 : STAGES.indexOf(uptoArg);
+const partialRun = uptoIndex < STAGES.length - 1;
+/** Does this run reach <stage>? No flag means all of them. */
+function runs(stage) {
+  return STAGES.indexOf(stage) <= uptoIndex;
+}
+
 // ── the scratch database ────────────────────────────────────────────────────
 const state = mkdtempSync(join(tmpdir(), 'cc-regression-'));
 let server = null;
@@ -834,6 +885,13 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
 }
 
 // ── inventory ───────────────────────────────────────────────────────────────
+// THE BODY OF THIS BLOCK IS NOT RE-INDENTED, on purpose. Indenting steps [5/7]
+// and [6/7] to match the brace would have turned a two-line change into a
+// 1,750-line diff in which the one line that matters is invisible, and this
+// suite is a required check - it is reviewed by people who need to see what
+// moved. The brace is a scope, not a nesting level. Top-level `await` is still
+// legal in here: a block at module top level is still module top level.
+if (runs('play')) {
 console.log('\n[5/7] Inventory, XP, level-up, picks, play');
 // By SLUG, not id — the catalog exposes ids but this endpoint keys on the slug,
 // because class markdown cites gear that way and one spelling is enough.
@@ -2584,6 +2642,23 @@ check('the audit surfaces the out-of-range pool as a warning',
 check('and the over-ceiling attribute',
   (audit.body.by_rule?.attribute_above_ceiling || 0) >= 1, JSON.stringify(audit.body.by_rule));
 
+}  // end of the `play` block opened before [5/7]
+
+// Step [7/7] is SIXTEEN sibling `{ ... }` blocks, not one - each a scope so
+// two groups can both call a local `classes` without colliding. That matters
+// here for one reason: an `if` wrapped around the first of them guards ONLY
+// the first, and the other fifteen keep running. That is exactly the bug this
+// flag shipped with for an hour, and the flagless run cannot see it - every
+// block runs either way, so all 666 checks pass and the suite looks fine. It
+// took running `--upto setup` and reading a FAIL to find it. The `if` below
+// therefore opens here and closes after the LAST block, near the summary.
+//
+// It is gated LAST and only last. This step reads the character that [5/7]
+// filled - see the `--upto` block at the top for the check that would quietly
+// change meaning if [5/7] were skipped under it - so `data` is reachable only
+// when `play` has run. `runs()` is a prefix test, which is what makes that
+// true by construction rather than by anyone remembering it.
+if (runs('data')) {
 console.log('\n' + '[7/7] Checks that only a database can make');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
@@ -4922,10 +4997,21 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and the pairs that only share a NAME are not linked',
     wronglyLinked.length === 0, wronglyLinked.join(', '));
 }
+}  // end of the `data` block opened before [7/7] - closes ALL sixteen of the
+   // sibling blocks above, not just the last one. See the note at the open.
 
 
+// PARTIAL is the whole point of the label: `ship-pr` step 4 says the merge gate
+// is the flagless run, and this is what stops a truncated run's output being
+// pasted in as if it were one. The stages that did NOT run are named rather
+// than left for the reader to work out from the stage that did.
+const partialTag = partialRun ? 'PARTIAL ' : '';
+const partialWhy = partialRun
+  ? ` — --upto ${STAGES[uptoIndex]}, so ${STAGES.slice(uptoIndex + 1).join(' and ')} did not run;`
+    + ' the merge gate is the flagless run'
+  : '';
 console.log('\n' + (failures === 0
-  ? `REGRESSION PASSED (${checks} checks)`
-  : `REGRESSION FAILED (${failures} of ${checks} checks)`));
+  ? `${partialTag}REGRESSION PASSED (${checks} checks)${partialWhy}`
+  : `${partialTag}REGRESSION FAILED (${failures} of ${checks} checks)${partialWhy}`));
 cleanup();
 process.exit(failures === 0 ? 0 : 1);
