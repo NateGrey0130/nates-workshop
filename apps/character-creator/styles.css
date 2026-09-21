@@ -96,6 +96,26 @@
   --text-primary:     #1A1614;
   --text-secondary:   #4A433F;
   --text-muted:       #6E6560;
+  /* --board IS THE SAME ORANGE AS --accent AND IS NOT THE SAME TOKEN, which is
+     the distinction the mockups turned on and the first draft of this scheme
+     missed. In the End Label world orange is a MATERIAL - the band behind a
+     name, the rail along an edge - and the thing you PRESS is ink. Shipping
+     one token for both would have put the control signal onto chrome that does
+     nothing, which is the failure Ley Verdigris exists to fix and which this
+     file's own hue table would then have stopped excusing.
+
+     They hold the same value today on purpose: one orange, two jobs, named
+     apart so the jobs can move independently. If board ever wants to be
+     warmer or heavier than the signal can afford, this is the seam it
+     separates along.
+
+     WHAT EACH ONE MARKS: --board is where you ARE (the identity band, the
+     chip on the current block, a selected edge). --accent stays what this
+     file has said twice it is - reserved for what you can act on - and a
+     primary button is filled with INK rather than with either of them, so a
+     press target is a shape rather than a hue. Same move as the mark on a
+     power row: this design does not carry meaning in colour. */
+  --board:            #A8401A;
   --accent:           #A8401A;
   --accent-link:      #8E3412;
   --accent-glow:      rgba(168, 64, 26, 0.14);
@@ -251,7 +271,37 @@ button { font-family: var(--font-display); font-stretch: 75%; cursor: pointer; }
 .btn-danger { background: transparent; border-color: var(--border); color: var(--danger); }
 .btn-danger:hover { background: var(--bg-tertiary); border-color: var(--danger); }
 
-/* .btn-primary is shared's now. It used to be repainted here in
+/* ── A PRESS TARGET IS A SHAPE, NOT A HUE (Board & Tissue) ────────────────
+   shared/styles.css fills .btn-primary with --accent, which is correct for
+   the three apps still on Ley Verdigris and wrong here: with --board owning
+   the identity band, an orange button would be the same colour as the chrome
+   above it, and "this is a control" would be carried by nothing but position.
+
+   Ink instead, exactly as the mockups' Cast buttons. The affordance moves to
+   fill and weight, which is the same move the mark on a power row makes and
+   the same one that lets this palette run a warm accent 29 degrees from
+   --warning: nothing here means anything by hue alone.
+
+   --accent is untouched and still means what this file says twice it means.
+   It is simply not what a primary button is PAINTED with any more; it is what
+   a selected edge and a current chip are.
+
+   All four shared selectors are restated rather than just the base, because
+   shared pins its own disabled and hover states back to --accent by name -
+   .btn:hover at (0,2,0) outranks .btn-primary at (0,1,0), which is the trap
+   its comment above those rules describes. Matching their specificity and
+   arriving later is what wins; this file loads after shared on all five RPG
+   pages. Ink on white measures 17.97. */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-card);
+}
+
+/* The neutral .btn is shared's now. It used to be repainted here in
    --accent-strong because white on the old violet --accent was 3.11:1, and
    the disabled-hover pair had to be repeated because shared pins that back to
    --accent by name. Neither is needed: shared paints the primary button in
@@ -986,14 +1036,45 @@ body.play-mode .vital.conflict .val > input,
 
    Neither uppercase nor tracked: a name is a name. The tags beside it set
    their own 10px, which is why the <h2> wraps the title alone. */
-.box.identity > .box-title { padding: 10px 12px; }
+/* ── THE BOARD BAND ───────────────────────────────────────────────────────
+   The one place this design lets colour own a REGION rather than an edge, and
+   the piece the world is unreadable without: with the orange reduced to a 13px
+   chip and a wordmark, the sheet reads as a light neutral page with warm trim
+   rather than as board and tissue. The identity block is where it goes because
+   the band is saying whose sheet this is, which is the one thing on the page
+   that is neither a number nor a control.
+
+   --board, NOT --accent, even though they hold the same value: this band is
+   material and is not pressable, and the token block above carries why that
+   distinction is load-bearing rather than pedantic.
+
+   THE LABEL IS #FFFFFF AND THAT IS A MEASURED CHOICE, not a default. White on
+   --board is 6.15; --bg-primary, which every other control on this palette
+   uses as its knocked-out foreground, is 5.10 - both clear 4.5, and the
+   brighter one is right here because this is the only knocked-out text on the
+   page that is 26px rather than 13px, so it is carrying the page's subject
+   rather than a control's label.
+
+   The tags that sit beside the name set their own 10px and keep their own
+   colours, so they are given a light border to survive the new ground rather
+   than being repainted. */
+.box.identity > .box-title {
+  padding: 12px 14px;
+  background: var(--board);
+  border-bottom-color: var(--board);
+}
 .box.identity > .box-title > h2 {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
   line-height: 1.1;
-  color: var(--text-primary);
+  color: #FFFFFF;
+}
+.box.identity > .box-title .tag {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #FFFFFF;
+  background: transparent;
 }
 /* Scrolls the CONTENT, never the box. A table wider than its column - the
    equipment table is 367px inside 332px at 390px wide - was cut by .box's own

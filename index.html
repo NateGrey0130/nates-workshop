@@ -107,9 +107,28 @@ body {
   align-items: center;
   padding: 60px 24px;
 }
+/* THE BOARD BAND, the hub's half of it. The rooms behind this door got one on
+   the identity block; without the matching band the front door was a warm
+   off-white page with warm trim, which is the shape a design detector calls
+   the default tasteful surface and is right to. The ground did not need
+   changing - it needed something to sit on it.
+
+   It spans the grid's own 960px rather than bleeding to the viewport edge: a
+   full-bleed band wants 100vw, 100vw includes the scrollbar, and the
+   horizontal overflow that buys is not worth a few pixels of ink. The band is
+   the width of the wall of boxes beneath it, which is what the mockup showed.
+
+   Left-aligned rather than centred. A band is the label on the end of a box;
+   centring the wordmark inside it makes it a banner, which is a different
+   object. */
 .hero {
-  text-align: center;
-  margin-bottom: 56px;
+  width: 100%;
+  max-width: 960px;
+  box-sizing: border-box;
+  background: var(--accent);
+  padding: 22px 26px 20px;
+  text-align: left;
+  margin-bottom: 40px;
 }
 .hero h1 {
   font-family: 'Archivo', system-ui, sans-serif;
@@ -119,12 +138,21 @@ body {
   letter-spacing: -1px;
   /* Solid, not a gradient clipped to the text - the same change .logo took
      in phase 1, for the same reason: a gradient on a wordmark reads as a
-     an effect rather than as a colour, and this scheme does not do effects. */
-  color: var(--accent);
-  margin-bottom: 8px;
+     an effect rather than as a colour, and this scheme does not do effects.
+     Knocked out of the band now rather than sitting on the page: white on
+     --accent measures 6.15, and the band itself is 5.10 against the ground. */
+  color: #FFFFFF;
+  margin-bottom: 6px;
 }
+/* NOT white at an opacity, and the honest reason is thinner than "it fails":
+   white at 0.8 composites to #EED9D1 on this fill and measures 4.54, which
+   CLEARS 4.5 by four hundredths. That is a rounding error standing between a
+   subtitle and the floor, and it moves the moment the fill behind it moves -
+   whereas a solid tint is a value someone can measure without compositing it
+   first. #FFEDE6 measures 5.42. The .card-soon note below refuses opacity on a
+   stronger version of the same argument. */
 .hero p {
-  color: var(--text-sub);
+  color: #FFEDE6;
   font-size: 16px;
   font-weight: 400;
 }
