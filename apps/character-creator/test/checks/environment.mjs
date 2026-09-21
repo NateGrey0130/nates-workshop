@@ -50,6 +50,44 @@ function wrangler(args) {
   return spawnSync('npx', ['wrangler', ...args, ...persist], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000, maxBuffer: 1e9 });
 }
 
+// ── how long wrangler takes to START, before it does anything ──────────────
+// `npx wrangler` resolves whatever is current - there is no package.json here
+// and tests.yml says so in as many words: "NOT A VERSION PIN". That is a
+// deliberate trade and this check is the other half of it.
+//
+// WHAT IT IS FOR, measured rather than imagined. On 2026-09-21 the globally
+// installed wrangler was 4.114.0, which took **11.5 seconds to start** against
+// 4.127.1's 1.2 - the same flags, the same machine, a no-op `--version`. The
+// suite spawns wrangler ~25 times in regression alone, so that version cost
+// roughly 500 seconds per full local gate. Nothing reported it. It surfaced
+// only because somebody timed a command by hand while looking for something
+// else, and the symptom until then was "the tests feel slow".
+//
+// 7000ms is 2.4x what 4.136.0 does here (~2,850ms) and well under the 11,500
+// the bad version did. A cold or busy machine has room; a version that regresses
+// start-up the way 4.114.0 did does not.
+//
+// LOCAL ONLY, and that is not a hedge. A GitHub runner resolves its own
+// wrangler, its timings are nobody's to act on, and a required check that fails
+// on a slow runner would be flaky in the one direction that gets a check
+// deleted. `checks/machine-instructions.mjs` declines off this machine the same
+// way and for the same reason.
+if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS) {
+  check('wrangler start-up is not timed in CI', true,
+    'a runner resolves its own wrangler and its timings are not actionable here');
+} else {
+  const startedAt = Date.now();
+  spawnSync('npx', ['wrangler', '--version'],
+    { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
+  const ms = Date.now() - startedAt;
+  check('wrangler starts in under 7s', ms < 7000,
+    `${ms}ms for a no-op --version. 4.114.0 took ~11,500ms here and 4.127.1 ~1,240ms, `
+    + 'so a number in five figures is a bad wrangler rather than a bad machine: '
+    + 'check `npx wrangler --version` and consider `npm i -g --allow-scripts=esbuild,workerd wrangler@latest`. '
+    + 'npm 12 blocks those postinstall scripts by default, and a wrangler whose workerd never '
+    + 'unpacked installs cleanly and then cannot run a --local query at all.');
+}
+
 const apply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);
 check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdout || '').slice(-500));
 
