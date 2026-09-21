@@ -198,6 +198,42 @@ check('every data script is pure ASCII', notAscii.length === 0,
 check('no data script carries a CR', hasCr.length === 0,
   'CRLF in: ' + hasCr.join(', ') + ' — the .gitattributes *.sql rule pins LF');
 
+// ── the z- tier is a unary counter, and this is its ceiling ─────────────────
+// A data script that must run after everything else takes a `z` prefix, and one
+// that must run after THAT takes another. `docs/operations.md` documents the
+// tiers a row each and they reach SEVENTEEN z's. The mechanism works; what it
+// does not have is an end, and every new last-running script costs one more `z`
+// plus one more row of that table.
+//
+// So the counter stops here. Anything that needs to sort after every `z` tier
+// takes `~NNN-` instead: `~` is U+007E and `z` is U+007A, so a `~` prefix sorts
+// after any number of z's and gives a NUMERIC counter with room left, which is
+// what the z's were standing in for.
+//
+// WHY THAT IS SAFE HERE, checked rather than assumed: all four things that
+// order these files use JavaScript's own `.sort()` — `scripts/rebuild-local.mjs`,
+// `scripts/repo-vs-live.mjs`, `scripts/d1-apply.mjs` (which re-globs a directory
+// itself rather than trusting the shell) and `test/regression.mjs` step [1/7].
+// That is UTF-16 code-unit order and it does not read a locale, so `~` after `z`
+// holds on every machine and in CI. A shell glob WOULD be locale-sensitive; none
+// of these depend on one.
+const zDepth = (f) => (f.match(/^z+/) || [''])[0].length;
+const overDeep = dataScripts.filter((f) => zDepth(f) > 17);
+check('no data script carries an eighteenth z', overDeep.length === 0,
+  overDeep.join(', ') + ' — the z- counter stops at seventeen. A file that has to '
+  + 'sort after every z tier takes `~NNN-` instead; see the last row of the '
+  + 'ordering table in docs/operations.md');
+
+// Not a vacuous check: there are no `~` files yet, so this pins the MECHANISM
+// the paragraph above and operations.md both promise, using the same `.sort()`
+// every consumer calls. If it ever stops being true, the documentation is
+// wrong before any file depends on it.
+const tierProbe = ['add-a-normal-script.sql', 'zz-a-correction.sql',
+  'zzzzzzzzzzzzzzzzz-seventeen-z.sql', '~001-after-every-z.sql'].sort();
+check('a ~NNN- prefix sorts after every z- tier',
+  tierProbe[tierProbe.length - 1] === '~001-after-every-z.sql',
+  'sorted order was ' + JSON.stringify(tierProbe));
+
 // The same two rules across EVERY .sql in the repo, not just the data scripts.
 // db/seed-catalogs.sql carried six em-dashes inside class markdown and is the
 // FIRST file a new environment applies, so a mangled character there would be

@@ -1072,12 +1072,21 @@ named outright.
 
 The `--remote` half has always been true and protects production. The `--local`
 half is newer and protects the RUN: `seed-dev.sql`'s inserts are unguarded, it
-sorts 264th of 295, and the gear row it inserts has already been created by an
-earlier script by the time a glob reaches it — so it fails on the FIRST pass
-from an empty database, not on a second. `d1-apply.mjs` stops at the first
-failure, so that one file used to strand the **31** that sort after it:
-`untag-cross-system.sql` and every `zz-`, `zzz-` and `zzzz-` correction in the
-repo. See [REBUILD-AUDIT.md](REBUILD-AUDIT.md) F1.
+sorts well down the glob, and the gear row it inserts has already been created
+by an earlier script by the time a glob reaches it — so it fails on the FIRST
+pass from an empty database, not on a second. `d1-apply.mjs` stops at the first
+failure, so that one file used to strand **everything that sorts after it**:
+`shifter-spells-per-level.sql`, `untag-cross-system.sql` and every `z`-prefixed
+correction in the repo, across all seventeen tiers. See
+[REBUILD-AUDIT.md](REBUILD-AUDIT.md) F1.
+
+**No count is quoted here on purpose.** This sentence used to say *"sorts 264th
+of 295"* and *"the **31** that sort after it"*; on 2026-09-21 it was 599th of
+759 with **160** after it, and both numbers had been wrong for long enough that
+nobody could say when they stopped being right. Nothing pins them — they are
+prose, not one of the counts `test/regression.mjs` reads out of this file — so
+they rotted silently. The shape of the failure is the durable part and the
+tally is not: it moves with every import.
 
 Smoke test (parser + schema):
 
