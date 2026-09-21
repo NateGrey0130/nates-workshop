@@ -78,16 +78,24 @@
    --text-muted is #6E6560 rather than the #7A706A the mockups used: the muted
    tier is the one that has failed here three times now, at 3.1:1 under Rust &
    Ash's first draft, again with the blue scheme's #5a6178, and again at 3.98:1
-   when this scheme was first drafted against a light ground. 4.72 measured
+   when this scheme was first drafted against a light ground. 4.69 measured
    against this background, which is the whole palette's floor case.
 
-   The smoke test compares these ten values against shared/styles.css by ROLE,
+   THE GROUND IS COOL AND THE BAND IS WARM, since 2026-09-21. It was a warm
+   off-white, which put the page in the band's own hue family and is the value
+   a design detector flags as the default tasteful surface — measured across
+   candidates, that rule fires on warm hues at high lightness and not on cool
+   ones. Board is the warm half of this scheme and tissue is not, so the
+   neutrals went to paper and the orange got its job back. The long version is
+   in apps/character-creator/styles.css.
+
+   The smoke test compares these ten values against the RPG override by ROLE,
    because a comment telling this file to keep in step did not stop it staying
    blue and violet for months after every room behind it was retoned. */
 :root {
-  --bg: #EFE9E2;
+  --bg: #E7EAE6;
   --bg-card: #FFFFFF;
-  --border: #DED6CB;
+  --border: #D6DBD5;
   --text: #1A1614;
   --text-sub: #4A433F;
   --text-muted: #6E6560;

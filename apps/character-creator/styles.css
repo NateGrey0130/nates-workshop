@@ -55,13 +55,9 @@
    change that starts leaning on hue alone to tell a warning from a control is
    the thing this table exists to stop.
 
-   Contrast, computed for these values. On --bg-primary, the darkest ground
-   and therefore the tightest for every dark ink: --text-primary 14.91,
-   --text-secondary 8.04, --text-muted 4.72, --accent 5.10, --accent-link
-   6.57, --accent-secondary 4.91, --success 4.91, --warning 5.19, --danger
-   6.60. The floor is 4.5 and NOTHING is under it. Every ratio improves on
-   --bg-secondary and --bg-card, which are lighter. --text-muted IS THE FLOOR
-   CASE and is the first pair to re-measure if --bg-primary is ever lightened.
+   Contrast is stated once, in the ladder block above, and re-measured there
+   whenever a ground moves. --text-muted IS THE FLOOR CASE at 4.69 and is the
+   first pair to re-measure if --bg-primary is ever darkened.
 
    WHITE ON THE BOARD BAND is the ratio that decided --accent's value, and the
    obvious value fails it. The band carries a 12px mono identity line in
@@ -71,8 +67,8 @@
 
    --border-control, --border and --border-strong keep the roles F55 gave them
    and the smoke suite recomputes all three against THIS block: a control edge
-   owes 3:1 and clears it at 3.78 / 4.36 / 4.01, while --border (1.19 / 1.38 /
-   1.27) and --border-strong (1.50 / 1.74 / 1.60) stay deliberately below it.
+   owes 3:1 and clears it at 3.67 / 4.26 / 3.96, while --border (1.16 / 1.34 /
+   1.25) and --border-strong (1.42 / 1.65 / 1.53) stay deliberately below it.
    What changed is what --border-strong is FOR. A lit top edge is a
    dark-scheme idiom — on white it reads as a seam, not as light — so depth
    here is the 13px colour chip down a block's left edge and the live block
@@ -83,15 +79,39 @@
    radius tokens stay alive rather than forcing a find-and-replace across the
    nine rules that name --radius-lg. --shadow is none, as under every scheme
    here, and index.html is still asserted to contain no box-shadow at all. */
+/* THE TISSUE IS COOL AND ONLY THE BOARD IS WARM, corrected 2026-09-21 from a
+   ladder where both were warm. The first version made every neutral a warm
+   off-white, which put the whole page in the accent's own hue family and left
+   the board bands sitting on a ground already half their colour.
+
+   The design detector called the page ground the default tasteful cream, and
+   it was right on the evidence: probing it across candidate values, the rule
+   fires on a WARM hue at high lightness — hue 32, 40, 47 and 60 all flagged,
+   84 and 105 did not, and neither did pure white. So the finding is not "beige
+   is banned", it is "a warm off-white page is what gets reached for", and this
+   page was reaching.
+
+   The fix goes with the world rather than around it. This scheme is called
+   Board AND Tissue and only one half of that is warm: board is kraft, tissue
+   is not. Making the neutrals cool paper gives the warm its job back — the
+   orange now lands on something that is not already orange, and reads harder
+   for it. Warm ink is kept on cool paper deliberately, which is what printing
+   on stock actually looks like.
+
+   Re-measured for this ladder, all four grounds: --text-muted 4.69 / 5.43 /
+   5.05 / 5.69 is the floor case; --accent 5.07, --accent-secondary and
+   --success 4.87, --warning 5.15, --danger 6.56, --accent-link 6.53,
+   --text-secondary 7.99, --text-primary 14.81. Floor is 4.5 and nothing is
+   under it. The board band measures 5.07 against --bg-primary. */
 :root {
-  --bg-primary:       #EFE9E2;
-  --bg-secondary:     #FAFAF8;
-  --bg-tertiary:      #F3F0EB;
+  --bg-primary:       #E7EAE6;
+  --bg-secondary:     #F9FAF9;
+  --bg-tertiary:      #F0F2EF;
   --bg-card:          #FFFFFF;
   --bg-input:         #FFFFFF;
-  --border:           #DED6CB;
-  --border-strong:    #C9BFB2;
-  --border-control:   #7E746D;
+  --border:           #D6DBD5;
+  --border-strong:    #C1C7BF;
+  --border-control:   #737974;
   --border-focus:     var(--accent);
   --text-primary:     #1A1614;
   --text-secondary:   #4A433F;
@@ -1178,7 +1198,35 @@ body.play-mode .vital.conflict .val > input,
   font-family: var(--font-display); font-stretch: 75%; font-size: 9px;
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
 }
-.vital .val { font-size: 44px; font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
+/* ── A LONG POOL SHRINKS RATHER THAN CLIPS ────────────────────────────────
+   44px is the phase-4 decision and stays the size of every pool anyone
+   actually has. What it could not do is hold FOUR digits: measured against the
+   input that clips it, "1888" ran 32px past a 92px card in Martian Mono and
+   17px past it in the condensed face this replaced, so it was broken before
+   the figure face and worse after. A P.P.E. pool passes 1000 on a high-level
+   caster standing on a ley line, and M.D.C. passes it on plenty of robots, so
+   this is reachable rather than theoretical.
+
+   BY DIGIT COUNT, NOT BY CONTAINER. Sizing off the container with cqi units
+   shrinks the number whenever the CARD is narrow, which on a phone is always -
+   it would have taken 44px down to 37px for a two-digit hit point total to buy
+   headroom nothing on screen needed. sheet-layout.js knows the digit count and
+   sets `data-digits`; only 4 and 5 are listed, because a pool over 99,999 is
+   not a thing and an unlisted count keeps the 44px default rather than
+   silently picking a size nobody chose.
+
+   SET ON .vital AND READ BY .val, which is what keeps the print rule winning.
+   A `.vital[data-digits="4"] .val` selector would be (0,3,0) and would outrank
+   the print block's flat `.vital .val { font-size: 17px }` at (0,2,0), quietly
+   printing a 32px number on a 10pt sheet. A custom property on the parent
+   leaves the two font-size declarations at equal specificity, so source order
+   decides and print - which comes later in this file - still wins.
+
+   Both sizes measured at the 92px grid minimum, against the input's own
+   scrollWidth: 32px holds four digits, 26px holds five. */
+.vital .val { font-size: var(--val-size, 44px); font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.vital[data-digits="4"] { --val-size: 32px; }
+.vital[data-digits="5"] { --val-size: 26px; }
 /* The input carries NO font-size of its own. `font: inherit` takes .val's 44px
    whole, so the editable number and the read-only <b> cannot be a different
    size - they are the same declaration rather than two numbers someone has to
