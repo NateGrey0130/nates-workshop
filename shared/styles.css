@@ -68,6 +68,57 @@
   font-display: swap;
 }
 
+/* ─── AND THE RPG SUITE'S PAIR ───
+   FOUR FACES ARE DECLARED HERE AND NO PAGE DOWNLOADS MORE THAN TWO, which is
+   why the paragraph above still says two files and is still true of any one
+   page. Board & Tissue (2026-09-20) retones the five RPG apps and index.html
+   and deliberately leaves FilamentForge, MediaVault and Pick 3 Cut 5 on Ley
+   Verdigris, so two design systems are live at once. A @font-face is a
+   declaration, not a request: the browser fetches a face when a rule that
+   resolves to it paints, so an RPG page pulls Archivo and Martian Mono, and
+   the other three pull Saira and IBM Plex Sans. Nothing pulls all four.
+
+   THE PAIR BELOW IS NOT A FREE CHOICE OF FACE. Board & Tissue was designed
+   against Barlow Condensed over Barlow, and NEITHER is variable:
+   `family=Barlow+Condensed:wght@100..900` is refused the way
+   `Saira+Condensed` is, and so is `Barlow`. That pair would have cost five
+   static files. Archivo carries a WIDTH axis instead — `font-stretch:
+   62% 125%` — so one file gives the condensed label face at 75% and the body
+   face at 100%. Measured against the API on 2026-09-20, not reasoned about.
+
+   75% MEANS THE SAME THING IN BOTH SYSTEMS, which is why this swap moved no
+   rule: Archivo's range contains Saira's, so the 99 rules that set
+   `font-stretch: 75%` and the smoke check that pins that instance are
+   untouched. A rule naming the family without the stretch still silently gets
+   the 100% width, in either system.
+
+   MARTIAN MONO IS A REAL FIGURE FACE, where --font-mono has always been a
+   device stack. The RPG override points --font-mono at it; the other three
+   apps keep the stack, so their eight --font-mono rules render exactly as
+   they did.
+
+   Sizes on disk: archivo 90,104 + martian mono 38,492 = 128KB, against
+   saira 98,912 + plex roman 45,712 = 141KB. Either pair is one page's cost,
+   and the RPG pair is the cheaper of the two. */
+@font-face {
+  font-family: 'Archivo';
+  src: url('/shared/fonts/archivo-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/archivo-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Martian Mono';
+  src: url('/shared/fonts/martian-mono-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/martian-mono-variable.woff2') format('woff2');
+  font-weight: 100 800;
+  font-stretch: 75% 112.5%;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ─── TOKENS ───
    LEY VERDIGRIS, replacing Rust & Ash, which replaced the blue/violet scheme
    (CHANGE-PLAN.md phase 1). Every name that existed still exists — the tokens

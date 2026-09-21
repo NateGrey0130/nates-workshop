@@ -4,13 +4,113 @@
    pools). The catalog's .imp-* and .cat-* blocks are a large part of this
    file — a class that looks wizard-only is probably not. */
 
-/* No :root here any more. This app used to override five tokens — --accent,
-   --accent-glow, --accent-secondary, --text-muted and --accent-strong — four
-   of them because shared's blue/violet scheme failed contrast where this app
-   spends colour, on 9-13px labels and on primary buttons. Rust & Ash carries
-   correct values for all five in /shared/styles.css, so the overrides are
-   gone rather than retoned. --border-focus is shared's `var(--accent)` and
-   needed restating no more than the rest. See CHANGE-PLAN.md phase 1. */
+/* ─── BOARD & TISSUE ───
+   THE :root CAME BACK, and the reason is scope rather than contrast. It left
+   under Rust & Ash because shared finally carried correct values for the five
+   tokens this app used to override — --accent, --accent-glow,
+   --accent-secondary, --text-muted and --accent-strong (CHANGE-PLAN.md phase
+   1). It returns on 2026-09-20 because the RPG suite is being retoned and the
+   other three apps are NOT: Nate asked for brighter for the apps he plays
+   with, and chose to leave FilamentForge, MediaVault and Pick 3 Cut 5 on Ley
+   Verdigris.
+
+   THIS BLOCK IS THE WHOLE MECHANISM, and it works because of the load order
+   in the five RPG pages: every one of them links /shared/styles.css FIRST and
+   /apps/character-creator/styles.css SECOND (campaign, character-sheet, codex
+   and gm-tools all point here; character-creator's own pages link it as
+   `styles.css`). The other three link their own file instead and never see
+   this, so they keep every shared value. Retoning shared/styles.css would
+   have retoned all eight — which is what the first draft of this change did.
+
+   index.html is the third case: it loads NEITHER stylesheet and carries its
+   own copy of the palette, which is why it has to be changed by hand and why
+   a smoke check compares the two. That check now compares it against THIS
+   block rather than shared's, because this is the palette the front door is a
+   door to.
+
+   WHAT A LIGHT SCHEME DOES TO THESE NAMES. The ladder inverts and the names
+   do not: --bg-primary is still the ground the app sits ON and is still what
+   a page background takes, it is simply the darkest of the set now rather
+   than the lightest, and --bg-card is white rather than a lift off black. No
+   rule was rewritten for that, which is the same reason Ley Verdigris kept
+   these names when it moved values.
+
+   THE ACCENT IS WARM NOW, AND THAT COSTS HUE SEPARATION — the one place this
+   scheme is measurably worse than what it replaces, stated here rather than
+   discovered later. Degrees from --accent, computed rather than quoted:
+
+     scheme           --danger   --warning   --accent-secondary
+     Rust & Ash            11          19                   12
+     Ley Verdigris        156         126                  133
+     Board & Tissue        32          29                  148
+
+   Rust & Ash's 11 and 19 are why "this is a button" stopped being legible
+   next to "this is a warning", and shared/styles.css still carries that
+   argument in full. 32 and 29 clear it by a wide margin and fall well short
+   of Ley Verdigris. What makes that acceptable HERE is that this design does
+   not carry state in hue at all: ready is a filled square, live is a hollow
+   square with a core, spent is a struck square with its row ruled through.
+   Colour confirms a mark that already reads without it — which is also what
+   makes the sheet survive print, sunlight and colourblindness. A future
+   change that starts leaning on hue alone to tell a warning from a control is
+   the thing this table exists to stop.
+
+   Contrast, computed for these values. On --bg-primary, the darkest ground
+   and therefore the tightest for every dark ink: --text-primary 14.91,
+   --text-secondary 8.04, --text-muted 4.72, --accent 5.10, --accent-link
+   6.57, --accent-secondary 4.91, --success 4.91, --warning 5.19, --danger
+   6.60. The floor is 4.5 and NOTHING is under it. Every ratio improves on
+   --bg-secondary and --bg-card, which are lighter. --text-muted IS THE FLOOR
+   CASE and is the first pair to re-measure if --bg-primary is ever lightened.
+
+   WHITE ON THE BOARD BAND is the ratio that decided --accent's value, and the
+   obvious value fails it. The band carries a 12px mono identity line in
+   white, so it owes 4.5 rather than the 3.0 a 64px name would: #C7541F, which
+   the mockups used, gives white 4.45. #A8401A gives white 6.15 and gives the
+   orange itself 5.10 as ink on --bg-primary, so one token serves both jobs.
+
+   --border-control, --border and --border-strong keep the roles F55 gave them
+   and the smoke suite recomputes all three against THIS block: a control edge
+   owes 3:1 and clears it at 3.78 / 4.36 / 4.01, while --border (1.19 / 1.38 /
+   1.27) and --border-strong (1.50 / 1.74 / 1.60) stay deliberately below it.
+   What changed is what --border-strong is FOR. A lit top edge is a
+   dark-scheme idiom — on white it reads as a seam, not as light — so depth
+   here is the 13px colour chip down a block's left edge and the live block
+   pulled proud of its row. --border-strong survives as the heavier of the two
+   ordinary rule weights.
+
+   --radius is 0 because this world has no rounded corner anywhere. The three
+   radius tokens stay alive rather than forcing a find-and-replace across the
+   nine rules that name --radius-lg. --shadow is none, as under every scheme
+   here, and index.html is still asserted to contain no box-shadow at all. */
+:root {
+  --bg-primary:       #EFE9E2;
+  --bg-secondary:     #FAFAF8;
+  --bg-tertiary:      #F3F0EB;
+  --bg-card:          #FFFFFF;
+  --bg-input:         #FFFFFF;
+  --border:           #DED6CB;
+  --border-strong:    #C9BFB2;
+  --border-control:   #7E746D;
+  --border-focus:     var(--accent);
+  --text-primary:     #1A1614;
+  --text-secondary:   #4A433F;
+  --text-muted:       #6E6560;
+  --accent:           #A8401A;
+  --accent-link:      #8E3412;
+  --accent-glow:      rgba(168, 64, 26, 0.14);
+  --accent-secondary: #2E6F5E;
+  --success:          #2E6F5E;
+  --warning:          #7A5C00;
+  --danger:           #A01238;
+  --radius:           0px;
+  --radius-sm:        0px;
+  --radius-lg:        0px;
+  --shadow:           none;
+  --font-body:    'Archivo', system-ui, sans-serif;
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-mono:    'Martian Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
 
 /* ─── LAYOUT ─── */
 .header { padding: 16px 28px; }

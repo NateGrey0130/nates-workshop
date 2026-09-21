@@ -5964,8 +5964,8 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
   const sharedCss = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
   const appCss = readFileSync(join(appDir, 'styles.css'), 'utf8');
   const noComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');
-  const token = (name) =>
-    (noComments(sharedCss).match(new RegExp('--' + name + ':\\s*(#[0-9a-fA-F]{6});')) || [])[1];
+  const tokenIn = (src, name) =>
+    (noComments(src).match(new RegExp('--' + name + ':\\s*(#[0-9a-fA-F]{6});')) || [])[1];
 
   const lum = (h) => {
     const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
@@ -5982,22 +5982,41 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
     return (hi + 0.05) / (lo + 0.05);
   };
 
-  const grounds = ['bg-primary', 'bg-secondary', 'bg-tertiary'].map((n) => [n, token(n)]);
-  check('every ground and both border tokens are declared as hex',
-    grounds.every(([, v]) => !!v) && !!token('border') && !!token('border-control'),
-    JSON.stringify(grounds));
+  // TWO PALETTES ARE LIVE SINCE 2026-09-20, so this runs twice. Board & Tissue
+  // retoned the five RPG apps through a :root in THIS app's stylesheet, which
+  // those five load after shared; FilamentForge, MediaVault and Pick 3 Cut 5
+  // load their own file instead and keep shared's Ley Verdigris. Checking only
+  // shared would have left the palette the RPG suite actually renders with
+  // entirely unmeasured - and it is the one that changed.
+  //
+  // The override is read on its own rather than merged over shared: it declares
+  // every token in this section, so a value that silently stopped being
+  // overridden should fail here rather than fall back and pass.
+  const palettes = [
+    ['the RPG suite', appCss],
+    ['the other three apps', sharedCss],
+  ];
 
-  // The point of the finding: a control edge owes 3:1 on every ground it can be
-  // drawn on, and --border cannot carry one.
-  for (const [name, bg] of grounds) {
-    const r = ratio(token('border-control'), bg);
-    check('--border-control clears 3:1 on --' + name, r >= 3, r.toFixed(2));
+  for (const [who, css] of palettes) {
+    const token = (n) => tokenIn(css, n);
+    const grounds = ['bg-primary', 'bg-secondary', 'bg-tertiary'].map((n) => [n, token(n)]);
+    check('every ground and both border tokens are declared as hex for ' + who,
+      grounds.every(([, v]) => !!v) && !!token('border') && !!token('border-control'),
+      JSON.stringify(grounds));
+
+    // The point of the finding: a control edge owes 3:1 on every ground it can
+    // be drawn on, and --border cannot carry one.
+    for (const [name, bg] of grounds) {
+      const r = ratio(token('border-control'), bg);
+      check('--border-control clears 3:1 on --' + name + ' for ' + who, r >= 3, r.toFixed(2));
+    }
+    // And the pair that IS the depth idiom is deliberately still below it, so a
+    // later "tidy" that points a control at --border-strong fails here.
+    check('--border-strong is still NOT a control colour for ' + who
+      + ', which is why F55 added a third token',
+      ratio(token('border-strong'), token('bg-tertiary')) < 3,
+      ratio(token('border-strong'), token('bg-tertiary')).toFixed(2));
   }
-  // And the pair that IS the depth idiom is deliberately still below it, so a
-  // later "tidy" that points a control at --border-strong fails here.
-  check('--border-strong is still NOT a control colour, which is why F55 added a third token',
-    ratio(token('border-strong'), token('bg-tertiary')) < 3,
-    ratio(token('border-strong'), token('bg-tertiary')).toFixed(2));
 
   // The three call sites the finding moved, and the ones it deliberately did not.
   check('the shared button takes it', /\.btn \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(sharedCss));
