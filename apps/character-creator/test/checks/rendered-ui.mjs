@@ -98,6 +98,7 @@ const SECTIONS = [
   'Trackable resources',
   'The session log',
   'Two people, one character',
+  'Board & Tissue: the chip column and the mark',
   'The front door agrees with the rooms',
   'Changes that could not be sent',
   'The sheet reads only item fields its endpoint sends',
@@ -1164,9 +1165,16 @@ export function run() {
     check('the pools column has tabular figures',
       /font-variant-numeric: tabular-nums/.test(pools),
       'pools read down a column with proportional digits');
-    check('and the display face, like every other numeric column',
-      /var\(--font-display\)/.test(pools) && /font-stretch: 75%/.test(pools),
-      'the pools column is the one numeric column still on the body face');
+    // THE FACE THIS PINS MOVED ON 2026-09-20 and the claim got stronger rather
+    // than weaker. Board & Tissue sets every run of figures in a real mono face
+    // instead of the condensed display face, so "like every other numeric
+    // column" now means --font-mono. font-stretch: 75% is unchanged and still
+    // asserted: Martian Mono's width axis starts at 75%, so the same
+    // declaration that gave Saira its condensed instance gives Martian Mono its
+    // narrowest one, which is what keeps a 44px pool value inside its card.
+    check('and the figure face, like every other numeric column',
+      /var\(--font-mono\)/.test(pools) && /font-stretch: 75%/.test(pools),
+      'the pools column is the one numeric column still on the display face');
   }
 
   // ---------- The printed sheet ----------
@@ -1576,6 +1584,63 @@ export function run() {
       'every pool change in play mode makes the next autosave a false conflict');
   }
 
+  // ---------- Board & Tissue's two component rules ----------
+  // The palette and the faces landed first and are measured elsewhere (the F55
+  // section in smoke.mjs runs over both live palettes). These are the two
+  // rules the WORLD rests on, and both are the kind of thing a later tidy
+  // removes without noticing what it was for.
+  section('Board & Tissue: the chip column and the mark');
+  {
+    const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
+
+    // A ::before rather than a border-left, and the difference is not
+    // cosmetic: a border-left REPLACES one of the box's four sides, which is
+    // what turns a block into a callout. The chip sits behind the whole block
+    // with all four borders still drawn.
+    check('the chip is a column of board, not a border',
+      /\.box::before \{[\s\S]{0,200}?width: 13px;/.test(css)
+      && !/^\.box \{[^}]*border-left:/m.test(css),
+      'the chip column is gone, or became a border-left');
+    check('and its padding makes room for it',
+      /^\.box \{[^}]*padding-left: 13px;/m.test(css));
+
+    // data-col already ranked the boxes; the chip is the third thing that rank
+    // buys. If someone re-points these at status colours the hue table in the
+    // :root block stops being true, so the mapping is pinned by name.
+    const chips = ['a', 'b', 'c']
+      .filter((c) => new RegExp(`\\.box\\[data-col="${c}"\\] \\{ --chip:`).test(css));
+    check('every column rank carries its own chip', chips.length === 3, 'have: ' + chips.join(', '));
+    check('and the identity block takes the accent, being the document’s subject',
+      /\.box\.identity \{ --chip: var\(--accent\); \}/.test(css));
+
+    // Furniture does not print; state does. Both halves asserted, because
+    // suppressing the wrong one is the easy mistake.
+    check('the chip does not reach paper',
+      /@media print \{[\s\S]{0,900}?\.box::before \{ display: none; \}/.test(css),
+      '13px of ink down every block on a three-page sheet');
+
+    // THE MARK REPLACES AN OPACITY, which is the whole point of it. If the
+    // class stops being emitted the rows silently go back to being told apart
+    // by a 0.45 dim on the button alone.
+    check('a power out of reach is marked, not merely dimmed',
+      /\.power-row\.short::before \{/.test(css)
+      && /\.power-row\.short > span:first-child \{[\s\S]{0,140}?text-decoration: line-through;/.test(css));
+    check('the row grid made a cell for the mark',
+      /\.power-row \{[\s\S]{0,160}?grid-template-columns: 10px 1fr auto auto;/.test(css),
+      'the mark has no column, so it is sharing one with the name');
+    check('and the sheet emits the class on the same condition usePower guards on',
+      /const short = cost != null && left != null && left < cost;/.test(sheet)
+      && /class="power-row\$\{short \? ' short' : ''\}"/.test(sheet),
+      'the mark and the disabled button could now disagree');
+    check('the shortfall says how much, which the dim never could',
+      /class="short-by">short \$\{cost - left\}/.test(sheet));
+    // Not gated on write access: a read-only sheet still answers "can she cast
+    // this", and that is most of what the question is for.
+    check('and it is not gated on write access',
+      !/const short = w &&/.test(sheet));
+  }
+
   // ---------- The front door agrees with the rooms ----------
   // index.html is the ONE page that does not load /shared/styles.css - it is
   // deliberately self-contained - so it carries its own copy of the palette under
@@ -1591,9 +1656,16 @@ export function run() {
   section('The front door agrees with the rooms');
   {
     const landing = readFileSync(join(repoRoot, 'index.html'), 'utf8');
-    const shared = readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
+    // THE ROOMS THIS DOOR OPENS ONTO ARE THE RPG SUITE, and since 2026-09-20
+    // that is no longer shared/styles.css. Board & Tissue retoned the five RPG
+    // apps through a :root in apps/character-creator/styles.css and left
+    // FilamentForge, MediaVault and Pick 3 Cut 5 on shared's Ley Verdigris, so
+    // comparing the landing page against shared would now assert that the front
+    // door matches the three apps it is deliberately NOT toned like. The hub is
+    // orange because the suite is.
+    const shared = readFileSync(join(appDir, 'styles.css'), 'utf8');
 
-    // Comments first: shared/styles.css records its measured contrast ratios
+    // Comments first: the stylesheet records its measured contrast ratios
     // in prose that names the tokens, and a line reading
     // `--bg-primary: --text-primary 14.74, ...` matches a naive search.
     const noComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');

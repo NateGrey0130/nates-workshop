@@ -4,13 +4,133 @@
    pools). The catalog's .imp-* and .cat-* blocks are a large part of this
    file — a class that looks wizard-only is probably not. */
 
-/* No :root here any more. This app used to override five tokens — --accent,
-   --accent-glow, --accent-secondary, --text-muted and --accent-strong — four
-   of them because shared's blue/violet scheme failed contrast where this app
-   spends colour, on 9-13px labels and on primary buttons. Rust & Ash carries
-   correct values for all five in /shared/styles.css, so the overrides are
-   gone rather than retoned. --border-focus is shared's `var(--accent)` and
-   needed restating no more than the rest. See CHANGE-PLAN.md phase 1. */
+/* ─── BOARD & TISSUE ───
+   THE :root CAME BACK, and the reason is scope rather than contrast. It left
+   under Rust & Ash because shared finally carried correct values for the five
+   tokens this app used to override — --accent, --accent-glow,
+   --accent-secondary, --text-muted and --accent-strong (CHANGE-PLAN.md phase
+   1). It returns on 2026-09-20 because the RPG suite is being retoned and the
+   other three apps are NOT: Nate asked for brighter for the apps he plays
+   with, and chose to leave FilamentForge, MediaVault and Pick 3 Cut 5 on Ley
+   Verdigris.
+
+   THIS BLOCK IS THE WHOLE MECHANISM, and it works because of the load order
+   in the five RPG pages: every one of them links /shared/styles.css FIRST and
+   /apps/character-creator/styles.css SECOND (campaign, character-sheet, codex
+   and gm-tools all point here; character-creator's own pages link it as
+   `styles.css`). The other three link their own file instead and never see
+   this, so they keep every shared value. Retoning shared/styles.css would
+   have retoned all eight — which is what the first draft of this change did.
+
+   index.html is the third case: it loads NEITHER stylesheet and carries its
+   own copy of the palette, which is why it has to be changed by hand and why
+   a smoke check compares the two. That check now compares it against THIS
+   block rather than shared's, because this is the palette the front door is a
+   door to.
+
+   WHAT A LIGHT SCHEME DOES TO THESE NAMES. The ladder inverts and the names
+   do not: --bg-primary is still the ground the app sits ON and is still what
+   a page background takes, it is simply the darkest of the set now rather
+   than the lightest, and --bg-card is white rather than a lift off black. No
+   rule was rewritten for that, which is the same reason Ley Verdigris kept
+   these names when it moved values.
+
+   THE ACCENT IS WARM NOW, AND THAT COSTS HUE SEPARATION — the one place this
+   scheme is measurably worse than what it replaces, stated here rather than
+   discovered later. Degrees from --accent, computed rather than quoted:
+
+     scheme           --danger   --warning   --accent-secondary
+     Rust & Ash            11          19                   12
+     Ley Verdigris        156         126                  133
+     Board & Tissue        32          29                  148
+
+   Rust & Ash's 11 and 19 are why "this is a button" stopped being legible
+   next to "this is a warning", and shared/styles.css still carries that
+   argument in full. 32 and 29 clear it by a wide margin and fall well short
+   of Ley Verdigris. What makes that acceptable HERE is that this design does
+   not carry state in hue at all: ready is a filled square, live is a hollow
+   square with a core, spent is a struck square with its row ruled through.
+   Colour confirms a mark that already reads without it — which is also what
+   makes the sheet survive print, sunlight and colourblindness. A future
+   change that starts leaning on hue alone to tell a warning from a control is
+   the thing this table exists to stop.
+
+   Contrast, computed for these values. On --bg-primary, the darkest ground
+   and therefore the tightest for every dark ink: --text-primary 14.91,
+   --text-secondary 8.04, --text-muted 4.72, --accent 5.10, --accent-link
+   6.57, --accent-secondary 4.91, --success 4.91, --warning 5.19, --danger
+   6.60. The floor is 4.5 and NOTHING is under it. Every ratio improves on
+   --bg-secondary and --bg-card, which are lighter. --text-muted IS THE FLOOR
+   CASE and is the first pair to re-measure if --bg-primary is ever lightened.
+
+   WHITE ON THE BOARD BAND is the ratio that decided --accent's value, and the
+   obvious value fails it. The band carries a 12px mono identity line in
+   white, so it owes 4.5 rather than the 3.0 a 64px name would: #C7541F, which
+   the mockups used, gives white 4.45. #A8401A gives white 6.15 and gives the
+   orange itself 5.10 as ink on --bg-primary, so one token serves both jobs.
+
+   --border-control, --border and --border-strong keep the roles F55 gave them
+   and the smoke suite recomputes all three against THIS block: a control edge
+   owes 3:1 and clears it at 3.78 / 4.36 / 4.01, while --border (1.19 / 1.38 /
+   1.27) and --border-strong (1.50 / 1.74 / 1.60) stay deliberately below it.
+   What changed is what --border-strong is FOR. A lit top edge is a
+   dark-scheme idiom — on white it reads as a seam, not as light — so depth
+   here is the 13px colour chip down a block's left edge and the live block
+   pulled proud of its row. --border-strong survives as the heavier of the two
+   ordinary rule weights.
+
+   --radius is 0 because this world has no rounded corner anywhere. The three
+   radius tokens stay alive rather than forcing a find-and-replace across the
+   nine rules that name --radius-lg. --shadow is none, as under every scheme
+   here, and index.html is still asserted to contain no box-shadow at all. */
+:root {
+  --bg-primary:       #EFE9E2;
+  --bg-secondary:     #FAFAF8;
+  --bg-tertiary:      #F3F0EB;
+  --bg-card:          #FFFFFF;
+  --bg-input:         #FFFFFF;
+  --border:           #DED6CB;
+  --border-strong:    #C9BFB2;
+  --border-control:   #7E746D;
+  --border-focus:     var(--accent);
+  --text-primary:     #1A1614;
+  --text-secondary:   #4A433F;
+  --text-muted:       #6E6560;
+  /* --board IS THE SAME ORANGE AS --accent AND IS NOT THE SAME TOKEN, which is
+     the distinction the mockups turned on and the first draft of this scheme
+     missed. In the End Label world orange is a MATERIAL - the band behind a
+     name, the rail along an edge - and the thing you PRESS is ink. Shipping
+     one token for both would have put the control signal onto chrome that does
+     nothing, which is the failure Ley Verdigris exists to fix and which this
+     file's own hue table would then have stopped excusing.
+
+     They hold the same value today on purpose: one orange, two jobs, named
+     apart so the jobs can move independently. If board ever wants to be
+     warmer or heavier than the signal can afford, this is the seam it
+     separates along.
+
+     WHAT EACH ONE MARKS: --board is where you ARE (the identity band, the
+     chip on the current block, a selected edge). --accent stays what this
+     file has said twice it is - reserved for what you can act on - and a
+     primary button is filled with INK rather than with either of them, so a
+     press target is a shape rather than a hue. Same move as the mark on a
+     power row: this design does not carry meaning in colour. */
+  --board:            #A8401A;
+  --accent:           #A8401A;
+  --accent-link:      #8E3412;
+  --accent-glow:      rgba(168, 64, 26, 0.14);
+  --accent-secondary: #2E6F5E;
+  --success:          #2E6F5E;
+  --warning:          #7A5C00;
+  --danger:           #A01238;
+  --radius:           0px;
+  --radius-sm:        0px;
+  --radius-lg:        0px;
+  --shadow:           none;
+  --font-body:    'Archivo', system-ui, sans-serif;
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-mono:    'Martian Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
 
 /* ─── LAYOUT ─── */
 .header { padding: 16px 28px; }
@@ -151,7 +271,37 @@ button { font-family: var(--font-display); font-stretch: 75%; cursor: pointer; }
 .btn-danger { background: transparent; border-color: var(--border); color: var(--danger); }
 .btn-danger:hover { background: var(--bg-tertiary); border-color: var(--danger); }
 
-/* .btn-primary is shared's now. It used to be repainted here in
+/* ── A PRESS TARGET IS A SHAPE, NOT A HUE (Board & Tissue) ────────────────
+   shared/styles.css fills .btn-primary with --accent, which is correct for
+   the three apps still on Ley Verdigris and wrong here: with --board owning
+   the identity band, an orange button would be the same colour as the chrome
+   above it, and "this is a control" would be carried by nothing but position.
+
+   Ink instead, exactly as the mockups' Cast buttons. The affordance moves to
+   fill and weight, which is the same move the mark on a power row makes and
+   the same one that lets this palette run a warm accent 29 degrees from
+   --warning: nothing here means anything by hue alone.
+
+   --accent is untouched and still means what this file says twice it means.
+   It is simply not what a primary button is PAINTED with any more; it is what
+   a selected edge and a current chip are.
+
+   All four shared selectors are restated rather than just the base, because
+   shared pins its own disabled and hover states back to --accent by name -
+   .btn:hover at (0,2,0) outranks .btn-primary at (0,1,0), which is the trap
+   its comment above those rules describes. Matching their specificity and
+   arriving later is what wins; this file loads after shared on all five RPG
+   pages. Ink on white measures 17.97. */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-card);
+}
+
+/* The neutral .btn is shared's now. It used to be repainted here in
    --accent-strong because white on the old violet --accent was 3.11:1, and
    the disabled-hover pair had to be repeated because shared pins that back to
    --accent by name. Neither is needed: shared paints the primary button in
@@ -492,7 +642,7 @@ th {
 .mention:hover { color: var(--text-primary); }
 
 .chkrow { display: flex; align-items: baseline; gap: 7px; padding: 3px 0; font-size: 13px; }
-.chkrow .pct { color: var(--text-muted); font-size: 11px; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.chkrow .pct { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; }
 /* The campaign's NPC row is a <button> — it opens a dossier. Everything else
    wearing .chkrow is a <label> around a checkbox, which is already focusable,
    so this is scoped to the button and strips the chrome a button arrives with.
@@ -639,7 +789,7 @@ body.play-mode .vital.conflict .val > input,
    was `normal` on the live page. */
 .pools-cell {
   font-size: 12px; color: var(--text-secondary); white-space: nowrap;
-  font-family: var(--font-display); font-stretch: 75%;
+  font-family: var(--font-mono); font-stretch: 75%;
   font-variant-numeric: tabular-nums;
 }
 
@@ -786,12 +936,51 @@ body.play-mode .vital.conflict .val > input,
   .sheet-grid.sheet-3 { max-width: 900px; margin-inline: auto; }
 }
 
+/* ── THE CHIP COLUMN (Board & Tissue, 2026-09-20) ─────────────────────────
+   A block is told apart from its neighbour by a 13px column of board down its
+   left edge. It is a ::before rather than a border-left because it is BOARD
+   rather than a rule: it runs the full height of the block, behind the title
+   bar and the body alike, while the box's own 1px --border still draws all
+   four sides. A border-left would have replaced one of those sides and made
+   the block read as a callout, which is the shape this file spends a lot of
+   words avoiding elsewhere.
+
+   THE CHIP COLOUR IS data-col, WHICH ALREADY MEANT SOMETHING. The comment
+   under .box-title says it outright: `a` is what you read constantly, `b` is
+   the lists you scan, `c` is what you read a paragraph of. That ranking has
+   been spent on grid placement and on title contrast; the chip is the third
+   thing it buys, and the only one legible from across a table. The identity
+   block takes the accent because it is the document's subject.
+
+   IT CARRIES NO STATE, and that is deliberate. --accent is still reserved for
+   what you can act on and the chip is never the thing you press; a chip that
+   started meaning "warning" would put the one colour a player must be able to
+   trust onto sixteen blocks at once. State is a mark - see .power-row.short
+   below - and the chip is furniture.
+
+   It does not print. Thirteen pixels of solid ink down every block is toner
+   spent on a distinction paper does not need: on screen the chip separates
+   blocks that tile against each other, and a printed sheet already has white
+   space and page breaks doing that. Suppressed in the print block. */
 .box {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  padding-left: 13px;
 }
+.box::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 13px;
+  background: var(--chip, var(--border-strong));
+}
+.box[data-col="a"] { --chip: var(--text-primary); }
+.box[data-col="b"] { --chip: var(--accent-secondary); }
+.box[data-col="c"] { --chip: var(--border-strong); }
+.box.identity { --chip: var(--accent); }
 /* Section labels are NOT accent-coloured. There are sixteen of them on the
    sheet and not one is clickable, so spending --accent on every heading left
    the Use button - the thing you can actually press - with no way to stand
@@ -847,14 +1036,45 @@ body.play-mode .vital.conflict .val > input,
 
    Neither uppercase nor tracked: a name is a name. The tags beside it set
    their own 10px, which is why the <h2> wraps the title alone. */
-.box.identity > .box-title { padding: 10px 12px; }
+/* ── THE BOARD BAND ───────────────────────────────────────────────────────
+   The one place this design lets colour own a REGION rather than an edge, and
+   the piece the world is unreadable without: with the orange reduced to a 13px
+   chip and a wordmark, the sheet reads as a light neutral page with warm trim
+   rather than as board and tissue. The identity block is where it goes because
+   the band is saying whose sheet this is, which is the one thing on the page
+   that is neither a number nor a control.
+
+   --board, NOT --accent, even though they hold the same value: this band is
+   material and is not pressable, and the token block above carries why that
+   distinction is load-bearing rather than pedantic.
+
+   THE LABEL IS #FFFFFF AND THAT IS A MEASURED CHOICE, not a default. White on
+   --board is 6.15; --bg-primary, which every other control on this palette
+   uses as its knocked-out foreground, is 5.10 - both clear 4.5, and the
+   brighter one is right here because this is the only knocked-out text on the
+   page that is 26px rather than 13px, so it is carrying the page's subject
+   rather than a control's label.
+
+   The tags that sit beside the name set their own 10px and keep their own
+   colours, so they are given a light border to survive the new ground rather
+   than being repainted. */
+.box.identity > .box-title {
+  padding: 12px 14px;
+  background: var(--board);
+  border-bottom-color: var(--board);
+}
 .box.identity > .box-title > h2 {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: none;
   line-height: 1.1;
-  color: var(--text-primary);
+  color: #FFFFFF;
+}
+.box.identity > .box-title .tag {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #FFFFFF;
+  background: transparent;
 }
 /* Scrolls the CONTENT, never the box. A table wider than its column - the
    equipment table is 367px inside 332px at 390px wide - was cut by .box's own
@@ -896,7 +1116,7 @@ body.play-mode .vital.conflict .val > input,
    number you touch forty times a session and the number you touch once were
    the same size, which is the hunting the brief describes. Size now tracks
    how often a number changes. */
-.attr-stack .field > .val { font-size: 22px; font-weight: 800; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.attr-stack .field > .val { font-size: 22px; font-weight: 800; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; }
 
 /* ─── POOLS: ONE WIDGET, BOTH MODES ───
    There used to be two. The sheet drew .vital - an input, a max, 17px - and
@@ -923,7 +1143,29 @@ body.play-mode .vital.conflict .val > input,
    Nothing keeps the two in sync by hand: togglePlay() calls render(), and all
    seven paths write C.data, so the input is rebuilt from current data every
    time the mode changes. */
-.vitals { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+/* 92px, RAISED FROM 84px BY THE FIGURE FACE, and measured rather than judged.
+   A declared minimum that clips is a defect even when no viewport happens to
+   hit it today: at 390px these cards render 104px wide, so the 84 was never
+   reached on a phone and the overflow was invisible until the card was forced
+   to its own stated floor.
+
+   Measured in the browser at 44px/900, overflow of the value past the input
+   that clips it, at an 84px card: Martian Mono 5px on three digits, Archivo at
+   75% 0px. The condensed face fitted and the figure face does not, so this is
+   the figure face's bill. 90px is where three digits come back inside; 92 is
+   that with two pixels of headroom.
+
+   FOUR DIGITS STILL CLIP AND DID BEFORE: 32px now, 17px under the condensed
+   face, and they need a 120px card to fit. A P.P.E. pool passes 1000 on a
+   high-level caster standing on a ley line, so this is reachable rather than
+   theoretical - it is recorded here rather than fixed, because the fix is the
+   value shrinking on length and that is a change to the widget, not to a
+   track size. The number to beat is 120px.
+
+   Raising the floor moves nothing on a phone: auto-fit picks the column COUNT
+   from the minimum and then 1fr divides what is there, so at 390px this stays
+   three across at 104px, exactly as it rendered before. */
+.vitals { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
 .vital {
   text-align: center;
   background: var(--bg-tertiary);
@@ -936,7 +1178,7 @@ body.play-mode .vital.conflict .val > input,
   font-family: var(--font-display); font-stretch: 75%; font-size: 9px;
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
 }
-.vital .val { font-size: 44px; font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.vital .val { font-size: 44px; font-weight: 900; line-height: 0.95; letter-spacing: -0.02em; font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; margin-top: 2px; }
 /* The input carries NO font-size of its own. `font: inherit` takes .val's 44px
    whole, so the editable number and the read-only <b> cannot be a different
    size - they are the same declaration rather than two numbers someone has to
@@ -983,9 +1225,13 @@ body.play-mode .vital .val b { display: inline; }
 .vital .bar > i { display: block; height: 100%; background: var(--tone, var(--text-muted)); }
 
 /* At a third or less the number takes the pool's own tone. Every tone clears
-   3.0 on --bg-tertiary, the floor that applies once phase 4 takes this value
-   to 44px/900: --accent is the tightest at 4.08 and the other four are 4.58 or
-   better. Measured against this palette, not carried over from the last one. */
+   3.0 on --bg-tertiary, the floor that applies at this value's 44px/900.
+   RE-MEASURED FOR BOARD & TISSUE on 2026-09-20 rather than carried over: the
+   tones are token names (js/sheet-layout.js POOL_TONES), so every one of them
+   moved when the palette did, and the figures this comment used to give were
+   Ley Verdigris's. --accent-secondary and --success are the tightest at 5.20,
+   --accent 5.41, --warning 5.50, --danger 7.00. All five now clear 4.5, not
+   merely the 3.0 a number this size owes. */
 .vital.low .val b, .vital.low .val input { color: var(--tone); }
 
 /* Steppers are play mode only, at the 44px target the phone work already set. */
@@ -1053,7 +1299,7 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
    of them - otherwise it cuts between a skill and its own footnote. */
 .skill-row:has(+ .skill-note) > td { border-bottom: 0; }
 .skill-note > td { border-bottom: 1px dotted var(--border); }
-.skill-table .num { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.skill-table .num { font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
 .skill-table td.num.pct { color: var(--text-primary); font-weight: 600; }
 .skill-note .note { font-size: 11px; color: var(--text-muted); padding-left: 10px; }
 /* Where a skill's percentage came from. Sits inline after the name rather than
@@ -1107,14 +1353,64 @@ body.play-mode .vital .steppers button:active { background: var(--accent-glow); 
 
 .power-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 10px 1fr auto auto;
   gap: 8px; align-items: center;
   padding: 3px 0; border-bottom: 1px dotted var(--border); font-size: 12.5px;
+}
+
+/* ── STATE IS A MARK, NOT A DIM (Board & Tissue, 2026-09-20) ──────────────
+   A power the pool cannot pay for was already knowable and was said in the
+   one way this repo rejects everywhere else: shared/styles.css dims :disabled
+   to opacity 0.45, so "you are short" arrived as faded text and nothing else.
+   Opacity is the mechanism the .st.na rule and index.html's .card-soon
+   comment both refuse by name, for the same measured reason - a composited
+   0.45 takes --text-secondary under the floor.
+
+   NO NEW STATE AND NO NEW DATA. usePower's guard is `left < cost`, the row
+   already has both numbers, and the button has been disabled on exactly this
+   condition all along. The mark says out loud what the dimming was mumbling,
+   and adds the arithmetic a player was doing in their head: short BY how much.
+
+   THE MARK IS THE SHAPE; COLOUR ONLY CONFIRMS IT. Filled square, ready;
+   struck hollow square with the name ruled through, out of reach. That
+   survives a greyscale print, a phone in sunlight and a player who cannot
+   tell #A8401A from #7A5C00 - which is the whole reason this design spends no
+   hue on state, and the argument that lets its palette run a warm accent 29
+   degrees from --warning at all. If this rule ever becomes a colour swap, the
+   hue table in the :root block above stops being true.
+
+   The diagonal is a single linear-gradient drawing one line across a 10px
+   box - geometry, not a texture - and the border is a real border rather than
+   an inset box-shadow, because --shadow is none here and the smoke suite
+   asserts no box-shadow reaches the landing page. */
+.power-row::before {
+  content: '';
+  width: 10px; height: 10px;
+  box-sizing: border-box;
+  align-self: center;
+  background: var(--text-primary);
+}
+.power-row.short::before {
+  border: 1.5px solid var(--text-muted);
+  background: linear-gradient(to bottom right,
+    transparent calc(50% - 1px), var(--text-muted) calc(50% - 1px),
+    var(--text-muted) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.power-row.short > span:first-child {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.power-row .short-by {
+  font-family: var(--font-mono); font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+  font-size: 10px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-muted);
 }
 /* The cost is a static number sitting in the same row as the ⚡ button, and only
    one of the two does anything. Accent went on the number and not on the control,
    which is backwards; the cost is metadata beside the name, so --text-secondary. */
-.power-row .cost { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.power-row .cost { font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
 /* A spell that also burns base P.P.E. has two buttons (BOOK-INGEST-AUDIT F101). They share
    the grid's last cell: a fourth child wrapped to a new line and stretched across the name
    column, measured at 467px on a desktop sheet. */
@@ -1543,7 +1839,7 @@ input.class-boosted { border-bottom-width: 2px; }
 }
 .stat-row:last-child { border-bottom: 0; }
 .stat-row span { color: var(--text-secondary); }
-.stat-row b { font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.stat-row b { font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; }
 
 .review-cols { display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-start; }
 .review-col {
@@ -2020,7 +2316,7 @@ body.show-play-keys .play-keys { display: block; }
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   flex-wrap: wrap; background: var(--bg-secondary); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px;
-  font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 13px;
+  font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums; font-size: 13px;
 }
 .play-melee button {
   min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
@@ -2246,6 +2542,19 @@ body.show-play-keys .play-keys { display: block; }
 @media print {
   .tabbar { display: none !important; }
   .tabpanel { display: contents !important; }
+
+  /* THE CHIP COLUMN DOES NOT PRINT. Thirteen pixels of solid ink down the left
+     edge of every block, on a sheet that runs to three pages, is toner spent
+     on a distinction paper does not need: on screen the chip separates blocks
+     tiled against each other, and print already has white space and page
+     breaks doing that job. The .box padding goes back with it so the body does
+     not print indented against a column that is not there.
+
+     The MARK on a power row deliberately still prints - that one is state, not
+     furniture, and surviving greyscale is the entire argument for it being a
+     shape. See .power-row.short. */
+  .box { padding-left: 0; }
+  .box::before { display: none; }
   /* Nothing sticks to paper. The strip inside it still prints - its current
      values reach the page through the <b> beside each input, because the
      global print rule hides every input outright. That <b> is the same node
@@ -2441,7 +2750,7 @@ body.show-play-keys .play-keys { display: block; }
 .codex-name { font-size: 13.5px; }
 .codex-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 .codex-cost {
-  font-family: var(--font-display); font-stretch: 75%; font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono); font-stretch: 75%; font-variant-numeric: tabular-nums;
   font-size: 11px; color: var(--text-secondary); white-space: nowrap;
 }
 .codex-entry.open .codex-name { color: var(--accent); }
