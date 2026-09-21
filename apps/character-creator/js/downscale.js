@@ -2,16 +2,19 @@
 //
 // WHY IN THE BROWSER AND NOT ON THE WAY OUT. This platform cannot resize an
 // image: `docs/pages-to-workers-migration.md` has a row for the Image Resizing
-// binding reading "Workers yes, Pages no", with NPC portraits served at full
-// size as its worked example. So a 5MB scan of a two-page map spread reaches a
-// phone as 5MB, and the two list views that show it cap the picture at 160px
-// and 70vh - they download the whole thing to paint a fraction of it. The only
-// place the bytes can be made smaller is before they leave.
+// binding reading "Workers yes, Pages no". So a 5MB scan of a two-page map
+// spread reaches a phone as 5MB, and the two list views that show it cap the
+// picture at 160px and 70vh - they download the whole thing to paint a
+// fraction of it. The only place the bytes can be made smaller is before they
+// leave. (That row's worked example used to be NPC portraits; F59 below is why
+// it no longer is.)
 //
 // A CLASSIC SCRIPT with one global, like sticky.js and derive.js, because the
-// pages that need it are not modules and because the NPC portrait upload in
-// apps/campaign/campaign.js is the second caller waiting to happen - see
-// UI-AUDIT F59, which is that half, filed rather than taken.
+// pages that need it are not modules - and because this file is loaded by two
+// apps that are not each other, by absolute path from `/apps/character-creator/js/`.
+// The second caller is the NPC portrait upload in apps/campaign/campaign.js,
+// UI-AUDIT F59, taken 2026-09-20; it passes its own `maxEdge` of 512, which is
+// what the second parameter exists for.
 //
 // EVERY REFUSAL RETURNS THE ORIGINAL FILE. Nothing here is allowed to stop an
 // upload: a canvas that will not decode, a browser without createImageBitmap,
@@ -20,10 +23,15 @@
 (function (global) {
   'use strict';
 
-  // 2048 on the longest edge. Present mode is the only view that wants more
-  // than about 1000 CSS px, and it is full-screen: 2048 covers a 1024pt tablet
-  // at device-pixel-ratio 2 with room over. Larger than that is detail no
-  // screen in this app can render.
+  // 2048 on the longest edge, for a campaign picture. Present mode is the only
+  // view that wants more than about 1000 CSS px, and it is full-screen: 2048
+  // covers a 1024pt tablet at device-pixel-ratio 2 with room over. Larger than
+  // that is detail no screen in this app can render.
+  //
+  // IT IS THE DEFAULT AND NOT THE RULE. A caller whose largest view is smaller
+  // passes its own - `uploadPortrait` passes 512, because an NPC portrait is
+  // painted at 34px and 120px and nowhere else (UI-AUDIT F59). The cap belongs
+  // to the view, and only the caller knows the view.
   const MAX_EDGE = 2048;
 
   // GIF IS NEVER RE-ENCODED, and this is the whole reason the type is chosen

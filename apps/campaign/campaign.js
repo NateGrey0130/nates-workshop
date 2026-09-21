@@ -885,6 +885,21 @@ async function deleteNpc(id) {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
+// A PORTRAIT IS THE SMALLEST PICTURE IN THIS WHOLE REPO, so it gets its own
+// cap rather than the 2048 `downscale.js` defaults to (UI-AUDIT F59). There
+// are exactly two views of one - the 34px roster thumbnail in `npcRow` and the
+// 120px square in the dossier, both `object-fit: cover` - and no full-screen
+// view exists the way present mode does for a campaign picture. 512 covers the
+// 120px square at a device pixel ratio of 4, and leaves room for a dossier
+// portrait that doubles in size before anyone has to think about this again.
+// Larger than that is detail no view in this app can render, which is the
+// argument `downscale.js` makes for 2048 one app over.
+//
+// THIS IS DESTRUCTIVE IN THE ONE WAY THAT MATTERS: the object in R2 is the
+// downscaled one, so a cap chosen too small cannot be undone by changing a
+// stylesheet later. That is the reason it is 512 and not 256.
+const PORTRAIT_MAX_EDGE = 512;
+
 // The raw file as the body, with its own Content-Type. Not multipart: there is
 // exactly one file and no fields beside it, so a FormData boundary would be
 // packaging for nothing.
@@ -893,8 +908,18 @@ async function uploadPortrait(id) {
   if (!file) { $('portrait-msg').textContent = 'Choose an image first.'; return; }
   $('portrait-msg').textContent = 'Uploading…';
   try {
+    // UI-AUDIT F59: shrink it here, because nothing downstream can - this
+    // platform has no image resizing on Pages. THE HEADER COMES FROM WHAT IS
+    // SENT, not from the File: the server reads this one header to pick the R2
+    // key's extension, the stored content_type and the Content-Type it serves
+    // back later, so describing a re-encoded blob with the original file's
+    // type would be wrong in three places. `toUpload` hands the original back
+    // untouched whenever it cannot do better - a gif, a picture already under
+    // the cap, a canvas that will not decode - so this is the same request it
+    // always was in every one of those cases.
+    const body = await downscale.toUpload(file, PORTRAIT_MAX_EDGE);
     await api(`campaigns/${campaignId}/npcs/${id}/portrait`, {
-      method: 'POST', headers: { 'Content-Type': file.type }, body: file,
+      method: 'POST', headers: { 'Content-Type': body.type }, body,
     });
     D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
     const list = await api(`campaigns/${campaignId}/npcs`);
