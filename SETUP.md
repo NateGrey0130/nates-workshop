@@ -798,6 +798,34 @@ does not intervene** — the command still fails identically, and an ordinary ty
 costs nothing because it is not on the list. **If that file ever appears, read it
 before doing anything else**, including reopening the shell. It covers **interactive shells only**: Claude Code runs `powershell.exe -NoProfile`, so nothing an agent launches loads this profile, and no instrumentation put here will ever see agent traffic.
 
+### Per-clone git config, because git cannot ship config with a checkout
+
+Two settings, once per clone. Neither is in the repo and neither can be —
+`.git/config` is not a tracked file — so a fresh clone starts without them and
+nothing reports the absence.
+
+```bash
+git config remote.origin.prune true
+git config gc.auto 1000
+```
+
+**`remote.origin.prune`** stops merged branches' tracking refs accumulating in
+`git branch -r`. The `ship-pr` skill has the detail that matters: it is
+necessary and **not sufficient**, because pruning only considers the refs the
+refspec covers — `git pull origin main` leaves the dead ref behind and a bare
+`git pull` removes it. That is why step 8 there is bare.
+
+**`gc.auto`** is the one with a measurement behind it. Git's default is 6700
+loose objects before an automatic repack, and on 2026-09-21 this clone held
+**6,684** — sixteen short, with `.git` at **136 MB** against **8.8 MB** of
+actual packs. A manual `git gc` took it to **18 MB**. The threshold was not
+wrong so much as too far away to ever be reached in normal use here, and the
+cost of it never firing is two orders of magnitude of clone weight. 1000 makes
+it fire during ordinary commits, for a few seconds at a time.
+
+Neither is urgent on a machine that already works. Both are the difference
+between a clone that stays tidy and one that needs somebody to remember.
+
 ### Worktrees, and the two stores that live under the repo root
 
 Two per-machine stores sit inside the checkout and are gitignored: the OCR book
