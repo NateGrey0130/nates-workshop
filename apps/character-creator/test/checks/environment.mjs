@@ -454,6 +454,33 @@ section('Documentation claims');
     stated ? `SETUP says ${stated[1]}, there are ${actual}` : '');
 }
 
+// ---- 4. The README's tree must not enumerate the checks modules -----------
+// It used to list TWO of them, and the second with a `└──`, which in a tree
+// drawn with box characters is the mark for "last in this directory". There
+// were eight more. A reader counting modules from that tree was off by eight,
+// and the two it named were simply the two that existed when it was written.
+//
+// The remedy is the one this repo keeps arriving at: stop enumerating. The
+// machine's own CLAUDE.md names no skill and no agent for the same reason and
+// is held to it by checks/machine-instructions.mjs, and the repo CLAUDE.md
+// says `ls .claude/agents/` "is the list, and it is the ONLY list". This is
+// that rule for the checks directory, which had grown the fastest of the three.
+//
+// Deliberately NOT a count check. "The README states how many modules there
+// are" would be a number to keep in step, which is the failure one line up.
+// The assertion is that it names none, which cannot go stale.
+{
+  const readmeText = readFileSync(join(appDir, 'README.md'), 'utf8');
+  const moduleFiles = readdirSync(join(appDir, 'test', 'checks'))
+    .filter((f) => f.endsWith('.mjs'));
+  check('there are checks modules to look for', moduleFiles.length > 0);
+  const named = moduleFiles.filter((f) => readmeText.includes(f));
+  check('the README names no individual checks module',
+    named.length === 0,
+    named.join(', ') + ' — the tree points at `ls test/checks/` instead, because a '
+    + 'list here goes stale the next time a module lands. See the note above the tree.');
+}
+
 section('Skills stay true');
 
 // Skills are instructions with no runtime, so they rot silently. Migration 024
