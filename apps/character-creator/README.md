@@ -53,6 +53,14 @@ In this file:
 Everything the app reads at runtime is in D1. There are no static content files
 — adding a class, a skill, a spell, or an item needs no commit and no redeploy.
 
+**The tree below is a SELECTION, not a listing.** It names the files worth
+knowing about and leaves the rest out — `js/` alone holds more than it shows.
+Read a missing file as unremarkable, never as absent, and `ls` the directory
+when you need the set. This is said here because the tree is drawn with box
+characters, and a `└──` looks like the end of a directory rather than the end
+of what was worth writing down: two of the ten `test/checks/` modules were
+listed that way, which read as eight modules that did not exist.
+
 ```
 FIVE APPS, ONE ENGINE. The wizard grew into five jobs and, on 2026-09-19, five
 URLs with a tile each on the workshop hub. The PAGES moved; the shared modules
@@ -157,11 +165,13 @@ apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 └── test/
     ├── smoke.mjs             The runner, and the rules half of the checks
     ├── harness.mjs           check(), section(), the counters and the summary
-    ├── checks/
-    │   ├── environment.mjs   D1 schema, schema.sql self-sufficiency, data-script
-    │   │                     conventions, documentation claims, migration state
-    │   └── catalog-data.mjs  Core pools, the Hand to Hand and W.P. level
-    │                         schedules, spell text, gear shape, provenance
+    ├── checks/               The rest of the suite, one module per subject.
+    │                         `ls apps/character-creator/test/checks/` is the
+    │                         list and it is the only one — nothing here
+    │                         enumerates them and no count is written down,
+    │                         because both rot the next time a module lands.
+    │                         Each declares the sections it runs and smoke.mjs
+    │                         checks that declaration both ways
     ├── regression.mjs        End-to-end: builds a throwaway D1, boots the
     │                         worker, drives the real endpoints over HTTP
     ├── dev-server.mjs        Free port, owner of a taken one, and proof the
