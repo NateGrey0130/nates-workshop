@@ -10,13 +10,23 @@
 // a rebuilt database serves requests. Nothing should start depending on this:
 // no test imports it, and it is not part of any gate.
 //
-// WHY IT EXISTS. `d1-apply.mjs --local db/*.sql` spawns one wrangler per file
-// and there are 295 of them - well over an hour. The alternative everything
+// WHY IT EXISTS. `d1-apply.mjs --local db/*.sql` spawns one wrangler per file,
+// and the glob matched 759 of them on 2026-09-21 - hours, at any wrangler
+// start-up cost this machine has measured. The alternative everything
 // else here uses is to concatenate the lot into one bootstrap and hand it to
 // wrangler once, which is minutes but gives up the thing that makes a rebuild
 // legible: WHICH FILE did that. This keeps both. It replays the same files in
-// the same order into node's own SQLite, in-process, and it takes about twenty
-// seconds.
+// the same order into node's own SQLite, in-process, and it takes under a
+// minute.
+//
+// BOTH NUMBERS ABOVE MOVE, so neither is load-bearing and neither is worth
+// trusting from here. The file count is whatever `db/*.sql` matches today, and
+// this script prints it - "N file(s) applied" - on every run; the duration
+// rides on that count and on the machine, this replay being in-process and
+// never spawning wrangler at all. They were 295 and "about twenty seconds"
+// when this header was written and went stale without anything noticing,
+// which is the argument for reading the run rather than the comment. Dated
+// claims only, and prefer the run.
 //
 // That speed is not a nicety. An hour per rebuild is why the zzzz- rename
 // shipped unverified and why three occurrences of the filename-ordering bug
