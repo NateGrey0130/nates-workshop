@@ -6,9 +6,9 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-A feature menu, taken one at a time. **`B10` IS OPEN** — filed 2026-09-20,
-under its own dated heading at the end of this file, and it is the reason this
-header no longer opens by saying everything is closed.
+A feature menu, taken one at a time. **Read each finding's own note for its
+state** — this header gives none. Findings filed after the original run sit
+under their own dated headings at the end of the file.
 
 `B1`…`B9` are all closed, across PRs #315–#325 — B1–B8 built, **B9 declined**
 as it recommended. **B6 was the largest item and
@@ -24,10 +24,10 @@ in a PR that did not come back here. `UI-AUDIT`'s header records the same
 failure happening to it three times. Read each finding's own note.)*
 <!-- claim-ok: quoting the sentence this paragraph replaces, with the date it stopped being true -->
 
-**`B10` has been premise-audited but NOT taken** — 2026-09-21, by the
-`audit-premise-auditor`, at Nate's word to file rather than build. The
-corrections are recorded under the finding itself so nobody implements it from
-its original text.
+**A premise audit was run on 2026-09-21** by the `audit-premise-auditor`, at
+Nate's word to file rather than build. Its corrections are recorded under the
+finding itself so nobody implements from the original text; read that
+finding's own note for what happened after.
 
 **Investigated 2026-08-26** against `9d16e9a` (`main`). The live ISBN bug is a
 separate file, `ISBN-AUDIT.md`, whose findings are numbered
@@ -360,3 +360,49 @@ the production row count: three values are recorded — **3,544** on 2026-08-26
 actively edited. **The argument does not depend on which is right**: the count
 cannot distinguish ran from never-ran in either direction, and only the derived
 headroom moves.
+
+**Closed without being taken, 2026-09-21, on Nate's word. Parked with a
+trigger, not declined on the merits.**
+
+**Option A is unavailable.** It needs a one-line check run in lillcreeper's own
+browser console, and they are not comfortable doing it. Option B is scoped by
+this finding as worth doing *"only if A comes back non-null"* — A cannot come
+back at all, so that condition cannot be evaluated. Substituting a scope this
+finding did not propose is what `audit-menu` forbids, so the question is left
+unanswered rather than answered a different way.
+
+**Waiting is safe, and that is why this parks rather than decides.**
+`migrateLocalIfNeeded` removes `mv_library` only after a confirmed 2xx
+(`app.js:2162`, re-read 2026-09-21) and `initApp` calls it unconditionally on
+every load. A migration that has never completed has therefore lost nothing:
+the cache sits where it is and is retried on every visit. **The failure is
+invisible, not destructive** — which is the whole reason the cost of not
+knowing is bounded.
+
+**What reopens this**, so the decision is not re-derived from scratch:
+
+- lillcreeper reports items missing, or a library smaller than they remember;
+- anyone becomes willing to run option A's check, or to have it run for them;
+- **the migration path is about to be deleted for any other reason.** That
+  deletion is the single action that turns a latent failure into a permanent
+  one, and it must not happen on the strength of this note.
+
+**One number bounds the risk.** The permanent-and-silent mode is the cap 400 at
+`migrate.js:78-80` against `MAX_ITEMS = 5000` (`_lib/common.js:108`). Against
+**3,444** cloud rows — re-queried with `scripts/q.mjs --remote` on 2026-09-21,
+unchanged from this finding's 2026-09-20 figure — it can only bite if the
+stranded cache holds more than **1,556** items not already matched by
+title+type. Every other failure mode retries and would succeed once its cause
+cleared.
+
+**Two memory corrections were made with this closure**, both required by the
+premise audit above and neither reachable by any grep of this repo:
+`app-work-ledger` said their migration *"has not run"*, dated 2026-08-26 with
+no basis given, and `audit-menus` said `B10` was open.
+<!-- claim-ok: quoting the memory line the premise audit above requires correcting, with its date -->
+
+**And one correction to this finding's own text, recorded rather than edited**
+per *Audit files are RECORDS*: *"Nothing cites `B10` by number"* was false when
+written. PR #1206 added three references to `B10` in this menu's header **in
+the same commit** as the premise audit that says it. A tree-wide grep on
+2026-09-21 returns seven, all in this file.
