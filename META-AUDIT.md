@@ -1020,7 +1020,9 @@ person read it.
 `HEAD~250..HEAD` (573 commits); the two dating commands above are the
 reproducible half.**
 
-- **A retrofit is out, which `A13` already says.** Across every menu the tree
+- **A retrofit is out.** `A13`’s own closing paragraph rules it out at
+  `.claude/skills/audit-menu/SKILL.md:560`, read 2026-09-21 — *"Existing
+  headers are records and stay as they are."* Across every menu the tree
   glob returns plus `SETUP-v2-CHANGES.md`, the leading blockquotes hold 589
   lines, and 18 files' headers name a finding number — 227 tokens. This menu's
   own header is one of them and already says so.
