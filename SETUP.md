@@ -1,5 +1,13 @@
 # Nate's Workshop — Deployment Reference
 
+> **What pins this file:** five checks read it — `documented-counts.mjs`,
+> `environment.mjs` and `smoke.mjs` in the character-creator suite, plus
+> `apps/pick3cut5/test/smoke.mjs` and `apps/media-vault/test/smoke.mjs` — and
+> `instruction-paths.mjs` resolves every absolute path it names.
+>
+> **They pin particular sentences, not the file.** The rest is prose, true on
+> the day it was written.
+
 This repo is **live**: Cloudflare Pages deploys `main` on every merge — no
 build step. **Since 2026-09-16 CI blocks the merge:** `main`'s ruleset
 `22209348`, *"main: require a pull request"*, requires the `smoke` and `menus`

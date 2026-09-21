@@ -1,5 +1,14 @@
 # CLAUDE.md — nates-workshop
 
+> **What pins this file:** `apps/character-creator/test/checks/documented-counts.mjs`
+> asserts the skill table below — every skill named, no skill named that does not
+> exist, the count stated in words, and that this file still says they load from
+> anywhere. `apps/character-creator/test/checks/instruction-paths.mjs` asserts that
+> every absolute path it names resolves.
+>
+> **Everything else here is prose and is pinned by nothing.** The Cloudflare
+> sections say so themselves and give the command to ask instead.
+
 Plain HTML/JS/CSS, zero dependencies, no build step. There is no `package.json`
 and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 `main` IS the deploy, and **since 2026-09-16 CI blocks that merge**.

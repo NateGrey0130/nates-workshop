@@ -5,6 +5,13 @@ description: Take a numbered audit finding the way audit-menu requires, in the o
 
 # /take <MENU> <ID>
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 `/take BOOK-INGEST-AUDIT F76`. The menu is the file's stem (`BOOK-INGEST-AUDIT`,
 `SKILL-AUDIT`, `apps/pick3cut5/AUDIT`) and the id is the finding's own
 (`F76`, `G8`, `M7`). **If either is missing, stop and ask which.** A bare number

@@ -5,6 +5,13 @@ description: Change Pick 3 Cut 5 without breaking it for the people it is public
 
 # Pick 3 Cut 5
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 The only part of this site that is **public**, and the only component a merge
 does not deploy. Both facts break things quietly, and both have.
 

@@ -5,6 +5,16 @@ description: Transcribe a Rifts or Palladium Fantasy O.C.C. or R.C.C. from a sou
 
 # Importing a class
 
+> **What pins this file:** its frontmatter and every repo path it names, by
+> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
+> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
+> `smoke.mjs` also pins that it separates the permanent half from the
+> perishable, `rendered-ui.mjs` pins `reference/frontmatter.md` against the
+> sheet, and `environment.mjs` pins `reference/data-script.sql`.
+>
+> **The prose is pinned by nothing** — read an undated claim here as true on
+> the day it was written.
+
 A class is a markdown file — YAML frontmatter for mechanics, prose body for
 lore — stored as one row in `imported_classes`. Adding one means writing a
 one-off SQL data script under `apps/character-creator/db/`.
@@ -260,7 +270,8 @@ They end up in the same paragraph and nothing marks the seam, so write the
 DECISION and cite the finding rather than explaining the mechanism:
 
 > Not stored; see BOOK-INGEST-AUDIT.md F8.  ← never goes stale
-> `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6.  ← always will
+> `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6. 
+> ← always will
 
 Where the mechanism has to be in the class, write it past-tense and name the PR.
 
