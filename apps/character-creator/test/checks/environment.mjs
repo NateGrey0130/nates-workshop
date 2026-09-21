@@ -474,11 +474,39 @@ section('Documentation claims');
   const moduleFiles = readdirSync(join(appDir, 'test', 'checks'))
     .filter((f) => f.endsWith('.mjs'));
   check('there are checks modules to look for', moduleFiles.length > 0);
-  const named = moduleFiles.filter((f) => readmeText.includes(f));
-  check('the README names no individual checks module',
+
+  // SCOPED TO THE TREES, not to the whole file. This landed file-wide in #1218
+  // on the reading that "the block has no machine-readable bounds", and that
+  // was simply wrong: both trees are fenced code blocks, and a fence is a
+  // bound. File-wide, this would have refused a perfectly good sentence
+  // elsewhere in the README explaining what one module does - which is a check
+  // picking a fight it has no stake in.
+  //
+  // A tree is a fenced block containing box-drawing characters. There are two
+  // (the app layout and the scripts list) and the count is not asserted,
+  // because a third would be fine and this check has no opinion about it.
+  const trees = [];
+  {
+    const lines = readmeText.split(/\r?\n/);
+    let open = null;
+    lines.forEach((l, i) => {
+      if (!/^```/.test(l)) return;
+      if (open === null) { open = i + 1; return; }
+      const body = lines.slice(open, i);
+      if (body.some((x) => /[├└│]/.test(x))) trees.push(body.join('\n'));
+      open = null;
+    });
+  }
+  check('the README has at least one file tree to check', trees.length > 0,
+    'no fenced block carried box-drawing characters — has the tree been reformatted?');
+
+  const treeText = trees.join('\n');
+  const named = moduleFiles.filter((f) => treeText.includes(f));
+  check('no README file tree names an individual checks module',
     named.length === 0,
     named.join(', ') + ' — the tree points at `ls test/checks/` instead, because a '
-    + 'list here goes stale the next time a module lands. See the note above the tree.');
+    + 'list there goes stale the next time a module lands. See the note above the tree. '
+    + 'Prose outside the trees may name whatever it likes.');
 }
 
 section('Skills stay true');

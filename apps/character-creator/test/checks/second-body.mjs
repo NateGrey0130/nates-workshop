@@ -43,11 +43,12 @@ import { appDir, appPath, repoRoot, check, section, wantSection } from '../harne
 // they run' check reads both directions out of this file: an announcement
 // missing from this list, and a name here that nothing announces.
 //
-// Do not write the announcing call's name followed by an open bracket anywhere
-// in this file's PROSE. That check counts those occurrences textually and
-// cannot tell a comment from code, so a mention in a comment reads as a fifth
-// call it then fails to parse a literal out of. This comment used to do
-// exactly that and cost a red run.
+// This comment used to carry a warning not to write section( in prose here,
+// because that check counted the occurrences textually and read a mention in a
+// comment as a fifth call it could not parse a literal out of. It cost a red
+// run on the day this module was created. The check is anchored to statement
+// position now and no longer cares, so the warning is gone rather than left
+// standing as a rule about a bug that was fixed.
 const SECTIONS = ['A Horror Factor the character PROJECTS (F75)',
   'A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)',
   'Damage, healing and rest on the active form (Nightbane follow-up 5)',
