@@ -270,8 +270,7 @@ They end up in the same paragraph and nothing marks the seam, so write the
 DECISION and cite the finding rather than explaining the mechanism:
 
 > Not stored; see BOOK-INGEST-AUDIT.md F8.  ← never goes stale
-> `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6. 
-> ← always will
+> `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6.  ← always will
 
 Where the mechanism has to be in the class, write it past-tense and name the PR.
 
