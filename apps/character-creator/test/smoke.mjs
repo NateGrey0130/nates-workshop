@@ -9278,8 +9278,22 @@ section('The checks modules declare the sections they run');
   const literal = /(['"])((?:(?!\1)[^\\]|\\.)*)\1/g;
   for (const f of modules) {
     const src = readFileSync(join(checksDir, f), 'utf8');
-    const called = [...src.matchAll(/\bsection\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*\)/g)].map((m) => m[2]);
-    const every = (src.match(/\bsection\(/g) || []).length;
+    const called = [...src.matchAll(/^[ \t]*section\(\s*(['"])((?:(?!\1)[^\\]|\\.)*)\1\s*\)/gm)].map((m) => m[2]);
+    // ANCHORED TO STATEMENT POSITION, both sides, and that is the whole fix.
+    // `every` used to be a bare `\bsection\(` over the file, which counts the
+    // words in a COMMENT too: a comment in checks/second-body.mjs describing
+    // how announcements are declared read as a fifth call that no literal
+    // could be parsed out of, and failed the suite (#1217). A comment line
+    // begins with `//`, so it cannot match `^[ \t]*section\(` - no comment
+    // stripper needed, and writing one is how the other three attempts at
+    // this class of problem went wrong.
+    //
+    // What it gives up: a call that is not the first thing on its line, such
+    // as `if (x) section('y');`. There are none, the shape is worth
+    // discouraging anyway, and one that appeared would be reported as a
+    // DECLARED name nothing announces by the two checks below - so it fails
+    // loudly rather than slipping past.
+    const every = (src.match(/^[ \t]*section\(/gm) || []).length;
     check(`${f}: every section() call names its section with a string literal`,
       called.length === every, `${every} calls, ${called.length} readable`);
     if (every === 0) continue;
