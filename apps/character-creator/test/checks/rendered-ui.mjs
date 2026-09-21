@@ -1639,6 +1639,36 @@ export function run() {
     // this", and that is most of what the question is for.
     check('and it is not gated on write access',
       !/const short = w &&/.test(sheet));
+
+    // A LONG POOL SHRINKS RATHER THAN CLIPS. Four digits overflowed the input
+    // that clips them at every card width the grid can produce - before the
+    // figure face as well as after it.
+    const layout = readFileSync(join(appDir, 'js', 'sheet-layout.js'), 'utf8');
+    check('the pool value takes its size from a property, not a literal',
+      /\.vital \.val \{ font-size: var\(--val-size, 44px\);/.test(css),
+      'the 44px is hard-coded again, so a long value has nothing to shrink to');
+    check('and four and five digits each have one',
+      /\.vital\[data-digits="4"\] \{ --val-size: 32px; \}/.test(css)
+      && /\.vital\[data-digits="5"\] \{ --val-size: 26px; \}/.test(css));
+
+    // THE SPECIFICITY IS THE POINT. Sized on .vital and read by .val, the two
+    // font-size declarations tie at (0,2,0) and the print block wins on source
+    // order. A `.vital[data-digits] .val` selector would be (0,3,0) and would
+    // print a 32px number on a 10pt sheet - silently, because the print check
+    // greps for a string that would still be sitting there.
+    check('the size is set on the card, so the print rule still outranks it',
+      !/\.vital\[data-digits="[45]"\] \.val \{/.test(css),
+      'a (0,3,0) selector would beat the print rule');
+
+    // It has to move WITH the value. paintPool is where a stepper, a damage
+    // press and a queued change all land, so a pool crossing 999 either way
+    // would otherwise keep whatever size it was first drawn at.
+    check('the digit count is emitted on render',
+      /data-digits="\$\{Math\.min\(digits, 5\)\}"/.test(layout));
+    check('and repainted when the value changes, in both directions',
+      /card\.setAttribute\('data-digits'/.test(layout)
+      && /card\.removeAttribute\('data-digits'\)/.test(layout),
+      'a pool dropping back under 1000 would keep the smaller size');
   }
 
   // ---------- The front door agrees with the rooms ----------
