@@ -43,8 +43,13 @@ own README — so it is corrected by hand or not at all.
 
 **Merging to `main` is the deploy.** Cloudflare Pages publishes the repo root,
 and there is no build step between the two. A GitHub ruleset requires a pull
-request, so `main` does not take a direct push; the test suites run on every
-pull request and **report only** — they cannot block a merge.
+request, so `main` does not take a direct push, and **since 2026-09-16 three
+checks must be green before the merge button works** — `smoke`, `menus` and
+`regression`. `play-flow` and the Pages deploy report only.
+
+This paragraph said the suites **could not** block a merge, for the five days
+after they started doing so. Ask the ruleset rather than this line:
+`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
 
 Schema and data changes are applied to the live database *before* the merge that
 needs them, never after. That ordering is the single most important thing to
