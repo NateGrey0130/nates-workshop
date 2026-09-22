@@ -271,3 +271,47 @@ take a new file.
 
 **Ongoing cost:** none. One sentence that already exists, made true, in a file
 that has no check reaching it from outside this machine.
+
+### M24 — low — the corrected claim sits a second time in the machine `CLAUDE.md`, and the paragraph around it says no test reads the file
+
+**Opened 2026-09-22 while taking `M23`**, by `audit-premise-auditor`, and filed
+rather than taken because `M23`'s posture is one paragraph and both of these sit
+outside it.
+
+Two sentences, both in `C:\Users\natha\.claude\CLAUDE.md`, read 2026-09-22:
+
+- **`:8-9`** gives the reason the pointer file exists at all: that the repo's own
+  `CLAUDE.md` does not load from outside the repo, *"and the book work runs from
+  `C:\Users\natha\Projects\workshop`"*. `M23` corrected the same claim at
+  `:21-24` and left this one deliberately. **The argument survives the
+  correction** — `Downloads` is outside the repo too — so what needs rewriting is
+  one clause, not the paragraph's point.
+- **`:27-31`** says *"no test, no grep of the repo and no other document reaches
+  it"*, and that `SETUP.md` → *Setting up a machine* *"is the only thing pointing
+  back at this one"*. `SETUP.md:747-752` says the opposite half outright: **since
+  2026-09-21 one test does read it**,
+  `apps/character-creator/test/checks/machine-instructions.mjs`. That module
+  points back as well, at `:1` and `:68`, and two `SETUP.md` paragraphs do. The
+  sentence is defensible on a narrow reading — no test detects a *move*, which
+  is what it is about — and it reads considerably broader than it is.
+
+**Proposal:** rewrite the clause at `:8-9` so the pointer's reason names no
+directory that can move — sessions here start outside the repo, whichever
+directory they start in — and narrow `:27-31` to what is still true: nothing
+detects a **move**. **Posture: two clauses, by hand, outside the repo, with the
+PR carrying the record, exactly as `M23`.** No rewrite of the file, no move of
+anything, and no enumeration put back.
+
+**Evidence:** reads of those lines, of `SETUP.md:747-752`, and of
+`machine-instructions.mjs:1` and `:68`, all 2026-09-22, by
+`audit-premise-auditor` while checking `M23`'s premises.
+
+**Confidence:** high on both sentences; each was read rather than inferred. What
+would raise the second half is a decision about whether *"no test reaches it"*
+was ever meant as broadly as it reads, which is Nate's rather than a fact to
+measure.
+
+**Ongoing cost:** none beyond the edit. The same gate applies as for `M23` —
+that file may name no skill or agent and state no count of them, and the check
+holding it to that runs only from inside this repo, so the edit has to be
+verified by hand here.
