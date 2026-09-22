@@ -930,6 +930,13 @@ scripts/
 ├── books-lib.mjs           Reading it, and cacheCoverage - is this cache long
 │                           enough to be believed? The title matching is in
 │                           class-check-lib.mjs, which stays free of file I/O
+├── agent-usage.mjs         Which subagent has been spawned how often, from
+│                           this machine’s session transcripts. Reads nothing
+│                           in this repo, and nothing gates on it. The block
+│                           is named `Agent`, not `Task`, and the dedupe key
+│                           is the block id - both rules are in its header,
+│                           because this measurement has been hand-built
+│                           three times and two of the three got one wrong
 ├── readme-section.mjs      One section of this README by heading, bounded by
 │                           the next heading of ANY depth; no arguments prints
 │                           the heading index. The alternative kept being the

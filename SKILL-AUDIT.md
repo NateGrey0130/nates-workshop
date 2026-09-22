@@ -1054,6 +1054,70 @@ date. Low on what a re-run would find, which is the reason to run it.
 **Ongoing cost:** a script that reads machine-local files and is run by hand.
 Nothing in CI, and nothing that can go red.
 
+**Taken, 2026-09-22 (PR #1240). Posture held: verification only — nothing was
+re-run and no agent's behaviour changed.** Two things shipped:
+`scripts/agent-usage.mjs`, and a dated note beside the 2026-09-04 run.
+
+**The finding asked for a re-run; the premise audit found what a re-run was not
+needed for.** `bd49881a`, the commit that shipped the claim verifiers, says in
+its own body that the `opus` pin *"was provisional pending a run"*, reports 9/9
+on both models, and concludes *"So `sonnet`."* `negatives.md:136` says the same.
+**`.claude/agents/claim-capability-verifier.md:5` has read `model: opus` since
+that commit and its `model:` line has never been edited** — eighteen days of a
+shipped file contradicting the run recorded beside it, and no re-run was needed
+to see it.
+
+**Nate's word, 2026-09-22: leave it at `opus` and resolve it in the record.**
+The run found no difference in verdicts, so what it settles is cost, on an agent
+spawned four times in those eighteen days; the same section lists four things
+`opus` did better, and the shape this agent exists for is the one that shipped a
+class seven skills short. The note is beside the run, the run is not edited, and
+the pin is now a decision rather than an oversight.
+
+**Five corrections from `audit-premise-auditor`:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"records the run
+  that scored both claim agents"* — it scored **one method at two models**,
+  through throwaway `zz-eval-blind` agent types, because a model comes from
+  frontmatter and a shipped agent file cannot be run at two of them. `F28`
+  already said the 9/9 describes *"the method, not the agent file"*.
+  **`claim-count-verifier` has never been scored by anything.**
+- <!-- claim-ok: quoting the premise this note corrects --> The
+  `SKILL-AUDIT.closed.md:2459-2462` citation is `F28`'s first-**exercise**
+  table. **`F47`'s outcome note on this menu had corrected that exact citation
+  hours before this finding was filed**, and handed this finding the right
+  question; this finding used a two-line-wider version of the same wrong
+  citation anyway. That is worth more than the correction: a citation naming a
+  file and a line reads as verified, and `menu-check` — which exists for claims
+  about other files — passes it, because it checks that a citation is *present*.
+- <!-- claim-ok: quoting the premise this note corrects --> *"a transcript logs
+  the same call about twice"* — **false for tool-use blocks**: 383 raw against
+  358 distinct in this window, **1.07×**. The ~1.9× belongs to assistant `usage`
+  records keyed by `message.id`, and that key here would drop every second call
+  in a turn that spawned two. Both rules are in the script's header.
+- **Hand-built three times, not twice** — `EFFICIENCY-AUDIT` parsed the same
+  corpus by script on 2026-08-25, using the key that does not work for counting
+  agent calls.
+- **313 is exact, and two of its parts are not what this section's lead says.**
+  `book-reconcile` is **53** in the window; the 56 in the lead is the whole
+  corpus from 2026-08-31. And `book-reconcile` was written **2026-08-22**, a
+  month before the eval, so *"the day they were written"* is not one day for the
+  agent this finding singles out.
+
+**One of six model assignments has a measurement behind it**, and it is the one
+that disagrees with its file. The other five are argument, and
+`open-findings-scout` — added earlier today by `F49` — is a sixth agent this
+finding's *five agents* framing does not reach.
+
+**One fixture figure has moved and is recorded rather than edited:**
+`negatives.md:85` says `Weapon Proficiencies` holds 34 rows; production returned
+**38** on 2026-09-22. No verdict in the fixture changes, and the answer key was
+re-verified against production while checking this.
+
+**What the script does not do**, so nobody assumes otherwise: no exit code, no
+check, no workflow. It reads a machine-local transcript directory that is absent
+on a runner, where it says so and exits 0. It counts spawns, not cost.
+
 ### F53 — `book-survey` §0 gives the visible-glyph detector's numbers to the digit detector, in the passage explaining that the two need opposite remedies
 
 **Opened 2026-09-22 while taking `F45`**, by `audit-premise-auditor`, in the

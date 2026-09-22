@@ -144,6 +144,18 @@ could not masquerade as an absent one, confirmed every row carries
 classified `Boxing` as a **seed** row, which makes that note false when written
 rather than merely outdated.
 
+**Adjusted 2026-09-22 — the pin was never applied, and now stays `opus` on
+purpose.** `.claude/agents/claim-capability-verifier.md` has read `model: opus`
+since the commit that announced the result above, and no `model:` line on it has
+been edited since — so this section recorded a conclusion the shipped file never
+took, for eighteen days. Found by `SKILL-AUDIT` `F52`. **Nate's word,
+2026-09-22: leave it at `opus`.** The table shows 9/9 either way, so what the run
+settles is cost, and this agent was spawned four times in the eighteen days after
+it ran; against that, the paragraph above lists four things `opus` did better,
+and the shape this agent exists for is the one that shipped a class seven skills
+short. **The measurement stands exactly as written.** What changed is that the
+pin is now a decision instead of an oversight.
+
 **Three limits, so nobody reads this as stronger than it is:**
 
 - **Neither model met the trap.** Both reached `skills` by reasoning from the
