@@ -643,7 +643,7 @@ subagent `book-survey` §5 calls for simply did not exist there
 junctions, so repo edits propagate, and no admin rights are needed:
 
 ```powershell
-foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','pick3cut5','schema-change','ship-pr','take','verify-ui','windows-shell') {
+foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','pick3cut5','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
@@ -659,7 +659,7 @@ keeps the "no admin rights" property this whole block depends on.
 
 It has one consequence worth knowing: `~/.claude/agents` **is** the repo's
 directory, so nothing else can live there. `~/.claude/skills` is shared —
-plugin-installed skills sit beside the ten repo junctions as real directories —
+plugin-installed skills sit beside the repo's junctions as real directories —
 and the agents directory cannot be. If a non-repo agent is ever wanted, this
 link has to become per-file, and that will need elevation.
 
@@ -688,7 +688,7 @@ confirm a skill — by asking for it by name, not by trusting this line.
 
 **`CLAUDE.md` is NOT linked, and cannot usefully be.** A repo `CLAUDE.md` loads
 only inside its own directory, so a session started in the working directory gets
-all ten skills, the subagent, and none of the file that says which skill to use,
+every skill, the subagents, and none of the file that says which skill to use,
 what the Cloudflare token can reach, or that `--local` is not a mirror. That gap
 was being
 closed by hand: sixteen sessions opened with a typed *"read its `CLAUDE.md`

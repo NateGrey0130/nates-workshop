@@ -290,10 +290,20 @@ export function run() {
     check('and CLAUDE.md names no skill that does not exist',
       claimed.every((c) => skills.includes(c)),
       claimed.filter((c) => !skills.includes(c)).join(', '));
-    check('and says how many there are', new RegExp(`\\b${
-      ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-        'eleven', 'twelve'][skills.length - 1] ?? '<no word for this many>'
-    } skills\\b`, 'i').test(claudeMd), `there are ${skills.length}`);
+    // The list ran to `twelve` and there were ten skills, so it had two spare.
+    // Running off the end fails in a way that reads like a stale count in
+    // CLAUDE.md - the regex looks for the literal `<no word for this many>` -
+    // when the actual fix is here. Extended to twenty, and the detail below now
+    // says which of the two it is.
+    const NUMBER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+      'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
+      'seventeen', 'eighteen', 'nineteen', 'twenty'];
+    const word = NUMBER_WORDS[skills.length - 1];
+    check('and says how many there are',
+      word !== undefined && new RegExp(`\\b${word} skills\\b`, 'i').test(claudeMd),
+      word === undefined
+        ? `${skills.length} skills, and NUMBER_WORDS in this file stops at ${NUMBER_WORDS.length} - extend it`
+        : `there are ${skills.length}, so CLAUDE.md should say "${word} skills"`);
 
     // And CLAUDE.md must not go back to saying they DO NOT load. It said so for
     // two days after the junctions landed, on the one file that is loaded into
