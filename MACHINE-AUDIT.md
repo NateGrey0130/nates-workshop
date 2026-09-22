@@ -271,3 +271,94 @@ take a new file.
 
 **Ongoing cost:** none. One sentence that already exists, made true, in a file
 that has no check reaching it from outside this machine.
+
+**Taken, 2026-09-22 (PR #1241). Posture held: one paragraph, by hand, outside
+the repo, with this PR carrying the record.** `~/.claude/CLAUDE.md` now states
+that sessions are not started in that directory, with the date and the
+measurement, and leaves the 2026-09-02 history and the pointer to the repo's own
+`CLAUDE.md` standing. The file is uniformly **LF** and stayed that way — `M19`
+recorded that, and the repo's CRLF convention does not reach it.
+
+**One sentence in this finding is false, and `audit-premise-auditor` caught it
+before the edit.** <!-- claim-ok: quoting the premise this note corrects -->
+Above it says *"`M22` records that the memory store is keyed to the working
+directory — the store in use is the `Downloads` one, which is where the sessions
+are."* **There is no `Downloads` store.**
+`~/.claude/projects/C--Users-natha-Downloads/memory` is a **junction whose
+target is the workshop key's `memory`**, and so is the `nates-apps` key's; the
+one real store directory lives under the key for the very directory this finding
+is about, and files were written into it as recently as 2026-09-21. That is what
+`M22` records. **The correction is why the new paragraph says only what was
+measured** — a replacement sentence reading *the work left that directory* would
+have shipped a second false sentence into the file this finding exists to make
+true.
+
+**Two things beyond the letter of the proposal, declared rather than taken
+quietly:**
+
+- **The enumeration went with it.** The sentence named *the sourcebook PDFs, the
+  loose briefs, and its own `.claude\`*; the directory also holds `profile.ps1`
+  and `tools\`, so it had **gone short again** — the exact failure `M19` is
+  about, inside the sentence that cites `M19`. It is replaced with a description
+  plus the instruction to look, which is `M19`'s own doctrine.
+- **The claim is in that file twice, and only one instance is corrected.**
+  `:8-9` gives *the book work runs from that directory* as the reason the
+  pointer file exists at all; correcting it touches the file's own rationale,
+  which is past *one paragraph*. **Filed as `M24`, not taken here.**
+
+**And the finding's evidence needed one word.** `510` is a **recursive** count:
+a flat listing of that key returns **150** `.jsonl` files, the rest being
+per-session subagent transcripts. It reconciles exactly — 510 + 6 + 3 + 1 is the
+520 the retrospective states — but a taker re-deriving it with a flat listing
+would think the premise had failed.
+
+**Verified**, 2026-09-22, with
+`node apps/character-creator/test/smoke.mjs --section "machine instruction file"`
+against the edited file: *it names no individual skill or agent of this repo*
+and *states no count of them*, both pass. That module reads a path outside the
+repo and cannot run in CI, so a local run was the only place this was ever going
+to be proved.
+
+### M24 — low — the corrected claim sits a second time in the machine `CLAUDE.md`, and the paragraph around it says no test reads the file
+
+**Opened 2026-09-22 while taking `M23`**, by `audit-premise-auditor`, and filed
+rather than taken because `M23`'s posture is one paragraph and both of these sit
+outside it.
+
+Two sentences, both in `C:\Users\natha\.claude\CLAUDE.md`, read 2026-09-22:
+
+- **`:8-9`** gives the reason the pointer file exists at all: that the repo's own
+  `CLAUDE.md` does not load from outside the repo, *"and the book work runs from
+  `C:\Users\natha\Projects\workshop`"*. `M23` corrected the same claim at
+  `:21-24` and left this one deliberately. **The argument survives the
+  correction** — `Downloads` is outside the repo too — so what needs rewriting is
+  one clause, not the paragraph's point.
+- **`:27-31`** says *"no test, no grep of the repo and no other document reaches
+  it"*, and that `SETUP.md` → *Setting up a machine* *"is the only thing pointing
+  back at this one"*. `SETUP.md:747-752` says the opposite half outright: **since
+  2026-09-21 one test does read it**,
+  `apps/character-creator/test/checks/machine-instructions.mjs`. That module
+  points back as well, at `:1` and `:68`, and two `SETUP.md` paragraphs do. The
+  sentence is defensible on a narrow reading — no test detects a *move*, which
+  is what it is about — and it reads considerably broader than it is.
+
+**Proposal:** rewrite the clause at `:8-9` so the pointer's reason names no
+directory that can move — sessions here start outside the repo, whichever
+directory they start in — and narrow `:27-31` to what is still true: nothing
+detects a **move**. **Posture: two clauses, by hand, outside the repo, with the
+PR carrying the record, exactly as `M23`.** No rewrite of the file, no move of
+anything, and no enumeration put back.
+
+**Evidence:** reads of those lines, of `SETUP.md:747-752`, and of
+`machine-instructions.mjs:1` and `:68`, all 2026-09-22, by
+`audit-premise-auditor` while checking `M23`'s premises.
+
+**Confidence:** high on both sentences; each was read rather than inferred. What
+would raise the second half is a decision about whether *"no test reaches it"*
+was ever meant as broadly as it reads, which is Nate's rather than a fact to
+measure.
+
+**Ongoing cost:** none beyond the edit. The same gate applies as for `M23` —
+that file may name no skill or agent and state no count of them, and the check
+holding it to that runs only from inside this repo, so the edit has to be
+verified by hand here.
