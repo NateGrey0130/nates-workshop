@@ -12,7 +12,9 @@
 > `F43`'s note with it. The live wrong number it named and deliberately
 > excluded in `BOOK-INGEST-QUEUE.md` was corrected four minutes after this
 > finding was filed, on 2026-09-04 (commit `8309b76`), so nothing is left
-> there. **THIS MENU HAS NO OPEN WORK.** `F41`, `F42` and `F43` were all taken
+> there. **WORK WAS OPENED ON THIS MENU ON 2026-09-22**, by the subagent
+> retrospective, under the `##` section of that name; read under a finding's own
+> heading for its state. `F41`, `F42` and `F43` were all taken
 > 2026-09-04 (PRs #704, #705, #707); `F43` was filed and taken the same day, in
 > separate PRs. Three notes carry things a citer needs: `F41`'s posture was
 > **widened on Nate's word** from one agent file to four, `F42` corrected a
@@ -433,6 +435,351 @@ census as filed.
 Nothing else is taken until Nate names it.
 
 ---
+
+## Opened by the subagent retrospective, 2026-09-22
+
+A retrospective on the agent files in `.claude/agents/`, run 2026-09-22 from a
+session started in `C:\Users\natha\Downloads`. Usage was measured from the
+session transcripts under `C:\Users\natha\.claude\projects`, parsed as JSON and
+**deduped by `tool_use` id** because a transcript logs the same call about
+twice: 520 `.jsonl` files, 366 distinct `Task` calls, 2026-08-31 to 2026-09-20.
+`book-extract-worker` 140, `audit-premise-auditor` 113, `book-reconcile` 56,
+`claim-capability-verifier` 4, `claim-count-verifier` 3, `general-purpose` 38.
+No call in that corpus returned `Agent type '<name>' not found`, and none came
+back an error, so the junction and `F26`'s turn rule are both holding.
+
+**Two of these are filed WITH their outcome, declined** — `F46` and `F48`.
+Nate named the decision on 2026-09-22, when the plan they came from was agreed,
+and they are written down rather than dropped so neither is re-derived.
+`F39` is the precedent for a finding that exists to stop an idea coming back.
+
+### F45 — neither book agent is told about the substituted-digit fault class, and both already open the key that measures it
+
+`.claude/agents/book-extract-worker.md:56` and `.claude/agents/book-reconcile.md:107`
+each open a section on what OCR does to this corpus — `I.S.P.` read as `LS.P.`,
+`S.D.C.` as `$.D.C.`, `feet` as `fect`. Neither carries a line about the fault
+class that swaps a digit for a letter shaped like it:
+`grep -rni "cipher\|digit\|dpi\|render" .claude/agents/` returned no line at all,
+2026-09-22, across all five agent files.
+
+That fault class is documented — `.claude/skills/book-survey/SKILL.md:135-160`,
+under `## 0. Does it have a text layer? Ask before you OCR` at `:39`. `:135`
+records that the `corrupt_pages` detector cannot see it, because the wrong
+glyphs are ordinary characters; `:140` records that it is therefore measured
+into a separate manifest key, `substituted_digits`; `:157` records that on the
+pages clipped at 600 dpi the damage was in the ink.
+
+**Both agents are already sent to the file that carries that key.**
+`book-extract-worker.md:34-37` and `book-reconcile.md:44-47` send the agent to
+`scripts/books.json` or the cache's own `manifest.json` for `page_offset`.
+`substituted_digits` is a sibling key in the same object: a `node -e` reading
+`Object.keys` of `.cache/books/{bom,cb1,dag}/manifest.json` on 2026-09-22
+printed `slug,source_pdf,pages,text_layer,cached_pages,cached_range,printed_pages,page_offset,welded_pages,corrupt_pages,substituted_digits`
+for all three. It is a per-page map, not a flag — `new-west`'s holds 74 printed
+pages, the largest ten hits on printed 151, read from
+`.cache/books/new-west/manifest.json` the same day.
+
+**The remedy is hand-carried into the prompt today, and the data scripts are
+where it ended up.** `grep -rl "200 dpi render" apps/character-creator/db/`
+returns 53 files, 2026-09-22 — a sentence about how the numbers were read,
+written into the output because it was not in the agent that read them.
+
+**Hand-carrying has already been missed once.**
+`apps/character-creator/test/regression.mjs:1929-1936` carries a `CIPHER`
+regular expression over stored rows, and its own comment at `:1932` says why
+`LIKE` was not used. A check at the data layer fires after rows are written and
+only on the shapes its pattern matches.
+
+Neither book agent can load the skill that holds §0: `book-extract-worker.md:4`
+and `book-reconcile.md:4` both read `tools: Read, Grep, Glob, Bash`. `F27` made
+the `Skill` grant opt-in and per agent, and `.claude/agents/audit-premise-auditor.md:4`
+is the one file that took it.
+
+**Proposal:** grant `Skill` to both book agents, and add a short section to each
+— read `substituted_digits` for the slug beside `page_offset`; where the slice
+intersects a listed page, treat every number read off that page as suspect and
+say so in the return; `book-survey` §0 owns which remedy applies, because a
+render cures the text-layer encoding fault and does not cure ink damage.
+**Posture: additive, two agent files, and bounded by `F43`'s subtractive
+precedent** — not a second OCR-noise paragraph, but the one fault class the
+first one does not name.
+
+**Evidence:** the greps, the `node -e` over three manifests, and the
+`regression.mjs` read, all 2026-09-22. Not measured: whether an edit to an
+*existing* agent file takes effect inside the session that makes it. `F26`
+measured that for a file that did not exist before, and the two are not the
+same question.
+
+**Confidence:** high that the gap is real — the grep is exhaustive over the five
+files. Medium on the shape of the fix until one slice is run over a book whose
+`substituted_digits` is populated, `new-west` being the largest, and the worker
+is watched to see whether it flags a listed page without being told to.
+
+**Ongoing cost:** two more paragraphs to keep true, in files that are edited
+whenever the cache learns something anyway. No CI minute and no new script.
+
+### F46 — `book-extract-worker`'s contract assumes a slice holds stat blocks, and a slice of prose falls outside it
+
+**Filed with its outcome. Declined 2026-09-22 on Nate's word**, recorded so it
+is not re-derived.
+
+`grep -c "prose" .claude/agents/book-extract-worker.md` returns `0`, 2026-09-22.
+Its return contract at `:89-103` asks for a row's name, its fields and its
+printed folio, and closes at `:101` with **Do not pad** — a slice that holds
+four rows returns four rows. A slice holding narrative rather than rows is not
+described anywhere between `:89` and `:105`.
+
+`SKILL-AUDIT.closed.md:2462` records the run that met this: `book-extract-worker`
+on `ww` printed 44-45 returned **0 rows, and refused to invent any**. That is
+the behaviour the contract exists to produce, reached without the contract
+saying so.
+
+**Proposal, as declined:** one clause in the return section saying that a slice
+of prose returns zero rows and a sentence naming what the pages hold.
+**Posture: documentation only, one agent file, one clause.**
+
+**Why it is declined rather than taken:** the observed failure was a correct
+answer. The cost of a clause is small and the cost of being wrong about it is
+smaller still, but `F43` cut text from these same files on the argument that a
+line that does not change an outcome is a line to lose. Nothing here changes an
+outcome. **A proposal whose ongoing cost exceeds its impact should say so**, and
+this one does.
+
+**Evidence:** the `grep -c` and the read of `:89-105`, both 2026-09-22;
+`SKILL-AUDIT.closed.md:2462` read the same day.
+
+**Confidence:** high, and nothing would raise it — the question is a judgement
+about value, not a fact that is unsettled.
+
+**Ongoing cost:** none, declined.
+
+### F47 — the two claim verifiers have no trigger, and seven calls in eighteen days is what that looks like
+
+`claim-count-verifier` and `claim-capability-verifier` were added 2026-09-04
+(`git log --date=short -- .claude/agents/`, read 2026-09-22, commit `bd49881a`).
+Between them they have been spawned **seven times**: four on 2026-09-04, two on
+2026-09-05, one on 2026-09-15, and none since — deduped `tool_use` ids from the
+transcript corpus described at the head of this section.
+
+`audit-premise-auditor` was added in the same batch and has 113 calls over the
+same window. The difference is not quality. `take` names the premise auditor as
+step 3 of a numbered procedure (`.claude/skills/take/SKILL.md:87`), so it fires
+whenever a finding is taken. `.claude/skills/claim-audit/SKILL.md:203-204` routes
+the two claim shapes to the two agents by name, and nothing in the repo says
+**when** that routing runs.
+
+The claims themselves have not stopped drifting. The shapes `claim-audit`
+documents at `:195-199` — a count in prose, and *the app cannot do X* — are the
+two the same file records as having cost a player seven skills on the Merc
+Soldier and eight on the Robot Pilot.
+
+**Proposal:** name both agents at the step of `ship-pr` where a change touches
+documentation, class prose, or a `note` — the moment the drift is introduced —
+so that lifting a limitation and sweeping for the sentence that described it are
+one action rather than two. **Posture: one paragraph in one skill. No new gate,
+no exit code, no check.** Do not merge the two agents: the sonnet/opus split is
+the design, `claim-audit:203-204` states it, and `SKILL-AUDIT.closed.md:2459-2460`
+holds the run that picked it.
+
+**Evidence:** the transcript counts and the two skill reads, 2026-09-22; the
+commit date from `git log`, same day.
+
+**Confidence:** high that nothing fires them — seven calls is the measurement.
+Medium that `ship-pr` is the right host; it would be raised by naming the last
+three PRs that lifted a limitation and asking whether a sweep at that step would
+have caught the sentence describing it.
+
+**Ongoing cost:** one paragraph in a skill that is read on every PR, and the
+sweep itself whenever it fires. The sweep is the cost being proposed, and it is
+the point.
+
+### F48 — moving `take`'s subject grep inside the premise auditor would collapse the gate it is
+
+**Filed with its outcome. Declined 2026-09-22 on Nate's word**, recorded so it
+is not re-derived.
+
+The idea: `.claude/skills/take/SKILL.md:62-85` has the caller grep every menu and
+the memory directory for the finding's **subject**, and `:87` then spawns
+`audit-premise-auditor`. Both steps are read-only, the agent already loads
+`audit-menu`, and this file's own argument for the agent having no write tools is
+that a rule enforced by the harness beats a rule someone drifts from. On that
+argument the grep belongs inside the agent.
+
+**It does not, and the skill says why at `:32`:** *the steps run in order, and
+each one gates the next.* Step 2's output is meant to be judged before step 3
+starts — `:79` requires every hit printed with its file and line, or the words
+`no hits`, and the next lines ask which hits matter and why. The failure that
+produced that sentence was the skill's own first live run on 2026-09-16, where
+steps 2 and 3 fired alongside step 1 and step 1 then found the finding already
+taken. Folding the grep into the agent makes the two one call again and removes
+the point at which a person reads the hits.
+
+**Proposal, as declined:** move the subject grep out of `take` step 2 and into
+`audit-premise-auditor`, which would return the hits with its disagreements.
+**Posture: one step moved between two files, nothing added.**
+
+**Why it is declined:** the gate is the value, not the grep.
+
+**Evidence:** `.claude/skills/take/SKILL.md:32`, `:62-85`, `:87`, read 2026-09-22.
+
+**Confidence:** high. What would change it is a measured case where the grep was
+run, its hits were printed, and nobody read them — which would make the gate
+theatre rather than a gate.
+
+**Ongoing cost:** none, declined.
+
+### F49 — nothing lists what is open across the menus, and the compilation has been hand-built four times
+
+Four `general-purpose` calls have asked one session to work out what is still
+open across several menus at once — three on 2026-08-31 and one on 2026-09-12,
+from the deduped transcript corpus described at the head of this section. Each
+one re-wrote the method in its own words in the prompt, and the method is this
+file's own: read each menu's status header, never grep an outcome note, take the
+list of menus from the tree.
+
+**Two scripts are adjacent to this and neither answers it.**
+`scripts/menu-check.mjs:29` states outright that it cannot tell whether a claim
+is true — it checks that a claim about another file carries a citation.
+`scripts/audit-citations.mjs:8` states that it answers for `BOOK-INGEST-AUDIT`
+and nothing else, and it is about which classes cite a finding. Read both
+2026-09-22.
+
+The half that cannot be mechanised is the half `audit-menu` insists on: a
+status is prose under a heading, the wordings vary on purpose, and a mechanical
+reader of them has been wrong in both directions. That is the shape an agent is
+for — judgement over a bounded corpus, with no write tools and nothing to
+decide.
+
+**Proposal:** a new read-only agent, `open-findings-scout` —
+`tools: Read, Grep, Glob, Bash, Skill`, loading `audit-menu` first. It takes the
+list of menus from the tree, reads each one's status header and then the lines
+under each finding's heading, and returns one line per finding it believes open,
+each carrying the sentence it read the status from, plus the menus it could not
+settle. It proposes nothing, edits nothing, and does not say what should be
+taken. **Posture: a new agent file, read-only, no script, no check, and no index
+file** — an index of the menus has been declined twice, `REPO-AUDIT` `G9` and
+`META-AUDIT` `A1`, and this does not add one: it reads the tree each time and
+writes nothing down.
+
+**Evidence:** the four transcript calls, and the two script headers read
+2026-09-22.
+
+**Confidence:** high that the gap is real. Medium on the agent being the right
+answer until it is run against a menu whose state is independently known — of
+which this retrospective produced three.
+
+**Ongoing cost:** one more agent file to keep true, which `F45` and `F51` both
+touch anyway. It cannot be exercised in the session that writes it (`F26`).
+
+### F50 — parallel worktree work has no checked-in contract, and the briefs it ran on are gone
+
+On 2026-09-17 a single session spawned **23** `general-purpose` calls, of which
+**16** told the agent to follow `class-brief.md` or `gear-brief.md` and **6**
+named a git worktree to implement in — deduped `tool_use` ids from the corpus
+at the head of this section. Both briefs were written into that session's
+scratchpad under
+`C:\Users\natha\AppData\Local\Temp\claude\C--Users-natha-Downloads\`, which is
+per-session. The rules they carried — spell every path out, do not merge, the
+environment a worktree needs — were re-derived for that session and did not
+survive it.
+
+The known failure of that pattern is recorded outside this repo: an agent given
+an unbounded search ran a whole-disk `find` that outlived it. A standing
+contract is what an agent file is, and a per-task slice is what a prompt is; on
+2026-09-17 both were in the prompt.
+
+**Proposal:** write the standing half down as a section of the `worktree` skill
+— every path absolute, no whole-tree search, the two environment variables a
+worktree needs, and an explicit refusal to merge, push to `main` or write to D1
+— so the next parallel campaign supplies only the slice. **Posture: a section in
+an existing skill. NOT a new agent, and deliberately.** A write-capable agent is
+the first crack in the property every other agent here leans on, which is that
+it has no write tools and therefore cannot drift into implementing; one campaign
+is one data point; and an agent file can no more refuse a whole-disk `find` than
+a skill section can. **Promote it to an agent when a second parallel campaign
+needs it**, and note then that `instruction-paths.mjs:51` pins every absolute
+path an agent file names.
+
+**Evidence:** the transcript counts, 2026-09-22; the scratchpad path from the
+prompts themselves, same day.
+
+**Confidence:** high on the measurement. Medium on the posture — a second
+campaign is what would settle whether the skill section is read when it matters,
+and that is exactly the evidence the promotion would wait for.
+
+**Ongoing cost:** a section in a skill that is already read before any worktree
+work.
+
+### F51 — no check reads the agent files, so a malformed one fails at spawn time
+
+`apps/character-creator/test/checks/instruction-paths.mjs:51` lists
+`.claude/agents` among its roots, so the absolute paths inside an agent file are
+pinned. `apps/character-creator/test/checks/machine-instructions.mjs:89` reads
+the directory to enforce the rule that the machine's own `CLAUDE.md` names no
+agent. Neither opens an agent file to ask whether it is well formed, and a
+`grep -rn "agents" apps/character-creator/test/checks/*.mjs` on 2026-09-22
+returned those two files and no third.
+
+So a `tools:` line naming a tool that does not exist, a `name:` that disagrees
+with the filename, or frontmatter that does not parse, all reach the harness
+rather than the suite — and the harness reports them mid-task, in the session
+that needed the agent.
+
+**Proposal:** add a block to `apps/character-creator/test/checks/environment.mjs`
+asserting, for every file in `.claude/agents/`: that the frontmatter parses,
+that `name` and `description` are present, that `name` matches the filename, and
+that every entry in `tools:` is a known tool name. **Derive the list from the
+directory and assert no count** — the same shape the same file already uses for
+the checks modules at `:501-514`, which was written precisely so a list cannot
+go stale. **Posture: fail, not warn** — a malformed agent file fails at spawn
+anyway, so this is the same failure moved earlier, and the check is
+deterministic.
+
+**Evidence:** the two reads and the `grep -rn`, all 2026-09-22.
+
+**Confidence:** high on the gap. Medium on the tool-name list, which has to come
+from somewhere and is the one part of this check that could go stale; that would
+be settled by deciding whether it reads a fixed list or only asserts the field's
+shape.
+
+**Ongoing cost:** one check block in a suite that already runs on every PR, and
+whatever the tool-name list costs to keep — which is the argument for keeping
+that part shallow.
+
+### F52 — the model choices and the scoring fixture have not been re-run since the day they were written
+
+`.claude/skills/claim-audit/reference/negatives.md:113` records the run that
+scored both claim agents on 2026-09-04. `SKILL-AUDIT.closed.md:2459-2462` records
+the runs that picked the models the same day. Nothing has re-run either since,
+and the transcripts show **313** invocations of the five agents between
+2026-09-04 and 2026-09-20 — the evidence the original choice did not have.
+
+The specific question worth asking: `book-reconcile` is a second reader whose
+misses are silent, and `.claude/agents/book-reconcile.md:5` reads `model: sonnet`.
+
+**Proposal:** re-run the eval that picked the models and re-score the two claim
+agents against `reference/negatives.md`, and append the result beside the
+2026-09-04 run rather than editing it — the fixture is a record. **Do not hand
+the fixture to the agent being scored**, which `claim-audit:215` already
+requires. **Posture: verification only. Change nothing unless a run shows
+something**, which is the posture `F28` took for the same reason.
+
+And check in the measurement: `scripts/agent-usage.mjs`, reading the transcripts
+under `C:\Users\natha\.claude\projects` and deduping by `tool_use` id. That
+measurement has now been hand-built twice — once on 2026-09-11 by a
+`general-purpose` call, once on 2026-09-22 by this retrospective — and the
+dedupe rule is the part that is re-derived wrong, because a transcript logs the
+same call about twice. **Posture for that half: a script, no check, no exit
+code, no CI.**
+
+**Evidence:** the two records read 2026-09-22, and the transcript counts from the
+corpus at the head of this section.
+
+**Confidence:** high that neither has been re-run — both files carry their run
+date. Low on what a re-run would find, which is the reason to run it.
+
+**Ongoing cost:** a script that reads machine-local files and is run by hand.
+Nothing in CI, and nothing that can go red.
 
 ## A closing observation, about this audit rather than its findings
 

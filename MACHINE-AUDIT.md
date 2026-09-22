@@ -12,7 +12,7 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
-**Status: nothing is open on this menu.** Status for any finding lives under its
+**Status: work was opened on this menu on 2026-09-22.** Status for any finding lives under its
 own heading, and this line deliberately does not count them. `M20` is **closed
 without being taken**, superseded by `M22`; `M22` was filed and taken the same
 day and is the one finding here that changed the machine rather than the repo.
@@ -221,3 +221,53 @@ diagnosis went a day without anyone asking `explorer.exe` what it actually held.
 - **M21** — low — the "`--remote` hangs from the agent's shell" caution is in no repo file, and all three of its commands ran clean — Taken, 2026-09-03 (PR #613), as proposed. A subsection in — full text in `MACHINE-AUDIT.closed.md` under its own `### M21` heading.
 
 - **M22** — medium — memory is keyed to the working directory, three keys exist, and only one of them had the store — Taken, 2026-09-03 (PR #607), and filed in the same PR at Nate's instruction. — full text in `MACHINE-AUDIT.closed.md` under its own `### M22` heading.
+
+### M23 — low — the machine `CLAUDE.md` says the book work runs from a directory no session has started in since 2026-09-03
+
+`C:\Users\natha\.claude\CLAUDE.md` states that the working directory moved on
+2026-09-02, from `Downloads` to `C:\Users\natha\Projects\workshop`, and that the
+second is where the book work runs from. The first half is a dated historical
+statement and stands. The second is a claim about today.
+
+Claude Code keys a session's transcript directory to the directory the session
+was started in — this session demonstrates it for its own, being started in
+`C:\Users\natha\Downloads` and writing to `C--Users-natha-Downloads`. Listed on
+2026-09-22, `C:\Users\natha\.claude\projects` held four keys:
+`C--Users-natha-Downloads` with 510 `.jsonl` files,
+`C--Users-natha-Projects-nates-apps` with 6,
+`C--Users-natha-Projects-workshop` with 3, and one worktree key with 1. **The
+workshop key's newest file is dated 2026-09-03.** The Downloads key holds files
+dated through 2026-09-22, and among them every one of the 140
+`book-extract-worker` calls made between 2026-09-04 and 2026-09-19.
+
+**Nothing is broken by this.** The skills and the agents are junctioned into
+`~/.claude`, so they resolve by name from either directory, and `M22` records
+that the memory store is keyed to the working directory — the store in use is
+the `Downloads` one, which is where the sessions are. What it costs is a reader
+sent to a directory the work left, in a file that is checked in nowhere and that
+nothing but a hand updates.
+
+**Proposal:** correct the sentence by hand on the machine, as a dated statement
+of where sessions actually start, leaving the pointer to the repo's own
+`CLAUDE.md` intact and leaving the 2026-09-02 history standing. **Posture: one
+paragraph, by hand, outside the repo, with the PR carrying the record.** `M19` is
+the precedent — the same file, taken 2026-09-03 in PR #612.
+
+Two constraints on the replacement wording, both read 2026-09-22:
+`apps/character-creator/test/checks/machine-instructions.mjs:72` holds that file
+to stating no count of skills or agents and `:89-93` to naming none of them; and
+that module reads a path outside the repo, so it answers only when the suite is
+run on this machine. Run it here before the outcome note says it passed. Neither
+constraint binds the replacement, which needs no name and no number.
+
+**Evidence:** the directory listing and the file dates above, 2026-09-22, and the
+transcript scan described in `SKILL-AUDIT.md` under
+`## Opened by the subagent retrospective, 2026-09-22`.
+
+**Confidence:** high that no session has started in the workshop directory since
+2026-09-03, resting on the key-to-directory mapping this session demonstrates for
+its own. What would raise it is starting a session there and watching the key
+take a new file.
+
+**Ongoing cost:** none. One sentence that already exists, made true, in a file
+that has no check reaching it from outside this machine.
