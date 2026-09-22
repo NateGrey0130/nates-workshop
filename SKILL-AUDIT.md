@@ -646,6 +646,61 @@ have caught the sentence describing it.
 sweep itself whenever it fires. The sweep is the cost being proposed, and it is
 the point.
 
+**Taken, 2026-09-22 (PR #1238). Posture held: one paragraph in one skill. No
+new gate, no exit code, no check.** A bullet in `ship-pr` step 4, beside the one
+that already makes a documentation obligation part of the same commit.
+
+**Nate's word was asked for before this was built, and given.** The subject grep
+found the ship-pr/ingestion retrospective of 2026-09-10, at which every proposal
+was cancelled — among them *a limitation-claim warning* — with *do not
+re-propose unprompted* recorded against it. This is not that. A warning is a
+mechanical reader with an output; what shipped is a bullet in a procedure, with
+no check, no exit code and nothing that can go red. The decision was put to him
+on 2026-09-22 with its own words quoted, and he took this as filed.
+
+**Three things `audit-premise-auditor` corrected before the branch existed:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"nothing in the
+  repo says **when** that routing runs"* — overstated. `claim-audit`'s own
+  section *The rule that makes it cheap* at `:221-224` says exactly when: when
+  you lift a limitation, grep for the sentence that described it, in the same
+  change. That skill's frontmatter and `claim-capability-verifier`'s own
+  `description:` name the same moment. What was genuinely absent is narrower and
+  still real: **no procedure invoked the agents**, and before this change
+  `grep -n "claim-audit\|limitation" .claude/skills/ship-pr/SKILL.md` returned
+  nothing (2026-09-22). So the work was naming the agents and the moment inside
+  the procedure, not inventing a trigger — and the shipped bullet says the rule
+  is not new.
+- <!-- claim-ok: quoting the premise this note corrects --> *"`SKILL-AUDIT.closed.md:2459-2460`
+  holds the run that picked it"* — **false, and the correction reaches past this
+  finding.** Those two lines are `F28`'s table recording the first *exercise* of
+  each agent; the models were already pinned when it ran. The only measured
+  model comparison on disk is
+  `.claude/skills/claim-audit/reference/negatives.md:113-137`, and it concludes
+  **"The pin stays `sonnet`", on measurement rather than argument: `opus` cost
+  roughly 2.5× for the same verdicts** — while
+  `.claude/agents/claim-capability-verifier.md:5` reads `model: opus`,
+  unchanged since it was written. **So the sonnet/opus split is an argument**
+  (`claim-audit:204-205`, *low volume, high cost of error*) **and not a
+  measurement**, and this note does not restate it as one. `F52` proposes
+  re-running that eval; whether `negatives.md:136` pins this agent or a default
+  is the unsettled question it should open with, rather than the citation this
+  finding used.
+- **`ship-pr` had no step keyed to documentation or class prose.** Step 4's
+  bullets are keyed to layers, not to what a change says. The new bullet sits
+  beside *"added a class or catalog rows: update the README's pinned counts in
+  the same commit"*, which is the closest shape in the file — an obligation
+  discharged inside the change rather than after it.
+
+**Two smaller corrections, recorded and not repaired above:** the finding cites
+`claim-audit:195-199` for the two claim shapes and they are at `:194-198`; and
+both costs it names — seven skills on the Merc Soldier, eight on the Robot
+Pilot — belong to the capability shape, not one to each.
+
+**And the window.** The heading says *seven calls in eighteen days*, from a
+corpus ending 2026-09-20 in a finding filed 2026-09-22. *None since 2026-09-15*
+is a statement about that corpus, not about the two days after it.
+
 ### F48 — moving `take`'s subject grep inside the premise auditor would collapse the gate it is
 
 **Filed with its outcome. Declined 2026-09-22 on Nate's word**, recorded so it

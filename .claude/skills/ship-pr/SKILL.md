@@ -97,6 +97,22 @@ of eyes on a run you already did, never as the reason to skip one.**
      and went stale on the next import; a skill naming a moving number is wrong
      more often than right. Run the test — it prints what it wanted against what
      it found, which is the answer anyway.
+   - **touched documentation, class prose or a `note` — or lifted a limitation
+     one of them describes:** sweep the sentences that described the old limit,
+     in the same change, and hand them to the two claim agents rather than
+     reading around them. `claim-capability-verifier` takes *the app cannot do
+     X*; `claim-count-verifier` takes a count in prose. Neither has write
+     tools, so neither can correct a sentence it misread. `claim-audit` owns
+     the method — bound each hit with `scripts/readme-section.mjs` and hand
+     them claims, not a corpus.
+
+     **No check, no exit code, nothing that can go red.** These notes vary in
+     wording by design and every mechanical reader of them here has been wrong
+     in both directions. The rule is not new either — `claim-audit` → *The rule
+     that makes it cheap* has said *"when you lift a limitation, grep for the
+     sentence that described it — in the same change"* since it was written.
+     What is new is that it is named at the step where a change is verified,
+     instead of only in the file that describes the method. `SKILL-AUDIT` F47.
    - touched an endpoint, the schema or a data script:
      `node apps/character-creator/test/regression.mjs` — it builds a database
      from nothing and drives the real routes, which is the only thing that
