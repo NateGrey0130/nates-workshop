@@ -6,7 +6,9 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-**Status, all of it 2026-09-03: nothing is open.**
+**Status: work was opened on this menu on 2026-09-22.** Read under a finding's
+own heading for its state. The table below is dated 2026-09-03 and describes
+only the findings of that pass.
 
 | | |
 |---|---|
@@ -247,3 +249,104 @@ the same PR**, and the merge waits for a separate word. Taking a finding means
 auditing it first: **every measurement above is a 2026-09-03 GitHub-side or
 filesystem reading, and several are one click from being false.** Re-run the
 command in the finding and lead the report with whatever it contradicts.
+
+## Opened by the subagent retrospective, 2026-09-22
+
+Filed while closing out the retrospective recorded on `SKILL-AUDIT.md` under
+its own `##` heading of that date. Every claim below was re-derived by hand
+before filing: two of them were first surfaced by an agent, and a third
+agent's count in the same batch turned out to be a count of mentions rather
+than of events, which is the reason for the rule rather than an aside.
+### G19 — low — this menu's scope statement calls three findings open that were taken on 2026-09-03
+
+**Opened 2026-09-22**, from the first run of the `open-findings-scout` agent and
+verified by hand.
+
+`REPO-AUDIT.md:152` reads, inside the scope statement: *"Also out of scope by
+prior ownership: the instruction layer (`SKILL-AUDIT.md`), documentation content
+(`DOCS-AUDIT-2.md`, **D1–D3 open**), the machine itself…"*.
+
+All three were taken the day after this menu was filed — `DOCS-AUDIT-2.md`
+carries `**Taken, 2026-09-03 (PR #609), as the PRIMARY proposal**` under `D1`,
+`**Taken, 2026-09-03 (PR #610).**` under `D2`, and
+`**Taken, 2026-09-03 (PR #611), as proposed.**` under `D3`. Read 2026-09-22.
+
+**It is the shape `META-AUDIT` `A17` was filed about**, and it is worth filing
+as an instance because `A17`'s own argument predicts that nothing would ever
+find it: the sentence carries **no finding number of any kind**, so a taker of
+`D1`, `D2` or `D3` grepping the tree for their numbers does not see it, the
+tree-wide sweep in `audit-menu` cannot reach it, and `scripts/audit-citations.mjs`
+answers only for `BOOK-INGEST-AUDIT`. It was found by a reader looking at
+something else.
+
+**Proposal:** strike the three-finding state from the clause and leave the
+ownership statement, which is what the sentence is for — *documentation content
+(`DOCS-AUDIT-2.md`)* — per `audit-menu` → *A header MAY NOT carry a per-finding
+state*, which governs wherever the sentence is written and not only in a header.
+**Posture: one clause, subtractive, no replacement state.** Do not write *D1–D3
+taken*: that is the same trap with today's answer in it.
+
+**Evidence:** the read of `REPO-AUDIT.md:152` and of the three outcome notes in
+`DOCS-AUDIT-2.md`, 2026-09-22.
+
+**Confidence:** high; both halves were read rather than inferred.
+
+**Ongoing cost:** none. Removing a state is what makes it stop rotting.
+
+### G20 — high — the `regression` required check fails intermittently in CI, about fifty seconds in, and a re-run clears it
+
+**Opened 2026-09-22**, after it blocked six merges in one afternoon.
+
+`regression` is one of the three required status checks on `main`, so a red run
+stops the merge button. On 2026-09-22 it failed **six times across five pull
+requests** — #1238 twice, #1239, #1240, #1242, #1243 — and **every failure
+cleared on a re-run of the identical commit**. The same suite passed locally on
+the same content every time it was run there.
+
+**The signature is the same every time and it is not a failed check:**
+
+```
+[TypeError: fetch failed] { [cause]: SocketError: other side closed }
+code: 'UND_ERR_SOCKET'
+```
+
+an **uncaught exception** that kills the suite process, followed at job teardown
+by `Terminate orphan process: pid (NNNN) (workerd)`. The dev server goes away
+and the next request crashes the run.
+
+**It is the clock, not the check.** The four measured precisely died **48, 51,
+48 and 57 seconds** into the suite step, at whatever request was in flight —
+after the vessel-name check twice, after the spell-burn fixture twice, after the
+psionic game-tagging once; the other two failed at comparable job durations,
+1m22s and 1m27s against a 30-second setup. Passing runs take **112 to 150
+seconds** and walk through all of those. So the check a failure lands on carries no information, and there is
+nothing to debug in it.
+
+**Proposal: diagnose before changing anything.** The two candidates are the
+runner killing `workerd` under memory pressure and the dev server exiting on its
+own; the cheapest discriminator is to capture the server's own stderr and the
+runner's memory at the moment of death, which the job does not keep today.
+**Posture: no change to the suite and no retry** until a run reproduces it under
+that instrumentation. **A retry would be the worst available fix** — it converts
+a required gate into one that passes eventually, which is what a gate is for
+stopping.
+
+**A second, separable half worth deciding with it:** make the crash legible.
+Wrapping the suite's request helper so a socket error prints *the dev server
+went away after N seconds* instead of an uncaught stack does not retry, hide or
+weaken anything, and turns a twenty-minute diagnosis into one line. It is a
+change to the suite, which is why it is named here rather than assumed.
+
+**Evidence:** the six failing runs, their logs kept; `gh run list --workflow=regression.yml`
+for the outcomes; the timings taken from the first and last timestamps of each
+job's suite step, all 2026-09-22.
+
+**Confidence:** high that the pattern is real — six failures, one signature, one
+time band, five different pull requests whose only common content is `main`.
+**Low on the cause**, which is the reason this proposes instrumentation rather
+than a repair.
+
+**Ongoing cost:** of the proposal itself, one job step that captures more on
+failure. Of **not** taking it: every pull request pays a re-run, and the habit of
+re-running a red required check until it is green is the one this repo can least
+afford to learn.
