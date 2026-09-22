@@ -320,10 +320,18 @@ and each got it wrong, in opposite directions.
 `C:\Users\natha\.claude\settings.json` with an absolute path, so it governs
 every directory on this machine — which is the point, because the book work
 runs from `C:\Users\natha\Projects\workshop` and that is where a session
-started outside the repo used to run unguarded. The repo's registration is
-still live too, so a session started here runs the hook twice.
+started outside the repo used to run unguarded.
 `apps/character-creator/test/checks/hook-registration.mjs` pins the user-level
 registration locally and asserts nothing in CI, where the file does not exist.
+
+**The repo's registration is still live too, so a session started here runs the
+hook twice, and that is DELIBERATE** — `SKILL-AUDIT` `F60` proposed removing it
+and was declined on measurement, 2026-09-22. The two are not interchangeable:
+each copy of `guard-bash.sh` guards only the tree it lives in, so in a git
+worktree the repo's registration is the one that guards the worktree. The repo
+block is also the only half that is checked in — `SETUP.md` documents no hook at
+all, so nothing tracked would tell a second machine that the user-level
+registration has to exist. **Do not remove it without reading `F60`'s note.**
 
 ### And since 2026-09-03 the allowlist is no longer the only thing holding that line
 

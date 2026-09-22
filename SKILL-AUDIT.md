@@ -1481,6 +1481,21 @@ so this session cannot exercise its own registration — the same shape as `F26`
 for an agent file. **The next session started outside the repo is the test**, and
 the string to grep for is `PreToolUse:Bash hook error`, **not** `guard-bash:`.
 
+> **Adjusted 2026-09-22 — the owed item is DISCHARGED**, while taking `F60`.
+> All 161 transcripts under `C:\Users\natha\.claude\projects\` were scanned for
+> that wrapper at the start of an `is_error` result. **Four genuine refusals
+> from a session started outside the repo**, project key
+> `C--Users-natha-Downloads`, `cwd=C:\Users\natha\Downloads`, all 2026-09-22 and
+> all naming the user-level registration: rule 2 at `14:47:41Z`, rule 4 twice at
+> `15:00:31Z` and `15:00:38Z`, rule 1 at `15:54:40Z`. None has ever been recorded
+> under a `Projects-workshop` key.
+>
+> **A fifth hit in the same session is the more useful one.** At `15:53:30Z` the
+> result was not a verdict at all — `guard-bash.sh: line 67: syntax error near
+> unexpected token '('`, the script momentarily unparseable mid-`F57`. That is
+> `F56`'s *"reads as installed and stops nothing"* shape caught in the wild, and
+> it is why the failure mode is worth knowing rather than just the refusals.
+
 **Opened while taking this: `F56`** — three instruction files state the refusal
 prefix wrongly, which is what this scan inherited, and nothing pins the hook's
 path or its registration. Filed below, not taken.

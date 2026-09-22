@@ -55,12 +55,24 @@
 //
 // WHAT IT CANNOT DO. It does not prove the hook FIRES: hook settings are read
 // when a session starts, so the session editing them cannot exercise its own
-// registration (SKILL-AUDIT F55's "owed", the same shape as F26 for an agent
-// file). It does not judge whether the six rules are right, and it does not
-// assert that the user-level registration is the ONLY one - the repo's
-// .claude/settings.json also registers the hook today, so a repo-rooted session
-// runs it twice (SKILL-AUDIT.md:1340-1342). That is a cost, not a defect, and
-// pinning it either way would be asserting a decision nobody has made.
+// registration. That was SKILL-AUDIT F55's "owed" item and it is now
+// DISCHARGED - four genuine refusals from sessions started outside the repo,
+// project key C--Users-natha-Downloads, 2026-09-22, found by scanning for the
+// wrapper `PreToolUse:Bash hook error`. It does not judge whether the six rules
+// are right.
+//
+// It also does not assert the user-level registration is the ONLY one, and
+// since SKILL-AUDIT F60 that is a DECISION rather than an open question: both
+// registrations are kept deliberately, because each copy of guard-bash.sh
+// guards only the tree it lives in, so the repo's registration is what guards a
+// git WORKTREE. Asserting "exactly one" here would now be wrong.
+//
+// AND THE HOLE THIS CHECK STILL HAS, which F60's audit found: if
+// ~/.claude/settings.json is absent ENTIRELY, the early return below reports a
+// PASS. That is right for CI and wrong for a second machine, where the file has
+// never been written and nothing notices. A machine-setup check would have to
+// live somewhere that knows it is on this machine; SETUP.md documents no hook
+// at all today.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';

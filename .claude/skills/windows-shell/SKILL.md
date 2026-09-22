@@ -66,8 +66,19 @@ sessions starting outside the repo. `SKILL-AUDIT` `F55` moved it to
 project key on this machine and anything future.
 
 **Both registrations are live**, the repo's and the user-level one, so a session
-started in the repo runs the hook twice. The verdict is the same either way; a
-doubled refusal is not a bug when you meet one.
+started in the repo runs the hook twice. A doubled refusal is not a bug when you
+meet one.
+
+**They are NOT interchangeable, and that is why both are kept.** Each copy of
+`guard-bash.sh` guards only the tree it lives in — `repo_posix` is derived from
+the script's own location, not from the session. So in a **git worktree** the
+repo's registration runs the worktree's own copy and guards the worktree, while
+the user-level one runs the main checkout's copy and does not. Measured
+2026-09-22 by running each copy against each tree: a target resolves as
+in-repo only for the copy living in that tree. `SKILL-AUDIT` `F60` proposed
+removing the repo's registration and was **declined** on exactly this — the
+other half being that the repo block is the only one checked in, and `SETUP.md`
+documents no hook at all.
 
 **So nothing here has been retired.** The six rules have a backstop everywhere
 now rather than in one directory — but a backstop is one edited settings file
