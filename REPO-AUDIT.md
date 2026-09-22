@@ -350,3 +350,87 @@ than a repair.
 failure. Of **not** taking it: every pull request pays a re-run, and the habit of
 re-running a red required check until it is green is the one this repo can least
 afford to learn.
+
+**Taken, 2026-09-22 (PR #1248). Posture held, in the only reading that is
+coherent: no retry, and no change to what any check asserts.** Items (a)-(c)
+below *are* changes to the suite, so the proposal's *"no change to the suite"*
+clause cannot be read literally against its own second half; it governs retries
+and verdicts, and this note says that back rather than papering over it.
+
+**The cause is still not fixed, and this does not pretend to fix it.** What
+shipped makes the next occurrence say what happened, in one run, instead of
+costing an afternoon.
+
+**Three claims in this finding are wrong, and `audit-premise-auditor` found all
+three in the logs the finding itself cites:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"at whatever
+  request was in flight … the check a failure lands on carries no information"*.
+  **Five of the six die on the identical request** — `regression.mjs`'s first
+  `POST /characters` — and the sixth on the first `GET` after a similar gap.
+  **No failure landed after a vessel-name check at all**; those pass some twenty
+  seconds earlier in every one of the six logs. That sentence was my own
+  measurement error: I read the failure point out of a `grep` for `FAIL\|Error`,
+  and the check named *"comes back with no vessel name rather than **failing**
+  the section"* matched it. A grep for a word inside a check's own name is not a
+  reading of where a run died.
+- <!-- claim-ok: quoting the premise this note corrects --> *"The dev server
+  goes away"*, with the `Terminate orphan process: … (workerd)` line as its
+  evidence. **The passing run prints the same seven-process orphan list**,
+  workerds included. The server was alive; only the connection closed. So
+  **liveness is the answer, not the exit code** — the instrumentation records
+  `STILL RUNNING` as a first-class result rather than as a failed instrument.
+- <!-- claim-ok: quoting the premise this note corrects --> *"It is the clock,
+  not the check."* They are the same observation. The two death sites are at
+  fixed points that a passing run reaches at 42.7s and 52.1s — which is the
+  48-57s band — and #1240, which got *past* the first site, died **later**, the
+  opposite of what a wall-clock effect predicts.
+
+**What the logs do show, and it is the one quantity nobody was recording.** Both
+death sites are **the first HTTP call after a run of blocking `spawnSync`
+wrangler calls**, and the idle gap before the fatal request was **5.16-5.98s in
+all six failures against 4.24s in the kept passing run**. That is now printed on
+every death. **The hypothesis it exists to settle: a pooled keep-alive
+connection going stale across that idle.** It is not acted on here, because the
+clean lever — configuring undici's dispatcher — needs a dependency this repo
+does not have, and a reconnect-on-error would be the retry this finding forbids.
+
+**Two implementation choices that are not obvious and were not in the
+proposal:**
+
+- **A file descriptor, not a pipe.** This suite sits inside `spawnSync` for
+  1.4-2.0s at a stretch, dozens of times, during which nothing drains a pipe; a
+  full pipe blocks the child's write, which would *lengthen the idle window the
+  instrument is measuring*. A ref'd pipe can also hold node's loop open at exit,
+  and the kept logs prove the wrangler tree routinely outlives `cleanup()` — so
+  a piped suite could hang a **green** run to the workflow timeout. A regular
+  file has neither failure mode.
+- **An `uncaughtException` handler, not a wrapper on `api`.** There are
+  seventeen places a fetch can throw here — `api`, `apiAs`, and fifteen bare
+  `await fetch(…)` calls, none inside a `try`. Wrapping one helper would have
+  covered the eight observed failures and left fifteen sites bare.
+
+**Proved by making it fail**, with a copy of the suite that throws the real
+error shape at the real site:
+
+```
+--- the run died, and this is what was around it (REPO-AUDIT G20) ---
+  UND_ERR_SOCKET
+  169.09s into the suite
+  last request sent 0.00s ago, last response 5.40s ago
+  IDLE BEFORE THIS REQUEST: 5.40s   (the six kept failures idled 5.2-6.0s here; the kept pass idled 4.24s)
+  the dev server: STILL RUNNING - so it did not go away, and only the connection did
+  its output, last 2000 of 2507 bytes: …
+```
+
+**Two corrections to this finding's own evidence, recorded rather than
+repaired.** `gh run list --workflow=regression.yml` returns **zero failures**
+today — a re-run replaces the run's conclusion, so the failures survive only per
+attempt, and the API path is
+`actions/workflows/regression.yml/runs` filtered on `run_attempt > 1`. By that
+reading it is **eight failed attempts across six runs**, all 2026-09-22. And
+*"every failure cleared on a re-run"* is too kind: **twice it took two
+re-runs**, which strengthens this finding's argument against a retry.
+
+**Out of scope and still true:** `play-flow.mjs` spawns its dev server the same
+way, with `stdio: 'ignore'`.
