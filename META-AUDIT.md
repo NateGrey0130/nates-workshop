@@ -1447,3 +1447,113 @@ which this finding does not ask a taker to run before deciding.
 **Ongoing cost:** nothing if declined. If a prompt-time question is added to
 `take`, it is one more thing in a skill whose whole argument is that it adds no
 rules — which is itself a reason to decline.
+
+**DECLINED, 2026-09-22 (PR #1259). The posture stands: documentation only, and
+`A16` was right for the second time.** Nothing changed but this note. **Not to
+be re-proposed a third time without an exhibit that beats the measurement
+below.**
+
+**The measurement this finding says nobody ran, run.** Corpus: the 40 files the
+`*AUDIT*.md` glob returns plus `SETUP-v2-CHANGES.md`; two passes, a multi-idiom
+grep of current text and a diff-history pass over every added line, each hit
+read in context and dated by the commit that added it. Unnumbered deferrals by
+the day the sentence was written:
+
+| day | count |
+|---|---|
+| 2026-08-27 | 2 |
+| 2026-08-28 | 1 |
+| **2026-08-31** | **3** |
+| 2026-09-01 | 1 |
+| 2026-09-03 | 1 |
+| **2026-09-04** | **4** |
+| 2026-09-06 | 1 |
+| 2026-09-09 | 1 |
+| 2026-09-14 | 1 |
+| **2026-09-22** | **5** |
+
+**Five in one day is at the top of the range, not off it — and the rate did not
+rise.** 2026-09-04 wrote **nine** hand-offs and numbered five, leaving four
+unnumbered, **two days before `A16` was filed and with no rule in force**. Both
+peaks are days with an unusual number of findings taken. **What changed after
+the rule is resolution, not frequency:** all five of 2026-09-22's were closed
+within hours — four numbered by PR #1252, one fixed by PR #1250 — where the
+pre-rule days left a residue. This finding's central worry does not survive its
+own requested measurement.
+
+**Four premises do not hold, and two of them change what the question was:**
+
+- **The mechanism is unreachable where this finding puts it.**
+  <!-- claim-ok: quoting this finding's own proposal, above --> *"whether it
+  could also ask, at hand-back, 'did this note name work it did not file'"* —
+  `take` step 5 at `.claude/skills/take/SKILL.md:120-128` hands back **before
+  the branch is worked**, so the outcome note does not exist yet and there is no
+  note to ask about. `take` mentions a note five times and every one is about
+  *reading* an existing one. `ship-pr` does not own the outcome note either; the
+  rule lives in `audit-menu` step 4 alone. A prompt-time question would have to
+  go somewhere else, which is a different proposal.
+- **The counter-argument credits a mechanism that was not running.**
+  <!-- claim-ok: quoting the premise this note corrects --> *"every one of the
+  five was caught, by a subject grep run at taking time"* is a bare inference
+  with no command. They were caught by an end-of-day retrospective and by the
+  **first ever run** of `open-findings-scout` — neither a standing part of the
+  loop. That weakens the *"a rule that leaks and a sweep that catches the leaks
+  may be the working system"* argument this finding rests its decline on, and it
+  is recorded because the decline survives anyway, on the rate.
+- <!-- claim-ok: quoting the premise this note corrects --> **"All five are
+  filed by the PR that files this finding"** — four were. The fifth, `F54`'s
+  first item, was closed two PRs earlier by **#1250**, by folding the correction
+  into `F56` rather than by a number. The counter-argument is stronger than
+  stated: the catch was earlier still.
+- **`A16` measured THREE, not four.** `META-AUDIT.closed.md:1644`'s heading says
+  *"three such deferrals are still standing"* and `:1662` measures three at
+  `c54a794`. The **four** comes from `audit-menu` → *A deferral is work*, not
+  from `A16` — a claim about another file, which is the shape this whole menu
+  keeps catching.
+
+**`SKILL-AUDIT` `F48` is the adjacent decision and this finding does not name
+it**, which is the omission `audit-menu` forbids. Filed and declined the same
+day, it turned down a different change to `take` — *collapsing* two steps rather
+than adding one — on the ground that *"the gate is the value, not the grep"*. It
+bears twice: its confidence clause says what would reverse it is *"a measured
+case where the grep was run, its hits were printed, and nobody read them"*, and
+it sets the standard any new step must meet — **a step that can only ever be
+answered "no deferrals" is not a gate.**
+
+**The strongest argument FOR this finding is one it does not make, and it still
+does not carry the day.** Seven deferrals are standing unfiled today, the oldest
+**22 days** — and **two of them predate `A16` and `A16` missed them**, on a menu
+`A16` did read. So `A16`'s own census undercounted, and the oldest standing
+deferral is 22 days rather than the ten this finding repeats. **The manual sweep
+leaks in the direction nobody notices.** Recorded because the next census must
+not trust its own completeness — including the scan behind this note, which is
+idiom-based over 24,000-plus lines and **demonstrably missed one of this
+finding's own five**, `SKILL-AUDIT.md:1750`, whose sentence carries no idiom at
+all. **Every count here is a floor.**
+
+**The seven are DROPPED, not deferred** — a deliberate drop is a complete answer
+and `audit-menu` says so. Listed with locations so any of them can be numbered
+later by anyone who wants it, and so this note does not commit the offence it
+describes:
+
+| file:line | written | what is named |
+|---|---|---|
+| `apps/character-creator/UI-AUDIT.closed.md:167` | 2026-08-31 | the nav is still `position: static` |
+| `apps/character-creator/UI-AUDIT.closed.md:244-248` | 2026-08-31 | the guided shortlist has no filter |
+| `SKILL-AUDIT.closed.md:2515-2525` | 2026-09-04 | `book-extract-worker`'s contract covers no prose case |
+| `SKILL-AUDIT.md:367-369` | 2026-09-04 | consolidating them is worth its own finding |
+| `BOOK-INGEST-AUDIT.md:888-893` | 2026-09-09 | that sweep is not done here |
+| `BOOK-INGEST-AUDIT.closed.md:11184-11187` | 2026-09-14 | which side wins needs its own decision |
+| `SKILL-AUDIT.md:1336-1342` | 2026-09-22 | `F54`'s item 1 — resolved by #1250, and the note still reads as unfiled |
+
+**The last row is the one to fix first if any is taken**: it is not merely
+unfiled, it now asserts that `.claude/skills/windows-shell/SKILL.md:39-46`
+*"still says"* something PR #1250 deleted — `grep -rn "project-scoped"
+.claude/skills/` returns zero.
+
+**Two specimens in the table above no longer read as this finding quotes them.**
+PR #1252 amended the notes it filed against, in the same commit, so
+`REPO-AUDIT.md:493-494` and `SKILL-AUDIT.md`'s `F57` note now carry
+*"**Filed as …**"* lines. A reader opening those locations finds compliant
+deferrals, not the specimens. `SKILL-AUDIT.md:1336` was not amended and is the
+one still readable as filed.
