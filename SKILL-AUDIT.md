@@ -1167,6 +1167,59 @@ the repair, which is Nate's to pick.
 
 **Ongoing cost:** none beyond the edit. One paragraph either moves or goes.
 
+**Taken, 2026-09-22 (PR #1243). Posture held: documentation only, one skill
+file, one paragraph** — but **not** either of the two repairs this finding
+offered. Nate's word, 2026-09-22: **keep the instruction, replace the evidence,
+and say which numbering the maps use.** Move-and-delete were the two options
+filed; this is a third inside the same posture.
+
+**Why the instruction stayed.** `audit-premise-auditor` settled the point the
+choice turns on: *worth running on a book you did not cache today* is true of
+**this** detector, not only of the visible-glyph one.
+`scripts/ocr-book.py:565-599` computes `welded_pages`, `corrupt_pages` and
+`substituted_digits` in the manifest-write path, **outside** the page loop that
+skips anything already cached, with a comment saying why. So a re-run on a
+complete cache costs seconds and rewrites only the manifest — and since the key
+did not exist before 2026-09-10, that re-run is the only way any older cache
+came to carry it. Every text-layer cache on disk now does. Deleting the
+paragraph would have removed a true instruction along with the wrong evidence.
+
+**The evidence that replaced it, and the number that was deliberately not
+used.** `bom`'s `substituted_digits` holds **116 pages**, which is the largest of
+the three books — and the paragraph being rewritten already contains
+*"printed 116"* as a folio. Using 116 there would have given one number three
+meanings in one paragraph. The replacement uses the largest single entry
+instead: **nine hits at cache 80, which is printed 79**, re-derived from
+`.cache/books/bom/manifest.json` on 2026-09-22.
+
+**The finding's clause 2 was half-satisfied, and the real gap was next to it.**
+The paragraph already labelled its pages *printed*. What §0 never said anywhere
+in `:39-171` is that the manifest maps are keyed by **cache** page — that
+arithmetic lives 200 lines below, under *Read the offset from the registry*. A
+worker arrives at §0 from an agent file that told it the keys are cache pages
+(`book-extract-worker.md`, shipped this morning by `F45`) and met a passage
+quoting folios with no statement of which numbering §0's own maps use. The
+replacement says it outright.
+
+**Three premises confirmed rather than assumed**, each re-derived from the
+manifests rather than taken from this finding: `bom` `page_offset` 1, cache 85 =
+30 hits, cache 117 = 3, cache 311 = 4 in `corrupt_pages`, with
+`substituted_digits` holding **no key** at 85 or 117 and 2 at 311; and nothing in
+that map within three times of 30.
+
+**Where the sentence came from, and what was deliberately left alone.** It is a
+near-verbatim lift from `BOOK-INGEST-AUDIT.closed.md:4525-4528`, inside `F36` —
+the visible-glyph finding — which is why its trailing citation was `F36` while
+the subsection it sits in cites `BOOK-INGEST-AUDIT` `F53`. **That origin is a
+measurement inside a record and is not edited**, per `audit-menu` → *Audit files
+are RECORDS*. The only copy that was wrong is the one that had been moved under
+the wrong detector, and it is the one that changed.
+
+**Two citation corrections, recorded and not repaired:** the *separate key on
+purpose* sentence runs `:140-142`, not the `:139-141` this finding gives; and
+`:165` to `:170` is five lines, not the four it says. `:167-170` for the
+paragraph itself was exact.
+
 ### F54 — the control for a whole-disk search is a sixth `guard-bash.sh` rule, and the instruction half has already been measured as insufficient
 
 **Opened 2026-09-22 while taking `F50`, on Nate's word**, and filed rather than
