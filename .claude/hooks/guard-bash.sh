@@ -313,9 +313,14 @@ fi
 #
 # `find` at a COMMAND position only, so that prose naming the shape does not
 # trip it: this rule's own documentation, and the memory note it came from, are
-# full of the phrase. That is a narrower guard than the other five and it is
-# deliberate - SKILL-AUDIT F57 records that the rules read prose, and a rule
-# whose trigger words are its own subject is the worst case of it.
+# full of the phrase. It was the ONLY narrow guard here until SKILL-AUDIT F58
+# anchored rule 2 the same way on 2026-09-22; rules 1, 3, 4 and 5 still match
+# anywhere in the command. That is deliberate and it is not an oversight -
+# SKILL-AUDIT F59 measured what anchoring the rest would cost, over 46,788
+# distinct commands from this machine's transcripts, and DECLINED it: rule 4
+# would stop refusing ~94 real `;`-chained merges, including the PR #668 shape
+# it exists for, and rule 1 ~15 real stagings. Read F59's note before proposing
+# it again.
 #
 # Every one of the eighteen used the bare unquoted `/`. The drive spellings are
 # defence in depth, not the thing that makes it fire.
