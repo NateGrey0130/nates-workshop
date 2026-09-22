@@ -17,7 +17,8 @@
 // is a separate command rather than another section of the smoke test.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSync,
+  openSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -109,6 +110,21 @@ function runs(stage) {
 const state = mkdtempSync(join(tmpdir(), 'cc-regression-'));
 let server = null;
 
+// REPO-AUDIT G20. Eight failures on 2026-09-22, all `UND_ERR_SOCKET: other side
+// closed` as an UNCAUGHT exception, and nothing kept to say why. What the kept
+// logs did show, and what these four record on the next one:
+//   - five of six died on the SAME request, regression.mjs's first POST to
+//     /characters, and the sixth on the first GET after a similar gap;
+//   - each came after a 5.2-6.0s idle while the suite sat in blocking
+//     spawnSync wrangler calls. The one kept PASSING log idled 4.24s there.
+// So the quantity to record is the idle gap, not the elapsed run, and the
+// question to settle is whether a pooled connection went stale under it.
+const suiteStartedAt = Date.now();
+let serverLog = null;
+let serverExit = null;
+let lastOkAt = null;        // a response came back
+let lastRequestAt = null;   // a request went out
+
 function cleanup() {
   if (server && !server.killed) {
     try { process.platform === 'win32' ? spawnSync('taskkill', ['/pid', server.pid, '/T', '/F']) : server.kill('SIGTERM'); }
@@ -123,6 +139,33 @@ function cleanup() {
   try { rmSync(state, { recursive: true, force: true, maxRetries: 20, retryDelay: 150 }); }
   catch { /* genuinely best effort now, rather than by default */ }
 }
+// REPO-AUDIT G20: say what happened instead of printing an uncaught stack.
+// This covers all seventeen places a fetch can throw here - `api`, `apiAs` and
+// fifteen bare `await fetch(...)` calls - which wrapping one helper would not,
+// and it asserts nothing, so no check's verdict moves.
+function reportDeath(err) {
+  const secs = (ms) => (ms === null ? 'never' : ((Date.now() - ms) / 1000).toFixed(2) + 's ago');
+  console.log('\n--- the run died, and this is what was around it (REPO-AUDIT G20) ---');
+  console.log(`  ${err && err.cause ? err.cause.code || err.cause.message : (err && err.message) || err}`);
+  console.log(`  ${((Date.now() - suiteStartedAt) / 1000).toFixed(2)}s into the suite`);
+  console.log(`  last request sent ${secs(lastRequestAt)}, last response ${secs(lastOkAt)}`);
+  if (lastOkAt !== null && lastRequestAt !== null) {
+    console.log(`  IDLE BEFORE THIS REQUEST: ${((lastRequestAt - lastOkAt) / 1000).toFixed(2)}s`
+      + '   (the six kept failures idled 5.2-6.0s here; the kept pass idled 4.24s)');
+  }
+  console.log(`  the dev server: ${serverExit
+    ? `exited code=${serverExit.code} signal=${serverExit.signal}`
+    : 'STILL RUNNING - so it did not go away, and only the connection did'}`);
+  try {
+    const size = statSync(serverLog).size;
+    const fh = readFileSync(serverLog, 'utf8');
+    console.log(`  its output, last 2000 of ${size} bytes:\n${fh.slice(-2000)}`);
+  } catch (e) { console.log(`  its output could not be read: ${e.message}`); }
+  console.log('--- end ---\n');
+}
+process.on('uncaughtException', (err) => { reportDeath(err); process.exit(1); });
+process.on('unhandledRejection', (err) => { reportDeath(err); process.exit(1); });
+
 process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(130); });
 
@@ -285,10 +328,26 @@ if (applied.status !== 0) { console.log('\nREGRESSION FAILED (cannot build a dat
 // ── boot the worker ─────────────────────────────────────────────────────────
 console.log('\n[2/7] Booting the app');
 await portGate();              // again: the build above takes minutes
+// stdio went to a FILE rather than to 'ignore' when REPO-AUDIT G20 was taken:
+// eight failures in one day left nothing to read, because the server's own
+// output was discarded. A file descriptor and not a pipe, deliberately - this
+// suite spends 1.4-2.0s at a stretch inside spawnSync dozens of times, during
+// which nothing drains a pipe, and a full pipe blocks the child's write. A
+// regular file never blocks, needs no draining, and cannot hold the loop open
+// at exit. Read it BEFORE cleanup(), which removes `state`.
+serverLog = join(state, 'dev-server.log');
+const serverLogFd = openSync(serverLog, 'a');
 server = spawn('npx', ['wrangler', 'pages', 'dev', '--port', String(PORT),
   '--persist-to', state, '--show-interactive-dev-session', 'false',
   '--binding', 'ADMIN_EMAIL=dev@localhost'],
-  { cwd: repoRoot, shell: true, stdio: 'ignore' });
+  { cwd: repoRoot, shell: true, stdio: ['ignore', serverLogFd, serverLogFd] });
+
+// Liveness is the answer, not just the exit code. G20 named two candidates -
+// the runner killing workerd, or the server exiting on its own - and the kept
+// logs support neither: the wrangler tree is in the job's orphan list on
+// PASSING runs too, so it was alive. Expect `still running` here, and record
+// it as a result rather than as a failed instrument.
+server.on('exit', (code, signal) => { serverExit = { code, signal, at: Date.now() }; });
 
 // Answering 200 on /me is not enough - ANY server does that, including another
 // run's. The marker draft exists only in the database built above.
@@ -302,11 +361,13 @@ if (!boot.ok) {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 async function api(method, path, body) {
+  lastRequestAt = Date.now();
   const res = await fetch(BASE + path, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
+  lastOkAt = Date.now();
   let payload = null;
   const text = await res.text();
   try { payload = JSON.parse(text); } catch { payload = { raw: text.slice(0, 200) }; }
