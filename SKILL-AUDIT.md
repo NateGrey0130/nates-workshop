@@ -1961,6 +1961,90 @@ declined** — the workaround is one sentence (`write prose to a file and `-F` i
 which the memory note already gives) and it is already written down in three
 places.
 
+**Taken, 2026-09-22 (PR #1254). THE MECHANISM IS DECLINED, on this finding's own
+recommendation and with the number it says nobody had.** Posture held:
+documentation only, no rule changed, no exit code moved. The `F58` fixture still
+passes 36 of 36, which is what says the six rules are untouched.
+
+**The measurement this finding calls for.** Rule 2's segmentation ported onto
+rules 1 and 4 and scored over **46,788 distinct commands** from this machine's
+transcripts, 2026-09-22:
+
+| rule | shape occurrences | at a command position | reachable only with `;` / `\|` | at no position |
+|---|---|---|---|---|
+| 1 — `git add -A` / `.` | 623 | 595 | **15** | 13 |
+| 4 — `gh pr merge` | 1,187 | 1,065 | **94** | 28 |
+
+Among the 94 is `cd … && gh pr checks 792 … ; gh pr merge 792 --squash …` —
+**the PR #668 incident shape with `;` in place of `&&`**, which is the thing
+rule 4 exists for. And `for n in 736 737; do gh pr merge $n …; done` sits at no
+command position under any segmentation, so no anchor reaches it. **Rule 4
+cannot reuse rule 2's segmentation**, because `guard-bash.sh` deliberately does
+not split on `;` — SQL strings are full of it — and rule 4 compensates by
+checking `;` directly.
+
+So anchoring would un-refuse ~109 real commands, which is exactly what this
+finding's posture forbids: <!-- claim-ok: quoting this finding's own posture,
+cited at the Proposal paragraph above --> *"it may not reduce what the hook
+refuses when the trigger IS a command."*
+
+**Run twice, by two implementations** — a JS port and `grep -E` with the hook's
+own matcher — agreeing exactly on the at-position counts, 595 and 1,065.
+
+**And the return side, measured the same day.** All 541 transcripts scanned for
+the wrapper `PreToolUse:Bash hook error` at the start of an `is_error` result:
+**11 genuine refusals ever** — six trigger text, three real matching commands,
+one real non-matching, one the hook crashing — against 1,290 Bash calls on
+2026-09-22 alone. **Not** a grep for a leading `guard-bash:`, which returns zero
+by construction and is the mistake `F55` shipped; a bare grep for the string
+over-counts to 104, which is the same error mirrored.
+
+**Two caveats, both against the measurement's own authority.** The window is
+**one day** — the hook only went machine-wide with `F55` — and nearly every
+session in it had the hook as its subject. The corpus also **self-contaminates
+at about +1 per shape per such session**: the probe commands run while auditing
+this land in the transcripts the scan reads, which is the sampling problem this
+finding names about its own three instances, one level up.
+
+**Four premises did not hold, and one changes what a future taker should look
+at:**
+
+- **Two of the four table rows no longer reproduce.** `F58` closed both rule-2
+  rows on 2026-09-22 without disarming rule 2 — controls in the same run refused
+  a real `sed -i` and a real `git add -A`. So <!-- claim-ok: quoting the premise
+  this note corrects --> *"every one REFUSED"* is half true today.
+- <!-- claim-ok: quoting the premise this note corrects --> **"It spans three
+  rules"** is wrong in both directions. Rule 2 is out; **rules 3 and 5 are in and
+  this finding names neither.** Rule 3 is not hypothetical — a real refusal at
+  `15:03:41Z` on 2026-09-22 was rule 3 firing on the words *"never call node
+  scripts/q.mjs without a flag"* inside a `node -e` argument. **Recorded here
+  rather than filed**, on Nate's word: the same measurement argues against
+  anchoring those two as well, so recording it closes the question instead of
+  opening one.
+- **Rule 2 is not fully closed for prose.** A multi-line `gh pr comment --body`
+  still trips it, because `lines()` splits on newline and puts `sed` at a command
+  position on the second line. `F58`'s note says *"row"*, singular, and is right;
+  it should not be read as "rule 2 is done".
+- **The rule-6 citation moved.** `guard-bash.sh:233-237` was correct when filed
+  and is now `:314-318`. The quoted sentences are verbatim there — but
+  <!-- claim-ok: quoting the script's own comment, corrected in this PR -->
+  *"a narrower guard than the other five"* had itself gone stale when `F58`
+  anchored rule 2, and **that sentence is what this PR rewrites**, since it is
+  where the next person will propose this again.
+
+**Could not be settled:** <!-- claim-ok: quoting the premise this note corrects -->
+*"it is already written down in three places"* carries no citation and only one
+place was found giving `-F` as the **prose** remedy. **And `-F` does not reach
+the cases measured**: it exists for a commit message and `gh pr comment`, while
+five of the six prose refusals were `node -e` or `echo`, which have none. The
+memory note now says so.
+
+**Sweeping trap, the third in a row:** `F59` is a three-way collision —
+`BOOK-INGEST-AUDIT` `F59` and `apps/character-creator/UI-AUDIT.md:698` are the
+others — and `scripts/audit-citations.mjs --remote F59` silently resolves the
+bare number to `BOOK-INGEST-AUDIT` and reports three unrelated classes. Sweep
+for `SKILL-AUDIT F59`.
+
 ### F60 — low — the hook is registered twice, and a session started in this repo runs it twice
 
 **Opened 2026-09-22.** `F54`'s outcome note names this at `SKILL-AUDIT.md:1340-1342`
