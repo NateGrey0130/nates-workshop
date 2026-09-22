@@ -6,11 +6,11 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **THIS MENU HAS NO OPEN WORK.** Filed and closed 2026-09-03/04, PRs #658–#673.
-> `F1`–`F9` and `F12`–`F14` taken; `F10` and `F11` DECLINED, each on its own
-> stated condition. **Read each finding's own note — this header is a summary and
-> summaries here go stale.** `F11`–`F14` were opened *while taking* the first ten
-> and sit under their own heading after `F10`, in numeric order.
+> **Work was opened on this menu on 2026-09-22**, under its own `##` heading at
+> the end of the file. **Read each finding's own note for its state — this header
+> is a summary and summaries here go stale.** The original pass was filed and
+> closed 2026-09-03/04, PRs #658–#673. `F11`–`F14` were opened *while taking* the
+> first ten and sit under their own heading after `F10`, in numeric order.
 >
 > **Two declines, and neither means "not a problem."** `F10`'s gap is real and
 > open — nothing reads the CI result before a merge — and it was declined because
@@ -18,6 +18,11 @@
 > worse — this pass grew `ship-pr` by 63 lines — and it was declined because a
 > split is the wrong remedy and nobody has read the file cold. Each note says what
 > would reopen it.
+>
+> **The paragraph directly above is `F15`'s subject and is left standing on
+> purpose**, filed 2026-09-22 and not taken: its `F10` clause is a per-finding
+> state, and the gap it describes closed on 2026-09-16 when CI became a required
+> check. Correcting it here would be taking a finding in the PR that files it.
 >
 > **`F13` was taken before it was filed**, which inverts the protocol on purpose:
 > it is the finding that describes why this file's own PR could not go green, so
@@ -161,3 +166,68 @@ every sweep here**, which is why not writing one is the only defence.
 - **F13** — the CI smoke job downloads wrangler inside a 120-second timeout, and went red on a documentation-only PR — Taken, 2026-09-04 (PR #670), on the second proposal. One step — — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F13` heading.
 
 - **F14** — a red CI run was merged because the command that read it was piped into `tail` — Taken, 2026-09-04 (PR #671). Documentation only, no gate, and `ship-pr` was — full text in `SHIP-PR-AUDIT.closed.md` under its own `### F14` heading.
+
+## Opened by the subagent retrospective, 2026-09-22
+
+### F15 — low — this menu's header states a DECLINED finding's gap as open, and the gap has since closed by other means
+
+**Opened 2026-09-22**, while sweeping the menus for open work. Surfaced by the
+`open-findings-scout` agent and read by hand afterwards.
+
+`SHIP-PR-AUDIT.md:15-16` reads, inside the header:
+
+<!-- claim-ok: quoting this file's own header, line cited in the sentence above -->
+> **Two declines, and neither means "not a problem."** `F10`'s gap is real and
+> open — nothing reads the CI result before a merge — and it was declined
+> because the fix would be a fourth thing to remember.
+
+**Two things are wrong with that sentence, and the second is the interesting
+one.**
+
+**One: it is a per-finding state in a header.** `audit-menu` → *What a status
+header may carry* forbids exactly this, and says so in a clause that governs
+*"wherever the sentence is written"* rather than only in headers. The same shape
+was taken as `REPO-AUDIT` `G19` on 2026-09-22 (PR #1249), one file over.
+
+**Two: the gap it describes has closed, and not by anything this menu did.**
+Since 2026-09-16 `main`'s ruleset `22209348` makes `smoke`, `menus` and
+`regression` **required status checks**: `gh pr merge` is refused until all three
+report success (`CLAUDE.md`, read 2026-09-22, which gives
+`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348` as the way to ask
+rather than trust the prose). Observed on this session's own PRs the same day —
+`mergeStateStatus` read `BLOCKED` while a required check was pending and `CLEAN`
+once all three passed.
+
+So <!-- claim-ok: quoting the premise this finding corrects --> *"nothing reads
+the CI result before a merge"* is false. The merge is now gated on CI
+mechanically, which is a stronger answer than the step `F10` declined to add —
+and `F10`'s decline reasoning, that the fix would be *"a fourth thing to
+remember"*, was vindicated: what closed it was a server-side rule that nobody has
+to remember at all.
+
+**Proposal:** strike the per-finding state from the header clause and leave the
+point it is making — that a decline is not the same as "not a problem" — which
+is what the sentence is for. **Posture: subtractive, no replacement state.** Do
+not write *"`F10`'s gap is now closed by the ruleset"*: that is the same trap
+with today's answer in it, and `G19`'s note records the identical reasoning.
+Where the closure deserves recording, it belongs under `F10` in
+`SHIP-PR-AUDIT.closed.md` as a dated `**Adjusted**` line, which is what
+`audit-menu` → *Audit files are RECORDS* prescribes for a world that moved under
+a finding.
+
+**Evidence:** the header read at `:15-16`, the `F10` pointer at `:134`, and the
+ruleset's behaviour observed on PRs #1250 and #1251, all 2026-09-22. **Not
+measured:** whether any other sentence in this header has also gone stale — this
+finding read the two decline sentences and stopped, per `audit-menu` → *Do not
+audit prose you are not changing*.
+
+**Confidence:** high on both halves. The header line was read, and the gate was
+watched refusing and then permitting a merge.
+
+**Ongoing cost:** none. Removing a state is what makes it stop rotting.
+
+**The `F11` sentence beside it is NOT part of this**, and is left alone
+deliberately: <!-- claim-ok: quoting this file's header, cited at :17-19 above -->
+*"`F11`'s number is real and got worse"* is a measurement with a date-shaped
+claim rather than another finding's open/closed state, and this finding has not
+re-measured it.
