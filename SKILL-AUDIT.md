@@ -799,6 +799,53 @@ shape.
 whatever the tool-name list costs to keep — which is the argument for keeping
 that part shallow.
 
+**Taken, 2026-09-22 (PR #1236). Posture held: fail, not warn; derived from the
+directory and asserting no count.** Four checks in a new `Agents stay true`
+section of `environment.mjs`, taking `smoke.mjs` from 2759 checks in 165
+sections to 2764 in 166.
+
+**Each check was proved by making it fail first**, with a probe file carrying
+one fault at a time and removed afterwards: no frontmatter, a `name` that
+disagrees with the filename, `tools: Read, Grep,,`, and frontmatter without a
+`description`. Each failed the one check it should and no other. A check that
+has only ever passed proves nothing.
+
+**Three corrections from `audit-premise-auditor` before the branch existed:**
+
+- **This module already does it for skills**, at `:592-594` and `:615-616` — a
+  regex over the raw text, directory-derived, no count asserted — and this
+  finding did not say so. `audit-menu` requires that an existing decision be
+  named. What shipped delivers more than copying that block: it parses the
+  frontmatter rather than pattern-matching it, and it checks `name` against the
+  filename, which the skills version does not do. The skills block is untouched.
+- **The `tools:` roster had nothing to rest on.** No list of valid tool names
+  exists anywhere in this repo; the only tool names on disk are the ones these
+  five files already use. Shipped as **shape only**, which is the fallback this
+  finding's own Confidence line named. A hardcoded roster of another system's
+  vocabulary is the staleness this module refuses two blocks above.
+- <!-- claim-ok: quoting the premise this note corrects --> The finding says its
+  grep *"returned those two files and no third"*. Re-run 2026-09-22 it returns
+  **three**: the third is `environment.mjs:504`, a comment naming the directory
+  rather than a read of it. The absence claim it supports holds — nothing in the
+  repo opened an agent file.
+
+**One premise left unsettled, and it is this finding's stated reason for
+`fail`.** <!-- claim-ok: quoting the premise this note corrects --> *"A
+malformed agent file fails at spawn anyway, so this is the same failure moved
+earlier"* quotes no command, and nothing in the repo can confirm or refute it —
+it is **inferred, not measured**. The posture is unchanged because the second
+argument stands alone: the check is deterministic and text-only, so there is no
+flake for a gate to cost anyone.
+
+**Routing, recorded because the rule points the other way.** `test-suite` →
+*Where a new check goes* sends a fact about a file to `smoke.mjs` or a module
+under `checks/`, and reserves `environment.mjs` for facts about the environment,
+which is where the wrangler calls and nearly all the wall clock live. This went
+to `environment.mjs` as the finding asks, on the ground that its sibling check
+sits forty lines above it and splitting one instruction surface across two
+modules costs more than the tidiness. Taken as written; the tension is real and
+is written here rather than resolved quietly.
+
 ### F52 — the model choices and the scoring fixture have not been re-run since the day they were written
 
 `.claude/skills/claim-audit/reference/negatives.md:113` records the run that
