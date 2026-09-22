@@ -16,6 +16,41 @@ Every one of these **succeeds**. Nothing exits non-zero, nothing warns, and in
 three cases the obvious check reports clean. They are collected here because
 each cost a session or reached production.
 
+## Five of these are a hook now, and it fires in one directory
+
+Since 2026-09-16 `.claude/hooks/guard-bash.sh` runs before every `Bash` call and
+exits 2 — the only code Claude Code treats as a block — on five shapes that were
+prose rules here and in `ship-pr` until then:
+
+- `git add -A`, `git add --all`, `git add .` — *Commit messages*, below
+- `sed -i` on a path under the repo — *Editing a file in place*, below
+- `scripts/q.mjs` or `scripts/d1-apply.mjs` with neither `--local` nor
+  `--remote` — `ship-pr` → *`--local` is not a mirror of production*
+- `gh pr merge` sharing a line with a chaining operator or a pipe — *A pipe
+  throws away the exit code you were testing*, below
+- `git commit -m` with a backtick in it — *Commit messages*, below
+
+**A refusal starts `guard-bash:`, and that is the hook rather than a permission
+denial.** The two read alike in a transcript and the repairs are opposite: a
+permission denial is waiting for Nate to approve the command you wrote, and this
+is telling you to write a different one. The script's header names the incident
+behind each rule.
+
+**It is project-scoped, which means the session that needs it most does not have
+it.** The hook is registered in this repo's `.claude/settings.json`, and
+`CLAUDE.md`'s four-cell probe established that project settings govern the
+directory they sit in and do not compose. The book work runs from
+`C:\Users\natha\Projects\workshop`, where there is no hook at all and the prose
+below is the whole of the protection. **So nothing here has been retired.** Five
+rules acquired a backstop in one directory; they are unchanged in the other, and
+that is the directory where a sourcebook import runs `git add` and `sed` all day.
+
+**It fails closed.** If the hook cannot parse the JSON envelope Claude Code hands
+it, it refuses rather than running unguarded — so a broken hook is noticed on the
+first command instead of never. `.gitattributes` pins `.claude/hooks/*.sh` to LF
+for the same reason: a CR on the shebang line fails as `/bin/sh^M: bad
+interpreter`, which is a hook that silently stops guarding anything.
+
 **The repo is CRLF except where `.gitattributes` says otherwise, and it says so
 about more than one thing.** Two paths are pinned to LF: `*.sql`, *because a
 CRLF checkout once changed the bytes that reached the database*, and
@@ -103,6 +138,12 @@ That is not hypothetical: PR #668 merged with `smoke` at `failure` on
 batch used the identical construction and were green, so nothing ever showed
 that the guard did not work — which is this page's whole thesis, applied to the
 shell rather than to a file.
+
+**That exact line is refused by the hook now, in this repo.** `gh pr merge` on a
+line with a chaining operator or a pipe is rule 4 above. It is the narrowest of
+the five and it does not cover the trap: `gh pr checks | tail` is still a
+pipeline whose exit code is gone, and every other command in this section is
+untouched by the hook in either directory.
 
 **Three fixes, in order of preference:**
 
