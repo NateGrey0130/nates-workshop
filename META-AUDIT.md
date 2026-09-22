@@ -1269,4 +1269,114 @@ asserted the pointer-per-finding property that part two exists because
 **What this does not close.** `apps/character-creator/AUDIT.md` was never split
 and records its outcomes as `**Fix**:` bullets under a *Fixed in this PR*
 section — a fourth outcome shape, and outside every part of this finding.
-Recorded rather than filed.
+Recorded rather than filed. **Filed as `A21`, 2026-09-22.**
+
+### A21 — low — five menus were never split, and one of them records outcomes in a shape no other menu uses
+
+**Opened 2026-09-22**, from `A20`'s premise audit, which listed the menus with
+no `<MENU>.closed.md` while checking something else.
+
+**Five menus have no closed file** — `DOCS-AUDIT.md`, `DOCS-AUDIT-2.md`,
+`apps/pick3cut5/AUDIT.md`, `apps/character-creator/AUDIT.md` and
+`SETUP-v2-CHANGES.md`. Derived 2026-09-22 by walking the `*AUDIT*.md` glob plus
+`SETUP-v2-CHANGES.md` and testing for `${base}.closed.md`. **Four of the five are
+unremarkable**: they are small, or closed, or — in `pick3cut5/AUDIT`'s case —
+still carrying open work.
+
+**The fifth is the finding.** `apps/character-creator/AUDIT.md` records its
+fourteen outcomes as `**Fix**:` bullets under a *Fixed in this PR* section rather
+than as notes under each finding, which is **a fourth outcome shape** beside the
+three `audit-menu` already warns about. Its own header says two scans have
+already misread it as open. Read 2026-09-22.
+
+**Proposal:** one sentence in that menu's own header naming its outcome shape —
+where the outcomes live and that they are not under the findings — and a row for
+it in `audit-menu`'s shape table if the table does not already describe it
+correctly. **Posture: documentation only. No split, no move, no restructure, and
+no check.** The same posture `A20` part three shipped for `RETRO-AUDIT` on
+2026-09-22 (PR #1251), and for the same reason: shape does not move when a
+finding closes.
+
+**Splitting it is explicitly NOT proposed**, and the argument is `A20`'s: the
+split is what produced `A20`'s three symptoms in the first place, and this menu
+has been readable without one since it was written. **The five unsplit menus are
+not a gap to close.**
+
+**Evidence:** the five-menu derivation and the `AUDIT.md` read, both 2026-09-22,
+both from `A20`'s premise audit. **Not measured:** whether `audit-menu`'s shape
+table row for `apps/character-creator/AUDIT.md` is already right — this finding
+did not open the table, which is the claim-about-another-file shape that fails
+most often here, so a taker should read `.claude/skills/audit-menu/SKILL.md`
+before assuming the row needs changing.
+
+**Confidence:** high that the five are five and that the shape is a fourth one.
+**Low on whether the header sentence is worth writing**, given the menu already
+warns that it has been misread — which may mean the warning is the thing that
+needs sharpening rather than a new sentence added beside it.
+
+**Ongoing cost:** one header sentence to keep true, the same trade `A20` part
+three accepted.
+
+### A22 — medium — the deferral rule shipped as documentation, and five unnumbered deferrals were written on one day by sessions that had just applied it
+
+**Opened 2026-09-22**, from the sweep that filed this batch. **This re-proposes
+something `A16` decided, and says so** — per `audit-menu` → *A finding may still
+re-propose a settled decision*, what a finding may not do is fail to say that a
+decision exists.
+
+**`A16` is the decision.** Taken 2026-09-06, it shipped `audit-menu` → *A
+deferral is work. Give it a number or say you are dropping it*, with the posture
+<!-- claim-ok: quoting A16's posture, located at META-AUDIT.closed.md:1699-1703 -->
+*"documentation only, one section in one skill. No check, no script, no retrofit
+of the two closed instances, and no index of deferrals."* It measured **four
+standing deferrals**, the oldest ten days old. `META-AUDIT.closed.md:1644` is the
+heading; the posture is at `:1699-1703`. Read 2026-09-22.
+
+**What is new is the rate.** On 2026-09-22 alone, **five** unnumbered deferrals
+were written into outcome notes, every one by a session working inside this
+apparatus with the rule in its own context:
+
+| where | the sentence |
+|---|---|
+| `SKILL-AUDIT.md:1336` (`F54`'s note) | *"Two things found while taking this, and neither is filed here"* — two items |
+| `SKILL-AUDIT.md` `F57`'s note | *"`xargs sed -i` is a live hole in rule 2, independent of this finding"* |
+| `SKILL-AUDIT.md` `F57`'s note | *"That is not closed here and should not be read as closed"* |
+| `REPO-AUDIT.md:493-494` (`G20`'s note) | *"Out of scope and still true"* |
+
+All five are filed by the PR that files this finding, so the backlog is not the
+problem. **The rate is.** `A16`'s four accumulated over roughly ten days before
+the rule existed; these five landed in one day after it did.
+
+**Proposal, and it is a question rather than a mechanism.** Ask whether
+documentation-only is the right posture for this rule, given the above — and
+**if the answer is that it is**, record that here so it is not re-proposed a
+third time. **Posture if anything is built: it may not be a check on menu text.**
+`A16` ruled that out and `audit-menu` rules it out repeatedly on the grounds that
+outcome notes vary in wording by design and every mechanical reader of them here
+has been wrong in both directions. The only shape not yet considered is a
+**prompt-time** one — the `take` skill already runs a subject grep and a premise
+audit before a branch; whether it could also ask, at hand-back, "did this note
+name work it did not file" is the open question.
+
+**This finding recommends its own decline if the answer is no**, and says so
+because `audit-menu` asks a proposal whose ongoing cost exceeds its impact to do
+exactly that. The counter-argument is strong and should be read first: **every
+one of the five was caught**, by a subject grep run at taking time, within hours
+of being written. A rule that leaks and a sweep that catches the leaks may be
+the working system rather than a broken one, and `A16`'s posture would then be
+right for the second time.
+
+**Evidence:** the four table rows read 2026-09-22, `A16`'s posture read the same
+day, and this PR's own filings. **Not measured:** the rate before 2026-09-22.
+`A16` counted a standing backlog, not a per-day rate, so *"five in one day"* has
+nothing to compare against and **this finding does not claim the rate is rising**
+— only that it is higher than a documentation-only rule was assumed to produce.
+
+**Confidence:** high that the five exist — each is quoted with a location.
+**Low on the conclusion**, for the counter-argument above. What would raise it is
+a count of deferrals per day across the whole corpus, which nobody has run and
+which this finding does not ask a taker to run before deciding.
+
+**Ongoing cost:** nothing if declined. If a prompt-time question is added to
+`take`, it is one more thing in a skill whose whole argument is that it adds no
+rules — which is itself a reason to decline.

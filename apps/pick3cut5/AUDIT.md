@@ -1,7 +1,10 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
-> **Nothing is open.** `F11` and `F12` were both taken 2026-09-03; everything
-> else here is closed, re-verified on 2026-09-02: `F1`–`F10` and `T1`–`T11`.
+> **Work was opened on this menu on 2026-09-22.** Read under a finding's own
+> heading for its state; this line does not give it. The sentence here said
+> *"Nothing is open"* from 2026-09-03 until then, naming a range of closed
+> numbers, which is the shape `audit-menu` → *What a status header may carry*
+> forbids — so it is not replaced with a new range.
 >
 > **`F11` and `F12` ended as ONE check, which is what `F12` asked for.** Reading
 > `F11` alone now misleads: its own assertion no longer exists as a separate
@@ -688,6 +691,59 @@ handles quoted and unquoted forms; my test harness did not.**
 **Nothing was broken before this PR and nothing is now.** The stylesheets the
 page loads reference `shared/fonts/` only; `requiredPublic` derived correctly
 before and after; `smoke.mjs --remote` green against production.
+
+### F13. Two `T` items are recorded as passed and carry an unrun half inside the same line
+
+**Opened 2026-09-22**, from a sweep of every menu for open work. Surfaced by the
+`open-findings-scout` agent and read by hand afterwards.
+
+The `## T` section is this menu's list of paths that have never run, and its
+own header is what makes the section worth having. **Two of its items report a
+pass whose qualifier is a second, unrun test** — not a failure, and not an open
+finding, but not the clean result a scan of the bold leads returns either:
+
+| item | how it reads today |
+|---|---|
+| `apps/pick3cut5/AUDIT.md:132` | **T7. The caps. — REPLAY CAP PASSED; ROUND CAP PINNED IN SOURCE 2026-09-12, NOT DRIVEN.** |
+| `apps/pick3cut5/AUDIT.md:214` | **T10. Screen reader and keyboard-only. — PARTIALLY RUN.** |
+
+Read 2026-09-22. Both are honest — each says what it did not do, in its own
+lead — and that is why this is `low`: **nothing here is hidden.** What makes it
+worth a number is that `T` items are **bold paragraph leads rather than
+headings** (`audit-menu` → *The headings are not uniform* records this file's
+`T` items as exactly that shape), so the usual way to read this section is to
+scan the leads — and a lead beginning `PASSED` reads as done at the speed anyone
+actually scans.
+
+**Proposal:** drive the two unrun halves and replace each lead with what the run
+says — the round cap against a real fourth attempt rather than against the
+source constant, and the screen-reader half of `T10` with an actual reader.
+**Posture: run the tests, update the two leads, and add no check and no gate.**
+If either turns out not to be worth driving, say so in the lead in those words,
+which is a complete answer and cheaper than a run — `T` items already carry
+`NOT DRIVEN` and `PARTIALLY RUN` honestly, and a third honest state is fine.
+
+**This is NOT a proposal to restructure the section.** `audit-menu` records the
+bold-lead shape as a documented trap rather than a defect, and the same skill's
+`META-AUDIT` `A20` line — taken 2026-09-22, PR #1251 — declined demoting forty-one
+headings in `RETRO-AUDIT` for the neighbouring reason: shape in a record is left
+alone and described instead.
+
+**Evidence:** the two reads above, 2026-09-22. **Not measured:** whether the
+round cap actually holds under a driven fourth attempt — that is the finding.
+The replay cap half of `T7` passed and is not in question.
+
+**Confidence:** high that the two leads say what is quoted. **Unknown whether
+either unrun half would fail**, which is the point of driving them; a pinned
+source constant and a live cap have disagreed in this repo before.
+
+**Ongoing cost:** none. Two one-time runs and two edited lines.
+
+**A reason to decline:** `T10`'s screen-reader half needs a real screen reader on
+this machine, which `verify-ui` does not cover and nothing here automates. If
+that is the blocker, take the `T7` half alone and record the `T10` half as a
+deliberate drop rather than leaving it named and unfiled — `audit-menu` → *A
+deferral is work*.
 
 ---
 

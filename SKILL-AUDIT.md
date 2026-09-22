@@ -1753,6 +1753,178 @@ quietly fixed.** A body of `os.system("git add -A")` is **not** matched by rule
 also covers trigger text inside a **quoted argument** — this session was refused
 twice more for exactly that while testing, once for `git add -A` inside a
 `node -e` string. That is not closed here and should not be read as closed.
+**Filed as `F59`, 2026-09-22.** The `xargs sed -i` hole this note names two
+paragraphs above is filed as `F58`, with a second rule-2 defect found beside it.
+
+### F58 — medium — rule 2's token walk is unbounded in one direction and blind in the other, so it refuses `sed -n … && grep -i …` and allows `xargs sed -i`
+
+**Opened 2026-09-22**, from two refusals this session actually hit plus the hole
+`F57`'s outcome note names and does not file.
+
+`.claude/hooks/guard-bash.sh:148` gates rule 2 on
+
+```
+sed[[:space:]]+([^[:space:]]+[[:space:]]+)*(-[a-zA-Z]*i[a-zA-Z.]*|--in-place[^[:space:]]*)
+```
+
+The `([^[:space:]]+[[:space:]]+)*` span is unbounded and crosses `&&`, `;` and
+`|`, because rule 2 — unlike rules 3 and 4 — matches the whole command rather
+than per line. So **any later command's `-i` satisfies rule 2's in-place flag.**
+Measured 2026-09-22, refused by the live hook:
+
+```
+sed -n '520,540p' META-AUDIT.closed.md && echo "" && grep -rn -i 'DOCS-AUDIT-2' <path>
+```
+
+`sed -n` is not an in-place edit; the `-i` belongs to `grep`. The token walk then
+finds `META-AUDIT.closed.md`, resolves it against the cwd, and refuses. **Any
+read-then-search pair in one call is refused today**, and this session hit it
+twice.
+
+**The same walk is blind in the other direction.** `xargs sed -i` is not matched,
+because the walk needs a *target token* and `xargs` supplies filenames on stdin.
+Driven at the real script with real envelopes, 2026-09-22:
+
+| command | verdict |
+|---|---|
+| `sed -i 's/a/b/' README.md` | REFUSED |
+| `find . -name '*.md' -exec sed -i 's/a/b/' {} +` | REFUSED |
+| `grep -rl foo . \| xargs sed -i 's/foo/bar/'` | **allowed** |
+| `grep -rlZ foo . \| xargs -0 sed -i 's/foo/bar/'` | **allowed** |
+
+**`F57`'s outcome note already records the second half** — *"`xargs sed -i` is a
+live hole in rule 2, independent of this finding"* — and files nothing. It does
+not know about the first half.
+
+**Proposal:** one change addressing both — anchor rule 2's `sed` at a command
+position, the way rule 6 already anchors `find` at `guard-bash.sh:241`, and
+treat `xargs` and `-exec` as command-position introducers so the two real
+multi-file shapes stay caught. **Posture: rule 2 only. No new rule, no change to
+what it refuses when it is right, and the refusal posture is unchanged — exit 2,
+fails closed.**
+
+**`F57` considered anchoring and rejected it on a cost that turns out to be
+half imaginary.** <!-- claim-ok: quoting the premise this finding corrects -->
+It says anchoring *"misses `find -exec sed -i` and `xargs sed -i`"*; its own
+outcome note then establishes that `xargs sed -i` **is already missed**. So
+anchoring costs `find -exec` alone, and the introducer list recovers that.
+
+**Evidence:** the live refusal above and the four-row table, both 2026-09-22,
+driven at `.claude/hooks/guard-bash.sh` with crafted envelopes. The envelope must
+be built in node rather than a shell string — the Bash tool collapses `\\` to
+`\` and a Windows path stops being valid JSON, which invalidated this session's
+first harness and made rule 2 look dead when it was not.
+
+**Confidence:** high on both defects — each reproduces from a command. Medium on
+the fix: a command-position matcher for `sed` has not been written or scored,
+and `F54` records that its own anchored matcher took two attempts and a
+re-extracted fixture.
+
+**Ongoing cost:** none new. It is a narrower regex in a rule that already exists.
+
+### F59 — medium — the rules still match trigger text inside a QUOTED ARGUMENT, which `F57` fixed for heredocs and explicitly left open
+
+**Opened 2026-09-22.** `F57`'s outcome note ends *"That is not closed here and
+should not be read as closed"*, and files nothing. This is that half.
+
+`F57` shipped `stripData` at `.claude/hooks/guard-bash.sh:68-92`, which drops the
+body of a data heredoc before the rules read the command. **A quoted argument is
+not a heredoc and is not stripped.** Driven at the real script, 2026-09-22 —
+every one REFUSED, and none of them is the command the rule is about:
+
+| command | rule that fired |
+|---|---|
+| `gh pr comment 99 --body "…a merge chained onto a check, gh pr merge && something, is refused"` | 4 |
+| `echo "the rule is: never run git add . in a shared checkout"` | 1 |
+| `echo "do not use sed -i on README.md here"` | 2 |
+| `echo do not run sed -i on README.md` | 2 |
+
+**It spans three rules, which is why it is not folded into `F58`.** `F57`'s two
+specimens were both `git add -A` inside a `node -e` string; the `sed` and
+`gh pr merge` shapes above are new, and the last row is not quoted at all — it is
+prose in an unquoted `echo`, which no amount of quote-awareness reaches.
+
+**This is the rule that bites a session writing about the rules**, which is this
+repo's normal work: `CLAUDE.md`, `windows-shell`, this menu and the memory note
+are all full of the trigger strings.
+
+**Proposal:** none specific, deliberately — this is a suspicion with a
+measurement attached rather than a design. The obvious move, stripping quoted
+arguments, is **not** proposed: `F57` records three ways its heredoc stripper
+would have failed open, and a quote-stripper is strictly harder because a
+command's real arguments are quoted too. **Posture, whatever the mechanism: it
+may not reduce what the hook refuses when the trigger IS a command.** A
+false-positive fix that buys itself a false negative is worse than the problem.
+
+**Rule 6 is the one precedent that works**, and it is narrow on purpose:
+`guard-bash.sh:233-237` says `find` is matched at a command position *"so that
+prose naming the shape does not trip it"*, calling that "a narrower guard than
+the other five and it is deliberate". `F58` proposes extending exactly that to
+rule 2. **Whether rules 1 and 4 should follow is this finding's question**, and
+it is a question rather than a proposal because `gh pr merge` inside a PR body is
+a real thing to write and a real thing to refuse.
+
+**Evidence:** the four-row table above, 2026-09-22, driven at the real script.
+**Not measured:** how often this fires in ordinary work. Three instances are
+known — two in `F57`, one here — all in sessions whose subject was the hook
+itself, which is the worst possible sample.
+
+**Confidence:** high that it reproduces. **Low that it is worth a mechanism**,
+and that is the finding: it may be right to write the workaround down and stop.
+
+**Ongoing cost:** a quote- or position-aware matcher is one more thing that must
+never throw inside a script whose failure mode is refusing every Bash call on the
+machine.
+
+**This proposal may well cost more than it returns, and if so it should be
+declined** — the workaround is one sentence (`write prose to a file and `-F` it`,
+which the memory note already gives) and it is already written down in three
+places.
+
+### F60 — low — the hook is registered twice, and a session started in this repo runs it twice
+
+**Opened 2026-09-22.** `F54`'s outcome note names this at `SKILL-AUDIT.md:1340-1342`
+and files nothing.
+
+Both registrations are live. `C:\Users\natha\.claude\settings.json` registers
+`sh "C:/Users/natha/Projects/nates-apps/.claude/hooks/guard-bash.sh"` and the
+repo's `.claude/settings.json:54` registers
+`sh "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh"`. Both match `Bash`. Read
+2026-09-22.
+
+**Demonstrated rather than inferred**, which is new since `F54` recorded it: two
+refusals in one session named *different* configured commands in the wrapper's
+bracket — one the absolute path, one `$CLAUDE_PROJECT_DIR`. Neither registration
+is deduped away.
+
+**The cost is real and small:** every `Bash` call in a repo-rooted session spawns
+`sh` and a `node` JSON parse twice instead of once. **The verdict is never
+different**, because both run the same script from the same path.
+
+**Proposal:** remove the hook block from the repo's `.claude/settings.json`,
+leaving the user-level registration — which covers every directory on this
+machine, including the two the repo's never reached. **Posture: subtractive, one
+JSON block, no rule changed and no behaviour changed except that the hook runs
+once.** The permission `allow` list in that file is untouched.
+
+**Read the argument against before taking it.** The repo registration is the one
+that is *checked in*, so it is the only half that survives a fresh clone or a
+second machine; the user-level one exists on this machine and nowhere else.
+Removing it makes the guard depend entirely on a file this repo cannot see,
+which is the shape `F55` was filed about in the other direction. **The counter is
+`apps/character-creator/test/checks/hook-registration.mjs`**, shipped with `F56`
+on 2026-09-22, which fails `smoke` locally when the user-level registration is
+missing or broken — so the machine notices. Whether that is enough is Nate's
+call, and this finding does not assume it is.
+
+**Evidence:** both settings files read 2026-09-22, and the two live refusals in
+this session's own transcript.
+
+**Confidence:** high that both fire — it was observed, not reasoned. **Medium on
+the proposal**, entirely because of the fresh-clone argument above.
+
+**Ongoing cost:** none either way. This is a one-time decision about which
+registration is authoritative.
 
 ## A closing observation, about this audit rather than its findings
 

@@ -491,4 +491,57 @@ reading it is **eight failed attempts across six runs**, all 2026-09-22. And
 re-runs**, which strengthens this finding's argument against a retry.
 
 **Out of scope and still true:** `play-flow.mjs` spawns its dev server the same
-way, with `stdio: 'ignore'`.
+way, with `stdio: 'ignore'`. **Filed as `G21`, 2026-09-22**, per `audit-menu` →
+*A deferral is work. Give it a number or say you are dropping it*.
+
+## Opened while closing out the subagent retrospective, 2026-09-22
+
+Filed in one PR, none taken. Each names the deferral or the measurement it came
+from.
+
+### G21 — low — `play-flow.mjs` spawns its dev server with `stdio: 'ignore'`, which is the thing `G20` fixed next door
+
+**Opened 2026-09-22**, as the deferral `G20`'s own outcome note names at
+`REPO-AUDIT.md:493-494` and does not file.
+
+`apps/character-creator/test/play-flow.mjs:196` spawns `npx wrangler pages dev`
+with `{ cwd: repoRoot, shell: true, stdio: 'ignore' }`. `regression.mjs:343`
+spawns the same command with `stdio: ['ignore', serverLogFd, serverLogFd]`, and
+its comment at `:331` says the change was made when `G20` was taken. Read
+2026-09-22.
+
+So the two suites that boot a dev server through `dev-server.mjs` now differ in
+exactly the way `G20` argued mattered: when `regression`'s server dies the suite
+can say what the server printed, and when `play-flow`'s dies it cannot.
+
+**This is smaller than `G20` was, and the reason is worth stating rather than
+discovering.** `play-flow` is **reporting only** — it is not among the three
+required status checks on `main`'s ruleset, which are `smoke`, `menus` and
+`regression` (`CLAUDE.md`, read 2026-09-22). A `play-flow` death costs a red
+square and no merge. `G20` was taken because a *required* check was failing
+intermittently and nobody could see why.
+
+**Proposal:** give `play-flow.mjs` the same file-backed stdio `G20` gave
+`regression.mjs`, and the same block-on-death reporting if that transfers
+without new machinery. **Posture: diagnostics only — no new check, no exit code
+moves, and nothing about when the suite fails changes.** If the reporting half
+does not transfer cheaply, take the stdio half alone and say so.
+
+**Evidence:** the two reads above, 2026-09-22, and `G20`'s own note. **Not
+measured:** whether `play-flow` has ever actually died this way. `G20`'s
+re-derivation counted attempts on `regression.yml` only, so the corresponding
+number for `play-flow` is unknown and this finding does not claim one.
+
+**Confidence:** high that the asymmetry is real — both lines were read. **Low on
+whether it is worth fixing**, and that is the honest state: a reporting-only
+suite that has never been observed to die this way may not be costing anything.
+What would raise it is the same `run_attempt > 1` query `G20` used, pointed at
+`play-flow.yml`.
+
+**Ongoing cost:** none beyond the log file `regression.mjs` already writes.
+
+**A reason to decline it:** the asymmetry may be correct rather than accidental.
+`G20` bought visibility into a required check with a real, measured flake;
+buying the same for a reporting-only suite with no measured flake is speculative
+work, and this finding would rather be declined on that than taken on symmetry
+alone.
