@@ -2,7 +2,7 @@
 
 Tools, toys, and experiments — built with Claude.
 
-A personal site of four small apps sharing one Cloudflare Pages project, one D1
+A personal site of small apps sharing one Cloudflare Pages project, one D1
 database and one R2 bucket. Plain HTML, JS and CSS: **no build step, no
 framework, no dependencies, no `package.json`.**
 
@@ -11,16 +11,33 @@ a login you almost certainly cannot pass. The code is all here.
 
 ## The apps
 
+Five of them are the RPG suite, which shares one stylesheet and one app
+switcher. The character creator was split into them on 2026-09-19; the engine
+they all load still lives under `apps/character-creator/js/`.
+
 | | |
 |---|---|
-| [`apps/character-creator/`](apps/character-creator/) | Palladium Fantasy & Rifts character builder and campaign journal — [its own README](apps/character-creator/README.md) is the deepest documentation in the repo |
+| [`apps/character-creator/`](apps/character-creator/) | Build a character, step by step — [its own README](apps/character-creator/README.md) is the deepest documentation in the repo, and its `js/` is the engine behind the four below |
+| [`apps/character-sheet/`](apps/character-sheet/) | The sheet you play from |
+| [`apps/codex/`](apps/codex/) | Everything the books print, and the editor behind it |
+| [`apps/campaign/`](apps/campaign/) | Session notes, the shared stash, the ledger |
+| [`apps/gm-tools/`](apps/gm-tools/) | The party roster, pools, and NPCs rolled from the books |
+
+And three that stand alone:
+
+| | |
+|---|---|
 | [`apps/filament-forge/`](apps/filament-forge/) | 3D print settings engine |
 | [`apps/media-vault/`](apps/media-vault/) | Personal audiobook and film library |
-| [`apps/pick3cut5/`](apps/pick3cut5/) | Party game, playable in a shared room |
+| [`apps/pick3cut5/`](apps/pick3cut5/) | Party game, playable in a shared room — the only public one |
 
 **What each app *is* lives in [`apps/manifest.json`](apps/manifest.json)**, which
-the landing page reads at runtime. That file is the source; this table is only
-a map, and deliberately does not repeat it.
+the landing page reads at runtime. That file is the source; these tables are only
+a map, and deliberately do not repeat it. Adding one is the `app-suite` skill.
+
+**This table described four apps while eight were live**, for two days after the
+split. Nothing pins this file — no check reads it, which is not true of any app's
+own README — so it is corrected by hand or not at all.
 
 ## How it ships
 
