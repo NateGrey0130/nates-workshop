@@ -1317,6 +1317,73 @@ needs sharpening rather than a new sentence added beside it.
 **Ongoing cost:** one header sentence to keep true, the same trade `A20` part
 three accepted.
 
+**DECLINED, 2026-09-22 (PR #1258). Nothing changed.** The work this proposes
+already exists, it was judged sufficient by a finding taken three weeks earlier,
+and three of this finding's premises are false. **Not to be re-proposed from the
+same observation.**
+
+**The decision already existed, and this finding does not name it — which is
+the failure `audit-menu` → *before WRITING a proposal, grep the other menus for
+its subject* exists to prevent.** `HEALTH-AUDIT` `F8`, **taken 2026-09-02
+(PR #531)**, reads at `HEALTH-AUDIT.closed.md:487-493`:
+<!-- claim-ok: quoting F8, located in the sentence before this one -->
+*"**One file already solves this.** `apps/character-creator/AUDIT.md:12` opens
+with … a paragraph naming the exact trap … It works, and **it is the only file
+that has one**."* `F8` then rolled that header out to **nine other menus as the
+model**. So the one header `A21` proposes adding a sentence to is the header the
+repo already copied everywhere else.
+
+**And the sentence is already there, larger than proposed.**
+`apps/character-creator/AUDIT.md:12-24` names the shape, where the outcomes
+live, that two scans misread it, and a sibling trap in
+`apps/media-vault/ISBN-AUDIT.md`. `A21` quotes the paragraph *after* it and
+proposes writing the one before it.
+
+**Three premises are false:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> **"records its
+  fourteen outcomes as `**Fix**:` bullets"** — **eight** do, at
+  `apps/character-creator/AUDIT.md:105, 119, 133, 143, 153, 162, 175, 186`.
+  `F1`–`F5` carry the repo-standard `- **Taken, 2026-08-24**:` at `:218, :265,
+  :307, :340, :386`, and `F6` is an information item. A header sentence written
+  as `A21` asks would be **false about five findings** and would newly mislead a
+  scan of them.
+- <!-- claim-ok: quoting the premise this note corrects --> **"rather than as
+  notes under each finding"** — the `**Fix**:` lines **are** under each
+  finding's own heading; `:105` sits under `### D1` at `:91`. What is unusual is
+  the **word**, not the **place**, and a reader following `audit-menu`'s own
+  *read the lines under the heading* finds every one. The menu's own header
+  carries this imprecision and `A21` inherited it.
+- <!-- claim-ok: quoting the premise this note corrects --> **"two scans have
+  already misread it as open"** is a true quote of a **stale** line. It is
+  three: `HEALTH-AUDIT.closed.md:491` records *"This audit's first pass made it
+  three"* and `.claude/skills/audit-menu/SKILL.md:460` says the same. The menu's
+  header still says two. **Not corrected here** — this finding is declined and
+  `audit-menu` → *Audit files are RECORDS* governs the rest.
+
+**The conditional second half resolves, and then argues against itself.**
+<!-- claim-ok: quoting this finding's own proposal, above -->
+*"a row for it in `audit-menu`'s shape table if the table does not already
+describe it correctly"* — it does not, but **the table describes outcome shape
+for no menu at all**: every cell across `.claude/skills/audit-menu/SKILL.md:588-610`
+is prefix, heading level and heading shape. Adding one would be a **new kind of
+claim in that table**, not the correction of a wrong cell — and the nearest
+precedent went the other way, `A20` part three putting its sentence in
+`RETRO-AUDIT.md`'s header and leaving the table alone.
+
+**What held:** the five-menu list is right, derived independently; and the
+`**Fix**:` bullet shape really is used by no other menu — `INGESTION-AUDIT.md:87`
+shares the `## Fixed in this PR` heading but its whole body is *"**Nothing.**"*,
+so the heading is shared and the outcome shape is not.
+
+**Two things could not be settled**, recorded rather than glossed: whether the
+2026-09-22 `open-findings-scout` run made a fourth misreading of this menu — the
+agent writes nothing to a file by design, so there is no record either way — and
+whether any class `extraction_notes` cites `A21`, because
+`scripts/audit-citations.mjs:8` answers for `BOOK-INGEST-AUDIT` and nothing else.
+The second is near-zero risk for a two-day-old instruction-layer finding, and it
+is unmeasured rather than clear.
+
 ### A22 — medium — the deferral rule shipped as documentation, and five unnumbered deferrals were written on one day by sessions that had just applied it
 
 **Opened 2026-09-22**, from the sweep that filed this batch. **This re-proposes
