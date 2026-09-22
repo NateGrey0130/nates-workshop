@@ -1822,6 +1822,86 @@ re-extracted fixture.
 
 **Ongoing cost:** none new. It is a narrower regex in a rule that already exists.
 
+**Taken, 2026-09-22 (PR #1253). Posture held: rule 2 only, no new rule, refusal
+posture unchanged — exit 2, fails closed.** Widened from *one* change to four on
+Nate's word, for the reason directly below.
+
+**This finding's proposed mechanism fixes neither defect, and that is the
+headline.** `audit-premise-auditor` caught it before a line was written.
+
+- <!-- claim-ok: quoting the premise this note corrects --> **"anchor rule 2's
+  `sed` at a command position"** does not bound the span. `sed -n '520,540p' …`
+  **is** at a command position; what reaches `grep`'s `-i` is the unbounded
+  token span, which a left anchor does not touch. Rule 6's anchor transplanted
+  onto `sed` still matches the refused command.
+- <!-- claim-ok: quoting the premise this note corrects --> **"treat `xargs` and
+  `-exec` as command-position introducers"** cannot change the `xargs` verdict,
+  because **the regex already matches `xargs sed -i`**. It is allowed because
+  the token walk finds no target. Demonstrated: the same command with one stray
+  token — `… xargs sed -i 's/foo/bar/' extra.md` — **is** refused today. The
+  regex was never the gate.
+
+**The introducer list survives, but for a different job than the finding gives
+it**: anchored *without* an `-exec` introducer, `find -exec sed -i` stops
+matching. It recovers a cost rather than fixing a defect.
+
+**What shipped instead, four changes:** the in-place flag is found among **sed's
+own options inside the walk** (options precede the script, so a later command's
+`-i` cannot be mistaken for sed's — the defect cannot recur rather than being
+patched); `sed` must sit at a command position or behind `xargs`/`find -exec`;
+**no target token fails closed**, which is what actually closes `xargs sed -i`;
+and `{}` resolves against find's own root.
+
+**Two more premises did not hold:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> **"rule 2 — unlike
+  rules 3 and 4 — matches the whole command"**. Only **rule 3** is per-line.
+  Rule 4 is whole-command plus a non-blank *line count*. `F57`'s own note states
+  this correctly about rule 3 alone at `SKILL-AUDIT.md:1737-1739`; this finding
+  widened the correction to a rule it does not cover.
+- <!-- claim-ok: quoting the premise this note corrects --> **"Any read-then-search
+  pair in one call is refused today"** is overbroad. It is cwd-dependent, and
+  four near-variants were allowed: `grep -rn` without `-i`, the same command
+  from outside the repo, the pair split across a newline, and `grep -i` first.
+
+**A fourth defect was found inside the rule and fixed here on Nate's word.**
+`find /c/Users/natha/Downloads -name '*.md' -exec sed -i 's/a/b/' {} +` run from
+the repo was **refused**, although it touches nothing in the repo — every bare
+word took the relative branch and `dirname` of `{}` or `+` is `.`. A bare `+`
+alone was enough. The finding's posture said *"no change to what it refuses when
+it is right"* and was silent on what it refuses when it is wrong.
+
+**Proved against 36 cases, fixture newlines intact** — `F54` records its own
+matcher scoring 13/18 against a fixture flattened to single lines, which
+destroyed the newlines that make a command position, and that lesson was
+inherited rather than re-learned. **Pre-F58: 27 pass, 9 fail. After: 36 pass.**
+The nine are three false negatives (all `xargs`) and six false positives; the
+other 27 are unchanged, six of them pinning rules 1, 3, 4, 5 and 6.
+
+**It was seen to fail first, and the failure is worth recording because it would
+recur.** The first draft ported the old ERE `-[a-zA-Z]*i[a-zA-Z.]*` into a
+`case` statement. In a shell glob `*` is "any sequence", not a quantifier, so
+that pattern cannot match a bare `-i` — **the whole rule was silently
+disarmed**, and 17 of 36 cases were red until the fixture said so. A comment now
+sits at the patch site.
+
+**`F59`'s rule-2 row closes as a side effect**, which was not planned: with
+`sed` anchored, `echo "do not use sed -i on README.md here"` and its unquoted
+twin are both allowed. `F59` still stands for rules 1 and 4, which this does not
+touch.
+
+**Not proposed, and deliberately dropped rather than left named:** committing a
+harness for the hook's rules. Two have now been written and thrown away —
+`F57`'s nineteen cases and this finding's thirty-six, both scratchpad-only — and
+nothing in the repo exercises the rules. That is real, and it is **new machinery
+rather than a narrower rule 2**, so it is outside this finding's posture. It is
+dropped here, not deferred; anyone who wants it should file it.
+
+**A sweeping note:** `F58` is a three-way collision — `BOOK-INGEST-AUDIT` `F58`
+and `apps/character-creator/UI-AUDIT.md:801` are the others, and
+`scripts/audit-citations.mjs --remote F58` silently resolves the bare number to
+`BOOK-INGEST-AUDIT`. Sweep for `SKILL-AUDIT F58`.
+
 ### F59 — medium — the rules still match trigger text inside a QUOTED ARGUMENT, which `F57` fixed for heredocs and explicitly left open
 
 **Opened 2026-09-22.** `F57`'s outcome note ends *"That is not closed here and

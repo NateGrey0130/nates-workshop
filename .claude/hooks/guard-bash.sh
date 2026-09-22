@@ -145,50 +145,131 @@ fi
 # used CLAUDE_PROJECT_DIR, which was right only while the hook was registered
 # from the repo - it missed real absolute repo paths from anywhere else, and it
 # refused EVERY relative `sed -i` on the machine.
-if has '(^|[^[:alnum:]_./-])sed[[:space:]]+([^[:space:]]+[[:space:]]+)*(-[a-zA-Z]*i[a-zA-Z.]*|--in-place[^[:space:]]*)([[:space:]]|$)'; then
-  in_repo=0
-  # Walk the tokens after the first `sed`. Crude tokenisation on whitespace is
-  # enough: a quoted sed script with spaces produces extra "targets" that are
-  # not paths, and a non-path relative token counts as in-repo, which errs on
-  # the side of refusing.
-  toks=$(printf '%s\n' "$cmd" | sed 's/.*[^[:alnum:]_./-]sed[[:space:]]//; s/^sed[[:space:]]//')
-  saw_script=0; expect_script=0
+#
+# FOUR things changed here when SKILL-AUDIT F58 was taken, 2026-09-22. The
+# finding named two defects; measuring it turned up two more.
+#
+#   a. The in-place flag is found among SED'S OWN OPTIONS, inside the walk,
+#      instead of by a regex over the whole command. The old regex let any later
+#      token's `-i` stand in for sed's, because `([^[:space:]]+[[:space:]]+)*`
+#      was unbounded and walked from `sed` to whatever came next:
+#      `sed -n '1,5p' F.md && grep -i x y` was REFUSED, and `sed -n` is not an
+#      in-place edit. Options precede the script, so a flag found before the
+#      script cannot belong to another command. This is why the bug cannot
+#      come back rather than merely being patched.
+#   b. `sed` must sit at a COMMAND POSITION in its segment, or behind one of the
+#      two introducers this corpus uses - `xargs` and `find -exec`. Prose naming
+#      the shape no longer trips it, which is the guard F54 gave rule 6 and the
+#      reason it gave. A BACKTICK counts as a command position: F54 decided that
+#      against a real stray, and this inherits the decision rather than retaking
+#      it.
+#   c. An in-place edit with NO target token now FAILS CLOSED. That is what
+#      closes `xargs sed -i`, where the filenames arrive on stdin and the walk
+#      can never see them - F57's outcome note records it as a live hole. It
+#      costs nothing real: `sed -i` with no file is an error in sed anyway.
+#   d. `{}` resolves against FIND'S OWN ROOT rather than the cwd. Before this,
+#      `find /elsewhere ... -exec sed -i ... {} +` run from the repo was refused
+#      although it touches nothing here, because every bare word took the
+#      relative branch and `dirname` of `{}` or `+` is `.`.
+#
+# Segments come from lines(): newline, && and ||. `|` is deliberately NOT a
+# splitter - `sed -i 's/a|b/c/' f.md` is a real script, and splitting there
+# would cut the target off and fail OPEN. A standalone `|`, `;` or `&` TOKEN
+# stops the walk instead, which a quoted script cannot produce.
+
+# in_repo_path TOKEN BASE : true when TOKEN resolves into the repo. BASE is the
+# cwd for an ordinary relative target, or find's own root for `{}`. An empty
+# BASE fails closed, which is what this whole file does when it cannot tell.
+in_repo_path() {
+  _t=$1; _base=$2
+  case "$_t" in
+    /*|[A-Za-z]:*|\\*)
+      case "$_t" in "$repo_posix"*|"$repo_win"*) return 0 ;; esac
+      _pw=$(printf '%s' "$repo_win" | sed 's#\\#/#g')
+      case "$_t" in "$_pw"*) return 0 ;; esac
+      return 1 ;;
+  esac
+  [ -n "$_base" ] || return 0
+  _d=$(cd "$_base" 2>/dev/null && cd "$(dirname "$_t")" 2>/dev/null && pwd)
+  case "$_d" in "$repo_posix"*) return 0 ;; esac
+  return 1
+}
+
+lines | while IFS= read -r seg; do
+  printf '%s\n' "$seg" | grep -Eq '(^|[`(])[[:space:]]*sed[[:space:]]|[[:space:]]xargs([[:space:]]+-[^[:space:]]+)*[[:space:]]+sed[[:space:]]|[[:space:]]-exec[[:space:]]+sed[[:space:]]' || continue
+
+  # find's root, for `{}`. Empty when this segment has no find, which then
+  # fails closed below rather than silently resolving to the cwd.
+  fr=''
+  if printf '%s\n' "$seg" | grep -Eq '(^|[[:space:]`(])find[[:space:]]'; then
+    set -f
+    for ft in $(printf '%s\n' "$seg" | sed 's/.*[^[:alnum:]_./-]find[[:space:]]//; s/^[[:space:]]*find[[:space:]]//'); do
+      case "$ft" in -*) break ;; esac
+      fr=$ft; break
+    done
+    set +f
+  fi
+
+  toks=$(printf '%s\n' "$seg" | sed 's/.*[^[:alnum:]_./-]sed[[:space:]]//; s/^[[:space:]]*sed[[:space:]]//')
+  inplace=0; in_repo=0; ntarget=0; saw_script=0; expect_script=0
+  set -f
   for t in $toks; do
+    case "$t" in '|'|';'|'&') break ;; esac
     if [ "$expect_script" -eq 1 ]; then expect_script=0; saw_script=1; continue; fi
+    if [ "$saw_script" -eq 0 ]; then
+      # NOTE: these are shell GLOBS, not the ERE the old regex used. `*` here is
+      # "any sequence", so the ERE `-[a-zA-Z]*i[a-zA-Z.]*` does NOT port over -
+      # as a glob it requires a letter before the `i` and so never matches a
+      # bare `-i`, which silently disarms the whole rule. Long options are
+      # listed exactly; a short cluster is any `-...i...`.
+      case "$t" in
+        -e|--expression|-f|--file) expect_script=1; continue ;;
+        --expression=*|--file=*) saw_script=1; continue ;;
+        --in-place|--in-place=*) inplace=1; continue ;;
+        --*) continue ;;
+        -*i*) inplace=1; continue ;;
+        -*) continue ;;
+      esac
+      saw_script=1; continue
+    fi
     case "$t" in
-      -e|--expression|-f|--file) expect_script=1; continue ;;
-      --expression=*|--file=*) saw_script=1; continue ;;
+      # An option may follow the operands: `sed -e 's/a/b/' -i f.md` is legal
+      # and must still be caught. Safe here in a way it was not before, because
+      # the walk is bounded to one segment and breaks at | ; and & - so the
+      # `grep -i` that used to be mistaken for sed's flag is never reached.
+      --in-place|--in-place=*) inplace=1; continue ;;
+      --*) continue ;;
+      -*i*) inplace=1; continue ;;
       -*) continue ;;
-    esac
-    if [ "$saw_script" -eq 0 ]; then saw_script=1; continue; fi
-    case "$t" in
-      /*|[A-Za-z]:*|\\*)
-        # absolute: in repo only if it starts with the repo
-        case "$t" in
-          "$repo_posix"*|"$repo_win"*) in_repo=1 ;;
-        esac
-        # also the forward-slash spelling of the Windows path
-        pw=$(printf '%s' "$repo_win" | sed 's#\\#/#g')
-        case "$t" in "$pw"*) in_repo=1 ;; esac
-        ;;
-      \$*|\"*|\'*) ;;   # a variable or a quoted script: cannot tell, do not count
-      *)
-        # relative: resolve it against the Bash tool's cwd. With no cwd in the
-        # envelope this FAILS CLOSED and counts, which is what the whole file
-        # does when it cannot tell.
-        if [ -n "$env_cwd" ]; then
-          rel_dir=$(cd "$env_cwd" 2>/dev/null && cd "$(dirname "$t")" 2>/dev/null && pwd)
-          case "$rel_dir" in "$repo_posix"*) in_repo=1 ;; esac
+      '{}')
+        ntarget=$((ntarget+1))
+        if [ -n "$fr" ]; then
+          in_repo_path "$fr" "$env_cwd" && in_repo=1
         else
           in_repo=1
         fi
-        ;;
+        continue ;;
+      \$*|\"*|\'*) continue ;;   # a variable or a quoted script: cannot tell
     esac
+    # `+`, `;` and `\;` are find -exec terminators, not paths. Anything with no
+    # alphanumeric in it cannot be one either.
+    case "$t" in *[A-Za-z0-9]*) ;; *) continue ;; esac
+    ntarget=$((ntarget+1))
+    in_repo_path "$t" "$env_cwd" && in_repo=1
   done
-  if [ "$in_repo" -eq 1 ]; then
-    refuse "sed -i rewrites a CRLF file as LF and the diff shows every line; use the Edit tool or node with an explicit encoding"
+  set +f
+
+  if [ "$inplace" -eq 1 ] && [ "$ntarget" -eq 0 ]; then
+    printf 'guard-bash: %s\n' "sed -i with no filename takes them from stdin, which this hook cannot read - xargs sed -i is the shape; name the paths, or use the Edit tool" >&2
+    exit 2
   fi
-fi
+  if [ "$inplace" -eq 1 ] && [ "$in_repo" -eq 1 ]; then
+    printf 'guard-bash: %s\n' "sed -i rewrites a CRLF file as LF and the diff shows every line; use the Edit tool or node with an explicit encoding" >&2
+    exit 2
+  fi
+done
+rc=$?
+[ "$rc" -eq 0 ] || exit "$rc"
 
 # --- 3. q.mjs / d1-apply.mjs with no target flag ------------------------------
 lines | while IFS= read -r line; do
