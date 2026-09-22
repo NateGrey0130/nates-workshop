@@ -164,10 +164,17 @@ the third category. **Read the token as the dice expression it can only be**:
 New West O.C.C. prints `Money: Starts with 3D4xlOO credits`.
 `BOOK-INGEST-AUDIT.md` F53.
 
-**It is worth running on a book you did not cache today.** `bom` printed 84 is
-30 hits — a wholly scrambled page found by hand on 2026-09-05, which this
-detector rediscovers on its own — and `bom` printed 116 and 310 turn a `1` into
-`\` inside spell durations and damage dice. `BOOK-INGEST-AUDIT.md` F36.
+**It is worth running on a book you did not cache today.** `ocr-book.py`
+recomputes this key, and the two beside it, on **every** run — outside the page
+loop, which skips anything already cached — so a re-run on a complete cache
+takes seconds, reads no page again, and rewrites only the manifest. That is how
+every text-layer cache on disk came to carry it: the key did not exist before
+2026-09-10, so a cache built earlier has it only because somebody re-ran.
+
+**And these maps are keyed by the CACHE page, not by the folio**, which is the
+one thing §0 never says and the agents reading it are told. `bom`’s largest
+single entry is nine hits at cache 80, which is printed 79. Convert before you
+cite one — *Read the offset from the registry* below has the arithmetic.
 
 ## 0b. Cache it — the SAME command either way
 
