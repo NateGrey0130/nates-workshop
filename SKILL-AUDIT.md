@@ -1530,6 +1530,71 @@ the proposal as written.
 throw, in a script whose failure mode when it cannot parse its input is to
 refuse everything.
 
+**Taken, 2026-09-22 (PR #1246). Posture held: one function in the extractor, no
+rule changed, refusal posture unchanged.** Filed and taken the same day on
+Nate's word, after the hook blocked this session twice.
+
+**Not the fix this finding proposed, and the premise audit is why.** It asked
+for heredoc bodies to be stripped. Stripping *every* body **disarms the guard on
+bodies that execute** — `sh <<EOF`, `python - <<PY`, `node - <<NODEEOF` — and
+`PY` and `PYEOF` are the **two commonest terminators in this corpus**, 1,758 and
+1,542 against `EOF`'s 1,876. Those bodies run in place; there is no later
+`sh script.sh` for the hook to catch instead, which is the case this finding's
+own *what it deliberately does not do* paragraph described and underrated.
+**So a body is kept when its opener names an interpreter, and stripped
+otherwise.**
+
+**Three ways the version as specified would have failed OPEN — silently, in a
+script whose whole posture is to fail closed:**
+
+- **`<<<` here-strings.** `<<` + optional quote + word matches at offset **1**
+  of `<<<`, taking the here-string's own text as a terminator and dropping
+  everything after it. 51 commands in the corpus contain `<<<`.
+- **An opener with no terminator** — a heredoc built inside a JS or Python
+  string, or `<<` inside an `awk` program. 18 corpus commands. The shipped
+  function **returns the text untouched** in that case rather than losing the
+  rest.
+- **`maxBuffer: 1 << 28`** parses as a heredoc with terminator `28` if the word
+  class allows a leading digit. The shipped class does not.
+
+The function also returns the original text on any throw, because section 0
+exits 3 when it cannot parse its input and `refuse()` then blocks **every** Bash
+call on the machine.
+
+**Two claims in this finding were wrong, and both are corrected here:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"it cost this one,
+  twice, within the hour"*. The heredoc defect fired **once** (14:47:41Z). The
+  other two refusals that hour were **rule 4**, on `gh pr merge` — and rule 4 is
+  right: its own comment requires the merge to be the whole tool call, and the
+  command it refused was chained to a `cd`. Stripping does not touch it.
+- <!-- claim-ok: quoting the premise this note corrects --> *"misses
+  `find -exec sed -i` and `xargs sed -i`"* as the cost of the rejected
+  alternative. `find -exec` holds; **`xargs sed -i` is not matched today
+  either**, because rule 2 needs a target token and `xargs` supplies filenames
+  on stdin. Half the stated cost of anchoring did not exist — **and
+  `xargs sed -i` is a live hole in rule 2, independent of this finding.**
+
+**Also corrected:** this finding says *"every rule matches against the whole
+command text"*. Rule 3 does not — it runs through `lines()` and matches per
+line. The fix is unaffected, since a body line is still a line.
+
+**Proved by a harness of nineteen cases**, driven at the real script with real
+envelopes, which failed **three** before the change and passes all nineteen
+after. It covers the four opener spellings this corpus uses — `<<'W'`, `<<W`,
+`<<\W`, `<< 'W'` — the three fail-open shapes above, both interpreter forms, and
+the unchanged behaviour of every other rule.
+
+**One harness case was expecting the wrong thing and is recorded rather than
+quietly fixed.** A body of `os.system("git add -A")` is **not** matched by rule
+1 with or without a heredoc — rule 1 requires whitespace or end-of-line after
+`-A` and finds a quote. The case now uses a bare line.
+
+**The heading is wider than the fix, deliberately.** *The rules match prose*
+also covers trigger text inside a **quoted argument** — this session was refused
+twice more for exactly that while testing, once for `git add -A` inside a
+`node -e` string. That is not closed here and should not be read as closed.
+
 ## A closing observation, about this audit rather than its findings
 
 **Instructions this session wrote were violated by their author, the same day,
