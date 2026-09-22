@@ -724,6 +724,65 @@ which this retrospective produced three.
 **Ongoing cost:** one more agent file to keep true, which `F45` and `F51` both
 touch anyway. It cannot be exercised in the session that writes it (`F26`).
 
+**Taken, 2026-09-22 (PR #1237). Posture held: a new agent file, read-only, no
+script, no check, and no index file.** `.claude/agents/open-findings-scout.md`,
+`tools: Read, Grep, Glob, Bash, Skill`, loading `audit-menu` first — the same
+tool set the three read-only agents already carry, so "read-only" means what it
+means here: `Bash` present, no `Write` or `Edit`.
+
+**Five things `audit-premise-auditor` corrected or added before the file was
+written.** Four are in the shipped text:
+
+- **`META-AUDIT` `A18` is a fifth instance of this compilation and the finding
+  did not cite it.** Filed 2026-09-06, it read under every heading in all 21
+  menus at `c54a794` — the only one of the five whose method was written down,
+  and the only ground truth on disk. Two things in it are now in the agent file:
+  that its own extractor **missed the wordings `WRITTEN` and `DECLINED`** and
+  reported seven findings as having no outcome until a person read them, and
+  that `A18` counts the index decline as **three**, not two.
+- <!-- claim-ok: quoting the premise this note corrects --> *"Each one re-wrote
+  the method in its own words … and the method is this file's own"* is true of
+  **one** of the four calls. The three from 2026-08-31 were handed an explicit
+  file list by the caller and say nothing about status headers. And the one that
+  did derive the list told itself to read each header and **"trust it over your
+  own scan"** — which `audit-menu` contradicts at `SKILL.md:511`, *a header MAY
+  NOT carry a per-finding state*. The agent file reverses that instruction
+  outright: a header is trusted for how to READ the file and never for whether a
+  particular finding is open.
+- <!-- claim-ok: quoting the premise this note corrects --> *"declined twice,
+  `REPO-AUDIT` `G9` and `META-AUDIT` `A1`"* is loose. `G9` is a one-line aside
+  inside a **rename** proposal that was itself closed without being taken, and
+  `A1` says so: *"The deciding evidence is not in `G9`."* `A1` is the decline
+  that carries reasoning, and its reasoning reaches a **stored** file — its own
+  remedy is derivation, which is what this agent does. The agent file quotes
+  `A1`'s remedy rather than the bare count.
+- **The corpus is larger and stranger than "the menus".** The glob returned 41
+  paths on 2026-09-22: 18 of them are `<MENU>.closed.md` records, the live menus
+  have been mostly one-line pointers since 2026-09-16, the glob misses
+  `SETUP-v2-CHANGES.md` and returns a brief that is not a menu, and two menus
+  keep twenty items in shapes a heading scan cannot see. All of it is in the
+  file, because an agent that does not know it inherits the twenty invisible
+  items.
+
+**One thing left unsettled, and it is this finding's own Confidence line.**
+<!-- claim-ok: quoting the premise this note corrects --> It says the agent
+should be run against *"a menu whose state is independently known — of which
+this retrospective produced three"*, and the retrospective section names no
+three. `META-AUDIT` `A18` is the better-specified ground truth and is what the
+first run should be checked against.
+
+**What fires it: somebody asking, and nothing else.** `F47`, two headings above,
+measures what an agent with no trigger gets — seven calls in eighteen days. That
+is accepted here rather than fixed: a state reading that runs on a schedule and
+is written down is an index with extra steps, which is the artefact `A1`
+declined.
+
+**Verified by the check that landed an hour earlier.** `F51`'s `Agents stay
+true` section reads this file and passes on it — frontmatter parsed, `name`
+matching the filename, `tools` well formed. **The agent itself cannot be spawned
+by the session that wrote it** (`F26`), so the first real run is owed, and
+`A18`'s list is what it should be scored against.
+
 ### F50 — parallel worktree work has no checked-in contract, and the briefs it ran on are gone
 
 On 2026-09-17 a single session spawned **23** `general-purpose` calls, of which
