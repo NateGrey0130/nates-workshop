@@ -17,6 +17,57 @@ rule below is a case where the numbers said one thing and the render said
 another. `ship-pr` step 4 says *"changed anything visible: drive it in a
 browser"*; this is how, here.
 
+## What you changed probably belongs to five apps
+
+Since the split on 2026-09-19, `apps/character-creator/` is a **library as well
+as an app**. Five pages link its stylesheet and pull modules out of its `js/`:
+the Creator, the Sheet, the Codex, Campaign and GM Tools.
+`apps/character-creator/js/api.js` is loaded by all five;
+`apps/character-creator/js/derive.js`,
+`apps/character-creator/js/picker.js`,
+`apps/character-creator/js/downscale.js` and
+`apps/character-creator/js/campaign-list.js` by two or three each.
+
+So *"I changed the sheet and the sheet looks right"* is no longer the check it
+used to be. **Ask which pages load the file before deciding what to look at:**
+
+```bash
+grep -rl 'js/derive.js' index.html apps/*/index.html apps/*/*.html
+```
+
+**Two spellings, one file.** The Creator links its own stylesheet relatively —
+`styles.css` — and the other four link it absolutely, so a grep for
+`/apps/character-creator/styles.css` finds four of the five and reads like a
+complete answer. Grep the basename.
+
+**The old URLs are still live, and they are stubs.**
+`apps/character-creator/sheet.html`, `apps/character-creator/campaign.html`,
+`apps/character-creator/catalog.html`, `apps/character-creator/codex.html` and
+`apps/character-creator/dashboard.html` are redirects that carry the query
+string across, because `?id=` is the character and a `<meta refresh>` cannot
+hold one. They load no CSS and no JS. If a page you are inspecting is blank,
+check you are not standing on one of them.
+
+## Which stylesheet you edit decides how many apps you retone
+
+`shared/styles.css` holds the Ley Verdigris tokens and is loaded by every app.
+`apps/character-creator/styles.css` redeclares every one of those tokens in a
+`:root` of its own, and that is the entire mechanism by which the RPG five are
+Board & Tissue instead — nothing but load order separates the two systems.
+**So retoning `shared/styles.css` retones all of them**, which is what the first
+draft of Board & Tissue did.
+
+The hub is a third case that neither rule covers. `index.html` loads neither
+stylesheet and carries its own copy of the palette under its own token names, so
+a change made carefully in both stylesheets still leaves the front door on the
+old one. It stayed blue and violet for months after every app behind it had been
+retoned.
+
+**`DESIGN.md` is the map of all three**, and it was written by reading the
+shipped stylesheets rather than by deciding anything. Read it before changing a
+colour — and where it and the stylesheets disagree, the stylesheets are right.
+It says so itself.
+
 ## 0. Serve on YOUR port. 8788 probably is not yours
 
 A dev server already listening on 8788 is almost always **another worktree**, and
@@ -150,6 +201,7 @@ Production also sits behind Access, so `curl` and the in-app pane get a 302;
 
 ## What "verified" means
 
+- every app that loads the file checked, not only the one you were working in
 - served on a port you own, with a string from your branch confirmed on the page
 - screenshotted at tablet and desktop, judged above the fold
 - any new control measured against its own cell, not the page
