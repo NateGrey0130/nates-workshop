@@ -1481,6 +1481,21 @@ so this session cannot exercise its own registration — the same shape as `F26`
 for an agent file. **The next session started outside the repo is the test**, and
 the string to grep for is `PreToolUse:Bash hook error`, **not** `guard-bash:`.
 
+> **Adjusted 2026-09-22 — the owed item is DISCHARGED**, while taking `F60`.
+> All 161 transcripts under `C:\Users\natha\.claude\projects\` were scanned for
+> that wrapper at the start of an `is_error` result. **Four genuine refusals
+> from a session started outside the repo**, project key
+> `C--Users-natha-Downloads`, `cwd=C:\Users\natha\Downloads`, all 2026-09-22 and
+> all naming the user-level registration: rule 2 at `14:47:41Z`, rule 4 twice at
+> `15:00:31Z` and `15:00:38Z`, rule 1 at `15:54:40Z`. None has ever been recorded
+> under a `Projects-workshop` key.
+>
+> **A fifth hit in the same session is the more useful one.** At `15:53:30Z` the
+> result was not a verdict at all — `guard-bash.sh: line 67: syntax error near
+> unexpected token '('`, the script momentarily unparseable mid-`F57`. That is
+> `F56`'s *"reads as installed and stops nothing"* shape caught in the wild, and
+> it is why the failure mode is worth knowing rather than just the refusals.
+
 **Opened while taking this: `F56`** — three instruction files state the refusal
 prefix wrongly, which is what this scan inherited, and nothing pins the hook's
 path or its registration. Filed below, not taken.
@@ -2089,6 +2104,81 @@ the proposal**, entirely because of the fresh-clone argument above.
 
 **Ongoing cost:** none either way. This is a one-time decision about which
 registration is authoritative.
+
+**Taken, 2026-09-22 (PR #1255). THE PROPOSAL IS DECLINED — both registrations
+are kept.** The finding's posture, <!-- claim-ok: quoting this finding's own
+posture, in the Proposal paragraph above --> *"subtractive, one JSON block, no
+rule changed and no behaviour changed except that the hook runs once"*, is the
+thing declined, and its last clause is false.
+
+**The two registrations are NOT interchangeable, which this finding assumes they
+are.** <!-- claim-ok: quoting the premise this note corrects --> *"The verdict is
+never different, because both run the same script from the same path."*
+`repo_posix` is derived from `$0`'s grandparent at `guard-bash.sh:124-126`, so
+**each copy of the script guards only the tree it lives in.** Measured
+2026-09-22 by running each copy against each tree with real envelopes:
+
+| script | cwd | verdict |
+|---|---|---|
+| main checkout's | main checkout | **REFUSED** |
+| main checkout's | another tree | allowed |
+| another tree's | its own tree | **REFUSED** |
+| another tree's | main checkout | allowed |
+
+In a **git worktree** the repo's registration runs the worktree's own copy and
+guards it; the user-level one runs the main checkout's copy and does not. Drop
+the repo block and **rule 2 stops refusing `sed -i` on a worktree's own files** —
+the workflow the `worktree` skill exists for, and the one this repo has a memory
+about because a removal there once emptied the main checkout's book caches.
+
+**Two further arguments, both understating in this finding's own
+counter-paragraph:**
+
+- **The repo block is the PORTABLE half.** `$CLAUDE_PROJECT_DIR` resolves to
+  wherever a clone sits; the user-level registration exists on this machine and
+  nowhere else. The finding has this backwards when it calls the repo block
+  merely *"the only half that is checked in"* — being checked in is what makes it
+  portable. And `SETUP.md` carries **no** occurrence of `hook`, `PreToolUse` or
+  `guard-bash`, so nothing tracked tells a second machine the user-level
+  registration must exist.
+- **`hook-registration.mjs` does not mean what the finding says.**
+  <!-- claim-ok: quoting the premise this note corrects --> *"so the machine
+  notices"* — it notices a missing or broken hook **block**. If
+  `~/.claude/settings.json` is absent **entirely** the check reports a PASS and
+  returns, which is right for CI and wrong for a second machine. That is exactly
+  the scenario the argument-against is about, so the counter is weaker than
+  offered.
+
+**One claim reads as measured and is not.** <!-- claim-ok: quoting the premise
+this note corrects --> *"The cost is real and small: every `Bash` call … spawns
+`sh` and a `node` JSON parse twice"* is inferred. The wrapper surfaces **one**
+bracketed command per refusal, never two; two brackets across one session prove
+both registrations are live, not that both run per call. The `Evidence` and
+`Confidence` lines are honest about this and the cost paragraph is not.
+
+**What the derivation actually does, since the script's own comment was wrong
+about it.** The comment called the `$CLAUDE_PROJECT_DIR` spelling hypothetical
+and circular. It is neither hypothetical — it fired at `2026-09-22T17:18:40Z` —
+nor wrong: project settings load only when the session's project root *is* that
+checkout, so `$0`'s grandparent is that checkout's real root. The derivation is
+circular and lands on the right answer. Corrected in this PR.
+
+**Shipped instead of the removal:** the corrections above, in the four places
+someone would next propose this — `guard-bash.sh`'s comment,
+`.claude/skills/windows-shell/SKILL.md:69`, `CLAUDE.md`, and
+`hook-registration.mjs`'s header, which now records both that *"exactly one"*
+would be wrong to assert and the hole it still has.
+
+**`F55`'s owed item is discharged in the same PR**, as an `Adjusted` note under
+`F55` with the original left standing: four genuine refusals from a session
+started outside the repo, `C--Users-natha-Downloads`, 2026-09-22.
+
+**Nothing cites `SKILL-AUDIT` `F60`**, and `F60` is a two-menu collision —
+`BOOK-INGEST-AUDIT` `F60` is cited in four repo files, and
+`scripts/audit-citations.mjs --remote F60` silently resolves the bare number to
+it. Sweep for `SKILL-AUDIT F60`. The four files that cite *this* finding's
+subject rather than its number are the four corrected above, and no script finds
+those.
 
 ## A closing observation, about this audit rather than its findings
 
