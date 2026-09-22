@@ -947,6 +947,7 @@ The 34 split three ways, and only one of them is a duplicate:
 - **F30** — medium — `F27`'s rule was built on one instance and gear gives 27 counterexamples — Adjusted 2026-09-06 and RE-SCOPED before being taken, on Nate's word. The — full text in `INGESTION-AUDIT.closed.md` under its own `### F30` heading.
 
 - **F31** — medium — `findDuplicates` has no `system` guard, and gear is duplicated across systems on purpose — Taken, 2026-09-06. Posture held: one condition mirroring the guard beside it. — full text in `INGESTION-AUDIT.closed.md` under its own `### F31` heading.
+- **F32** — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description — Taken, 2026-09-06 (`zzzzzz-ingestion-f32-sleeping-bag.sql`). Posture held: one data script, applied to production before — full text in `INGESTION-AUDIT.closed.md` under its own `### F32` heading.
 
 ## Filed 2026-09-06, found while measuring F30
 

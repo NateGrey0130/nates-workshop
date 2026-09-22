@@ -2932,7 +2932,9 @@ turned *"two different systems demote the pair"* red. One check each way, plus a
 third pinning that the same system on both rows stays confident — which is the
 `Sleeping Bag` pair the guard must not touch.
 
-Smoke 1698 → **1701.** under `rifts`, and one of the rows says so in its own description
+Smoke 1698 → **1701.**
+
+### F32 — low — `Sleeping Bag` exists twice under `rifts`, and one of the rows says so in its own description
 
 The one unambiguous duplicate in the gear catalog. Production, 2026-09-06:
 
