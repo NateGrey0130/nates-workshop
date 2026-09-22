@@ -1540,6 +1540,102 @@ rots only when somebody edits it.
 more local-only check, which is one more thing that passes silently on a runner
 and therefore one more thing a reader can mistake for coverage.
 
+**Taken, 2026-09-22 (PR #1250), both parts.** Part one shipped as documentation,
+as proposed. Part two shipped as
+`apps/character-creator/test/checks/hook-registration.mjs`.
+
+**The posture sentence asks for two different things, and Nate picked between
+them.** <!-- claim-ok: quoting the premise this note corrects --> It says *"a
+check that reports rather than gates"* **and** *"the same posture
+`machine-instructions.mjs` already takes for the same reason"*. That module
+calls `check()` at `machine-instructions.mjs:94` and `:99`, and `harness.mjs`
+counts a false condition as a failure, so a violation fails `smoke` — a required
+status check. **It gates locally; it asserts nothing in CI and says so in a
+passing check's own label, then returns.** Asked which was meant, Nate chose the
+module over the literal clause, so **the shipped posture is: gates locally,
+asserts nothing in CI and says so.** Recorded because a taker reading only the
+first clause would build something weaker than the model the second clause
+names.
+
+**Two more premises were wrong, and both narrowed the work:**
+
+- **Part one is a two-file edit, not three.** The memory note this finding names
+  had already been corrected — its frontmatter reads
+  `modified: 2026-09-22T16:01:39.609Z`, later on the same day this finding was
+  filed — and it now states the wrapper correctly. Only
+  `.claude/skills/windows-shell/SKILL.md:33` and `CLAUDE.md:310` still carried
+  the claim. Read 2026-09-22.
+- **The line numbers are off by one.** `ROOTS` is at
+  `apps/character-creator/test/checks/instruction-paths.mjs:51` and `READABLE`
+  at `:52`; `:50` is a comment. The values and all three conclusions hold
+  exactly. Read 2026-09-22.
+
+**What the audit added that this finding did not have:**
+`apps/character-creator/test/checks/environment.mjs:602` matches repo paths
+beginning `db|scripts|apps|functions|shared` only, so it does not reach
+`.claude/hooks/guard-bash.sh` either. The finding established that
+`instruction-paths.mjs` misses the hook; the second reader misses it too, and
+before this PR the only in-repo reference to the script outside prose was
+`.claude/settings.json:54`.
+
+**The prefix error damaged a third finding, in the opposite direction, which is
+the sharpest argument for part one.** `F55` anchored on a **leading**
+`guard-bash:` and got zero, concluding the hook had never fired. `F54` matched
+the **bare string** anywhere and reported 42 refusals; its own note has since
+retracted that as results *containing* the string. One wrong sentence about a
+prefix produced both a false zero and a false 42, and neither looked wrong.
+
+**Folded in on Nate's word, and neither is a new number.** Both are
+documentation, in the two files and the two sections this PR already edits:
+
+- **The project-scoped claim.** `windows-shell/SKILL.md:19` headed its section
+  *"and it fires in one directory"*, `:39-46` said the hook is project-scoped
+  and that `C:\Users\natha\Projects\workshop` has no hook at all, and
+  `CLAUDE.md:311-312` said it governs a session started in the repo *"and
+  nothing else"*. All false since `F55`. **`F54`'s outcome note had already
+  found this and filed nothing** — `SKILL-AUDIT.md:1336-1342`, *"Two things
+  found while taking this, and neither is filed here"* — which is the deferral
+  shape `audit-menu` warns about, and it is why the sentence was reachable only
+  by reading the interior of a closed finding.
+- **Five rules are now six.** `F54` shipped the drive-root `find` rule on
+  2026-09-22 and no instruction file followed it; `windows-shell/SKILL.md:19`
+  and `:25-31`, `CLAUDE.md:306`, and the memory note all still said five. This
+  finding does not mention it, and it sits inside the lines being edited.
+
+**The second thing `F54` deferred is NOT folded in and is not filed here
+either.** Both registrations are live — the repo's and the user-level one — so a
+repo-rooted session runs the hook twice. That was demonstrated while taking
+this, by two refusals in one session naming different configured commands, one
+the absolute user-level path and one `$CLAUDE_PROJECT_DIR`. Removing a
+registration is a change of posture rather than a correction, so it is left for
+Nate to name. The new check deliberately does not assert that the user-level
+registration is the only one.
+
+**Every check in the new section was seen to fail before it was believed.**
+Eight fixtures driven at the real module through `USERPROFILE`, so the fault
+enters through the module's own path derivation rather than past it: six red —
+no Bash hook, no `guard-bash.sh`, a `$CLAUDE_PROJECT_DIR` path, an absolute path
+with a typo, malformed JSON, and a resolving path whose contents differ — and
+two green, the real registration and the absent-file case CI takes. **The
+fixtures caught a defect in the first draft**: a path that did not resolve also
+failed the contents check, reporting that the script *"resolves, but its
+contents differ"*, which would have sent a reader looking for a diff that does
+not exist.
+
+**One half of one premise is documented rather than measured**, and is recorded
+so nobody reads it as run: that `sh` returns 127 on a missing script was
+measured 2026-09-22; that Claude Code treats 127 as non-blocking is taken from
+`guard-bash.sh:7-8`'s own header. An end-to-end 127 registration was not
+exercised, because doing so means pointing this machine's live guard at a broken
+path.
+
+**And a trap for anyone sweeping this finding's number: `F56` names three
+different findings.** `BOOK-INGEST-AUDIT` `F56` is about totem animals and
+`apps/character-creator/UI-AUDIT.md:473` carries a third. A bare tree grep for
+`F56` returns 40+ hits, none of them this one, and
+`node scripts/audit-citations.mjs --remote F56` silently resolves the bare
+number to `BOOK-INGEST-AUDIT`. Sweep for `SKILL-AUDIT F56`.
+
 ### F57 — the rules match prose, and registering the hook turned that from invisible into a daily cost
 
 **Opened 2026-09-22 while taking `F55`**, by the hook refusing this session's own

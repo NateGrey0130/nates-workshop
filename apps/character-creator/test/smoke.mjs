@@ -809,6 +809,7 @@ import { run as classCheckToolChecks } from './checks/class-check-tool.mjs';
 import { run as catalogMatchingChecks } from './checks/catalog-matching.mjs';
 import { run as instructionPathChecks } from './checks/instruction-paths.mjs';
 import { run as machineInstructionChecks } from './checks/machine-instructions.mjs';
+import { run as hookRegistrationChecks } from './checks/hook-registration.mjs';
 import { run as secondBodyChecks } from './checks/second-body.mjs';
 // ---------- 1c2. Level-up skill grants ----------
 // occ_related_skills.schedule recorded these for a long time and nothing read
@@ -9420,6 +9421,7 @@ section('The checks modules declare the sections they run');
 
 instructionPathChecks();
 machineInstructionChecks();
+hookRegistrationChecks();
 
 // slow one - it shells out to wrangler.
 environmentChecks();

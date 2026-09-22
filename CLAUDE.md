@@ -303,13 +303,27 @@ here instead. See `HEALTH-AUDIT.md` F6.
 
 **Since 2026-09-16 the same file also carries a `PreToolUse` hook.**
 `.claude/hooks/guard-bash.sh` runs before every `Bash` call and exits 2 with a
-one-line reason for five command shapes that used to be prose rules: `git add
+one-line reason for six command shapes that used to be prose rules: `git add
 -A` / `git add .`, `sed -i` on a path under the repo, `q.mjs` or `d1-apply.mjs`
 with neither `--local` nor `--remote`, `gh pr merge` sharing a call with anything
-else, and `git commit -m` with a backtick in it. The script's header names the
-incident behind each rule. A refusal starts `guard-bash:` — that is the hook,
-not a permission denial. It is project-scoped like the allowlist above, so it
-governs a session started here and nothing else.
+else, `git commit -m` with a backtick in it, and — since 2026-09-22 — `find`
+rooted at a drive root. The script's header names the
+incident behind each rule. **A refusal is the hook rather than a permission
+denial, but it does NOT start `guard-bash:`** — Claude Code wraps the hook's
+stderr, so a transcript carries `PreToolUse:Bash hook error: [<the registered
+command>]: guard-bash: <reason>`. Grep for the wrapper, never for a leading
+`guard-bash:`; `SKILL-AUDIT` `F55` and `F54` each built a count on that string
+and each got it wrong, in opposite directions.
+
+**Unlike the allowlist above, the hook is NOT project-scoped.** Since
+2026-09-22 it is registered at user level in
+`C:\Users\natha\.claude\settings.json` with an absolute path, so it governs
+every directory on this machine — which is the point, because the book work
+runs from `C:\Users\natha\Projects\workshop` and that is where a session
+started outside the repo used to run unguarded. The repo's registration is
+still live too, so a session started here runs the hook twice.
+`apps/character-creator/test/checks/hook-registration.mjs` pins the user-level
+registration locally and asserts nothing in CI, where the file does not exist.
 
 ### And since 2026-09-03 the allowlist is no longer the only thing holding that line
 
