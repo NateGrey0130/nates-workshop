@@ -42,8 +42,13 @@ refuse() {
   exit 2
 }
 
-# --- 0. pull the command out of the hook envelope ---------------------------
-cmd=$(node -e '
+# --- 0. pull the command AND the cwd out of the hook envelope ----------------
+# The envelope carries `cwd` as a required field - it is in the CLI's own schema
+# for every hook input - and rule 2 needs it: a relative path resolves against
+# the Bash tool's working directory, which is not necessarily this repo and, as
+# of SKILL-AUDIT F55, not necessarily even the directory the session started in.
+# The cwd comes back first because the command may itself contain newlines.
+envelope=$(node -e '
 let s = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", d => { s += d; });
@@ -52,16 +57,31 @@ process.stdin.on("end", () => {
   try { j = JSON.parse(s); } catch (e) { process.exit(3); }
   const ti = j && j.tool_input;
   const c = ti && typeof ti.command === "string" ? ti.command : "";
-  process.stdout.write(c);
+  const w = j && typeof j.cwd === "string" ? j.cwd : "";
+  process.stdout.write(w + "\n---guard-bash-envelope---\n" + c);
 });
 ' 2>/dev/null)
 rc=$?
 [ "$rc" -eq 0 ] || refuse "could not parse the hook input (node exit $rc); refusing rather than running unguarded"
+env_cwd=$(printf '%s' "$envelope" | sed -n '1p' | sed 's#\\#/#g')
+cmd=$(printf '%s' "$envelope" | sed '1,2d')
 [ -n "$cmd" ] || exit 0
 
 # --- helpers -----------------------------------------------------------------
 # has PATTERN  : extended-regex match against the whole command
 has() { printf '%s\n' "$cmd" | grep -Eq -- "$1"; }
+
+# repo_posix / repo_win : where the repo IS, derived from this script's own
+# location rather than from CLAUDE_PROJECT_DIR. Since SKILL-AUDIT F55 this hook
+# is registered from settings that are not the repo's, so CLAUDE_PROJECT_DIR is
+# the directory the SESSION started in - Downloads, usually - and rule 2 used it
+# as "the repo". $0 is the path sh was invoked with, and that registration
+# spells it absolutely, so this is not circular. It WOULD be circular against a
+# registration written as "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh",
+# because the shell expands that before sh ever sees it.
+hook_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd)
+repo_posix=$(cd "$hook_dir/../.." 2>/dev/null && pwd)
+repo_win=$(cd "$hook_dir/../.." 2>/dev/null && pwd -W 2>/dev/null || printf '%s' "$repo_posix")
 
 # lines : the command split into shell "lines" - newlines, && and || all start
 # a new one, so a chained merge is caught whether it is joined with a newline
@@ -77,11 +97,13 @@ fi
 # --- 2. sed -i on a path under the repo ---------------------------------------
 # Any in-place form: -i, -i.bak, --in-place[=SUF], and combined short flags that
 # contain i (-ni, -Ei, -ie). A target is a non-option token that is not the sed
-# script. Relative targets resolve against the cwd, which is this repo. Absolute
-# targets are checked against the project directory in both path spellings.
+# script. A relative target resolves against the Bash tool's own cwd, which the
+# envelope gives us, and is in the repo only if that resolves into it. Absolute
+# targets are checked against the repo in both path spellings. Until F55 both
+# used CLAUDE_PROJECT_DIR, which was right only while the hook was registered
+# from the repo - it missed real absolute repo paths from anywhere else, and it
+# refused EVERY relative `sed -i` on the machine.
 if has '(^|[^[:alnum:]_./-])sed[[:space:]]+([^[:space:]]+[[:space:]]+)*(-[a-zA-Z]*i[a-zA-Z.]*|--in-place[^[:space:]]*)([[:space:]]|$)'; then
-  proj_posix=$(cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null && pwd)
-  proj_win=$(cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null && pwd -W 2>/dev/null || printf '%s' "$proj_posix")
   in_repo=0
   # Walk the tokens after the first `sed`. Crude tokenisation on whitespace is
   # enough: a quoted sed script with spaces produces extra "targets" that are
@@ -99,17 +121,26 @@ if has '(^|[^[:alnum:]_./-])sed[[:space:]]+([^[:space:]]+[[:space:]]+)*(-[a-zA-Z
     if [ "$saw_script" -eq 0 ]; then saw_script=1; continue; fi
     case "$t" in
       /*|[A-Za-z]:*|\\*)
-        # absolute: in repo only if it starts with the project dir
+        # absolute: in repo only if it starts with the repo
         case "$t" in
-          "$proj_posix"*|"$proj_win"*) in_repo=1 ;;
-          "${proj_win}"*) in_repo=1 ;;
+          "$repo_posix"*|"$repo_win"*) in_repo=1 ;;
         esac
         # also the forward-slash spelling of the Windows path
-        pw=$(printf '%s' "$proj_win" | sed 's#\\#/#g')
+        pw=$(printf '%s' "$repo_win" | sed 's#\\#/#g')
         case "$t" in "$pw"*) in_repo=1 ;; esac
         ;;
       \$*|\"*|\'*) ;;   # a variable or a quoted script: cannot tell, do not count
-      *) in_repo=1 ;;   # relative: resolves against the repo
+      *)
+        # relative: resolve it against the Bash tool's cwd. With no cwd in the
+        # envelope this FAILS CLOSED and counts, which is what the whole file
+        # does when it cannot tell.
+        if [ -n "$env_cwd" ]; then
+          rel_dir=$(cd "$env_cwd" 2>/dev/null && cd "$(dirname "$t")" 2>/dev/null && pwd)
+          case "$rel_dir" in "$repo_posix"*) in_repo=1 ;; esac
+        else
+          in_repo=1
+        fi
+        ;;
     esac
   done
   if [ "$in_repo" -eq 1 ]; then
