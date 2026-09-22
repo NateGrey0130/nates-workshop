@@ -362,3 +362,58 @@ measure.
 that file may name no skill or agent and state no count of them, and the check
 holding it to that runs only from inside this repo, so the edit has to be
 verified by hand here.
+
+**Taken, 2026-09-22 (PR #1242). Posture held: two clauses, by hand, outside the
+repo, with this PR carrying the record.** No rewrite of the file, no move of
+anything, no enumeration put back. It is still uniformly LF, and is now 37 lines.
+
+**This finding's own replacement gloss was false, and `audit-premise-auditor`
+caught it before it was written.** <!-- claim-ok: quoting the premise this note
+corrects --> It proposed wording to the effect that *sessions here start outside
+the repo, whichever directory they start in*. **Sessions do start inside the
+repo** — `~/.claude/projects` holds a `nates-apps` key with six transcripts, the
+newest 2026-09-21, and a worktree key with one more. What survives is the
+**conditional**: whenever a session starts outside the repo, the repo's own
+`CLAUDE.md` does not load — and against those six there are 150 transcripts
+directly under the `Downloads` key, 519 counting subagents. The shipped clause
+says *most sessions here are started outside it, so whenever that is true this
+pointer is the only thing that reaches you*, which is true and names no
+directory that can move.
+
+**The second clause is narrowed rather than deleted.**
+`machine-instructions.mjs:53-59` says in its own words that it judges no path and
+no pointer, so *nothing detects a move* is exactly true; what was false was the
+breadth around it. The file now says that a test does read it, what that test
+holds it to, and that it runs only from inside the repo — the half
+`SETUP.md:746-753` already recorded and this file denied.
+
+**Four corrections to citations, none of which changed the work:**
+
+- `:27-31` had become **`:30-34`** — `M23`'s edit this morning added three lines
+  above it. `:8-9` did not move.
+- `SETUP.md`'s sentence starts at **`:746`**, not `:747`, and its paragraph runs
+  to `:753`.
+- <!-- claim-ok: quoting the premise this note corrects --> *"two `SETUP.md`
+  paragraphs do"* undercounts badly: **six paragraphs and a code block** inside
+  *Setting up a machine* are about this file, and at least five memory files,
+  four files under `docs/prompts/` and four menus point back at it. The finding
+  argued that `SETUP.md`'s sentence was no longer the only thing pointing back;
+  it is not remotely the only thing.
+- `M23`'s note cites `machine-instructions.mjs:72` and `:89-93` for the two
+  constraints. Those are the count regex and the directory reads. **The
+  assertions are `:94-96` and `:99-101`**, and the property that keeps it out of
+  CI is the early return at `:79-83`.
+
+**Why this was worth taking now rather than leaving filed:** after `M23` the file
+**contradicted itself inside thirty-six lines** — `:8-9` saying the book work
+runs from `C:\Users\natha\Projects\workshop`, `:26` saying it runs from
+`Downloads`. Correcting one instance and filing the other left that standing for
+as long as the finding stayed open.
+
+**Verified**, 2026-09-22:
+`node apps/character-creator/test/smoke.mjs --section "machine instruction file"`
+against the edited file — *it names no individual skill or agent of this repo*
+and *states no count of them*, both pass. The section filter is
+case-insensitive (`harness.mjs:73`, `:81`), so `M23`'s lowercase invocation of it
+really did run the section rather than matching nothing and reporting a pass
+from an empty run.
