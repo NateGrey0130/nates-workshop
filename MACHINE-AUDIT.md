@@ -417,3 +417,63 @@ and *states no count of them*, both pass. The section filter is
 case-insensitive (`harness.mjs:73`, `:81`), so `M23`'s lowercase invocation of it
 really did run the section rather than matching nothing and reporting a pass
 from an empty run.
+
+## Opened while handing over the 2026-09-22 sweep
+
+### M25 — low — the `wrangler starts in under 7s` check straddles its own threshold on this machine
+
+**Opened 2026-09-22**, from seven flagless runs of
+`node apps/character-creator/test/smoke.mjs` in one session while shipping other
+work. Filed, not taken.
+
+The check in `apps/character-creator/test/checks/environment.mjs` times a no-op
+`npx wrangler --version` and fails above 7s. In one session, same machine, same
+tree, same wrangler:
+
+| run | result |
+|---|---|
+| 1 | **FAIL — 10952ms** |
+| 2, 3, 4 | pass |
+| 5 | **FAIL — 9383ms** |
+| 6 | **FAIL — 9194ms** |
+| 7 | pass |
+
+Three failures and four passes, interleaved, with no change in between. A
+direct warm loop of `npx wrangler --version` measured **3811 / 3446 / 3333 ms**
+in the same session, and `tasklist` showed **no** stray `workerd` or `wrangler`
+processes on any failure — so it is not the orphan-process trap. wrangler is
+`4.136.0`. All 2026-09-22.
+
+**Its failure text sends the reader the wrong way**, which is the part that
+costs time: it says *"a number in five figures is a bad wrangler rather than a
+bad machine"* and prescribes reinstalling wrangler. Six of the seven readings
+here are four figures, and the same binary passes seconds later.
+
+**Proposal:** decide what the check is for and make it say that. Either raise
+the threshold to a number this machine does not straddle and say what the
+number is protecting against, or turn it into a report that prints the timing
+and never fails. **Posture: one check, and it may not become stricter** — the
+gate this sits behind is `smoke`, which is required, so a flapping threshold
+costs a merge rather than a warning.
+
+**Not proposed: removing it.** It exists because a wrangler whose `workerd`
+never unpacked installs cleanly and then cannot run a `--local` query at all,
+which is a real failure this repo has had. The check has a job; the threshold
+is the question.
+
+**Evidence:** the seven runs and the three direct timings, all 2026-09-22 on
+this machine, recorded as they happened rather than reconstructed. **Not
+measured:** whether CI ever fails it — every `smoke` run on the runner passed
+today, and nobody has queried the workflow history for this specific check.
+
+**Confidence:** high that it flaps — seven readings. **Low on the remedy**: a
+threshold is a judgement about this machine, and the right number depends on
+what the check is meant to catch, which its own text answers ambiguously.
+
+**Ongoing cost:** none if it becomes a report. If the threshold moves, it is one
+number to revisit when the machine or wrangler changes.
+
+**A reason to decline:** three failures in one unusually long session may be
+load from that session rather than a standing condition, and a check that fires
+under heavy local load is arguably doing its job. What would settle it is the
+same seven-run sample on a quiet machine.

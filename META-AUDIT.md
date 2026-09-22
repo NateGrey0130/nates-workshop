@@ -1557,3 +1557,54 @@ PR #1252 amended the notes it filed against, in the same commit, so
 *"**Filed as …**"* lines. A reader opening those locations finds compliant
 deferrals, not the specimens. `SKILL-AUDIT.md:1336` was not amended and is the
 one still readable as filed.
+
+### A23 — low — `apps/character-creator/AUDIT.md`'s header says two scans misread it, and the number is three
+
+**Opened 2026-09-22**, while taking `A21`, which quotes the stale number and
+repeats it. Filed, not taken.
+
+`apps/character-creator/AUDIT.md:18-19` reads *"Two separate | scans have now
+reported D1–D6 and C1–C2 as outstanding"* — the phrase wraps, which is worth
+knowing before grepping for it, because `grep -n 'Two separate scans'` on that
+file returns **nothing** and reads as absence.
+
+**It is three, and two other files already say so.**
+`HEALTH-AUDIT.closed.md:491` records *"This audit's first pass made it three"*
+(2026-09-02) and `.claude/skills/audit-menu/SKILL.md:460` says the header
+*"caught its third scan misreading D1–D6"*. Both were written after that header
+and neither updated it. Read 2026-09-22.
+
+**The same sentence is also imprecise about the thing it exists to explain**,
+which is the better reason to touch it. It says the outcome is *"a `**Fix**:`
+line under a section heading rather than a `**Taken**` bullet under the
+finding"*. The `**Fix**:` lines **are** under each finding's own heading —
+`apps/character-creator/AUDIT.md:105` sits under `### D1` at `:91`. The trap is
+the **word**, not the **place**, and a reader following `audit-menu`'s own *read
+the lines under the heading* finds every one. `A21`'s outcome note records this
+and did not fix it, because `A21` was declined.
+
+**Proposal:** correct the count and the location clause in that one sentence.
+**Posture: documentation only, one sentence, and no new state.** Specifically
+**do not** extend the roll-call around it — the paragraph it sits in is a
+per-finding state of the kind `A13` forbids, and `A13`'s posture was **no
+retrofit**, so it stays as a record.
+
+**A taker should read `HEALTH-AUDIT` `F8` first.** It judged this header
+sufficient on 2026-09-02 and made it the model for nine other menus, so this is
+sharpening the template rather than patching one file — and whatever is written
+here is what the other nine were copied from.
+
+**Evidence:** the three reads above, 2026-09-22. **Not measured:** whether a
+fourth misread has happened since. The 2026-09-22 `open-findings-scout` run read
+this menu and stores nothing by design, so there is no record either way, and
+the count may already be stale again in the same direction.
+
+**Confidence:** high on both halves — each is a direct read. **Low on whether it
+is worth a PR on its own**: it is one sentence, and the natural moment is
+whenever something else touches that file.
+
+**Ongoing cost:** a count in prose, which is the thing this menu most often
+files findings about. **If the answer is to remove the number rather than
+correct it, that is a better fix** — `SKILL-AUDIT` `F7`'s rule, that removing
+an ordinal beats incrementing one, applies exactly here and the sentence works
+without it.
