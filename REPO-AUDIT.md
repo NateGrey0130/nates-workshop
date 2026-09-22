@@ -151,7 +151,7 @@ findings here.** If `PORTABILITY-AUDIT.md` is ever produced, G8's outcome note
 should cite its number rather than restate it.
 
 Also out of scope by prior ownership: the instruction layer (`SKILL-AUDIT.md`),
-documentation content (`DOCS-AUDIT-2.md`, D1–D3 open), the machine itself
+documentation content (`DOCS-AUDIT-2.md`), the machine itself
 (`MACHINE-AUDIT.md`), and the book-ingestion loop (`BOOK-INGEST-AUDIT.md`).
 
 ## The scope Nate set, 2026-09-03
