@@ -1278,6 +1278,72 @@ against the 21 recorded calls and check it refuses every one.
 **Ongoing cost:** one more rule in a file that fails closed, and whatever a false
 refusal costs someone who meant the search. No CI minute, no new file.
 
+### F55 — the `guard-bash` hook has never refused a command, because it is registered where sessions do not start
+
+**Opened 2026-09-22 on Nate's word**, while establishing the one thing `F54`
+says to settle before its rule is written.
+
+`.claude/settings.json` registers `.claude/hooks/guard-bash.sh` as a `PreToolUse`
+hook on `Bash`, and `windows-shell` opens *"Five of these are a hook now, and it
+fires in one directory"*. Measured 2026-09-22: **it has fired in none.**
+
+- **Zero refusals across every transcript on this machine.** A refusal is a tool
+  result whose text begins `guard-bash:` — `refuse()` at
+  `.claude/hooks/guard-bash.sh:40-43` prints exactly that to stderr and exits 2.
+  Scanning every `.jsonl` file under `C:\Users\natha\.claude\projects` for a
+  tool result of that shape returns **0**. The string itself appears **343**
+  times in the same scan, every one prose: the skill describing the hook, the script being read,
+  an agent quoting one of them.
+- **Two live probes from a session rooted in `Downloads`**, which is where the
+  work runs. `sed -i` on a relative path inside the repo: **not refused** — and
+  rule 2's matcher counts a relative path as in-repo explicitly
+  (`guard-bash.sh:112`, `*) in_repo=1 ;;   # relative: resolves against the
+  repo`). `git add -A`: **not refused**.
+
+**The cause is where it is registered.** Project settings are read from the
+directory a session starts in. Sessions here start in `Downloads`, whose
+`.claude\settings.local.json` declares permissions and no hooks;
+`C:\Users\natha\.claude\settings.json` declares no hooks either. The transcript
+keys measure the split: **150** sessions directly under the `Downloads` key -
+520 counting subagents - against **6** under the repo's.
+
+**`windows-shell` half-says this and names the wrong directory.** Its own
+paragraph — *"It is project-scoped, which means the session that needs it most
+does not have it"* — points at `C:\Users\natha\Projects\workshop`. The directory
+without the hook is the one almost every session starts in.
+
+**This also corrects a measurement this menu carries.** `F50`'s premise audit
+reported *"42 tool results in the corpus carry a `guard-bash:` refusal; 19 are
+sidechains"*, and `F54` was filed on it. Those 42 are tool results **containing**
+the string — file reads of `CLAUDE.md` and of memory notes. None is a refusal.
+
+**Proposal:** make the hook reachable from where sessions start, in two parts,
+the second being the trap. **One:** register it in the settings a
+`Downloads`-rooted session reads. **Two:** make `guard-bash.sh` resolve the repo
+**independently of `CLAUDE_PROJECT_DIR`**, which is what it uses today to decide
+what *under the repo* means — registered from `Downloads`, rules 1 and 2 would
+treat `Downloads` as the repo while rules 4 and 5 would work unchanged.
+**Posture: the hook keeps its refusal posture — exit 2, fails closed — and gains
+no new rule here.** `F54`'s sixth rule is a separate decision that depends on
+this one and is worth nothing before it.
+
+**Prove it by making it fail.** The `sed -i` probe above is the test: from a
+session started outside the repo it must be refused afterwards, and today it is
+not.
+
+**Evidence:** the transcript scan and both probes, 2026-09-22; reads of
+`.claude/settings.json`, `C:\Users\natha\Downloads\.claude\settings.local.json`,
+`C:\Users\natha\.claude\settings.json` and `guard-bash.sh:40-43`, `:100-118`.
+
+**Confidence:** high that it has never fired — a corpus scan and two live probes
+agree, by different methods. Medium on the fix: which directories deserve the
+hook is a judgement, and the repo-path resolution has to be written and proved
+rather than reasoned about.
+
+**Ongoing cost:** a hook that really runs on every `Bash` call in the directory
+the work happens in. That is the point and it is also the cost — five rules that
+have never fired will start firing, and a false refusal will be felt at once.
+
 ## A closing observation, about this audit rather than its findings
 
 **Instructions this session wrote were violated by their author, the same day,

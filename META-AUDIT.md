@@ -6,7 +6,7 @@
 > in full every finding whose own section records no outcome. The closed file
 > is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **Nothing is open on this menu, as of 2026-09-21.** Read each finding's own
+> **Work was opened on this menu on 2026-09-22.** Read each finding's own
 > heading for its state and its PR number; this line does not give it. Later
 > passes have added sections after the original one, each under its own dated
 > `##` heading at the end of the file:
@@ -1126,3 +1126,79 @@ thing this finding got wrong once already.
 **Kept:** the corpus and added-line counts under *Measured*. They are a dated
 record, they cost nothing standing, and re-deriving them would cost the same
 afternoon twice.
+
+## Opened by the subagent retrospective, 2026-09-22
+
+Filed while closing out the retrospective recorded on `SKILL-AUDIT.md` under
+its own `##` heading of that date. Every claim below was re-derived by hand
+before filing: two of them were first surfaced by an agent, and a third
+agent's count in the same batch turned out to be a count of mentions rather
+than of events, which is the reason for the rule rather than an aside.
+### A20 — medium — the closed-file split left three kinds of damage, and one finding's record is gone
+
+**Opened 2026-09-22**, from the first run of the `open-findings-scout` agent and
+verified by hand afterwards. One cause — the 2026-09-16 move of closed findings
+into `<MENU>.closed.md` — and three symptoms that a reader meets as three
+unrelated confusions.
+
+**One: a record is gone, not merely hard to find.** `INGESTION-AUDIT` `F32` was
+filed in `117c0d61` as `### F32 — low — Sleeping Bag exists twice under rifts…`.
+Its heading was **deleted by `e74505f6`**, whose subject is *Take
+INGESTION-AUDIT F31* — so the heading went before `F32` itself was taken, in
+`0744c8a3`, *Take INGESTION-AUDIT F32: one Sleeping Bag row, class-import stub
+retired*. **The outcome note had nowhere to be written.** Today
+`grep -n '^### F32\|^- \*\*F32\*\*'` over `INGESTION-AUDIT.md` and
+`INGESTION-AUDIT.closed.md` returns nothing; the only surviving traces are two
+bare citations at `INGESTION-AUDIT.md:943` and `:953` and the commit subjects.
+
+**Two: eighteen findings moved without the pointer the header promises.**
+`BOOK-INGEST-AUDIT.md`'s header says the live file *"keeps a one-line pointer
+per moved finding where its heading was."* Sampled 2026-09-22: `F24`, `F30`,
+`F36`, `F97` and `F101` each have a full heading in
+`BOOK-INGEST-AUDIT.closed.md` and **no pointer of any kind** in the live file.
+`F30`–`F36` are discussed by number in the live file at `:216-309`, where the
+numbers now resolve to nothing.
+
+**Three: `RETRO-AUDIT.md` is forty-one `###` headings and not one of them is a
+finding.** Counted 2026-09-22: `grep -c '^### '` returns **41**;
+`grep -c '^### R[0-9]'` returns **0**. All 21 `R` findings are one-line pointers,
+and the `###` sub-sections of their outcome notes — *The scope was wrong by two,
+and the finding's own query is why*, and forty like it — stayed behind when
+their parents moved. A heading scan of that file returns forty-one results and
+zero findings, which is the **inverse** of the trap `audit-menu` warns about for
+`CLASS-AUDIT` and `pick3cut5/AUDIT`.
+
+**Proposal:** three repairs, each small and each independently declinable.
+Reconstruct `F32` as a heading plus a dated note in `INGESTION-AUDIT.closed.md`
+from the two commits, marked as a reconstruction rather than a record. Add the
+missing pointer lines to `BOOK-INGEST-AUDIT.md`, which is mechanical — the
+closed file has every heading. And for `RETRO-AUDIT`, **one sentence in that
+menu's own header saying its `###` headings are not findings** — Nate's word,
+2026-09-22.
+
+**The alternative is declined and recorded so it is not re-proposed:** demoting
+the forty-one orphaned sub-headings to bold leads is a large diff inside a
+record, and what a reader needs is the same kind of fact `audit-menu`’s shape
+table already carries at `.claude/skills/audit-menu/SKILL.md:596` and `:606`,
+read 2026-09-22 — `CLASS-AUDIT`'s `S` items as BULLETS, `pick3cut5/AUDIT`'s
+`T` items as BOLD PARAGRAPH LEADS. **That is shape, not status** — the half of a header that has stayed true
+everywhere it was written, while the status narrations rotted.
+
+**Posture: records, not rewrites** — no finding text is altered, nothing moves
+back, and the `F32` reconstruction is labelled as one.
+
+**Evidence:** the greps and `git log` reads above, all 2026-09-22; `F32`'s two
+commits read with `git show`. The three were surfaced by the scout's first run
+and every one was re-derived by hand before filing, after a different agent's
+count of hook refusals turned out to be a count of mentions.
+
+**Confidence:** high on all three — each is a count or a grep that reproduces.
+What would raise the second part from a sample to a total is listing every
+heading in `BOOK-INGEST-AUDIT.closed.md` and diffing it against the pointers in
+the live file, which is a one-line script and was not run.
+
+**Ongoing cost:** none for parts one and two once done. **Part three costs one
+header sentence to keep true**, which is the trade being accepted: a sentence
+about shape rather than about state, on the argument that shape does not move
+when a finding closes. If `RETRO-AUDIT` ever regains a real `###` finding, that
+sentence becomes the thing to correct.
