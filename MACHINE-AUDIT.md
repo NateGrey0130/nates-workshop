@@ -272,6 +272,53 @@ take a new file.
 **Ongoing cost:** none. One sentence that already exists, made true, in a file
 that has no check reaching it from outside this machine.
 
+**Taken, 2026-09-22 (PR #1241). Posture held: one paragraph, by hand, outside
+the repo, with this PR carrying the record.** `~/.claude/CLAUDE.md` now states
+that sessions are not started in that directory, with the date and the
+measurement, and leaves the 2026-09-02 history and the pointer to the repo's own
+`CLAUDE.md` standing. The file is uniformly **LF** and stayed that way — `M19`
+recorded that, and the repo's CRLF convention does not reach it.
+
+**One sentence in this finding is false, and `audit-premise-auditor` caught it
+before the edit.** <!-- claim-ok: quoting the premise this note corrects -->
+Above it says *"`M22` records that the memory store is keyed to the working
+directory — the store in use is the `Downloads` one, which is where the sessions
+are."* **There is no `Downloads` store.**
+`~/.claude/projects/C--Users-natha-Downloads/memory` is a **junction whose
+target is the workshop key's `memory`**, and so is the `nates-apps` key's; the
+one real store directory lives under the key for the very directory this finding
+is about, and files were written into it as recently as 2026-09-21. That is what
+`M22` records. **The correction is why the new paragraph says only what was
+measured** — a replacement sentence reading *the work left that directory* would
+have shipped a second false sentence into the file this finding exists to make
+true.
+
+**Two things beyond the letter of the proposal, declared rather than taken
+quietly:**
+
+- **The enumeration went with it.** The sentence named *the sourcebook PDFs, the
+  loose briefs, and its own `.claude\`*; the directory also holds `profile.ps1`
+  and `tools\`, so it had **gone short again** — the exact failure `M19` is
+  about, inside the sentence that cites `M19`. It is replaced with a description
+  plus the instruction to look, which is `M19`'s own doctrine.
+- **The claim is in that file twice, and only one instance is corrected.**
+  `:8-9` gives *the book work runs from that directory* as the reason the
+  pointer file exists at all; correcting it touches the file's own rationale,
+  which is past *one paragraph*. **Filed as `M24`, not taken here.**
+
+**And the finding's evidence needed one word.** `510` is a **recursive** count:
+a flat listing of that key returns **150** `.jsonl` files, the rest being
+per-session subagent transcripts. It reconciles exactly — 510 + 6 + 3 + 1 is the
+520 the retrospective states — but a taker re-deriving it with a flat listing
+would think the premise had failed.
+
+**Verified**, 2026-09-22, with
+`node apps/character-creator/test/smoke.mjs --section "machine instruction file"`
+against the edited file: *it names no individual skill or agent of this repo*
+and *states no count of them*, both pass. That module reads a path outside the
+repo and cannot run in CI, so a local run was the only place this was ever going
+to be proved.
+
 ### M24 — low — the corrected claim sits a second time in the machine `CLAUDE.md`, and the paragraph around it says no test reads the file
 
 **Opened 2026-09-22 while taking `M23`**, by `audit-premise-auditor`, and filed
