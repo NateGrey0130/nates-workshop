@@ -293,6 +293,64 @@ taken*: that is the same trap with today's answer in it.
 
 **Ongoing cost:** none. Removing a state is what makes it stop rotting.
 
+**Taken, 2026-09-22 (PR #1249). Posture held: one clause, subtractive, no
+replacement state.** The ownership half of the sentence stands untouched,
+nothing replaced the state that came out, and *D1–D3 taken* was deliberately
+not written.
+
+**Three of this finding's premises are false, and `audit-premise-auditor`
+caught all three before the branch existed. None of them reaches the
+proposal**, which rests on `audit-menu` → *A header MAY NOT carry a per-finding
+state* and cites it accurately, including its *wherever the sentence is
+written* extension.
+
+- **The line number is wrong, and was wrong on the day this was filed.** The
+  body and the `Evidence` line both say `REPO-AUDIT.md:152`. The sentence
+  begins at `:153` and the struck words were on `:154`; `:152` is blank.
+  Checked against `bbd19e8e`, the commit that filed this finding — off by one
+  when written, not drift. Read 2026-09-22.
+- <!-- claim-ok: quoting the premise this note corrects --> **"the sentence
+  carries no finding number of any kind"** is false about its own subject, and
+  it was this finding's whole reason for being filed as an instance. `D1` and
+  `D3` are literal substrings of the struck text, so the tree-wide sweep does
+  reach this line for two of the three numbers; only `D2` was invisible. The
+  real failure is the opposite one: `grep -rnE --include=*.md '\bD1\b'` over
+  the repo returns **370** lines because `D1` is also Cloudflare D1, and
+  `\bD3\b` returns **53**. Reachable and drowned, not unreachable. Measured
+  2026-09-22.
+- **The `META-AUDIT` `A17` attribution does not hold, in two directions.**
+  `A17` as filed is about prefix ambiguity, not about a missing number; its own
+  `Adjusted` note retracts that central inference, records that the per-menu
+  grep was never shipped, and closes *"Not to be re-proposed without an exhibit
+  that a number grep could actually have caught."* What did ship is narrower —
+  a sentence stating another finding's state is unreachable when it is written
+  **without a number** (`META-AUDIT.closed.md:1903-1910`). The struck clause
+  had numbers in it, so it is not an instance of `A17` as shipped either. The
+  argument attributed to `A17` here is `audit-menu`'s own paragraph, which
+  cites `A17`; it was imported and applied to a sentence its precondition
+  excludes. Read 2026-09-22. `META-AUDIT.md:891` holds only a pointer — the
+  full `A17` is in `META-AUDIT.closed.md`.
+
+**One quotation also does not match its source.** The block quoted in this
+finding renders the struck words in bold; `:154` carried no bold markers. The
+en dash is right in both (U+2013, confirmed with `cat -A`). A taker editing by
+literal string match against the quoted form would have found nothing.
+
+**Not the first copy of this phrase, which the subject grep found and this
+finding did not.** `META-AUDIT` `A6` struck the same stale state out of
+`MEMORY.md` and out of `docs-audit-2-menu.md` — `META-AUDIT.closed.md:531-532`
+carries both rows. That sweep was scoped to the memory store and never looked
+at this menu. Re-greped 2026-09-22: `audit-menus.md:71` is now a pointer
+carrying no per-finding state in all three project keys, so this file held the
+last live copy.
+
+**The struck wording survives inside this finding's own quotation of it**, at
+`:267`, because `audit-menu` → *Audit files are RECORDS* forbids editing the
+finding to tidy that away. A grep for the old phrasing still lands here — on a
+record of it having been struck, not on a live claim. That is the accepted cost
+of the record rule, and it is worth knowing before anyone greps this phrase and
+concludes the sweep missed something.
+
 ### G20 — high — the `regression` required check fails intermittently in CI, about fifty seconds in, and a re-run clears it
 
 **Opened 2026-09-22**, after it blocked six merges in one afternoon.
