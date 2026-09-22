@@ -629,6 +629,32 @@ number, rather than re-proposed here.
 in full because a menu that only records what it changed teaches the wrong
 lesson about what a pass is for.
 
+> **Adjusted 2026-09-22 — the gap closed, by something other than this
+> finding**, recorded while taking `F15`. `main`'s ruleset `22209348` now makes
+> `smoke`, `menus` and `regression` required status checks, with
+> `bypass_actors: []` and `enforcement: active`, so `gh pr merge` is refused
+> until they report success. Read from the ruleset itself, 2026-09-22;
+> `updated_at` is `2026-09-16`, which is **consistent with** that being the day
+> they were added and is not proof of it, since the API carries no per-rule
+> history.
+>
+> **This decline was right, and the closure is the evidence.** The argument
+> above is that a fourth thing for a person to remember is the mechanism that
+> had already failed twice. What closed the gap is a server-side rule nobody has
+> to remember at all.
+>
+> **It is narrower than "the gap is gone", and the difference is the part worth
+> keeping.** The reopen condition as written — *a red `tests` run that reached
+> `main`* — describes a **non-event**: no workflow in `.github/workflows/` has a
+> `push:` trigger, so `tests` has never run on `main`, before or after. Three
+> ways a red tree can still reach `main`: `play-flow` and `deploy-alarm` are not
+> required and can be red through a merge; `strict_required_status_checks_policy`
+> is **false** and nothing runs on `main`, so two PRs each green against an older
+> base can merge into a failing tree with nothing to say so; and an admin can
+> disable the ruleset. **The unattended alarm this note assigns to `REPO-AUDIT`
+> is still the answer to those**, which is why this is an `Adjusted` line and not
+> a closure.
+
 ---
 
 ### F11 — the pass grew the file it audits by roughly 13%

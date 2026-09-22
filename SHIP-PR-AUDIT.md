@@ -6,23 +6,20 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **Work was opened on this menu on 2026-09-22**, under its own `##` heading at
-> the end of the file. **Read each finding's own note for its state — this header
-> is a summary and summaries here go stale.** The original pass was filed and
-> closed 2026-09-03/04, PRs #658–#673. `F11`–`F14` were opened *while taking* the
-> first ten and sit under their own heading after `F10`, in numeric order.
+> **Nothing is open on this menu, as of 2026-09-22.** **Read each finding's own
+> note for its state — this header is a summary and summaries here go stale.**
+> The original pass was filed and closed 2026-09-03/04, PRs #658–#673.
+> `F11`–`F14` were opened *while taking* the first ten and sit under their own
+> heading after `F10`, in numeric order; `F15` sits under a dated `##` heading
+> at the end of the file.
 >
-> **Two declines, and neither means "not a problem."** `F10`'s gap is real and
-> open — nothing reads the CI result before a merge — and it was declined because
-> the fix would be a fourth thing to remember. `F11`'s number is real and got
-> worse — this pass grew `ship-pr` by 63 lines — and it was declined because a
-> split is the wrong remedy and nobody has read the file cold. Each note says what
-> would reopen it.
->
-> **The paragraph directly above is `F15`'s subject and is left standing on
-> purpose**, filed 2026-09-22 and not taken: its `F10` clause is a per-finding
-> state, and the gap it describes closed on 2026-09-16 when CI became a required
-> check. Correcting it here would be taking a finding in the PR that files it.
+> **Some findings here were DECLINED, and a decline does not mean "not a
+> problem."** Each one's own note says what it decided and what would reopen it;
+> this header no longer says which, how many, or what state any of them is in.
+> It used to, and `F15` is the finding about what that cost — the clause
+> asserting one finding's gap was "real and open" stayed after the gap had
+> closed by other means, and nothing could have caught it, because a sentence
+> naming no finding number is invisible to every sweep here.
 >
 > **`F13` was taken before it was filed**, which inverts the protocol on purpose:
 > it is the finding that describes why this file's own PR could not go green, so
