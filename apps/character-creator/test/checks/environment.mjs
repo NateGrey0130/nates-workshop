@@ -27,7 +27,7 @@ import { localD1Args } from '../../../../scripts/d1-query-lib.mjs';
 // 'The checks modules declare the sections they run', since 2026-09-17).
 const SECTIONS = ['D1 schema (local, shared DB)', 'schema.sql self-sufficiency',
   'Data script conventions', 'SQL statement splitting', 'Documentation claims',
-  'Skills stay true', 'Book surveys', 'Migration state',
+  'Skills stay true', 'Agents stay true', 'Book surveys', 'Migration state',
   'What Pages will compile'];
 
 export function run() {
@@ -672,6 +672,83 @@ section('Skills stay true');
 // gitignored and a clean clone has none, so such a check could only fail on the
 // machines that matter - F10 says this outright, and F21 keeps it. This is a
 // relocation, not a new gate.
+// ---------------------------------------------------------------------------
+section('Agents stay true');
+
+// An agent file is instructions with no runtime, exactly like a skill - and
+// unlike a skill, nothing here opened one until SKILL-AUDIT F51.
+// instruction-paths.mjs pins the absolute paths inside them, and
+// machine-instructions.mjs reads this directory to hold the machine's own
+// CLAUDE.md to naming no agent. Neither of those opens an agent file to ask
+// whether it is well formed. So a name: that disagrees with the filename, a
+// malformed tools: line, or frontmatter that does not parse all reach the
+// harness instead of the suite - and the harness reports them mid-task, in the
+// session that needed the agent.
+//
+// DERIVED FROM THE DIRECTORY, AND NO COUNT IS ASSERTED. The same rule the
+// documentation-claims block states for the checks modules, and the one the
+// repo CLAUDE.md states for this directory: ls .claude/agents/ is the list and
+// it is the only list. A check that knows how many there are is one more thing
+// to keep in step.
+//
+// The tools: check is SHAPE ONLY, and deliberately. There is no roster of
+// valid tool names anywhere in this repo to validate against - the only tool
+// names on disk are the ones these five files already use - so a membership
+// check would have to carry its own hand-written list of somebody else's
+// vocabulary, which is the staleness shape this module keeps refusing. Shape
+// catches what actually breaks: an empty or malformed line.
+{
+  const agentsDir = join(repoRoot, '.claude', 'agents');
+  const agentFiles = existsSync(agentsDir)
+    ? readdirSync(agentsDir).filter((f) => f.endsWith('.md'))
+    : [];
+  check('agent files are present to check', agentFiles.length > 0,
+    'no .claude/agents/*.md - every check below would pass vacuously');
+
+  const noFrontmatter = [];
+  const missingField = [];
+  const nameMismatch = [];
+  const badTools = [];
+
+  for (const file of agentFiles) {
+    const text = readFileSync(join(agentsDir, file), 'utf8');
+    // \r? because these files are CRLF. Without it the block never matches,
+    // every list below stays empty, and three checks go green on nothing -
+    // the vacuous pass the ship-pr fence check above exists to prevent.
+    const block = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(text);
+    if (!block) { noFrontmatter.push(file); continue; }
+    const front = block[1];
+    const field = (k) => {
+      const hit = new RegExp('^' + k + ':[ \\t]*(\\S.*?)[ \\t]*$', 'm').exec(front);
+      return hit ? hit[1] : null;
+    };
+
+    const name = field('name');
+    const description = field('description');
+    const tools = field('tools');
+
+    if (!name || !description) { missingField.push(file); continue; }
+    // The harness spawns by the name field; the filename is how a person finds
+    // the file. A disagreement means the agent someone edits is not the agent
+    // that runs.
+    if (name !== file.replace(/\.md$/, '')) nameMismatch.push(file + ' -> ' + name);
+    // tools: is optional - an agent without one inherits everything. When it
+    // is present it is a comma-separated list of bare tool names.
+    if (tools !== null && !/^[A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*$/.test(tools)) {
+      badTools.push(file + ' -> ' + tools);
+    }
+  }
+
+  check('every agent file opens with frontmatter', noFrontmatter.length === 0,
+    noFrontmatter.join(', ') + ' - the harness cannot register a file it cannot parse');
+  check('and every one declares name and description', missingField.length === 0,
+    missingField.join(', '));
+  check('and every name matches its filename', nameMismatch.length === 0,
+    nameMismatch.join('; '));
+  check('and every tools line is a comma-separated list of tool names',
+    badTools.length === 0, badTools.join('; '));
+}
+
 section('Book surveys');
 {
   const surveyDir = join(appDir, 'docs', 'surveys');
