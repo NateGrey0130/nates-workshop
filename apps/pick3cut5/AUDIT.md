@@ -214,7 +214,8 @@ sleeps mid-round is the single most likely real-world failure, and the
 catch-up-on-message fix was written for exactly that shape of problem without
 ever being tested against it.
 
-**T10. Screen reader and keyboard-only. — PARTIALLY RUN.**
+**T10. Screen reader and keyboard-only. — KEYBOARD DRIVEN OVER CDP 2026-09-06;
+SCREEN READER NEEDS A PERSON AND NO SESSION CAN DO IT, 2026-09-12.**
 
 Verified: focus ring renders (amber, 2.7px) on a genuinely focused element;
 every input, checkbox and icon button is labelled; the live region carries
@@ -744,6 +745,79 @@ this machine, which `verify-ui` does not cover and nothing here automates. If
 that is the blocker, take the `T7` half alone and record the `T10` half as a
 deliberate drop rather than leaving it named and unfiled — `audit-menu` → *A
 deferral is work*.
+
+**Taken, 2026-09-22 (PR #1261), and it shrank to ONE EDITED LINE.** Both halves
+of the proposal were already settled decisions, in this file, and this finding
+named neither. `T10`'s lead is updated to say what its own body says. **Nothing
+was driven, and the posture that changed is the finding's, not the app's.**
+
+**The `T7` half reverses a decision with stated reasoning.** `:148-152` reads
+<!-- claim-ok: quoting T7's own note, located in the sentence before this one -->
+*"**PINNED IN SOURCE INSTEAD, 2026-09-12 (PR #975), and the reasoning is the
+point.** Thirty real generations is thirty Claude calls to exercise three
+lines"*, and `:161-165` adds that a live thirty-round run *"is not worth thirty
+generations today"*. This finding proposes exactly that run and does not mention
+`PR #975`. `MAX_ROUNDS = 30` is at `workers/pick3cut5-room/src/room.js:69` and
+`apps/pick3cut5/test/game.mjs:217-244` carries seven checks against it.
+
+**And it conflates the two caps.** <!-- claim-ok: quoting the premise this note
+corrects --> *"the round cap against a real fourth attempt"* — the fourth
+attempt is the **replay** cap, which this finding itself says *"passed and is
+not in question"*. The round cap is reachable only by thirty `start_round`
+calls. **A taker implementing that sentence as written would re-run the replay
+test and report the round cap closed.**
+
+**The `T10` half asks a session for what the file says no session can do**, and
+its own fallback is already written. `:268-273`:
+<!-- claim-ok: quoting T10's own note, located in the sentence before this one -->
+*"**RESOLVED AS FAR AS A MACHINE CAN TAKE IT, 2026-09-12.** … what is left needs
+a person at a screen reader … **It is not tracked as outstanding work for a
+session, because no session can do it.**"* The keyboard half was driven over CDP
+on 2026-09-06 with a four-row results table at `:236-249` — twelve trusted `Tab`
+keydowns, `Enter` on `btnHost`, `Space` on `btnSoloToggle`.
+
+**The heading is false about half its subject.**
+<!-- claim-ok: quoting this finding's own heading --> *"Two `T` items are
+**recorded as passed**"* — `T10`'s lead read `PARTIALLY RUN`, which is the
+honest word and contains no pass. The scan hazard this finding describes reaches
+`T7` alone, whose lead names both halves and the date.
+
+**Both cited line numbers were wrong the instant they were written.** The table
+cites `:132` and `:214`; the leads were at `:135` and `:217`. They were correct
+at `0408cfb9` and moved three lines in **`3b7bf46b` — the same commit that added
+this finding**, whose status-header rewrite inserted three lines above them.
+
+**What survived, and why it is worth the one line.** `T7`'s lead is accurate and
+complete; nothing to do. `T10`'s lead was literally true and **stale** — written
+before the CDP run and the resolution beneath it. **This finding exists because
+that lead misled a reader**: it was filed by a session that scanned
+`PARTIALLY RUN` and did not read the body saying resolved, which is this
+finding's own argument turned on itself. Updating the lead is the cheapest thing
+that stops the next one, and it is this finding's own escape clause —
+<!-- claim-ok: quoting this finding's own proposal --> *"say so in the lead in
+those words, which is a complete answer and cheaper than a run."*
+
+**The old wording survives twice inside this finding's own text**, at `:709` and
+`:725`, because those are its record of what it found. A grep for
+`PARTIALLY RUN` still lands there and no longer lands on a `T` lead.
+
+**Measured, so the pin can be re-argued rather than re-derived**, if anyone ever
+wants the thirty-round run: 29 gaps × 21s ≈ **10 min floor**, realistically
+**12–60 min** depending on how many categories are time-sensitive, and
+**~$0.11 to ~$5.70** — classify plus generate is ~$0.0036 per unverified
+generation, verification ~$0.19 when it fires
+(`pick3cut5-verification-costs.md`, measured 2026-08-24, prices now 29 days
+old). **The money was never the objection**; thirty Claude calls and up to an
+hour of a session to exercise three lines was, and these numbers do not move it.
+
+**Still unsettled, and recorded rather than implied:** nobody has driven the
+round cap, so nobody has confirmed it stops at 30 — `T7` says so itself — and
+whether any screen reader exists on this machine is unknown.
+
+**`F13` is a nine-way collision.** A `F13` heading exists in this file and eight
+`.closed.md` files, and `node scripts/audit-citations.mjs --remote F13` silently
+resolves the bare number to `BOOK-INGEST-AUDIT` — printing its own disclaimer
+that it never saw any other menu's. Sweep for `pick3cut5/AUDIT F13`.
 
 ---
 
