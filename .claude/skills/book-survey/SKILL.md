@@ -180,6 +180,25 @@ page-addressed cache under `.cache/books/<slug>/txt/` is what `class-check
 --field-sources` and `drift-check`'s citation check both read; without it a row
 cannot be traced back to the page it came from at all.
 
+**That path is the default, not the location, and in a worktree the literal one
+is empty.** Since 2026-09-16 `scripts/books-lib.mjs` (`ocrCacheDir()`) and
+`scripts/ocr-book.py` both read `$WORKSHOP_OCR_CACHE` first and fall back to
+`<repo>/.cache/books`; `scripts/d1-query-lib.mjs` (`localD1Args()`) does the
+same for `$WORKSHOP_LOCAL_D1` and passes it as `--persist-to`. Everything here
+that reads a cache or runs a `--local` query goes through one of the two.
+
+The reason is that `git worktree` re-roots the repo to itself, so every path
+derived from the repo root pointed at an empty directory — and two smoke
+sections failed there for that reason and no other. Ask rather than assume:
+
+```bash
+echo "$WORKSHOP_OCR_CACHE"    # empty means <repo>/.cache/books
+```
+
+An empty answer is correct in the main checkout and wrong in a worktree, where
+it means the cache you are about to read does not exist. Set both variables or
+work in the main checkout. `SETUP.md` carries the table of what reads each one.
+
 One command, no flags required, because the failure this prevents is a session
 writing its own caching loop. Seven of the first eight caches were built that
 way — six by throwaway code that is in no commit — and they do not agree with
