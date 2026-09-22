@@ -213,6 +213,32 @@ the fallback and the five places were never affected.
 
 - **F23** — an O.C.C. whose skills are ANOTHER O.C.C.'s, and a skill grant that picks CATEGORIES rather than skills — Taken, 2026-09-07 (PR #794), posture as written - a new grant block and a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F23` heading.
 
+- **F24** — a book that ROLLS one of four psychic profiles: the powers fit, the RELATED-SKILL COUNT does not — Taken, 2026-09-07 (PR #789). Part (a) only, as written. (b) and (c) stand — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F24` heading.
+
+- **F25** — a class whose book defines it AS another class, and nothing records that the two must stay identical — Taken, 2026-09-07 (PR #785). Posture honoured: assert, do not model. — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F25` heading.
+
+- **F26** — one spell, two traditions, two costs, and one row — Taken, 2026-09-08 (PR pending), as the smaller option - `spells.same_spell_as` — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F26` heading.
+
+- **F27** — `class-check` does not validate skill names inside an MOS option, and they fail silently — Taken, 2026-09-08 (PR pending). Both of the questions this finding left — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F27` heading.
+
+- **F28** — the coverage ledger checks five catalogs and there are six, so no vessel's citation is verified — Taken, 2026-09-08 (PR pending) - filed and taken in one change, on the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F28` heading.
+
+- **F29** — `Air: Sonic Blast` and `Sonic Blast` look like one spell twice, inside the Book of Magic — Taken, 2026-09-15 (PR #1072). ANSWERED BY READING THE TWO PAGES, AND THE — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F29` heading.
+
+- **F30** — a cached page can be WELDED across the gutter, and nothing detects it — Taken, 2026-09-08 (PR #830). Detect and warn, as proposed. Nothing repairs — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F30` heading.
+
+- **F31** — four chassis of one O.C.C. cannot be `variants`, because a variant may not add a skill — Taken, 2026-09-08 (PR #834). The mechanism only, on Nate's decision. The — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F31` heading.
+
+- **F32** — `attribute_requirements` holds MINIMUMS only, and a book's MAXIMUM inverts silently — Taken, 2026-09-08 (PR #824). `attribute_maximums` exists, and the class that — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F32` heading.
+
+- **F33** — the gear catalog holds the same item twice under two slugs, and no single detector finds them — Taken, 2026-09-08 (PR #825). Posture as proposed - reporting, plus a — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F33` heading.
+
+- **F34** — the literacy placeholder is guarded and the LANGUAGE placeholder is not, so the same mistake fails on one and ships on the other — Taken, 2026-09-08 (PR #832). Both halves in one PR, as the finding insists - — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F34` heading.
+
+- **F35** — `class-import` tells you to strip a prefix the catalog requires, and the advice produces the exact bug it warns about — Taken, 2026-09-08 (PR #823). Documentation only, on one skill file, — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F35` heading.
+
+- **F36** — a text-layer page can be corrupt at the GLYPH level, and the damage is not where the tell is — Taken, 2026-09-08 (PR #833). Both halves - the detector and the rule. It — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F36` heading.
+
 ### Premise audit of F30-F36, 2026-09-08 - read this before taking any of them
 
 **All six of F30-F35 went through `audit-premise-auditor` BEFORE any was
@@ -1391,6 +1417,16 @@ commentary as readily as the field.
 - **F94** — high - `source-coverage.mjs` walks five tables of eight, and reported two fully-imported books as untouched — WITHDRAWN 2026-09-15 (PR #1070), THE SAME DAY IT WAS FILED. F94 IS A — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F94` heading.
 
 - **F95** — medium - the last fifteen gear values where the repo and production disagree, and they do NOT all fall the same way — Taken, 2026-09-15 (PR #1078), both halves, each to the side this finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F95` heading.
+
+- **F97** — low - six ordnance rows carry a mega-damage FLAG and no mega-damage NUMBER anywhere — Taken, 2026-09-15 (PR #1082). THE PAGE IS NOT SILENT, so this is the fill — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F97` heading.
+
+- **F98** — high - an ability pick is counted against EVERY group at once, so a class with more than one choice group cannot be finished — Taken, 2026-09-15 (PR #1083). Posture held: a wizard bug fix, no schema — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F98` heading.
+
+- **F99** — medium - two migrations are never recorded on a database built from `db/schema.sql`, because their guard runs before the table it tests for — Taken, 2026-09-16 (PR #1089). Both halves, on Nate's word - the two seed — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F99` heading.
+
+- **F100** — medium - four hand-written catalog lists sit beside one declared list, and the ninth catalog needed all four edited by hand — Taken, 2026-09-16 (PR #1090), as its ALTERNATIVE and not its proposal, on — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F100` heading.
+
+- **F101** — medium - a Nightbane may BUY two Talents every level with permanent P.P.E., and nothing can spend a pool as a currency — Taken, 2026-09-16, on Nate's word - the FULL mechanism, which the finding — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F101` heading.
 
 ## Filed while taking the Nightbane survey's D6, 2026-09-16
 

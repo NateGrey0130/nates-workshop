@@ -6,6 +6,19 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **The `###` headings in this file are NOT findings, and that is the inverse of
+> the trap `audit-menu` records for two other menus.** Every `R` finding here is
+> a one-line `- **R<n>**` pointer into `RETRO-AUDIT.closed.md`. The `###`
+> headings that remain are sub-sections of outcome notes whose parents moved,
+> plus two under `## Method, and what each detector was worth` that were never
+> children of a finding at all. So a heading scan of this file returns results
+> and **zero findings** — `grep -c '^### R[0-9]'` returned `0` on 2026-09-22,
+> against `grep -c '^### '` returning 41. Read the pointer lines instead.
+> `.claude/skills/audit-menu/SKILL.md:596` and `:606` carry the other direction
+> of the same shape, where `CLASS-AUDIT`'s `S` items are bullets and
+> `pick3cut5/AUDIT`'s `T` items are bold paragraph leads — items a `###` scan
+> cannot see, rather than headings that are not items.
+
 > **Nothing is open on this menu, as of 2026-09-06.** This line will not say
 > which findings, and it did not when there was work open either.
 > **Read under the heading for what actually happened to each** — some turned
