@@ -643,7 +643,7 @@ subagent `book-survey` §5 calls for simply did not exist there
 junctions, so repo edits propagate, and no admin rights are needed:
 
 ```powershell
-foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','pick3cut5','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell') {
+foreach ($s in 'audit-menu','book-survey','claim-audit','class-import','pick3cut5','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
@@ -667,6 +667,29 @@ A skill added to the repo later needs its own link — there is nothing that
 notices the gap, so add the link in the same PR that adds the skill. **A new
 agent needs nothing**: the directory junction covers it the moment the file
 lands.
+
+**A third junction already exists on this machine and was recorded nowhere until
+now: the session memory.** It is keyed per working directory —
+`C:\Users\natha\.claude\projects\<slug>\memory` — so the repo, the working
+directory and the old `Downloads` one would each have their own. They do not:
+the real store is
+`C:\Users\natha\.claude\projects\C--Users-natha-Projects-workshop\memory`, and
+the other two are junctions to it, verified identical on 2026-09-21. That is
+what makes one memory rather than three drifting copies, and a fresh machine
+would not have it.
+
+```powershell
+foreach ($p in 'C--Users-natha-Downloads','C--Users-natha-Projects-nates-apps') {
+  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\projects\$p\memory" `
+    -Target "$env:USERPROFILE\.claude\projects\C--Users-natha-Projects-workshop\memory"
+}
+```
+
+**A worktree is the case this does not cover**, and it is not fixable by adding
+a line here: a worktree's project slug is generated per worktree, so there is
+nothing to junction until it exists. A session in one starts with no memory at
+all — checked 2026-09-21, the one worktree project folder holds a transcript and
+no `memory` directory. The `worktree` skill says what to do about it.
 
 **That is the junction, not the harness. An agent file written during a session
 cannot be spawned in that session** — the file is on disk and `ls

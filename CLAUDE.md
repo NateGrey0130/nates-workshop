@@ -35,7 +35,7 @@ App conventions and the data model live in `apps/character-creator/README.md`.
 table is the one place each migration says what it adds. This file covers the
 skills and what is easy to get wrong about Cloudflare auth.
 
-## Eleven skills, and they load from anywhere on this machine
+## Twelve skills, and they load from anywhere on this machine
 
 `.claude/skills/` holds them. They are **directory-scoped** by nature: a session
 started anywhere else — in the working directory, say, with the PDF — would not
@@ -85,6 +85,7 @@ something it just wrote.
 | `verify-ui` | any CSS, template or layout change, and before calling anything visual done |
 | `test-suite` | adding or changing a check, pinning a count, reading a failure, or splitting a checks module — a seventh of the commits here land in these files |
 | `windows-shell` | before an in-place edit, an inline script with backslashes, or a query whose answer you will act on |
+| `worktree` | a second concurrent session, and **before `git worktree remove`** — one removal emptied the main checkout's book caches |
 | `pick3cut5` | anything under `apps/pick3cut5/`, `workers/pick3cut5-room/`, `shared/`, or an Access policy |
 
 **Read the skill before the code.** Each one is written from failures that
