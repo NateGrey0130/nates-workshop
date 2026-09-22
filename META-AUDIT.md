@@ -1179,8 +1179,9 @@ menu's own header saying its `###` headings are not findings** — Nate's word,
 **The alternative is declined and recorded so it is not re-proposed:** demoting
 the forty-one orphaned sub-headings to bold leads is a large diff inside a
 record, and what a reader needs is the same kind of fact `audit-menu`’s shape
-table already carries for `CLASS-AUDIT`'s bullets and `pick3cut5/AUDIT`'s bold
-leads. **That is shape, not status** — the half of a header that has stayed true
+table already carries at `.claude/skills/audit-menu/SKILL.md:596` and `:606`,
+read 2026-09-22 — `CLASS-AUDIT`'s `S` items as BULLETS, `pick3cut5/AUDIT`'s
+`T` items as BOLD PARAGRAPH LEADS. **That is shape, not status** — the half of a header that has stayed true
 everywhere it was written, while the status narrations rotted.
 
 **Posture: records, not rewrites** — no finding text is altered, nothing moves
