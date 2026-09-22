@@ -86,6 +86,39 @@ falsify — and this repo falsifies them regularly: the `bonus` key on a
 related-skill category turned "the format cannot hold a per-category percentage"
 from true into false across four classes in a single PR.
 
+**One shape of that subset is mechanised**, and it is the only one that is:
+
+```bash
+node scripts/retro-check.mjs --remote
+```
+
+It asks whether a published class **carries a key while its own prose denies
+that the key exists** — a self-contradiction inside one record, where the data
+is already right and only the sentence is false, so no test fails and nothing
+else notices. There is no false-positive class: a record cannot both carry a key
+and truthfully say the key does not exist. Every hit is a note to rewrite, never
+a mechanic to build. `CLASS-AUDIT` S4 found the first on the Godling and
+`RETRO-AUDIT` R1 found five more.
+
+**Its silence is not coverage, and its own output says so.** A class with no key
+at all has nothing to contradict, so the commoner half — a class that predates a
+capability and simply never gained it — is invisible to it. That half is the
+claim sweep this page describes, run against the `claim-capability-verifier`
+subagent, and it resists mechanising because every capability here has a
+meaningful unset default: `RETRO-AUDIT` measured a capability-vs-date diff at
+**11% precision** against the one capability with known ground truth. A check
+that fires on correct values trains you to stop reading it.
+
+**It reports and never exits non-zero** — the same posture `class-check.mjs`
+takes with UNMODELLED keys — and its pair list is hand-maintained, so a new
+capability needs a new entry and nothing will remind you.
+
+**Read its quotations block before dismissing it.** A corrected note usually
+quotes the false sentence it replaced, so the denial is present as history rather
+than as a claim. The script separates the ones it can detect by their finding
+citation and states outright that it cannot tell a quotation from a claim that
+merely happens to cite something.
+
 **The README and comments:**
 
 ```bash
@@ -260,6 +293,11 @@ A corrected sentence goes stale again. Where the claim is checkable, pin it:
 - a **count a file can answer** → `test/smoke.mjs`. The scripts file map, the
   data-scripts table and the migration table are all pinned this way, and each
   fails on a file the docs do not name *and* on a name with no file.
+- a **claim a single record can contradict** → a pair in
+  `scripts/retro-check.mjs`: the key, and a phrase that denies the key. This is
+  the one pin that needs no count and no transcription, because the evidence is
+  inside the record. Match against whitespace-collapsed text — a stored note
+  wraps mid-phrase, and a naive match reported a present sentence as absent.
 - a **stale note in an applied one-shot script** cannot be edited — that is the
   rule. What must be true is that a **later-sorting** script undoes it, and that
   is what to assert.
