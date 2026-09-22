@@ -1344,6 +1344,192 @@ rather than reasoned about.
 the work happens in. That is the point and it is also the cost — five rules that
 have never fired will start firing, and a false refusal will be felt at once.
 
+**Taken, 2026-09-22 (PR #1245). Posture held: the hook keeps its refusal
+posture — exit 2, fails closed — and gains no new rule.** Registered at user
+level with an absolute path, and `guard-bash.sh` now derives the repo from its
+own location and resolves a relative target against the envelope's `cwd`.
+
+**This finding's headline is false and `audit-premise-auditor` caught it.**
+<!-- claim-ok: quoting the premise this note corrects --> *"the `guard-bash`
+hook has never refused a command"*, and *"Zero refusals across every
+transcript"*. **It refused once** — `2026-09-16T16:15:51Z`, in the `nates-apps`
+project key, `is_error: true`, `git add -A`. Re-derived independently on
+2026-09-22 by matching the wrapper prefix instead: exactly one genuine refusal,
+plus one session quoting it four seconds later and four hits that are this
+session's own scan output.
+
+**The cause of the miss is this finding's own definition of a refusal**, and it
+is the part worth keeping. It said a refusal is a tool result **beginning**
+`guard-bash:`. It never does: Claude Code wraps the hook's stderr, so the result
+begins `PreToolUse:Bash hook error: [<the configured command>]: ` and the
+reason sits in the middle. **A scan anchored on `^guard-bash:` returns zero by
+construction, whatever the truth is** — which is how a finding built on a
+corpus-wide count came to assert the one thing that was not true.
+
+**What survives, and it is the whole mechanism.** The single refusal was the
+hook's own self-test on the day it shipped, from the 6-session repo key, four
+seconds before a `Downloads`-rooted session verified it by hand. **No real work
+has ever been guarded**, because the work runs where the hook was not
+registered. That is the finding, and it stands.
+
+**Three more corrections, all of which narrowed the work:**
+
+- **Only rule 2 depended on the repo path**, not rules 1 and 2 as filed. The
+  derivation lived *inside* rule 2's `if` block; rules 1, 3, 4 and 5 are pure
+  regex matches on the command text. Rule 3 was in neither group of the
+  finding's sentence. So part two was a one-rule change.
+- **Rule 2 misfired in BOTH directions** from a foreign root, which the finding
+  only half-said: it **missed** real absolute repo paths, and it refused every
+  relative `sed -i` anywhere on the machine.
+- **The envelope carries `cwd`, as a required field** — read out of the CLI's
+  own schema rather than guessed. That turned the fix from conservative to
+  correct: `$0` says where the repo is, `cwd` says where a relative path lands,
+  and rule 2 needs both. The finding proposed only the first.
+
+**And two corrections to what I believed when scoping it.** The ~258-entry
+`settings.local.json` that `M11` tells you to leave alone is at
+`C:\Users\natha\Projects\workshop\.claude\`, not `Downloads\.claude\`, which
+holds **three** entries — the whole directory moved under `M7` on 2026-09-02.
+And `Projects\workshop` is a third project key with sessions of its own, which a
+`Downloads`-only registration would have left unguarded. **Registering at user
+level covers all four keys and anything future**, which is why it went there.
+
+**Proved, in seven directions, by piping envelopes at the script** (2 = refused):
+
+| case | want | got |
+|---|---|---|
+| relative target, cwd **in** the repo | 2 | 2 |
+| relative target, cwd **outside** the repo | 0 | 0 |
+| absolute target **in** the repo, cwd outside | 2 | 2 |
+| absolute target **outside** the repo | 0 | 0 |
+| relative target, **no `cwd` in the envelope** | 2 | 2 |
+| `git add -A`, anywhere | 2 | 2 |
+| `q.mjs` **with** `--remote` | 0 | 0 |
+
+**The failure mode to know about, because the posture does not survive it.** A
+wrong path in the registration makes `sh` exit **127**, and this script's own
+header records that exit 2 is the only code treated as a block — so a typo
+produces a guard that reads as installed and stops nothing. The registration was
+therefore read back and its path resolved after writing, and the exact
+registered command was run and returned 2.
+
+**Owed: the first live refusal.** Hook settings are read when a session starts,
+so this session cannot exercise its own registration — the same shape as `F26`
+for an agent file. **The next session started outside the repo is the test**, and
+the string to grep for is `PreToolUse:Bash hook error`, **not** `guard-bash:`.
+
+**Opened while taking this: `F56`** — three instruction files state the refusal
+prefix wrongly, which is what this scan inherited, and nothing pins the hook's
+path or its registration. Filed below, not taken.
+
+### F56 — three files say a refusal starts `guard-bash:`, and nothing pins where the hook lives or that it is registered
+
+**Opened 2026-09-22 while taking `F55`**, by `audit-premise-auditor`. Both parts
+are things `F55` walked into rather than things it foresaw.
+
+**One: the refusal prefix is wrong in three places, and it produced a false
+finding.** `.claude/skills/windows-shell/SKILL.md:33` says *"A refusal starts
+`guard-bash:`"*; `CLAUDE.md:310` says the same; and the memory note on the hook
+says *"a tool result starting `guard-bash:` is the hook"*. All three are true of
+what the **script** prints — `refuse()` writes exactly that to stderr — and
+false of what a **transcript** holds. Claude Code wraps it: the tool result
+begins `PreToolUse:Bash hook error: [<the configured command>]: ` and the
+`guard-bash:` reason is in the middle. Read 2026-09-22.
+
+**The cost is not theoretical.** `F55` defined a refusal as a result *beginning*
+`guard-bash:`, scanned every transcript on the machine, got **0**, and filed
+*"the hook has never refused a command"* as its heading. One refusal existed the
+whole time. A count anchored on a prefix that never appears returns zero by
+construction, and nothing about the result looks wrong.
+
+**Two: nothing pins the hook's path or its registration.**
+`apps/character-creator/test/checks/instruction-paths.mjs:50-51` has
+`ROOTS = ['CLAUDE.md', 'SETUP.md', '.claude/skills', '.claude/agents']` and
+`READABLE = /\.(md|json|ps1|mjs|js)$/i`. `.claude/hooks` is not a root and `.sh`
+is not readable, so an absolute path written into `guard-bash.sh` is pinned by
+nothing; `.claude/settings.json` is outside `ROOTS` too. Since `F55` the live
+registration is in `C:\Users\natha\.claude\settings.json`, **outside the repo
+entirely**, where a wrong path makes `sh` exit 127 — not a block — and the guard
+reads as installed while stopping nothing.
+
+**Proposal, two parts, each independently declinable.** Correct the prefix
+sentence in all three files to the string a transcript actually carries, and say
+plainly that the script's own output and the transcript's differ. And pin the
+registration the way the machine instruction file is pinned: a **local-only**
+check, in the shape of
+`apps/character-creator/test/checks/machine-instructions.mjs`, asserting that
+the user-level settings register a hook whose script path resolves. **Posture:
+documentation for part one; for part two, a check that reports rather than
+gates, and that states a non-assertion in CI where the file is absent** — the
+same posture `machine-instructions.mjs` already takes for the same reason.
+
+**Evidence:** the three reads, the `instruction-paths.mjs` read, and the
+re-derived refusal count, all 2026-09-22 and all recorded under `F55`'s outcome
+note.
+
+**Confidence:** high on part one — the wrapper prefix was read out of a real
+transcript line. Medium on part two's shape: whether a check that cannot run in
+CI earns its place here is the same argument `machine-instructions.mjs` already
+had and won, but it won it for a file that rots on its own, and a registration
+rots only when somebody edits it.
+
+**Ongoing cost:** part one, none — a sentence that becomes true. Part two, one
+more local-only check, which is one more thing that passes silently on a runner
+and therefore one more thing a reader can mistake for coverage.
+
+### F57 — the rules match prose, and registering the hook turned that from invisible into a daily cost
+
+**Opened 2026-09-22 while taking `F55`**, by the hook refusing this session's own
+commit — the first command it ever blocked in real work.
+
+Every rule matches against the **whole command text**. That is correct for a
+command and wrong for a heredoc body, and this repo writes commit messages and
+pull-request bodies as heredocs full of prose about commands. The refusal:
+
+```
+PreToolUse:Bash hook error: [sh ".../guard-bash.sh"]: guard-bash: sed -i
+rewrites a CRLF file as LF and the diff shows every line; use the Edit tool or
+node with an explicit encoding
+```
+
+The command was `cat > commit-msg.tmp <<'MSG' … MSG` and the matched text was a
+**sentence inside the message** describing what rule 2 used to do. Rule 2 then
+tokenised the surrounding prose as targets, resolved one against the cwd — which
+was the repo — and refused.
+
+**It is not a new defect.** The matcher has always read the whole text; it was
+invisible for six days because the hook was registered where no session started
+(`F55`). Registering it machine-wide made it visible in about ninety seconds,
+which is the honest summary of what `F55` bought: the rules now fire, including
+where they are wrong.
+
+**Proposal:** strip heredoc bodies from the text the rules match against,
+in the same `node` call that already parses the envelope — find
+`<<` or `<<-` followed by an optionally quoted word, drop lines until the
+terminator, keep the terminator. Match on the stripped text; leave the
+`sed`/`git`/`gh` patterns themselves alone. **Posture: one function in the
+extractor, no rule changed, refusal posture unchanged.**
+
+**What it deliberately does not do**, and this is the trade: a command written
+*into* a heredoc — a script file that is then run — stops being matched. That is
+accepted, because the hook cannot guard the eventual `sh script.sh` either, and
+the alternative that keeps it (requiring `sed` at a command position) **misses
+`find -exec sed -i` and `xargs sed -i`**, which are real command positions this
+repo could use.
+
+**Evidence:** the refusal above, 2026-09-22, from this session's own transcript,
+with the command that produced it.
+
+**Confidence:** high that the defect is real and costs a session daily — it cost
+this one, twice, within the hour. Medium on the stripping being complete: a
+heredoc terminator can be quoted, indented with `<<-`, or shadowed by a word
+appearing alone on a line inside the body, and only the first two are handled by
+the proposal as written.
+
+**Ongoing cost:** one more function in the part of the hook that must never
+throw, in a script whose failure mode when it cannot parse its input is to
+refuse everything.
+
 ## A closing observation, about this audit rather than its findings
 
 **Instructions this session wrote were violated by their author, the same day,
