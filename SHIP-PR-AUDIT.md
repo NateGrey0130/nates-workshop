@@ -228,3 +228,64 @@ deliberately: <!-- claim-ok: quoting this file's header, cited at :17-19 above -
 *"`F11`'s number is real and got worse"* is a measurement with a date-shaped
 claim rather than another finding's open/closed state, and this finding has not
 re-measured it.
+
+**Taken, 2026-09-22 (PR #1257). Posture held: subtractive, no replacement
+state** — and widened, on Nate's word, from the one clause to the whole
+state-carrying paragraph plus the header's open-work line.
+
+**Why wider.** Striking only the `F10` clause would have left *"Two declines"*,
+which is a **count of findings' states**, and `F11`'s *"and it was declined"*,
+which is a per-finding state one sentence over — a paragraph announcing two
+declines while describing one. **The paragraph above excludes `F11` on the
+ground that its sentence is a measurement rather than a state, and that is true
+of *"got worse"* and *"63 lines"* but not of *"it was declined"*.** So the
+exclusion was right about the wrong clause.
+
+**And taking this closed the menu's last open finding**, which made the header's
+*"Work was opened on this menu"* line stale in the same PR. Replaced with
+whether anything is open — the one status `audit-menu` permits — carrying no
+range of closed numbers.
+
+**The closure is recorded under `F10` in `SHIP-PR-AUDIT.closed.md`** as a dated
+`Adjusted` line with every original sentence standing, which is what this
+finding proposed and what *Audit files are RECORDS* prescribes.
+
+**Three premises did not hold, and one of them is this finding's own signature
+defect.**
+
+- **The `Evidence` line cites a section of `audit-menu` that does not exist.**
+  <!-- claim-ok: quoting the premise this note corrects --> *"per `audit-menu` →
+  Do not audit prose you are not changing"*. That skill has 21 headings and none
+  is this; the phrase appears nowhere in the repo but that line. **The rule is
+  real and comes from the session brief, not the skill.** `SHIP-PR-AUDIT` exists
+  because four of its findings rested on a claim about another file, and this
+  finding committed the same one while correcting an instance of it. It changes
+  nothing about the proposal and is recorded because the shape is the menu's
+  subject.
+- **The cited range is off by one.** The clause runs to `:17`, not `:15-16`;
+  line 17 carries its tail and then begins the `F11` sentence. `G19` — named
+  here as the same shape — made the identical off-by-one, and its note records
+  that too.
+- **The ruleset date is *consistent with*, not *confirmed by*.** `updated_at` is
+  `2026-09-16` and the API carries no per-rule history, so it does not prove
+  that is when the three checks were added. The three required contexts, the
+  empty `bypass_actors` and `enforcement: active` all verified exactly.
+
+**What the closure is NOT, and the `Adjusted` line says so.**
+<!-- claim-ok: quoting F10's reopen condition, at SHIP-PR-AUDIT.closed.md:623 -->
+`F10`'s reopen condition — *"a red `tests` run that reached `main`"* — describes
+a **non-event**: no workflow in `.github/workflows/` has a `push:` trigger, so
+`tests` has never run on `main`. Three ways a red tree still reaches it:
+`play-flow` and `deploy-alarm` are not required checks;
+`strict_required_status_checks_policy` is **false** and nothing runs on `main`,
+so two PRs each green against an older base can merge into a failing tree; and
+an admin can disable the ruleset. **`F10` assigning the unattended alarm to
+`REPO-AUDIT` remains the answer to all three**, which is why that is an
+`Adjusted` line rather than a closure.
+
+**`F15` is a heavy collision — seven other menus carry an `F15`**, and
+`scripts/audit-citations.mjs --remote F15` silently resolves the bare number to
+`BOOK-INGEST-AUDIT`. Sweep for `SHIP-PR-AUDIT F15`. A second trap found while
+sweeping: `grep -rn F15 ~/.claude/skills/` returns nothing, because each skill
+is its own junction and a recursive grep does not traverse them from the parent
+— grep the repo's `.claude/skills/` instead.
