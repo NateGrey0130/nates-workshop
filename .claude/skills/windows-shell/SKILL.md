@@ -16,10 +16,10 @@ Every one of these **succeeds**. Nothing exits non-zero, nothing warns, and in
 three cases the obvious check reports clean. They are collected here because
 each cost a session or reached production.
 
-## Five of these are a hook now, and it fires in one directory
+## Six of these are a hook now, and it fires everywhere on this machine
 
 Since 2026-09-16 `.claude/hooks/guard-bash.sh` runs before every `Bash` call and
-exits 2 — the only code Claude Code treats as a block — on five shapes that were
+exits 2 — the only code Claude Code treats as a block — on six shapes that were
 prose rules here and in `ship-pr` until then:
 
 - `git add -A`, `git add --all`, `git add .` — *Commit messages*, below
@@ -29,21 +29,53 @@ prose rules here and in `ship-pr` until then:
 - `gh pr merge` sharing a line with a chaining operator or a pipe — *A pipe
   throws away the exit code you were testing*, below
 - `git commit -m` with a backtick in it — *Commit messages*, below
+- `find` rooted at a filesystem or drive root, **at a command position only** —
+  added 2026-09-22 (`SKILL-AUDIT` `F54`), after eighteen whole-disk searches
+  that outlived the agents that started them. It is narrower than the other
+  five on purpose: this rule's trigger words are its own subject, so a
+  permissive matcher would refuse the act of writing about it.
 
-**A refusal starts `guard-bash:`, and that is the hook rather than a permission
-denial.** The two read alike in a transcript and the repairs are opposite: a
-permission denial is waiting for Nate to approve the command you wrote, and this
-is telling you to write a different one. The script's header names the incident
-behind each rule.
+**The script prints `guard-bash:`. A TRANSCRIPT does not start with it.** Claude
+Code wraps the hook's stderr, so the tool result reads
 
-**It is project-scoped, which means the session that needs it most does not have
-it.** The hook is registered in this repo's `.claude/settings.json`, and
-`CLAUDE.md`'s four-cell probe established that project settings govern the
-directory they sit in and do not compose. The book work runs from
-`C:\Users\natha\Projects\workshop`, where there is no hook at all and the prose
-below is the whole of the protection. **So nothing here has been retired.** Five
-rules acquired a backstop in one directory; they are unchanged in the other, and
-that is the directory where a sourcebook import runs `git add` and `sed` all day.
+```
+PreToolUse:Bash hook error: [<the registered command>]: guard-bash: <reason>
+```
+
+and the reason sits in the middle. That distinction is not cosmetic, and it has
+now cost two findings their central number: a scan anchored on a **leading**
+`guard-bash:` returns zero by construction, which is how `SKILL-AUDIT` `F55`
+came to report that the hook had never refused anything, and a scan matching the
+**bare string** anywhere returns results that merely quote it, which is how
+`F54` came to report 42 refusals. **Grep for `PreToolUse:Bash hook error`.** The
+bracket holds whichever registration fired, so it is not one fixed string to
+match on.
+
+A refusal is still the hook rather than a permission denial, and the two repairs
+are opposite: a permission denial is waiting for Nate to approve the command you
+wrote, and this is telling you to write a different one. The script's header
+names the incident behind each rule.
+
+**It is registered at USER level and fires in every directory on this machine.**
+Until 2026-09-22 it was registered only in this repo's `.claude/settings.json`,
+and `CLAUDE.md`'s four-cell probe established that project settings govern the
+directory they sit in and do not compose — so for six days it guarded nothing
+that mattered, the book work running from `C:\Users\natha\Projects\workshop` and
+sessions starting outside the repo. `SKILL-AUDIT` `F55` moved it to
+`C:\Users\natha\.claude\settings.json` with an absolute path, which covers every
+project key on this machine and anything future.
+
+**Both registrations are live**, the repo's and the user-level one, so a session
+started in the repo runs the hook twice. The verdict is the same either way; a
+doubled refusal is not a bug when you meet one.
+
+**So nothing here has been retired.** The six rules have a backstop everywhere
+now rather than in one directory — but a backstop is one edited settings file
+away from being gone, and a wrong path there fails as `sh` exit 127, which is
+**reported rather than blocking**, so the guard would read as installed and stop
+nothing. `apps/character-creator/test/checks/hook-registration.mjs` is the
+local-only check that catches that; it asserts nothing off this machine and says
+so in its own label.
 
 **It fails closed.** If the hook cannot parse the JSON envelope Claude Code hands
 it, it refuses rather than running unguarded — so a broken hook is noticed on the
