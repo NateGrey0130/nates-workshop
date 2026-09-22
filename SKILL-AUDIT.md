@@ -877,6 +877,65 @@ and that is exactly the evidence the promotion would wait for.
 **Ongoing cost:** a section in a skill that is already read before any worktree
 work.
 
+**Taken, 2026-09-22 (PR #1239). Posture held: a section in an existing skill,
+NOT a new agent.** `.claude/skills/worktree/SKILL.md` → *Briefing a worker you
+spawn into one*. The promotion to an agent waits for a second campaign, as the
+proposal says.
+
+**Opened in the same PR and not taken: `F54`**, the sixth `guard-bash.sh` rule.
+Nate's word, 2026-09-22, on the evidence below — the instruction half ships here
+and the control that does not depend on being read is filed separately.
+
+**Three premises do not hold, and `audit-premise-auditor` settled all three
+before the branch existed:**
+
+- <!-- claim-ok: quoting the premise this note corrects --> **"the briefs it ran
+  on are gone" is false.** `class-brief.md`, `gear-brief.md` and
+  `morphus-extract-brief.md` are still in that session's scratchpad, which still
+  holds 305 files, verified 2026-09-22. The body's narrower claim holds exactly
+  — they are per-session, checked in nowhere, and were re-derived rather than
+  inherited — but the heading overstates it. **That widens the work in the
+  useful direction:** the standing rules did not have to be reconstructed from
+  transcripts, and two of them came straight out of those files, including
+  *never delete a file you did not create*, which the finding never names.
+- <!-- claim-ok: quoting the premise this note corrects --> **"6 named a git
+  worktree" is 5.** Five distinct worktrees were named — `nates-apps-morphus`
+  twice, `nates-apps-generator`, `nates-apps-ladders`, `nates-apps-formplay`.
+  The other two figures reproduce exactly: 23 calls on 2026-09-17, 16 following
+  one of the two briefs. No counting rule reproduces 6.
+- **`instruction-paths.mjs` pins skills as well as agents** — its `ROOTS` array
+  names `.claude/skills` beside `.claude/agents`, so the deferral in the
+  proposal (*"note then that it pins every absolute path an agent file names"*)
+  was already due here. Every absolute path in the new section had to exist or
+  be templated; the section names none, which is why.
+
+**And two things about the target file the finding did not know:**
+
+- **The `worktree` skill already carries both environment variables**, with what
+  broke without them, at *Making one*. The new section points at it rather than
+  repeating the values, because a second copy is a second thing to keep true.
+- **It also carries *Merging from a worktree*, which is written for the session
+  that owns the tree.** A spawned worker needs the opposite instruction, so the
+  new section says the refusals are the worker's and names the contrast
+  explicitly. Without that the file would say both merge-from-here and
+  never-merge.
+
+**One clause in the finding's list was never in the prompts.** All five worktree
+prompts carried the environment variables, *do not push*, *do not open a PR*,
+*do not apply anything to the remote database*, and a note that `git add -A` is
+refused by a hook. **None said *do not merge*, and none bounded searching.** So
+the no-whole-tree-search rule is not something the campaign had and lost — it is
+new, and `F54` is why it is here as a reminder rather than as a control.
+
+**A correction to this section's own method line, recorded rather than edited**
+— audit files are records. The lead at the head of
+`## Opened by the subagent retrospective, 2026-09-22` says *366 distinct `Task`
+calls*. The tool-use blocks in the transcripts are named **`Agent`**, not
+`Task`; a re-runner matching on `Task` gets **zero**. The per-agent figures were
+derived by matching `input.subagent_type` rather than the block name and are
+unaffected — `general-purpose` 38 reproduces exactly — but the name in that
+sentence would cost the next reader a round trip.
+
 ### F51 — no check reads the agent files, so a malformed one fails at spawn time
 
 `apps/character-creator/test/checks/instruction-paths.mjs:51` lists
@@ -1043,6 +1102,64 @@ has no key for two of the three pages and nothing near 30 anywhere. Medium on
 the repair, which is Nate's to pick.
 
 **Ongoing cost:** none beyond the edit. One paragraph either moves or goes.
+
+### F54 — the control for a whole-disk search is a sixth `guard-bash.sh` rule, and the instruction half has already been measured as insufficient
+
+**Opened 2026-09-22 while taking `F50`, on Nate's word**, and filed rather than
+taken so the decision to build it stays separate.
+
+`.claude/hooks/guard-bash.sh` carries five rules — `git add -A`, `sed -i` inside
+the repo, a flagless `q.mjs`/`d1-apply.mjs`, `gh pr merge` sharing a line with a
+pipe or a chain, and a backtick in `git commit -m`. **None is about a search
+root.** Read 2026-09-22.
+
+**The shape recurs and it is not one incident.** Measured across the session
+transcripts on 2026-09-22, deduped by tool-use id: **21 distinct Bash calls
+searching from a filesystem root, on 2026-09-16, 2026-09-18 and 2026-09-19, and
+every one of them from a spawned worker rather than from a main session.**
+
+**The hook already reaches those workers**, which is the premise a rule aimed at
+them depends on: the same corpus carries 42 `guard-bash:` refusals, **19 of them
+in subagent transcripts**, five within seconds of the 2026-09-17 worktree spawns.
+A sixth rule would have fired on the workers `F50` is about.
+
+**The instruction half has been tried and measured.** The memory note on this
+records that a brief saying *"NEVER search from / or C:\\"*, with the full path
+given, did not stop two workers from searching the root for fifty minutes, and
+names the remedy in its own words: *"a PreToolUse hook refusing `find /` would
+be the shape that cannot go wrong - not built yet."* `F50` ships the instruction
+half today and says so; this is the half that does not depend on being read.
+
+**Proposal:** a sixth rule in `guard-bash.sh` refusing a search whose root is a
+filesystem or drive root — `find /`, `find C:\\`, `find /c/` and the same shapes
+with `-name`/`-iname` — with a refusal message that names the incident and tells
+the caller to search the path it was given. **Posture: refuse, like the other
+five.** The hook's posture is refusal with exit 2 and it fails closed; a
+whole-disk search has no legitimate use in this repo, and the caller that wants
+one can say which directory it means.
+
+**One thing to settle while taking it, because two sources disagree.**
+`windows-shell` records the hook as project-scoped — registered in this repo's
+`.claude/settings.json`, and absent from the directory the book work runs in.
+The measurement above puts 41 of the 42 refusals in sessions whose recorded
+working directory is `Downloads`. Both cannot be the whole story, and which one
+is true decides whether this rule protects the sessions that produced the 21
+calls. **Establish that before writing the rule**, by provoking a refusal from a
+session started outside the repo rather than by reasoning from either file.
+
+**Evidence:** the read of `.claude/hooks/guard-bash.sh` and the transcript scan,
+both 2026-09-22, the scan reported by `audit-premise-auditor` and its method —
+dedupe by tool-use id — stated with it.
+
+**Confidence:** high that the shape recurs and that the hook reaches spawned
+workers; both are counted rather than inferred. **Medium on the matcher**, which
+is where this can fail quietly: a search root has more spellings on this machine
+than any of the five existing rules have to handle, and a rule that misses `C:\\`
+or `/c/` is a rule that does not fire. What would raise it: write the matcher
+against the 21 recorded calls and check it refuses every one.
+
+**Ongoing cost:** one more rule in a file that fails closed, and whatever a false
+refusal costs someone who meant the search. No CI minute, no new file.
 
 ## A closing observation, about this audit rather than its findings
 
