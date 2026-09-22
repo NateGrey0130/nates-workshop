@@ -1278,6 +1278,69 @@ against the 21 recorded calls and check it refuses every one.
 **Ongoing cost:** one more rule in a file that fails closed, and whatever a false
 refusal costs someone who meant the search. No CI minute, no new file.
 
+**Taken, 2026-09-22 (PR #1247). Posture held: refuse, like the other five** —
+exit 2, fails closed, no exception path. Rule 6 in `guard-bash.sh`.
+
+**The count is 18, not 21.** Twenty-one is exactly what a naive `find /` matcher
+returns over the corpus; the three extras are two scans of the transcripts and
+**the memory-note write that accidentally ran one**. Re-derived over all 47,455
+distinct Bash calls: a command-position matcher returns **18, with zero extras**.
+`.claude/skills/worktree/SKILL.md`, which shipped the figure as 21 this morning
+in PR #1239, is corrected in this PR — it cites this finding two lines below.
+
+**The premise this finding leans on was dead, and is now true for a different
+reason.** <!-- claim-ok: quoting the premise this note corrects --> It argued
+*"the hook already reaches those workers"* from *"42 `guard-bash:` refusals, 19
+of them in subagent transcripts"*. `F55` retracted that count — those were
+results *containing* the string, and only **one** real refusal existed before
+today. The conclusion holds now because `F55` registered the hook at user level,
+and it was demonstrated live: the premise auditor's own `echo git add -A` was
+refused mid-audit. **But *"a sixth rule would have fired on the workers `F50` is
+about"* is false as written** — all 18 ran on 09-16/18/19, when the hook was
+registered only in the repo and no worker session started there.
+
+**A nineteenth search really ran, from a MAIN session, and it changed the
+matcher.** On 2026-09-19 somebody wrote the memory note about the first
+eighteen through `node -e "…"` with backticks in the text; the shell substituted
+them and started a stray. The note records it first-hand. It is the **only**
+command in the corpus that distinguishes the two candidate matchers, so **a
+backtick counts as a command position** — and that decision is here rather than
+inherited.
+
+**The spelling worry in this finding's Confidence line was not borne out.**
+<!-- claim-ok: quoting the premise this note corrects --> It warned that *"a
+rule that misses `C:\` or `/c/` is a rule that does not fire"*. All **20 root
+occurrences across the 18 commands are the bare unquoted `/`** — zero `C:\`,
+zero `/c/`, zero `/cygdrive/c/`, checked against the whole corpus. The drive
+spellings are in the rule as defence in depth and are not what makes it fire.
+
+**Scope stays at `find`, on measurement.** No `grep -r /`, `ls -R /`, `dir /s`
+or `Get-ChildItem -Recurse` from a drive root has **ever** run in this corpus.
+Widening would have been speculative.
+
+**Why this rule is narrower than the other five, deliberately.** It fires at a
+**command position** only. `F57` established that the rules read prose, and this
+rule's trigger words are its own subject: its documentation, the memory note it
+came from, and this very paragraph are full of the phrase. A permissive matcher
+here would refuse the act of writing about it — which is exactly how the
+nineteenth search happened.
+
+**Proved against the eighteen commands as they were actually issued**, plus nine
+negatives: **18 refused, 9 allowed, nothing else touched**, and the backtick
+form refused. The first attempt scored 13/18 — **against a fixture that had been
+flattened to single lines**, which destroyed the newlines that make a `find` a
+command position. The fixture was re-extracted with the text intact before the
+rule was trusted; a matcher scored against a mangled fixture would have been
+tuned to the mangling.
+
+**Two things found while taking this, and neither is filed here.**
+`.claude/skills/windows-shell/SKILL.md:39-46` still says the hook *"is
+project-scoped, which means the session that needs it most does not have it"* —
+false since `F55`, and `F56` as filed covers only the refusal-prefix sentence
+above it. And **both registrations are live**, the repo's and the user-level
+one, so a repo-rooted session runs the hook twice. Same verdict either way, but
+a double refusal is not a bug when it appears.
+
 ### F55 — the `guard-bash` hook has never refused a command, because it is registered where sessions do not start
 
 **Opened 2026-09-22 on Nate's word**, while establishing the one thing `F54`
