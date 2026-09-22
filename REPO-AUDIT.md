@@ -545,3 +545,62 @@ What would raise it is the same `run_attempt > 1` query `G20` used, pointed at
 buying the same for a reporting-only suite with no measured flake is speculative
 work, and this finding would rather be declined on that than taken on symmetry
 alone.
+
+**DECLINED, 2026-09-22 (PR #1256), on the measurement this finding says it did
+not make.** No code changed. **Every one of its six premises held exactly** —
+the two spawn lines, the ruleset, and the asymmetry are all as filed. It is
+declined because the number it asked for came back zero, not because it was
+wrong about anything.
+
+**The number.** `G20`'s own method — `run_attempt > 1` over a workflow's runs —
+pointed at `play-flow.yml` and at `regression.yml` for comparison, run
+2026-09-22:
+
+| | `play-flow` | `regression` |
+|---|---|---|
+| total runs | **532** (2026-09-09 → 2026-09-22) | 756 |
+| success | 452 | 612 |
+| cancelled | 80 | 119 |
+| **failure** | **0** | **25** |
+| **runs with `run_attempt > 1`** | **0** | **8** |
+
+**`play-flow` has never failed and has never been re-run, in its entire
+history.** So the `UND_ERR_SOCKET` signature search has an **empty domain
+rather than an inconclusive one**. This finding's `Confidence` line names
+exactly this query as the thing that would raise it; it lowers it instead, and
+its own *reason to decline* is the paragraph the evidence supports. The 80
+cancellations are the workflow's own `cancel-in-progress` group at
+`.github/workflows/play-flow.yml:41-43`, sampled at five and matching branches
+pushed twice.
+
+**The fallback clause was reached and then declined too, and the reason is worth
+keeping.** <!-- claim-ok: quoting this finding's own proposal, in the Proposal
+paragraph above --> *"If the reporting half does not transfer cheaply, take the
+stdio half alone and say so."* It does not transfer: `reportDeath` is **inline
+at `regression.mjs:142-167`**, not in `dev-server.mjs`, and it closes over five
+module-level variables declared at `:121-125`. Two of them — `lastRequestAt` and
+`lastOkAt`, which produce the idle-gap number that is the entire point — are
+written inside `regression.mjs`'s `api()` and `apiAs()` helpers. **`play-flow.mjs`
+has no such helpers**: it makes five raw `fetch` calls with no funnel, and has no
+`server.on('exit')`. A faithful port needs new imports, an exit listener,
+instrumentation at five call sites and two `process.on` handlers.
+
+**And the stdio half ALONE would have been vacuous**, which is why it was not
+taken either. `play-flow.mjs:133` runs `removeState()` on exit, and `state` is
+where `regression.mjs:338` puts its log — so a server log written there is
+deleted before anything could read it after a death. Shipping it would have been
+a diagnostic that cannot report, which `test-suite` → *A check that fires on
+correct values is worse than no check* is the neighbouring argument against.
+
+**What is true and stays true, so the asymmetry is not re-noticed as new.**
+`play-flow.mjs` has **no death path at all** — no `uncaughtException` and no
+`unhandledRejection` handler in 640 lines; `waitForOwnServer` covers boot only.
+A mid-suite connection death prints a bare uncaught stack. And the exposure is
+real: `play-flow.mjs:122-125` runs blocking `wrangler d1 execute` calls while
+the server is up, which is the idle pattern `G20` blamed. **Exposure without a
+single occurrence in 532 runs is the whole finding**, and if `play-flow` ever
+does fail this way, this note is the thing to reopen — the query above is the
+test, and it costs one command.
+
+**Not re-proposable on symmetry alone.** Recorded here so the next reader who
+notices the two spawn lines differ has the number rather than the observation.
