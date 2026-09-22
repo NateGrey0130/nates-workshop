@@ -1202,3 +1202,71 @@ header sentence to keep true**, which is the trade being accepted: a sentence
 about shape rather than about state, on the argument that shape does not move
 when a finding closes. If `RETRO-AUDIT` ever regains a real `###` finding, that
 sentence becomes the thing to correct.
+
+**Taken, 2026-09-22 (PR #1251), all three parts. Posture held: records, not
+rewrites — no finding text was altered and nothing moved back.** The third
+clause of that posture no longer applies, and that is the headline: it says
+<!-- claim-ok: quoting the premise this note corrects --> *"the `F32`
+reconstruction is labelled as one"*, and **there was no reconstruction to
+label.** Nate chose the repair over the labelled duplicate.
+
+**Parts one and two were both wrong about the KIND of damage, and both in the
+same direction — the work had been done and misplaced, not left undone.** That
+is worth more than either correction, because it is what the repairs turned out
+to have in common.
+
+- **Part one. The record was never lost.** <!-- claim-ok: quoting the premise
+  this note corrects --> *"a record is gone, not merely hard to find"* and
+  *"the outcome note had nowhere to be written"* are both false. `F32`'s entire
+  finding — body, table, `Proposal`, `Posture`, `Evidence`, `Confidence`,
+  `Ongoing cost` and its full dated outcome note — was in
+  `apps/character-creator/INGESTION-AUDIT.closed.md` the whole time, stranded
+  under `F31`'s heading. `e74505f6` was a bad in-place edit: it deleted the
+  heading line and welded the heading's tail onto `F31`'s closing sentence, so
+  one line read `Smoke 1698 → **1701.** under \`rifts\`, and one of the rows
+  says so in its own description`. Read with `git show e74505f6`, 2026-09-22.
+  **Implemented as written this would have appended a second copy of text
+  already present a few lines above**, and called a record a reconstruction.
+  Repaired instead by restoring the heading verbatim from `117c0d61` and
+  closing `F31`'s note — and by adding the live-file pointer the restored
+  heading then needs.
+- **Part one, also false:** <!-- claim-ok: quoting the premise this note
+  corrects --> *"the only surviving traces are two bare citations."* `F32` is
+  discussed by number at `INGESTION-AUDIT.closed.md:2817`, `:2926`, `:3049` and
+  `:3070` as well.
+- **Part two. The eighteen pointer lines had been written into the wrong
+  file.** <!-- claim-ok: quoting the premise this note corrects --> The proposal
+  calls the repair *"mechanical — the closed file has every heading."* The
+  closed file had more than the headings: the eighteen finished pointer lines,
+  in pointer shape, sat at its end. **Moved rather than composed**, because
+  composing from headings would discard the outcome-note excerpt each pointer
+  carries, which is the half that makes a pointer block worth reading.
+  Positions taken from `1decb9d2~1`, the pre-split file, rather than guessed.
+
+**The unrun total is now run, and this finding's headline was exactly right.**
+Its `Confidence` line says raising part two from a sample to a total *"is a
+one-line script and was not run"*. Run 2026-09-22 across every menu with a
+closed file: **`BOOK-INGEST-AUDIT` is the only affected menu and the count is
+exactly eighteen** — `F24`–`F36` and `F97`–`F101`. All seventeen other menus:
+zero missing. The five sampled findings were representative of the whole.
+
+**Part three held, with one correction.** `grep -c '^### '` on
+`apps/character-creator/RETRO-AUDIT.md` returns 41 and `grep -c '^### R[0-9]'`
+returns 0, both re-run 2026-09-22. But <!-- claim-ok: quoting the premise this
+note corrects --> *"forty like it"* overstates by two: `RETRO-AUDIT.md:146` and
+`:161` sit under `## Method, and what each detector was worth` and were never
+children of a finding. Thirty-nine are orphans. The header sentence is
+unaffected — if anything it is more right, since two of the headings it warns
+about never had a parent to lose.
+
+**Corrected outside this repo, in the same sweep.** The memory note
+`audit-menus.md` said every menu but two has a closed file; **five do not** —
+`DOCS-AUDIT`, `DOCS-AUDIT-2`, `apps/pick3cut5/AUDIT`,
+`apps/character-creator/AUDIT` and `SETUP-v2-CHANGES`. The same paragraph
+asserted the pointer-per-finding property that part two exists because
+`BOOK-INGEST-AUDIT` did not have. Both corrected.
+
+**What this does not close.** `apps/character-creator/AUDIT.md` was never split
+and records its outcomes as `**Fix**:` bullets under a *Fixed in this PR*
+section — a fourth outcome shape, and outside every part of this finding.
+Recorded rather than filed.
