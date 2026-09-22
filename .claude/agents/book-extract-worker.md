@@ -1,7 +1,7 @@
 ---
 name: book-extract-worker
 description: Extract candidate rows from one slice of a sourcebook's OCR cache and cite each to a printed page, so a large book can be pulled apart in parallel. Use during a book survey when the extraction is too big for one pass, and always before book-reconcile, which checks the output. Returns candidates and citations only - it does not map to catalog vocabulary, write data scripts, run SQL, or decide what gets imported.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Skill
 model: sonnet
 ---
 
@@ -52,6 +52,35 @@ around.
 
 **Cite the printed folio.** Name the cache page alongside it only when the two
 are worth showing together.
+
+## A digit set as a letter, and the map that finds it is keyed by CACHE page
+
+A third fault class, beside the manglings below. A Palladium text layer sets
+**1 as `!` or `l` and 0 as `O` or `Q`** inside dice and prices — `!D4xlO` for
+1D4x10, `lD6` for 1D6, `10Q` for 100. The characters are ordinary, so the
+detector that finds visibly broken glyphs cannot count this one. **Assume any
+Palladium text layer has it.**
+
+It is counted per page in the manifest, as `substituted_digits`, the key beside
+the `page_offset` you are already reading.
+
+**Its keys are CACHE pages. Convert before you use one.** `new-west`'s largest
+entry is cache 151, which is printed 150 — and its keys run past the last
+printed folio, which is how you can tell. Read them as folios and every warning
+lands one page off, which is the error the offset section above exists to
+prevent.
+
+**A page the map does not list is not a clean page.** `+104x10+10` was read off
+an unlisted page for +1D4x10+10 (`BOOK-INGEST-AUDIT.closed.md`, *Read from the
+ink, 2026-09-10*), and the cipher inserts a glyph as well as swapping one —
+`4O0ft` is printed 40ft.
+
+**Flag it; do not repair it and do not drop the row.** The key ships advisory —
+warn, do not block (PR #904). Return the token **as printed**, say which page it
+came from, and say that the page is listed. Where you need the remedy rather
+than the flag, load `book-survey` §0 — **only then**, because it is a long skill
+and you run once per slice. The remedies differ by book: a render fixes a text
+layer that disagrees with the ink, and does not fix ink that is wrong.
 
 ## What the OCR does to this corpus
 

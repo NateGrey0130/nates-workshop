@@ -1,7 +1,7 @@
 ---
 name: book-reconcile
 description: Check extracted sourcebook rows against the book's own text before they are written to the catalog. Use after an extraction or diff has produced proposed rows and corrections, and before generating a data script. Returns disagreements only - it does not write files, run SQL, or fix anything.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Skill
 model: sonnet
 ---
 
@@ -113,6 +113,35 @@ produces: `I.S.P.` reads as `LS.P.`, `1.S.P.` or `I:S.P.`; `S.D.C.` as
 
 Names ending in an abbreviation (`Restore P.P.E.`) end in a period, so a rule
 that rejects lines ending in `.` will silently drop them.
+
+## A digit set as a letter, and the map that finds it is keyed by CACHE page
+
+A third fault class, beside the manglings above. A Palladium text layer sets
+**1 as `!` or `l` and 0 as `O` or `Q`** inside dice and prices — `!D4xlO` for
+1D4x10, `lD6` for 1D6, `10Q` for 100. The characters are ordinary, so the
+detector that finds visibly broken glyphs cannot count this one. **Assume any
+Palladium text layer has it.**
+
+It is counted per page in the manifest, as `substituted_digits`, the key beside
+the `page_offset` you are already reading.
+
+**Its keys are CACHE pages. Convert before you use one.** `new-west`'s largest
+entry is cache 151, which is printed 150 — and its keys run past the last
+printed folio, which is how you can tell. Read them as folios and you will
+check the wrong page, which is the failure the offset section above describes.
+
+**A page the map does not list is not a clean page**, so a proposed row off an
+unlisted page is not verified by that. `+104x10+10` was read off an unlisted
+page for +1D4x10+10 (`BOOK-INGEST-AUDIT.closed.md`, *Read from the ink,
+2026-09-10*), and the cipher inserts a glyph as well as swapping one — `4O0ft`
+is printed 40ft, so a number that parses cleanly can still be wrong by a factor
+of ten.
+
+**This is where your two readings earn their keep.** A dice or price figure off
+a listed page is exactly the case for reading it twice from two places, and for
+saying which reading you took. Report the disagreement; do not correct the row.
+Where you need the remedy rather than the flag, load `book-survey` §0 — **only
+then**, because it is a long skill and you run once per batch.
 
 ## What to return
 

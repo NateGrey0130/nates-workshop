@@ -518,6 +518,59 @@ is watched to see whether it flags a listed page without being told to.
 **Ongoing cost:** two more paragraphs to keep true, in files that are edited
 whenever the cache learns something anyway. No CI minute and no new script.
 
+**Taken, 2026-09-22 (PR #1235). Posture held: additive, two agent files, bounded
+by `F43`'s subtractive precedent.** `Skill` granted to both, one section added to
+each, and the load of `book-survey` §0 made **conditional on a listed page**
+rather than per call.
+
+**Four things above are wrong or short, and `audit-premise-auditor` found all
+four before a line was written.** The first would have shipped the defect:
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"the largest ten
+  hits on printed 151"* — the keys of `substituted_digits` are **cache** pages.
+  `scripts/ocr-book.py:483` says so in the function's own docstring, and
+  `new-west`'s keys run to 224 against a `printed_pages` of 222, which is how a
+  reader can tell. Cache 151 is printed 150. Both agents are briefed to cite the
+  printed folio, so the section as filed would have put every warning one page
+  off — the error the offset section above it exists to prevent. The shipped
+  text says convert, and says how to tell.
+- <!-- claim-ok: quoting the premise this note corrects --> *"74 printed
+  pages"* — it is **75**, counted from `.cache/books/new-west/manifest.json` on
+  2026-09-22. Two files already said 75: `.claude/skills/book-survey/SKILL.md:150`
+  and `BOOK-INGEST-AUDIT.closed.md:6291`, the second under a heading whose whole
+  subject is an earlier undercount of that same number.
+- **`F27`'s decision was not named, and `audit-menu` requires that it be.** Its
+  note at `SKILL-AUDIT.closed.md:2365-2372` scopes the `Skill` grant to
+  `audit-premise-auditor` alone, on the argument that an agent firing once per
+  finding can pay for a long skill and one running per slice at volume cannot.
+  `book-survey` is 884 lines (`wc -l`, 2026-09-22) and `book-extract-worker` is
+  the highest-volume agent on this machine. Argued past rather than ignored: the
+  load is conditional, so the cost is paid on the slices that need a remedy and
+  on none of the others.
+- <!-- claim-ok: quoting the premise this note corrects --> *"Not measured:
+  whether an edit to an existing agent file takes effect inside the session that
+  makes it"* — there is a recorded answer, in the file this finding already
+  quotes. `SKILL-AUDIT.closed.md:2384-2393`: a tools change is a change to an
+  agent file, an agent file is not re-read until a turn boundary, and the swap
+  was verified the next turn in PR #683. **So this change cannot be exercised by
+  the session that wrote it**, which is why the verification below is the suites
+  rather than a live slice.
+
+**One thing the subject grep added to the work.** `BOOK-INGEST-AUDIT.closed.md`
+→ *Read from the ink, 2026-09-10* records `+104x10+10` read off a page
+`substituted_digits` does not list, and the memory note on the cipher records
+that it can insert a glyph as well as swap one — `4O0ft` is printed 40ft. Both
+agents are now told that an unlisted page is not a clean page, which the finding
+as filed did not say and its wording invited.
+
+**Opened while taking this: `F53`**, below — `book-survey` §0's closing
+paragraph attributes the other detector's numbers to this one, in the section
+this finding makes authoritative. Filed, not taken here.
+
+**Owed: the first live slice.** For the turn-boundary reason above, nothing here
+has been run through a worker. `new-west` carries the largest
+`substituted_digits` on disk and is the book to run it on.
+
 ### F46 — `book-extract-worker`'s contract assumes a slice holds stat blocks, and a slice of prose falls outside it
 
 **Filed with its outcome. Declined 2026-09-22 on Nate's word**, recorded so it
@@ -780,6 +833,55 @@ date. Low on what a re-run would find, which is the reason to run it.
 
 **Ongoing cost:** a script that reads machine-local files and is run by hand.
 Nothing in CI, and nothing that can go red.
+
+### F53 — `book-survey` §0 gives the visible-glyph detector's numbers to the digit detector, in the passage explaining that the two need opposite remedies
+
+**Opened 2026-09-22 while taking `F45`**, by `audit-premise-auditor`, in the
+section `F45` makes authoritative for both book agents.
+
+`.claude/skills/book-survey/SKILL.md:167-170` closes the `substituted_digits`
+subsection this way, read 2026-09-22: `bom` printed 84 is 30 hits, a wholly
+scrambled page *"which this detector rediscovers on its own"*, and `bom` printed
+116 and 310 turn a `1` into a backslash inside spell durations and damage dice.
+
+**Those are the other detector's numbers.** Read from
+`.cache/books/bom/manifest.json` with node on 2026-09-22, at `page_offset` 1:
+
+| printed | cache | `corrupt_pages` | `substituted_digits` |
+|---|---|---|---|
+| 84 | 85 | **30** | no key |
+| 116 | 117 | **3** | no key |
+| 310 | 311 | **4** | 2 |
+
+`bom`'s largest single `substituted_digits` entry anywhere in the book is **9**,
+at cache 80. A `1` set as a backslash is the visible kind by definition — a
+character a clean text layer never makes, which is precisely what
+`corrupt_pages` looks for — and the passage cites `BOOK-INGEST-AUDIT.md` `F36`,
+which is the visible-glyph finding, four lines after the subsection's own
+citation of `F53` there.
+
+The cost is not the arithmetic. `:139-141` of that file says the two faults are
+a separate key **on purpose**, because they need opposite remedies and folding
+them together would tell a reader to render a page a render cannot fix. The
+closing paragraph then hands one detector's evidence to the other, in the
+subsection a worker is now sent to for the remedy.
+
+**Proposal:** move the three-book paragraph into the `corrupt_pages` material it
+describes, or delete it; and where it names pages, say whether they are printed
+or cache — it states folios while the maps beside it are keyed by cache page,
+which is `F45`'s first correction one level up. **Posture: documentation only,
+one skill file, one paragraph. Which of move-or-delete is the decision**, and
+`F43`'s precedent in these files is that deleting beats relocating when the
+sentence changes no outcome.
+
+**Evidence:** the node read of the `bom` manifest and the read of `:167-170`,
+both 2026-09-22.
+
+**Confidence:** high that the numbers belong to `corrupt_pages` — the other map
+has no key for two of the three pages and nothing near 30 anywhere. Medium on
+the repair, which is Nate's to pick.
+
+**Ongoing cost:** none beyond the edit. One paragraph either moves or goes.
 
 ## A closing observation, about this audit rather than its findings
 
