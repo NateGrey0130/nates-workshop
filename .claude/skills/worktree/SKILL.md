@@ -156,12 +156,12 @@ merge*, and *never delete* survived only because one brief happened to say it.
 
 **Give every path the worker needs, and expect the instruction not to hold.** A
 worker hunting for a file it was not handed searches from the drive root, and
-the process outlives the agent that started it: **21 such calls** across
+the process outlives the agent that started it: **18 such calls** across
 2026-09-16, 09-18 and 09-19, every one from a spawned worker. One brief said
 *"NEVER search from / or C:\\"* and gave the full path; two workers searched from
 the root anyway, for fifty minutes. **So the paths are the control and the
-sentence is a reminder** — `SKILL-AUDIT` `F54` proposes the control that cannot
-be ignored.
+sentence is a reminder** — and since `SKILL-AUDIT` `F54` the hook refuses the
+shape outright, which is the control that does not depend on being read.
 
 **Sweep after every batch, because that is what actually caught it.**
 `Stop-Process` reports success on a stray search and leaves it running;

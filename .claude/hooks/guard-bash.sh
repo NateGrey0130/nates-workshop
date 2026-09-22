@@ -221,4 +221,25 @@ if has '(^|[^[:alnum:]_./-])git[[:space:]]+commit([[:space:]]+[^[:space:]]+)*[[:
   refuse "a backtick in git commit -m is evaluated by the shell; write the message to commit-msg.tmp and use -F"
 fi
 
+# --- 6. find rooted at a filesystem or drive root ----------------------------
+# Eighteen of these were run on 2026-09-16/18/19, every one by a spawned worker
+# hunting for a file it had not been given the path to. On Windows Git Bash the
+# search never finishes: `find.exe` outlived its agent by four hours, and
+# Stop-Process reported success while leaving it alive. A nineteenth ran from a
+# main session because backticks inside a `node -e "..."` string were
+# substituted by the shell - which is why a backtick counts as a command
+# position below.
+#
+# `find` at a COMMAND position only, so that prose naming the shape does not
+# trip it: this rule's own documentation, and the memory note it came from, are
+# full of the phrase. That is a narrower guard than the other five and it is
+# deliberate - SKILL-AUDIT F57 records that the rules read prose, and a rule
+# whose trigger words are its own subject is the worst case of it.
+#
+# Every one of the eighteen used the bare unquoted `/`. The drive spellings are
+# defence in depth, not the thing that makes it fire.
+if has '(^|[;&|(`]|&&|\|\|)[[:space:]]*find[[:space:]]+(-[a-zA-Z-]+[[:space:]]+)*(/|[A-Za-z]:[\\/]?|/[a-z]/)([[:space:]]|$)'; then
+  refuse "a search rooted at the drive never finishes here and outlives the agent; name the directory - the path you were given, or the repo"
+fi
+
 exit 0
