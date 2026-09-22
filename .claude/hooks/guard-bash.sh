@@ -49,6 +49,48 @@ refuse() {
 # of SKILL-AUDIT F55, not necessarily even the directory the session started in.
 # The cwd comes back first because the command may itself contain newlines.
 envelope=$(node -e '
+// stripData: drop the BODY of a data heredoc before the rules read the text.
+// SKILL-AUDIT F57 - the first command this hook ever blocked in real work was
+// a commit message whose prose quoted an in-place edit. The rules match the
+// whole command, which is right for a command and wrong for a message.
+//
+// A body fed to an INTERPRETER is kept, because it executes: `python - <<PY`
+// and `sh <<EOF` are the commonest heredoc shapes in this corpus and there is
+// no later `sh script.sh` for the hook to catch instead.
+//
+// It fails CLOSED in every direction it cannot read: an opener with no
+// terminator returns the text untouched, a `<<<` here-string is not an opener,
+// and anything thrown here returns the text untouched rather than blinding the
+// rules. No single quotes anywhere below - this whole program is inside a
+// single-quoted shell string.
+const EXECUTES = /\b(?:sh|bash|zsh|ksh|dash|python[0-9.]*|node|deno|perl|ruby|php)\b[^<]*<</;
+const OPENER = /<<(?:-?)[ \t]*(?:([\x22\x27])([A-Za-z_][A-Za-z0-9_]*)\1|\\([A-Za-z_][A-Za-z0-9_]*)|([A-Za-z_][A-Za-z0-9_]*))/g;
+function stripData(src) {
+  try {
+    const out = [];
+    let term = null, keep = false;
+    for (const line of src.split("\n")) {
+      if (term === null) {
+        out.push(line);
+        OPENER.lastIndex = 0;
+        let m, first = null;
+        while ((m = OPENER.exec(line)) !== null) {
+          if (m.index > 0 && line[m.index - 1] === "<") continue;  // <<< here-string
+          first = m[2] || m[3] || m[4];
+          break;                                                   // shell reads bodies in order
+        }
+        if (first) { term = first; keep = EXECUTES.test(line); }
+      } else if (line.trim() === term) {
+        term = null; out.push(line);
+      } else if (keep) {
+        out.push(line);
+      }
+    }
+    if (term !== null) return src;   // no terminator: keep everything
+    return out.join("\n");
+  } catch (e) { return src; }
+}
+
 let s = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", d => { s += d; });
@@ -58,7 +100,7 @@ process.stdin.on("end", () => {
   const ti = j && j.tool_input;
   const c = ti && typeof ti.command === "string" ? ti.command : "";
   const w = j && typeof j.cwd === "string" ? j.cwd : "";
-  process.stdout.write(w + "\n---guard-bash-envelope---\n" + c);
+  process.stdout.write(w + "\n---guard-bash-envelope---\n" + stripData(c));
 });
 ' 2>/dev/null)
 rc=$?
