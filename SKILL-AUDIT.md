@@ -1341,6 +1341,25 @@ above it. And **both registrations are live**, the repo's and the user-level
 one, so a repo-rooted session runs the hook twice. Same verdict either way, but
 a double refusal is not a bug when it appears.
 
+> **Adjusted 2026-09-22 (PR #1263) — both items are closed, and a third sentence
+> in the paragraph above is false.** Appended rather than rewritten, per
+> `audit-menu` → *Audit files are RECORDS*; the paragraph stands as the evidence
+> `META-AUDIT` `A22` measured, and this is `SKILL-AUDIT` `F63`.
+>
+> - **The `windows-shell` sentence was deleted** by PR #1250 while taking `F56`,
+>   which widened beyond the refusal-prefix half on Nate's word.
+>   `grep -c 'project-scoped' .claude/skills/windows-shell/SKILL.md` returns
+>   **0**, checked 2026-09-22. So *"still says"* above has been false since
+>   #1250 merged.
+> - **The double registration was filed as `F60` and DECLINED** in PR #1255:
+>   both registrations are kept, deliberately.
+> - **And *"Same verdict either way"* is wrong**, which `F63` did not name.
+>   `F60`'s note measured the opposite — `repo_posix` derives from `$0`'s
+>   grandparent at `guard-bash.sh:124-126`, so **each copy of the script guards
+>   only the tree it lives in**, and in a git worktree the two registrations
+>   give *different* verdicts on the same `sed -i`. That is the reason `F60`
+>   was declined rather than a detail beside it.
+
 ### F55 — the `guard-bash` hook has never refused a command, because it is registered where sessions do not start
 
 **Opened 2026-09-22 on Nate's word**, while establishing the one thing `F54`
@@ -2332,3 +2351,40 @@ on the list whose work is already done.
 **Confidence:** high on both halves.
 
 **Ongoing cost:** none. It is one dated line on a closed finding.
+
+**Taken, 2026-09-22 (PR #1263). Posture held: additive only** — the deferral
+paragraph at `:1336-1342` is untouched and an `Adjusted` block sits beneath it.
+**Appended after `:1342` rather than inside the paragraph**, because `F60`
+(`:2065`) and `META-AUDIT` `A22` both cite that exact range and an insertion
+would have broken three live citations.
+
+**All seven premises held.** The two corrections are scope, not error:
+
+- **A THIRD sentence in the same paragraph is false, and this finding did not
+  name it.** <!-- claim-ok: quoting F54's note, cited at :1341-1342 above -->
+  *"Same verdict either way"*. `F60`'s note measured the opposite — each copy of
+  `guard-bash.sh` guards only the tree it lives in, so in a git worktree the two
+  registrations disagree on the same in-place edit. **That is the reason `F60`
+  was declined**, which makes it the load-bearing sentence of the three rather
+  than a detail beside them. Covered by the same appended block, on Nate's word.
+- **Taking this falsified `META-AUDIT` `A22`'s note, and no sweep would have
+  found it.** `A22` listed this paragraph as *"the one to fix first"* and called
+  it *"the one still readable as filed"*. Both sentences **carry no finding
+  number**, so a tree-wide grep for `F63` reaches neither — `A17`'s shape
+  exactly. **This PR would have created that trap while closing another instance
+  of it**, so `A22`'s note is corrected here with a dated line of its own.
+
+**A live instance of `F59` landed while shipping this.** The first attempt to
+open the PR was **refused by the hook**: rule 2 fired on the words for an
+in-place edit inside the PR body. That is `F59` — trigger text in a quoted
+argument — measured and declined earlier today on the grounds that anchoring
+rules 1 and 4 would un-refuse ~109 real commands. The workaround is the
+documented one, writing the body to a file. **Recorded because it is the first
+time that cost has landed in ordinary work** rather than in a session whose
+subject was the hook, which is the sample `F59` says its own frequency estimate
+was drawn from.
+
+**`F63` is a two-menu collision** — `BOOK-INGEST-AUDIT` `F63` is cited in seven
+files, and `scripts/audit-citations.mjs --remote F63` silently resolves the bare
+number to it and returns four live classes, none of them related. Sweep for
+`SKILL-AUDIT F63`.
