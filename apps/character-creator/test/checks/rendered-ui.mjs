@@ -2342,9 +2342,25 @@ export function run() {
       check(`${dir} loads the name panel before the panel that draws its buttons`,
         a > 0 && a < html.indexOf('js/npc-sheets.js'));
     }
-    check('the panel asks the campaign\'s name list and nothing else for names',
-      (panel.match(/\bapi\(`/g) || []).length === 2 && panel.includes('`campaigns/${S.host.campaignId}/names?${qs}`')
+    check('the panel asks a name list and nothing else for names - the campaign\'s, or with no campaign the campaign-free one',
+      (panel.match(/await api\(/g) || []).length === 2
+        && panel.includes('api(S.host.campaignId ? `campaigns/${S.host.campaignId}/names?${qs}` : `names?${qs}`)')
         && panel.includes('`names/themes?system='));
+    // The character wizard (Phase 4c): the same panel, at no table.
+    const wizard = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const wizHtml = readFileSync(join(appDir, 'index.html'), 'utf8');
+    const review = wizard.slice(wizard.indexOf('function renderReview()'), wizard.indexOf('<h3>${esc(S.cls.name)}'));
+    check('the wizard\'s name box has the 🎲 and the panel under it, at no campaign',
+      /namePanel\.init\(\{ campaignId: null, system: S\.system \}\);/.test(review)
+        && /namePanel\.button\('char-name', \{ classes: nameClasses \}\)/.test(review)
+        && /namePanel\.slot\('char-name'\)/.test(review));
+    check('and loads the panel before the page that draws its button',
+      wizHtml.indexOf('js/name-panel.js') > 0 && wizHtml.indexOf('js/name-panel.js') < wizHtml.indexOf('app.js'));
+    check('a new game reloads the themes and resets every box',
+      /if \(was !== undefined && was !== host\.system\) \{\s*S\.meta = null;/.test(panel));
+    const free = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'names.js'), 'utf8');
+    check('the campaign-free list reads no campaign: only the chips on screen are left out',
+      !/usedNames|env\.DB|requireCampaign/.test(free) && /generateNames\(\{ \.\.\.q, exclude: q\.avoid \}\)/.test(free));
     check('and never adds a chip the server did not send - a short list stays short',
       !/chips\.push\(|chips\.unshift\(|chips\.splice\(/.test(panel)
         && /b\.chips = \[\.\.\.keep, \.\.\.res\.names\];/.test(panel));

@@ -458,6 +458,13 @@ Nothing is saved - a reload forgets the pins. The roller's **a different name
 for each** checkbox (off by default) sends that theme as `name_theme`, so every
 NPC in the batch gets its own name, or the batch is refused whole.
 
+**The character wizard has the same 🎲** beside its name box on the review
+step. A new character belongs to no table yet, so it asks the campaign-free
+`GET names` - the same parameters, and anyone signed in may ask, since it
+reads nothing but the word lists. No campaign's names are left out, only the
+chips on screen. The theme starts from the chosen race and occupation, and a
+change of game reloads the themes.
+
 
 ---
 
