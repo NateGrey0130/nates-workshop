@@ -2729,3 +2729,40 @@ saw.**
   used the new one.**
 - The other three fixes are wording: the sweep's history, dropping skills from
   the cause's footprint, and the memory hits.
+
+### F66 — low — `F64`'s blinding rule covers the prompt, and the answer leaked through the tree and the skill
+
+**Opened 2026-09-23.** Named in `F65`'s outcome note above as a gap in `F64`'s
+section, left for Nate to number, and named by him the same day. It is filed
+and taken in one PR on the same grounds `F64` records: the decision came
+before the number.
+
+`test-suite` → *A skill is a check too*, step 2, said *"Keep the prompt blind"*
+and nothing more. In `F65`'s second GREEN round, the one run that hit reported
+that it had read the working tree first. That meant the uncommitted `F65`
+finding, and the `test-suite` diff, whose closing paragraph described the RED
+runs and whose example quoted the failing row. The prompt itself was blind.
+The run's hit was discarded, and both leaks were removed before the third
+round.
+
+**Proposal:** extend step 2 to cover the working tree and the skill under test
+as well as the prompt. Drafts that describe the test stay in the scratchpad
+until the runs are done. A skill must not name its scenario or record its own
+results, since evidence belongs in the finding. A run that read either one is
+discarded and re-run.
+
+**Posture: documentation only.** One paragraph in one skill section, with no
+check.
+
+**Evidence:** `F65`'s outcome note, and that run's own report, 2026-09-23.
+
+**Not pressure-tested, and on purpose.** This changes how the method is run,
+not how a session behaves on a task, so there is no task scenario to put a
+subagent through. Its test is the next `F64` run that keeps a finding in the
+scratchpad and gets a clean result.
+
+**Confidence:** high that the leak is real, since the run named what it read.
+Medium that the wording prevents the next one.
+
+**Ongoing cost:** one paragraph, and drafting findings outside the tree while
+runs are live.
