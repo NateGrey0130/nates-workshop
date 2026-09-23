@@ -648,8 +648,8 @@ stale.
 **Taken, 2026-09-22 (PR #1276). As written: no figure.** All three sentences now
 say that a wrangler spawn's start-up is paid once per batch instead of once per
 query, and none gives a number. `q.mjs`'s comment also says the number was left
-out on purpose, and cites this finding. That makes four changed lines in three
-files. **Posture, said back: documentation only.** No behaviour, check or exit
+out on purpose, and cites this finding. Three files change, all of them prose.
+**Posture, said back: documentation only.** No behaviour, check or exit
 code changed, and `environment.mjs`'s figures stay with `M25`.
 
 **Two premises are weaker than this finding states. Both make the case for
