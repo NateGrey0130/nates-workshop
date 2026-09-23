@@ -36,8 +36,68 @@ window.campaignList = {
   // optional - the home view passes the wizard's, the other pages have none.
   html(list, shortDate) {
     if (!list.length) {
-      return '<p class="muted small">No campaigns yet. Creating a character puts you in one.</p>';
+      return '<p class="muted small">No campaigns yet. Create one below to run it, or create a character to join one.</p>'
+        + this.createHtml();
     }
+    return this.rowsHtml(list, shortDate) + this.createHtml();
+  },
+
+  // "Create a campaign", with no character. Until this the only way to make one
+  // was the wizard's "New campaign name" box, so every campaign was born with a
+  // character in it and a G.M. who only wanted to run a table had to roll one
+  // first. The G.M. is campaigns.gm_email, not a characters row, so nothing
+  // below needs a character: pick() keeps a campaign the caller runs, and
+  // campaignAccess() counts the G.M. as a member.
+  //
+  // A <details> rather than a modal: it opens in place, needs no state, and
+  // works the same on both pages that show this list.
+  createHtml() {
+    const systems = [['palladium-fantasy', 'Palladium Fantasy'], ['rifts', 'Rifts'],
+      ['nightbane', 'Nightbane'], ['heroes-unlimited', 'Heroes Unlimited']];
+    return `<details class="camp-create" style="margin-top:12px">
+      <summary class="btn btn-sm btn-primary">+ Create a campaign</summary>
+      <form class="panel-inset" style="margin-top:10px" onsubmit="return campaignList.create(this)">
+        <div class="rowline" style="flex-wrap:wrap">
+          <label class="small">Name <input type="text" name="name" class="picker-input" required maxlength="120"></label>
+          <label class="small">Game <select name="system">${systems.map(([v, l]) =>
+            `<option value="${v}">${l}</option>`).join('')}</select></label>
+        </div>
+        <label class="small" style="display:block;margin-top:8px">Description <span class="muted">(optional)</span>
+          <textarea name="description" rows="2" style="width:100%"></textarea></label>
+        <label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="open" checked>
+          Open to anyone — anyone on the site may join by creating a character in it</label>
+        <div class="rowline" style="margin-top:8px">
+          <button type="submit" class="btn btn-sm btn-primary">Create</button>
+          <span class="small camp-create-msg"></span>
+        </div>
+      </form>
+    </details>`;
+  },
+
+  // Creates it and goes straight to its page - the G.M.'s next move is there.
+  // Returns false so the form never submits the ordinary way.
+  create(form) {
+    const msg = form.querySelector('.camp-create-msg');
+    const btn = form.querySelector('button[type=submit]');
+    const body = {
+      name: form.elements.name.value.trim(),
+      system: form.elements.system.value,
+      description: form.elements.description.value.trim(),
+      open: form.elements.open.checked,
+    };
+    if (!body.name) { msg.className = 'small err camp-create-msg'; msg.textContent = 'A name is required.'; return false; }
+    btn.disabled = true;
+    msg.className = 'small muted camp-create-msg'; msg.textContent = 'Creating…';
+    api('campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then((res) => { location.href = `/apps/campaign/?campaign_id=${res.campaign.id}`; })
+      .catch((err) => {
+        btn.disabled = false;
+        msg.className = 'small err camp-create-msg'; msg.textContent = 'Could not create it: ' + err.message;
+      });
+    return false;
+  },
+
+  rowsHtml(list, shortDate) {
     return `<ul class="home-list">${list.map((c) => {
       const role = c.is_gm ? 'you are the GM'
         : `${c.mine} of your character${c.mine === 1 ? '' : 's'}`;

@@ -600,7 +600,7 @@ writes are gated (see [Permissions](#permissions)).
 | `catalogs/duplicates` | GET / POST | Admin. Suggested duplicate pairs for a catalog; POST merges two rows. `?counts_only=1` returns just the per-tier counts, for the badge |
 | `catalogs/redirects` | GET / DELETE | Admin. Retired keys and where they resolve (`?catalog=`); DELETE stops forwarding one (`&id=`). No POST — redirects are written by merges and renames |
 | `items` | GET | Gear catalog (table is `gear`), plus retired slugs as `redirects`. `?system=` — a NULL system is unrestricted, matching how `skills.systems` reads |
-| `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`), each row carrying `can_join` for THIS caller; create (caller becomes GM) |
+| `campaigns` | GET / POST | List (`?system=`, `?limit=`, `?offset=`), each row carrying `can_join` for THIS caller; create (caller becomes GM; `description` and `open` optional, and no character needed) |
 | `campaigns/[id]` | GET / PATCH | Details (`gm_notes` stripped for non-GM, and `is_member`); edit `gm_notes` and the `open` join gate, **GM only** |
 | `campaigns/[id]/search` | GET | FTS5 search over the campaign's notes (`?q=`, `?author=`, `?since=`). Free and instant — this is what runs as you type |
 | `campaigns/[id]/ask` | POST | `{question}` → a written answer over the notes, stash and ledger, citing the entries it used. One model call per press; see [Search is free, asking costs a call](docs/campaign-and-play.md#search-is-free-asking-costs-a-call) |
