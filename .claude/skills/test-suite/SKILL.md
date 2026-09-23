@@ -1,6 +1,6 @@
 ---
 name: test-suite
-description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test". Covers the five suites and which three gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
+description: Add or change a check in this repo's test suites without writing one that cannot fail. Use when adding a test, pinning a count or a claim, reading a failure, deciding which suite a check belongs in, or splitting a checks module — "add a check for this", "pin that number", "why did smoke fail", "write a test" — and when writing or changing a skill, which is pressure-tested before it ships. Covers the five suites and which three gate a merge, why a section list is declared twice, why regression truncates instead of filtering, and the ports that let another worktree answer for yours.
 ---
 
 # Adding a check
@@ -171,6 +171,54 @@ tiers` section by evaluating `js/derive.js` against a stand-in global, and used
 in 95 places as far down as the last few hundred lines. Do not let that section
 travel with a split, and check for the same shape before any cut: it is what
 broke the `second-body` cut on its first run.
+
+## A skill is a check too, so pressure-test it before it ships
+
+A skill in `.claude/skills/` is a check on behaviour, and until 2026-09-23 none
+had been seen to fail. Each was written after an incident and tested by the
+next one. `take` is what that costs: it exists because `audit-menu` already
+required the subject grep and the premise audit, and sessions skipped both
+anyway (`.claude/skills/take/SKILL.md:21-30`). A skill that reads as correct
+and changes nothing is a green tick that retired a real rule, which is the
+same failure this file opens with.
+
+**So a new or changed skill is run against a scenario before it merges.** The
+method comes from obra/superpowers' `writing-skills`, reviewed 2026-09-22 and
+adopted without the plugin (`SKILL-AUDIT` `F64`):
+
+1. **Write the scenario with the pressure that caused the incident.** Use a
+   real failing line, a request to "just fix it tonight", or a branch that's
+   already open. A calm scenario tests reading comprehension, not behaviour.
+2. **RED: run it BEFORE editing the skill.** Use two fresh subagents with the
+   same prompt. Make it planning only: they may read anything and run nothing
+   that writes, and they reply with their steps and the first change they would
+   make. **Do this before the edit, because the junction serves the working
+   tree:** once a skill file in this tree is edited, that edit is what every
+   subagent loads, including ones spawned in the same turn.
+3. **GREEN: edit, WAIT, then run the identical prompt again**, two more runs.
+   The edit reaches subagents after a delay, not on save. Measured 2026-09-23:
+   a probe spawned two tool calls after an edit loaded the old headings. The
+   session then showed a skill-listing refresh carrying the new description,
+   and the next probe loaded the new headings. **Wait for that refresh**, or
+   have one probe list the skill's `## ` headings, before believing a GREEN
+   run saw the new text.
+4. **Read the difference, and trust a failure more than a pass.**
+   - If RED already does what the skill asks, the skill adds nothing on that
+     scenario. **Say so, then ship it smaller or not at all.**
+   - If GREEN still misses, either the wording is wrong or the skill never
+     loaded. The description is what makes it load.
+   - A pass in a clean scenario is weak evidence. A miss is strong evidence.
+5. **Put the prompt and what each run did in the PR body.** The next person to
+   change the skill can then re-run the same scenario, not invent a new one.
+
+**An agent file is different.** One written mid-session answers
+`Agent type '<name>' not found` until the next turn (`CLAUDE.md`,
+`SKILL-AUDIT` `F26`), so an agent's GREEN half waits for the next turn. A
+skill's waits only for the refresh in step 3.
+
+**Cost: four subagent runs per skill change.** Skip it for a typo, a moved
+path, or a dated fact. Run it whenever the change is meant to make a session
+**do** something differently.
 
 ## What "checked" means
 

@@ -14,7 +14,9 @@
 > finding was filed, on 2026-09-04 (commit `8309b76`), so nothing is left
 > there. **WORK WAS OPENED ON THIS MENU ON 2026-09-22**, by the subagent
 > retrospective, under the `##` section of that name; read under a finding's own
-> heading for its state. `F41`, `F42` and `F43` were all taken
+> heading for its state. **More was filed on 2026-09-23**, after a review of
+> obra/superpowers, under `## Filed from the superpowers retrospective,
+> 2026-09-23` at the foot of the file; read under each heading. `F41`, `F42` and `F43` were all taken
 > 2026-09-04 (PRs #704, #705, #707); `F43` was filed and taken the same day, in
 > separate PRs. Three notes carry things a citer needs: `F41`'s posture was
 > **widened on Nate's word** from one agent file to four, `F42` corrected a
@@ -2532,3 +2534,52 @@ was drawn from.
 files, and `scripts/audit-citations.mjs --remote F63` silently resolves the bare
 number to it and returns four live classes, none of them related. Sweep for
 `SKILL-AUDIT F63`.
+
+## Filed from the superpowers retrospective, 2026-09-23
+
+On 2026-09-22 Nate asked, in session, whether the obra/superpowers skill library
+would help this repo's process. The retrospective recommended **not installing
+it**. Its brainstorm, plan, worktree and finish-branch workflow restates this
+repo's process in general terms. It also conflicts with `worktree` and
+`ship-pr` exactly where those are specific. The retrospective named two ideas
+worth borrowing by hand. Nate said to take both on 2026-09-23. They are
+numbered here, one PR each.
+
+### F64 — medium — no skill here has ever been seen to fail, so a skill that changes nothing looks exactly like one that works
+
+**Opened 2026-09-23.** Every skill in `.claude/skills/` was written after an
+incident and first tested by the next one. `take` is the standing instance.
+It adds no rule, and says so at `.claude/skills/take/SKILL.md:21-30`. It
+exists because `audit-menu` already required the subject grep and the premise
+audit and sessions skipped both. The skill that carried the rule was never run
+against a scenario, so nothing showed that it did not change behaviour until it
+had failed on real findings.
+
+`test-suite` opens with *make it fail before you believe it* for checks.
+Nothing applied that to skills. Subject grep, 2026-09-23, across every
+`*AUDIT*.md` and the memory directory for `pressure.?test`, `with and without
+the skill` and `superpowers`: **no hits**.
+
+**Proposal:** adopt the RED/GREEN method from superpowers' `writing-skills`
+without the plugin. Before a skill change merges, run a realistic,
+pressured scenario through two fresh subagents before the edit and two after
+it, planning only, and record both in the PR body. Say plainly when RED already
+behaves: that means the change adds nothing on that scenario. Put the method in
+`test-suite`, whose subject is checks that cannot fail, and add its trigger to
+the description. Put one paragraph in `CLAUDE.md` beside the rule that a new
+skill needs its link.
+
+**Posture: documentation only. No new check, no gate, no change to any
+existing skill's content, and no plugin.** The method is a step a session
+chooses to run. Nothing enforces it.
+
+**Evidence:** the `take` lines above, read 2026-09-23. The subject grep above,
+2026-09-23. **Not measured:** how often a skill has shipped without changing
+behaviour. `take` is the one instance with a record.
+
+**Confidence:** medium that it catches a no-op skill before it merges. It would
+rise to high after the first run in which RED already behaves and the change
+is cut because of it.
+
+**Ongoing cost:** four subagent runs per behavioural skill change, and one
+section in `test-suite` that has to stay true.
