@@ -2689,7 +2689,7 @@ It would rise with a second scenario whose cause is written down nowhere.
 **Ongoing cost:** one section in `test-suite`, plus one more sentence a session
 writes before a fix.
 
-**Taken, 2026-09-23 (PR #PRNUM).** Posture as proposed. **It took three
+**Taken, 2026-09-23 (PR #1283).** Posture as proposed. **It took three
 GREEN rounds, and the record is the point:**
 
 | round | wording | looked past `spells` |
