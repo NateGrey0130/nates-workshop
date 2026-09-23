@@ -943,6 +943,78 @@ works, and nobody has recorded a complaint about the nav scrolling away. `F3`
 deferred it on scope, not on desire — there is no evidence in this menu that
 anyone wants it.
 
+**MOOT, 2026-09-22 (PR #PRNUM). No CSS is changed.** The wizard nav is already
+sticky and has been for three weeks. This finding names this outcome itself:
+*"**A taker's first command is to check that**, because if it has since changed
+this finding is moot."* The first command checked it, and it had.
+
+**`apps/character-creator/styles.css:698-706` reads `position: sticky; bottom:
+0; z-index: 15`**, under a comment that states this finding's own rationale:
+*"The wizard's primary action sticks to the bottom of the viewport rather than
+to the bottom of a long step, so Next is reachable without scrolling past a
+skill list to find it."*
+
+**THE DEFERRAL STOOD FOR ONE DAY, NOT 22, and it is not the oldest in the
+corpus.** `git log -S` on that comment gives commit `cabcdc37`, **2026-09-01
+17:28:43**, merged as **PR #494**, *"Rust & Ash, phase 5 - the wizard rail"*.
+`F3`'s note deferring it shipped in PR #442 on 2026-08-31. The redesign did the
+work the next day, and nothing wrote back to `F3`'s note. **This is the fourth
+instance of that shape recorded on 2026-09-22** — `BOOK-INGEST-AUDIT` `F104`'s
+deferral was discharged 83 minutes later by `F45`, `SKILL-AUDIT` `F62`'s 41
+minutes later by `F39`, and `SKILL-AUDIT` `F61` re-derived `F46` the same
+afternoon. All four were filed from `META-AUDIT` `A22`'s dropped-deferral list
+in one pass, and all four were answered before anyone filed them.
+
+**Verified in the browser rather than from the stylesheet, because this finding
+requires it.** `npx wrangler pages dev` on 8788, the wizard resumed from an
+existing draft, viewport emulated at 1280x400 so the step scrolls at all:
+
+| `scrollTop` | nav bottom | pinned to viewport bottom |
+|---|---|---|
+| 0 | 400 | yes |
+| 400 | 400 | yes |
+| 900 | 400 | yes |
+| 1400 | 400 | yes |
+| 1888 (max) | 340 | no — and that is correct |
+
+The last row is sticky working, not failing: the nav is its container's last
+child, so at the end of the scroll it settles into flow. Page scroll height
+2288 against a 400 viewport. **`body` computes to `overflow: hidden auto`**,
+which is the usual way `position: sticky` is defeated, and it does NOT defeat it
+here — worth recording, because reading that rule out of the stylesheet would
+predict the opposite.
+
+**TWO TRAPS HIT WHILE MEASURING THIS, both of which produced a confident wrong
+answer first.**
+
+- **The hidden Browser pane reports `innerHeight: 0`**, so every viewport
+  comparison is an artifact — the first run returned `pinnedToViewportBottom:
+  true` by comparing `0` to `0`, which is the right answer for the wrong reason
+  and would have been reported as proof. `resize_window` to an explicit size
+  fixes it. This is a **fifth** way the pane lies, beside the three in
+  `verify-ui` and the blank-frames-on-scroll one at
+  `apps/character-creator/UI-AUDIT.closed.md:248-252`. Requesting an animation
+  frame in a hidden pane never resolves, so a measurement cannot wait for one.
+- **`.nav` matches two different elements.** The landing page's draft-resume
+  panel has one inside `.panel.home-draft`, and `document.querySelector('.nav')`
+  finds THAT one before the wizard exists. It is not pinned, correctly — its
+  parent is 196px tall and sticky has no room to move it. Measuring it produced
+  *"declared sticky, does not stick"*, which is true of that element and says
+  nothing about the one this finding is about. **Resume the draft first, then
+  query.**
+
+**Evidence:** the stylesheet read at `:688-706` and the `git log -S` above,
+2026-09-22; the five-row scroll table measured in the running app the same day;
+`apps/character-creator/UI-AUDIT.closed.md:160-162` and `:167`, this finding's
+own sources, re-read to confirm the deferral is quoted correctly — it is.
+
+**Confidence: high.** The behaviour was measured in the app at five scroll
+positions rather than inferred from a declaration, which is what this finding
+demanded and is the reason the first two readings were caught as wrong.
+
+**Ongoing cost: none.** Nothing was changed, and the thing proposed already
+exists.
+
 ### F61 — low — *Browse all* got a filter and the guided shortlist did not, and whether it should is a question about guided mode
 
 **Opened 2026-09-22.** Named at
