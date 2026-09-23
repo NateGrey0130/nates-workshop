@@ -1,8 +1,9 @@
 // City Creator - the page. The engine is js/city-engine.js, a pure module;
 // this file holds the settings, the city on screen and its locks, and draws
-// them. Phase 1: text output, lock and reroll, JSON export. No map and no
-// saving yet (Phases 2 and 3), so the city lives in this page - and in this
-// browser's storage as a convenience, so a reload does not lose it.
+// them: text output, lock and reroll, JSON export (Phase 1), the map (Phase
+// 2), and keeping a city in one of the G.M.'s campaigns with what the players
+// may see of it (Phase 3). This browser's storage holds the city on screen as
+// a convenience, so a reload does not lose it; the record is the saved row.
 //
 // A module, so it can import the engine; the inline handlers reach it through
 // window.City. escHtml()/escJs() come from /shared/js/ui.js, api() from
@@ -30,11 +31,15 @@ const S = {
   rccs: null,        // the setting's published R.C.C.s, for the race rows
   city: null,
   busy: false, msg: '', err: false,
+  // Keeping a city in a campaign (Phase 3, migration 080). `saved` is the row
+  // this city is, once it has been saved; `dirty` is a change since.
+  saved: null, dirty: false, camps: null, openCamp: '', savedList: null,
+  keepMsg: '', keepErr: false,
 };
 
 // ── storage: a convenience, never the record ──
 function save() {
-  try { localStorage.setItem(STORE, JSON.stringify({ settings: S.settings, nameTheme: S.nameTheme, city: S.city })); }
+  try { localStorage.setItem(STORE, JSON.stringify({ settings: S.settings, nameTheme: S.nameTheme, city: S.city, saved: S.saved, dirty: S.dirty })); }
   catch { /* private mode, full storage - the page works without it */ }
 }
 function restore() {
@@ -44,6 +49,7 @@ function restore() {
     if (typeof v?.nameTheme === 'string') S.nameTheme = v.nameTheme;
     // A city kept by Phase 1 has no map yet: draw it once, then it is kept.
     if (v?.city?.version === 1) S.city = v.city.map ? v.city : withMap(v.city);
+    if (S.city && v?.saved?.id) { S.saved = v.saved; S.dirty = !!v.dirty; }
   } catch { /* ignore */ }
 }
 
@@ -180,7 +186,68 @@ function mapHtml(c) {
     </svg>
     <ol class="map-key small">${m.pins.map((p) => `<li value="${p.n}"><a href="#e-${esc(p.id)}"
       onclick="City.goto('${escJs(p.id)}'); return false;">${esc(p.label)}</a>
-      <span class="muted">${p.kind === 'shop' ? 'shop' : 'place'}, ${esc(p.district)}</span></li>`).join('')}</ol>
+      <span class="muted">${p.kind === 'shop' ? 'shop' : 'place'}, ${esc(p.district)}</span>
+      ${S.saved ? revealToggle(c, p.id) : ''}</li>`).join('')}</ol>
+  </div>`;
+}
+
+// ── keeping it (Phase 3) ──
+// A city is saved into one of the G.M.'s own campaigns, whole, as generated.
+// Until then everything is only in this page. Once saved, each pin gets a
+// reveal switch and each district, place and shop a "what the players read"
+// line - the only text a player view will ever carry about it. A G.M.'s
+// secrets stay in the fields the players' view never reads.
+const revealed = (c, id) => !!c.reveal?.[id];
+function revealToggle(c, id) {
+  const on = revealed(c, id);
+  return `<button type="button" class="btn btn-sm btn-ghost city-reveal" aria-pressed="${on}"
+    title="${on ? 'Shown to the players - hide it' : 'Hidden from the players - reveal it'}"
+    onclick="City.reveal('${escJs(id)}')">${on ? '👁 shown' : '🙈 hidden'}</button>`;
+}
+function publicField(c, id) {
+  if (!S.saved) return '';
+  return `<input type="text" class="picker-input city-public" value="${esc(c.public?.[id] || '')}"
+    placeholder="What the players read about this (optional)" aria-label="What the players read"
+    onchange="City.publicText('${escJs(id)}', this.value)">`;
+}
+
+function keepHtml() {
+  const c = S.city;
+  const camps = S.camps || [];
+  const sys = c?.settings?.system;
+  const own = camps.filter((x) => !sys || x.system === sys);
+  const openList = S.savedList
+    ? (S.savedList.length ? `<ul class="small">${S.savedList.map((x) => `<li><a href="#" onclick="City.openSaved(${x.id}); return false;">${
+        esc(x.name)}</a> <span class="muted">${x.show_map ? 'map shown' : 'hidden'}</span></li>`).join('')}</ul>`
+      : '<p class="muted small">No cities kept in that campaign yet.</p>')
+    : '';
+  return `<div class="panel city-keep">
+    <h3 style="margin-top:0">Keep it in a campaign <span class="muted small">— your campaigns only; everything stays yours until you show it</span></h3>
+    ${c ? (S.saved
+      ? `<p class="small">Saved in <b>${esc(camps.find((x) => x.id === S.saved.campaign_id)?.name || 'campaign ' + S.saved.campaign_id)}</b>${
+          S.dirty ? ' — <span class="warn">changed since</span>' : ''}.</p>
+        <div class="rowline" style="flex-wrap:wrap">
+          <button type="button" class="btn btn-sm btn-primary" onclick="City.keep()" ${S.dirty ? '' : 'disabled'}>💾 Save changes</button>
+          <label class="small"><input type="checkbox" ${S.saved.show_map ? 'checked' : ''} onchange="City.showMap(this.checked)">
+            Show the map to players</label>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="City.deleteSaved()">delete saved city</button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="City.forget()">start a new city</button>
+        </div>`
+      : `<div class="rowline" style="flex-wrap:wrap">
+          <label class="small">Campaign <select id="keep-camp">
+            ${own.length ? own.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('')
+              : `<option value="">— none of yours is ${esc(sys || '')} —</option>`}
+          </select></label>
+          <button type="button" class="btn btn-sm btn-primary" onclick="City.keep()" ${own.length ? '' : 'disabled'}>💾 Save this city</button>
+        </div>`) : ''}
+    <div class="rowline" style="flex-wrap:wrap;margin-top:8px">
+      <label class="small">Open a kept city from <select onchange="City.listSaved(this.value)">
+        <option value="">— a campaign —</option>
+        ${camps.map((x) => `<option value="${x.id}"${String(x.id) === S.openCamp ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}
+      </select></label>
+    </div>
+    ${openList}
+    ${S.keepMsg ? `<p class="small${S.keepErr ? ' err' : ''}">${esc(S.keepMsg)}</p>` : ''}
   </div>`;
 }
 
@@ -211,16 +278,19 @@ function cityHtml() {
   <div class="panel"><h3 style="margin-top:0">Districts</h3>
     ${c.districts.map((d) => card(d.id, `<p><b>${esc(d.name)}</b>${d.name !== d.kind ? ` <span class="muted small">${esc(d.kind)}</span>` : ''}
       — ${esc(d.mood)}</p>
-      <details><summary class="small">d6 encounters</summary><ol class="small">${d.encounters.map((e) => `<li>${esc(e.text)}</li>`).join('')}</ol></details>`)).join('')}
+      <details><summary class="small">d6 encounters</summary><ol class="small">${d.encounters.map((e) => `<li>${esc(e.text)}</li>`).join('')}</ol></details>
+      ${publicField(c, d.id)}`)).join('')}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Places of interest</h3>
-    ${c.places.map((p) => card(p.id, `<p>${pinTag(c, p.id)}${esc(p.name)}${p.district ? ` <span class="muted small">— ${esc(p.district)}</span>` : ''}</p>`)).join('')}
+    ${c.places.map((p) => card(p.id, `<p>${pinTag(c, p.id)}${esc(p.name)}${p.district ? ` <span class="muted small">— ${esc(p.district)}</span>` : ''}</p>
+      ${publicField(c, p.id)}`)).join('')}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Shops and taverns</h3>
     ${c.shops.map((s) => card(s.id, `<p>${pinTag(c, s.id)}<b>${esc(s.name || '(unnamed)')}</b> <span class="muted small">${esc(s.type)}${s.district ? ', ' + esc(s.district) : ''}</span></p>
-      <p class="small">Known for ${esc(s.specialty)}. Prices ${esc(s.price)}. Owner: ${esc(npcName[s.owner] || 'nobody named')} — ${esc(s.quirk)}.</p>`)).join('')}
+      <p class="small">Known for ${esc(s.specialty)}. Prices ${esc(s.price)}. Owner: ${esc(npcName[s.owner] || 'nobody named')} — ${esc(s.quirk)}.</p>
+      ${publicField(c, s.id)}`)).join('')}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Named NPCs <span class="muted small">— ${c.npcs.length}</span></h3>
@@ -241,8 +311,23 @@ function cityHtml() {
 
 function render() {
   $('settings').innerHTML = settingsHtml();
-  $('city').innerHTML = cityHtml();
+  $('city').innerHTML = keepHtml() + cityHtml();
 }
+
+// ── keeping: the requests ──
+// The G.M.'s own campaigns: a city is saved only into one they run, and the
+// server refuses anything else (requireCampaign) whatever this list says.
+async function loadCamps() {
+  try {
+    const [c, me] = await Promise.all([api('campaigns?limit=500'), api('me')]);
+    S.camps = (c.campaigns || []).filter((x) => x.gm_email === me.email);
+  } catch { S.camps = []; }
+}
+const post = (path, method, body) => api(path, { method, headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body) });
+function keepFail(err) { S.keepMsg = err.message; S.keepErr = true; render(); }
+// A reroll or an edit to a saved city marks it changed; Save puts it back.
+function changed() { if (S.saved) S.dirty = true; }
 
 // ── actions ──
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.trunc(Number(v)) || 0));
@@ -266,6 +351,8 @@ async function generate() {
       pool = parsePool(res.content?.map((b) => b.text || '').join('') || '', S.settings);
     }
     S.city = withMap(generateCity(S.settings, seed, pool));
+    // A new city is not the saved one: saving it makes another row.
+    S.saved = null; S.dirty = false; S.keepMsg = '';
     S.msg = '';
     save();
   } catch (err) {
@@ -309,9 +396,75 @@ window.City = {
   theme(v) { S.nameTheme = v; save(); },
   seed(v) { S.seed = v; },
   generate,
-  lock(id) { S.city = toggleLock(S.city, id); save(); render(); },
-  reroll(id) { S.city = withMap(rerollEntry(S.city, id)); save(); render(); },
-  rerollAll() { S.city = withMap(rerollCity(S.city, newSeed())); save(); render(); },
+  lock(id) { S.city = toggleLock(S.city, id); changed(); save(); render(); },
+  async keep() {
+    S.keepMsg = ''; S.keepErr = false;
+    try {
+      if (S.saved) {
+        const { reveal: _r, public: _p, ...summary } = await post(`cities/${S.saved.id}`, 'PATCH', { city: S.city });
+        S.saved = { ...S.saved, ...summary };
+        S.keepMsg = 'Saved.';
+      } else {
+        const campaignId = Number($('keep-camp')?.value);
+        const res = await post(`campaigns/${campaignId}/cities`, 'POST', { city: S.city });
+        S.saved = res.city;
+        S.keepMsg = `Kept ${res.city.name}. Nothing is shown to the players until you say so.`;
+      }
+      S.dirty = false;
+      save(); render();
+    } catch (err) { keepFail(err); }
+  },
+  async showMap(on) {
+    try {
+      const res = await post(`cities/${S.saved.id}`, 'PATCH', { show_map: !!on });
+      S.saved = { ...S.saved, show_map: res.show_map };
+      S.keepMsg = res.show_map ? 'The map is shown to the players - revealed pins only.' : 'The map is hidden again.';
+      S.keepErr = false; save(); render();
+    } catch (err) { keepFail(err); }
+  },
+  // Reveal and public text are saved straight away: they are the switches a
+  // G.M. flips mid-session, and waiting for "Save changes" would lose them.
+  async reveal(id) {
+    try {
+      const res = await post(`cities/${S.saved.id}`, 'PATCH', { reveal: { [id]: !revealed(S.city, id) } });
+      S.city = { ...S.city, reveal: res.reveal };
+      save(); render();
+    } catch (err) { keepFail(err); }
+  },
+  async publicText(id, text) {
+    try {
+      const res = await post(`cities/${S.saved.id}`, 'PATCH', { public: { [id]: text } });
+      S.city = { ...S.city, public: res.public };
+      save();
+    } catch (err) { keepFail(err); }
+  },
+  async listSaved(campaignId) {
+    S.openCamp = campaignId; S.savedList = null;
+    if (!campaignId) return render();
+    try { S.savedList = (await api(`campaigns/${campaignId}/cities`)).cities || []; } catch (err) { return keepFail(err); }
+    render();
+  },
+  async openSaved(id) {
+    try {
+      const res = await api(`cities/${id}`);
+      S.city = res.city.map ? res.city : withMap(res.city);
+      S.saved = { id: res.id, campaign_id: res.campaign_id, name: res.name, show_map: res.show_map };
+      S.settings = structuredClone(res.city.settings);
+      S.dirty = false; S.keepMsg = `Opened ${res.name}.`; S.keepErr = false;
+      save(); render();
+    } catch (err) { keepFail(err); }
+  },
+  async deleteSaved() {
+    if (!confirm(`Delete the saved ${S.city.overview.name} from its campaign? The city stays on this page until you start another.`)) return;
+    try {
+      await api(`cities/${S.saved.id}`, { method: 'DELETE' });
+      S.saved = null; S.dirty = false; S.keepMsg = 'Deleted from the campaign.'; S.keepErr = false;
+      save(); render();
+    } catch (err) { keepFail(err); }
+  },
+  forget() { S.saved = null; S.dirty = false; S.keepMsg = ''; save(); render(); },
+  reroll(id) { S.city = withMap(rerollEntry(S.city, id)); changed(); save(); render(); },
+  rerollAll() { S.city = withMap(rerollCity(S.city, newSeed())); changed(); save(); render(); },
   // A pin names an entry: bring it into view and mark it for a moment.
   goto(id) {
     const el = document.getElementById('e-' + id);
@@ -333,7 +486,7 @@ window.City = {
 };
 
 restore();
-await loadRaces();
+await Promise.all([loadRaces(), loadCamps()]);
 // ?seed=N opens on that city, built from the settings on screen - a seed can
 // be passed on, and a printed page can be made without clicking. Built-in
 // names only: a URL never spends an AI call.
@@ -341,5 +494,9 @@ const urlSeed = new URLSearchParams(location.search).get('seed');
 if (urlSeed && !settingsProblems(S.settings).length) {
   S.seed = urlSeed;
   S.city = withMap(generateCity(S.settings, Number(urlSeed) >>> 0 || hashSeed(urlSeed), null));
+  // A city from the URL is a new city, whatever was kept before it: left
+  // pointing at the saved row, "Save changes" would overwrite that city
+  // with this one. Seen when a reload of ?seed= showed "Saved in ...".
+  S.saved = null; S.dirty = false;
 }
 render();

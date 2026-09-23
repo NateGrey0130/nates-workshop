@@ -359,7 +359,10 @@ export function rerollCity(city, seed) {
   const fresh = generateCity({ ...city.settings }, seed, city.pool);
   const keep = (a, b) => a.map((x, i) => (locked.has(x.id) ? x : (b[i] || null))).filter(Boolean)
     .concat(b.slice(a.length));
-  const out = { ...fresh, locks: [...locked], rolls: { ...city.rolls } };
+  // What the players were shown of the city (Phase 3) is the G.M.'s decision,
+  // not the dice's: it survives a reroll, keyed by the entry ids that stay.
+  const out = { ...fresh, locks: [...locked], rolls: { ...city.rolls },
+    ...(city.reveal ? { reveal: { ...city.reveal } } : {}), ...(city.public ? { public: { ...city.public } } : {}) };
   out.overview = locked.has('overview') ? city.overview : fresh.overview;
   for (const key of ['districts', 'places', 'shops', 'npcs', 'quirks', 'rumours']) {
     out[key] = keep(city[key], fresh[key]);

@@ -242,4 +242,27 @@ export function run() {
       && /id="e-\$\{esc\(id\)\}"/.test(page));
   const css = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.css'), 'utf8');
   check('and the map has a print rule that keeps it whole', /@media print[\s\S]*\.city-map \{[^}]*break-inside: avoid/.test(css));
+
+  // ── keeping (Phase 3) ──
+  // What the players were shown is the G.M.'s decision, not the dice's: a
+  // whole-city reroll must carry it, or the next reroll silently re-hides
+  // everything the table has already seen.
+  const shownCity = { ...toggleLock(a, 'place-0'), reveal: { 'place-0': true, 'shop-1': true },
+    public: { 'place-0': 'The tower on the hill.' } };
+  const reshown = rerollCity(shownCity, 99);
+  check('a whole-city reroll keeps which pins are revealed and what the players read',
+    reshown.reveal?.['place-0'] === true && reshown.reveal?.['shop-1'] === true && reshown.public?.['place-0'] === 'The tower on the hill.');
+  check('and so does a one-entry reroll', rerollEntry(shownCity, 'npc-0').reveal?.['place-0'] === true);
+  check('the kept city\'s controls are left off the printed page',
+    /@media print[\s\S]*\.city-keep[\s\S]*\.city-reveal/.test(css) && /\.city-public:placeholder-shown \{ display: none; \}/.test(css));
+  // A NEW city - from Generate or from ?seed= - is not the saved one. Left
+  // pointing at the saved row, "Save changes" would overwrite that city with
+  // this one; a reload of ?seed= did exactly that on screen before this line.
+  const seedBlock = page.slice(page.indexOf("const urlSeed ="), page.indexOf('render();', page.indexOf("const urlSeed =")));
+  const genBlock = page.slice(page.indexOf('async function generate()'), page.indexOf('function hashSeed('));
+  check('a new city, generated or opened from ?seed=, is never the saved one',
+    /S\.saved = null; S\.dirty = false;/.test(seedBlock) && /S\.saved = null; S\.dirty = false;/.test(genBlock));
+  check('reveal and players\' text are saved as they are flipped, not held for "Save changes"',
+    /async reveal\(id\) \{[\s\S]*?post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ reveal:/.test(page)
+      && /async publicText\(id, text\) \{[\s\S]*?post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ public:/.test(page));
 }
