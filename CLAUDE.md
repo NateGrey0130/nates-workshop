@@ -116,6 +116,20 @@ ones that fail LATE:
   moves two of them.
 - **`--local` is not a mirror of production.** It accumulates. Ask production.
 
+**When a check goes red, the rows it names are not the whole cause.** Before
+the first edit that turns it green, write two lines:
+
+1. **The cause, as a mechanism.** For example, "this book's cache sets 0 as O",
+   not "this row has a typo".
+2. **Every table that cause wrote to, marking which ones any check reads.**
+   For a book, including tables imported by earlier PRs:
+
+   ```bash
+   grep -l -i "<book name as printed>" apps/character-creator/db/*.sql
+   ```
+
+Sweep the unread tables, or say in the PR body that you did not.
+
 ## Health check
 
 ```bash
