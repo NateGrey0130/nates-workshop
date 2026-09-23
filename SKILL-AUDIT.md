@@ -2643,7 +2643,8 @@ cause is stated*. Here the rule has lived only in the memory note
 checkpoint. Subject grep, 2026-09-23, across every `*AUDIT*.md` and the memory
 directory for `root cause`, `drip.?fix` and `superpowers`:
 
-- The memory directories hit on that note alone, one copy per project key.
+- The memory directories hit on that note, one copy per project key, and on
+  each key's `MEMORY.md` index line linking to it.
 - The menus hit on this section and on three incidental uses of *root cause*
   about specific bugs: `apps/character-creator/REBUILD-AUDIT.closed.md:210`,
   `apps/media-vault/ISBN-AUDIT.closed.md:215` and
@@ -2660,11 +2661,13 @@ the runs, and not in the skill.
 - **Both runs named the mechanism**, the digit cipher, not a typo.
 - **Both swept the rest of the import**, and both refused to loosen the
   pattern.
-- **Neither looked at any table outside `spells`.** Yet the same book's gear,
-  skills and psionics carry the same cause. `regression.mjs`'s cipher sweep
-  reads super abilities, spells, psionic powers and talents only. Its own
-  comment records that widening it on 2026-09-18 found 49 rows no check had
-  been red on.
+- **Neither looked at any table outside `spells`.** Yet the same book's
+  scanned gear, classes and creatures are exposed to the same cause. Skills
+  are not: `regression.mjs` says their notes are written by hand. That file's
+  OCR sweep reads super abilities, spells, psionic powers and talents only.
+  Commit `0d4bef06` (2026-09-18) widened it to those three extra tables and
+  the cipher pattern, and it found 49 rows no check had been red on. Most
+  were level headings, and 8 were cipher spells.
 
 So a three-part gate would have restated what sessions already do. **Proposal:**
 one section in `test-suite`, whose description already fires on *"reading a
@@ -2708,3 +2711,21 @@ the prompt blind"* covers the prompt. It does not cover the working tree or
 the skill under test. An uncommitted finding and a skill that describes its own
 pressure test are answer keys too. One PR per finding, so it is left for Nate
 to number.
+
+**The premise auditor returned four disagreements, and all four were fixed
+after GREEN 3. The most important one changes the command the GREEN runs
+saw.**
+
+- **The command was wrong.** `ls … | grep -i <book-slug>` lists `rue`'s
+  scripts but misses Mystic Russia's four spell imports (`zzzzzzzzzz-mr-*`).
+  It also misses most or all of the scripts for Heroes Unlimited, Nightbane
+  and Book of Magic, whose files use `hu-`, `nb-` and full names rather than
+  the survey slugs. It is replaced with a
+  content grep for the book's printed name. That grep finds 43 Mystic Russia
+  scripts, including all four spell files, measured 2026-09-23.
+- **The GREEN 3 hit acted on the instruction around the command:** "not only
+  this branch", and mark what no check reads. That instruction is unchanged.
+  The command it would have run is not what shipped, and **no GREEN run has
+  used the new one.**
+- The other three fixes are wording: the sweep's history, dropping skills from
+  the cause's footprint, and the memory hits.

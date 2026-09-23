@@ -134,11 +134,14 @@ flag, for a structural reason rather than a fixable one.
 
 A red check names the rows **it reads**. Fixing those rows turns it green, but
 that says nothing about the rows the same cause wrote where no check looks.
-The digit-cipher sweep in `apps/character-creator/test/regression.mjs` is the
-record. It read super abilities first. Run over three more catalogs on
-2026-09-18, the same sweep found 46 spells, 1 psionic power and 2 more super
-abilities (the comment at its `SELECT * FROM ${table}` loop). None of those
-rows was red until someone widened what was read.
+The OCR sweep in `apps/character-creator/test/regression.mjs` is the record.
+Until 2026-09-18 it read only super abilities, and only for page numbers,
+headings and junk. Commit `0d4bef06` widened it in two directions: three more
+tables, and a digit-cipher pattern. It found 46 spells, 1 psionic power and 2
+more super abilities (the comment at its `SELECT * FROM ${table}` loop). The
+defects were mostly level headings attached to the end of a spell, with 8
+spells in the cipher. None of those rows was red until someone widened what
+was read.
 
 **So before the first edit that turns a failing check green, write two lines
 in the session:**
@@ -147,16 +150,22 @@ in the session:**
    sets 0 as O", not "this row has a typo".
 2. **Every place that cause wrote to, not only this branch, and which of those
    places any check reads.** A cause in a book's cache is in every table that
-   book ever fed, including tables imported by earlier PRs. The filenames name
-   them:
+   book ever fed, including tables imported by earlier PRs. **Grep the
+   scripts' contents for the book's printed name, not the filenames for its
+   slug.** Filenames do not reliably carry the slug. All four of Mystic
+   Russia's spell imports are `zzzzzzzzzz-mr-*-spells.sql`, and a slug grep
+   finds none of them (measured 2026-09-23).
 
    ```bash
-   ls apps/character-creator/db | grep -i <book-slug>
+   grep -l -i "<book name as printed>" apps/character-creator/db/*.sql
    ```
 
-   A book typically lists equipment, skills, psionics and spells there, and
-   the regression sweeps above read only some of those tables. Sweep the
-   unread ones by hand, or say in the PR body that you did not.
+   It over-includes, which is the safe direction for a sweep. A book usually
+   feeds gear, classes and creatures as well as spells and psionics, and the
+   sweep above reads only spells, psionic powers, talents and super abilities.
+   Skill notes are written by hand rather than scanned (the comment above
+   that loop). Sweep the unread tables by hand, or say in the PR body that you
+   did not.
 
 If you can't write line 1, you're not ready to fix yet. Reading is the work.
 
