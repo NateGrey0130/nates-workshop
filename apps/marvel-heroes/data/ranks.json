@@ -1,0 +1,166 @@
+{
+ "about": "The rank ladder. standard is the Standard Rank Number, min/max the rank range, initial the number a freshly rolled ability starts at. Class ranks are points on the ladder the books give single numbers for; min/max between them are this app's, so a rank number between two classes still finds a rank. Beyond has no number.",
+ "sources": [
+  "PB p.2 (rank table)",
+  "PB back cover (Universal Table header)",
+  "UPB p.12 (Random Ranks Table)"
+ ],
+ "ranks": [
+  {
+   "id": "shift-0",
+   "name": "Shift 0",
+   "abbr": "0",
+   "standard": 0,
+   "min": 0,
+   "max": 0
+  },
+  {
+   "id": "feeble",
+   "name": "Feeble",
+   "abbr": "Fe",
+   "standard": 2,
+   "min": 1,
+   "max": 2,
+   "initial": 1
+  },
+  {
+   "id": "poor",
+   "name": "Poor",
+   "abbr": "Pr",
+   "standard": 4,
+   "min": 3,
+   "max": 4,
+   "initial": 3
+  },
+  {
+   "id": "typical",
+   "name": "Typical",
+   "abbr": "Ty",
+   "standard": 6,
+   "min": 5,
+   "max": 7,
+   "initial": 5
+  },
+  {
+   "id": "good",
+   "name": "Good",
+   "abbr": "Gd",
+   "standard": 10,
+   "min": 8,
+   "max": 15,
+   "initial": 8
+  },
+  {
+   "id": "excellent",
+   "name": "Excellent",
+   "abbr": "Ex",
+   "standard": 20,
+   "min": 16,
+   "max": 25,
+   "initial": 16
+  },
+  {
+   "id": "remarkable",
+   "name": "Remarkable",
+   "abbr": "Rm",
+   "standard": 30,
+   "min": 26,
+   "max": 35,
+   "initial": 26,
+   "ruling": "R2"
+  },
+  {
+   "id": "incredible",
+   "name": "Incredible",
+   "abbr": "In",
+   "standard": 40,
+   "min": 36,
+   "max": 45,
+   "initial": 36,
+   "ruling": "R2"
+  },
+  {
+   "id": "amazing",
+   "name": "Amazing",
+   "abbr": "Am",
+   "standard": 50,
+   "min": 46,
+   "max": 62,
+   "initial": 46
+  },
+  {
+   "id": "monstrous",
+   "name": "Monstrous",
+   "abbr": "Mn",
+   "standard": 75,
+   "min": 63,
+   "max": 87,
+   "initial": 63,
+   "ruling": "R3"
+  },
+  {
+   "id": "unearthly",
+   "name": "Unearthly",
+   "abbr": "Un",
+   "standard": 100,
+   "min": 88,
+   "max": 125
+  },
+  {
+   "id": "shift-x",
+   "name": "Shift X",
+   "abbr": "ShX",
+   "standard": 150,
+   "min": 126,
+   "max": 175
+  },
+  {
+   "id": "shift-y",
+   "name": "Shift Y",
+   "abbr": "ShY",
+   "standard": 200,
+   "min": 176,
+   "max": 350
+  },
+  {
+   "id": "shift-z",
+   "name": "Shift Z",
+   "abbr": "ShZ",
+   "standard": 500,
+   "min": 351,
+   "max": 999
+  },
+  {
+   "id": "class-1000",
+   "name": "Class 1000",
+   "abbr": "CL1000",
+   "standard": 1000,
+   "min": 1000,
+   "max": 2999
+  },
+  {
+   "id": "class-3000",
+   "name": "Class 3000",
+   "abbr": "CL3000",
+   "standard": 3000,
+   "min": 3000,
+   "max": 4999
+  },
+  {
+   "id": "class-5000",
+   "name": "Class 5000",
+   "abbr": "CL5000",
+   "standard": 5000,
+   "min": 5000,
+   "max": null
+  },
+  {
+   "id": "beyond",
+   "name": "Beyond",
+   "abbr": "B",
+   "standard": null,
+   "min": null,
+   "max": null
+  }
+ ]
+}

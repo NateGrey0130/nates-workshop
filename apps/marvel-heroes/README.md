@@ -46,7 +46,17 @@ text, and where one of its tables contradicts itself the index on pp.101-104
 decides. Every ruling is listed here with both page numbers, and every data
 entry that needed one carries a `ruling` field pointing back to this list.
 
-None yet.
+- **R1** Random Ranks Table, column 2: **Good is 76-95**. Both UPB p.12 and
+  PB p.6 print Typical 26-75 and Good 78-95, so no roll gives 76 or 77. Neither
+  book says which rank owns them; the band after the gap takes them, the
+  smallest change that makes the column cover every roll.
+- **R2** **Remarkable is 26-35 and Incredible is 36-45.** The Universal Table on
+  the PB back cover prints 26-36 and 37-45. UPB p.12 starts Incredible at 36,
+  and so do PB p.2's rank table and PB p.6's Random Ranks Table. The UPB wins,
+  and the PB agrees with it everywhere except its back cover.
+- **R3** **Monstrous is 63-87.** PB p.2 prints 63-67, which would leave 68-87
+  belonging to no rank; the PB back cover prints 63-87, and Unearthly starts at
+  88 in both.
 
 ## Layout
 
@@ -55,7 +65,17 @@ None yet.
 | `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM |
 | `styles.css` | the whole visual system; contrast is pinned by the smoke test |
 | `palette.html` | the palette sample, for review; removed at launch |
-| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast |
+| `data/ranks.json` | the rank ladder: standard number, range, initial number |
+| `data/universal.json` | the Universal Table: d100 bands, a colour per rank, and what each colour means per FEAT |
+| `data/random-ranks.json` | the five Random Ranks columns |
+| `data/tables.json` | range, area of effect, movement and simultaneous actions, as printed |
+| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged |
+
+**The Universal Table's colours were read from the page, not by eye.** Its
+cells are vector fills on the PB back cover, and each cell's colour was taken
+from the fill under the centre of that row and column. The printed table stripes
+every third row in a darker shade; that carries no meaning and is folded into
+its colour.
 
 Run the suite from anywhere:
 

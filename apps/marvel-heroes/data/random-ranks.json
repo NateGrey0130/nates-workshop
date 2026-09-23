@@ -1,0 +1,213 @@
+{
+ "about": "The Random Ranks Table: roll d100 on the column a body type names for each primary ability. A rolled ability starts at its rank's initial number (ranks.json). The Players' Book names the columns for its own origins; the Ultimate Powers Book refers to them by number.",
+ "sources": [
+  "UPB p.12",
+  "PB p.6"
+ ],
+ "pb_column_names": {
+  "1": "Mutants, Altered Humans",
+  "2": "Normal Folks",
+  "3": "High Technology",
+  "4": "Robots",
+  "5": "Aliens"
+ },
+ "columns": {
+  "1": [
+   {
+    "rank": "feeble",
+    "lo": 1,
+    "hi": 5
+   },
+   {
+    "rank": "poor",
+    "lo": 6,
+    "hi": 10
+   },
+   {
+    "rank": "typical",
+    "lo": 11,
+    "hi": 20
+   },
+   {
+    "rank": "good",
+    "lo": 21,
+    "hi": 40
+   },
+   {
+    "rank": "excellent",
+    "lo": 41,
+    "hi": 60
+   },
+   {
+    "rank": "remarkable",
+    "lo": 61,
+    "hi": 80
+   },
+   {
+    "rank": "incredible",
+    "lo": 81,
+    "hi": 96
+   },
+   {
+    "rank": "amazing",
+    "lo": 97,
+    "hi": 100
+   }
+  ],
+  "2": [
+   {
+    "rank": "feeble",
+    "lo": 1,
+    "hi": 5
+   },
+   {
+    "rank": "poor",
+    "lo": 6,
+    "hi": 25
+   },
+   {
+    "rank": "typical",
+    "lo": 26,
+    "hi": 75
+   },
+   {
+    "rank": "good",
+    "lo": 76,
+    "hi": 95,
+    "ruling": "R1",
+    "printed": "78-95"
+   },
+   {
+    "rank": "excellent",
+    "lo": 96,
+    "hi": 100
+   }
+  ],
+  "3": [
+   {
+    "rank": "feeble",
+    "lo": 1,
+    "hi": 5
+   },
+   {
+    "rank": "poor",
+    "lo": 6,
+    "hi": 10
+   },
+   {
+    "rank": "typical",
+    "lo": 11,
+    "hi": 40
+   },
+   {
+    "rank": "good",
+    "lo": 41,
+    "hi": 80
+   },
+   {
+    "rank": "excellent",
+    "lo": 81,
+    "hi": 95
+   },
+   {
+    "rank": "remarkable",
+    "lo": 96,
+    "hi": 100
+   }
+  ],
+  "4": [
+   {
+    "rank": "feeble",
+    "lo": 1,
+    "hi": 5
+   },
+   {
+    "rank": "poor",
+    "lo": 6,
+    "hi": 10
+   },
+   {
+    "rank": "typical",
+    "lo": 11,
+    "hi": 15
+   },
+   {
+    "rank": "good",
+    "lo": 16,
+    "hi": 40
+   },
+   {
+    "rank": "excellent",
+    "lo": 41,
+    "hi": 50
+   },
+   {
+    "rank": "remarkable",
+    "lo": 51,
+    "hi": 70
+   },
+   {
+    "rank": "incredible",
+    "lo": 71,
+    "hi": 90
+   },
+   {
+    "rank": "amazing",
+    "lo": 91,
+    "hi": 98
+   },
+   {
+    "rank": "monstrous",
+    "lo": 99,
+    "hi": 100
+   }
+  ],
+  "5": [
+   {
+    "rank": "feeble",
+    "lo": 1,
+    "hi": 10
+   },
+   {
+    "rank": "poor",
+    "lo": 11,
+    "hi": 20
+   },
+   {
+    "rank": "typical",
+    "lo": 21,
+    "hi": 30
+   },
+   {
+    "rank": "good",
+    "lo": 31,
+    "hi": 40
+   },
+   {
+    "rank": "excellent",
+    "lo": 41,
+    "hi": 60
+   },
+   {
+    "rank": "remarkable",
+    "lo": 61,
+    "hi": 70
+   },
+   {
+    "rank": "incredible",
+    "lo": 71,
+    "hi": 80
+   },
+   {
+    "rank": "amazing",
+    "lo": 81,
+    "hi": 95
+   },
+   {
+    "rank": "monstrous",
+    "lo": 96,
+    "hi": 100
+   }
+  ]
+ }
+}

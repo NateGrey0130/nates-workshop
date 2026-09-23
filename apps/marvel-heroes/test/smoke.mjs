@@ -146,4 +146,127 @@ check('the README carries the rulings log', /^## Rulings$/m.test(readme));
 check('and states the conflict rule: the Ultimate Powers Book wins',
   /Ultimate Powers Book wins/.test(readme));
 
+// ---------------------------------------------------------------------------
+// The data. Every d100 table must cover 01-00 exactly once: that is the check
+// that catches a transcription slip AND a misprint in the book, and every
+// misprint it has caught is settled by a ruling rather than by editing the
+// check. See the README's Rulings.
+
+const dataDir = join(appDir, 'data');
+const load = (name) => JSON.parse(readFileSync(join(dataDir, name), 'utf8'));
+
+// Problems with a list of [lo, hi] bands meant to cover 1..100 exactly once.
+function coverage(bands) {
+  const problems = [];
+  const seen = new Array(101).fill(0);
+  for (const [lo, hi] of bands) {
+    if (!(Number.isInteger(lo) && Number.isInteger(hi) && lo >= 1 && hi <= 100 && lo <= hi)) {
+      problems.push(`bad band ${lo}-${hi}`);
+      continue;
+    }
+    for (let n = lo; n <= hi; n++) seen[n]++;
+  }
+  const gaps = [], overlaps = [];
+  for (let n = 1; n <= 100; n++) {
+    if (seen[n] === 0) gaps.push(n);
+    if (seen[n] > 1) overlaps.push(n);
+  }
+  if (gaps.length) problems.push('uncovered ' + gaps.join(','));
+  if (overlaps.length) problems.push('covered twice ' + overlaps.join(','));
+  return problems;
+}
+
+section('The rank ladder is one unbroken run of numbers');
+
+const ranks = load('ranks.json').ranks;
+const rankIds = ranks.map((r) => r.id);
+const rankIndex = Object.fromEntries(rankIds.map((id, i) => [id, i]));
+check('rank ids are unique', new Set(rankIds).size === rankIds.length);
+check('the ladder runs Shift 0 to Beyond', rankIds[0] === 'shift-0' && rankIds.at(-1) === 'beyond');
+const numbered = ranks.filter((r) => r.min !== null);
+for (let i = 1; i < numbered.length; i++) {
+  const [a, b] = [numbered[i - 1], numbered[i]];
+  check(`${b.name} starts where ${a.name} ends`, a.max !== null && b.min === a.max + 1,
+    `${a.name} ${a.min}-${a.max}, ${b.name} ${b.min}-${b.max}`);
+}
+for (const r of numbered) {
+  check(`${r.name}'s standard number is inside its range`,
+    r.standard >= r.min && (r.max === null || r.standard <= r.max), `${r.standard} in ${r.min}-${r.max}`);
+  if ('initial' in r) check(`${r.name}'s initial number is the bottom of its range`, r.initial === r.min);
+}
+
+section('The Universal Table is complete and every column runs white, green, yellow, red');
+
+const ut = load('universal.json');
+const ORDER = ['white', 'green', 'yellow', 'red'];
+check('it has 24 row bands', ut.rows.length === 24, String(ut.rows.length));
+check('and they cover 01-00 exactly once', coverage(ut.rows).length === 0, coverage(ut.rows).join('; '));
+check('it has a column for all 18 ranks, in ladder order',
+  ut.columns.map((c) => c.rank).join() === rankIds.join(), ut.columns.map((c) => c.rank).join());
+for (const col of ut.columns) {
+  const idx = col.colours.map((c) => ORDER.indexOf(c));
+  check(`${col.rank}: a colour for every row`, idx.length === ut.rows.length && idx.every((i) => i >= 0),
+    col.colours.join(','));
+  check(`${col.rank}: the colours never step back down the column`,
+    idx.every((v, i) => i === 0 || v >= idx[i - 1]), col.colours.join(','));
+  check(`${col.rank}: 01 is white and 00 is red`, col.colours[0] === 'white' && col.colours.at(-1) === 'red');
+}
+// A higher rank never does worse: for every row, a column's colour is at least the one to its left.
+for (let i = 1; i < ut.columns.length; i++) {
+  const [a, b] = [ut.columns[i - 1], ut.columns[i]];
+  check(`${b.rank} never does worse than ${a.rank} on the same roll`,
+    b.colours.every((c, row) => ORDER.indexOf(c) >= ORDER.indexOf(a.colours[row])));
+}
+const ABILITIES = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
+check('the result header has all 18 kinds of FEAT', ut.actions.length === 18, String(ut.actions.length));
+for (const a of ut.actions) {
+  check(`${a.name}: a result for every colour, and a real ability`,
+    ORDER.every((c) => typeof a.results[c] === 'string' && a.results[c].length > 0)
+      && ABILITIES.includes(a.ability));
+}
+
+section('The Random Ranks Table covers every roll in every column');
+
+const rr = load('random-ranks.json');
+check('it has the five columns', Object.keys(rr.columns).join() === '1,2,3,4,5');
+for (const [k, bands] of Object.entries(rr.columns)) {
+  const cov = coverage(bands.map((b) => [b.lo, b.hi]));
+  check(`column ${k} covers 01-00 exactly once`, cov.length === 0, cov.join('; '));
+  check(`column ${k} climbs the ladder a rank at a time from Feeble`,
+    bands[0].rank === 'feeble' && bands.every((b, i) => i === 0 || rankIndex[b.rank] === rankIndex[bands[i - 1].rank] + 1),
+    bands.map((b) => b.rank).join());
+  check(`column ${k}: every rank it gives has an initial number`,
+    bands.every((b) => 'initial' in ranks[rankIndex[b.rank]]));
+}
+
+section('The cover tables have a row for every rank from Feeble to Class 5000');
+
+const tables = load('tables.json');
+const LADDER = rankIds.slice(1, -1);
+for (const name of ['range', 'area_of_effect', 'movement', 'simultaneous']) {
+  const got = tables[name].rows.map((r) => r.rank).join();
+  check(`${name}: ${LADDER.length} rows in ladder order`, got === LADDER.join(), got);
+}
+
+section('Every ruling in the data is in the README, and every README ruling is in the data');
+
+// Collect every "ruling" value, anywhere in any data file.
+function rulingsIn(v, out) {
+  if (Array.isArray(v)) v.forEach((x) => rulingsIn(x, out));
+  else if (v && typeof v === 'object') {
+    for (const [k, x] of Object.entries(v)) {
+      if (k === 'ruling') out.add(x);
+      else rulingsIn(x, out);
+    }
+  }
+  return out;
+}
+const dataFiles = existsSync(dataDir) ? readdirSync(dataDir).filter((f) => f.endsWith('.json')) : [];
+const inData = new Set();
+for (const f of dataFiles) rulingsIn(load(f), inData);
+const inReadme = new Set([...readme.matchAll(/^- \*\*(R\d+)\*\*/gm)].map((m) => m[1]));
+check('the README lists at least one ruling as "- **Rn**"', inReadme.size > 0);
+for (const id of inData) check(`${id}, cited in the data, is in the README`, inReadme.has(id));
+for (const id of inReadme) check(`${id}, in the README, is cited by the data`, inData.has(id));
+
 process.exit(summary() === 0 ? 0 : 1);
