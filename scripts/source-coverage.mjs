@@ -157,6 +157,22 @@ const groups = [
     label: t,
     rows: d1(`SELECT name AS label, source_book AS sb FROM ${t}`),
   })),
+  // NOT CATALOGS, AND CITED ALL THE SAME. BOOK-INGEST-AUDIT F107. A per-game
+  // override of a catalog row carries its own `source_book` - 95 rows on
+  // 2026-09-22, 89 of them Heroes Unlimited's - and neither table has a `name`,
+  // so each is labelled by the row it overrides plus the game. F100's check ties
+  // the spread above to CATALOGS and so could not see these; smoke now also ties
+  // both halves of this file to every `source_book` column in db/schema.sql.
+  {
+    label: 'skill_system_bases',
+    rows: d1("SELECT skill_name || ' (' || system || ')' AS label, source_book AS sb "
+      + 'FROM skill_system_bases'),
+  },
+  {
+    label: 'psionic_system_costs',
+    rows: d1("SELECT power_name || ' (' || system || ')' AS label, source_book AS sb "
+      + 'FROM psionic_system_costs'),
+  },
 ];
 
 const pad = (s, n) => String(s).padEnd(n);
@@ -450,6 +466,18 @@ if (process.argv.includes('--vs-build')) {
           label: t,
           rows: fromBuild(`SELECT name AS label, source_book AS sb FROM ${t}`),
         })),
+        // The two non-catalog tables, as above (F107). Both halves or neither,
+        // for the reason the comment on this list gives.
+        {
+          label: 'skill_system_bases',
+          rows: fromBuild("SELECT skill_name || ' (' || system || ')' AS label, source_book AS sb "
+            + 'FROM skill_system_bases'),
+        },
+        {
+          label: 'psionic_system_costs',
+          rows: fromBuild("SELECT power_name || ' (' || system || ')' AS label, source_book AS sb "
+            + 'FROM psionic_system_costs'),
+        },
       ];
 
       const totals = (gs) => {
