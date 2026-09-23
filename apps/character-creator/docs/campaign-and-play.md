@@ -378,6 +378,34 @@ title, race or occupation, narrow by book and (optionally) by game, and show
 the stat block - numbers for a notable, dice for a creature - before anything
 is placed.
 
+### The G.M.'s NPC library
+
+A good villain outlives the campaign that rolled them. The **library**
+(`npc_library`, migration 079, since 2026-09-23) holds a G.M.'s statted NPCs in
+**no campaign at all**, and it is theirs alone: every read and write is by
+`owner_email`, and anyone else - another G.M. included - gets a **404**, not a
+403, for the reason `isHiddenNpc` gives. Nate chose a separate table over making
+`characters.campaign_id` nullable (2026-09-22): that column is NOT NULL,
+cascades, and is read by 37 files.
+
+An entry is a **snapshot**: the character row's own columns (read from the row,
+not listed, so a column added later travels in snapshots taken after it) and the
+rows that hang off it - open skill and power picks, grants, live items and live
+vehicles. No level history, no play log, and **no portrait**, because a portrait
+belongs to the dossier (`npcs`), not the sheet.
+
+Three ways in, all from the *Statted NPCs* panel (so on the People tab and in GM
+Tools alike): **📚 keep** on any statted NPC's row saves a copy; the **"into my
+NPC library instead"** box on the roller and both book pickers sends a roll
+there - the roll runs through exactly the path it always does and is moved out
+of the campaign afterwards, so there is no second roller; and a pulled copy can
+be kept again after it has been played. **⤵ Pull into this campaign** makes an
+INDEPENDENT copy - a new `kind = 'npc'` row - whose notes end with where it came
+from; a rename in the library and a change at the table never reach each other.
+A different game is refused with a 409 (`system_mismatch`) and goes in only when
+the G.M. confirms. Entries can be renamed, noted and deleted; deleting one
+leaves the copies already pulled.
+
 ### Names for people, places and groups
 
 `shared/js/namegen.js` makes names from **themes**: hand-written word lists

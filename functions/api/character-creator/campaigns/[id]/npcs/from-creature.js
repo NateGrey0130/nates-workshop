@@ -24,6 +24,7 @@
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
 import { rollCreature, CreatureGap } from '../../../../../../apps/character-creator/js/creature-roll.js';
+import { moveToLibrary } from '../../../_lib/npc-snapshot.js';
 
 const MAX_COUNT = 12;
 
@@ -86,7 +87,15 @@ export async function onRequestPost({ request, env, params }) {
     JSON.stringify(bio), JSON.stringify(combat), notes,
   )));
 
-  return json({ characters: results.map((r, i) => ({ id: r.results[0].id, name: names[i] })) }, 201);
+  const made = results.map((r, i) => ({ id: r.results[0].id, name: names[i] }));
+  // `to_library`: into the G.M.'s NPC library instead (migration 079) - rolled
+  // and written by the path above, then moved, so each roll has one path.
+  if (b.to_library) {
+    const library = [];
+    for (const m of made) library.push(await moveToLibrary(env, m.id, guard.email, 'creature'));
+    return json({ library }, 201);
+  }
+  return json({ characters: made }, 201);
 }
 
 // The book's prose, in from-notable's order: what it hits with, what it can

@@ -25,6 +25,7 @@
 // the table. Linking those to the catalogs is a later decision (2026-09-17).
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
+import { moveToLibrary } from '../../../_lib/npc-snapshot.js';
 
 export async function onRequestPost({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id, { gm: true });
@@ -77,6 +78,14 @@ export async function onRequestPost({ request, env, params }) {
     JSON.stringify(bio), JSON.stringify(combat), notesFor(row, attacks || []),
   ).first();
 
+  // `to_library`: the G.M.'s NPC library rather than this campaign (migration
+  // 079). The row above was written by the one path every placing takes, and
+  // is moved from here into the library, so there is no second placer to keep
+  // in step with this one.
+  if (b.to_library) {
+    const entry = await moveToLibrary(env, character.id, guard.email, 'notable');
+    return json({ library: [entry] }, 201);
+  }
   return json({ id: character.id, name }, 201);
 }
 

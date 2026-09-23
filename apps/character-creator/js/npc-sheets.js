@@ -31,6 +31,10 @@ window.npcSheets = (function () {
             busy: false, msg: '', err: false },
     beast: { open: false, rows: null, slug: '', count: 1, name: '', q: '', src: '', all: false,
              busy: false, msg: '', err: false },
+    // The G.M.'s NPC library (migration 079): theirs, in no campaign. `toLib`
+    // on a form sends the roll there instead of into this campaign.
+    lib: { open: false, entries: null, busy: false, msg: '', err: false },
+    toLib: false,
   };
   const esc = (s) => escHtml(s == null ? '' : String(s));
   const cid = () => S.host.campaignId;
@@ -68,10 +72,13 @@ window.npcSheets = (function () {
     return `<div class="panel">
       <h3>Statted NPCs <span class="muted small">— only you can see these</span></h3>
       ${S.gen.open ? genForm() : S.book.open ? pickForm('book') : S.beast.open ? pickForm('beast')
+        : S.lib.open ? libView()
         : `<div class="rowline" style="margin-top:6px;flex-wrap:wrap">
             <button class="btn btn-sm" onclick="npcSheets.openGen()">🎲 Roll NPCs from a class</button>
             <button class="btn btn-sm" onclick="npcSheets.openPick('book')">📖 Place a notable NPC from the books</button>
-            <button class="btn btn-sm" onclick="npcSheets.openPick('beast')">🐾 Roll creatures from the books</button></div>`}
+            <button class="btn btn-sm" onclick="npcSheets.openPick('beast')">🐾 Roll creatures from the books</button>
+            <button class="btn btn-sm" onclick="npcSheets.openLib()">📚 Your library — pull one in</button></div>`}
+      ${S.lib.msg && !S.lib.open ? `<p class="small${S.lib.err ? ' err' : ''}">${esc(S.lib.msg)}</p>` : ''}
       <div style="margin-top:10px">${list.length ? list.map(sheetRow).join('')
         : '<p class="muted small">None yet. Roll some, then link one to a dossier.</p>'}</div>
     </div>`;
@@ -99,6 +106,8 @@ window.npcSheets = (function () {
       <span class="rowline" style="flex-wrap:wrap">
         ${linkControl(c)}
         <a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${c.id}&amp;play=1">▶ Play</a>
+        <button class="btn btn-sm btn-ghost" title="Keep a copy in your NPC library, for any campaign"
+          onclick="npcSheets.keep(${c.id})">📚 keep</button>
         <button class="btn btn-sm btn-ghost" onclick="npcSheets.remove(${c.id})">delete</button>
       </span>
     </div>`;
@@ -149,6 +158,7 @@ window.npcSheets = (function () {
         <input type="checkbox" ${g.each ? 'checked' : ''} onchange="npcSheets.genSet('each', this.checked, true)">
         a different name for each
         <span class="muted">— from the 🎲 theme, none already used in this campaign; the Name box is not used</span></label>` : ''}
+      ${toLibBox()}
       <div class="rowline" style="margin-top:8px">
         <button class="btn btn-sm btn-primary" onclick="npcSheets.roll()"
           ${g.busy || !g.cls || (needsJob && !g.occ) ? 'disabled' : ''}>${g.busy ? 'Rolling…' : 'Roll'}</button>
@@ -203,13 +213,15 @@ window.npcSheets = (function () {
       // writes anything, and refuses a batch the theme cannot name.
       if (g.each) Object.assign(body, await namePanel.batchOptions('npcgen-name', genClasses()));
       else body.name = g.name.trim() || null;
+      if (S.toLib) body.to_library = true;
       const res = await api(`campaigns/${cid()}/npcs/generate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       await reloadRoster();
-      const banked = res.npcs.reduce((n, x) => n + (x.powers_banked || 0) + (x.picks_pending || 0), 0);
-      g.msg = `Rolled ${res.npcs.length}: ${res.npcs.map((x) => x.name).join(', ')}.`
+      const got = res.library || res.npcs;
+      const banked = got.reduce((n, x) => n + (x.powers_banked || 0) + (x.picks_pending || 0), 0);
+      g.msg = `${res.library ? 'Kept in your library' : 'Rolled'} ${got.length}: ${got.map((x) => x.name).join(', ')}.`
         + (banked ? ` ${banked} pick${banked === 1 ? '' : 's'} banked on their sheets for you to choose.` : '')
         + (res.refused ? ` Stopped there: ${res.refused.error}` : '');
       g.err = !!res.refused;
@@ -291,6 +303,7 @@ window.npcSheets = (function () {
         ${window.namePanel ? namePanel.button(`npc${which}-name`, { kinds: ['person'] }) : ''}
       </div>
       ${window.namePanel ? namePanel.slot(`npc${which}-name`) : ''}
+      ${toLibBox()}
       <div class="rowline" style="margin-top:8px">
         <button class="btn btn-sm btn-primary" onclick="npcSheets.place('${which}')" ${p.busy || !p.slug ? 'disabled' : ''}>
           ${p.busy ? cfg.busyVerb : cfg.verb}</button>
@@ -361,11 +374,13 @@ window.npcSheets = (function () {
     try {
       const res = await api(`campaigns/${cid()}/npcs/${cfg.endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cfg.count ? { slug: p.slug, count: p.count, name: p.name.trim() || null }
-          : { slug: p.slug, name: p.name.trim() || null }),
+        body: JSON.stringify({ ...(cfg.count ? { slug: p.slug, count: p.count, name: p.name.trim() || null }
+          : { slug: p.slug, name: p.name.trim() || null }), ...(S.toLib ? { to_library: true } : {}) }),
       });
       await reloadRoster();
-      if (cfg.count) {
+      if (res.library) {
+        p.msg = `Kept in your library: ${res.library.map((x) => x.name).join(', ')}.`;
+      } else if (cfg.count) {
         const made = res.characters || [];
         p.msg = made.length === 1 ? `Rolled ${made[0].name}.` : `Rolled ${made.length}: ${made.map((c) => c.name).join(', ')}.`;
       } else {
@@ -407,6 +422,116 @@ window.npcSheets = (function () {
     S.dossiers = S.dossiers.map((n) => (n.id === npcId ? { ...n, ...res.npc } : n));
   }
 
+  // ---------- the G.M.'s NPC library (migration 079) ----------
+  //
+  // Theirs, in no campaign, and nobody else's: the server answers only the
+  // owner. Pulling one in makes an independent copy in THIS campaign; a
+  // different game is refused by the server until the G.M. says yes here.
+
+  // The "into my library instead" box on all three forms: one setting, since
+  // it is a mode the G.M. is in rather than a property of one roll.
+  const toLibBox = () => `<label class="small" style="display:block;margin-top:6px">
+      <input type="checkbox" ${S.toLib ? 'checked' : ''} onchange="npcSheets.setToLib(this.checked)">
+      into my NPC library instead <span class="muted">— kept for any campaign; nothing is added here</span></label>`;
+  function setToLib(on) { S.toLib = !!on; render(); }
+
+  function libView() {
+    const L = S.lib;
+    if (!L.entries) return '<p class="muted small" style="margin-top:10px">Loading your library…</p>';
+    const row = (e) => `<div class="chkrow">
+        <span><b>${esc(e.name)}</b>
+          <span class="muted small"> — ${esc(e.system || 'any game')}, ${esc(e.source)}${
+            e.level ? `, level ${e.level}` : ''}${e.notes ? ` · ${esc(e.notes)}` : ''}</span></span>
+        <span class="rowline" style="flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="npcSheets.pull(${e.id})" ${L.busy ? 'disabled' : ''}>⤵ Pull into this campaign</button>
+          <button class="btn btn-sm btn-ghost" onclick="npcSheets.renameEntry(${e.id})">rename</button>
+          <button class="btn btn-sm btn-ghost" onclick="npcSheets.noteEntry(${e.id})">note</button>
+          <button class="btn btn-sm btn-ghost" onclick="npcSheets.deleteEntry(${e.id})">delete</button>
+        </span></div>`;
+    return `<div class="panel-inset" style="margin-top:10px">
+      <p class="small" style="margin-top:0"><b>Your NPC library</b> <span class="muted">— yours alone, in no campaign.
+        Pulling one in makes a copy here; changes to either never reach the other.</span></p>
+      ${L.entries.length ? L.entries.map(row).join('')
+        : '<p class="muted small">Empty. Keep an NPC with 📚 on its row, or roll one straight in with the box on any form.</p>'}
+      <div class="rowline" style="margin-top:8px">
+        <button class="btn btn-sm btn-ghost" onclick="npcSheets.closeLib()">close</button></div>
+      ${L.msg ? `<p class="small${L.err ? ' err' : ''}">${esc(L.msg)}</p>` : ''}
+    </div>`;
+  }
+
+  async function loadLib() {
+    try { S.lib.entries = (await api('npc-library')).entries || []; }
+    catch (err) { S.lib.entries = []; S.lib.msg = 'Could not load your library: ' + err.message; S.lib.err = true; }
+  }
+  async function openLib() {
+    S.lib.open = true; S.lib.msg = '';
+    render();
+    await loadLib();
+    render();
+  }
+  function closeLib() { S.lib.open = false; S.lib.msg = ''; render(); }
+
+  async function keep(id) {
+    try {
+      const res = await api('npc-library', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character_id: id }),
+      });
+      S.lib.msg = `Kept ${res.entry.name} in your library.`; S.lib.err = false;
+      S.lib.entries = null;
+    } catch (err) { S.lib.msg = err.message; S.lib.err = true; }
+    render();
+  }
+
+  async function pull(id, force = false) {
+    const L = S.lib;
+    L.busy = true; L.msg = ''; L.err = false;
+    render();
+    try {
+      const res = await api(`npc-library/${id}/pull`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaign_id: Number(cid()), force }),
+      });
+      await reloadRoster();
+      L.msg = `Pulled ${res.character.name} into this campaign.`;
+    } catch (err) {
+      L.busy = false;
+      // A different game is the server's refusal to make, and the G.M.'s to overrule.
+      if (err.status === 409 && err.detail?.code === 'system_mismatch'
+          && confirm(`${err.message}.\n\nPull it in anyway?`)) return pull(id, true);
+      L.msg = err.message; L.err = true;
+    }
+    L.busy = false;
+    render();
+  }
+
+  async function patchEntry(id, body) {
+    try {
+      await api(`npc-library/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      await loadLib();
+    } catch (err) { S.lib.msg = err.message; S.lib.err = true; }
+    render();
+  }
+  function renameEntry(id) {
+    const e = S.lib.entries.find((x) => x.id === id);
+    const name = prompt('New name for this library entry:', e?.name || '');
+    if (name != null && name.trim()) patchEntry(id, { name: name.trim() });
+  }
+  function noteEntry(id) {
+    const e = S.lib.entries.find((x) => x.id === id);
+    const notes = prompt('Your note on this entry (blank to clear):', e?.notes || '');
+    if (notes != null) patchEntry(id, { notes });
+  }
+  async function deleteEntry(id) {
+    const e = S.lib.entries.find((x) => x.id === id);
+    if (!confirm(`Delete ${e?.name || 'this entry'} from your library? Copies already pulled into campaigns stay.`)) return;
+    try { await api(`npc-library/${id}`, { method: 'DELETE' }); await loadLib(); }
+    catch (err) { S.lib.msg = err.message; S.lib.err = true; }
+    render();
+  }
+
   return { mount, render, setRoster, setDossiers, openGen, closeGen, genSet, roll,
-           openPick, closePick, pickSearch, pickSet, place, remove, link, sheets, className };
+           openPick, closePick, pickSearch, pickSet, place, remove, link, sheets, className,
+           openLib, closeLib, keep, pull, renameEntry, noteEntry, deleteEntry, setToLib };
 })();
