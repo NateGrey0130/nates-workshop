@@ -416,6 +416,20 @@ and the default map from a class to its theme (a Wolfen gets Wolfen names, a
 Coalition grunt a rank and callsign, anything else its game's default). The
 City Creator will load the same module in the browser with a seeded random.
 
+**The 🎲 beside a Name box** (`js/name-panel.js`, since 2026-09-23) is on all
+four: the class roller, the notable and creature pickers, and the People tab's
+*Add someone by hand*, which offers every kind because a dossier can be a
+tavern or a gang. It is the G.M.'s only, since the list is a G.M.-only request.
+The panel picks a theme (filterable by game or culture), a kind, and for people
+a gender and style, and shows eight names; the theme starts on the chosen
+class's own (a Dog Boy gets Dog Boy names). Clicking a chip fills the box;
+a pin keeps a chip through **Generate new list**, which sends the rest as
+`avoid`. Pins survive a change of theme and are cleared by a change of kind.
+An exhausted theme shows the server's reason and only the names it had.
+Nothing is saved - a reload forgets the pins. The roller's **a different name
+for each** checkbox (off by default) sends that theme as `name_theme`, so every
+NPC in the batch gets its own name, or the batch is refused whole.
+
 
 ---
 

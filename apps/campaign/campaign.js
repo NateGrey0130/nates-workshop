@@ -49,6 +49,7 @@ async function load() {
     const camp = await api('campaigns/' + campaignId);
     D.campaign = camp.campaign; D.isGm = camp.is_gm; D.isMember = camp.is_member;
     window.appnav?.setContext({ campaignId, campaignName: D.campaign?.name });
+    if (D.isGm) namePanel.init({ campaignId, system: D.campaign.system });
 
     // A non-member gets the campaign's name and nothing else. Everything below
     // this line is member-gated server-side too — this only avoids four
@@ -388,8 +389,13 @@ function peopleView() {
     <h4 style="margin-top:16px">Add someone by hand</h4>
     <div class="rowline">
       <input type="text" id="npc-name" class="picker-input" placeholder="Name">
+      ${D.isGm ? namePanel.button('npc-name', { kinds: 'all' }) : ''}
       <button class="btn btn-sm" onclick="addNpc()">Add</button>
     </div>
+    ${/* The 🎲 is the G.M.'s: names come from a G.M.-only request, because the
+         list leaves out the campaign's statted NPCs, which only the G.M. may
+         know exist. A dossier can be a place or a gang, so every kind is offered. */ ''}
+    ${D.isGm ? namePanel.slot('npc-name') : ''}
     <p id="npc-msg" class="small"></p>
   </div>
   ${D.isGm ? npcSheetsMount() : ''}

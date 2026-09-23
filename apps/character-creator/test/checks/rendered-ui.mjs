@@ -106,6 +106,7 @@ const SECTIONS = [
   'One header for five apps',
   'Present mode shows without revealing',
   'Statted NPCs: one panel, two pages',
+  'The name panel beside every Name box',
 ];
 
 export function run() {
@@ -2287,5 +2288,47 @@ export function run() {
         !!mountFn && (js.match(/npcSheets\.mount\(/g) || []).length === 1
           && js.includes(`\${D.isGm ? ${mountFn}() : ''}`), mountFn || 'no mount function');
     }
+  }
+
+  // ---------- The name panel beside every Name box ----------
+  // Phase 4b of the NPC work: a 🎲 beside all four Name boxes - the class
+  // roller's, the notable picker's, the creature picker's and the dossier form's
+  // - opens js/name-panel.js. The names come from the G.M.-only list request,
+  // so the panel holds no word list and cannot top a short list up; a click
+  // fills the box through its own change handler. Names go into inline
+  // handlers, so they are escaped for the attribute AND the JS string
+  // (escJs - the O'Brien bug, memory: escaping-into-markup).
+  section('The name panel beside every Name box');
+  {
+    const panel = readFileSync(join(appDir, 'js', 'name-panel.js'), 'utf8');
+    const sheets = readFileSync(join(appDir, 'js', 'npc-sheets.js'), 'utf8');
+    const camp = readFileSync(join(repoRoot, 'apps', 'campaign', 'campaign.js'), 'utf8');
+    check('the roller\'s Name box has a 🎲 and the panel under it',
+      /namePanel\.button\('npcgen-name'/.test(sheets) && /namePanel\.slot\('npcgen-name'\)/.test(sheets));
+    check('so do both book pickers\' Name boxes',
+      /id="npc\$\{which\}-name"/.test(sheets) && /namePanel\.button\(`npc\$\{which\}-name`/.test(sheets)
+        && /namePanel\.slot\(`npc\$\{which\}-name`\)/.test(sheets));
+    check('and the dossier form\'s, for the G.M. only, offering every kind',
+      /D\.isGm \? namePanel\.button\('npc-name', \{ kinds: 'all' \}\)/.test(camp)
+        && /D\.isGm \? namePanel\.slot\('npc-name'\)/.test(camp));
+    for (const dir of ['campaign', 'gm-tools']) {
+      const html = readFileSync(join(repoRoot, 'apps', dir, 'index.html'), 'utf8');
+      const a = html.indexOf('js/name-panel.js');
+      check(`${dir} loads the name panel before the panel that draws its buttons`,
+        a > 0 && a < html.indexOf('js/npc-sheets.js'));
+    }
+    check('the panel asks the campaign\'s name list and nothing else for names',
+      (panel.match(/\bapi\(`/g) || []).length === 2 && panel.includes('`campaigns/${S.host.campaignId}/names?${qs}`')
+        && panel.includes('`names/themes?system='));
+    check('and never adds a chip the server did not send - a short list stays short',
+      !/chips\.push\(|chips\.unshift\(|chips\.splice\(/.test(panel)
+        && /b\.chips = \[\.\.\.keep, \.\.\.res\.names\];/.test(panel));
+    check('a chip escapes the name twice for its handler and once for its text',
+      /const sn = escJs\(name\)/.test(panel) && /namePanel\.use\('\$\{sid\}', '\$\{sn\}'\)/.test(panel)
+        && /\$\{esc\(name\)\}<\/button>/.test(panel));
+    const roll = sheets.slice(sheets.indexOf('async function roll()'), sheets.indexOf('// ---------- from the books'));
+    check('"a different name for each" sends the theme and not the Name box',
+      /if \(g\.each\) Object\.assign\(body, await namePanel\.batchOptions\(/.test(roll)
+        && /else body\.name = /.test(roll));
   }
 }
