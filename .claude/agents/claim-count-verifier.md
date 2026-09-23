@@ -39,7 +39,7 @@ first newline and calls the remainder `incomplete input`, which reads like
 malformed SQL rather than a mangled argument. For several counts at once, write
 them to a file and use `node scripts/q.mjs --remote --batch <file.sql>`: it
 collapses each statement to one line, sends them as **one** wrangler invocation,
-and pays the ~11s start-up once instead of per query. Results come back
+and pays wrangler's start-up once instead of per query. Results come back
 numbered, one block per statement, in order.
 
 **Do not build a quote with `\"`.** It does not escape in PowerShell; the string

@@ -24,8 +24,10 @@
 // statements across many lines, because batchStatements() splits and collapses
 // each one to a single line before they are joined into ONE wrangler
 // invocation. The verify-after-import volley of 5-10 SELECTs used to be 5-10
-// separate calls at ~11s of wrangler start-up each; a batch pays that cost
-// once. Results come back numbered, one block per statement, in order.
+// separate calls, each paying wrangler's start-up; a batch pays that cost
+// once. No figure here on purpose: it has moved with every wrangler release
+// (MACHINE-AUDIT M26). Results come back numbered, one block per statement,
+// in order.
 import { readFileSync } from 'node:fs';
 import { d1Batch, d1Query } from './d1-query-lib.mjs';
 import { batchStatements } from './sql-statements.mjs';
