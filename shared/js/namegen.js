@@ -61,7 +61,7 @@ export class NameGenError extends Error {
 // The key two names are the same under: case, and runs of spaces.
 export const nameKey = (s) => String(s).trim().replace(/\s+/g, ' ').toLowerCase();
 
-export function findTheme(id, themes = BUILT_IN) {
+function findTheme(id, themes = BUILT_IN) {
   return themes.find((t) => t.id === id) || null;
 }
 
@@ -85,7 +85,6 @@ export function themeSummaries(system = null, themes = BUILT_IN) {
 export function defaultThemeFor({ classId = null, occClassId = null, system = null } = {}) {
   return CLASS_THEMES[occClassId] || CLASS_THEMES[classId] || SYSTEM_THEMES[system] || null;
 }
-export const defaultPlaceThemeFor = (system) => PLACE_THEMES[system] || null;
 export { CLASS_THEMES, SYSTEM_THEMES, PLACE_THEMES };
 
 // ── the space ──
@@ -103,7 +102,7 @@ function slotSource(kindDef, slot, gender) {
 }
 
 // Every string a source can produce. Syllable joins glue their parts and tidy
-// the seam; a union is its members together.
+// the seam.
 function expand(src) {
   if (Array.isArray(src)) return src;
   if (src.join) {
