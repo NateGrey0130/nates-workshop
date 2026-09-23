@@ -1743,6 +1743,98 @@ is wrong**, which is cheap to settle and is the work.
 **Ongoing cost:** none once done, and it recurs whenever a book gains its first
 production row — which is what made the original sentence rot.
 
+**Taken, 2026-09-22 (PR #1264). Posture kept: `scripts/books.json` notes only,
+no schema and no data script.** Every figure below is `node scripts/q.mjs
+--remote` run in that session; `--local` was never touched, as the proposal
+required.
+
+**THE PROPOSAL'S TWO BRANCHES ARE NOT BOTH AVAILABLE, and the one it names
+first is impossible.** *"Update the dates"* would make both sentences FALSE:
+production now cites both books, so *"No production row cited this book as of
+2026-09-22"* is a lie where the 2026-09-09 and 2026-09-12 versions were true.
+The second branch — name what production held and when — is the only one that
+can be taken, and it was.
+
+**Neither sentence was stale in the sense this finding expected.** Both are
+dated, both were correct on their dates, and `BOOK-INGEST-AUDIT.closed.md:5536`
+predicted this outcome in `F45`'s own note:
+<!-- claim-ok: quoting F45's note, located in the sentence before this one -->
+*"it will not become a lie the day someone imports the book."* What is wrong is
+the reader's takeaway — a book session opening either note for `page_offset`
+meets *"No production row cited this book"* three lines away. So the measurement
+is APPENDED after the dated sentence rather than replacing it. An audit file is
+a record and so, here, is a dated registry note.
+
+| book | measured `--remote` 2026-09-22 |
+|---|---|
+| `mystic-russia` | **240 catalog rows** — 146 spells, 53 gear, 26 creatures, 7 vehicles, 7 skills, 1 notable NPC — and **23 published classes** |
+| `heroes-unlimited-core` | **950 catalog rows** — 708 gear, 88 skill system bases, 69 super abilities, 49 vehicles, 16 spells, 10 skills, 5 notable NPCs, 4 psionic powers, 1 psionic system cost — and **30 published classes** |
+
+**THREE OF THIS FINDING'S OWN PREMISES ARE WRONG.** They are corrected here
+rather than in the heading, which stands as filed.
+
+- **The sweep was not deferred for 13 days. It was done in 83 minutes.**
+  `BOOK-INGEST-AUDIT.closed.md:5490` is `F45` — *six book notes in the registry
+  made a standing claim about live data, and four of the six were false* —
+  filed and taken the same afternoon, PR #865, and it swept all six. This
+  finding is therefore not *the deferred sweep*; it is a re-measurement of the
+  two notes `F45` left in the TRUE state.
+- **The count was six, not four.** `BOOK-INGEST-AUDIT.closed.md:5525` retires
+  the figure this heading inherits and says where it came from: a grep windowed
+  on a substring position, which found three of the six.
+- **`ww` is not the model.** Its note is three sentences about a zero offset,
+  folio verification and scan quality; it carries no production claim of any
+  kind and was never reworded. The note that names what production held and
+  when is **`phase-world`**, and the string `ww` occurs inside it — which is the
+  likely source of the mix-up. `phase-world` is what both notes were rewritten
+  against.
+
+**Three OTHER registry notes made an undated standing claim about live data, and
+all three were false. Folded in here with no new number**, because they are
+sentences in the one file this PR already edits. Found by splitting every `note`
+into sentences and flagging any that mentions production and carries no date —
+not by grepping this finding's phrase.
+
+| note | what it said | measured `--remote` 2026-09-22 |
+|---|---|---|
+| `nightbane-core` | *"no catalog row can cite it until `system` accepts a third value"* | **963 catalog rows** across nine tables and **19 published classes**. The note was edited on 2026-09-16 by the gear import that falsified this sentence, and the sentence was left standing. |
+| `rifts-skill-list` | *"cited by 48 skills"* | **29.** |
+| `pf` | *"The most-cited book in the database"* | **third** — 610 catalog rows and 39 classes, behind `nightbane-core` (963) and `heroes-unlimited-core` (950). Removed rather than re-dated: a rank moves with the next import. |
+
+**`phase-world`'s own trailing sentence was the source of this deferral and is
+corrected with them.** It still told a reader that four other notes carried the
+claim and at least one was stale — a question `F45` had already answered in
+full.
+
+**None of the three matches the check `F45` built**, which refuses two wordings
+and lets any third through. **Recorded in `noticed.md`, not filed**: widening it
+is a mechanism change in a file this PR does not touch, and the obvious
+heuristic — any production sentence with no date — also flags two harmless
+mechanism sentences, so the shape needs work before it is a gate.
+
+**Also recorded in `noticed.md`:** `scripts/source-coverage.mjs:155` walks
+**12** of the **14** tables that carry a `source_book` column, omitting
+`skill_system_bases` and `psionic_system_costs` — 89 of
+`heroes-unlimited-core`'s 950 rows. The fourteen were derived by parsing every
+`CREATE TABLE` body in `db/schema.sql`, which is where the schema lives; the
+brief for this finding's premise audit named a path under
+`apps/character-creator/db/` that does not exist. Same shape as `F94`'s *five
+tables of eight*.
+
+**Two traps for the next measurer, both hit in this session.** `source_book`
+stores `"<title> p.<pages>"` and never the registry slug, so the obvious query —
+`WHERE source_book IN ('mystic-russia', 'heroes-unlimited-core')` — returns
+nothing and reads as *still true*. And a `LIKE '%Palladium%'` census over-counts
+`pf` by **147 rows**, every one of them **Dragons and Gods**: the first pass here
+reported 757 where the answer is 610. List the distinct values before trusting a
+count, per `repo-rebuilds-names-not-values`.
+
+**Confidence: high.** Every number above is a `--remote` query run in this
+session rather than quoted from the premise audit, and for each book the
+per-table figures sum to the stated total. **Ongoing cost: none, and the
+recurrence is unchanged** — a note gains a production row whenever its book is
+imported, and nothing walks from an import back to this file.
+
 ### F105 — medium — the repo-vs-live column sweep, and which side wins
 
 **Opened 2026-09-22. HELD for its own session on Nate's word, 2026-09-22** — it
