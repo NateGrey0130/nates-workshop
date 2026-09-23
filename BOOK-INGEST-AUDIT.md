@@ -2055,3 +2055,81 @@ of `scripts/books.json` that `git log` returns: 26 versions.
 2026-09-22). `F104`'s note says <!-- claim-ok: quoting F104's note -->
 *"the shape needs work before it is a gate"*. That sentence was true when
 written and is answered here. It stays as it is, since an audit file is a record.
+
+### F107 — low — `source-coverage.mjs` walks 12 of the 14 tables that carry a `source_book`, and `F100`'s check cannot see the other two
+
+**Opened 2026-09-22.** This is the second deferral `F104`'s note records in
+`noticed.md` and does not file. Nate named it for filing.
+
+`scripts/source-coverage.mjs` asks whether each shipped row can be traced to a
+cached page. Its two group lists (live side, `rows: d1(`; build side,
+`rows: fromBuild(`) each name **twelve** tables in a spread, read 2026-09-22:
+`gear`, `skills`, `spells`, `psionic_powers`, `vehicles`, `super_abilities`,
+`enchantments`, `totems`, `talents`, `morphus_characteristics`, `notable_npcs`
+and `creatures`. Both sides also add `imported_classes` separately.
+
+**`db/schema.sql` has fourteen tables with a `source_book` column.** An `awk`
+over every `CREATE TABLE` body, 2026-09-22, adds two to the twelve above:
+**`skill_system_bases`** and **`psionic_system_costs`**. The schema is at
+`db/schema.sql`. There is no `apps/character-creator/db/schema.sql`, whatever
+an earlier brief said.
+
+**What the two hold, `node scripts/q.mjs --remote`, 2026-09-22:**
+
+| table | Revised Heroes Unlimited | Nightbane RPG | Palladium Fantasy RPG | total |
+|---|---|---|---|---|
+| `skill_system_bases` | 88 | 3 | 1 | 92 |
+| `psionic_system_costs` | 1 | 2 | 0 | 3 |
+
+So **95 cited rows** are checked by nothing in the ledger built to check them.
+For `heroes-unlimited-core`, `F104` measured **950** rows on 2026-09-22, and 89
+of them are in these two tables.
+
+**Why `F100`'s check did not catch it**, and why this is not `F100` again.
+`F100` ties every hand-written list to **`CATALOGS`**, the declared catalog list
+in `js/catalog-fields.js` (`smoke.mjs`, the block headed
+*"EVERY CATALOG IS IN EVERY HAND-WRITTEN CATALOG LIST"*, read 2026-09-22). The
+two missing tables are **not catalogs**. They are per-game overrides of a
+catalog row, keyed `(skill_name, system)` and `(power_name, system)`, with no
+`name` column. So `F100`'s check is complete against its own authority, and the
+authority is the wrong set for this question. Source coverage is about **every
+table that cites a page**, and that set lives in the schema.
+
+**A decision already made, which constrains the fix.** `F100` was taken
+*"as its ALTERNATIVE and not its proposal"* on Nate's word, 2026-09-16:
+<!-- claim-ok: quoting F100's note, BOOK-INGEST-AUDIT.closed.md under ### F100 -->
+*"A check, not the derive-from-`CATALOGS` refactor"*. The lists stay literal,
+because they *"disagree about scope on purpose"* and a derived list makes a
+deliberate exclusion easy to lose. **Deriving the source-coverage list from the
+schema would reverse that decision for these two lists**, so this finding does
+not propose it.
+
+**Proposal:**
+
+1. Add both tables to both `source-coverage` halves. Each needs its own entry
+   rather than a string in the spread, because the spread selects
+   `name AS label` and neither table has a `name`. The label should be the
+   owning row's name plus the game, e.g. `skill_name || ' (' || system || ')'`.
+2. Extend `F100`'s smoke block with a **second authority**: every table in
+   `db/schema.sql` with a `source_book` column appears on both sides of
+   `source-coverage.mjs`, unless it is a named exclusion with its reason, in
+   the way `CITATION_EXCLUDED` already works. That makes the fifteenth table
+   fail the suite on the day it lands, not when someone counts.
+
+**Posture:** the tool stays advisory and always exits 0, as its header says. The
+check is one more assertion in `F100`'s existing block, same posture as
+`F100`'s. **No refactor and no derived list.** **This widens a required
+check** (`smoke`), and it passes on the day it ships, because the same PR adds
+the two tables.
+
+**Evidence:** the two list reads, the schema `awk` and the `--remote` counts
+above, all 2026-09-22. `F100`'s text, read under its heading in
+`BOOK-INGEST-AUDIT.closed.md`, the same day.
+
+**Confidence:** high on the gap and the counts. Medium on the label shape,
+which is a display choice. Raising it takes one run of the tool afterwards to
+read how the offenders print.
+
+**Ongoing cost:** two more entries in each list, and one assertion. The recurrence
+it stops is `F28`, `F85`, `F94` and this one: a hand-written subset of a set
+that grew.
