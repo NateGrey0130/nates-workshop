@@ -2542,8 +2542,16 @@ would help this repo's process. The retrospective recommended **not installing
 it**. Its brainstorm, plan, worktree and finish-branch workflow restates this
 repo's process in general terms. It also conflicts with `worktree` and
 `ship-pr` exactly where those are specific. The retrospective named two ideas
-worth borrowing by hand. Nate said to take both on 2026-09-23. They are
-numbered here, one PR each.
+worth borrowing by hand. Nate said to take both on 2026-09-23.
+
+**`F64` is filed and taken in the same PR.** That goes against `audit-menu` →
+*When not to*, which says not to add a finding you intend to take in the same
+PR, because the numbering keeps the decision to take separate. Here the
+decision came first: Nate named both ideas as ones to take before either was
+numbered. So the number records a decision that was already made, rather than
+one it leaves open. The second idea gets its own
+number in its own PR once this one merges. Both edit this section and
+`test-suite`, and his standing order is one merged before the next starts.
 
 ### F64 — medium — no skill here has ever been seen to fail, so a skill that changes nothing looks exactly like one that works
 
@@ -2551,14 +2559,27 @@ numbered here, one PR each.
 incident and first tested by the next one. `take` is the standing instance.
 It adds no rule, and says so at `.claude/skills/take/SKILL.md:21-30`. It
 exists because `audit-menu` already required the subject grep and the premise
-audit and sessions skipped both. The skill that carried the rule was never run
-against a scenario, so nothing showed that it did not change behaviour until it
-had failed on real findings.
+audit and sessions skipped both. What showed that `audit-menu` changed nothing
+there was findings taken without those steps, not a test before it shipped.
 
 `test-suite` opens with *make it fail before you believe it* for checks.
 Nothing applied that to skills. Subject grep, 2026-09-23, across every
 `*AUDIT*.md` and the memory directory for `pressure.?test`, `with and without
 the skill` and `superpowers`: **no hits**.
+
+**The method has local precedent for AGENTS, and the grep terms missed it.** The
+premise auditor found it on 2026-09-23:
+
+- `SKILL-AUDIT.closed.md:2418` is `F28`: *"all four agents added in #676
+  shipped without ever being invoked"*, and they were run for the first time
+  while it was taken.
+- `.claude/skills/claim-audit/reference/negatives.md:113` records a scored
+  fixture run of the capability method.
+- `.claude/skills/claim-audit/SKILL.md:215` rules that the fixture is never
+  handed to the agent.
+
+So *"no skill has been seen to fail"* holds for `SKILL.md` files only. The new
+section cites the agent precedent and carries its blinding rule over.
 
 **Proposal:** adopt the RED/GREEN method from superpowers' `writing-skills`
 without the plugin. Before a skill change merges, run a realistic,
@@ -2569,13 +2590,32 @@ behaves: that means the change adds nothing on that scenario. Put the method in
 the description. Put one paragraph in `CLAUDE.md` beside the rule that a new
 skill needs its link.
 
-**Posture: documentation only. No new check, no gate, no change to any
-existing skill's content, and no plugin.** The method is a step a session
-chooses to run. Nothing enforces it.
+**Posture: documentation only.** There is no new check, no gate and no plugin,
+and no skill changes except `test-suite`, which gains one section and a
+trigger clause. The method is a step a session chooses to run. Nothing enforces
+it.
 
 **Evidence:** the `take` lines above, read 2026-09-23. The subject grep above,
 2026-09-23. **Not measured:** how often a skill has shipped without changing
 behaviour. `take` is the one instance with a record.
+
+**Found while taking it: a skill edit reaches subagents in the same turn, but
+not on save.** Measured 2026-09-23, one observation, with two probes. Each one
+told a fresh subagent to load `test-suite` through the Skill tool only and
+list its `## ` headings.
+
+- **Probe 1** ran two tool calls after the edit. It returned the **old**
+  description and the old seven headings.
+- A skill-listing refresh carrying the new description then appeared in the
+  session.
+- **Probe 2** ran right after that refresh. It returned the **new** eighth
+  heading.
+
+That is **unlike an agent file**, where `F26` measured that it is *"the turn,
+not elapsed time and not tool calls"*. The text shipped first said the opposite,
+*"live … the moment it is saved"*, and probe 1 disproved it before the commit.
+That makes it the first thing this method caught. **Re-run the probe pair
+before building on it.** One observation does not say how long the delay is.
 
 **Confidence:** medium that it catches a no-op skill before it merges. It would
 rise to high after the first run in which RED already behaves and the change

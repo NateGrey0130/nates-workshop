@@ -192,9 +192,18 @@ adopted without the plugin (`SKILL-AUDIT` `F64`):
 2. **RED: run it BEFORE editing the skill.** Use two fresh subagents with the
    same prompt. Make it planning only: they may read anything and run nothing
    that writes, and they reply with their steps and the first change they would
-   make. **Do this before the edit, because the junction serves the working
-   tree:** once a skill file in this tree is edited, that edit is what every
-   subagent loads, including ones spawned in the same turn.
+   make. **Do this before the edit, because the junction serves the main
+   checkout:** once a skill file there is edited, that edit is what every
+   subagent loads, including ones spawned in the same turn. It is also what
+   every other session on the machine loads.
+   **In a worktree the junction serves nothing you edit**, so GREEN would
+   load the old skill and match RED. Step 4 would then read that as "the
+   skill adds nothing", and the verdict would be false. Run this from the
+   main checkout.
+   **Keep the prompt blind.** It describes the situation and never the
+   behaviour you hope for. `claim-audit`'s fixture rule is the precedent: an
+   agent that has read the answer key cannot be scored (`SKILL-AUDIT` `F28`,
+   `.claude/skills/claim-audit/reference/negatives.md`).
 3. **GREEN: edit, WAIT, then run the identical prompt again**, two more runs.
    The edit reaches subagents after a delay, not on save. Measured 2026-09-23:
    a probe spawned two tool calls after an edit loaded the old headings. The
