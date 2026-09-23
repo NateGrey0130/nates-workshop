@@ -1,0 +1,24 @@
+/* City Creator - only what the Board & Tissue sheets do not already give.
+   Colours come from the tokens apps/character-creator/styles.css declares. */
+
+.city-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+.city-entry:first-of-type { border-top: 0; }
+.city-entry > div { flex: 1 1 auto; min-width: 0; }
+.city-entry p { margin: 2px 0; }
+.city-entry.is-locked > div { border-left: 3px solid var(--accent); padding-left: 8px; }
+.city-tools { display: inline-flex; flex: 0 0 auto; gap: 2px; }
+.city-race select { max-width: 100%; }
+.city-race .picker-input { flex: 1 1 14em; min-width: 0; }
+.rumour-true { background: var(--success-bg, #e6f2e6); }
+.rumour-false { background: var(--danger-bg, #f6e3e1); }
+
+@media print {
+  .city-settings, .city-tools, .appnav { display: none; }
+  .city-entry details { display: block; }
+}

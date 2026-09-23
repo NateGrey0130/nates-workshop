@@ -54,10 +54,12 @@
     codex: '/apps/codex/',
     campaign: '/apps/campaign/',
     gm: '/apps/gm-tools/',
+    city: '/apps/city-creator/',
   };
   const withCamp = (url) => url + (ctx.campaignId ? '?campaign_id=' + encodeURIComponent(ctx.campaignId) : '');
 
-  // The five, in the order the work happens: make a character, play it, look
+  // The five, and since 2026-09-23 the City Creator as a sixth, in the order
+  // the work happens: make a character, play it, look
   // something up, write the table down, run the table.
   function apps() {
     return [
@@ -76,6 +78,9 @@
         hint: 'Notes, stash and the ledger' },
       { id: 'gm', label: 'GM Tools', href: withCamp(APP.gm),
         hint: 'Roster, pools and rolling NPCs' },
+      // The sixth (2026-09-23): a G.M.'s prep tool, after the table it serves.
+      { id: 'city', label: 'City Creator', href: APP.city,
+        hint: 'Build a city: districts, shops, NPCs, rumours' },
     ];
   }
 

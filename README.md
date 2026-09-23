@@ -11,17 +11,19 @@ a login you almost certainly cannot pass. The code is all here.
 
 ## The apps
 
-Five of them are the RPG suite, which shares one stylesheet and one app
-switcher. The character creator was split into them on 2026-09-19; the engine
-they all load still lives under `apps/character-creator/js/`.
+Six of them are the RPG suite, which shares one stylesheet and one app
+switcher. The character creator was split into five on 2026-09-19; the engine
+they all load still lives under `apps/character-creator/js/`. The City
+Creator joined as the sixth on 2026-09-23.
 
 | | |
 |---|---|
-| [`apps/character-creator/`](apps/character-creator/) | Build a character, step by step — [its own README](apps/character-creator/README.md) is the deepest documentation in the repo, and its `js/` is the engine behind the four below |
+| [`apps/character-creator/`](apps/character-creator/) | Build a character, step by step — [its own README](apps/character-creator/README.md) is the deepest documentation in the repo, and its `js/` is the engine behind the next four (the City Creator has its own, in `apps/city-creator/js/`) |
 | [`apps/character-sheet/`](apps/character-sheet/) | The sheet you play from |
 | [`apps/codex/`](apps/codex/) | Everything the books print, and the editor behind it |
 | [`apps/campaign/`](apps/campaign/) | Session notes, the shared stash, the ledger |
 | [`apps/gm-tools/`](apps/gm-tools/) | The party roster, pools, and NPCs rolled from the books |
+| [`apps/city-creator/`](apps/city-creator/) | A whole city from a seed - districts, shops, named NPCs, rumours - to lock and reroll |
 
 And three that stand alone:
 
