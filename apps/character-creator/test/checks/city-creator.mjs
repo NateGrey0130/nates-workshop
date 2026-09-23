@@ -23,6 +23,10 @@
 // an empty answer accepted, and a kept city saved without its guard. The
 // guard fault first landed in keep(), which carries the same line, and the
 // section passed; aimed at flesh() it failed.
+// Shop names, the same way: shops named from the places theme again, a kind
+// stripped of its words, an AI pool ignored, a clash renamed by the label
+// 'Tavern', and the used-name test removed. The last PASSED a 50-city sampled
+// check and is read from the source instead - see the comment there.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,7 +38,7 @@ import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, re
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
-  'City Creator flesh out', 'City Creator Rifts'];
+  'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -440,4 +444,44 @@ export function run() {
     !/Rifts \(coming\)/.test(page) && /const human = tablesFor\(S\.settings\.system\)\?\.HUMAN;/.test(page)
       && page.includes('S.rccs.unshift({ ...human })')
       && /<td>\$\{i\.price\} \$\{currency\(S\.city\)\}<\/td>/.test(page) && RT.CURRENCY === 'cr');
+
+  // ── shop names say what the shop sells ──
+  // Until 2026-09-23 a shop took a generic name from the places theme, so
+  // "Fitch's Energy Weapons" could be a body-chop-shop. Now a shop is named
+  // from its own kind's words; a tavern, and a city with an AI pool, keep the
+  // old way.
+  section('City Creator shop names');
+  const kindsOf = (TT) => [...TT.SHOP_TYPES, ...Object.values(TT.RACE_LINES).flatMap((x) => x.shops)];
+  const unworded = [['palladium-fantasy', T], ['rifts', RT]].flatMap(([sys, TT]) => kindsOf(TT)
+    .filter((k) => (k.type === 'tavern') === (k.names?.length >= 5)).map((k) => `${sys} ${k.label}`));
+  check('every shop kind but the tavern has five or more words of its own, and the tavern has none',
+    unworded.length === 0 && T.SHOP_ADJECTIVES.length >= 20 && RT.SHOP_ADJECTIVES.length >= 20, unworded.join(', '));
+  const mismatched = [];
+  const allNames = [];
+  for (let seed = 0; seed < 25; seed++) {
+    for (const c of [generateCity({ ...base(), population: 60000 }, seed),
+      generateCity({ system: 'rifts', population: 60000, npcCount: 8, everyRace: true,
+        races: [{ id: 'human', name: 'Human', pct: 100 }] }, seed)]) {
+      const TT = tablesFor(c.settings.system);
+      for (const s of c.shops) {
+        const kind = kindsOf(TT).find((k) => k.label === s.type);
+        allNames.push(`${c.settings.system}:${seed}:${s.name}`);
+        if (kind?.names && !kind.names.some((w) => s.name.endsWith(' ' + w))) mismatched.push(`${s.name} [${s.type}]`);
+      }
+    }
+  }
+  check('over 50 metropolises of both settings, every shop is named by its own kind',
+    allNames.length > 500 && mismatched.length === 0, `${allNames.length} shops; ${mismatched.slice(0, 5).join(', ')}`);
+  // Read, not sampled: with the used-name test removed, 12 of 800 metropolises
+  // repeated a shop name (measured 2026-09-23) - so a sample this size passes
+  // a broken namer about half the time, and 800 cities take over a minute.
+  const shopNamer = readFileSync(join(repoRoot, 'apps', 'city-creator', 'js', 'city-engine.js'), 'utf8')
+    .split('shop(r, t) {')[1]?.split('\n    },')[0] || '';
+  check('and the shop namer never hands out a name the city already uses',
+    /if \(!ctx\.used\.has\(n\.toLowerCase\(\)\)\) \{ ctx\.used\.add\(n\.toLowerCase\(\)\); return n; \}/.test(shopNamer));
+  check('a city with an AI name pool still names its shops from the pool',
+    pooled.shops.every((s) => !s.name || pool.shop.includes(s.name)), pooled.shops.map((s) => s.name).join(', '));
+  const engineSrc = readFileSync(join(repoRoot, 'apps', 'city-creator', 'js', 'city-engine.js'), 'utf8');
+  check('and a shop renamed after a clash is renamed by its kind, not by the label "Tavern"',
+    /x\.name = ctx\.names\.shop\(r, shopTypeFor\(ctx, x\.type\)\)/.test(engineSrc) && !/x\.type === 'Tavern'/.test(engineSrc));
 }
