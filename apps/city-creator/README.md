@@ -14,7 +14,7 @@ sheets). Built one phase per PR; the plan's phases are:
 | 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
 | 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
-| 4 | roll stats for an NPC, shop inventories, a player view, an AI "Flesh out" | to come |
+| 4 | roll stats for an NPC (4a, done), shop inventories, a player view, an AI "Flesh out" | in progress |
 | 5 | the Rifts table set | to come |
 
 ## How it works
@@ -82,6 +82,23 @@ players' own view (through present mode) is Phase 4.
 
 Printing leaves the keeping controls off the page and prints only the players'
 lines that were written.
+
+## Rolling stats for an NPC
+
+On a kept city, each named NPC has **🎲 Roll stats**. It sends them to the
+ordinary NPC roller (`campaigns/:id/npcs/generate`, `js/npc-generate.js`) in
+the city's campaign as their race's R.C.C. with the job their role maps to
+(`ROLE_OCC` in the tables: commoners are Vagabonds/Peasants, a guard is a
+Soldier, a shop owner a Merchant), under their own name. The sheet it makes is a
+statted NPC in that campaign like any other, and the entry keeps a **📜 open
+sheet** link to it; rerolling the entry makes a new person and drops the link.
+
+**The roller refuses rather than guesses, and the page shows the refusal as it
+comes** - a race whose page bars that job, or a class the roller cannot build.
+Measured 2026-09-23 on the local server: most Palladium Fantasy race and job
+pairings are refused today on a language pick (only Soldier and Noble roll),
+a gap in the roller itself and filed as its own piece of work; nothing here
+pads around it.
 
 The page also keeps the city on screen in this browser's storage, so a reload
 does not lose it - a convenience; the record is the saved row - and **Export

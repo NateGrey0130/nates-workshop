@@ -869,4 +869,27 @@ export const RACE_NAME_THEMES = {
   'hob-goblin': 'pf-orc-ogre', kobold: 'pf-orc-ogre', troglodyte: 'pf-orc-ogre',
 };
 export const DEFAULT_PEOPLE_THEME = 'pf-eastern-territory';
+
+// "Roll stats" (Phase 4a): the job O.C.C. an NPC's role maps to, paired with
+// their race's R.C.C. Every Palladium Fantasy race takes an occupation, so the
+// roller needs one. Commoners are Vagabonds/Peasants - the book's catch-all -
+// and the rest take the class nearest their work. Keyed by the class ids the
+// catalog uses. Where a race's own page bars the pairing (a dwarf takes no
+// magic O.C.C.), the roller refuses with the reason, and the page shows it.
+export const ROLE_OCC = {
+  innkeeper: 'merchant', blacksmith: 'vagabond-peasant', 'guard sergeant': 'soldier',
+  priest: 'priest-of-light', merchant: 'merchant', fisher: 'vagabond-peasant', farmer: 'vagabond-peasant',
+  thief: 'thief', scholar: 'scholar', healer: 'psi-healer', soldier: 'soldier', noble: 'noble',
+  beggar: 'vagabond-peasant', minstrel: 'vagabond-peasant', moneylender: 'merchant',
+  carpenter: 'vagabond-peasant', 'stable-hand': 'vagabond-peasant', herbalist: 'scholar',
+  ferryman: 'vagabond-peasant', 'tax collector': 'scholar', gravedigger: 'vagabond-peasant',
+  miller: 'vagabond-peasant', hunter: 'ranger', tailor: 'vagabond-peasant', sailor: 'vagabond-peasant',
+  'guild clerk': 'scholar', 'fortune-teller': 'psychic-sensitive', 'retired adventurer': 'mercenary-fighter',
+  'city watchman': 'soldier', smuggler: 'thief', baker: 'vagabond-peasant', brewer: 'vagabond-peasant',
+  mason: 'vagabond-peasant', courtesan: 'vagabond-peasant', judge: 'noble', 'hedge wizard': 'wizard',
+  pilgrim: 'vagabond-peasant', cook: 'vagabond-peasant', 'rat-catcher': 'vagabond-peasant',
+  lamplighter: 'vagabond-peasant',
+};
+// A shop owner ("owner of The Golden Anvil") keeps shop: a merchant.
+export const OWNER_OCC = 'merchant';
 export const PLACES_THEME = 'pf-places';

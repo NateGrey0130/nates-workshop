@@ -2693,6 +2693,31 @@ check('and none of them with ?mine=1',
   check('re-saving after a reroll replaces the city and keeps what was shown',
     resaved.body.name === 'Re-rolled Town' && after.body.city.public?.['place-0'] === 'A crumbling tower the watch avoids.'
       && after.body.show_map === true, JSON.stringify({ name: resaved.body.name, show: after.body.show_map }));
+  // "Roll stats" (Phase 4a): the page's request is the engine's rollRequest,
+  // sent to the ordinary roller in the city's campaign. The jobs the roles map
+  // to must be real, published Palladium Fantasy O.C.C.s - a stale slug would
+  // be refused as "no such class" for every NPC holding that role.
+  const { rollRequest, linkSheet, tablesFor } = await import('../../city-creator/js/city-engine.js');
+  const PF = tablesFor('palladium-fantasy');
+  const pfOccs = new Set(((await api('GET', '/classes?system=palladium-fantasy&limit=500')).body.classes || [])
+    .filter((c) => c.category !== 'rcc').map((c) => c.id));
+  const jobs = [...new Set([...Object.values(PF.ROLE_OCC), PF.OWNER_OCC])];
+  const unpublished = jobs.filter((j) => !pfOccs.has(j));
+  check('every job a city NPC\'s role maps to is a published Palladium Fantasy O.C.C.',
+    pfOccs.size > 10 && unpublished.length === 0, unpublished.join(', '));
+  const pfCampaign = (await api('POST', '/campaigns', { name: 'City Roll Table', system: 'palladium-fantasy' })).body.campaign;
+  const guard = { ...renamed, npcs: renamed.npcs.map((n, i) => (i === 0 ? { ...n, raceId: 'human', role: 'soldier' } : n)) };
+  const req = rollRequest(guard, guard.npcs[0].id);
+  const rolledNpc = await api('POST', `/campaigns/${pfCampaign.id}/npcs/generate`, req);
+  const sheetId = rolledNpc.body.npcs?.[0]?.id;
+  check('a city NPC rolls through the ordinary roller as their race and job, under their name',
+    rolledNpc.status === 201 && !!sheetId && rolledNpc.body.npcs[0].name === guard.npcs[0].name
+      && req.class_id === 'human' && req.occ_class_id === 'soldier', JSON.stringify(rolledNpc.body).slice(0, 200));
+  const relinked = await api('PATCH', `/cities/${cityId}`, { city: linkSheet(guard, guard.npcs[0].id, sheetId) });
+  const withSheet = await api('GET', `/cities/${cityId}`);
+  check('and the kept city remembers which sheet is theirs',
+    relinked.status === 200 && withSheet.body.city.npcs[0].sheet_id === sheetId, JSON.stringify(withSheet.body.city?.npcs?.[0]));
+
   const gone = await api('DELETE', `/cities/${cityId}`);
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }
