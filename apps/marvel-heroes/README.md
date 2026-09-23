@@ -139,6 +139,21 @@ Two the generator needed, where the books say nothing (`js/generator.js`):
   Primary Abilities, the Players' Book's rule for ability modifiers (PB p.6). A
   Deity who rolls Amazing Strength is Monstrous, not Unearthly. Resources and
   Popularity may still fall to Shift 0, the "zero" several body types set.
+- **R19** **A Changeling has at least as many Power slots as it has forms.**
+  UPB p.10 requires each form to have a Power no other form has, and a hero
+  can roll fewer Powers than forms; the slots rise to make the rule
+  satisfiable. The first Power in each slot belongs to one form, the rest to
+  all of them.
+
+How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
+many body types it combines and the chance of keeping each trait (50%, 33%,
+25%, 20%), then rolls each type - never Compound or Changeling again, never the
+same type twice - and keeps each of that type's traits (a column shift, a set
+rank, a body Power, a Power more or fewer, a free +1CS, a Health multiplier, a
+Contact rule) on a d100 at or under the chance. Its own -1CS Popularity comes
+on top, and any artificial type makes it a Cyborg. A Changeling rolls its forms
+the same way, rolls its abilities once on column 5, and applies each form's
+whole set of traits to its own copy; it rolls past Alter Ego.
 
 And three the generator applies from the Players' Book because the UPB is
 silent, none of them in conflict with it: every hero's Power ranks roll on

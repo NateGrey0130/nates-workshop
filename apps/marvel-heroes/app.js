@@ -47,8 +47,11 @@ function initTabs() {
       show(next.dataset.tab);
     });
   });
-  let saved = null;
-  try { saved = localStorage.getItem('mh-tab'); } catch { /* ignore */ }
+  // A link can name its tab (#gen, #powers, #feat); otherwise the last one used.
+  let saved = location.hash.slice(1) || null;
+  if (!tabs.some((t) => t.dataset.tab === saved)) {
+    try { saved = localStorage.getItem('mh-tab'); } catch { /* ignore */ }
+  }
   show(tabs.some((t) => t.dataset.tab === saved) ? saved : tabs[0].dataset.tab);
 }
 
@@ -224,7 +227,7 @@ function initBrowser(browser, tables) {
 // Which picks belong to which step: rerolling a step forgets its picks too,
 // unless the step is locked.
 const STEP_PICKS = {
-  body: ['body', 'variant', 'choose'],
+  body: ['body', 'variant', 'choose', 'aspects'],
   origin: ['origin'],
   abilities: ['ranks', 'choose'],
   weakness: ['weakness'],
@@ -287,7 +290,38 @@ function initGenerator(gen, data) {
     const h = gen.build(state);
     save();
     const t = gen.typeById[h.body.id];
-    const bodyTypes = gen.types.filter((x) => !x.special);
+    const bodyTypes = gen.types;
+    // What a trait key means, for a Compound's list of kept traits.
+    const traitLabel = (m, k) => {
+      const [kind, key] = k.split(':');
+      if (kind === 'shift') return `${LABEL[key]} ${m.shift[key] > 0 ? '+' : ''}${m.shift[key]}CS`;
+      if (kind === 'set') return `${LABEL[key]} ${rankName(m.set[key])}`;
+      if (kind === 'bonus') {
+        const bp = m.bonus_powers[Number(key)];
+        return bp.code ? `${gen.powerByCode[bp.code].name} (${bp.code})` : `a ${bp.class} Power`;
+      }
+      if (kind === 'powers') return `${m.powers > 0 ? '+' : ''}${m.powers} Power`;
+      if (kind === 'choose') return 'a free +1CS';
+      if (kind === 'health') return `Health x${m.health_multiplier}`;
+      if (kind === 'contacts') return 'its Contact rule';
+      return k;
+    };
+    const aspectPicker = (i, x) => `<label>${h.body.special === 'compound' ? 'Type' : 'Form'} ${i + 1}
+      <select data-aspect="${i}">${options(gen.types.filter((y) => !y.special), x.id)}</select></label>`;
+    let aspects = '';
+    if (h.body.special) {
+      const list = h.body.aspects.map((x, i) => {
+        const m = gen.merged(gen.typeById[x.id], x.variant);
+        const name = `${esc(m.type.name)}${m.variant ? ` - ${esc(m.variant.name)}` : ''}`;
+        if (h.body.special === 'changeling') return `<li><strong>${name}</strong> ${rollNote(x.roll)}</li>`;
+        return `<li><strong>${name}</strong> ${rollNote(x.roll)}<br>
+          <span class="muted">keeps:</span> ${x.kept.length ? x.kept.map((k) => esc(traitLabel(m, k))).join(', ') : 'nothing'}</li>`;
+      }).join('');
+      aspects = `
+        <p>${h.body.aspects.length} ${h.body.special === 'compound' ? 'body types' : 'forms'}${h.body.countRoll ? ` (rolled ${String(h.body.countRoll).padStart(2, '0')})` : ''}${h.body.special === 'compound' ? `, each trait kept on ${h.body.retain}% or less` : ''}:</p>
+        <ol class="notes">${list}</ol>
+        <div class="fields">${h.body.aspects.map((x, i) => aspectPicker(i, x)).join('')}</div>`;
+    }
 
     // 1. Physical form
     const variantSel = t.variants
@@ -298,7 +332,8 @@ function initGenerator(gen, data) {
         ${variantSel}
       </div>
       <p class="big">${esc(h.body.name)}${h.body.variantName ? ` - ${esc(h.body.variantName)}` : ''} ${rollNote(h.body.roll)}</p>
-      <p class="muted">Rolls abilities on Random Ranks column ${h.body.column}.</p>
+      ${aspects}
+      <p class="muted">Rolls abilities on Random Ranks column ${h.body.column}${h.body.special === 'compound' ? ', one per body type (R14)' : h.body.special === 'changeling' ? ', whatever its forms would use' : ''}.</p>
       ${h.body.notes.length ? `<ul class="notes">${h.body.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}`);
 
     // 2. Origin
@@ -310,7 +345,7 @@ function initGenerator(gen, data) {
     // 3 & 4. Abilities
     const rankOpts = (sel) => `<option value="">Roll</option>${gen.ladder.filter((r) => r.initial !== undefined)
       .map((r) => `<option value="${r.id}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}`;
-    const choose = t.choose_shift;
+    const choose = h.choose;
     const rows = Object.entries(h.abilities).map(([a, v]) => `
       <tr${PRIMARY.includes(a) ? '' : ' class="secondary"'}>
         <th scope="row">${LABEL[a]}</th>
@@ -329,6 +364,9 @@ function initGenerator(gen, data) {
         <tbody>${rows}</tbody>
       </table></div>
       <p class="secondaries"><span><strong>Health</strong> ${h.health}</span> <span><strong>Karma</strong> ${h.karma}</span></p>
+      ${h.forms ? `<h3>Form by form</h3><p class="muted">The table above is the first form. Each form applies its own traits to the same dice.</p>
+        <div class="table-wrap"><table class="abilities"><thead><tr><th>Form</th>${PRIMARY.map((k) => `<th>${LABEL[k].slice(0, 3)}</th>`).join('')}<th>Res.</th><th>Pop.</th><th class="num">Health</th><th class="num">Karma</th></tr></thead>
+        <tbody>${h.forms.map((f) => `<tr><th scope="row">${esc(f.name)}${f.variantName ? ` (${esc(f.variantName)})` : ''}</th>${[...PRIMARY, 'resources', 'popularity'].map((k) => `<td>${esc(rankName(f.abilities[k].rank))}</td>`).join('')}<td class="num">${f.health}</td><td class="num">${f.karma}</td></tr>`).join('')}</tbody></table></div>` : ''}
       ${h.resourcesBefore !== h.abilities.resources.rank ? `<p class="muted">Resources were ${esc(rankName(h.resourcesBefore))} before buying extras.</p>` : ''}`);
 
     // 5. Weakness
@@ -399,7 +437,8 @@ function initGenerator(gen, data) {
         <p class="stats">${PRIMARY.map((a) => `<span><b>${LABEL[a][0]}</b> ${esc(rankName(ab[a].rank))} (${ab[a].number})</span>`).join(' ')}</p>
         <p class="stats"><span><b>Health</b> ${h.health}</span> <span><b>Karma</b> ${h.karma}</span>
           <span><b>Resources</b> ${esc(rankName(ab.resources.rank))}</span> <span><b>Popularity</b> ${esc(rankName(ab.popularity.rank))} (${ab.popularity.number})</span></p>
-        <p><b>Powers:</b> ${h.powers.map((p) => `${esc(gen.powerByCode[p.code].name)} ${esc(rankName(p.rank))}`).join('; ') || 'none'}</p>
+        ${h.body.special ? `<p><b>${h.body.special === 'compound' ? 'Combines' : 'Forms'}:</b> ${h.body.aspects.map((x) => esc(gen.typeById[x.id].name)).join('; ')}</p>` : ''}
+        <p><b>Powers:</b> ${h.powers.map((p) => `${esc(gen.powerByCode[p.code].name)} ${esc(rankName(p.rank))}${p.form !== undefined && h.forms ? ` [${esc(h.forms[p.form].name)}]` : ''}`).join('; ') || 'none'}</p>
         <p><b>Talents:</b> ${h.talents.map((x) => esc(byId(data.talents.talents, x.id).name)).join('; ') || 'none'}</p>
         <p><b>Contacts:</b> ${Array.from({ length: h.contacts.slots }, (_, i) => esc(byId(data.contacts.contacts, chosenContacts[i])?.name || 'to choose')).join('; ') || 'none'}</p>
         <p><b>Weakness:</b> ${esc(byId(w.stimulus, h.weakness.stimulus.id).name)}, ${esc(byId(w.effect, h.weakness.effect.id).name)}, ${esc(byId(w.duration, h.weakness.duration.id).name)}</p>
@@ -426,8 +465,13 @@ function initGenerator(gen, data) {
   root.addEventListener('change', (e) => {
     const el = e.target;
     if (el.dataset.lock) { state.locks[el.dataset.lock] = el.checked; return draw(); }
+    if (el.dataset.aspect !== undefined) {
+      const cur = gen.build(state).body.aspects.map((x) => ({ id: x.id, variant: x.variant }));
+      cur[Number(el.dataset.aspect)] = { id: el.value };
+      return setPick('aspects', cur);
+    }
     if (el.dataset.pick) {
-      if (el.dataset.pick === 'body') { delete state.picks.variant; delete state.picks.choose; }
+      if (el.dataset.pick === 'body') { delete state.picks.variant; delete state.picks.choose; delete state.picks.aspects; }
       return setPick(el.dataset.pick, el.value);
     }
     if (el.dataset.rank) return setPick('ranks', { ...(state.picks.ranks || {}), [el.dataset.rank]: el.value || undefined });
