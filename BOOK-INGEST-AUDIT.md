@@ -2040,7 +2040,8 @@ of `scripts/books.json` that `git log` returns: 26 versions.
 
 - **A date anywhere in a sentence clears it.** At `aa24ba49` the false *"no
   catalog row can cite it"* shared one run-on sentence with an unrelated
-  *"MOVED there on 2026-09-12"*, and that version passes. The claim is still
+  *"MOVED there on 2026-09-12"*, and there that sentence passes (the version
+  still fails, on `pf` and `rifts-skill-list`). The claim is still
   caught in the versions on either side. Tying the date to the matched clause
   would need a parser that a registry note does not justify.
 - **A bare row count is not covered, deliberately.** The auditor found three
