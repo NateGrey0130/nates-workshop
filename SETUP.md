@@ -124,7 +124,7 @@ nates-workshop/
         │                     and both thin proxies to the Worker
         ├── filament-forge/   catalog (the OFD snapshot) + data (per-user
         │                     config/history/presets/custom filaments)
-        └── character-creator/  56 endpoints + _lib; see the app README
+        └── character-creator/  57 endpoints + _lib; see the app README
 ```
 
 Everything under `.claude/` is repo-local until a machine links it into the

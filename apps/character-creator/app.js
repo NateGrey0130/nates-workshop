@@ -4837,11 +4837,19 @@ function renderReview() {
   const p = poolsPayload();
   const campaigns = S.campaigns.filter((c) => c.system === S.system);
   const stat = (label, v) => v != null ? `<span class="statline">${label}: <b>${v}</b></span>` : '';
+  // The 🎲 name panel (Phase 4c): the same panel as the campaign page's Name
+  // boxes, asking the campaign-free list - a new character is at no table yet.
+  // Its theme starts from the chosen race and occupation.
+  namePanel.init({ campaignId: null, system: S.system });
+  const nameClasses = () => ({ cls: S.rcc?.id, occ: S.occ });
+  namePanel.classChanged('char-name', nameClasses());
   $('app').innerHTML = `
   <div class="panel">
     <h2>Review &amp; save</h2>
-    <div class="rowline"><label class="small">Character name:</label>
-      <input type="text" id="char-name" value="${esc(S.charName)}" placeholder="e.g. Sir Roderick" onchange="S.charName=this.value.trim()"></div>
+    <div class="rowline"><label class="small" for="char-name">Character name:</label>
+      <input type="text" id="char-name" value="${esc(S.charName)}" placeholder="e.g. Sir Roderick" onchange="S.charName=this.value.trim()">
+      ${namePanel.button('char-name', { classes: nameClasses })}</div>
+    ${namePanel.slot('char-name')}
     <div class="rowline"><label class="small">Campaign:</label>
       <select id="campaign-sel" onchange="S.campaignId=+this.value||null">
         <option value="">— pick —</option>

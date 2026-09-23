@@ -1,8 +1,10 @@
 // The 🎲 beside a Name box: a panel of generated names to click into it.
 //
-// Phase 4 of the NPC / bestiary work (PR 4b). The names come from the server -
-// GET campaigns/:id/names, which leaves out every name the campaign already
-// uses - so this file holds no word lists and makes no names. It holds what
+// Phase 4 of the NPC / bestiary work (PR 4b, and 4c for the character
+// wizard). The names come from the server - GET campaigns/:id/names, which
+// leaves out every name the campaign already uses, or GET names on a page with
+// no campaign, which leaves out only the chips on screen - so this file holds
+// no word lists and makes no names. It holds what
 // the G.M. is looking at: the theme, the kind, the gender and shape, the chips
 // on screen and which of them are pinned. Nothing is saved; a reload forgets
 // the pins, by Nate's decision.
@@ -24,7 +26,7 @@
 window.namePanel = (function () {
   const LIST = 8;
   const S = {
-    host: null,        // { campaignId, system }
+    host: null,        // { campaignId, system } - campaignId null on the wizard
     meta: null,        // the themes request, once loaded
     loading: false,
     open: null,        // the id of the Name box whose panel is open
@@ -34,7 +36,17 @@ window.namePanel = (function () {
   };
   const esc = (s) => escHtml(s == null ? '' : String(s));
 
-  function init(host) { S.host = host; }
+  // Called again when the page's game changes (the wizard's system is picked
+  // mid-flow): the themes are per game, so a new game reloads them and moves
+  // every box back to its default theme.
+  function init(host) {
+    const was = S.host?.system;
+    S.host = host;
+    if (was !== undefined && was !== host.system) {
+      S.meta = null;
+      for (const b of Object.values(S.boxes)) { b.theme = ''; b.shape = ''; b.chips = []; b.pinned = new Set(); }
+    }
+  }
 
   async function themes() {
     if (S.meta || S.loading) return S.meta;
@@ -199,7 +211,9 @@ window.namePanel = (function () {
     }
     for (const n of b.chips) qs.append('avoid', n);
     try {
-      const res = await api(`campaigns/${S.host.campaignId}/names?${qs}`);
+      // A campaign's list leaves out the names that campaign uses; with no
+      // campaign (the wizard) only the chips on screen are left out.
+      const res = await api(S.host.campaignId ? `campaigns/${S.host.campaignId}/names?${qs}` : `names?${qs}`);
       b.chips = [...keep, ...res.names];
       b.reason = res.exhausted ? res.reason : '';
     } catch (err) { b.err = err.message; }

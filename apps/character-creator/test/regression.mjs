@@ -2519,6 +2519,25 @@ check('and none of them with ?mine=1',
     left.body.names?.length === 3 && left.body.names.every((n) => keep.includes(n))
       && left.body.exhausted === true, JSON.stringify(left.body));
 
+  // The campaign-free list (Phase 4c, GET names, the character wizard): the
+  // same space, asked by someone at no table, is whole again - no campaign's
+  // names are left out, only the `avoid` chips.
+  const free = (qs, who = 'stranger@example.com') => apiAs(who, 'GET', `/names?${qs}`);
+  const whole = await free(`${small}&count=12`);
+  check('the campaign-free list is open to anyone signed in, and leaves out no campaign\'s names',
+    whole.status === 200 && whole.body.names?.length === Math.min(12, spaceSize)
+      && whole.body.names.some((n) => !keep.includes(n)), JSON.stringify(whole.body));
+  const freeAvoid = await free(`${small}&count=12${seen.slice(0, -2).map((n) => '&avoid=' + encodeURIComponent(n)).join('')}`);
+  check('it honours "avoid", and runs out rather than padding',
+    freeAvoid.body.names?.length === 2 && freeAvoid.body.names.every((n) => seen.slice(-2).includes(n))
+      && freeAvoid.body.exhausted === true && !!freeAvoid.body.reason, JSON.stringify(freeAvoid.body));
+  const freeMany = await free('theme=rifts-frontier&count=50');
+  const freeBad = await free('theme=no-such-theme');
+  const freeNone = await free('count=3');
+  check('it clamps to 12, and an unknown or missing theme is a 400',
+    freeMany.body.names?.length === 12 && freeBad.status === 400 && freeNone.status === 400,
+    JSON.stringify([freeMany.body.names?.length, freeBad.status, freeNone.status]));
+
   const genNamed = (body) => api('POST', `/campaigns/${campaignId}/npcs/generate`,
     { class_id: cls.id, name_theme: 'rifts-coalition', name_gender: 'neutral', name_shape: 'given', ...body });
   const tooMany = await genNamed({ count: 5 });
