@@ -47,3 +47,10 @@ favicon.ico -text
 # guarding. Same reasoning as the workflow rule above: pin it so the file that
 # is edited here is byte-identical to the one the shell executes.
 .claude/hooks/*.sh text eol=lf
+
+# Marvel Heroes. Its smoke test holds every file in the app to LF, as a floor
+# under the data files the app reads and the extraction its D1 table is loaded
+# from. With core.autocrlf true on this machine every other app's working tree
+# is CRLF, so without this line the check would pass in CI and fail on the
+# first local checkout after a merge.
+apps/marvel-heroes/** text eol=lf
