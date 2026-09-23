@@ -1050,3 +1050,53 @@ that settles it.
 
 **Ongoing cost:** none if declined. If a filter is added it is one more control
 on a step whose argument is that it has fewer.
+
+**DECLINED 2026-09-22 on Nate's word (PR #1270). No code changes.** The guided
+shortlist keeps no filter box. This note is the only change: no code, no
+stylesheet, and the heading stays where it is.
+
+The reasons, in order of weight:
+
+- **A guided shortlist is ranked, so it is meant to be read in order.** A filter
+  box invites treating it as a catalogue, and *Browse all* is already that
+  catalogue. The two are different tools. The decision is the one `F4` made
+  when it built the shortlist: its note keeps zero-score classes in a
+  `<details>` rather than dropping them *"because the guided mode is a
+  suggestion and hiding a class outright would make it a filter."* The code
+  says the same thing today, in the comment at `app.js:1103-1105`
+  (*"a suggestion, not a filter"*), read 2026-09-22.
+- **This finding's own posture rules out the other argument.** It says the
+  change *"may not be adopted on symmetry alone."* *Browse all* having a filter
+  is not a reason for guided mode to have one.
+- **The scroll complaint is smaller than it looks.** The one measurement on
+  record puts the shortlist at 98 cards plus 22 collapsed, with the page
+  height falling from 12,276px to 10,194px. That is already shorter than
+  *Browse all*'s 11,027px, which has a filter.
+
+**This was a product call. No evidence settled it, because none exists.** There
+is no usage data on whether anyone scrolls past the top of the shortlist, and
+this finding says so under its own **Evidence**. The next reader should not
+think the decline rests on a measurement. Evidence of real use is a reason
+to reopen it. A stronger symmetry argument is not.
+
+**Correcting the attribution** <!-- claim-ok: quoting the premise this note corrects -->:
+this finding calls the passage at `UI-AUDIT.closed.md:244-248` *"`F3`'s own
+outcome note"* and the numbers *"`F3`'s measured numbers"*. Both belong to
+**`F4`** (PR #443). `### F4` begins at `UI-AUDIT.closed.md:198`, and its note
+holds the 120 → 98 + 22 table at `:238-242` and this passage at `:244-248`.
+`F3` (PR #442) built the *Browse all* filter and measured the 11,027px
+baseline. The reasoning about ranked lists and what guided mode is for comes
+from `F4`, so *"`F3` said so"* in the posture line above should read `F4`. The
+98/22 split also depends on the answers given: `F4` measured it with Rifts
+*occupation / mystic / high-tech*, and Palladium Fantasy gives 20 and 20. It
+was not re-measured for this decline, because no decision here depends on it.
+The finding keeps its own wording, since an audit file is a record.
+Checked by the `audit-premise-auditor`, 2026-09-22. That audit also confirmed at
+`app.js:1084-1121` that the shortlist still has no `Picker.inputHtml` and that
+*Browse all*'s `class-filter` is still wired.
+
+**What cites this finding:** a grep of the repo and the memory directory for
+`F61`, 2026-09-22, turns up this menu's header at `:14`, a dated statement that
+stays accurate, and `META-AUDIT.md:1563`, which records the numbering. Every
+other `F61` hit is `SKILL-AUDIT`'s or `BOOK-INGEST-AUDIT`'s. There are no class
+notes to correct, because a UI finding is not cited from `extraction_notes`.
