@@ -58,6 +58,49 @@ entry that needed one carries a `ruling` field pointing back to this list.
   belonging to no rank; the PB back cover prints 63-87, and Unearthly starts at
   88 in both.
 
+The Physical Form table (UPB p.3) prints five bands that cannot all be true;
+each has exactly one reading that makes the table cover every roll once:
+
+- **R4** Induced Mutant is **27-30**. Printed 26-30, overlapping Normal
+  Human's 01-26; the band printed first keeps the shared number.
+- **R5** Modified Human (Organic) is **48-49**. Printed "48-19".
+- **R6** Modified Human (Muscular) is **50-51**. Printed "60-61", which would
+  overlap Faun and Felinoid and leave 50-51 to nobody.
+- **R7** Avian is **65-66**. Printed "66-66", leaving 65 to nobody.
+- **R8** Cyborg (Mechanical Body) is **75-76**. Printed "76-76", leaving 75 to
+  nobody.
+- **R9** Counts table, 67-75: **6/8 Powers**. Printed 2/8, the only break in
+  a column that otherwise climbs 1, 2, 3, 4, 5, then 7, 8 and on (UPB p.14).
+- **R10** Self-Alteration: Body Adaptation is **22-27**. Printed 21-27,
+  overlapping Blending's 20-21 (UPB p.16).
+- **R11** Travel: Rocket is **53-56**. Printed 52-56, overlapping
+  Levitation's 47-52 (UPB p.17).
+
+Four body types the book never gives a Random Ranks column:
+
+- **R12** Cyborg (Limbs and Organs) and Cyborg (Exoskeleton) roll on
+  **column 3**, the column the book gives the one other Cyborg built around an
+  intact human body (Mechanically Augmented), and the Players' Book's column
+  for heroes whose power is equipment.
+- **R13** Other Demihuman rolls on **column 2**, the column the named
+  Demihumans use most (Faun, Harpy, Chiropteran and Merhuman).
+- **R14** Compound: the book says the column is "determined by the A/D
+  percentage" and gives no mapping. The column is **the number of aspects**:
+  two aspects roll on column 2, five on column 5.
+- **R15** Avian, Angel/Demon and Animal each come in two kinds the book tells
+  apart without saying how to choose. **The player picks; a random hero gets
+  either with even odds.**
+- **R16** Modified Human (Extra Parts) **takes the Modified Human rules**: one
+  Power fewer, and a Contact who did the modifying. The book states both for
+  "all Modified Humans" and gives Extra Parts its own paragraph without
+  repeating them; the Physical Form table files it under Modified Human.
+
+**The book's own worked examples cite rolls its table does not give** - its
+Compound example calls 69 Chiropteran (the table's Merhuman) and its Changeling
+example calls 83 a Humanshape Robot (the table's Usuform). They read as written
+against an earlier draft of the table, so the tests use them by body type, not
+by roll, and they decide nothing here.
+
 ## Layout
 
 | path | what |
@@ -69,6 +112,11 @@ entry that needed one carries a `ruling` field pointing back to this list.
 | `data/universal.json` | the Universal Table: d100 bands, a colour per rank, and what each colour means per FEAT |
 | `data/random-ranks.json` | the five Random Ranks columns |
 | `data/tables.json` | range, area of effect, movement and simultaneous actions, as printed |
+| `data/body-types.json` | the Physical Form table, what each body type does to a hero, and the Compound and Changeling aspect tables |
+| `data/origins.json`, `data/weakness.json` | Origin of Power, and the three Weakness rolls |
+| `data/counts.json` | how many Powers, Talents and Contacts, and what extra ones cost in Resources |
+| `data/power-tables.json` | the sixteen power classes and their roll tables, 263 codes; `double` is the book's asterisk, `addenda` its red rows |
+| `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
 | `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged |
 
 **The Universal Table's colours were read from the page, not by eye.** Its

@@ -154,6 +154,7 @@ check('and states the conflict rule: the Ultimate Powers Book wins',
 
 const dataDir = join(appDir, 'data');
 const load = (name) => JSON.parse(readFileSync(join(dataDir, name), 'utf8'));
+const dataFiles = existsSync(dataDir) ? readdirSync(dataDir).filter((f) => f.endsWith('.json')) : [];
 
 // Problems with a list of [lo, hi] bands meant to cover 1..100 exactly once.
 function coverage(bands) {
@@ -248,6 +249,133 @@ for (const name of ['range', 'area_of_effect', 'movement', 'simultaneous']) {
   check(`${name}: ${LADDER.length} rows in ladder order`, got === LADDER.join(), got);
 }
 
+section('The Physical Form table covers every roll, and every body type can be built');
+
+const bodies = load('body-types.json');
+const powerTables = load('power-tables.json');
+const allCodes = new Set(Object.values(powerTables.tables).flat().map((p) => p.code));
+const classCodes = new Set(powerTables.classes.map((c) => c.code));
+const SHIFTABLE = [...ABILITIES, 'resources', 'popularity'];
+{
+  const cov = coverage(bodies.types.map((t) => t.roll));
+  check('the body types cover 01-00 exactly once', cov.length === 0, cov.join('; '));
+  check('body type ids are unique', new Set(bodies.types.map((t) => t.id)).size === bodies.types.length);
+  for (const [name, table] of [['Compound', bodies.compound_aspects], ['Changeling', bodies.changeling_aspects]]) {
+    const c = coverage(table.map((a) => [a.lo, a.hi]));
+    check(`the ${name} aspect table covers 01-00 exactly once`, c.length === 0, c.join('; '));
+  }
+  const problems = [];
+  for (const t of bodies.types) {
+    const parts = [t, ...(t.variants || [])];
+    const column = (v) => v.column ?? t.column;
+    if (t.special !== 'compound') {
+      for (const v of t.variants || [t]) {
+        if (![1, 2, 3, 4, 5].includes(column(v))) problems.push(`${t.id}/${v.id}: no Random Ranks column`);
+      }
+    } else if (!t.column_ruling) problems.push(`${t.id}: a compound needs its column ruling`);
+    for (const p of parts) {
+      if (p.choose_shift && !['primary', 'any'].includes(p.choose_shift.from)) {
+        problems.push(`${p.id}: choose_shift must say whether it draws from primary or any abilities`);
+      }
+      for (const k of Object.keys(p.shift || {})) if (!SHIFTABLE.includes(k)) problems.push(`${p.id}: shift ${k}`);
+      for (const [k, v] of Object.entries(p.set || {})) {
+        if (!SHIFTABLE.includes(k)) problems.push(`${p.id}: set ${k}`);
+        if (!(v in rankIndex)) problems.push(`${p.id}: set ${k} to unknown rank ${v}`);
+      }
+      for (const b of p.bonus_powers || []) {
+        if (b.code && !allCodes.has(b.code)) problems.push(`${p.id}: bonus power ${b.code} is not in the power tables`);
+        if (b.class && !classCodes.has(b.class)) problems.push(`${p.id}: bonus class ${b.class}`);
+        if (b.rank && !(b.rank in rankIndex)) problems.push(`${p.id}: bonus rank ${b.rank}`);
+      }
+    }
+  }
+  check('every body type has a Random Ranks column, and every modifier names a real ability, rank and Power',
+    problems.length === 0, problems.join('; '));
+}
+
+section('Origin, Weakness and the counts table cover every roll');
+
+{
+  const origins = load('origins.json').origins;
+  check('the origins cover 01-00 exactly once', coverage(origins.map((o) => o.roll)).length === 0,
+    coverage(origins.map((o) => o.roll)).join('; '));
+  const weakness = load('weakness.json');
+  for (const part of ['stimulus', 'effect', 'duration']) {
+    const c = coverage(weakness[part].map((w) => w.roll));
+    check(`the weakness ${part} table covers 01-00 exactly once`, c.length === 0, c.join('; '));
+  }
+  const counts = load('counts.json').rows;
+  const c = coverage(counts.map((r) => r.roll));
+  check('the counts table covers 01-00 exactly once', c.length === 0, c.join('; '));
+  for (const kind of ['powers', 'talents', 'contacts']) {
+    check(`${kind}: the initial number never exceeds the maximum`,
+      counts.every((r) => r[kind].initial <= r[kind].max));
+  }
+  // The one column the book builds as a staircase. A misprint in it (the printed
+  // 2/8 at 67-75) is exactly the value that breaks the climb.
+  check('the initial number of Powers climbs with the roll',
+    counts.every((r, i) => i === 0 || r.powers.initial > counts[i - 1].powers.initial),
+    counts.map((r) => r.powers.initial).join(','));
+}
+
+section('The power roll tables cover every roll, and every code is numbered in order');
+
+{
+  const c = coverage(powerTables.classes.map((x) => x.roll));
+  check('the sixteen power classes cover 01-00 exactly once', powerTables.classes.length === 16 && c.length === 0,
+    c.join('; '));
+  check('every class has a table, and every table a class',
+    [...classCodes].sort().join() === Object.keys(powerTables.tables).sort().join());
+  for (const [k, rows] of Object.entries(powerTables.tables)) {
+    const cov = coverage(rows.map((r) => r.roll));
+    check(`${k}: covers 01-00 exactly once`, cov.length === 0, cov.join('; '));
+    check(`${k}: codes run ${k}1 to ${k}${rows.length} in order`,
+      rows.every((r, i) => r.code === `${k}${i + 1}`), rows.map((r) => r.code).join(','));
+  }
+  check('every power code is unique', allCodes.size === Object.values(powerTables.tables).flat().length);
+}
+
+section('Talents and Contacts');
+
+{
+  const tal = load('talents.json');
+  const cg = coverage(tal.groups.map((g) => g.roll));
+  check('the Talent categories cover 01-00 exactly once', cg.length === 0, cg.join('; '));
+  check('Talent ids are unique', new Set(tal.talents.map((t) => t.id)).size === tal.talents.length);
+  for (const g of tal.groups) {
+    // Talents sharing one d10 result share one band, so cover 1-10 with the
+    // distinct bands.
+    const bands = [...new Map(tal.talents.filter((t) => t.group === g.id)
+      .map((t) => [t.roll.join('-'), t.roll])).values()];
+    const seen = new Array(11).fill(0);
+    for (const [lo, hi] of bands) for (let n = lo; n <= hi; n++) seen[n]++;
+    check(`${g.name}: the d10 covers 1-10 exactly once`, seen.slice(1).every((n) => n === 1), seen.slice(1).join(','));
+  }
+  const con = load('contacts.json');
+  const groups = new Set(con.groups.map((g) => g.id));
+  check('Contact ids are unique', new Set(con.contacts.map((c) => c.id)).size === con.contacts.length);
+  check('every Contact is in a listed group', con.contacts.every((c) => groups.has(c.group)));
+}
+
+section('Summaries are short, so no book prose rides in on them');
+
+{
+  // The repo is public; the data holds mechanics and summaries written for the
+  // app. A summary or note longer than this is a sign of text copied from a
+  // book rather than summarised. It is a floor, not the rule.
+  const MAX = 140;
+  const long = [];
+  const walk = (v, path) => {
+    if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}[${i}]`));
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, `${path}.${k}`);
+    else if (typeof v === 'string' && /\.(summary|notes\[\d+\])$/.test(path) && v.length > MAX) {
+      long.push(`${path} (${v.length})`);
+    }
+  };
+  for (const f of dataFiles) walk(load(f), f);
+  check(`no summary or note is longer than ${MAX} characters`, long.length === 0, long.join('; '));
+}
+
 section('Every ruling in the data is in the README, and every README ruling is in the data');
 
 // Collect every "ruling" value, anywhere in any data file.
@@ -255,13 +383,14 @@ function rulingsIn(v, out) {
   if (Array.isArray(v)) v.forEach((x) => rulingsIn(x, out));
   else if (v && typeof v === 'object') {
     for (const [k, x] of Object.entries(v)) {
-      if (k === 'ruling') out.add(x);
+      // `ruling`, and the `column_ruling` / `variant_ruling` a body type uses
+      // when the ruling is about one field rather than the whole entry.
+      if (/(^|_)ruling$/.test(k)) out.add(x);
       else rulingsIn(x, out);
     }
   }
   return out;
 }
-const dataFiles = existsSync(dataDir) ? readdirSync(dataDir).filter((f) => f.endsWith('.json')) : [];
 const inData = new Set();
 for (const f of dataFiles) rulingsIn(load(f), inData);
 const inReadme = new Set([...readme.matchAll(/^- \*\*(R\d+)\*\*/gm)].map((m) => m[1]));

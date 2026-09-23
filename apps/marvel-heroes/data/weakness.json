@@ -1,0 +1,138 @@
+{
+ "about": "Three d100 rolls: what triggers the Weakness, what it does, and for how long. If every Power is Remarkable or lower, a Fatal result may be taken as Incapacitation instead.",
+ "sources": [
+  "UPB pp.12-13"
+ ],
+ "stimulus": [
+  {
+   "id": "elemental-allergy",
+   "name": "Elemental Allergy",
+   "roll": [
+    1,
+    13
+   ],
+   "summary": "An ounce or more of one pure element within 20 feet."
+  },
+  {
+   "id": "molecular-allergy",
+   "name": "Molecular Allergy",
+   "roll": [
+    14,
+    18
+   ],
+   "summary": "A specific compound, such as water, wood or Adamantium."
+  },
+  {
+   "id": "energy-allergy",
+   "name": "Energy Allergy",
+   "roll": [
+    19,
+    43
+   ],
+   "summary": "A specific form of energy."
+  },
+  {
+   "id": "energy-depletion",
+   "name": "Energy Depletion",
+   "roll": [
+    44,
+    68
+   ],
+   "summary": "The hero's Power runs down and must be recharged."
+  },
+  {
+   "id": "energy-dampening",
+   "name": "Energy Dampening",
+   "roll": [
+    69,
+    81
+   ],
+   "summary": "Pent-up energy harms the hero if he cannot use his Powers."
+  },
+  {
+   "id": "finite-limit",
+   "name": "Finite Limit",
+   "roll": [
+    82,
+    94
+   ],
+   "summary": "Each Power has a limited number of uses."
+  },
+  {
+   "id": "psychological",
+   "name": "Psychological",
+   "roll": [
+    95,
+    100
+   ],
+   "summary": "A condition that affects the hero's mind."
+  }
+ ],
+ "effect": [
+  {
+   "id": "power-negation",
+   "name": "Power Negation",
+   "roll": [
+    1,
+    50
+   ],
+   "summary": "Powers stop working near the stimulus."
+  },
+  {
+   "id": "incapacitation",
+   "name": "Incapacitation",
+   "roll": [
+    51,
+    90
+   ],
+   "summary": "Loses 1 Health a turn, stopping at zero."
+  },
+  {
+   "id": "fatal",
+   "name": "Fatal",
+   "roll": [
+    91,
+    100
+   ],
+   "summary": "Loses Health, then Endurance, and can die."
+  }
+ ],
+ "duration": [
+  {
+   "id": "continuous",
+   "name": "Continuous with Contact",
+   "roll": [
+    1,
+    40
+   ],
+   "summary": "Lasts while the stimulus is in range."
+  },
+  {
+   "id": "limited-with",
+   "name": "Limited Duration with Contact",
+   "roll": [
+    41,
+    60
+   ],
+   "summary": "Starts at contact and lasts 1-100 turns."
+  },
+  {
+   "id": "limited-after",
+   "name": "Limited Duration after Contact",
+   "roll": [
+    61,
+    90
+   ],
+   "summary": "Lasts 1-100 turns after contact ends."
+  },
+  {
+   "id": "permanent",
+   "name": "Permanent",
+   "roll": [
+    91,
+    100
+   ],
+   "summary": "Runs its full course even if contact is broken."
+  }
+ ]
+}

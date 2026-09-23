@@ -1,0 +1,645 @@
+{
+ "about": "Talents: roll d100 for the category, then d10 within it; where several Talents share a d10 result the player picks one. double marks a Talent that takes two Talent slots (an asterisk in the table; the Players' Book's own example also counts Law Enforcement as two). table_name is the name the category table uses where Appendix B names the Talent differently.",
+ "sources": [
+  "PB p.10 (Talent Categories)",
+  "PB pp.89-91 (Appendix B)"
+ ],
+ "groups": [
+  {
+   "id": "weapon",
+   "name": "Weapon Skills",
+   "roll": [
+    1,
+    20
+   ]
+  },
+  {
+   "id": "fighting",
+   "name": "Fighting Skills",
+   "roll": [
+    21,
+    45
+   ]
+  },
+  {
+   "id": "professional",
+   "name": "Professional Skills",
+   "roll": [
+    46,
+    65
+   ]
+  },
+  {
+   "id": "scientific",
+   "name": "Scientific Skills",
+   "roll": [
+    66,
+    85
+   ]
+  },
+  {
+   "id": "mystic",
+   "name": "Mystic and Mental Skills",
+   "roll": [
+    86,
+    90
+   ]
+  },
+  {
+   "id": "other",
+   "name": "Other Skills",
+   "roll": [
+    91,
+    100
+   ]
+  }
+ ],
+ "talents": [
+  {
+   "id": "guns",
+   "name": "Guns",
+   "group": "weapon",
+   "roll": [
+    1,
+    2
+   ],
+   "double": false,
+   "summary": "+1CS to hit with guns of every kind."
+  },
+  {
+   "id": "thrown-weapons",
+   "name": "Thrown Weapons",
+   "group": "weapon",
+   "roll": [
+    3,
+    5
+   ],
+   "double": false,
+   "summary": "+1CS with weapons made to be thrown."
+  },
+  {
+   "id": "bows",
+   "name": "Bows",
+   "group": "weapon",
+   "roll": [
+    6,
+    6
+   ],
+   "double": false,
+   "summary": "+1CS with bows and crossbows, where the untrained take -1CS."
+  },
+  {
+   "id": "blunt-weapons",
+   "name": "Blunt Weapons",
+   "group": "weapon",
+   "roll": [
+    7,
+    8
+   ],
+   "double": false,
+   "summary": "+1CS to hit with weapons that strike on Blunt Attacks."
+  },
+  {
+   "id": "sharp-weapons",
+   "name": "Sharp Weapons",
+   "group": "weapon",
+   "roll": [
+    9,
+    9
+   ],
+   "double": false,
+   "summary": "+1CS to hit with bladed weapons."
+  },
+  {
+   "id": "oriental-weapons",
+   "name": "Oriental Weapons",
+   "group": "weapon",
+   "roll": [
+    10,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS with shuriken, sais, katana and the like."
+  },
+  {
+   "id": "marksman",
+   "name": "Marksman",
+   "group": "weapon",
+   "roll": [
+    10,
+    10
+   ],
+   "double": true,
+   "summary": "+1CS with line-of-sight ranged weapons, and no range penalty."
+  },
+  {
+   "id": "weapons-master",
+   "name": "Weapons Master",
+   "group": "weapon",
+   "roll": [
+    10,
+    10
+   ],
+   "double": true,
+   "summary": "+1CS with any weapon that hits on Fighting."
+  },
+  {
+   "id": "weapons-specialist",
+   "name": "Weapons Specialist",
+   "group": "weapon",
+   "roll": [
+    10,
+    10
+   ],
+   "double": true,
+   "summary": "+2CS and +1 initiative with one chosen weapon."
+  },
+  {
+   "id": "martial-arts-a",
+   "name": "Martial Arts A",
+   "group": "fighting",
+   "roll": [
+    1,
+    1
+   ],
+   "double": false,
+   "summary": "Can Stun or Slam regardless of Strength or Endurance."
+  },
+  {
+   "id": "martial-arts-b",
+   "name": "Martial Arts B",
+   "group": "fighting",
+   "roll": [
+    2,
+    2
+   ],
+   "double": false,
+   "summary": "+1CS Fighting in unarmed combat."
+  },
+  {
+   "id": "martial-arts-c",
+   "name": "Martial Arts C",
+   "group": "fighting",
+   "roll": [
+    3,
+    3
+   ],
+   "double": false,
+   "summary": "+1CS for grappling and escaping, and for dodging."
+  },
+  {
+   "id": "martial-arts-d",
+   "name": "Martial Arts D",
+   "group": "fighting",
+   "roll": [
+    4,
+    4
+   ],
+   "double": false,
+   "summary": "After two rounds of study, ignores Body Armor for Stun and Slam."
+  },
+  {
+   "id": "martial-arts-e",
+   "name": "Martial Arts E",
+   "group": "fighting",
+   "roll": [
+    5,
+    5
+   ],
+   "double": false,
+   "summary": "+1 to initiative in unarmed combat."
+  },
+  {
+   "id": "wrestling",
+   "name": "Wrestling",
+   "group": "fighting",
+   "roll": [
+    6,
+    6
+   ],
+   "double": false,
+   "summary": "+2CS to hit when grappling."
+  },
+  {
+   "id": "thrown-objects",
+   "name": "Thrown Objects",
+   "group": "fighting",
+   "roll": [
+    7,
+    7
+   ],
+   "double": false,
+   "summary": "+1CS on all throwing and on catching."
+  },
+  {
+   "id": "tumbling",
+   "name": "Tumbling",
+   "group": "fighting",
+   "roll": [
+    8,
+    8
+   ],
+   "double": false,
+   "summary": "An Agility FEAT to land safely from a fall."
+  },
+  {
+   "id": "acrobatics",
+   "name": "Acrobatics",
+   "group": "fighting",
+   "roll": [
+    9,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS when dodging, evading and escaping."
+  },
+  {
+   "id": "medicine",
+   "name": "Medicine",
+   "group": "professional",
+   "roll": [
+    1,
+    1
+   ],
+   "double": true,
+   "summary": "Healing, reviving the dying, +1CS on medical Reason FEATs."
+  },
+  {
+   "id": "law",
+   "name": "Law",
+   "group": "professional",
+   "roll": [
+    2,
+    2
+   ],
+   "double": false,
+   "summary": "+1CS on FEATs involving the law."
+  },
+  {
+   "id": "law-enforcement",
+   "name": "Law Enforcement",
+   "group": "professional",
+   "roll": [
+    2,
+    2
+   ],
+   "double": true,
+   "summary": "Includes Guns and Law; may carry a gun and arrest."
+  },
+  {
+   "id": "pilot",
+   "name": "Pilot",
+   "group": "professional",
+   "roll": [
+    3,
+    3
+   ],
+   "double": false,
+   "summary": "+1CS on FEATs flying or designing aircraft."
+  },
+  {
+   "id": "military",
+   "name": "Military",
+   "group": "professional",
+   "roll": [
+    4,
+    4
+   ],
+   "double": false,
+   "summary": "+1CS in military matters and a military Contact."
+  },
+  {
+   "id": "business-finance",
+   "name": "Business/Finance",
+   "group": "professional",
+   "roll": [
+    5,
+    5
+   ],
+   "double": false,
+   "summary": "Resources at least Good, +1CS with money, a Contact."
+  },
+  {
+   "id": "journalism",
+   "name": "Journalism",
+   "group": "professional",
+   "roll": [
+    6,
+    6
+   ],
+   "double": false,
+   "summary": "Two extra media Contacts."
+  },
+  {
+   "id": "engineering",
+   "name": "Engineering",
+   "group": "professional",
+   "roll": [
+    7,
+    7
+   ],
+   "double": false,
+   "summary": "+1CS on FEATs to build things."
+  },
+  {
+   "id": "criminology",
+   "name": "Criminology",
+   "group": "professional",
+   "roll": [
+    8,
+    8
+   ],
+   "double": false,
+   "summary": "+1CS on Reason and Intuition FEATs about crime, and a Contact.",
+   "table_name": "Crime"
+  },
+  {
+   "id": "psychiatry",
+   "name": "Psychiatry",
+   "group": "professional",
+   "roll": [
+    9,
+    9
+   ],
+   "double": false,
+   "summary": "+1CS on FEATs involving the mind and mental Powers."
+  },
+  {
+   "id": "detective-espionage",
+   "name": "Detective/Espionage",
+   "group": "professional",
+   "roll": [
+    10,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS to find clues, and a Contact."
+  },
+  {
+   "id": "chemistry",
+   "name": "Chemistry",
+   "group": "scientific",
+   "roll": [
+    1,
+    2
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs in chemistry."
+  },
+  {
+   "id": "biology",
+   "name": "Biology",
+   "group": "scientific",
+   "roll": [
+    3,
+    4
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs in biology."
+  },
+  {
+   "id": "geology",
+   "name": "Geology",
+   "group": "scientific",
+   "roll": [
+    5,
+    6
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about the Earth."
+  },
+  {
+   "id": "genetics",
+   "name": "Genetics",
+   "group": "scientific",
+   "roll": [
+    7,
+    7
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about genes and mutants."
+  },
+  {
+   "id": "archaeology",
+   "name": "Archaeology",
+   "group": "scientific",
+   "roll": [
+    8,
+    8
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about the past.",
+   "table_name": "Archeology"
+  },
+  {
+   "id": "physics",
+   "name": "Physics",
+   "group": "scientific",
+   "roll": [
+    9,
+    9
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs in physics and astrophysics."
+  },
+  {
+   "id": "computers",
+   "name": "Computers",
+   "group": "scientific",
+   "roll": [
+    9,
+    9
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about computers and AIs."
+  },
+  {
+   "id": "electronics",
+   "name": "Electronics",
+   "group": "scientific",
+   "roll": [
+    10,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about electronics."
+  },
+  {
+   "id": "trance",
+   "name": "Trance",
+   "group": "mystic",
+   "roll": [
+    1,
+    2
+   ],
+   "double": false,
+   "summary": "A death-like trance; regains one Endurance rank a day."
+  },
+  {
+   "id": "mesmerism",
+   "name": "Mesmerism and Hypnosis",
+   "group": "mystic",
+   "roll": [
+    3,
+    5
+   ],
+   "double": false,
+   "summary": "Mind Control at the hero's Reason rank, easily broken."
+  },
+  {
+   "id": "sleight-of-hand",
+   "name": "Sleight of Hand",
+   "group": "mystic",
+   "roll": [
+    6,
+    7
+   ],
+   "double": false,
+   "summary": "Palms small items at Agility +1CS."
+  },
+  {
+   "id": "resist-domination",
+   "name": "Resist Domination",
+   "group": "mystic",
+   "roll": [
+    8,
+    9
+   ],
+   "double": false,
+   "summary": "Resists mental attacks as Psyche +1CS."
+  },
+  {
+   "id": "mystic-background",
+   "name": "Mystic Background",
+   "group": "mystic",
+   "roll": [
+    8,
+    9
+   ],
+   "double": true,
+   "summary": "May have magical Powers, with the Judge's approval.",
+   "table_name": "Mystic Origin"
+  },
+  {
+   "id": "occult-lore",
+   "name": "Occult Lore",
+   "group": "mystic",
+   "roll": [
+    10,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs about magical things."
+  },
+  {
+   "id": "artist",
+   "name": "Artist",
+   "group": "other",
+   "roll": [
+    1,
+    2
+   ],
+   "double": false,
+   "summary": "Earns Karma from finished works of art."
+  },
+  {
+   "id": "languages",
+   "name": "Languages",
+   "group": "other",
+   "roll": [
+    3,
+    4
+   ],
+   "double": false,
+   "summary": "One extra language, and more at half cost."
+  },
+  {
+   "id": "first-aid",
+   "name": "First Aid",
+   "group": "other",
+   "roll": [
+    5,
+    6
+   ],
+   "double": false,
+   "summary": "Stops a dying hero's Endurance loss and restores a rank."
+  },
+  {
+   "id": "repair-tinkering",
+   "name": "Repair/Tinkering",
+   "group": "other",
+   "roll": [
+    7,
+    8
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs to repair or modify things."
+  },
+  {
+   "id": "trivia",
+   "name": "Trivia",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": false,
+   "summary": "+1CS on Reason FEATs in one narrow subject."
+  },
+  {
+   "id": "performer",
+   "name": "Performer",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": false,
+   "summary": "Earns Karma from a week of performing."
+  },
+  {
+   "id": "animal-training",
+   "name": "Animal Training",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": true,
+   "summary": "Teaches animals tricks; +1CS to animal Powers."
+  },
+  {
+   "id": "heir-to-fortune",
+   "name": "Heir to Fortune",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": true,
+   "summary": "Resources at least Remarkable; only at creation."
+  },
+  {
+   "id": "student",
+   "name": "Student",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": true,
+   "summary": "No other starting Talents, but later ones cost less; only at creation."
+  },
+  {
+   "id": "leadership",
+   "name": "Leadership",
+   "group": "other",
+   "roll": [
+    9,
+    10
+   ],
+   "double": true,
+   "summary": "+50 Karma to a Karma Pool the hero leads."
+  }
+ ]
+}

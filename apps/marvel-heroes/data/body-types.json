@@ -1,0 +1,959 @@
+{
+ "about": "The Physical Form table and what each body type does to a hero. roll is the d100 band as ruled; printed is what the book prints where they differ. column is the Random Ranks column. shift is column shifts; set is a fixed rank; choose_shift lets the player raise that many abilities (from: primary, or any including Resources and Popularity); powers changes the number of Powers; bonus_powers are Powers every hero of the type has, by code or by class. notes are short summaries the generator shows but does not compute. Where a type has variants, the variant's fields add to the type's.",
+ "sources": [
+  "UPB pp.3-10"
+ ],
+ "types": [
+  {
+   "id": "normal-human",
+   "name": "Normal Human",
+   "form": "Normal Human",
+   "roll": [
+    1,
+    26
+   ],
+   "column": 2,
+   "page": "UPB p.3",
+   "shift": {
+    "resources": 1
+   }
+  },
+  {
+   "id": "mutant-induced",
+   "name": "Induced Mutant",
+   "form": "Mutant",
+   "roll": [
+    27,
+    30
+   ],
+   "printed": "26-30",
+   "ruling": "R4",
+   "column": 1,
+   "page": "UPB p.3",
+   "choose_shift": {
+    "count": 1,
+    "amount": 1,
+    "from": "primary"
+   }
+  },
+  {
+   "id": "mutant-random",
+   "name": "Random Mutant",
+   "form": "Mutant",
+   "roll": [
+    31,
+    33
+   ],
+   "column": 1,
+   "page": "UPB p.3",
+   "powers": 1,
+   "shift": {
+    "resources": -1,
+    "endurance": 1
+   }
+  },
+  {
+   "id": "mutant-breed",
+   "name": "Breed Mutant",
+   "form": "Mutant",
+   "roll": [
+    34,
+    35
+   ],
+   "column": 1,
+   "page": "UPB p.3",
+   "shift": {
+    "intuition": 1,
+    "endurance": 1
+   },
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "At least one Contact, usually the hero's tribe."
+   ]
+  },
+  {
+   "id": "android",
+   "name": "Android",
+   "form": "Android",
+   "roll": [
+    36,
+    38
+   ],
+   "column": 4,
+   "page": "UPB p.3",
+   "shift": {
+    "popularity": -1
+   },
+   "choose_shift": {
+    "count": 1,
+    "amount": 1,
+    "from": "any"
+   },
+   "powers": 1,
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "At least one Contact: whoever made the hero."
+   ]
+  },
+  {
+   "id": "humanoid-race",
+   "name": "Humanoid Race",
+   "form": "Humanoid Race",
+   "roll": [
+    39,
+    46
+   ],
+   "column": 5,
+   "page": "UPB p.4",
+   "choose_shift": {
+    "count": 1,
+    "amount": 1,
+    "from": "any"
+   },
+   "set": {
+    "resources": "poor"
+   },
+   "contacts": {
+    "exact": 1
+   },
+   "notes": [
+    "Starts with exactly one Contact: the hero's race."
+   ]
+  },
+  {
+   "id": "surgical-composite",
+   "name": "Surgical Composite",
+   "form": "Surgical Composite",
+   "roll": [
+    47,
+    47
+   ],
+   "column": 2,
+   "page": "UPB p.4",
+   "shift": {
+    "strength": 1,
+    "fighting": 1,
+    "endurance": 1
+   },
+   "set": {
+    "popularity": "shift-0",
+    "resources": "poor"
+   },
+   "contacts": {
+    "exact": 1
+   },
+   "notes": [
+    "Resistance to Mental Domination is -1CS.",
+    "Heals twice as fast as a Normal Human.",
+    "One Contact: whoever assembled the hero."
+   ]
+  },
+  {
+   "id": "modified-organic",
+   "name": "Modified Human (Organic)",
+   "form": "Modified Human",
+   "roll": [
+    48,
+    49
+   ],
+   "printed": "48-19",
+   "ruling": "R5",
+   "column": 1,
+   "page": "UPB p.4",
+   "powers": -1,
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "Heals twice as fast as a Normal Human.",
+    "At least one Contact: whoever did the modifying."
+   ]
+  },
+  {
+   "id": "modified-muscular",
+   "name": "Modified Human (Muscular)",
+   "form": "Modified Human",
+   "roll": [
+    50,
+    51
+   ],
+   "printed": "60-61",
+   "ruling": "R6",
+   "column": 1,
+   "page": "UPB p.4",
+   "powers": -1,
+   "shift": {
+    "strength": 1,
+    "endurance": 1
+   },
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "At least one Contact: whoever did the modifying."
+   ]
+  },
+  {
+   "id": "modified-skeletal",
+   "name": "Modified Human (Skeletal)",
+   "form": "Modified Human",
+   "roll": [
+    52,
+    53
+   ],
+   "column": 1,
+   "page": "UPB p.4",
+   "powers": -1,
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "Resistance to physical attacks +1CS.",
+    "At least one Contact: whoever did the modifying."
+   ]
+  },
+  {
+   "id": "modified-extra-parts",
+   "name": "Modified Human (Extra Parts)",
+   "form": "Modified Human",
+   "roll": [
+    54,
+    57
+   ],
+   "column": 1,
+   "page": "UPB p.4",
+   "powers": -1,
+   "contacts": {
+    "min": 1
+   },
+   "ruling": "R16",
+   "notes": [
+    "Extra arms: Fighting +1CS. Duplicate organs: double Health. Each tail: one more blunt attack. Wings: Flight.",
+    "At least one Contact: whoever did the modifying."
+   ]
+  },
+  {
+   "id": "centaur",
+   "name": "Centaur",
+   "form": "Demihuman",
+   "roll": [
+    58,
+    58
+   ],
+   "column": 5,
+   "page": "UPB p.4",
+   "shift": {
+    "strength": 1
+   },
+   "notes": [
+    "Moves four areas a turn on level ground and can fight with hooves.",
+    "Climbing is Feeble."
+   ]
+  },
+  {
+   "id": "equiman",
+   "name": "Equiman",
+   "form": "Demihuman",
+   "roll": [
+    59,
+    59
+   ],
+   "column": 3,
+   "page": "UPB p.4",
+   "notes": [
+    "Kicks do +1CS damage.",
+    "Can pass for human with the legs and tail hidden."
+   ]
+  },
+  {
+   "id": "faun",
+   "name": "Faun",
+   "form": "Demihuman",
+   "roll": [
+    60,
+    60
+   ],
+   "column": 2,
+   "page": "UPB p.4",
+   "set": {
+    "popularity": "shift-0"
+   },
+   "notes": [
+    "Feeble Mental Domination over human(oid) women.",
+    "Gains Popularity more slowly than other Demihumans."
+   ]
+  },
+  {
+   "id": "felinoid",
+   "name": "Felinoid",
+   "form": "Demihuman",
+   "roll": [
+    61,
+    62
+   ],
+   "column": 1,
+   "page": "UPB p.4",
+   "notes": [
+    "Excellent night vision.",
+    "Climbing +1CS."
+   ]
+  },
+  {
+   "id": "lupinoid",
+   "name": "Lupinoid",
+   "form": "Demihuman",
+   "roll": [
+    63,
+    64
+   ],
+   "column": 4,
+   "page": "UPB p.5",
+   "shift": {
+    "popularity": -1
+   },
+   "notes": [
+    "Excellent sense of smell.",
+    "Popularity never drops below the one -1CS."
+   ]
+  },
+  {
+   "id": "avian",
+   "name": "Avian",
+   "form": "Demihuman",
+   "roll": [
+    65,
+    66
+   ],
+   "printed": "66-66",
+   "ruling": "R7",
+   "page": "UPB p.5",
+   "variants": [
+    {
+     "id": "angelic",
+     "name": "Angelic Avian",
+     "column": 3,
+     "shift": {
+      "popularity": 1
+     },
+     "notes": [
+      "Wings from the shoulder blades."
+     ]
+    },
+    {
+     "id": "harpy",
+     "name": "Harpy",
+     "column": 2,
+     "shift": {
+      "fighting": 1
+     },
+     "notes": [
+      "Arms double as wings; clawed bird legs; lays eggs."
+     ]
+    }
+   ],
+   "variant_ruling": "R15"
+  },
+  {
+   "id": "chiropteran",
+   "name": "Chiropteran",
+   "form": "Demihuman",
+   "roll": [
+    67,
+    67
+   ],
+   "column": 2,
+   "page": "UPB p.5",
+   "set": {
+    "popularity": "feeble"
+   },
+   "bonus_powers": [
+    {
+     "code": "DT16",
+     "rank": "good"
+    }
+   ],
+   "notes": [
+    "Bat wings formed by the arms; hand-like feet; large ears."
+   ]
+  },
+  {
+   "id": "lamian",
+   "name": "Lamian",
+   "form": "Demihuman",
+   "roll": [
+    68,
+    68
+   ],
+   "column": 3,
+   "page": "UPB p.5",
+   "set": {
+    "popularity": "shift-0"
+   },
+   "notes": [
+    "A 50% chance of Excellent venom.",
+    "+1CS to escape bonds."
+   ]
+  },
+  {
+   "id": "merhuman",
+   "name": "Merhuman",
+   "form": "Demihuman",
+   "roll": [
+    69,
+    69
+   ],
+   "column": 2,
+   "page": "UPB p.5",
+   "shift": {
+    "popularity": 1
+   },
+   "bonus_powers": [
+    {
+     "code": "P17"
+    }
+   ],
+   "notes": [
+    "Lungs and gills; dries out away from water; crawls on land."
+   ]
+  },
+  {
+   "id": "demihuman-other",
+   "name": "Other Demihuman",
+   "form": "Demihuman",
+   "roll": [
+    70,
+    70
+   ],
+   "column": 2,
+   "ruling": "R13",
+   "page": "UPB p.5",
+   "notes": [
+    "Any animal-human blend; the player and Judge set its traits."
+   ]
+  },
+  {
+   "id": "cyborg-limb",
+   "name": "Cyborg (Limbs and Organs)",
+   "form": "Cyborg",
+   "roll": [
+    71,
+    72
+   ],
+   "column": 3,
+   "ruling": "R12",
+   "page": "UPB p.5",
+   "shift": {
+    "intuition": -1
+   },
+   "contacts": {
+    "min": 1
+   },
+   "notes": [
+    "At least one Contact: the lab or hospital that built or maintains the hero."
+   ]
+  },
+  {
+   "id": "cyborg-exoskeleton",
+   "name": "Cyborg (Exoskeleton)",
+   "form": "Cyborg",
+   "roll": [
+    73,
+    74
+   ],
+   "column": 3,
+   "ruling": "R12",
+   "page": "UPB p.5",
+   "notes": [
+    "An intact body inside a powered suit."
+   ]
+  },
+  {
+   "id": "cyborg-mech-body",
+   "name": "Cyborg (Mechanical Body)",
+   "form": "Cyborg",
+   "roll": [
+    75,
+    76
+   ],
+   "printed": "76-76",
+   "ruling": "R8",
+   "column": 4,
+   "page": "UPB p.5",
+   "shift": {
+    "intuition": -1,
+    "psyche": -1
+   },
+   "contacts": {
+    "exact": 1
+   },
+   "notes": [
+    "Monstrous resistance to disease and poison; vulnerable to magnetism and rust.",
+    "One Contact: the lab that built the hero."
+   ]
+  },
+  {
+   "id": "cyborg-augmented",
+   "name": "Cyborg (Mechanically Augmented)",
+   "form": "Cyborg",
+   "roll": [
+    77,
+    79
+   ],
+   "column": 3,
+   "page": "UPB p.6",
+   "powers": -1,
+   "set": {
+    "resources": "good"
+   },
+   "notes": [
+    "Resources may be rolled instead of Good."
+   ]
+  },
+  {
+   "id": "robot-humanshape",
+   "name": "Robot (Humanshape)",
+   "form": "Robot",
+   "roll": [
+    80,
+    82
+   ],
+   "column": 4,
+   "page": "UPB p.6",
+   "set": {
+    "popularity": "shift-0"
+   },
+   "notes": [
+    "Weighs 500 to 2,000 pounds.",
+    "Self-repair stands in for Healing."
+   ]
+  },
+  {
+   "id": "robot-usuform",
+   "name": "Robot (Usuform)",
+   "form": "Robot",
+   "roll": [
+    83,
+    84
+   ],
+   "column": 4,
+   "page": "UPB p.6",
+   "notes": [
+    "Shaped by its Powers rather than like a person."
+   ]
+  },
+  {
+   "id": "robot-metamorphic",
+   "name": "Robot (Metamorphic)",
+   "form": "Robot",
+   "roll": [
+    85,
+    86
+   ],
+   "column": 4,
+   "page": "UPB p.6",
+   "notes": [
+    "Two or more forms, each with its own physical abilities.",
+    "Each form past two costs -1CS to every Primary Ability."
+   ]
+  },
+  {
+   "id": "robot-computer",
+   "name": "Robot (Computer)",
+   "form": "Robot",
+   "roll": [
+    87,
+    87
+   ],
+   "column": 4,
+   "page": "UPB p.6",
+   "shift": {
+    "reason": 2,
+    "fighting": -1,
+    "resources": 1
+   },
+   "notes": [
+    "Immobile; acts through peripherals, starting with one robot.",
+    "Reduced resistance to electrical and magnetic attacks and to Phasing."
+   ]
+  },
+  {
+   "id": "angel-demon",
+   "name": "Angel or Demon",
+   "form": "Angel/Demon",
+   "roll": [
+    88,
+    88
+   ],
+   "column": 5,
+   "page": "UPB p.7",
+   "shift": {
+    "fighting": 1,
+    "agility": 1,
+    "strength": 1,
+    "endurance": 1
+   },
+   "contacts": {
+    "max": 0
+   },
+   "notes": [
+    "A Psychological Weakness that negates the hero's Powers."
+   ],
+   "variants": [
+    {
+     "id": "angel",
+     "name": "Angel",
+     "shift": {
+      "popularity": 2
+     },
+     "bonus_powers": [
+      {
+       "code": "MCr1"
+      }
+     ],
+     "notes": [
+      "The Artifact Creation makes a magical sword of Excellent damage."
+     ]
+    },
+    {
+     "id": "demon",
+     "name": "Demon",
+     "shift": {
+      "popularity": -2
+     },
+     "bonus_powers": [
+      {
+       "code": "EE4",
+       "rank": "good"
+      }
+     ],
+     "notes": [
+      "Invulnerable to heat and fire."
+     ]
+    }
+   ],
+   "variant_ruling": "R15"
+  },
+  {
+   "id": "deity",
+   "name": "Deity",
+   "form": "Deity",
+   "roll": [
+    89,
+    89
+   ],
+   "column": 5,
+   "page": "UPB p.7",
+   "shift": {
+    "fighting": 2,
+    "agility": 2,
+    "strength": 2,
+    "endurance": 2,
+    "reason": 2,
+    "intuition": 2,
+    "psyche": 2,
+    "popularity": 2
+   },
+   "powers": 2,
+   "bonus_powers": [
+    {
+     "class": "T"
+    }
+   ],
+   "notes": [
+    "Cannot truly die on Earth except at another deity's hand.",
+    "Surviving worshippers become Contacts."
+   ]
+  },
+  {
+   "id": "animal",
+   "name": "Animal",
+   "form": "Animal",
+   "roll": [
+    90,
+    90
+   ],
+   "page": "UPB p.7",
+   "powers": -1,
+   "set": {
+    "resources": "shift-0"
+   },
+   "contacts": {
+    "min": 1
+   },
+   "bonus_powers": [
+    {
+     "class": "DT",
+     "rank": "good"
+    },
+    {
+     "class": "DT",
+     "rank": "good"
+    }
+   ],
+   "notes": [
+    "At least one human Contact, usually taken for the owner."
+   ],
+   "variants": [
+    {
+     "id": "earth-animal",
+     "name": "Animal",
+     "column": 1
+    },
+    {
+     "id": "alien",
+     "name": "Alien creature",
+     "column": 5
+    }
+   ],
+   "variant_ruling": "R15"
+  },
+  {
+   "id": "vegetable",
+   "name": "Vegetable",
+   "form": "Vegetable",
+   "roll": [
+    91,
+    91
+   ],
+   "column": 1,
+   "page": "UPB p.8",
+   "shift": {
+    "fighting": -2,
+    "endurance": 2
+   },
+   "set": {
+    "resources": "shift-0"
+   },
+   "contacts": {
+    "max": 1
+   },
+   "bonus_powers": [
+    {
+     "code": "EC1",
+     "rank": "good"
+    }
+   ],
+   "notes": [
+    "Loses -1CS Strength and Endurance a day after three days without light and water.",
+    "No Contacts, unless science made the plant: then its maker may be one."
+   ]
+  },
+  {
+   "id": "abnormal-chemistry",
+   "name": "Abnormal Biochemistry",
+   "form": "Abnormal Chemistry",
+   "roll": [
+    92,
+    92
+   ],
+   "column": 2,
+   "page": "UPB p.8",
+   "shift": {
+    "endurance": 1
+   },
+   "notes": [
+    "Needs special food; anything that feeds on the hero takes Good damage."
+   ]
+  },
+  {
+   "id": "mineral",
+   "name": "Mineral Life",
+   "form": "Mineral",
+   "roll": [
+    93,
+    93
+   ],
+   "column": 2,
+   "page": "UPB p.8",
+   "health_multiplier": 2,
+   "notes": [
+    "Movement -1CS.",
+    "Immune to ordinary poisons and diseases."
+   ]
+  },
+  {
+   "id": "gaseous",
+   "name": "Gaseous Life",
+   "form": "Gaseous",
+   "roll": [
+    94,
+    94
+   ],
+   "column": 5,
+   "page": "UPB p.8",
+   "set": {
+    "resources": "shift-0"
+   },
+   "contacts": {
+    "max": 0
+   },
+   "notes": [
+    "A natural Phasing through solids."
+   ]
+  },
+  {
+   "id": "liquid",
+   "name": "Liquid Life",
+   "form": "Liquid",
+   "roll": [
+    95,
+    95
+   ],
+   "column": 5,
+   "page": "UPB p.8",
+   "contacts": {
+    "max": 1
+   },
+   "notes": [
+    "A natural Phasing through porous material.",
+    "No Contacts except the hero's own race, if there is one."
+   ]
+  },
+  {
+   "id": "energy",
+   "name": "Energy Body",
+   "form": "Energy",
+   "roll": [
+    96,
+    96
+   ],
+   "column": 5,
+   "page": "UPB p.9",
+   "bonus_powers": [
+    {
+     "class": "EE"
+    }
+   ],
+   "notes": [
+    "Energy Control is an optional Power.",
+    "Resistance to Plasma Control is -1CS.",
+    "Touching the hero does Feeble damage."
+   ]
+  },
+  {
+   "id": "ethereal",
+   "name": "Ethereal",
+   "form": "Ethereal",
+   "roll": [
+    97,
+    97
+   ],
+   "column": 1,
+   "page": "UPB p.9",
+   "set": {
+    "fighting": "shift-0"
+   },
+   "notes": [
+    "Fighting is Shift 0 on Earth except against another Ethereal.",
+    "Physical attacks -9CS."
+   ]
+  },
+  {
+   "id": "undead",
+   "name": "Undead",
+   "form": "Undead",
+   "roll": [
+    98,
+    98
+   ],
+   "column": 1,
+   "page": "UPB p.9",
+   "shift": {
+    "strength": 1,
+    "endurance": 1
+   },
+   "notes": [
+    "Powers negated within 10 feet of a religious symbol.",
+    "Needs a body-maintenance routine."
+   ]
+  },
+  {
+   "id": "compound",
+   "name": "Compound",
+   "form": "Compound",
+   "roll": [
+    99,
+    99
+   ],
+   "page": "UPB p.9",
+   "special": "compound",
+   "shift": {
+    "popularity": -1
+   },
+   "column_ruling": "R14",
+   "notes": [
+    "Two to five body types at once, keeping some of each one's traits.",
+    "A Compound with any artificial body type is a Cyborg."
+   ]
+  },
+  {
+   "id": "changeling",
+   "name": "Changeling",
+   "form": "Changeling",
+   "roll": [
+    100,
+    100
+   ],
+   "column": 5,
+   "page": "UPB p.10",
+   "special": "changeling",
+   "notes": [
+    "Two to five body types, one at a time; changing takes 10 turns.",
+    "Each form must have one Power no other form has.",
+    "A rolled Alter Ego may be discarded and rolled again."
+   ]
+  }
+ ],
+ "compound_aspects": [
+  {
+   "lo": 1,
+   "hi": 50,
+   "number": 2,
+   "retain": 50
+  },
+  {
+   "lo": 51,
+   "hi": 75,
+   "number": 3,
+   "retain": 33
+  },
+  {
+   "lo": 76,
+   "hi": 95,
+   "number": 4,
+   "retain": 25
+  },
+  {
+   "lo": 96,
+   "hi": 100,
+   "number": 5,
+   "retain": 20
+  }
+ ],
+ "changeling_aspects": [
+  {
+   "lo": 1,
+   "hi": 50,
+   "number": 2
+  },
+  {
+   "lo": 51,
+   "hi": 75,
+   "number": 3
+  },
+  {
+   "lo": 76,
+   "hi": 95,
+   "number": 4
+  },
+  {
+   "lo": 96,
+   "hi": 100,
+   "number": 5
+  }
+ ]
+}
