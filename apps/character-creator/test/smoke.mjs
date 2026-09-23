@@ -483,6 +483,42 @@ check('catalog configs are internally consistent', catalogProblems.length === 0,
     spreads.length === 2 && JSON.stringify([...spreads[0]].sort()) === JSON.stringify([...spreads[1]].sort()),
     spreads.map((s) => s.join(',')).join('  VS  '));
 
+  // A SECOND AUTHORITY FOR source-coverage: THE SCHEMA. BOOK-INGEST-AUDIT F107.
+  // CATALOGS is the wrong set for the question that file asks. It asks whether
+  // every CITED row traces to a page, and `skill_system_bases` and
+  // `psionic_system_costs` cite pages without being catalogs - 95 production
+  // rows sat outside the report while every assertion above passed. So every
+  // table with a `source_book` column in db/schema.sql, read through node:sqlite
+  // rather than parsed as text, must be read by BOTH halves, as a spread entry or
+  // as its own `FROM <table>` entry. The spreads alone cannot show this: the two
+  // tables have no `name` column and sit outside them, so the identical-lists
+  // check above would pass with one landed on one side only.
+  //
+  // Still a check, not a derived list - F100's decision. A table this report
+  // should skip on purpose goes in SOURCE_EXCLUDED with its reason; there is
+  // none today.
+  const SOURCE_EXCLUDED = [];
+  const schemaMem = new DatabaseSync(':memory:');
+  schemaMem.exec(readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'));
+  const cited = schemaMem.prepare("SELECT m.name FROM sqlite_master m WHERE m.type = 'table' "
+    + "AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) p WHERE p.name = 'source_book')")
+    .all().map((r) => r.name);
+  schemaMem.close();
+  check('schema.sql names tables that carry a source_book', cited.length > 0);
+  const halfOf = (start, end) => {
+    const i = sc.indexOf(start);
+    return i < 0 ? '' : sc.slice(i, sc.indexOf(end, i));
+  };
+  const halves = [halfOf('const groups = [', '\n];'), halfOf('const buildGroups = [', '\n      ];')];
+  check('both source-coverage halves were found', halves.every((h) => h.length > 0));
+  for (const [i, h] of halves.entries()) {
+    const spread = quoted((h.match(/\.\.\.(\[[^\]]*\])\.map\(/) || [])[1] || '');
+    const missing = cited.filter((t) => !SOURCE_EXCLUDED.includes(t)
+      && !spread.includes(t) && !new RegExp(`FROM ${t}\\b`).test(h));
+    check(`source-coverage half ${i + 1} of 2 reads every table that cites a page`, missing.length === 0,
+      'missing, and not a named exclusion: ' + missing.join(', '));
+  }
+
   // 3. repo-vs-live's TABLES. A SUPERSET: it also compares imported_classes,
   // skill_system_bases and catalog_redirects, which are not catalogs, so extras
   // are expected and only an absence is wrong.

@@ -2133,3 +2133,69 @@ read how the offenders print.
 **Ongoing cost:** two more entries in each list, and one assertion. The recurrence
 it stops is `F28`, `F85`, `F94` and this one: a hand-written subset of a set
 that grew.
+
+**Taken, 2026-09-22 (PR #1280).** Both parts are implemented as written.
+**Posture, said back:** `source-coverage.mjs` stays advisory and still exits 0.
+The assertion added to `F100`'s block uses the same shape as `F100`'s check,
+with no refactor and no derived list. It widens `smoke`, which is a required
+check, and it passes on the day it ships because the two tables land in the
+same PR.
+
+**What shipped:**
+
+- **Both halves of `scripts/source-coverage.mjs`** read `skill_system_bases`
+  and `psionic_system_costs`. Each gets its own entry after the spread, and
+  each row is labelled `<skill|power> (<game>)`.
+- **`apps/character-creator/test/smoke.mjs`**, inside `F100`'s block, gets a
+  second authority. It builds `db/schema.sql` into an in-memory `node:sqlite`
+  database. Every table with a `source_book` column in `pragma_table_info` must
+  then be read by both halves, either as a spread entry or as its own
+  `FROM <table>`. `SOURCE_EXCLUDED` holds the named exclusions and is empty.
+
+**Two things the premise audit settled** (`audit-premise-auditor`,
+2026-09-22). No premise was false.
+
+- **`F100`'s own check cannot see a table added outside the spreads.** Its
+  identical-lists check reads the spreads only, so a table added on one half
+  alone would pass it. The new assertion therefore reads each half whole.
+- **The schema is read through SQLite, not parsed as text.** An `awk` over
+  `CREATE TABLE` bodies returns the right fourteen today. It would over-count
+  if a comment inside a body ever mentioned `source_book`. The auditor also
+  confirmed that no `ALTER TABLE` and no migration adds the column elsewhere.
+  Production's `sqlite_master` agrees on the same fourteen.
+
+**This finding's comparison to `F100`'s posture is loose.** <!-- claim-ok: quoting the premise this note corrects -->
+It calls its posture the *"same posture as `F100`'s"*. `F100`'s note says its
+check *"is not a required CI status"*, which was true on its day. `smoke` has
+been required since 2026-09-16. F107 already says so outright, so only the
+comparison was wrong.
+
+**Proved by making it fail, 2026-09-22**, running
+`smoke.mjs --section 'Catalog field config'`:
+
+| injected | fired |
+|---|---|
+| `main`'s `source-coverage.mjs`, unchanged | half 1 **and** half 2: `skill_system_bases, psionic_system_costs` |
+| `psionic_system_costs` dropped from the build half | half 2: `psionic_system_costs` |
+| `skill_system_bases` dropped from the live half | half 1: `skill_system_bases` |
+| `creatures` dropped from the live spread | `F100`'s list-1 and identical-lists checks, and half 1 |
+
+Flagless smoke went from **2776 to 2780** checks.
+
+**What the report says now**, `node scripts/source-coverage.mjs --remote`,
+2026-09-22: `skill_system_bases` is **92 traceable of 92**, and
+`psionic_system_costs` is **1 traceable, 2 unknown-book, of 3**. `--vs-build`
+reports **6281** rows on each side, so the build half reads the new tables too.
+
+**The two unknown-book rows are the first thing the wider report caught.**
+`Hypnotic Suggestion (nightbane)` and `Death Trance (nightbane)` each cite two
+page references in one value, `Nightbane RPG p.72, p.78` and
+`Nightbane RPG p.77, p.84`. The single-page form, `Nightbane RPG p.57`,
+resolves. **The rows are not fixed here, and no number is filed for them.**
+Neither the data script nor the resolver is a file this PR edits. The case is
+recorded in this session's hand-back list for Nate to decide.
+
+**What cites this finding:** `F104`'s note describes this gap without its
+number, and stays as it is, since an audit file is a record. `git grep F107`
+and the memory directories otherwise find only this section, 2026-09-22.
+`audit-citations.mjs --remote F107` reports no class citing it.
