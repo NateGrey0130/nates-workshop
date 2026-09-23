@@ -130,6 +130,36 @@ Steps 1 to 4 always run. They were 183 of the suite's 325 seconds measured
 most the flag can save is roughly 142 seconds. A smaller win than the smoke
 flag, for a structural reason rather than a fixable one.
 
+## Reading a failure: the check's rows are not the whole cause
+
+A red check names the rows **it reads**. Fixing those rows turns it green, but
+that says nothing about the rows the same cause wrote where no check looks.
+The digit-cipher sweep in `apps/character-creator/test/regression.mjs` is the
+record. It read super abilities first. Run over three more catalogs on
+2026-09-18, the same sweep found 46 spells, 1 psionic power and 2 more super
+abilities (the comment at its `SELECT * FROM ${table}` loop). None of those
+rows was red until someone widened what was read.
+
+**So before the first edit that turns a failing check green, write two lines
+in the session:**
+
+1. **The cause, as a mechanism, not a row.** For example, "this book's cache
+   sets 0 as O", not "this row has a typo".
+2. **Every place that cause wrote to, not only this branch, and which of those
+   places any check reads.** A cause in a book's cache is in every table that
+   book ever fed, including tables imported by earlier PRs. The filenames name
+   them:
+
+   ```bash
+   ls apps/character-creator/db | grep -i <book-slug>
+   ```
+
+   A book typically lists equipment, skills, psionics and spells there, and
+   the regression sweeps above read only some of those tables. Sweep the
+   unread ones by hand, or say in the PR body that you did not.
+
+If you can't write line 1, you're not ready to fix yet. Reading is the work.
+
 ## The port, and the other worktree that answers on it
 
 `regression.mjs` and `play-flow.mjs` boot `wrangler pages dev` through

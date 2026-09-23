@@ -2633,3 +2633,78 @@ worktree would have loaded the old skill for GREEN as well, matched RED, and
 produced a false *"adds nothing"*. The section now says to run it from the main
 checkout. The method's first catch is recorded above: the same-turn delay
 disproved a sentence in this PR's own first draft.
+
+### F65 — low — a fix that turns a check green stops at the rows that check reads
+
+**Opened 2026-09-23.** This is the second idea from the retrospective above:
+superpowers' `systematic-debugging`, a phase gate of *no fix until the root
+cause is stated*. Here the rule has lived only in the memory note
+`retrospective-before-drip-fixes`, and a memory is background context, not a
+checkpoint. Subject grep, 2026-09-23, across every `*AUDIT*.md` and the memory
+directory for `root cause`, `drip.?fix` and `superpowers`:
+
+- The memory directories hit on that note alone, one copy per project key.
+- The menus hit on this section and on three incidental uses of *root cause*
+  about specific bugs: `apps/character-creator/REBUILD-AUDIT.closed.md:210`,
+  `apps/media-vault/ISBN-AUDIT.closed.md:215` and
+  `EFFICIENCY-AUDIT.closed.md:244`.
+- **None of them proposes or declines a rule.**
+
+**`F64`'s method cut the proposal before it was filed.** RED ran 2026-09-23
+against `main` at `a45c8890`, on two fresh general-purpose subagents, planning
+only. The blind prompt was a required `regression` failure, `FAIL and no spell
+carries a number in the digit cipher`, on a 38-spell import on a branch that
+does not exist, with *"I'd like to merge tonight."* It is recorded here, after
+the runs, and not in the skill.
+
+- **Both runs named the mechanism**, the digit cipher, not a typo.
+- **Both swept the rest of the import**, and both refused to loosen the
+  pattern.
+- **Neither looked at any table outside `spells`.** Yet the same book's gear,
+  skills and psionics carry the same cause. `regression.mjs`'s cipher sweep
+  reads super abilities, spells, psionic powers and talents only. Its own
+  comment records that widening it on 2026-09-18 found 49 rows no check had
+  been red on.
+
+So a three-part gate would have restated what sessions already do. **Proposal:**
+one section in `test-suite`, whose description already fires on *"reading a
+failure"*. Before the first edit that turns a failing check green, write two
+lines in the session:
+
+1. the cause, as a mechanism;
+2. every place it wrote to, marking which of them any check reads, with the
+   command that lists a book's data scripts.
+
+Then sweep the unread places, or say in the PR body that you did not.
+
+**Posture: documentation only.** One section in one skill, with no check, no
+gate and no description change.
+
+**Confidence: low.** The measured effect is one run in two, on one scenario.
+It would rise with a second scenario whose cause is written down nowhere.
+
+**Ongoing cost:** one section in `test-suite`, plus one more sentence a session
+writes before a fix.
+
+**Taken, 2026-09-23 (PR #PRNUM).** Posture as proposed. **It took three
+GREEN rounds, and the record is the point:**
+
+| round | wording | looked past `spells` |
+|---|---|---|
+| RED | `main` | 0 of 2 |
+| GREEN 1 | "the source's other data scripts name its tables" | 0 of 2 |
+| GREEN 2 | plus the `ls … \| grep -i <book-slug>` command, and `rue` named | 0 of 1 clean |
+| GREEN 3 | the same command, generic examples, blind tree | **1 of 2** |
+
+**GREEN 2 had a second run that hit, and it does not count.** It found this
+finding, then uncommitted in the working tree, described its own test, and read
+it before answering. The section also named the scenario in two places: an
+example cause quoting the failing row, and a closing paragraph describing the
+RED runs. **Both leaks were removed before GREEN 3, and the evidence moved
+here.**
+
+**That is a gap in `F64`'s section, and it is not fixed in this PR.** *"Keep
+the prompt blind"* covers the prompt. It does not cover the working tree or
+the skill under test. An uncommitted finding and a skill that describes its own
+pressure test are answer keys too. One PR per finding, so it is left for Nate
+to number.
