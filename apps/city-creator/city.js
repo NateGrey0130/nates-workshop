@@ -10,7 +10,8 @@
 // /apps/character-creator/js/api.js, claudeRequest() from /shared/js/api.js.
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
-  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet }
+  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet,
+  stockShop, restockShop }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 
@@ -38,6 +39,8 @@ const S = {
   keepMsg: '', keepErr: false,
   // "Roll stats" per NPC (Phase 4a): what the roller said, keyed by entry id.
   rolls: {},
+  // The Codex's gear, loaded the first time a shop is stocked (Phase 4b).
+  gear: null, stockMsg: '',
 };
 
 // ── storage: a convenience, never the record ──
@@ -270,6 +273,28 @@ function statsTools(n) {
     ${r?.msg ? `<span class="small${r.err ? ' err' : ' muted'}">${esc(r.msg)}</span>` : ''}</div>`;
 }
 
+// ── shop inventories (Phase 4b) ──
+// Real gear rows from the Codex, copied into the city with this city's price,
+// so a kept city keeps its stock when the Codex changes. A shop the Codex can
+// only partly stock says so; nothing is invented to fill the shelf.
+function stockHtml(s) {
+  if (!s.inventory) {
+    return `<button type="button" class="btn btn-sm btn-ghost" onclick="City.stock('${escJs(s.id)}')">📦 Stock it</button>`;
+  }
+  return `<details class="city-stock"><summary class="small">${s.inventory.length} item${s.inventory.length === 1 ? '' : 's'} for sale</summary>
+    <table class="small"><thead><tr><th>Item</th><th>Here</th><th>Book</th></tr></thead><tbody>
+      ${s.inventory.map((i) => `<tr><td>${esc(i.name)}</td><td>${i.price} gp</td><td class="muted">${i.book}</td></tr>`).join('')}
+    </tbody></table>
+    ${s.stock_note ? `<p class="small warn">${esc(s.stock_note)}</p>` : ''}
+    <button type="button" class="btn btn-sm btn-ghost" onclick="City.restock('${escJs(s.id)}')">🎲 Restock</button>
+  </details>`;
+}
+async function loadGear() {
+  if (S.gear) return S.gear;
+  S.gear = (await api('codex?section=gear')).gear || [];
+  return S.gear;
+}
+
 function cityHtml() {
   const c = S.city;
   if (!c) return '';
@@ -307,8 +332,14 @@ function cityHtml() {
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Shops and taverns</h3>
+    <div class="rowline" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-sm" onclick="City.stockAll()">📦 Stock every shop from the Codex</button>
+      <span class="muted small">6-10 real items each, at book price × the city's wealth (${esc(o.wealth)})</span>
+    </div>
+    ${S.stockMsg ? `<p class="small err">${esc(S.stockMsg)}</p>` : ''}
     ${c.shops.map((s) => card(s.id, `<p>${pinTag(c, s.id)}<b>${esc(s.name || '(unnamed)')}</b> <span class="muted small">${esc(s.type)}${s.district ? ', ' + esc(s.district) : ''}</span></p>
       <p class="small">Known for ${esc(s.specialty)}. Prices ${esc(s.price)}. Owner: ${esc(npcName[s.owner] || 'nobody named')} — ${esc(s.quirk)}.</p>
+      ${stockHtml(s)}
       ${publicField(c, s.id)}`)).join('')}
   </div>
 
@@ -481,6 +512,24 @@ window.City = {
       S.saved = null; S.dirty = false; S.keepMsg = 'Deleted from the campaign.'; S.keepErr = false;
       save(); render();
     } catch (err) { keepFail(err); }
+  },
+  async stock(id) {
+    try { S.city = stockShop(S.city, id, await loadGear()); S.stockMsg = ''; changed(); save(); }
+    catch (err) { S.stockMsg = 'Could not stock it: ' + err.message; }
+    render();
+  },
+  async restock(id) {
+    try { S.city = restockShop(S.city, id, await loadGear()); changed(); save(); }
+    catch (err) { S.stockMsg = 'Could not restock it: ' + err.message; }
+    render();
+  },
+  async stockAll() {
+    try {
+      const gear = await loadGear();
+      for (const shop of S.city.shops) S.city = stockShop(S.city, shop.id, gear);
+      S.stockMsg = ''; changed(); save();
+    } catch (err) { S.stockMsg = 'Could not stock the shops: ' + err.message; }
+    render();
   },
   async rollStats(id) {
     S.rolls[id] = { busy: true };

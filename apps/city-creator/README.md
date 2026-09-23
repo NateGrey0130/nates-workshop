@@ -14,7 +14,7 @@ sheets). Built one phase per PR; the plan's phases are:
 | 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
 | 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
-| 4 | roll stats for an NPC (4a, done), shop inventories, a player view, an AI "Flesh out" | in progress |
+| 4 | roll stats for an NPC (4a, done), shop inventories (4b, done), a player view, an AI "Flesh out" | in progress |
 | 5 | the Rifts table set | to come |
 
 ## How it works
@@ -82,6 +82,20 @@ players' own view (through present mode) is Phase 4.
 
 Printing leaves the keeping controls off the page and prints only the players'
 lines that were written.
+
+## Shop inventories
+
+**📦 Stock it** (or **Stock every shop from the Codex**) puts 6-10 real gear
+rows from the Codex on a shop's shelf, chosen by that kind of shop's rule
+(`SHOP_STOCK` in the tables: gear categories, and a pattern an item's name must
+match - a smithy's weapons, chain, locks and traps; a scribe's books, ink and
+parchment). Each row is priced at the **book price times the city's wealth**
+(a Poor city 0.8, a Rich one 1.5), with the book price shown beside it. The rows
+are copied into the city - slug, name, book price, this city's price - so a kept
+city keeps its stock when the Codex changes. **🎲 Restock** draws that shop
+again and no other. A rule the Codex can only partly fill stocks what exists
+and says so; nothing is invented to fill a shelf. Regression checks that every
+kind of shop can be stocked with six or more real rows.
 
 ## Rolling stats for an NPC
 

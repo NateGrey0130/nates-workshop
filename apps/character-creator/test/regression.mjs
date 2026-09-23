@@ -2718,6 +2718,24 @@ check('and none of them with ?mine=1',
   check('and the kept city remembers which sheet is theirs',
     relinked.status === 200 && withSheet.body.city.npcs[0].sheet_id === sheetId, JSON.stringify(withSheet.body.city?.npcs?.[0]));
 
+  // Shop inventories (Phase 4b): "6-10 real gear rows per shop from the Codex".
+  // Only the real catalog can say whether every kind of shop CAN be stocked
+  // that full - a rule whose pattern matches four rows is a shelf that is
+  // always short, and the smoke fixture cannot see it.
+  const { stockShop } = await import('../../city-creator/js/city-engine.js');
+  const codexGear = (await api('GET', '/codex?section=gear')).body.gear || [];
+  const kinds = [...PF.SHOP_TYPES.map((x) => x.label), ...Object.values(PF.RACE_LINES).flatMap((r) => r.shops.map((x) => x.label))];
+  const thin = [];
+  for (const type of kinds) {
+    const one = { ...city, shops: [{ ...city.shops[0], id: 'shop-0', type }] };
+    const got = stockShop(one, 'shop-0', codexGear).shops[0];
+    // Six or more on the shelf. A NOTE alone is not thin: the Bowyer's rule
+    // matches nine real rows, and a draw that asks for ten says it is short.
+    if (got.inventory.length < 6) thin.push(`${type} ${got.inventory.length}`);
+  }
+  check('every kind of shop can be stocked with 6 or more real Palladium Fantasy rows from the Codex',
+    codexGear.length > 100 && thin.length === 0, thin.join(', '));
+
   const gone = await api('DELETE', `/cities/${cityId}`);
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }

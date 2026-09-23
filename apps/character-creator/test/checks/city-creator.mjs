@@ -23,10 +23,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
-  parsePool, tablesFor, exportJson, rollRequest, linkSheet } from '../../../city-creator/js/city-engine.js';
+  parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop }
+  from '../../../city-creator/js/city-engine.js';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
-const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats'];
+const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -295,4 +296,50 @@ export function run() {
       && (roll.match(/npcs\/generate/g) || []).length === 1);
   check('and only for a kept city, whose campaign the sheet can belong to',
     /function statsTools\(n\) \{\s*if \(!S\.saved\) return '';/.test(page));
+
+  // ── shop inventories (Phase 4b) ──
+  // 6-10 real Codex rows per shop, by the shop type's rule, at book price x
+  // the city's wealth, copied into the city. A fixture catalog here, so each
+  // property is pinned against rows whose answer is known; regression proves
+  // the real catalog can stock every shop type.
+  section('City Creator shop stock');
+  const gearRow = (slug, name, category, cost, system = 'palladium-fantasy') => ({ slug, name, category, cost, system });
+  // More wrong rows (18) than right ones (14), so a rule that stopped filtering would
+  // put one on the shelf within a few draws; the check below takes ten.
+  const armour = Array.from({ length: 14 }, (_, i) => gearRow(`plate-${i}`, `Plate Armor ${i}`, 'armor', 100 + i));
+  const wrong = Array.from({ length: 6 }, (_, i) => [
+    gearRow(`cloak-${i}`, `Cloak of Armor ${i}`, 'armor', 900),          // the Armourer's rule leaves cloaks out
+    gearRow(`free-${i}`, `Plate Armor Free ${i}`, 'armor', 0),           // no price, no sale
+    gearRow(`mdc-${i}`, `Plate Armor MDC ${i}`, 'armor', 5000, 'rifts'), // another game's
+  ]).flat();
+  const fixture = [...armour, ...wrong,
+    gearRow('bread-1', 'Bread, 4 loaves', 'gear', 1), gearRow('buns-1', 'Buns/rolls 2 dozen', 'gear', 1)];
+  // A Rich city, so the price multiplier is not 1 and a price left at book shows.
+  const oneShop = (type) => ({ ...a, overview: { ...a.overview, wealth: 'Rich' }, shops: [{ ...a.shops[0], id: 'shop-0', type }] });
+  const armoury = stockShop(oneShop('Armourer'), 'shop-0', fixture);
+  const stock = armoury.shops[0].inventory;
+  const mult = T.WEALTH.find((x) => x.label === 'Rich').price;
+  let shelf = armoury;
+  const strays = new Set();
+  for (let k = 0; k < 10; k++) {
+    for (const i of shelf.shops[0].inventory) if (!/^plate-\d+$/.test(i.slug)) strays.add(i.slug);
+    shelf = restockShop(shelf, 'shop-0', fixture);
+  }
+  check('a shop is stocked with 6-10 distinct real rows its rule allows - in its game, priced, and none it excludes',
+    stock.length >= 6 && stock.length <= 10 && new Set(stock.map((i) => i.slug)).size === stock.length
+      && strays.size === 0, `${stock.length} rows; strays over ten restocks: ${[...strays].join(', ')}`);
+  check('priced at book price times the city\'s wealth, with the book price kept beside it',
+    stock.every((i) => i.price === Math.max(1, Math.round(i.book * mult))), `x${mult}`);
+  check('the same city stocks the same shelf, and a restock draws another',
+    JSON.stringify(stockShop(oneShop('Armourer'), 'shop-0', fixture).shops[0].inventory) === JSON.stringify(stock)
+      && JSON.stringify(restockShop(armoury, 'shop-0', fixture).shops[0].inventory) !== JSON.stringify(stock));
+  const bakery = stockShop(oneShop('Bakery'), 'shop-0', fixture).shops[0];
+  check('a rule the Codex can only partly fill stocks what exists and says so - never padded',
+    bakery.inventory.length === 2 && /has 2 items/.test(bakery.stock_note || ''), JSON.stringify(bakery));
+  const allTypes = [...T.SHOP_TYPES.map((x) => x.label), ...Object.values(T.RACE_LINES).flatMap((r) => r.shops.map((x) => x.label))];
+  const ruleless = allTypes.filter((label) => !T.SHOP_STOCK[label]);
+  check('every kind of shop the city can make has a stock rule', ruleless.length === 0, ruleless.join(', '));
+  check('the page stocks through the engine with the Codex\'s own gear, and marks a kept city changed',
+    /S\.city = stockShop\(S\.city, id, await loadGear\(\)\); S\.stockMsg = ''; changed\(\);/.test(page)
+      && /api\('codex\?section=gear'\)/.test(page));
 }
