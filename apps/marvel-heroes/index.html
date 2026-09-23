@@ -25,6 +25,7 @@
 
 <nav class="tabs" role="tablist" aria-label="Marvel Heroes">
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
+  <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
 </nav>
 
 <main id="app">
@@ -70,6 +71,32 @@
       <h2>Last ten rolls</h2>
       <ol id="feat-log" class="log"></ol>
     </section>
+  </section>
+  <section id="panel-powers" role="tabpanel" aria-labelledby="tab-powers" hidden>
+    <div class="panel">
+      <span class="caption">The Ultimate Powers Book</span>
+      <h1>Every Power</h1>
+      <div class="fields">
+        <label>Search a name, a code or a word
+          <input id="pw-query" type="search" placeholder="e.g. MG10, flight, force field" autocomplete="off">
+        </label>
+        <label>Class
+          <select id="pw-class"></select>
+        </label>
+        <label class="check"><input id="pw-double" type="checkbox"> Only Powers that take two slots</label>
+        <label>Show ranges at
+          <select id="pw-range-rank"></select>
+        </label>
+      </div>
+      <p id="pw-count" class="muted" aria-live="polite"></p>
+    </div>
+    <div class="browser">
+      <ol id="pw-list" class="pw-list" aria-label="Powers"></ol>
+      <div class="pw-side">
+        <article id="pw-detail" class="panel pw-detail" aria-live="polite" hidden></article>
+        <section id="pw-intro" class="panel alt pw-intro" hidden></section>
+      </div>
+    </div>
   </section>
 </main>
 

@@ -6,6 +6,7 @@
 
 import { rng, newSeed, d100 } from './js/dice.js';
 import { makeFeat } from './js/feat.js';
+import { makeBrowser } from './js/browser.js';
 
 export const APP = 'marvel-heroes';
 
@@ -105,13 +106,126 @@ function initFeat(feat) {
   drawCs();
 }
 
+// ---------------------------------------------------------------- power browser
+
+// The full text comes from D1 and may not be there: a database built from the
+// repo has msh_power_text empty, and the endpoint says so with a 404 carrying
+// `missing`. Either way the committed summary is already on screen.
+const textCache = new Map();
+async function fullText(code) {
+  if (textCache.has(code)) return textCache.get(code);
+  let out;
+  try {
+    const res = await fetch(`/api/marvel-heroes/power-text?code=${encodeURIComponent(code)}`, { credentials: 'same-origin' });
+    const body = await res.json().catch(() => ({}));
+    out = res.ok ? { ok: true, body } : { ok: false, missing: !!body.missing, status: res.status };
+  } catch {
+    out = { ok: false, missing: false, status: 0 };
+  }
+  textCache.set(code, out);
+  return out;
+}
+
+// Book prose arrives as one run of text; break it into paragraphs at the
+// sentence boundaries the listings use for their own sub-heads.
+// 'shift-x' -> 'Shift X', 'class-1000' -> 'Class 1000': the tables name ranks by id.
+const rankLabel = (id) => id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+const paragraphs = (s) => esc(s).split(/(?<=\.)\s+(?=(?:Power Stunts?|Optional Powers?|Bonus Powers?|The Nemesis|Nemesis|Example|Note)\b)/)
+  .map((p) => `<p>${p}</p>`).join('');
+
+function initBrowser(browser, tables) {
+  const q = $('#pw-query');
+  const cls = $('#pw-class');
+  const dbl = $('#pw-double');
+  const list = $('#pw-list');
+  const count = $('#pw-count');
+  const detail = $('#pw-detail');
+  const intro = $('#pw-intro');
+  const rangeRank = $('#pw-range-rank');
+
+  cls.innerHTML = '<option value="">Every class</option>'
+    + browser.classes.map((c) => `<option value="${c.code}">${esc(c.name)} (${c.code})</option>`).join('');
+  rangeRank.innerHTML = tables.range.rows
+    .map((r) => `<option value="${r.rank}">${esc(rankLabel(r.rank))}</option>`).join('');
+  rangeRank.value = 'good';
+
+  let selected = null;
+
+  function draw() {
+    const hits = browser.search({ query: q.value, cls: cls.value, doubleOnly: dbl.checked });
+    count.textContent = `${hits.length} of ${browser.byCode ? Object.keys(browser.byCode).length : 0} Powers`;
+    list.innerHTML = hits.map((p) => `
+      <li><button type="button" class="pw-item${p.code === selected ? ' on' : ''}" data-code="${p.code}">
+        <span class="code">${p.code}</span> <span class="pw-name">${esc(p.name)}</span>${p.double ? ' <span class="tag" title="Takes two Power slots">x2</span>' : ''}
+        <span class="pw-sum">${esc(p.summary)}</span>
+      </button></li>`).join('');
+    drawIntro();
+  }
+
+  async function drawIntro() {
+    const c = cls.value;
+    intro.hidden = true;
+    if (!c) return;
+    const r = await fullText(c);
+    if (cls.value !== c) return;
+    if (r.ok) {
+      intro.innerHTML = `<h3>${esc(r.body.name)}</h3>${paragraphs(r.body.body)}<p class="muted">UPB p.${r.body.page}</p>`;
+      intro.hidden = false;
+    }
+  }
+
+  function rangeLine(p) {
+    if (!p.range) return '<p class="muted">The listing names no Range Table column.</p>';
+    const row = tables.range.rows.find((r) => r.rank === rangeRank.value);
+    return `<p>Range column <strong>${p.range}</strong>: at ${esc(rankLabel(rangeRank.value))} rank, <strong>${esc(row[p.range])}</strong>.</p>`;
+  }
+
+  async function show(code) {
+    selected = code;
+    const p = browser.byCode[code];
+    for (const b of list.querySelectorAll('.pw-item')) b.classList.toggle('on', b.dataset.code === code);
+    const rel = (kind, label) => {
+      const items = browser.related(p, kind);
+      if (!items.length) return '';
+      return `<p><strong>${label}:</strong> ${items.map((x) => (x.code
+        ? `<button type="button" class="linklike" data-code="${x.code}">${esc(x.name)} (${x.code})</button>`
+        : esc(x.name))).join(', ')}</p>`;
+    };
+    detail.innerHTML = `
+      <span class="caption">${esc(browser.className[p.class])}</span>
+      <h2><span class="code">${p.code}</span> ${esc(p.name)}</h2>
+      <p class="lead">${esc(p.summary)}</p>
+      <p class="muted">UPB p.${p.page}${p.double ? ' &middot; takes two Power slots' : ''}${p.addenda ? ' &middot; rewritten by the <i>Dragon</i> #122 addenda' : ''}</p>
+      ${rangeLine(p)}
+      ${rel('bonus', 'Bonus')}${rel('optional', 'Optional')}${rel('nemesis', 'Nemesis')}
+      <div class="pw-text"><p class="muted">Loading the full text...</p></div>`;
+    detail.hidden = false;
+    // One column on a phone: the detail sits under the whole list, out of sight.
+    if (matchMedia('(max-width: 760px)').matches) detail.scrollIntoView({ block: 'start' });
+    const r = await fullText(code);
+    if (selected !== code) return;
+    const box = $('.pw-text', detail);
+    box.innerHTML = r.ok
+      ? `<h3>The book's text</h3>${paragraphs(r.body.body)}`
+      : `<p class="muted">${r.missing ? 'The full text is not loaded on this server; the summary above is what the app ships.' : 'The full text could not be fetched just now.'}</p>`;
+  }
+
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-code]'); if (b) show(b.dataset.code); });
+  detail.addEventListener('click', (e) => { const b = e.target.closest('[data-code]'); if (b) { q.value = ''; cls.value = ''; draw(); show(b.dataset.code); } });
+  rangeRank.addEventListener('change', () => { if (selected) show(selected); });
+  for (const el of [q, cls, dbl]) el.addEventListener('input', draw);
+  draw();
+}
+
 // ---------------------------------------------------------------- boot
 
 async function boot() {
   initTabs();
   try {
-    const data = await loadData('ranks', 'universal');
+    const data = await loadData('ranks', 'universal', 'powers', 'power-tables', 'tables');
     initFeat(makeFeat(data.ranks, data.universal));
+    initBrowser(makeBrowser(data.powers, data['power-tables']), data.tables);
   } catch (err) {
     $('#load-error').hidden = false;
     $('#load-error').textContent = `The app's data did not load: ${err.message}`;
