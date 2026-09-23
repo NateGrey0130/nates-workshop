@@ -433,6 +433,30 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '078-campaign-entries.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_images');
 
+-- A G.M.'s own statted NPCs, belonging to no campaign (migration 079). A
+-- statted NPC is a characters row, and characters.campaign_id is NOT NULL and
+-- cascades - so the library is its own table rather than a nullable column,
+-- and an entry is a SNAPSHOT of the sheet: the row's columns and the rows that
+-- hang off it (open picks, grants, items, vehicles), as JSON in `sheet`.
+-- OWNER ONLY: read and written by owner_email, and a 404 to anyone else.
+-- Pulling one into a campaign makes an independent copy there.
+CREATE TABLE IF NOT EXISTS npc_library (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
+  sheet TEXT NOT NULL,                   -- JSON { version, character, skill_picks, power_picks, grants, items, vehicles }
+  source TEXT NOT NULL CHECK (source IN ('notable', 'creature', 'generated', 'campaign')),
+  notes TEXT,                            -- the G.M.'s note on the ENTRY, not the sheet's own notes
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_npc_library_owner ON npc_library (owner_email);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '079-npc-library.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npc_library');
+
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.
 CREATE TABLE IF NOT EXISTS npc_mentions (

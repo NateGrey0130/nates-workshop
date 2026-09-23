@@ -2289,7 +2289,21 @@ export function run() {
       check(`${dir} mounts it once, and only for the G.M.`,
         !!mountFn && (js.match(/npcSheets\.mount\(/g) || []).length === 1
           && js.includes(`\${D.isGm ? ${mountFn}() : ''}`), mountFn || 'no mount function');
+      // The library (migration 079) is the panel's too, so both pages have it
+      // and neither has a copy.
+      check(`${dir} reaches the NPC library only through the shared panel`, !/npc-library/.test(js));
     }
+    // Keep, pull and roll-into-library all live in the panel. A pull into a
+    // campaign of a different game is the SERVER's refusal (409) and goes in
+    // only after the G.M. confirms - `force` is never sent first.
+    const pull = panel.slice(panel.indexOf('async function pull('), panel.indexOf('async function patchEntry('));
+    check('the panel keeps, pulls and rolls into the library',
+      /api\('npc-library', \{/.test(panel) && /`npc-library\/\$\{id\}\/pull`/.test(panel)
+        && /body\.to_library = true/.test(panel) && /to_library: true/.test(panel));
+    check('and forces a pull across games only after a 409 and a yes',
+      /async function pull\(id, force = false\)/.test(pull)
+        && /err\.status === 409 && err\.detail\?\.code === 'system_mismatch'\s*&& confirm\(/.test(pull)
+        && /return pull\(id, true\)/.test(pull));
   }
 
   // ---------- The name panel beside every Name box ----------

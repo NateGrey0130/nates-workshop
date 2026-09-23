@@ -2539,6 +2539,101 @@ check('and none of them with ?mine=1',
   check('a name and a name theme together are a 400', both.status === 400, both.status);
 }
 
+// ── The G.M.'s NPC library (migration 079, npc-library) ─────────────────────
+//
+// A statted NPC kept for any campaign: a snapshot of the sheet and the rows off
+// it, owned by one G.M. and nobody else. What only requests can prove: the
+// owner-only 404s, the pull's two guards, the game check, that a pull is an
+// independent copy carrying the sheet's children, and that the rollers'
+// to_library leaves nothing in the campaign.
+{
+  const lib = (method, path, body, who = null) => (who ? apiAs(who, method, path, body) : api(method, path, body));
+  const rolled = await api('POST', `/campaigns/${campaignId}/npcs/generate`, { class_id: cls.id, level: 2, name: 'Library Candidate' });
+  const npcId = rolled.body.npcs?.[0]?.id;
+  await api('POST', `/characters/${npcId}/items`, { custom_name: 'Lucky Coin', qty: 1 });
+  const src = (await api('GET', `/characters/${npcId}`)).body.character;
+
+  const kept = await lib('POST', '/npc-library', { character_id: npcId });
+  const entryId = kept.body.entry?.id;
+  check('the G.M. keeps a statted NPC in their library', kept.status === 201 && !!entryId && kept.body.entry.system === 'rifts',
+    JSON.stringify(kept.body));
+  const mine = await lib('GET', '/npc-library');
+  const row = (mine.body.entries || []).find((e) => e.id === entryId);
+  check('and it is listed as a summary, not the sheet', row?.level === 2 && row?.class_id === cls.id && !('sheet' in row),
+    JSON.stringify(row));
+  const pc = await lib('POST', '/npc-library', { character_id: charId });
+  check('a player\'s character cannot go in the library', pc.status === 400, pc.status);
+
+  // Owner only - 404 to everyone else, as a hidden NPC is.
+  const stranger = 'stranger@example.com', otherGm = 'other-gm@example.com';
+  const theirs = await lib('GET', '/npc-library', null, stranger);
+  check('nobody else\'s list shows it', !(theirs.body.entries || []).some((e) => e.id === entryId));
+  // One at a time and DELETE last: with the owner check removed, a stranger's
+  // DELETE really deleted the entry, and run in parallel it raced the other two.
+  const probes = [];
+  probes.push(await lib('GET', `/npc-library/${entryId}`, null, stranger));
+  probes.push(await lib('PATCH', `/npc-library/${entryId}`, { name: 'Mine now' }, stranger));
+  probes.push(await lib('DELETE', `/npc-library/${entryId}`, null, stranger));
+  check('and to anyone else it does not exist - read, rename and delete are all 404',
+    probes.every((p) => p.status === 404), probes.map((p) => p.status).join(', '));
+  const otherCamp = (await apiAs(otherGm, 'POST', '/campaigns', { name: 'Other Table', system: 'rifts' })).body.campaign;
+  const stolen = await lib('POST', `/npc-library/${entryId}/pull`, { campaign_id: otherCamp.id }, otherGm);
+  check('another G.M. cannot pull it into their own campaign', stolen.status === 404, stolen.status);
+  const intoTheirs = await lib('POST', `/npc-library/${entryId}/pull`, { campaign_id: otherCamp.id });
+  check('nor can its owner pull it into a campaign they do not run', intoTheirs.status === 403, intoTheirs.status);
+
+  // A pull is an independent copy, children and all.
+  const pulled = await lib('POST', `/npc-library/${entryId}/pull`, { campaign_id: campaignId });
+  const copyId = pulled.body.character?.id;
+  const copy = (await api('GET', `/characters/${copyId}`)).body;
+  const copyItems = copy.items || [];
+  check('pulling it makes a new statted NPC in the campaign, the same sheet',
+    pulled.status === 201 && copyId !== npcId && copy.character?.kind === 'npc'
+      && JSON.stringify(copy.character.attributes) === JSON.stringify(src.attributes)
+      && copy.character.level === src.level && copy.character.class_id === src.class_id,
+    JSON.stringify({ status: pulled.status, kind: copy.character?.kind }));
+  check('with its gear, and a note of where it came from',
+    copyItems.some((i) => i.custom_name === 'Lucky Coin') && /Pulled from your NPC library/.test(copy.character.notes || ''),
+    JSON.stringify(copyItems.map((i) => i.custom_name)));
+  await lib('PATCH', `/npc-library/${entryId}`, { name: 'Renamed In Library' });
+  await api('PATCH', `/characters/${copyId}`, { notes: 'changed at the table' });
+  const copyAfter = (await api('GET', `/characters/${copyId}`)).body.character;
+  const entryAfter = (await lib('GET', `/npc-library/${entryId}`)).body.entry;
+  check('and the two never touch again: a rename in the library, a note on the copy',
+    copyAfter.name === src.name && entryAfter.name === 'Renamed In Library'
+      && entryAfter.sheet.character.notes !== 'changed at the table',
+    JSON.stringify({ copy: copyAfter.name, entry: entryAfter.name }));
+
+  // The game has to match, unless the G.M. says so.
+  const pfCamp = (await api('POST', '/campaigns', { name: 'Library PF Table', system: 'palladium-fantasy' })).body.campaign;
+  const mismatch = await lib('POST', `/npc-library/${entryId}/pull`, { campaign_id: pfCamp.id });
+  check('a Rifts NPC is refused by a Palladium Fantasy campaign, with a code the page can ask about',
+    mismatch.status === 409 && mismatch.body.code === 'system_mismatch', JSON.stringify(mismatch.body));
+  const forced = await lib('POST', `/npc-library/${entryId}/pull`, { campaign_id: pfCamp.id, force: true });
+  check('and goes in when the G.M. says to', forced.status === 201, forced.status);
+
+  // Straight into the library from each roller: nothing stays in the campaign.
+  const before = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
+  const libBefore = (await lib('GET', '/npc-library')).body.entries.length;
+  const direct = await api('POST', `/campaigns/${campaignId}/npcs/generate`, { class_id: cls.id, count: 2, name: 'Straight In', to_library: true });
+  const notable = (await api('GET', '/codex?section=notables')).body.notables?.find((n) => n.system === 'rifts' || n.system === 'both');
+  const viaBook = notable ? await api('POST', `/campaigns/${campaignId}/npcs/from-notable`, { slug: notable.slug, to_library: true }) : null;
+  const after = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
+  const libAfter = (await lib('GET', '/npc-library')).body.entries;
+  check('rolling "into my library" leaves nothing in the campaign and keeps each one',
+    direct.status === 201 && direct.body.library?.length === 2 && after === before
+      && libAfter.length === libBefore + 2 + (viaBook ? 1 : 0)
+      && libAfter.filter((e) => e.source === 'generated').length >= 2 && (!viaBook || viaBook.body.library?.[0]?.source === 'notable'),
+    JSON.stringify({ before, after, libBefore, libAfter: libAfter.length, direct: direct.status, book: viaBook?.status }));
+
+  const blank = await lib('PATCH', `/npc-library/${entryId}`, { name: '  ' });
+  check('an entry cannot be renamed to nothing', blank.status === 400, blank.status);
+  const gone = await lib('DELETE', `/npc-library/${entryId}`);
+  const after404 = await lib('GET', `/npc-library/${entryId}`);
+  check('its owner can delete it, and copies already pulled stay',
+    gone.status === 200 && after404.status === 404 && (await api('GET', `/characters/${copyId}`)).status === 200);
+}
+
 // ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────
 //
 // A book prints FIXED numbers for one person, and a G.M. copies that person

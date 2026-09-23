@@ -48,6 +48,7 @@ import { generateNpc, chooseClassOptions, skillsNamedByClasses, NpcGap }
   from '../../../../../../apps/character-creator/js/npc-generate.js';
 import { generateNames, NameGenError } from '../../../../../../shared/js/namegen.js';
 import { usedNames } from '../../../_lib/names.js';
+import { moveToLibrary } from '../../../_lib/npc-snapshot.js';
 // A classic script, not a module: importing it installs `globalThis.derive`,
 // the attribute chart the I.Q. skill bonus and the dice bonuses read. Same
 // arrangement the smoke and regression tests use to load it.
@@ -154,6 +155,11 @@ export async function onRequestPost({ request, env, params }) {
       if (e instanceof NpcGap) {
         // Anything already made in this request stays made and is reported:
         // a refusal on the fourth of six is a fact about the fourth.
+        if (made.length && b.to_library) {
+          const library = [];
+          for (const m of made) library.push(await moveToLibrary(env, m.id, guard.email, 'generated'));
+          return json({ library, refused: { error: e.message, code: e.code } }, 201);
+        }
         if (made.length) return json({ npcs: made, refused: { error: e.message, code: e.code } }, 201);
         return gapResponse(e);
       }
@@ -181,6 +187,16 @@ export async function onRequestPost({ request, env, params }) {
     }
     made.push({ id: res.body.id, name: body.name, level: res.body.level,
                 picks_pending: res.body.picks_pending, powers_banked: bank.reduce((n, g) => n + (g.count || 1), 0) });
+  }
+  // `to_library`: the G.M.'s NPC library rather than this campaign (migration
+  // 079). Each NPC above went through createCharacter - validated, banked -
+  // exactly as a campaign roll does, and is moved into the library from here.
+  // The campaign supplies the game the NPC is rolled for; nothing stays in it.
+  if (b.to_library) {
+    const library = [];
+    for (const m of made) library.push({ ...(await moveToLibrary(env, m.id, guard.email, 'generated')),
+      picks_pending: m.picks_pending, powers_banked: m.powers_banked });
+    return json({ library }, 201);
   }
   return json({ npcs: made }, 201);
 }
