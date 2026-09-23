@@ -457,6 +457,31 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '079-npc-library.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'npc_library');
 
+-- The City Creator's saved cities (migration 080), each in a campaign. `data`
+-- is the city AS GENERATED - map and name pool included - not its seed, so a
+-- later change to the tables or the layout never changes a saved city. NO
+-- OWNER COLUMN: a city's G.M. is its campaign's gm_email, and requireCampaign
+-- is the check. Everything is the G.M.'s until shown: `show_map` lets the
+-- players see the map, and inside `data` each pin's `reveal` and each entry's
+-- separate `public` text say what they may read. The player view is built by
+-- the server from those, never by sending the city and hiding parts of it.
+CREATE TABLE IF NOT EXISTS cities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
+  data TEXT NOT NULL,                    -- JSON: the whole generated city, its `reveal` and `public` included
+  show_map INTEGER NOT NULL DEFAULT 0,   -- 1 = the campaign's players may see the map
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cities_campaign ON cities (campaign_id, show_map);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '080-cities.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cities');
+
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.
 CREATE TABLE IF NOT EXISTS npc_mentions (

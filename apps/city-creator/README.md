@@ -13,7 +13,7 @@ sheets). Built one phase per PR; the plan's phases are:
 |---|---|---|
 | 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
 | 2 | SVG district map with pins, race quarters drawn | done |
-| 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | to come |
+| 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
 | 4 | roll stats for an NPC, shop inventories, a player view, an AI "Flesh out" | to come |
 | 5 | the Rifts table set | to come |
 
@@ -62,9 +62,30 @@ load, so a later change to the layout never moves a saved city's districts.
 which is also how the print check renders a page without clicking. The map
 prints in the page's strokes, sized to share a page with the overview.
 
-Nothing is saved on the server yet (Phase 3). The page keeps the last city in
-this browser's storage so a reload does not lose it, and **Export JSON** hands
-it over as a file.
+## Keeping a city
+
+**Keep it in a campaign** saves the city into one of the G.M.'s own campaigns of
+the same game (`cities`, migration 080) - the whole city as generated, map and
+AI name pool included, never just its seed, so a later change to the tables or
+the layout cannot change it. There is no owner column: a city's G.M. is its
+campaign's `gm_email`, and `requireCampaign` is the check.
+
+**Everything is the G.M.'s until shown.** Once kept, the city gets a
+**Show the map to players** switch, a **👁 / 🙈** switch beside each pin in the
+map's key, and a **what the players read** line under each district, place and
+shop. Those three are all a player view will ever be built from - a G.M.'s
+secret sits in fields it never reads - and the reveal and players' lines are
+saved as they are flipped, not held for *Save changes*. A reroll keeps them.
+To anyone but the G.M., a whole city is a 404 whether or not its map is shown,
+and the campaign's list shows them only shown cities, as summaries. The
+players' own view (through present mode) is Phase 4.
+
+Printing leaves the keeping controls off the page and prints only the players'
+lines that were written.
+
+The page also keeps the city on screen in this browser's storage, so a reload
+does not lose it - a convenience; the record is the saved row - and **Export
+JSON** hands it over as a file.
 
 The smoke suite's *City Creator engine* section
 (`apps/character-creator/test/checks/city-creator.mjs`) proves the engine's

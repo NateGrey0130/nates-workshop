@@ -2634,6 +2634,69 @@ check('and none of them with ?mine=1',
     gone.status === 200 && after404.status === 404 && (await api('GET', `/characters/${copyId}`)).status === 200);
 }
 
+// ── The City Creator's saved cities (migration 080, cities) ─────────────────
+//
+// A city is the G.M.'s: its G.M. is its campaign's, there is no owner column,
+// and to anyone else a whole city is a 404 whether or not its map is shown.
+// A real city from the engine, saved and read back through the routes.
+{
+  const { generateCity } = await import('../../city-creator/js/city-engine.js');
+  const { layoutMap } = await import('../../city-creator/js/city-map.js');
+  const built = generateCity({ system: 'palladium-fantasy', population: 12000, npcCount: 10, everyRace: true,
+    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] }, 31337);
+  const city = { ...built, map: layoutMap(built) };
+  const player = 'player2@example.com', stranger = 'stranger@example.com';
+
+  const saved = await api('POST', `/campaigns/${campaignId}/cities`, { city });
+  const cityId = saved.body.city?.id;
+  check('the G.M. keeps a city in their campaign, and the answer is a summary, not the city',
+    saved.status === 201 && !!cityId && saved.body.city.show_map === false && !('data' in saved.body.city)
+      && !('city' in saved.body.city), JSON.stringify(saved.body).slice(0, 200));
+  const byPlayer = await apiAs(player, 'POST', `/campaigns/${campaignId}/cities`, { city });
+  check('a player in the campaign cannot save one there', byPlayer.status === 403, byPlayer.status);
+  const junk = await api('POST', `/campaigns/${campaignId}/cities`, { city: { version: 1, overview: {} } });
+  check('and something that is not a City Creator city is a 400', junk.status === 400, junk.status);
+
+  const full = await api('GET', `/cities/${cityId}`);
+  check('the G.M. reads the whole city back exactly as saved',
+    full.status === 200 && JSON.stringify(full.body.city) === JSON.stringify(city), full.status);
+  const hiddenList = await apiAs(player, 'GET', `/campaigns/${campaignId}/cities`);
+  const hiddenFull = await apiAs(player, 'GET', `/cities/${cityId}`);
+  check('to a player a city with its map hidden is not listed, and does not exist',
+    !(hiddenList.body.cities || []).some((c) => c.id === cityId) && hiddenFull.status === 404,
+    JSON.stringify({ list: hiddenList.body.cities?.length, full: hiddenFull.status }));
+
+  const shown = await api('PATCH', `/cities/${cityId}`, { show_map: true, reveal: { 'place-0': true },
+    public: { 'place-0': 'A crumbling tower the watch avoids.' } });
+  check('the G.M. shows the map, reveals a pin and writes what the players read',
+    shown.status === 200 && shown.body.show_map === true && shown.body.reveal?.['place-0'] === true
+      && shown.body.public?.['place-0'] === 'A crumbling tower the watch avoids.', JSON.stringify(shown.body).slice(0, 200));
+  const shownList = await apiAs(player, 'GET', `/campaigns/${campaignId}/cities`);
+  const listed = (shownList.body.cities || []).find((c) => c.id === cityId);
+  const shownFull = await apiAs(player, 'GET', `/cities/${cityId}`);
+  check('once shown, a player sees it listed - as a summary with no contents - and still cannot read the city',
+    !!listed && !('data' in listed) && !('city' in listed) && shownFull.status === 404,
+    JSON.stringify({ listed, full: shownFull.status }));
+  const probes = [];
+  probes.push(await apiAs(player, 'PATCH', `/cities/${cityId}`, { show_map: false }));
+  probes.push(await apiAs(stranger, 'GET', `/cities/${cityId}`));
+  probes.push(await apiAs(player, 'DELETE', `/cities/${cityId}`));
+  check('and nobody but the G.M. can change or delete it - all 404', probes.every((p) => p.status === 404),
+    probes.map((p) => p.status).join(', '));
+  const badId = await api('PATCH', `/cities/${cityId}`, { reveal: { 'secret-sauce': true } });
+  check('a reveal for something that is not an entry is a 400', badId.status === 400, badId.status);
+
+  const renamed = { ...city, overview: { ...city.overview, name: 'Re-rolled Town' },
+    reveal: shown.body.reveal, public: shown.body.public };
+  const resaved = await api('PATCH', `/cities/${cityId}`, { city: renamed });
+  const after = await api('GET', `/cities/${cityId}`);
+  check('re-saving after a reroll replaces the city and keeps what was shown',
+    resaved.body.name === 'Re-rolled Town' && after.body.city.public?.['place-0'] === 'A crumbling tower the watch avoids.'
+      && after.body.show_map === true, JSON.stringify({ name: resaved.body.name, show: after.body.show_map }));
+  const gone = await api('DELETE', `/cities/${cityId}`);
+  check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
+}
+
 // ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────
 //
 // A book prints FIXED numbers for one person, and a G.M. copies that person
