@@ -129,8 +129,9 @@ on 2026-08-25 rather than reasoned about:
 
 The token has been widened at some point beyond the Account → D1 → Edit it was
 originally cut with. **What it still cannot do was re-tested and holds:** both
-`r2 bucket list` and `pages project list` exit 1, so R2 and Pages remain
-dashboard-or-Chrome work and the R2 section below stands.
+`r2 bucket list` and `pages project list` exit 1, so **this token** does not
+reach R2 or Pages. Both are reachable anyway, through the Cloudflare MCP plugin
+— see *Three credentials* under the R2 section.
 
 The lesson that outlived the facts: **a failing wrangler command here is not
 automatically a broken credential, and a succeeding one is not proof the
@@ -150,9 +151,10 @@ does D1 and reads the account, and it does **not** do R2 or Pages. Check what yo
 need against the thing itself; this line will drift again.
 
 **"The token cannot" is not "this repo cannot."** Pages is reachable through the
-`cloudflare-api` MCP plugin, which authenticates separately — see *Three
-credentials* under the R2 section. The two facts lived in one sentence here for
-weeks and only the first half was ever true.
+`cloudflare-api` MCP plugin and R2 through `cloudflare-bindings`, both of which
+authenticate separately — see *Three credentials* under the R2 section. The two
+facts lived in one sentence here for weeks and only the first half was ever
+true, and R2 repeated the mistake until 2026-09-22.
 
 Set them with PowerShell, not the Windows Environment Variables dialog:
 
@@ -193,7 +195,8 @@ retrieve account IDs, and the `User->Memberships->Read` warning, are wrangler's
 fallback attempts after the first failure rather than separate problems.
 
 `pages project list` fails the same way and for the same reason. **That is a
-fact about this token, and it is no longer a fact about Pages.**
+fact about this token, and it is no longer a fact about Pages — or about R2.**
+The heading means the token, not the bucket: see the table below.
 
 ### Three credentials, and only one of them is the token
 
@@ -201,6 +204,7 @@ fact about this token, and it is no longer a fact about Pages.**
 |---|---|
 | D1 — read or write, local or `--remote` | `npx wrangler`, under `CLOUDFLARE_API_TOKEN` |
 | a Pages question, or a deployment | the **`cloudflare-api` MCP plugin** |
+| an R2 **question** — which buckets exist | the plugin's **`cloudflare-bindings`** server. It lists them |
 | an Access **question** — who is allowed, which IdPs, how long a session lasts | the **plugin**. It reads Access |
 | an Access **change** | **per endpoint** — one write is measured to work, one to fail. Read the block below before assuming either |
 
@@ -255,10 +259,19 @@ says nothing about the plugin. And a Pages **deploy** through it would still be
 the deliberate keystroke the allowlist section argues for, exactly as
 `d1-apply.mjs` is.
 
-Creating or listing a bucket needs **Workers R2 Storage -> Edit** added to the
-token, or the Cloudflare dashboard. Widening the token is the bigger decision of
-the two, since the same variable is what every `d1 execute --remote` in this
-repo runs under.
+**Listing buckets no longer needs the token or the dashboard.** On 2026-09-22
+the plugin's `cloudflare-bindings` server — a separate OAuth sign-in from
+`cloudflare-api` — returned `nates-workshop-media` from `r2_buckets_list`. That
+is the **only** R2 call measured. The same server also carries
+`r2_bucket_create` and `r2_bucket_delete`, and they are **untested**, like most
+of Access above; do not reach for either to find out, since a bucket delete
+takes every portrait with it. Its `d1_database_query` would also write
+production D1 around `d1-apply.mjs` and its pre-flight — use the script.
+
+Creating a bucket by a route someone has actually tested still needs **Workers
+R2 Storage -> Edit** added to the token, or the Cloudflare dashboard. Widening
+the token is the bigger decision of the two, since the same variable is what
+every `d1 execute --remote` in this repo runs under.
 
 **Do not enable public access on the bucket.** The whole site sits behind
 Access, and every portrait read goes through a Pages Function that checks
