@@ -2623,3 +2623,13 @@ is cut because of it.
 
 **Ongoing cost:** four subagent runs per behavioural skill change, and one
 section in `test-suite` that has to stay true.
+
+**Taken, 2026-09-23 (PR #1282).** Posture as proposed: documentation only.
+`test-suite` gains a section and a trigger clause, `CLAUDE.md` gains one
+paragraph, and there is no check and no plugin. **The premise auditor returned
+six disagreements, and all six were fixed before merge.** The one that mattered
+most: the junction serves the main checkout and no worktree. A run from a
+worktree would have loaded the old skill for GREEN as well, matched RED, and
+produced a false *"adds nothing"*. The section now says to run it from the main
+checkout. The method's first catch is recorded above: the same-turn delay
+disproved a sentence in this PR's own first draft.
