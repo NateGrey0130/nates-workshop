@@ -8,7 +8,7 @@
 // the same seeds and picks always give the same hero - the smoke suite pins
 // that.
 //
-// Rules the book leaves open are the README's rulings (R12-R18), cited where
+// Rules the book leaves open are the README's rulings (R12-R19), cited where
 // they bite.
 
 import { rng, newSeed, d100, die, pick } from './dice.js';
@@ -63,25 +63,82 @@ export function makeGenerator(data) {
     };
   }
 
+  // R15: a type with two kinds - the player's pick, or even odds.
+  const variantOf = (next, type, wanted) => (!type.variants ? null
+    : wanted && type.variants.some((v) => v.id === wanted) ? wanted
+      : type.variants[die(next, type.variants.length) - 1].id);
+
+  // The artificial body types: a Compound with any of them is a Cyborg (UPB p.10).
+  const ARTIFICIAL = new Set(['Android', 'Surgical Composite', 'Cyborg', 'Robot']);
+
+  // Every trait a body type carries, one key each, so a Compound can keep or
+  // lose them one at a time.
+  function traits(m) {
+    const out = [];
+    for (const k of Object.keys(m.shift)) out.push(`shift:${k}`);
+    for (const k of Object.keys(m.set)) out.push(`set:${k}`);
+    m.bonus_powers.forEach((_, i) => out.push(`bonus:${i}`));
+    if (m.powers) out.push('powers');
+    if (m.choose_shift) out.push('choose');
+    if (m.health_multiplier !== 1) out.push('health');
+    if (m.contacts) out.push('contacts');
+    return out;
+  }
+
   function stepBody(next, picks) {
     let roll = null, type;
     if (picks.body) type = typeById[picks.body];
-    else {
-      // Compound and Changeling arrive in the next update; until then a roll
-      // that lands on them rolls again.
-      for (let i = 0; i < SAFETY; i++) {
-        roll = d100(next);
-        type = pick(types, roll);
-        if (!type.special) break;
+    else { roll = d100(next); type = pick(types, roll); }
+    const variant = variantOf(next, type, picks.variant);
+    if (!type.special) return { roll, id: type.id, variant };
+
+    // Compound and Changeling: how many body types, then which. The player may
+    // name them (picks.aspects); otherwise each is rolled on the same table,
+    // never Compound or Changeling again and never the same type twice.
+    const bodies = data['body-types'];
+    const table = (type.special === 'compound' ? bodies.compound_aspects : bodies.changeling_aspects)
+      .map((r) => ({ ...r, roll: [r.lo, r.hi] }));
+    const given = (picks.aspects || []).filter((x) => typeById[x.id] && !typeById[x.id].special).slice(0, 5);
+    const countRoll = given.length >= 2 ? null : d100(next);
+    const row = given.length >= 2 ? table.find((r) => r.number === given.length) : pick(table, countRoll);
+    const aspects = given.map((x) => ({ id: x.id, variant: variantOf(next, typeById[x.id], x.variant), roll: null }));
+    for (let i = 0; aspects.length < row.number && i < SAFETY; i++) {
+      const r = d100(next);
+      const t = pick(types, r);
+      if (t.special || aspects.some((x) => x.id === t.id)) continue;
+      aspects.push({ id: t.id, variant: variantOf(next, t, null), roll: r });
+    }
+    // A Compound keeps each trait of each aspect with the table's percentage
+    // chance (UPB p.9); a Changeling keeps everything, form by form.
+    if (type.special === 'compound') {
+      for (const x of aspects) {
+        x.kept = traits(merged(typeById[x.id], x.variant)).filter(() => d100(next) <= row.retain);
       }
     }
-    // R15: a type with two kinds - the player's pick, or even odds.
-    let variant = null;
-    if (type.variants) {
-      variant = picks.variant && type.variants.some((v) => v.id === picks.variant)
-        ? picks.variant : type.variants[die(next, type.variants.length) - 1].id;
+    return { roll, id: type.id, variant, special: type.special, countRoll, retain: row.retain ?? null, aspects };
+  }
+
+  // A Compound's body: the traits each aspect kept, added together, on the
+  // column R14 names, with its own -1CS Popularity on top.
+  function compoundBody(b) {
+    const self = merged(typeById[b.id], null);
+    const out = { ...self, column: Math.min(5, b.aspects.length), shift: { ...self.shift }, set: {}, bonus_powers: [],
+      powers: 0, choose_shift: null, health_multiplier: 1, contacts: null, notes: [...self.notes] };
+    for (const x of b.aspects) {
+      const m = merged(typeById[x.id], x.variant);
+      for (const k of x.kept) {
+        const [kind, key] = k.split(':');
+        if (kind === 'shift') out.shift[key] = (out.shift[key] || 0) + m.shift[key];
+        if (kind === 'set') out.set[key] = m.set[key];
+        if (kind === 'bonus') out.bonus_powers.push(m.bonus_powers[Number(key)]);
+        if (kind === 'powers') out.powers += m.powers;
+        if (kind === 'choose') out.choose_shift = m.choose_shift;
+        if (kind === 'health') out.health_multiplier *= m.health_multiplier;
+        if (kind === 'contacts') out.contacts = m.contacts;
+      }
     }
-    return { roll, id: type.id, variant };
+    if (b.aspects.some((x) => ARTIFICIAL.has(typeById[x.id].form))) out.notes.push('It has an artificial aspect, so it is also a Cyborg.');
+    return out;
   }
 
   // ------------------------------------------------------------ 2. origin
@@ -159,17 +216,20 @@ export function makeGenerator(data) {
     return pick(tables.tables[c], d100(next)).code;
   }
 
-  function stepPowers(next, body, slotsTotal, picks) {
+  function stepPowers(next, body, slotsTotal, picks, exclude = new Set(), minCount = 0) {
     const list = [];
     const has = (code) => list.some((p) => p.code === code);
     const used = () => list.filter((p) => p.source !== 'body').reduce((s, p) => s + p.slots, 0);
+    const count = () => list.filter((p) => p.source !== 'body').length;
+    // Room left for the Powers still owed (R19): each needs at least one slot.
+    const fits = (addSlots, addCount) => slotsTotal - used() - addSlots >= Math.max(0, minCount - count() - addCount);
     const rank = (fixed) => fixed ? { rank: fixed, roll: null } : rollRank(next, POWER_RANK_COLUMN);
 
     // R17: Powers a body type grants come with the body and take no slot.
     for (const b of body.bonus_powers) {
       let code = b.code, tries = 0;
       while (!code || has(code)) { code = rollPowerCode(next, b.class); if (++tries > SAFETY) break; }
-      if (!has(code)) list.push({ code, ...rank(b.rank), slots: 0, source: 'body' });
+      if (!has(code)) list.push({ code, ...rank(b.rank), slots: 0, source: 'body', ...(b.form !== undefined ? { form: b.form } : {}) });
     }
     // The player's own picks come first, then the dice fill what is left.
     for (const code of picks.powers || []) {
@@ -185,12 +245,13 @@ export function makeGenerator(data) {
       const p = powerByCode[code];
       const slots = p.double ? 2 : 1;
       // UPB p.14: a double Power with no room is discarded and rolled again.
-      if (has(code) || used() + slots > slotsTotal) continue;
+      // `exclude` is what a body type says to roll past (a Changeling's Alter Ego).
+      if (has(code) || exclude.has(code) || used() + slots > slotsTotal) continue;
       // UPB p.13 (addenda): a Bonus Power the listing names must be taken and
       // fills a slot; with no slot for it, the Power it came with goes instead.
       const bonus = (p.bonus || []).filter((b) => typeof b === 'string' && powerByCode[b] && !has(b) && b !== code);
       const bonusSlots = bonus.reduce((s, b) => s + (powerByCode[b].double ? 2 : 1), 0);
-      if (used() + slots + bonusSlots > slotsTotal) continue;
+      if (used() + slots + bonusSlots > slotsTotal || !fits(slots + bonusSlots, 1 + bonus.length)) continue;
       list.push({ code, ...rank(null), slots, source: 'rolled' });
       for (const b of bonus) list.push({ code: b, ...rank(null), slots: powerByCode[b].double ? 2 : 1, source: 'bonus', of: code });
     }
@@ -224,9 +285,20 @@ export function makeGenerator(data) {
   function build({ seeds, picks = {} }) {
     const R = (step) => rng(seeds[step]);
     const b = stepBody(R('body'), picks);
-    const body = merged(typeById[b.id], b.variant);
+    const dice = stepAbilityDice(R('abilities'));
+    // A Changeling rolls its abilities once, on column 5 whatever its forms
+    // would use, and each form then applies its own traits to them (UPB p.10).
+    let body, forms = null;
+    if (b.special === 'compound') body = compoundBody(b);
+    else if (b.special === 'changeling') {
+      const self = merged(typeById[b.id], null);
+      forms = b.aspects.map((x) => ({ ...merged(typeById[x.id], x.variant), column: 5 }));
+      body = { ...self, column: 5,
+        bonus_powers: forms.flatMap((f, i) => f.bonus_powers.map((bp) => ({ ...bp, form: i }))) };
+    } else body = merged(typeById[b.id], b.variant);
     const origin = stepOrigin(R('origin'), picks);
-    const { abilities: ab, chosen } = abilities(body, stepAbilityDice(R('abilities')), picks);
+    const formAbilities = forms ? forms.map((f) => abilities(f, dice, picks)) : null;
+    const { abilities: ab, chosen } = formAbilities ? formAbilities[0] : abilities(body, dice, picks);
     const weakness = stepWeakness(R('weakness'), picks);
     const counts = stepCounts(R('counts'));
 
@@ -240,11 +312,21 @@ export function makeGenerator(data) {
     const cost = bought.powers * 2 + bought.talents + bought.contacts;
     const resourcesBefore = ab.resources.rank;
     if (cost) {
-      ab.resources.rank = shiftRank(ab.resources.rank, -cost, 'feeble', 'beyond');
-      ab.resources.number = numberOf(ab.resources.rank);
+      for (const set of formAbilities ? formAbilities.map((f) => f.abilities) : [ab]) {
+        set.resources.rank = shiftRank(set.resources.rank, -cost, 'feeble', 'beyond');
+        set.resources.number = numberOf(set.resources.rank);
+      }
     }
-    const slots = Math.max(0, counts.powers.initial + body.powers + bought.powers);
-    const powers = stepPowers(R('powers'), body, slots, picks);
+    let slots = Math.max(0, counts.powers.initial + body.powers + bought.powers);
+    // R19: each Changeling form must have a Power no other form has, so a
+    // Changeling has at least as many Power slots as forms.
+    if (forms) slots = Math.max(slots, forms.length);
+    const exclude = new Set(forms ? ['S2'] : []);     // UPB p.10: a Changeling rolls past Alter Ego
+    const powers = stepPowers(R('powers'), body, slots, picks, exclude, forms ? forms.length : 0);
+    if (forms) {
+      // The first Power in each slot belongs to one form; the rest serve all.
+      powers.filter((p) => p.source !== 'body').slice(0, forms.length).forEach((p, i) => { p.form = i; });
+    }
     const talentSlots = counts.talents.initial + bought.talents;
     const talentList = stepTalents(R('talents'), talentSlots, picks);
 
@@ -256,9 +338,15 @@ export function makeGenerator(data) {
       if (c?.max !== undefined) contactSlots = Math.min(contactSlots, c.max);
     }
 
-    const sum = (keys) => keys.reduce((s, k) => s + ab[k].number, 0);
-    const health = sum(['fighting', 'agility', 'strength', 'endurance']) * body.health_multiplier;
-    const karma = sum(['reason', 'intuition', 'psyche']);
+    const sum = (set, keys) => keys.reduce((s, k) => s + set[k].number, 0);
+    const health = sum(ab, ['fighting', 'agility', 'strength', 'endurance']) * (forms ? forms[0] : body).health_multiplier;
+    const karma = sum(ab, ['reason', 'intuition', 'psyche']);
+    const formsOut = forms && forms.map((f, i) => ({
+      id: b.aspects[i].id, variant: b.aspects[i].variant, name: f.type.name, variantName: f.variant?.name ?? null,
+      abilities: formAbilities[i].abilities, chosen: formAbilities[i].chosen, notes: f.notes,
+      health: sum(formAbilities[i].abilities, ['fighting', 'agility', 'strength', 'endurance']) * f.health_multiplier,
+      karma: sum(formAbilities[i].abilities, ['reason', 'intuition', 'psyche']),
+    }));
     // UPB p.12: with every Power Remarkable or lower, a Fatal Weakness may be
     // taken as Incapacitation instead.
     const fatalMayConvert = weakness.effect.id === 'fatal'
@@ -267,6 +355,9 @@ export function makeGenerator(data) {
     return {
       seeds: { ...seeds }, picks,
       body: { ...b, column: body.column, name: body.type.name, variantName: body.variant?.name ?? null, notes: body.notes },
+      forms: formsOut,
+      // The free +1CS in force: a Compound may have kept one from an aspect.
+      choose: (forms ? forms[0] : body).choose_shift || null,
       origin, abilities: ab, chosen, health, karma, weakness, fatalMayConvert,
       counts, bought, resourcesBefore,
       slots: { powers: slots, talents: talentSlots, contacts: contactSlots,

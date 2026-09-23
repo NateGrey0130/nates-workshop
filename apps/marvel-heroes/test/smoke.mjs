@@ -586,11 +586,12 @@ section('The generator builds a legal hero, and the same seeds always build the 
 
   // Two thousand random heroes against the rules.
   const problems = new Set();
+  let specials = 0;
   for (let i = 0; i < 2000; i++) {
     const h = safe(() => gen.build({ seeds: newSeeds() }));
     if (h.threw) { problems.add('threw: ' + h.threw); continue; }
     const t = gen.typeById[h.body.id];
-    if (t.special) problems.add('rolled a Compound or Changeling');
+    if (t.special) specials++;
     const used = h.powers.filter((p) => p.source !== 'body').reduce((s, p) => s + p.slots, 0);
     if (used !== h.slots.powers) problems.add(`power slots ${used} of ${h.slots.powers}`);
     if (new Set(h.powers.map((p) => p.code)).size !== h.powers.length) problems.add('a Power twice');
@@ -602,13 +603,21 @@ section('The generator builds a legal hero, and the same seeds always build the 
       if (!r.set && (R[r.rank] < R.feeble || R[r.rank] > R.monstrous)) problems.add(`${k} ${r.rank} outside Feeble-Monstrous`);
     }
     const sum = (ks) => ks.reduce((s, k) => s + h.abilities[k].number, 0);
-    if (h.health !== sum(['fighting', 'agility', 'strength', 'endurance']) * (t.health_multiplier || 1)) problems.add('Health');
     if (h.karma !== sum(['reason', 'intuition', 'psyche'])) problems.add('Karma');
-    const bodyPowers = gen.merged(t, h.body.variant).bonus_powers.length;
-    if (h.powers.filter((p) => p.source === 'body').length !== bodyPowers) problems.add(`${t.id}: body Powers`);
+    if (!t.special) {
+      if (h.health !== sum(['fighting', 'agility', 'strength', 'endurance']) * (t.health_multiplier || 1)) problems.add('Health');
+      const bodyPowers = gen.merged(t, h.body.variant).bonus_powers.length;
+      if (h.powers.filter((p) => p.source === 'body').length !== bodyPowers) problems.add(`${t.id}: body Powers`);
+    } else {
+      const ids = h.body.aspects.map((x) => x.id);
+      if (ids.length < 2 || ids.length > 5 || new Set(ids).size !== ids.length || ids.some((x) => gen.typeById[x].special)) problems.add(`${t.id}: aspects ${ids}`);
+      if (t.special === 'compound' && h.body.column !== Math.min(5, ids.length)) problems.add('compound column (R14)');
+      if (t.special === 'changeling' && (h.body.column !== 5 || h.forms.length !== ids.length)) problems.add('changeling forms');
+    }
   }
   check('2,000 random heroes: slots filled exactly, nothing twice, ranks in bounds, Health and Karma summed, body Powers granted',
     problems.size === 0, [...problems].slice(0, 6).join('; '));
+  check('and the dice do reach Compound and Changeling (2 rolls in 100, so about 40 in 2,000)', specials >= 15 && specials <= 75, String(specials));
 
   const as = (body, extra = {}) => safe(() => gen.build({ seeds, picks: { body, ...extra } }));
   const d = as('deity');
@@ -652,6 +661,70 @@ section('The generator builds a legal hero, and the same seeds always build the 
   const v = as('avian', { variant: 'harpy' });
   check('a picked variant is used: a Harpy rolls on column 2 with Fighting +1CS (R15)',
     v.body.variant === 'harpy' && v.body.column === 2 && v.abilities.fighting.cs === 1);
+}
+
+section('Compound and Changeling, built the way the book\'s own examples describe');
+
+{
+  const { makeGenerator, newSeeds, PRIMARY } = await import(new URL('../js/generator.js', import.meta.url));
+  const data = {};
+  for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) data[n] = load(`${n}.json`);
+  const gen = makeGenerator(data);
+  const R = Object.fromEntries(data.ranks.ranks.map((r, i) => [r.id, i]));
+  const safe = (fn) => { try { return fn(); } catch (e) { return { threw: e.message }; } };
+  const seeds = { body: 11, origin: 2, abilities: 3, weakness: 4, counts: 5, powers: 6, talents: 7 };
+
+  // UPB p.10's Compound: three aspects - Normal Human, Chiropteran, Other
+  // Demihuman - at 33%. The book cites them by roll, and its rolls do not
+  // match its own table, so they are given here by body type (README).
+  const freak = [{ id: 'normal-human' }, { id: 'chiropteran' }, { id: 'demihuman-other' }];
+  const c = safe(() => gen.build({ seeds, picks: { body: 'compound', aspects: freak } }));
+  check('the book\'s Compound: three types at 33%, rolling on column 3 (R14)',
+    !c.threw && c.body.aspects.map((x) => x.id).join() === 'normal-human,chiropteran,demihuman-other'
+      && c.body.retain === 33 && c.body.column === 3, c.threw || `${c.body.retain} ${c.body.column}`);
+  check('and its own -1CS Popularity comes on top of whatever it keeps',
+    !c.threw && c.abilities.popularity.cs <= -1 + (c.body.aspects[0].kept.includes('shift:popularity') ? 0 : 0));
+  // Over many seeds, a two-type Compound keeps close to half its traits, and a
+  // kept body Power arrives while an unkept one does not.
+  let kept = 0, total = 0, powerRight = 0, powerCases = 0;
+  for (let i = 0; i < 1500; i++) {
+    const h = gen.build({ seeds: newSeeds(), picks: { body: 'compound', aspects: [{ id: 'chiropteran' }, { id: 'vegetable' }] } });
+    for (const x of h.body.aspects) {
+      const all = x.id === 'chiropteran' ? 2 : 5;       // Chiropteran: set:popularity, bonus:0. Vegetable: 2 shifts, set, bonus, contacts
+      kept += x.kept.length; total += all;
+    }
+    const veg = h.body.aspects.find((x) => x.id === 'vegetable');
+    powerCases++;
+    if (veg.kept.includes('bonus:0') === h.powers.some((p) => p.code === 'EC1' && p.source === 'body')) powerRight++;
+  }
+  check('a two-type Compound keeps about half of its traits (50% each)', Math.abs(kept / total - 0.5) < 0.04,
+    (kept / total).toFixed(3));
+  check('and a body Power arrives exactly when its trait was kept', powerRight === powerCases, `${powerRight}/${powerCases}`);
+  const cy = gen.build({ seeds, picks: { body: 'compound', aspects: [{ id: 'normal-human' }, { id: 'robot-usuform' }] } });
+  const flesh = gen.build({ seeds, picks: { body: 'compound', aspects: [{ id: 'normal-human' }, { id: 'felinoid' }] } });
+  const cyborgNote = (h) => h.body.notes.some((n) => /is also a Cyborg/.test(n));
+  check('a Compound with an artificial type is also a Cyborg, and one without is not', cyborgNote(cy) && !cyborgNote(flesh));
+
+  // UPB p.10's Changeling: a Humanshape Robot that turns into a Vegetable.
+  const kit = safe(() => gen.build({ seeds, picks: { body: 'changeling', aspects: [{ id: 'robot-humanshape' }, { id: 'vegetable' }] } }));
+  check('the book\'s Changeling: two forms, rolling once on column 5',
+    !kit.threw && kit.body.column === 5 && kit.forms.map((f) => f.id).join() === 'robot-humanshape,vegetable', kit.threw);
+  const [robot, plant] = kit.threw ? [{}, {}] : kit.forms;
+  check('each form applies its own traits to the SAME dice: the robot has no Popularity, the plant no Resources',
+    !kit.threw && PRIMARY.every((k) => robot.abilities[k].roll === plant.abilities[k].roll)
+      && robot.abilities.popularity.rank === 'shift-0' && plant.abilities.resources.rank === 'shift-0'
+      && R[plant.abilities.fighting.rank] === Math.max(R.feeble, R[plant.abilities.fighting.rolled] - 2));
+  check('the plant\'s Absorption belongs to the plant form', !kit.threw && kit.powers.some((p) => p.code === 'EC1' && p.form === 1));
+  let unique = true, noAlterEgo = true, slotsOk = true;
+  for (let i = 0; i < 1500; i++) {
+    const h = gen.build({ seeds: newSeeds(), picks: { body: 'changeling' } });
+    const n = h.forms.length;
+    for (let f = 0; f < n; f++) if (!h.powers.some((p) => p.form === f && p.source !== 'body')) unique = false;
+    if (h.powers.some((p) => p.code === 'S2')) noAlterEgo = false;
+    if (h.slots.powers < n) slotsOk = false;
+  }
+  check('every Changeling form has a Power of its own, with at least one slot per form (R19)', unique && slotsOk);
+  check('and a Changeling never keeps Alter Ego', noAlterEgo);
 }
 
 section('Every ruling in the data is in the README, and every README ruling is in the data');
