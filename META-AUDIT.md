@@ -1625,3 +1625,77 @@ files findings about. **If the answer is to remove the number rather than
 correct it, that is a better fix** — `SKILL-AUDIT` `F7`'s rule, that removing
 an ordinal beats incrementing one, applies exactly here and the sentence works
 without it.
+
+**Taken, 2026-09-22 (PR #PRNUM). Posture held: documentation only, one sentence,
+no new state.** The roll-call paragraph above the sentence was NOT extended and
+NOT retrofitted, per `A13`.
+
+**THE NUMBER WAS REMOVED RATHER THAN CORRECTED, on Nate's word** — the option
+this finding's own last paragraph recommends over the one its Proposal names.
+The sentence now opens *"Scans have repeatedly reported D1-D6 and C1-C2 as
+outstanding"* and states no tally. `SKILL-AUDIT.closed.md:512-519` is `F7`'s
+rule <!-- claim-ok: quoting F7's note, located in the sentence before this one -->
+*"Rather than change fourteen to fifteen and leave the same trap armed, the
+sentence no longer states a number at all"*, and `HEALTH-AUDIT.closed.md:591`
+is `F10`, taken 2026-09-02 (PR #525) with the posture *"describe the failure,
+not its tally"*. **`F10` named three sites and deliberately excluded this
+header**, so it did not settle this finding — but it is a decision about this
+exact tally, and this finding should have named it.
+
+**Removal is not dodging an unknown. The count was measured first, and it was
+three.** This finding records *"Not measured: whether a fourth misread has
+happened since"* and reasons that the `open-findings-scout` stores nothing, so
+*"there is no record either way"*. **Both halves are wrong.** Two scout runs
+read this menu on 2026-09-22, both BEFORE this finding was filed at 19:50
+(`0fac298e`), and **both read it correctly** — the second listing
+`apps/character-creator/AUDIT.md:12` under *"All fourteen items are closed"*.
+The agent stores nothing in the REPO; its subagent transcript under
+`~/.claude/projects` is a record, and it answers the question. The two earlier
+misreads are misread #2, a machine-generated `OPEN: D1 … total=14 open=9` dated
+2026-08-26 17:49 EDT — nine minutes before this header was committed in
+`cf646738` at 17:58 — and misread #3, the 2026-09-02 health-audit pass that
+`HEALTH-AUDIT.closed.md:491` records. **No fourth exists** in any menu, any
+`.closed.md`, the memory directory, or 538 transcripts written since
+2026-09-02. So *"two"* was stale by exactly one, and the removal loses nothing
+that was true.
+
+**THE SENTENCE IS FOUR LINES, NOT TWO, and this finding cites two.** It gives
+`apps/character-creator/AUDIT.md:18-19`, which covers the count only; the
+location clause it also asks to correct is on `:20-21`. **A taker who bounded
+the edit to the cited range would have shipped half the finding** — which is
+`bound-section-edits-by-any-heading` arriving from the other direction, a
+citation too NARROW rather than a search too wide.
+
+**The location clause was wrong in the way this finding says, and wrong for all
+eight findings rather than the one it checks.** Read 2026-09-22: the `- **Fix**:`
+bullets sit at `:105`, `:119`, `:133`, `:143`, `:153`, `:162`, `:175` and `:186`,
+each under its own `###` heading at `:91`, `:108`, `:123`, `:136`, `:146`,
+`:156`, `:165` and `:177`. The `- **Taken, 2026-08-24**:` bullets at `:218`,
+`:265`, `:307`, `:340` and `:386` sit under their headings the same way. **Both
+shapes are bullets under the finding**, so the old clause's *"under a section
+heading rather than … under the finding"* described a difference that does not
+exist. The replacement says what does differ — the word — and why a scan keyed
+on *Taken* misses eight closed findings.
+
+**One premise of this finding overstated the stakes, and it is worth recording
+because it argued for care that was not needed.** It says `HEALTH-AUDIT` `F8`
+made this header *"the model for nine other menus"*, so this is *"sharpening the
+template rather than patching one file"*. Nine is the right number —
+`HEALTH-AUDIT.closed.md:557-560` says *"Nine files needed a line, not eleven"* —
+but what those nine copied is the *"All N closed, re-verified on <date>"* shape
+and the *"The one that misreads"* lead. **No other menu carries a misread count
+at all.** There was nothing downstream to keep in sync, and this is one file.
+
+**Evidence:** the header read at `:18-21` and the sixteen outcome-bullet and
+heading line numbers, all 2026-09-22; `SKILL-AUDIT.closed.md:512-519`,
+`HEALTH-AUDIT.closed.md:491`, `:557-560` and `:591`, and
+`.claude/skills/audit-menu/SKILL.md:460` read the same day; the two 2026-09-22
+scout transcripts and the 2026-08-26 one, with `cf646738`'s and `0fac298e`'s
+timestamps from `git show -s --date=iso`.
+
+**Confidence: high.** Every claim above is a direct read, and the count question
+the finding left open was closed before the sentence was touched.
+
+**Ongoing cost: none, and one less than before** — the sentence no longer holds
+a number that nothing walks back to update. The warning it exists to give is
+unchanged.

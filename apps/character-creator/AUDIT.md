@@ -15,13 +15,14 @@ under *Fixed in this PR*, each with its own `**Fix**:` line; F1–F5 were taken 
 2026-08-24 and carry `**Taken**` notes below; F6 is an information item whose
 verdict is *keep it*, with no action ever proposed.
 
-> **Read that paragraph before grepping this file for open work.** Two separate
-> scans have now reported D1–D6 and C1–C2 as outstanding, because the outcome of
-> a finding fixed in its own PR is a `**Fix**:` line under a section heading
-> rather than a `**Taken**` bullet under the finding. The same trap in a
-> different shape sits in `apps/media-vault/ISBN-AUDIT.md`, where F7's *first*
-> outcome bullet says **Held** and its second, further down, says **Taken**. An
-> outcome here is prose, and prose has to be read.
+> **Read that paragraph before grepping this file for open work.** Scans have
+> repeatedly reported D1–D6 and C1–C2 as outstanding, because the outcome of a
+> finding fixed in its own PR is a `**Fix**:` bullet rather than a `**Taken**`
+> one. Both sit under the finding's own `###` heading — it is the WORD that
+> differs, not the place — so a scan keyed on *Taken* misses all eight. The
+> same trap in a different shape sits in `apps/media-vault/ISBN-AUDIT.md`,
+> where F7's *first* outcome bullet says **Held** and its second, further
+> down, says **Taken**. An outcome here is prose, and prose has to be read.
 
 > **The character-creator README was split on 2026-08-26** (PR #309) into an
 > 827-line spine plus eleven topic files under `apps/character-creator/docs/`.
