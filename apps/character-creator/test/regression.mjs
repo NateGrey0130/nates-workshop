@@ -2452,6 +2452,93 @@ check('and none of them with ?mine=1',
     untagged.length === 79, `${untagged.length} untagged, want 79 - tag a new skill with its game(s)`);
 }
 
+// ── Names (shared/js/namegen.js, campaigns/:id/names, names/themes) ─────────
+//
+// The generator is a pure module the smoke suite sweeps; this is the part only
+// a request can prove: the G.M. guard, the exclusion of names the campaign
+// already uses (read from D1), and the roller refusing a batch it cannot name
+// BEFORE it writes anything. The exhaustion is driven for real - a small space
+// is walked to its end through the list endpoint, then filled with dossiers.
+{
+  const { THEMES: NAME_THEMES, CLASS_THEMES } = await import('../../../shared/js/namegen.js');
+  const names = (qs, who = null) => (who
+    ? apiAs(who, 'GET', `/campaigns/${campaignId}/names?${qs}`)
+    : api('GET', `/campaigns/${campaignId}/names?${qs}`));
+  const key = (s) => s.trim().toLowerCase();
+
+  const themes = await api('GET', '/names/themes?system=rifts');
+  const ids = (themes.body.themes || []).map((t) => t.id);
+  check('the themes request lists a game\'s own themes and the generic ones, and no other game\'s',
+    themes.status === 200 && ids.includes('rifts-coalition') && ids.includes('nb-modern')
+      && !ids.includes('pf-elf'), JSON.stringify(ids));
+  const allClasses = (await api('GET', '/classes?limit=500')).body.classes || [];
+  const liveIds = new Set(allClasses.map((c) => c.id));
+  const strays = Object.keys(themes.body.class_themes || {}).filter((id) => !liveIds.has(id));
+  check('and every class its default map names is a published class',
+    Object.keys(themes.body.class_themes || {}).length === Object.keys(CLASS_THEMES).length
+      && liveIds.size > 300 && strays.length === 0, `not a published class: ${strays.join(', ')}`);
+
+  const twelve = await names('theme=rifts-frontier&count=50');
+  check('a list is clamped to 12 distinct names',
+    twelve.status === 200 && twelve.body.names?.length === 12
+      && new Set(twelve.body.names.map(key)).size === 12 && twelve.body.exhausted === false,
+    JSON.stringify(twelve.body));
+  const asStranger = await names('theme=rifts-frontier', 'stranger@example.com');
+  const asPlayer = await names('theme=rifts-frontier', 'player2@example.com');
+  check('only the campaign\'s G.M. may ask for one - not a stranger, not a player',
+    asStranger.status === 403 && asPlayer.status === 403, `${asStranger.status} / ${asPlayer.status}`);
+  const noTheme = await names('theme=no-such-theme');
+  const noKind = await names('theme=rifts-frontier&kind=ship');
+  check('an unknown theme, or a kind the theme does not make, is a 400 that says so',
+    noTheme.status === 400 && noKind.status === 400 && /ship/.test(noKind.body.error || ''),
+    JSON.stringify([noTheme.body, noKind.body]));
+
+  // A space small enough to walk: the Coalition theme's neutral given names.
+  const small = 'theme=rifts-coalition&gender=neutral&shape=given';
+  const spaceSize = NAME_THEMES.find((t) => t.id === 'rifts-coalition').kinds.person.lists.given.neutral.length;
+  const seen = [];
+  let last = null;
+  for (let i = 0; i < 10; i++) {
+    last = await names(`${small}&count=12${seen.map((n) => '&avoid=' + encodeURIComponent(n)).join('')}`);
+    seen.push(...(last.body.names || []));
+    if (last.body.exhausted) break;
+  }
+  check('"avoid" is honoured: walking a theme with it lists every name once, then says it has run out',
+    seen.length === spaceSize && new Set(seen.map(key)).size === spaceSize && last.body.exhausted === true
+      && /none left|only/.test(last.body.reason || ''),
+    JSON.stringify({ seen: seen.length, spaceSize, last: last.body }));
+
+  // Use all but three of them in the campaign, as dossiers. One is written with
+  // odd case and spacing, because a campaign's names are typed by people.
+  const keep = seen.slice(-3);
+  for (const [i, n] of seen.slice(0, -3).entries()) {
+    await api('POST', `/campaigns/${campaignId}/npcs`, { name: i === 0 ? `  ${n.toUpperCase()} ` : n });
+  }
+  const left = await names(`${small}&count=12`);
+  check('the campaign\'s own names are excluded, case and spacing aside - only three are left',
+    left.body.names?.length === 3 && left.body.names.every((n) => keep.includes(n))
+      && left.body.exhausted === true, JSON.stringify(left.body));
+
+  const genNamed = (body) => api('POST', `/campaigns/${campaignId}/npcs/generate`,
+    { class_id: cls.id, name_theme: 'rifts-coalition', name_gender: 'neutral', name_shape: 'given', ...body });
+  const tooMany = await genNamed({ count: 5 });
+  const afterRefusal = await names(`${small}&count=12`);
+  check('the roller refuses a batch its theme cannot name: a 422 with the reason, and nothing written',
+    tooMany.status === 422 && tooMany.body.code === 'names_exhausted' && /3/.test(tooMany.body.error || '')
+      && afterRefusal.body.names?.length === 3, JSON.stringify({ gen: tooMany.body, left: afterRefusal.body }));
+  const three = await genNamed({ count: 3 });
+  const rolledNames = (three.body.npcs || []).map((n) => n.name);
+  check('and names a batch it can, each NPC differently, from the names not yet used',
+    three.status === 201 && rolledNames.length === 3 && rolledNames.every((n) => keep.includes(n))
+      && new Set(rolledNames).size === 3, JSON.stringify(three.body).slice(0, 300));
+  const none = await names(`${small}&count=12`);
+  check('after which the theme has none left, and says so rather than padding',
+    none.body.names?.length === 0 && none.body.exhausted === true && /none left/.test(none.body.reason || ''),
+    JSON.stringify(none.body));
+  const both = await genNamed({ count: 1, name: 'Guard' });
+  check('a name and a name theme together are a 400', both.status === 400, both.status);
+}
+
 // ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────
 //
 // A book prints FIXED numbers for one person, and a G.M. copies that person
