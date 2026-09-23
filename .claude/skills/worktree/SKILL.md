@@ -98,14 +98,21 @@ learned to drop it. Expect small text differences, and expect them to surface as
 
 ## Merging from a worktree
 
-**`gh pr merge <n> --merge --delete-branch` exits 1 there, after the merge has
-already happened.** The error is `fatal: 'main' is already used by worktree at
-'C:/Users/natha/Projects/nates-apps'`: `gh` merges on GitHub first, then tries to
-switch the current tree to the base branch, and git refuses because `main` is
-checked out in the main checkout. PR #1142 went that way on 2026-09-17 — state
-`MERGED`, remote branch deleted, only the local half failed.
+`gh pr merge <n> --merge --delete-branch` merges on GitHub first, then tries to
+switch **the tree it was run in** to the base branch and delete the local
+branch. What happens next depends on **whether any other tree has `main`
+checked out** — and with a second session in the main checkout, that changes
+from one merge to the next. Both outcomes have been seen:
 
-**Never retry the merge on that error.** Read the state instead:
+| the main checkout is on | `gh` exits | what the worktree is left holding | seen |
+|---|---|---|---|
+| `main` | **1**, after the merge | its own branch, still there locally | PR #1142, 2026-09-17 |
+| any other branch — another session's feature branch, say | **0** | **`main`**, fast-forwarded, local branch already deleted | PR #1273, 2026-09-22 |
+
+**Exit 1.** The error is `fatal: 'main' is already used by worktree at
+'C:/Users/natha/Projects/nates-apps'`, because git will not check one branch
+out in two trees. State `MERGED`, remote branch deleted, only the local half
+failed. **Never retry the merge on that error.** Read the state instead:
 
 ```bash
 gh pr view <n> --json state,mergeCommit --jq '.state + "  " + .mergeCommit.oid'
@@ -116,6 +123,21 @@ rather than a pull into a tree another session may be using. Finally
 `git worktree remove` (after the reparse-point scan above) and `git branch -D` —
 capital `D`, because local `main` is behind and `-d` will call the branch
 unmerged.
+
+**Exit 0 is the one that costs someone else.** It looks like a clean merge, and
+it is one — but the worktree now holds `main`, and for as long as it does **no
+other tree can check `main` out**. A session in the main checkout that merges
+and then returns to `main`, which is what `ship-pr` does after every PR, gets
+the same `already used by worktree` refusal, pointed the other way. So remove
+the worktree **straight away**: read the state as above, run the reparse-point
+scan, then `git worktree remove`. There is no `git branch -D` to do; `gh`
+already deleted the branch.
+
+`git worktree list` tells you which case you are in before you merge, since it
+prints each tree's branch. The same mechanism also means **never run the merge
+from the main checkout while another session is using it** — `gh` would switch
+*that* tree to `main` under the other session. That half is inferred from the
+mechanism rather than seen; nobody has done it here.
 
 ## What a worktree session does not inherit
 
