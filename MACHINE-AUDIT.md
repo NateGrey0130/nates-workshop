@@ -478,7 +478,7 @@ load from that session rather than a standing condition, and a check that fires
 under heavy local load is arguably doing its job. What would settle it is the
 same seven-run sample on a quiet machine.
 
-**Taken, 2026-09-22 (PR #PRNUM). Posture held: one check, and it did NOT become
+**Taken, 2026-09-22 (PR #1269). Posture held: one check, and it did NOT become
 stricter** — best-of-two is strictly LOOSER than one reading, so the gate this
 sits behind cannot refuse a merge it would have let through before. Nothing was
 removed, as the finding required.
