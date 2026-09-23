@@ -150,8 +150,10 @@ function reportDeath(err) {
   console.log(`  ${((Date.now() - suiteStartedAt) / 1000).toFixed(2)}s into the suite`);
   console.log(`  last request sent ${secs(lastRequestAt)}, last response ${secs(lastOkAt)}`);
   if (lastOkAt !== null && lastRequestAt !== null) {
+    // No band beside it. One printed here from 2026-09-22 until REPO-AUDIT G22
+    // and was outgrown within a day; the deaths on record are in G20 and G22.
     console.log(`  IDLE BEFORE THIS REQUEST: ${((lastRequestAt - lastOkAt) / 1000).toFixed(2)}s`
-      + '   (the six kept failures idled 5.2-6.0s here; the kept pass idled 4.24s)');
+      + '   (compare REPO-AUDIT G20 and G22, not a range printed here)');
   }
   console.log(`  the dev server: ${serverExit
     ? `exited code=${serverExit.code} signal=${serverExit.signal}`

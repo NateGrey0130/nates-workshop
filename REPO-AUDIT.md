@@ -672,3 +672,58 @@ idle line, so that has not been measured.
 
 **Ongoing cost:** none once taken. Left as it is, each further death outside
 the band makes the line more misleading.
+
+**Taken, 2026-09-22 (PR #1272). As written: no band is printed.** The idle gap
+is still measured and printed. After it, the line now names this finding and
+`G20` as where the deaths on record are kept. `regression.mjs:153-154` is the
+whole code change, plus a two-line comment above it saying a band used to be
+printed there and why it was removed. **Posture, said back: diagnostics text
+only.** No check, exit code or retry moved, and nothing about when the suite
+dies or what it asserts. The dated comment at `:113-121` is untouched, as the
+proposal said.
+
+**The table above is not "every failed attempt", and the correction makes the
+case stronger.** <!-- claim-ok: quoting the premise this note corrects -->
+It was built from runs with `run_attempt > 1`, so it only saw runs that had been
+re-run. A run that failed on its first attempt and was then replaced by a new
+push keeps `run_attempt = 1` and falls out of that filter. Querying for
+`run_attempt == 1 and conclusion == failure`, 2026-09-22, finds the missing
+ones. The `audit-premise-auditor` derived the same list independently, with a
+`created=>=` window from `G20`'s merge at 2026-09-22T16:56:16Z. Both counted
+these:
+
+| run | attempt | into the suite | idle | dev server |
+|---|---|---|---|---|
+| 35760469322 | 1 | 51.42s | 5.54s | STILL RUNNING |
+| 35803674498 | 1 | 55.23s | **7.88s** | STILL RUNNING |
+| 35805258828 | 1 | 51.82s | 5.71s | STILL RUNNING |
+| 35811965311 | 1 | 51.32s | 5.70s | STILL RUNNING |
+
+The last row is this finding's own filing PR, #1271, which died once and passed
+on a re-run. **So there have been thirteen deaths since `G20`, not nine.** Four
+of them idled above 6.0s, not three. The band on record is **5.16-7.88s**, not
+5.16-7.58s. The *Confidence* line <!-- claim-ok: quoting the premise this note corrects -->
+said the band would only move if a passing run idled above 7.58s. A failing run
+had already moved it before this finding was filed. That is the finding's
+argument happening to the finding itself, since a range written into prose went
+stale while it was being written. Had the band been widened, it would have been
+wrong at the ceiling on the day it shipped. All thirteen are `UND_ERR_SOCKET`
+with the server still up, at 44.25-57.50s into the suite.
+
+**Every other premise held**, per the auditor. The quoted lines matched word
+for word. All nine table rows matched their logs. `G20`'s 5.16-5.98s is at
+`REPO-AUDIT.md:449`. **No test pins the text**: that was checked by reading,
+not only by grep. The only check that reads `regression.mjs` is `smoke.mjs:528`,
+and it parses the `CATALOGS` map only.
+
+**What quotes the old parenthetical without naming this finding:** the memory
+note `regression-ci-dev-server-dies.md`, which no repo grep reaches. It was
+corrected in this session to the 5.16-7.88 reading and to the removed caption.
+`G20`'s note at `:479` quotes the line as a specimen of that day's output and
+stays as it is, since an audit file is a record.
+
+**Not proved by making it fail.** The change is one string literal. Tripping
+the death path means booting the dev server for a full local run, and a
+socket error would have to be injected upstream of it. `node --check` passes,
+and CI's `regression` run exercises the file. The next real death will print
+the new line.
