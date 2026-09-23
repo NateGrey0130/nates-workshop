@@ -2792,5 +2792,15 @@ scratchpad and gets a clean result.
 **Confidence:** high that the leak is real, since the run named what it read.
 Medium that the wording prevents the next one.
 
-**Ongoing cost:** one paragraph, and drafting findings outside the tree while
-runs are live.
+**Ongoing cost:** one paragraph, drafting findings outside the tree while runs
+are live, and a neutral branch name for the runs.
+
+**Taken, 2026-09-23 (PR #1284).** Posture as proposed: documentation only.
+**The premise auditor widened it before it shipped.** My first draft named
+two leaks, the tree and the skill. The auditor read the transcripts and found
+a third: the harness's git snapshot hands every subagent the branch name. That
+leak was live in every `F65` GREEN run, **including the one hit `F65`
+counts**. So step 2 now names the branch first, and `F65` carries a dated
+adjustment rather than a rewritten table. The auditor also corrected how the
+round-2 run reached the finding: a content grep of the tree, not opening the
+file.
