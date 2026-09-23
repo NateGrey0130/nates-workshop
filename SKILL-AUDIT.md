@@ -2219,3 +2219,116 @@ and `F9`'s 74 false positives.
 
 Recorded here rather than filed as a finding, because there is nothing to
 implement. It is the result.
+
+## Filed from `META-AUDIT` A22's dropped-deferral list, 2026-09-22
+
+Three deferrals named on this menu and never filed. `A22` listed them as a
+deliberate drop with locations; Nate named them, and they are numbered here.
+None is taken in this PR.
+
+### F61 — low — `book-extract-worker`'s return contract covers stat blocks only, measured 2026-09-22
+
+**Opened 2026-09-22.** Named at `SKILL-AUDIT.closed.md:2515-2525`, inside
+`F28`'s note: <!-- claim-ok: quoting that note, located in the sentence before
+this one --> *"the prose case is covered nowhere in it … the file should carry
+it, and that is a change to an agent rather than verification, so it is not made
+here."* Deferred 2026-09-04, 18 days ago.
+
+Re-checked 2026-09-22 and still true: `grep -c -i prose
+.claude/agents/book-extract-worker.md` returns **0**. Its return contract at
+`:81` opens *"For each row: the name as printed, the fields the book gives…"*,
+and `:57` and `:66` both reason about stat blocks.
+
+**The agent handled a prose slice correctly anyway and reported the gap itself**,
+which is the argument for this being `low` — the behaviour is right and the
+contract is silent, rather than the contract being wrong.
+
+**Proposal:** add the prose case to the agent's return contract, in whatever
+words the file already uses for a stat-block row. **Posture: one agent file,
+documentation only. No change to what the agent does, and no new step.** The
+observed behaviour is the specification; this is writing it down.
+
+**Read `CLAUDE.md`'s agent-timing rule before planning around this.** An agent
+file written mid-session cannot be spawned in that session — the junction shows
+it instantly and a spawn still answers `Agent type '<name>' not found` until the
+next turn (`SKILL-AUDIT` `F26`). So a PR that edits this agent cannot also
+exercise it.
+
+**Evidence:** the `grep -c` above and the three line reads, 2026-09-22; the
+deferral read at `SKILL-AUDIT.closed.md:2515-2525`. **Not measured:** how the
+agent actually behaved on the prose slice — that run is described in `F28`'s
+note and was not re-run here.
+
+**Confidence:** high that the contract is silent. **Medium that writing it down
+changes anything**, since the agent already did the right thing unprompted.
+
+**Ongoing cost:** one more paragraph in an agent file that has to stay true.
+
+### F62 — low — this menu's findings sit under six-plus dated `##` placements, and consolidating them was deferred
+
+**Opened 2026-09-22.** Named at `SKILL-AUDIT.md:367-369`: <!-- claim-ok:
+quoting this file's own section lead, located in the sentence before this one -->
+*"A **sixth** placement on this page. Six is past the point where the arrangement
+helps anybody; consolidating them is worth its own finding and is not attempted
+here."* Written 2026-09-04, 18 days ago — **and there are more than six now**,
+including two added on 2026-09-22.
+
+**Read `SKILL-AUDIT` `F42` and `META-AUDIT` `A13` before scoping this.** `F42`
+cut the arrangement prose out of `audit-menu`'s shape table on the ground that
+arrangement belongs in *"a menu's own dated header, which is where `audit-menu`
+already puts status for the same reason"*. So the question is not whether to
+document the arrangement — that is settled — but whether the placements
+themselves should be merged.
+
+**Proposal:** decide whether to consolidate, and if the answer is no, record it
+here so it is not re-derived a third time. **Posture: if anything moves, it is
+headings only — no finding text is altered and nothing is renumbered.**
+`audit-menu` → *Audit files are RECORDS* governs the rest, and the placements
+are dated records of when work was opened.
+
+**The counter-argument is strong and should be read first:** each `##` heading
+carries a date and a reason, which is exactly what `audit-menu` says a header
+*may* hold — *how to read the file*. Merging them would delete that. The cost of
+many placements is that a reader must scroll; the cost of merging is losing when
+and why each batch was opened.
+
+**Evidence:** the section lead read 2026-09-22, and `grep -c '^## ' SKILL-AUDIT.md`.
+**Not measured:** whether anyone has actually been misled by the arrangement.
+The deferral asserts *"past the point where the arrangement helps anybody"* with
+no instance behind it.
+
+**Confidence:** high that the deferral exists and that the count has grown.
+**Low that consolidation is right**, for the counter-argument above.
+
+**Ongoing cost:** none if declined. If merged, one more thing to keep true as
+placements accumulate — which is the problem restated.
+
+### F63 — low — `F54`'s note still reads as an unfiled deferral, and half of it now asserts something that was deleted
+
+**Opened 2026-09-22.** `SKILL-AUDIT.md:1336-1342` reads
+<!-- claim-ok: quoting F54's note, located in the sentence before this one -->
+*"**Two things found while taking this, and neither is filed here.**
+`.claude/skills/windows-shell/SKILL.md:39-46` **still says** the hook *is
+project-scoped*…"*.
+
+**Both halves have since been closed, and the note says neither.** The
+project-scoped sentences were deleted by PR #1250 while taking `F56` —
+`grep -c 'project-scoped' .claude/skills/windows-shell/SKILL.md` returns **0**,
+checked 2026-09-22 — and the double registration was filed as `F60` and declined
+in PR #1255.
+
+**So this is not merely an unfiled deferral: it is a live false claim.** A reader
+following it opens `windows-shell` looking for a sentence that is not there.
+
+**Proposal:** append a dated line to `F54`'s note recording that both items are
+closed and where. **Posture: additive only — `audit-menu` → *Audit files are
+RECORDS*, so the original sentences stay and nothing is rewritten.** Do not
+delete the deferral; it is the evidence `A22` measured.
+
+**Evidence:** the `grep -c` above and the read of `:1336-1342`, both 2026-09-22;
+PRs #1250 and #1255. **Nothing here is unmeasured** — this is the one deferral
+on the list whose work is already done.
+
+**Confidence:** high on both halves.
+
+**Ongoing cost:** none. It is one dated line on a closed finding.

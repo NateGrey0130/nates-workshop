@@ -1699,3 +1699,87 @@ map and keeps the catalog row's schedule. A campaign-less Palladium Fantasy
 character therefore still reads RUE's four. That is the existing design of
 `loadSystemBases`, not something this finding changed, and it is recorded here
 rather than fixed.
+
+## Filed from `META-AUDIT` A22's dropped-deferral list, 2026-09-22
+
+Two deferrals named on this menu and never filed. `A22` listed them as a
+deliberate drop with locations; Nate named them, and they are numbered here.
+Neither is taken in this PR, and `F105` is explicitly held for its own session.
+
+### F104 — low — four other `books.json` notes carried the same production claim, and the sweep was deferred
+
+**Opened 2026-09-22.** Named at `BOOK-INGEST-AUDIT.md:888-893`:
+<!-- claim-ok: quoting that note, located in the sentence before this one -->
+*"**four other book notes in that file carry the same sentence**, at least one of
+them also stale. That sweep is NOT done here and is worth its own finding."*
+Deferred 2026-09-09, 13 days ago.
+
+**Partly done since, which narrows this.** Read 2026-09-22:
+`grep -c -i 'nothing in production cites' scripts/books.json` returns **0** — the
+undated standing claim is gone. What remains are **dated** claims, which are the
+right shape and may still be stale:
+
+- *"No production row cited this book as of 2026-09-09."*
+- *"No production row cited this book as of 2026-09-12."*
+
+**Proposal:** re-measure those against production and update the dates, or
+reword them the way the `ww` note was reworded — which names what production
+held and when. **Posture: `scripts/books.json` notes only, no schema and no data
+script.** The register is the one place each book says what it is; a wrong
+sentence there sits three lines from the `page_offset` a book session relies on.
+
+**Measure with `--remote`, never `--local`.** `ship-pr` → *`--local` is not a
+mirror of production* is the rule, and this is precisely the question it is
+about: a local database that has accumulated rows would report citations that
+production does not have.
+
+**Evidence:** the two `grep -c` results and the two quoted notes, 2026-09-22.
+**Not measured:** whether either claim is actually stale — that is the finding,
+and it is one `--remote` query per book.
+
+**Confidence:** high that the two dated claims exist. **Unknown whether either
+is wrong**, which is cheap to settle and is the work.
+
+**Ongoing cost:** none once done, and it recurs whenever a book gains its first
+production row — which is what made the original sentence rot.
+
+### F105 — medium — the repo-vs-live column sweep, and which side wins
+
+**Opened 2026-09-22. HELD for its own session on Nate's word, 2026-09-22** — it
+is filed so it stops being invisible, and it is deliberately not taken here.
+
+Named at `BOOK-INGEST-AUDIT.closed.md:11184-11187`, inside `F99`'s proposal:
+<!-- claim-ok: quoting that note, located in the sentence before this one -->
+*"**Do not widen this into a general repo-vs-live column sweep here.** That is
+`repo-rebuilds-names-not-values` territory - 428 field values were already known
+to diverge - and it needs its own finding and its own decision about which side
+wins."* Deferred 2026-09-14, 8 days ago.
+
+**Why it is held rather than worked.** It is two things, and the second gates the
+first: **a policy decision** — when the repo's data scripts and production
+disagree on a field *value*, which is authoritative — and only then **a sweep**
+across 428 known divergences. `scripts/repo-vs-live.mjs --table X --offenders`
+names differing rows, which is the instrument; it does not decide anything.
+
+**Proposal:** settle the policy first, in writing, then scope the sweep against
+it. **Posture: nothing is applied to production until the policy exists.** A
+row-by-row judgement taken 428 times without a rule is how the two sides diverged
+in the first place.
+
+**The precedent to read first** is `F99`'s own outcome note in the same file —
+taken 2026-09-14 and **six of its premises were wrong**. That is the error rate
+this subject carries, and it is the argument for a session with a decision made
+up front rather than a taker working from these paragraphs.
+
+**Evidence:** the deferral read 2026-09-22, and the **428** figure as quoted by
+`F99` — which cites `repo-rebuilds-names-not-values`. **NOT re-measured here.**
+That number is 8 days old, it is quoted rather than derived, and the first
+command of any session taking this is to re-run `repo-vs-live.mjs` and find out
+what it is today.
+
+**Confidence:** high that the deferral and the instrument exist. **The 428 is
+low-confidence by construction** — see the line above.
+
+**Ongoing cost:** a stated policy is one sentence to keep true. The sweep itself
+is one-time, and the divergence recurs unless the policy also says what prevents
+it.
