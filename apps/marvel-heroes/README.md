@@ -139,7 +139,9 @@ by roll, and they decide nothing here.
 
 | path | what |
 |---|---|
-| `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM |
+| `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM; one tab per tool |
+| `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
+| `js/feat.js` | a FEAT on the Universal Table: rank from a rank number, column shifts that stop at the ladder's ends, the colour a roll gives, and what that colour means for each kind of FEAT |
 | `styles.css` | the whole visual system; contrast is pinned by the smoke test |
 | `palette.html` | the palette sample, for review; removed at launch |
 | `data/ranks.json` | the rank ladder: standard number, range, initial number |

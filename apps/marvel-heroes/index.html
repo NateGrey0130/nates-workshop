@@ -23,13 +23,53 @@
   <a href="/" class="home">&larr; workshop</a>
 </header>
 
+<nav class="tabs" role="tablist" aria-label="Marvel Heroes">
+  <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
+</nav>
+
 <main id="app">
-  <section class="panel">
-    <span class="caption">Coming soon</span>
-    <h1>Under construction</h1>
-    <p>A hero generator, a power browser and a FEAT roller for the MARVEL SUPER HEROES
-      Advanced Set, built from the Ultimate Powers Book.</p>
-    <p class="muted">This page is not on the hub yet. It joins it once the generator works.</p>
+  <p id="load-error" class="panel error" role="alert" hidden></p>
+
+  <section id="panel-feat" role="tabpanel" aria-labelledby="tab-feat">
+    <form id="feat-form" class="panel">
+      <span class="caption">The Universal Table</span>
+      <h1>Roll a FEAT</h1>
+      <div class="fields">
+        <label>Rank
+          <select id="feat-rank"></select>
+        </label>
+        <label>or a rank number
+          <input id="feat-number" type="number" min="0" max="9999" inputmode="numeric" placeholder="e.g. 30">
+        </label>
+        <div class="field">
+          <span class="field-label" id="feat-cs-label">Column shift</span>
+          <div class="stepper" role="group" aria-labelledby="feat-cs-label">
+            <button type="button" class="btn secondary small" id="feat-cs-down" aria-label="Shift one column left">-1</button>
+            <output id="feat-cs" aria-live="polite">0</output>
+            <button type="button" class="btn secondary small" id="feat-cs-up" aria-label="Shift one column right">+1</button>
+            <button type="button" class="btn secondary small" id="feat-cs-reset">Reset</button>
+          </div>
+        </div>
+        <label>Kind of FEAT
+          <select id="feat-action"></select>
+        </label>
+        <label>Colour needed
+          <select id="feat-need">
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="red">Red</option>
+            <option value="white">White (any roll)</option>
+          </select>
+        </label>
+      </div>
+      <button type="submit" class="btn roll">Roll d100</button>
+      <div id="feat-result" class="feat-result" aria-live="polite"></div>
+    </form>
+
+    <section class="panel alt">
+      <h2>Last ten rolls</h2>
+      <ol id="feat-log" class="log"></ol>
+    </section>
   </section>
 </main>
 
