@@ -95,8 +95,37 @@ export function run() {
     // A DATED MEASUREMENT IS FINE and is what the corrected notes carry - "No
     // production row cited this book as of 2026-09-09" cannot rot, because it
     // says when it was true. Only the timeless present tense is banned.
+    //
+    // THE CLAIM, NOT TWO WORDINGS OF IT. `BOOK-INGEST-AUDIT.md` F106. The two
+    // original wordings passed three false notes for days - "cited by 48
+    // skills", "the most-cited book in the database", "no catalog row can cite
+    // it" - until PR #1264 corrected them by hand. So: F45's two wordings,
+    // always; and three more shapes (a quantity citing the book, a rank, whether
+    // rows can cite it), unless the SENTENCE carries a date that is not
+    // introduced by "since" - "Cited by NOTHING since 2026-08-28" was one of
+    // F45's six, and "since" is how a standing claim wears a date.
+    //
+    // The splitter is part of the rule: a sentence ends at . ; ! or ? followed
+    // by a capital, so "...could cite it...; that stopped being true with the
+    // 2026-09-16 gear import" stays one dated sentence. Scanned across every
+    // version of books.json in history on 2026-09-22: every known false claim
+    // is refused, and no mechanism or history sentence is. A bare row count
+    // ("One gear row.") is NOT covered - F106 records why.
+    const NUMBER = '[\\d,]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve'
+      + '|dozens?|hundreds?|all|every|no|nobody|none|nothing|several|many|few|most';
+    const ALWAYS = /cites this book yet|[Cc]ited by NOTHING/;
+    const UNLESS_DATED = [
+      new RegExp(`\\bcited by\\s+(${NUMBER})\\b`, 'i'),
+      /\b(most|least|best|widely)[- ]cited\b/i,
+      /\b(can|could|does|do|will|would)(\s*not|n't)?\s+cite\s+(it|this book)\b/i,
+    ];
+    const MEASURED = /(?<!since\s)\b20\d\d-\d\d-\d\d\b/i;
+    const standingClaim = (note) => (note || '')
+      .split(/(?<=[.;!?])\s+(?=[A-Z(*`"'])/)
+      .some((s) => ALWAYS.test(s)
+        || (UNLESS_DATED.some((p) => p.test(s)) && !MEASURED.test(s)));
     const standing = Object.entries(registry)
-      .filter(([, b]) => /cites this book yet|[Cc]ited by NOTHING/.test(b.note || ''))
+      .filter(([, b]) => standingClaim(b.note))
       .map(([slug]) => slug);
     check('no book note makes a standing claim about what cites it',
       standing.length === 0,
