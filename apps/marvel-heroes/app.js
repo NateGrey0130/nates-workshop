@@ -445,7 +445,21 @@ function initGenerator(gen, data) {
         <p class="muted seeds">Seeds ${STEPS.map((s) => h.seeds[s]).join('-')}</p>
       </section>`;
 
-    root.innerHTML = s1 + s2 + s3 + s5 + s6 + s7 + sum;
+    // Every change redraws the panel, which would drop keyboard focus to the
+    // top of the page (WCAG 2.4.3). Find the control that had focus by its
+    // data-* attribute and put focus back on its replacement.
+    const had = document.activeElement;
+    let again = null;
+    if (had && root.contains(had)) {
+      const attr = [...had.attributes].find((x) => x.name.startsWith('data-'));
+      again = attr ? `[${attr.name}="${CSS.escape(attr.value)}"]` : (had.name ? `[name="${CSS.escape(had.name)}"]` : null);
+    }
+    // The hero first: at the table the summary is what gets read, and the
+    // steps below it are the workshop that made it.
+    root.innerHTML = sum + s1 + s2 + s3 + s5 + s6 + s7;
+    if (again) root.querySelector(again)?.focus();
+    const status = $('#gen-status');
+    if (status) status.textContent = `${h.body.name}, ${org.name}: ${h.powers.length} Powers, Health ${h.health}, Karma ${h.karma}.`;
   }
 
   root.addEventListener('click', (e) => {

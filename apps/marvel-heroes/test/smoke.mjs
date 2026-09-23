@@ -133,13 +133,17 @@ for (const [scheme, t] of [['light', light], ['dark', dark]]) {
 }
 
 // ---------------------------------------------------------------------------
-section('The app stays off the hub until it works');
+section('The app is on the hub');
 
-// Nate's decision, 2026-09-23: no manifest entry until the generator works.
-// The launch PR flips this check to require a live tile with an <svg icon.
+// Nate's decision, 2026-09-23: no manifest entry until the generator worked.
+// It works, and the launch PR added the tile. A slug with status "live" is what
+// makes the hub card a link; the icon is inline SVG and never an emoji, which
+// the character creator's rendered-ui checks hold every tile to as well.
 const manifest = JSON.parse(readFileSync(join(repoRoot, 'apps', 'manifest.json'), 'utf8'));
-check('apps/manifest.json has no marvel-heroes entry yet',
-  !manifest.apps.some((a) => a.slug === 'marvel-heroes'));
+const tile = manifest.apps.find((a) => a.slug === 'marvel-heroes');
+check('apps/manifest.json has a live marvel-heroes tile', tile?.status === 'live', JSON.stringify(tile?.status));
+check('with an inline <svg icon and a name and description', /^<svg\b/.test(tile?.icon || '')
+  && tile.name === 'Marvel Heroes' && (tile.description || '').length > 20);
 
 const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
 check('the README carries the rulings log', /^## Rulings$/m.test(readme));
