@@ -76,16 +76,43 @@ if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS) {
   check('wrangler start-up is not timed in CI', true,
     'a runner resolves its own wrangler and its timings are not actionable here');
 } else {
-  const startedAt = Date.now();
-  spawnSync('npx', ['wrangler', '--version'],
-    { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
-  const ms = Date.now() - startedAt;
-  check('wrangler starts in under 7s', ms < 7000,
-    `${ms}ms for a no-op --version. 4.114.0 took ~11,500ms here and 4.127.1 ~1,240ms, `
-    + 'so a number in five figures is a bad wrangler rather than a bad machine: '
-    + 'check `npx wrangler --version` and consider `npm i -g --allow-scripts=esbuild,workerd wrangler@latest`. '
-    + 'npm 12 blocks those postinstall scripts by default, and a wrangler whose workerd never '
-    + 'unpacked installs cleanly and then cannot run a --local query at all.');
+  // BEST OF TWO, and the second spawn is the whole point. A SINGLE reading
+  // straddles this threshold on this machine: four failures on 2026-09-22 -
+  // 9194, 9383, 10952 and 12435ms - across TWO sessions, against roughly 58
+  // runs that passed, every one clearing on a re-run seconds later. One of
+  // them passed 50 seconds after it failed. That is a ~7% misfire on a check
+  // that blocks a required gate (`MACHINE-AUDIT` M25).
+  //
+  // A flap now has to hit BOTH spawns. The regression this exists for does
+  // not care: 4.114.0 took ~11,500ms EVERY time, not once in fourteen. The
+  // extra spawn costs ~2.6s and is paid only when the first reading is
+  // already over the line, on a machine about to spawn wrangler ~25 more
+  // times before this suite finishes.
+  //
+  // RAISING THE THRESHOLD INSTEAD WAS CONSIDERED AND IS WRONG: the observed
+  // flap reached 12,435ms, which is ABOVE the ~11,500 this check was built to
+  // catch, so any threshold clear of the flap band disarms it entirely.
+  const time = () => {
+    const startedAt = Date.now();
+    const r = spawnSync('npx', ['wrangler', '--version'],
+      { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
+    return { ms: Date.now() - startedAt, out: (r.stdout || '').trim() };
+  };
+  const first = time();
+  // A fast first reading is conclusive. Only a slow one buys a second opinion.
+  const second = first.ms < 7000 ? null : time();
+  const best = second && second.ms < first.ms ? second : first;
+  const version = (best.out.match(/\d+\.\d+\.\d+/) || ['unknown'])[0];
+  check('wrangler starts in under 7s', best.ms < 7000,
+    `${best.ms}ms for a no-op --version, best of ${second ? 2 : 1}, on wrangler ${version}. `
+    + 'BOTH spawns were over the line, so this is not the transient straddle M25 measured - '
+    + 'but re-run once before believing it. 4.136.0 starts in ~2,850ms here, so 7000 is 2.4x '
+    + 'the expected baseline. WHAT THE THRESHOLD IS FOR is a START-UP REGRESSION rather than a '
+    + "broken install: 4.114.0 took ~11,500ms against 4.127.1's ~1,240, and this suite spawns "
+    + 'wrangler ~25 times in regression alone, so that version cost ~500s per full local gate. '
+    + 'The remedy is: npm i -g --allow-scripts=esbuild,workerd wrangler@latest. npm 12 blocks '
+    + 'those postinstall scripts by default, and a wrangler whose workerd never unpacked installs '
+    + 'cleanly and then fails the NEXT check, not this one.');
 }
 
 const apply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.sql']);

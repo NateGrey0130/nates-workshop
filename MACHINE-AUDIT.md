@@ -477,3 +477,111 @@ number to revisit when the machine or wrangler changes.
 load from that session rather than a standing condition, and a check that fires
 under heavy local load is arguably doing its job. What would settle it is the
 same seven-run sample on a quiet machine.
+
+**Taken, 2026-09-22 (PR #PRNUM). Posture held: one check, and it did NOT become
+stricter** — best-of-two is strictly LOOSER than one reading, so the gate this
+sits behind cannot refuse a merge it would have let through before. Nothing was
+removed, as the finding required.
+
+**THE REMEDY IS NEITHER OF THE TWO THIS FINDING NAMES, because the first one is
+dead on the evidence and the second throws away a real gate.** *"Raise the
+threshold to a number this machine does not straddle"* cannot be done: the flap
+reached **12,435ms**, which is ABOVE the ~11,500ms that
+`apps/character-creator/test/checks/environment.mjs:59-60` records for wrangler
+4.114.0 — the regression the check was built to catch. **Any threshold clear of
+the flap band disarms the check entirely.** A taker who took that branch would
+have shipped a check that can no longer fail on the thing it exists for.
+
+**What shipped instead: the first reading is kept if it is fast, and a slow one
+buys a second opinion.** A flap now has to hit both spawns. The regression does
+not care — 4.114.0 took ~11,500ms *every* time, not once in fourteen. The cost
+is one extra no-op spawn, ~2.6s, paid only when the first reading is already
+over the line.
+
+**PROVED BY MAKING IT FAIL, both ways, before believing either.** The spawn was
+replaced with a stub under an env flag, the two cases run through the real
+check, and the flag removed afterwards — `prove-a-check-by-making-it-fail`, and
+the injection is UPSTREAM of the timing rather than a hand-edited threshold:
+
+| injected | result |
+|---|---|
+| both spawns slow, 7.6s each | **FAIL** — *"7681ms for a no-op --version, best of 2, on wrangler 4.136.0"* |
+| first spawn slow, second fast | **ok** — the straddle is absorbed |
+
+**THIS FINDING STATES THE WRONG REASON THE CHECK EXISTS, in the one sentence it
+tells a taker not to touch.** It says *"Not proposed: removing it. It exists
+because a wrangler whose `workerd` never unpacked installs cleanly and then
+cannot run a `--local` query at all."* `environment.mjs:58-64`, under a heading
+reading *"WHAT IT IS FOR, measured rather than imagined"*, says it is for a
+**start-up regression**: 4.114.0 at 11.5s against 4.127.1's 1.2s, ~25 spawns per
+regression run, *"roughly 500 seconds per full local gate."* The `workerd`
+material is a caveat on the prescribed remedy, and it cannot be what this check
+detects — a wrangler whose `workerd` never unpacked starts `--version` normally
+and fails the NEXT check, `schema applies cleanly`. **Since this finding's whole
+proposal is *"decide what the check is for and make it say that"*, starting from
+the wrong purpose was the expensive error in it**, and the new message says the
+measured purpose instead.
+
+**The new message carries what the old one could not.** The old text's only
+interpretive sentence was conditioned on five figures — *"a number in five
+figures is a bad wrangler rather than a bad machine"* — while the prescription
+after the colon was unconditional, so a 9,194ms reading got a diagnosis that
+excluded it and a remedy that assumed it. Two of the four real failures sit in
+the 7,000-9,999 band the old message said nothing about. It also said *"check
+`npx wrangler --version`"* while discarding the stdout of the command it had
+just run. The new one prints **the version it actually timed**, the current
+4.136.0 baseline, what the threshold protects against, that both spawns were
+over the line, and **re-run once before believing it**.
+
+**THE DECISIVE TEST THIS FINDING NAMES DOES NOT SETTLE IT, and the finding's
+own sample was five times smaller than it says.** It offers *"three failures in
+one unusually long session may be load from that session... What would settle it
+is the same seven-run sample on a quiet machine."* That sample was run on
+2026-09-22 — seven flagless runs, seven passes, plus seven direct
+`npx wrangler --version` timings at 2,369-2,834ms, none near 7,000. **It settles
+nothing**, because the flap is not confined to one session:
+
+- A **fourth** failure exists, six hours before this finding's earliest, in a
+  different session under the `C--Users-natha-Downloads` project key:
+  `scratchpad/smoke-pr1.txt` records `FAIL wrangler starts in under 7s -
+  12435ms` at **08:11:06**, and `smoke-pr1-run2.txt` beside it passes at
+  **08:11:56**. Fifty seconds.
+- The filing session ran the flagless suite **33** times, not seven — three
+  failures against about thirty passes. Counting every saved smoke log across
+  all sessions gives **4 failures in roughly 58 runs, about 7%**, rather than
+  the 3-in-7 (43%) this finding's *"Confidence: high that it flaps - seven
+  readings"* rests on.
+
+**It does flap, and both numbers are worth having**: a required check that
+misfires once in fourteen full runs is a different decision from one that
+misfires twice in five, and the second number is what made best-of-two the
+proportionate answer rather than deleting the threshold.
+
+**Two smaller corrections, recorded rather than fixed.** *"Not measured: whether
+CI ever fails it"* asks an unanswerable question — the CI branch at
+`environment.mjs:75-77` is `check('wrangler start-up is not timed in CI', true,
+...)`, whose condition is the literal `true`, so it cannot fail and there is no
+history to query. And *"`tasklist` showed no stray `workerd` or `wrangler`
+processes on any failure"* is over-stated: one process listing exists in the
+filing session and it was taken after the last two failures had finished, with
+none near the first and none in the other session's. The orphan-process trap is
+ruled out for the tail of the sample rather than for all four, and that cannot
+now be re-observed.
+
+**Nothing else had to change in this PR.** No test reads check labels and no
+suite total is pinned to this one; the check keeps its name, so
+`MACHINE-AUDIT.md`'s heading above stays accurate as well as staying a record.
+No `section()` was added, so `SECTIONS` at `environment.mjs:28-31` is untouched.
+
+**Evidence:** the two injected runs above and the clean flagless run after the
+flag was removed, 2026-09-22; `environment.mjs:58-88` read the same day; the two
+`smoke-pr1` files with their timestamps; the seven-run quiet sample and the
+seven direct timings.
+
+**Confidence: high.** The behaviour was proved in both directions rather than
+observed passing, which is the only reading that would have meant anything here.
+
+**Ongoing cost: one extra wrangler spawn on a slow first reading**, and a
+message with three figures in it - 2,850, 11,500 and 1,240 - that go stale when
+wrangler moves. The first is the one that matters and it is named as a baseline
+rather than as a rule.
