@@ -2283,6 +2283,57 @@ changes anything**, since the agent already did the right thing unprompted.
 
 **Ongoing cost:** one more paragraph in an agent file that has to stay true.
 
+**DECLINED 2026-09-22 on Nate's word (PR #1265), as a DUPLICATE of `F46` on
+this same menu.** Nothing is changed in `.claude/agents/book-extract-worker.md`,
+and `F46`'s decline is not reversed.
+
+**`SKILL-AUDIT.md:574` is `F46`** — *"`book-extract-worker`'s contract assumes a
+slice holds stat blocks, and a slice of prose falls outside it"* — and its own
+note at `:576` reads
+<!-- claim-ok: quoting F46's note, located in the sentence before this one -->
+*"Filed with its outcome. Declined 2026-09-22 on Nate's word, recorded so it is
+not re-derived."* Same subject, same evidence — the `grep -c prose` returning
+zero, and the `ww` printed 44-45 run recorded at `SKILL-AUDIT.closed.md:2462` —
+same proposal of one clause in the return section, and the same
+documentation-only posture. **This finding was filed hours after that decline
+and re-derived it exactly**, which is what `F46`'s last clause exists to
+prevent.
+
+**How it got past the guard.** `F61` was filed off `META-AUDIT.md:1543`'s
+dropped-deferral list — one row per deferral, each naming its source location —
+and the row was turned into a finding without the subject grep that `take` §2
+requires. That grep, run on 2026-09-22 before this note, returns `F46` on its
+second line. `F33` is the same shape and is the reason §2 exists; this is its
+second instance, and both times the branch had not been opened yet, which is the
+only reason it cost nothing.
+
+**ONE OF THIS FINDING'S OWN CITATIONS WAS NEVER MEASURED.** `F61` says
+*"Re-checked 2026-09-22 and still true"* and then gives `:81`, `:57` and `:66`.
+The `grep -c` half was re-checked. The three line numbers were copied verbatim
+from `F28`'s **2026-09-04** reading at `SKILL-AUDIT.closed.md:2517`, and they do
+not hold: read 2026-09-22, `.claude/agents/book-extract-worker.md:118` is
+`## What to return`, `:120` opens *"For each row: the name as printed, the
+fields the book gives"*, and `:130` is **Do not pad**. The return contract is
+`:118-133`. A re-check that re-runs one half of a claim and inherits the other
+half is `claims-about-other-files-fail-most` with a date on it.
+
+**`F46`'s numbers were right when it wrote them, and moved the same morning.**
+It cites `:89-103` and puts **Do not pad** at `:101`, which is where that line
+sat until commit `9299fbae` — `Take SKILL-AUDIT F45`, 2026-09-22 08:29 — pushed
+the section down by 29 lines. **That measurement stands as written**: an audit
+file is a record, and re-dating a correct reading would lose the fact that the
+file moved under it within the hour. Anyone citing `F46`'s line numbers should
+read the file instead.
+
+**Evidence:** the subject grep, the reads of `SKILL-AUDIT.md:574-600` and
+`.claude/agents/book-extract-worker.md:118-133`, and
+`git show 9299fbae~1:.claude/agents/book-extract-worker.md`, all 2026-09-22.
+
+**Confidence: high**, and it is not a judgement — `F46` and `F61` propose the
+same clause in the same file for the same reason.
+
+**Ongoing cost: none, declined.**
+
 ### F62 — low — this menu's findings sit under six-plus dated `##` placements, and consolidating them was deferred
 
 **Opened 2026-09-22.** Named at `SKILL-AUDIT.md:367-369`: <!-- claim-ok:
