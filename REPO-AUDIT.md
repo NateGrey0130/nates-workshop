@@ -727,3 +727,68 @@ the death path means booting the dev server for a full local run, and a
 socket error would have to be injected upstream of it. `node --check` passes,
 and CI's `regression` run exercises the file. The next real death will print
 the new line.
+
+## Filed from the 2026-09-23 session, 2026-09-23
+
+### G23 — medium — the keep-alive lever `G20` set aside needs no dependency, and it is not a retry
+
+`G20`'s note left the stale-connection hypothesis untested for two reasons. It
+said the clean lever, *"configuring undici's dispatcher"*, needs a dependency
+this repo does not have (`REPO-AUDIT.md:453-454`), and that reconnecting on
+error would be the retry the finding forbids. **The second reason stands. The
+first does not.** <!-- claim-ok: quoting the premise this finding corrects -->
+
+**Measured 2026-09-23, node v24.18.0 on this machine, no package installed.**
+Node's built-in `fetch` stores its dispatcher on
+`globalThis[Symbol.for('undici.globalDispatcher.1')]`, an `Agent` once the first
+request has gone out. A new `Agent` made from that object's own constructor,
+`new D.constructor({ keepAliveTimeout: 500, keepAliveMaxTimeout: 500 })`, and
+assigned back, is what every later `fetch` uses. The test was a local HTTP
+server with `keepAliveTimeout = 1000` and two requests 800 ms apart. Counting
+the server's `connection` events gave **2**, so the idle socket was not reused
+and a second connection was opened. The script is short enough to re-run from
+this paragraph. It prints a libuv assertion on Windows at `process.exit`,
+because a socket is still closing; that is teardown, not the result.
+
+**The deaths still fit the hypothesis.** Two more on 2026-09-23, on PR #1298's
+`regression` run 35881525975: attempt 1 idled **7.47s**, attempt 2 **5.46s**,
+both `UND_ERR_SOCKET` with the server `STILL RUNNING`. Attempt 3 passed. Both
+idles sit inside `G22`'s recorded band.
+
+**Proposal:** at the top of `apps/character-creator/test/regression.mjs`,
+after its first request, replace the global dispatcher with an `Agent` whose
+keep-alive timeout is well under the shortest idle a death has shown (about
+1 s against 5.16 s). A request after a longer pause then opens a fresh
+connection instead of writing to one the server may have closed.
+- **If the symbol is absent** (a Node version that renames it), print one line
+  saying so and change nothing. The suite must not fail on it.
+- **It changes no check and retries nothing.** No request is repeated and no
+  error is caught. `G20`'s death block stays exactly as it is, so a death after
+  this change reports itself the same way. That is the experiment's control.
+- **`play-flow.mjs`** boots its server the same way and could take the same
+  block. It is not proposed here: it is reporting-only, and its record per
+  `G21` is zero deaths.
+
+**Posture:** an experiment with a stopping rule, not a fix claimed in advance.
+Say in the outcome note how many CI `regression` runs will count, and afterwards
+say what they showed. **Zero deaths over that many runs supports the
+hypothesis. One death with a short idle refutes it, and the block comes out.**
+No retry, no change to any verdict.
+
+**Evidence:** the dispatcher probe above, 2026-09-23. The two idle readings are
+from `gh run view 35881525975 --attempt 1|2 --log-failed`, 2026-09-23. The
+earlier deaths are in `G20` and `G22`. **Not measured:** whether workerd
+actually closes idle connections near 5 s. That is inferred from the band, not
+read from its configuration.
+
+**Confidence:** high that the lever exists and works without a dependency, since
+it was run. **Low that it stops the deaths**, because the hypothesis has never
+been tested. That is what taking this measures. It would rise with a stretch of
+CI runs with no death, sized against the recorded rate. `G21`'s table
+(`REPO-AUDIT.md:559-565`, run 2026-09-22) counts 25 failed `regression` runs
+of 756, against `play-flow`'s 0 of 532.
+
+**Ongoing cost:** one block in one test file, relying on an **undocumented
+internal symbol**. A Node upgrade could rename it silently, which is why the
+absent case prints a line rather than failing. Of not taking this: every PR
+keeps paying re-runs of a required check, with the cause still a guess.
