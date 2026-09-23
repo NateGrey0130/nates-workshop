@@ -1875,3 +1875,103 @@ low-confidence by construction** — see the line above.
 **Ongoing cost:** a stated policy is one sentence to keep true. The sweep itself
 is one-time, and the divergence recurs unless the policy also says what prevents
 it.
+
+## Filed from the 2026-09-22 session's noticed list, 2026-09-22
+
+Named for filing by Nate. This is the deferral `F104`'s note records as
+*"Recorded in `noticed.md`, not filed"*. <!-- claim-ok: quoting F104's note, located in this paragraph -->
+It is not taken in the PR that files it.
+
+### F106 — low — `F45`'s check refuses two wordings of the banned claim, and three notes used three others for days
+
+**Opened 2026-09-22.** `F45` made the shape *"impossible rather than the
+instances correct"* with one check, at
+`apps/character-creator/test/checks/book-registry.mjs:98-103`, read 2026-09-22:
+
+```js
+.filter(([, b]) => /cites this book yet|[Cc]ited by NOTHING/.test(b.note || ''))
+```
+
+**It matches the wording and misses the claim.** `F104`'s note records three
+registry notes that made an undated standing claim about live data in other
+words. All three were false, and all three passed this check until PR #1264
+corrected them:
+
+- `nightbane-core`: *"no catalog row can cite it until `system` accepts a third
+  value"*. Production held 963 rows.
+- `rifts-skill-list`: *"cited by 48 skills"*. It was 29.
+- `pf`: *"The most-cited book in the database"*. It was third.
+
+**So the shape is possible again, only in a new wording.** `F45`'s own posture
+is the argument for widening it. A check keyed to one sentence's wording only
+catches that one sentence.
+
+**A heuristic that is too wide.** `F104`'s note suggests flagging any sentence
+that mentions production, citation or a catalog quantity and carries no date.
+Run over today's registry (2026-09-22), it flags three sentences, and none of
+them is a live-data claim. `triax` and `underseas` describe the page mechanism
+(*"a row cited to p.224"*, *"nothing can cite a page the scan does not hold"*).
+`rifts-core` records the history of its own note. Before #1264 the same
+heuristic flagged six sentences, three of which were false positives. **As a
+gate it would fail on sentences that are correct.**
+
+**A narrower shape: a claim that the book itself is cited, or how much.** Four
+patterns, applied to each sentence of each `note`, read 2026-09-22:
+
+1. `F45`'s two wordings, unchanged and with no date exemption, as today;
+2. a quantity citing the book: `cited by` followed by a number, or by
+   `all`/`every`/`no`/`none`/`nothing`/`several`/`many`/`few`/`most`;
+3. a rank: `most-cited`, `least-cited`, `best-cited`, `widely-cited`;
+4. whether rows can cite it: `can`/`could`/`does`/`do`/`will`/`would`
+   (optionally with `not`), then `cite it` or `cite this book`.
+
+Patterns 2-4 exempt a sentence that carries a `20\d\d-\d\d-\d\d` date, **but
+not one introduced by `since`**. *"Since"* is how a standing claim carries a
+date. The `rifts-core` note that `F45` caught said *"Cited by NOTHING since
+2026-08-28"*, and a date read as a measurement (*as of*, *measured*) is a
+different thing from a date that starts a claim that is still running.
+
+**Measured against every version of `scripts/books.json` in history**, which
+means all 26 commits `git log -- scripts/books.json` returns, 2026-09-22:
+
+- **it flags all nine known false claims.** Those are `F45`'s six, which are
+  already caught, including `rifts-core`'s dated *"since"* one, and `F104`'s
+  three, which are not;
+- **plus `phase-world`'s versions**, which `F45`'s regex already catches. One of
+  them is the quotation `F45` reworded;
+- **and one more that nobody recorded:** an older `pf` wording at `63b1c40b`,
+  *"The most-cited book in the database and the one with no manifest.json in
+  its cache"*;
+- **it flags nothing else.** The `triax`, `underseas` and `rifts-core`
+  sentences that the wide heuristic flags all pass;
+- **it flags nothing in today's registry**, so taking this does not turn a
+  green check red.
+
+An earlier run of this scan applied the date exemption to `F45`'s wordings as
+well, and it let the `rifts-core` sentence through. That is why pattern 1 must
+keep no exemption.
+
+**Proposal:** replace the regex at `book-registry.mjs:99` with the four patterns
+above and the date rule, keeping `F45`'s two wordings with no exemption, and keep the
+check's name and failure text. Prove it by making it fail: inject each of the
+three `F104` sentences, plus a `since`-dated one, and watch each fail by name.
+Then run it over the registry's history, as above, and record the result.
+**Posture: the same as `F45`'s.** This is a check in the existing smoke suite.
+It widens what it refuses, adds no new check and no new suite, and moves no
+exit code on today's data. **This widens a required check** (`smoke` is required
+on `main` since 2026-09-16), so a future note in one of these wordings will fail
+the merge. That is the point, and it is also the cost.
+
+**Evidence:** the regex read, the two heuristics, and the 26-version scan, all
+run 2026-09-22 with a scratch script that parses each version's JSON and splits
+notes into sentences. **Not measured:** whether any `extraction_notes` or other
+prose makes the same claim. This covers `books.json` only, as `F45` did.
+
+**Confidence:** medium. The patterns fit every known specimen and no known false
+positive. The next unknown wording is by definition not in that set. What would
+raise it: a sweep of the other free-text fields in the registry for claims of
+the same kind.
+
+**Ongoing cost:** four patterns in one check. A false positive would block a
+merge until the note is reworded or dated, which is the same cost `F45`'s check
+already imposes.
