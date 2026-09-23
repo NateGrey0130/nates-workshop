@@ -215,6 +215,32 @@ and a `DELETE` on a wedged deployment — which is how a stalled build was
 diagnosed and cleared in one call, where this file's advice was a hand-off. See
 `HEALTH-AUDIT.md` F24.
 
+**Signing `cloudflare-api` in cannot be done from the desktop app.** Its `/mcp`
+sign-in sends a `claude://` redirect URI, and `mcp.cloudflare.com` refuses it
+before the login page: *"Redirect URI must use HTTPS or a local loopback
+address"*, `invalid_request`. Seen 2026-09-22. The plugin's other servers
+(`cloudflare-bindings`, `-builds`, `-observability`) sit on their own hosts,
+accept the same redirect, and sign in from the desktop app normally. So:
+
+1. run `claude` in a terminal, `/mcp`, pick `plugin:cloudflare:cloudflare-api`,
+   authenticate — the CLI uses a `localhost` redirect, which is accepted;
+2. confirm it there with `claude mcp list`, which should say `Connected`;
+3. restart the desktop app. **Expect more than one restart:** on 2026-09-22 one
+   restart left the desktop session at `needs_auth` while `claude mcp list`
+   already said `Connected`. The tools appeared on 2026-09-23 after a Claude
+   Code update and a second restart, and served the Pages project, its
+   deployments and the Access apps.
+
+A desktop session's `needs_auth` therefore does not mean the sign-in failed.
+Ask `claude mcp list` before signing in again.
+
+The server exposes **three tools, and one of them is every verb**: `search`
+reads the API spec, `docs` reads documentation, and `execute` runs code that
+calls `cloudflare.request()` with any method — `GET` through `DELETE`, on any
+endpoint the credential reaches. No allowlist entry covers it, so each call
+asks. Read the method in the code before approving; the prompt is the only
+place a write is visible ahead of time.
+
 **Access has now been tested twice, and the second test broke the first one's
 conclusion.** This block said *"the plugin READS it and cannot WRITE it"* from
 2026-09-05 until 2026-09-09, when a reusable-policy `DELETE` went straight
