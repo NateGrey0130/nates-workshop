@@ -2869,3 +2869,15 @@ second scenario.
 **Ongoing cost:** fourteen lines in the one file every session reads, which is
 the cost this repo usually avoids and the reason `F65` went into a skill in
 the first place.
+
+**Taken, 2026-09-23 (PR #1285).** Posture as proposed. **The premise auditor
+returned four wording disagreements, all fixed, and none to scope:**
+
+- The `CLAUDE.md` row had also carried the full `test-suite` section, so that
+  row is relabelled.
+- The pointer's count was four sessions, and it is six.
+- The leak line now names the two runs that carried `F6x` strings.
+- The pointer names a paragraph, not a heading.
+
+It re-derived every count in the table from the logs and the `probe` commits,
+which were still in the object store, and all of them held.
