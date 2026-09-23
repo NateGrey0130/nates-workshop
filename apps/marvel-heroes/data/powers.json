@@ -1,0 +1,3376 @@
+{
+ "about": "The 263 Powers. Mechanics and a one-line summary written for this app; the book's own text is never in this file. range is the Range Table column the power's text or its section states, null where neither does. bonus, optional and nemesis list the Powers the text names, by code where the name matches a Power and by name where it does not (a category, or a Power described rather than named). The full text lives only in D1 (msh_power_text), loaded from a gitignored extraction.",
+ "sources": [
+  "UPB pp.18-100"
+ ],
+ "class_intros": {
+  "EC": {
+   "name": "Energy Control Powers",
+   "page": 21
+  },
+  "EE": {
+   "name": "Energy Emission Powers",
+   "page": 26
+  },
+  "I": {
+   "name": "Illusory Powers",
+   "page": 31
+  },
+  "MG": {
+   "name": "Magical Powers",
+   "page": 41
+  },
+  "PC": {
+   "name": "Power Control Powers",
+   "page": 82
+  }
+ },
+ "powers": [
+  {
+   "code": "D1",
+   "name": "Body Armor",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": null,
+   "summary": "Worn protective suit whose rank sets how much damage it stops; other powers may be built into it but can break down."
+  },
+  {
+   "code": "D2",
+   "name": "Force Field",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Projects a protective barrier spanning a tenth of the rank number in areas; attacks at or below rank are fully stopped."
+  },
+  {
+   "code": "D3",
+   "name": "Force Field vs. Emotion",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier shielding everyone inside from emotion and Intuition attacks; rank must exceed the hero's Intuition."
+  },
+  {
+   "code": "D4",
+   "name": "Force Field vs. Energy",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier that blocks emitted energy such as light, heat, radiation, electricity and sonics for all inside it."
+  },
+  {
+   "code": "D5",
+   "name": "Force Field vs. Magic",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier guarding everyone inside against magical attacks; its rank may sit below the hero's Psyche."
+  },
+  {
+   "code": "D6",
+   "name": "Force Field vs. Mental",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier guarding occupants from psionic and neural attacks; rank must be above the hero's Psyche."
+  },
+  {
+   "code": "D7",
+   "name": "Force Field vs. Physical",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier against blows, chemicals, disease, heat and cold; it keeps hazards out but does not supply air."
+  },
+  {
+   "code": "D8",
+   "name": "Force Field vs. Power Manipulation",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier protecting occupants from attacks that seize, weaken or control their powers."
+  },
+  {
+   "code": "D9",
+   "name": "Force Field vs. Vampirism",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": "B",
+   "summary": "Area barrier shielding occupants from every kind of draining or vampiric attack."
+  },
+  {
+   "code": "D10",
+   "name": "Reflection",
+   "class": "D",
+   "page": 18,
+   "double": false,
+   "range": null,
+   "summary": "Bounces attacks back, more with a better FEAT; excess over rank gets through, and repeated breaches risk failure."
+  },
+  {
+   "code": "D11",
+   "name": "Resist: Emotion",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores emotion and Intuition attacks below rank and cuts stronger ones by the rank number."
+  },
+  {
+   "code": "D12",
+   "name": "Resist: Energy",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores emitted-energy attacks below rank and lowers stronger ones by the rank number; can specialise for +1CS."
+  },
+  {
+   "code": "D13",
+   "name": "Resist: Magic",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores magic below rank and trims stronger spells by the rank number; rank may be lower than Psyche."
+  },
+  {
+   "code": "D14",
+   "name": "Resist: Mental",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Shrugs off psionic and neural attacks on the mind; rank is set at least one step above Psyche."
+  },
+  {
+   "code": "D15",
+   "name": "Resist: Physical",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores blows, toxins, disease and harsh conditions below rank and reduces stronger harm by the rank number."
+  },
+  {
+   "code": "D16",
+   "name": "Resist: Power Manipulation",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores attempts to control or weaken the hero's powers below rank and blunts stronger ones by the rank number."
+  },
+  {
+   "code": "D17",
+   "name": "Resist: Vampirism",
+   "class": "D",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Ignores draining attacks below rank; against stronger drains, subtract this rank number from the attacker's."
+  },
+  {
+   "code": "DT1",
+   "name": "Abnormal Sensitivity",
+   "class": "DT",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Vision or hearing is shifted to a different band, perceiving normally hidden signals while missing ordinary ones."
+  },
+  {
+   "code": "DT2",
+   "name": "Circular Vision",
+   "class": "DT",
+   "page": 19,
+   "double": false,
+   "range": null,
+   "summary": "Sees in every direction at once; the odd-eyed version grants +1CS Fighting but costs -1CS Popularity. Unranked."
+  },
+  {
+   "code": "DT3",
+   "name": "Energy Detection",
+   "class": "DT",
+   "page": 19,
+   "double": false,
+   "range": "D",
+   "summary": "Senses and identifies active energy out to rank range; cannot sense stored energy or the people emitting it."
+  },
+  {
+   "code": "DT4",
+   "name": "Environmental Awareness",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": "B",
+   "summary": "Constantly aware of weather, chemicals, motion and life nearby; reaching past rank range takes a FEAT."
+  },
+  {
+   "code": "DT5",
+   "name": "Extradimensional",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Perceives other dimensions; the rank number is how many separate dimensions the hero can look into."
+  },
+  {
+   "code": "DT6",
+   "name": "Hyper-Hearing",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Picks up faint or unusual sounds and identifies things by them; sonic attacks gain +1CS against the hero."
+  },
+  {
+   "code": "DT7",
+   "name": "Hyper-Olfactory",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Identifies trace substances by scent; if the hero loses the knack of filtering odors, -1CS to Reason and Endurance."
+  },
+  {
+   "code": "DT8",
+   "name": "Hyper-Touch",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Feels minute surface texture and can tell what a material is just by touching it."
+  },
+  {
+   "code": "DT9",
+   "name": "Life Detection",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": "B",
+   "summary": "Senses living things within rank range and what kind they are; a red FEAT picks one out or reads its biology."
+  },
+  {
+   "code": "DT10",
+   "name": "Magic Detection",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Senses and identifies magic, active or latent; FEATs reveal past spell use (green), caster (yellow), spell (red)."
+  },
+  {
+   "code": "DT11",
+   "name": "Microscopic Vision",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Magnifies tiny objects; rank sets the limit, from microfilm at Feeble down to subatomic worlds at CL5000."
+  },
+  {
+   "code": "DT12",
+   "name": "Penetration Vision",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": null,
+   "summary": "Sees through solid material to a depth in feet equal to the rank number; one chosen substance blocks it."
+  },
+  {
+   "code": "DT13",
+   "name": "Power Detection",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": "B",
+   "summary": "Senses superhuman powers and who used them; harder FEATs identify the power, its user, or traces left on targets."
+  },
+  {
+   "code": "DT14",
+   "name": "Psionic Detection",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": "C",
+   "summary": "Senses psionic ability, active or latent; harder FEATs reveal past use, the specific power and its owner."
+  },
+  {
+   "code": "DT15",
+   "name": "Radarsense",
+   "class": "DT",
+   "page": 20,
+   "double": false,
+   "range": "B",
+   "summary": "Builds a 3-D picture of surroundings from electromagnetic echoes; -1CS against electrical and magnetic attacks."
+  },
+  {
+   "code": "DT16",
+   "name": "Sonar",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": "B",
+   "summary": "Maps surroundings by reflected sound, passively or by emitting pings; -1CS when resisting sonic attacks."
+  },
+  {
+   "code": "DT17",
+   "name": "Telescopic Vision",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": "E",
+   "summary": "Sees faraway objects in line of sight, even other worlds, and can extend the reach of other vision powers."
+  },
+  {
+   "code": "DT18",
+   "name": "Thermal Vision",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": null,
+   "summary": "Sees heat and infrared, allowing sight in darkness and reading of temperature traces; -1CS against bright heat."
+  },
+  {
+   "code": "DT19",
+   "name": "Tracking",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": null,
+   "summary": "Follows the trail of a chosen target; at high ranks the trail can be followed across space."
+  },
+  {
+   "code": "DT20",
+   "name": "True Sight",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": null,
+   "summary": "Sees past disguises and concealment up to its rank, with harder FEATs for higher ones; range is one area."
+  },
+  {
+   "code": "DT21",
+   "name": "UV Vision",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": null,
+   "summary": "Sees ultraviolet, giving +1CS through fog and water and seeing radioactive glow; -2CS against UV glare."
+  },
+  {
+   "code": "DT22",
+   "name": "Weakness Detection",
+   "class": "DT",
+   "page": 21,
+   "double": false,
+   "range": null,
+   "summary": "Spots flaws in a target; low ranks find physical faults, middle ranks mental too, Monstrous+ also power faults."
+  },
+  {
+   "code": "EC1",
+   "name": "Absorption Power",
+   "class": "EC",
+   "page": 21,
+   "double": false,
+   "range": "B",
+   "summary": "Converts one energy type into healing, gaining Health equal to rank each time struck; can replace food and air."
+  },
+  {
+   "code": "EC2",
+   "name": "Catalytic Control",
+   "class": "EC",
+   "page": 21,
+   "double": false,
+   "range": "B",
+   "summary": "Speeds, slows or alters chemical reactions, shifting their energy by the rank number; lasting on objects."
+  },
+  {
+   "code": "EC3",
+   "name": "Coldshaping",
+   "class": "EC",
+   "page": 22,
+   "double": false,
+   "range": "B",
+   "summary": "Shapes and redirects existing cold, raising or lowering it by rank; can build ice or frozen-gas constructs.",
+   "bonus": [
+    "EE1"
+   ],
+   "optional": [
+    "EC20",
+    {
+     "name": "Condensation"
+    },
+    "MC11",
+    "S9"
+   ]
+  },
+  {
+   "code": "EC4",
+   "name": "Darkforce Manipulation",
+   "class": "EC",
+   "page": 22,
+   "double": false,
+   "range": "B",
+   "summary": "Creates and wields shadowy extradimensional Darkforce: blunt attacks, darkness, slower flight, portals, solid shapes."
+  },
+  {
+   "code": "EC5",
+   "name": "Electrical Control",
+   "class": "EC",
+   "page": 22,
+   "double": false,
+   "range": "B",
+   "summary": "Commands existing electricity, shaping it and changing its strength by rank; can run devices with a FEAT.",
+   "optional": [
+    "EE2",
+    "EE3",
+    "S14",
+    "S13",
+    "T2",
+    "T4"
+   ]
+  },
+  {
+   "code": "EC6",
+   "name": "Energy Conversion",
+   "class": "EC",
+   "page": 22,
+   "double": false,
+   "range": "B",
+   "summary": "Turns one energy type into another at one rank lower; starts with a single conversion and learns more as stunts."
+  },
+  {
+   "code": "EC7",
+   "name": "Energy Solidification",
+   "class": "EC",
+   "page": 23,
+   "double": false,
+   "range": "B",
+   "summary": "Forms energy into solid-seeming constructs with Strength equal to rank; harder shapes need higher FEATs.",
+   "optional": [
+    {
+     "name": "any Energy Emission or Energy Control Power"
+    }
+   ]
+  },
+  {
+   "code": "EC8",
+   "name": "Energy Sponge",
+   "class": "EC",
+   "page": 23,
+   "double": false,
+   "range": "B",
+   "summary": "Soaks up energy up to the rank number without harm and can release it later at -2CS; overloading is dangerous."
+  },
+  {
+   "code": "EC9",
+   "name": "Energy Vampirism",
+   "class": "EC",
+   "page": 23,
+   "double": false,
+   "range": "B",
+   "summary": "Drains energy from objects or beings, boosting Strength, Endurance, Psyche and powers; must feed or weaken hourly."
+  },
+  {
+   "code": "EC10",
+   "name": "Fire Control",
+   "class": "EC",
+   "page": 24,
+   "double": false,
+   "range": "B",
+   "summary": "Controls existing fire, changing its strength up to rank and molding it into shapes; resists fire and heat.",
+   "optional": [
+    "EE4",
+    "EC20",
+    "S14",
+    "S13"
+   ]
+  },
+  {
+   "code": "EC11",
+   "name": "Gravity Manipulation",
+   "class": "EC",
+   "page": 24,
+   "double": false,
+   "range": "B",
+   "summary": "Raises or lowers gravity by the rank number on self or a target, allowing levitation, pinning and redirection."
+  },
+  {
+   "code": "EC12",
+   "name": "Hard Radiation Control",
+   "class": "EC",
+   "page": 24,
+   "double": false,
+   "range": "B",
+   "summary": "Controls existing radiation: redirects it, changes its type, and alters its strength or damage by rank.",
+   "optional": [
+    "EE5",
+    "EE3",
+    "S14",
+    "S13",
+    {
+     "name": "Energy Sustenance"
+    }
+   ]
+  },
+  {
+   "code": "EC13",
+   "name": "Kinetic Control",
+   "class": "EC",
+   "page": 24,
+   "double": false,
+   "range": "B",
+   "summary": "Controls motion energy, changing its strength by rank, deflecting moving targets and reshaping kinetic attacks.",
+   "bonus": [
+    "M30",
+    "EE7"
+   ],
+   "optional": [
+    "M30",
+    "EE7"
+   ]
+  },
+  {
+   "code": "EC14",
+   "name": "Light Control",
+   "class": "EC",
+   "page": 24,
+   "double": false,
+   "range": "B",
+   "summary": "Alters existing light's brightness, color and focus, bends it and forms crude holograms; +1CS versus light attacks.",
+   "optional": [
+    "EE8",
+    "S14",
+    "T2",
+    "I2"
+   ],
+   "nemesis": [
+    "EC14"
+   ]
+  },
+  {
+   "code": "EC15",
+   "name": "Magnetic Manipulation",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Controls magnetism, altering it by rank, flipping polarity and shaping fields; can disable or run machines."
+  },
+  {
+   "code": "EC16",
+   "name": "Plasma Control",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Shapes existing plasma fields, alters their strength by rank, resists plasma, and can counter plasma-based powers.",
+   "optional": [
+    "EE10",
+    "EE3",
+    "S14",
+    "S13"
+   ]
+  },
+  {
+   "code": "EC17",
+   "name": "Radiowave Control",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Controls radio and microwaves: changes strength, jams signals and fakes broadcasts, with harder FEATs for richer ones.",
+   "bonus": [
+    "EE11"
+   ],
+   "optional": [
+    "EE3",
+    "S14",
+    "T2"
+   ]
+  },
+  {
+   "code": "EC18",
+   "name": "Shadowshaping",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Moves, resizes and shapes ordinary shadows into forms that deal rank damage; sees through dim shadows.",
+   "bonus": [
+    "EE12"
+   ],
+   "optional": [
+    "EC14",
+    "S14",
+    "S13"
+   ]
+  },
+  {
+   "code": "EC19",
+   "name": "Sound Manipulation",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Amplifies or mutes existing sound, resists sonic attacks, and can boost other sound powers by +1CS.",
+   "bonus": [
+    "EE13"
+   ],
+   "optional": [
+    "EE14",
+    "EC21"
+   ]
+  },
+  {
+   "code": "EC20",
+   "name": "Thermal Control",
+   "class": "EC",
+   "page": 25,
+   "double": false,
+   "range": "B",
+   "summary": "Manipulates active heating or cooling (not ambient temperature), countering or strengthening thermal powers.",
+   "optional": [
+    "EE6",
+    "EE4",
+    "EE1",
+    "EC10",
+    "EC3"
+   ]
+  },
+  {
+   "code": "EC21",
+   "name": "Vibration Control",
+   "class": "EC",
+   "page": 26,
+   "double": false,
+   "range": "B",
+   "summary": "Controls vibrations, altering them by rank; can calm quakes, silence voices, disrupt gyroscopes or phase.",
+   "optional": [
+    "EE14",
+    "EE13",
+    "EC19"
+   ]
+  },
+  {
+   "code": "EE1",
+   "name": "Cold Generation",
+   "class": "EE",
+   "page": 27,
+   "double": false,
+   "range": "A",
+   "summary": "Chills a target by 10x, 20x or 40x the rank number in degrees, set by the FEAT color; resists cold.",
+   "optional": [
+    "EC3",
+    {
+     "name": "Condensation"
+    },
+    {
+     "name": "Solidification"
+    },
+    "MC11"
+   ],
+   "nemesis": [
+    "EE6",
+    "EE4",
+    "EC20"
+   ]
+  },
+  {
+   "code": "EE2",
+   "name": "Electrical Generation",
+   "class": "EE",
+   "page": 27,
+   "double": false,
+   "range": "A",
+   "summary": "Fires electricity for rank damage through air, water or metal; contact-only use gives +2CS; resists electricity."
+  },
+  {
+   "code": "EE3",
+   "name": "Energy Doppelganger",
+   "class": "EE",
+   "page": 27,
+   "double": false,
+   "range": "A",
+   "summary": "Sends out an energy duplicate that flies and may carry the hero's powers; harm to it comes off the hero's Psyche.",
+   "nemesis": [
+    "EC16"
+   ]
+  },
+  {
+   "code": "EE4",
+   "name": "Fire Generation",
+   "class": "EE",
+   "page": 27,
+   "double": false,
+   "range": "A",
+   "summary": "Hurls flame for rank damage and range, but needs oxygen; gains +1CS against cold and water powers."
+  },
+  {
+   "code": "EE5",
+   "name": "Hard Radiation",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Projects UV, X-rays, particle or cosmic radiation for rank damage and range; specialising in one type adds +1CS."
+  },
+  {
+   "code": "EE6",
+   "name": "Heat",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Emits pure heat for rank effects, working even underwater or without air; strong against cold and water powers."
+  },
+  {
+   "code": "EE7",
+   "name": "Kinetic Bolt",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Strikes with a shapeable surge of force for rank damage and range; affects solid matter only.",
+   "optional": [
+    "EC13",
+    "M30"
+   ],
+   "nemesis": [
+    "EC13",
+    "M30"
+   ]
+  },
+  {
+   "code": "EE8",
+   "name": "Light Emission",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Blasts light for rank damage: plain light to blind or illuminate, lasers that burn, or concussive optic beams."
+  },
+  {
+   "code": "EE9",
+   "name": "Magnetism",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Generates magnetic fields that pull, push and magnetize metal and scramble electronics; draws metal attacks +2CS.",
+   "nemesis": [
+    "EE9"
+   ]
+  },
+  {
+   "code": "EE10",
+   "name": "Plasma Generation",
+   "class": "EE",
+   "page": 28,
+   "double": false,
+   "range": "A",
+   "summary": "Fires charged-particle fields for rank force damage plus two lesser side effects such as heat or radiation.",
+   "nemesis": [
+    "EC16",
+    {
+     "name": "Power Control"
+    }
+   ]
+  },
+  {
+   "code": "EE11",
+   "name": "Radiowave Generation",
+   "class": "EE",
+   "page": 29,
+   "double": false,
+   "range": "A",
+   "summary": "Emits radio and microwaves that disrupt electronics at rank, or cook a living target at -2CS damage and range.",
+   "optional": [
+    "EC17",
+    "S14",
+    "T2"
+   ],
+   "nemesis": [
+    "EC17",
+    "EC1",
+    "D4"
+   ]
+  },
+  {
+   "code": "EE12",
+   "name": "Shadowcasting",
+   "class": "EE",
+   "page": 29,
+   "double": false,
+   "range": "A",
+   "summary": "Projects darkness that weakens light and, at higher ranks, heat, radiation, radio and energy beings.",
+   "optional": [
+    "EC18",
+    "EC4"
+   ],
+   "nemesis": [
+    "EE8"
+   ]
+  },
+  {
+   "code": "EE13",
+   "name": "Sonic Generation",
+   "class": "EE",
+   "page": 29,
+   "double": false,
+   "range": "A",
+   "summary": "Unleashes powerful sound for rank damage and range and disrupts other sonic powers; needs a medium to travel.",
+   "optional": [
+    "EC19",
+    "EE14",
+    "EC21"
+   ],
+   "nemesis": [
+    "EE13",
+    "EC19",
+    "EE14",
+    "EC21"
+   ]
+  },
+  {
+   "code": "EE14",
+   "name": "Vibration",
+   "class": "EE",
+   "page": 29,
+   "double": false,
+   "range": "A",
+   "summary": "Creates silent tremors for rank damage that can sicken living targets, cancel vocal powers and shield the hero.",
+   "optional": [
+    "EC21",
+    "EE13"
+   ]
+  },
+  {
+   "code": "F1",
+   "name": "Berserker",
+   "class": "F",
+   "page": 29,
+   "double": false,
+   "range": null,
+   "summary": "Enters a combat frenzy: Reason and Psyche fall to Feeble, the lost points boost Strength and Fighting, plus Iron Will.",
+   "optional": [
+    "F3"
+   ],
+   "nemesis": [
+    "L10"
+   ]
+  },
+  {
+   "code": "F2",
+   "name": "Martial Supremacy",
+   "class": "F",
+   "page": 29,
+   "double": false,
+   "range": null,
+   "summary": "Adds rank to a chosen Martial Arts talent, allowing rank-level damage to objects; can apply to one weapon skill.",
+   "optional": [
+    "M16",
+    "F4"
+   ],
+   "nemesis": [
+    "F2"
+   ]
+  },
+  {
+   "code": "F3",
+   "name": "Natural Weaponry",
+   "class": "F",
+   "page": 30,
+   "double": false,
+   "range": null,
+   "summary": "Body has built-in weapons whose material strength equals rank; losing them costs Fighting equal to their rank."
+  },
+  {
+   "code": "F4",
+   "name": "Weapons Creation",
+   "class": "F",
+   "page": 30,
+   "double": true,
+   "range": null,
+   "summary": "Conjures remembered weapons, rank-number ounces a turn; each ounce costs 1 Health, and a FEAT sets how long it lasts.",
+   "optional": [
+    "F2"
+   ],
+   "nemesis": [
+    "P14"
+   ]
+  },
+  {
+   "code": "F5",
+   "name": "Weapons Tinkering",
+   "class": "F",
+   "page": 31,
+   "double": false,
+   "range": null,
+   "summary": "Builds any weapon from available materials; green, yellow or red FEAT by its cost versus rank; specialists gain +2CS."
+  },
+  {
+   "code": "I1",
+   "name": "Animate Image",
+   "class": "I",
+   "page": 31,
+   "double": false,
+   "range": "B",
+   "summary": "Makes a flat picture seem to step out as a moving 3-D illusion; realism needs line of sight and a Reason FEAT.",
+   "optional": [
+    "DT17",
+    "M2",
+    "EC7",
+    "MCr2",
+    "MCr6"
+   ],
+   "nemesis": [
+    "DT16",
+    "DT15"
+   ]
+  },
+  {
+   "code": "I2",
+   "name": "Illusion-Casting",
+   "class": "I",
+   "page": 32,
+   "double": true,
+   "range": "B",
+   "summary": "Casts visible, camera-detectable illusions anywhere in range while concentrating; viewers resist with Intuition.",
+   "optional": [
+    "EC7",
+    "DT17",
+    "M2"
+   ],
+   "nemesis": [
+    "EE12",
+    "EC18",
+    "DT16",
+    "DT15"
+   ]
+  },
+  {
+   "code": "I3",
+   "name": "Illusory Invisibility",
+   "class": "I",
+   "page": 34,
+   "double": false,
+   "range": "B",
+   "summary": "Wraps the hero or an area with an image of empty space, radius in feet equal to rank; fools sight and cameras.",
+   "optional": [
+    "EC14",
+    "EE8"
+   ],
+   "nemesis": [
+    "EC14",
+    "DT15",
+    "DT16"
+   ]
+  },
+  {
+   "code": "I4",
+   "name": "Illusory Duplication",
+   "class": "I",
+   "page": 34,
+   "double": false,
+   "range": "B",
+   "summary": "Creates up to rank-number illusory copies of self that the hero sees, hears and speaks through at range.",
+   "nemesis": [
+    "EC14",
+    "EE12"
+   ]
+  },
+  {
+   "code": "L1",
+   "name": "Biophysical Control",
+   "class": "L",
+   "page": 35,
+   "double": true,
+   "range": null,
+   "summary": "Touch-based control of a body's biology in one chosen mode: heal, regrow, revive, absorb wounds, rot, harm or age.",
+   "optional": [
+    {
+     "name": "another form of this Power"
+    }
+   ],
+   "nemesis": [
+    {
+     "name": "Immortality"
+    },
+    "M28"
+   ]
+  },
+  {
+   "code": "L2",
+   "name": "Bio-Vampirism",
+   "class": "L",
+   "page": 36,
+   "double": true,
+   "range": null,
+   "summary": "Pins a victim and drains Health each turn to boost own abilities; ranks fade hourly unless the character keeps feeding.",
+   "bonus": [
+    "L10"
+   ]
+  },
+  {
+   "code": "L3",
+   "name": "Body Transformation-Others",
+   "class": "L",
+   "page": 37,
+   "double": false,
+   "range": null,
+   "summary": "Converts a living subject's body into another substance, life form or energy field; the victim survives meanwhile."
+  },
+  {
+   "code": "L4",
+   "name": "Emotion Control",
+   "class": "L",
+   "page": 37,
+   "double": false,
+   "range": null,
+   "summary": "Imposes one chosen emotion on everyone in range; narrowing to a single fixed emotion earns +2CS."
+  },
+  {
+   "code": "L5",
+   "name": "Exorcism",
+   "class": "L",
+   "page": 37,
+   "double": false,
+   "range": null,
+   "summary": "Breaks outside control such as possession or domination on a nearby subject and sends the controller home."
+  },
+  {
+   "code": "L6",
+   "name": "Force Field vs. Hostiles",
+   "class": "L",
+   "page": 37,
+   "double": false,
+   "range": "A",
+   "summary": "A mind-reading barrier that shoves away anyone meaning harm while letting friends through; blocks melee, not missiles."
+  },
+  {
+   "code": "L7",
+   "name": "Forced Reincarnation",
+   "class": "L",
+   "page": 37,
+   "double": false,
+   "range": null,
+   "summary": "Catches a spirit, holds it, then binds it into a new host body, keeping its mind and mental powers."
+  },
+  {
+   "code": "L8",
+   "name": "Grafting",
+   "class": "L",
+   "page": 38,
+   "double": true,
+   "range": null,
+   "summary": "Psionic surgery that keeps a patient alive through any operation, from routine repairs to brain swaps."
+  },
+  {
+   "code": "L9",
+   "name": "Hypnotic Control",
+   "class": "L",
+   "page": 38,
+   "double": false,
+   "range": null,
+   "summary": "Plants spoken or triggered commands in a target, acting now or later; red FEAT to override their morals."
+  },
+  {
+   "code": "L10",
+   "name": "Mind Control",
+   "class": "L",
+   "page": 38,
+   "double": true,
+   "range": null,
+   "summary": "Psionically seizes a mind as puppet, possession, total shutdown, or boosts its mental ranks."
+  },
+  {
+   "code": "L11",
+   "name": "Mind Transferral",
+   "class": "L",
+   "page": 38,
+   "double": true,
+   "range": "A",
+   "summary": "Swaps minds between bodies, or copies one mind into several, moving mental traits but no physical ones."
+  },
+  {
+   "code": "L12",
+   "name": "Neural Manipulation",
+   "class": "L",
+   "page": 39,
+   "double": false,
+   "range": "A",
+   "summary": "Scrambles a target's nerve signals to numb, freeze, convulse or overdrive their voluntary muscles."
+  },
+  {
+   "code": "L13",
+   "name": "Plague Carrier",
+   "class": "L",
+   "page": 39,
+   "double": false,
+   "range": null,
+   "summary": "Carries germs to infect targets with collected diseases at will; can also draw a disease out of a patient."
+  },
+  {
+   "code": "L14",
+   "name": "Plant Control",
+   "class": "L",
+   "page": 39,
+   "double": false,
+   "range": null,
+   "summary": "Makes ordinary plants aware and mobile so they follow simple orders; rank sets how many and for how long."
+  },
+  {
+   "code": "L15",
+   "name": "Plant Growth",
+   "class": "L",
+   "page": 39,
+   "double": false,
+   "range": null,
+   "summary": "Grows plants huge almost instantly, even without soil or light; the forced growth dies off quickly."
+  },
+  {
+   "code": "L16",
+   "name": "Sense Alteration",
+   "class": "L",
+   "page": 40,
+   "double": false,
+   "range": null,
+   "summary": "Shuts off, distorts, or shares a target's senses, up to making a group perceive the same hallucination."
+  },
+  {
+   "code": "L17",
+   "name": "Shapechange-Others",
+   "class": "L",
+   "page": 40,
+   "double": true,
+   "range": null,
+   "summary": "Reshapes other creatures into any outward form while their inner biology stays the same."
+  },
+  {
+   "code": "L18",
+   "name": "Sleep-Induced",
+   "class": "L",
+   "page": 40,
+   "double": false,
+   "range": "A",
+   "summary": "Knocks everyone in range into a helpless slumber lasting the power's duration plus 1-10 hours."
+  },
+  {
+   "code": "L19",
+   "name": "Spirit Storage",
+   "class": "L",
+   "page": 40,
+   "double": false,
+   "range": null,
+   "summary": "Traps any number of spirits in an inner pocket realm; capture odds depend on power rank versus their Psyche."
+  },
+  {
+   "code": "L20",
+   "name": "Summoning",
+   "class": "L",
+   "page": 40,
+   "double": false,
+   "range": null,
+   "summary": "Calls an otherworldly being to the character and binds it to carry out one task; stronger beings are riskier."
+  },
+  {
+   "code": "L21",
+   "name": "Undead Control",
+   "class": "L",
+   "page": 40,
+   "double": false,
+   "range": null,
+   "summary": "Commands corporeal undead to do tasks; mindless ones are easy, clever ones like vampires need a red FEAT."
+  },
+  {
+   "code": "MG1",
+   "name": "Enchantment",
+   "class": "MG",
+   "page": 42,
+   "double": true,
+   "range": null,
+   "summary": "Stores spells inside a mindless object, total rank capped by this power, released by a trigger set at casting.",
+   "optional": [
+    "MCo4",
+    "MCo6",
+    "MC11"
+   ],
+   "nemesis": [
+    "D5",
+    "D13",
+    "MG4",
+    "MG6"
+   ]
+  },
+  {
+   "code": "MG2",
+   "name": "Energy Source",
+   "class": "MG",
+   "page": 43,
+   "double": false,
+   "range": null,
+   "summary": "A drawback: magic flows from an outside source; if cut off, spells drain a reserve equal to Psyche. Grants a reroll."
+  },
+  {
+   "code": "MG3",
+   "name": "Internal Limbo",
+   "class": "MG",
+   "page": 43,
+   "double": false,
+   "range": null,
+   "summary": "The mage's body is a doorway to a vast pocket realm whose setting and moods the mage controls.",
+   "optional": [
+    "EE3",
+    "I4",
+    "MCr3",
+    "M11",
+    "S3",
+    "S27",
+    "T1"
+   ],
+   "nemesis": [
+    "T3"
+   ]
+  },
+  {
+   "code": "MG4",
+   "name": "Magic Control",
+   "class": "MG",
+   "page": 44,
+   "double": true,
+   "range": "A",
+   "summary": "Redirects, reshapes, boosts, weakens or cancels other magic within range, but never the mage's own.",
+   "nemesis": [
+    "MG4"
+   ]
+  },
+  {
+   "code": "MG5",
+   "name": "Magic Creation",
+   "class": "MG",
+   "page": 44,
+   "double": true,
+   "range": null,
+   "summary": "Grants magical powers to others at 3CS below this rank; how long they last depends on a Reason roll.",
+   "optional": [
+    "M13",
+    "M33"
+   ],
+   "nemesis": [
+    "MG4"
+   ]
+  },
+  {
+   "code": "MG6",
+   "name": "Magic Domination",
+   "class": "MG",
+   "page": 45,
+   "double": false,
+   "range": "A",
+   "summary": "Takes over another spellcaster, forcing them to cast their spells as the mage wishes; only affects magic users.",
+   "optional": [
+    "L10",
+    "PC3"
+   ],
+   "nemesis": [
+    {
+     "name": "enhanced Psyche"
+    },
+    "MG6"
+   ]
+  },
+  {
+   "code": "MG7",
+   "name": "Magic Transferral",
+   "class": "MG",
+   "page": 45,
+   "double": false,
+   "range": null,
+   "summary": "Lends some of the mage's own spell ranks to another being, losing that amount while the loan lasts.",
+   "optional": [
+    "L11",
+    "PC10"
+   ],
+   "nemesis": [
+    "D5",
+    "D13",
+    "MG4"
+   ]
+  },
+  {
+   "code": "MG8",
+   "name": "Magic Vampirism",
+   "class": "MG",
+   "page": 45,
+   "double": false,
+   "range": null,
+   "summary": "Leeches magic from items or beings to raise own abilities; the gains drain away hourly without more feeding.",
+   "nemesis": [
+    {
+     "name": "enhanced Psyche"
+    }
+   ]
+  },
+  {
+   "code": "MG9",
+   "name": "Power Simulation",
+   "class": "MG",
+   "page": 46,
+   "double": false,
+   "range": null,
+   "summary": "Reroll for a normal power that is then cast as a spell; all later powers are magical too."
+  },
+  {
+   "code": "MG10",
+   "name": "Reality Alteration",
+   "class": "MG",
+   "page": 46,
+   "double": true,
+   "range": null,
+   "summary": "Bends time in one rolled form: nudge future odds, overlay an alternate present, rewrite the past, or speed/slow time.",
+   "optional": [
+    "M24",
+    "M2",
+    {
+     "name": "Retrocognition"
+    }
+   ],
+   "nemesis": [
+    "MG10"
+   ]
+  },
+  {
+   "code": "MG11",
+   "name": "Spirit Vampirism",
+   "class": "MG",
+   "page": 48,
+   "double": true,
+   "range": null,
+   "summary": "Drains a victim's Intuition and Psyche to power up own abilities; must keep feeding or ranks decline.",
+   "optional": [
+    "L2"
+   ],
+   "nemesis": [
+    {
+     "name": "enhanced Psyche"
+    }
+   ]
+  },
+  {
+   "code": "MG12",
+   "name": "Sympathetic Magic",
+   "class": "MG",
+   "page": 48,
+   "double": false,
+   "range": "B",
+   "summary": "Uses a doll holding the victim's hair or similar to channel harm and mind or life powers at one target.",
+   "nemesis": [
+    "M16"
+   ]
+  },
+  {
+   "code": "MG13",
+   "name": "Warding",
+   "class": "MG",
+   "page": 49,
+   "double": false,
+   "range": null,
+   "summary": "Sets magical traps on locations that unleash stored powers once a chosen trigger occurs.",
+   "nemesis": [
+    "DT3",
+    "DT10",
+    "DT14",
+    "DT13",
+    "D13"
+   ]
+  },
+  {
+   "code": "MC1",
+   "name": "Bonding",
+   "class": "MC",
+   "page": 49,
+   "double": false,
+   "range": null,
+   "summary": "Fuses touching solid objects together; the bond gains strength each turn held, up to the power rank.",
+   "optional": [
+    "MCr5",
+    "MCr7",
+    "MCr8",
+    "F5"
+   ],
+   "nemesis": [
+    "S22",
+    "S8",
+    "S13"
+   ]
+  },
+  {
+   "code": "MC2",
+   "name": "Collection",
+   "class": "MC",
+   "page": 50,
+   "double": false,
+   "range": "C",
+   "summary": "Gathers a chosen material scattered across the area and teleports it into a pile at a visible spot.",
+   "optional": [
+    "MC3",
+    "MC8",
+    "MC10",
+    "MC11",
+    "MC12",
+    "MCo2",
+    "MCo4",
+    "MCo6"
+   ],
+   "nemesis": [
+    "MC8"
+   ]
+  },
+  {
+   "code": "MC3",
+   "name": "Crystallization",
+   "class": "MC",
+   "page": 51,
+   "double": false,
+   "range": "C",
+   "summary": "Turns matter or airborne dust into tough crystal of rank strength; living targets freeze in suspended animation.",
+   "optional": [
+    "F4",
+    "MC2",
+    "MC8",
+    "MCr5",
+    "MCr7"
+   ],
+   "nemesis": [
+    "D4",
+    "D7",
+    "D12",
+    "D15",
+    "MCo3"
+   ]
+  },
+  {
+   "code": "MC4",
+   "name": "Diminution",
+   "class": "MC",
+   "page": 51,
+   "double": false,
+   "range": null,
+   "summary": "Shrinks a visible target; higher ranks reach cell, atom or microverse scale by one of three methods.",
+   "nemesis": [
+    "D4",
+    "D12",
+    "P14",
+    "MC6"
+   ]
+  },
+  {
+   "code": "MC5",
+   "name": "Disruption",
+   "class": "MC",
+   "page": 52,
+   "double": false,
+   "range": "A",
+   "summary": "Breaks a target's molecular bonds so it crumbles into dust, liquid or gas; weight per turn set by rank.",
+   "nemesis": [
+    "D4",
+    "D12",
+    "P14",
+    "MC2",
+    "MC11"
+   ]
+  },
+  {
+   "code": "MC6",
+   "name": "Enlargement",
+   "class": "MC",
+   "page": 53,
+   "double": false,
+   "range": null,
+   "summary": "Makes a nearby target grow up to many times its size, by one of three methods with different side effects.",
+   "nemesis": [
+    "D4",
+    "D12",
+    "P14",
+    "S30",
+    "MC4"
+   ]
+  },
+  {
+   "code": "MC7",
+   "name": "Geoforce",
+   "class": "MC",
+   "page": 54,
+   "double": false,
+   "range": "B",
+   "summary": "Senses and steers earth forces: trigger or calm quakes, open pits and tunnels, even raise small volcanoes.",
+   "nemesis": [
+    "MC7",
+    "MCo3",
+    "S22"
+   ]
+  },
+  {
+   "code": "MC8",
+   "name": "Matter Animation",
+   "class": "MC",
+   "page": 55,
+   "double": true,
+   "range": "B",
+   "summary": "Moves and shapes natural air, liquid or solid matter (one form) as long as the character concentrates.",
+   "nemesis": [
+    "MC8",
+    "MCo3"
+   ]
+  },
+  {
+   "code": "MC9",
+   "name": "Machine Animation",
+   "class": "MC",
+   "page": 55,
+   "double": true,
+   "range": "B",
+   "summary": "Remotely runs and powers machines, even unplugged; robots resist with Psyche, and extra machines cut range.",
+   "optional": [
+    "M4",
+    "M5",
+    "MC8"
+   ]
+  },
+  {
+   "code": "MC10",
+   "name": "Micro-Environment",
+   "class": "MC",
+   "page": 56,
+   "double": false,
+   "range": "B",
+   "summary": "Wraps the character in a shielded bubble of breathable air and comfortable conditions, cutting hazards by rank.",
+   "nemesis": [
+    "MC8",
+    "MC8"
+   ]
+  },
+  {
+   "code": "MC11",
+   "name": "Molding",
+   "class": "MC",
+   "page": 57,
+   "double": false,
+   "range": "A",
+   "summary": "Reshapes solid matter into any form, even working devices, at a range and weight set by rank.",
+   "optional": [
+    "MCo4",
+    "MCo6",
+    "MC2",
+    "MC3"
+   ],
+   "nemesis": [
+    "D2",
+    "MC11"
+   ]
+  },
+  {
+   "code": "MC12",
+   "name": "Weather",
+   "class": "MC",
+   "page": 57,
+   "double": false,
+   "range": "C",
+   "summary": "Commands local weather: heat, wind, humidity, clouds, rain and lightning, for minutes a day equal to Health.",
+   "optional": [
+    "DT4",
+    "T21",
+    "T23",
+    "T7"
+   ],
+   "nemesis": [
+    "MC12",
+    "S22"
+   ]
+  },
+  {
+   "code": "MC13",
+   "name": "Zombie Animation",
+   "class": "MC",
+   "page": 58,
+   "double": true,
+   "range": null,
+   "summary": "Raises corpses as mindless servants after a prep period; directly controls as many as the Psyche rank number.",
+   "optional": [
+    "DT5",
+    "L7",
+    "L20",
+    "L21",
+    "M5"
+   ],
+   "nemesis": [
+    "L5",
+    {
+     "name": "Healing"
+    },
+    "L21"
+   ]
+  },
+  {
+   "code": "MCo1",
+   "name": "Coloration",
+   "class": "MCo",
+   "page": 59,
+   "double": false,
+   "range": null,
+   "summary": "Changes the color, light frequency or transparency of anything, for effects like dimming, heating or seeing through.",
+   "optional": [
+    "EC14"
+   ],
+   "nemesis": [
+    "DT15",
+    "DT16"
+   ]
+  },
+  {
+   "code": "MCo2",
+   "name": "Combustion",
+   "class": "MCo",
+   "page": 60,
+   "double": false,
+   "range": "A",
+   "summary": "Makes the outer layer of a target flammable so it bursts into flame a few turns later, dealing rank damage.",
+   "optional": [
+    "EE4",
+    "EC10"
+   ],
+   "nemesis": [
+    "MCo4",
+    "MCo6",
+    "EE1",
+    "EC10",
+    "EC20"
+   ]
+  },
+  {
+   "code": "MCo3",
+   "name": "Disintegration",
+   "class": "MCo",
+   "page": 60,
+   "double": false,
+   "range": "A",
+   "summary": "A beam that turns matter into harmless light; cubic feet per turn equal the rank number, needs an Agility FEAT.",
+   "nemesis": [
+    "S22",
+    "MCo5"
+   ]
+  },
+  {
+   "code": "MCo4",
+   "name": "Elemental Conversion",
+   "class": "MCo",
+   "page": 61,
+   "double": true,
+   "range": "A",
+   "summary": "Transmutes matter into any single element, pounds per turn by rank; lethal to living tissue unless temporary.",
+   "optional": [
+    "MC8",
+    "MC11"
+   ],
+   "nemesis": [
+    "D4",
+    "D12",
+    "P14"
+   ]
+  },
+  {
+   "code": "MCo5",
+   "name": "Ionization",
+   "class": "MCo",
+   "page": 62,
+   "double": false,
+   "range": "A",
+   "summary": "Energizes a target's atoms to build static charge, emit electricity, break it apart, warm it or phase it.",
+   "nemesis": [
+    "EC8"
+   ]
+  },
+  {
+   "code": "MCo6",
+   "name": "Molecular Conversion",
+   "class": "MCo",
+   "page": 62,
+   "double": true,
+   "range": "A",
+   "summary": "Rebuilds matter into any chosen compound; more complex molecules need harder FEATs. Weight per turn by rank.",
+   "optional": [
+    "MC8",
+    "MC11"
+   ],
+   "nemesis": [
+    "D4",
+    "D12",
+    "P14"
+   ]
+  },
+  {
+   "code": "MCr1",
+   "name": "Artifact Creation",
+   "class": "MCr",
+   "page": 63,
+   "double": true,
+   "range": null,
+   "summary": "Conjures one-piece objects from memorized designs, ounces per turn by rank, each ounce costing a Health point.",
+   "optional": [
+    "MC8",
+    "M13"
+   ],
+   "nemesis": [
+    "MCo3",
+    "L10"
+   ]
+  },
+  {
+   "code": "MCr2",
+   "name": "Elemental Creation",
+   "class": "MCr",
+   "page": 64,
+   "double": false,
+   "range": null,
+   "summary": "Materializes pure elements nearby, ounces per turn by rank at a Health cost; can be dropped on foes as an attack.",
+   "optional": [
+    "MC8",
+    "MC9"
+   ],
+   "nemesis": [
+    "MCo3",
+    "MC8"
+   ]
+  },
+  {
+   "code": "MCr3",
+   "name": "Lifeform Creation",
+   "class": "MCr",
+   "page": 64,
+   "double": true,
+   "range": null,
+   "summary": "Creates living creatures from studied or invented designs, ounces per turn by rank, paying Health per ounce.",
+   "optional": [
+    "M32",
+    "L10",
+    {
+     "name": "Animal Control"
+    },
+    "L14"
+   ],
+   "nemesis": [
+    "M32",
+    "L10",
+    {
+     "name": "Animal Control"
+    },
+    "L14"
+   ]
+  },
+  {
+   "code": "MCr4",
+   "name": "Mechanical Creation",
+   "class": "MCr",
+   "page": 65,
+   "double": true,
+   "range": null,
+   "summary": "Builds working machines from memorized designs, ounces per turn by rank, spending a Health point per ounce.",
+   "optional": [
+    "MC9",
+    "M13",
+    "M14"
+   ],
+   "nemesis": [
+    "MC9",
+    "L10"
+   ]
+  },
+  {
+   "code": "MCr5",
+   "name": "Missile Creation",
+   "class": "MCr",
+   "page": 66,
+   "double": false,
+   "range": null,
+   "summary": "Creates and fires stunning projectiles, optionally carrying another power's effect; hourly shots limited by rank.",
+   "nemesis": [
+    "D10",
+    {
+     "name": "Induced Teleportation"
+    }
+   ]
+  },
+  {
+   "code": "MCr6",
+   "name": "Molecular Creation",
+   "class": "MCr",
+   "page": 66,
+   "double": false,
+   "range": null,
+   "summary": "Forms any compound out of nothing nearby, ounces per turn by rank, costing Health; usable as a dodgeable attack.",
+   "optional": [
+    "MC8",
+    "MC9"
+   ],
+   "nemesis": [
+    "MCo3",
+    "MC8"
+   ]
+  },
+  {
+   "code": "MCr7",
+   "name": "Spray",
+   "class": "MCr",
+   "page": 67,
+   "double": false,
+   "range": null,
+   "summary": "Releases a short-range cloud that chokes and blinds, and can deliver another power's effect; daily uses by rank.",
+   "nemesis": [
+    "D10",
+    {
+     "name": "Induced Teleportation"
+    }
+   ]
+  },
+  {
+   "code": "MCr8",
+   "name": "Webcasting",
+   "class": "MCr",
+   "page": 67,
+   "double": false,
+   "range": null,
+   "summary": "Shoots sticky webbing to snare foes, swing between spots or form shields; can carry other powers. Daily uses by rank.",
+   "nemesis": [
+    "S22"
+   ]
+  },
+  {
+   "code": "M1",
+   "name": "Clairaudience",
+   "class": "M",
+   "page": 68,
+   "double": false,
+   "range": "E",
+   "summary": "Listen in on faraway places through any barrier or vacuum, but psionic and sonic attacks there hit you at -1CS.",
+   "optional": [
+    "DT6",
+    "M2",
+    "M26"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    }
+   ]
+  },
+  {
+   "code": "M2",
+   "name": "Clairvoyance",
+   "class": "M",
+   "page": 68,
+   "double": false,
+   "range": "E",
+   "summary": "View remote scenes unhindered by distance or walls; psionic and light attacks aimed there can reach you at -1CS.",
+   "optional": [
+    "M1",
+    "M26"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    }
+   ]
+  },
+  {
+   "code": "M3",
+   "name": "Communicate with Animals",
+   "class": "M",
+   "page": 69,
+   "double": false,
+   "range": null,
+   "summary": "Talk with animals and non-sentient creatures; mammals need green, birds and reptiles yellow, all others red.",
+   "optional": [
+    "M17",
+    {
+     "name": "Communication Powers"
+    }
+   ],
+   "nemesis": [
+    "L12"
+   ]
+  },
+  {
+   "code": "M4",
+   "name": "Communicate with Cybernetics",
+   "class": "M",
+   "page": 69,
+   "double": false,
+   "range": null,
+   "summary": "Converse with any programmed device; multi-chip computers are green, single-chip gadgets yellow, chipless ones red.",
+   "optional": [
+    "M17"
+   ],
+   "nemesis": [
+    "L12"
+   ]
+  },
+  {
+   "code": "M5",
+   "name": "Communicate with Non-Living",
+   "class": "M",
+   "page": 69,
+   "double": false,
+   "range": null,
+   "summary": "Lend awareness to objects or corpses so they answer questions, letting you quiz belongings about their owner.",
+   "optional": [
+    {
+     "name": "Communications with Cybernetics"
+    }
+   ],
+   "nemesis": [
+    "L12"
+   ]
+  },
+  {
+   "code": "M6",
+   "name": "Communicate with Plants",
+   "class": "M",
+   "page": 69,
+   "double": false,
+   "range": null,
+   "summary": "Converse with plant life; trees are easiest (green), shrubs yellow, fungi and simple plants red.",
+   "optional": [
+    "M3",
+    "M5",
+    "L14",
+    "L15"
+   ],
+   "nemesis": [
+    "L12"
+   ]
+  },
+  {
+   "code": "M7",
+   "name": "Cosmic Awareness",
+   "class": "M",
+   "page": 69,
+   "double": true,
+   "range": null,
+   "summary": "Learn nearly anything by FEAT and gain +1CS on attacks, but frequent use risks a Reason check against insanity.",
+   "optional": [
+    "M13"
+   ],
+   "nemesis": [
+    "L4"
+   ]
+  },
+  {
+   "code": "M8",
+   "name": "Danger Sense",
+   "class": "M",
+   "page": 70,
+   "double": false,
+   "range": null,
+   "summary": "Warns of danger seconds ahead and may stand in for Intuition, Fighting, Agility or Strength in combat.",
+   "nemesis": [
+    "L4"
+   ]
+  },
+  {
+   "code": "M9",
+   "name": "Dreamtravel",
+   "class": "M",
+   "page": 70,
+   "double": false,
+   "range": null,
+   "summary": "Step into a nearby sleeper's dream world, using this rank for all physical stats; injuries there are real.",
+   "optional": [
+    "M32"
+   ]
+  },
+  {
+   "code": "M10",
+   "name": "Empathy",
+   "class": "M",
+   "page": 70,
+   "double": false,
+   "range": "B",
+   "summary": "Read the feelings of others and broadcast your own emotions as a signal; each extra target cuts range -1CS.",
+   "optional": [
+    "M2",
+    "L4"
+   ],
+   "nemesis": [
+    "M19",
+    "D2",
+    "D14"
+   ]
+  },
+  {
+   "code": "M11",
+   "name": "Free Spirit",
+   "class": "M",
+   "page": 70,
+   "double": true,
+   "range": null,
+   "summary": "Your spirit can leave the body, carry your mental abilities, and persist after death with a red FEAT.",
+   "nemesis": [
+    "L20",
+    "L19"
+   ]
+  },
+  {
+   "code": "M12",
+   "name": "Hallucinations",
+   "class": "M",
+   "page": 71,
+   "double": true,
+   "range": "A",
+   "summary": "Plant illusions only the target can see while you concentrate; wounds they believe in can knock them out."
+  },
+  {
+   "code": "M13",
+   "name": "Hyper-Intelligence",
+   "class": "M",
+   "page": 71,
+   "double": false,
+   "range": null,
+   "summary": "Boost Reason or Intuition, either permanently by this rank or temporarily by many column shifts for minutes.",
+   "optional": [
+    "M14",
+    "M33"
+   ],
+   "nemesis": [
+    "M22"
+   ]
+  },
+  {
+   "code": "M14",
+   "name": "Hyper-Invention",
+   "class": "M",
+   "page": 71,
+   "double": false,
+   "range": null,
+   "summary": "Master, repair and build technology cheaply; FEAT color depends on how much instruction material you have.",
+   "optional": [
+    "F5",
+    "MC9",
+    "MC11",
+    "MCr1",
+    {
+     "name": "Machine Creation"
+    }
+   ],
+   "nemesis": [
+    "M18",
+    "M22"
+   ]
+  },
+  {
+   "code": "M15",
+   "name": "Incarnation Awareness",
+   "class": "M",
+   "page": 72,
+   "double": false,
+   "range": null,
+   "summary": "Recall and talk to as many past lives as your rank number, even asking them to set up plans that pay off now.",
+   "optional": [
+    "T19",
+    "M11"
+   ]
+  },
+  {
+   "code": "M16",
+   "name": "Iron Will",
+   "class": "M",
+   "page": 72,
+   "double": false,
+   "range": null,
+   "summary": "Soak up to rank-number damage per hit and resist with this rank; releasing it costs half the stored damage as Health."
+  },
+  {
+   "code": "M17",
+   "name": "Linguistics",
+   "class": "M",
+   "page": 73,
+   "double": false,
+   "range": null,
+   "summary": "Learn tongues fast, keeping as many as your rank number; also grants rank resistance to sonic mind control.",
+   "optional": [
+    "M13"
+   ],
+   "nemesis": [
+    "M22"
+   ]
+  },
+  {
+   "code": "M18",
+   "name": "Mental Duplication",
+   "class": "M",
+   "page": 73,
+   "double": false,
+   "range": "A",
+   "summary": "Copy another mind into your own, gaining memories, talents or mental powers by FEAT color, for Psyche-based minutes.",
+   "optional": [
+    "M22",
+    "PC4"
+   ],
+   "nemesis": [
+    "M21"
+   ]
+  },
+  {
+   "code": "M19",
+   "name": "Mental Invisibility",
+   "class": "M",
+   "page": 74,
+   "double": false,
+   "range": null,
+   "summary": "Hide your mind from all detection, giving rank resistance to probes and psionic attacks; shielding others is -1CS each.",
+   "nemesis": [
+    "M20"
+   ]
+  },
+  {
+   "code": "M20",
+   "name": "Mental Probe",
+   "class": "M",
+   "page": 74,
+   "double": false,
+   "range": "A",
+   "summary": "Search a mind or psychic phenomenon for specific information; a target that resists bars retries for a day.",
+   "optional": [
+    "M32",
+    "M27"
+   ],
+   "nemesis": [
+    "M19"
+   ]
+  },
+  {
+   "code": "M21",
+   "name": "Mind Blast",
+   "class": "M",
+   "page": 75,
+   "double": false,
+   "range": "A",
+   "summary": "Psionic bolt deals rank damage to the nervous system; a failed Psyche FEAT also knocks the target out 1-10 turns.",
+   "optional": [
+    "M32",
+    "M20"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    }
+   ]
+  },
+  {
+   "code": "M22",
+   "name": "Mind Drain",
+   "class": "M",
+   "page": 75,
+   "double": false,
+   "range": "A",
+   "summary": "Each use strips rank points from both Reason and Intuition of a victim; zero in both makes the loss permanent.",
+   "optional": [
+    "M32",
+    "M20",
+    "M18",
+    "M21"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    }
+   ]
+  },
+  {
+   "code": "M23",
+   "name": "Postcognition",
+   "class": "M",
+   "page": 75,
+   "double": false,
+   "range": null,
+   "summary": "Touch a person, object or place to relive its past up to rank-number weeks back; FEAT color sets vision accuracy.",
+   "optional": [
+    "M32",
+    "T19"
+   ]
+  },
+  {
+   "code": "M24",
+   "name": "Precognition",
+   "class": "M",
+   "page": 75,
+   "double": true,
+   "range": null,
+   "summary": "Glimpse events up to twice rank-number hours ahead under a chosen limit; the Judge rolls secretly for accuracy.",
+   "optional": [
+    "M32",
+    "T19"
+   ]
+  },
+  {
+   "code": "M25",
+   "name": "Psionic Vampirism",
+   "class": "M",
+   "page": 76,
+   "double": true,
+   "range": null,
+   "summary": "Feed on a victim's mind to pump up your stats and powers, which otherwise decay one point every hour.",
+   "nemesis": [
+    {
+     "name": "Enhanced Psyche"
+    }
+   ]
+  },
+  {
+   "code": "M26",
+   "name": "Remote Sensing",
+   "class": "M",
+   "page": 77,
+   "double": false,
+   "range": "E",
+   "summary": "Project one chosen non-sight, non-hearing sense to a distance; psionic attacks against you gain +1CS.",
+   "optional": [
+    "M26",
+    "M1",
+    "M2"
+   ],
+   "nemesis": [
+    "M19"
+   ]
+  },
+  {
+   "code": "M27",
+   "name": "Sensory Link",
+   "class": "M",
+   "page": 77,
+   "double": false,
+   "range": null,
+   "summary": "Borrow the senses of any creature in sight unnoticed, at -1CS to psionic resistance, Agility and Fighting.",
+   "optional": [
+    "M32"
+   ],
+   "nemesis": [
+    "L12"
+   ]
+  },
+  {
+   "code": "M28",
+   "name": "Serial Immortality",
+   "class": "M",
+   "page": 77,
+   "double": true,
+   "range": null,
+   "summary": "On death your life force moves into a new body by one of five methods, keeping some of your powers.",
+   "nemesis": [
+    "L5"
+   ]
+  },
+  {
+   "code": "M29",
+   "name": "Speechthrowing",
+   "class": "M",
+   "page": 78,
+   "double": false,
+   "range": "E",
+   "summary": "Make your voice sound at any far location instantly, through any barrier that does not block psionics.",
+   "bonus": [
+    "M1"
+   ],
+   "optional": [
+    "M2",
+    "P15",
+    "DT6",
+    "M27"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    }
+   ]
+  },
+  {
+   "code": "M30",
+   "name": "Telekinesis",
+   "class": "M",
+   "page": 79,
+   "double": false,
+   "range": "A",
+   "summary": "Move objects with the mind using rank as Strength; each extra simultaneous action shortens range -1CS.",
+   "optional": [
+    "MC8",
+    "MC11",
+    "M2",
+    "M26",
+    "T12",
+    "T21"
+   ],
+   "nemesis": [
+    {
+     "name": "Force Field vs. Psionics"
+    },
+    "EC11"
+   ]
+  },
+  {
+   "code": "M31",
+   "name": "Telelocation",
+   "class": "M",
+   "page": 79,
+   "double": false,
+   "range": "D",
+   "summary": "Find a chosen quarry anywhere in range with no trail needed; FEAT color depends on your link to the target.",
+   "optional": [
+    "M2",
+    "DT5"
+   ],
+   "nemesis": [
+    "M19"
+   ]
+  },
+  {
+   "code": "M32",
+   "name": "Telepathy",
+   "class": "M",
+   "page": 79,
+   "double": false,
+   "range": "D",
+   "summary": "Mind-to-mind contact, easy with weaker or willing minds and harder against strong or shielded ones.",
+   "optional": [
+    "M10",
+    "M12",
+    "M19",
+    "M20",
+    "M21",
+    "M22",
+    "M27",
+    "DT14"
+   ],
+   "nemesis": [
+    "D14"
+   ]
+  },
+  {
+   "code": "M33",
+   "name": "Total Memory",
+   "class": "M",
+   "page": 79,
+   "double": false,
+   "range": null,
+   "summary": "Recall anything ever experienced, with accuracy equal to rank number as a percent; old mind attacks may resurface.",
+   "optional": [
+    "M14",
+    "M13",
+    "F5"
+   ],
+   "nemesis": [
+    "M22"
+   ]
+  },
+  {
+   "code": "P1",
+   "name": "Armor Skin",
+   "class": "P",
+   "page": 80,
+   "double": false,
+   "range": null,
+   "summary": "Toughened skin subtracts rank number from physical and energy attacks; a switchable version costs -2CS.",
+   "optional": [
+    "P9"
+   ]
+  },
+  {
+   "code": "P2",
+   "name": "Body Resistance",
+   "class": "P",
+   "page": 80,
+   "double": false,
+   "range": null,
+   "summary": "Normal-looking flesh subtracts rank number from physical and energy damage and heals surface wounds ten times faster.",
+   "optional": [
+    "P9"
+   ]
+  },
+  {
+   "code": "P3",
+   "name": "Chemical Touch",
+   "class": "P",
+   "page": 80,
+   "double": false,
+   "range": null,
+   "summary": "Your skin secretes substances that, blended with another of your powers, deal rank damage by contact.",
+   "nemesis": [
+    "S22"
+   ]
+  },
+  {
+   "code": "P4",
+   "name": "Digestive Adaptation",
+   "class": "P",
+   "page": 80,
+   "double": false,
+   "range": null,
+   "summary": "Eat and digest anything safely, converting it to useful matter, with +4CS resistance to swallowed toxins.",
+   "optional": [
+    "P7",
+    "S7"
+   ]
+  },
+  {
+   "code": "P5",
+   "name": "Hyper-Speed",
+   "class": "P",
+   "page": 81,
+   "double": false,
+   "range": null,
+   "summary": "Move or work faster by a multiple equal to rank number, possibly past light speed; skip adaptations for +2CS."
+  },
+  {
+   "code": "P6",
+   "name": "Hypnotic Voice",
+   "class": "P",
+   "page": 81,
+   "double": false,
+   "range": null,
+   "summary": "Anyone hearing you must pass an Intuition FEAT or obey; strength falls -1CS per 20 feet and through recordings."
+  },
+  {
+   "code": "P7",
+   "name": "Lung Adaptability",
+   "class": "P",
+   "page": 81,
+   "double": false,
+   "range": null,
+   "summary": "Breathe any gas or liquid by converting it inside your lungs, shrugging off airborne poisons."
+  },
+  {
+   "code": "P8",
+   "name": "Pheromones",
+   "class": "P",
+   "page": 81,
+   "double": false,
+   "range": null,
+   "summary": "Emit scents that command those who smell them; rank drops -1CS per 20 feet beyond the first 20."
+  },
+  {
+   "code": "P9",
+   "name": "Regeneration",
+   "class": "P",
+   "page": 81,
+   "double": true,
+   "range": null,
+   "summary": "Heal at a rate multiplied by rank number and eventually regrow lost limbs or organs with a red FEAT."
+  },
+  {
+   "code": "P10",
+   "name": "Self-Revival",
+   "class": "P",
+   "page": 81,
+   "double": true,
+   "range": null,
+   "summary": "Your body repairs even fatal harm and brings you back to life; FEAT color depends on how much body remains."
+  },
+  {
+   "code": "P11",
+   "name": "Self-Sustenance",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Go without air, food or water; a temporary version gives +1CS but you must binge afterwards."
+  },
+  {
+   "code": "P12",
+   "name": "Stealth",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Your rank is subtracted from anyone trying to spot or track you."
+  },
+  {
+   "code": "P13",
+   "name": "Suspended Animation",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Enter a deathlike trance that ignores hostile conditions, waking later on a set time, trigger or outside help."
+  },
+  {
+   "code": "P14",
+   "name": "True Invulnerability",
+   "class": "P",
+   "page": 82,
+   "double": true,
+   "range": null,
+   "summary": "Lowers the rank of nearly every physical or energy attack by this rank, but not magic or mental attacks."
+  },
+  {
+   "code": "P15",
+   "name": "Vocal Control",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Mimic any voice or sound perfectly within your rank, and copy sonic powers at -1CS of the original."
+  },
+  {
+   "code": "P16",
+   "name": "Waterbreathing",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Breathe water or another chosen medium; the permanent form suffers -1CS and +1CS damage from heat and dryness."
+  },
+  {
+   "code": "P17",
+   "name": "Water Freedom",
+   "class": "P",
+   "page": 82,
+   "double": false,
+   "range": null,
+   "summary": "Move through water as easily as air and ignore deep pressure; on land +2CS Strength and Endurance, -2CS Agility.",
+   "bonus": [
+    "P16"
+   ]
+  },
+  {
+   "code": "PC1",
+   "name": "Control",
+   "class": "PC",
+   "page": 82,
+   "double": true,
+   "range": "A",
+   "summary": "Steer, boost or shrink, or cancel the powers of others in range, for up to rank-number minutes at a time."
+  },
+  {
+   "code": "PC2",
+   "name": "Creation",
+   "class": "PC",
+   "page": 83,
+   "double": false,
+   "range": null,
+   "summary": "Grant new powers to others at -3CS of this rank, up to rank-number kinds; a Reason FEAT sets how long they last.",
+   "nemesis": [
+    {
+     "name": "Power Control/Negation"
+    }
+   ]
+  },
+  {
+   "code": "PC3",
+   "name": "Domination",
+   "class": "PC",
+   "page": 83,
+   "double": true,
+   "range": "A",
+   "summary": "Force super-beings to use their own powers as you command, against their Psyche; no effect on the powerless.",
+   "optional": [
+    "L10",
+    "MG6"
+   ],
+   "nemesis": [
+    {
+     "name": "Enhanced Psyche"
+    }
+   ]
+  },
+  {
+   "code": "PC4",
+   "name": "Duplication",
+   "class": "PC",
+   "page": 83,
+   "double": false,
+   "range": null,
+   "summary": "Copy one power you have been exposed to at this rank, storing up to rank-number powers; swapping takes 3 turns.",
+   "nemesis": [
+    "M22"
+   ]
+  },
+  {
+   "code": "PC5",
+   "name": "Energy Source",
+   "class": "PC",
+   "page": 84,
+   "double": false,
+   "range": null,
+   "summary": "Your powers run off an external source; if cut off, you get a pool of points equal to Psyche. Roll another power."
+  },
+  {
+   "code": "PC6",
+   "name": "Energy Source Creation",
+   "class": "PC",
+   "page": 84,
+   "double": true,
+   "range": null,
+   "summary": "Charge a non-living object with powers so others can later unleash them, up to limits set by this rank."
+  },
+  {
+   "code": "PC7",
+   "name": "Focus",
+   "class": "PC",
+   "page": 84,
+   "double": false,
+   "range": null,
+   "summary": "Pour every ability and power total into one power for a single burst, then drop to Feeble and recover. Roll again."
+  },
+  {
+   "code": "PC8",
+   "name": "Gestalt",
+   "class": "PC",
+   "page": 84,
+   "double": false,
+   "range": null,
+   "summary": "Join with a partner character to produce a randomly rolled shared power at this rank."
+  },
+  {
+   "code": "PC9",
+   "name": "Nemesis",
+   "class": "PC",
+   "page": 84,
+   "double": false,
+   "range": null,
+   "summary": "Replaces all powers: study one foe and build a power to beat it, up to this rank; useless against the powerless."
+  },
+  {
+   "code": "PC10",
+   "name": "Power Transferral",
+   "class": "PC",
+   "page": 84,
+   "double": false,
+   "range": null,
+   "summary": "Lend your powers and ranks to another being, losing them meanwhile; a Reason FEAT sets how long the loan lasts.",
+   "optional": [
+    "L11",
+    "MG7"
+   ],
+   "nemesis": [
+    "D8"
+   ]
+  },
+  {
+   "code": "PC11",
+   "name": "Power Vampirism",
+   "class": "PC",
+   "page": 85,
+   "double": true,
+   "range": null,
+   "summary": "Drain power from items or beings to raise your stats and powers, which otherwise fade a point every hour.",
+   "nemesis": [
+    {
+     "name": "Psyche"
+    }
+   ]
+  },
+  {
+   "code": "PC12",
+   "name": "Residual Absorption",
+   "class": "PC",
+   "page": 85,
+   "double": false,
+   "range": null,
+   "summary": "Soak up leftover traces from a power's use to gain it at this rank; a Reason FEAT sets how long it lasts."
+  },
+  {
+   "code": "PC13",
+   "name": "Selection",
+   "class": "PC",
+   "page": 85,
+   "double": false,
+   "range": null,
+   "summary": "Hold many powers but use only one at a time, with three turns to switch; grants an extra power roll."
+  },
+  {
+   "code": "PC14",
+   "name": "Weakness Creation",
+   "class": "PC",
+   "page": 85,
+   "double": true,
+   "range": null,
+   "summary": "Inflict a random Weakness on a victim against their Psyche; a Reason FEAT decides how long it lasts."
+  },
+  {
+   "code": "S1",
+   "name": "Age-Shift",
+   "class": "S",
+   "page": 86,
+   "double": false,
+   "range": null,
+   "summary": "Makes the body look older or younger by a number of years set by rank; the mind stays the same."
+  },
+  {
+   "code": "S2",
+   "name": "Alter Ego",
+   "class": "S",
+   "page": 86,
+   "double": false,
+   "range": null,
+   "summary": "Switches between an ordinary powerless self and a separately built powered self; risk of reverting at bad moments."
+  },
+  {
+   "code": "S3",
+   "name": "Anatomical Separation",
+   "class": "S",
+   "page": 86,
+   "double": false,
+   "range": null,
+   "summary": "Detaches body parts that act and move on their own for a rank-based time and range; +1CS against edged attacks."
+  },
+  {
+   "code": "S4",
+   "name": "Animal Transformation",
+   "class": "S",
+   "page": 86,
+   "double": false,
+   "range": null,
+   "summary": "Reshapes the body into any animal or non-humanoid alien look while keeping the same underlying biology."
+  },
+  {
+   "code": "S5",
+   "name": "Animal Mimicry",
+   "class": "S",
+   "page": 86,
+   "double": false,
+   "range": null,
+   "summary": "Copies an animal's natural abilities without changing shape; harder FEATs for alien, magical or mythical beasts."
+  },
+  {
+   "code": "S6",
+   "name": "Blending",
+   "class": "S",
+   "page": 87,
+   "double": false,
+   "range": null,
+   "summary": "Changes skin colour to match the surroundings, giving near-invisibility that works best in dim light or at range."
+  },
+  {
+   "code": "S7",
+   "name": "Body Adaptation",
+   "class": "S",
+   "page": 87,
+   "double": true,
+   "range": null,
+   "summary": "Body automatically reshapes itself over 1-10 turns to survive a hostile environment; conscious control at Shift X."
+  },
+  {
+   "code": "S8",
+   "name": "Body Transformation",
+   "class": "S",
+   "page": 87,
+   "double": true,
+   "range": null,
+   "summary": "Turns the body into another element or compound while staying alive; vulnerable to attacks on that material."
+  },
+  {
+   "code": "S9",
+   "name": "Body Coating",
+   "class": "S",
+   "page": 87,
+   "double": false,
+   "range": null,
+   "summary": "Grows a protective layer of one chosen material that absorbs damage and regrows; other powers need it present."
+  },
+  {
+   "code": "S10",
+   "name": "Bouncing Ball",
+   "class": "S",
+   "page": 87,
+   "double": false,
+   "range": null,
+   "summary": "Inflates into a bouncy sphere: moves at rank speed, adds rank to Fighting, +3CS vs blunt and -2CS vs slashing.",
+   "addenda": true
+  },
+  {
+   "code": "S11",
+   "name": "Chemical Mimicry",
+   "class": "S",
+   "page": 87,
+   "double": false,
+   "range": null,
+   "summary": "Flesh behaves chemically like any chosen substance without changing composition; scent tracking suffers -4CS."
+  },
+  {
+   "code": "S12",
+   "name": "Elongation",
+   "class": "S",
+   "page": 88,
+   "double": false,
+   "range": null,
+   "summary": "Stretches body parts up to rank number in yards total, held for up to rank number in turns.",
+   "addenda": true,
+   "optional": [
+    "S25"
+   ]
+  },
+  {
+   "code": "S13",
+   "name": "Energy Body",
+   "class": "S",
+   "page": 88,
+   "double": true,
+   "range": null,
+   "summary": "Becomes a living field of chosen energy types, each ranked separately, able to spend and reabsorb that energy."
+  },
+  {
+   "code": "S14",
+   "name": "Energy Sheath",
+   "class": "S",
+   "page": 88,
+   "double": false,
+   "range": null,
+   "summary": "Wraps self in an energy field giving protection and life support; +2CS vs its own energy type, -2CS to its controllers."
+  },
+  {
+   "code": "S15",
+   "name": "Evolution",
+   "class": "S",
+   "page": 88,
+   "double": false,
+   "range": null,
+   "summary": "Shifts to a primitive brute or advanced big-brain stage, moving ability ranks between physical and mental."
+  },
+  {
+   "code": "S16",
+   "name": "Growth",
+   "class": "S",
+   "page": 88,
+   "double": false,
+   "range": null,
+   "summary": "Grows larger at will, becoming easier to hit; one of three rolled forms decides mass, strength and fragility.",
+   "addenda": true,
+   "nemesis": [
+    "MC4"
+   ]
+  },
+  {
+   "code": "S17",
+   "name": "Imitation-Face Changer",
+   "class": "S",
+   "page": 89,
+   "double": false,
+   "range": null,
+   "summary": "Reshapes facial features, skin and hair to pass as any human of roughly the same build."
+  },
+  {
+   "code": "S18",
+   "name": "Imitation-Human Changeling",
+   "class": "S",
+   "page": 89,
+   "double": false,
+   "range": null,
+   "summary": "Takes on any human or humanoid form, copied or invented, without gaining that person's powers or habits."
+  },
+  {
+   "code": "S19",
+   "name": "Invisibility",
+   "class": "S",
+   "page": 89,
+   "double": false,
+   "range": null,
+   "summary": "Becomes unseen by one of four methods (light, mind, illusion, hologram), each with its own detection weaknesses."
+  },
+  {
+   "code": "S20",
+   "name": "Mass Decrease",
+   "class": "S",
+   "page": 90,
+   "double": false,
+   "range": null,
+   "summary": "Cuts body weight to a rank-based percentage; at Shift X and above the hero floats and can bear extra load.",
+   "addenda": true,
+   "optional": [
+    "EC11"
+   ]
+  },
+  {
+   "code": "S21",
+   "name": "Mass Increase",
+   "class": "S",
+   "page": 90,
+   "double": false,
+   "range": null,
+   "summary": "Multiplies body weight by rank number while moving normally; grants rank resistance to physical harm and charges.",
+   "addenda": true
+  },
+  {
+   "code": "S22",
+   "name": "Phasing",
+   "class": "S",
+   "page": 90,
+   "double": false,
+   "range": null,
+   "summary": "Turns intangible to pass through matter weaker than the rank; lasts as long as breath is held; scrambles electronics.",
+   "addenda": true
+  },
+  {
+   "code": "S23",
+   "name": "Physical Gestalt",
+   "class": "S",
+   "page": 90,
+   "double": false,
+   "range": null,
+   "summary": "Two or more ordinary people fuse into one powered hero; all must be present, and their ailments carry over."
+  },
+  {
+   "code": "S24",
+   "name": "Plant Mimicry",
+   "class": "S",
+   "page": 91,
+   "double": false,
+   "range": null,
+   "summary": "Copies a plant's traits such as photosynthesis, rooting or a toxic touch, with FEATs harder for alien or magic plants."
+  },
+  {
+   "code": "S25",
+   "name": "Plasticity",
+   "class": "S",
+   "page": 91,
+   "double": false,
+   "range": null,
+   "summary": "Twists and stretches the body into any shape without holes; rank resistance to blunt hits and safe long falls.",
+   "addenda": true,
+   "bonus": [
+    "S12"
+   ],
+   "optional": [
+    "S10"
+   ]
+  },
+  {
+   "code": "S26",
+   "name": "Prehensile Hair",
+   "class": "S",
+   "page": 91,
+   "double": false,
+   "range": null,
+   "summary": "Hair moves like many tentacles to grab, strike or manipulate; action count and Str/Agil shift are set by rank."
+  },
+  {
+   "code": "S27",
+   "name": "Self-Duplication",
+   "class": "S",
+   "page": 91,
+   "double": true,
+   "range": null,
+   "summary": "Creates copies of self with the same stats and powers, linked by telepathy; losing a copy costs no Health."
+  },
+  {
+   "code": "S28",
+   "name": "Self-Vegetation",
+   "class": "S",
+   "page": 92,
+   "double": false,
+   "range": null,
+   "summary": "Turns into a plant form: immune to anti-animal attacks, weak to herbicides, fed by sunlight; physical stats change."
+  },
+  {
+   "code": "S29",
+   "name": "Shapeshifting",
+   "class": "S",
+   "page": 92,
+   "double": false,
+   "range": null,
+   "summary": "Changes into any shape by FEAT while keeping flesh composition; very large or small shapes cut duration -3CS."
+  },
+  {
+   "code": "S30",
+   "name": "Shrinking",
+   "class": "S",
+   "page": 92,
+   "double": false,
+   "range": null,
+   "summary": "Shrinks at will, becoming harder to hit but taking more damage; one of three rolled forms decides mass and strength.",
+   "addenda": true,
+   "optional": [
+    "MC4"
+   ],
+   "nemesis": [
+    "MC6"
+   ]
+  },
+  {
+   "code": "S31",
+   "name": "Spirit Gestalt",
+   "class": "S",
+   "page": 93,
+   "double": false,
+   "range": null,
+   "summary": "Merges with one or more spirits to become a powered alter ego; rank sets how well the merger resists being split."
+  },
+  {
+   "code": "S32",
+   "name": "Two-dimensionality",
+   "class": "S",
+   "page": 93,
+   "double": false,
+   "range": null,
+   "summary": "Flattens to paper-thin or thinner by FEAT to slip through cracks or slice barriers; less harmed by blunt blows.",
+   "addenda": true
+  },
+  {
+   "code": "T1",
+   "name": "Astral Body",
+   "class": "T",
+   "page": 93,
+   "double": false,
+   "range": null,
+   "summary": "Projects an intangible spirit form tethered by a silver cord while the body lies helpless; can cross dimensions.",
+   "optional": [
+    {
+     "name": "Magic Powers"
+    },
+    "DT5"
+   ],
+   "nemesis": [
+    "L20"
+   ]
+  },
+  {
+   "code": "T2",
+   "name": "Carrier Wave",
+   "class": "T",
+   "page": 94,
+   "double": false,
+   "range": null,
+   "summary": "Rides a current of one chosen energy type at rank speed, towing a rank-Strength load; fails where that energy ends.",
+   "optional": [
+    "DT3",
+    {
+     "name": "Energy Control"
+    }
+   ],
+   "nemesis": [
+    {
+     "name": "Energy Control"
+    }
+   ]
+  },
+  {
+   "code": "T3",
+   "name": "Dimension Travel",
+   "class": "T",
+   "page": 94,
+   "double": false,
+   "range": null,
+   "summary": "Crosses into other dimensions; starts with home plus one more, with FEATs for precise targets or under stress."
+  },
+  {
+   "code": "T4",
+   "name": "Energy Path",
+   "class": "T",
+   "page": 94,
+   "double": false,
+   "range": null,
+   "summary": "Converts into energy and travels along existing currents of that type at rank speed, carrying a rank-Strength load.",
+   "optional": [
+    "DT3",
+    {
+     "name": "Energy Emission"
+    },
+    {
+     "name": "Energy Control"
+    }
+   ],
+   "nemesis": [
+    {
+     "name": "Energy Control"
+    }
+   ]
+  },
+  {
+   "code": "T5",
+   "name": "Floating Disc",
+   "class": "T",
+   "page": 94,
+   "double": false,
+   "range": null,
+   "summary": "Creates a solid-light platform that carries the hero and cargo at rank speed; practical air speed tops out at RM.",
+   "optional": [
+    "EE7"
+   ],
+   "nemesis": [
+    "EC9"
+   ]
+  },
+  {
+   "code": "T6",
+   "name": "Gateway",
+   "class": "T",
+   "page": 95,
+   "double": true,
+   "range": "E",
+   "summary": "Opens portals to fixed spots across distance, eras or other realms; holds a number of set destinations equal to rank."
+  },
+  {
+   "code": "T7",
+   "name": "Gliding",
+   "class": "T",
+   "page": 95,
+   "double": false,
+   "range": null,
+   "summary": "Rides air currents at rank speed up to Mach One, sinking each turn unless Agility FEATs keep it level or climbing.",
+   "optional": [
+    "MC12",
+    "MC8"
+   ],
+   "nemesis": [
+    "MC12",
+    "MC8"
+   ]
+  },
+  {
+   "code": "T8",
+   "name": "Hyper-Digging",
+   "class": "T",
+   "page": 95,
+   "double": false,
+   "range": null,
+   "summary": "Tunnels through ground softer than the rank at rank speed; adds rank number to Strength and Endurance.",
+   "bonus": [
+    "F3",
+    "P2"
+   ],
+   "optional": [
+    {
+     "name": "Hyperstrength"
+    },
+    {
+     "name": "Hyper-endurance"
+    },
+    "P1",
+    "P2"
+   ],
+   "nemesis": [
+    "MC8"
+   ]
+  },
+  {
+   "code": "T9",
+   "name": "Hyper-Leaping",
+   "class": "T",
+   "page": 96,
+   "double": false,
+   "range": null,
+   "summary": "Makes huge, safely landed jumps with distance set by rank; rank must beat Strength by at least one step."
+  },
+  {
+   "code": "T10",
+   "name": "Hyper-Running",
+   "class": "T",
+   "page": 96,
+   "double": false,
+   "range": null,
+   "summary": "Runs at rank speed for long periods, adds rank to Endurance, and slows perceived motion so bullets can be dodged."
+  },
+  {
+   "code": "T11",
+   "name": "Hyper-Swimming",
+   "class": "T",
+   "page": 96,
+   "double": false,
+   "range": null,
+   "summary": "Swims at rank speed, slowed -1CS per 100 feet of depth; can tow buoyant objects at -1CS.",
+   "bonus": [
+    "P16",
+    "P17"
+   ],
+   "optional": [
+    "P16",
+    "P17"
+   ],
+   "nemesis": [
+    "MC8"
+   ]
+  },
+  {
+   "code": "T12",
+   "name": "Levitation",
+   "class": "T",
+   "page": 96,
+   "double": false,
+   "range": null,
+   "summary": "Floats up or down at rank speed and hovers, never falling while conscious; rank resistance to wind and gravity shifts.",
+   "optional": [
+    "M30"
+   ],
+   "nemesis": [
+    "MC8"
+   ]
+  },
+  {
+   "code": "T13",
+   "name": "Rocket",
+   "class": "T",
+   "page": 97,
+   "double": false,
+   "range": null,
+   "summary": "Flies at rank speed on a self-made exhaust jet, even in vacuum; thrust uses rank as Strength for loads.",
+   "nemesis": [
+    "EC11"
+   ]
+  },
+  {
+   "code": "T14",
+   "name": "Skywalk",
+   "class": "T",
+   "page": 97,
+   "double": false,
+   "range": null,
+   "summary": "Walks on a self-made invisible path through the air at up to rank speed, ramping to change height.",
+   "optional": [
+    "M30"
+   ],
+   "nemesis": [
+    "EC11"
+   ]
+  },
+  {
+   "code": "T15",
+   "name": "Spiderclimb",
+   "class": "T",
+   "page": 97,
+   "double": false,
+   "range": null,
+   "summary": "Clings to and moves over walls and ceilings at normal speed; rank sets grip, and extra weight lowers it.",
+   "nemesis": [
+    {
+     "name": "Matter Conversion"
+    }
+   ]
+  },
+  {
+   "code": "T16",
+   "name": "Teleport Self",
+   "class": "T",
+   "page": 97,
+   "double": true,
+   "range": "E",
+   "summary": "Vanishes and reappears elsewhere within range, bringing touched items up to Strength limit; bad FEAT disorients.",
+   "optional": [
+    "T17",
+    "M2"
+   ]
+  },
+  {
+   "code": "T17",
+   "name": "Teleport Others",
+   "class": "T",
+   "page": 97,
+   "double": true,
+   "range": "E",
+   "summary": "Sends others, within a Strength-based weight cap, to a distant spot over three turns; distance to target costs CS.",
+   "optional": [
+    "T16",
+    "M2"
+   ]
+  },
+  {
+   "code": "T18",
+   "name": "Telereformation",
+   "class": "T",
+   "page": 98,
+   "double": false,
+   "range": "E",
+   "summary": "Dissolves the body, sends the life force far away, and builds a new body from materials at the destination by FEAT.",
+   "optional": [
+    "M2",
+    "M11",
+    "M28"
+   ],
+   "nemesis": [
+    "D6"
+   ]
+  },
+  {
+   "code": "T19",
+   "name": "Time Travel",
+   "class": "T",
+   "page": 98,
+   "double": true,
+   "range": null,
+   "summary": "Journeys to the past (rank x 1000 years) or future (rank x 10 years), carrying a mass equal to Strength.",
+   "optional": [
+    "T3",
+    "M24",
+    "M23",
+    "MG10"
+   ],
+   "nemesis": [
+    "MG10"
+   ]
+  },
+  {
+   "code": "T20",
+   "name": "Troubleseeker",
+   "class": "T",
+   "page": 99,
+   "double": false,
+   "range": "E",
+   "summary": "Uncontrollably teleports the hero to nearby emotional crises and holds him within 10 areas until they are resolved."
+  },
+  {
+   "code": "T21",
+   "name": "True Flight",
+   "class": "T",
+   "page": 100,
+   "double": false,
+   "range": null,
+   "summary": "Flies through water, air and space at rank-set speeds; Agility sets maneuvering, with resistance to air friction.",
+   "optional": [
+    "P2",
+    "P1",
+    "P11",
+    "M30"
+   ],
+   "nemesis": [
+    "EC11"
+   ]
+  },
+  {
+   "code": "T22",
+   "name": "Water Walking",
+   "class": "T",
+   "page": 100,
+   "double": false,
+   "range": null,
+   "summary": "Firms up the water's surface so the hero can walk across it at rank speed; currents and waves alter progress.",
+   "nemesis": [
+    "MC8"
+   ]
+  },
+  {
+   "code": "T23",
+   "name": "Whirlwind",
+   "class": "T",
+   "page": 100,
+   "double": false,
+   "range": null,
+   "summary": "Flies in a personal cyclone at rank speed up to Shift X with passengers; rank-level defence vs sonic and physical harm.",
+   "optional": [
+    "MC12",
+    "MC8"
+   ],
+   "nemesis": [
+    "MC12",
+    "MC8"
+   ]
+  }
+ ]
+}

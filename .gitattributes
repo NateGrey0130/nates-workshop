@@ -54,3 +54,4 @@ favicon.ico -text
 # is CRLF, so without this line the check would pass in CI and fail on the
 # first local checkout after a merge.
 apps/marvel-heroes/** text eol=lf
+functions/api/marvel-heroes/** text eol=lf

@@ -38,6 +38,40 @@ app**, never the books' prose. Where the full text of a power is wanted it lives
 only in D1, loaded from an extraction that is written to the gitignored
 `.cache/msh/` and never committed.
 
+### The one table: `msh_power_text`
+
+| column | what |
+|---|---|
+| `code` | the roll tables' code (`D1`, `MCo3`), or a bare class code (`MG`) for a section's introduction |
+| `name` | the table's name for the Power, or the section heading |
+| `page` | the printed page the listing starts on |
+| `body` | the listing's text, folded to ASCII |
+
+Migration `081`. The `msh_` prefix marks it as this app's in the shared
+database. **Its rows are never in the repo**, so a database built from the repo
+has it empty; `/api/marvel-heroes/power-text` then answers 404 `missing: true`
+and the app shows the committed summary.
+
+**Loading it.** On the machine with the PDF:
+
+```bash
+python scripts/msh-extract.py "<path to the Ultimate Powers Book PDF>"
+node scripts/d1-apply.mjs --remote .cache/msh/power-text.sql
+```
+
+The extractor finds each listing by walking the roll tables' codes in order,
+because nine headers print a code other than the table's (`D20/True Sight` is
+DT20, a bare `MC/Machine Animation` is MC9, `T17/Telereformation` is T18) and
+many lines open with a code that is only a cross-reference. It refuses to
+write anything unless the book's index names the same 263 codes as the roll
+tables. In a worktree, set `WORKSHOP_MSH_CACHE` to the main checkout's
+`.cache/msh` so both the extractor and the suite's leak check find it.
+
+**The leak check.** When the extraction is present, the smoke suite compares
+every tracked and untracked file under this app, its endpoint, the extractor
+and the migration against every run of ten words in the book's power text, and
+fails on any match. CI has no extraction and says the section skipped.
+
 ## Rulings
 
 **Where the books disagree, the Ultimate Powers Book wins**, because it was
@@ -117,6 +151,13 @@ by roll, and they decide nothing here.
 | `data/counts.json` | how many Powers, Talents and Contacts, and what extra ones cost in Resources |
 | `data/power-tables.json` | the sixteen power classes and their roll tables, 263 codes; `double` is the book's asterisk, `addenda` its red rows |
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
+| `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
+| `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
+
+The summaries in `powers.json` were written for the app by four subagents
+working from the extraction, each told to reuse no five-word run of the book's
+text, then checked together: none shares a six-word run with any Power's text.
 | `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged |
 
 **The Universal Table's colours were read from the page, not by eye.** Its

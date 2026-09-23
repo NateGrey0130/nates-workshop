@@ -482,6 +482,20 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '080-cities.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cities');
 
+-- Marvel Heroes (apps/marvel-heroes): the full text of the Ultimate Powers
+-- Book's power listings. Its rows are never in this repository - see migration
+-- 081 - so a database built from here has it empty, which the app allows for.
+CREATE TABLE IF NOT EXISTS msh_power_text (
+  code TEXT PRIMARY KEY,                 -- the roll tables' code (D1, MCo3), or a class code for its introduction
+  name TEXT NOT NULL,
+  page INTEGER,                          -- the page printed on the book's page
+  body TEXT NOT NULL
+);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '081-msh-power-text.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_power_text');
+
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.
 CREATE TABLE IF NOT EXISTS npc_mentions (
