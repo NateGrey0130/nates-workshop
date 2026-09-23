@@ -793,7 +793,7 @@ internal symbol**. A Node upgrade could rename it silently, which is why the
 absent case prints a line rather than failing. Of not taking this: every PR
 keeps paying re-runs of a required check, with the cause still a guess.
 
-**Taken, 2026-09-23 (this PR). Posture held: an experiment with a stopping
+**Taken, 2026-09-23 (PR #1303). Posture held: an experiment with a stopping
 rule, no retry, no change to any check's verdict.** The block sits in
 `regression.mjs` just after the suite proves its own server answers, and it
 prints which way it went. `G20`'s death block now also prints
