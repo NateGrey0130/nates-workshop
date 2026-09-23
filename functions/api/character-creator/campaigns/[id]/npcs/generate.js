@@ -1,8 +1,18 @@
 // POST /api/character-creator/campaigns/:id/npcs/generate — roll statted NPCs.
 //
 // Body: { class_id, class_variant?, occ_class_id?, occ_class_variant?,
-//         level? (default 1), count? (1-10, default 1), name? }
+//         level? (default 1), count? (1-10, default 1), name?,
+//         name_theme?, name_gender?, name_shape? }
 // G.M. only. Returns 201 { npcs: [{ id, name, level, picks_pending, powers_banked }] }.
+//
+// ── Names ──
+// `name` is one name for the batch: "Guard" rolls "Guard 1", "Guard 2". Send
+// `name_theme` instead (shared/js/namegen.js) and every NPC gets a name of its
+// own from that theme, none already used in this campaign and none twice in
+// the batch. The names are chosen BEFORE anything is written, so a theme that
+// cannot name the whole batch is a 422 with its reason and no NPCs - the rule
+// every generator here keeps: refuse, never pad. Neither sent, the class name
+// and level stand in, as before.
 //
 // Phase 1 of the NPC / bestiary work (migration 070). The dice and the choices
 // are js/npc-generate.js, a pure module a test sweeps across every published
@@ -36,6 +46,8 @@ import { needsOccupation, occAllowedForRace, raceAllowedForOcc } from '../../../
 import { xpTableFor } from '../../../../../../apps/character-creator/js/leveling.js';
 import { generateNpc, chooseClassOptions, skillsNamedByClasses, NpcGap }
   from '../../../../../../apps/character-creator/js/npc-generate.js';
+import { generateNames, NameGenError } from '../../../../../../shared/js/namegen.js';
+import { usedNames } from '../../../_lib/names.js';
 // A classic script, not a module: importing it installs `globalThis.derive`,
 // the attribute chart the I.Q. skill bonus and the dice bonuses read. Same
 // arrangement the smoke and regression tests use to load it.
@@ -58,6 +70,26 @@ export async function onRequestPost({ request, env, params }) {
   const occId = str(b.occ_class_id);
   const occVariant = str(b.occ_class_variant);
   const count = Math.max(1, Math.min(MAX_COUNT, Number.isFinite(Number(b.count)) ? Math.trunc(Number(b.count)) : 1));
+
+  // One name per NPC from a theme, all of them chosen before the first write.
+  let themed = null;
+  const theme = str(b.name_theme);
+  if (theme) {
+    if (str(b.name)) return json({ error: 'Send name or name_theme, not both' }, 400);
+    let res;
+    try {
+      res = generateNames({ theme, kind: 'person', gender: str(b.name_gender) || 'any',
+        shape: str(b.name_shape), count, exclude: await usedNames(env, params.id) });
+    } catch (e) {
+      if (e instanceof NameGenError) return json({ error: e.message }, 400);
+      throw e;
+    }
+    if (res.names.length < count) {
+      return json({ error: `Could not name all ${count}: ${res.reason}`, code: 'names_exhausted',
+        detail: { wanted: count, available: res.names.length } }, 422);
+    }
+    themed = res.names;
+  }
 
   const campaign = await env.DB.prepare('SELECT id, system FROM campaigns WHERE id = ?').bind(params.id).first();
   const system = campaign?.system ?? null;
@@ -116,7 +148,7 @@ export async function onRequestPost({ request, env, params }) {
       const base = str(b.name);
       body = generateNpc({
         cls, level, catalog, derive: globalThis.derive, system, chosen, powerCatalog, gameSkills,
-        name: base ? (count > 1 ? `${base} ${i + 1}` : base) : null,
+        name: themed ? themed[i] : base ? (count > 1 ? `${base} ${i + 1}` : base) : null,
       });
     } catch (e) {
       if (e instanceof NpcGap) {

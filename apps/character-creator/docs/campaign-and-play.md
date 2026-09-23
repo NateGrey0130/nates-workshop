@@ -367,6 +367,44 @@ after the party and tagged NPC, with the same damage controls - *Award XP to
 party* skips them. Not on the home screen's list of your characters (`?mine=1`
 is the characters you play).
 
+### Names for people, places and groups
+
+`shared/js/namegen.js` makes names from **themes**: hand-written word lists
+plus syllable rules, in plain JavaScript (`shared/js/namegen-themes.js` holds
+the lists). There is no Markov model and no AI call, so a list is instant, free
+and the same on every machine, and there is no D1 table and nothing saved: a
+list is a suggestion, and the page holds whatever the G.M. pins. Every theme
+carries a **game** tag (`rifts`, `palladium-fantasy`, `nightbane`, or `generic`
+for every game) and **culture** tags, and it names some of six kinds: people,
+taverns and inns, shops and businesses, ships, districts, and gangs, guilds and
+cults. A people theme offers some of four shapes (given name, given + family,
+with an epithet, callsign) and four gender choices.
+
+The starting themes, as Nate approved them on 2026-09-22: for Rifts, frontier
+human, Coalition rank and callsign, Juicer and street callsign, Dog Boy,
+Splugorth and Atlantean nobility, and Sovietski; for Palladium Fantasy, the
+Western Empire, the Eastern Territory, Wolfen, elf, dwarf, and orc and ogre; for
+Nightbane, modern everyday names and the Nightlord court. Each game has one
+places theme. **Every word in them was written for that file.** None is copied
+from a sourcebook or an OCR cache, whose name lists are book text.
+
+**Refuse, never pad** - the rule every generator here keeps. A theme with fewer
+unused names than asked for returns the ones it has, `exhausted`, and a reason
+saying how many it has in all and how many were ruled out. It never repeats a
+name, never borrows another theme's, and never invents a filler. When the space
+of names is small enough to write out, it is written out, so "exhausted" is
+exact rather than a run of unlucky draws.
+
+**Generation runs on the server**, where it can see the campaign:
+`GET campaigns/:id/names` (G.M. only) excludes every name the campaign already
+uses (its dossiers, its characters and its statted NPCs) plus the `avoid`
+names the page sends. The roller takes `name_theme` too, and gives each NPC in
+the batch its own name, all chosen before the first write. A batch the theme
+cannot name is a 422 and nothing is rolled. `GET names/themes` lists the themes
+and the default map from a class to its theme (a Wolfen gets Wolfen names, a
+Coalition grunt a rank and callsign, anything else its game's default). The
+City Creator will load the same module in the browser with a seeded random.
+
 
 ---
 
