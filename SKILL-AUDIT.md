@@ -2804,3 +2804,80 @@ counts**. So step 2 now names the branch first, and `F65` carries a dated
 adjustment rather than a rewritten table. The auditor also corrected how the
 round-2 run reached the finding: a content grep of the tree, not opening the
 file.
+
+### F67 — medium — `F65`'s rule sits in a skill that sessions fixing a red check do not load
+
+**Opened 2026-09-23**, from the clean retest `F66` made possible. Nate asked for
+the retest, and then for the recommended fix, before this was numbered.
+
+**Setup.** A fresh scenario recorded nowhere in the repo: a required
+`regression` failure, `FAIL no talent description ends in a printed page
+number — Shadow Slip`, on a 24-Talent Nightbane import, with *"merge
+tonight"*. The prompt is kept in the session scratchpad, not the tree. Every
+run was on a local branch named `probe` whose recent commits were all `wip`,
+with a clean tree. That branch was never pushed and was deleted afterwards.
+The session logs were read after each round, not only the answers.
+
+| harness | rule lives in | looked past `talents` | what the log shows |
+|---|---|---|---|
+| subagents | `test-suite` (as on `main`) | 0 of 2 | **neither** called the Skill tool or opened `test-suite` |
+| subagents | `test-suite`, section removed | 0 of 2 | the same |
+| fresh `claude -p` | `test-suite` (as on `main`) | 1 of 2 | **the hit loaded `test-suite` via the Skill tool, and the miss did not** |
+| fresh `claude -p` | `CLAUDE.md`, **and still** the full `test-suite` section | **2 of 2** | both write *"the two lines CLAUDE.md asks for"* and plan the book-wide grep; neither loaded `test-suite` |
+
+- **The rule works whenever a session sees it.** The only question is
+  placement. `test-suite`'s *"reading a failure"* trigger fired in one of the
+  six sessions that had the section. Only one called the Skill tool for it:
+  `claude -p` session `e14188c9`.
+- **The shipped state was not run exactly.** In the last row, `test-suite`
+  still held the full section, while the PR cuts it to a pointer. Neither of
+  those runs opened `test-suite`, so the 2 of 2 very likely carries over. The
+  premise auditor found this. It is recorded rather than re-run.
+- **Leak check:** every log shows `Current branch: probe` and a `wip`-only
+  snapshot. **No run reached the scenario or an `F67` finding**, but two runs
+  carried `F6x` strings from somewhere other than `CLAUDE.md`:
+  - `e14188c9` carries `F64`–`F66` from the `test-suite` it loaded, the method
+    section's references.
+  - One GREEN subagent ran `git log … origin/main` and saw the `F66` merge
+    subjects. Those describe blinding, not this scenario's answer.
+  - The other six carry only `CLAUDE.md`'s pointer to `F64`, or no `F6x`
+    string at all.
+
+**Found while testing: subagents do not see a mid-session `CLAUDE.md` edit.**
+Two probes spawned after the edit answered NO when asked whether their
+`CLAUDE.md` held the new paragraph. So a `CLAUDE.md` change cannot be GREEN-run
+through subagents in the session that made it, **the reverse of a skill edit**
+(`F64`). A fresh `claude -p` reads it from disk, and that is what the table's
+last two rows used.
+
+**Proposal:** move the rule to `CLAUDE.md`, after *the three things that fail
+late*, and cut `test-suite`'s section to its reasoning plus a pointer. That
+leaves one copy of the rule.
+
+**Posture: documentation only.** One paragraph in `CLAUDE.md`, and a smaller
+section in `test-suite`, with no check. **Not a fourth item in the fail-late
+list**, whose heading counts three.
+
+**Evidence:** the eight runs above, and their session logs, 2026-09-23.
+**`F65`'s own record is not rewritten.** Its `F66` adjustment stands, and this
+finding is the clean measurement that record lacked.
+
+**Confidence:** medium. The result is 2 of 2 against 1 of 2 in one harness,
+and the logs explain every run. It would rise with the same result on a
+second scenario.
+
+**Ongoing cost:** fourteen lines in the one file every session reads, which is
+the cost this repo usually avoids and the reason `F65` went into a skill in
+the first place.
+
+**Taken, 2026-09-23 (PR #1285).** Posture as proposed. **The premise auditor
+returned four wording disagreements, all fixed, and none to scope:**
+
+- The `CLAUDE.md` row had also carried the full `test-suite` section, so that
+  row is relabelled.
+- The pointer's count was four sessions, and it is six.
+- The leak line now names the two runs that carried `F6x` strings.
+- The pointer names a paragraph, not a heading.
+
+It re-derived every count in the table from the logs and the `probe` commits,
+which were still in the object store, and all of them held.

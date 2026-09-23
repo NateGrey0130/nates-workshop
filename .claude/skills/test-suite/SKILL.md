@@ -143,31 +143,24 @@ defects were mostly level headings attached to the end of a spell, with 8
 spells in the cipher. None of those rows was red until someone widened what
 was read.
 
-**So before the first edit that turns a failing check green, write two lines
-in the session:**
+**The rule that follows from this lives in `CLAUDE.md`**, in the paragraph
+opening *When a check goes red*, and not here. Measured 2026-09-23
+(`SKILL-AUDIT` `F67`): six sessions fixing a red check had the rule in this
+section, and only one of them loaded this skill.
+- Of the four that had it **only** here, that one session was the only one to
+  act on it.
+- The two that also had it in `CLAUDE.md` both acted on it from there. Every session
+reads `CLAUDE.md`. This section keeps the reasoning behind the rule:
 
-1. **The cause, as a mechanism, not a row.** For example, "this book's cache
-   sets 0 as O", not "this row has a typo".
-2. **Every place that cause wrote to, not only this branch, and which of those
-   places any check reads.** A cause in a book's cache is in every table that
-   book ever fed, including tables imported by earlier PRs. **Grep the
-   scripts' contents for the book's printed name, not the filenames for its
-   slug.** Filenames do not reliably carry the slug. All four of Mystic
-   Russia's spell imports are `zzzzzzzzzz-mr-*-spells.sql`, and a slug grep
-   finds none of them (measured 2026-09-23).
-
-   ```bash
-   grep -l -i "<book name as printed>" apps/character-creator/db/*.sql
-   ```
-
-   It over-includes, which is the safe direction for a sweep. A book usually
-   feeds gear, classes and creatures as well as spells and psionics, and the
-   sweep above reads only spells, psionic powers, talents and super abilities.
-   Skill notes are written by hand rather than scanned (the comment above
-   that loop). Sweep the unread tables by hand, or say in the PR body that you
-   did not.
-
-If you can't write line 1, you're not ready to fix yet. Reading is the work.
+- **Grep a book's scripts by the name it prints, not the filenames by its
+  slug.** Filenames do not reliably carry the slug. All four of Mystic
+  Russia's spell imports are `zzzzzzzzzz-mr-*-spells.sql`, and a slug grep
+  finds none of them (measured 2026-09-23). The content grep over-includes,
+  which is the safe direction for a sweep.
+- **What the sweep above does not read.** A book usually feeds gear, classes
+  and creatures as well as spells and psionics. The sweep reads only spells,
+  psionic powers, talents and super abilities. Skill notes are written by
+  hand rather than scanned (the comment above that loop).
 
 ## The port, and the other worktree that answers on it
 
