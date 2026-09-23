@@ -540,6 +540,30 @@ section('Every element the page script looks up is on the page');
   check('every tab controls a panel that exists', tabs.length > 0 && tabs.every((p) => html.includes(`id="${p}"`)), tabs.join());
 }
 
+section('The power browser finds Powers by code, name, word and class');
+
+{
+  const { makeBrowser } = await import(new URL('../js/browser.js', import.meta.url));
+  const b = makeBrowser(load('powers.json'), load('power-tables.json'));
+  const codes = (r) => r.map((p) => p.code);
+  check('an empty search lists all 263', b.search().length === 263, String(b.search().length));
+  check('a code finds exactly that Power, in any case', codes(b.search({ query: 'MG10' })).join() === 'MG10'
+    && codes(b.search({ query: 'mco3' })).join() === 'MCo3');
+  const flight = codes(b.search({ query: 'flight' }));
+  check('a word finds Powers whose name has it before those whose summary has it',
+    flight[0] === 'T21' && flight.length > 1, flight.slice(0, 5).join());
+  check('every word must match', b.search({ query: 'force field vampirism' }).every((p) => /force field/i.test(p.name + p.summary)));
+  check('a class narrows to that class', b.search({ cls: 'D' }).length === 17 && b.search({ cls: 'D' }).every((p) => p.class === 'D'));
+  check('and a code outside the chosen class finds nothing', b.search({ query: 'MG10', cls: 'D' }).every((p) => p.class === 'D'));
+  check('the two-slot filter keeps only doubles', b.search({ doubleOnly: true }).length > 0
+    && b.search({ doubleOnly: true }).every((p) => p.double));
+  const rel = b.related(b.byCode.L2, 'bonus');
+  check('related Powers resolve a code to its name', rel.length === 1 && rel[0].code === 'L10' && rel[0].name === 'Mind Control');
+  const named = load('powers.json').powers.find((p) => (p.optional || []).some((x) => typeof x === 'object'));
+  check('and keep a name that is not a Power as a name', !!named
+    && b.related(named, 'optional').some((x) => x.code === null && x.name));
+}
+
 section('Every ruling in the data is in the README, and every README ruling is in the data');
 
 // Collect every "ruling" value, anywhere in any data file.
