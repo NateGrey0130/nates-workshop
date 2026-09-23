@@ -526,3 +526,46 @@ export function linkSheet(city, npcId, sheetId) {
   return { ...city, npcs: city.npcs.map((n) => (n.id === npcId ? { ...n, sheet_id: sheetId } : n)) };
 }
 export const tablesFor = (system) => TABLES[system] || null;
+
+// ── shop inventories (Phase 4b) ──
+//
+// 6-10 real gear rows from the Codex for one shop, chosen by the shop's rule
+// (SHOP_STOCK), seeded by the city, the shop and that shop's restock count, and
+// priced at the book's price times the city's wealth. The rows are copied INTO
+// the city - slug, name, book price and this city's price - so a kept city
+// keeps its stock when the Codex changes. A rule the Codex can only partly
+// fill stocks what there is and says so; nothing is invented to fill a shelf.
+export function stockShop(city, shopId, gear) {
+  const T = TABLES[city.settings.system];
+  const shop = city.shops.find((s) => s.id === shopId);
+  if (!shop) throw new Error(`No shop ${shopId}`);
+  const rules = T.SHOP_STOCK[shop.type];
+  if (!rules) return withStock(city, shopId, [], `No stock rule for a ${shop.type.toLowerCase()} yet`);
+  const sys = city.settings.system;
+  const fits = (g) => rules.some((rule) => g.category === rule.category
+    && (!rule.name || new RegExp(`\\b(${rule.name})`, 'i').test(g.name))
+    && (!rule.not || !new RegExp(`\\b(${rule.not})`, 'i').test(g.name)));
+  const pool = [...new Map(gear
+    .filter((g) => (g.system === sys || g.system === 'both' || !g.system) && Number(g.cost) > 0 && fits(g))
+    .map((g) => [g.slug, g])).values()].sort((a, b) => a.slug.localeCompare(b.slug));
+  const key = `stock:${shopId}`;
+  const r = rng(hash(city.seed, key, city.rolls?.[key] || 0));
+  const want = between(r, [6, 10]);
+  const wealth = T.WEALTH.find((w) => w.label === city.overview.wealth) || { price: 1 };
+  const items = sample(r, pool, want).map((g) => ({
+    slug: g.slug, name: g.name, category: g.category,
+    book: Number(g.cost), price: Math.max(1, Math.round(Number(g.cost) * wealth.price)),
+  })).sort((a, b) => a.name.localeCompare(b.name));
+  const note = pool.length < want
+    ? `The Codex has ${pool.length} ${pool.length === 1 ? 'item' : 'items'} a ${shop.type.toLowerCase()} sells - all of them are here`
+    : null;
+  return withStock(city, shopId, items, note);
+}
+function withStock(city, shopId, items, note) {
+  return { ...city, shops: city.shops.map((s) => (s.id === shopId ? { ...s, inventory: items, stock_note: note } : s)) };
+}
+// Restock: the next draw for that shop, by bumping its restock count.
+export function restockShop(city, shopId, gear) {
+  const key = `stock:${shopId}`;
+  return stockShop({ ...city, rolls: { ...city.rolls, [key]: (city.rolls?.[key] || 0) + 1 } }, shopId, gear);
+}

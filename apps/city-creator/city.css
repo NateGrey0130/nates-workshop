@@ -62,6 +62,12 @@ a:focus-visible .map-pin circle, a:focus-visible .map-pin rect { stroke: var(--b
 }
 .city-entry.is-flash { background: var(--accent-glow); transition: background 0.3s; }
 
+/* Shop stock (Phase 4b): a small priced table under the shop. */
+.city-stock table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+.city-stock th, .city-stock td { text-align: left; padding: 2px 6px 2px 0; border-bottom: 1px solid var(--border); }
+.city-stock td:nth-child(2), .city-stock td:nth-child(3),
+.city-stock th:nth-child(2), .city-stock th:nth-child(3) { text-align: right; white-space: nowrap; }
+
 /* Keeping a city (Phase 3): the players' line under an entry, and its switch. */
 .city-public { display: block; width: 100%; margin-top: 4px; font-size: 0.9em; }
 .city-reveal { margin-left: 4px; }

@@ -893,3 +893,32 @@ export const ROLE_OCC = {
 // A shop owner ("owner of The Golden Anvil") keeps shop: a merchant.
 export const OWNER_OCC = 'merchant';
 export const PLACES_THEME = 'pf-places';
+
+// Shop inventories (Phase 4b): what each kind of shop sells, as rules over the
+// Codex's gear rows - never a list of items written here, because the Codex is
+// the catalog and its prices are the book's. A rule is gear categories, and
+// optionally a pattern the item's NAME must match. A shop is stocked with 6-10
+// distinct rows its rule allows, priced at book price times the city's wealth.
+// A rule the Codex can only partly fill stocks what exists and says so.
+// Keyed by the shop type's label, as the city stores it.
+export const SHOP_STOCK = {
+  Tavern: [{ category: 'gear', name: 'ale|beer|brandy|champagne|mead|moonshine|rum|wine|bread|buns|pastries|cheese|sausage|roast|steak|chicken|duck|goose|pheasant|turkey|fish|stew|pie' }],
+  Smithy: [{ category: 'weapon', not: 'bow|sling|dart|frying pan|bull whip|cat-o-nine' },
+    { category: 'gear', name: 'chain|manacles|lock \\(|hammer|mallet|kettle|pot \\(metal\\)|spike|trap|hook' }],
+  'General store': [{ category: 'gear', name: 'rope|sack|bag|back pack|knap sack|bedroll|blanket|candle|lantern|oil lamp|torch|tinder|flint|tent|water skin|box|trunk|bucket|jar|jug|cask|rations|soap|oil \\(per' }],
+  Apothecary: [{ category: 'gear', name: 'bandages|first-aid|tonic|garlic|spice|soap|perfume|vial|honey|salt \\(fine|quick silver|wax|holy water' }],
+  Armourer: [{ category: 'armor', not: 'cloak of' }],
+  'Bowyer and fletcher': [{ category: 'weapon', name: 'bow|sling|dart|javelin' }, { category: 'gear', name: 'arrows|bolts' }],
+  Clothier: [{ category: 'gear', name: 'boots|shoes|sandals|cape|robe|dress|shirt|pants|skirt|hat|cap \\(|jacket|vest|scarf|gloves|socks|belt|gown|surcoat|uniform' }],
+  'Magic shop': [{ category: 'magic' }],
+  Stable: [{ category: 'gear', name: 'saddle|hay|oats|straw|rope|blanket|bucket|net, animal|water skin' }],
+  Jeweller: [{ category: 'gear', name: 'gold leaf|silver leaf|bronze leaf|chalice|goblet|silver cross|holy symbol|mirror|snuff box|perfume' }],
+  Bakery: [{ category: 'gear', name: 'bread|buns|pastries|flour|butter|eggs|honey|jam|sugar|syrup|oat meal|wheat' }],
+  Scribe: [{ category: 'gear', name: 'book|paper|parchment|ink|pen|pencil|chalk|charcoal \\(dozen|note pad|sketch pad|slate|etching|brushes|pigments|glue' }],
+  'Wolfen furrier': [{ category: 'gear', name: 'fur|jacket|cape|blanket|boots|gloves|trap' }, { category: 'weapon', name: 'spear|javelin|knife' }],
+  'Elven craftshop': [{ category: 'weapon', name: 'bow' }, { category: 'gear', name: 'arrows|cape|boots \\(soft|robe|scarf' }],
+  'Dwarven forge': [{ category: 'weapon', name: 'axe|hammer|pick|mace|maul' }, { category: 'armor', not: 'cloak of|cloth|padded|soft leather' }],
+  'Orc trader': [{ category: 'gear', name: 'trap|jerked|salted|smoked' }, { category: 'weapon', name: 'club|axe|spear|flail' }],
+  'Goblin junk-shop': [{ category: 'gear', name: 'box|trunk|jar|jug|bottle|trap|lock \\(|chain|net|rope' }],
+  'Gnome tinker': [{ category: 'gear', name: 'lock|glass|mirror|lantern|goggles|tools|box|etching' }],
+};
