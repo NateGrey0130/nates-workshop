@@ -117,10 +117,11 @@ export function run() {
   // ── the size the plan asked for ──
   // The City Creator plan: 200 or more name parts per culture and a table big
   // enough that two cities do not share names. Palladium Fantasy is the game
-  // its first phase builds; Rifts comes with its fifth.
-  const thin = THEMES.filter((t) => t.kinds.person && t.games.includes('palladium-fantasy') && partCount(t) < 200)
-    .map((t) => `${t.id} ${partCount(t)}`);
-  check('every Palladium Fantasy people theme has 200 or more name parts', thin.length === 0, thin.join(', '));
+  // its first phase builds; Rifts came with its fifth, when the Dog Boy (146)
+  // and Atlantean (162) themes were short of the bar and were filled out.
+  const thin = THEMES.filter((t) => t.kinds.person && t.games.some((g) => g === 'palladium-fantasy' || g === 'rifts')
+    && partCount(t) < 200).map((t) => `${t.id} ${partCount(t)}`);
+  check('every Palladium Fantasy and Rifts people theme has 200 or more name parts', thin.length === 0, thin.join(', '));
   const smallPlaces = THEMES.flatMap((t) => Object.keys(t.kinds).filter((k) => k !== 'person')
     .map((k) => [`${t.id} ${k}`, spaceSize({ theme: t, kind: k })])).filter(([, n]) => n < 500);
   check('every place and group kind can make 500 or more names', smallPlaces.length === 0,

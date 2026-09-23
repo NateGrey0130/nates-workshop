@@ -2736,6 +2736,43 @@ check('and none of them with ?mine=1',
   check('every kind of shop can be stocked with 6 or more real Palladium Fantasy rows from the Codex',
     codexGear.length > 100 && thin.length === 0, thin.join(', '));
 
+  // The Rifts tables (Phase 5), against the real catalog the same way: its
+  // jobs are published Rifts O.C.C.s, every Rifts shop fills a shelf, and a
+  // city NPC rolls - a human as their O.C.C. alone, and a race that takes an
+  // occupation (the Noro) with one.
+  const RT = tablesFor('rifts');
+  const riftsClasses = (await api('GET', '/classes?system=rifts&limit=500')).body.classes || [];
+  const riftsOccs = new Set(riftsClasses.filter((c) => c.category !== 'rcc').map((c) => c.id));
+  const riftsJobs = [...new Set([...Object.values(RT.ROLE_OCC), RT.OWNER_OCC])];
+  const riftsMissing = riftsJobs.filter((j) => !riftsOccs.has(j));
+  check('every job a Rifts city NPC\'s role maps to is a published Rifts O.C.C.',
+    riftsOccs.size > 10 && riftsMissing.length === 0, riftsMissing.join(', '));
+  const riftsCity = generateCity({ system: 'rifts', population: 12000, npcCount: 6, everyRace: true,
+    races: [{ id: 'human', name: 'Human', pct: 80 }, { id: 'noro', name: 'Noro', pct: 20, takesOcc: true }] }, 2468);
+  const riftsThin = [];
+  for (const t of RT.SHOP_TYPES) {
+    const one = { ...riftsCity, shops: [{ ...riftsCity.shops[0], id: 'shop-0', type: t.label }] };
+    const got = stockShop(one, 'shop-0', codexGear).shops[0];
+    if (got.inventory.length < 6) riftsThin.push(`${t.label} ${got.inventory.length}`);
+  }
+  check('every kind of Rifts shop can be stocked with 6 or more real Rifts rows from the Codex',
+    riftsThin.length === 0, riftsThin.join(', '));
+  const noroRow = riftsClasses.find((c) => c.id === 'noro');
+  check('and the Noro, marked as taking an O.C.C. here, is one by the roller\'s own rule',
+    !!noroRow && !(noroRow.skills?.occ_related_skills?.count) && !(noroRow.skills?.secondary_skills?.count));
+  const riftsCampaign = (await api('POST', '/campaigns', { name: 'Rifts City Rolls', system: 'rifts' })).body.campaign;
+  const riftsGuard = { ...riftsCity, npcs: riftsCity.npcs.map((n, i) => (i === 0 ? { ...n, raceId: 'human', role: 'gate guard' }
+    : i === 1 ? { ...n, raceId: 'noro', role: 'mercenary' } : n)) };
+  const rolls = [];
+  for (const n of riftsGuard.npcs.slice(0, 2)) {
+    const req = rollRequest(riftsGuard, n.id);
+    const res = await api('POST', `/campaigns/${riftsCampaign.id}/npcs/generate`, req);
+    rolls.push({ req, status: res.status, error: res.body.error });
+  }
+  check('a Rifts human rolls as their O.C.C. alone, and a Noro as their R.C.C. with one',
+    rolls.every((x) => x.status === 201) && rolls[0].req.class_id === 'merc-soldier' && !rolls[0].req.occ_class_id
+      && rolls[1].req.class_id === 'noro' && rolls[1].req.occ_class_id === 'merc-soldier', JSON.stringify(rolls));
+
   const gone = await api('DELETE', `/cities/${cityId}`);
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }

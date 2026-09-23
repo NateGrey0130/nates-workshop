@@ -25,8 +25,9 @@
 
 import { generateNames } from '../../../shared/js/namegen.js';
 import * as PF from './city-tables-pf.js';
+import * as RIFTS from './city-tables-rifts.js';
 
-const TABLES = { 'palladium-fantasy': PF };
+const TABLES = { 'palladium-fantasy': PF, rifts: RIFTS };
 export const SUPPORTED_SYSTEMS = Object.keys(TABLES);
 
 // ── the seeded generator ──
@@ -192,6 +193,9 @@ function makeOverview(ctx, r, keepName = null) {
       const [name, goal] = line.split(/, (?=who )/);
       return { id: `faction-${i}`, name, goal: goal || '' };
     }),
+    // A setting's own overview lines (Rifts: tech level, the Coalition, ley
+    // lines). Drawn last, so a setting without them draws exactly as before.
+    ...(T.OVERVIEW_EXTRAS ? { extras: T.OVERVIEW_EXTRAS.map((x) => ({ key: x.key, label: x.label, text: pick(r, x.lines) })) } : {}),
   };
 }
 
@@ -466,7 +470,8 @@ export function poolPrompt(settings, theme) {
     `- "${x.id}" (${x.name}): ${x.theme?.trim() || theme}`).join('\n');
   return {
     system: 'You invent names for a tabletop role-playing game city. Answer with one JSON object and nothing else - no prose, no code fence.',
-    prompt: `Invent original names (not from any published setting) for a fantasy city.
+    prompt: `Invent original names (not from any published setting) for a ${settings.system === 'rifts'
+      ? 'post-apocalyptic science-fantasy (Rifts)' : 'fantasy'} city.
 Overall naming theme: ${theme}
 Cultures and their naming theme:
 ${cultures}
@@ -516,7 +521,19 @@ export function rollRequest(city, npcId) {
   const n = city.npcs.find((x) => x.id === npcId);
   if (!n) throw new Error(`No NPC ${npcId}`);
   const occ = /^owner of /.test(n.role) ? T.OWNER_OCC : T.ROLE_OCC[n.role] || null;
-  return { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...(n.name ? { name: n.name } : {}) };
+  const named = n.name ? { name: n.name } : {};
+  // Rifts: a human is their job's O.C.C. alone. Another race is their R.C.C.
+  // alone, unless that R.C.C. takes an occupation - the race row's `takesOcc`,
+  // which the page copies from the roller's own rule (needsOccupation in
+  // js/parser.js) when the race is chosen.
+  if (T.RACE_TAKES_OCC === false) {
+    if (n.raceId === T.HUMAN.id) return { class_id: occ, level: 1, count: 1, ...named };
+    const race = (city.settings.races || []).find((x) => x.id === n.raceId);
+    return race?.takesOcc
+      ? { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...named }
+      : { class_id: n.raceId, level: 1, count: 1, ...named };
+  }
+  return { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...named };
 }
 
 // The link from the city's entry to the sheet the roller made: the sheet's id
@@ -609,7 +626,8 @@ export function fleshPrompt(city, id) {
     system: 'You help a game master prepare a tabletop role-playing game city. Write original material only - never '
       + 'quote or retell published books. Answer in plain prose: no headings, no lists, no markdown.',
     prompt: `The city of ${o.name} (${SETTING_NAMES[city.settings.system] || city.settings.system}): ${o.size} of `
-      + `${Number(o.population).toLocaleString('en-US')}, ruled by ${o.government}, ${o.wealth}, living on ${o.trade}.
+      + `${Number(o.population).toLocaleString('en-US')}, ruled by ${o.government}, ${o.wealth}, living on ${o.trade}.${
+        (o.extras || []).map((x) => ` ${x.label}: ${x.text}.`).join('')}
 
 Flesh out ${about}
 

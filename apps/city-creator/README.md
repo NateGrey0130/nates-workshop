@@ -15,7 +15,7 @@ sheets). Built one phase per PR; the plan's phases are:
 | 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
 | 4 | roll stats for an NPC (4a), shop inventories (4b), a player view (4c), an AI "Flesh out" (4d) | done |
-| 5 | the Rifts table set | to come |
+| 5 | the Rifts table set: tech level, Coalition presence, ley lines, M.D.C. walls | done |
 
 ## How it works
 
@@ -25,8 +25,9 @@ sheets). Built one phase per PR; the plan's phases are:
   reseeds that entry alone.
 - **`js/city-tables-pf.js`** is every line the Palladium Fantasy city is built
   from - 40 or more entries per table, all written for this file. Nothing is
-  copied from a sourcebook or an OCR cache. The setting is a switch: Rifts will
-  be a second file in the same shape.
+  copied from a sourcebook or an OCR cache. The setting is a switch, and
+  **`js/city-tables-rifts.js`** is the second file in the same shape - see
+  *Rifts* below.
 - **Names** come from `shared/js/namegen.js` (a theme per race - Wolfen names
   for Wolfen - and the places theme for shops and districts), run in the
   browser with the city's seeded random. **With a naming theme**, one call to
@@ -144,6 +145,33 @@ revealed place to prove it.
 
 Quirks and rumours have no button: each is one line, and a paragraph about a
 rumour would decide what the G.M. has not.
+
+## Rifts
+
+Choose **Rifts** under *Setting* and the city is built from
+`js/city-tables-rifts.js` instead: 40 or more lines per table, all written
+fresh for that file, and none carried over from the Palladium Fantasy one (a
+smoke check compares them). A Rifts overview adds three lines of its own - a
+**tech level**, how much the **Coalition** is present, and the **ley lines** -
+and every wall is an M.D.C. wall. A Palladium Fantasy city draws none of those
+and is built exactly as before.
+
+- **Races** are the setting's published R.C.C.s, plus a **Human** row: Rifts
+  humans take an O.C.C. and have no R.C.C. of their own. Switching the setting
+  resets a race list the new setting has no classes for.
+- **Names** come from the Rifts themes (`rifts-frontier` by default,
+  `rifts-places` for shops and districts). Every Rifts people theme now has
+  200 or more name parts; the Dog Boy and Atlantean themes were filled out to
+  get there.
+- **Shops** are the Rifts kinds - bars, gun shops, body-chop-shops,
+  Techno-Wizard shops, vehicle lots and more - and each stocks 6 or more real
+  Rifts rows from the Codex, priced in credits.
+- **Roll stats** sends a human as their job's O.C.C. alone. Another race goes
+  as its R.C.C. alone, or with the job's O.C.C. when the roller says that race
+  takes one (a Noro, a Psi-Pony) - the page reads that from the roller's own
+  rule when the race is chosen. Measured 2026-09-23 on the local server: every
+  mapped O.C.C. rolls except the **Rogue Scholar**, which the roller refuses on
+  a skill-choice gap of its own; the page shows that refusal as it comes.
 
 The page also keeps the city on screen in this browser's storage, so a reload
 does not lose it - a convenience; the record is the saved row - and **Export

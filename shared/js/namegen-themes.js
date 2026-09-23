@@ -158,12 +158,17 @@ const riftsDogBoy = {
           Abby Bonnie Cleo Dixie Duchess Freckles Gracie Hazel Juno Lulu Maggie Missy Nala Nellie Pixie
           Queenie Ruby Sheba Skye Sugar Tess Tilly Xena Zelda Poppy`),
         neutral: w(`Ash Biscuit Bolt Boots Chance Copper Dusty Echo Flash Jinx Lucky Nugget Patch Pip Rascal
-          Scrappy Shadow Smokey Socks Tag Taffy Tip Ziggy Ranger Tracker Scout-Two`),
+          Scrappy Shadow Smokey Socks Tag Taffy Tip Ziggy Ranger Tracker Scout-Two
+          Sparky Dodger Tinker Rook Gravel Pepperjack Mudlark Kettle Trooper Sprocket Flint Cinder Pickles
+          Nibbles Tumble Wags Hopper Rivet Gizmo Dash Moxie Radar Nacho Bullet Sergeant-Two`),
       },
       epithet: w(`Longnose Mudpaw Quickear Greyback Brokentail Sharpnose Two-Tone Bigfoot Redcoat Blackmask
         Whitesock Stumpy Silvermuzzle Ironjaw Longleg Hotnose Burr Floppy-Ear Scarface Nosewise
         Barrelchest Stubtail Ragear Spotback Tanpaw Dusktail Frostmuzzle Lopear Nightcoat Rustcoat
-        Quicktrack Steadynose Hardpaw Keeneye Whisperstep Braveheart Loudmouth Slowpoke Brindle Pathnose`),
+        Quicktrack Steadynose Hardpaw Keeneye Whisperstep Braveheart Loudmouth Slowpoke Brindle Pathnose
+        Chewtoy Muddyboots Nosedive Tailwag Bonecrusher Gatekeeper Sniffer Halfear Coldnose Longhowl
+        Deadeye Stormbark Dustcoat Hardcase Crookedtail Softpaw Firebrand Longwatch Rattail Scentmaster
+        Tripwire Ashcoat Nightnose Bristleback Growler Trailblazer Lastbark Siltpaw Duskhound Kennelborn`),
     },
     shapes: {
       given: ['{given}'],
@@ -189,14 +194,21 @@ const riftsAtlantean = {
       house: w(`Veshtar Olumar Kethren Zarimoth Aelvanis Draxen Ithuril Morvath Quelloran Sethrak Tyrvane
         Ulthaar Vaelcor Xandrith Yssembar Zothrenn Belmaros Cephiran Dharvessa Hesperoth Jorvaine Lyrrath
         Maelzor Naxxurin Phaedrossa Rhaskell Sylvarix Tyrreth Vashkaal Zarathine Ekkoran Gorvesh Khaldros
-        Oruvane Quorrith Thalissar Uldraxis Velthorne Xenmarok Nexuvar`),
+        Oruvane Quorrith Thalissar Uldraxis Velthorne Xenmarok Nexuvar
+        Aurvesk Brelloth Cazzarin Dhuulmar Esserak Fenzhaal Galvorith Hurrasca Imvessa Jhaeloth Korrazin
+        Lethvarn Mizzuran Nuulveth Othrakis Pelzarim Qethuula Rovaskin Sarrakoth Thuvessa Uzzarath
+        Vyrrandel Wexxoran Xhelvari Yzzorath Zhaelmir`),
       epithet: p(`the Many-Eyed|the Twice-Crowned|the Slave-Taker|Keeper of the Tenth Gate|the Unblinking|
         the Pale Hand|the Tidebound|of the Ashen Stair|the Gilded|the Serpent-Tongued|the Coin-Eater|
         the Collector|of the Drowned Market|the Bone-Buyer|the Patient|the Unforgiving|Warden of Chains|
         the Bright Tyrant|of the Glass Towers|the Beloved of the Lord|the Hungry|Mouth of the Court|
         the Eyeless|the Ever-Watchful|the Silk-Handed|of the Black Wharf|the Deathless|the Tithe-Taker|
         the Branded|the Radiant|the Horned|of the Seventh Circle|the Dreadful|Herald of the Deep|
-        the Scale-Bearer|the Bargainer|the Iron Voice|the Coldborn|the Last Heir|the Sorrowless`),
+        the Scale-Bearer|the Bargainer|the Iron Voice|the Coldborn|the Last Heir|the Sorrowless|
+        the Salt-Crowned|Lord of Lesser Tides|the Chain-Maker|of the Sunken Arena|the Twice-Sold|
+        the Mask-Wearer|the Glass-Eyed|Speaker for the Deep|the Stone-Hearted|of the Weeping Pillars|
+        the Debt-Keeper|the Emberborn|the Wave-Breaker|of the Hollow Throne|the Unbought|
+        the Pearl-Handed|the Nameless Heir|the Lantern of the Court|of the Nine Moorings|the Tide-Caller`),
     },
     shapes: {
       given: ['{given}'],
