@@ -2283,7 +2283,7 @@ changes anything**, since the agent already did the right thing unprompted.
 
 **Ongoing cost:** one more paragraph in an agent file that has to stay true.
 
-**DECLINED 2026-09-22 on Nate's word, as a DUPLICATE of `F46` on
+**DECLINED 2026-09-22 on Nate's word (PR #1265), as a DUPLICATE of `F46` on
 this same menu.** Nothing is changed in `.claude/agents/book-extract-worker.md`,
 and `F46`'s decline is not reversed.
 
