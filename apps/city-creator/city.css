@@ -18,7 +18,54 @@
 .rumour-true { background: var(--success-bg, #e6f2e6); }
 .rumour-false { background: var(--danger-bg, #f6e3e1); }
 
+/* ── the map (Phase 2) ──
+   Drawn in the page's own tokens, so it is the Board & Tissue board rather
+   than a picture pasted onto it. Strokes carry the structure and fills stay
+   light, so it still reads printed in black and white. */
+.city-map { display: block; width: 100%; max-width: 760px; height: auto; margin: 0 auto;
+  font-family: var(--font-body); }
+.map-ground { fill: var(--bg-secondary); stroke: none; }
+.map-cell { stroke: var(--border-strong); stroke-width: 3; }
+.map-cell-0 { fill: var(--bg-card); }
+.map-cell-1 { fill: var(--bg-tertiary); }
+.map-cell-2 { fill: var(--bg-secondary); }
+.map-cell-3 { fill: var(--bg-input); }
+/* A race quarter is hatched. Set here and not as an SVG fill attribute:
+   a class's fill beats the attribute, which is how the first draw lost it. */
+.map-cell-quarter { fill: url(#quarter-hatch); }
+.map-hatch-bg { fill: var(--bg-card); }
+.map-hatch { stroke: var(--accent); stroke-width: 6; opacity: 0.35; }
+.map-label { font-size: 26px; font-weight: 700; fill: var(--text-primary); text-anchor: middle;
+  paint-order: stroke; stroke: var(--bg-card); stroke-width: 6px; stroke-linejoin: round; }
+.map-river { fill: none; stroke: var(--accent-link); stroke-width: 22; stroke-linecap: round;
+  stroke-linejoin: round; opacity: 0.55; }
+.map-road { fill: none; stroke: var(--text-secondary); stroke-width: 7; stroke-dasharray: 18 10;
+  stroke-linecap: round; }
+.map-wall { fill: none; stroke: var(--text-primary); stroke-width: 10; stroke-linejoin: round; }
+.map-gate { fill: var(--bg-card); stroke: var(--text-primary); stroke-width: 5; }
+.map-pin circle, .map-pin rect { stroke: var(--text-primary); stroke-width: 3; }
+.map-pin-place circle { fill: var(--bg-card); }
+.map-pin-shop rect { fill: var(--accent); }
+.map-pin text { font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.map-pin-place text { fill: var(--text-primary); }
+.map-pin-shop text { fill: var(--bg-card); }
+a:focus-visible .map-pin circle, a:focus-visible .map-pin rect { stroke: var(--border-focus); stroke-width: 6; }
+.map-key { columns: 2 14em; margin: 10px 0 0; padding-left: 2em; }
+.map-key li { break-inside: avoid; }
+.map-no { font-variant-numeric: tabular-nums; }
+/* On a phone the map is ~330px across, so its type and pins grow in map
+   units to stay legible. The numbered key under it is the big tap target. */
+@media (max-width: 520px) {
+  .map-label { font-size: 34px; stroke-width: 8px; }
+  .map-pin circle { r: 22px; }
+  .map-pin text { font-size: 24px; }
+}
+.city-entry.is-flash { background: var(--accent-glow); transition: background 0.3s; }
+
 @media print {
   .city-settings, .city-tools, .appnav { display: none; }
   .city-entry details { display: block; }
+  /* Short enough to share a page with the overview: at full width it would
+     not split, and pushed itself onto page two leaving one mostly blank. */
+  .city-map { max-width: 100%; max-height: 5.6in; break-inside: avoid; }
 }

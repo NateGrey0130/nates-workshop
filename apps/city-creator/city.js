@@ -10,6 +10,12 @@
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS } from './js/city-engine.js';
+import { layoutMap } from './js/city-map.js';
+
+// The map is computed when the city CHANGES and kept with it, not redrawn
+// from the layout code on every load: Phase 3 saves the generated city, and a
+// later change to the layout must not move a saved city's districts.
+const withMap = (city) => ({ ...city, map: layoutMap(city) });
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => escHtml(s == null ? '' : String(s));
@@ -36,7 +42,8 @@ function restore() {
     const v = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (v?.settings) S.settings = v.settings;
     if (typeof v?.nameTheme === 'string') S.nameTheme = v.nameTheme;
-    if (v?.city?.version === 1) S.city = v.city;
+    // A city kept by Phase 1 has no map yet: draw it once, then it is kept.
+    if (v?.city?.version === 1) S.city = v.city.map ? v.city : withMap(v.city);
   } catch { /* ignore */ }
 }
 
@@ -130,7 +137,52 @@ function tools(id) {
       onclick="City.reroll('${escJs(id)}')">🎲</button>
   </span>`;
 }
-const card = (id, body) => `<div class="city-entry${locked(id) ? ' is-locked' : ''}">${tools(id)}<div>${body}</div></div>`;
+const card = (id, body) => `<div class="city-entry${locked(id) ? ' is-locked' : ''}" id="e-${esc(id)}">${tools(id)}<div>${body}</div></div>`;
+
+// ── the map (Phase 2) ──
+// An SVG in the map's own 0..1000 units, scaled to the panel's width, so it
+// reads on a phone and prints as it looks. Pins are numbered, and the list
+// under the map says what each number is - a label on every pin would not
+// fit on a phone. A pin is a real link to its entry.
+const pts = (poly) => poly.map(([x, y]) => `${x},${y}`).join(' ');
+const pinNo = (map, id) => map?.pins.find((p) => p.id === id)?.n;
+// The entry's number on the map, so the list and the map can be read together.
+const pinTag = (c, id) => (pinNo(c.map, id) ? `<span class="tag map-no">${pinNo(c.map, id)}</span> ` : '');
+
+function mapHtml(c) {
+  const m = c.map;
+  if (!m) return '';
+  const districts = m.districts.map((d, i) => `<g class="map-district${d.race ? ' is-quarter' : ''}">
+      <polygon points="${pts(d.polygon)}" class="map-cell ${d.race ? 'map-cell-quarter' : `map-cell-${i % 4}`}"><title>${
+        esc(d.name)}</title></polygon>
+    </g>`).join('');
+  // Labels on their own layer, over the roads and the wall, under the pins.
+  const labels = m.districts.map((d) =>
+    `<text x="${d.label[0]}" y="${d.label[1]}" class="map-label">${esc(d.name)}</text>`).join('');
+  const river = m.river ? `<polyline points="${pts(m.river)}" class="map-river"/>` : '';
+  const wall = m.wall ? `<polygon points="${pts(m.wall)}" class="map-wall"/>` : '';
+  const roads = m.roads.map((r) => `<polyline points="${pts(r)}" class="map-road"/>`).join('');
+  const gates = m.wall ? m.gates.map(([x, y]) => `<rect x="${x - 14}" y="${y - 14}" width="28" height="28" class="map-gate"/>`).join('') : '';
+  const pins = m.pins.map((p) => `<a href="#e-${esc(p.id)}" onclick="City.goto('${escJs(p.id)}'); return false;"
+      aria-label="${p.n}: ${esc(p.label)}">
+      <g class="map-pin map-pin-${p.kind}">${p.kind === 'shop'
+        ? `<rect x="${p.at[0] - 16}" y="${p.at[1] - 16}" width="32" height="32" rx="4"/>`
+        : `<circle cx="${p.at[0]}" cy="${p.at[1]}" r="17"/>`}
+      <text x="${p.at[0]}" y="${p.at[1]}">${p.n}</text></g></a>`).join('');
+  return `<div class="panel city-map-panel">
+    <h3 style="margin-top:0">Map <span class="muted small">— districts${m.wall ? ', walls and gates' : ''}${m.river ? ', the river' : ''};
+      numbers are places (○) and shops (■)</span></h3>
+    <svg class="city-map" viewBox="${(m.view || [0, 0, m.size, m.size]).join(' ')}" role="img" aria-label="Map of ${esc(c.overview.name)}">
+      <defs><pattern id="quarter-hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="16" height="16" class="map-hatch-bg"/><line x1="0" y1="0" x2="0" y2="16" class="map-hatch"/></pattern></defs>
+      <polygon points="${pts(m.outline)}" class="map-ground"/>
+      ${river}${districts}${roads}${wall}${gates}${labels}${pins}
+    </svg>
+    <ol class="map-key small">${m.pins.map((p) => `<li value="${p.n}"><a href="#e-${esc(p.id)}"
+      onclick="City.goto('${escJs(p.id)}'); return false;">${esc(p.label)}</a>
+      <span class="muted">${p.kind === 'shop' ? 'shop' : 'place'}, ${esc(p.district)}</span></li>`).join('')}</ol>
+  </div>`;
+}
 
 function cityHtml() {
   const c = S.city;
@@ -154,6 +206,8 @@ function cityHtml() {
         `<li><b>${esc(f.name)}</b>${f.goal ? ', ' + esc(f.goal) : ''}</li>`).join('')}</ul>` : ''}`)}
   </div>
 
+  ${mapHtml(c)}
+
   <div class="panel"><h3 style="margin-top:0">Districts</h3>
     ${c.districts.map((d) => card(d.id, `<p><b>${esc(d.name)}</b>${d.name !== d.kind ? ` <span class="muted small">${esc(d.kind)}</span>` : ''}
       — ${esc(d.mood)}</p>
@@ -161,11 +215,11 @@ function cityHtml() {
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Places of interest</h3>
-    ${c.places.map((p) => card(p.id, `<p>${esc(p.name)}${p.district ? ` <span class="muted small">— ${esc(p.district)}</span>` : ''}</p>`)).join('')}
+    ${c.places.map((p) => card(p.id, `<p>${pinTag(c, p.id)}${esc(p.name)}${p.district ? ` <span class="muted small">— ${esc(p.district)}</span>` : ''}</p>`)).join('')}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Shops and taverns</h3>
-    ${c.shops.map((s) => card(s.id, `<p><b>${esc(s.name || '(unnamed)')}</b> <span class="muted small">${esc(s.type)}${s.district ? ', ' + esc(s.district) : ''}</span></p>
+    ${c.shops.map((s) => card(s.id, `<p>${pinTag(c, s.id)}<b>${esc(s.name || '(unnamed)')}</b> <span class="muted small">${esc(s.type)}${s.district ? ', ' + esc(s.district) : ''}</span></p>
       <p class="small">Known for ${esc(s.specialty)}. Prices ${esc(s.price)}. Owner: ${esc(npcName[s.owner] || 'nobody named')} — ${esc(s.quirk)}.</p>`)).join('')}
   </div>
 
@@ -211,7 +265,7 @@ async function generate() {
       if (res.stop_reason === 'max_tokens') throw new Error('The name pool was cut off before it finished - try again, or a shorter theme');
       pool = parsePool(res.content?.map((b) => b.text || '').join('') || '', S.settings);
     }
-    S.city = generateCity(S.settings, seed, pool);
+    S.city = withMap(generateCity(S.settings, seed, pool));
     S.msg = '';
     save();
   } catch (err) {
@@ -256,8 +310,18 @@ window.City = {
   seed(v) { S.seed = v; },
   generate,
   lock(id) { S.city = toggleLock(S.city, id); save(); render(); },
-  reroll(id) { S.city = rerollEntry(S.city, id); save(); render(); },
-  rerollAll() { S.city = rerollCity(S.city, newSeed()); save(); render(); },
+  reroll(id) { S.city = withMap(rerollEntry(S.city, id)); save(); render(); },
+  rerollAll() { S.city = withMap(rerollCity(S.city, newSeed())); save(); render(); },
+  // A pin names an entry: bring it into view and mark it for a moment.
+  goto(id) {
+    const el = document.getElementById('e-' + id);
+    if (!el) return;
+    // An instant jump: the flash already says where you landed, and a smooth
+    // scroll does not move at all in a page the browser is not painting.
+    el.scrollIntoView({ block: 'center' });
+    el.classList.add('is-flash');
+    setTimeout(() => el.classList.remove('is-flash'), 1600);
+  },
   exportJson() {
     const blob = new Blob([exportJson(S.city)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -270,4 +334,12 @@ window.City = {
 
 restore();
 await loadRaces();
+// ?seed=N opens on that city, built from the settings on screen - a seed can
+// be passed on, and a printed page can be made without clicking. Built-in
+// names only: a URL never spends an AI call.
+const urlSeed = new URLSearchParams(location.search).get('seed');
+if (urlSeed && !settingsProblems(S.settings).length) {
+  S.seed = urlSeed;
+  S.city = withMap(generateCity(S.settings, Number(urlSeed) >>> 0 || hashSeed(urlSeed), null));
+}
 render();

@@ -14,14 +14,19 @@
 // overview; owners invented instead of drawn from the NPCs; the rumour table
 // cut to 38; and the name pool padded when it ran out. The last one PASSED the
 // first version of the pool check - see the comment there.
+// The map (Phase 2), the same way: a cell not clipped against the centre
+// district, every pin put in the wrong district, a wall on every city, and
+// pins placed without spacing. The wrong-district fault PASSED the first
+// version of the pin check, which read the pin's own record of its district.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson } from '../../../city-creator/js/city-engine.js';
+import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
-const SECTIONS = ['City Creator engine'];
+const SECTIONS = ['City Creator engine', 'City Creator map'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -182,4 +187,59 @@ export function run() {
     (page.match(/await claudeRequest\(/g) || []).length === 1
       && page.indexOf('await claudeRequest(') > page.indexOf('async function generate()')
       && page.indexOf('await claudeRequest(') < page.indexOf('window.City ='));
+
+  // ── the map (Phase 2) ──
+  // Geometry the eye cannot audit across two hundred cities: every district
+  // owns its share of the outline and no more, every pin sits in its own
+  // district and clear of the others, and the wall only exists where the
+  // city has one.
+  section('City Creator map');
+  const sizes = [60, 450, 2500, 12000, 60000];
+  const withQuarter = { ...base(), races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] };
+  const outside = [], untiled = [], crowded = [], wallWrong = [], quarterless = [];
+  for (let seed = 0; seed < 120; seed++) {
+    const c = generateCity({ ...withQuarter, population: sizes[seed % 5] }, seed);
+    const m = layoutMap(c);
+    const whole = area(m.outline);
+    const sum = m.districts.reduce((n, d) => n + area(d.polygon), 0);
+    if (Math.abs(sum - whole) / whole > 0.001 || m.districts.length !== c.districts.length) untiled.push(seed);
+    // Against the district the ENTRY names in the city, not the pin's own
+    // record of it: a fault that pinned a shop in the wrong district rewrote
+    // both halves of the pin and passed the first version of this check.
+    const named = Object.fromEntries([...c.places, ...c.shops].map((e) => [e.id, e.district]));
+    for (const p of m.pins) {
+      const d = m.districts.find((x) => x.name === named[p.id]);
+      if (!d || !inside(p.at, d.polygon)) outside.push(`${seed}:${p.id}`);
+      if (m.pins.some((o) => o !== p && Math.hypot(o.at[0] - p.at[0], o.at[1] - p.at[1]) < 34)) crowded.push(`${seed}:${p.id}`);
+    }
+    if (!!m.wall !== !!c.overview.walls) wallWrong.push(seed);
+    if (!m.districts.some((d) => d.race === 'dwarf')) quarterless.push(seed);
+  }
+  check('the districts tile the city outline exactly, one region each (120 cities)', untiled.length === 0, untiled.join(', '));
+  check('every pin is inside its own district', outside.length === 0, outside.slice(0, 5).join(', '));
+  check('and no two pins touch', crowded.length === 0, crowded.slice(0, 5).join(', '));
+  check('the wall is drawn exactly when the city has walls', wallWrong.length === 0, wallWrong.join(', '));
+  check('and a race quarter is on the map as a quarter', quarterless.length === 0, quarterless.join(', '));
+  const walled = generateCity({ ...withQuarter, population: 60000 }, 3);
+  const wm = layoutMap(walled);
+  check('gates sit on the wall', wm.gates.length >= 2 && wm.gates.every((g) => wm.wall.some((w) => w[0] === g[0] && w[1] === g[1])));
+  check('the same city draws the same map', JSON.stringify(layoutMap(walled)) === JSON.stringify(wm));
+  const shopOne = walled.shops[0];
+  const moved = layoutMap(rerollEntry(walled, shopOne.id));
+  const elsewhere = wm.pins.filter((p) => p.districtId !== wm.pins.find((x) => x.id === shopOne.id).districtId
+    && moved.pins.find((x) => x.id === p.id)?.districtId === p.districtId);
+  check('rerolling a shop moves no pin in any other district',
+    elsewhere.every((p) => JSON.stringify(moved.pins.find((x) => x.id === p.id).at) === JSON.stringify(p.at)));
+  check('the view is cropped to the city, inside the sheet',
+    wm.view[0] >= 0 && wm.view[1] >= 0 && wm.view[2] < wm.size && wm.view[0] + wm.view[2] <= wm.size);
+
+  // The page keeps the map WITH the city (Phase 3 saves the generated city,
+  // and a later layout change must not move a saved city's districts), and
+  // every pin is a link to its entry.
+  check('the page stores the map with the city on every change, and draws pins as links',
+    /S\.city = withMap\(generateCity\(/.test(page) && /S\.city = withMap\(rerollEntry\(/.test(page)
+      && /S\.city = withMap\(rerollCity\(/.test(page) && /<a href="#e-\$\{esc\(p\.id\)\}"/.test(page)
+      && /id="e-\$\{esc\(id\)\}"/.test(page));
+  const css = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.css'), 'utf8');
+  check('and the map has a print rule that keeps it whole', /@media print[\s\S]*\.city-map \{[^}]*break-inside: avoid/.test(css));
 }
