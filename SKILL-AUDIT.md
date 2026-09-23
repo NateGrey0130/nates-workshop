@@ -2387,7 +2387,7 @@ exactly: *"The next reader to scroll seven `##` sections will have the same
 idea."* `F62` is that reader, and it names `F42` and `A13` but not `F39`.
 
 **THE DEFERRAL THIS FINDING QUOTES WAS ANSWERED 41 MINUTES AFTER IT WAS
-WRITTEN.** `SKILL-AUDIT.md:367-369` — *"Six is past the point where the
+WRITTEN.** `SKILL-AUDIT.md:368-370` — *"Six is past the point where the
 arrangement helps anybody; consolidating them is worth its own finding and is
 not attempted here"* — landed in commit `013a5a1c` at **2026-09-04 09:50:21**.
 `F39` closed in commit `16899c86` at **2026-09-04 10:31:49**. The deferral was
@@ -2398,6 +2398,11 @@ it. **This is the third instance of that shape recorded tonight** —
 and `F61` on this menu re-derived `F46` the same afternoon. A deferral sentence
 does not learn that its work was done.
 
+**This finding cites that sentence as `:367-369`, and it is off by one** — it
+was 368 on the day the finding was filed too, by `git show
+b3d13beb:SKILL-AUDIT.md | grep -n`. The finding keeps its own number, an audit
+file being a record; this note uses the measured one.
+
 **One thing did change since `F39`, and it is the only thing that could reopen
 it: the count grew from seven placements to nine**, two of them added
 2026-09-22. `F39`'s load-bearing argument is that the findings stay in strict
@@ -2405,20 +2410,37 @@ numeric order however many `##` sections sit above them. **Measured 2026-09-22
 against the live file: 19 `### F` headings, `F45` through `F63`, strict
 ascending, zero inversions.** The argument survives the growth intact.
 
-**And the page is SHORTER than when `F39` declined, not longer.** `wc -l
-SKILL-AUDIT.md` is **2,441** today against **3,717** at `16899c86`, because the
-2026-09-16 split (`05eddb17`) moved every closed finding to
-`SKILL-AUDIT.closed.md` and left a one-line pointer where each heading was —
-4,386 lines down to 475 on the day. The placements now sit above pointers for
-the most part rather than above bodies, so the scroll cost `F39` weighed has
-fallen while the placement count rose.
+**THE 2026-09-16 SPLIT CUTS BOTH WAYS, and the half that argues AGAINST this
+decline has to be written down or the fourth derivation will think it found
+something.** `05eddb17` moved every closed finding to `SKILL-AUDIT.closed.md`
+and left a one-line pointer where each heading was — 4,386 lines down to 475 on
+the day, and `wc -l SKILL-AUDIT.md` is **2,441** today against **3,717** at
+`16899c86`.
 
-**The bar `F39` set for reopening is not cleared.** Its note ends: *"a shape
-that merges the 2026-09-04 sections without moving a finding body, since moving
-them is a large diff across a record file and every moved line re-enters
-`menu-check` as an added line. Nobody has proposed one."* `F62` proposes no such
-shape either — its posture says *"if anything moves, it is headings only"*,
-which is the constraint rather than a way to satisfy it.
+- It **strengthens** `F39`'s first argument. The scroll cost the placements
+  impose has fallen while their count rose.
+- It **dissolves `F39`'s second argument entirely.** That argument was
+  *"Consolidation means moving finding bodies in a record file, which is a large
+  diff over `Audit files are RECORDS` territory."* Measured 2026-09-22 across
+  the five 2026-09-04-era sections at `SKILL-AUDIT.md:330-393`: **16 one-line
+  pointer bullets and ZERO finding bodies.** Merging those sections today moves
+  no body at all.
+
+**So the bar `F39` set is now clearable, and it was not when `F39` set it.** Its
+note ends: *"a shape that merges the 2026-09-04 sections without moving a
+finding body, since moving them is a large diff across a record file and every
+moved line re-enters `menu-check` as an added line. Nobody has proposed one."*
+Any shape clears that today, because there is no body left to move. **`F62` still
+proposes none** — its posture, *"if anything moves, it is headings only"*, is the
+constraint rather than a way to satisfy it — so nothing here is a proposal Nate
+declined without seeing.
+
+**The decline therefore rests on the two arguments that survive**, plus his word
+given twice: the findings are in strict numeric order, and the section names
+carry the provenance — *opened by taking `F28`*, *opened by `F32`'s own CI run*
+— that merging would delete. It does NOT rest on the moving-bodies cost any
+more. **Whoever derives this a fourth time should be told that the cheap-diff
+objection is gone**, and decide on the remaining two.
 
 **What `F62` contributes, and it is worth keeping.** It is the first record that
 the placement count kept growing after `F39` weighed it, and it names the two
@@ -2426,11 +2448,17 @@ the placement count kept growing after `F39` weighed it, and it names the two
 the next reader gets `F39`'s reasoning, the measurement that it still holds, and
 the date the count was last checked.
 
-**Evidence:** `SKILL-AUDIT.closed.md:3310-3375` and `SKILL-AUDIT.md:367-369`
+**Evidence:** `SKILL-AUDIT.closed.md:3310-3375` and `SKILL-AUDIT.md:368-370`
 read 2026-09-22; the two commit timestamps from `git log --date=iso`; the
 ordering checked by listing every `^### F` heading and comparing each number to
 the one above it; the three line counts from `git show <rev>:SKILL-AUDIT.md | wc
--l`.
+-l`; the pointer-versus-body count from `grep -c` over `:330-393` for `^- **F`
+and for `^### `.
+
+**The body count and the off-by-one came from the premise auditor, not from this
+session**, which had already committed the note framing the split as purely
+strengthening. Both were re-measured here before being written down. That is the
+second time tonight the premise audit changed a note after the branch was open.
 
 **Confidence: high on the facts, and the judgement is Nate's and was given.**
 What would change it is the bar `F39` named and nobody has met.
