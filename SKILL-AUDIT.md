@@ -2226,7 +2226,7 @@ Three deferrals named on this menu and never filed. `A22` listed them as a
 deliberate drop with locations; Nate named them, and they are numbered here.
 None is taken in this PR.
 
-### F61 — low — `book-extract-worker`'s contract assumes stat blocks, and says nothing about prose
+### F61 — low — `book-extract-worker`'s return contract covers stat blocks only, measured 2026-09-22
 
 **Opened 2026-09-22.** Named at `SKILL-AUDIT.closed.md:2515-2525`, inside
 `F28`'s note: <!-- claim-ok: quoting that note, located in the sentence before
