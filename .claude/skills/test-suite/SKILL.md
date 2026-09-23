@@ -243,6 +243,26 @@ adopted without the plugin (`SKILL-AUDIT` `F64`):
    behaviour you hope for. `claim-audit`'s fixture rule is the precedent: an
    agent that has read the answer key cannot be scored (`SKILL-AUDIT` `F28`,
    `.claude/skills/claim-audit/reference/negatives.md`).
+   **The prompt is not the only place the answer can be.** Subagents grep
+   the tree and read files from disk, and the harness hands every one of them
+   a git snapshot. So keep the answer out of all three places below while any
+   run is live:
+   - **The branch name and commit subjects.** The snapshot carries the
+     current branch, the uncommitted file list and recent commit subjects,
+     whatever the tree holds. A branch called `…-sweep-past-the-check` states
+     the answer. Run from a neutrally named branch, and don't commit anything
+     that describes the test until the runs are done.
+   - **The working tree.** An uncommitted finding, a PR-body draft or a
+     notes file that describes the test is an answer key. Keep drafts in the
+     scratchpad, and write the finding after the runs.
+   - **The skill under test.** It must not name the scenario, quote the
+     failing row, or record its own RED and GREEN results. Evidence belongs
+     in the finding, not in the skill.
+
+   A run that read any of these does not count. Say so in the record, and run
+   it again. `SKILL-AUDIT` `F65` had all three leaks in its second GREEN
+   round, and its one hit there was discarded. The branch name was still live
+   in its third round too (`SKILL-AUDIT` `F66`).
 3. **GREEN: edit, WAIT, then run the identical prompt again**, two more runs.
    The edit reaches subagents after a delay, not on save. Measured 2026-09-23:
    a probe spawned two tool calls after an edit loaded the old headings. The

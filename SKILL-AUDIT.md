@@ -2729,3 +2729,78 @@ saw.**
   used the new one.**
 - The other three fixes are wording: the sweep's history, dropping skills from
   the cause's footprint, and the memory hits.
+
+> **Adjusted 2026-09-23 — `F66`.** GREEN 3's one hit is **weaker than the
+> table says**. Every GREEN 2 and GREEN 3 run was handed the branch name
+> `skill-audit-f65-sweep-past-the-check` in the harness's git snapshot, and
+> that name states what the scenario scored. So `F65`'s effect on record is
+> **1 of 2, with that exposure**. No run has been scored on a neutrally named
+> branch. The table is left standing as filed.
+
+### F66 — low — `F64`'s blinding rule covers the prompt, and the answer leaked through the tree and the skill
+
+**Opened 2026-09-23.** Named in `F65`'s outcome note above as a gap in `F64`'s
+section, left for Nate to number, and named by him the same day. It is filed
+and taken in one PR on the same grounds `F64` records: the decision came
+before the number.
+
+`test-suite` → *A skill is a check too*, step 2, said *"Keep the prompt blind"*
+and nothing more. The prompt in `F65`'s runs was blind, and the answer
+reached them anyway, through three channels.
+
+**Measured from the subagent transcripts by the premise auditor, 2026-09-23,**
+under `~/.claude/projects/C--Users-natha-Projects-nates-apps/<session>/subagents/`:
+
+- **The skill under test.** `F65`'s second-round hit read the `test-suite`
+  section from disk with `sed`. That diff's closing paragraph described the
+  RED runs, and its example quoted the failing row. The run reported that
+  *"those edits describe this exact prompt as the F65 pressure test"*.
+- **The working tree.** The same run's `grep -rn "Ley Surge"` over `*.md`
+  returned the uncommitted `F65` finding's line quoting the scenario. It
+  never opened that file.
+- **The branch name and commit subjects.** The harness hands every subagent
+  a git snapshot of the current branch, the uncommitted file list and recent
+  commit subjects. All four second- and third-round GREEN runs carry
+  `Current branch: skill-audit-f65-sweep-past-the-check`, which names what the
+  scenario scored. **That includes `F65`'s one counted hit in round three.**
+  The transcripts show the name was present, not that it was used.
+
+**Also measured, and outside this finding's scope:** none of those four runs
+loaded `test-suite` through the Skill tool. Two read it from disk and two
+never read it. A disk read sees an edit at once, which makes `F64`'s
+refresh-wait apply only to Skill-tool loads.
+
+**Proposal:** extend step 2 to cover all three places:
+
+- **The branch.** Run from a neutrally named branch, and commit nothing that
+  describes the test until the runs are done.
+- **The tree.** Keep drafts in the scratchpad.
+- **The skill.** It must not name its scenario or record its own results.
+
+A run that read any of them is discarded and re-run.
+
+**Posture: documentation only.** One paragraph in one skill section, with no
+check.
+
+**Evidence:** the transcripts above, and `F65`'s outcome note, 2026-09-23.
+
+**Not pressure-tested, and on purpose.** This changes how the method is run,
+not how a session behaves on a task, so there is no task scenario to put a
+subagent through. Its test is the next `F64` run that keeps a finding in the
+scratchpad and gets a clean result.
+
+**Confidence:** high that the leak is real, since the run named what it read.
+Medium that the wording prevents the next one.
+
+**Ongoing cost:** one paragraph, drafting findings outside the tree while runs
+are live, and a neutral branch name for the runs.
+
+**Taken, 2026-09-23 (PR #1284).** Posture as proposed: documentation only.
+**The premise auditor widened it before it shipped.** My first draft named
+two leaks, the tree and the skill. The auditor read the transcripts and found
+a third: the harness's git snapshot hands every subagent the branch name. That
+leak was live in every `F65` GREEN run, **including the one hit `F65`
+counts**. So step 2 now names the branch first, and `F65` carries a dated
+adjustment rather than a rewritten table. The auditor also corrected how the
+round-2 run reached the finding: a content grep of the tree, not opening the
+file.
