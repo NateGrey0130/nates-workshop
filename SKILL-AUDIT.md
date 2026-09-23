@@ -2373,6 +2373,71 @@ no instance behind it.
 **Ongoing cost:** none if declined. If merged, one more thing to keep true as
 placements accumulate — which is the problem restated.
 
+**DECLINED 2026-09-22 on Nate's word. No file is changed and no heading is
+moved.** This finding asks for a decision and recommends against consolidating;
+the decision had already been made, and the measurement below says nothing has
+happened since to reopen it.
+
+**`SKILL-AUDIT.closed.md:3310` is `F39`** — *"the seven section placements on
+this page, and the case for leaving them"* — **closed without being taken on
+2026-09-04 (PR #696) on Nate's word**, agreeing with its own recommendation. Its
+note says <!-- claim-ok: quoting F39's note, located in the sentence before this
+one --> *"Recorded so it is not re-proposed"*, and then predicts this finding
+exactly: *"The next reader to scroll seven `##` sections will have the same
+idea."* `F62` is that reader, and it names `F42` and `A13` but not `F39`.
+
+**THE DEFERRAL THIS FINDING QUOTES WAS ANSWERED 41 MINUTES AFTER IT WAS
+WRITTEN.** `SKILL-AUDIT.md:367-369` — *"Six is past the point where the
+arrangement helps anybody; consolidating them is worth its own finding and is
+not attempted here"* — landed in commit `013a5a1c` at **2026-09-04 09:50:21**.
+`F39` closed in commit `16899c86` at **2026-09-04 10:31:49**. The deferral was
+never a standing gap; it was discharged before the day was out, by a finding
+filed for that purpose, and nothing wrote back to the sentence that asked for
+it. **This is the third instance of that shape recorded tonight** —
+`BOOK-INGEST-AUDIT` `F104`'s deferral was discharged 83 minutes later by `F45`,
+and `F61` on this menu re-derived `F46` the same afternoon. A deferral sentence
+does not learn that its work was done.
+
+**One thing did change since `F39`, and it is the only thing that could reopen
+it: the count grew from seven placements to nine**, two of them added
+2026-09-22. `F39`'s load-bearing argument is that the findings stay in strict
+numeric order however many `##` sections sit above them. **Measured 2026-09-22
+against the live file: 19 `### F` headings, `F45` through `F63`, strict
+ascending, zero inversions.** The argument survives the growth intact.
+
+**And the page is SHORTER than when `F39` declined, not longer.** `wc -l
+SKILL-AUDIT.md` is **2,441** today against **3,717** at `16899c86`, because the
+2026-09-16 split (`05eddb17`) moved every closed finding to
+`SKILL-AUDIT.closed.md` and left a one-line pointer where each heading was —
+4,386 lines down to 475 on the day. The placements now sit above pointers for
+the most part rather than above bodies, so the scroll cost `F39` weighed has
+fallen while the placement count rose.
+
+**The bar `F39` set for reopening is not cleared.** Its note ends: *"a shape
+that merges the 2026-09-04 sections without moving a finding body, since moving
+them is a large diff across a record file and every moved line re-enters
+`menu-check` as an added line. Nobody has proposed one."* `F62` proposes no such
+shape either — its posture says *"if anything moves, it is headings only"*,
+which is the constraint rather than a way to satisfy it.
+
+**What `F62` contributes, and it is worth keeping.** It is the first record that
+the placement count kept growing after `F39` weighed it, and it names the two
+2026-09-22 additions. That is why this is declined in place rather than struck:
+the next reader gets `F39`'s reasoning, the measurement that it still holds, and
+the date the count was last checked.
+
+**Evidence:** `SKILL-AUDIT.closed.md:3310-3375` and `SKILL-AUDIT.md:367-369`
+read 2026-09-22; the two commit timestamps from `git log --date=iso`; the
+ordering checked by listing every `^### F` heading and comparing each number to
+the one above it; the three line counts from `git show <rev>:SKILL-AUDIT.md | wc
+-l`.
+
+**Confidence: high on the facts, and the judgement is Nate's and was given.**
+What would change it is the bar `F39` named and nobody has met.
+
+**Ongoing cost: none, declined** — beyond the one `F39` already recorded, a
+header paragraph that keeps naming the placements as they accumulate.
+
 ### F63 — low — `F54`'s note still reads as an unfiled deferral, and half of it now asserts something that was deleted
 
 **Opened 2026-09-22.** `SKILL-AUDIT.md:1336-1342` reads
