@@ -25,7 +25,7 @@ window.npcSheets = (function () {
     host: null,          // { campaignId, system, containerId, classNames, onRoster(list), dossiers? }
     roster: [],
     dossiers: null,      // the campaign's dossiers, for the link control; null = not offered
-    gen: { open: false, classes: null, cls: '', occ: '', level: 1, count: 1, name: '',
+    gen: { open: false, classes: null, cls: '', occ: '', level: 1, count: 1, name: '', each: false,
            busy: false, msg: '', err: false },
     book: { open: false, rows: null, slug: '', name: '', q: '', src: '', all: false,
             busy: false, msg: '', err: false },
@@ -140,9 +140,15 @@ window.npcSheets = (function () {
           onchange="npcSheets.genSet('level', this.value)"></label>
         <label class="small">How many <input type="number" min="1" max="10" value="${g.count}" style="width:4.5em"
           onchange="npcSheets.genSet('count', this.value)"></label>
-        <input type="text" class="picker-input" placeholder="Name (optional)" value="${esc(g.name)}"
-          onchange="npcSheets.genSet('name', this.value)">
+        <input type="text" id="npcgen-name" class="picker-input" placeholder="Name (optional)" value="${esc(g.name)}"
+          ${g.each ? 'disabled' : ''} onchange="npcSheets.genSet('name', this.value)">
+        ${window.namePanel ? namePanel.button('npcgen-name', genNameOpts) : ''}
       </div>
+      ${window.namePanel ? namePanel.slot('npcgen-name') : ''}
+      ${window.namePanel ? `<label class="small" style="display:block;margin-top:6px">
+        <input type="checkbox" ${g.each ? 'checked' : ''} onchange="npcSheets.genSet('each', this.checked, true)">
+        a different name for each
+        <span class="muted">— from the 🎲 theme, none already used in this campaign; the Name box is not used</span></label>` : ''}
       <div class="rowline" style="margin-top:8px">
         <button class="btn btn-sm btn-primary" onclick="npcSheets.roll()"
           ${g.busy || !g.cls || (needsJob && !g.occ) ? 'disabled' : ''}>${g.busy ? 'Rolling…' : 'Roll'}</button>
@@ -176,18 +182,30 @@ window.npcSheets = (function () {
     else if (key === 'count') g.count = Math.max(1, Math.min(10, Math.trunc(Number(value) || 1)));
     else g[key] = value;
     if (key === 'cls') { g.occ = ''; g.msg = ''; g.err = false; }
+    // A new class moves the name theme to that class's own (a Wolfen gets
+    // Wolfen names), unless the G.M. has already picked one.
+    if ((key === 'cls' || key === 'occ') && window.namePanel) namePanel.classChanged('npcgen-name', genClasses());
     if (rerender) render();
   }
+
+  // What the 🎲 beside the roller's Name box knows about the class chosen.
+  const genClasses = () => ({ cls: S.gen.cls, occ: S.gen.occ });
+  const genNameOpts = { kinds: ['person'], classes: genClasses };
 
   async function roll() {
     const g = S.gen;
     g.busy = true; g.msg = ''; g.err = false;
     render();
     try {
+      const body = { class_id: g.cls, occ_class_id: g.occ || null, level: g.level, count: g.count };
+      // "A different name for each": the theme the 🎲 is on, or the class's
+      // default if it was never opened. The server picks every name before it
+      // writes anything, and refuses a batch the theme cannot name.
+      if (g.each) Object.assign(body, await namePanel.batchOptions('npcgen-name', genClasses()));
+      else body.name = g.name.trim() || null;
       const res = await api(`campaigns/${cid()}/npcs/generate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: g.cls, occ_class_id: g.occ || null,
-                               level: g.level, count: g.count, name: g.name.trim() || null }),
+        body: JSON.stringify(body),
       });
       await reloadRoster();
       const banked = res.npcs.reduce((n, x) => n + (x.powers_banked || 0) + (x.picks_pending || 0), 0);
@@ -268,9 +286,11 @@ window.npcSheets = (function () {
         ${cfg.count ? `<label class="small">How many
           <input type="number" min="1" max="12" value="${p.count}" style="width:5em"
             onchange="npcSheets.pickSet('${which}', 'count', this.value)"></label>` : ''}
-        <input type="text" class="picker-input" placeholder="Name in this campaign (optional)" value="${esc(p.name)}"
-          onchange="npcSheets.pickSet('${which}', 'name', this.value)">
+        <input type="text" id="npc${which}-name" class="picker-input" placeholder="Name in this campaign (optional)"
+          value="${esc(p.name)}" onchange="npcSheets.pickSet('${which}', 'name', this.value)">
+        ${window.namePanel ? namePanel.button(`npc${which}-name`, { kinds: ['person'] }) : ''}
       </div>
+      ${window.namePanel ? namePanel.slot(`npc${which}-name`) : ''}
       <div class="rowline" style="margin-top:8px">
         <button class="btn btn-sm btn-primary" onclick="npcSheets.place('${which}')" ${p.busy || !p.slug ? 'disabled' : ''}>
           ${p.busy ? cfg.busyVerb : cfg.verb}</button>

@@ -29,6 +29,8 @@ async function load() {
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
     window.appnav?.setContext({ campaignId, campaignName: D.campaign?.name });
+    // The 🎲 beside the Statted NPCs panel's Name boxes (js/name-panel.js).
+    if (D.isGm) namePanel.init({ campaignId, system: D.campaign.system });
     D.roster = partyFirst(rosterRes.characters);
     D.journal = journalRes.entries;
     D.journalTotal = journalRes.total ?? journalRes.entries.length;
