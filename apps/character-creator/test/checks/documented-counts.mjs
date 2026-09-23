@@ -218,8 +218,9 @@ export function run() {
     // ff_, so a table documented perfectly well in apps/media-vault/README.md
     // fails `every table has a row in a data-model table`. OBSERVED, not
     // predicted — a media_shares CREATE appended to schema.sql failed this exact
-    // check before the prefix was widened. SHARE-AUDIT V5.
-    const notOursPrefixes = ['ff_', 'media_'];
+    // check before the prefix was widened. SHARE-AUDIT V5. Marvel Heroes' msh_
+    // joined on 2026-09-23 the same way.
+    const notOursPrefixes = ['ff_', 'media_', 'msh_'];
     const undescribed = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS ([a-z_]+)/g)]
       .map((m) => m[1])
       .filter((t) => !named.has(t) && !notOurs.includes(t)

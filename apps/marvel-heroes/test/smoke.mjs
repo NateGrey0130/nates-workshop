@@ -376,6 +376,100 @@ section('Summaries are short, so no book prose rides in on them');
   check(`no summary or note is longer than ${MAX} characters`, long.length === 0, long.join('; '));
 }
 
+section('The power catalog matches the roll tables, Power for Power');
+
+const catalog = load('powers.json');
+{
+  const byCode = Object.fromEntries(catalog.powers.map((p) => [p.code, p]));
+  const rolled = Object.entries(powerTables.tables).flatMap(([k, rows]) => rows.map((r) => ({ ...r, cls: k })));
+  check('the catalog has every rolled Power and nothing else',
+    catalog.powers.length === rolled.length && rolled.every((r) => byCode[r.code]),
+    `${catalog.powers.length} in the catalog, ${rolled.length} in the tables`);
+  const drift = rolled.filter((r) => {
+    const p = byCode[r.code];
+    return !p || p.name !== r.name || p.class !== r.cls || p.double !== r.double || !!p.addenda !== !!r.addenda;
+  });
+  check('and agrees with them on name, class, double and addenda', drift.length === 0,
+    drift.map((r) => r.code).join(', '));
+  const bad = [];
+  for (const p of catalog.powers) {
+    if (!(p.range === null || ['A', 'B', 'C', 'D', 'E'].includes(p.range))) bad.push(`${p.code} range ${p.range}`);
+    if (!Number.isInteger(p.page) || p.page < 18 || p.page > 100) bad.push(`${p.code} page ${p.page}`);
+    if (typeof p.summary !== 'string' || p.summary.length < 20) bad.push(`${p.code} summary`);
+    for (const kind of ['bonus', 'optional', 'nemesis']) {
+      for (const x of p[kind] || []) {
+        if (typeof x === 'string' ? !byCode[x] : !(x && typeof x.name === 'string')) bad.push(`${p.code} ${kind} ${JSON.stringify(x)}`);
+      }
+    }
+  }
+  check('every Power has a page in the listings, a summary, a real range column and real related Powers',
+    bad.length === 0, bad.join('; '));
+  check('every section introduction belongs to a class',
+    Object.keys(catalog.class_intros).every((c) => classCodes.has(c)));
+}
+
+section('The power-text endpoint reads one row, GET only, and answers a missing row with the summary\'s cue');
+
+{
+  const mod = await import(new URL('../../../functions/api/marvel-heroes/power-text.js', import.meta.url));
+  const handlers = Object.keys(mod).filter((k) => k.startsWith('onRequest'));
+  check('its only handler is onRequestGet, so every other method is a 405',
+    handlers.join() === 'onRequestGet', handlers.join());
+  check('its code pattern takes every catalog code and every class code',
+    catalog.powers.every((p) => mod.CODE.test(p.code)) && [...classCodes].every((c) => mod.CODE.test(c)));
+  check('and refuses anything else', !['D0', 'X1', 'MG1;', "D1' OR 1=1", '', 'd1', 'MCo66x'].some((c) => mod.CODE.test(c)));
+  const rows = { MG10: { code: 'MG10', name: 'Reality Alteration', page: 47, body: 'text' } };
+  const env = { DB: { prepare: () => ({ bind: (code) => ({ first: async () => rows[code] || null }) }) } };
+  const call = async (code, headers = { 'Cf-Access-Authenticated-User-Email': 'a@b.c' }, host = 'example.com') => {
+    const res = await mod.onRequestGet({ request: new Request(`https://${host}/api/marvel-heroes/power-text?code=${encodeURIComponent(code)}`, { headers }), env });
+    return { status: res.status, body: await res.json() };
+  };
+  const hit = await call('MG10');
+  check('a stored row comes back whole', hit.status === 200 && hit.body.body === 'text', JSON.stringify(hit));
+  const miss = await call('D1');
+  check('a row the database does not have is a 404 that says missing', miss.status === 404 && miss.body.missing === true);
+  check('a bad code is a 400', (await call('X9')).status === 400);
+  check('and nobody signed in is a 401', (await call('MG10', {})).status === 401);
+}
+
+section('No book text is in any tracked file (local only: needs the extraction)');
+
+{
+  // The one check that compares against the real text. The extraction lives in
+  // the gitignored .cache/msh/ on the machine that has the PDF, so CI has
+  // nothing to compare with and this section says so rather than passing
+  // silently. WORKSHOP_MSH_CACHE points a worktree at the main checkout's.
+  const cacheDir = process.env.WORKSHOP_MSH_CACHE || join(repoRoot, '.cache', 'msh');
+  const full = join(cacheDir, 'powers-full.json');
+  if (!existsSync(full)) {
+    check(`skipped: no extraction at ${rel(full) || full}`, true);
+  } else {
+    const N = 10;
+    const words = (s) => s.toLowerCase().match(/[a-z0-9]+/g) || [];
+    const shingles = new Set();
+    for (const e of Object.values(JSON.parse(readFileSync(full, 'utf8')))) {
+      const w = words(e.body);
+      for (let i = 0; i + N <= w.length; i++) shingles.add(w.slice(i, i + N).join(' '));
+    }
+    const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
+      'scripts/msh-extract.py', 'db/migrations/081-msh-power-text.sql'], { cwd: repoRoot, encoding: 'utf8' })
+      .stdout.split('\0').filter(Boolean);
+    // Files not yet committed count too: the check has to fire before the commit.
+    const untracked = spawnSync('git', ['ls-files', '-z', '--others', '--exclude-standard', '--', 'apps/marvel-heroes',
+      'functions/api/marvel-heroes', 'scripts'], { cwd: repoRoot, encoding: 'utf8' }).stdout.split('\0').filter(Boolean);
+    const leaks = [];
+    for (const f of new Set([...tracked, ...untracked])) {
+      if (!TEXT.has(extname(f)) && extname(f) !== '.py' && extname(f) !== '.sql') continue;
+      const w = words(readFileSync(join(repoRoot, f), 'utf8'));
+      for (let i = 0; i + N <= w.length; i++) {
+        if (shingles.has(w.slice(i, i + N).join(' '))) { leaks.push(`${f}: "${w.slice(i, i + N).join(' ')}"`); break; }
+      }
+    }
+    check(`no file shares ${N} words in a row with the book's power text (${shingles.size} runs checked)`,
+      leaks.length === 0, leaks.join('; '));
+  }
+}
+
 section('Every ruling in the data is in the README, and every README ruling is in the data');
 
 // Collect every "ruling" value, anywhere in any data file.
