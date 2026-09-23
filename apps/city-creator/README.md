@@ -29,8 +29,13 @@ sheets). Built one phase per PR; the plan's phases are:
   **`js/city-tables-rifts.js`** is the second file in the same shape - see
   *Rifts* below.
 - **Names** come from `shared/js/namegen.js` (a theme per race - Wolfen names
-  for Wolfen - and the places theme for shops and districts), run in the
-  browser with the city's seeded random. **With a naming theme**, one call to
+  for Wolfen - and the places theme for taverns and districts), run in the
+  browser with the city's seeded random. **A shop is named by its kind**: each
+  kind carries its own words in the tables (`names`: a smithy's Forge and
+  Anvil, a body-chop-shop's Cybernetics and Bionics), set with a surname or one
+  of the setting's `SHOP_ADJECTIVES` - "Greenholt's Forge", "The Northern Body
+  Works". Taverns and bars keep the places theme's names, which already read
+  as taverns. **With a naming theme**, one call to
   `/api/claude` returns a name pool that is saved with the city; locks and
   rerolls draw from that pool and never call again.
 - **Population** sets the number of districts, shops and places and whether
@@ -167,7 +172,7 @@ and is built exactly as before.
   humans take an O.C.C. and have no R.C.C. of their own. Switching the setting
   resets a race list the new setting has no classes for.
 - **Names** come from the Rifts themes (`rifts-frontier` by default,
-  `rifts-places` for shops and districts). Every Rifts people theme now has
+  `rifts-places` for bars and districts, and each shop kind's own words for shops). Every Rifts people theme now has
   200 or more name parts; the Dog Boy and Atlantean themes were filled out to
   get there.
 - **Shops** are the Rifts kinds - bars, gun shops, body-chop-shops,

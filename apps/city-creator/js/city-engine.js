@@ -142,6 +142,33 @@ function namer(ctx) {
       ctx.used.add(res.names[0].toLowerCase());
       return res.names[0];
     },
+    // A shop's name says what it sells: "Haskett's Cybernetics", "The Iron
+    // Anvil", from the kind's own words (`names` on the shop type) and the
+    // setting's SHOP_ADJECTIVES. The places theme's shop names are generic, so
+    // "Fitch's Energy Weapons" could be a clinic. A tavern, a kind with no
+    // words, or a city with an AI name pool keeps the old way: the pool was
+    // the G.M.'s own choice. A kind whose words run out says so and goes
+    // unnamed, like every other name here.
+    shop(r, t) {
+      const kind = t?.type === 'tavern' ? 'tavern' : 'shop';
+      if (kind === 'tavern' || !t?.names?.length || ctx.pool?.shop?.length) return this.place(r, kind);
+      for (let i = 0; i < 40; i++) {
+        const word = pick(r, t.names);
+        const form = Math.floor(r() * 3);
+        let n;
+        if (form === 0) {
+          const person = generateNames({ theme: T.DEFAULT_PEOPLE_THEME, shape: 'given+family', count: 1, random: r }).names[0];
+          const surname = person?.split(' ').slice(1).join(' ');
+          if (!surname) continue;
+          n = `${surname}${/s$/i.test(surname) ? "'" : "'s"} ${word}`;
+        } else {
+          n = `${form === 1 ? 'The ' : ''}${pick(r, T.SHOP_ADJECTIVES)} ${word}`;
+        }
+        if (!ctx.used.has(n.toLowerCase())) { ctx.used.add(n.toLowerCase()); return n; }
+      }
+      ctx.warnings.add(`No new name was left for a ${t.label.toLowerCase()}`);
+      return '';
+    },
   };
 }
 
@@ -224,15 +251,17 @@ function shopTypes(ctx) {
   return [...ctx.T.SHOP_TYPES, ...extra];
 }
 
+// The kind a stored shop is, from its label - the city stores the label.
+const shopTypeFor = (ctx, label) => shopTypes(ctx).find((t) => t.label === label) || null;
+
 function makeShop(ctx, r, i, city) {
   const t = pick(r, shopTypes(ctx));
-  const kind = t.type === 'tavern' ? 'tavern' : 'shop';
   const wealth = ctx.T.WEALTH.find((w) => w.label === city.overview.wealth);
   // Prices lean with the city's wealth, then a shop's own habits.
   const lean = Math.max(0, Math.min(ctx.T.PRICE_LEVELS.length - 1,
     Math.floor(r() * ctx.T.PRICE_LEVELS.length) + (wealth.price > 1.2 ? 1 : wealth.price < 0.9 ? -1 : 0)));
   return {
-    id: `shop-${i}`, name: ctx.names.place(r, kind), type: t.label,
+    id: `shop-${i}`, name: ctx.names.shop(r, t), type: t.label,
     specialty: pick(r, t.specialties), price: ctx.T.PRICE_LEVELS[lean],
     quirk: pick(r, ctx.T.PERSONALITIES).replace(/^/, 'the owner '),
     district: pick(r, city.districts)?.name || null, owner: null,
@@ -391,7 +420,9 @@ function dedupeNames(city, locked) {
   }
   for (const x of city.shops) {
     if (locked.has(x.id) || !x.name) continue;
-    if (ctx.used.has(x.name.toLowerCase())) x.name = ctx.names.place(r, x.type === 'Tavern' ? 'tavern' : 'shop');
+    // By its kind, as makeShop names one: a clash renamed a Rifts Bar with a
+    // shop's name until 2026-09-23, because this tested the label 'Tavern'.
+    if (ctx.used.has(x.name.toLowerCase())) x.name = ctx.names.shop(r, shopTypeFor(ctx, x.type));
     else ctx.used.add(x.name.toLowerCase());
   }
 }

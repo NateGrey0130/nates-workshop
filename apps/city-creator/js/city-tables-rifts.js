@@ -353,7 +353,7 @@ export const SHOP_TYPES = [
       rotgut strong enough to strip paint
       a quiet back booth for deals that never happened
     `) },
-  { type: 'gunshop', label: 'Gun shop', specialties: lines(`
+  { type: 'gunshop', label: 'Gun shop', names: ['Guns', 'Arms', 'Armory', 'Firearms', 'Ammo', 'Hardware', 'Lasers'], specialties: lines(`
       Northern Gun lasers, new and nearly new
       old-fashioned slug-throwers for the Magic Zone
       E-Clip recharging while you wait
@@ -365,7 +365,7 @@ export const SHOP_TYPES = [
       holdout pistols small enough to hide in a boot
       vibro-blades and energy melee weapons
     `) },
-  { type: 'armour', label: 'Armour shop', specialties: lines(`
+  { type: 'armour', label: 'Armour shop', names: ['Armour', 'Plate', 'Hardsuits', 'Shells', 'Body Armour'], specialties: lines(`
       environmental body armour fitted while you wait
       M.D.C. plate repair and re-sealing
       urban armour disguised as ordinary clothes
@@ -377,7 +377,7 @@ export const SHOP_TYPES = [
       full environmental suits for the badlands
       armour painted in any gang's colours
     `) },
-  { type: 'bodychop', label: 'Body-chop-shop', specialties: lines(`
+  { type: 'bodychop', label: 'Body-chop-shop', names: ['Cybernetics', 'Bionics', 'Chop Shop', 'Implants', 'Body Works', 'Augments'], specialties: lines(`
       cybernetic eyes and ears, installed the same day
       bionic arm attachments for miners and fighters
       implants with no records kept
@@ -389,7 +389,7 @@ export const SHOP_TYPES = [
       removal of Coalition tracking implants
       hydraulic hands for heavy labour
     `) },
-  { type: 'general', label: 'General store', specialties: lines(`
+  { type: 'general', label: 'General store', names: ['Supply', 'Goods', 'Provisions', 'Trading Post', 'Sundries', 'Surplus'], specialties: lines(`
       backpacks, rope and everything for the road
       survival kits for travellers heading into the wilds
       canned food from before the Coming of the Rifts
@@ -401,7 +401,7 @@ export const SHOP_TYPES = [
       goods traded from three dimensions
       whatever the caravan brought last week
     `) },
-  { type: 'tw', label: 'Techno-Wizard shop', specialties: lines(`
+  { type: 'tw', label: 'Techno-Wizard shop', names: ['Techno-Wizardry', 'Crystals', 'Mystic Works', 'Wands', 'Arcane Tech', 'Spellworks'], specialties: lines(`
       guns that fire lightning instead of lasers
       crystals charged at the ley line
       converted energy weapons that never need an E-Clip
@@ -413,7 +413,7 @@ export const SHOP_TYPES = [
       revolvers that never run out of shots
       devices whose use the owner will not explain
     `) },
-  { type: 'vehicles', label: 'Vehicle lot', specialties: lines(`
+  { type: 'vehicles', label: 'Vehicle lot', names: ['Motors', 'Hover Lot', 'Garage', 'Rides', 'Wheels', 'Autos'], specialties: lines(`
       hovercycles, new, used and stolen
       ATVs for the badlands
       rebuilt pre-Rifts jeeps
@@ -425,7 +425,7 @@ export const SHOP_TYPES = [
       anything with an engine, bought for cash
       a workshop that fixes what it cannot sell
     `) },
-  { type: 'clinic', label: 'Medical clinic', specialties: lines(`
+  { type: 'clinic', label: 'Medical clinic', names: ['Clinic', 'Medical', 'Infirmary', 'Healers', 'Med-Center', 'Surgery'], specialties: lines(`
       field surgery for mercs who cannot stop bleeding
       robot medical kits and nano-healers
       radiation treatment for scavengers
@@ -437,7 +437,7 @@ export const SHOP_TYPES = [
       surgery on anything that walks in
       healing salves from local herbs
     `) },
-  { type: 'electronics', label: 'Electronics shop', specialties: lines(`
+  { type: 'electronics', label: 'Electronics shop', names: ['Electronics', 'Comms', 'Circuits', 'Sensors', 'Radio', 'Tech Exchange'], specialties: lines(`
       radios and communicators of every range
       portable computers and data discs
       sensors for scouts and bounty hunters
@@ -449,7 +449,7 @@ export const SHOP_TYPES = [
       tracer bugs and the tools to find them
       a repair counter with a two-week queue
     `) },
-  { type: 'outfitter', label: 'Outfitter', specialties: lines(`
+  { type: 'outfitter', label: 'Outfitter', names: ['Outfitters', 'Clothing', 'Gear', 'Wear', 'Threads', 'Tailors'], specialties: lines(`
       clothes for the badlands and the city alike
       boots that last a thousand miles
       gas masks and air filters for the toxic zones
@@ -461,7 +461,7 @@ export const SHOP_TYPES = [
       gloves, belts and holsters
       dress clothes for a night at the arena
     `) },
-  { type: 'magic', label: 'Magic shop', specialties: lines(`
+  { type: 'magic', label: 'Magic shop', names: ['Magic', 'Arcana', 'Curios', 'Oddities', 'Relics', 'Wonders'], specialties: lines(`
       fetishes and charms of the local shamans
       parts of monsters, sold for purposes best left unasked
       rune weapons, when one can be found
@@ -474,6 +474,11 @@ export const SHOP_TYPES = [
       things that belong in a museum, or a fire
     `) },
 ];
+
+// A shop's name is built from its kind's `names` above and these, so the
+// name says what the shop sells (city-engine.js, names.shop). Taverns have no
+// `names`: the places theme's tavern names already read as taverns.
+export const SHOP_ADJECTIVES = ['Iron', 'Chrome', 'Rusty', 'Neon', 'Lucky', 'Last', 'Free', 'Burning', 'Blue', 'Red', 'Black', 'Steel', 'Wild', 'Honest', 'Silver', 'Broken', 'Crooked', 'Old', 'New', 'Northern', 'Frontier', 'Big', 'Busted', 'Dusty', 'Shining', 'Golden', 'Plasma', 'Atomic', 'Rolling', 'Lonesome'];
 
 export const NPC_ROLES = lines(`
   bartender

@@ -327,7 +327,7 @@ export const SHOP_TYPES = [
       a fireplace big enough to stand in
       spiced cider and roast apples
     `) },
-  { type: 'smith', label: 'Smithy', specialties: lines(`
+  { type: 'smith', label: 'Smithy', names: ['Forge', 'Anvil', 'Smithy', 'Ironworks', 'Hammer', 'Bellows'], specialties: lines(`
       horseshoes and plough-blades
       swords of honest steel
       locks and iron-bound chests
@@ -339,7 +339,7 @@ export const SHOP_TYPES = [
       spearheads for the watch
       tools for the quarrymen
     `) },
-  { type: 'general', label: 'General store', specialties: lines(`
+  { type: 'general', label: 'General store', names: ['Goods', 'Provisions', 'Sundries', 'Supply', 'Trading Post', 'Stores'], specialties: lines(`
       rope, lamp-oil and travel rations
       a bit of everything and most of it dusty
       trail gear for caravans
@@ -351,7 +351,7 @@ export const SHOP_TYPES = [
       winter supplies at summer prices
       whatever came off the last barge
     `) },
-  { type: 'apothecary', label: 'Apothecary', specialties: lines(`
+  { type: 'apothecary', label: 'Apothecary', names: ['Remedies', 'Apothecary', 'Herbs', 'Tinctures', 'Cures', 'Physic'], specialties: lines(`
       poultices and healing salves
       sleeping draughts and headache powders
       rare herbs from the high meadows
@@ -363,7 +363,7 @@ export const SHOP_TYPES = [
       dried roots and mushrooms of every kind
       love charms sold under the counter
     `) },
-  { type: 'armourer', label: 'Armourer', specialties: lines(`
+  { type: 'armourer', label: 'Armourer', names: ['Armoury', 'Mail', 'Plate', 'Shields', 'Harness', 'Armourer'], specialties: lines(`
       padded jacks and leather armour
       chain shirts, new and mended
       shields painted to order
@@ -375,7 +375,7 @@ export const SHOP_TYPES = [
       armour taken from the battlefield
       horse barding for the rich
     `) },
-  { type: 'bowyer', label: 'Bowyer and fletcher', specialties: lines(`
+  { type: 'bowyer', label: 'Bowyer and fletcher', names: ['Bows', 'Arrows', 'Fletchery', 'Bowyer', 'Quiver', 'Longbows'], specialties: lines(`
       longbows of yew
       crossbows and bolts
       arrows fletched with goose feathers
@@ -387,7 +387,7 @@ export const SHOP_TYPES = [
       short bows for riders
       bow repair and re-stringing
     `) },
-  { type: 'clothier', label: 'Clothier', specialties: lines(`
+  { type: 'clothier', label: 'Clothier', names: ['Cloth', 'Tailoring', 'Garments', 'Silks', 'Needle', 'Weavers'], specialties: lines(`
       fine cloaks in the latest style
       work clothes that last
       mourning black, always in stock
@@ -399,7 +399,7 @@ export const SHOP_TYPES = [
       furs for winter
       costumes for the players' company
     `) },
-  { type: 'magic', label: 'Magic shop', specialties: lines(`
+  { type: 'magic', label: 'Magic shop', names: ['Wonders', 'Curios', 'Arcana', 'Charms', 'Enchantments', 'Mysteries'], specialties: lines(`
       spell components, sorted and labelled
       scrolls of minor enchantment
       charms against the evil eye
@@ -411,7 +411,7 @@ export const SHOP_TYPES = [
       protective amulets
       curiosities from ruined towers
     `) },
-  { type: 'stable', label: 'Stable', specialties: lines(`
+  { type: 'stable', label: 'Stable', names: ['Stables', 'Livery', 'Paddock', 'Horses', 'Mews', 'Stalls'], specialties: lines(`
       horses for hire by the day
       mules and pack animals
       a fine riding horse for sale
@@ -423,7 +423,7 @@ export const SHOP_TYPES = [
       fodder and grain
       a farrier on hand
     `) },
-  { type: 'jeweller', label: 'Jeweller', specialties: lines(`
+  { type: 'jeweller', label: 'Jeweller', names: ['Gems', 'Jewels', 'Silverwork', 'Rings', 'Goldsmith', 'Treasures'], specialties: lines(`
       rings and brooches of silver
       gems cut and set
       appraisals, honest or not
@@ -435,7 +435,7 @@ export const SHOP_TYPES = [
       pearls from the coast
       repairs to old heirlooms
     `) },
-  { type: 'bakery', label: 'Bakery', specialties: lines(`
+  { type: 'bakery', label: 'Bakery', names: ['Bakery', 'Bread', 'Ovens', 'Loaves', 'Pies', 'Crust'], specialties: lines(`
       black bread and white rolls
       honey cakes on feast days
       meat pies at midday
@@ -447,7 +447,7 @@ export const SHOP_TYPES = [
       the only oven in the district
       loaves stamped with the guild mark
     `) },
-  { type: 'scribe', label: 'Scribe', specialties: lines(`
+  { type: 'scribe', label: 'Scribe', names: ['Quill', 'Scriptorium', 'Letters', 'Ink', 'Scrolls', 'Pages'], specialties: lines(`
       letters written for those who cannot
       contracts and deeds
       copies of books, slowly
@@ -460,6 +460,11 @@ export const SHOP_TYPES = [
       wills witnessed and sealed
     `) },
 ];
+
+// A shop's name is built from its kind's `names` above and these, so the
+// name says what the shop sells (city-engine.js, names.shop). Taverns have no
+// `names`: the places theme's tavern names already read as taverns.
+export const SHOP_ADJECTIVES = ['Golden', 'Silver', 'Iron', 'Old', 'Red', 'Black', 'Crooked', 'Honest', 'Merry', 'Gilded', 'Copper', 'Green', 'Blue', 'Wandering', 'Lucky', 'Royal', 'Humble', 'Stout', 'Bright', 'Hidden', 'Faithful', 'Rusty', 'Singing', 'Laughing', 'Proud', 'White', 'Tall', 'Little', 'Oaken', 'Stone', 'Twin', 'Brass'];
 
 export const NPC_ROLES = lines(`
   innkeeper
@@ -813,21 +818,21 @@ export const RACE_LINES = {
   wolfen: {
     quirks: ['A Wolfen longhouse stands at the edge of town, and its pack guards the north road.',
       'Howling at the full moon is permitted, but only from the Wolfen hill.'],
-    shops: [{ type: 'furrier', label: 'Wolfen furrier', specialties: ['cloaks of winter pelts', 'tooth and bone charms', 'hunting spears of the northern style'] }],
+    shops: [{ type: 'furrier', label: 'Wolfen furrier', names: ['Furs', 'Pelts', 'Hides', 'Skins', 'Furrier'], specialties: ['cloaks of winter pelts', 'tooth and bone charms', 'hunting spears of the northern style'] }],
   },
   elf: {
     quirks: ['The elves keep a grove within the walls where no axe may enter.',
       'Elven songs are sung at every funeral, whoever died.'],
-    shops: [{ type: 'elven-crafts', label: 'Elven craftshop', specialties: ['bows of living wood', 'silver leaf jewellery', 'cloaks that blend with the forest'] }],
+    shops: [{ type: 'elven-crafts', label: 'Elven craftshop', names: ['Crafts', 'Bowcraft', 'Leafwork', 'Woodcraft', 'Silverleaf'], specialties: ['bows of living wood', 'silver leaf jewellery', 'cloaks that blend with the forest'] }],
   },
   dwarf: {
     quirks: ['The dwarves have dug beneath the town, and nobody knows how far.',
       'A dwarven clock in the square is never more than a second wrong.'],
-    shops: [{ type: 'dwarven-forge', label: 'Dwarven forge', specialties: ['axes that hold an edge for a lifetime', 'engraved armour', 'mining gear and lanterns'] }],
+    shops: [{ type: 'dwarven-forge', label: 'Dwarven forge', names: ['Forge', 'Anvil', 'Axes', 'Deepworks', 'Ironhall'], specialties: ['axes that hold an edge for a lifetime', 'engraved armour', 'mining gear and lanterns'] }],
   },
   orc: {
     quirks: ['An orc tribe trades at the gate each new moon, under an old truce.'],
-    shops: [{ type: 'orc-trader', label: 'Orc trader', specialties: ['hides and bone', 'crude but heavy weapons', 'mushrooms from the deep caves'] }],
+    shops: [{ type: 'orc-trader', label: 'Orc trader', names: ['Traders', 'Hides', 'Barter', 'Bones', 'Goods'], specialties: ['hides and bone', 'crude but heavy weapons', 'mushrooms from the deep caves'] }],
   },
   ogre: {
     quirks: ['An ogre works the town crane, and is paid in bread and beer.'],
@@ -835,11 +840,11 @@ export const RACE_LINES = {
   },
   goblin: {
     quirks: ['Goblins run the town\'s rubbish carts, and know every secret thrown out.'],
-    shops: [{ type: 'goblin-junk', label: 'Goblin junk-shop', specialties: ['anything anyone threw away', 'traps of every size', 'strange mechanical toys'] }],
+    shops: [{ type: 'goblin-junk', label: 'Goblin junk-shop', names: ['Junk', 'Oddments', 'Scrap', 'Heap', 'Castoffs'], specialties: ['anything anyone threw away', 'traps of every size', 'strange mechanical toys'] }],
   },
   gnome: {
     quirks: ['A gnome clockmaker has filled the town with small moving figures.'],
-    shops: [{ type: 'gnome-tinker', label: 'Gnome tinker', specialties: ['clockwork and gears', 'repair of anything', 'gemstone polishing'] }],
+    shops: [{ type: 'gnome-tinker', label: 'Gnome tinker', names: ['Tinkery', 'Clockworks', 'Gears', 'Springs', 'Contraptions'], specialties: ['clockwork and gears', 'repair of anything', 'gemstone polishing'] }],
   },
   troll: {
     quirks: ['A troll collects the bridge toll, legally, under a charter nobody can find.'],
