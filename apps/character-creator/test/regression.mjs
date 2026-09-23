@@ -125,6 +125,7 @@ let serverLog = null;
 let serverExit = null;
 let lastOkAt = null;        // a response came back
 let lastRequestAt = null;   // a request went out
+let g23KeepAlive = 'stock (the REPO-AUDIT G23 block has not run yet)';
 
 function cleanup() {
   if (server && !server.killed) {
@@ -156,6 +157,9 @@ function reportDeath(err) {
     console.log(`  IDLE BEFORE THIS REQUEST: ${((lastRequestAt - lastOkAt) / 1000).toFixed(2)}s`
       + '   (compare REPO-AUDIT G20 and G22, not a range printed here)');
   }
+  // What REPO-AUDIT G23's stopping rule reads: a death with this set refutes
+  // the stale-connection hypothesis.
+  console.log(`  connection keep-alive: ${g23KeepAlive}`);
   console.log(`  the dev server: ${serverExit
     ? `exited code=${serverExit.code} signal=${serverExit.signal}`
     : 'STILL RUNNING - so it did not go away, and only the connection did'}`);
@@ -360,6 +364,31 @@ if (!boot.ok) {
   console.log('  ' + boot.why);
   console.log('\nREGRESSION FAILED (worker never came up as this run\'s own)');
   process.exit(1);
+}
+
+// ── REPO-AUDIT G23: no connection reused across a long pause ───────────────
+//
+// AN EXPERIMENT, NOT A FIX. Every death G20 recorded is the first request
+// after 5.16s or more of blocking wrangler calls, with the server still up.
+// The hypothesis: fetch reuses a pooled connection the server closed during
+// the pause. Every request here goes through global fetch (api, apiAs, the
+// bare fetch calls, dev-server.mjs's poll), so a dispatcher whose keep-alive
+// ends after 1s means no connection outlives a pause that long. Nothing is
+// retried and no check's verdict changes; G20's death block below still
+// reports a death the same way, which is the control. G23's outcome note
+// carries the stopping rule. The symbol is node's own, undocumented: if a
+// node version drops it, this says so in one line and changes nothing.
+{
+  const KEY = Symbol.for('undici.globalDispatcher.1');
+  const stock = globalThis[KEY];
+  if (typeof stock?.constructor === 'function') {
+    globalThis[KEY] = new stock.constructor({ keepAliveTimeout: 1000, keepAliveMaxTimeout: 1000 });
+    g23KeepAlive = '1s (REPO-AUDIT G23)';
+    console.log('      (REPO-AUDIT G23: connections are not kept alive past 1s idle)');
+  } else {
+    g23KeepAlive = 'stock - node had no global dispatcher to set (REPO-AUDIT G23)';
+    console.log('      (REPO-AUDIT G23: node has no global dispatcher to set - running with the stock one)');
+  }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
