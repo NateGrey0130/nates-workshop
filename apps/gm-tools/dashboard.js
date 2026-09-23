@@ -36,6 +36,12 @@ async function load() {
     // After the campaign, because it is GM-only and isGm is what decides
     // whether to ask at all - a player's dashboard makes no request for it.
     await loadEntries();
+    // The dossiers, for the Statted NPCs panel's link control. G.M.-only for
+    // the same reason the entries are: a player's page never asks.
+    if (D.isGm) {
+      try { D.dossiers = (await api(`campaigns/${campaignId}/npcs?limit=500`)).npcs || []; }
+      catch { D.dossiers = null; }
+    }
     render();
     // After that first render, so a page that will not open has somewhere to
     // say so: setMsg writes into markup that does not exist until now. Gated
@@ -244,6 +250,17 @@ async function refreshRoster() {
 document.addEventListener('visibilitychange', refreshRoster);
 window.addEventListener('focus', refreshRoster);
 
+// The roster table, or the line that says there is none. Its own function so
+// the Statted NPCs panel can repaint it when the first NPC arrives in a
+// campaign that had no table to add a row to.
+function rosterAreaHtml(rosterRows = D.roster.map(rosterRowHtml).join('')) {
+  return `${D.isGm && rosterRows ? gmToolbarHtml() : ''}
+    ${rosterRows
+      ? `<div class="roster-scroll"><table><thead><tr><th>Character</th><th>Class</th><th>Level</th><th>Player</th><th>Pools (cur/max)</th></tr></thead>
+          <tbody id="roster-rows">${rosterRows}</tbody></table></div>`
+      : '<p class="muted small">No characters in this campaign yet.</p>'}`;
+}
+
 function render() {
   const camp = D.campaign;
   const charName = Object.fromEntries(D.roster.map((c) => [c.id, c.name]));
@@ -277,11 +294,7 @@ function render() {
     <h2>${escHtml(camp.name)} ${D.isGm ? '<span class="tag gm">you are the GM</span>' : ''}</h2>
     <p class="muted">${escHtml(camp.system)} · GM: ${escHtml(camp.gm_email)}${camp.description ? ' — ' + escHtml(camp.description) : ''}</p>
     <h3>Party roster</h3>
-    ${D.isGm && rosterRows ? gmToolbarHtml() : ''}
-    ${rosterRows
-      ? `<div class="roster-scroll"><table><thead><tr><th>Character</th><th>Class</th><th>Level</th><th>Player</th><th>Pools (cur/max)</th></tr></thead>
-          <tbody id="roster-rows">${rosterRows}</tbody></table></div>`
-      : '<p class="muted small">No characters in this campaign yet.</p>'}
+    <div id="roster-area">${rosterAreaHtml(rosterRows)}</div>
   </div>
 
   ${D.isGm ? `
@@ -298,6 +311,8 @@ function render() {
   </div>
 
   ${D.isGm ? settingHtml() : ''}
+
+  ${D.isGm ? npcSheetsHtml() : ''}
 
   <div class="panel">
     <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
@@ -402,6 +417,28 @@ function entryEditorHtml() {
     </div>
     ${pics ? `<ul class="setting-pics">${pics}</ul>` : ''}
   </div>`;
+}
+
+// ─── statted NPCs ───
+//
+// The same panel the campaign page's People tab has - js/npc-sheets.js, one
+// copy mounted twice. It repaints only itself, so rolling an NPC never rebuilds
+// the G.M. notes being typed beside it; what it adds reaches the roster table
+// above by repainting that table's rows, as refreshRoster does.
+function npcSheetsHtml() {
+  return npcSheets.mount({
+    campaignId, system: D.campaign.system, containerId: 'npc-sheets', classNames: D.classNames,
+    roster: D.roster, dossiers: D.dossiers,
+    onRoster: (list) => {
+      D.roster = partyFirst(list);
+      // Just the rows when there is a table, so the toolbar's amount survives;
+      // the whole area when this is the campaign's first character of any kind.
+      const body = $('roster-rows');
+      if (body) body.innerHTML = D.roster.map(rosterRowHtml).join('');
+      else if ($('roster-area')) $('roster-area').innerHTML = rosterAreaHtml();
+    },
+    onDossiers: (list) => { D.dossiers = list; },
+  });
 }
 
 async function loadEntries() {

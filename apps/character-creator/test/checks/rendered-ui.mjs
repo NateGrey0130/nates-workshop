@@ -105,6 +105,7 @@ const SECTIONS = [
   'The codex',
   'One header for five apps',
   'Present mode shows without revealing',
+  'Statted NPCs: one panel, two pages',
 ];
 
 export function run() {
@@ -2256,5 +2257,35 @@ export function run() {
     check('and it still casts no shadow', !/box-shadow/.test(stage));
     check('the chrome fades when nothing is happening',
       /body\.present\.idle \.present-chrome \{ opacity: 0; \}/.test(stage));
+  }
+
+  // ---------- Statted NPCs: one panel, two pages ----------
+  // The G.M.'s statted-NPC panel - rolling from a class, placing a notable NPC,
+  // rolling creatures, linking a sheet to a dossier - was written into the
+  // campaign page, and GM Tools needed it too. It lives in js/npc-sheets.js and
+  // both pages mount it, so there is ONE copy of every roller call: a second
+  // copy is the one a fix never reaches. And both mount it only for the G.M.
+  // The server is the real guard (the roster request sends kind = 'npc' rows to
+  // the G.M. alone, and regression proves it); this pins that neither page asks
+  // for the panel's endpoints on a player's behalf.
+  section('Statted NPCs: one panel, two pages');
+  {
+    const panel = readFileSync(join(appDir, 'js', 'npc-sheets.js'), 'utf8');
+    // The panel builds the two book paths from one `endpoint` field, so the
+    // route's last segment is what both sides are read for.
+    const rollers = ['npcs/generate', 'from-notable', 'from-creature'];
+    check('the panel calls all three rollers', rollers.every((r) => panel.includes(r)));
+    for (const [dir, file] of [['campaign', 'campaign.js'], ['gm-tools', 'dashboard.js']]) {
+      const html = readFileSync(join(repoRoot, 'apps', dir, 'index.html'), 'utf8');
+      const js = readFileSync(join(repoRoot, 'apps', dir, file), 'utf8');
+      check(`${dir} loads the shared panel`, html.includes('/apps/character-creator/js/npc-sheets.js'));
+      const own = rollers.filter((r) => js.includes(r));
+      check(`${dir} carries no roller of its own`, own.length === 0, own.join(', '));
+      // Exactly one mount, inside a function the render calls only behind isGm.
+      const mountFn = (js.match(/function (\w+)\(\) \{\s*return npcSheets\.mount\(/) || [])[1];
+      check(`${dir} mounts it once, and only for the G.M.`,
+        !!mountFn && (js.match(/npcSheets\.mount\(/g) || []).length === 1
+          && js.includes(`\${D.isGm ? ${mountFn}() : ''}`), mountFn || 'no mount function');
+    }
   }
 }

@@ -30,17 +30,7 @@ const D = {
   answer: null, asking: false,
   tab: 'notes',
   composer: { title: '', body: '', session_date: '' },
-  // The G.M.'s NPC roller (migration 070). `classes` loads the first time the
-  // form opens - the full list is the heaviest response in the app, and only a
-  // G.M. who asks for the form needs it.
-  gen: { open: false, classes: null, cls: '', occ: '', level: 1, count: 1, name: '',
-         busy: false, msg: '', err: false },
-  // Placing a notable NPC from the books (notable_npcs, migration 072): the
-  // codex's `notables` section, loaded the first time the form opens.
-  book: { open: false, rows: null, slug: '', name: '', busy: false, msg: '', err: false },
-  // Rolling creatures from the books (creatures, migration 074): the codex's
-  // `creatures` section, loaded the first time the form opens.
-  beast: { open: false, rows: null, slug: '', count: 1, name: '', busy: false, msg: '', err: false },
+  // The statted-NPC forms keep their own state in js/npc-sheets.js.
 };
 
 async function load() {
@@ -402,303 +392,23 @@ function peopleView() {
     </div>
     <p id="npc-msg" class="small"></p>
   </div>
-  ${D.isGm ? npcSheetsPanel() : ''}
+  ${D.isGm ? npcSheetsMount() : ''}
   ${sweepPanel()}`;
 }
 
 // ---------- statted NPCs (G.M. only) ----------
 //
-// A dossier is what the table knows about someone; a statted NPC is what the
-// G.M. rolls for them - a characters row with kind = 'npc' that the server shows
-// to nobody else. The list comes from the roster request the page already
-// makes: the server includes NPC rows only for the G.M., so a player's copy of
-// this page never holds one to hide.
-const npcSheets = () => (D.roster || []).filter((c) => c.kind === 'npc');
-
-function npcSheetsPanel() {
-  const sheets = npcSheets();
-  return `<div class="panel">
-    <h3>Statted NPCs <span class="muted small">— only you can see these</span></h3>
-    ${D.gen.open ? genForm() : D.book.open ? bookForm() : D.beast.open ? beastForm()
-      : `<div class="rowline" style="margin-top:6px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="openGen()">🎲 Roll NPCs from a class</button>
-          <button class="btn btn-sm" onclick="openBook()">📖 Place a notable NPC from the books</button>
-          <button class="btn btn-sm" onclick="openBeast()">🐾 Roll creatures from the books</button></div>`}
-    <div style="margin-top:10px">${sheets.length ? sheets.map(npcSheetRow).join('')
-      : '<p class="muted small">None yet. Roll some, then link one to a dossier from its page.</p>'}</div>
-  </div>`;
-}
-
-function npcSheetRow(c) {
-  return `<div class="chkrow">
-    <span><a href="/apps/character-sheet/?id=${c.id}"><b>${esc(c.name)}</b></a>
-      <span class="muted small"> — ${esc(className(c.class_id))}${
-        c.occ_class_id ? ' ' + esc(className(c.occ_class_id)) : ''}, level ${c.level}</span></span>
-    <span class="rowline">
-      <a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${c.id}&amp;play=1">▶ Play</a>
-      <button class="btn btn-sm btn-ghost" onclick="deleteNpcSheet(${c.id})">delete</button>
-    </span>
-  </div>`;
-}
-
-// A book NPC's class id is `notable:<slug>` (from-notable) - it names where the
-// sheet came from, not a class, so it reads as that.
-// A creature's is `creature:<slug>` (from-creature), for the same reason.
-const className = (id) => (String(id).startsWith('notable:') ? 'from the books'
-  : String(id).startsWith('creature:') ? 'a creature from the books'
-  : D.classNames?.[id] || id);
-
-// A race whose entry grants no related or secondary skills takes an occupation,
-// and the server refuses one without it - so the form asks rather than letting
-// the refusal be the first the G.M. hears of it. The same test js/parser.js
-// needsOccupation() applies.
-const takesOccupation = (c) => c?.category === 'rcc'
-  && !(c.skills?.occ_related_skills?.count) && !(c.skills?.secondary_skills?.count);
-
-function genForm() {
-  const g = D.gen;
-  if (!g.classes) return '<p class="muted small" style="margin-top:10px">Loading classes…</p>';
-  const option = (c, sel) => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`;
-  const races = g.classes.filter((c) => c.category === 'rcc');
-  const jobs = g.classes.filter((c) => c.category !== 'rcc');
-  const chosen = g.classes.find((c) => c.id === g.cls);
-  const needsJob = takesOccupation(chosen);
-  return `<div class="panel-inset" style="margin-top:10px">
-    <div class="rowline" style="flex-wrap:wrap">
-      <label class="small">Class
-        <select onchange="genSet('cls', this.value, true)">
-          <option value="">— choose —</option>
-          <optgroup label="Races (R.C.C.)">${races.map((c) => option(c, g.cls)).join('')}</optgroup>
-          <optgroup label="Occupations (O.C.C.)">${jobs.map((c) => option(c, g.cls)).join('')}</optgroup>
-        </select></label>
-      ${chosen?.category === 'rcc' ? `<label class="small">Occupation${needsJob ? '' : ' <span class="muted">(optional)</span>'}
-        <select onchange="genSet('occ', this.value, true)">
-          <option value="">${needsJob ? '— choose one —' : '— none —'}</option>
-          ${jobs.map((c) => option(c, g.occ)).join('')}
-        </select></label>` : ''}
-    </div>
-    <div class="rowline" style="flex-wrap:wrap;margin-top:8px">
-      <label class="small">Level <input type="number" min="1" max="20" value="${g.level}" style="width:4.5em"
-        onchange="genSet('level', this.value)"></label>
-      <label class="small">How many <input type="number" min="1" max="10" value="${g.count}" style="width:4.5em"
-        onchange="genSet('count', this.value)"></label>
-      <input type="text" class="picker-input" placeholder="Name (optional)" value="${esc(g.name)}"
-        onchange="genSet('name', this.value)">
-    </div>
-    <div class="rowline" style="margin-top:8px">
-      <button class="btn btn-sm btn-primary" onclick="rollNpcs()"
-        ${g.busy || !g.cls || (needsJob && !g.occ) ? 'disabled' : ''}>${g.busy ? 'Rolling…' : 'Roll'}</button>
-      <button class="btn btn-sm btn-ghost" onclick="closeGen()">close</button>
-    </div>
-    <p class="small muted">Every choice is made at random and checked against the class like a
-      player's character. Spells and psionic powers the class lets them <em>choose</em> are banked on
-      the sheet for you to pick. A class the roller cannot build legally is refused, with the reason.</p>
-    ${g.msg ? `<p class="small${g.err ? ' err' : ''}">${esc(g.msg)}</p>` : ''}
-  </div>`;
-}
-
-async function openGen() {
-  D.gen.open = true;
-  render();
-  if (D.gen.classes) return;
-  try {
-    const res = await api(`classes?system=${encodeURIComponent(D.campaign.system)}`);
-    D.gen.classes = [...res.classes].sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  } catch (err) { D.gen.msg = 'Could not load classes: ' + err.message; D.gen.err = true; D.gen.classes = []; }
-  render();
-}
-function closeGen() { D.gen.open = false; D.gen.msg = ''; render(); }
-
-// ---------- a notable NPC from the books ----------
-//
-// The named people the books stat (the codex's Notable NPCs). Placing one COPIES
-// the book's numbers into this campaign as a statted NPC - one-way, so a fight
-// changes this table's copy and never the book. Offered from this campaign's
-// game, plus any a book marks as belonging to every game.
-function bookForm() {
-  const b = D.book;
-  if (!b.rows) return '<p class="muted small" style="margin-top:10px">Loading the books…</p>';
-  const rows = b.rows.filter((r) => !r.system || r.system === 'both' || r.system === D.campaign.system);
-  if (!rows.length) {
-    return `<div class="panel-inset" style="margin-top:10px">
-      <p class="muted small">No notable NPCs from ${esc(D.campaign.system)} books have been imported yet.</p>
-      <button class="btn btn-sm btn-ghost" onclick="closeBook()">close</button></div>`;
-  }
-  return `<div class="panel-inset" style="margin-top:10px">
-    <div class="rowline" style="flex-wrap:wrap">
-      ${/* An option carries name, title and citation, so a select sized to its
-           longest option overran the panel on desktop; it takes the row instead. */ ''}
-      <label class="small" style="flex:1 1 100%;min-width:0">From the books
-        <select style="width:100%" onchange="bookSet('slug', this.value, true)">
-          <option value="">— choose —</option>
-          ${rows.map((r) => `<option value="${esc(r.slug)}"${r.slug === b.slug ? ' selected' : ''}>${
-            esc(r.name)}${r.title ? ` — ${esc(r.title)}` : ''} (${esc(r.source_book || '')})</option>`).join('')}
-        </select></label>
-      <input type="text" class="picker-input" placeholder="Name in this campaign (optional)" value="${esc(b.name)}"
-        onchange="bookSet('name', this.value)">
-    </div>
-    <div class="rowline" style="margin-top:8px">
-      <button class="btn btn-sm btn-primary" onclick="placeNotable()" ${b.busy || !b.slug ? 'disabled' : ''}>
-        ${b.busy ? 'Placing…' : 'Place in this campaign'}</button>
-      <button class="btn btn-sm btn-ghost" onclick="closeBook()">close</button>
-    </div>
-    <p class="small muted">The book's own numbers for this person, copied. Its attacks, powers and gear go in the
-      sheet's notes. Changes to the copy never touch the book.</p>
-    ${b.msg ? `<p class="small${b.err ? ' err' : ''}">${esc(b.msg)}</p>` : ''}
-  </div>`;
-}
-
-async function openBook() {
-  D.book.open = true;
-  render();
-  if (D.book.rows) return;
-  try {
-    D.book.rows = (await api('codex?section=notables')).notables || [];
-  } catch (err) { D.book.msg = 'Could not load them: ' + err.message; D.book.err = true; D.book.rows = []; }
-  render();
-}
-function closeBook() { D.book.open = false; D.book.msg = ''; render(); }
-function bookSet(key, value, rerender = false) {
-  D.book[key] = value;
-  if (key === 'slug') { D.book.msg = ''; D.book.err = false; }
-  if (rerender) render();
-}
-
-async function placeNotable() {
-  const b = D.book;
-  b.busy = true; b.msg = ''; b.err = false;
-  render();
-  try {
-    const res = await api(`campaigns/${campaignId}/npcs/from-notable`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: b.slug, name: b.name.trim() || null }),
-    });
-    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
-    b.msg = `Placed ${res.name}.`;
-    b.name = '';
-  } catch (err) { b.msg = err.message; b.err = true; }
-  b.busy = false;
-  render();
-}
-
-// ---------- creatures from the books ----------
-//
-// The species the books stat (the codex's Creatures). Each individual is ROLLED
-// from the book's dice, separately - six wolves are six rolls. A formula the
-// server cannot roll is refused with its name, and nothing is placed.
-function beastForm() {
-  const b = D.beast;
-  if (!b.rows) return '<p class="muted small" style="margin-top:10px">Loading the books…</p>';
-  const rows = b.rows.filter((r) => !r.system || r.system === 'both' || r.system === D.campaign.system);
-  if (!rows.length) {
-    return `<div class="panel-inset" style="margin-top:10px">
-      <p class="muted small">No creatures from ${esc(D.campaign.system)} books have been imported yet.</p>
-      <button class="btn btn-sm btn-ghost" onclick="closeBeast()">close</button></div>`;
-  }
-  return `<div class="panel-inset" style="margin-top:10px">
-    <div class="rowline" style="flex-wrap:wrap">
-      ${/* Sized to the row, not its longest option - the notable form's fix. */ ''}
-      <label class="small" style="flex:1 1 100%;min-width:0">From the books
-        <select style="width:100%" onchange="beastSet('slug', this.value, true)">
-          <option value="">— choose —</option>
-          ${rows.map((r) => `<option value="${esc(r.slug)}"${r.slug === b.slug ? ' selected' : ''}>${
-            esc(r.name)}${r.category ? ` — ${esc(r.category)}` : ''} (${esc(r.source_book || '')})</option>`).join('')}
-        </select></label>
-      <label class="small">How many
-        <input type="number" min="1" max="12" value="${b.count}" style="width:5em"
-          onchange="beastSet('count', this.value)"></label>
-      <input type="text" class="picker-input" placeholder="Name in this campaign (optional)" value="${esc(b.name)}"
-        onchange="beastSet('name', this.value)">
-    </div>
-    <div class="rowline" style="margin-top:8px">
-      <button class="btn btn-sm btn-primary" onclick="placeCreatures()" ${b.busy || !b.slug ? 'disabled' : ''}>
-        ${b.busy ? 'Rolling…' : 'Roll into this campaign'}</button>
-      <button class="btn btn-sm btn-ghost" onclick="closeBeast()">close</button>
-    </div>
-    <p class="small muted">Each one is rolled from the book's dice. Its attacks and abilities go in the sheet's
-      notes. Changes to a creature never touch the book.</p>
-    ${b.msg ? `<p class="small${b.err ? ' err' : ''}">${esc(b.msg)}</p>` : ''}
-  </div>`;
-}
-
-async function openBeast() {
-  D.beast.open = true;
-  render();
-  if (D.beast.rows) return;
-  try {
-    D.beast.rows = (await api('codex?section=creatures')).creatures || [];
-  } catch (err) { D.beast.msg = 'Could not load them: ' + err.message; D.beast.err = true; D.beast.rows = []; }
-  render();
-}
-function closeBeast() { D.beast.open = false; D.beast.msg = ''; render(); }
-function beastSet(key, value, rerender = false) {
-  const b = D.beast;
-  if (key === 'count') b.count = Math.max(1, Math.min(12, Math.trunc(Number(value) || 1)));
-  else b[key] = value;
-  if (key === 'slug') { b.msg = ''; b.err = false; }
-  if (rerender) render();
-}
-
-async function placeCreatures() {
-  const b = D.beast;
-  b.busy = true; b.msg = ''; b.err = false;
-  render();
-  try {
-    const res = await api(`campaigns/${campaignId}/npcs/from-creature`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: b.slug, count: b.count, name: b.name.trim() || null }),
-    });
-    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
-    const made = res.characters || [];
-    b.msg = made.length === 1 ? `Rolled ${made[0].name}.` : `Rolled ${made.length}: ${made.map((c) => c.name).join(', ')}.`;
-    b.name = '';
-  } catch (err) { b.msg = err.message; b.err = true; }
-  b.busy = false;
-  render();
-}
-
-// Selects re-render (the occupation control appears with a race, and the Roll
-// button waits for one); typed inputs only store, so a keystroke never rebuilds
-// the field being typed in.
-function genSet(key, value, rerender = false) {
-  const g = D.gen;
-  if (key === 'level') g.level = Math.max(1, Math.trunc(Number(value) || 1));
-  else if (key === 'count') g.count = Math.max(1, Math.min(10, Math.trunc(Number(value) || 1)));
-  else g[key] = value;
-  if (key === 'cls') { g.occ = ''; g.msg = ''; g.err = false; }
-  if (rerender) render();
-}
-
-async function rollNpcs() {
-  const g = D.gen;
-  g.busy = true; g.msg = ''; g.err = false;
-  render();
-  try {
-    const res = await api(`campaigns/${campaignId}/npcs/generate`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ class_id: g.cls, occ_class_id: g.occ || null,
-                             level: g.level, count: g.count, name: g.name.trim() || null }),
-    });
-    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
-    const banked = res.npcs.reduce((n, x) => n + (x.powers_banked || 0) + (x.picks_pending || 0), 0);
-    g.msg = `Rolled ${res.npcs.length}: ${res.npcs.map((x) => x.name).join(', ')}.`
-      + (banked ? ` ${banked} pick${banked === 1 ? '' : 's'} banked on their sheets for you to choose.` : '')
-      + (res.refused ? ` Stopped there: ${res.refused.error}` : '');
-    g.err = !!res.refused;
-  } catch (err) {
-    g.msg = err.message; g.err = true;
-  }
-  g.busy = false;
-  render();
-}
-
-async function deleteNpcSheet(id) {
-  if (!confirm('Delete this statted NPC? A dossier linked to it keeps everything but the link.')) return;
-  try {
-    await api(`characters/${id}`, { method: 'DELETE' });
-    D.roster = (await api(`characters?campaign_id=${campaignId}`)).characters;
-    render();
-  } catch (err) { alert('Failed: ' + err.message); }
+// The panel - the list, and rolling from a class, placing a notable NPC and
+// rolling creatures - is js/npc-sheets.js, shared with GM Tools so there is one
+// copy of it. This page mounts it on the People tab and keeps D.roster and
+// D.npcs in step with what it changes.
+function npcSheetsMount() {
+  return npcSheets.mount({
+    campaignId, system: D.campaign.system, containerId: 'npc-sheets', classNames: D.classNames,
+    roster: D.roster, dossiers: D.npcs,
+    onRoster: (list) => { D.roster = list; },
+    onDossiers: (list) => { D.npcs = list; },
+  });
 }
 
 async function linkSheet(npcId, value) {
@@ -708,6 +418,7 @@ async function linkSheet(npcId, value) {
       body: JSON.stringify({ character_id: value ? Number(value) : null }),
     });
     D.npc.npc = res.npc;
+    D.npcs = D.npcs.map((x) => (x.id === res.npc.id ? { ...x, character_id: res.npc.character_id } : x));
     render();
   } catch (err) { alert('Failed: ' + err.message); }
 }
@@ -815,7 +526,7 @@ function dossierView() {
       <label class="small">Statted sheet <span class="muted">(only you see this)</span>
         <select onchange="linkSheet(${n.id}, this.value)">
           <option value="">— none —</option>
-          ${npcSheets().map((c) => `<option value="${c.id}"${n.character_id === c.id ? ' selected' : ''}>${
+          ${(D.roster || []).filter((c) => c.kind === 'npc').map((c) => `<option value="${c.id}"${n.character_id === c.id ? ' selected' : ''}>${
             esc(c.name)} (level ${c.level})</option>`).join('')}
         </select></label>
       ${n.character_id ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.character_id}">open sheet</a>` : ''}
