@@ -2755,6 +2755,9 @@ check('and none of them with ?mine=1',
   let city = generateCity({ system: 'palladium-fantasy', population: 12000, npcCount: 12, everyRace: true,
     races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] }, 424242);
   for (const s of city.shops) city = stockShop(city, s.id, gear);
+  // "Flesh out" (Phase 4d) is the G.M.'s, even on a pin the players can see.
+  city.places[0].flesh = 'GM-FLESH-ON-A-REVEALED-PLACE';
+  city.npcs[0].flesh = 'GM-FLESH-ON-AN-NPC';
   city = { ...city, map: layoutMap(city), reveal: { 'place-0': true, 'shop-0': true },
     public: { 'place-0': 'Anyone can see the old tower from the road.', [city.districts[0].id]: 'The busy heart of town.',
       'npc-0': 'SECRET-PUBLIC-TEXT-ON-AN-NPC' } };
@@ -2788,7 +2791,7 @@ check('and none of them with ?mine=1',
     ...city.shops.flatMap((s) => [s.specialty, s.quirk, ...(s.inventory || []).map((i) => i.name)]),
     ...city.shops.filter((s) => s.id !== 'shop-0').map((s) => s.name),
     ...city.places.filter((p) => p.id !== 'place-0').map((p) => p.name),
-    'SECRET-PUBLIC-TEXT-ON-AN-NPC',
+    'SECRET-PUBLIC-TEXT-ON-AN-NPC', 'GM-FLESH-ON-A-REVEALED-PLACE', 'GM-FLESH-ON-AN-NPC',
   ].filter((t) => typeof t === 'string' && t.length > 3 && !allowed.includes(t));
   const body = JSON.stringify(asPlayer.body);
   const leaked = gmOnly.filter((t) => body.includes(t));

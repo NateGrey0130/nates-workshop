@@ -14,7 +14,7 @@ sheets). Built one phase per PR; the plan's phases are:
 | 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
 | 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
-| 4 | roll stats for an NPC (4a, done), shop inventories (4b, done), a player view (4c, done), an AI "Flesh out" | in progress |
+| 4 | roll stats for an NPC (4a), shop inventories (4b), a player view (4c), an AI "Flesh out" (4d) | done |
 | 5 | the Rifts table set | to come |
 
 ## How it works
@@ -124,6 +124,26 @@ Measured 2026-09-23 on the local server: most Palladium Fantasy race and job
 pairings are refused today on a language pick (only Soldier and Noble roll),
 a gap in the roller itself and filed as its own piece of work; nothing here
 pads around it.
+
+## Flesh out
+
+Each district, place, shop and named NPC has **✨ Flesh out**. One press is one
+call to `/api/claude` for that entry alone: the prompt carries the entry as it
+stands (an NPC's look, want and secret, a shop's specialty and owner) and a
+line about the city, and asks for two or three short original paragraphs for
+the G.M. The answer is tidied to plain prose and saved **into the entry** as
+`flesh` - on a kept city at once, like a rolled sheet. Pressed again, it writes
+a new one over the old. An empty answer is an error the page shows and nothing
+is saved.
+
+It is part of the entry: a lock keeps it through a reroll, and rerolling the
+entry makes a new one without it. It prints with the entry, and it never
+reaches the players - the players' view is built from an allowlist that does
+not read it, and the regression suite's leak check carries a fleshed-out
+revealed place to prove it.
+
+Quirks and rumours have no button: each is one line, and a paragraph about a
+rumour would decide what the G.M. has not.
 
 The page also keeps the city on screen in this browser's storage, so a reload
 does not lose it - a convenience; the record is the saved row - and **Export

@@ -91,6 +91,11 @@ body.is-city .present-city { margin-top: 52px; max-height: calc(100dvh - 52px); 
 .city-stock td:nth-child(2), .city-stock td:nth-child(3),
 .city-stock th:nth-child(2), .city-stock th:nth-child(3) { text-align: right; white-space: nowrap; }
 
+/* "Flesh out" (Phase 4d): the G.M.'s notes the AI wrote, set off by a rule. */
+.city-flesh { margin: 4px 0; }
+.city-flesh-text { border-left: 3px solid var(--border-strong); padding-left: 8px; margin-bottom: 4px; }
+.city-flesh-text p { margin: 0 0 4px; }
+
 /* Keeping a city (Phase 3): the players' line under an entry, and its switch. */
 .city-public { display: block; width: 100%; margin-top: 4px; font-size: 0.9em; }
 .city-reveal { margin-left: 4px; }
@@ -98,7 +103,7 @@ body.is-city .present-city { margin-top: 52px; max-height: calc(100dvh - 52px); 
 
 @media print {
   /* The G.M.'s printed copy: the city, not the controls for keeping it. */
-  .city-settings, .city-tools, .city-keep, .city-reveal, .appnav { display: none; }
+  .city-settings, .city-tools, .city-keep, .city-reveal, .city-flesh button, .appnav { display: none; }
   .city-public:placeholder-shown { display: none; }
   .city-public { border: 0; padding: 0; font-style: italic; }
   .city-entry details { display: block; }

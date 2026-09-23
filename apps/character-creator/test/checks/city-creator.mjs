@@ -18,16 +18,23 @@
 // district, every pin put in the wrong district, a wall on every city, and
 // pins placed without spacing. The wrong-district fault PASSED the first
 // version of the pin check, which read the pin's own record of its district.
+// "Flesh out" (Phase 4d), the same way: flesh written onto every entry, kept
+// by an entry reroll, bold left in, the secret left out of an NPC's prompt,
+// an empty answer accepted, and a kept city saved without its guard. The
+// guard fault first landed in keep(), which carries the same line, and the
+// section passed; aimed at flesh() it failed.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
-  parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop }
+  parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
+  FLESH_KINDS }
   from '../../../city-creator/js/city-engine.js';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
-const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock'];
+const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
+  'City Creator flesh out'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -184,10 +191,13 @@ export function run() {
   check('the race list asks for this setting\'s R.C.C.s and never for retired ones',
     /classes\?system=\$\{encodeURIComponent\(S\.settings\.system\)\}&category=rcc/.test(page)
       && !/include_retired/.test(page));
-  check('the AI is called in one place, only from Generate',
-    (page.match(/await claudeRequest\(/g) || []).length === 1
-      && page.indexOf('await claudeRequest(') > page.indexOf('async function generate()')
-      && page.indexOf('await claudeRequest(') < page.indexOf('window.City ='));
+  // Every call is a press of a button: Generate (the name pool) and, since
+  // Phase 4d, Flesh out on one entry. Nothing on load, and never from ?seed=.
+  const aiAt = [...page.matchAll(/await claudeRequest\(/g)].map((m) => m.index);
+  const inFn = (at, start, end) => at > page.indexOf(start) && at < page.indexOf(end, page.indexOf(start));
+  check('the AI is called in two places, each behind a button: Generate and Flesh out',
+    aiAt.length === 2 && inFn(aiAt[0], 'async function generate()', 'function hashSeed(')
+      && inFn(aiAt[1], 'async flesh(id)', 'forget() {'));
 
   // ── the map (Phase 2) ──
   // Geometry the eye cannot audit across two hundred cities: every district
@@ -342,4 +352,42 @@ export function run() {
   check('the page stocks through the engine with the Codex\'s own gear, and marks a kept city changed',
     /S\.city = stockShop\(S\.city, id, await loadGear\(\)\); S\.stockMsg = ''; changed\(\);/.test(page)
       && /api\('codex\?section=gear'\)/.test(page));
+
+  // ── "Flesh out" (Phase 4d) ──
+  // One AI call for one entry, saved into that entry. What can be proved
+  // without the model: the prompt names the entry and its city, the answer is
+  // tidied and an empty one refused, the text lands on that entry alone, and
+  // a reroll or a lock treats it as part of the entry.
+  section('City Creator flesh out');
+  const firstOf = { district: a.districts[0], place: a.places[0], shop: a.shops[0], npc: a.npcs[0] };
+  const prompts = Object.fromEntries(FLESH_KINDS.map((k) => [k, fleshPrompt(a, firstOf[k].id).prompt]));
+  const unnamed = FLESH_KINDS.filter((k) => !prompts[k].includes(a.overview.name) || !prompts[k].includes(firstOf[k].name));
+  check('a flesh-out prompt names its entry and its city, for each of the four kinds',
+    FLESH_KINDS.join() === 'district,place,shop,npc' && unnamed.length === 0, unnamed.join(', '));
+  check('and carries what the entry already says, so the answer can fit it',
+    prompts.npc.includes(a.npcs[0].secret) && prompts.shop.includes(a.shops[0].specialty)
+      && prompts.district.includes(a.districts[0].mood));
+  const refused = (fn) => { try { fn(); return false; } catch { return true; } };
+  check('a quirk, a rumour or an unknown id is refused, not guessed at',
+    refused(() => fleshPrompt(a, a.quirks[0].id)) && refused(() => fleshPrompt(a, a.rumours[0].id))
+      && refused(() => fleshPrompt(a, 'npc-999')) && refused(() => withFlesh(a, 'npc-999', 'x')));
+  const fence = '```';
+  check('an answer is tidied to plain prose - no fence, heading, bullet or bold',
+    parseFlesh(`${fence}\n## The Mill\n**Loud** and wet.\n\n- A hook.\n${fence}`) === 'The Mill\nLoud and wet.\n\nA hook.');
+  check('an empty answer is an error and saves nothing', refused(() => parseFlesh(` \n${fence}${fence} `)));
+  const long = parseFlesh('word '.repeat(2000));
+  check('a runaway answer is capped at a word boundary', long.length <= 2401 && long.endsWith('word…'), long.length);
+  const npcId = a.npcs[0].id;
+  const fleshed = withFlesh(a, npcId, 'A NOTE');
+  check('the text lands on that entry and no other',
+    fleshed.npcs[0].flesh === 'A NOTE' && JSON.stringify(fleshed).split('A NOTE').length === 2 && !a.npcs[0].flesh);
+  check('a reroll of the entry makes a new one, and drops its flesh', !rerollEntry(fleshed, npcId).npcs[0].flesh);
+  check('a lock keeps it through a reroll of the city, and an unlocked entry loses it',
+    rerollCity(toggleLock(fleshed, npcId), 99).npcs[0].flesh === 'A NOTE' && !rerollCity(fleshed, 99).npcs[0].flesh);
+  const fl = page.slice(page.indexOf('async flesh(id)'), page.indexOf('forget() {'));
+  check('the page asks once through /api/claude, keeps the answer in the entry, and saves a kept city at once',
+    (fl.match(/claudeRequest\(/g) || []).length === 1 && /S\.city = withFlesh\(S\.city, id, parseFlesh\(/.test(fl)
+      && /if \(S\.saved\) \{\s*const \{ reveal: _r, public: _p, \.\.\.summary \} = await post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ city: S\.city \}\);/.test(fl));
+  check('every district, place, shop and NPC card has the button',
+    ['fleshHtml(d)', 'fleshHtml(p)', 'fleshHtml(s)', 'fleshHtml(n)'].every((x) => page.includes(x)));
 }
