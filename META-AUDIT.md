@@ -1626,7 +1626,7 @@ correct it, that is a better fix** — `SKILL-AUDIT` `F7`'s rule, that removing
 an ordinal beats incrementing one, applies exactly here and the sentence works
 without it.
 
-**Taken, 2026-09-22 (PR #PRNUM). Posture held: documentation only, one sentence,
+**Taken, 2026-09-22 (PR #1267). Posture held: documentation only, one sentence,
 no new state.** The roll-call paragraph above the sentence was NOT extended and
 NOT retrofitted, per `A13`.
 
