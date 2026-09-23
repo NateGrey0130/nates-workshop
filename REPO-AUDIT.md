@@ -792,3 +792,50 @@ of 756, against `play-flow`'s 0 of 532.
 internal symbol**. A Node upgrade could rename it silently, which is why the
 absent case prints a line rather than failing. Of not taking this: every PR
 keeps paying re-runs of a required check, with the cause still a guess.
+
+**Taken, 2026-09-23 (PR #1303). Posture held: an experiment with a stopping
+rule, no retry, no change to any check's verdict.** The block sits in
+`regression.mjs` just after the suite proves its own server answers, and it
+prints which way it went. `G20`'s death block now also prints
+`connection keep-alive:`, so each death says whether the lever was on. **Proved
+by making it fail:** with a fetch to a closed port injected right after the
+block, `--upto setup` died through `G20`'s handler and printed
+`connection keep-alive: 1s (REPO-AUDIT G23)`.
+
+**The stopping rule, stated as the proposal asked:** the next **60** CI
+`regression` run attempts after this merges. Zero deaths supports the
+hypothesis. One death printing `connection keep-alive: 1s` refutes it, and the
+block comes out. At `G21`'s recorded rate (25 failed runs of 756, about 3.3%),
+60 clean runs would happen by chance about 13% of the time, so a clean result
+is weak support and not proof. Say so when reporting it.
+
+**Corrections found while taking it, by `audit-premise-auditor` and by
+measurement.** Nine of eleven premises held. The two that did not hold, and
+three more things:
+
+- **The probe in this finding's second paragraph could not fail.** Rerun
+  with a control, the stock dispatcher also opened 2 connections there,
+  because a node server with `keepAliveTimeout = 1000` sends
+  `Keep-Alive: timeout=1`, and undici drops the socket early either way. The
+  auditor's controlled rerun was a server advertising 10 s, a separate process,
+  and a `spawnSync` block of 5.5 s. There the stock client reused the socket
+  (0 new connections) and the lever did not (1). **So the lever works**, on
+  that run rather than on this finding's.
+- **The hypothesis is weaker than this finding says.** Measured 2026-09-23
+  against the local `wrangler pages dev`: workerd sends **no** `Keep-Alive`
+  header and closes an idle connection at **5.02 s**. With no header, undici's
+  default already drops an idle socket after 4 s. So the stock client should
+  not be reusing a socket after the 5.16 s+ idles on record at all. The deaths
+  need another cause, or a behaviour on the Linux runner that this machine does
+  not show.
+- **It does not reproduce locally.** A script that booted its own server and
+  ran fetch, a 5.5 s blocking `spawnSync`, then fetch at once, lost 0 of 8
+  requests with the stock client and 0 of 8 with the lever (and 0 of 4 at 3 s).
+  CI is the only place this experiment can be read.
+- **The symbol can be missing before the first fetch.** In one run on node
+  v24.18.0 `globalThis[Symbol.for('undici.globalDispatcher.1')]` was
+  `undefined` before any request, while the auditor saw it already set. The
+  block runs after the suite's first fetch and handles both cases.
+- **Still cites this finding outside the repo:** the memory note
+  `regression-ci-dev-server-dies.md`, updated in the same session to say it is
+  taken.
