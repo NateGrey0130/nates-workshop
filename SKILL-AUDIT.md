@@ -2373,8 +2373,8 @@ no instance behind it.
 **Ongoing cost:** none if declined. If merged, one more thing to keep true as
 placements accumulate — which is the problem restated.
 
-**DECLINED 2026-09-22 on Nate's word. No file is changed and no heading is
-moved.** This finding asks for a decision and recommends against consolidating;
+**DECLINED 2026-09-22 on Nate's word (PR #1266). No file is changed and no
+heading is moved.** This finding asks for a decision and recommends against consolidating;
 the decision had already been made, and the measurement below says nothing has
 happened since to reopen it.
 
