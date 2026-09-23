@@ -65,7 +65,7 @@ account with a date on it.
 **Ask production.** `node scripts/q.mjs --remote "<one SQL statement>"` — one
 statement, one line, because `--command` truncates at the first newline. Several
 at once: write them to a file and use `--batch`, which sends them as one
-wrangler invocation and pays the ~11s start-up once. `--local` drifts in both
+wrangler invocation and pays wrangler's start-up once. `--local` drifts in both
 directions and answers a question about this machine. Build quotes with
 `char(34)`; `\"` does not escape in PowerShell.
 

@@ -644,3 +644,43 @@ words. A sweep for wrangler cost phrased without a number would settle it.
 
 **Ongoing cost:** none once taken. A sentence with no number has nothing to go
 stale.
+
+**Taken, 2026-09-22 (PR #1276). As written: no figure.** All three sentences now
+say that a wrangler spawn's start-up is paid once per batch instead of once per
+query, and none gives a number. `q.mjs`'s comment also says the number was left
+out on purpose, and cites this finding. Three files change, all of them prose.
+**Posture, said back: documentation only.** No behaviour, check or exit
+code changed, and `environment.mjs`'s figures stay with `M25`.
+
+**Two premises are weaker than this finding states. Both make the case for
+leaving out a number stronger.** Found by the `audit-premise-auditor`,
+2026-09-22.
+
+- <!-- claim-ok: quoting the premise this note corrects --> *"The figure is a
+  property of wrangler 4.114.0"* **is inferred, not measured.** The ~11s comes
+  from `EFFICIENCY-AUDIT` `F3` (`EFFICIENCY-AUDIT.closed.md:102-105`), which
+  gives it as the *"measured average, remote"* of a **whole** D1 call. Commit
+  `93b37000` relabelled it as start-up. Nothing records which wrangler version
+  was installed on 2026-08-25. The earliest dated mention of 4.114.0 is
+  2026-09-02, at `SETUP.md:255`. 4.114.0's 11.5s start-up fits the figure, but
+  that is a match and not a demonstration.
+- **A `--version` timing is not the like-for-like comparison.** The three
+  sentences are about `q.mjs --remote`, and that spawns wrangler without a
+  shell, which costs less. The auditor timed it on 4.136.0 the same day. A
+  single query took **8842ms** cold, then 2107, 2146, 2008 and 2037ms. A
+  three-statement `--batch` took 2004, 1952 and 2001ms. **A warm remote query
+  costs about 2s, and the first call of a session costs nearly the old ~11s.**
+  So the figure was about five times too high for the usual case and close for
+  the first call. One number cannot describe both, which is why the proposal
+  gives none.
+
+**The sweep was one form short.** `environment.mjs:59` says *"11.5 seconds to
+start"*, which none of this finding's patterns match. It names its version, so
+it is not stale, and it belongs to `M25`. The question left open in the
+*Confidence* line is now closed. Outside the menus, no other file prices
+wrangler. Two files mention the cost without a number and are correct at any
+version: `claim-audit/reference/negatives.md:15` and `regression.mjs:261`.
+
+**Nothing else cites this finding.** A grep of the repo and the memory
+directories for `M26`, 2026-09-22, finds only this section. Nothing in memory
+states the ~11s figure.
