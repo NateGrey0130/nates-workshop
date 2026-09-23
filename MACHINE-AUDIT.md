@@ -585,3 +585,62 @@ observed passing, which is the only reading that would have meant anything here.
 message with three figures in it - 2,850, 11,500 and 1,240 - that go stale when
 wrangler moves. The first is the one that matters and it is named as a baseline
 rather than as a rule.
+
+## Filed from the 2026-09-22 session's noticed list, 2026-09-22
+
+Nate named this one for filing. It is filed here and not taken in this PR.
+
+### M26 — low — three files still say a wrangler call costs ~11s, a figure from 4.114.0
+
+**Opened 2026-09-22**, found while taking `M25`. Three files tell a reader that
+a wrangler invocation costs about eleven seconds, read 2026-09-22:
+
+- `scripts/q.mjs:26-27`: *"5-10 separate calls at ~11s of wrangler start-up
+  each"*;
+- `.claude/agents/claim-count-verifier.md:42`: *"pays the ~11s start-up once
+  instead of per query"*;
+- `.claude/agents/claim-capability-verifier.md:68`: *"pays the ~11s start-up
+  once"*.
+
+`git log -S'~11s'` dates them to 2026-08-25 (`93b37000`, `q.mjs`) and 2026-09-04
+(`bd49881a`, the agents). **The figure is a property of wrangler 4.114.0.**
+Commit `f08396b6` (2026-09-21 18:57) built the start-up check in
+`apps/character-creator/test/checks/environment.mjs` on the measurement that
+replaced it. That file's own message says *"4.114.0 took ~11,500ms against
+4.127.1's ~1,240"*, which puts the number in its version's past.
+<!-- claim-ok: quoting the file this sentence locates -->
+
+**Five cold `npx wrangler --version` spawns on 4.136.0, 2026-09-22, took
+2469, 2475, 2973, 2689 and 2476ms.** That is roughly 2.5-3.0s, so the three
+sentences overstate the cost by about four times.
+
+**Why it matters, and why only a little.** The figure sets an expectation; it
+gates nothing. A reader who believes a query costs 11s batches more than they
+need to, or treats a 3s call as unusually fast. The agent briefs are the
+sharper case. They are read cold by subagents as fact about this machine, and
+nothing walks from a wrangler upgrade back to them.
+
+**`scripts/rebuild-local.mjs:15-16` makes the same point with no number** —
+*"hours, at any wrangler start-up cost this machine has measured"* — and is
+correct at every version. It is the model for the fix.
+
+**Proposal:** reword all three to say a wrangler spawn is not free and that
+`--batch` pays it once, and **give no figure**. Do not correct `~11s` to `~3s`.
+`SKILL-AUDIT` `F7` makes this argument (removing a number beats correcting one),
+and this number has already been wrong once by about four times. **Posture:
+documentation only.** No behaviour, check or exit code changes. The figures in
+`environment.mjs`'s own failure message belong to `M25` and are out of scope:
+that check measures the number, and version-stamps it.
+
+**Evidence:** the three reads and the five timings above, 2026-09-22. A `grep`
+across `*.md`, `*.mjs`, `*.js` and `*.sh` outside the audit menus for `~11s`,
+`11 seconds`, `eleven seconds` and `11,NNNms` that day found these three and
+`environment.mjs:87,111`. `environment.mjs` states the number as 4.114.0's, so
+it is not stale.
+
+**Confidence:** high. Every file was read and the timing was run. The only
+open question is whether some other file makes the same claim in different
+words. A sweep for wrangler cost phrased without a number would settle it.
+
+**Ongoing cost:** none once taken. A sentence with no number has nothing to go
+stale.
