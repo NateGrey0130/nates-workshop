@@ -470,6 +470,76 @@ section('No book text is in any tracked file (local only: needs the extraction)'
   }
 }
 
+section('The dice are seedable and fair enough');
+
+{
+  const dice = await import(new URL('../js/dice.js', import.meta.url));
+  const a = dice.rng(12345), b = dice.rng(12345);
+  const seqA = Array.from({ length: 20 }, () => dice.d100(a));
+  const seqB = Array.from({ length: 20 }, () => dice.d100(b));
+  check('the same seed rolls the same dice', seqA.join() === seqB.join(), seqA.join());
+  // Pinned, so a generator that quietly mixes in the clock or Math.random fails
+  // here rather than only across two runs. A hero rebuilt from its seed depends
+  // on this sequence; changing the generator is a deliberate re-pin.
+  check('and seed 12345 opens 98, 31, 49, 82, 51, 35, 8, 77', seqA.slice(0, 8).join() === '98,31,49,82,51,35,8,77',
+    seqA.slice(0, 8).join());
+  check('a different seed rolls different dice',
+    seqA.join() !== Array.from({ length: 20 }, ((n) => () => dice.d100(n))(dice.rng(54321))).join());
+  const next = dice.rng(7);
+  const seen = new Array(101).fill(0);
+  for (let i = 0; i < 20000; i++) seen[dice.d100(next)]++;
+  check('d100 gives every value 1-100 and nothing else',
+    seen[0] === 0 && seen.slice(1).every((n) => n > 0), `min ${Math.min(...seen.slice(1))}`);
+  check('and no value is wildly over- or under-rolled (20,000 rolls, 200 expected each)',
+    seen.slice(1).every((n) => n > 120 && n < 290), `${Math.min(...seen.slice(1))}-${Math.max(...seen.slice(1))}`);
+  check('pick finds the band that holds a roll',
+    dice.pick([{ roll: [1, 50], v: 'a' }, { roll: [51, 100], v: 'b' }], 51).v === 'b'
+      && dice.pick([{ lo: 1, hi: 5, v: 'x' }], 5).v === 'x' && dice.pick([{ roll: [1, 5] }], 6) === null);
+}
+
+section('A FEAT reads the Universal Table the way the book prints it');
+
+{
+  const { makeFeat } = await import(new URL('../js/feat.js', import.meta.url));
+  const feat = makeFeat(load('ranks.json'), load('universal.json'));
+  // A call that throws reports as its check's failure rather than ending the run.
+  const safe = (fn) => { try { return fn(); } catch (e) { return 'threw: ' + e.message; } };
+  const rn = [[0, 'shift-0'], [1, 'feeble'], [2, 'feeble'], [7, 'typical'], [15, 'good'], [35, 'remarkable'],
+    [36, 'incredible'], [87, 'monstrous'], [88, 'unearthly'], [351, 'shift-z'], [999, 'shift-z'],
+    [1000, 'class-1000'], [3000, 'class-3000'], [99999, 'class-5000']];
+  const wrong = rn.filter(([n, id]) => safe(() => feat.rankForNumber(n)) !== id);
+  check('rank numbers find their rank, R2 included (35 Remarkable, 36 Incredible)', wrong.length === 0,
+    wrong.map(([n, id]) => `${n}: ${feat.rankForNumber(n)} not ${id}`).join('; '));
+  check('a negative or missing number finds no rank', feat.rankForNumber(-1) === null && feat.rankForNumber(NaN) === null);
+  check('a column shift moves along the ladder', safe(() => feat.shift('typical', 2)) === 'excellent' && safe(() => feat.shift('good', -1)) === 'typical');
+  check('and stops at both ends', safe(() => feat.shift('feeble', -5)) === 'shift-0' && safe(() => feat.shift('class-5000', 4)) === 'beyond');
+  // PB back cover, Typical: white 01-50, green 51-80, yellow 81-97, red 98-00.
+  const ty = [[1, 'white'], [50, 'white'], [51, 'green'], [80, 'green'], [81, 'yellow'], [97, 'yellow'], [98, 'red'], [100, 'red']];
+  const tyWrong = ty.filter(([r, c]) => safe(() => feat.colour('typical', r)) !== c);
+  check('Typical is white to 50, green to 80, yellow to 97, red above', tyWrong.length === 0,
+    tyWrong.map(([r, c]) => `${r}: ${safe(() => feat.colour('typical', r))} not ${c}`).join('; '));
+  // Shift 0 and Class 1000 bracket the table: 94 is green on Shift 0, 02 green on Class 1000.
+  check('the table\'s two extremes read right', feat.colour('shift-0', 94) === 'green' && feat.colour('shift-0', 95) === 'yellow'
+    && feat.colour('class-1000', 1) === 'white' && feat.colour('class-1000', 2) === 'green');
+  const r = safe(() => feat.roll({ rank: 'typical', cs: 1, d100: 98, need: 'yellow', action: 'blunt-attacks' }));
+  check('a whole FEAT: Typical +1CS is Good, 98 there is red, red beats yellow, and a red blunt attack Stuns',
+    r.column === 'good' && r.colour === 'red' && r.success === true && r.result === 'Stun', JSON.stringify(r));
+  const miss = safe(() => feat.roll({ rank: 'typical', d100: 60, need: 'yellow' }));
+  check('and green does not meet a yellow FEAT', miss.colour === 'green' && miss.success === false && miss.result === null);
+}
+
+section('Every element the page script looks up is on the page');
+
+{
+  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
+  const js = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const ids = [...new Set([...js.matchAll(/\$\('#([a-z0-9-]+)'\)/g)].map((m) => m[1]))];
+  const missing = ids.filter((id) => !new RegExp(`id="${id}"`).test(html));
+  check(`app.js looks up ${ids.length} ids and index.html has them all`, ids.length > 0 && missing.length === 0, missing.join(', '));
+  const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"/g)].map((m) => m[1]);
+  check('every tab controls a panel that exists', tabs.length > 0 && tabs.every((p) => html.includes(`id="${p}"`)), tabs.join());
+}
+
 section('Every ruling in the data is in the README, and every README ruling is in the data');
 
 // Collect every "ruling" value, anywhere in any data file.
