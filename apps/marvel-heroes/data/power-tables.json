@@ -1,0 +1,2550 @@
+{
+ "about": "Rolling a Power: d100 for the class, then d100 on that class's table. double marks a Power that takes two Power slots (an asterisk in the book). addenda marks a row the Dragon #122 addenda printed in red.",
+ "sources": [
+  "UPB pp.14-17"
+ ],
+ "classes": [
+  {
+   "code": "D",
+   "name": "Defensive",
+   "roll": [
+    1,
+    5
+   ]
+  },
+  {
+   "code": "DT",
+   "name": "Detection",
+   "roll": [
+    6,
+    11
+   ]
+  },
+  {
+   "code": "EC",
+   "name": "Energy Control",
+   "roll": [
+    12,
+    16
+   ]
+  },
+  {
+   "code": "EE",
+   "name": "Energy Emission",
+   "roll": [
+    17,
+    24
+   ]
+  },
+  {
+   "code": "F",
+   "name": "Fighting",
+   "roll": [
+    25,
+    29
+   ]
+  },
+  {
+   "code": "I",
+   "name": "Illusionary",
+   "roll": [
+    30,
+    31
+   ]
+  },
+  {
+   "code": "L",
+   "name": "Lifeform Control",
+   "roll": [
+    32,
+    35
+   ]
+  },
+  {
+   "code": "MG",
+   "name": "Magic",
+   "roll": [
+    36,
+    40
+   ]
+  },
+  {
+   "code": "MC",
+   "name": "Matter Control",
+   "roll": [
+    41,
+    47
+   ]
+  },
+  {
+   "code": "MCo",
+   "name": "Matter Conversion",
+   "roll": [
+    48,
+    53
+   ]
+  },
+  {
+   "code": "MCr",
+   "name": "Matter Creation",
+   "roll": [
+    54,
+    57
+   ]
+  },
+  {
+   "code": "M",
+   "name": "Mental Enhancement",
+   "roll": [
+    58,
+    71
+   ]
+  },
+  {
+   "code": "P",
+   "name": "Physical Enhancement",
+   "roll": [
+    72,
+    85
+   ]
+  },
+  {
+   "code": "PC",
+   "name": "Power Control",
+   "roll": [
+    86,
+    88
+   ]
+  },
+  {
+   "code": "S",
+   "name": "Self-Alteration",
+   "roll": [
+    89,
+    92
+   ]
+  },
+  {
+   "code": "T",
+   "name": "Travel",
+   "roll": [
+    93,
+    100
+   ]
+  }
+ ],
+ "tables": {
+  "D": [
+   {
+    "code": "D1",
+    "name": "Body Armor",
+    "roll": [
+     1,
+     15
+    ],
+    "double": false
+   },
+   {
+    "code": "D2",
+    "name": "Force Field",
+    "roll": [
+     16,
+     20
+    ],
+    "double": false
+   },
+   {
+    "code": "D3",
+    "name": "Force Field vs. Emotion",
+    "roll": [
+     21,
+     23
+    ],
+    "double": false
+   },
+   {
+    "code": "D4",
+    "name": "Force Field vs. Energy",
+    "roll": [
+     24,
+     30
+    ],
+    "double": false
+   },
+   {
+    "code": "D5",
+    "name": "Force Field vs. Magic",
+    "roll": [
+     31,
+     35
+    ],
+    "double": false
+   },
+   {
+    "code": "D6",
+    "name": "Force Field vs. Mental",
+    "roll": [
+     36,
+     40
+    ],
+    "double": false
+   },
+   {
+    "code": "D7",
+    "name": "Force Field vs. Physical",
+    "roll": [
+     41,
+     48
+    ],
+    "double": false
+   },
+   {
+    "code": "D8",
+    "name": "Force Field vs. Power Manipulation",
+    "roll": [
+     49,
+     50
+    ],
+    "double": false
+   },
+   {
+    "code": "D9",
+    "name": "Force Field vs. Vampirism",
+    "roll": [
+     51,
+     53
+    ],
+    "double": false
+   },
+   {
+    "code": "D10",
+    "name": "Reflection",
+    "roll": [
+     54,
+     65
+    ],
+    "double": false
+   },
+   {
+    "code": "D11",
+    "name": "Resist: Emotion",
+    "roll": [
+     66,
+     70
+    ],
+    "double": false
+   },
+   {
+    "code": "D12",
+    "name": "Resist: Energy",
+    "roll": [
+     71,
+     77
+    ],
+    "double": false
+   },
+   {
+    "code": "D13",
+    "name": "Resist: Magic",
+    "roll": [
+     78,
+     82
+    ],
+    "double": false
+   },
+   {
+    "code": "D14",
+    "name": "Resist: Mental",
+    "roll": [
+     83,
+     87
+    ],
+    "double": false
+   },
+   {
+    "code": "D15",
+    "name": "Resist: Physical",
+    "roll": [
+     88,
+     94
+    ],
+    "double": false
+   },
+   {
+    "code": "D16",
+    "name": "Resist: Power Manipulation",
+    "roll": [
+     95,
+     97
+    ],
+    "double": false
+   },
+   {
+    "code": "D17",
+    "name": "Resist: Vampirism",
+    "roll": [
+     98,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "DT": [
+   {
+    "code": "DT1",
+    "name": "Abnormal Sensitivity",
+    "roll": [
+     1,
+     2
+    ],
+    "double": false
+   },
+   {
+    "code": "DT2",
+    "name": "Circular Vision",
+    "roll": [
+     3,
+     4
+    ],
+    "double": false
+   },
+   {
+    "code": "DT3",
+    "name": "Energy Detection",
+    "roll": [
+     5,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "DT4",
+    "name": "Environmental Awareness",
+    "roll": [
+     11,
+     14
+    ],
+    "double": false
+   },
+   {
+    "code": "DT5",
+    "name": "Extradimensional",
+    "roll": [
+     15,
+     20
+    ],
+    "double": false
+   },
+   {
+    "code": "DT6",
+    "name": "Hyper-Hearing",
+    "roll": [
+     21,
+     28
+    ],
+    "double": false
+   },
+   {
+    "code": "DT7",
+    "name": "Hyper-Olfactory",
+    "roll": [
+     29,
+     34
+    ],
+    "double": false
+   },
+   {
+    "code": "DT8",
+    "name": "Hyper-Touch",
+    "roll": [
+     35,
+     40
+    ],
+    "double": false
+   },
+   {
+    "code": "DT9",
+    "name": "Life Detection",
+    "roll": [
+     41,
+     42
+    ],
+    "double": false
+   },
+   {
+    "code": "DT10",
+    "name": "Magic Detection",
+    "roll": [
+     43,
+     44
+    ],
+    "double": false
+   },
+   {
+    "code": "DT11",
+    "name": "Microscopic Vision",
+    "roll": [
+     45,
+     50
+    ],
+    "double": false
+   },
+   {
+    "code": "DT12",
+    "name": "Penetration Vision",
+    "roll": [
+     51,
+     54
+    ],
+    "double": false
+   },
+   {
+    "code": "DT13",
+    "name": "Power Detection",
+    "roll": [
+     55,
+     56
+    ],
+    "double": false
+   },
+   {
+    "code": "DT14",
+    "name": "Psionic Detection",
+    "roll": [
+     57,
+     58
+    ],
+    "double": false
+   },
+   {
+    "code": "DT15",
+    "name": "Radarsense",
+    "roll": [
+     59,
+     59
+    ],
+    "double": false
+   },
+   {
+    "code": "DT16",
+    "name": "Sonar",
+    "roll": [
+     60,
+     62
+    ],
+    "double": false
+   },
+   {
+    "code": "DT17",
+    "name": "Telescopic Vision",
+    "roll": [
+     63,
+     69
+    ],
+    "double": false
+   },
+   {
+    "code": "DT18",
+    "name": "Thermal Vision",
+    "roll": [
+     70,
+     79
+    ],
+    "double": false
+   },
+   {
+    "code": "DT19",
+    "name": "Tracking",
+    "roll": [
+     80,
+     90
+    ],
+    "double": false
+   },
+   {
+    "code": "DT20",
+    "name": "True Sight",
+    "roll": [
+     91,
+     94
+    ],
+    "double": false
+   },
+   {
+    "code": "DT21",
+    "name": "UV Vision",
+    "roll": [
+     95,
+     98
+    ],
+    "double": false
+   },
+   {
+    "code": "DT22",
+    "name": "Weakness Detection",
+    "roll": [
+     99,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "EC": [
+   {
+    "code": "EC1",
+    "name": "Absorption Power",
+    "roll": [
+     1,
+     7
+    ],
+    "double": false
+   },
+   {
+    "code": "EC2",
+    "name": "Catalytic Control",
+    "roll": [
+     8,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "EC3",
+    "name": "Coldshaping",
+    "roll": [
+     11,
+     15
+    ],
+    "double": false
+   },
+   {
+    "code": "EC4",
+    "name": "Darkforce Manipulation",
+    "roll": [
+     16,
+     18
+    ],
+    "double": false
+   },
+   {
+    "code": "EC5",
+    "name": "Electrical Control",
+    "roll": [
+     19,
+     25
+    ],
+    "double": false
+   },
+   {
+    "code": "EC6",
+    "name": "Energy Conversion",
+    "roll": [
+     26,
+     28
+    ],
+    "double": false
+   },
+   {
+    "code": "EC7",
+    "name": "Energy Solidification",
+    "roll": [
+     29,
+     31
+    ],
+    "double": false
+   },
+   {
+    "code": "EC8",
+    "name": "Energy Sponge",
+    "roll": [
+     32,
+     36
+    ],
+    "double": false
+   },
+   {
+    "code": "EC9",
+    "name": "Energy Vampirism",
+    "roll": [
+     37,
+     38
+    ],
+    "double": false
+   },
+   {
+    "code": "EC10",
+    "name": "Fire Control",
+    "roll": [
+     39,
+     45
+    ],
+    "double": false
+   },
+   {
+    "code": "EC11",
+    "name": "Gravity Manipulation",
+    "roll": [
+     46,
+     49
+    ],
+    "double": false
+   },
+   {
+    "code": "EC12",
+    "name": "Hard Radiation Control",
+    "roll": [
+     50,
+     53
+    ],
+    "double": false
+   },
+   {
+    "code": "EC13",
+    "name": "Kinetic Control",
+    "roll": [
+     54,
+     59
+    ],
+    "double": false
+   },
+   {
+    "code": "EC14",
+    "name": "Light Control",
+    "roll": [
+     60,
+     66
+    ],
+    "double": false
+   },
+   {
+    "code": "EC15",
+    "name": "Magnetic Manipulation",
+    "roll": [
+     67,
+     73
+    ],
+    "double": false
+   },
+   {
+    "code": "EC16",
+    "name": "Plasma Control",
+    "roll": [
+     74,
+     77
+    ],
+    "double": false
+   },
+   {
+    "code": "EC17",
+    "name": "Radiowave Control",
+    "roll": [
+     78,
+     80
+    ],
+    "double": false
+   },
+   {
+    "code": "EC18",
+    "name": "Shadowshaping",
+    "roll": [
+     81,
+     84
+    ],
+    "double": false
+   },
+   {
+    "code": "EC19",
+    "name": "Sound Manipulation",
+    "roll": [
+     85,
+     90
+    ],
+    "double": false
+   },
+   {
+    "code": "EC20",
+    "name": "Thermal Control",
+    "roll": [
+     91,
+     97
+    ],
+    "double": false
+   },
+   {
+    "code": "EC21",
+    "name": "Vibration Control",
+    "roll": [
+     98,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "EE": [
+   {
+    "code": "EE1",
+    "name": "Cold Generation",
+    "roll": [
+     1,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "EE2",
+    "name": "Electrical Generation",
+    "roll": [
+     11,
+     20
+    ],
+    "double": false
+   },
+   {
+    "code": "EE3",
+    "name": "Energy Doppelganger",
+    "roll": [
+     21,
+     22
+    ],
+    "double": false
+   },
+   {
+    "code": "EE4",
+    "name": "Fire Generation",
+    "roll": [
+     23,
+     34
+    ],
+    "double": false
+   },
+   {
+    "code": "EE5",
+    "name": "Hard Radiation",
+    "roll": [
+     35,
+     37
+    ],
+    "double": false
+   },
+   {
+    "code": "EE6",
+    "name": "Heat",
+    "roll": [
+     38,
+     42
+    ],
+    "double": false
+   },
+   {
+    "code": "EE7",
+    "name": "Kinetic Bolt",
+    "roll": [
+     43,
+     52
+    ],
+    "double": false
+   },
+   {
+    "code": "EE8",
+    "name": "Light Emission",
+    "roll": [
+     53,
+     62
+    ],
+    "double": false
+   },
+   {
+    "code": "EE9",
+    "name": "Magnetism",
+    "roll": [
+     63,
+     72
+    ],
+    "double": false
+   },
+   {
+    "code": "EE10",
+    "name": "Plasma Generation",
+    "roll": [
+     73,
+     75
+    ],
+    "double": false
+   },
+   {
+    "code": "EE11",
+    "name": "Radiowave Generation",
+    "roll": [
+     76,
+     78
+    ],
+    "double": false
+   },
+   {
+    "code": "EE12",
+    "name": "Shadowcasting",
+    "roll": [
+     79,
+     83
+    ],
+    "double": false
+   },
+   {
+    "code": "EE13",
+    "name": "Sonic Generation",
+    "roll": [
+     84,
+     93
+    ],
+    "double": false
+   },
+   {
+    "code": "EE14",
+    "name": "Vibration",
+    "roll": [
+     94,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "F": [
+   {
+    "code": "F1",
+    "name": "Berserker",
+    "roll": [
+     1,
+     20
+    ],
+    "double": false
+   },
+   {
+    "code": "F2",
+    "name": "Martial Supremacy",
+    "roll": [
+     21,
+     60
+    ],
+    "double": false
+   },
+   {
+    "code": "F3",
+    "name": "Natural Weaponry",
+    "roll": [
+     61,
+     75
+    ],
+    "double": false
+   },
+   {
+    "code": "F4",
+    "name": "Weapons Creation",
+    "roll": [
+     76,
+     80
+    ],
+    "double": true
+   },
+   {
+    "code": "F5",
+    "name": "Weapons Tinkering",
+    "roll": [
+     81,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "I": [
+   {
+    "code": "I1",
+    "name": "Animate Image",
+    "roll": [
+     1,
+     15
+    ],
+    "double": false
+   },
+   {
+    "code": "I2",
+    "name": "Illusion-Casting",
+    "roll": [
+     16,
+     70
+    ],
+    "double": true
+   },
+   {
+    "code": "I3",
+    "name": "Illusory Invisibility",
+    "roll": [
+     71,
+     85
+    ],
+    "double": false
+   },
+   {
+    "code": "I4",
+    "name": "Illusory Duplication",
+    "roll": [
+     86,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "L": [
+   {
+    "code": "L1",
+    "name": "Biophysical Control",
+    "roll": [
+     1,
+     14
+    ],
+    "double": true
+   },
+   {
+    "code": "L2",
+    "name": "Bio-Vampirism",
+    "roll": [
+     15,
+     15
+    ],
+    "double": true
+   },
+   {
+    "code": "L3",
+    "name": "Body Transformation-Others",
+    "roll": [
+     16,
+     18
+    ],
+    "double": false
+   },
+   {
+    "code": "L4",
+    "name": "Emotion Control",
+    "roll": [
+     19,
+     26
+    ],
+    "double": false
+   },
+   {
+    "code": "L5",
+    "name": "Exorcism",
+    "roll": [
+     27,
+     32
+    ],
+    "double": false
+   },
+   {
+    "code": "L6",
+    "name": "Force Field vs. Hostiles",
+    "roll": [
+     33,
+     34
+    ],
+    "double": false
+   },
+   {
+    "code": "L7",
+    "name": "Forced Reincarnation",
+    "roll": [
+     35,
+     35
+    ],
+    "double": false
+   },
+   {
+    "code": "L8",
+    "name": "Grafting",
+    "roll": [
+     36,
+     39
+    ],
+    "double": true
+   },
+   {
+    "code": "L9",
+    "name": "Hypnotic Control",
+    "roll": [
+     40,
+     51
+    ],
+    "double": false
+   },
+   {
+    "code": "L10",
+    "name": "Mind Control",
+    "roll": [
+     52,
+     60
+    ],
+    "double": true
+   },
+   {
+    "code": "L11",
+    "name": "Mind Transferral",
+    "roll": [
+     61,
+     62
+    ],
+    "double": true
+   },
+   {
+    "code": "L12",
+    "name": "Neural Manipulation",
+    "roll": [
+     63,
+     65
+    ],
+    "double": false
+   },
+   {
+    "code": "L13",
+    "name": "Plague Carrier",
+    "roll": [
+     66,
+     66
+    ],
+    "double": false
+   },
+   {
+    "code": "L14",
+    "name": "Plant Control",
+    "roll": [
+     67,
+     69
+    ],
+    "double": false
+   },
+   {
+    "code": "L15",
+    "name": "Plant Growth",
+    "roll": [
+     70,
+     71
+    ],
+    "double": false
+   },
+   {
+    "code": "L16",
+    "name": "Sense Alteration",
+    "roll": [
+     72,
+     80
+    ],
+    "double": false
+   },
+   {
+    "code": "L17",
+    "name": "Shapechange-Others",
+    "roll": [
+     81,
+     83
+    ],
+    "double": true
+   },
+   {
+    "code": "L18",
+    "name": "Sleep-Induced",
+    "roll": [
+     84,
+     89
+    ],
+    "double": false
+   },
+   {
+    "code": "L19",
+    "name": "Spirit Storage",
+    "roll": [
+     90,
+     90
+    ],
+    "double": false
+   },
+   {
+    "code": "L20",
+    "name": "Summoning",
+    "roll": [
+     91,
+     95
+    ],
+    "double": false
+   },
+   {
+    "code": "L21",
+    "name": "Undead Control",
+    "roll": [
+     96,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "MG": [
+   {
+    "code": "MG1",
+    "name": "Enchantment",
+    "roll": [
+     1,
+     8
+    ],
+    "double": true
+   },
+   {
+    "code": "MG2",
+    "name": "Energy Source",
+    "roll": [
+     9,
+     15
+    ],
+    "double": false
+   },
+   {
+    "code": "MG3",
+    "name": "Internal Limbo",
+    "roll": [
+     16,
+     17
+    ],
+    "double": false
+   },
+   {
+    "code": "MG4",
+    "name": "Magic Control",
+    "roll": [
+     18,
+     25
+    ],
+    "double": true
+   },
+   {
+    "code": "MG5",
+    "name": "Magic Creation",
+    "roll": [
+     26,
+     28
+    ],
+    "double": true
+   },
+   {
+    "code": "MG6",
+    "name": "Magic Domination",
+    "roll": [
+     29,
+     33
+    ],
+    "double": false
+   },
+   {
+    "code": "MG7",
+    "name": "Magic Transferral",
+    "roll": [
+     34,
+     39
+    ],
+    "double": false
+   },
+   {
+    "code": "MG8",
+    "name": "Magic Vampirism",
+    "roll": [
+     40,
+     41
+    ],
+    "double": false
+   },
+   {
+    "code": "MG9",
+    "name": "Power Simulation",
+    "roll": [
+     42,
+     71
+    ],
+    "double": false
+   },
+   {
+    "code": "MG10",
+    "name": "Reality Alteration",
+    "roll": [
+     72,
+     77
+    ],
+    "double": true
+   },
+   {
+    "code": "MG11",
+    "name": "Spirit Vampirism",
+    "roll": [
+     78,
+     79
+    ],
+    "double": true
+   },
+   {
+    "code": "MG12",
+    "name": "Sympathetic Magic",
+    "roll": [
+     80,
+     95
+    ],
+    "double": false
+   },
+   {
+    "code": "MG13",
+    "name": "Warding",
+    "roll": [
+     96,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "MC": [
+   {
+    "code": "MC1",
+    "name": "Bonding",
+    "roll": [
+     1,
+     5
+    ],
+    "double": false
+   },
+   {
+    "code": "MC2",
+    "name": "Collection",
+    "roll": [
+     6,
+     17
+    ],
+    "double": false
+   },
+   {
+    "code": "MC3",
+    "name": "Crystallization",
+    "roll": [
+     18,
+     22
+    ],
+    "double": false
+   },
+   {
+    "code": "MC4",
+    "name": "Diminution",
+    "roll": [
+     23,
+     29
+    ],
+    "double": false
+   },
+   {
+    "code": "MC5",
+    "name": "Disruption",
+    "roll": [
+     30,
+     39
+    ],
+    "double": false
+   },
+   {
+    "code": "MC6",
+    "name": "Enlargement",
+    "roll": [
+     40,
+     46
+    ],
+    "double": false
+   },
+   {
+    "code": "MC7",
+    "name": "Geoforce",
+    "roll": [
+     47,
+     51
+    ],
+    "double": false
+   },
+   {
+    "code": "MC8",
+    "name": "Matter Animation",
+    "roll": [
+     52,
+     61
+    ],
+    "double": true
+   },
+   {
+    "code": "MC9",
+    "name": "Machine Animation",
+    "roll": [
+     62,
+     68
+    ],
+    "double": true
+   },
+   {
+    "code": "MC10",
+    "name": "Micro-Environment",
+    "roll": [
+     69,
+     73
+    ],
+    "double": false
+   },
+   {
+    "code": "MC11",
+    "name": "Molding",
+    "roll": [
+     74,
+     83
+    ],
+    "double": false
+   },
+   {
+    "code": "MC12",
+    "name": "Weather",
+    "roll": [
+     84,
+     93
+    ],
+    "double": false
+   },
+   {
+    "code": "MC13",
+    "name": "Zombie Animation",
+    "roll": [
+     94,
+     100
+    ],
+    "double": true
+   }
+  ],
+  "MCo": [
+   {
+    "code": "MCo1",
+    "name": "Coloration",
+    "roll": [
+     1,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "MCo2",
+    "name": "Combustion",
+    "roll": [
+     11,
+     25
+    ],
+    "double": false
+   },
+   {
+    "code": "MCo3",
+    "name": "Disintegration",
+    "roll": [
+     26,
+     45
+    ],
+    "double": false
+   },
+   {
+    "code": "MCo4",
+    "name": "Elemental Conversion",
+    "roll": [
+     46,
+     70
+    ],
+    "double": true
+   },
+   {
+    "code": "MCo5",
+    "name": "Ionization",
+    "roll": [
+     71,
+     80
+    ],
+    "double": false
+   },
+   {
+    "code": "MCo6",
+    "name": "Molecular Conversion",
+    "roll": [
+     81,
+     100
+    ],
+    "double": true
+   }
+  ],
+  "MCr": [
+   {
+    "code": "MCr1",
+    "name": "Artifact Creation",
+    "roll": [
+     1,
+     10
+    ],
+    "double": true
+   },
+   {
+    "code": "MCr2",
+    "name": "Elemental Creation",
+    "roll": [
+     11,
+     24
+    ],
+    "double": false
+   },
+   {
+    "code": "MCr3",
+    "name": "Lifeform Creation",
+    "roll": [
+     25,
+     29
+    ],
+    "double": true
+   },
+   {
+    "code": "MCr4",
+    "name": "Mechanical Creation",
+    "roll": [
+     30,
+     35
+    ],
+    "double": true
+   },
+   {
+    "code": "MCr5",
+    "name": "Missile Creation",
+    "roll": [
+     36,
+     59
+    ],
+    "double": false
+   },
+   {
+    "code": "MCr6",
+    "name": "Molecular Creation",
+    "roll": [
+     60,
+     69
+    ],
+    "double": false
+   },
+   {
+    "code": "MCr7",
+    "name": "Spray",
+    "roll": [
+     70,
+     88
+    ],
+    "double": false
+   },
+   {
+    "code": "MCr8",
+    "name": "Webcasting",
+    "roll": [
+     89,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "M": [
+   {
+    "code": "M1",
+    "name": "Clairaudience",
+    "roll": [
+     1,
+     4
+    ],
+    "double": false
+   },
+   {
+    "code": "M2",
+    "name": "Clairvoyance",
+    "roll": [
+     5,
+     8
+    ],
+    "double": false
+   },
+   {
+    "code": "M3",
+    "name": "Communicate with Animals",
+    "roll": [
+     9,
+     11
+    ],
+    "double": false
+   },
+   {
+    "code": "M4",
+    "name": "Communicate with Cybernetics",
+    "roll": [
+     12,
+     12
+    ],
+    "double": false
+   },
+   {
+    "code": "M5",
+    "name": "Communicate with Non-Living",
+    "roll": [
+     13,
+     13
+    ],
+    "double": false
+   },
+   {
+    "code": "M6",
+    "name": "Communicate with Plants",
+    "roll": [
+     14,
+     15
+    ],
+    "double": false
+   },
+   {
+    "code": "M7",
+    "name": "Cosmic Awareness",
+    "roll": [
+     16,
+     16
+    ],
+    "double": true
+   },
+   {
+    "code": "M8",
+    "name": "Danger Sense",
+    "roll": [
+     17,
+     22
+    ],
+    "double": false
+   },
+   {
+    "code": "M9",
+    "name": "Dreamtravel",
+    "roll": [
+     23,
+     23
+    ],
+    "double": false
+   },
+   {
+    "code": "M10",
+    "name": "Empathy",
+    "roll": [
+     24,
+     26
+    ],
+    "double": false
+   },
+   {
+    "code": "M11",
+    "name": "Free Spirit",
+    "roll": [
+     27,
+     27
+    ],
+    "double": true
+   },
+   {
+    "code": "M12",
+    "name": "Hallucinations",
+    "roll": [
+     28,
+     31
+    ],
+    "double": true
+   },
+   {
+    "code": "M13",
+    "name": "Hyper-Intelligence",
+    "roll": [
+     32,
+     40
+    ],
+    "double": false
+   },
+   {
+    "code": "M14",
+    "name": "Hyper-Invention",
+    "roll": [
+     41,
+     47
+    ],
+    "double": false
+   },
+   {
+    "code": "M15",
+    "name": "Incarnation Awareness",
+    "roll": [
+     48,
+     48
+    ],
+    "double": false
+   },
+   {
+    "code": "M16",
+    "name": "Iron Will",
+    "roll": [
+     49,
+     58
+    ],
+    "double": false
+   },
+   {
+    "code": "M17",
+    "name": "Linguistics",
+    "roll": [
+     59,
+     65
+    ],
+    "double": false
+   },
+   {
+    "code": "M18",
+    "name": "Mental Duplication",
+    "roll": [
+     66,
+     66
+    ],
+    "double": false
+   },
+   {
+    "code": "M19",
+    "name": "Mental Invisibility",
+    "roll": [
+     67,
+     67
+    ],
+    "double": false
+   },
+   {
+    "code": "M20",
+    "name": "Mental Probe",
+    "roll": [
+     68,
+     69
+    ],
+    "double": false
+   },
+   {
+    "code": "M21",
+    "name": "Mind Blast",
+    "roll": [
+     70,
+     72
+    ],
+    "double": false
+   },
+   {
+    "code": "M22",
+    "name": "Mind Drain",
+    "roll": [
+     73,
+     73
+    ],
+    "double": false
+   },
+   {
+    "code": "M23",
+    "name": "Postcognition",
+    "roll": [
+     74,
+     74
+    ],
+    "double": false
+   },
+   {
+    "code": "M24",
+    "name": "Precognition",
+    "roll": [
+     75,
+     75
+    ],
+    "double": true
+   },
+   {
+    "code": "M25",
+    "name": "Psionic Vampirism",
+    "roll": [
+     76,
+     76
+    ],
+    "double": true
+   },
+   {
+    "code": "M26",
+    "name": "Remote Sensing",
+    "roll": [
+     77,
+     78
+    ],
+    "double": false
+   },
+   {
+    "code": "M27",
+    "name": "Sensory Link",
+    "roll": [
+     79,
+     79
+    ],
+    "double": false
+   },
+   {
+    "code": "M28",
+    "name": "Serial Immortality",
+    "roll": [
+     80,
+     80
+    ],
+    "double": true
+   },
+   {
+    "code": "M29",
+    "name": "Speechthrowing",
+    "roll": [
+     81,
+     81
+    ],
+    "double": false
+   },
+   {
+    "code": "M30",
+    "name": "Telekinesis",
+    "roll": [
+     82,
+     85
+    ],
+    "double": false
+   },
+   {
+    "code": "M31",
+    "name": "Telelocation",
+    "roll": [
+     86,
+     86
+    ],
+    "double": false
+   },
+   {
+    "code": "M32",
+    "name": "Telepathy",
+    "roll": [
+     87,
+     96
+    ],
+    "double": false
+   },
+   {
+    "code": "M33",
+    "name": "Total Memory",
+    "roll": [
+     97,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "P": [
+   {
+    "code": "P1",
+    "name": "Armor Skin",
+    "roll": [
+     1,
+     14
+    ],
+    "double": false
+   },
+   {
+    "code": "P2",
+    "name": "Body Resistance",
+    "roll": [
+     15,
+     28
+    ],
+    "double": false
+   },
+   {
+    "code": "P3",
+    "name": "Chemical Touch",
+    "roll": [
+     29,
+     30
+    ],
+    "double": false
+   },
+   {
+    "code": "P4",
+    "name": "Digestive Adaptation",
+    "roll": [
+     31,
+     33
+    ],
+    "double": false
+   },
+   {
+    "code": "P5",
+    "name": "Hyper-Speed",
+    "roll": [
+     34,
+     40
+    ],
+    "double": false
+   },
+   {
+    "code": "P6",
+    "name": "Hypnotic Voice",
+    "roll": [
+     41,
+     42
+    ],
+    "double": false
+   },
+   {
+    "code": "P7",
+    "name": "Lung Adaptability",
+    "roll": [
+     43,
+     45
+    ],
+    "double": false
+   },
+   {
+    "code": "P8",
+    "name": "Pheromones",
+    "roll": [
+     46,
+     47
+    ],
+    "double": false
+   },
+   {
+    "code": "P9",
+    "name": "Regeneration",
+    "roll": [
+     48,
+     60
+    ],
+    "double": true
+   },
+   {
+    "code": "P10",
+    "name": "Self-Revival",
+    "roll": [
+     61,
+     62
+    ],
+    "double": true
+   },
+   {
+    "code": "P11",
+    "name": "Self-Sustenance",
+    "roll": [
+     63,
+     67
+    ],
+    "double": false
+   },
+   {
+    "code": "P12",
+    "name": "Stealth",
+    "roll": [
+     68,
+     71
+    ],
+    "double": false
+   },
+   {
+    "code": "P13",
+    "name": "Suspended Animation",
+    "roll": [
+     72,
+     76
+    ],
+    "double": false
+   },
+   {
+    "code": "P14",
+    "name": "True Invulnerability",
+    "roll": [
+     77,
+     78
+    ],
+    "double": true
+   },
+   {
+    "code": "P15",
+    "name": "Vocal Control",
+    "roll": [
+     79,
+     82
+    ],
+    "double": false
+   },
+   {
+    "code": "P16",
+    "name": "Waterbreathing",
+    "roll": [
+     83,
+     90
+    ],
+    "double": false
+   },
+   {
+    "code": "P17",
+    "name": "Water Freedom",
+    "roll": [
+     91,
+     100
+    ],
+    "double": false
+   }
+  ],
+  "PC": [
+   {
+    "code": "PC1",
+    "name": "Control",
+    "roll": [
+     1,
+     8
+    ],
+    "double": true
+   },
+   {
+    "code": "PC2",
+    "name": "Creation",
+    "roll": [
+     9,
+     12
+    ],
+    "double": false
+   },
+   {
+    "code": "PC3",
+    "name": "Domination",
+    "roll": [
+     13,
+     18
+    ],
+    "double": true
+   },
+   {
+    "code": "PC4",
+    "name": "Duplication",
+    "roll": [
+     19,
+     23
+    ],
+    "double": false
+   },
+   {
+    "code": "PC5",
+    "name": "Energy Source",
+    "roll": [
+     24,
+     37
+    ],
+    "double": false
+   },
+   {
+    "code": "PC6",
+    "name": "Energy Source Creation",
+    "roll": [
+     38,
+     39
+    ],
+    "double": true
+   },
+   {
+    "code": "PC7",
+    "name": "Focus",
+    "roll": [
+     40,
+     49
+    ],
+    "double": false
+   },
+   {
+    "code": "PC8",
+    "name": "Gestalt",
+    "roll": [
+     50,
+     55
+    ],
+    "double": false
+   },
+   {
+    "code": "PC9",
+    "name": "Nemesis",
+    "roll": [
+     56,
+     60
+    ],
+    "double": false
+   },
+   {
+    "code": "PC10",
+    "name": "Power Transferral",
+    "roll": [
+     61,
+     64
+    ],
+    "double": false
+   },
+   {
+    "code": "PC11",
+    "name": "Power Vampirism",
+    "roll": [
+     65,
+     73
+    ],
+    "double": true
+   },
+   {
+    "code": "PC12",
+    "name": "Residual Absorption",
+    "roll": [
+     74,
+     83
+    ],
+    "double": false
+   },
+   {
+    "code": "PC13",
+    "name": "Selection",
+    "roll": [
+     84,
+     96
+    ],
+    "double": false
+   },
+   {
+    "code": "PC14",
+    "name": "Weakness Creation",
+    "roll": [
+     97,
+     100
+    ],
+    "double": true
+   }
+  ],
+  "S": [
+   {
+    "code": "S1",
+    "name": "Age-Shift",
+    "roll": [
+     1,
+     2
+    ],
+    "double": false
+   },
+   {
+    "code": "S2",
+    "name": "Alter Ego",
+    "roll": [
+     3,
+     9
+    ],
+    "double": false
+   },
+   {
+    "code": "S3",
+    "name": "Anatomical Separation",
+    "roll": [
+     10,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "S4",
+    "name": "Animal Transformation",
+    "roll": [
+     11,
+     13
+    ],
+    "double": false
+   },
+   {
+    "code": "S5",
+    "name": "Animal Mimicry",
+    "roll": [
+     14,
+     19
+    ],
+    "double": false
+   },
+   {
+    "code": "S6",
+    "name": "Blending",
+    "roll": [
+     20,
+     21
+    ],
+    "double": false
+   },
+   {
+    "code": "S7",
+    "name": "Body Adaptation",
+    "roll": [
+     22,
+     27
+    ],
+    "double": true,
+    "printed": "21-27",
+    "ruling": "R10"
+   },
+   {
+    "code": "S8",
+    "name": "Body Transformation",
+    "roll": [
+     28,
+     30
+    ],
+    "double": true
+   },
+   {
+    "code": "S9",
+    "name": "Body Coating",
+    "roll": [
+     31,
+     33
+    ],
+    "double": false
+   },
+   {
+    "code": "S10",
+    "name": "Bouncing Ball",
+    "roll": [
+     34,
+     37
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S11",
+    "name": "Chemical Mimicry",
+    "roll": [
+     38,
+     38
+    ],
+    "double": false
+   },
+   {
+    "code": "S12",
+    "name": "Elongation",
+    "roll": [
+     39,
+     42
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S13",
+    "name": "Energy Body",
+    "roll": [
+     43,
+     44
+    ],
+    "double": true
+   },
+   {
+    "code": "S14",
+    "name": "Energy Sheath",
+    "roll": [
+     45,
+     49
+    ],
+    "double": false
+   },
+   {
+    "code": "S15",
+    "name": "Evolution",
+    "roll": [
+     50,
+     55
+    ],
+    "double": false
+   },
+   {
+    "code": "S16",
+    "name": "Growth",
+    "roll": [
+     56,
+     57
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S17",
+    "name": "Imitation-Face Changer",
+    "roll": [
+     58,
+     58
+    ],
+    "double": false
+   },
+   {
+    "code": "S18",
+    "name": "Imitation-Human Changeling",
+    "roll": [
+     59,
+     60
+    ],
+    "double": false
+   },
+   {
+    "code": "S19",
+    "name": "Invisibility",
+    "roll": [
+     61,
+     61
+    ],
+    "double": false
+   },
+   {
+    "code": "S20",
+    "name": "Mass Decrease",
+    "roll": [
+     62,
+     62
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S21",
+    "name": "Mass Increase",
+    "roll": [
+     63,
+     63
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S22",
+    "name": "Phasing",
+    "roll": [
+     64,
+     67
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S23",
+    "name": "Physical Gestalt",
+    "roll": [
+     68,
+     70
+    ],
+    "double": false
+   },
+   {
+    "code": "S24",
+    "name": "Plant Mimicry",
+    "roll": [
+     71,
+     71
+    ],
+    "double": false
+   },
+   {
+    "code": "S25",
+    "name": "Plasticity",
+    "roll": [
+     72,
+     74
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S26",
+    "name": "Prehensile Hair",
+    "roll": [
+     75,
+     78
+    ],
+    "double": false
+   },
+   {
+    "code": "S27",
+    "name": "Self-Duplication",
+    "roll": [
+     79,
+     81
+    ],
+    "double": true
+   },
+   {
+    "code": "S28",
+    "name": "Self-Vegetation",
+    "roll": [
+     82,
+     84
+    ],
+    "double": false
+   },
+   {
+    "code": "S29",
+    "name": "Shapeshifting",
+    "roll": [
+     85,
+     90
+    ],
+    "double": false
+   },
+   {
+    "code": "S30",
+    "name": "Shrinking",
+    "roll": [
+     91,
+     94
+    ],
+    "double": false,
+    "addenda": true
+   },
+   {
+    "code": "S31",
+    "name": "Spirit Gestalt",
+    "roll": [
+     95,
+     99
+    ],
+    "double": false
+   },
+   {
+    "code": "S32",
+    "name": "Two-dimensionality",
+    "roll": [
+     100,
+     100
+    ],
+    "double": false,
+    "addenda": true
+   }
+  ],
+  "T": [
+   {
+    "code": "T1",
+    "name": "Astral Body",
+    "roll": [
+     1,
+     2
+    ],
+    "double": false
+   },
+   {
+    "code": "T2",
+    "name": "Carrier Wave",
+    "roll": [
+     3,
+     6
+    ],
+    "double": false
+   },
+   {
+    "code": "T3",
+    "name": "Dimension Travel",
+    "roll": [
+     7,
+     10
+    ],
+    "double": false
+   },
+   {
+    "code": "T4",
+    "name": "Energy Path",
+    "roll": [
+     11,
+     12
+    ],
+    "double": false
+   },
+   {
+    "code": "T5",
+    "name": "Floating Disc",
+    "roll": [
+     13,
+     14
+    ],
+    "double": false
+   },
+   {
+    "code": "T6",
+    "name": "Gateway",
+    "roll": [
+     15,
+     20
+    ],
+    "double": true
+   },
+   {
+    "code": "T7",
+    "name": "Gliding",
+    "roll": [
+     21,
+     26
+    ],
+    "double": false
+   },
+   {
+    "code": "T8",
+    "name": "Hyper-Digging",
+    "roll": [
+     27,
+     28
+    ],
+    "double": false
+   },
+   {
+    "code": "T9",
+    "name": "Hyper-Leaping",
+    "roll": [
+     29,
+     34
+    ],
+    "double": false
+   },
+   {
+    "code": "T10",
+    "name": "Hyper-Running",
+    "roll": [
+     35,
+     42
+    ],
+    "double": false
+   },
+   {
+    "code": "T11",
+    "name": "Hyper-Swimming",
+    "roll": [
+     43,
+     46
+    ],
+    "double": false
+   },
+   {
+    "code": "T12",
+    "name": "Levitation",
+    "roll": [
+     47,
+     52
+    ],
+    "double": false
+   },
+   {
+    "code": "T13",
+    "name": "Rocket",
+    "roll": [
+     53,
+     56
+    ],
+    "double": false,
+    "printed": "52-56",
+    "ruling": "R11"
+   },
+   {
+    "code": "T14",
+    "name": "Skywalk",
+    "roll": [
+     57,
+     58
+    ],
+    "double": false
+   },
+   {
+    "code": "T15",
+    "name": "Spiderclimb",
+    "roll": [
+     59,
+     64
+    ],
+    "double": false
+   },
+   {
+    "code": "T16",
+    "name": "Teleport Self",
+    "roll": [
+     65,
+     72
+    ],
+    "double": true
+   },
+   {
+    "code": "T17",
+    "name": "Teleport Others",
+    "roll": [
+     73,
+     76
+    ],
+    "double": true
+   },
+   {
+    "code": "T18",
+    "name": "Telereformation",
+    "roll": [
+     77,
+     78
+    ],
+    "double": false
+   },
+   {
+    "code": "T19",
+    "name": "Time Travel",
+    "roll": [
+     79,
+     80
+    ],
+    "double": true
+   },
+   {
+    "code": "T20",
+    "name": "Troubleseeker",
+    "roll": [
+     81,
+     82
+    ],
+    "double": false
+   },
+   {
+    "code": "T21",
+    "name": "True Flight",
+    "roll": [
+     83,
+     93
+    ],
+    "double": false
+   },
+   {
+    "code": "T22",
+    "name": "Water Walking",
+    "roll": [
+     94,
+     97
+    ],
+    "double": false
+   },
+   {
+    "code": "T23",
+    "name": "Whirlwind",
+    "roll": [
+     98,
+     100
+    ],
+    "double": false
+   }
+  ]
+ }
+}

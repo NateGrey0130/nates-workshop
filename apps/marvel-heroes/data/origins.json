@@ -1,0 +1,107 @@
+{
+ "about": "Origin of Power: one d100 roll. The table calls the sixth origin Technical Procedure and the text below it Technical Experiment; they are the same entry.",
+ "sources": [
+  "UPB p.11"
+ ],
+ "origins": [
+  {
+   "id": "natal",
+   "name": "Natal",
+   "roll": [
+    1,
+    10
+   ],
+   "summary": "Born with the body and the Powers."
+  },
+  {
+   "id": "maturity",
+   "name": "Maturity",
+   "roll": [
+    11,
+    20
+   ],
+   "summary": "Powers arrived in adulthood, perhaps after flickers in youth."
+  },
+  {
+   "id": "self-achievement",
+   "name": "Self-Achievement",
+   "roll": [
+    21,
+    30
+   ],
+   "summary": "The hero sought Power and found a way: science, study or training."
+  },
+  {
+   "id": "endowment",
+   "name": "Endowment",
+   "roll": [
+    31,
+    35
+   ],
+   "summary": "Another being, or an object, gave the hero Power."
+  },
+  {
+   "id": "technical-mishap",
+   "name": "Technical Mishap",
+   "roll": [
+    36,
+    50
+   ],
+   "summary": "An experiment or procedure went wrong and cannot be exactly repeated."
+  },
+  {
+   "id": "technical-procedure",
+   "name": "Technical Procedure",
+   "roll": [
+    51,
+    60
+   ],
+   "summary": "A deliberate procedure that could be repeated, if anyone had kept notes."
+  },
+  {
+   "id": "creation",
+   "name": "Creation",
+   "roll": [
+    61,
+    65
+   ],
+   "summary": "Made as an adult with Powers: robots, androids, angels and the like."
+  },
+  {
+   "id": "biological-exposure",
+   "name": "Biological Exposure",
+   "roll": [
+    66,
+    76
+   ],
+   "summary": "A creature or something it secreted, like a werewolf's bite."
+  },
+  {
+   "id": "chemical-exposure",
+   "name": "Chemical Exposure",
+   "roll": [
+    77,
+    87
+   ],
+   "summary": "An exotic substance, breathed, eaten, injected or touched."
+  },
+  {
+   "id": "energy-exposure",
+   "name": "Energy Exposure",
+   "roll": [
+    88,
+    98
+   ],
+   "summary": "An unusual form or intensity of energy."
+  },
+  {
+   "id": "rebirth",
+   "name": "Rebirth",
+   "roll": [
+    99,
+    100
+   ],
+   "summary": "The hero died and came back in a new body with Power."
+  }
+ ]
+}

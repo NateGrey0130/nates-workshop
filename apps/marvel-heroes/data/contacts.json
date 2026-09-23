@@ -1,0 +1,207 @@
+{
+ "about": "Contacts are chosen, not rolled: the counts table gives how many. These are the types the Players' Book lists, with what Appendix C says each provides.",
+ "sources": [
+  "PB p.10-11 (types of Contacts)",
+  "PB pp.92-93 (Appendix C)"
+ ],
+ "groups": [
+  {
+   "id": "professional",
+   "name": "Professional"
+  },
+  {
+   "id": "scientific",
+   "name": "Scientific"
+  },
+  {
+   "id": "political",
+   "name": "Political"
+  },
+  {
+   "id": "mystic",
+   "name": "Mystic"
+  }
+ ],
+ "contacts": [
+  {
+   "id": "medicine",
+   "name": "Medicine",
+   "group": "professional",
+   "summary": "Medical advice and care, free or cheap."
+  },
+  {
+   "id": "law",
+   "name": "Law",
+   "group": "professional",
+   "summary": "Legal advice free, representation at a reduced fee."
+  },
+  {
+   "id": "law-enforcement",
+   "name": "Law Enforcement",
+   "group": "professional",
+   "summary": "From a patrolman to a commissioner; police resources."
+  },
+  {
+   "id": "military",
+   "name": "Military",
+   "group": "professional",
+   "summary": "Armed forces of any rank; up to Amazing resources."
+  },
+  {
+   "id": "business",
+   "name": "Business World",
+   "group": "professional",
+   "summary": "Business and finance; up to Incredible resources."
+  },
+  {
+   "id": "journalism",
+   "name": "Journalism",
+   "group": "professional",
+   "summary": "Poor resources but Remarkable knowledge of their beat."
+  },
+  {
+   "id": "crime",
+   "name": "Crime",
+   "group": "professional",
+   "summary": "From a street snitch to a crime boss; risky to rely on."
+  },
+  {
+   "id": "engineering",
+   "name": "Engineering",
+   "group": "professional",
+   "summary": "Someone who builds things and can help build devices."
+  },
+  {
+   "id": "psychiatry",
+   "name": "Psychiatry",
+   "group": "professional",
+   "summary": "A psychiatrist or analyst."
+  },
+  {
+   "id": "espionage",
+   "name": "Espionage",
+   "group": "professional",
+   "summary": "An intelligence agency; information and equipment, favors owed."
+  },
+  {
+   "id": "hero-group",
+   "name": "Hero Group",
+   "group": "professional",
+   "summary": "A superhero team's help, gear and headquarters, and its enemies."
+  },
+  {
+   "id": "artist-performer",
+   "name": "Artist/Performer",
+   "group": "professional",
+   "summary": "Someone in acting or performing."
+  },
+  {
+   "id": "chemistry",
+   "name": "Chemistry",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "biology",
+   "name": "Biology",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "geology",
+   "name": "Geology",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "genetics",
+   "name": "Genetics",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "archaeology",
+   "name": "Archaeology",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "physics",
+   "name": "Physics",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "computers",
+   "name": "Computers",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "electronics",
+   "name": "Electronics",
+   "group": "scientific",
+   "summary": "A scientist with that Talent and at least Excellent Reason."
+  },
+  {
+   "id": "local",
+   "name": "Local",
+   "group": "political",
+   "summary": "A local official; neighborhood information."
+  },
+  {
+   "id": "state",
+   "name": "State",
+   "group": "political",
+   "summary": "State government; up to Remarkable resources."
+  },
+  {
+   "id": "national",
+   "name": "National",
+   "group": "political",
+   "summary": "National government; up to Monstrous, and favors get called in."
+  },
+  {
+   "id": "other-national",
+   "name": "Other National",
+   "group": "political",
+   "summary": "Another nation's government, friend or foe."
+  },
+  {
+   "id": "international",
+   "name": "International",
+   "group": "political",
+   "summary": "The UN or similar; up to Monstrous resources."
+  },
+  {
+   "id": "planetary",
+   "name": "Planetary",
+   "group": "political",
+   "summary": "Aliens only: another world's people or rulers."
+  },
+  {
+   "id": "religion",
+   "name": "Religion",
+   "group": "mystic",
+   "summary": "Named in the Players' Book's list of Contact types, not described in Appendix C."
+  },
+  {
+   "id": "mystic-arts",
+   "name": "Mystic Arts",
+   "group": "mystic",
+   "summary": "Someone aware of extradimensional powers."
+  },
+  {
+   "id": "occult-lore",
+   "name": "Occult Lore",
+   "group": "mystic",
+   "summary": "A scholar of the occult with Remarkable Reason in it."
+  },
+  {
+   "id": "mythology",
+   "name": "Mythology",
+   "group": "mystic",
+   "summary": "A scholar of one pantheon of gods."
+  }
+ ]
+}
