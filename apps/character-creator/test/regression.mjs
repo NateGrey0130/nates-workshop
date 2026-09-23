@@ -2388,15 +2388,30 @@ check('and none of them with ?mine=1',
   }
   let pfPicks = 0;
   const pfStray = new Set();
+  // EVERY occupation a race allows, not the first one. Until 2026-09-23 this
+  // rolled each race with fits[0] alone, so a race rolled as one occupation
+  // out of twenty and the other nineteen pairings were never built - and a
+  // Palladium Fantasy race + occupation refusal on the occupations' shared
+  // language pick went unseen. The first pairing is still built at level
+  // five as well; the rest at level one, which is where a starting pick is.
+  const builds = [];
   for (const c of all) {
-    let occ = null;
-    if (needsOccupation(c)) {
-      const fits = occs.filter((o) => o.system === c.system && occAllowedForRace(c, o).allowed
-        && raceAllowedForOcc(o, c).allowed);
-      if (!fits.length) continue;
-      occ = fits[0];
-    }
-    for (const level of [1, 5]) {
+    if (!needsOccupation(c)) { builds.push([c, null, [1, 5]]); continue; }
+    const fits = occs.filter((o) => o.system === c.system && occAllowedForRace(c, o).allowed
+      && raceAllowedForOcc(o, c).allowed);
+    fits.forEach((o, i) => builds.push([c, o, i === 0 ? [1, 5] : [1]]));
+  }
+  // A refusal is a finished answer, so the check above counts it as one - but
+  // a Language: Other or Literacy: Other pick names a whole family, and that
+  // family is untagged on purpose (zzzzzzzzzzzzzzzz-tag-skill-systems.sql) so
+  // that every game can draw from it. A build refused because one of those
+  // picks ran dry means the family has been narrowed, which is how a local
+  // database carrying the tag script's first version refused every Palladium
+  // Fantasy race + occupation. Collected here and checked below.
+  const familyDry = [];
+  const refusedBy = {};
+  for (const [c, occ, levels] of builds) {
+    for (const level of levels) {
       try {
         const first = composeClass({ rcc: c, occ, character: {} });
         const chosen = chooseClassOptions(first, { totems: cat.totems || [] });
@@ -2426,14 +2441,23 @@ check('and none of them with ?mine=1',
         if (violations.length) bad.push(`${c.id}@${at}: ${violations.map((v) => v.rule).join(', ')}`);
         else tally.built++;
       } catch (e) {
-        if (e instanceof NpcGap) tally.refused++;
-        else bad.push(`${c.id}@${level}: CRASH ${e.message}`);
+        if (e instanceof NpcGap) {
+          tally.refused++;
+          refusedBy[e.code] = (refusedBy[e.code] || 0) + 1;
+          if (e.code === 'choice_group' && /\b(Language|Literacy): Other\b/.test(e.message)) {
+            familyDry.push(`${c.id}${occ ? '+' + occ.id : ''}@${level}`);
+          }
+        } else bad.push(`${c.id}${occ ? '+' + occ.id : ''}@${level}: CRASH ${e.message}`);
       }
     }
   }
-  console.log(`      (${all.length} classes: ${tally.built} NPCs built and accepted, ${tally.refused} refused by name)`);
-  check('every published class either builds an NPC its validator accepts, or refuses by name',
-    bad.length === 0 && tally.built > 0, bad.slice(0, 6).join(' | '));
+  const pairs = builds.filter(([, o]) => o).length;
+  console.log(`      (${all.length} classes, ${pairs} race + occupation pairings: ${tally.built} NPCs built and accepted, `
+    + `${tally.refused} refused by name - ${Object.entries(refusedBy).map(([k, n]) => `${k} ${n}`).join(', ') || 'none'})`);
+  check('every published class, and every race with every occupation it allows, either builds an NPC its validator accepts, or refuses by name',
+    bad.length === 0 && tally.built > 0 && pairs > all.filter((c) => needsOccupation(c)).length, bad.slice(0, 6).join(' | '));
+  check('and none is refused because a Language: Other or Literacy: Other pick ran out of languages',
+    familyDry.length === 0, `${familyDry.length}: ${familyDry.slice(0, 8).join(', ')}`);
   // What went wrong while skills.systems was NULL on every row: a Palladium
   // Fantasy mercenary rolled W.P. Heavy Military Weapons and Language: Gargoyle.
   // The catalog is tagged now, and random picks still prefer, within the game,
