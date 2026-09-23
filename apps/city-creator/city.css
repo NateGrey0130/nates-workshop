@@ -62,6 +62,29 @@ a:focus-visible .map-pin circle, a:focus-visible .map-pin rect { stroke: var(--b
 }
 .city-entry.is-flash { background: var(--accent-glow); transition: background 0.3s; }
 
+/* Present mode's city view (Phase 4c, apps/gm-tools/present.html?city_id=):
+   the map on a card, filling the height of the black stage, with the
+   players' key beside it on a wide screen and under it on a narrow one. */
+.present-city {
+  background: var(--bg-card); color: var(--text-primary);
+  border-radius: var(--radius); padding: 12px;
+  width: min(1200px, 100%); max-height: 100dvh; overflow: auto;
+  display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 12px; align-items: start;
+}
+.present-city .city-map { max-width: none; max-height: calc(100dvh - 72px); }
+/* Present mode's picture controls have no job on a city: its stylesheet gives
+   the arrows and the reveal row a display that beats `hidden`, so they are
+   taken out here. The card starts below the top bar so the bar never covers
+   the key. */
+body.is-city .present-arrow, body.is-city .present-actions { display: none; }
+body.is-city .present-city { margin-top: 52px; max-height: calc(100dvh - 52px); }
+.present-city .present-citykey, .present-city .present-citynotes { grid-column: 2; margin: 0; }
+.present-city .present-citynotes { grid-row: 2; }
+@media (max-width: 760px) {
+  .present-city { grid-template-columns: 1fr; }
+  .present-city .present-citykey, .present-city .present-citynotes { grid-column: 1; grid-row: auto; }
+}
+
 /* Shop stock (Phase 4b): a small priced table under the shop. */
 .city-stock table { width: 100%; border-collapse: collapse; margin: 4px 0; }
 .city-stock th, .city-stock td { text-align: left; padding: 2px 6px 2px 0; border-bottom: 1px solid var(--border); }

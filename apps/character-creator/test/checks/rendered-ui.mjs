@@ -2230,6 +2230,15 @@ export function run() {
     check('and the caption is set as text', /\$\('caption'\)\.textContent/.test(presentJs));
     check('it reads the GM-only entry endpoint',
       /api\(`campaigns\/\$\{campaignId\}\/entries\/\$\{entryId\}`\)/.test(presentJs));
+    // A City Creator city (?city_id=, Phase 4c) is shown from the SERVER's
+    // player view and nothing else - never the G.M.'s whole city, which this
+    // page would then have to hide parts of. Drawn with DOM calls, so the
+    // no-markup check above still covers it, and it adds no write.
+    const cityPart = presentJs.slice(presentJs.indexOf('async function loadCity()'),
+      presentJs.indexOf('// ---------- the chrome'));
+    check('a city is shown from the players\' view, and only from it',
+      /api\(`cities\/\$\{cityId\}\/view`\)/.test(cityPart) && !/api\(`cities\/\$\{cityId\}`\)/.test(presentJs)
+        && (presentJs.match(/\bapi\(`/g) || []).length === 3, `${(presentJs.match(/\bapi\(`/g) || []).length} api() calls`);
 
     // ── the way in, and the way back ──
     check('the dashboard offers Present on a picture and on a page',

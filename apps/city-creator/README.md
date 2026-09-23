@@ -14,7 +14,7 @@ sheets). Built one phase per PR; the plan's phases are:
 | 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
 | 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | done |
-| 4 | roll stats for an NPC (4a, done), shop inventories (4b, done), a player view, an AI "Flesh out" | in progress |
+| 4 | roll stats for an NPC (4a, done), shop inventories (4b, done), a player view (4c, done), an AI "Flesh out" | in progress |
 | 5 | the Rifts table set | to come |
 
 ## How it works
@@ -77,8 +77,19 @@ shop. Those three are all a player view will ever be built from - a G.M.'s
 secret sits in fields it never reads - and the reveal and players' lines are
 saved as they are flipped, not held for *Save changes*. A reroll keeps them.
 To anyone but the G.M., a whole city is a 404 whether or not its map is shown,
-and the campaign's list shows them only shown cities, as summaries. The
-players' own view (through present mode) is Phase 4.
+and the campaign's list shows them only shown cities, as summaries.
+
+## What the players see
+
+**▶ Present what the players see** opens present mode on the city
+(`/apps/gm-tools/present.html?city_id=`). It reads `cities/:id/view`, which
+the server builds from the saved city and nothing else: the map's shapes and
+district names, the pins the G.M. revealed (renumbered 1 to n, so a hidden pin
+leaves no gap), and each entry's players' line. No NPC, rumour, hook, stock,
+secret or G.M. description is in it, so the page cannot leak what it was never
+sent. It is a 404 to a player until the map is shown, and the G.M. can open it
+beforehand as a preview. Players reach it from the campaign's **Handouts**
+tab, which lists every shown city.
 
 Printing leaves the keeping controls off the page and prints only the players'
 lines that were written.

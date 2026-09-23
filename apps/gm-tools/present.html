@@ -15,6 +15,8 @@
 <meta name="theme-color" content="#000000">
 <link rel="stylesheet" href="/shared/styles.css">
 <link rel="stylesheet" href="/apps/character-creator/styles.css">
+<!-- The City Creator's map classes, for ?city_id= (City Creator Phase 4c). -->
+<link rel="stylesheet" href="/apps/city-creator/city.css">
 </head>
 <!--
   PRESENT MODE (P4b). The GM's screen turned round at the table.
@@ -43,6 +45,14 @@
     <img id="pic" alt="">
   </figure>
 
+  <!-- A kept city's map, as the PLAYERS may see it (?city_id=, City Creator
+       Phase 4c). Static here and filled by present.js with DOM calls and
+       textContent, like the picture: no markup is written from a city. -->
+  <section class="present-city" id="city" hidden>
+    <svg class="city-map" id="citymap" role="img" xmlns="http://www.w3.org/2000/svg"></svg>
+    <ol class="map-key present-citykey" id="citykey"></ol>
+    <div class="present-citynotes small" id="citynotes"></div>
+  </section>
   <p class="present-state" id="state">Loading…</p>
 
   <!-- Everything that is not the picture. It fades out when nothing has been

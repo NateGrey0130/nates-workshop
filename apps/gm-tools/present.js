@@ -41,7 +41,14 @@ function backUrl() {
   return '/apps/gm-tools/' + (q.toString() ? '?' + q : '');
 }
 
-function leave() { location.href = backUrl(); }
+// A city's view goes back to where it was opened from: the City Creator for
+// its G.M., the campaign's notes for a player.
+function cityBackUrl() {
+  return P.cityGm ? '/apps/city-creator/'
+    : '/apps/campaign/' + (P.cityCampaign ? '?campaign_id=' + encodeURIComponent(P.cityCampaign) : '');
+}
+
+function leave() { location.href = cityId ? cityBackUrl() : backUrl(); }
 
 // A dead end says what went wrong and keeps the way out: the top bar stays,
 // the picture and the arrows go. A player who reaches this URL lands here -
@@ -56,6 +63,7 @@ function fail(text) {
 }
 
 async function load() {
+  if (cityId) return loadCity();
   if (!campaignId || !entryId) {
     fail('Present mode opens a page of pictures. Pick one on the dashboard and press Present.');
     return;
@@ -152,6 +160,97 @@ async function toggleReveal() {
   } catch (err) {
     $('msg').textContent = err.message;
   }
+}
+
+// ---------- a city's map (City Creator, Phase 4c) ----------
+//
+// ?city_id=N shows what the PLAYERS may see of a kept city: its districts, the
+// pins the G.M. revealed, and the lines the G.M. wrote for them. It reads the
+// server's player view (cities/:id/view), which is BUILT from those parts and
+// nothing else, so there is nothing on this page to hide - a player who opens
+// it sees exactly what the G.M. sees here. It writes nothing: revealing a pin
+// is the City Creator's, and this file's one write stays toggleReveal's.
+//
+// Drawn with createElementNS and textContent, never innerHTML, like the rest
+// of this file: a district or a pin is named by whoever wrote the city.
+const cityId = params.get('city_id');
+const SVG = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs, text) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+const svgPts = (list) => list.map(([x, y]) => `${x},${y}`).join(' ');
+
+async function loadCity() {
+  document.body.classList.add('is-city');
+  for (const id of ['prev', 'next', 'reveal', 'shown', 'count']) $(id).hidden = true;
+  let res;
+  try { res = await api(`cities/${cityId}/view`); }
+  catch (err) { fail(err.status === 404 ? 'That city map is not shown to the players.' : err.message); return; }
+  const c = res.city;
+  P.cityGm = res.is_gm;
+  P.cityCampaign = c.campaign_id;
+  $('title').textContent = c.name;
+  const m = c.map;
+  const box = $('citymap');
+  box.setAttribute('viewBox', (m.view || [0, 0, m.size, m.size]).join(' '));
+  box.setAttribute('aria-label', `Map of ${c.name}`);
+  box.replaceChildren();
+  // The quarter hatch city.css fills a race quarter with: defined per page,
+  // so this page draws its own copy of the City Creator's pattern.
+  const hatch = svg('pattern', { id: 'quarter-hatch', width: 16, height: 16, patternUnits: 'userSpaceOnUse',
+    patternTransform: 'rotate(45)' });
+  hatch.append(svg('rect', { width: 16, height: 16, class: 'map-hatch-bg' }),
+    svg('line', { x1: 0, y1: 0, x2: 0, y2: 16, class: 'map-hatch' }));
+  const defs = svg('defs');
+  defs.append(hatch);
+  box.append(defs, svg('polygon', { points: svgPts(m.outline), class: 'map-ground' }));
+  if (m.river) box.append(svg('polyline', { points: svgPts(m.river), class: 'map-river' }));
+  m.districts.forEach((d, i) => {
+    const cell = svg('polygon', { points: svgPts(d.polygon), class: `map-cell ${d.quarter ? 'map-cell-quarter' : 'map-cell-' + (i % 4)}` });
+    cell.append(svg('title', {}, d.name));
+    box.append(cell);
+  });
+  for (const r of m.roads) box.append(svg('polyline', { points: svgPts(r), class: 'map-road' }));
+  if (m.wall) box.append(svg('polygon', { points: svgPts(m.wall), class: 'map-wall' }));
+  for (const [x, y] of m.gates) box.append(svg('rect', { x: x - 14, y: y - 14, width: 28, height: 28, class: 'map-gate' }));
+  for (const d of m.districts) if (d.label) box.append(svg('text', { x: d.label[0], y: d.label[1], class: 'map-label' }, d.name));
+  for (const p of c.pins) {
+    const g = svg('g', { class: `map-pin map-pin-${p.kind}` });
+    g.append(p.kind === 'shop'
+      ? svg('rect', { x: p.at[0] - 16, y: p.at[1] - 16, width: 32, height: 32, rx: 4 })
+      : svg('circle', { cx: p.at[0], cy: p.at[1], r: 17 }));
+    g.append(svg('text', { x: p.at[0], y: p.at[1] }, String(p.n)));
+    g.append(svg('title', {}, p.label));
+    box.append(g);
+  }
+  // What the players read: each revealed pin and each district the G.M. wrote a
+  // line for, as text.
+  const key = $('citykey');
+  key.replaceChildren();
+  for (const p of c.pins) {
+    const li = document.createElement('li');
+    li.value = p.n;
+    const b = document.createElement('b');
+    b.textContent = p.label;
+    li.append(b, document.createTextNode(p.text ? ` - ${p.text}` : ''));
+    key.append(li);
+  }
+  const notes = $('citynotes');
+  notes.replaceChildren();
+  for (const d of m.districts.filter((x) => x.text)) {
+    const para = document.createElement('p');
+    const b = document.createElement('b');
+    b.textContent = d.name;
+    para.append(b, document.createTextNode(` - ${d.text}`));
+    notes.append(para);
+  }
+  $('caption').textContent = c.pins.length ? '' : 'No places marked yet.';
+  $('state').hidden = true;
+  $('city').hidden = false;
+  keepAwake();
 }
 
 // ---------- the chrome, and when it is not there ----------

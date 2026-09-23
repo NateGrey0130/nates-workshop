@@ -70,6 +70,9 @@ async function load() {
     D.roster = roster.characters;
     D.npcs = npcs.npcs;
     D.handouts = handouts.handouts || [];
+    // The City Creator's shown maps (Phase 4c), beside the handouts. A failure
+    // costs only the list; the rest of the page does not wait on it.
+    try { D.cities = (await api(`campaigns/${campaignId}/cities`)).cities || []; } catch { D.cities = []; }
     // Labels for the G.M.'s statted-NPC list: the id-and-name projection, not
     // the full class list, which only loads if the roller is opened.
     if (D.isGm && !D.classNames) {
@@ -109,7 +112,7 @@ function render() {
                 ['people', 'People', D.npcs.length],
                 ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
                 ['money', 'Currency', 0],
-                ['handouts', 'Handouts', D.handouts.length]];
+                ['handouts', 'Handouts', D.handouts.length + (D.cities?.length || 0)]];
   $('app').innerHTML = `
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
@@ -134,7 +137,20 @@ function setTab(t) { D.tab = t; D.npc = null; render(); }
 // is the GM's notebook and only the IMAGE is ever revealed (migration 078).
 // A player who has seen nothing gets a sentence saying so rather than an empty
 // panel, because "nothing yet" and "this is broken" look identical otherwise.
+// The City Creator's maps the GM has shown (Phase 4c): a link each to the
+// players' view in present mode. The list request sends a player only the
+// cities whose map is shown, and only their names.
+function cityMapsHtml() {
+  if (!D.cities?.length) return '';
+  return `<div class="panel">
+    <h3 style="margin-top:0">City maps</h3>
+    <ul>${D.cities.map((c) => `<li><a href="/apps/gm-tools/present.html?city_id=${c.id}">🗺 ${esc(c.name)}</a>${
+      D.isGm && !c.show_map ? ' <span class="muted small">(not shown to the players)</span>' : ''}</li>`).join('')}</ul>
+  </div>`;
+}
+
 function handoutsView() {
+  if (!D.handouts.length && D.cities?.length) return cityMapsHtml();
   if (!D.handouts.length) {
     return `<div class="panel">
       <h3 style="margin-top:0">Handouts</h3>
@@ -153,7 +169,7 @@ function handoutsView() {
         </figure>
       </li>`).join('')}
     </ul>
-  </div>`;
+  </div>${cityMapsHtml()}`;
 }
 
 // ---------- notes ----------

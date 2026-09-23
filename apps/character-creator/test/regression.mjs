@@ -2740,6 +2740,75 @@ check('and none of them with ?mine=1',
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }
 
+// ── The players' view of a city (Phase 4c, cities/:id/view) ─────────────────
+//
+// THE CHECK THAT FAILS IF A G.M.-ONLY FIELD REACHES A NON-G.M. The view is
+// BUILT on the server from the map, the revealed pins and the players' lines;
+// this reads it as a player and a stranger and fails if any text the city
+// holds for the G.M. alone appears anywhere in the response - an NPC, a
+// secret, a hook, a rumour true or false, an encounter, a shop's owner or
+// stock, the overview, or a pin that was not revealed.
+{
+  const { generateCity, stockShop } = await import('../../city-creator/js/city-engine.js');
+  const { layoutMap } = await import('../../city-creator/js/city-map.js');
+  const gear = (await api('GET', '/codex?section=gear')).body.gear || [];
+  let city = generateCity({ system: 'palladium-fantasy', population: 12000, npcCount: 12, everyRace: true,
+    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] }, 424242);
+  for (const s of city.shops) city = stockShop(city, s.id, gear);
+  city = { ...city, map: layoutMap(city), reveal: { 'place-0': true, 'shop-0': true },
+    public: { 'place-0': 'Anyone can see the old tower from the road.', [city.districts[0].id]: 'The busy heart of town.',
+      'npc-0': 'SECRET-PUBLIC-TEXT-ON-AN-NPC' } };
+  const cid = (await api('POST', `/campaigns/${campaignId}/cities`, { city })).body.city.id;
+  const player = 'player2@example.com', stranger = 'stranger@example.com';
+
+  const hidden = await apiAs(player, 'GET', `/cities/${cid}/view`);
+  check('a city whose map is not shown has no player view', hidden.status === 404, hidden.status);
+  const preview = await api('GET', `/cities/${cid}/view`);
+  check('while its G.M. can open the players\' view before showing it', preview.status === 200 && preview.body.is_gm === true);
+  await api('PATCH', `/cities/${cid}`, { show_map: true });
+  const asPlayer = await apiAs(player, 'GET', `/cities/${cid}/view`);
+  const asStranger = await apiAs(stranger, 'GET', `/cities/${cid}/view`);
+  check('once shown, the players - anyone signed in - get the view', asPlayer.status === 200 && asStranger.status === 200,
+    `${asPlayer.status} / ${asStranger.status}`);
+
+  // What a player may read, and everything else the city holds. The allowed
+  // text comes from what THIS TEST revealed, never from the response: read
+  // off the response, a leaked string would count as allowed and pass.
+  const v = asPlayer.body.city;
+  const shownPins = city.map.pins.filter((p) => city.reveal[p.id] === true);
+  const allowed = [city.overview.name, ...city.map.districts.map((d) => d.name),
+    city.public['place-0'], city.public[city.districts[0].id],
+    ...shownPins.flatMap((p) => [p.label, p.district])].filter(Boolean).join('\n');
+  const gmOnly = [
+    ...city.npcs.flatMap((n) => [n.name, n.role, n.look, n.quirk, n.want, n.secret]),
+    ...city.rumours.map((r) => r.text),
+    ...city.districts.flatMap((d) => [d.mood, ...d.encounters.map((e) => e.text)]),
+    city.overview.government, city.overview.trade, city.overview.walls, ...city.overview.factions.flatMap((f) => [f.name, f.goal]),
+    ...city.quirks.map((q) => q.text),
+    ...city.shops.flatMap((s) => [s.specialty, s.quirk, ...(s.inventory || []).map((i) => i.name)]),
+    ...city.shops.filter((s) => s.id !== 'shop-0').map((s) => s.name),
+    ...city.places.filter((p) => p.id !== 'place-0').map((p) => p.name),
+    'SECRET-PUBLIC-TEXT-ON-AN-NPC',
+  ].filter((t) => typeof t === 'string' && t.length > 3 && !allowed.includes(t));
+  const body = JSON.stringify(asPlayer.body);
+  const leaked = gmOnly.filter((t) => body.includes(t));
+  check('NOTHING the city holds for the G.M. reaches a player - no NPC, secret, rumour, encounter, stock or hidden pin',
+    gmOnly.length > 100 && leaked.length === 0, `${gmOnly.length} G.M.-only strings; leaked: ${leaked.slice(0, 5).join(' | ')}`);
+  check('the view carries only its own fields',
+    JSON.stringify(Object.keys(v).sort()) === JSON.stringify(['campaign_id', 'id', 'map', 'name', 'pins'])
+      && v.pins.every((p) => JSON.stringify(Object.keys(p).sort()) === JSON.stringify(['at', 'district', 'id', 'kind', 'label', 'n', 'text'])),
+    JSON.stringify(Object.keys(v)));
+  check('only the revealed pins, numbered 1..n so the hidden ones leave no gaps',
+    v.pins.length === 2 && v.pins.map((p) => p.n).join() === '1,2' && v.pins.some((p) => p.text === 'Anyone can see the old tower from the road.'),
+    JSON.stringify(v.pins.map((p) => [p.id, p.n])));
+  // By id: the map lists districts in its own order (the centre first), not the city's.
+  check('and a district\'s players\' line comes with it',
+    v.map.districts.find((d) => d.id === city.districts[0].id)?.text === 'The busy heart of town.');
+  await api('PATCH', `/cities/${cid}`, { show_map: false });
+  check('hiding the map again takes the view away', (await apiAs(player, 'GET', `/cities/${cid}/view`)).status === 404);
+  await api('DELETE', `/cities/${cid}`);
+}
+
 // ── Notable NPCs from the books (migrations 072/073, from-notable) ──────────
 //
 // A book prints FIXED numbers for one person, and a G.M. copies that person
