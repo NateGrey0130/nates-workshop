@@ -345,3 +345,39 @@ label.check input { width: 20px; height: 20px; }
   .pw-side { position: static; }
   .pw-list { max-height: 50vh; }
 }
+
+/* -- generator -- */
+.step-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.step-head h2 { margin: 0; }
+.step-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.step .big { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 26px; margin: 10px 0 4px; text-transform: uppercase; }
+.notes { margin: 8px 0 0; padding-left: 20px; }
+.note { border-left: 4px solid var(--yellow); padding-left: 10px; }
+.table-wrap { overflow-x: auto; }
+table.abilities { border-collapse: collapse; width: 100%; margin-top: 8px; }
+table.abilities th, table.abilities td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.abilities thead th { font-family: var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.04em; }
+table.abilities .num { text-align: right; }
+table.abilities tr.secondary th, table.abilities tr.secondary td { background: var(--panel-alt); }
+table.abilities select { min-height: 34px; padding: 3px 6px; }
+table.abilities input[type="checkbox"] { width: 20px; height: 20px; }
+.secondaries { display: flex; gap: 24px; font-size: 20px; }
+.buys { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.buy { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
+ol.powers { padding-left: 22px; }
+ol.powers li { padding: 5px 0; }
+.add-power { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.add-power label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
+.fields.weak { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.hero-card .stats { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.hero-card .seeds { font-size: 12px; }
+.step button[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+@media print {
+  body { background: #fff; color: #000; }
+  .masthead, .tabs, .step, .gen-bar, #panel-feat, #panel-powers { display: none !important; }
+  #panel-gen { display: block !important; }
+  .panel, .panel.alt { box-shadow: none; border: 2px solid #000; background: #fff; }
+  .hero-card .caption { border: 1px solid #000; background: #fff; }
+}
+.step .big .muted, .step .big .tag { font-family: var(--font-body); font-size: 14px; font-weight: 400; text-transform: none; vertical-align: middle; }

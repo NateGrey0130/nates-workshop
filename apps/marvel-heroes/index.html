@@ -26,6 +26,7 @@
 <nav class="tabs" role="tablist" aria-label="Marvel Heroes">
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
+  <button type="button" role="tab" id="tab-gen" data-tab="gen" aria-controls="panel-gen" aria-selected="false">Generator</button>
 </nav>
 
 <main id="app">
@@ -97,6 +98,19 @@
         <section id="pw-intro" class="panel alt pw-intro" hidden></section>
       </div>
     </div>
+  </section>
+  <section id="panel-gen" role="tabpanel" aria-labelledby="tab-gen" hidden>
+    <div class="panel gen-bar">
+      <span class="caption">The Ultimate Powers Book, seven steps</span>
+      <h1>Build a hero</h1>
+      <p>Every step is rolled; change any of them by picking instead, reroll one on its own, or lock it and roll the rest.</p>
+      <div class="row">
+        <button type="button" class="btn roll" id="gen-roll">Roll the unlocked steps</button>
+        <button type="button" class="btn secondary" id="gen-new">Start over</button>
+        <button type="button" class="btn secondary" id="gen-print">Print the hero</button>
+      </div>
+    </div>
+    <div id="gen"></div>
   </section>
 </main>
 

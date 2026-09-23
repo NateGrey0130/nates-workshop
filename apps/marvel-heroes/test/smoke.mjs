@@ -564,6 +564,96 @@ section('The power browser finds Powers by code, name, word and class');
     && b.related(named, 'optional').some((x) => x.code === null && x.name));
 }
 
+section('The generator builds a legal hero, and the same seeds always build the same one');
+
+{
+  const { makeGenerator, newSeeds, PRIMARY } = await import(new URL('../js/generator.js', import.meta.url));
+  const data = {};
+  for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) data[n] = load(`${n}.json`);
+  const gen = makeGenerator(data);
+  const R = Object.fromEntries(data.ranks.ranks.map((r, i) => [r.id, i]));
+  const seeds = { body: 1, origin: 2, abilities: 3, weakness: 4, counts: 5, powers: 6, talents: 7 };
+  const safe = (fn) => { try { return fn(); } catch (e) { return { threw: e.message }; } };
+
+  const a = safe(() => gen.build({ seeds })), b = safe(() => gen.build({ seeds }));
+  check('the same seeds build the same hero', !a.threw && JSON.stringify(a) === JSON.stringify(b), a.threw);
+  // Pinned: seeds 1-7 make this Lupinoid. A hero can be rebuilt from its seeds
+  // only while this holds; a change to the generator is a deliberate re-pin.
+  const pin = a.threw ? a.threw : [a.body.id, a.origin.id, ...PRIMARY.map((k) => a.abilities[k].rank), a.health, a.karma,
+    ...a.powers.map((p) => `${p.code}:${p.rank}`), ...a.talents.map((t) => t.id)].join(',');
+  check('and seeds 1-7 are pinned', pin === 'lupinoid,biological-exposure,incredible,feeble,excellent,poor,incredible,excellent,excellent,56,68,'
+    + 'MCo1:remarkable,EE8:poor,D15:amazing,EE14:good,D1:excellent,P11:excellent,guns,geology,pilot', pin);
+
+  // Two thousand random heroes against the rules.
+  const problems = new Set();
+  for (let i = 0; i < 2000; i++) {
+    const h = safe(() => gen.build({ seeds: newSeeds() }));
+    if (h.threw) { problems.add('threw: ' + h.threw); continue; }
+    const t = gen.typeById[h.body.id];
+    if (t.special) problems.add('rolled a Compound or Changeling');
+    const used = h.powers.filter((p) => p.source !== 'body').reduce((s, p) => s + p.slots, 0);
+    if (used !== h.slots.powers) problems.add(`power slots ${used} of ${h.slots.powers}`);
+    if (new Set(h.powers.map((p) => p.code)).size !== h.powers.length) problems.add('a Power twice');
+    if (h.powers.some((p) => !gen.powerByCode[p.code] || !(p.rank in R))) problems.add('an unknown Power or rank');
+    if (h.talents.reduce((s, x) => s + x.slots, 0) !== h.slots.talents) problems.add('talent slots');
+    if (new Set(h.talents.map((x) => x.id)).size !== h.talents.length) problems.add('a Talent twice');
+    for (const k of PRIMARY) {
+      const r = h.abilities[k];
+      if (!r.set && (R[r.rank] < R.feeble || R[r.rank] > R.monstrous)) problems.add(`${k} ${r.rank} outside Feeble-Monstrous`);
+    }
+    const sum = (ks) => ks.reduce((s, k) => s + h.abilities[k].number, 0);
+    if (h.health !== sum(['fighting', 'agility', 'strength', 'endurance']) * (t.health_multiplier || 1)) problems.add('Health');
+    if (h.karma !== sum(['reason', 'intuition', 'psyche'])) problems.add('Karma');
+    const bodyPowers = gen.merged(t, h.body.variant).bonus_powers.length;
+    if (h.powers.filter((p) => p.source === 'body').length !== bodyPowers) problems.add(`${t.id}: body Powers`);
+  }
+  check('2,000 random heroes: slots filled exactly, nothing twice, ranks in bounds, Health and Karma summed, body Powers granted',
+    problems.size === 0, [...problems].slice(0, 6).join('; '));
+
+  const as = (body, extra = {}) => safe(() => gen.build({ seeds, picks: { body, ...extra } }));
+  const d = as('deity');
+  const plain = safe(() => gen.build({ seeds, picks: { body: 'deity', ranks: {} } }));
+  check('a Deity: every Primary Ability +2CS, stopping at Monstrous (R18)', PRIMARY.every((k) => {
+    const x = d.abilities[k];
+    return R[x.rank] === Math.min(R[x.rolled] + 2, R.monstrous);
+  }), PRIMARY.map((k) => `${d.abilities[k].rolled}->${d.abilities[k].rank}`).join(' '));
+  check('and two more Powers, and a Travel Power from the body that takes no slot (R17)',
+    d.slots.powers === d.counts.powers.initial + 2 && d.powers.some((p) => p.source === 'body' && p.code.startsWith('T') && p.slots === 0));
+  const veg = as('vegetable');
+  check('a Vegetable: Resources zero, Fighting -2CS, Endurance +2CS, Absorption at Good',
+    veg.abilities.resources.rank === 'shift-0' && veg.abilities.resources.number === 0
+      && veg.abilities.fighting.cs === -2 && veg.abilities.endurance.cs === 2
+      && veg.powers.some((p) => p.code === 'EC1' && p.rank === 'good' && p.source === 'body'));
+  const eth = as('ethereal');
+  check('an Ethereal\'s Fighting is set to Shift 0', eth.abilities.fighting.rank === 'shift-0' && eth.abilities.fighting.number === 0);
+  const nh = as('normal-human');
+  const col2 = data['random-ranks'].columns['2'];
+  check('a Normal Human rolls on column 2', PRIMARY.every((k) => col2.some((bd) => bd.rank === nh.abilities[k].rolled
+    && nh.abilities[k].roll >= bd.lo && nh.abilities[k].roll <= bd.hi)));
+  // A reroll of the body is a new BODY seed; the ability dice must not move.
+  const reBody = safe(() => gen.build({ seeds: { ...seeds, body: 99 } }));
+  check('the same ability dice are read again when the body is rerolled or picked',
+    PRIMARY.every((k) => nh.abilities[k].roll === d.abilities[k].roll && reBody.abilities[k].roll === a.abilities[k].roll)
+      && reBody.body.id !== a.body.id, `${a.body.id} -> ${reBody.body.id}`);
+  const ind = as('mutant-induced', { choose: ['psyche'] });
+  check('a picked free +1CS goes where the player put it', ind.chosen.join() === 'psyche' && ind.abilities.psyche.cs === 1);
+  const indRes = as('mutant-induced', { choose: ['resources'] });
+  check('and an Induced Mutant\'s cannot go to Resources, which is not a Primary Ability',
+    !indRes.chosen.includes('resources') && PRIMARY.includes(indRes.chosen[0]));
+  const bought = as('normal-human', { bought: { powers: 1 } });
+  const room = nh.counts.powers.max - nh.counts.powers.initial;
+  check('buying a Power adds a slot and costs -2CS Resources',
+    room < 1 || (bought.slots.powers === nh.slots.powers + 1 && R[bought.abilities.resources.rank] === Math.max(R.feeble, R[nh.abilities.resources.rank] - 2)));
+  const greedy = as('normal-human', { bought: { powers: 99 } });
+  check('and buying stops at the table\'s maximum', greedy.slots.powers === nh.counts.powers.max);
+  const picked = as('normal-human', { powers: ['T21'] });
+  check('a picked Power is kept and the dice fill the rest', picked.powers[0].code === 'T21' && picked.powers[0].source === 'picked'
+    && picked.powers.reduce((s, p) => s + p.slots, 0) === picked.slots.powers);
+  const v = as('avian', { variant: 'harpy' });
+  check('a picked variant is used: a Harpy rolls on column 2 with Fighting +1CS (R15)',
+    v.body.variant === 'harpy' && v.body.column === 2 && v.abilities.fighting.cs === 1);
+}
+
 section('Every ruling in the data is in the README, and every README ruling is in the data');
 
 // Collect every "ruling" value, anywhere in any data file.
@@ -581,6 +671,10 @@ function rulingsIn(v, out) {
 }
 const inData = new Set();
 for (const f of dataFiles) rulingsIn(load(f), inData);
+// A ruling the generator applies lives in its code, cited as "R17:" in a comment.
+for (const f of walk(join(appDir, 'js')).filter((p) => p.endsWith('.js'))) {
+  for (const m of readFileSync(f, 'utf8').matchAll(/\/\/.*?\b(R\d+):/g)) inData.add(m[1]);
+}
 const inReadme = new Set([...readme.matchAll(/^- \*\*(R\d+)\*\*/gm)].map((m) => m[1]));
 check('the README lists at least one ruling as "- **Rn**"', inReadme.size > 0);
 for (const id of inData) check(`${id}, cited in the data, is in the README`, inReadme.has(id));

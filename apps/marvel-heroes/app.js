@@ -7,6 +7,7 @@
 import { rng, newSeed, d100 } from './js/dice.js';
 import { makeFeat } from './js/feat.js';
 import { makeBrowser } from './js/browser.js';
+import { makeGenerator, newSeeds, STEPS, PRIMARY } from './js/generator.js';
 
 export const APP = 'marvel-heroes';
 
@@ -126,11 +127,11 @@ async function fullText(code) {
   return out;
 }
 
-// Book prose arrives as one run of text; break it into paragraphs at the
-// sentence boundaries the listings use for their own sub-heads.
 // 'shift-x' -> 'Shift X', 'class-1000' -> 'Class 1000': the tables name ranks by id.
 const rankLabel = (id) => id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+// Book prose arrives as one run of text; break it into paragraphs at the
+// sentence boundaries the listings use for their own sub-heads.
 const paragraphs = (s) => esc(s).split(/(?<=\.)\s+(?=(?:Power Stunts?|Optional Powers?|Bonus Powers?|The Nemesis|Nemesis|Example|Note)\b)/)
   .map((p) => `<p>${p}</p>`).join('');
 
@@ -218,14 +219,255 @@ function initBrowser(browser, tables) {
   draw();
 }
 
+// ---------------------------------------------------------------- generator
+
+// Which picks belong to which step: rerolling a step forgets its picks too,
+// unless the step is locked.
+const STEP_PICKS = {
+  body: ['body', 'variant', 'choose'],
+  origin: ['origin'],
+  abilities: ['ranks', 'choose'],
+  weakness: ['weakness'],
+  counts: ['bought'],
+  powers: ['powers'],
+  talents: ['talents'],
+};
+const LABEL = { fighting: 'Fighting', agility: 'Agility', strength: 'Strength', endurance: 'Endurance',
+  reason: 'Reason', intuition: 'Intuition', psyche: 'Psyche', resources: 'Resources', popularity: 'Popularity' };
+
+function initGenerator(gen, data) {
+  const root = $('#gen');
+  const rankName = (id) => gen.ladder.find((r) => r.id === id)?.name ?? id;
+  const byId = (list, id) => list.find((x) => x.id === id);
+  let state = null;
+
+  function fresh() { return { seeds: newSeeds(), picks: {}, locks: {} }; }
+  try {
+    const saved = JSON.parse(localStorage.getItem('mh-hero') || 'null');
+    if (saved?.seeds && STEPS.every((s) => Number.isFinite(saved.seeds[s]))) state = { locks: {}, picks: {}, ...saved };
+  } catch { /* a blocked or stale store just means a fresh hero */ }
+  if (!state) state = fresh();
+  const save = () => { try { localStorage.setItem('mh-hero', JSON.stringify(state)); } catch { /* ignore */ } };
+
+  function reroll(step) {
+    state.seeds[step] = newSeed();
+    for (const k of STEP_PICKS[step]) delete state.picks[k];
+    draw();
+  }
+  function rollAll() {
+    for (const s of STEPS) if (!state.locks[s]) {
+      state.seeds[s] = newSeed();
+      for (const k of STEP_PICKS[s]) delete state.picks[k];
+    }
+    draw();
+  }
+  const setPick = (k, v) => {
+    if (v === '' || v === null || v === undefined || (Array.isArray(v) && !v.length)) delete state.picks[k];
+    else state.picks[k] = v;
+    draw();
+  };
+
+  const card = (step, title, body, extra = '') => `
+    <section class="panel step" data-step="${step}">
+      <header class="step-head">
+        <h2>${title}</h2>
+        <div class="step-tools">
+          ${extra}
+          <label class="check"><input type="checkbox" data-lock="${step}" ${state.locks[step] ? 'checked' : ''}> Lock</label>
+          <button type="button" class="btn secondary small" data-reroll="${step}" ${state.locks[step] ? 'disabled' : ''}>Reroll</button>
+        </div>
+      </header>
+      ${body}
+    </section>`;
+  const rollNote = (roll) => (roll === null || roll === undefined ? '<span class="tag">picked</span>' : `<span class="muted">rolled ${String(roll).padStart(2, '0')}</span>`);
+  const options = (list, sel, label = (x) => x.name, val = (x) => x.id) =>
+    list.map((x) => `<option value="${esc(val(x))}" ${val(x) === sel ? 'selected' : ''}>${esc(label(x))}</option>`).join('');
+
+  function draw() {
+    const h = gen.build(state);
+    save();
+    const t = gen.typeById[h.body.id];
+    const bodyTypes = gen.types.filter((x) => !x.special);
+
+    // 1. Physical form
+    const variantSel = t.variants
+      ? `<label>Kind <select data-pick="variant">${options(t.variants, h.body.variant)}</select></label>` : '';
+    const s1 = card('body', '1. Physical form', `
+      <div class="fields">
+        <label>Body type <select data-pick="body"><option value="">Roll it</option>${options(bodyTypes, state.picks.body)}</select></label>
+        ${variantSel}
+      </div>
+      <p class="big">${esc(h.body.name)}${h.body.variantName ? ` - ${esc(h.body.variantName)}` : ''} ${rollNote(h.body.roll)}</p>
+      <p class="muted">Rolls abilities on Random Ranks column ${h.body.column}.</p>
+      ${h.body.notes.length ? `<ul class="notes">${h.body.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}`);
+
+    // 2. Origin
+    const org = byId(data.origins.origins, h.origin.id);
+    const s2 = card('origin', '2. Origin of Power', `
+      <div class="fields"><label>Origin <select data-pick="origin"><option value="">Roll it</option>${options(data.origins.origins, state.picks.origin)}</select></label></div>
+      <p class="big">${esc(org.name)} ${rollNote(h.origin.roll)}</p><p>${esc(org.summary)}</p>`);
+
+    // 3 & 4. Abilities
+    const rankOpts = (sel) => `<option value="">Roll</option>${gen.ladder.filter((r) => r.initial !== undefined)
+      .map((r) => `<option value="${r.id}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}`;
+    const choose = t.choose_shift;
+    const rows = Object.entries(h.abilities).map(([a, v]) => `
+      <tr${PRIMARY.includes(a) ? '' : ' class="secondary"'}>
+        <th scope="row">${LABEL[a]}</th>
+        <td>${v.roll === null ? '<span class="tag">picked</span>' : String(v.roll).padStart(2, '0')}</td>
+        <td>${esc(rankName(v.rolled))}</td>
+        <td>${v.set ? 'set' : ''}${v.cs ? `${v.cs > 0 ? '+' : ''}${v.cs}CS` : ''}</td>
+        <td><strong>${esc(rankName(v.rank))}</strong></td>
+        <td class="num">${v.number}</td>
+        <td><select data-rank="${a}" aria-label="Pick ${LABEL[a]}">${rankOpts(state.picks.ranks?.[a])}</select></td>
+        ${choose ? `<td><input type="checkbox" data-choose="${a}" aria-label="Give ${LABEL[a]} the free +1CS" ${h.chosen.includes(a) ? 'checked' : ''} ${choose.from === 'primary' && !PRIMARY.includes(a) ? 'disabled' : ''}></td>` : ''}
+      </tr>`).join('');
+    const s3 = card('abilities', '3. Abilities', `
+      ${choose ? `<p>${esc(h.body.name)} raises any ${choose.count} ${choose.from === 'primary' ? 'Primary Ability' : 'ability'} +${choose.amount}CS: tick it below.</p>` : ''}
+      <div class="table-wrap"><table class="abilities">
+        <thead><tr><th>Ability</th><th>Roll</th><th>Rolled</th><th>Body</th><th>Rank</th><th class="num">No.</th><th>Pick</th>${choose ? '<th>+1CS</th>' : ''}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="secondaries"><span><strong>Health</strong> ${h.health}</span> <span><strong>Karma</strong> ${h.karma}</span></p>
+      ${h.resourcesBefore !== h.abilities.resources.rank ? `<p class="muted">Resources were ${esc(rankName(h.resourcesBefore))} before buying extras.</p>` : ''}`);
+
+    // 5. Weakness
+    const w = data.weakness;
+    const wPart = (part, label) => {
+      const e = byId(w[part], h.weakness[part].id);
+      return `<label>${label} <select data-weak="${part}"><option value="">Roll it</option>${options(w[part], state.picks.weakness?.[part])}</select></label>
+        <p><strong>${esc(e.name)}</strong> ${rollNote(h.weakness[part].roll)}<br><span class="muted">${esc(e.summary)}</span></p>`;
+    };
+    const s5 = card('weakness', '4. Weakness', `
+      <div class="fields weak"><div>${wPart('stimulus', 'Stimulus')}</div><div>${wPart('effect', 'Effect')}</div><div>${wPart('duration', 'Duration')}</div></div>
+      ${h.fatalMayConvert ? '<p class="note">Every Power is Remarkable or lower, so this Fatal Weakness may be taken as Incapacitation instead.</p>' : ''}`);
+
+    // 6. Powers
+    const buy = (kind, cost, label) => {
+      const n = h.bought[kind];
+      const room = h.slots.max[kind] - h.counts[kind].initial;
+      return `<span class="buy">${label}: ${n}
+        <button type="button" class="btn secondary small" data-buy="${kind}" data-d="-1" ${n <= 0 ? 'disabled' : ''} aria-label="Buy one fewer ${kind}">-</button>
+        <button type="button" class="btn secondary small" data-buy="${kind}" data-d="1" ${n >= room ? 'disabled' : ''} aria-label="Buy one more ${kind}, ${cost}CS Resources">+</button></span>`;
+    };
+    const pRows = h.powers.map((p) => {
+      const d = gen.powerByCode[p.code];
+      const src = { body: 'from the body', bonus: `bonus with ${p.of}`, picked: 'picked', rolled: '' }[p.source];
+      return `<li>
+        <span class="code">${p.code}</span> <strong>${esc(d.name)}</strong>
+        - ${esc(rankName(p.rank))} (${gen.numberOf(p.rank)})${p.slots === 2 ? ' <span class="tag">x2</span>' : ''}${src ? ` <span class="muted">${esc(src)}</span>` : ''}
+        ${p.source === 'picked' ? `<button type="button" class="linklike" data-unpick="${p.code}">remove</button>` : ''}
+        <span class="pw-sum">${esc(d.summary)}</span></li>`;
+    }).join('');
+    const s6 = card('powers', '5. Powers', `
+      <p>Rolled ${h.counts.powers.initial} of a possible ${h.slots.max.powers} (counts roll ${String(h.counts.powers.roll).padStart(2, '0')})${gen.merged(t, h.body.variant).powers ? `, ${gen.merged(t, h.body.variant).powers > 0 ? '+' : ''}${gen.merged(t, h.body.variant).powers} for the body` : ''}: <strong>${h.slots.powers} slots</strong>.</p>
+      <p class="buys">${buy('powers', -2, 'Extra Powers')} ${buy('talents', -1, 'Extra Talents')} ${buy('contacts', -1, 'Extra Contacts')}
+        <span class="muted">Each extra Power costs -2CS Resources; a Talent or Contact -1CS.</span></p>
+      <ol class="powers">${pRows || '<li class="muted">No Powers.</li>'}</ol>
+      <form class="add-power" data-add-power><label>Add a Power by code <input name="code" type="text" placeholder="e.g. T21" size="8" autocomplete="off"></label>
+        <button type="submit" class="btn secondary small">Add</button></form>`,
+      `<label class="check"><input type="checkbox" data-lock="counts" ${state.locks.counts ? 'checked' : ''}> Lock counts</label>
+       <button type="button" class="btn secondary small" data-reroll="counts" ${state.locks.counts ? 'disabled' : ''}>Reroll counts</button>`);
+
+    // 7. Talents and Contacts
+    const tRows = h.talents.map((x) => {
+      const d = byId(data.talents.talents, x.id);
+      const g = byId(data.talents.groups, d.group);
+      return `<li><strong>${esc(d.name)}</strong> <span class="muted">${esc(g.name)}</span>${x.slots === 2 ? ' <span class="tag">x2</span>' : ''}
+        ${x.source === 'picked' ? `<button type="button" class="linklike" data-untalent="${x.id}">remove</button>` : ''}<span class="pw-sum">${esc(d.summary)}</span></li>`;
+    }).join('');
+    const chosenContacts = state.picks.contacts || [];
+    const cSlots = Array.from({ length: h.contacts.slots }, (_, i) => `
+      <label>Contact ${i + 1} <select data-contact="${i}"><option value="">Choose later</option>
+        ${data.contacts.groups.map((g) => `<optgroup label="${esc(g.name)}">${options(data.contacts.contacts.filter((c) => c.group === g.id), chosenContacts[i])}</optgroup>`).join('')}
+      </select></label>`).join('');
+    const s7 = card('talents', '6. Talents and Contacts', `
+      <p><strong>${h.slots.talents} Talent slots.</strong></p>
+      <ol class="powers">${tRows || '<li class="muted">No Talents.</li>'}</ol>
+      <div class="fields"><label>Add a Talent <select data-add-talent><option value="">Choose one</option>
+        ${data.talents.groups.map((g) => `<optgroup label="${esc(g.name)}">${options(data.talents.talents.filter((x) => x.group === g.id), null)}</optgroup>`).join('')}
+      </select></label></div>
+      <p><strong>${h.contacts.slots} Contacts</strong> - chosen, not rolled.${h.contacts.rule ? ` <span class="muted">${esc(Object.entries(h.contacts.rule).map(([k, v]) => `${k} ${v}`).join(', '))} for this body type.</span>` : ''}</p>
+      <div class="fields">${cSlots}</div>`);
+
+    // The summary, which is also what prints.
+    const ab = h.abilities;
+    const sum = `
+      <section class="panel alt hero-card" aria-label="The hero">
+        <span class="caption">Your hero</span>
+        <h2>${esc(h.body.name)}${h.body.variantName ? ` (${esc(h.body.variantName)})` : ''} - ${esc(org.name)}</h2>
+        <p class="stats">${PRIMARY.map((a) => `<span><b>${LABEL[a][0]}</b> ${esc(rankName(ab[a].rank))} (${ab[a].number})</span>`).join(' ')}</p>
+        <p class="stats"><span><b>Health</b> ${h.health}</span> <span><b>Karma</b> ${h.karma}</span>
+          <span><b>Resources</b> ${esc(rankName(ab.resources.rank))}</span> <span><b>Popularity</b> ${esc(rankName(ab.popularity.rank))} (${ab.popularity.number})</span></p>
+        <p><b>Powers:</b> ${h.powers.map((p) => `${esc(gen.powerByCode[p.code].name)} ${esc(rankName(p.rank))}`).join('; ') || 'none'}</p>
+        <p><b>Talents:</b> ${h.talents.map((x) => esc(byId(data.talents.talents, x.id).name)).join('; ') || 'none'}</p>
+        <p><b>Contacts:</b> ${Array.from({ length: h.contacts.slots }, (_, i) => esc(byId(data.contacts.contacts, chosenContacts[i])?.name || 'to choose')).join('; ') || 'none'}</p>
+        <p><b>Weakness:</b> ${esc(byId(w.stimulus, h.weakness.stimulus.id).name)}, ${esc(byId(w.effect, h.weakness.effect.id).name)}, ${esc(byId(w.duration, h.weakness.duration.id).name)}</p>
+        <p class="muted seeds">Seeds ${STEPS.map((s) => h.seeds[s]).join('-')}</p>
+      </section>`;
+
+    root.innerHTML = s1 + s2 + s3 + s5 + s6 + s7 + sum;
+  }
+
+  root.addEventListener('click', (e) => {
+    const r = e.target.closest('[data-reroll]');
+    if (r) return reroll(r.dataset.reroll);
+    const b = e.target.closest('[data-buy]');
+    if (b) {
+      const bought = { powers: 0, talents: 0, contacts: 0, ...(state.picks.bought || {}) };
+      bought[b.dataset.buy] = Math.max(0, bought[b.dataset.buy] + Number(b.dataset.d));
+      return setPick('bought', bought);
+    }
+    const u = e.target.closest('[data-unpick]');
+    if (u) return setPick('powers', (state.picks.powers || []).filter((c) => c !== u.dataset.unpick));
+    const ut = e.target.closest('[data-untalent]');
+    if (ut) return setPick('talents', (state.picks.talents || []).filter((c) => c !== ut.dataset.untalent));
+  });
+  root.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.dataset.lock) { state.locks[el.dataset.lock] = el.checked; return draw(); }
+    if (el.dataset.pick) {
+      if (el.dataset.pick === 'body') { delete state.picks.variant; delete state.picks.choose; }
+      return setPick(el.dataset.pick, el.value);
+    }
+    if (el.dataset.rank) return setPick('ranks', { ...(state.picks.ranks || {}), [el.dataset.rank]: el.value || undefined });
+    if (el.dataset.choose) {
+      // The newest tick goes FIRST: the generator keeps the first N it is
+      // given, so ticking a second box when only one is allowed moves the +1CS.
+      const others = gen.build(state).chosen.filter((a) => a !== el.dataset.choose);
+      return setPick('choose', el.checked ? [el.dataset.choose, ...others] : others);
+    }
+    if (el.dataset.weak) return setPick('weakness', { ...(state.picks.weakness || {}), [el.dataset.weak]: el.value || undefined });
+    if (el.dataset.contact !== undefined) {
+      const c = [...(state.picks.contacts || [])];
+      c[Number(el.dataset.contact)] = el.value || null;
+      return setPick('contacts', c);
+    }
+    if (el.matches('[data-add-talent]') && el.value) return setPick('talents', [...new Set([...(state.picks.talents || []), el.value])]);
+  });
+  root.addEventListener('submit', (e) => {
+    if (!e.target.matches('[data-add-power]')) return;
+    e.preventDefault();
+    const code = String(new FormData(e.target).get('code') || '').trim();
+    const hit = Object.keys(gen.powerByCode).find((c) => c.toLowerCase() === code.toLowerCase());
+    if (hit) setPick('powers', [...new Set([...(state.picks.powers || []), hit])]);
+  });
+  $('#gen-roll').addEventListener('click', rollAll);
+  $('#gen-new').addEventListener('click', () => { state = fresh(); draw(); });
+  $('#gen-print').addEventListener('click', () => window.print());
+  draw();
+}
+
 // ---------------------------------------------------------------- boot
 
 async function boot() {
   initTabs();
   try {
-    const data = await loadData('ranks', 'universal', 'powers', 'power-tables', 'tables');
+    const data = await loadData('ranks', 'universal', 'powers', 'power-tables', 'tables', 'random-ranks',
+      'body-types', 'origins', 'weakness', 'counts', 'talents', 'contacts');
     initFeat(makeFeat(data.ranks, data.universal));
     initBrowser(makeBrowser(data.powers, data['power-tables']), data.tables);
+    initGenerator(makeGenerator(data), data);
   } catch (err) {
     $('#load-error').hidden = false;
     $('#load-error').textContent = `The app's data did not load: ${err.message}`;

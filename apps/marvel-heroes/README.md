@@ -129,6 +129,23 @@ Four body types the book never gives a Random Ranks column:
   "all Modified Humans" and gives Extra Parts its own paragraph without
   repeating them; the Physical Form table files it under Modified Human.
 
+Two the generator needed, where the books say nothing (`js/generator.js`):
+
+- **R17** **Powers a body type grants come with the body and take no Power
+  slot** - a Chiropteran's Sonar, a Vegetable's Absorption, a Deity's Travel
+  Power. The UPB's Bonus Powers (a Power's listing naming another) are a
+  different thing, and those do fill a slot, as the addenda on p.13 says.
+- **R18** **A body type's column shifts stop at Feeble and Monstrous** for
+  Primary Abilities, the Players' Book's rule for ability modifiers (PB p.6). A
+  Deity who rolls Amazing Strength is Monstrous, not Unearthly. Resources and
+  Popularity may still fall to Shift 0, the "zero" several body types set.
+
+And three the generator applies from the Players' Book because the UPB is
+silent, none of them in conflict with it: every hero's Power ranks roll on
+column 4 (PB p.9); a Power rolled twice, or a two-slot Power with one slot
+left, is rolled again (PB p.9, UPB p.14); buying extras never takes Resources
+below Feeble (PB p.7).
+
 **The book's own worked examples cite rolls its table does not give** - its
 Compound example calls 69 Chiropteran (the table's Merhuman) and its Changeling
 example calls 83 a Humanshape Robot (the table's Usuform). They read as written
@@ -142,6 +159,7 @@ by roll, and they decide nothing here.
 | `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM; one tab per tool |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
+| `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
 | `js/feat.js` | a FEAT on the Universal Table: rank from a rank number, column shifts that stop at the ladder's ends, the colour a roll gives, and what that colour means for each kind of FEAT |
 | `styles.css` | the whole visual system; contrast is pinned by the smoke test |
 | `palette.html` | the palette sample, for review; removed at launch |
