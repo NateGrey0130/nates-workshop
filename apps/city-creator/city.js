@@ -236,6 +236,9 @@ function keepHtml() {
           <button type="button" class="btn btn-sm btn-primary" onclick="City.keep()" ${S.dirty ? '' : 'disabled'}>💾 Save changes</button>
           <label class="small"><input type="checkbox" ${S.saved.show_map ? 'checked' : ''} onchange="City.showMap(this.checked)">
             Show the map to players</label>
+          ${/* What the table sees, from the server's player view - the same
+               page a player opens. The G.M. may open it before showing it. */ ''}
+          <a class="btn btn-sm" href="/apps/gm-tools/present.html?city_id=${S.saved.id}">▶ Present what the players see</a>
           <button type="button" class="btn btn-sm btn-ghost" onclick="City.deleteSaved()">delete saved city</button>
           <button type="button" class="btn btn-sm btn-ghost" onclick="City.forget()">start a new city</button>
         </div>`
