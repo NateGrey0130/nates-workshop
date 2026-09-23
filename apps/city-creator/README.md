@@ -121,10 +121,17 @@ sheet** link to it; rerolling the entry makes a new person and drops the link.
 
 **The roller refuses rather than guesses, and the page shows the refusal as it
 comes** - a race whose page bars that job, or a class the roller cannot build.
-Measured 2026-09-23 on the local server: most Palladium Fantasy race and job
-pairings are refused today on a language pick (only Soldier and Noble roll),
-a gap in the roller itself and filed as its own piece of work; nothing here
-pads around it.
+Nothing here pads around it.
+
+A measurement on 2026-09-23 had most Palladium Fantasy race and job pairings
+refused on a language pick. **That was the local dev database, not the
+roller.** It had run the first version of
+`zzzzzzzzzzzzzzzz-tag-skill-systems.sql`, which tagged the named languages
+Rifts and Heroes Unlimited, and never the correction that leaves them for
+every game. Production and a database built from the repo leave them
+untagged, and there every race rolls with every occupation it allows. The
+regression sweep now rolls every such pairing and fails if a language pick
+runs dry.
 
 ## Flesh out
 
@@ -169,9 +176,11 @@ and is built exactly as before.
 - **Roll stats** sends a human as their job's O.C.C. alone. Another race goes
   as its R.C.C. alone, or with the job's O.C.C. when the roller says that race
   takes one (a Noro, a Psi-Pony) - the page reads that from the roller's own
-  rule when the race is chosen. Measured 2026-09-23 on the local server: every
-  mapped O.C.C. rolls except the **Rogue Scholar**, which the roller refuses on
-  a skill-choice gap of its own; the page shows that refusal as it comes.
+  rule when the race is chosen. Every mapped O.C.C. rolls on a database built
+  from the repo, which matches production here. The **Rogue Scholar** was
+  refused on the local dev database only: its "three Literacy: Other" pick
+  draws from the literacies the catalog names, and that database was missing
+  two of the four (Gypsy and Russian), whose scripts it had never run.
 
 The page also keeps the city on screen in this browser's storage, so a reload
 does not lose it - a convenience; the record is the saved row - and **Export
