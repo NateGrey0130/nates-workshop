@@ -1341,6 +1341,25 @@ above it. And **both registrations are live**, the repo's and the user-level
 one, so a repo-rooted session runs the hook twice. Same verdict either way, but
 a double refusal is not a bug when it appears.
 
+> **Adjusted 2026-09-22 (PR #1263) — both items are closed, and a third sentence
+> in the paragraph above is false.** Appended rather than rewritten, per
+> `audit-menu` → *Audit files are RECORDS*; the paragraph stands as the evidence
+> `META-AUDIT` `A22` measured, and this is `SKILL-AUDIT` `F63`.
+>
+> - **The `windows-shell` sentence was deleted** by PR #1250 while taking `F56`,
+>   which widened beyond the refusal-prefix half on Nate's word.
+>   `grep -c 'project-scoped' .claude/skills/windows-shell/SKILL.md` returns
+>   **0**, checked 2026-09-22. So *"still says"* above has been false since
+>   #1250 merged.
+> - **The double registration was filed as `F60` and DECLINED** in PR #1255:
+>   both registrations are kept, deliberately.
+> - **And *"Same verdict either way"* is wrong**, which `F63` did not name.
+>   `F60`'s note measured the opposite — `repo_posix` derives from `$0`'s
+>   grandparent at `guard-bash.sh:124-126`, so **each copy of the script guards
+>   only the tree it lives in**, and in a git worktree the two registrations
+>   give *different* verdicts on the same `sed -i`. That is the reason `F60`
+>   was declined rather than a detail beside it.
+
 ### F55 — the `guard-bash` hook has never refused a command, because it is registered where sessions do not start
 
 **Opened 2026-09-22 on Nate's word**, while establishing the one thing `F54`

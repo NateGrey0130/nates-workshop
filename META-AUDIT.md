@@ -1558,6 +1558,23 @@ PR #1252 amended the notes it filed against, in the same commit, so
 deferrals, not the specimens. `SKILL-AUDIT.md:1336` was not amended and is the
 one still readable as filed.
 
+> **Adjusted 2026-09-22 (PR #1263) — all seven are now filed, and the last row
+> is closed.** Nate named them on 2026-09-22 and they were numbered in PR #1262
+> as `UI-AUDIT` `F60`/`F61`, `SKILL-AUDIT` `F61`/`F62`/`F63` and
+> `BOOK-INGEST-AUDIT` `F104`/`F105`. **So the drop above became a filing**, which
+> is the outcome this note said any of them could have.
+>
+> **The two paragraphs directly above are now stale, and this line is the only
+> thing that will ever say so.** `SKILL-AUDIT.md:1336` *was* amended — by
+> `SKILL-AUDIT` `F63` in this PR — so it is no longer *"the one still readable
+> as filed"*, and the row calling it the first to fix has been acted on.
+>
+> **They are corrected here rather than rewritten** (`audit-menu` → *Audit files
+> are RECORDS*), and this line exists because **neither paragraph carries a
+> finding number**: a sweep for `F63` would never have reached them, which is
+> `A17`'s shape and the reason `F63`'s PR corrected them deliberately instead of
+> leaving the trap it would otherwise have created.
+
 ### A23 — low — `apps/character-creator/AUDIT.md`'s header says two scans misread it, and the number is three
 
 **Opened 2026-09-22**, while taking `A21`, which quotes the stale number and
