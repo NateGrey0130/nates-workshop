@@ -143,10 +143,13 @@ defects were mostly level headings attached to the end of a spell, with 8
 spells in the cipher. None of those rows was red until someone widened what
 was read.
 
-**The rule that follows from this lives in `CLAUDE.md`**, under *When a check
-goes red*, and not here. Measured 2026-09-23 (`SKILL-AUDIT` `F67`): of four
-sessions fixing a red check while the rule lived here, only one loaded this
-skill, and that one was the only session that acted on the rule. Every session
+**The rule that follows from this lives in `CLAUDE.md`**, in the paragraph
+opening *When a check goes red*, and not here. Measured 2026-09-23
+(`SKILL-AUDIT` `F67`): six sessions fixing a red check had the rule in this
+section, and only one of them loaded this skill.
+- Of the four that had it **only** here, that one session was the only one to
+  act on it.
+- The two that also had it in `CLAUDE.md` both acted on it from there. Every session
 reads `CLAUDE.md`. This section keeps the reasoning behind the rule:
 
 - **Grep a book's scripts by the name it prints, not the filenames by its

@@ -2823,14 +2823,25 @@ The session logs were read after each round, not only the answers.
 | subagents | `test-suite` (as on `main`) | 0 of 2 | **neither** called the Skill tool or opened `test-suite` |
 | subagents | `test-suite`, section removed | 0 of 2 | the same |
 | fresh `claude -p` | `test-suite` (as on `main`) | 1 of 2 | **the hit loaded `test-suite` via the Skill tool, and the miss did not** |
-| fresh `claude -p` | `CLAUDE.md` | **2 of 2** | both write *"the two lines CLAUDE.md asks for"* and plan the book-wide grep |
+| fresh `claude -p` | `CLAUDE.md`, **and still** the full `test-suite` section | **2 of 2** | both write *"the two lines CLAUDE.md asks for"* and plan the book-wide grep; neither loaded `test-suite` |
 
 - **The rule works whenever a session sees it.** The only question is
-  placement. `test-suite`'s *"reading a failure"* trigger fired in one of four
-  sessions that were fixing a red check.
-- **Leak check:** every log shows `Current branch: probe`. No run read an
-  `F64`–`F67` finding. The one `F6x` string per run is `CLAUDE.md`'s own
-  pointer to `F64`.
+  placement. `test-suite`'s *"reading a failure"* trigger fired in one of the
+  six sessions that had the section. Only one called the Skill tool for it:
+  `claude -p` session `e14188c9`.
+- **The shipped state was not run exactly.** In the last row, `test-suite`
+  still held the full section, while the PR cuts it to a pointer. Neither of
+  those runs opened `test-suite`, so the 2 of 2 very likely carries over. The
+  premise auditor found this. It is recorded rather than re-run.
+- **Leak check:** every log shows `Current branch: probe` and a `wip`-only
+  snapshot. **No run reached the scenario or an `F67` finding**, but two runs
+  carried `F6x` strings from somewhere other than `CLAUDE.md`:
+  - `e14188c9` carries `F64`–`F66` from the `test-suite` it loaded, the method
+    section's references.
+  - One GREEN subagent ran `git log … origin/main` and saw the `F66` merge
+    subjects. Those describe blinding, not this scenario's answer.
+  - The other six carry only `CLAUDE.md`'s pointer to `F64`, or no `F6x`
+    string at all.
 
 **Found while testing: subagents do not see a mid-session `CLAUDE.md` edit.**
 Two probes spawned after the edit answered NO when asked whether their
