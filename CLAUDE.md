@@ -48,6 +48,17 @@ junction block in `SETUP.md`. They load by name from any working directory now.
 the gap: the skill simply does not exist for a session started outside the repo,
 which is the working directory the book work uses.
 
+**A new or changed skill is also pressure-tested before it merges.** Run a
+realistic scenario through fresh subagents before the edit and again after
+it, and put what each run did in the PR body. `test-suite` → *A skill is a
+check too* has the method (`SKILL-AUDIT` `F64`). Run it in the **main
+checkout**, and run the "before" half first. The junctions point there and at
+no worktree, so an edit saved in the main checkout reaches every subagent **in
+the same turn**. It arrives **after a delay, though, not on save**. Measured
+2026-09-23: a probe spawned two tool calls after the edit loaded the old text.
+The session then showed a skill-listing refresh, and the next probe loaded the
+new text. Wait for that refresh before running the "after" half.
+
 **The agents directory is linked too, since 2026-08-28** (`INGESTION-AUDIT` F8),
 when `book-reconcile` was the only agent in it. There are more now — `ls
 .claude/agents/` is the list, and it is the **only** list; nothing enumerates
