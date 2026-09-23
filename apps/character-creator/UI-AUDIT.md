@@ -943,7 +943,7 @@ works, and nobody has recorded a complaint about the nav scrolling away. `F3`
 deferred it on scope, not on desire — there is no evidence in this menu that
 anyone wants it.
 
-**MOOT, 2026-09-22 (PR #PRNUM). No CSS is changed.** The wizard nav is already
+**MOOT, 2026-09-22 (PR #1268). No CSS is changed.** The wizard nav is already
 sticky and has been for three weeks. This finding names this outcome itself:
 *"**A taker's first command is to check that**, because if it has since changed
 this finding is moot."* The first command checked it, and it had.
