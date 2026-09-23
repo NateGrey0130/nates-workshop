@@ -2067,7 +2067,7 @@ export function run() {
       && marked['codex.html'] === 'codex' && marked['catalog.html'] === 'codex'
       && marked['campaign.html'] === 'campaign' && marked['dashboard.html'] === 'gm',
       JSON.stringify(marked));
-    for (const id of ['creator', 'play', 'codex', 'campaign', 'gm']) {
+    for (const id of ['creator', 'play', 'codex', 'campaign', 'gm', 'city']) {
       check(`the switcher offers ${id}`, new RegExp(`id: '${id}'`).test(navSrc));
     }
 
@@ -2122,7 +2122,9 @@ export function run() {
     // it used to live at still takes a bookmark somewhere useful.
     const manifest = JSON.parse(readFileSync(join(repoRoot, 'apps', 'manifest.json'), 'utf8'));
     const tiles = Object.fromEntries(manifest.apps.filter((a) => a.slug).map((a) => [a.slug, a]));
-    for (const slug of ['character-creator', 'character-sheet', 'codex', 'campaign', 'gm-tools']) {
+    // Six since 2026-09-23: the City Creator joined the suite, and loads the
+    // shared header and the Board & Tissue sheets like the five.
+    for (const slug of ['character-creator', 'character-sheet', 'codex', 'campaign', 'gm-tools', 'city-creator']) {
       const index = join(repoRoot, 'apps', slug, 'index.html');
       check(`${slug} is an app with its own page`,
         existsSync(index) && /data-appnav/.test(readFileSync(index, 'utf8')));

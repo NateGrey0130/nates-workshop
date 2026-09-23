@@ -848,6 +848,7 @@ import { run as machineInstructionChecks } from './checks/machine-instructions.m
 import { run as hookRegistrationChecks } from './checks/hook-registration.mjs';
 import { run as secondBodyChecks } from './checks/second-body.mjs';
 import { run as namegenChecks } from './checks/namegen.mjs';
+import { run as cityCreatorChecks } from './checks/city-creator.mjs';
 // ---------- 1c2. Level-up skill grants ----------
 // occ_related_skills.schedule recorded these for a long time and nothing read
 // them. The itemisation matters: a grant knows which level earned it.
@@ -9460,6 +9461,7 @@ instructionPathChecks();
 machineInstructionChecks();
 hookRegistrationChecks();
 namegenChecks();
+cityCreatorChecks();
 
 // slow one - it shells out to wrangler.
 environmentChecks();

@@ -50,6 +50,13 @@
       "status": "live"
     },
     {
+      "slug": "city-creator",
+      "name": "City Creator",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M3 20.6h18'/><path d='M4.6 20.6V11l3-2.2 3 2.2v9.6'/><path d='M10.6 20.6V6.4L14 3.6l3.4 2.8v14.2'/><path d='M17.4 20.6v-7.4h2.4v7.4'/><path d='M13 9.2h2M13 12.6h2M6.6 14h2'/></svg>",
+      "description": "A whole city on the fly: districts, shops, named NPCs, rumours and hooks. Lock what you like, reroll the rest.",
+      "status": "live"
+    },
+    {
       "slug": "pick3cut5",
       "name": "Pick 3 Cut 5",
       "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='6.2' cy='18.2' r='2.6'/><circle cx='17.8' cy='18.2' r='2.6'/><path d='M16.4 16.1 5.6 3.6M7.6 16.1 18.4 3.6'/></svg>",
