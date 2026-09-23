@@ -367,6 +367,17 @@ after the party and tagged NPC, with the same damage controls - *Award XP to
 party* skips them. Not on the home screen's list of your characters (`?mine=1`
 is the characters you play).
 
+**One panel, two pages.** The *Statted NPCs* panel - the list, the three ways
+to add one, and a control on each sheet that links it to a dossier - is
+`js/npc-sheets.js`, mounted by the People tab and by GM Tools (since
+2026-09-23). Both pages mount it only for the G.M., and a smoke section pins
+that neither carries a roller of its own, so a fix to one roller reaches both.
+It repaints only its own container, so rolling an NPC in GM Tools never
+rebuilds a half-typed G.M. note beside it. The two book pickers search by name,
+title, race or occupation, narrow by book and (optionally) by game, and show
+the stat block - numbers for a notable, dice for a creature - before anything
+is placed.
+
 ### Names for people, places and groups
 
 `shared/js/namegen.js` makes names from **themes**: hand-written word lists
