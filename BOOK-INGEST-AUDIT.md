@@ -1975,3 +1975,83 @@ the same kind.
 **Ongoing cost:** four patterns in one check. A false positive would block a
 merge until the note is reworded or dated, which is the same cost `F45`'s check
 already imposes.
+
+**Taken, 2026-09-22 (PR #1278).** Implemented as written, with three adjustments
+the premise audit forced. **Posture, said back:** the same as `F45`'s. It is one
+widened check in the existing smoke suite, with the same name and failure text,
+no new check and no new suite, and **no exit code moves on today's data**. This
+widens a required check, so a future note in one of these wordings fails the
+merge.
+
+**What shipped** is at `apps/character-creator/test/checks/book-registry.mjs`,
+beside `F45`'s comment. `F45`'s two wordings are refused always. Three further
+shapes are refused unless the sentence carries a date that is not introduced by
+*since*: a quantity citing the book, a rank, and whether rows can cite it. The
+test runs per sentence, and the splitter is written into the rule.
+
+**The three adjustments**, from the `audit-premise-auditor`, 2026-09-22:
+
+- **The splitter is part of the rule, and the finding did not define one.**
+  <!-- claim-ok: quoting the premise this note corrects -->
+  *"Flags nothing in today's registry"* depends on it. Today's `nightbane-core`
+  note has a history sentence, *"THIS SENTENCE USED TO SAY no catalog row could
+  cite it … ; that stopped being true with the 2026-09-16 gear import"*. It
+  passes only if a lowercase clause after `;` stays attached to its dates. The
+  shipped splitter ends a sentence at `.`, `;`, `!` or `?` followed by a
+  capital, and the comment says so. With a splitter that breaks at every `;`,
+  `smoke` would have gone red on correct data.
+- **Pattern 2 took digits only, and a known false claim was missed.**
+  `rifts-core` read *"Cited by two published classes; never cached."* from
+  `d5280fe4` to `3734ac59`, and the registry's own later note records that only
+  one did. Number words from one to twelve, *dozen(s)*, *hundred(s)*, *nobody*,
+  and comma-grouped numerals now count. Pattern 4 also takes *cannot*.
+  **Writing it turned up a bug in the finding's own pattern:** `\d` followed by
+  `\b` does not match *"cited by 48"*, because there is no word boundary
+  between two digits. The shipped form is `[\d,]+`.
+- **"All nine known false claims" miscounts.** <!-- claim-ok: quoting the premise this note corrects -->
+  Two of `F45`'s six, `spirit-west` and `mystic-russia`, were true when
+  measured. `F45` refuses the sentence shape whether or not it happens to be
+  true, so they count as specimens, not as false claims.
+
+**Measured, 2026-09-22.** A scratch harness extracts the rule from the shipped
+source, so the code under test is the code that ships. It runs every version
+of `scripts/books.json` that `git log` returns: 26 versions.
+
+- **Every version before PR #1264 fails, and today's registry passes.** The
+  distinct sentences refused are these:
+  - `F45`'s six, including `rifts-core`'s dated *"Cited by NOTHING since
+    2026-08-28"*;
+  - `phase-world`'s own versions, one of them the quotation `F45` reworded,
+    which `F45`'s regex already refuses;
+  - `F104`'s three;
+  - `rifts-core`'s *"Cited by two"*;
+  - the older `pf` wording at `63b1c40b`.
+
+  **No mechanism or history sentence is refused.**
+- **Proved through the real suite by making it fail.** Each of these was
+  appended to `spirit-west`'s note, one at a time, and `smoke.mjs --section
+  'Book registry'` was run: *"Cited by 29 skills."*, *"The most-cited book in
+  the database."*, *"No catalog row can cite it until the schema changes."*,
+  *"Cited by two published classes since 2026-09-01."*. **Each fails by name.**
+  *"Cited by 29 skills, measured --remote 2026-09-22."* **passes.** The registry
+  was restored from a byte copy afterwards.
+
+**Two limits, stated rather than fixed:**
+
+- **A date anywhere in a sentence clears it.** At `aa24ba49` the false *"no
+  catalog row can cite it"* shared one run-on sentence with an unrelated
+  *"MOVED there on 2026-09-12"*, and there that sentence passes (the version
+  still fails, on `pf` and `rifts-skill-list`). The claim is still
+  caught in the versions on either side. Tying the date to the matched clause
+  would need a parser that a registry note does not justify.
+- **A bare row count is not covered, deliberately.** The auditor found three
+  in history: `pf`'s *"Its four aliases carry 586 rows between them"*,
+  `triax`'s *"One gear row"* and `new-west`'s *"One skill row"*. None was
+  measured false. A pattern broad enough to catch *N rows* would also catch
+  the registry's page and vote counts (*"157 pages agree at +1"*). **This is a
+  deliberate drop, not a deferral.**
+
+**What cites this finding:** nothing outside its own section (`git grep F106`,
+2026-09-22). `F104`'s note says <!-- claim-ok: quoting F104's note -->
+*"the shape needs work before it is a gate"*. That sentence was true when
+written and is answered here. It stays as it is, since an audit file is a record.
