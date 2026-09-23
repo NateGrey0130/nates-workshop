@@ -569,3 +569,67 @@ export function restockShop(city, shopId, gear) {
   const key = `stock:${shopId}`;
   return stockShop({ ...city, rolls: { ...city.rolls, [key]: (city.rolls?.[key] || 0) + 1 } }, shopId, gear);
 }
+
+// ── "Flesh out" (Phase 4d) ──
+//
+// One AI call per press, for one district, place, shop or NPC: a few short
+// paragraphs for the G.M., saved INTO that entry as `flesh`. The prompt
+// carries the entry and just enough of the city to fit it in; the answer is
+// plain prose, tidied and capped, and an empty one is an error the page
+// shows, never a blank saved over the entry. A reroll of the entry makes a
+// new one and drops its flesh with it; a lock keeps both. The players' view
+// never reads the field (cities/[id]/view.js builds its response from an
+// allowlist), so it is the G.M.'s alone like the rest of the entry.
+export const FLESH_KINDS = ['district', 'place', 'shop', 'npc'];
+const MAX_FLESH = 2400;
+const SETTING_NAMES = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts', nightbane: 'Nightbane',
+  'heroes-unlimited': 'Heroes Unlimited' };
+
+function fleshEntry(city, id) {
+  const kind = String(id).split('-')[0];
+  const list = { district: city.districts, place: city.places, shop: city.shops, npc: city.npcs }[kind];
+  const entry = list?.find((x) => x.id === id);
+  if (!entry) throw new Error(`No district, place, shop or NPC ${id}`);
+  return { kind, entry };
+}
+
+export function fleshPrompt(city, id) {
+  const { kind, entry: e } = fleshEntry(city, id);
+  const o = city.overview;
+  const npcName = (nid) => city.npcs.find((n) => n.id === nid)?.name || null;
+  const about = {
+    district: () => `the district "${e.name}" (${e.kind}). Its mood: ${e.mood}.`,
+    place: () => `the place of interest "${e.name}"${e.district ? `, in the ${e.district} district` : ''}.`,
+    shop: () => `the ${e.type.toLowerCase()} "${e.name || 'with no name yet'}"${e.district ? `, in the ${e.district} district` : ''}. `
+      + `Known for ${e.specialty}; prices ${e.price}; ${e.quirk}. Owner: ${npcName(e.owner) || 'not yet named'}.`,
+    npc: () => `the ${e.race} ${e.role} ${e.name || '(no name yet)'}: ${e.look}; ${e.quirk}. Wants ${e.want}. `
+      + `Secret: ${e.secret}.`,
+  }[kind]();
+  return {
+    system: 'You help a game master prepare a tabletop role-playing game city. Write original material only - never '
+      + 'quote or retell published books. Answer in plain prose: no headings, no lists, no markdown.',
+    prompt: `The city of ${o.name} (${SETTING_NAMES[city.settings.system] || city.settings.system}): ${o.size} of `
+      + `${Number(o.population).toLocaleString('en-US')}, ruled by ${o.government}, ${o.wealth}, living on ${o.trade}.
+
+Flesh out ${about}
+
+Write two or three short paragraphs, 150 words at most, for the game master's eyes: what the players notice first, `
+      + `one detail that makes it memorable, and one hook the game master can use in play. Keep to what is given above `
+      + `and do not contradict it.`,
+  };
+}
+
+export function parseFlesh(text) {
+  const s = String(text || '').trim()
+    .replace(/^```[a-z]*\s*|\s*```$/gi, '')
+    .split(/\r?\n/).map((l) => l.replace(/^\s*(#+\s*|[-*]\s+)/, '').replace(/\*\*(.+?)\*\*/g, '$1').trim())
+    .join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!s) throw new Error('The answer was empty - nothing was saved');
+  return s.length > MAX_FLESH ? s.slice(0, s.lastIndexOf(' ', MAX_FLESH)) + '…' : s;
+}
+
+export function withFlesh(city, id, text) {
+  const { kind } = fleshEntry(city, id);
+  const key = { district: 'districts', place: 'places', shop: 'shops', npc: 'npcs' }[kind];
+  return { ...city, [key]: city[key].map((x) => (x.id === id ? { ...x, flesh: text } : x)) };
+}

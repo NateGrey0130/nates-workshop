@@ -1,8 +1,8 @@
 // City Creator - the page. The engine is js/city-engine.js, a pure module;
 // this file holds the settings, the city on screen and its locks, and draws
 // them: text output, lock and reroll, JSON export (Phase 1), the map (Phase
-// 2), and keeping a city in one of the G.M.'s campaigns with what the players
-// may see of it (Phase 3). This browser's storage holds the city on screen as
+// 2), keeping a city in one of the G.M.'s campaigns with what the players
+// may see of it (Phase 3), and Phase 4's stats, stock and "Flesh out". This browser's storage holds the city on screen as
 // a convenience, so a reload does not lose it; the record is the saved row.
 //
 // A module, so it can import the engine; the inline handlers reach it through
@@ -11,7 +11,7 @@
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet,
-  stockShop, restockShop }
+  stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 
@@ -41,6 +41,8 @@ const S = {
   rolls: {},
   // The Codex's gear, loaded the first time a shop is stocked (Phase 4b).
   gear: null, stockMsg: '',
+  // "Flesh out" per entry (Phase 4d): a call in flight or its error, by entry id.
+  flesh: {},
 };
 
 // ── storage: a convenience, never the record ──
@@ -276,6 +278,19 @@ function statsTools(n) {
     ${r?.msg ? `<span class="small${r.err ? ' err' : ' muted'}">${esc(r.msg)}</span>` : ''}</div>`;
 }
 
+// ── "Flesh out" (Phase 4d) ──
+// The G.M.'s own notes on an entry, written by the AI on request and kept in
+// the entry. Pressed again, it writes a new one over the old.
+function fleshHtml(x) {
+  const f = S.flesh[x.id];
+  return `<div class="city-flesh">
+    ${x.flesh ? `<div class="city-flesh-text small">${x.flesh.split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>` : ''}
+    <button type="button" class="btn btn-sm btn-ghost" onclick="City.flesh('${escJs(x.id)}')" ${f?.busy ? 'disabled' : ''}>
+      ${f?.busy ? 'Writing…' : x.flesh ? '✨ Flesh out again' : '✨ Flesh out'}</button>
+    ${f?.err ? `<span class="small err">${esc(f.err)}</span>` : ''}
+  </div>`;
+}
+
 // ── shop inventories (Phase 4b) ──
 // Real gear rows from the Codex, copied into the city with this city's price,
 // so a kept city keeps its stock when the Codex changes. A shop the Codex can
@@ -326,11 +341,13 @@ function cityHtml() {
     ${c.districts.map((d) => card(d.id, `<p><b>${esc(d.name)}</b>${d.name !== d.kind ? ` <span class="muted small">${esc(d.kind)}</span>` : ''}
       — ${esc(d.mood)}</p>
       <details><summary class="small">d6 encounters</summary><ol class="small">${d.encounters.map((e) => `<li>${esc(e.text)}</li>`).join('')}</ol></details>
+      ${fleshHtml(d)}
       ${publicField(c, d.id)}`)).join('')}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Places of interest</h3>
     ${c.places.map((p) => card(p.id, `<p>${pinTag(c, p.id)}${esc(p.name)}${p.district ? ` <span class="muted small">— ${esc(p.district)}</span>` : ''}</p>
+      ${fleshHtml(p)}
       ${publicField(c, p.id)}`)).join('')}
   </div>
 
@@ -343,6 +360,7 @@ function cityHtml() {
     ${c.shops.map((s) => card(s.id, `<p>${pinTag(c, s.id)}<b>${esc(s.name || '(unnamed)')}</b> <span class="muted small">${esc(s.type)}${s.district ? ', ' + esc(s.district) : ''}</span></p>
       <p class="small">Known for ${esc(s.specialty)}. Prices ${esc(s.price)}. Owner: ${esc(npcName[s.owner] || 'nobody named')} — ${esc(s.quirk)}.</p>
       ${stockHtml(s)}
+      ${fleshHtml(s)}
       ${publicField(c, s.id)}`)).join('')}
   </div>
 
@@ -350,6 +368,7 @@ function cityHtml() {
     ${c.npcs.map((n) => card(n.id, `<p><b>${esc(n.name || '(unnamed)')}</b> <span class="muted small">${esc(n.race)}, ${esc(n.role)}</span></p>
       <p class="small">${esc(n.look)}; ${esc(n.quirk)}. Wants ${esc(n.want)}.
       <span class="gm-secret">Secret: ${esc(n.secret)}.</span></p>
+      ${fleshHtml(n)}
       ${statsTools(n)}`)).join('') || '<p class="muted small">None asked for.</p>'}
   </div>
 
@@ -553,6 +572,28 @@ window.City = {
     } catch (err) {
       // The roller's own words - a race that bars the job, a class it cannot build.
       S.rolls[id] = { msg: err.message, err: true };
+    }
+    render();
+  },
+  // One call for one entry. A kept city saves the answer at once, like a
+  // rolled sheet: it cost a call, and "Save changes" is easy to forget.
+  async flesh(id) {
+    S.flesh[id] = { busy: true };
+    render();
+    try {
+      const { system, prompt } = fleshPrompt(S.city, id);
+      const res = await claudeRequest({ model: MODEL, max_tokens: 4000, system,
+        messages: [{ role: 'user', content: prompt }] });
+      if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off before it finished - try again');
+      S.city = withFlesh(S.city, id, parseFlesh(res.content?.map((b) => b.text || '').join('') || ''));
+      if (S.saved) {
+        const { reveal: _r, public: _p, ...summary } = await post(`cities/${S.saved.id}`, 'PATCH', { city: S.city });
+        S.saved = { ...S.saved, ...summary };
+      }
+      S.flesh[id] = {};
+      save();
+    } catch (err) {
+      S.flesh[id] = { err: err.message };
     }
     render();
   },
