@@ -1,0 +1,527 @@
+{
+ "about": "Reference tables printed on the Ultimate Powers Book's covers, stored as printed. They are display-only: the app computes nothing from them, so an odd printed value is kept and noted rather than corrected.",
+ "range": {
+  "source": "UPB inside front cover",
+  "rows": [
+   {
+    "rank": "feeble",
+    "A": "Contact",
+    "B": "Contact",
+    "C": "1 area",
+    "D": "10 feet",
+    "E": "2 miles"
+   },
+   {
+    "rank": "poor",
+    "A": "1 area",
+    "B": "1 area",
+    "C": "10 areas",
+    "D": "1 area",
+    "E": "25 miles"
+   },
+   {
+    "rank": "typical",
+    "A": "2 areas",
+    "B": "5 areas",
+    "C": "1 mile",
+    "D": "4 areas",
+    "E": "250 miles"
+   },
+   {
+    "rank": "good",
+    "A": "4 areas",
+    "B": "10 areas",
+    "C": "3 miles",
+    "D": "16 areas",
+    "E": "2500 miles"
+   },
+   {
+    "rank": "excellent",
+    "A": "6 areas",
+    "B": "25 areas",
+    "C": "6 miles",
+    "D": "64 areas",
+    "E": "25,000 miles"
+   },
+   {
+    "rank": "remarkable",
+    "A": "8 areas",
+    "B": "1 mile",
+    "C": "12 miles",
+    "D": "6 miles",
+    "E": "250,000 miles"
+   },
+   {
+    "rank": "incredible",
+    "A": "11 areas",
+    "B": "2 miles",
+    "C": "25 miles",
+    "D": "250 miles",
+    "E": "2.5 million miles"
+   },
+   {
+    "rank": "amazing",
+    "A": "20 areas",
+    "B": "3 miles",
+    "C": "50 miles",
+    "D": "1000 miles",
+    "E": "25 million miles"
+   },
+   {
+    "rank": "monstrous",
+    "A": "40 areas",
+    "B": "6 miles",
+    "C": "120 miles",
+    "D": "4000 miles",
+    "E": "250 million miles"
+   },
+   {
+    "rank": "unearthly",
+    "A": "60 areas",
+    "B": "10 miles",
+    "C": "250 miles",
+    "D": "16,000 miles",
+    "E": "2.5 billion miles"
+   },
+   {
+    "rank": "shift-x",
+    "A": "80 areas",
+    "B": "15 miles",
+    "C": "500 miles",
+    "D": "64,000 miles",
+    "E": "25 billion miles"
+   },
+   {
+    "rank": "shift-y",
+    "A": "160 areas",
+    "B": "30 miles",
+    "C": "1200 miles",
+    "D": "250,000 miles",
+    "E": "250 billion miles"
+   },
+   {
+    "rank": "shift-z",
+    "A": "400 areas",
+    "B": "50 miles",
+    "C": "2500 miles",
+    "D": "1 million miles",
+    "E": "1/2 light year"
+   },
+   {
+    "rank": "class-1000",
+    "A": "100 miles",
+    "B": "80 miles",
+    "C": "5000 miles",
+    "D": "4 million miles",
+    "E": ".5 light years"
+   },
+   {
+    "rank": "class-3000",
+    "A": "10,000 miles",
+    "B": "150 miles",
+    "C": "12,000 miles",
+    "D": "16 million miles",
+    "E": "50 light years"
+   },
+   {
+    "rank": "class-5000",
+    "A": "100,000 miles",
+    "B": "250 miles",
+    "C": "250,000 miles",
+    "D": "64 million miles",
+    "E": "500 light years"
+   }
+  ],
+  "notes": [
+   "Remarkable's Range D is printed as 6 miles, shorter than its Range C of 12 miles.",
+   "Shift Z and Class 1000 Range E are printed as 1/2 light year and .5 light years."
+  ]
+ },
+ "area_of_effect": {
+  "source": "UPB inside front cover",
+  "rows": [
+   {
+    "rank": "feeble",
+    "radius": "1",
+    "area": "3 sq. ft.",
+    "volume": "3 cu. ft."
+   },
+   {
+    "rank": "poor",
+    "radius": "2",
+    "area": "12 sq. ft.",
+    "volume": "25 cu. ft."
+   },
+   {
+    "rank": "typical",
+    "radius": "4",
+    "area": "200 sq. ft.",
+    "volume": "200 cu. ft."
+   },
+   {
+    "rank": "good",
+    "radius": "10",
+    "area": "314 sq. ft.",
+    "volume": "3,140 cu. ft."
+   },
+   {
+    "rank": "excellent",
+    "radius": "15",
+    "area": "707 sq. ft.",
+    "volume": "10,600 cu. ft."
+   },
+   {
+    "rank": "remarkable",
+    "radius": "20",
+    "area": "1,256 sq. ft.",
+    "volume": "25,120 cu. ft."
+   },
+   {
+    "rank": "incredible",
+    "radius": "30",
+    "area": "2,826 sq. ft.",
+    "volume": "85,000 cu. ft."
+   },
+   {
+    "rank": "amazing",
+    "radius": "50",
+    "area": "7,850 sq. ft.",
+    "volume": "392,000 cu. ft."
+   },
+   {
+    "rank": "monstrous",
+    "radius": "100",
+    "area": "31,400 sq. ft.",
+    "volume": "3,140,000 cu. ft."
+   },
+   {
+    "rank": "unearthly",
+    "radius": "200",
+    "area": "125,600 sq. ft.",
+    "volume": "25,120,000 cu. ft."
+   },
+   {
+    "rank": "shift-x",
+    "radius": "500",
+    "area": "785,000 sq. ft.",
+    "volume": "392,500,000 cu. ft."
+   },
+   {
+    "rank": "shift-y",
+    "radius": "1,000",
+    "area": "3,140,000 sq. ft.",
+    "volume": "3,140,000,000 cu. ft."
+   },
+   {
+    "rank": "shift-z",
+    "radius": "2,000",
+    "area": "12,560,000 sq. ft.",
+    "volume": "25,120,000,000 cu. ft."
+   },
+   {
+    "rank": "class-1000",
+    "radius": "1 mile",
+    "area": "3 sq. miles",
+    "volume": "1.3 cu. miles"
+   },
+   {
+    "rank": "class-3000",
+    "radius": "2 miles",
+    "area": "12 sq. miles",
+    "volume": "25 cu. miles"
+   },
+   {
+    "rank": "class-5000",
+    "radius": "5 miles",
+    "area": "78 sq. miles",
+    "volume": "392 cu. miles"
+   }
+  ],
+  "footnotes": [
+   "1 square mile = 28 million square feet",
+   "1 cubic mile = 147 billion square feet"
+  ],
+  "notes": [
+   "Printed as is: Typical's 4-foot radius gives about 50 sq. ft., and the book prints 200. The second footnote says square feet for a cubic measure."
+  ]
+ },
+ "movement": {
+  "source": "UPB inside back cover",
+  "columns": {
+   "land_areas": "Land/Water areas",
+   "land_mph": "Land/Water mph/m",
+   "air_areas": "Air areas",
+   "air_mph": "Air mph/m",
+   "space_mph": "Space/Extradimensional mph/m"
+  },
+  "rows": [
+   {
+    "rank": "feeble",
+    "land_areas": "1",
+    "land_mph": "15/.25",
+    "air_areas": "2",
+    "air_mph": "30/.5",
+    "space_mph": "300/5"
+   },
+   {
+    "rank": "poor",
+    "land_areas": "2",
+    "land_mph": "30/.5",
+    "air_areas": "4",
+    "air_mph": "60/1",
+    "space_mph": "600/10"
+   },
+   {
+    "rank": "typical",
+    "land_areas": "3",
+    "land_mph": "45/.75",
+    "air_areas": "6",
+    "air_mph": "90/1.5",
+    "space_mph": "1000/17"
+   },
+   {
+    "rank": "good",
+    "land_areas": "4",
+    "land_mph": "60/1",
+    "air_areas": "8",
+    "air_mph": "120/2",
+    "space_mph": "1500/25"
+   },
+   {
+    "rank": "excellent",
+    "land_areas": "5",
+    "land_mph": "75/1.25",
+    "air_areas": "10",
+    "air_mph": "150/2.5",
+    "space_mph": "2000/33"
+   },
+   {
+    "rank": "remarkable",
+    "land_areas": "6",
+    "land_mph": "90/1.5",
+    "air_areas": "15",
+    "air_mph": "225/3.75",
+    "space_mph": "4000/66"
+   },
+   {
+    "rank": "incredible",
+    "land_areas": "7",
+    "land_mph": "105/1.75",
+    "air_areas": "20",
+    "air_mph": "300/5",
+    "space_mph": "6000/100"
+   },
+   {
+    "rank": "amazing",
+    "land_areas": "8",
+    "land_mph": "120/2",
+    "air_areas": "25",
+    "air_mph": "375/6.25",
+    "space_mph": "10,000/167"
+   },
+   {
+    "rank": "monstrous",
+    "land_areas": "9",
+    "land_mph": "135/2.25",
+    "air_areas": "30",
+    "air_mph": "450/7.5",
+    "space_mph": "20,000/333"
+   },
+   {
+    "rank": "unearthly",
+    "land_areas": "10",
+    "land_mph": "150/2.5",
+    "air_areas": "40",
+    "air_mph": "600/10",
+    "space_mph": "40,000/666"
+   },
+   {
+    "rank": "shift-x",
+    "land_areas": "12",
+    "land_mph": "180/3",
+    "air_areas": "50",
+    "air_mph": "750/12.5",
+    "space_mph": "80,000/1332"
+   },
+   {
+    "rank": "shift-y",
+    "land_areas": "14",
+    "land_mph": "210/3.5",
+    "air_areas": "100",
+    "air_mph": "1500/25",
+    "space_mph": "150,000/2500"
+   },
+   {
+    "rank": "shift-z",
+    "land_areas": "16",
+    "land_mph": "240/4",
+    "air_areas": "200",
+    "air_mph": "3750/62.5",
+    "space_mph": "300,000/500"
+   },
+   {
+    "rank": "class-1000",
+    "land_areas": "32",
+    "land_mph": "480/8",
+    "air_areas": null,
+    "air_mph": "10,000",
+    "space_mph": "1 million/16,667"
+   },
+   {
+    "rank": "class-3000",
+    "land_areas": "50",
+    "land_mph": "480/8",
+    "air_areas": null,
+    "air_mph": null,
+    "space_mph": "lightspeed"
+   },
+   {
+    "rank": "class-5000",
+    "land_areas": "100",
+    "land_mph": "1500",
+    "air_areas": null,
+    "air_mph": null,
+    "space_mph": "100 x lightspeed"
+   }
+  ],
+  "notes": [
+   "Shift Z's space speed is printed 300,000/500; every other row's second figure is the first divided by 60, which would make it 5000.",
+   "Class 3000's 'lightspeed' and Class 5000's '100 x lightspeed' are printed across the air and space columns; they are stored under space.",
+   "Class 1000 prints 10,000 under air mph with a dash for air areas."
+  ]
+ },
+ "simultaneous": {
+  "source": "UPB inside back cover",
+  "about": "Number of simultaneous actions or targets, by Power rank and range column.",
+  "rows": [
+   {
+    "rank": "feeble",
+    "A": "1",
+    "B": "1",
+    "C": "1",
+    "D": "2",
+    "E": "2"
+   },
+   {
+    "rank": "poor",
+    "A": "1",
+    "B": "1",
+    "C": "1",
+    "D": "4",
+    "E": "4"
+   },
+   {
+    "rank": "typical",
+    "A": "1",
+    "B": "2",
+    "C": "1",
+    "D": "6",
+    "E": "10"
+   },
+   {
+    "rank": "good",
+    "A": "1",
+    "B": "3",
+    "C": "1",
+    "D": "10",
+    "E": "25"
+   },
+   {
+    "rank": "excellent",
+    "A": "2",
+    "B": "5",
+    "C": "2",
+    "D": "20",
+    "E": "50"
+   },
+   {
+    "rank": "remarkable",
+    "A": "2",
+    "B": "10",
+    "C": "2",
+    "D": "30",
+    "E": "100"
+   },
+   {
+    "rank": "incredible",
+    "A": "2",
+    "B": "15",
+    "C": "2",
+    "D": "40",
+    "E": "200"
+   },
+   {
+    "rank": "amazing",
+    "A": "3",
+    "B": "25",
+    "C": "4",
+    "D": "50",
+    "E": "500"
+   },
+   {
+    "rank": "monstrous",
+    "A": "3",
+    "B": "40",
+    "C": "4",
+    "D": "75",
+    "E": "1,000"
+   },
+   {
+    "rank": "unearthly",
+    "A": "4",
+    "B": "50",
+    "C": "8",
+    "D": "100",
+    "E": "2,000"
+   },
+   {
+    "rank": "shift-x",
+    "A": "5",
+    "B": "75",
+    "C": "20",
+    "D": "150",
+    "E": "5,000"
+   },
+   {
+    "rank": "shift-y",
+    "A": "10",
+    "B": "100",
+    "C": "50",
+    "D": "200",
+    "E": "10,000"
+   },
+   {
+    "rank": "shift-z",
+    "A": "20",
+    "B": "250",
+    "C": "100",
+    "D": "500",
+    "E": "20,000"
+   },
+   {
+    "rank": "class-1000",
+    "A": "50",
+    "B": "500",
+    "C": "1,000",
+    "D": "1,000",
+    "E": "50,000"
+   },
+   {
+    "rank": "class-3000",
+    "A": "100",
+    "B": "1,500",
+    "C": "5,000",
+    "D": "3,000",
+    "E": "100,000"
+   },
+   {
+    "rank": "class-5000",
+    "A": "200",
+    "B": "2,500",
+    "C": "10,000",
+    "D": "5,000",
+    "E": "200,000"
+   }
+  ]
+ }
+}

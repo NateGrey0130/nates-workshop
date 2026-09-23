@@ -1,0 +1,846 @@
+{
+ "about": "The Universal Table. rows are the d100 bands, top to bottom. Each column is a rank; colours[i] is the result colour for rows[i]. The darker shades and the grey stripe on the printed table mark every third row and carry no meaning, so they are folded into their colour. actions is the result header: what each colour means for each kind of FEAT. The colours were read from the page's vector fills, not by eye.",
+ "sources": [
+  "PB back cover"
+ ],
+ "rows": [
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   3
+  ],
+  [
+   4,
+   6
+  ],
+  [
+   7,
+   10
+  ],
+  [
+   11,
+   15
+  ],
+  [
+   16,
+   20
+  ],
+  [
+   21,
+   25
+  ],
+  [
+   26,
+   30
+  ],
+  [
+   31,
+   35
+  ],
+  [
+   36,
+   40
+  ],
+  [
+   41,
+   45
+  ],
+  [
+   46,
+   50
+  ],
+  [
+   51,
+   55
+  ],
+  [
+   56,
+   60
+  ],
+  [
+   61,
+   65
+  ],
+  [
+   66,
+   70
+  ],
+  [
+   71,
+   75
+  ],
+  [
+   76,
+   80
+  ],
+  [
+   81,
+   85
+  ],
+  [
+   86,
+   90
+  ],
+  [
+   91,
+   94
+  ],
+  [
+   95,
+   97
+  ],
+  [
+   98,
+   99
+  ],
+  [
+   100,
+   100
+  ]
+ ],
+ "columns": [
+  {
+   "rank": "shift-0",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "red"
+   ]
+  },
+  {
+   "rank": "feeble",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red"
+   ]
+  },
+  {
+   "rank": "poor",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red"
+   ]
+  },
+  {
+   "rank": "typical",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "good",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "excellent",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "remarkable",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "incredible",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "amazing",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "monstrous",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "unearthly",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "shift-x",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "shift-y",
+   "colours": [
+    "white",
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "shift-z",
+   "colours": [
+    "white",
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "class-1000",
+   "colours": [
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "class-3000",
+   "colours": [
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "class-5000",
+   "colours": [
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  },
+  {
+   "rank": "beyond",
+   "colours": [
+    "white",
+    "green",
+    "green",
+    "green",
+    "green",
+    "green",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "id": "blunt-attacks",
+   "abbr": "BA",
+   "name": "Blunt Attacks",
+   "ability": "fighting",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Slam",
+    "red": "Stun"
+   }
+  },
+  {
+   "id": "edged-attacks",
+   "abbr": "EA",
+   "name": "Edged Attacks",
+   "ability": "fighting",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Stun",
+    "red": "Kill"
+   }
+  },
+  {
+   "id": "shooting",
+   "abbr": "Sh",
+   "name": "Shooting Attacks",
+   "ability": "agility",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Bullseye",
+    "red": "Kill"
+   }
+  },
+  {
+   "id": "throwing-edged",
+   "abbr": "TE",
+   "name": "Throwing Edged",
+   "ability": "agility",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Stun",
+    "red": "Kill"
+   }
+  },
+  {
+   "id": "throwing-blunt",
+   "abbr": "TB",
+   "name": "Throwing Blunt",
+   "ability": "agility",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Hit",
+    "red": "Stun"
+   }
+  },
+  {
+   "id": "energy",
+   "abbr": "En",
+   "name": "Energy",
+   "ability": "agility",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Bullseye",
+    "red": "Kill"
+   }
+  },
+  {
+   "id": "force",
+   "abbr": "Fo",
+   "name": "Force",
+   "ability": "agility",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Bullseye",
+    "red": "Stun"
+   }
+  },
+  {
+   "id": "grappling",
+   "abbr": "Gp",
+   "name": "Grappling",
+   "ability": "strength",
+   "results": {
+    "white": "Miss",
+    "green": "Miss",
+    "yellow": "Partial",
+    "red": "Hold"
+   }
+  },
+  {
+   "id": "grabbing",
+   "abbr": "Gb",
+   "name": "Grabbing",
+   "ability": "strength",
+   "results": {
+    "white": "Miss",
+    "green": "Take",
+    "yellow": "Grab",
+    "red": "Break"
+   }
+  },
+  {
+   "id": "escaping",
+   "abbr": "Es",
+   "name": "Escaping",
+   "ability": "strength",
+   "results": {
+    "white": "Miss",
+    "green": "Miss",
+    "yellow": "Escape",
+    "red": "Reverse"
+   }
+  },
+  {
+   "id": "charging",
+   "abbr": "Ch",
+   "name": "Charging",
+   "ability": "endurance",
+   "results": {
+    "white": "Miss",
+    "green": "Hit",
+    "yellow": "Slam",
+    "red": "Stun"
+   }
+  },
+  {
+   "id": "dodging",
+   "abbr": "Do",
+   "name": "Dodging",
+   "ability": "agility",
+   "results": {
+    "white": "None",
+    "green": "-2 CS",
+    "yellow": "-4 CS",
+    "red": "-6 CS"
+   }
+  },
+  {
+   "id": "evading",
+   "abbr": "Ev",
+   "name": "Evading",
+   "ability": "fighting",
+   "results": {
+    "white": "Autohit",
+    "green": "Evasion",
+    "yellow": "+1 CS",
+    "red": "+2 CS"
+   }
+  },
+  {
+   "id": "blocking",
+   "abbr": "Bl",
+   "name": "Blocking",
+   "ability": "strength",
+   "results": {
+    "white": "-6 CS",
+    "green": "-4 CS",
+    "yellow": "-2 CS",
+    "red": "+1 CS"
+   }
+  },
+  {
+   "id": "catching",
+   "abbr": "Ca",
+   "name": "Catching",
+   "ability": "agility",
+   "results": {
+    "white": "Autohit",
+    "green": "Miss",
+    "yellow": "Damage",
+    "red": "Catch"
+   }
+  },
+  {
+   "id": "stun",
+   "abbr": "St",
+   "name": "Stun?",
+   "ability": "endurance",
+   "results": {
+    "white": "1-10",
+    "green": "1",
+    "yellow": "No",
+    "red": "No"
+   }
+  },
+  {
+   "id": "slam",
+   "abbr": "Sl",
+   "name": "Slam?",
+   "ability": "endurance",
+   "results": {
+    "white": "Gr. Slam",
+    "green": "1 area",
+    "yellow": "Stagger",
+    "red": "No"
+   }
+  },
+  {
+   "id": "kill",
+   "abbr": "Ki",
+   "name": "Kill?",
+   "ability": "endurance",
+   "results": {
+    "white": "En. Loss",
+    "green": "E/S",
+    "yellow": "No",
+    "red": "No"
+   }
+  }
+ ]
+}
