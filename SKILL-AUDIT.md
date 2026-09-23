@@ -2730,6 +2730,13 @@ saw.**
 - The other three fixes are wording: the sweep's history, dropping skills from
   the cause's footprint, and the memory hits.
 
+> **Adjusted 2026-09-23 — `F66`.** GREEN 3's one hit is **weaker than the
+> table says**. Every GREEN 2 and GREEN 3 run was handed the branch name
+> `skill-audit-f65-sweep-past-the-check` in the harness's git snapshot, and
+> that name states what the scenario scored. So `F65`'s effect on record is
+> **1 of 2, with that exposure**. No run has been scored on a neutrally named
+> branch. The table is left standing as filed.
+
 ### F66 — low — `F64`'s blinding rule covers the prompt, and the answer leaked through the tree and the skill
 
 **Opened 2026-09-23.** Named in `F65`'s outcome note above as a gap in `F64`'s
@@ -2738,23 +2745,44 @@ and taken in one PR on the same grounds `F64` records: the decision came
 before the number.
 
 `test-suite` → *A skill is a check too*, step 2, said *"Keep the prompt blind"*
-and nothing more. In `F65`'s second GREEN round, the one run that hit reported
-that it had read the working tree first. That meant the uncommitted `F65`
-finding, and the `test-suite` diff, whose closing paragraph described the RED
-runs and whose example quoted the failing row. The prompt itself was blind.
-The run's hit was discarded, and both leaks were removed before the third
-round.
+and nothing more. The prompt in `F65`'s runs was blind, and the answer
+reached them anyway, through three channels.
 
-**Proposal:** extend step 2 to cover the working tree and the skill under test
-as well as the prompt. Drafts that describe the test stay in the scratchpad
-until the runs are done. A skill must not name its scenario or record its own
-results, since evidence belongs in the finding. A run that read either one is
-discarded and re-run.
+**Measured from the subagent transcripts by the premise auditor, 2026-09-23,**
+under `~/.claude/projects/C--Users-natha-Projects-nates-apps/<session>/subagents/`:
+
+- **The skill under test.** `F65`'s second-round hit read the `test-suite`
+  section from disk with `sed`. That diff's closing paragraph described the
+  RED runs, and its example quoted the failing row. The run reported that
+  *"those edits describe this exact prompt as the F65 pressure test"*.
+- **The working tree.** The same run's `grep -rn "Ley Surge"` over `*.md`
+  returned the uncommitted `F65` finding's line quoting the scenario. It
+  never opened that file.
+- **The branch name and commit subjects.** The harness hands every subagent
+  a git snapshot of the current branch, the uncommitted file list and recent
+  commit subjects. All four second- and third-round GREEN runs carry
+  `Current branch: skill-audit-f65-sweep-past-the-check`, which names what the
+  scenario scored. **That includes `F65`'s one counted hit in round three.**
+  The transcripts show the name was present, not that it was used.
+
+**Also measured, and outside this finding's scope:** none of those four runs
+loaded `test-suite` through the Skill tool. Two read it from disk and two
+never read it. A disk read sees an edit at once, which makes `F64`'s
+refresh-wait apply only to Skill-tool loads.
+
+**Proposal:** extend step 2 to cover all three places:
+
+- **The branch.** Run from a neutrally named branch, and commit nothing that
+  describes the test until the runs are done.
+- **The tree.** Keep drafts in the scratchpad.
+- **The skill.** It must not name its scenario or record its own results.
+
+A run that read any of them is discarded and re-run.
 
 **Posture: documentation only.** One paragraph in one skill section, with no
 check.
 
-**Evidence:** `F65`'s outcome note, and that run's own report, 2026-09-23.
+**Evidence:** the transcripts above, and `F65`'s outcome note, 2026-09-23.
 
 **Not pressure-tested, and on purpose.** This changes how the method is run,
 not how a session behaves on a task, so there is no task scenario to put a
