@@ -11,9 +11,10 @@
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet,
-  stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh }
+  stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
+import { needsOccupation } from '/apps/character-creator/js/parser.js';
 
 // The map is computed when the city CHANGES and kept with it, not redrawn
 // from the layout code on every load: Phase 3 saves the generated city, and a
@@ -24,6 +25,9 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => escHtml(s == null ? '' : String(s));
 const STORE = 'workshop.city.last';
 const MODEL = 'claude-sonnet-5';
+const SETTING_LABEL = { 'palladium-fantasy': 'Palladium Fantasy', rifts: 'Rifts' };
+// The setting's money: gold in Palladium Fantasy, credits in Rifts.
+const currency = (c) => tablesFor(c.settings.system)?.CURRENCY || 'gp';
 
 const S = {
   settings: { system: 'palladium-fantasy', population: 2500, npcCount: 12, everyRace: true,
@@ -69,7 +73,17 @@ async function loadRaces() {
   try {
     const res = await api(`classes?system=${encodeURIComponent(S.settings.system)}&category=rcc`);
     S.rccs = (res.classes || []).filter((c) => c.category === 'rcc')
-      .map((c) => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name));
+      // takesOcc: the roller's own rule for a race that must take an O.C.C.
+      .map((c) => ({ id: c.id, name: c.name, takesOcc: needsOccupation(c) })).sort((a, b) => a.name.localeCompare(b.name));
+    // Rifts humans have no R.C.C. - they take an O.C.C. - so the setting's
+    // tables name a Human row for the list.
+    const human = tablesFor(S.settings.system)?.HUMAN;
+    if (human && !S.rccs.some((c) => c.id === human.id)) S.rccs.unshift({ ...human });
+    // Rows kept from before carry the flag as the catalog says it today.
+    for (const x of S.settings.races) {
+      const c = S.rccs.find((r) => r.id === x.id);
+      if (c) x.takesOcc = !!c.takesOcc;
+    }
   } catch (err) {
     S.rccs = [];
     S.msg = 'Could not load the races: ' + err.message; S.err = true;
@@ -87,8 +101,7 @@ function settingsHtml() {
     <h2 style="margin-top:0">Settings</h2>
     <div class="rowline" style="flex-wrap:wrap">
       <label class="small">Setting <select onchange="City.set('system', this.value)">
-        ${SUPPORTED_SYSTEMS.map((x) => `<option value="${x}"${x === s.system ? ' selected' : ''}>${x === 'palladium-fantasy' ? 'Palladium Fantasy' : esc(x)}</option>`).join('')}
-        <option disabled>Rifts (coming)</option>
+        ${SUPPORTED_SYSTEMS.map((x) => `<option value="${x}"${x === s.system ? ' selected' : ''}>${esc(SETTING_LABEL[x] || x)}</option>`).join('')}
       </select></label>
       <label class="small">Population <input type="number" min="1" value="${esc(s.population)}" style="width:8em"
         onchange="City.set('population', this.value)"></label>
@@ -127,7 +140,7 @@ function settingsHtml() {
       placeholder="Naming theme, e.g. Venetian merchant princes, Norse dock workers (optional)"
       aria-label="Naming theme" onchange="City.theme(this.value)">
     <p class="muted small" style="margin:6px 0 0">With a theme, one AI call invents a name pool for this city and it is kept
-      with the city: locks and rerolls draw from it and never call again. Without one, the built-in Palladium Fantasy names.</p>
+      with the city: locks and rerolls draw from it and never call again. Without one, the built-in ${esc(SETTING_LABEL[s.system] || s.system)} names.</p>
 
     <div class="rowline" style="flex-wrap:wrap;margin-top:10px">
       <label class="small">Seed <input type="text" value="${esc(S.seed)}" placeholder="random" style="width:9em"
@@ -301,7 +314,7 @@ function stockHtml(s) {
   }
   return `<details class="city-stock"><summary class="small">${s.inventory.length} item${s.inventory.length === 1 ? '' : 's'} for sale</summary>
     <table class="small"><thead><tr><th>Item</th><th>Here</th><th>Book</th></tr></thead><tbody>
-      ${s.inventory.map((i) => `<tr><td>${esc(i.name)}</td><td>${i.price} gp</td><td class="muted">${i.book}</td></tr>`).join('')}
+      ${s.inventory.map((i) => `<tr><td>${esc(i.name)}</td><td>${i.price} ${currency(S.city)}</td><td class="muted">${i.book}</td></tr>`).join('')}
     </tbody></table>
     ${s.stock_note ? `<p class="small warn">${esc(s.stock_note)}</p>` : ''}
     <button type="button" class="btn btn-sm btn-ghost" onclick="City.restock('${escJs(s.id)}')">🎲 Restock</button>
@@ -331,6 +344,7 @@ function cityHtml() {
     ${card('overview', `<p><b>${esc(o.size)}</b> of ${Number(o.population).toLocaleString()} ·
       ruled by ${esc(o.government)} · ${esc(o.wealth)} · lives on ${esc(o.trade)}</p>
       <p>${o.walls ? 'Walls: ' + esc(o.walls) + '.' : 'No walls.'}</p>
+      ${(o.extras || []).map((x) => `<p><b>${esc(x.label)}:</b> ${esc(x.text)}.</p>`).join('')}
       ${o.factions.length ? `<p><b>Factions</b></p><ul>${o.factions.map((f) =>
         `<li><b>${esc(f.name)}</b>${f.goal ? ', ' + esc(f.goal) : ''}</li>`).join('')}</ul>` : ''}`)}
   </div>
@@ -443,13 +457,25 @@ window.City = {
     if (key === 'population') s.population = num(value, 1, 10000000);
     else if (key === 'npcCount') s.npcCount = num(value, 0, 200);
     else if (key === 'everyRace') s.everyRace = !!value;
-    else if (key === 'system') { s.system = value; S.rccs = null; loadRaces().then(render); }
+    else if (key === 'system') {
+      s.system = value; S.rccs = null;
+      // Races are the setting's own: a row the new setting has no class for
+      // would build a city of a people that setting does not have.
+      loadRaces().then(() => {
+        const ids = new Set(S.rccs.map((c) => c.id));
+        if (s.races.some((x) => !ids.has(x.id))) {
+          const human = S.rccs.find((c) => c.id === 'human') || S.rccs[0];
+          s.races = human ? [{ id: human.id, name: human.name, pct: 100, theme: '' }] : [];
+        }
+        save(); render();
+      });
+    }
     save(); render();
   },
   suggest(pop) { if (pop) { S.settings.population = Number(pop); save(); render(); } },
   race(i, key, value) {
     const x = S.settings.races[i];
-    if (key === 'id') { const c = S.rccs.find((r) => r.id === value); x.id = value; x.name = c?.name || value; }
+    if (key === 'id') { const c = S.rccs.find((r) => r.id === value); x.id = value; x.name = c?.name || value; x.takesOcc = !!c?.takesOcc; }
     else if (key === 'pct') x.pct = Math.max(0, Math.min(100, Number(value) || 0));
     else x[key] = value;
     save(); render();
@@ -457,7 +483,7 @@ window.City = {
   addRace() {
     const taken = new Set(S.settings.races.map((x) => x.id));
     const next = (S.rccs || []).find((c) => !taken.has(c.id));
-    if (next) S.settings.races.push({ id: next.id, name: next.name, pct: 0, theme: '' });
+    if (next) S.settings.races.push({ id: next.id, name: next.name, pct: 0, theme: '', takesOcc: !!next.takesOcc });
     save(); render();
   },
   dropRace(i) { S.settings.races.splice(i, 1); save(); render(); },

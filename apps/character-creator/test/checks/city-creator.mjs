@@ -34,7 +34,7 @@ import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, re
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
-  'City Creator flesh out'];
+  'City Creator flesh out', 'City Creator Rifts'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -390,4 +390,54 @@ export function run() {
       && /if \(S\.saved\) \{\s*const \{ reveal: _r, public: _p, \.\.\.summary \} = await post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ city: S\.city \}\);/.test(fl));
   check('every district, place, shop and NPC card has the button',
     ['fleshHtml(d)', 'fleshHtml(p)', 'fleshHtml(s)', 'fleshHtml(n)'].every((x) => page.includes(x)));
+
+  // ── the Rifts tables (Phase 5) ──
+  // A second table file in the Palladium Fantasy file's shape, plus what
+  // Rifts adds: tech level, Coalition presence, ley lines, M.D.C. walls.
+  section('City Creator Rifts');
+  const RT = tablesFor('rifts');
+  const riftsFlat = [...flat, 'TECH_LEVELS', 'COALITION', 'LEY_LINES'];
+  const riftsSmall = riftsFlat.filter((k) => new Set(RT[k] || []).size < 40).map((k) => `${k} ${new Set(RT[k] || []).size}`);
+  check('every Rifts table has 40 or more distinct entries, the three Rifts-only ones too',
+    riftsSmall.length === 0, riftsSmall.join(', '));
+  check('and its shop specialties together are 40 or more', new Set(RT.SHOP_TYPES.flatMap((t) => t.specialties)).size >= 40);
+  // Job names (NPC_ROLES) are shared words, not written lines: a farmer is a farmer.
+  const riftsCopied = riftsFlat.filter((k) => k !== 'NPC_ROLES').filter((k) => RT[k].some((line) => (T[k] || []).includes(line)));
+  check('no Rifts line is a Palladium Fantasy line carried over', riftsCopied.length === 0, riftsCopied.join(', '));
+  check('every Rifts wall is an M.D.C. wall', RT.WALLS.every((w) => /M\.D\.C\.|mega-damage/i.test(w)),
+    RT.WALLS.filter((w) => !/M\.D\.C\.|mega-damage/i.test(w)).join(' | '));
+  const riftsSettings = () => ({ system: 'rifts', population: 12000, npcCount: 12, everyRace: true,
+    races: [{ id: 'human', name: 'Human', pct: 70 }, { id: 'noro', name: 'Noro', pct: 20, takesOcc: true },
+      { id: 'dragon-hatchling', name: 'Dragon Hatchling', pct: 10, takesOcc: false }] });
+  const rc = generateCity(riftsSettings(), 777);
+  check('a Rifts city is the same city from the same seed', exportJson(rc) === exportJson(generateCity(riftsSettings(), 777)));
+  check('its overview carries a tech level, the Coalition\'s presence and the ley lines, each from its table',
+    JSON.stringify((rc.overview.extras || []).map((x) => x.key)) === '["tech","coalition","ley"]'
+      && RT.TECH_LEVELS.includes(rc.overview.extras[0].text) && RT.COALITION.includes(rc.overview.extras[1].text)
+      && RT.LEY_LINES.includes(rc.overview.extras[2].text), JSON.stringify(rc.overview.extras));
+  check('a Palladium Fantasy city draws none of them, so it is built exactly as before', !('extras' in a.overview));
+  check('its lines come from the Rifts tables, not the Palladium Fantasy ones',
+    RT.GOVERNMENTS.includes(rc.overview.government) && rc.districts.every((d) => RT.MOODS.includes(d.mood))
+      && rc.npcs.every((n) => RT.SECRETS.includes(n.secret)) && !/\{\w+\}/.test(exportJson(rc)));
+  check('and its NPCs are named from the Rifts themes, with nobody left unnamed',
+    rc.npcs.every((n) => n.name) && rc.warnings.length === 0, rc.warnings.join('; '));
+  check('every Rifts role maps to an O.C.C., and every Rifts shop kind has a stock rule',
+    RT.NPC_ROLES.every((role) => RT.ROLE_OCC[role]) && RT.SHOP_TYPES.every((t) => RT.SHOP_STOCK[t.label]));
+  const human = rc.npcs.find((n) => n.raceId === 'human');
+  const noro = rc.npcs.find((n) => n.raceId === 'noro');
+  const dragon = rc.npcs.find((n) => n.raceId === 'dragon-hatchling');
+  const jobOf = (n) => (/^owner of /.test(n.role) ? RT.OWNER_OCC : RT.ROLE_OCC[n.role]);
+  const [humanReq, noroReq, dragonReq] = [human, noro, dragon].map((n) => rollRequest(rc, n.id));
+  check('a Rifts human rolls as their job\'s O.C.C. alone, a race that takes an O.C.C. with it, and any other as its R.C.C. alone',
+    humanReq.class_id === jobOf(human) && !('occ_class_id' in humanReq)
+      && noroReq.class_id === 'noro' && noroReq.occ_class_id === jobOf(noro)
+      && dragonReq.class_id === 'dragon-hatchling' && !('occ_class_id' in dragonReq),
+    JSON.stringify([humanReq, noroReq, dragonReq]));
+  check('and the page marks which races take one by the roller\'s own rule',
+    /import \{ needsOccupation \} from '\/apps\/character-creator\/js\/parser\.js';/.test(page)
+      && /takesOcc: needsOccupation\(c\)/.test(page));
+  check('the page offers Rifts, adds the Human row the R.C.C. list lacks, and prices in the setting\'s money',
+    !/Rifts \(coming\)/.test(page) && /const human = tablesFor\(S\.settings\.system\)\?\.HUMAN;/.test(page)
+      && page.includes('S.rccs.unshift({ ...human })')
+      && /<td>\$\{i\.price\} \$\{currency\(S\.city\)\}<\/td>/.test(page) && RT.CURRENCY === 'cr');
 }
