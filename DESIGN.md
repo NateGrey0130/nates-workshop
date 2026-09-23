@@ -3,14 +3,16 @@
 Written 2026-09-20 by reading the shipped stylesheets, not by deciding
 anything. Product truth is in `PRODUCT.md`.
 
-**THERE ARE TWO VISUAL SYSTEMS NOW, and which one you get is decided by which
+**THERE ARE THREE VISUAL SYSTEMS NOW, and which one you get is decided by which
 stylesheet your page links.** Board & Tissue retoned the five RPG apps and the
 hub on 2026-09-20; FilamentForge, MediaVault and Pick 3 Cut 5 stay on Ley
-Verdigris. Every section below says which system it describes when the two
-differ, and most of them do.
+Verdigris. Marvel Heroes (2026-09-23) is the third, Newsprint, and it is the
+odd one out in mechanism as well as look: it links **no** shared stylesheet at
+all - see *Newsprint* at the end. Every other section below is about the first
+two and says which it describes when they differ, and most of them do.
 
 **Where the truth actually lives:** `shared/styles.css` holds the Ley Verdigris
-tokens and is loaded by every app; `apps/character-creator/styles.css` holds
+tokens and is loaded by every app except Marvel Heroes; `apps/character-creator/styles.css` holds
 everything the RPG suite's five apps draw **and overrides every token in a
 `:root` of its own**. This file is a reader's map of those two. When they
 disagree with this file, **they are right** — and several claims below are
@@ -18,18 +20,19 @@ pinned by named checks in `apps/character-creator/test/checks/rendered-ui.mjs`
 and in the F55 section of `test/smoke.mjs`, which are the only things here that
 cannot rot quietly.
 
-## Two palettes, and the load order that separates them
+## The palettes, and the load order that separates them
 
 | | ground | accent | faces |
 |---|---|---|---|
 | Character Creator, Character Sheet, Codex, Campaign, GM Tools | `#EFE9E2` | `#A8401A` | Archivo + Martian Mono |
 | FilamentForge, MediaVault, Pick 3 Cut 5 | `#0A0F0E` | `#35A0AE` | Saira + IBM Plex Sans |
+| Marvel Heroes (Newsprint) | `#F7F0E1`, dark `#15120F` | `#B81D24` | Saira (condensed) + IBM Plex Sans |
 
 The mechanism is nothing but load order. The five RPG pages link
 `/shared/styles.css` first and `/apps/character-creator/styles.css` second, so
 that file's `:root` wins. The other three link their own stylesheet, which
 declares no palette, so shared's survives. **Retoning `shared/styles.css` would
-retone all eight** — that is the trap this arrangement exists to avoid, and the
+retone all eight that load it** — that is the trap this arrangement exists to avoid, and the
 first draft of Board & Tissue fell into it.
 
 `index.html` is the third case: it links **neither** and carries its own copy of
@@ -182,3 +185,22 @@ CHECK are unwritten, so there is nothing else with a reason to show.
 
 44px minimum, stated at `.tabbar .tab` and followed by the steppers, the roll
 buttons and the tab entries. The sheet is used on a tablet with a finger.
+
+## Newsprint (Marvel Heroes)
+
+A 1980s comic page: warm newsprint ground with a halftone dot, ink rules three
+pixels heavy, panels with a hard offset shadow instead of a lit edge, a red
+masthead, and condensed uppercase Saira for every heading and button. It is a
+different game from everything else here, and it looks it on purpose.
+
+**It links no shared stylesheet**, only `apps/marvel-heroes/styles.css`, which
+declares every token it reads and borrows nothing but the self-hosted font
+files. So no change made for Ley Verdigris or Board & Tissue can reach it, and
+none made here can leave it. Its own smoke suite holds every page to that.
+
+**Contrast is pinned by that suite**, not stated here: it reads the light and
+dark `:root` blocks out of the stylesheet and requires 4.5:1 for the thirteen
+text-on-background pairs the stylesheet uses. **The four FEAT colours always
+carry their word** - a result is "Yellow", never a yellow square.
+
+Targets are 44px, as everywhere else in this file.

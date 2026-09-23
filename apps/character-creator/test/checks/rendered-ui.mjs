@@ -1713,8 +1713,8 @@ export function run() {
   }
 
   // ---------- The front door agrees with the rooms ----------
-  // index.html is the ONE page that does not load /shared/styles.css - it is
-  // deliberately self-contained - so it carries its own copy of the palette under
+  // index.html does not load /shared/styles.css (nor does Marvel Heroes, which is
+  // its own visual system) - it is deliberately self-contained - so it carries its own copy of the palette under
   // its own names. That copy drifted for the whole of the Rust & Ash redesign:
   // every app behind it was retoned in phase 1 and the landing page stayed blue
   // and violet until it was done deliberately, months of commits later.

@@ -5,10 +5,10 @@ HEROES Advanced Set, built from the *Ultimate Powers Book*. It is a standalone
 app: a different game system from the Palladium apps, and deliberately
 separate from them.
 
-**Status: under construction, and not on the hub.** The manifest entry lands in
-the PR that makes the generator work (Nate's decision, 2026-09-23), so until then
-the page exists at `/apps/marvel-heroes/` behind Access and nothing links to it.
-`test/smoke.mjs` pins that.
+**On the hub since the launch PR.** Until the generator worked the page existed
+at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
+decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Three tabs,
+each linkable: `#feat`, `#powers`, `#gen`.
 
 ## Sources
 
@@ -177,7 +177,6 @@ by roll, and they decide nothing here.
 | `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
 | `js/feat.js` | a FEAT on the Universal Table: rank from a rank number, column shifts that stop at the ladder's ends, the colour a roll gives, and what that colour means for each kind of FEAT |
 | `styles.css` | the whole visual system; contrast is pinned by the smoke test |
-| `palette.html` | the palette sample, for review; removed at launch |
 | `data/ranks.json` | the rank ladder: standard number, range, initial number |
 | `data/universal.json` | the Universal Table: d100 bands, a colour per rank, and what each colour means per FEAT |
 | `data/random-ranks.json` | the five Random Ranks columns |

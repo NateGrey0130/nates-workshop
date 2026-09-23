@@ -9,9 +9,9 @@ on the day it was written. Where a claim is checkable, the check is named.
 
 ## What it is
 
-Eight small apps behind one Cloudflare Access wall, sharing one palette, one
-stylesheet and one deploy. `apps/manifest.json` is the list; the hub at `/` is
-the tile grid.
+Small apps behind one Cloudflare Access wall and one deploy.
+`apps/manifest.json` is the list, and the only count worth trusting; the hub at
+`/` is the tile grid. The visual systems are in `DESIGN.md`.
 
 Five of them are one product in five jobs — the RPG suite, split on 2026-09-19:
 
@@ -23,8 +23,11 @@ Five of them are one product in five jobs — the RPG suite, split on 2026-09-19
 | Campaign | what happened, what the party carries |
 | GM Tools | run the table |
 
-The other three are unrelated: FilamentForge (3D print settings), MediaVault
-(a media library), Pick 3 Cut 5 (a party game, and the only public one).
+The others are unrelated: FilamentForge (3D print settings), MediaVault
+(a media library), Pick 3 Cut 5 (a party game, and the only public one), and
+Marvel Heroes (a hero generator for a different RPG, TSR's MARVEL SUPER HEROES,
+built from the *Ultimate Powers Book* and kept apart from the Palladium apps on
+purpose).
 
 ## Who uses it
 
