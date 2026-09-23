@@ -23,10 +23,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
-  parsePool, tablesFor, exportJson } from '../../../city-creator/js/city-engine.js';
+  parsePool, tablesFor, exportJson, rollRequest, linkSheet } from '../../../city-creator/js/city-engine.js';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
-const SECTIONS = ['City Creator engine', 'City Creator map'];
+const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -265,4 +265,34 @@ export function run() {
   check('reveal and players\' text are saved as they are flipped, not held for "Save changes"',
     /async reveal\(id\) \{[\s\S]*?post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ reveal:/.test(page)
       && /async publicText\(id, text\) \{[\s\S]*?post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ public:/.test(page));
+
+  // ── "Roll stats" (Phase 4a) ──
+  // A city NPC goes to the NPC roller as their race's R.C.C. with the job
+  // their role maps to. Every Palladium Fantasy race takes an occupation, so
+  // a role with no job would be refused before anything is rolled.
+  section('City Creator roll stats');
+  const unmapped = T.NPC_ROLES.filter((role) => !T.ROLE_OCC[role]);
+  check('every NPC role maps to a job O.C.C.', unmapped.length === 0, unmapped.join(', '));
+  const owner = a.npcs.find((n) => /^owner of /.test(n.role));
+  const other = a.npcs.find((n) => !/^owner of /.test(n.role));
+  const ownerReq = rollRequest(a, owner.id);
+  check('an NPC goes to the roller as their race with their role\'s job, under their own name',
+    ownerReq.class_id === owner.raceId && ownerReq.occ_class_id === T.OWNER_OCC && ownerReq.name === owner.name
+      && ownerReq.count === 1, JSON.stringify(ownerReq));
+  check('and a shop owner as the owner\'s job, the rest by their role',
+    !other || rollRequest(a, other.id).occ_class_id === T.ROLE_OCC[other.role]);
+  const linked = linkSheet(a, owner.id, 4242);
+  check('the sheet it makes is linked from that entry and no other',
+    linked.npcs.find((n) => n.id === owner.id).sheet_id === 4242 && linked.npcs.filter((n) => n.sheet_id).length === 1);
+  check('rerolling the entry makes a new person, and drops the link',
+    !rerollEntry(linked, owner.id).npcs.find((n) => n.id === owner.id).sheet_id);
+  // The roller REFUSES rather than guesses, and the page shows that refusal
+  // as it comes: the error is the roller's, and nothing is rolled in its place.
+  const roll = page.slice(page.indexOf('async rollStats(id)'), page.indexOf('forget() {'));
+  check('the page sends the roller exactly that request, and shows its refusal as it comes',
+    /const body = rollRequest\(S\.city, id\);/.test(roll) && /npcs\/generate`, 'POST', body\)/.test(roll)
+      && /S\.rolls\[id\] = \{ msg: err\.message, err: true \};/.test(roll)
+      && (roll.match(/npcs\/generate/g) || []).length === 1);
+  check('and only for a kept city, whose campaign the sheet can belong to',
+    /function statsTools\(n\) \{\s*if \(!S\.saved\) return '';/.test(page));
 }

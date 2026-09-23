@@ -503,4 +503,26 @@ export function parsePool(text, settings) {
 
 // ── export ──
 export const exportJson = (city) => JSON.stringify(city, null, 2);
+
+// ── "Roll stats" (Phase 4a) ──
+//
+// A city NPC becomes a statted NPC in the city's campaign through the NPC
+// roller (campaigns/:id/npcs/generate, js/npc-generate.js): their race's
+// R.C.C. with the job O.C.C. their role maps to. The roller REFUSES rather
+// than guesses - a pairing the race's page bars, a class it cannot build - and
+// the page shows that refusal as it comes; nothing here pads around it.
+export function rollRequest(city, npcId) {
+  const T = TABLES[city.settings.system];
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  const occ = /^owner of /.test(n.role) ? T.OWNER_OCC : T.ROLE_OCC[n.role] || null;
+  return { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...(n.name ? { name: n.name } : {}) };
+}
+
+// The link from the city's entry to the sheet the roller made: the sheet's id
+// on the entry. A reroll of the entry makes a new person and drops the link;
+// the sheet stays in the campaign, as any statted NPC does.
+export function linkSheet(city, npcId, sheetId) {
+  return { ...city, npcs: city.npcs.map((n) => (n.id === npcId ? { ...n, sheet_id: sheetId } : n)) };
+}
 export const tablesFor = (system) => TABLES[system] || null;

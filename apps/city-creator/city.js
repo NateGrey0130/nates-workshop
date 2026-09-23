@@ -10,7 +10,8 @@
 // /apps/character-creator/js/api.js, claudeRequest() from /shared/js/api.js.
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
-  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS } from './js/city-engine.js';
+  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet }
+  from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 
 // The map is computed when the city CHANGES and kept with it, not redrawn
@@ -35,6 +36,8 @@ const S = {
   // this city is, once it has been saved; `dirty` is a change since.
   saved: null, dirty: false, camps: null, openCamp: '', savedList: null,
   keepMsg: '', keepErr: false,
+  // "Roll stats" per NPC (Phase 4a): what the roller said, keyed by entry id.
+  rolls: {},
 };
 
 // ── storage: a convenience, never the record ──
@@ -251,6 +254,22 @@ function keepHtml() {
   </div>`;
 }
 
+// ── "Roll stats" (Phase 4a) ──
+// A kept city's NPC can become a statted NPC in its campaign: the roller
+// builds their race's R.C.C. with the job their role maps to, and the sheet
+// is linked from the entry. The roller refuses rather than guesses; its
+// refusal is shown here as it comes, and nothing is invented to stand in.
+function statsTools(n) {
+  if (!S.saved) return '';
+  const r = S.rolls[n.id];
+  const link = n.sheet_id
+    ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.sheet_id}">📜 open sheet</a>`
+    : `<button type="button" class="btn btn-sm btn-ghost" onclick="City.rollStats('${escJs(n.id)}')" ${r?.busy ? 'disabled' : ''}>
+        ${r?.busy ? 'Rolling…' : '🎲 Roll stats'}</button>`;
+  return `<div class="rowline city-stats" style="flex-wrap:wrap">${link}
+    ${r?.msg ? `<span class="small${r.err ? ' err' : ' muted'}">${esc(r.msg)}</span>` : ''}</div>`;
+}
+
 function cityHtml() {
   const c = S.city;
   if (!c) return '';
@@ -296,7 +315,8 @@ function cityHtml() {
   <div class="panel"><h3 style="margin-top:0">Named NPCs <span class="muted small">— ${c.npcs.length}</span></h3>
     ${c.npcs.map((n) => card(n.id, `<p><b>${esc(n.name || '(unnamed)')}</b> <span class="muted small">${esc(n.race)}, ${esc(n.role)}</span></p>
       <p class="small">${esc(n.look)}; ${esc(n.quirk)}. Wants ${esc(n.want)}.
-      <span class="gm-secret">Secret: ${esc(n.secret)}.</span></p>`)).join('') || '<p class="muted small">None asked for.</p>'}
+      <span class="gm-secret">Secret: ${esc(n.secret)}.</span></p>
+      ${statsTools(n)}`)).join('') || '<p class="muted small">None asked for.</p>'}
   </div>
 
   <div class="panel"><h3 style="margin-top:0">City quirks</h3>
@@ -461,6 +481,28 @@ window.City = {
       S.saved = null; S.dirty = false; S.keepMsg = 'Deleted from the campaign.'; S.keepErr = false;
       save(); render();
     } catch (err) { keepFail(err); }
+  },
+  async rollStats(id) {
+    S.rolls[id] = { busy: true };
+    render();
+    try {
+      const body = rollRequest(S.city, id);
+      const res = await post(`campaigns/${S.saved.campaign_id}/npcs/generate`, 'POST', body);
+      const made = res.npcs?.[0];
+      if (!made) throw new Error(res.refused?.error || 'The roller made nobody');
+      S.city = linkSheet(S.city, id, made.id);
+      // The link is part of the kept city: saved at once, like a reveal.
+      const { reveal: _r, public: _p, ...summary } = await post(`cities/${S.saved.id}`, 'PATCH', { city: S.city });
+      S.saved = { ...S.saved, ...summary };
+      const banked = (made.powers_banked || 0) + (made.picks_pending || 0);
+      S.rolls[id] = { msg: `Rolled as ${body.occ_class_id ? 'a ' + body.occ_class_id.replace(/-/g, ' ') : 'their race alone'}${
+        banked ? `; ${banked} pick${banked === 1 ? '' : 's'} banked on the sheet` : ''}.` };
+      save();
+    } catch (err) {
+      // The roller's own words - a race that bars the job, a class it cannot build.
+      S.rolls[id] = { msg: err.message, err: true };
+    }
+    render();
   },
   forget() { S.saved = null; S.dirty = false; S.keepMsg = ''; save(); render(); },
   reroll(id) { S.city = withMap(rerollEntry(S.city, id)); changed(); save(); render(); },
