@@ -6,10 +6,12 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **No numbered finding on this menu is open, as of 2026-09-10.** A finding's
+> **Work was opened on this menu on 2026-09-22.** A finding's
 > state is its outcome note, directly under its proposal; the headings carry only
-> severity. Checked 2026-09-10, after PR #931, by matching every `### F` heading
-> in this file to the `**Taken` or `**Closed` note beneath it. **The findings
+> severity. The line here read *"No numbered finding on this menu is open"* from
+> 2026-09-10, after PR #931, when every `### F` heading was matched to the
+> `**Taken` or `**Closed` note beneath it — a method worth repeating and a
+> sentence that stopped being true when `F60` and `F61` were filed. **The findings
 > filed after the original run sit under their own dated `##` headings at the end
 > of the file**, after `F30`, and they run in filing order rather than in severity
 > order. This line deliberately neither names nor counts those headings — it
@@ -897,3 +899,82 @@ the `repeat(5, 1fr)` was never the problem.
 defaults [printBackground] off, so the recipe in `print-render-headless-chrome.md`
 cannot see it."* **That is false on this Chrome** - see the dated correction
 under `F56`, measured in the same pass.
+
+## Filed from `META-AUDIT` A22's dropped-deferral list, 2026-09-22
+
+Both were named as *"a separate finding"* on 2026-08-31 and never filed, so they
+were reachable only by reading the interior of a closed finding. `A22` listed
+them as a deliberate drop with locations; Nate named them, and they are numbered
+here. Neither is taken in this PR.
+
+### F60 — medium — the wizard nav is `position: static`, and the step it was deferred from shipped 22 days ago
+
+**Opened 2026-09-22.** Named at `apps/character-creator/UI-AUDIT.closed.md:167`
+inside `F3`'s outcome note — <!-- claim-ok: quoting F3's note, located in the
+sentence before this one --> *"the nav is still `position: static` — that stays a
+separate finding"* — and at `:160-162`, which is the same note refusing to let it
+ride along: *"Making the nav sticky is a **separate** finding and should not ride
+along — it would change every step, not this one."* Taken 2026-08-31 (PR #442);
+the deferral has stood 22 days, the oldest in the corpus.
+
+**Proposal:** make the wizard nav sticky. **Posture: one component, every step —
+and that is the reason it was deferred rather than a reason to widen it.** The
+nav is shared, so this is a single CSS change with a whole-wizard blast radius,
+which is precisely why `F3` refused to fold it in.
+
+**Verify with `verify-ui`, not by reading the CSS.** That skill records three
+ways the in-app Browser pane lies, and `UI-AUDIT.closed.md:248-252` adds a
+fourth measured here: the pane returns **blank frames whenever the page is
+scrolled**, and a sticky nav is a scroll behaviour. A screenshot that looks right
+is not evidence for this change.
+
+**Evidence:** the two reads above, 2026-09-22, and PR #442's date. **Not
+measured:** whether the nav is still `position: static` today — `F3`'s note is
+22 days old and nothing has re-read the stylesheet. **A taker's first command is
+to check that**, because if it has since changed this finding is moot.
+
+**Confidence:** high that it was deferred deliberately and never filed. **Unknown
+whether it is still true**, which is the line above.
+
+**Ongoing cost:** none. A sticky nav is not a check to maintain.
+
+**A reason to decline:** every step changing is a real cost on a wizard that
+works, and nobody has recorded a complaint about the nav scrolling away. `F3`
+deferred it on scope, not on desire — there is no evidence in this menu that
+anyone wants it.
+
+### F61 — low — *Browse all* got a filter and the guided shortlist did not, and whether it should is a question about guided mode
+
+**Opened 2026-09-22.** Named at
+`apps/character-creator/UI-AUDIT.closed.md:244-248`, in `F3`'s own outcome note:
+<!-- claim-ok: quoting F3's note, located in the sentence before this one -->
+*"**An asymmetry this opens, recorded and NOT taken:** `F3` gave *Browse all* a
+filter box; the guided shortlist has none, so its 98 remaining cards are still an
+unfiltered scroll. Whether the filter belongs over a ranked list is a question
+about what guided mode is for, and it is a finding of its own rather than
+something to fold in here."*
+
+**This finding POSES the question and does not answer it**, on Nate's word,
+2026-09-22. That is its whole content and the reason it is `low`.
+
+**The question:** a guided shortlist is **ranked** — it is meant to be read in
+order, and a filter box invites treating it as a catalogue, which is what
+*Browse all* already is. Against that: 98 cards is a long scroll whichever mode
+you are in, and the two modes now behave differently for no reason a user can
+see.
+
+**Proposal:** none. **Posture, whatever is decided: it may not be adopted on
+symmetry alone.** *Browse all* having a filter is not an argument that guided
+mode needs one; they are different tools and `F3` said so.
+
+**Evidence:** the read above, 2026-09-22, and `F3`'s measured numbers in the same
+note — 120 cards before, **98 + 22 collapsed** after, page height 12,276px →
+**10,194px**, shorter than *Browse all*'s 11,027px. **Not measured:** whether
+anyone scrolls past the top of the shortlist in practice. No usage data exists.
+
+**Confidence:** high that the asymmetry is real and deliberate. **The conclusion
+is not a confidence question** — it is a product decision with no measurement
+that settles it.
+
+**Ongoing cost:** none if declined. If a filter is added it is one more control
+on a step whose argument is that it has fewer.
