@@ -112,6 +112,9 @@ jobs:
       - name: media-vault
         run: node apps/media-vault/test/smoke.mjs
 
+      - name: marvel-heroes
+        run: node apps/marvel-heroes/test/smoke.mjs
+
   # DOES EVERY NEW CLAIM ABOUT ANOTHER FILE SAY WHERE IT WAS READ?
   #
   # Its own job rather than a step in `smoke`, for two reasons: it needs the

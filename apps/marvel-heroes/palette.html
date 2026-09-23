@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvel Heroes palette &mdash; Nate's Workshop</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<meta name="theme-color" content="#b81d24">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- The palette sample for review. Temporary: removed when the app launches.
+     Every colour on this page comes from a token in styles.css. -->
+
+<header class="masthead">
+  <div>
+    <div class="title">Marvel Heroes</div>
+    <div class="tagline">Palette sample &middot; "Newsprint"</div>
+  </div>
+  <a href="./" class="home">&larr; the app</a>
+</header>
+
+<main>
+  <section class="panel">
+    <span class="caption">Tokens</span>
+    <h2>Ink, paper and three process colours</h2>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:var(--paper)"></div><div class="label">Paper<br><code>--paper</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--panel)"></div><div class="label">Panel<br><code>--panel</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--panel-alt)"></div><div class="label">Panel, alternate<br><code>--panel-alt</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink)"></div><div class="label">Ink<br><code>--ink</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--red)"></div><div class="label">Red<br><code>--red</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--blue)"></div><div class="label">Blue<br><code>--blue</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--yellow)"></div><div class="label">Yellow<br><code>--yellow</code></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="caption">Type</span>
+    <h1>Heading one: Saira, condensed</h1>
+    <h2>Heading two</h2>
+    <h3>Heading three</h3>
+    <p>Body text is IBM Plex Sans. Both faces are the workshop's own self-hosted files, so the page
+      makes no third-party request.</p>
+    <p class="muted">Muted text, for notes and page citations (UPB p.14).</p>
+  </section>
+
+  <section class="panel alt">
+    <span class="caption">A card</span>
+    <h2>Captain Example</h2>
+    <p><strong>Body type:</strong> Induced Mutant &middot; <strong>Origin:</strong> Energy Exposure</p>
+    <p>F <strong>GD</strong> &middot; A <strong>EX</strong> &middot; S <strong>TY</strong> &middot;
+      E <strong>RM</strong> &middot; R <strong>GD</strong> &middot; I <strong>EX</strong> &middot; P <strong>TY</strong></p>
+    <div class="row">
+      <button class="btn" type="button">Roll a hero</button>
+      <button class="btn secondary" type="button">Lock this step</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="caption">FEAT results</span>
+    <h2>The Universal Table's four colours</h2>
+    <p>Every result carries its word as well as its colour.</p>
+    <div class="row">
+      <span class="feat white">White</span>
+      <span class="feat green">Green</span>
+      <span class="feat yellow">Yellow</span>
+      <span class="feat red">Red</span>
+    </div>
+  </section>
+</main>
+</body>
+</html>

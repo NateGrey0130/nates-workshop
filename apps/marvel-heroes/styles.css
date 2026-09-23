@@ -1,0 +1,228 @@
+/* Marvel Heroes - its own visual system, "Newsprint".
+
+   THIS APP LOADS NO SHARED STYLESHEET, deliberately. shared/styles.css is Ley
+   Verdigris and apps/character-creator/styles.css is Board & Tissue; both
+   redeclare tokens on :root, so linking either would let a change made for
+   the other apps restyle this one. Every token this app reads is declared
+   below. The only shared things it uses are the self-hosted font FILES, which
+   are assets rather than a design system.
+
+   The look is a 1980s comic page: warm newsprint, heavy ink rules, panels with
+   a hard offset shadow, and the four FEAT colours of the Universal Table.
+
+   CONTRAST IS PINNED. apps/marvel-heroes/test/smoke.mjs reads the tokens out
+   of this file - the light :root block and the dark block - and requires 4.5:1
+   for every text/background pair it lists. Rename a token and the check names
+   it rather than passing quietly. */
+
+@font-face {
+  font-family: 'Saira';
+  src: url('/shared/fonts/saira-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/saira-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2-variations'),
+       url('/shared/fonts/ibm-plex-sans-variable.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f7f0e1;
+  --panel: #fffaf0;
+  --panel-alt: #efe4cc;
+  --ink: #16130f;
+  --ink-soft: #4a4136;
+  --rule: #16130f;
+  --red: #b81d24;
+  --on-red: #ffffff;
+  --blue: #1d4f91;
+  --on-blue: #ffffff;
+  --yellow: #f2c230;
+  --on-yellow: #16130f;
+  --dot: rgba(29, 79, 145, 0.14);
+
+  /* The Universal Table's four results. Each is shown WITH its word, never by
+     colour alone. */
+  --feat-white: #ffffff;
+  --on-feat-white: #16130f;
+  --feat-green: #16753f;
+  --on-feat-green: #ffffff;
+  --feat-yellow: #f2c230;
+  --on-feat-yellow: #16130f;
+  --feat-red: #b81d24;
+  --on-feat-red: #ffffff;
+
+  --font-display: 'Saira', 'Arial Narrow', sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --shadow: 4px 4px 0 var(--rule);
+  --radius: 2px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #15120f;
+    --panel: #221d18;
+    --panel-alt: #2c2620;
+    --ink: #f3ead7;
+    --ink-soft: #c9bca4;
+    --rule: #f3ead7;
+    --red: #b81d24;
+    --on-red: #ffffff;
+    --blue: #1d4f91;
+    --on-blue: #ffffff;
+    --yellow: #f2c230;
+    --on-yellow: #16130f;
+    --dot: rgba(242, 194, 48, 0.08);
+    --feat-white: #f3ead7;
+    --on-feat-white: #16130f;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.4px);
+  background-size: 9px 9px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* -- masthead -- */
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: var(--red);
+  color: var(--on-red);
+  border-bottom: 4px solid var(--rule);
+}
+.masthead .title {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 900;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transform: skew(-6deg);
+}
+.masthead .tagline { font-size: 13px; opacity: 0.92; margin-top: 4px; }
+.masthead .home { color: var(--on-red); font-weight: 600; font-size: 14px; white-space: nowrap; }
+
+main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+
+/* -- panels -- */
+.panel {
+  background: var(--panel);
+  border: 3px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+.panel.alt { background: var(--panel-alt); }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  margin: 0 0 10px;
+}
+h1 { font-size: 34px; }
+h2 { font-size: 24px; }
+h3 { font-size: 18px; }
+
+.caption {
+  display: inline-block;
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border: 2px solid var(--rule);
+  padding: 2px 10px;
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.muted { color: var(--ink-soft); }
+
+/* -- buttons -- */
+.btn {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 17px;
+  padding: 8px 18px;
+  border: 3px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--rule);
+  background: var(--blue);
+  color: var(--on-blue);
+  cursor: pointer;
+}
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--rule); }
+.btn.secondary { background: var(--panel); color: var(--ink); }
+.btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* -- FEAT result chips: colour AND word, always -- */
+.feat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  padding: 6px 12px;
+  border: 2px solid var(--rule);
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.feat.white  { background: var(--feat-white);  color: var(--on-feat-white); }
+.feat.green  { background: var(--feat-green);  color: var(--on-feat-green); }
+.feat.yellow { background: var(--feat-yellow); color: var(--on-feat-yellow); }
+.feat.red    { background: var(--feat-red);    color: var(--on-feat-red); }
+
+/* -- swatches (palette sample) -- */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.swatch { border: 3px solid var(--rule); background: var(--panel); }
+.swatch .chip { height: 56px; border-bottom: 3px solid var(--rule); }
+.swatch .label { padding: 6px 8px; font-size: 13px; }
+.swatch code { font-size: 12px; color: var(--ink-soft); }
+
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+@media (max-width: 560px) {
+  .masthead { padding: 12px 16px; }
+  .masthead .title { font-size: 24px; }
+  h1 { font-size: 28px; }
+  .panel { padding: 14px 14px; box-shadow: 3px 3px 0 var(--rule); }
+}
