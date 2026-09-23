@@ -11,8 +11,8 @@ sheets). Built one phase per PR; the plan's phases are:
 
 | phase | what | state |
 |---|---|---|
-| 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | this PR |
-| 2 | SVG district map with pins, race quarters drawn | to come |
+| 1 | engine, Palladium Fantasy tables, settings, text output, lock and reroll, JSON export | done |
+| 2 | SVG district map with pins, race quarters drawn | done |
 | 3 | D1 `cities` table, linked to a campaign, G.M.-only by `campaigns.gm_email`, print styles | to come |
 | 4 | roll stats for an NPC, shop inventories, a player view, an AI "Flesh out" | to come |
 | 5 | the Rifts table set | to come |
@@ -43,6 +43,24 @@ sheets). Built one phase per PR; the plan's phases are:
 - **Refuse, never pad.** A table line whose `{slot}` the city cannot fill is
   skipped, and a name source that runs out leaves the entry unnamed and says so,
   rather than repeating a name.
+
+## The map
+
+**`js/city-map.js`** lays out a district map from the city, seeded like the
+rest. It is a district map and not a street map (out of scope by the plan):
+the city's outline is cut into one region per district by the perpendicular
+bisectors between their sites, so every point belongs to exactly one district.
+Race quarters are hatched; the wall and its gates appear only when the city has
+walls; main roads run from the central square out through the gates; about half
+of cities get a river. Every place and shop is a numbered pin inside its own
+district, clear of the label and of the other pins, and each pin links to its
+entry - the numbered key under the map is the large tap target on a phone.
+
+The map is **computed when the city changes and kept with it**, not redrawn on
+load, so a later change to the layout never moves a saved city's districts.
+`?seed=N` opens on that city with the settings on screen (built-in names only),
+which is also how the print check renders a page without clicking. The map
+prints in the page's strokes, sized to share a page with the overview.
 
 Nothing is saved on the server yet (Phase 3). The page keeps the last city in
 this browser's storage so a reload does not lose it, and **Export JSON** hands
