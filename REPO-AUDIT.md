@@ -604,3 +604,71 @@ test, and it costs one command.
 
 **Not re-proposable on symmetry alone.** Recorded here so the next reader who
 notices the two spawn lines differ has the number rather than the observation.
+
+## Filed from the 2026-09-22 session's noticed list, 2026-09-22
+
+Nate named it for filing. It is filed here and not taken in this PR.
+
+### G22 — low — `regression.mjs`'s death block prints an idle band that the deaths since `G20` have already left
+
+**Opened 2026-09-22.** When the suite dies, `G20` has it report the idle gap
+before the fatal request. The line it prints, at
+`apps/character-creator/test/regression.mjs:153-154` (read 2026-09-22), ends in
+a hard-coded parenthetical:
+
+<!-- claim-ok: quoting the printed text this finding is about -->
+*"(the six kept failures idled 5.2-6.0s here; the kept pass idled 4.24s)"*
+
+That summarises the six failures kept when `G20` was taken, and later deaths
+have fallen outside it. **Every failed attempt of `regression.yml` since `G20`
+shipped**, re-derived from the workflow history with
+`gh api .../actions/workflows/regression.yml/runs` filtered on
+`run_attempt > 1`, then `gh run view <id> --attempt <n> --log-failed` for each
+failed attempt, 2026-09-22:
+
+| run | attempt | into the suite | idle | dev server |
+|---|---|---|---|---|
+| 35790754301 | 1 | 44.25s | 5.65s | STILL RUNNING |
+| 35795094181 | 1 | 52.90s | 5.65s | STILL RUNNING |
+| 35795094181 | 2 | 57.50s | **7.30s** | STILL RUNNING |
+| 35795094181 | 3 | 51.18s | 5.49s | STILL RUNNING |
+| 35802343106 | 1 | 52.05s | 5.70s | STILL RUNNING |
+| 35803803650 | 1 | 51.72s | **7.25s** | STILL RUNNING |
+| 35807354524 | 1 | 50.38s | 5.33s | STILL RUNNING |
+| 35807354524 | 2 | 54.60s | **7.58s** | STILL RUNNING |
+| 35807354524 | 3 | 50.40s | 5.46s | STILL RUNNING |
+
+All nine are `UND_ERR_SOCKET`, and in every one the dev server was still up.
+**Three of the nine idled above 6.0s.** Add the 5.16-5.98s of the six `G20`
+kept and the band on record is **5.16-7.58s**. The eight earlier failed
+attempts the same query returns predate the instrument; their logs carry `other side closed`
+and no idle line.
+
+**Why it matters.** The printed band is there to be compared against. A reader
+who gets 7.3s concludes that they are outside the known range and facing
+something new, when it is the same flake `G20` described. The instrument is
+right and its caption is wrong.
+
+**The elapsed position does not help either.** It reads 44.25s to 57.50s across
+the nine, so no fixed point in the suite marks this death.
+
+**Proposal:** stop printing a band. Keep the measured idle gap and point the
+reader at `G20` and this finding for the history, with no numbers in the line.
+Widening the band to 5.16-7.58 would reset the same trap. `SKILL-AUDIT` `F7`
+makes this argument (removing a number beats correcting one), and `META-AUDIT`
+`A23` applied it to a header in PR #1267. **Posture: diagnostics text only.**
+No check changes, no exit code moves, no retry, and nothing about when the
+suite dies or what it asserts. The comment at `regression.mjs:113-121` is a
+dated account of the 2026-09-22 failures and is not part of this proposal.
+
+**Evidence:** the table above, run 2026-09-22; the two source lines, read the
+same day. `grep -rn 'kept failures'` over the repo, 2026-09-22, finds the
+string in `regression.mjs:154` and in `G20`'s own note at `REPO-AUDIT.md:479`,
+which is a quoted specimen. No test pins the text.
+
+**Confidence:** high. Every number above was read out of a log. It would only
+move if a passing run were found to idle above 7.58s. Passing runs print no
+idle line, so that has not been measured.
+
+**Ongoing cost:** none once taken. Left as it is, each further death outside
+the band makes the line more misleading.
