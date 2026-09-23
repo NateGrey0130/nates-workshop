@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync, rmSync, mkdtempSync, readdirSync, existsSy
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
+import vm from 'node:vm';
 import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE_NONE,
   parseClassMarkdown, combineClasses, isChoiceGroup } from '../js/parser.js';
 import { composeClass } from '../js/compose.js';
@@ -817,6 +818,68 @@ check('and reports write permission for its owner', sheet.body.can_write === tru
 // the guard folded into requireCharacter, on a real request
 const missing = await api('GET', '/characters/99999999');
 check('a character that does not exist is a 404, not a 403', missing.status === 404, missing.status);
+
+// ── a campaign with no character in it ──────────────────────────────────────
+// The list's "Create a campaign" form makes a campaign on its own. Before it,
+// every campaign was born in the wizard alongside a character, so nothing here
+// had ever run with a G.M. who owns no characters row - and the G.M. is
+// campaigns.gm_email, so nothing SHOULD need one. Each claim below is a place
+// that could have assumed otherwise.
+{
+  const loneGm = 'lone-gm@example.com';
+  const made = await apiAs(loneGm, 'POST', '/campaigns',
+    { name: '  The Empty Table  ', system: cls.system, description: 'Prep before anyone rolls.', open: false });
+  const lone = made.body.campaign || {};
+  check('a campaign is created with no character behind it',
+    made.status === 201 && lone.gm_email === loneGm && lone.name === 'The Empty Table',
+    JSON.stringify(made.body));
+  check('and the create request keeps its description and open flag',
+    lone.description === 'Prep before anyone rolls.' && lone.open === 0, JSON.stringify(lone));
+  const bare = await api('POST', '/campaigns', { name: 'Wizard Shape', system: 'rifts' });
+  check('while the wizard\'s two-field create still makes an open campaign with no description',
+    bare.status === 201 && bare.body.campaign?.open === 1 && bare.body.campaign?.description === null,
+    JSON.stringify(bare.body));
+  const badDesc = await apiAs(loneGm, 'POST', '/campaigns', { name: 'X', system: 'rifts', description: 7 });
+  check('a description that is not text is a 400', badDesc.status === 400, badDesc.status);
+
+  // The "Your campaigns" list is campaignList.pick() over two requests. Run the
+  // page's own code against this G.M.'s real responses, not a copy of its rule.
+  const [listed, mine] = await Promise.all([
+    apiAs(loneGm, 'GET', '/campaigns'), apiAs(loneGm, 'GET', '/characters?mine=1')]);
+  const ctx = { window: {} };
+  vm.runInNewContext(readFileSync(join(appDir, 'js', 'campaign-list.js'), 'utf8'), ctx);
+  const shown = ctx.window.campaignList.pick(listed.body.campaigns, mine.body.characters, loneGm);
+  const row = shown.find((c) => c.id === lone.id);
+  check('it is in its G.M.\'s "Your campaigns" though they own no character',
+    (mine.body.characters || []).length === 0 && row?.is_gm === true,
+    JSON.stringify({ mine: mine.body.characters?.length, row }));
+  check('and its players count reads 0', row?.character_count === 0, JSON.stringify(row));
+
+  const page = await apiAs(loneGm, 'GET', `/campaigns/${lone.id}`);
+  check('the campaign page gives that G.M. G.M. access',
+    page.status === 200 && page.body.is_gm === true && page.body.is_member === true,
+    JSON.stringify({ status: page.status, is_gm: page.body.is_gm, is_member: page.body.is_member }));
+
+  // A PLAYER at the G.M.-only endpoints - a member, so the refusal has to come
+  // from the G.M. check and not from membership, which a stranger hits first
+  // (seen: with generate's G.M. guard removed, a stranger was still refused).
+  // The G.M. opens the door and the player joins by creating a character.
+  await apiAs(loneGm, 'PATCH', `/campaigns/${lone.id}`, { open: true });
+  const player = 'lone-player@example.com';
+  const joined = await apiAs(player, 'POST', '/characters', {
+    campaign_id: lone.id, name: 'First Player', class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+  check('a player can join it', joined.status === 201, JSON.stringify(joined.body).slice(0, 200));
+  const gen = await apiAs(player, 'POST', `/campaigns/${lone.id}/npcs/generate`, { class_id: cls.id });
+  const patch = await apiAs(player, 'PATCH', `/campaigns/${lone.id}`, { gm_notes: 'mine now' });
+  // A member write, from somebody who owns no character here and so is not in it.
+  const npcsPost = await apiAs('stranger@example.com', 'POST', `/campaigns/${lone.id}/npcs`, { name: 'Gate Crasher' });
+  check('a player in it is still refused its G.M. endpoints',
+    gen.status === 403 && patch.status === 403,
+    JSON.stringify({ generate: gen.status, patch: patch.status }));
+  check('and a stranger is not a member of it', npcsPost.status === 403, `POST npcs → ${npcsPost.status}`);
+}
 
 // ── the join gate ───────────────────────────────────────────────────────────
 // Joining a campaign IS creating a character in it — membership is "owns a

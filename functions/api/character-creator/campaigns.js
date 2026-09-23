@@ -1,6 +1,7 @@
 // GET  /api/character-creator/campaigns            — list campaigns (optionally ?system=)
 //      ?limit= and ?offset= page (default 200, max 500)
-// POST /api/character-creator/campaigns {name, system} — create one, GM = caller
+// POST /api/character-creator/campaigns {name, system, description?, open?} — create one, GM = caller.
+//      No character is needed: the GM is campaigns.gm_email, not a characters row.
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery } from './_lib/paging.js';
@@ -69,12 +70,24 @@ export async function onRequestPost({ request, env }) {
   // `VALID_SYSTEMS` in js/parser.js is the same four values for classes. Kept as
   // a literal rather than imported: this is a Worker route and that is a browser
   // module, and the import would drag the whole parser into every request.
-  if (!body.name
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  if (!name
       || !['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'].includes(body.system)) {
     return json({ error: 'name and a valid system are required' }, 400);
   }
+  // description and open are optional, and exist here because a campaign can
+  // now be made on its own - the list's "Create a campaign" form - rather than
+  // only as a side effect of the wizard saving a character, which sends
+  // neither. Omitted, they are the schema's own defaults: no description, and
+  // open (1), so the wizard's path creates exactly what it always did.
+  if (body.description != null && typeof body.description !== 'string') {
+    return json({ error: 'description must be text' }, 400);
+  }
+  const description = (body.description || '').trim() || null;
+  const open = 'open' in body ? (body.open ? 1 : 0) : 1;
   const row = await env.DB.prepare(
-    'INSERT INTO campaigns (name, system, gm_email) VALUES (?, ?, ?) RETURNING id, name, system, gm_email'
-  ).bind(body.name, body.system, email).first();
+    `INSERT INTO campaigns (name, system, gm_email, description, open) VALUES (?, ?, ?, ?, ?)
+     RETURNING id, name, system, gm_email, description, open`
+  ).bind(name, body.system, email, description, open).first();
   return json({ campaign: row }, 201);
 }

@@ -50,6 +50,18 @@ a player looking for their table should learn it is closed, not that it does
 not exist — and the server refuses regardless, because a disabled `<option>` is
 a hint and not a rule.
 
+**The G.M. needs no character.** The G.M. is `campaigns.gm_email`, whoever
+created the campaign, and `campaignAccess()` counts them as a member before it
+looks for a characters row. Until 2026-09-23 that was true and never exercised:
+the only way to make a campaign was the wizard's **New campaign name** box, so
+every campaign was born with a character in it. The **Create a campaign** form
+under *Your campaigns* (the campaign page and GM Tools, opened with no
+campaign) now makes one on its own — name, game, an optional description and
+the open flag — and goes straight to its page. Regression drives it as a G.M.
+with no characters: the campaign is in their list, the page gives them G.M.
+access, the player count reads 0, and a player who then joins is still refused
+the G.M.-only endpoints.
+
 Three permissions, not one:
 
 | | who |
