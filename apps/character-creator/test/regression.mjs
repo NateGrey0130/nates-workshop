@@ -1114,6 +1114,59 @@ if (itemId) {
   check('a removed row leaves the active inventory', !stillThere);
 }
 
+// ── the party stash, both ways ──────────────────────────────────────────────
+// Part of a stack claimed onto a sheet, and an item handed back. Each is a
+// batch whose two halves are one fact - left one place, arrived at the other -
+// so each is checked from BOTH ends, never from the response alone. The stash
+// had no regression coverage at all before this.
+{
+  const ARROWS = 'Regression arrows';
+  const stashRows = async () => ((await api('GET', `/campaigns/${campaignId}/items?include_removed=1`)).body.items || [])
+    .filter((i) => i.custom_name === ARROWS);
+  const sheetRows = async () => ((await api('GET', `/characters/${charId}`)).body.items || [])
+    .filter((i) => i.custom_name === ARROWS && !i.removed_at);
+
+  const put = await api('POST', `/campaigns/${campaignId}/items`, { custom_name: ARROWS, qty: 12 });
+  const stashId = put.body.item?.id;
+  check('a stack of twelve goes into the party stash', put.status === 201 && !!stashId, put.body);
+
+  const over = await api('POST', `/campaigns/${campaignId}/items/${stashId}`, { claim_for_character_id: charId, qty: 13 });
+  check('claiming more than the stack holds is refused', over.status === 400, over.body);
+
+  const part = await api('POST', `/campaigns/${campaignId}/items/${stashId}`, { claim_for_character_id: charId, qty: 3 });
+  check('three of the twelve can be claimed',
+    part.status === 200 && part.body.claimed === 3 && part.body.left === 9, part.body);
+  let rows = await stashRows();
+  const heldRow = rows.find((i) => !i.removed_at);
+  const takenRow = rows.find((i) => i.removed_at);
+  check('and nine stay in the stash, beside a history row naming who took three',
+    heldRow?.qty === 9 && takenRow?.qty === 3 && takenRow?.claimed_by_character_id === charId,
+    JSON.stringify(rows.map((i) => [i.qty, i.removed_at, i.claimed_by_character_id])));
+  let mine = await sheetRows();
+  check('and the three arrive on the sheet', mine.length === 1 && mine[0].qty === 3,
+    JSON.stringify(mine.map((i) => i.qty)));
+
+  const back = await api('POST', `/characters/${charId}/items/${mine[0]?.id}/stash`, { qty: 1 });
+  check('one can be given back to the stash', back.status === 200 && back.body.moved === 1 && back.body.left === 2, back.body);
+  mine = await sheetRows();
+  rows = await stashRows();
+  check('and it leaves the sheet and arrives in the stash',
+    mine[0]?.qty === 2 && rows.filter((i) => !i.removed_at).map((i) => i.qty).sort((a, b) => a - b).join() === '1,9',
+    JSON.stringify({ sheet: mine.map((i) => i.qty), stash: rows.filter((i) => !i.removed_at).map((i) => i.qty) }));
+
+  const rest = await api('POST', `/characters/${charId}/items/${mine[0]?.id}/stash`, {});
+  check('and the rest of the row goes whole', rest.status === 200 && rest.body.moved === 2 && rest.body.left === 0, rest.body);
+  check('leaving no arrows on the sheet', (await sheetRows()).length === 0);
+
+  const again = await api('POST', `/characters/${charId}/items/${mine[0]?.id}/stash`, {});
+  check('and a row already given away cannot be given twice', again.status === 404, again.body);
+
+  const events = (await api('GET', `/characters/${charId}/events`)).body.events || [];
+  check('each gift is in the play log as a stash event',
+    events.filter((e) => e.kind === 'stash').length === 2,
+    JSON.stringify(events.map((e) => e.kind)));
+}
+
 // ── owning a vessel ─────────────────────────────────────────────────────────
 // Migration 052. Vessels have been a catalog since 048 and readable since the
 // codex learned the section, but nothing could OWN one: character_items.gear_slug

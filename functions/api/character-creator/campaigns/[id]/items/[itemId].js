@@ -3,8 +3,10 @@
 //        the stash. A soft delete: removed_at and removed_by are set and the
 //        row stays, because "what did we used to have" is a question a party
 //        asks and a real DELETE cannot answer.
-// POST   …/items/:itemId with { claim_for_character_id } — move it onto a
-//        character's sheet. See below: this is the one that has to be atomic.
+// POST   …/items/:itemId with { claim_for_character_id, qty? } — move it (or
+//        `qty` of it) onto a character's sheet. See below: this is the one
+//        that has to be atomic. The way back is characters/[id]/items/
+//        [itemId]/stash.js.
 
 import { json, readJson, requireCampaign, isHiddenNpc } from '../../../_lib/auth.js';
 
@@ -72,6 +74,43 @@ export async function onRequestPost({ request, env, params }) {
   }
   if (character.player_email !== guard.email && !guard.access.isGm) {
     return json({ error: 'Only that character’s owner or the GM can claim an item for it' }, 403);
+  }
+
+  // PART OF A STACK: `qty` below the row's quantity takes that many and leaves
+  // the rest in the stash - three of the party's twelve arrows, not all twelve
+  // or none. Absent, or the whole quantity, is the whole-row claim below,
+  // unchanged.
+  const want = b?.qty == null ? row.qty : Math.trunc(Number(b.qty));
+  if (!Number.isFinite(want) || want < 1 || want > row.qty) {
+    return json({ error: `qty must be between 1 and ${row.qty}` }, 400);
+  }
+  if (want < row.qty) {
+    // Three statements under one guard - still held, still MORE than `want` -
+    // so two part-claims racing cannot take more than the stack holds: the
+    // loser copies nothing and changes nothing. The third writes a history row
+    // for the part that left, already removed and marked claimed, so "No
+    // longer held" says who took the three arrows the way it says who took a
+    // whole row.
+    const guardSql = 'FROM campaign_items WHERE id = ? AND campaign_id = ? AND removed_at IS NULL AND qty > ?';
+    const results = await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO character_items (character_id, gear_slug, custom_name, qty, notes, journal_entry_id)
+         SELECT ?, gear_slug, custom_name, ?, notes, journal_entry_id ${guardSql}`
+      ).bind(characterId, want, row.id, params.id, want),
+      env.DB.prepare(
+        `INSERT INTO campaign_items (campaign_id, gear_slug, custom_name, qty, notes, journal_entry_id,
+                                     added_by, added_at, removed_at, removed_by, claimed_by_character_id)
+         SELECT campaign_id, gear_slug, custom_name, ?, notes, journal_entry_id,
+                added_by, added_at, datetime('now'), ?, ? ${guardSql}`
+      ).bind(want, guard.email, characterId, row.id, params.id, want),
+      env.DB.prepare(
+        `UPDATE campaign_items SET qty = qty - ? WHERE id = ? AND campaign_id = ? AND removed_at IS NULL AND qty > ?`
+      ).bind(want, row.id, params.id, want),
+    ]);
+    if (!results[0].meta?.changes) {
+      return json({ error: 'The stash changed while you were claiming; nothing was taken' }, 409);
+    }
+    return json({ ok: true, claimed_by: character.name, claimed: want, left: row.qty - want });
   }
 
   await env.DB.batch([

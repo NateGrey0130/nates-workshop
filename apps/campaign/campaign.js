@@ -747,7 +747,9 @@ function stashView() {
     </div>
     <p class="muted small">Pick from the catalog and a claimed weapon arrives on the sheet as a
       weapon card, with its damage and payload; a custom item arrives as a name. Claiming moves it
-      onto a character's sheet and records that it left the stash — the row stays either way.</p>
+      onto a character's sheet and records that it left the stash — the row stays either way. A
+      stack can be claimed in part: set how many beside it. To hand something back, use
+      <b>to stash</b> on the item's row on the sheet.</p>
     <p id="stash-msg" class="small"></p>
   </div>
   ${gone.length ? `<div class="panel">
@@ -765,6 +767,8 @@ function stashRow(i) {
       ${i.notes ? `<span class="muted small"> — ${esc(i.notes)}</span>` : ''}
       <span class="muted small"> added by ${esc(i.added_by)}</span></span>
     <span class="rowline">
+      ${i.qty > 1 ? `<input type="number" id="claim-qty-${i.id}" class="claim-qty" min="1" max="${i.qty}"
+        value="${i.qty}" aria-label="How many of the ${i.qty} to claim" title="How many to claim">` : ''}
       <select id="claim-${i.id}"><option value="">— claim for —</option>${options}</select>
       <button class="btn btn-sm btn-ghost" onclick="claim(${i.id})">claim</button>
       <button class="btn btn-sm btn-ghost" onclick="dropItem(${i.id})">remove</button>
@@ -847,10 +851,13 @@ async function addStash() {
 async function claim(itemId) {
   const characterId = $('claim-' + itemId)?.value;
   if (!characterId) { alert('Choose which character is taking it.'); return; }
+  // A stack offers a count (stashRow); a single item has no box and moves whole.
+  const qtyBox = $('claim-qty-' + itemId);
+  const qty = qtyBox ? Math.trunc(Number(qtyBox.value)) : null;
   try {
     await api(`campaigns/${campaignId}/items/${itemId}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ claim_for_character_id: Number(characterId) }),
+      body: JSON.stringify({ claim_for_character_id: Number(characterId), ...(qty ? { qty } : {}) }),
     });
     await load();
   } catch (err) { alert('Failed: ' + err.message); }
