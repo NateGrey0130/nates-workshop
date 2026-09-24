@@ -28,6 +28,7 @@
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
   <button type="button" role="tab" id="tab-gen" data-tab="gen" aria-controls="panel-gen" aria-selected="false">Generator</button>
   <button type="button" role="tab" id="tab-heroes" data-tab="heroes" aria-controls="panel-heroes" aria-selected="false">My heroes</button>
+  <button type="button" role="tab" id="tab-gear" data-tab="gear" aria-controls="panel-gear" aria-selected="false">Gear</button>
 </nav>
 
 <main id="app">
@@ -140,6 +141,32 @@
         <div id="sheet" class="panel"></div>
       </div>
     </div>
+  </section>
+  <section id="panel-gear" role="tabpanel" aria-labelledby="tab-gear" hidden>
+    <div class="panel">
+      <span class="caption">The Players' Book</span>
+      <h1>Weapons and vehicles</h1>
+      <div class="fields">
+        <label>Search a name or a word
+          <input id="gear-query" type="search" placeholder="e.g. rifle, power pack, Air" autocomplete="off">
+        </label>
+        <label>Show
+          <select id="gear-group">
+            <option value="">Weapons and vehicles</option>
+            <option value="weapons">Weapons only</option>
+            <option value="vehicles">Vehicles only</option>
+          </select>
+        </label>
+      </div>
+      <p id="gear-count" class="muted" aria-live="polite"></p>
+      <details class="gear-help"><summary>What the columns and notes mean</summary><div id="gear-keys"></div></details>
+    </div>
+    <div id="gear-tables"></div>
+    <section class="panel alt">
+      <h2>When a vehicle takes damage</h2>
+      <p>Compare the damage with the vehicle's Body, then read the colour of the attack's FEAT.</p>
+      <div id="gear-damage" class="table-wrap"></div>
+    </section>
   </section>
 </main>
 

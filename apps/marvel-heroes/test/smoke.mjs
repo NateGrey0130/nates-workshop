@@ -563,10 +563,20 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     const N = 10;
     const words = (s) => s.toLowerCase().match(/[a-z0-9]+/g) || [];
     const shingles = new Set();
-    for (const e of Object.values(JSON.parse(readFileSync(full, 'utf8')))) {
-      const w = words(e.body);
-      for (let i = 0; i + N <= w.length; i++) shingles.add(w.slice(i, i + N).join(' '));
-    }
+    // A run counts only if it reads as prose: six or more real words in it. The
+    // tables' own runs - "10 11 15 16 ...", "fe pr ty gd ex ..." - are mechanics,
+    // which the app is meant to carry, and would otherwise match.
+    const prose = (run) => run.filter((x) => /^[a-z]{3,}$/.test(x)).length >= 6;
+    const addText = (text) => {
+      const w = words(text);
+      for (let i = 0; i + N <= w.length; i++) if (prose(w.slice(i, i + N))) shingles.add(w.slice(i, i + N).join(' '));
+    };
+    for (const e of Object.values(JSON.parse(readFileSync(full, 'utf8')))) addText(e.body);
+    // The Players' Book too, page by page, when its text layer has been dumped
+    // there: the Gear tab's column keys were written from its pages.
+    const pb = join(cacheDir, 'players-pages.json');
+    check(`the Players' Book text is there to compare against too (${rel(pb) || pb})`, existsSync(pb));
+    if (existsSync(pb)) for (const page of Object.values(JSON.parse(readFileSync(pb, 'utf8')))) addText(page);
     const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
       'scripts/msh-extract.py', 'db/migrations/081-msh-power-text.sql'], { cwd: repoRoot, encoding: 'utf8' })
       .stdout.split('\0').filter(Boolean);
@@ -581,9 +591,66 @@ section('No book text is in any tracked file (local only: needs the extraction)'
         if (shingles.has(w.slice(i, i + N).join(' '))) { leaks.push(`${f}: "${w.slice(i, i + N).join(' ')}"`); break; }
       }
     }
-    check(`no file shares ${N} words in a row with the book's power text (${shingles.size} runs checked)`,
+    check(`no file shares ${N} words in a row with the books' text (${shingles.size} runs checked)`,
       leaks.length === 0, leaks.join('; '));
   }
+}
+
+section('Gear: the Players\' Book tables are whole, and every rank cell is a rank');
+
+{
+  const eq = load('equipment.json');
+  const ranks = load('ranks.json');
+  const universal = load('universal.json');
+  const { makeGear } = await import(new URL('../js/gear.js', import.meta.url));
+  const gear = makeGear(eq, ranks);
+  // Row counts as printed, read off the two blind transcriptions (which agreed).
+  const PRINTED = { shooting: 37, melee: 11, ammunition: 35, missiles: 3, other: 34, vehicles: 81 };
+  for (const t of gear.tables) {
+    check(`${t.name}: ${PRINTED[t.id]} rows, as printed`, t.rows.length === PRINTED[t.id], String(t.rows.length));
+    check(`${t.name}: every row has a name`, t.rows.every((r) => typeof r[t.columns[0]] === 'string' && r[t.columns[0]].trim()));
+  }
+  check('the vehicle damage list has its 11 lines', eq.vehicle_damage.rows.length === 11);
+  // Which columns hold ranks: a cell there is a ladder abbreviation, a
+  // number, "*", or one of the few printed forms named here.
+  const RANK_COLS = { shooting: ['range', 'material'], melee: ['price', 'strength'], ammunition: ['cost'],
+    missiles: ['body', 'control', 'speed'], other: ['cost'], vehicles: ['cost', 'control', 'speed', 'body', 'protection'] };
+  const ASIS = new Set(['*', 'Ty/Gd']);
+  const bad = [];
+  for (const t of gear.tables) {
+    for (const r of t.rows) {
+      for (const c of RANK_COLS[t.id]) {
+        const v = r[c];
+        if (v === undefined || typeof v === 'number' || ASIS.has(v)) continue;
+        if (!gear.rankOf(v)) bad.push(`${t.id}/${r.name}/${c}=${v}`);
+      }
+    }
+  }
+  check('every rank cell reads back onto the ladder (R21 took the one that did not)', bad.length === 0, bad.join(', '));
+  check('and something that is not a rank reads as none', gear.rankOf('Re') === null && gear.rankOf('Road') === null && gear.rankOf(6) === null);
+  check('vehicle types are the book\'s eight, less R20\'s misprint',
+    [...new Set(eq.vehicles[0].rows.map((r) => r.type.replace('*', '')))].sort().join()
+      === ['Air', 'GEV', 'Off-Road', 'Railed', 'Road', 'Space', 'Sub', 'Water'].sort().join());
+  const find = (q, g) => gear.search({ query: q, group: g }).flatMap((t) => t.rows.map((r) => r.name));
+  check('search finds by name, by note and by any cell, every word required',
+    find('sniper').join() === 'Sniper Rifle,AP Shot' && find('power pack pistol').includes('Laser Pistol')
+      && find('Space').includes('Lunar Shuttle') && !find('power pack pistol').includes('Laser Rifle'));
+  check('and the group narrows it', find('', 'vehicles').length === 81 && !find('', 'weapons').includes('Jeep'));
+  check('every column key is short and written for the app (15 words at most)',
+    [...eq.keys.weapons, ...eq.keys.vehicles].every((k) => k.meaning.split(/\s+/).length <= 15));
+
+  // The FEAT roller's follow-up: a Slam, Stun or Kill result hands the target
+  // an Endurance FEAT on that result's own Effects column, and nothing else does.
+  const { makeFeat } = await import(new URL('../js/feat.js', import.meta.url));
+  const feat = makeFeat(ranks, universal);
+  const results = new Set(universal.actions.flatMap((a) => Object.values(a.results)));
+  for (const res of ['Slam', 'Stun', 'Kill']) {
+    const f = feat.followUp(res);
+    check(`a ${res} result leads to the ${res}? column, rolled on Endurance`,
+      f?.name === `${res}?` && f.ability === 'endurance' && feat.ORDER.every((c) => typeof f.results[c] === 'string'));
+  }
+  check('no other result leads anywhere', [...results].filter((x) => !['Slam', 'Stun', 'Kill'].includes(x)).every((x) => feat.followUp(x) === null)
+    && feat.followUp(null) === null);
 }
 
 section('The dice are seedable and fair enough');

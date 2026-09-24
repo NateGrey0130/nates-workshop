@@ -9,6 +9,7 @@ import { makeFeat } from './js/feat.js';
 import { makeBrowser } from './js/browser.js';
 import { makeGenerator, newSeeds, STEPS, PRIMARY } from './js/generator.js';
 import { snapshot, renderSheet, tagline } from './js/sheet.js';
+import { makeGear } from './js/gear.js';
 
 export const APP = 'marvel-heroes';
 
@@ -98,6 +99,11 @@ function initFeat(feat) {
     e.preventDefault();
     const r = feat.roll({ rank: rankSel.value, cs, d100: d100(next), need: needSel.value, action: actionSel.value || null });
     const shifted = r.column !== r.rank ? ` shifted to <strong>${esc(nameOf(r.column))}</strong>` : '';
+    // A Slam, Stun or Kill hands the next roll to the target.
+    const next2 = feat.followUp(r.result);
+    const follow = next2 ? `<p class="follow">The target now makes an Endurance FEAT on the ${esc(next2.name.replace(/\?$/, ''))} column:
+        ${feat.ORDER.map((c) => `${c} <strong>${esc(next2.results[c])}</strong>`).join(', ')}.
+        <button type="button" class="btn secondary small" data-follow="${next2.id}">Set up that roll</button></p>` : '';
     result.innerHTML = `
       <div class="feat-roll">${String(r.d100).padStart(2, '0')}</div>
       <div>
@@ -105,13 +111,71 @@ function initFeat(feat) {
         <span class="verdict ${r.success ? 'ok' : 'no'}">${r.success ? 'Success' : 'Failure'}</span>
         ${r.result ? `<span class="effect">${esc(r.result)}</span>` : ''}
         <p class="muted">${esc(nameOf(r.rank))}${shifted}; needed ${esc(r.need)}.</p>
+        ${follow}
       </div>`;
     const li = document.createElement('li');
     li.innerHTML = `<span class="feat small ${r.colour}">${r.colour}</span> ${String(r.d100).padStart(2, '0')} on ${esc(nameOf(r.column))}${r.result ? ` - ${esc(r.result)}` : ''}`;
     log.prepend(li);
     while (log.children.length > 10) log.lastElementChild.remove();
   });
+  // "Set up that roll": the Effects column chosen, shifts cleared, and the rank
+  // left for the TARGET's Endurance, which this page cannot know.
+  result.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-follow]');
+    if (!b) return;
+    actionSel.value = b.dataset.follow;
+    needSel.value = 'white';
+    cs = 0;
+    drawCs();
+    numIn.value = '';
+    rankSel.focus();
+    result.insertAdjacentHTML('beforeend', '<p class="muted">Now pick the target\'s Endurance rank and roll; the colour decides the effect.</p>');
+    b.disabled = true;
+  });
   drawCs();
+}
+
+// ---------------------------------------------------------------- gear
+
+// The Player's Book weapon and vehicle tables. A rank cell shows the book's
+// abbreviation with the rank's name beside it for anyone who has not learned
+// them; anything else shows as printed.
+function initGear(gear, equipment) {
+  const q = $('#gear-query');
+  const grp = $('#gear-group');
+  const out = $('#gear-tables');
+  const count = $('#gear-count');
+  const HEAD = { special_damage: 'Special damage' };
+  const head = (c) => HEAD[c] || c.charAt(0).toUpperCase() + c.slice(1);
+  const cell = (v) => {
+    const r = gear.rankOf(v);
+    return r ? `${esc(v)} <span class="muted">${esc(r.name)}</span>` : esc(v ?? '');
+  };
+  function draw() {
+    const hits = gear.search({ query: q.value, group: grp.value });
+    const rows = hits.reduce((n, t) => n + t.rows.length, 0);
+    count.textContent = `${rows} ${rows === 1 ? 'row' : 'rows'}${q.value.trim() ? ` matching "${q.value.trim()}"` : ''}.`;
+    out.innerHTML = hits.map((t) => `
+      <section class="panel gear-table">
+        <h2>${esc(t.name)} <span class="muted">PB p.${t.page}</span></h2>
+        <div class="table-wrap"><table class="abilities gear">
+          <thead><tr>${t.columns.map((c) => `<th scope="col">${esc(head(c))}</th>`).join('')}</tr></thead>
+          <tbody>${t.rows.map((r) => `<tr>${t.columns.map((c, i) => (i === 0
+            ? `<th scope="row">${esc(r[c] ?? '')}${r.notes ? `<span class="gear-note">${esc(r.notes)}</span>` : ''}${r.includes ? `<span class="gear-note">Includes ${esc(r.includes)}</span>` : ''}</th>`
+            : `<td>${cell(r[c])}</td>`)).join('')}</tr>`).join('')}</tbody>
+        </table></div>
+      </section>`).join('') || '<p class="panel muted">Nothing matches.</p>';
+  }
+  const d = equipment.vehicle_damage;
+  $('#gear-damage').innerHTML = `<table class="abilities">
+      <thead><tr><th scope="col">Damage against Body</th><th scope="col">Colour</th><th scope="col">Effect</th></tr></thead>
+      <tbody>${d.rows.map((r) => `<tr><td>${esc(r.damage)}</td><td>${esc(r.colour)}</td><td>${esc(r.effect)}</td></tr>`).join('')}</tbody></table>
+    <p class="muted">PB p.${d.page}.</p>`;
+  const keyList = (list) => `<dl class="gear-keys">${list.map((k) => `<dt>${esc(k.key)}</dt><dd>${esc(k.meaning)}</dd>`).join('')}</dl>`;
+  $('#gear-keys').innerHTML = `<h3>Weapons</h3>${keyList(equipment.keys.weapons)}<h3>Vehicles</h3>${keyList(equipment.keys.vehicles)}`;
+  q.addEventListener('input', draw);
+  grp.addEventListener('change', draw);
+  draw();
 }
 
 // ---------------------------------------------------------------- power browser
@@ -680,10 +744,11 @@ async function boot() {
   const tabs = initTabs();
   try {
     const data = await loadData('ranks', 'universal', 'powers', 'power-tables', 'tables', 'random-ranks',
-      'body-types', 'origins', 'weakness', 'counts', 'talents', 'contacts');
+      'body-types', 'origins', 'weakness', 'counts', 'talents', 'contacts', 'equipment');
     initFeat(makeFeat(data.ranks, data.universal));
     initBrowser(makeBrowser(data.powers, data['power-tables']), data.tables);
     initHeroes(initGenerator(makeGenerator(data), data, tabs));
+    initGear(makeGear(data.equipment, data.ranks), data.equipment);
   } catch (err) {
     $('#load-error').hidden = false;
     $('#load-error').textContent = `The app's data did not load: ${err.message}`;

@@ -1,0 +1,1961 @@
+{
+ "about": "The Player's Book equipment tables: weapons, ammunition, melee weapons, missiles and other weapon costs, vehicles and what damage does to a vehicle. Rank cells are the book's abbreviations (Fe, Pr, Ty, Gd, Ex, Rm, In, Am, Mn, Un, ShX, ShY, ShZ, Cl1000, Cl3000) and the page shows each rank's name. Cells are as printed, a number where the cell is a plain number, * where the book prints one; `notes` is the line printed under a name and `includes` what a vehicle carries. Transcribed twice, blind, from rendered pages; the two agreed cell for cell. `ruling` names a correction logged in the README.",
+ "sources": [
+  "PB pp.42-46",
+  "PB pp.48-49",
+  "PB p.51"
+ ],
+ "weapons": [
+  {
+   "id": "shooting",
+   "name": "Shooting weapons",
+   "page": 42,
+   "columns": [
+    "name",
+    "range",
+    "price",
+    "damage",
+    "type",
+    "rate",
+    "shots",
+    "material"
+   ],
+   "rows": [
+    {
+     "name": "Cheap Handgun",
+     "range": "Fe",
+     "price": 2,
+     "damage": 6,
+     "type": "S",
+     "rate": 1,
+     "shots": 6,
+     "material": "Pr",
+     "notes": "One-handed, no special ammo"
+    },
+    {
+     "name": "Handgun/Pistol",
+     "range": "Ty",
+     "price": 3,
+     "damage": 6,
+     "type": "S",
+     "rate": 1,
+     "shots": "6,8,9",
+     "material": "Ex",
+     "notes": "One-handed"
+    },
+    {
+     "name": "Target Pistol",
+     "range": "Ty",
+     "price": 5,
+     "damage": 6,
+     "type": "S",
+     "rate": 1,
+     "shots": 1,
+     "material": "Ex"
+    },
+    {
+     "name": "Variable Pistol",
+     "range": "Gd",
+     "price": 3,
+     "damage": 6,
+     "type": "S",
+     "rate": 1,
+     "shots": "6,8,9",
+     "material": "Ex",
+     "notes": "One-handed, may change ammo type in field"
+    },
+    {
+     "name": "GyroJet Pistol",
+     "range": "Ex",
+     "price": 5,
+     "damage": 10,
+     "type": "S",
+     "rate": "1 per 2",
+     "shots": 3,
+     "material": "Gd",
+     "notes": "One-handed, fires gyro-jet ammo, illegal"
+    },
+    {
+     "name": "Laser Pistol",
+     "range": "Rm",
+     "price": 10,
+     "damage": 10,
+     "type": "E",
+     "rate": 1,
+     "shots": 10,
+     "material": "Pr",
+     "notes": "One-handed, power pack, illegal"
+    },
+    {
+     "name": "Stun Pistol",
+     "range": "Rm",
+     "price": 2,
+     "damage": "*",
+     "type": "*",
+     "rate": 1,
+     "shots": 10,
+     "material": "Pr",
+     "notes": "One-handed, power pack, Typical Intensity stunning"
+    },
+    {
+     "name": "Concussion Pistol",
+     "range": "In",
+     "price": 4,
+     "damage": 10,
+     "type": "F",
+     "rate": 1,
+     "shots": 5,
+     "material": "Ty",
+     "notes": "One-handed, power pack"
+    },
+    {
+     "name": "Plasma Beam Handgun",
+     "range": "Am",
+     "price": 7,
+     "damage": 20,
+     "type": "F",
+     "rate": 1,
+     "shots": 10,
+     "material": "Ex",
+     "notes": "One-handed, power pack"
+    },
+    {
+     "name": "Machine Pistol",
+     "range": "Ex",
+     "price": 3,
+     "damage": 20,
+     "type": "S",
+     "rate": 1,
+     "shots": 6,
+     "material": "Ex",
+     "notes": "Bursts, one-handed, military"
+    },
+    {
+     "name": "Rifle",
+     "range": "Ty",
+     "price": 10,
+     "damage": 10,
+     "type": "S",
+     "rate": 1,
+     "shots": 4,
+     "material": "Gd"
+    },
+    {
+     "name": "Hunting Rifle",
+     "range": "Gd",
+     "price": 10,
+     "damage": 10,
+     "type": "S",
+     "rate": 1,
+     "shots": "6,7,8",
+     "material": "Gd"
+    },
+    {
+     "name": "Sniper Rifle",
+     "range": "Gd",
+     "price": 10,
+     "damage": 15,
+     "type": "S",
+     "rate": 1,
+     "shots": 4,
+     "material": "Gd"
+    },
+    {
+     "name": "Assault Rifle",
+     "range": "Ex",
+     "price": 7,
+     "damage": 10,
+     "type": "S",
+     "rate": 2,
+     "shots": 20,
+     "material": "Gd",
+     "notes": "Military"
+    },
+    {
+     "name": "Laser Rifle",
+     "range": "Rm",
+     "price": 4,
+     "damage": 20,
+     "type": "S",
+     "rate": 1,
+     "shots": 20,
+     "material": "Ty",
+     "notes": "Power pack, illegal"
+    },
+    {
+     "name": "Stun Rifle",
+     "range": "Rm",
+     "price": 5,
+     "damage": "*",
+     "type": "*",
+     "rate": 1,
+     "shots": 20,
+     "material": "Ty",
+     "notes": "Remarkable Intensity stunning, power pack, illegal"
+    },
+    {
+     "name": "Concussion Rifle",
+     "range": "Rm",
+     "price": 7,
+     "damage": 10,
+     "type": "F",
+     "rate": 1,
+     "shots": 12,
+     "material": "Gd",
+     "notes": "Power pack, illegal"
+    },
+    {
+     "name": "Automatic Rifle",
+     "range": "Ex",
+     "price": 5,
+     "damage": 15,
+     "type": "S",
+     "rate": 1,
+     "shots": 20,
+     "material": "Gd",
+     "notes": "Military, bursts"
+    },
+    {
+     "name": "Shotgun",
+     "range": "Gd",
+     "price": 3,
+     "damage": 20,
+     "type": "S",
+     "rate": "1,2",
+     "shots": 2,
+     "material": "Gd",
+     "notes": "Bursts"
+    },
+    {
+     "name": "Riot Gun",
+     "range": "Gd",
+     "price": 2,
+     "damage": 15,
+     "type": "S",
+     "rate": 1,
+     "shots": 6,
+     "material": "Ex",
+     "notes": "Fire one-handed at -1CS"
+    },
+    {
+     "name": "Grenade Launcher",
+     "range": "Ex",
+     "price": 4,
+     "damage": "*",
+     "type": "1 per 2",
+     "rate": 1,
+     "shots": 1,
+     "material": "Gd",
+     "notes": "Military"
+    },
+    {
+     "name": "Sub-Machine Gun",
+     "range": "Rm",
+     "price": 7,
+     "damage": 25,
+     "type": "S",
+     "rate": 1,
+     "shots": 7,
+     "material": "Gd",
+     "notes": "Fire one-handed at -2CS, bursts, military"
+    },
+    {
+     "name": "Machine Gun",
+     "range": "In",
+     "price": 10,
+     "damage": 30,
+     "type": "S",
+     "rate": 1,
+     "shots": 20,
+     "material": "Gd",
+     "notes": "Bursts, military"
+    },
+    {
+     "name": "Flamethrower",
+     "range": "In",
+     "price": 2,
+     "damage": 30,
+     "type": "E",
+     "rate": 1,
+     "shots": 5,
+     "material": "Ty/Gd",
+     "notes": "Fire burns for 10 points/damage/round, scatters, military"
+    },
+    {
+     "name": "Bazooka",
+     "range": "In",
+     "price": 4,
+     "damage": 40,
+     "type": "S",
+     "rate": "1 per 2",
+     "shots": 1,
+     "material": "Gd",
+     "notes": "Two men to fire, military"
+    },
+    {
+     "name": "LAW",
+     "range": "Am",
+     "price": 4,
+     "damage": 40,
+     "type": "S",
+     "rate": 1,
+     "shots": 6,
+     "material": "Gd",
+     "notes": "Military"
+    },
+    {
+     "name": "Light Artillery",
+     "range": "Am",
+     "price": 10,
+     "damage": 40,
+     "type": "S",
+     "rate": 1,
+     "shots": 20,
+     "material": "Ex",
+     "notes": "Two men to operate, military"
+    },
+    {
+     "name": "Stun Cannon",
+     "range": "Am",
+     "price": 10,
+     "damage": "*",
+     "type": "*",
+     "rate": 1,
+     "shots": 10,
+     "material": "Rm",
+     "notes": "Crew of two (one alone fires at -1CS), Incredible Intensity stun, bursts, power pack"
+    },
+    {
+     "name": "Concussion Cannon",
+     "range": "Am",
+     "price": 15,
+     "damage": 40,
+     "type": "F",
+     "rate": 1,
+     "shots": 10,
+     "material": "Rm",
+     "notes": "Power pack"
+    },
+    {
+     "name": "Laser Cannon",
+     "range": "Am",
+     "price": 20,
+     "damage": 30,
+     "type": "E",
+     "rate": 1,
+     "shots": 10,
+     "material": "Ex",
+     "notes": "Power pack"
+    },
+    {
+     "name": "Heavy Artillery",
+     "range": "Mn",
+     "price": 40,
+     "damage": 50,
+     "type": "S",
+     "rate": 1,
+     "shots": 30,
+     "material": "Rm",
+     "notes": "Two men to fire, scatters, military"
+    },
+    {
+     "name": "Superheavy Artillery",
+     "range": "Un",
+     "price": 80,
+     "damage": 50,
+     "type": "S",
+     "rate": 1,
+     "shots": 30,
+     "material": "In",
+     "notes": "Stationary, two men to fire, military"
+    },
+    {
+     "name": "Missile Launcher",
+     "range": "In",
+     "price": "*",
+     "damage": "*",
+     "type": "*",
+     "rate": 1,
+     "shots": 10,
+     "material": "Rm",
+     "notes": "Fires missiles of various capabilities, military"
+    },
+    {
+     "name": "Regular Bow",
+     "range": "Pr",
+     "price": 5,
+     "damage": 6,
+     "type": "S",
+     "rate": 1,
+     "shots": 1,
+     "material": "Pr",
+     "notes": "Two-handed"
+    },
+    {
+     "name": "Long Bow",
+     "range": "Ty",
+     "price": 6,
+     "damage": 10,
+     "type": "S",
+     "rate": 1,
+     "shots": 1,
+     "material": "Ty",
+     "notes": "Two-handed"
+    },
+    {
+     "name": "Compound Bow",
+     "range": "Ex",
+     "price": 7,
+     "damage": 15,
+     "type": "S",
+     "rate": 1,
+     "shots": 1,
+     "material": "Gd",
+     "notes": "Two-handed"
+    },
+    {
+     "name": "Crossbow",
+     "range": "Gd",
+     "price": 3,
+     "damage": 10,
+     "type": "S",
+     "rate": "1 per 2",
+     "shots": 1,
+     "material": "Ty",
+     "notes": "Fire one-handed at -2CS"
+    }
+   ]
+  },
+  {
+   "id": "melee",
+   "name": "Melee and thrown weapons",
+   "page": 45,
+   "columns": [
+    "name",
+    "price",
+    "damage",
+    "type",
+    "strength"
+   ],
+   "rows": [
+    {
+     "name": "Knife",
+     "price": "Fe",
+     "damage": 10,
+     "type": "EA,ET",
+     "strength": "Ex"
+    },
+    {
+     "name": "Sword",
+     "price": "Pr",
+     "damage": 10,
+     "type": "EA",
+     "strength": "Ex"
+    },
+    {
+     "name": "Great Sword",
+     "price": "Gd",
+     "damage": 15,
+     "type": "EA",
+     "strength": "Ex",
+     "notes": "Two-Handed"
+    },
+    {
+     "name": "Axe",
+     "price": "Gd",
+     "damage": 5,
+     "type": "EA",
+     "strength": "Gd"
+    },
+    {
+     "name": "Great Axe",
+     "price": "Ex",
+     "damage": 15,
+     "type": "EA",
+     "strength": "Gd",
+     "notes": "Two-Handed"
+    },
+    {
+     "name": "Spear",
+     "price": "Fe",
+     "damage": 10,
+     "type": "EA,ET",
+     "strength": "Gd"
+    },
+    {
+     "name": "Club",
+     "price": "Fe",
+     "damage": 10,
+     "type": "BA,BT",
+     "strength": "Gd"
+    },
+    {
+     "name": "Shuriken",
+     "price": "Fe",
+     "damage": 10,
+     "type": "ET",
+     "strength": "Ex"
+    },
+    {
+     "name": "Boomerang",
+     "price": "Pr",
+     "damage": 10,
+     "type": "BT",
+     "strength": "Gd"
+    },
+    {
+     "name": "Whip, leather",
+     "price": "Pr",
+     "damage": 0,
+     "type": "Gp,Gb",
+     "strength": "Ty"
+    },
+    {
+     "name": "Whip, metal",
+     "price": "Gd",
+     "damage": 10,
+     "type": "Gp,Gb",
+     "strength": "Gd"
+    }
+   ]
+  },
+  {
+   "id": "ammunition",
+   "name": "Ammunition",
+   "page": 44,
+   "columns": [
+    "name",
+    "weapon",
+    "cost",
+    "rounds"
+   ],
+   "rows": [
+    {
+     "name": "Standard",
+     "weapon": "All Handguns",
+     "cost": "Fe",
+     "rounds": 50
+    },
+    {
+     "name": "Standard",
+     "weapon": "All Rifles",
+     "cost": "Fe",
+     "rounds": 50
+    },
+    {
+     "name": "Standard",
+     "weapon": "Assault Rifle",
+     "cost": "Fe",
+     "rounds": 30
+    },
+    {
+     "name": "Standard",
+     "weapon": "Automatic Rifle",
+     "cost": "Fe",
+     "rounds": "20 (1 clip)"
+    },
+    {
+     "name": "Standard",
+     "weapon": "Sub-Machine Gun",
+     "cost": "Fe",
+     "rounds": "7 (1 clip)"
+    },
+    {
+     "name": "Standard",
+     "weapon": "Machine Gun",
+     "cost": "Pr",
+     "rounds": "20 (1 clip)"
+    },
+    {
+     "name": "Standard",
+     "weapon": "Shotgun",
+     "cost": "Fe",
+     "rounds": 10
+    },
+    {
+     "name": "Standard",
+     "weapon": "Bazooka",
+     "cost": "Fe",
+     "rounds": 1
+    },
+    {
+     "name": "Standard",
+     "weapon": "LAW",
+     "cost": "Fe",
+     "rounds": 1
+    },
+    {
+     "name": "Standard",
+     "weapon": "Light Artillery",
+     "cost": "Pr",
+     "rounds": 1
+    },
+    {
+     "name": "Standard",
+     "weapon": "Heavy Artillery",
+     "cost": "Ty",
+     "rounds": 1
+    },
+    {
+     "name": "Standard",
+     "weapon": "Superheavy Artillery",
+     "cost": "Gd",
+     "rounds": 1
+    },
+    {
+     "name": "Power Pack",
+     "weapon": "Pistol",
+     "cost": "Ty",
+     "rounds": "1 pack"
+    },
+    {
+     "name": "Power Pack",
+     "weapon": "Rifle",
+     "cost": "Gd",
+     "rounds": "1 pack"
+    },
+    {
+     "name": "Power Pack",
+     "weapon": "Cannon",
+     "cost": "Ex",
+     "rounds": "1 pack"
+    },
+    {
+     "name": "Mercy Shot",
+     "weapon": "Handgun",
+     "cost": "Fe",
+     "rounds": 10
+    },
+    {
+     "name": "Mercy Shot",
+     "weapon": "Rifle",
+     "cost": "Fe",
+     "rounds": 10
+    },
+    {
+     "name": "Mercy Shot",
+     "weapon": "Assault Rifle",
+     "cost": "Fe",
+     "rounds": 5
+    },
+    {
+     "name": "Mercy Shot",
+     "weapon": "Automatic Rifle",
+     "cost": "Ty",
+     "rounds": "20 (1 clip)"
+    },
+    {
+     "name": "AP Shot",
+     "weapon": "Handgun",
+     "cost": "Fe",
+     "rounds": "10 rounds"
+    },
+    {
+     "name": "AP Shot",
+     "weapon": "Sniper Rifle",
+     "cost": "Fe",
+     "rounds": "10 rounds"
+    },
+    {
+     "name": "AP Shot",
+     "weapon": "LAW, Bazooka",
+     "cost": "Fe",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Rubber Shot",
+     "weapon": "Handgun",
+     "cost": "Fe",
+     "rounds": "40 rounds"
+    },
+    {
+     "name": "Rubber Shot",
+     "weapon": "Rifle",
+     "cost": "Fe",
+     "rounds": "40 rounds"
+    },
+    {
+     "name": "Explosive Shot",
+     "weapon": "Handgun",
+     "cost": "Ty",
+     "rounds": "10 rounds"
+    },
+    {
+     "name": "Explosive Shot",
+     "weapon": "Rifle",
+     "cost": "Ty",
+     "rounds": "10 rounds"
+    },
+    {
+     "name": "Explosive Shot",
+     "weapon": "Bazooka",
+     "cost": "Gd",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Canister Shot",
+     "weapon": "LAW, Bazooka, Riot gun",
+     "cost": "Gd",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Canister Shot",
+     "weapon": "Light Artillery",
+     "cost": "Gd",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Canister Shot",
+     "weapon": "Heavy Artillery",
+     "cost": "Ex",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Canister Shot",
+     "weapon": "Superheavy Artillery",
+     "cost": "Rm",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Standard",
+     "weapon": "Gyro-jet",
+     "cost": "Pr",
+     "rounds": "5 rounds"
+    },
+    {
+     "name": "Explosive",
+     "weapon": "Gyro-jet",
+     "cost": "Pr",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Heat-Seeker",
+     "weapon": "Gyro-jet",
+     "cost": "Pr",
+     "rounds": "1 round"
+    },
+    {
+     "name": "Explosive H-S",
+     "weapon": "Gyro-jet",
+     "cost": "Gd",
+     "rounds": "1 round"
+    }
+   ]
+  },
+  {
+   "id": "missiles",
+   "name": "Missiles",
+   "page": 45,
+   "columns": [
+    "name",
+    "body",
+    "control",
+    "speed"
+   ],
+   "rows": [
+    {
+     "name": "The Standard Missile",
+     "body": "Ex",
+     "control": "Rm",
+     "speed": "Ex"
+    },
+    {
+     "name": "The High-Tech Missile",
+     "body": "Ex",
+     "control": "In",
+     "speed": "Ex"
+    },
+    {
+     "name": "The High-Speed Missile",
+     "body": "Ex",
+     "control": "In",
+     "speed": "Am"
+    }
+   ]
+  },
+  {
+   "id": "other",
+   "name": "Grenades, missile parts and gas",
+   "page": 46,
+   "columns": [
+    "name",
+    "cost",
+    "special_damage"
+   ],
+   "rows": [
+    {
+     "name": "Grenade, Fragment",
+     "cost": "Ex",
+     "special_damage": "RM damage, Scatter"
+    },
+    {
+     "name": "Grenade, Smoke",
+     "cost": "Gd",
+     "special_damage": "-2 CS for FEATs"
+    },
+    {
+     "name": "Grenade, Tear Gas",
+     "cost": "Ex",
+     "special_damage": "Typical Intensity"
+    },
+    {
+     "name": "Grenade, Knock-out",
+     "cost": "In",
+     "special_damage": "Good Intensity"
+    },
+    {
+     "name": "Grenade, Knock-out",
+     "cost": "Am",
+     "special_damage": "Excellent Intensity"
+    },
+    {
+     "name": "Grenade, Knock-out",
+     "cost": "Mn",
+     "special_damage": "Remarkable Intensity"
+    },
+    {
+     "name": "Grenade, Flash",
+     "cost": "Ex",
+     "special_damage": "Amazing Intensity"
+    },
+    {
+     "name": "Grenade, Concussive",
+     "cost": "Rm",
+     "special_damage": "40 points BA"
+    },
+    {
+     "name": "Grenade, Sonic",
+     "cost": "In",
+     "special_damage": "20 points Energy"
+    },
+    {
+     "name": "Missile, Standard",
+     "cost": "Am"
+    },
+    {
+     "name": "Missile, High-tech",
+     "cost": "Mn"
+    },
+    {
+     "name": "Missile, High-speed",
+     "cost": "Mn"
+    },
+    {
+     "name": "Missile Control, Wire-guided",
+     "cost": "Rm"
+    },
+    {
+     "name": "Missile Control, Tele-guided",
+     "cost": "In"
+    },
+    {
+     "name": "Missile Control, Computer",
+     "cost": "Am"
+    },
+    {
+     "name": "Missile Control, Radio",
+     "cost": "In"
+    },
+    {
+     "name": "Missile Control, Heat Seeker",
+     "cost": "Rm"
+    },
+    {
+     "name": "Missile Payload, Standard",
+     "cost": "Rm",
+     "special_damage": "40 points, Scatter"
+    },
+    {
+     "name": "Missile Payload, Concentrated Explosive",
+     "cost": "Rm",
+     "special_damage": "40 points, one target"
+    },
+    {
+     "name": "Missile Payload, High Exp.",
+     "cost": "Am",
+     "special_damage": "70 points Scatter; 20 points, adjacent"
+    },
+    {
+     "name": "Missile Payload, Incendiary",
+     "cost": "In",
+     "special_damage": "40 points fire"
+    },
+    {
+     "name": "Missile Payload, Gas",
+     "cost": "Am",
+     "special_damage": "Amazing Intensity"
+    },
+    {
+     "name": "Smoke, fill one area",
+     "cost": "Gd",
+     "special_damage": "- 2CS on FEATs"
+    },
+    {
+     "name": "Tear Gas, fill one area",
+     "cost": "Ex",
+     "special_damage": "Typical intensity"
+    },
+    {
+     "name": "Knock-Out Gas, fill one area",
+     "cost": "Ex",
+     "special_damage": "Feeble Intensity"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Rm",
+     "special_damage": "Poor Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Rm",
+     "special_damage": "Typical intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "In",
+     "special_damage": "Good intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "In",
+     "special_damage": "Excellent Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Am",
+     "special_damage": "Remarkable Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Am",
+     "special_damage": "Incredible Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Mn",
+     "special_damage": "Amazing Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Mn",
+     "special_damage": "Monstrous Intensity",
+     "ruling": "R22"
+    },
+    {
+     "name": "Knock-Out Gas or explosive, fill one area",
+     "cost": "Un",
+     "special_damage": "Unearthly Intensity; 10 points BA",
+     "ruling": "R22"
+    }
+   ]
+  }
+ ],
+ "vehicles": [
+  {
+   "id": "vehicles",
+   "name": "Vehicles",
+   "page": 48,
+   "columns": [
+    "name",
+    "type",
+    "cost",
+    "control",
+    "speed",
+    "body",
+    "protection"
+   ],
+   "rows": [
+    {
+     "name": "Sedan",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Pr"
+    },
+    {
+     "name": "Mini-Car",
+     "type": "Road",
+     "cost": "Ex",
+     "control": "Gd",
+     "speed": "Gd",
+     "body": "Pr",
+     "protection": "Fe"
+    },
+    {
+     "name": "Sports Car",
+     "type": "Road",
+     "cost": "In",
+     "control": "Ex",
+     "speed": "Rm",
+     "body": "Pr",
+     "protection": "Pr"
+    },
+    {
+     "name": "Luxury Car",
+     "type": "Road",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Gd",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Security Limo",
+     "type": "Road",
+     "cost": "Am",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Rm",
+     "protection": "Rm",
+     "ruling": "R21"
+    },
+    {
+     "name": "Van",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Pr",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Convertible",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Fe"
+    },
+    {
+     "name": "Taxi",
+     "type": "Road",
+     "cost": "Ex",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Ty",
+     "protection": "Pr"
+    },
+    {
+     "name": "Bus",
+     "type": "Road",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Gd",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "Police Car",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Ex",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "Police Van",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "SWAT Van",
+     "type": "Road",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Rm",
+     "protection": "Ex"
+    },
+    {
+     "name": "Semi",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Sleeper",
+     "type": "Road",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Ex",
+     "protection": "Ex"
+    },
+    {
+     "name": "Armored Car",
+     "type": "Road",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Ty",
+     "body": "Rm",
+     "protection": "Rm"
+    },
+    {
+     "name": "Fire Truck",
+     "type": "Road",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": "Ty",
+     "includes": "Fire Hoses, Hook and Ladder"
+    },
+    {
+     "name": "Ambulance",
+     "type": "Road",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Rocket Car",
+     "type": "Road",
+     "cost": "Am",
+     "control": "Fe",
+     "speed": "ShZ",
+     "body": "Pr",
+     "protection": "Pr"
+    },
+    {
+     "name": "Bicycle",
+     "type": "Off-Road",
+     "cost": "Pr",
+     "control": "Gd",
+     "speed": "Ty",
+     "body": "Fe",
+     "protection": 0
+    },
+    {
+     "name": "Motorcycle",
+     "type": "Off-Road",
+     "cost": "Ex",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Pr",
+     "protection": 0
+    },
+    {
+     "name": "Motor Trike",
+     "type": "Off-Road",
+     "cost": "Rm",
+     "control": "Rm",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": 0,
+     "ruling": "R20"
+    },
+    {
+     "name": "Pickup Truck",
+     "type": "Off-Road",
+     "cost": "Rm",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Ty"
+    },
+    {
+     "name": "Jeep",
+     "type": "Off-Road",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": "Pr",
+     "ruling": "R20"
+    },
+    {
+     "name": "ATV",
+     "type": "Off-Road",
+     "cost": "Rm",
+     "control": "Rm",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Ty"
+    },
+    {
+     "name": "Snowmobile",
+     "type": "Off-Road",
+     "cost": "Ex",
+     "control": "Gd",
+     "speed": "Gd",
+     "body": "Ty",
+     "protection": "Rm"
+    },
+    {
+     "name": "Heavy Truck",
+     "type": "Off-Road",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Ty",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Tractor",
+     "type": "Off-Road",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Ty",
+     "body": "Gd",
+     "protection": 0
+    },
+    {
+     "name": "Bulldozer",
+     "type": "Off-Road",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Ty",
+     "body": "Ex",
+     "protection": "Ty"
+    },
+    {
+     "name": "Tank",
+     "type": "Off-Road",
+     "cost": "Am",
+     "control": "Ex",
+     "speed": "Ty",
+     "body": "In",
+     "protection": "Rm",
+     "includes": "Light Artillery mount and Machine Gun"
+    },
+    {
+     "name": "SPG",
+     "type": "Off-Road",
+     "cost": "Mn",
+     "control": "Ty",
+     "speed": "Pr",
+     "body": "Rm",
+     "protection": "Ex",
+     "includes": "Heavy Artillery mount and Machine Gun"
+    },
+    {
+     "name": "Armored Carrier",
+     "type": "Off-Road",
+     "cost": "Am",
+     "control": "Gd",
+     "speed": "Gd",
+     "body": "In",
+     "protection": "Rm",
+     "includes": "Machine gun"
+    },
+    {
+     "name": "Walker",
+     "type": "Off-Road",
+     "cost": "In",
+     "control": "Gd",
+     "speed": "Gd",
+     "body": "Rm",
+     "protection": "Rm",
+     "includes": "Stun Cannon"
+    },
+    {
+     "name": "Borer",
+     "type": "Off-Road",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Ty",
+     "body": "Rm",
+     "protection": "Rm"
+    },
+    {
+     "name": "Train",
+     "type": "Railed",
+     "cost": "In",
+     "control": "Fe",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Bullet Train",
+     "type": "Railed",
+     "cost": "Am",
+     "control": "Pr",
+     "speed": "In",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "El",
+     "type": "Railed",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Ty",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Monorail",
+     "type": "Railed",
+     "cost": "In",
+     "control": "Pr",
+     "speed": "Ex",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Hovercraft",
+     "type": "GEV",
+     "cost": "In",
+     "control": "Ex",
+     "speed": "Rm",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Private Plane",
+     "type": "Air",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Am",
+     "body": "Fe",
+     "protection": "Ty"
+    },
+    {
+     "name": "Corporate Jet",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Ty",
+     "speed": "Am",
+     "body": "Pr",
+     "protection": "Ty"
+    },
+    {
+     "name": "Military Jet",
+     "type": "Air",
+     "cost": "Mn",
+     "control": "Ex",
+     "speed": "ShX",
+     "body": "Ty",
+     "protection": "Ty",
+     "includes": "4 missiles of various types, Machine Gun"
+    },
+    {
+     "name": "Commercial Jet",
+     "type": "Air",
+     "cost": "Mn",
+     "control": "Gd",
+     "speed": "Mn",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "Blimp",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Fe",
+     "speed": "Pr",
+     "body": "Fe",
+     "protection": 0
+    },
+    {
+     "name": "Traffic Copter",
+     "type": "Air",
+     "cost": "In",
+     "control": "Gd",
+     "speed": "Ex",
+     "body": "Fe",
+     "protection": "Fe"
+    },
+    {
+     "name": "Battle Copter",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Ex",
+     "speed": "Ex",
+     "body": "Ty",
+     "protection": "Gd"
+    },
+    {
+     "name": "WWII Plane",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Gd",
+     "speed": "Rm",
+     "body": "Ty",
+     "protection": "Ty",
+     "includes": "machine gun, 2 bombs"
+    },
+    {
+     "name": "WWII Bomber",
+     "type": "Air",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": "Gd",
+     "includes": "Machine Guns, 100 bombs"
+    },
+    {
+     "name": "WWI Fighter",
+     "type": "Air",
+     "cost": "In",
+     "control": "Rm",
+     "speed": "Gd",
+     "body": "Pr",
+     "protection": 0,
+     "includes": "Machine Guns"
+    },
+    {
+     "name": "VTOL Jet",
+     "type": "Air",
+     "cost": "Mn",
+     "control": "Rm",
+     "speed": "Un",
+     "body": "Ty",
+     "protection": "Ty",
+     "includes": "four Missiles"
+    },
+    {
+     "name": "Ultra-Light",
+     "type": "Air",
+     "cost": "Ex",
+     "control": "Ex",
+     "speed": "Ty",
+     "body": "Fe",
+     "protection": 0
+    },
+    {
+     "name": "Gliders",
+     "type": "Air",
+     "cost": "Ex",
+     "control": "Ty",
+     "speed": "Ty",
+     "body": "Fe",
+     "protection": 0
+    },
+    {
+     "name": "Autogyro",
+     "type": "Air",
+     "cost": "Rm",
+     "control": "Ex",
+     "speed": "Ex",
+     "body": "Pr",
+     "protection": "Pr"
+    },
+    {
+     "name": "Air Car",
+     "type": "Air",
+     "cost": "In",
+     "control": "Ex",
+     "speed": "Pr",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Skymobile",
+     "type": "Air",
+     "cost": "Rm",
+     "control": "Ex",
+     "speed": "In",
+     "body": "Ex",
+     "protection": 0
+    },
+    {
+     "name": "Flying Car",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Rm",
+     "speed": "Am",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Quinjet",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Rm",
+     "speed": "ShY",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Concorde",
+     "type": "Air",
+     "cost": "Mn",
+     "control": "Ty",
+     "speed": "ShX",
+     "body": "Gd",
+     "protection": "Gd"
+    },
+    {
+     "name": "Omnijet",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Ex",
+     "speed": "ShY",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Pogo Plane",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Ex",
+     "speed": "ShY",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Fantasticar",
+     "type": "Air",
+     "cost": "In",
+     "control": "Ex",
+     "speed": "In",
+     "body": "Gd",
+     "protection": "Ty",
+     "ruling": "R23"
+    },
+    {
+     "name": "SRC",
+     "type": "Air",
+     "cost": "In",
+     "control": "Gd",
+     "speed": "Rm",
+     "body": "Ex",
+     "protection": "Ty"
+    },
+    {
+     "name": "\"Blackbird\"",
+     "type": "Air",
+     "cost": "Am",
+     "control": "Rm",
+     "speed": "ShY",
+     "body": "Ex",
+     "protection": "Gd"
+    },
+    {
+     "name": "Space Shuttle",
+     "type": "Space",
+     "cost": "Mn",
+     "control": "Ty",
+     "speed": "ShZ",
+     "body": "Rm",
+     "protection": "Rm"
+    },
+    {
+     "name": "Lunar Shuttle",
+     "type": "Space",
+     "cost": "Am",
+     "control": "Gd",
+     "speed": "Cl1000",
+     "body": "Rm",
+     "protection": "Rm"
+    },
+    {
+     "name": "Space Ship",
+     "type": "Space*",
+     "cost": "Un",
+     "control": "Ex",
+     "speed": "Cl3000",
+     "body": "Ex",
+     "protection": "Ex"
+    },
+    {
+     "name": "Raft",
+     "type": "Water",
+     "cost": "Fe",
+     "control": "Ty",
+     "speed": "Fe",
+     "body": "Pr",
+     "protection": 0
+    },
+    {
+     "name": "Rowboat",
+     "type": "Water",
+     "cost": "Ty",
+     "control": "Gd",
+     "speed": "Fe",
+     "body": "Ty",
+     "protection": "Fe"
+    },
+    {
+     "name": "Sailboat",
+     "type": "Water",
+     "cost": "Gd",
+     "control": "Pr",
+     "speed": "Pr",
+     "body": "Fe",
+     "protection": 0
+    },
+    {
+     "name": "Racing Sloop",
+     "type": "Water",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Gd",
+     "body": "Pr",
+     "protection": "Pr"
+    },
+    {
+     "name": "Motorboat",
+     "type": "Water",
+     "cost": "Gd",
+     "control": "Ex",
+     "speed": "Ex",
+     "body": "Ty",
+     "protection": "Pr"
+    },
+    {
+     "name": "Yacht",
+     "type": "Water",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "Gd",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "Speedboat",
+     "type": "Water",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "In",
+     "body": "Ty",
+     "protection": "Pr"
+    },
+    {
+     "name": "Patrol Boat",
+     "type": "Water",
+     "cost": "Rm",
+     "control": "Gd",
+     "speed": "Rm",
+     "body": "Gd",
+     "protection": "Ty",
+     "includes": "Light Artillery, Machine Guns"
+    },
+    {
+     "name": "Hydrofoil",
+     "type": "Water",
+     "cost": "In",
+     "control": "Ty",
+     "speed": "In",
+     "body": "Ty",
+     "protection": "Ty"
+    },
+    {
+     "name": "Jetskis",
+     "type": "Water",
+     "cost": "Rm",
+     "control": "Ex",
+     "speed": "Ex",
+     "body": "Gd",
+     "protection": 0
+    },
+    {
+     "name": "Ocean Liner",
+     "type": "Water",
+     "cost": "Am",
+     "control": "Gd",
+     "speed": "Ty",
+     "body": "Rm",
+     "protection": "Gd"
+    },
+    {
+     "name": "Destroyer",
+     "type": "Water*",
+     "cost": "Mn",
+     "control": "Ty",
+     "speed": "Ty",
+     "body": "Ex",
+     "protection": "Ex",
+     "includes": "Light Artillery, Heavy Artillery"
+    },
+    {
+     "name": "Battleship",
+     "type": "Water*",
+     "cost": "Un",
+     "control": "Ty",
+     "speed": "Pr",
+     "body": "Rm",
+     "protection": "Ex",
+     "includes": "Super Heavy Artillery"
+    },
+    {
+     "name": "Carrier",
+     "type": "Water*",
+     "cost": "Un",
+     "control": "Ty",
+     "speed": "Pr",
+     "body": "Ex",
+     "protection": "Ex",
+     "includes": "Missiles (does not include air craft"
+    },
+    {
+     "name": "Submarine",
+     "type": "Sub*",
+     "cost": "Am",
+     "control": "Gd",
+     "speed": "Pr",
+     "body": "Rm",
+     "protection": "Ex",
+     "includes": "8 Missiles"
+    },
+    {
+     "name": "Mini-Subs",
+     "type": "Sub",
+     "cost": "In",
+     "control": "Ex",
+     "speed": "Gd",
+     "body": "Gd",
+     "protection": "Gd",
+     "includes": "Missile or laser armed"
+    }
+   ]
+  }
+ ],
+ "vehicle_damage": {
+  "page": 51,
+  "rows": [
+   {
+    "damage": "Damage Greater than Body",
+    "colour": "Red",
+    "effect": "Body -1CS, damage"
+   },
+   {
+    "damage": "Damage Greater than Body",
+    "colour": "Yellow",
+    "effect": "Speed -1CS, Control FEAT"
+   },
+   {
+    "damage": "Damage Greater than Body",
+    "colour": "Green",
+    "effect": "Control -1CS, Control FEAT"
+   },
+   {
+    "damage": "Damage Greater than Body",
+    "colour": "White",
+    "effect": "All -1CS, Out of Control"
+   },
+   {
+    "damage": "Damage Equal to Body",
+    "colour": "Red",
+    "effect": "No damage to vehicle, passengers"
+   },
+   {
+    "damage": "Damage Equal to Body",
+    "colour": "Yellow",
+    "effect": "Body -1CS, damage to passengers"
+   },
+   {
+    "damage": "Damage Equal to Body",
+    "colour": "Green",
+    "effect": "Speed -1CS, Control FEAT"
+   },
+   {
+    "damage": "Damage Equal to Body",
+    "colour": "White",
+    "effect": "Control - 1CS, Control FEAT"
+   },
+   {
+    "damage": "Damage Less than Body",
+    "colour": "Red, Yellow",
+    "effect": "No damage"
+   },
+   {
+    "damage": "Damage Less than Body",
+    "colour": "Green",
+    "effect": "Body -1CS, Control FEAT"
+   },
+   {
+    "damage": "Damage Less than Body",
+    "colour": "White",
+    "effect": "Control -1CS, damage to passengers, Control FEAT"
+   }
+  ]
+ },
+ "keys": {
+  "weapons": [
+   {
+    "key": "One-handed",
+    "meaning": "Usable in one hand with no penalty"
+   },
+   {
+    "key": "Illegal",
+    "meaning": "Owning it without authorization is a minor offence"
+   },
+   {
+    "key": "Military",
+    "meaning": "Owning it outside the armed forces or approved groups is a crime"
+   },
+   {
+    "key": "Power pack",
+    "meaning": "Runs off a power pack instead of ordinary ammunition"
+   },
+   {
+    "key": "Bursts",
+    "meaning": "Can hit several neighbouring targets at once"
+   },
+   {
+    "key": "Scatters",
+    "meaning": "Hits everyone within one area of the target"
+   },
+   {
+    "key": "Two men to fire",
+    "meaning": "Needs a crew of two; solo use halves rate and costs -2CS"
+   },
+   {
+    "key": "Stationary",
+    "meaning": "Cannot be moved about, only pivoted where it stands"
+   },
+   {
+    "key": "Price",
+    "meaning": "Resource rank needed for the purchase FEAT"
+   },
+   {
+    "key": "Range",
+    "meaning": "How many areas the weapon reaches effectively"
+   },
+   {
+    "key": "Damage",
+    "meaning": "Standard damage; * marks special or variable damage"
+   },
+   {
+    "key": "Type",
+    "meaning": "Universal Table column used: S Shooting, F Force, E Energy"
+   },
+   {
+    "key": "Rate",
+    "meaning": "Shots per round; '1 per 2' means one shot every second round"
+   },
+   {
+    "key": "Shots",
+    "meaning": "Rounds of fire available before a reload"
+   },
+   {
+    "key": "Material",
+    "meaning": "Material strength rank of the weapon itself"
+   },
+   {
+    "key": "EA / ET / BA / BT / Gp / Gb",
+    "meaning": "Melee types: Edged Attack, Edged Throwing, Blunt Attack, Blunt Throwing, Grappling, Grabbing"
+   },
+   {
+    "key": "Strength (melee table)",
+    "meaning": "Material strength rank of the melee weapon"
+   },
+   {
+    "key": "Ammunition: Name",
+    "meaning": "Kind of ammunition"
+   },
+   {
+    "key": "Ammunition: Weapon",
+    "meaning": "Which weapon the ammunition fits"
+   },
+   {
+    "key": "Ammunition: Cost (Price)",
+    "meaning": "Resource rank of the ammunition"
+   },
+   {
+    "key": "Ammunition: Rounds (Amount)",
+    "meaning": "Normal package size; partial clips are not sold"
+   }
+  ],
+  "vehicles": [
+   {
+    "key": "Type",
+    "meaning": "Broad class of vehicle, listed below"
+   },
+   {
+    "key": "Road",
+    "meaning": "Built for hard, level surfaces"
+   },
+   {
+    "key": "Off-Road",
+    "meaning": "Handles rough terrain without penalty"
+   },
+   {
+    "key": "Railed",
+    "meaning": "Follows a fixed track or path"
+   },
+   {
+    "key": "GEV",
+    "meaning": "Ground Effect Vehicle, riding on an air cushion"
+   },
+   {
+    "key": "Air",
+    "meaning": "Normally flies"
+   },
+   {
+    "key": "Space",
+    "meaning": "Space-capable; often, not always, able to fly in air too"
+   },
+   {
+    "key": "Water",
+    "meaning": "Floats and travels on the water surface"
+   },
+   {
+    "key": "Sub",
+    "meaning": "Normally travels underwater"
+   },
+   {
+    "key": "*",
+    "meaning": "Vehicle is divided into compartments"
+   },
+   {
+    "key": "Cost",
+    "meaning": "Resource rank to buy the craft"
+   },
+   {
+    "key": "Control",
+    "meaning": "How well it reacts to abrupt turns and speed changes"
+   },
+   {
+    "key": "Speed",
+    "meaning": "Rank of its top safe speed"
+   },
+   {
+    "key": "Body",
+    "meaning": "Damage it absorbs before breaking down; also its armour and material rank"
+   },
+   {
+    "key": "Protection",
+    "meaning": "Body Armor rank given to ordinary occupants; 0 means none"
+   },
+   {
+    "key": "ShX / ShY / ShZ",
+    "meaning": "Shift X, Shift Y, Shift Z speed ranks"
+   },
+   {
+    "key": "Cl1000 / Cl3000",
+    "meaning": "Class 1000 and Class 3000 ranks from the Universal Table"
+   },
+   {
+    "key": "Body/Control/Speed -1CS (damage list)",
+    "meaning": "That statistic drops one rank until repaired"
+   },
+   {
+    "key": "Control FEAT (damage list)",
+    "meaning": "Operator must roll Control or the craft goes out of control"
+   },
+   {
+    "key": "Out of Control (damage list)",
+    "meaning": "Craft loses control automatically"
+   },
+   {
+    "key": "Damage to passengers (damage list)",
+    "meaning": "Occupants take harm from the attack, handled like a crash"
+   }
+  ]
+ }
+}

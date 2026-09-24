@@ -49,5 +49,14 @@ export function makeFeat(ranks, universal) {
     };
   }
 
-  return { ladder, actions: universal.actions, rankForNumber, shift, colour, roll, ORDER };
+  // A Slam, Stun or Kill result is not the end of it: the TARGET then makes an
+  // Endurance FEAT on that result's own column of the Effects Table (PB back
+  // cover), which universal.json carries as the actions slam, stun and kill.
+  // Answers that column, or null for any other result.
+  const FOLLOW = { Slam: 'slam', Stun: 'stun', Kill: 'kill' };
+  function followUp(result) {
+    return FOLLOW[result] ? actions[FOLLOW[result]] ?? null : null;
+  }
+
+  return { ladder, actions: universal.actions, rankForNumber, shift, colour, roll, followUp, ORDER };
 }
