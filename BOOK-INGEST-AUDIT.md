@@ -2199,3 +2199,61 @@ recorded in this session's hand-back list for Nate to decide.
 number, and stays as it is, since an audit file is a record. `git grep F107`
 and the memory directories otherwise find only this section, 2026-09-22.
 `audit-citations.mjs --remote F107` reports no class citing it.
+
+### F108 — low — a variant cannot remove a parent skill or carry its own ladder, so the Madhaven Mutant Shaman is half prose
+
+**Opened 2026-09-24** by the `madhaven` import (`apps/character-creator/docs/surveys/madhaven.md`,
+*The Mutant Shaman*). Filed under `book-survey` §8 Tier 3: filed, not built.
+
+Rifts World Book 29 printed 79 makes a Shaman out of **any** of its eight Haven
+Mutant R.C.C.s. Four things change:
+
+1. attribute and P.P.E. bonuses;
+2. a fixed skill list that **replaces** every Secondary skill, every Piloting
+   skill and every modern W.P.;
+3. two prayers, each with a percentile chance and a yearly limit;
+4. its **own XP ladder**, the Gateway Knight & Mutant Shaman column of printed
+   79. The other mutants use the Haven Mutant R.C.C. column.
+
+The import models it as a `shaman` variant on each of the eight classes.
+`VARIANT_OVERRIDES` in `apps/character-creator/js/parser.js` (line 64, read
+2026-09-24) carries items 1 and 2's *additions*: `bonuses`, `ppe_base` and
+`attribute_dice`, plus `skills_additional` since F31. It carries **neither a
+removal nor `xp_table`**. F31's own comment says why removal is absent: the
+union, *never replace*, is what stops a variant becoming a second class.
+
+So, on all eight classes, a Shaman character:
+
+- **keeps** its Secondary, Piloting and modern W.P. skills, which the book
+  takes away;
+- **levels on the wrong ladder**, the Haven Mutant column instead of the
+  Gateway/Shaman one. The two ladders are 2,240 against 2,350 XP at level 2
+  and 395,920 against 435,000 at level 15, so a Shaman levels a little early
+  all the way up;
+- shows the prayers as prose only, which is the right home for them (a
+  conditional, percentile effect, and `class-import` puts those in prose).
+
+Each class's `extraction_notes` cites this finding.
+
+**Proposal:** add `xp_table` to `VARIANT_OVERRIDES`. It is a scalar array, so
+it replaces, as the list's own comment says every non-merged key does. Check
+`leveling.js`'s six call sites read the class *after* `applyVariant`. Then
+move each Madhaven Shaman's ladder into its variant. **Leave the removal
+alone.** F31 declined removal on purpose, and the book's replacement can stay
+prose. One lost Secondary list per Shaman is a smaller wrong than weakening
+F31's guarantee.
+
+**Posture:** a mechanism change for `xp_table` only, with the data following it.
+It adds no check.
+
+**Evidence:** `VARIANT_OVERRIDES` read at `apps/character-creator/js/parser.js:64`,
+2026-09-24. The ladders are transcribed from printed 79 (cache p080) by the
+import session. Whether all six `xp_table` readers run after `applyVariant`
+was **not measured**. That is the one premise a taker must check first.
+
+**Confidence:** high on the gap. Medium on the fix's size, until someone reads
+the six call sites. If any of them reads the raw class, the change grows past
+one list entry.
+
+**Ongoing cost:** one more key on a list a test already pins against
+`docs/leveling.md`, so that doc gets one more word. Nothing recurring.
