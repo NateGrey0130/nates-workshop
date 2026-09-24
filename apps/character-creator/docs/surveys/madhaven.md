@@ -119,15 +119,19 @@ A Shaman is any of the eight mutants with extra attribute and P.P.E. bonuses,
 a fixed skill list that **replaces** all secondary, piloting and modern-W.P.
 skills, two prayers to Isis, and **its own XP ladder** (Gateway & Shaman).
 
-A `variant` may override attribute dice, pools and `bonuses`, but **not skills
-and not `xp_table`** (`class-import` reference, *Variants*). The proposal:
+A `variant` may override attribute dice, pools and `bonuses`, and since
+`BOOK-INGEST-AUDIT` F31 (PR #834) it may **add** skills through
+`skills_additional`. It still **cannot remove** a parent skill, and it
+**cannot carry its own `xp_table`**, which is not on `VARIANT_OVERRIDES` in
+`apps/character-creator/js/parser.js`. Read at line 64 on 2026-09-24. The plan,
+with the variant-plus-prose approach Nate chose on 2026-09-24:
 
 - a `shaman` variant on each of the eight R.C.C.s, carrying the attribute and
-  P.P.E. changes;
-- the skill swap, the prayers and the ladder as prose on each class, plus an
-  `extraction_notes` line;
-- a finding filed in `BOOK-INGEST-AUDIT.md` for variants that replace skills
-  and take their own ladder. That is Tier 3: filed, not built.
+  P.P.E. changes, and adding the Shaman skill list through `skills_additional`;
+- the removal of Secondary, Piloting and modern-W.P. skills, the two prayers
+  and the ladder as prose on each class, plus an `extraction_notes` line;
+- a finding filed in `BOOK-INGEST-AUDIT.md` for a variant that has to remove
+  skills and use its own ladder. That is Tier 3: filed, not built.
 
 ### Not a class
 
