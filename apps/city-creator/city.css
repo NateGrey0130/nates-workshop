@@ -42,6 +42,16 @@
 .map-road { fill: none; stroke: var(--text-secondary); stroke-width: 7; stroke-dasharray: 18 10;
   stroke-linecap: round; }
 .map-wall { fill: none; stroke: var(--text-primary); stroke-width: 10; stroke-linejoin: round; }
+/* A theme's street plan (city-map.js): canals, the street grid, a railway
+   and its station, and a towering core. */
+.map-canal { fill: none; stroke: var(--accent-link); stroke-width: 12; stroke-linecap: round;
+  stroke-linejoin: round; opacity: 0.5; }
+.map-street { fill: none; stroke: var(--border-strong); stroke-width: 2.5; opacity: 0.7; }
+.map-rail { fill: none; stroke: var(--text-primary); stroke-width: 5; }
+.map-rail-ties { fill: none; stroke: var(--text-primary); stroke-width: 16; stroke-dasharray: 3 14; }
+.map-station { fill: var(--bg-card); stroke: var(--text-primary); stroke-width: 4; }
+.map-core { fill: var(--text-secondary); fill-opacity: 0.18; stroke: var(--text-primary); stroke-width: 4;
+  stroke-dasharray: 10 6; }
 .map-gate { fill: var(--bg-card); stroke: var(--text-primary); stroke-width: 5; }
 .map-pin circle, .map-pin rect { stroke: var(--text-primary); stroke-width: 3; }
 .map-pin-place circle { fill: var(--bg-card); }

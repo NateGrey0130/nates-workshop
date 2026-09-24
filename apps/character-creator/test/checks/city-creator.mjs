@@ -39,6 +39,9 @@
 // Themed rolls (PR 3), the same way: rollBlocker() answering null for a role
 // with no class, the Rifts R.C.C.-alone exemption dropped, and rollRequest()
 // sending the request without asking.
+// Map styles (PR 4), the same way: an organic theme drawing a style's extras,
+// grid avenues bent through the square, a canal city without its river, the station put off
+// the railway, and present mode not drawing the core.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -53,7 +56,7 @@ import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
   'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
-  'City Creator theme writing', 'City Creator themed rolls'];
+  'City Creator theme writing', 'City Creator themed rolls', 'City Creator map styles'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -710,4 +713,81 @@ export function run() {
     [generateCity(base(), 5), generateCity({ ...themedRiftsSettings, npcCount: 12 }, 5)].every((c) => c.npcs.every((n) => rollBlocker(c, n.id) === null)));
   check('the page shows the reason in place of the button',
     /const blocked = !n\.sheet_id && rollBlocker\(S\.city, n\.id\);/.test(page));
+
+  section('City Creator map styles');
+
+  // A theme's street plan. Every style keeps the map's own promises - the
+  // districts tile the outline, every pin is in its own district, no two pins
+  // touch, a race quarter is a quarter - and adds its own shapes.
+  const styleSettings = { ...base(), everyRace: false, npcCount: 6,
+    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] };
+  const styled = (style, seed, population = 12000) => {
+    const c = generateCity({ ...styleSettings, population }, seed, null,
+      { intensity: 'light', pack: validateThemePack({ ...westPack(), mapStyle: style }, styleSettings) });
+    return { c, m: layoutMap(c) };
+  };
+  const broken = [];
+  for (const style of MAP_STYLES) {
+    for (let seed = 0; seed < 40; seed++) {
+      const { c, m } = styled(style, seed, [60, 450, 2500, 12000, 60000][seed % 5]);
+      const whole = area(m.outline);
+      if (Math.abs(m.districts.reduce((n, d) => n + area(d.polygon), 0) - whole) / whole > 0.001) broken.push(`${style} ${seed} untiled`);
+      const named = Object.fromEntries([...c.places, ...c.shops].map((e) => [e.id, e.district]));
+      for (const p of m.pins) {
+        const d = m.districts.find((x) => x.name === named[p.id]);
+        if (!d || !inside(p.at, d.polygon)) broken.push(`${style} ${seed} ${p.id} outside`);
+        if (m.pins.some((o) => o !== p && Math.hypot(o.at[0] - p.at[0], o.at[1] - p.at[1]) < 34)) broken.push(`${style} ${seed} ${p.id} crowded`);
+      }
+      if (!m.districts.some((d) => d.race === 'dwarf')) broken.push(`${style} ${seed} no quarter`);
+    }
+  }
+  check('every street plan keeps the map\'s promises: tiled, pins in their districts and apart, the quarter drawn (200 cities)',
+    broken.length === 0, broken.slice(0, 5).join(', '));
+
+  const plainKeys = Object.keys(layoutMap(generateCity(styleSettings, 3))).sort().join();
+  const organic = styled('organic', 3).m;
+  check('an organic theme draws the map a city with no theme draws: no style, and nothing added',
+    Object.keys(organic).sort().join() === plainKeys && !('style' in organic));
+  const grids = [1, 2, 3, 4].map((seed) => styled('grid', seed).m);
+  // A street runs edge to edge: its middle inside the city, each end on the outline.
+  const toEdge = (poly, q) => Math.min(...poly.map((a, i) => {
+    const b = poly[(i + 1) % poly.length];
+    const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * (b[0] - a[0]) + (q[1] - a[1]) * (b[1] - a[1])) / ((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)));
+    return Math.hypot(a[0] + t * (b[0] - a[0]) - q[0], a[1] + t * (b[1] - a[1]) - q[1]);
+  }));
+  const edgeToEdge = (m, [p, q]) => inside([(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], m.outline)
+    && toEdge(m.outline, p) < 1 && toEdge(m.outline, q) < 1;
+  check('a grid city has two straight avenues crossing it gate to gate, and streets that stay inside the city',
+    grids.every((m) => m.style === 'grid' && m.gates.length === 4 && m.roads.length === 2 && m.roads.every((r) => r.length === 2)
+      && m.roads.every(([p, q]) => m.gates.some((g) => g + '' === p + '') && m.gates.some((g) => g + '' === q + ''))
+      && m.streets.length >= 6 && m.streets.every((l) => edgeToEdge(m, l))));
+  const railMaps = [1, 2, 3, 4].map((seed) => styled('rail', seed).m);
+  const offLine = ([a, b], q) => Math.abs((b[0] - a[0]) * (a[1] - q[1]) - (a[0] - q[0]) * (b[1] - a[1])) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+  check('a railway crosses a rail city, its station on the line and near the square',
+    railMaps.every((m) => m.rail.length === 2 && offLine(m.rail, m.station) < 1
+      && Math.hypot(m.station[0] - m.square[0], m.station[1] - m.square[1]) < 120));
+  const canalMaps = Array.from({ length: 12 }, (_, seed) => styled('canal', seed).m);
+  check('a canal city always has its river, and two to four canals',
+    canalMaps.every((m) => !!m.river && m.canals.length >= 2 && m.canals.length <= 4));
+  const towers = [1, 2, 3].map((seed) => styled('vertical', seed).m);
+  check('a vertical city\'s core rings the square, inside the city',
+    towers.every((m) => inside(m.square, m.core) && m.core.every((q) => inside(q, m.outline))));
+  check('the same themed city draws the same map', JSON.stringify(styled('rail', 7).m) === JSON.stringify(styled('rail', 7).m));
+
+  // Drawn on the G.M.'s page and in present mode, and passed to the players.
+  const presentJs = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'present.js'), 'utf8');
+  const viewJs = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'cities', '[id]', 'view.js'), 'utf8');
+  const mapCss = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.css'), 'utf8');
+  const shapes = ['canal', 'core', 'street', 'rail', 'station'];
+  check('the G.M.\'s page and present mode both draw every street-plan shape, and the stylesheet styles each',
+    shapes.every((k) => page.includes(`class="map-${k}"`) && presentJs.includes(`class: 'map-${k}'`)
+      && new RegExp(`\\.map-${k} \\{`).test(mapCss)));
+  // District fills are opaque: a shape drawn before them is hidden inside the
+  // city, which is how the first draw of the canals showed only their ends.
+  check('and both draw the canals and the core over the districts, not under them',
+    page.includes('${districts}${canals}${core}')
+      && presentJs.indexOf("class: 'map-canal'") > presentJs.indexOf('map-cell ')
+      && presentJs.indexOf("class: 'map-core'") > presentJs.indexOf('map-cell '));
+  check('and the players\' view passes the shapes on',
+    ['canals', 'streets', 'rail', 'station', 'core'].every((k) => new RegExp(`^\\s+${k}: `, 'm').test(viewJs)));
 }

@@ -87,6 +87,16 @@ of cities get a river. Every place and shop is a numbered pin inside its own
 district, clear of the label and of the other pins, and each pin links to its
 entry - the numbered key under the map is the large tap target on a phone.
 
+**A themed city has a street plan** (the theme's `mapStyle`). *Organic* is the
+map above, drawn the same way. *Grid* squares the outline, sets the districts
+on a grid with the centre district in the middle and the quarters at the edge,
+and draws the street grid with two straight avenues crossing gate to gate - a
+street grid for the look of the place, still not a street map. *Rail* runs a
+railway across the sheet with a station by the square. *Canal* always has the
+river and adds two to four canals. *Vertical* marks a towering core round the
+square. The players' map carries these shapes too; the theme's words never
+reach it.
+
 The map is **computed when the city changes and kept with it**, not redrawn on
 load, so a later change to the layout never moves a saved city's districts.
 `?seed=N` opens on that city with the settings on screen (built-in names only),

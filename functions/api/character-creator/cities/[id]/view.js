@@ -37,6 +37,12 @@ function playerView(row, city) {
       gates: m.wall ? pts(m.gates) : [],
       roads: Array.isArray(m.roads) ? m.roads.map(pts) : [],
       river: m.river ? pts(m.river) : null,
+      // A theme's street plan: shapes only. The theme's words never come here.
+      canals: Array.isArray(m.canals) ? m.canals.map(pts) : null,
+      streets: Array.isArray(m.streets) ? m.streets.map(pts) : null,
+      rail: m.rail ? pts(m.rail) : null,
+      station: m.rail ? pt(m.station) : null,
+      core: m.core ? pts(m.core) : null,
       districts: (Array.isArray(m.districts) ? m.districts : []).map((d) => ({
         id: String(d.id), name: String(d.name || ''), quarter: !!d.race,
         polygon: pts(d.polygon), label: pt(d.label), text: text(d.id),

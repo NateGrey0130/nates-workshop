@@ -213,7 +213,16 @@ async function loadCity() {
     cell.append(svg('title', {}, d.name));
     box.append(cell);
   });
+  // A theme's street plan, as the City Creator draws it: over the districts.
+  for (const c of m.canals || []) box.append(svg('polyline', { points: svgPts(c), class: 'map-canal' }));
+  if (m.core) box.append(svg('polygon', { points: svgPts(m.core), class: 'map-core' }));
+  for (const l of m.streets || []) box.append(svg('polyline', { points: svgPts(l), class: 'map-street' }));
   for (const r of m.roads) box.append(svg('polyline', { points: svgPts(r), class: 'map-road' }));
+  if (m.rail) {
+    box.append(svg('polyline', { points: svgPts(m.rail), class: 'map-rail' }),
+      svg('polyline', { points: svgPts(m.rail), class: 'map-rail-ties' }));
+    if (m.station) box.append(svg('rect', { x: m.station[0] - 18, y: m.station[1] - 10, width: 36, height: 20, class: 'map-station' }));
+  }
   if (m.wall) box.append(svg('polygon', { points: svgPts(m.wall), class: 'map-wall' }));
   for (const [x, y] of m.gates) box.append(svg('rect', { x: x - 14, y: y - 14, width: 28, height: 28, class: 'map-gate' }));
   for (const d of m.districts) if (d.label) box.append(svg('text', { x: d.label[0], y: d.label[1], class: 'map-label' }, d.name));

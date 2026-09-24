@@ -17,8 +17,17 @@
 // against every other site - an exact Voronoi cell, cheap at fourteen
 // districts. Every point of the city belongs to exactly one district, which is
 // the property the smoke check reads back.
+//
+// ── Street plans (a theme's mapStyle) ──
+// A themed city names one of MAP_STYLES. ORGANIC is the map above, drawn by
+// the same code with the same random draws, so a city with no theme is
+// unchanged to the byte. The others: GRID squares the outline, sets the
+// districts on a grid and draws its streets and straight avenues; RAIL runs a
+// railway across the sheet with a station by the square; CANAL always has the
+// river and adds canals; VERTICAL marks a towering core round the square. Each
+// extra is drawn from its own generator, after the organic draws.
 
-import { rng, hash } from './city-engine.js';
+import { rng, hash, MAP_STYLES } from './city-engine.js';
 
 export const SIZE = 1000;              // the map's own units; the SVG scales them
 const C = SIZE / 2;
@@ -91,6 +100,68 @@ function pointIn(r, poly) {
 
 const round = ([x, y]) => [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
 
+// The parts of segment a-b inside a polygon, as [p, q] pairs.
+function clipLine(poly, a, b) {
+  const ts = [0, 1];
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  for (let i = 0; i < poly.length; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % poly.length];
+    const ex = x2 - x1, ey = y2 - y1;
+    const den = dx * ey - dy * ex;
+    if (!den) continue;
+    const t = ((x1 - a[0]) * ey - (y1 - a[1]) * ex) / den;
+    const u = ((x1 - a[0]) * dy - (y1 - a[1]) * dx) / den;
+    if (t > 0 && t < 1 && u >= 0 && u <= 1) ts.push(t);
+  }
+  ts.sort((m, n) => m - n);
+  const at = (t) => [a[0] + dx * t, a[1] + dy * t];
+  const out = [];
+  for (let i = 0; i < ts.length - 1; i++) {
+    if (ts[i + 1] - ts[i] < 1e-6) continue;
+    if (inside(at((ts[i] + ts[i + 1]) / 2), poly)) out.push([round(at(ts[i])), round(at(ts[i + 1]))]);
+  }
+  return out;
+}
+
+// A river across the sheet: in at one edge, out the other.
+function riverLine(r, radius) {
+  const t = r() * Math.PI;
+  const dx = Math.cos(t), dy = Math.sin(t);
+  const off = (r() - 0.5) * radius * 0.6;
+  const px = -dy * off, py = dx * off;
+  const pts = [];
+  for (let k = -3; k <= 3; k++) {
+    const s = (k / 3) * SIZE * 0.75;
+    pts.push(round([C + px + dx * s + (r() - 0.5) * 40, C + py + dy * s + (r() - 0.5) * 40]));
+  }
+  return pts;
+}
+
+// Grid sites: the nearest cells to the middle, the centre district in the
+// middle one and the race quarters in the outermost, as on the organic map.
+function gridSites(r, order, quarterCount, radius) {
+  const n = order.length;
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+  const span = radius * 1.5;
+  const w = span / cols, h = span / rows;
+  const cells = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      cells.push([C - span / 2 + (col + 0.5) * w + (r() - 0.5) * w * 0.16,
+        C - span / 2 + (row + 0.5) * h + (r() - 0.5) * h * 0.16]);
+    }
+  }
+  const byMiddle = cells.map((c) => [c, Math.hypot(c[0] - C, c[1] - C)]).sort((a, b) => a[1] - b[1]).map((x) => x[0]).slice(0, n);
+  const out = new Array(n);
+  out[0] = byMiddle[0];
+  for (let i = 1; i <= quarterCount; i++) out[i] = byMiddle[n - i];
+  let k = 1;
+  for (let i = quarterCount + 1; i < n; i++) out[i] = byMiddle[k++];
+  return { sites: out, span, w, h };
+}
+
 // ── the map ──
 
 /**
@@ -100,6 +171,7 @@ const round = ([x, y]) => [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
  */
 export function layoutMap(city) {
   const r = rng(hash(city.seed, 'map'));
+  const style = MAP_STYLES.includes(city.theme?.pack?.mapStyle) ? city.theme.pack.mapStyle : 'organic';
   const n = Math.max(1, city.districts.length);
   // Bigger cities fill more of the sheet.
   const radius = SIZE * (0.3 + Math.min(0.14, n * 0.012));
@@ -107,8 +179,14 @@ export function layoutMap(city) {
   // The outline: a ragged circle.
   const sides = 28;
   const wobble = Array.from({ length: sides }, () => 0.9 + r() * 0.16);
+  // A grid city's outline is a rounded square, its edges barely ragged.
+  const squared = (v) => Math.sign(v) * Math.abs(v) ** 0.25;
   const outline = wobble.map((w, i) => {
     const t = (i / sides) * Math.PI * 2;
+    if (style === 'grid') {
+      const g = 0.94 + (w - 0.9) * 0.25;
+      return [C + squared(Math.cos(t)) * radius * g, C + squared(Math.sin(t)) * radius * g];
+    }
     return [C + Math.cos(t) * radius * w, C + Math.sin(t) * radius * w];
   });
 
@@ -120,7 +198,8 @@ export function layoutMap(city) {
   const order = [...plain.slice(0, 1), ...quarters, ...plain.slice(1)];
   const ring = order.length - 1;
   const spin = r() * Math.PI * 2;
-  const sites = order.map((d, i) => {
+  const grid = style === 'grid' ? gridSites(r, order, quarters.length, radius) : null;
+  const sites = grid ? grid.sites : order.map((d, i) => {
     if (i === 0 && order.length > 1) return [C + (r() - 0.5) * 30, C + (r() - 0.5) * 30];
     if (order.length === 1) return [C, C];
     const t = spin + ((i - 1) / ring) * Math.PI * 2 + (r() - 0.5) * 0.3;
@@ -140,8 +219,11 @@ export function layoutMap(city) {
   const gateCount = walled ? 2 + Math.floor(r() * 3) : 3;
   const gateAt = Array.from({ length: gateCount }, (_, i) =>
     Math.floor(((i + r() * 0.5) / gateCount) * sides) % sides);
-  const gates = [...new Set(gateAt)].map((i) => round(outline[i]));
-  const roads = gates.map((g) => {
+  // A grid city's gates are its four compass points, and its two avenues
+  // run straight across it, gate to gate, crossing in the middle.
+  const gates = grid ? [0, 7, 14, 21].map((i) => round(outline[i]))
+    : [...new Set(gateAt)].map((i) => round(outline[i]));
+  const roads = grid ? [[gates[2], gates[0]], [gates[3], gates[1]]] : gates.map((g) => {
     // A road bends once on the way out, so it reads as a road and not a ruler.
     const mid = [(square[0] + g[0]) / 2 + (r() - 0.5) * 60, (square[1] + g[1]) / 2 + (r() - 0.5) * 60];
     return [square, round(mid), g];
@@ -149,17 +231,55 @@ export function layoutMap(city) {
 
   // A river in about half of cities: in at one edge of the sheet, out the other.
   let river = null;
-  if (r() < 0.5) {
-    const t = r() * Math.PI;
-    const dx = Math.cos(t), dy = Math.sin(t);
-    const off = (r() - 0.5) * radius * 0.6;
-    const px = -dy * off, py = dx * off;
-    const pts = [];
-    for (let k = -3; k <= 3; k++) {
-      const s = (k / 3) * SIZE * 0.75;
-      pts.push(round([C + px + dx * s + (r() - 0.5) * 40, C + py + dy * s + (r() - 0.5) * 40]));
+  if (r() < 0.5) river = riverLine(r, radius);
+
+  // A street plan's own additions, from their own generator.
+  const extra = {};
+  if (style !== 'organic') {
+    const rs = rng(hash(city.seed, 'map-style', style));
+    extra.style = style;
+    if (grid) {
+      // Streets every half cell, across the whole city.
+      const lines = [];
+      const reach = radius * 1.3;
+      for (let k = 0; k <= Math.round(grid.span / (grid.w / 2)); k++) {
+        const x = C - grid.span / 2 + (k * grid.w) / 2;
+        lines.push(...clipLine(outline, [x, C - reach], [x, C + reach]));
+      }
+      for (let k = 0; k <= Math.round(grid.span / (grid.h / 2)); k++) {
+        const y = C - grid.span / 2 + (k * grid.h) / 2;
+        lines.push(...clipLine(outline, [C - reach, y], [C + reach, y]));
+      }
+      extra.streets = lines;
+    } else if (style === 'rail') {
+      // A railway straight across the sheet, passing near the square, with the
+      // station where it comes closest.
+      const t = rs() * Math.PI;
+      const dx = Math.cos(t), dy = Math.sin(t);
+      const off = (rs() - 0.5) * radius * 0.4;
+      const through = [square[0] - dy * off, square[1] + dx * off];
+      const reach = SIZE * 0.75;
+      extra.rail = [round([through[0] - dx * reach, through[1] - dy * reach]), round([through[0] + dx * reach, through[1] + dy * reach])];
+      extra.station = round(through);
+    } else if (style === 'canal') {
+      if (!river) river = riverLine(rs, radius);
+      const count = 2 + Math.floor(rs() * 3);
+      extra.canals = Array.from({ length: count }, () => {
+        const i = Math.floor(rs() * sides);
+        const j = (i + Math.floor(sides / 2) + Math.floor((rs() - 0.5) * 8) + sides) % sides;
+        const mid = [(outline[i][0] + outline[j][0]) / 2 + (rs() - 0.5) * radius * 0.5,
+          (outline[i][1] + outline[j][1]) / 2 + (rs() - 0.5) * radius * 0.5];
+        return [round(outline[i]), round(mid), round(outline[j])];
+      });
+    } else if (style === 'vertical') {
+      // The core: a tight ragged ring round the square, where the towers are.
+      const coreR = radius * 0.2;
+      extra.core = Array.from({ length: 16 }, (_, i) => {
+        const t = (i / 16) * Math.PI * 2;
+        const w = 0.85 + rs() * 0.3;
+        return round([square[0] + Math.cos(t) * coreR * w, square[1] + Math.sin(t) * coreR * w]);
+      });
     }
-    river = pts;
   }
 
   // Pins: every place and shop in its own district, seeded by its own id, and
@@ -198,7 +318,7 @@ export function layoutMap(city) {
     Math.ceil(Math.max(...xs) - Math.min(...xs) + 2 * pad), Math.ceil(Math.max(...ys) - Math.min(...ys) + 2 * pad)];
 
   return { size: SIZE, view, outline: outline.map(round), districts, wall: walled ? outline.map(round) : null,
-    gates, roads, river, square, pins };
+    gates, roads, river, square, pins, ...extra };
 }
 
 export { area };
