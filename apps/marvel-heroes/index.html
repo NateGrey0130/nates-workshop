@@ -27,6 +27,7 @@
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
   <button type="button" role="tab" id="tab-gen" data-tab="gen" aria-controls="panel-gen" aria-selected="false">Generator</button>
+  <button type="button" role="tab" id="tab-pb" data-tab="pb" aria-controls="panel-pb" aria-selected="false">Point Buy</button>
   <button type="button" role="tab" id="tab-heroes" data-tab="heroes" aria-controls="panel-heroes" aria-selected="false">My heroes</button>
   <button type="button" role="tab" id="tab-gear" data-tab="gear" aria-controls="panel-gear" aria-selected="false">Gear</button>
 </nav>
@@ -121,6 +122,30 @@
     <p id="gen-status" class="sr-only" aria-live="polite"></p>
     <div id="gen"></div>
   </section>
+  <section id="panel-pb" role="tabpanel" aria-labelledby="tab-pb" hidden>
+    <div class="panel gen-bar">
+      <span class="caption">A house rule, not from the books (R24)</span>
+      <h1>Point Buy</h1>
+      <p>Your GM sets a point limit. Each ability costs its rank number, so Excellent 24 costs 24. Choosing a Power is free, but its rank costs its number, and a Power marked x2 pays double. The GM's grants cost nothing unless you untick them.</p>
+      <div class="fields pb-setup">
+        <label>Point limit <input id="pb-limit" type="number" min="0" step="1" inputmode="numeric" placeholder="From your GM"></label>
+        <label>Highest rank allowed <select id="pb-cap"></select></label>
+      </div>
+      <p id="pb-typical" class="muted"></p>
+      <div class="row">
+        <button type="button" class="btn secondary" id="pb-reset">Reset</button>
+        <button type="button" class="btn secondary" id="pb-print">Print the hero</button>
+      </div>
+      <form id="pb-save" class="save-row">
+        <label>Hero name <input name="name" type="text" maxlength="80" autocomplete="off" required placeholder="e.g. Nightwing"></label>
+        <button type="submit" class="btn" id="pb-save-btn">Save hero</button>
+        <button type="button" class="btn secondary" id="pb-save-new" hidden>Save as a new hero</button>
+        <p id="pb-save-status" class="muted" aria-live="polite"></p>
+      </form>
+    </div>
+    <div id="pb-readout" class="pb-readout"></div>
+    <div id="pb"></div>
+  </section>
   <section id="panel-heroes" role="tabpanel" aria-labelledby="tab-heroes" hidden>
     <div class="heroes">
       <div class="panel hero-list-panel">
@@ -128,7 +153,7 @@
         <h1>My heroes</h1>
         <p id="heroes-status" class="muted" aria-live="polite"></p>
         <ol id="heroes-list" class="hero-list"></ol>
-        <p class="muted">Build one on the Generator tab and save it there.</p>
+        <p class="muted">Build one on the Generator or Point Buy tab and save it there.</p>
       </div>
       <div id="sheet-wrap" hidden>
         <div class="panel sheet-tools row">

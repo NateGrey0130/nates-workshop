@@ -7,9 +7,36 @@ separate from them.
 
 **On the hub since the launch PR.** Until the generator worked the page existed
 at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
-decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Four tabs,
-each linkable: `#feat`, `#powers`, `#gen`, `#heroes` (the heroes a person has
-saved) and `#gear` (the Players' Book weapons and vehicles).
+decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Six tabs,
+each linkable: `#feat`, `#powers`, `#gen`, `#pb` (Point Buy, below), `#heroes`
+(the heroes a person has saved) and `#gear` (the Players' Book weapons and
+vehicles).
+
+## Point Buy
+
+A second way to make a hero, and **a house rule, not from any book** (R24). The
+GM gives a point limit and the highest rank allowed; the player buys the seven
+abilities and any Powers, and a total stays at the top of the screen while
+they do. It goes amber with less than a tenth of the limit left, and red once
+it is over.
+
+- **An ability costs its exact rank number.** Excellent 24 costs 24. Any
+  number can be typed, or the up and down buttons step to the next rank's
+  standard number (24 up is Remarkable 30, down is Excellent 20).
+- **Choosing a Power costs nothing; its rank costs its number**, and a Power
+  the UPB marks `*` (two slots) pays double. There is no limit on how many.
+- **Nothing else costs points.** Resources and Popularity are picked freely.
+  A Point Buy hero has no body type, origin, weakness, Talents or Contacts.
+- **The GM's grants** - Powers, ability bonuses (a flat amount added to the
+  number), and anything else written down - each carry an "Exclude from
+  points" tick, on by default. They also ignore the cap.
+- **Going over the limit, a rank above the cap, or a blank ability warns
+  and still saves.** The GM decides.
+
+Each line offers the most it can afford, and a new Power starts at the most
+the budget allows, up to Good. For scale, the tab prices 400 rolled heroes
+the same way (fixed seed, so the figure does not move) and says what a
+typical one costs. The last limit and cap are remembered in the browser.
 
 ## Sources
 
@@ -84,7 +111,7 @@ prints it. Migration `082`.
 | `id` | a UUID the endpoint makes; the page never chooses one |
 | `owner_email` | the Access email that saved it. **Every query is scoped to it**, as MediaVault's are, so a hero someone else owns answers exactly like one that does not exist |
 | `name` | the hero's name, 80 characters at most |
-| `build` | JSON: the generator's seeds and picks, so the hero reopens in the generator exactly as it was made |
+| `build` | JSON: the generator's seeds and picks, so the hero reopens in the generator exactly as it was made - or, for a Point Buy hero, `{ mode: 'pointbuy', pb }` with what was bought, which reopens it on that tab |
 | `snapshot` | JSON: what that built, resolved to names and numbers at save time. **The sheet draws only from this**, so a later correction to a table here cannot quietly change a saved hero |
 | `sheet` | JSON: what the player writes on the sheet - identity lines, background, notes - and the numbers tracked in play (Health and Karma now, Karma pool, Advancement fund) |
 
@@ -185,6 +212,14 @@ book, not a slip:
   Body Gd). Its description on PB p.52 gives Control In, Speed Ex, Body Ty; the
   table is the book's statistics and the description is colour.
 
+And one that is not from any book at all:
+
+- **R24** **Point Buy is a house rule** (Nate, 2026-09-24): abilities cost their
+  exact rank number, a Power's rank costs its number and double for a `*`
+  Power, choosing a Power is free, the GM's grants are excluded by a tick and
+  ignore the cap, and going over warns rather than refuses. See *Point Buy*
+  above; the rules are in `js/pointbuy.js`.
+
 How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
 many body types it combines and the chance of keeping each trait (50%, 33%,
 25%, 20%), then rolls each type - never Compound or Changeling again, never the
@@ -230,6 +265,7 @@ by roll, and they decide nothing here.
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
 | `js/gear.js` | the Gear tab's search, and reading a printed rank abbreviation back onto the ladder |
 | `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
+| `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |

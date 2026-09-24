@@ -10,6 +10,7 @@ import { makeBrowser } from './js/browser.js';
 import { makeGenerator, newSeeds, STEPS, PRIMARY } from './js/generator.js';
 import { snapshot, renderSheet, tagline } from './js/sheet.js';
 import { makeGear } from './js/gear.js';
+import { makePointBuy, emptyBuild as emptyPb, normalise as normalisePb } from './js/pointbuy.js';
 
 export const APP = 'marvel-heroes';
 
@@ -658,9 +659,352 @@ function initGenerator(gen, data, tabs) {
   };
 }
 
+// ---------------------------------------------------------------- point buy
+
+// R24, a house rule: the rules are in js/pointbuy.js. Number boxes update the
+// running totals as they are typed (refresh), and redraw the whole panel only
+// when a line is added, removed or ticked (draw), so typing keeps its caret.
+function initPointBuy(pb, gen, browser, tabs) {
+  const root = $('#pb');
+  const readout = $('#pb-readout');
+  const limitIn = $('#pb-limit');
+  const capSel = $('#pb-cap');
+  const rankName = (id) => gen.ladder.find((r) => r.id === id)?.name ?? id;
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage may be blocked */ } },
+  };
+  // The last limit and cap anyone set here, which a fresh build starts from.
+  const setup = () => store.get('mh-pb-setup') || {};
+  let state = store.get('mh-pb');
+  state = { build: state?.build ? normalisePb(state.build, pb) : emptyPb(setup()), saved: state?.saved || null };
+  const save = () => store.set('mh-pb', state);
+  const b = () => state.build;
+
+  capSel.innerHTML = pb.capRanks.map((r) => `<option value="${r.id}">${esc(r.name)}${r.max === null ? '' : ` (up to ${r.max})`}</option>`).join('');
+
+  // One line's live parts: its rank, its cost, the cap flag, and the button
+  // that sets the most it can afford.
+  function live(kind, key) {
+    const l = pb.ledger(b()).lines.find((x) => x.kind === kind && x.key === key);
+    const n = l.number;
+    const r = n === null ? null : pb.rankFor(n);
+    // A grant that costs nothing has no budget to fit inside.
+    const most = kind === 'power' && b().powers[key].gm && b().powers[key].free ? null : pb.maxAffordable(b(), kind, key);
+    const t = kind === 'ability' ? pb.hero(b()).total[key] : null;
+    const withGrants = t !== null && t !== n ? `<span class="pb-with">${t} with grants (${esc(pb.rankFor(t)?.name ?? '-')})</span>` : '';
+    return `<span class="pb-rank">${r ? esc(r.name) : '<span class="muted">-</span>'}</span>
+      <span class="pb-cost">${l.cost} pts${l.multiplier === 2 ? ' <span class="tag" title="Takes two Power slots, so it pays double">x2</span>' : ''}</span>
+      ${l.overCap ? '<span class="pb-flag">above the cap</span>' : ''}${withGrants}
+      ${most !== null && most !== n ? `<button type="button" class="linklike" data-most="${kind}:${key}" data-n="${most}">most you can afford: ${most} (${esc(pb.rankFor(most).name)})</button>` : ''}`;
+  }
+  const numberBox = (kind, key, n, label) => `<span class="pb-number">
+      <button type="button" class="btn secondary small" data-step="${kind}:${key}" data-d="-1" aria-label="${esc(label)} down a rank" ${n === null || pb.step(n, -1) === null ? 'disabled' : ''}>&#9660;</button>
+      <input type="number" min="1" step="1" inputmode="numeric" data-num="${kind}:${key}" value="${n ?? ''}" aria-label="${esc(label)}">
+      <button type="button" class="btn secondary small" data-step="${kind}:${key}" data-d="1" aria-label="${esc(label)} up a rank">&#9650;</button></span>`;
+
+  function drawReadout() {
+    const l = pb.ledger(b());
+    const lim = b().limit;
+    const over = l.remaining !== null && l.remaining < 0;
+    const low = !over && l.remaining !== null && lim > 0 && l.remaining < lim * 0.1;
+    readout.className = `pb-readout${over ? ' over' : low ? ' low' : ''}`;
+    const parts = [`Abilities ${l.abilities}`, `Powers ${l.powers}`, ...(l.grants ? [`Grants ${l.grants}`] : [])].join(' &middot; ');
+    readout.innerHTML = `<p class="pb-total">${lim === null
+      ? `<strong>Spent ${l.spent}</strong> <span>Set a point limit above</span>`
+      : `<strong>${over ? `${-l.remaining} over` : `${l.remaining} left`}</strong> <span>Spent ${l.spent} of ${lim}</span>`}</p>
+      <p class="pb-parts">${parts}${l.overCap.length ? ` &middot; <b>${l.overCap.length} above the cap</b>` : ''}</p>`;
+    const h = pb.hero(b());
+    const hk = $('#pb-hk', root);
+    if (hk) hk.innerHTML = `<span><strong>Health</strong> ${h.health}</span> <span><strong>Karma</strong> ${h.karma}</span>`;
+  }
+  // After a keystroke: every line's live parts and the totals, and nothing else.
+  function refresh() {
+    for (const el of root.querySelectorAll('[data-live]')) {
+      const [kind, key] = el.dataset.live.split(':');
+      el.innerHTML = live(kind, kind === 'ability' ? key : Number(key));
+    }
+    for (const el of root.querySelectorAll('[data-step]')) {
+      const [kind, key] = el.dataset.step.split(':');
+      const n = kind === 'ability' ? b().abilities[key] : b().powers[Number(key)].number;
+      el.disabled = Number(el.dataset.d) < 0 ? n === null || pb.step(n, -1) === null : false;
+    }
+    drawReadout();
+    save();
+  }
+
+  const searchBox = (which, label) => `<div class="pb-search">
+      <label>${label} <input type="search" data-search="${which}" autocomplete="off" placeholder="A name, a word or a code"></label>
+      <ul class="pb-results" data-results="${which}"></ul></div>`;
+  function results(which, q) {
+    const box = root.querySelector(`[data-results="${which}"]`);
+    if (!q.trim()) { box.innerHTML = ''; return; }
+    const have = new Set(b().powers.map((p) => p.code));
+    const hits = browser.search({ query: q }).slice(0, 8);
+    box.innerHTML = hits.map((p) => `<li><button type="button" class="linklike" data-add="${which}" data-code="${p.code}" ${have.has(p.code) ? 'disabled' : ''}>
+        <span class="code">${p.code}</span> ${esc(p.name)}${p.double ? ' <span class="tag">x2</span>' : ''}${have.has(p.code) ? ' <span class="muted">(already chosen)</span>' : ''}</button></li>`).join('')
+      || '<li class="muted">Nothing matches.</li>';
+  }
+
+  function draw() {
+    const x = b();
+    if (document.activeElement !== limitIn) limitIn.value = x.limit ?? '';
+    capSel.value = x.cap;
+    const h = pb.hero(x);
+    const aRows = PRIMARY.map((a) => `<tr>
+        <th scope="row">${LABEL[a]}</th>
+        <td>${numberBox('ability', a, x.abilities[a], LABEL[a])}</td>
+        <td class="pb-live" data-live="ability:${a}">${live('ability', a)}</td>
+      </tr>`).join('');
+    const freeSel = (k) => `<label>${LABEL[k]} <select data-free="${k}">${pb.freeRanks.map((r) => `<option value="${r.id}" ${r.id === x[k] ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label>`;
+    const powerRow = (p, i) => {
+      const d = pb.powerByCode[p.code];
+      return `<li class="pb-power">
+        <div><span class="code">${p.code}</span> <strong>${esc(d.name)}</strong>
+          <button type="button" class="linklike" data-remove="power:${i}">remove</button>
+          <span class="pw-sum">${esc(d.summary)}</span></div>
+        <div class="pb-line">${numberBox('power', i, p.number, `${d.name} rank`)}
+          <span class="pb-live" data-live="power:${i}">${live('power', i)}</span>
+          ${p.gm ? `<label class="check"><input type="checkbox" data-free-power="${i}" ${p.free ? 'checked' : ''}> Exclude from points</label>` : ''}</div></li>`;
+    };
+    const bought = x.powers.map((p, i) => [p, i]).filter(([p]) => !p.gm);
+    const granted = x.powers.map((p, i) => [p, i]).filter(([p]) => p.gm);
+    const bonusRow = (y, i) => `<li class="pb-grant">
+        <label>Ability <select data-bonus="${i}" data-field="ability">${PRIMARY.map((a) => `<option value="${a}" ${a === y.ability ? 'selected' : ''}>${LABEL[a]}</option>`).join('')}</select></label>
+        <label>Amount <input type="number" min="0" step="1" inputmode="numeric" data-bonus="${i}" data-field="amount" value="${y.amount}"></label>
+        <label class="grow">Why <input type="text" maxlength="120" data-bonus="${i}" data-field="reason" value="${esc(y.reason)}" placeholder="e.g. the serum"></label>
+        <label class="check"><input type="checkbox" data-bonus="${i}" data-field="free" ${y.free ? 'checked' : ''}> Exclude from points</label>
+        <button type="button" class="linklike" data-remove="bonus:${i}">remove</button></li>`;
+    const itemRow = (y, i) => `<li class="pb-grant">
+        <label class="grow">Grant <input type="text" maxlength="120" data-item="${i}" data-field="name" value="${esc(y.name)}" placeholder="e.g. a jet pack"></label>
+        <label class="grow">Notes <input type="text" maxlength="400" data-item="${i}" data-field="notes" value="${esc(y.notes)}"></label>
+        <label>Points <input type="number" min="0" step="1" inputmode="numeric" data-item="${i}" data-field="points" value="${y.points}" ${y.free ? 'disabled' : ''}></label>
+        <label class="check"><input type="checkbox" data-item="${i}" data-field="free" ${y.free ? 'checked' : ''}> Exclude from points</label>
+        <button type="button" class="linklike" data-remove="item:${i}">remove</button></li>`;
+
+    const named = x.items.filter((y) => y.name.trim());
+    const summary = `
+      <section class="panel alt hero-card" aria-label="The hero">
+        <span class="caption">Your hero, point buy</span>
+        <p class="stats">${PRIMARY.map((a) => `<span><b>${LABEL[a][0]}</b> ${h.total[a] === null ? '-' : `${esc(pb.rankFor(h.total[a])?.name ?? '-')} (${h.total[a]})`}</span>`).join(' ')}</p>
+        <p class="stats"><span><b>Health</b> ${h.health}</span> <span><b>Karma</b> ${h.karma}</span>
+          <span><b>Resources</b> ${esc(rankName(x.resources))}</span> <span><b>Popularity</b> ${esc(rankName(x.popularity))}</span></p>
+        <p><b>Powers:</b> ${x.powers.map((p) => `${esc(pb.powerByCode[p.code].name)} ${esc(pb.rankFor(p.number).name)} (${p.number})${p.gm ? ' [GM]' : ''}`).join('; ') || 'none'}</p>
+        ${x.bonuses.length || named.length ? `<p><b>GM grants:</b> ${[
+          ...x.bonuses.map((y) => `${LABEL[y.ability]} +${y.amount}${y.reason ? ` (${esc(y.reason)})` : ''}`),
+          ...named.map((y) => esc(y.name))].join('; ')}</p>` : ''}
+        <p class="muted">${pb.ledger(x).spent} points spent${x.limit === null ? '' : ` of ${x.limit}`}; highest rank allowed ${esc(rankName(x.cap))}.</p>
+      </section>`;
+
+    // Put focus back on the control that had it, as the generator does.
+    const had = document.activeElement;
+    let again = null;
+    if (had && root.contains(had)) {
+      const attr = [...had.attributes].find((a) => a.name.startsWith('data-') && a.name !== 'data-field');
+      again = attr ? `[${attr.name}="${CSS.escape(attr.value)}"]${had.dataset.field ? `[data-field="${had.dataset.field}"]` : ''}${had.dataset.d ? `[data-d="${had.dataset.d}"]` : ''}` : null;
+    }
+    root.innerHTML = `${summary}
+      <section class="panel step">
+        <h2>Abilities</h2>
+        <p class="muted">Type any number, or step a rank at a time. The rank follows the number: Excellent is 16 to 25.</p>
+        <div class="table-wrap"><table class="abilities pb-abilities">
+          <thead><tr><th>Ability</th><th>Number</th><th>Rank and cost</th></tr></thead>
+          <tbody>${aRows}</tbody></table></div>
+        <p class="secondaries" id="pb-hk"></p>
+        <div class="fields">${freeSel('resources')}${freeSel('popularity')}</div>
+        <p class="muted">Resources and Popularity cost nothing.</p>
+      </section>
+      <section class="panel step">
+        <h2>Powers</h2>
+        <p class="muted">Choosing a Power is free; you pay for its rank.</p>
+        ${searchBox('buy', 'Add a Power')}
+        <ol class="powers pb-powers">${bought.map(([p, i]) => powerRow(p, i)).join('') || '<li class="muted">No Powers yet.</li>'}</ol>
+      </section>
+      <section class="panel step">
+        <h2>GM grants</h2>
+        <p class="muted">What the GM gives outright. Each costs nothing while "Exclude from points" is ticked, and the cap does not apply.</p>
+        <h3>Powers</h3>
+        ${searchBox('gm', 'Grant a Power')}
+        <ol class="powers pb-powers">${granted.map(([p, i]) => powerRow(p, i)).join('') || '<li class="muted">None.</li>'}</ol>
+        <h3>Ability bonuses</h3>
+        <ul class="pb-grants">${x.bonuses.map(bonusRow).join('')}</ul>
+        <button type="button" class="btn secondary small" data-new="bonus">Add a bonus</button>
+        <h3>Other grants</h3>
+        <ul class="pb-grants">${x.items.map(itemRow).join('')}</ul>
+        <button type="button" class="btn secondary small" data-new="item">Add a grant</button>
+      </section>`;
+    if (again) root.querySelector(again)?.focus();
+    drawSaved();
+    drawReadout();
+    save();
+  }
+
+  const setNum = (kind, key, n) => {
+    if (kind === 'ability') b().abilities[key] = n;
+    else b().powers[Number(key)].number = n ?? 1;
+  };
+  const wholeOf = (v) => (v === '' ? null : Math.floor(Number(v)));
+  root.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.dataset.search) return results(el.dataset.search, el.value);
+    const whole = wholeOf(el.value);
+    if (el.dataset.num) {
+      const [kind, key] = el.dataset.num.split(':');
+      setNum(kind, key, whole !== null && whole >= 1 ? whole : null);
+      return refresh();
+    }
+    if (el.dataset.bonus !== undefined && el.type !== 'checkbox' && el.tagName !== 'SELECT') {
+      const y = b().bonuses[Number(el.dataset.bonus)];
+      if (el.dataset.field === 'amount') y.amount = whole !== null && whole >= 0 ? whole : 0;
+      else y.reason = el.value;
+      return refresh();
+    }
+    if (el.dataset.item !== undefined && el.type !== 'checkbox') {
+      const y = b().items[Number(el.dataset.item)];
+      if (el.dataset.field === 'points') y.points = whole !== null && whole >= 0 ? whole : 0;
+      else y[el.dataset.field] = el.value;
+      return refresh();
+    }
+  });
+  root.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.dataset.search) return;
+    if (el.dataset.num || (el.type !== 'checkbox' && el.tagName === 'INPUT')) return draw();   // the summary card catches up
+    if (el.dataset.free) { b()[el.dataset.free] = el.value; return draw(); }
+    if (el.dataset.freePower !== undefined) { b().powers[Number(el.dataset.freePower)].free = el.checked; return draw(); }
+    if (el.dataset.bonus !== undefined) {
+      const y = b().bonuses[Number(el.dataset.bonus)];
+      if (el.dataset.field === 'free') y.free = el.checked;
+      if (el.dataset.field === 'ability') y.ability = el.value;
+      return draw();
+    }
+    if (el.dataset.item !== undefined && el.dataset.field === 'free') {
+      b().items[Number(el.dataset.item)].free = el.checked;
+      return draw();
+    }
+  });
+  root.addEventListener('click', (e) => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.dataset.step) {
+      const [kind, key] = t.dataset.step.split(':');
+      const cur = kind === 'ability' ? b().abilities[key] : b().powers[Number(key)].number;
+      const cap = kind === 'power' && b().powers[Number(key)].gm ? null : b().cap;
+      const n = pb.step(cur, Number(t.dataset.d), cap);
+      if (n === null) return;
+      setNum(kind, key, n);
+      return draw();
+    }
+    if (t.dataset.most) {
+      const [kind, key] = t.dataset.most.split(':');
+      setNum(kind, key, Number(t.dataset.n));
+      return draw();
+    }
+    if (t.dataset.add) {
+      const code = t.dataset.code;
+      if (b().powers.some((p) => p.code === code)) return;        // one of each, as the generator does
+      const gm = t.dataset.add === 'gm';
+      b().powers.push({ code, number: pb.startingNumber(b(), code, gm), gm, free: gm });
+      draw();
+      root.querySelector(`[data-search="${t.dataset.add}"]`)?.focus();
+      return;
+    }
+    if (t.dataset.remove) {
+      const [kind, i] = t.dataset.remove.split(':');
+      b()[{ power: 'powers', bonus: 'bonuses', item: 'items' }[kind]].splice(Number(i), 1);
+      return draw();
+    }
+    if (t.dataset.new === 'bonus') { b().bonuses.push({ ability: 'strength', amount: 10, reason: '', free: true }); return draw(); }
+    if (t.dataset.new === 'item') { b().items.push({ name: '', notes: '', points: 0, free: true }); return draw(); }
+  });
+
+  // The setup, which is also what a fresh build starts from next time.
+  const keepSetup = () => store.set('mh-pb-setup', { limit: b().limit, cap: b().cap });
+  limitIn.addEventListener('input', () => {
+    const n = wholeOf(limitIn.value);
+    b().limit = n !== null && n >= 0 ? n : null;
+    keepSetup();
+    refresh();
+  });
+  limitIn.addEventListener('change', draw);
+  capSel.addEventListener('change', () => { b().cap = capSel.value; keepSetup(); draw(); });
+  $('#pb-reset').addEventListener('click', () => {
+    if (!confirm('Clear every ability, Power and grant? The point limit and cap stay.')) return;
+    state = { build: emptyPb({ limit: b().limit, cap: b().cap }), saved: null };
+    saveStatus.textContent = '';
+    saveForm.elements.name.value = '';
+    draw();
+  });
+  $('#pb-print').addEventListener('click', () => window.print());
+
+  // What a rolled hero costs at these prices, worked out once, when the tab is
+  // first opened: a few hundred heroes is a moment's work, but not at boot.
+  let typical = null;
+  document.addEventListener('mh-tab', (e) => {
+    if (e.detail !== 'pb' || typical) return;
+    typical = pb.rolledCosts();
+    $('#pb-typical').textContent = `For scale: priced this way, a rolled hero costs about ${typical.median} points, and half of them cost between ${typical.low} and ${typical.high}.`;
+  });
+
+  // Saving, exactly as the generator does it.
+  const saveForm = $('#pb-save');
+  const saveStatus = $('#pb-save-status');
+  function drawSaved() {
+    const s = state.saved;
+    $('#pb-save-btn').textContent = s ? 'Save changes' : 'Save hero';
+    $('#pb-save-new').hidden = !s;
+    if (s && document.activeElement !== saveForm.elements.name) saveForm.elements.name.value = s.name;
+  }
+  async function saveHero(asNew) {
+    const name = saveForm.elements.name.value.trim();
+    if (!name) { saveStatus.textContent = 'Give the hero a name first.'; saveForm.elements.name.focus(); return; }
+    saveStatus.textContent = 'Saving...';
+    const r = await heroesApi.save({
+      ...(state.saved && !asNew ? { id: state.saved.id } : {}),
+      name,
+      build: { mode: 'pointbuy', pb: b() },
+      snapshot: pb.snapshot(b()),
+    });
+    if (!r.ok) { saveStatus.textContent = `Not saved: ${failure(r)}`; return; }
+    state.saved = { id: r.body.id, name };
+    save();
+    drawSaved();
+    // Going over, or leaving an ability blank, warns and still saves.
+    const l = pb.ledger(b());
+    const warn = [
+      l.empty.length ? `${l.empty.map((a) => LABEL[a]).join(', ')} ${l.empty.length === 1 ? 'has' : 'have'} no number yet.` : '',
+      l.remaining !== null && l.remaining < 0 ? `It is ${-l.remaining} points over the limit.` : '',
+      l.overCap.length ? `${l.overCap.length} ${l.overCap.length === 1 ? 'rank is' : 'ranks are'} above the cap.` : '',
+    ].filter(Boolean).join(' ');
+    saveStatus.textContent = `Saved ${name}. It is on the My heroes tab.${warn ? ` ${warn}` : ''}`;
+  }
+  saveForm.addEventListener('submit', (e) => { e.preventDefault(); saveHero(false); });
+  $('#pb-save-new').addEventListener('click', () => saveHero(true));
+  draw();
+
+  return {
+    open(hero) {
+      state = { build: normalisePb(hero.build.pb, pb), saved: { id: hero.id, name: hero.name } };
+      draw();
+      saveStatus.textContent = `Editing ${hero.name}. Save changes updates it and keeps its sheet.`;
+      tabs.show('pb');
+    },
+    forget(id) {
+      if (state.saved?.id !== id) return;
+      state.saved = null;
+      save();
+      drawSaved();
+      saveStatus.textContent = '';
+    },
+  };
+}
+
 // ---------------------------------------------------------------- my heroes
 
-function initHeroes(generator) {
+// A saved hero goes back to the tab that built it: a Point Buy build says so
+// in its mode, and anything else came from the generator.
+function initHeroes(generator, pointBuy) {
+  const tabFor = (h) => (h?.build?.mode === 'pointbuy' ? pointBuy : generator);
   const list = $('#heroes-list');
   const status = $('#heroes-status');
   const wrap = $('#sheet-wrap');
@@ -687,6 +1031,7 @@ function initHeroes(generator) {
     open = r.body.hero;
     dirty = false;
     sheetEl.innerHTML = renderSheet(open);
+    $('#sheet-open-gen').textContent = open.build?.mode === 'pointbuy' ? 'Open in Point Buy' : 'Open in the generator';
     wrap.hidden = false;
     sheetStatus.textContent = '';
     for (const b of list.querySelectorAll('.hero-item')) b.classList.toggle('on', b.dataset.hero === id);
@@ -718,9 +1063,9 @@ function initHeroes(generator) {
   });
   $('#sheet-open-gen').addEventListener('click', () => {
     if (!open) return;
-    if (dirty && !confirm('The sheet has changes that are not saved. Open the generator anyway?')) return;
+    if (dirty && !confirm('The sheet has changes that are not saved. Open it for editing anyway?')) return;
     dirty = false;
-    generator.open(open);
+    tabFor(open).open(open);
   });
   $('#sheet-print').addEventListener('click', () => window.print());
   $('#sheet-delete').addEventListener('click', async () => {
@@ -729,6 +1074,7 @@ function initHeroes(generator) {
     if (!r.ok) { sheetStatus.textContent = `Not deleted: ${failure(r)}`; return; }
     const gone = open.name;
     generator.forget(open.id);
+    pointBuy.forget(open.id);
     open = null;
     dirty = false;
     wrap.hidden = true;
@@ -747,7 +1093,9 @@ async function boot() {
       'body-types', 'origins', 'weakness', 'counts', 'talents', 'contacts', 'equipment');
     initFeat(makeFeat(data.ranks, data.universal));
     initBrowser(makeBrowser(data.powers, data['power-tables']), data.tables);
-    initHeroes(initGenerator(makeGenerator(data), data, tabs));
+    const gen = makeGenerator(data);
+    const pointBuy = initPointBuy(makePointBuy(data, gen), gen, makeBrowser(data.powers, data['power-tables']), tabs);
+    initHeroes(initGenerator(gen, data, tabs), pointBuy);
     initGear(makeGear(data.equipment, data.ranks), data.equipment);
   } catch (err) {
     $('#load-error').hidden = false;
