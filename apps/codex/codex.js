@@ -34,6 +34,7 @@
 const SECTIONS = [
   {
     id: 'spells',
+    groupNoun: 'level',
     label: 'Spells',
     key: (r) => String(r.name).toLowerCase(),
     title: (r) => r.name,
@@ -48,6 +49,7 @@ const SECTIONS = [
   },
   {
     id: 'psionics',
+    groupNoun: 'category',
     label: 'Psionics',
     key: (r) => String(r.name).toLowerCase(),
     title: (r) => r.name,
@@ -61,6 +63,7 @@ const SECTIONS = [
   },
   {
     id: 'gear',
+    groupNoun: 'category',
     label: 'Gear',
     key: (r) => String(r.slug).toLowerCase(),
     title: (r) => r.name,
@@ -94,6 +97,7 @@ const SECTIONS = [
   },
   {
     id: 'vehicles',
+    groupNoun: 'class',
     label: 'Vessels',
     key: (r) => String(r.slug).toLowerCase(),
     title: (r) => r.name,
@@ -124,6 +128,7 @@ const SECTIONS = [
   // #spells / #gear link already sent keep opening where they did.
   {
     id: 'skills',
+    groupNoun: 'category',
     label: 'Skills',
     key: (r) => String(r.name).toLowerCase(),
     title: (r) => r.name,
@@ -139,6 +144,7 @@ const SECTIONS = [
   },
   {
     id: 'classes',
+    groupNoun: 'class type',
     label: 'Classes',
     key: (r) => String(r.slug).toLowerCase(),
     title: (r) => r.name,
@@ -162,6 +168,7 @@ const SECTIONS = [
   // "varies" and the schedule is in the notes - 22 of the 25 have one.
   {
     id: 'talents',
+    groupNoun: 'tier',
     label: 'Talents',
     key: (r) => String(r.name).toLowerCase(),
     title: (r) => r.name,
@@ -196,6 +203,7 @@ const SECTIONS = [
   // is one, and typing "alter physical" is the group.
   {
     id: 'super-abilities',
+    groupNoun: 'tier',
     label: 'Super Abilities',
     key: (r) => String(r.name).toLowerCase(),
     title: (r) => r.name,
@@ -240,6 +248,7 @@ const SECTIONS = [
   // on the campaign page's People tab, and each one rolls separately.
   {
     id: 'creatures',
+    groupNoun: 'kind',
     label: 'Creatures',
     key: (r) => String(r.slug).toLowerCase(),
     title: (r) => r.name,
@@ -308,6 +317,8 @@ const S = {
   text: {},             // "<section>:<key>" -> the entry's text, once fetched
   textLoading: {},      // -> a fetch for it is in flight
   textError: {},        // -> what went wrong; cleared by the next attempt
+  group: '',            // one meta value ("Level 3", "Weapons") or '' for all
+  sort: '',             // a sortsFor() key, '' = the catalog's own order
   focus: null,          // "<section>:<key>" a link named - scrolled to and marked
   missing: null,        // the key a link named that this section does not hold
 };
@@ -501,13 +512,97 @@ function hasText(sec, r) {
 function visible() {
   const sec = byId(S.tab);
   const terms = S.filter.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return rowsFor(S.tab).filter((r) => {
+  // A group this section does not have (a stale link) narrows nothing, rather
+  // than narrowing to nothing.
+  const group = (groupsFor(sec) || []).some(([g]) => g === S.group) ? S.group : '';
+  const rows = rowsFor(S.tab).filter((r) => {
     // A NULL system is unrestricted, which is how every picker already reads it.
     if (S.system && r.system && r.system !== 'both' && r.system !== S.system) return false;
+    if (group && sec.meta(r) !== group) return false;
     if (!terms.length) return true;
     const hay = sec.hay(r).toLowerCase();
     return terms.every((t) => hay.includes(t));
   });
+  return sortRows(sec, rows);
+}
+
+// ── narrowing and ordering ──
+//
+// THE GROUP IS THE ROW'S OWN META LINE - "Level 3", "Healing", "Weapons",
+// "R.C.C.", "Major" - rather than a field chosen per section. That line is
+// already what each section decided a reader groups by, it already arrives
+// with every row, and it means a new section gets a group filter without
+// anyone remembering to give it one. A section whose meta is closer to a
+// caption than a category (a notable NPC's title) has too many distinct
+// values to be a menu, and gets none: GROUP_MAX is where a dropdown stops
+// being faster than typing.
+const GROUP_MAX = 60;
+
+function groupsFor(sec) {
+  const rows = rowsFor(sec.id);
+  if (!rows.length) return null;
+  const n = new Map();
+  for (const r of rows) {
+    const g = sec.meta(r);
+    if (g) n.set(g, (n.get(g) || 0) + 1);
+  }
+  if (n.size < 2 || n.size > GROUP_MAX) return null;
+  // Natural order, so "Level 10" follows "Level 9" rather than "Level 1".
+  return [...n.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
+}
+
+// The DEFAULT is the catalog's own order, which the endpoint already groups
+// (spells by level, psionics by category, gear by category) - so it is named
+// for what it is rather than hidden behind "name". Every section can sort by
+// name and by book; the rest are the one number a section is compared on.
+// A missing number sorts LAST in either direction, never first: "no price" is
+// not the cheapest item.
+const SORT_EXTRA = {
+  spells: [['ppe', 'P.P.E. cost', (r) => r.ppe]],
+  psionics: [['isp', 'I.S.P. cost', (r) => r.isp]],
+  gear: [['cost', 'Price', (r) => (typeof r.cost === 'number' ? r.cost : null)],
+         ['weight', 'Weight', (r) => r.weight_lbs]],
+  skills: [['base', 'Base %', (r) => (r.base ? Number(r.base) : null)]],
+  notables: [['level', 'Level', (r) => r.level]],
+  talents: [['acquire', 'Cost to acquire', (r) => r.acquire_ppe]],
+};
+
+function sortsFor(sec) {
+  return [['', 'Catalog order'], ['name', 'Name'], ['book', 'Book'],
+          ...(SORT_EXTRA[sec.id] || []).map(([k, label]) => [k, label])];
+}
+
+function sortRows(sec, rows) {
+  const by = sortsFor(sec).some(([k]) => k === S.sort) ? S.sort : '';
+  if (!by) return rows;
+  const byName = (a, b) => String(sec.title(a)).localeCompare(String(sec.title(b)));
+  if (by === 'name') return [...rows].sort(byName);
+  if (by === 'book') {
+    return [...rows].sort((a, b) =>
+      String(a.source_book || '￿').localeCompare(String(b.source_book || '￿'), undefined, { numeric: true })
+      || byName(a, b));
+  }
+  const get = (SORT_EXTRA[sec.id] || []).find(([k]) => k === by)[2];
+  const num = (r) => { const v = get(r); return v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v); };
+  return [...rows].sort((a, b) => {
+    const x = num(a), y = num(b);
+    if (x == null || y == null) return x == null && y == null ? byName(a, b) : x == null ? 1 : -1;
+    return x - y || byName(a, b);
+  });
+}
+
+// The narrowing lives in the address too, so a filtered view is a link: the
+// search (`?q=`), system, group and sort. The HASH stays the section and
+// entry, as "a link to one entry" below describes, and the two never mix -
+// an entry's Copy link is deliberately free of whatever filter you had on.
+function syncQuery() {
+  const p = new URLSearchParams();
+  if (S.filter) p.set('q', S.filter);
+  if (S.system) p.set('system', S.system);
+  if (S.group) p.set('group', S.group);
+  if (S.sort) p.set('sort', S.sort);
+  const qs = p.toString();
+  history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
 }
 
 // ── rendering ──
@@ -575,6 +670,7 @@ function listHtml(sec) {
     return `<div class="panel"><p class="muted">Loading ${escHtml(sec.label.toLowerCase())}…</p></div>`;
   }
 
+  const groups = groupsFor(sec);
   const shown = visible();
   const total = rowsFor(sec.id).length;
   const withText = shown.filter((r) => hasText(sec, r)).length;
@@ -588,6 +684,15 @@ function listHtml(sec) {
         <option value="palladium-fantasy"${S.system === 'palladium-fantasy' ? ' selected' : ''}>Palladium Fantasy</option>
         <option value="nightbane"${S.system === 'nightbane' ? ' selected' : ''}>Nightbane</option>
         <option value="heroes-unlimited"${S.system === 'heroes-unlimited' ? ' selected' : ''}>Heroes Unlimited</option>
+      </select>
+      ${groups ? `<select id="codex-group" aria-label="Only one ${escHtml(sec.groupNoun || 'group')}">
+        <option value="">Every ${escHtml(sec.groupNoun || 'group')}</option>
+        ${groups.map(([g, n]) => `<option value="${escHtml(g)}"${S.group === g ? ' selected' : ''}>${
+          escHtml(g)} (${n})</option>`).join('')}
+      </select>` : ''}
+      <select id="codex-sort" aria-label="Sort by">
+        ${sortsFor(sec).map(([k, label]) => `<option value="${k}"${(S.sort || '') === k ? ' selected' : ''}>${
+          k ? 'Sort: ' : ''}${escHtml(label)}</option>`).join('')}
       </select>
       <span class="muted small">${shown.length} of ${total}${
         shown.length && !sec.noText ? ` · ${withText} with text` : ''}</span>
@@ -622,7 +727,12 @@ document.addEventListener('click', (e) => {
     // against vessels, and carrying it across would open a tab on "nothing
     // matches that" with no visible reason.
     S.filter = '';
+    // A group and a sort belong to one section's rows for the same reason.
+    // The system does not, and stays.
+    S.group = '';
+    S.sort = '';
     location.hash = '#' + S.tab;
+    syncQuery();
     render();
     loadSection(S.tab);
     return;
@@ -662,11 +772,12 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('input', (e) => {
-  if (e.target.id === 'codex-filter') { S.filter = e.target.value; S.filterFocused = true; S.missing = null; render(); }
+  if (e.target.id === 'codex-filter') { S.filter = e.target.value; S.filterFocused = true; S.missing = null; syncQuery(); render(); }
 });
 
 document.addEventListener('change', (e) => {
-  if (e.target.id === 'codex-system') { S.system = e.target.value; S.filterFocused = false; render(); }
+  const pick = { 'codex-system': 'system', 'codex-group': 'group', 'codex-sort': 'sort' }[e.target.id];
+  if (pick) { S[pick] = e.target.value; S.filterFocused = false; syncQuery(); render(); }
 });
 
 // ─── a link to one entry ───
@@ -729,9 +840,12 @@ function applyHash() {
     const k = tab + ':' + key;
     S.open.add(k);
     S.focus = k;
-    // The one row a link names must be on screen: a system filter chosen
-    // earlier would otherwise hide it and read as a broken link.
+    // The one row a link names must be on screen: a filter, system or group
+    // chosen earlier would otherwise hide it and read as a broken link.
     S.system = '';
+    S.filter = '';
+    S.group = '';
+    syncQuery();
   }
   render();
   // Loaded already: settle now. Not yet: loadSection settles when it lands.
@@ -742,6 +856,23 @@ function applyHash() {
 // The page's own tab clicks set the hash too; that arrives here as well and
 // is harmless, because the state it describes is the state already showing.
 window.addEventListener('hashchange', applyHash);
+
+// A filtered view arrives as ?q=&system=&group=&sort= (syncQuery above).
+// Read before the hash, so an entry link can still clear what would hide it.
+// A value the page does not offer is dropped rather than trusted: the group
+// and sort are checked against the section when it renders, the system here.
+{
+  const p = new URLSearchParams(location.search);
+  S.filter = p.get('q') || '';
+  const sys = p.get('system') || '';
+  S.system = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'].includes(sys) ? sys : '';
+  S.group = p.get('group') || '';
+  S.sort = p.get('sort') || '';
+  // The section too, or applyHash would read #gear as a change of tab away
+  // from the default and throw the search it just restored away with it.
+  const { tab } = parseHash();
+  if (SECTIONS.some((s) => s.id === tab)) S.tab = tab;
+}
 
 render();
 loadIndex();
