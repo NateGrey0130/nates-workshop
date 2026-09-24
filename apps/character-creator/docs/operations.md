@@ -338,7 +338,7 @@ local-only script is protected as soon as it says so.
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 337 |
+| classes (published, live) | 341 |
 | skills | 390 |
 | per-system skill bases | 92 |
 | spells | 974 |

@@ -692,6 +692,15 @@ export const CORE_SDC_BY_CLASS = {
   'nb-package-warlord': '3D6',
   'nb-nightbane-sorcerer': '3D6',
   'nb-nightbane-mystic': '3D6',
+  // Rifts World Book 29: Madhaven, printed 26-38 - the Order of the White Rose.
+  // None prints an S.D.C. formula; each prints only a pool bonus (+20, +10,
+  // +15, +20). Printed 28 and 37 file the Mystic Knight and the Keeper among
+  // the magic O.C.C.s, and the Gateway Knight is a Mystic Knight, so those three
+  // are 1D6. The Squire is the Order's non-Mystic fighter and is 3D6.
+  'knight-of-the-white-rose': '1D6',
+  'gateway-knight': '1D6',
+  'keeper-of-the-garden': '1D6',
+  'squire-of-the-white-rose': '3D6',
 };
 
 // An M.D.C. being tracks M.D.C. INSTEAD of hit points and S.D.C., so silence

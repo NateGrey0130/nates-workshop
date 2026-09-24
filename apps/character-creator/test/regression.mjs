@@ -3697,6 +3697,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     'hu-edu-bachelors': 13,
     'hu-edu-masters': 13,
     'hu-edu-doctorate': 14,
+    // Madhaven, printed 30-31: the Squire of the White Rose picks ONE of ten
+    // areas of specialty. The book's two-MOS trade is prose.
+    'squire-of-the-white-rose': 10,
   };
   // How many programs each level GRANTS, which is the half `choose` holds and
   // the half that did nothing before F82. Pinned separately from the option

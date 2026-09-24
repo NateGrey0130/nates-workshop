@@ -200,7 +200,8 @@ What is deliberately left, with the reason:
 | 2026-09-24 | — | cache built (136 pp, text layer), survey written, offset +1 verified at four folios, `madhaven` registered in `books.json` |
 | 2026-09-24 | [#1337](https://github.com/NateGrey0130/nates-workshop/pull/1337) | registry, survey and queue row. MERGED |
 | 2026-09-24 | [#1338](https://github.com/NateGrey0130/nates-workshop/pull/1338) | `add-madhaven-gear.sql`: 40 gear rows (15 weapon, 9 armor, 6 gear, 10 magic). All 40 missing in `catalog-diff --remote` against 2830 rows; every number from a render; `book-reconcile` 40 of 40 agree. Applied `--remote` before the PR, both read-backs hold |
+| 2026-09-24 | O.C.C. PR | the four White Rose O.C.C.s: `knight-of-the-white-rose`, `squire-of-the-white-rose`, `gateway-knight`, `keeper-of-the-garden`, with their White Rose healing kits and the TW Barrier Shield as starting gear (live since #1338). `occ_group: magic` for the three Mystic Knights (printed 28 and 37 call them magic O.C.C.s) and `men-of-arms` for the Squire; `CORE_SDC_BY_CLASS` 1D6 / 3D6 to match. 0 stub rows. Applied `--remote` before the PR |
 
 ### What remains
 
-Steps 3-6 of the extraction plan: the O.C.C.s, the R.C.C.s, the creatures and the notables.
+Steps 4-6 of the extraction plan: the R.C.C.s, the creatures and the notables.
