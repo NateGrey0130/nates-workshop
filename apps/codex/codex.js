@@ -154,6 +154,12 @@ const SECTIONS = [
       ['Type', r.category === 'rcc' ? 'Racial character class' : r.category === 'occ' ? 'Occupational character class' : null],
       ['System', SYSTEM_LABEL[r.system] || r.system],
     ],
+    // The way from reading a class to playing one. A LINK, not a write: the
+    // wizard takes `?class=<slug>` and does the rest, including asking before
+    // it replaces a build already under way (there is one draft per person).
+    // So this page stays read-only by construction, as the smoke test holds it.
+    extra: (r) => `<p class="noprint"><a class="btn btn-sm" href="/apps/character-creator/?class=${
+      encodeURIComponent(r.slug)}">Start a character with this class</a></p>`,
     notes: () => [],
     hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
   },
