@@ -2,8 +2,10 @@
 // this file holds the settings, the city on screen and its locks, and draws
 // them: text output, lock and reroll, JSON export (Phase 1), the map (Phase
 // 2), keeping a city in one of the G.M.'s campaigns with what the players
-// may see of it (Phase 3), and Phase 4's stats, stock and "Flesh out". This browser's storage holds the city on screen as
-// a convenience, so a reload does not lose it; the record is the saved row.
+// may see of it (Phase 3), and Phase 4's stats, stock and "Flesh out", and a
+// city's theme (five AI calls that write its tables, js/city-engine.js). This
+// browser's storage holds the city on screen as a convenience, so a reload
+// does not lose it; the record is the saved row.
 //
 // A module, so it can import the engine; the inline handlers reach it through
 // window.City. escHtml()/escJs() come from /shared/js/ui.js, api() from
@@ -11,7 +13,8 @@
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet,
-  stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor }
+  stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor,
+  THEME_PARTS, THEME_INTENSITY, themePrompt, parseThemePart, assembleThemePack }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 import { needsOccupation } from '/apps/character-creator/js/parser.js';
@@ -32,7 +35,13 @@ const currency = (c) => tablesFor(c.settings.system)?.CURRENCY || 'gp';
 const S = {
   settings: { system: 'palladium-fantasy', population: 2500, npcCount: 12, everyRace: true,
     races: [{ id: 'human', name: 'Human', pct: 100, theme: '' }] },
-  nameTheme: '',
+  // The city's theme (one box; it replaced the naming theme on 2026-09-24),
+  // how strongly it takes over, and the parts written for it so far. A part
+  // is kept while its inputs are unchanged, so Generate does not pay for a
+  // theme it already has, and a part that failed is the only one asked again.
+  themeText: '', intensity: 'strong',
+  themeParts: {},    // part -> { key, value }
+  themeStatus: {},   // part -> 'writing' | 'done' | an error message
   seed: '',
   rccs: null,        // the setting's published R.C.C.s, for the race rows
   city: null,
@@ -51,14 +60,21 @@ const S = {
 
 // ── storage: a convenience, never the record ──
 function save() {
-  try { localStorage.setItem(STORE, JSON.stringify({ settings: S.settings, nameTheme: S.nameTheme, city: S.city, saved: S.saved, dirty: S.dirty })); }
+  try {
+    localStorage.setItem(STORE, JSON.stringify({ settings: S.settings, themeText: S.themeText, intensity: S.intensity,
+      themeParts: S.themeParts, city: S.city, saved: S.saved, dirty: S.dirty }));
+  }
   catch { /* private mode, full storage - the page works without it */ }
 }
 function restore() {
   try {
     const v = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (v?.settings) S.settings = v.settings;
-    if (typeof v?.nameTheme === 'string') S.nameTheme = v.nameTheme;
+    // A naming theme kept from before themes is the city theme now.
+    if (typeof v?.themeText === 'string') S.themeText = v.themeText;
+    else if (typeof v?.nameTheme === 'string') S.themeText = v.nameTheme;
+    if (THEME_INTENSITY[v?.intensity]) S.intensity = v.intensity;
+    if (v?.themeParts && typeof v.themeParts === 'object') S.themeParts = v.themeParts;
     // A city kept by Phase 1 has no map yet: draw it once, then it is kept.
     if (v?.city?.version === 1) S.city = v.city.map ? v.city : withMap(v.city);
     if (S.city && v?.saved?.id) { S.saved = v.saved; S.dirty = !!v.dirty; }
@@ -135,12 +151,22 @@ function settingsHtml() {
     </div>
     <p class="muted small" style="margin:6px 0 0">A race at 20% or more gets its own quarter.</p>
 
-    <h3>Names</h3>
-    <input type="text" class="picker-input" style="width:100%" value="${esc(S.nameTheme)}"
-      placeholder="Naming theme, e.g. Venetian merchant princes, Norse dock workers (optional)"
-      aria-label="Naming theme" onchange="City.theme(this.value)">
-    <p class="muted small" style="margin:6px 0 0">With a theme, one AI call invents a name pool for this city and it is kept
-      with the city: locks and rerolls draw from it and never call again. Without one, the built-in ${esc(SETTING_LABEL[s.system] || s.system)} names.</p>
+    <h3>Theme</h3>
+    <input type="text" class="picker-input" style="width:100%" value="${esc(S.themeText)}"
+      placeholder="City theme, e.g. Old West boomtown, Neo Tokyo arcology (optional)"
+      aria-label="City theme" onchange="City.theme(this.value)">
+    <div class="rowline city-theme-row" style="flex-wrap:wrap;margin-top:6px">
+      ${THEME_EXAMPLES.map((x) => `<button type="button" class="btn btn-sm btn-ghost" onclick="City.theme('${escJs(x)}')">${esc(x)}</button>`).join('')}
+      <label class="small">Intensity <select aria-label="Theme intensity" onchange="City.intensity(this.value)">
+        ${Object.keys(THEME_INTENSITY).map((k) => `<option value="${k}"${k === S.intensity ? ' selected' : ''}>${INTENSITY_LABEL[k]}</option>`).join('')}
+      </select></label>
+    </div>
+    <p class="muted small" style="margin:6px 0 0">With a theme, five AI calls write this city's own lines - people, buildings,
+      the overview, the streets and the names - in about a minute, and they are kept with the city: locks and rerolls draw
+      from them and never call again. ${esc(SETTING_LABEL[s.system] || s.system)} still decides the races, classes, gear and
+      rules. A race's own lines change only if the theme, or that race's box above, names the race. The players never see
+      the theme. Without one, the built-in ${esc(SETTING_LABEL[s.system] || s.system)} lines and names.</p>
+    ${themeStatusHtml()}
 
     <div class="rowline" style="flex-wrap:wrap;margin-top:10px">
       <label class="small">Seed <input type="text" value="${esc(S.seed)}" placeholder="random" style="width:9em"
@@ -151,6 +177,67 @@ function settingsHtml() {
     ${problems.length ? `<ul class="small warn">${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
     ${S.msg ? `<p class="small${S.err ? ' err' : ''}">${esc(S.msg)}</p>` : ''}
   </div>`;
+}
+
+// ── the theme ──
+const THEME_EXAMPLES = ['Old West boomtown', 'Neo Tokyo arcology', 'Venetian canal republic', 'Dust-bowl mining camp'];
+const INTENSITY_LABEL = { light: 'Light - about a third', strong: 'Strong - about two thirds', total: 'Total - all of it' };
+const PART_LABEL = { people: 'people', buildings: 'buildings', overview: 'overview', streets: 'streets', names: 'names' };
+// What a part was written from. The names depend on each race's own naming
+// box too; every other part only on the setting, the theme and the races.
+function partKey(part, text) {
+  const races = S.settings.races.map((x) => [x.id, part === 'names' ? x.theme || '' : '']);
+  return JSON.stringify([S.settings.system, text, races]);
+}
+function themeStatusHtml() {
+  const text = S.themeText.trim();
+  if (!text) return '';
+  const parts = Object.keys(THEME_PARTS);
+  const kept = parts.filter((p) => S.themeParts[p]?.key === partKey(p, text));
+  const mark = (p) => {
+    const st = S.themeStatus[p];
+    if (st === 'writing') return `<span class="tag">${PART_LABEL[p]} …</span>`;
+    if (kept.includes(p)) return `<span class="tag">${PART_LABEL[p]} ✓</span>`;
+    if (st && st !== 'done') return `<span class="tag warn" title="${esc(st)}">${PART_LABEL[p]} ✗</span>`;
+    return `<span class="tag muted">${PART_LABEL[p]}</span>`;
+  };
+  return `<div class="rowline small city-theme-status" style="flex-wrap:wrap;margin-top:6px">
+    <span class="muted">${kept.length === parts.length ? 'Theme written:' : 'Theme parts:'}</span> ${parts.map(mark).join(' ')}
+    ${kept.length ? '<button type="button" class="btn btn-sm btn-ghost" onclick="City.rewriteTheme()">↻ Write the theme again</button>' : ''}
+  </div>`;
+}
+// The five parts, in parallel: each is written unless it is already kept for
+// these inputs, and each is checked as it arrives. A part that fails leaves
+// the others kept, and Generate asks again for that part alone.
+async function writeTheme(text) {
+  const todo = Object.keys(THEME_PARTS).filter((p) => S.themeParts[p]?.key !== partKey(p, text));
+  for (const p of todo) S.themeStatus[p] = 'writing';
+  render();
+  await Promise.all(todo.map(async (part) => {
+    try {
+      const { system, prompt, schema } = themePrompt(part, S.settings, text);
+      // Low effort and a schema: measured 2026-09-24, the longest part took 68s
+      // (the proxy gives up near 100s); without them it thought for 150s and
+      // spent all 12,000 tokens before the answer ended.
+      const res = await claudeRequest({ model: MODEL, max_tokens: 16000, system,
+        output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+        messages: [{ role: 'user', content: prompt }] });
+      if (res.stop_reason === 'max_tokens') throw new Error('it was cut off before it finished');
+      const value = parseThemePart(part, res.content?.map((b) => b.text || '').join('') || '', S.settings, text);
+      S.themeParts[part] = { key: partKey(part, text), value };
+      S.themeStatus[part] = 'done';
+    } catch (err) {
+      S.themeStatus[part] = err.message;
+    }
+    save(); render();
+  }));
+  const failed = Object.keys(THEME_PARTS).filter((p) => S.themeParts[p]?.key !== partKey(p, text));
+  if (failed.length) {
+    throw new Error(`The theme's ${failed.join(' and ')} ${failed.length === 1 ? 'was' : 'were'} not written (${
+      S.themeStatus[failed[0]]}). Generate again to ask for ${failed.length === 1 ? 'that part' : 'those parts'} alone.`);
+  }
+  const parts = Object.fromEntries(Object.keys(THEME_PARTS).map((p) => [p, S.themeParts[p].value]));
+  return assembleThemePack(text, parts, S.settings);
 }
 
 // ── the city ──
@@ -339,7 +426,8 @@ function cityHtml() {
         <button type="button" class="btn btn-sm" onclick="City.exportJson()">⬇ Export JSON</button>
       </span>
     </div>
-    <p class="muted small">Seed ${esc(c.seed)}${c.pool ? ' · names from this city\'s own AI name pool' : ' · built-in names'}</p>
+    <p class="muted small">Seed ${esc(c.seed)}${c.theme ? ` · theme: ${esc(c.theme.pack.title)} (${esc(c.theme.intensity)})` : ''}${
+      c.pool ? ' · names from this city\'s own AI name pool' : ' · built-in names'}</p>
     ${c.warnings?.length ? `<ul class="small warn">${c.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
     ${card('overview', `<p><b>${esc(o.size)}</b> of ${Number(o.population).toLocaleString()} ·
       ruled by ${esc(o.government)} · ${esc(o.wealth)} · lives on ${esc(o.trade)}</p>
@@ -427,9 +515,17 @@ async function generate() {
   const seed = S.seed.trim() ? (Number(S.seed) >>> 0 || hashSeed(S.seed)) : newSeed();
   try {
     let pool = null;
-    if (S.nameTheme.trim() || S.settings.races.some((x) => x.theme?.trim())) {
+    let theme = null;
+    const text = S.themeText.trim();
+    if (text) {
+      S.msg = 'Writing the theme - about a minute…'; render();
+      // The names come with the theme, as its pool; the city keeps the rest.
+      const { names, ...pack } = await writeTheme(text);
+      pool = names;
+      theme = { intensity: S.intensity, pack };
+    } else if (S.settings.races.some((x) => x.theme?.trim())) {
       S.msg = 'Asking for a name pool…'; render();
-      const { system, prompt } = poolPrompt(S.settings, S.nameTheme.trim() || 'fantasy');
+      const { system, prompt } = poolPrompt(S.settings, 'fantasy');
       // 12,000 tokens: the first try at 4,000 stopped mid-list (stop_reason
       // max_tokens) once the model's thinking and ~300 names were counted.
       const res = await claudeRequest({ model: MODEL, max_tokens: 12000, system,
@@ -437,7 +533,7 @@ async function generate() {
       if (res.stop_reason === 'max_tokens') throw new Error('The name pool was cut off before it finished - try again, or a shorter theme');
       pool = parsePool(res.content?.map((b) => b.text || '').join('') || '', S.settings);
     }
-    S.city = withMap(generateCity(S.settings, seed, pool));
+    S.city = withMap(generateCity(S.settings, seed, pool, theme));
     // A new city is not the saved one: saving it makes another row.
     S.saved = null; S.dirty = false; S.keepMsg = '';
     S.msg = '';
@@ -492,7 +588,9 @@ window.City = {
     S.settings.races = restAreHuman(S.settings.races, { ...human, theme: '' });
     save(); render();
   },
-  theme(v) { S.nameTheme = v; save(); },
+  theme(v) { S.themeText = String(v || ''); save(); render(); },
+  intensity(v) { if (THEME_INTENSITY[v]) S.intensity = v; save(); },
+  rewriteTheme() { S.themeParts = {}; S.themeStatus = {}; save(); render(); },
   seed(v) { S.seed = v; },
   generate,
   lock(id) { S.city = toggleLock(S.city, id); changed(); save(); render(); },

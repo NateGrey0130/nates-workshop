@@ -2936,13 +2936,18 @@ check('and none of them with ?mine=1',
 // this reads it as a player and a stranger and fails if any text the city
 // holds for the G.M. alone appears anywhere in the response - an NPC, a
 // secret, a hook, a rumour true or false, an encounter, a shop's owner or
-// stock, the overview, or a pin that was not revealed.
+// stock, the overview, or a pin that was not revealed. The city carries a
+// theme, which is the G.M.'s too: its description and title never reach them.
 {
-  const { generateCity, stockShop } = await import('../../city-creator/js/city-engine.js');
+  const { generateCity, stockShop, validateThemePack } = await import('../../city-creator/js/city-engine.js');
+  const { westPack } = await import('./fixtures/city-theme-pack.mjs');
   const { layoutMap } = await import('../../city-creator/js/city-map.js');
   const gear = (await api('GET', '/codex?section=gear')).body.gear || [];
-  let city = generateCity({ system: 'palladium-fantasy', population: 12000, npcCount: 12, everyRace: true,
-    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] }, 424242);
+  const citySettings = { system: 'palladium-fantasy', population: 12000, npcCount: 12, everyRace: true,
+    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'dwarf', name: 'Dwarf', pct: 25 }] };
+  const pack = validateThemePack({ ...westPack(), prompt: 'THEME-PROMPT-FOR-THE-GM a frontier boomtown', title: 'THEME-TITLE-FOR-THE-GM' },
+    citySettings);
+  let city = generateCity(citySettings, 424242, null, { intensity: 'strong', pack });
   for (const s of city.shops) city = stockShop(city, s.id, gear);
   // "Flesh out" (Phase 4d) is the G.M.'s, even on a pin the players can see.
   city.places[0].flesh = 'GM-FLESH-ON-A-REVEALED-PLACE';
@@ -2981,10 +2986,11 @@ check('and none of them with ?mine=1',
     ...city.shops.filter((s) => s.id !== 'shop-0').map((s) => s.name),
     ...city.places.filter((p) => p.id !== 'place-0').map((p) => p.name),
     'SECRET-PUBLIC-TEXT-ON-AN-NPC', 'GM-FLESH-ON-A-REVEALED-PLACE', 'GM-FLESH-ON-AN-NPC',
+    pack.prompt, pack.title, ...(city.overview.extras || []).map((x) => x.text),
   ].filter((t) => typeof t === 'string' && t.length > 3 && !allowed.includes(t));
   const body = JSON.stringify(asPlayer.body);
   const leaked = gmOnly.filter((t) => body.includes(t));
-  check('NOTHING the city holds for the G.M. reaches a player - no NPC, secret, rumour, encounter, stock or hidden pin',
+  check('NOTHING the city holds for the G.M. reaches a player - no NPC, secret, rumour, encounter, stock, hidden pin or theme',
     gmOnly.length > 100 && leaked.length === 0, `${gmOnly.length} G.M.-only strings; leaked: ${leaked.slice(0, 5).join(' | ')}`);
   check('the view carries only its own fields',
     JSON.stringify(Object.keys(v).sort()) === JSON.stringify(['campaign_id', 'id', 'map', 'name', 'pins'])

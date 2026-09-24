@@ -35,9 +35,10 @@ sheets). Built one phase per PR; the plan's phases are:
   Anvil, a body-chop-shop's Cybernetics and Bionics), set with a surname or one
   of the setting's `SHOP_ADJECTIVES` - "Greenholt's Forge", "The Northern Body
   Works". Taverns and bars keep the places theme's names, which already read
-  as taverns. **With a naming theme**, one call to
-  `/api/claude` returns a name pool that is saved with the city; locks and
-  rerolls draw from that pool and never call again.
+  as taverns. **With a theme** (below), the names come from the pool one of
+  the theme's calls writes, and **with only a race's own naming box** filled,
+  one call to `/api/claude` returns that pool alone. Either way it is saved
+  with the city; locks and rerolls draw from it and never call again.
 - **Population** sets the number of districts, shops and places and whether
   there are walls. **The named-NPC count** is the G.M.'s alone, and shop owners
   are among those NPCs - with fewer NPCs than shops, one person owns two.
@@ -49,6 +50,30 @@ sheets). Built one phase per PR; the plan's phases are:
 - **Refuse, never pad.** A table line whose `{slot}` the city cannot fill is
   skipped, and a name source that runs out leaves the entry unnamed and says so,
   rather than repeating a name.
+
+## Themes
+
+**A theme** - *Old West boomtown*, *Neo Tokyo arcology* - is typed in the
+settings, and five AI calls write the city's own lines for it: people,
+buildings, the overview, the streets and the names, in parallel, in about a
+minute. The pack is saved **with the city** (`city.theme`), so locks and
+rerolls draw from it and never call again, and Generate reuses it until the
+theme, the setting or the races change. It is **layered on the setting**: the
+setting still decides the races, classes, Codex gear and rules, and
+**Intensity** decides how much of each table the theme takes - Light about a
+third, Strong about two thirds, Total all of it. A Total theme that runs out
+says so rather than borrowing the setting's lines.
+
+Every answer is checked before it is used (`validateThemePack`): each themed
+shop kind names one of the setting's stock rules and stocks by it, each mapped
+role names a class the setting can roll, and a rumour may use only the slots a
+city fills. **A race's own lines change only for a race the theme names** - in
+the theme, or in that race's naming box; anything the answer says about
+another race is thrown away. The players never see the theme.
+
+Each call runs at low effort with a JSON schema. Measured 2026-09-24: the
+slowest part took 68 seconds, where one unbounded call thought for 150 and ran
+out of tokens - and the proxy gives up near 100.
 
 ## The map
 
@@ -71,8 +96,8 @@ prints in the page's strokes, sized to share a page with the overview.
 ## Keeping a city
 
 **Keep it in a campaign** saves the city into one of the G.M.'s own campaigns of
-the same game (`cities`, migration 080) - the whole city as generated, map and
-AI name pool included, never just its seed, so a later change to the tables or
+the same game (`cities`, migration 080) - the whole city as generated, map,
+AI name pool and theme included, never just its seed, so a later change to the tables or
 the layout cannot change it. There is no owner column: a city's G.M. is its
 campaign's `gm_email`, and `requireCampaign` is the check.
 

@@ -197,6 +197,72 @@ function shopKinds(v, T, taken, what) {
   });
 }
 
+// A theme is written in five calls (THEME_PARTS), each small enough to finish
+// well inside the proxy's time limit, and each part is checked on its own as
+// it arrives, so a part that fails is retried alone.
+export const THEME_PARTS = {
+  people: ['NPC_ROLES', 'LOOKS', 'PERSONALITIES', 'WANTS', 'SECRETS'],
+  buildings: ['DISTRICT_KINDS', 'MOODS', 'PLACES', 'SHOP_ADJECTIVES'],
+  overview: ['GOVERNMENTS', 'TRADES', 'WALLS', 'FACTIONS'],
+  streets: ['CITY_QUIRKS', 'RUMOURS', 'ENCOUNTERS'],
+  names: [],
+};
+const partTables = (pack, keys) => Object.fromEntries(keys.map((k) => [k, lineList(pack.tables?.[k], tableLabel(k), THEME_MIN_LINES)]));
+const rollableOccs = (T) => [...new Set([...Object.values(T.ROLE_OCC), T.OWNER_OCC])];
+const settingShopLabels = (T) => [...T.SHOP_TYPES, ...Object.values(T.RACE_LINES).flatMap((x) => x.shops || [])].map((t) => t.label);
+const namedRaces = (settings, prompt) => (settings.races || []).filter((x) => raceNamed(x, prompt));
+
+function checkPeople(pack, T) {
+  const tables = partTables(pack, THEME_PARTS.people);
+  const rollable = new Set(rollableOccs(T));
+  const roleOcc = {};
+  for (const [role, occ] of Object.entries(pack.roleOcc || {})) {
+    if (!tables.NPC_ROLES.includes(role)) throw new Error(`The theme maps "${role}", which is not one of its roles`);
+    if (!rollable.has(occ)) throw new Error(`The theme's "${role}" rolls as "${occ}", which the setting cannot roll`);
+    roleOcc[role] = occ;
+  }
+  return { tables, roleOcc };
+}
+function checkBuildings(pack, T, settings, prompt) {
+  const tables = partTables(pack, THEME_PARTS.buildings);
+  const taken = new Set(settingShopLabels(T).map((l) => l.toLowerCase()));
+  const shopTypes = shopKinds(pack.shopTypes, T, taken, 'shop kinds');
+  if (shopTypes.length < 3) throw new Error(`The theme has ${shopTypes.length} shop kinds; it needs 3`);
+  const mapStyle = pack.mapStyle ?? 'organic';
+  if (!MAP_STYLES.includes(mapStyle)) throw new Error(`The map style "${mapStyle}" is not one of ${MAP_STYLES.join(', ')}`);
+  const raceLines = {};
+  for (const [id, lines] of Object.entries(pack.raceLines || {})) {
+    const race = (settings.races || []).find((x) => x.id === id);
+    if (!race || !raceNamed(race, prompt)) continue;
+    const own = {};
+    if (lines?.quirks) own.quirks = lineList(lines.quirks, `${race.name} quirks`, 1);
+    // A named race's shops replace its own, so they may keep their names.
+    const mine = new Set((T.RACE_LINES[id]?.shops || []).map((t) => t.label.toLowerCase()));
+    if (lines?.shops) own.shops = shopKinds(lines.shops, T, new Set([...taken].filter((l) => !mine.has(l))), `${race.name} shops`);
+    if (Object.keys(own).length) raceLines[id] = own;
+  }
+  return { tables, shopTypes, mapStyle, ...(Object.keys(raceLines).length ? { raceLines } : {}) };
+}
+function checkOverview(pack) {
+  const tables = partTables(pack, THEME_PARTS.overview);
+  const overviewExtras = (pack.overviewExtras || []).map((x) => {
+    const label = String(x?.label || '').trim();
+    if (!label) throw new Error('An overview line in the theme has no label');
+    return { key: `theme-${slug(label)}`, label, lines: lineList(x.lines, `lines for "${label}"`, 3) };
+  });
+  if (overviewExtras.length > 4) throw new Error('The theme has more than four overview lines');
+  const title = typeof pack.title === 'string' ? pack.title.trim().slice(0, 80) : '';
+  return { tables, overviewExtras, ...(title ? { title } : {}) };
+}
+function checkStreets(pack) {
+  const tables = partTables(pack, THEME_PARTS.streets);
+  for (const line of tables.RUMOURS) {
+    const bad = [...line.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).filter((s) => !RUMOUR_SLOTS.includes(s));
+    if (bad.length) throw new Error(`A rumour uses {${bad[0]}}, which a city cannot fill`);
+  }
+  return { tables };
+}
+
 /**
  * A theme pack checked against the setting it is for, or an Error saying what
  * is wrong. Returns a clean copy: every field the engine reads, and nothing
@@ -209,48 +275,152 @@ export function validateThemePack(pack, settings) {
   if (pack.system && pack.system !== settings.system) throw new Error(`The theme is for ${pack.system}, not ${settings.system}`);
   const prompt = String(pack.prompt || '').trim();
   if (!prompt) throw new Error('The theme has no description');
-  const tables = {};
   const extra = Object.keys(pack.tables || {}).filter((k) => !THEME_TABLES.includes(k));
   if (extra.length) throw new Error(`The theme has tables the city does not use: ${extra.join(', ')}`);
-  for (const key of THEME_TABLES) tables[key] = lineList(pack.tables?.[key], tableLabel(key), THEME_MIN_LINES);
-  for (const line of tables.RUMOURS) {
-    const bad = [...line.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).filter((s) => !RUMOUR_SLOTS.includes(s));
-    if (bad.length) throw new Error(`A rumour uses {${bad[0]}}, which a city cannot fill`);
+  const people = checkPeople(pack, T);
+  const buildings = checkBuildings(pack, T, settings, prompt);
+  const overview = checkOverview(pack);
+  const streets = checkStreets(pack);
+  const all = { ...people.tables, ...buildings.tables, ...overview.tables, ...streets.tables };
+  return { v: 1, system: settings.system, title: overview.title || prompt.slice(0, 80), prompt,
+    tables: Object.fromEntries(THEME_TABLES.map((k) => [k, all[k]])),
+    shopTypes: buildings.shopTypes, roleOcc: people.roleOcc, mapStyle: buildings.mapStyle,
+    overviewExtras: overview.overviewExtras,
+    ...(buildings.raceLines ? { raceLines: buildings.raceLines } : {}),
+    ...(pack.names ? { names: checkPool(pack.names, []) } : {}) };
+}
+
+// ── writing a theme: the five calls ──
+//
+// Each call carries a JSON schema (structured output), so the answer is always
+// JSON of the right shape - a first measurement without one got a line of code
+// in the middle of a list. The schema's enums also hold the answer to what it
+// must choose from: the setting's stock rules, the classes it can roll, the map
+// styles. The check still runs on every answer; the schema cannot count lines
+// or see a rumour's {slot}. Examples come from the setting's own tables, so
+// the answer matches the lines it is mixed with.
+const SETTING_BLURB = { 'palladium-fantasy': 'Palladium Fantasy, a sword-and-sorcery fantasy world',
+  rifts: 'Rifts, a post-apocalyptic science-fantasy Earth of mega-damage, magic and the Coalition' };
+const THEME_SYSTEM = 'You write tables for a tabletop role-playing game city generator. Write original material only - '
+  + 'never quote or retell published books.';
+const ex = (T, key) => `e.g. "${T[key][1]}"`;
+const S_STR = { type: 'string' };
+const S_LIST = { type: 'array', items: S_STR };
+const S_OBJ = (props) => ({ type: 'object', properties: props, required: Object.keys(props), additionalProperties: false });
+const S_TABLES = (keys) => S_OBJ(Object.fromEntries(keys.map((k) => [k, S_LIST])));
+const S_SHOP = (T) => S_OBJ({ label: S_STR, stockAs: { type: 'string', enum: Object.keys(T.SHOP_STOCK) },
+  names: S_LIST, specialties: S_LIST });
+
+export function themePrompt(part, settings, text) {
+  const T = TABLES[settings.system];
+  if (!T) throw new Error(`No tables for ${settings.system}`);
+  const intro = `The city's setting is ${SETTING_BLURB[settings.system] || settings.system}. The game master's theme for `
+    + `this city: "${text}".
+Every line must read as that theme while still belonging in the setting. Keep each line short - a phrase or one sentence - `
+    + `and make the lines of a list all different from each other.
+The city's peoples: ${(settings.races || []).map((x) => x.name).join(', ')}.
+`;
+  if (part === 'names') {
+    const { system, prompt } = poolPrompt(settings, text);
+    const culture = S_OBJ({ given: S_LIST, family: S_LIST });
+    return { system, prompt, schema: S_OBJ({ city: S_LIST, district: S_LIST, street: S_LIST, shop: S_LIST,
+      cultures: S_OBJ(Object.fromEntries((settings.races || []).map((x) => [x.id, culture]))) }) };
   }
-  const taken = new Set([...T.SHOP_TYPES, ...Object.values(T.RACE_LINES).flatMap((x) => x.shops || [])]
-    .map((t) => t.label.toLowerCase()));
-  const shopTypes = shopKinds(pack.shopTypes, T, taken, 'shop kinds');
-  if (shopTypes.length < 3) throw new Error(`The theme has ${shopTypes.length} shop kinds; it needs 3`);
-  const rollable = new Set([...Object.values(T.ROLE_OCC), T.OWNER_OCC]);
-  const roleOcc = {};
-  for (const [role, occ] of Object.entries(pack.roleOcc || {})) {
-    if (!tables.NPC_ROLES.includes(role)) throw new Error(`The theme maps "${role}", which is not one of its roles`);
-    if (!rollable.has(occ)) throw new Error(`The theme's "${role}" rolls as "${occ}", which the setting cannot roll`);
-    roleOcc[role] = occ;
+  if (part === 'people') {
+    return { system: THEME_SYSTEM, schema: S_OBJ({ tables: S_TABLES(THEME_PARTS.people),
+      roleOcc: { type: 'array', items: S_OBJ({ role: S_STR, occ: { type: 'string', enum: rollableOccs(T) } }) } }),
+    prompt: `${intro}
+Write, in "tables":
+- NPC_ROLES: 40 jobs or roles a townsperson has, lower case, one to three words, ${ex(T, 'NPC_ROLES')}
+- LOOKS: 40 short descriptions of how someone looks, lower case, ${ex(T, 'LOOKS')}
+- PERSONALITIES: 40 habits or manners, lower case, ${ex(T, 'PERSONALITIES')}
+- WANTS: 40 things a person wants, lower case, starting "to", ${ex(T, 'WANTS')}
+- SECRETS: 40 secrets, lower case, ${ex(T, 'SECRETS')}
+And in "roleOcc", for as many of your NPC_ROLES as fit, the role exactly as written there and the class a person in `
+      + `that job would be as a game character.` };
   }
-  const mapStyle = pack.mapStyle ?? 'organic';
-  if (!MAP_STYLES.includes(mapStyle)) throw new Error(`The map style "${mapStyle}" is not one of ${MAP_STYLES.join(', ')}`);
-  const overviewExtras = (pack.overviewExtras || []).map((x) => {
-    const label = String(x?.label || '').trim();
-    if (!label) throw new Error('An overview line in the theme has no label');
-    return { key: `theme-${slug(label)}`, label, lines: lineList(x.lines, `lines for "${label}"`, 3) };
-  });
-  if (overviewExtras.length > 4) throw new Error('The theme has more than four overview lines');
-  const raceLines = {};
-  for (const [id, lines] of Object.entries(pack.raceLines || {})) {
-    const race = (settings.races || []).find((x) => x.id === id);
-    if (!race || !raceNamed(race, prompt)) continue;
-    const own = {};
-    if (lines?.quirks) own.quirks = lineList(lines.quirks, `${race.name} quirks`, 1);
-    // A named race's shops replace its own, so they may keep their names.
-    const mine = new Set((T.RACE_LINES[id]?.shops || []).map((t) => t.label.toLowerCase()));
-    if (lines?.shops) own.shops = shopKinds(lines.shops, T, new Set([...taken].filter((l) => !mine.has(l))), `${race.name} shops`);
-    if (Object.keys(own).length) raceLines[id] = own;
+  if (part === 'buildings') {
+    const named = namedRaces(settings, text);
+    const styles = { organic: 'winding old streets', grid: 'a planned grid', rail: 'a railway line through town',
+      canal: 'built on canals or a river', vertical: 'a dense, towering core' };
+    return { system: THEME_SYSTEM, schema: S_OBJ({ tables: S_TABLES(THEME_PARTS.buildings),
+      shopTypes: { type: 'array', items: S_SHOP(T) },
+      mapStyle: { type: 'string', enum: MAP_STYLES },
+      ...(named.length ? { raceLines: S_OBJ(Object.fromEntries(named.map((x) => [x.id,
+        S_OBJ({ quirks: S_LIST, shops: { type: 'array', items: S_SHOP(T) } })]))) } : {}) }),
+    prompt: `${intro}
+Write, in "tables":
+- DISTRICT_KINDS: 40 kinds of district, one to three words, title case, ${ex(T, 'DISTRICT_KINDS')}
+- MOODS: 40 moods a district has, ${ex(T, 'MOODS')}
+- PLACES: 40 places of interest, each a name with a few words about it, ${ex(T, 'PLACES')}
+- SHOP_ADJECTIVES: 40 single words a shop is named with, title case, e.g. "${T.SHOP_ADJECTIVES[0]}"
+In "shopTypes", 10 kinds of shop or business: its "label" (e.g. Saloon), the stock rule its goods are closest to `
+      + `("stockAs"), 6 single words a business of that kind is named with ("names", e.g. Forge, Anvil), and 8 things one `
+      + `business of that kind is known for ("specialties", lower case, e.g. "${T.SHOP_TYPES[1].specialties[0]}"). No shop kind `
+      + `may be named any of these, which the setting already has: ${settingShopLabels(T).join(', ')}.
+In "mapStyle", the street plan that suits the theme: ${MAP_STYLES.map((m) => `${m} (${styles[m]})`).join(', ')}.${named.length
+      ? `\nIn "raceLines", for ${named.map((x) => `${x.name} ("${x.id}")`).join(', ')} as the theme describes them: 3 things `
+        + `true of the city because of that people ("quirks"), and 1 or 2 shop kinds of theirs ("shops").` : ''}` };
   }
-  return { v: 1, system: settings.system, title: String(pack.title || prompt).trim().slice(0, 80), prompt,
-    tables, shopTypes, roleOcc, mapStyle, overviewExtras,
-    ...(Object.keys(raceLines).length ? { raceLines } : {}),
-    ...(pack.names ? { names: pack.names } : {}) };
+  if (part === 'overview') {
+    const theirs = (T.OVERVIEW_EXTRAS || []).map((x) => x.label);
+    return { system: THEME_SYSTEM, schema: S_OBJ({ title: S_STR, tables: S_TABLES(THEME_PARTS.overview),
+      overviewExtras: { type: 'array', items: S_OBJ({ label: S_STR, lines: S_LIST }) } }),
+    prompt: `${intro}
+Write a "title" for this theme, two to four words. Then, in "tables":
+- GOVERNMENTS: 40 who rules the city, lower case, ${ex(T, 'GOVERNMENTS')}
+- TRADES: 40 what the city lives on, lower case, ${ex(T, 'TRADES')}
+- WALLS: 40 what the city's walls or defences are, lower case, ${ex(T, 'WALLS')}
+- FACTIONS: 40 factions, each "Name, who want or do something", ${ex(T, 'FACTIONS')}
+And in "overviewExtras", up to 3 more things this theme's city has that a game master would want at a glance, `
+      + `each a "label" (e.g. Law) and 8 alternatives for it ("lines", lower case).${theirs.length
+      ? ` The setting already gives ${theirs.join(', ')}; do not repeat them.` : ''}` };
+  }
+  if (part === 'streets') {
+    return { system: THEME_SYSTEM, schema: S_OBJ({ tables: S_TABLES(THEME_PARTS.streets) }),
+      prompt: `${intro}
+Write, in "tables":
+- CITY_QUIRKS: 40 odd facts about the city, ${ex(T, 'CITY_QUIRKS')}
+- RUMOURS: 40 rumours, ${ex(T, 'RUMOURS')}
+- ENCOUNTERS: 40 things that happen in the street, ${ex(T, 'ENCOUNTERS')}
+A rumour may name something in the city with these slots, which the generator fills: `
+      + `${RUMOUR_SLOTS.map((s) => `{${s}}`).join(' ')}. Use no other braces.` };
+  }
+  throw new Error(`No theme part "${part}"`);
+}
+
+const answerJson = (text) => {
+  const s = String(text || '').trim();
+  try { return JSON.parse(s.slice(s.indexOf('{'), s.lastIndexOf('}') + 1)); } catch { return null; }
+};
+
+// One part's answer, checked on its own. Returns what the part owns.
+export function parseThemePart(part, text, settings, prompt) {
+  if (part === 'names') return parsePool(text, settings);
+  const v = answerJson(text);
+  if (!v) throw new Error(`The theme's ${part} was not valid JSON`);
+  const T = TABLES[settings.system];
+  const pack = { ...v, tables: v.tables || {} };
+  if (part === 'people') {
+    // Asked for as a list of pairs, since a schema cannot key an object by role.
+    // A pair for a role the answer did not list could never be drawn: dropped.
+    const roles = new Set(Array.isArray(pack.tables.NPC_ROLES) ? pack.tables.NPC_ROLES.map((x) => String(x).trim()) : []);
+    const pairs = (Array.isArray(v.roleOcc) ? v.roleOcc : []).filter((x) => roles.has(String(x?.role).trim()));
+    return checkPeople({ ...pack, roleOcc: Object.fromEntries(pairs.map((x) => [String(x.role).trim(), x.occ])) }, T);
+  }
+  if (part === 'buildings') return checkBuildings(pack, T, settings, prompt);
+  if (part === 'overview') return checkOverview(pack);
+  if (part === 'streets') return checkStreets(pack);
+  throw new Error(`No theme part "${part}"`);
+}
+
+// The five parts, put together and checked whole.
+export function assembleThemePack(prompt, parts, settings) {
+  const { people, buildings, overview, streets, names } = parts;
+  return validateThemePack({ prompt, title: overview.title,
+    tables: { ...people.tables, ...buildings.tables, ...overview.tables, ...streets.tables },
+    roleOcc: people.roleOcc, shopTypes: buildings.shopTypes, mapStyle: buildings.mapStyle,
+    raceLines: buildings.raceLines, overviewExtras: overview.overviewExtras, names }, settings);
 }
 
 // ── names ──
@@ -302,7 +472,9 @@ function namer(ctx) {
     // unnamed, like every other name here.
     shop(r, t) {
       const kind = t?.type === 'tavern' ? 'tavern' : 'shop';
-      if (kind === 'tavern' || !t?.names?.length || ctx.pool?.shop?.length) return this.place(r, kind);
+      // With a theme, the pool's shop names are only for the setting's taverns: a
+      // themed kind has words of its own, and a pooled name fits no kind in particular.
+      if (kind === 'tavern' || !t?.names?.length || (ctx.pool?.shop?.length && !ctx.theme)) return this.place(r, kind);
       for (let i = 0; i < 40; i++) {
         const word = pick(r, t.names);
         const form = Math.floor(r() * 3);
@@ -686,16 +858,24 @@ Use every culture id listed above as a key under "cultures".`,
 }
 
 export function parsePool(text, settings) {
-  let v;
-  const s = String(text || '').trim();
-  try { v = JSON.parse(s.slice(s.indexOf('{'), s.lastIndexOf('}') + 1)); } catch { throw new Error('The name pool was not valid JSON'); }
+  const v = answerJson(text);
+  if (!v) throw new Error('The name pool was not valid JSON');
+  return checkPool(v, settings.races || []);
+}
+// A pool's shape. With races, names for each of them and only them; with none
+// (a pool kept in a theme), every culture it has.
+function checkPool(v, races) {
+  if (!v || typeof v !== 'object') throw new Error('The name pool is not an object');
   const list = (x) => Array.isArray(x) ? [...new Set(x.filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim()))] : [];
   const pool = { city: list(v.city), district: list(v.district), street: list(v.street), shop: list(v.shop), cultures: {} };
-  for (const race of settings.races || []) {
+  for (const race of races) {
     const c = v.cultures?.[race.id];
     if (!c) throw new Error(`The name pool has no names for ${race.name}`);
     pool.cultures[race.id] = { given: list(c.given), family: list(c.family) };
     if (pool.cultures[race.id].given.length < 5) throw new Error(`The name pool has too few names for ${race.name}`);
+  }
+  if (!races.length) {
+    for (const [id, c] of Object.entries(v.cultures || {})) pool.cultures[id] = { given: list(c?.given), family: list(c?.family) };
   }
   if (!pool.city.length || !pool.shop.length || !pool.district.length) throw new Error('The name pool is missing city, shop or district names');
   return pool;
@@ -827,7 +1007,8 @@ export function fleshPrompt(city, id) {
       + 'quote or retell published books. Answer in plain prose: no headings, no lists, no markdown.',
     prompt: `The city of ${o.name} (${SETTING_NAMES[city.settings.system] || city.settings.system}): ${o.size} of `
       + `${Number(o.population).toLocaleString('en-US')}, ruled by ${o.government}, ${o.wealth}, living on ${o.trade}.${
-        (o.extras || []).map((x) => ` ${x.label}: ${x.text}.`).join('')}
+        (o.extras || []).map((x) => ` ${x.label}: ${x.text}.`).join('')}${
+        city.theme ? ` The city's theme: ${city.theme.pack.title} - ${city.theme.pack.prompt}.` : ''}
 
 Flesh out ${about}
 
