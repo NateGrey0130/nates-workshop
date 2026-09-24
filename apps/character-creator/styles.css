@@ -3105,3 +3105,20 @@ body.present.is-error .present-bottom { display: none; }
   .present-next { right: 8px; }
   .present-caption { font-size: 14px; }
 }
+
+/* "Removed X. Undo" - js/undo-toast.js. Bottom centre, where the eye already
+   is after pressing a row's remove button, and above the sticky header's
+   z-index so nothing on the page can cover it. In play mode it rides above
+   the roll bar rather than over it: that bar is the thumb zone. */
+.undo-toast {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 120;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  max-width: calc(100vw - 32px); padding: 8px 10px 8px 14px;
+  background: var(--bg-card); color: var(--text-primary);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--accent);
+  font-size: 14px;
+}
+.undo-toast[hidden] { display: none; }
+.undo-toast .err { color: var(--danger); }
+body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); }

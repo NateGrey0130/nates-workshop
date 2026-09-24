@@ -376,12 +376,22 @@ async function postNote() {
   }
 }
 
-async function removeEntry(id) {
-  if (!confirm('Delete this note? It is not recoverable.')) return;
-  try {
-    await api('journal/' + id, { method: 'DELETE' });
-    await load();
-  } catch (err) { alert('Failed: ' + err.message); }
+// A note is not recoverable once deleted, which is the argument FOR an undo
+// window rather than a confirm: the mistake is seen after the click, not
+// before it. Nothing is sent until the window closes (js/undo-toast.js).
+function removeEntry(id) {
+  const at = D.entries.findIndex((e) => e.id === id);
+  if (at < 0) return;
+  const e = D.entries[at];
+  undoable({
+    label: e.title ? `“${e.title}”` : 'the note',
+    hide: () => { D.entries = D.entries.filter((x) => x.id !== id); D.entriesTotal -= 1; render(); },
+    restore: () => { D.entries.splice(Math.min(at, D.entries.length), 0, e); D.entriesTotal += 1; render(); },
+    commit: async (keepalive) => {
+      await api('journal/' + id, { method: 'DELETE', keepalive });
+      if (!keepalive) await load();
+    },
+  });
 }
 
 // ---------- people ----------
@@ -609,13 +619,25 @@ async function editNpc(id, field, value) {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
-async function deleteNpc(id) {
-  if (!confirm('Delete this dossier? The notes that mention them are not touched.')) return;
-  try {
-    await api(`campaigns/${campaignId}/npcs/${id}`, { method: 'DELETE' });
-    D.npc = null;
-    await load();
-  } catch (err) { alert('Failed: ' + err.message); }
+// Undo rather than confirm (js/undo-toast.js). Undo reopens the dossier it
+// was deleted from, since that is where the person was standing.
+function deleteNpc(id) {
+  const at = D.npcs.findIndex((n) => n.id === id);
+  const n = at >= 0 ? D.npcs[at] : null;
+  const open = D.npc;
+  undoable({
+    label: n?.name || open?.name || 'the dossier',
+    hide: () => { D.npc = null; D.npcs = D.npcs.filter((x) => x.id !== id); render(); },
+    restore: () => {
+      if (n) D.npcs.splice(Math.min(at, D.npcs.length), 0, n);
+      D.npc = open;
+      render();
+    },
+    commit: async (keepalive) => {
+      await api(`campaigns/${campaignId}/npcs/${id}`, { method: 'DELETE', keepalive });
+      if (!keepalive) await load();
+    },
+  });
 }
 
 // A PORTRAIT IS THE SMALLEST PICTURE IN THIS WHOLE REPO, so it gets its own
@@ -834,11 +856,22 @@ async function claim(itemId) {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
-async function dropItem(itemId) {
-  try {
-    await api(`campaigns/${campaignId}/items/${itemId}`, { method: 'DELETE' });
-    await load();
-  } catch (err) { alert('Failed: ' + err.message); }
+// It asked nothing before, and one mis-tap took the party's loot off the list.
+// Now it goes with an Undo (js/undo-toast.js); the row is soft-deleted on the
+// server either way, and lands under "No longer held" once the window closes.
+function dropItem(itemId) {
+  const at = D.items.findIndex((i) => i.id === itemId);
+  if (at < 0) return;
+  const it = D.items[at];
+  undoable({
+    label: it.item_name || it.custom_name || 'the item',
+    hide: () => { D.items = D.items.filter((i) => i.id !== itemId); render(); },
+    restore: () => { D.items.splice(Math.min(at, D.items.length), 0, it); render(); },
+    commit: async (keepalive) => {
+      await api(`campaigns/${campaignId}/items/${itemId}`, { method: 'DELETE', keepalive });
+      if (!keepalive) await load();
+    },
+  });
 }
 
 // ---------- currency ----------
