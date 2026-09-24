@@ -315,6 +315,16 @@
       "printed_pages": 128,
       "page_offset": 1,
       "note": "Cached 2026-09-24 from its TEXT LAYER, --probe median 4,786 chars/page and 36.8% stop words, so the words survive (not the F73 glyph-dropped kind). Offset verified by folio at four points rather than taken from the vote - cache p024 reads 23, p078 reads 77, p100 reads 99, p129 reads 128 - one region, no split. printed_pages is 128, the last numbered folio at cache p129; cache p130-p135 are Palladium house ads and an order form and p136 is the back cover. ocr-book.py measured printed_pages 99 and that is a max-folio misread; the registry outranks the manifest, as it does for bom and heroes-unlimited-core. welded_pages 4 (113, 130, 132, 133 - only 113 is content, the Beautiful/Harmful Ghost page), corrupt_pages 4 pages at one hit each, substituted_digits 26 pages. See apps/character-creator/docs/surveys/madhaven.md."
+    },
+
+    "south-america": {
+      "title": "Rifts World Book 6: South America",
+      "aliases": ["South America", "Rifts World Book Six: South America", "Rifts South America"],
+      "source_pdf": "Rifts- World Book 6 South-America.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 168,
+      "page_offset": 1,
+      "note": "Cached 2026-09-24 from its TEXT LAYER, --probe median 4,239 chars/page and 36.9% stop words (not the F73 glyph-dropped kind). Offset verified by folio at five points - cache p020 reads 19, p060 reads 59, p100 reads 99, p140 reads 139, p169 reads 168 - one region, no split. printed_pages is 168, the Experience Tables at cache p169, whose file also carries the page-169 'same as' ladder notes because the text layer did not break there; cache p170 is the blank back cover. ocr-book.py measured 167. welded_pages 1 (160 = printed 159, the Black Galleon / Black Ship weapons), corrupt_pages 5 pages (87 = map labels, 105 = a near-empty art page, 31/47/116 one hit each), substituted_digits 3 pages (46, 82, 110). Printed 22-23 (Colombian weapons) and 139 (NE plasma weapons) have stat blocks out of order in the cache though no detector flags them; read those from a render. See apps/character-creator/docs/surveys/south-america.md."
     }
   }
 }
