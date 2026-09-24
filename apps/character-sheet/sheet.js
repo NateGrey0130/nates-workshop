@@ -1304,6 +1304,8 @@ async function endSession() {
     }));
     await postEvent('recap', 'session recap posted');
     recordRoll('recap', 'Session recap', { note: 'posted to the journal' });
+    // A posted recap is the end of the fight as well as the session.
+    resetMelee(C.meleeAttacks);
   } catch (err) { alert('Recap failed: ' + err.message); }
 }
 
@@ -1604,9 +1606,13 @@ document.addEventListener('input', (ev) => {
 
 
 // ── Play mode phase 4: melee round counter + rest ──
-// The counter is table ephemera - client state, deliberately not persisted;
-// a round in progress is not character data. Attacks-per-melee comes from
-// the derived combat block (base 2 + class bonuses + whatever a human typed).
+// The counter is table ephemera - a round in progress is not character data,
+// so it never reaches the server. It IS kept in this tab's sessionStorage, so
+// a reload mid-fight (a phone locking, a pull-to-refresh) comes back on the
+// same round and attack; closing the tab, ⟲, or posting a session recap ends
+// it. Per character, because two sheets in two tabs are two combatants.
+// Attacks-per-melee comes from the derived combat block (base 2 + class
+// bonuses + whatever a human typed).
 //
 // Rest applies rate x hours to each pool in ONE undoable event. The RATES
 // ARE THE TABLE'S OWN, deliberately: the books' recovery pages are not yet
@@ -1616,9 +1622,21 @@ document.addEventListener('input', (ev) => {
 // recovery pages are audited, cited defaults land in js/rules.js and this
 // comment changes.
 
+const MELEE_KEY = () => `cc-play-melee-${id}`;
+
 function meleeState() {
-  if (!C.melee) C.melee = { round: 1, attack: 1 };
+  if (!C.melee) {
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(MELEE_KEY())); } catch { /* blocked storage: start fresh */ }
+    const ok = saved && Number.isInteger(saved.round) && Number.isInteger(saved.attack)
+      && saved.round >= 1 && saved.attack >= 1;
+    C.melee = ok ? { round: saved.round, attack: saved.attack } : { round: 1, attack: 1 };
+  }
   return C.melee;
+}
+
+function saveMelee() {
+  try { sessionStorage.setItem(MELEE_KEY(), JSON.stringify(C.melee)); } catch { /* the count still works for this visit */ }
 }
 
 // ONE ROLL CONTROL, used by every rollable row on the sheet.
@@ -1721,6 +1739,7 @@ function nextAttack(attacksPer) {
   const m = meleeState();
   if (attacksPer && m.attack >= attacksPer) { m.attack = 1; m.round += 1; }
   else m.attack += 1;
+  saveMelee();
   const el = $('play-melee-label');
   if (el) el.textContent = meleeLabel(attacksPer);
 }
@@ -1728,12 +1747,14 @@ function nextAttack(attacksPer) {
 function newRound(attacksPer) {
   const m = meleeState();
   m.round += 1; m.attack = 1;
+  saveMelee();
   const el = $('play-melee-label');
   if (el) el.textContent = meleeLabel(attacksPer);
 }
 
 function resetMelee(attacksPer) {
   C.melee = { round: 1, attack: 1 };
+  try { sessionStorage.removeItem(MELEE_KEY()); } catch { /* nothing was kept */ }
   const el = $('play-melee-label');
   if (el) el.textContent = meleeLabel(attacksPer);
 }

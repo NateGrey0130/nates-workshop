@@ -560,7 +560,10 @@ how a log inherits every consistency bug forever. What the log buys:
 
 **The melee counter and rest (phase 4).** The round/attack counter reads the
 derived attacks-per-melee and is deliberately client-only ephemera — a round
-in progress is not character data. **Rest** applies rate × hours per pool as
+in progress is not character data, so it never reaches the server. It is kept
+in the tab's `sessionStorage`, per character, so a reload mid-fight comes back
+on the same round and attack; closing the tab, ⟲, or posting a session recap
+ends it. **Rest** applies rate × hours per pool as
 one undoable event, clamped at each pool's max. The rates are **the
 table's own** — set once by the G.M. on the campaign dashboard and preferred by
 every sheet in the campaign (UI-AUDIT F52), or else typed in and remembered per
