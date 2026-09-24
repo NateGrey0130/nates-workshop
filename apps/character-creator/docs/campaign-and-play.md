@@ -364,7 +364,9 @@ placed, rather than rolled as something the book never printed.
 
 **Where they show.** On the People tab and in the G.M.'s dashboard roster,
 after the party and tagged NPC, with the same damage controls - *Award XP to
-party* skips them. Not on the home screen's list of your characters (`?mine=1`
+party* skips them. Each party row carries a tick for that award, all ticked by
+default; untick the player who missed the session and the button reads *Award
+XP to 3 of 4*, and its confirm names who gets it. Not on the home screen's list of your characters (`?mine=1`
 is the characters you play).
 
 **One panel, two pages.** The *Statted NPCs* panel - the list, the three ways

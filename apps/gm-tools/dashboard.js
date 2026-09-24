@@ -10,7 +10,12 @@ const openEntryId = new URLSearchParams(location.search).get('entry_id');
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
 const D = { campaign: null, isGm: false, roster: [], journal: [], classNames: {}, amt: 5,
             // The GM's own pages (migration 078) and the one open in the editor.
-            entries: [], entry: null, entryImages: [] };
+            entries: [], entry: null, entryImages: [],
+            // Party members UNTICKED for the next XP award. The unticked set
+            // rather than the ticked one, so a character who joins mid-session
+            // arrives ticked like everyone else, and a roster refresh cannot
+            // drop anyone out of the award by replacing the rows.
+            xpSkip: new Set() };
 const $ = (i) => document.getElementById(i);
 
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
@@ -96,8 +101,14 @@ function partyFirst(list) {
 }
 
 function rosterRowHtml(c) {
+  // Who the next XP award goes to - the G.M.'s view only, and never on an NPC,
+  // which awardXp() leaves out whatever is ticked.
+  const xpBox = D.isGm && c.kind !== 'npc'
+    ? `<input type="checkbox" class="gm-xp-pick noprint" ${D.xpSkip.has(c.id) ? '' : 'checked'}
+        aria-label="Award XP to ${escHtml(c.name)}" title="Include in the next XP award"
+        onchange="gmXpPick(${c.id}, this.checked)"> ` : '';
   return `<tr id="roster-${c.id}">
-      <td><a href="/apps/character-sheet/?id=${c.id}">${escHtml(c.name)}</a>${
+      <td>${xpBox}<a href="/apps/character-sheet/?id=${c.id}">${escHtml(c.name)}</a>${
         c.kind === 'npc' ? ' <span class="tag">NPC</span>' : ''}</td>
       <td>${escHtml(String(c.class_id).startsWith('notable:') ? 'From the books'
         : String(c.class_id).startsWith('creature:') ? 'A creature from the books'
@@ -132,8 +143,8 @@ function gmToolbarHtml() {
       <input type="number" id="gm-amt-custom" class="gm-amt-custom" min="1" placeholder="#"
         aria-label="Any other amount" value="${[1, 5, 10].includes(D.amt) ? '' : D.amt}">
       <span class="gm-xp">
-        <input type="number" id="gm-xp" placeholder="XP" aria-label="XP to award each character">
-        <button type="button" class="btn btn-sm" onclick="awardPartyXp()">Award XP to party</button>
+        <input type="number" id="gm-xp" placeholder="XP" aria-label="XP to award each ticked character">
+        <button type="button" class="btn btn-sm" id="gm-xp-btn" onclick="awardPartyXp()">${xpButtonLabel()}</button>
       </span>
       <span id="gm-msg" class="muted small" role="status" aria-live="polite"></span>
     </div>`;
@@ -210,17 +221,38 @@ async function gmUndo(id) {
   }
 }
 
-// One amount to everyone, through each character's own XP route. The route
-// raises XP and PROPOSES any level-up rather than applying it, so a crossed
-// threshold is reported here and taken on that character's sheet, where the
-// banner from UI-AUDIT F42 is waiting. Asked about first: it is a bulk write.
+// The PARTY: the G.M.'s statted NPCs share this roster for hit-point tracking,
+// and do not earn the party's experience. Of the party, the ticked ones - the
+// player who missed the session, or the one who earned a bonus alone.
+const xpParty = () => D.roster.filter((c) => c.kind !== 'npc');
+const xpTargets = () => xpParty().filter((c) => !D.xpSkip.has(c.id));
+
+// Says who, so the button cannot read "party" while two of them are unticked.
+function xpButtonLabel() {
+  const all = xpParty().length, n = xpTargets().length;
+  return n === all ? 'Award XP to party' : `Award XP to ${n} of ${all}`;
+}
+
+function gmXpPick(id, on) {
+  if (on) D.xpSkip.delete(id); else D.xpSkip.add(id);
+  const b = $('gm-xp-btn');
+  if (b) b.textContent = xpButtonLabel();
+}
+
+// One amount to each ticked character, through each character's own XP route.
+// The route raises XP and PROPOSES any level-up rather than applying it, so a
+// crossed threshold is reported here and taken on that character's sheet, where
+// the banner from UI-AUDIT F42 is waiting. Asked about first: it is a bulk
+// write, and the question names who gets it when that is not everyone.
 async function awardPartyXp() {
   const delta = parseInt($('gm-xp')?.value, 10);
   if (!Number.isFinite(delta) || !delta) { gmMsg('Enter an amount of XP to award.', true); return; }
-  // The PARTY: the G.M.'s statted NPCs share this roster for hit-point
-  // tracking, and do not earn the party's experience.
-  const party = D.roster.filter((c) => c.kind !== 'npc');
-  if (!confirm(`Award ${delta} XP to each of the ${party.length} characters in this campaign?`)) return;
+  const party = xpTargets();
+  if (!party.length) { gmMsg('Tick at least one character to award XP to.', true); return; }
+  const everyone = party.length === xpParty().length;
+  if (!confirm(everyone
+    ? `Award ${delta} XP to each of the ${party.length} characters in this campaign?`
+    : `Award ${delta} XP to ${party.map((c) => c.name).join(', ')}?`)) return;
   const ready = [], failed = [];
   for (const c of party) {
     try {
