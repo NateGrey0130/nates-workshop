@@ -2925,6 +2925,42 @@ check('and none of them with ?mine=1',
     rolls.every((x) => x.status === 201) && rolls[0].req.class_id === 'merc-soldier' && !rolls[0].req.occ_class_id
       && rolls[1].req.class_id === 'noro' && rolls[1].req.occ_class_id === 'merc-soldier', JSON.stringify(rolls));
 
+  // A theme's own roles and shops, through the real roller and the real
+  // Codex: a themed role rolls as the class the theme mapped it to, and a
+  // themed shop kind fills its shelf through the stock rule it named.
+  const { validateThemePack } = await import('../../city-creator/js/city-engine.js');
+  const { westPack } = await import('./fixtures/city-theme-pack.mjs');
+  const pfSettings = { system: 'palladium-fantasy', population: 12000, npcCount: 4, everyRace: false,
+    races: [{ id: 'human', name: 'Human', pct: 100 }] };
+  const riftsSettings = { system: 'rifts', population: 12000, npcCount: 4, everyRace: false,
+    races: [{ id: 'human', name: 'Human', pct: 100 }] };
+  const riftsStock = ['Bar', 'Gun shop', 'Vehicle lot'];
+  const themedPacks = [
+    [pfSettings, validateThemePack(westPack(), pfSettings), pfCampaign],
+    [riftsSettings, validateThemePack({ ...westPack(), raceLines: {},
+      shopTypes: westPack().shopTypes.map((k, i) => ({ ...k, stockAs: riftsStock[i] })),
+      roleOcc: { '[W] npc_roles 1': 'merc-soldier' } }, riftsSettings), riftsCampaign],
+  ];
+  const themedRolls = [];
+  const themedThin = [];
+  for (const [settings, pack, camp] of themedPacks) {
+    const tc = generateCity(settings, 97, null, { intensity: 'total', pack });
+    const one = { ...tc, npcs: tc.npcs.map((n, i) => (i ? n : { ...n, role: '[W] npc_roles 1' })) };
+    const req = rollRequest(one, one.npcs[0].id);
+    const res = await api('POST', `/campaigns/${camp.id}/npcs/generate`, req);
+    themedRolls.push({ system: settings.system, occ: req.occ_class_id || req.class_id, status: res.status, error: res.body.error });
+    for (const k of pack.shopTypes) {
+      const shelf = { ...tc, shops: [{ ...tc.shops[0], id: 'shop-0', type: k.label, stockAs: k.stockAs }] };
+      const got = stockShop(shelf, 'shop-0', codexGear).shops[0];
+      if (got.inventory.length < 6) themedThin.push(`${settings.system} ${k.label} as ${k.stockAs}: ${got.inventory.length}`);
+    }
+  }
+  check('a themed role rolls through the real roller as the class its theme gave it, in both settings',
+    themedRolls.every((x) => x.status === 201) && themedRolls.map((x) => x.occ).join() === 'soldier,merc-soldier',
+    JSON.stringify(themedRolls));
+  check('and every themed shop kind fills a shelf of 6 or more real rows through the stock rule it names',
+    themedThin.length === 0, themedThin.join(', '));
+
   const gone = await api('DELETE', `/cities/${cityId}`);
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }

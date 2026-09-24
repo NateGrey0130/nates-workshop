@@ -36,6 +36,9 @@
 // stock rules, the buildings prompt asking every race for lines, a stray
 // role/class pair kept, the flesh-out prompt without the theme, and a themed
 // shop named from the AI name pool again.
+// Themed rolls (PR 3), the same way: rollBlocker() answering null for a role
+// with no class, the Rifts R.C.C.-alone exemption dropped, and rollRequest()
+// sending the request without asking.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -43,14 +46,14 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
   FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS,
-  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack }
+  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker }
   from '../../../city-creator/js/city-engine.js';
 import { W, westPack } from '../fixtures/city-theme-pack.mjs';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
   'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
-  'City Creator theme writing'];
+  'City Creator theme writing', 'City Creator themed rolls'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -668,10 +671,43 @@ export function run() {
       && !/theme/i.test(fleshPrompt(generateCity(base(), 11), 'npc-0').prompt));
 
   // The page: five parts, low effort and a schema each, and the theme handed to the engine.
-  const themePage = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.js'), 'utf8');
   check('the page writes a theme through the five parts, each at low effort with its schema, and builds the city with it',
     /output_config: \{ effort: 'low', format: \{ type: 'json_schema', schema \} \}/.test(page)
       && /Object\.keys\(THEME_PARTS\)/.test(page) && /generateCity\(S\.settings, seed, pool, theme\)/.test(page));
   check('and a naming theme kept from before themes becomes the city theme',
     /else if \(typeof v\?\.nameTheme === 'string'\) S\.themeText = v\.nameTheme;/.test(page) && !/S\.nameTheme/.test(page));
+
+  section('City Creator themed rolls');
+
+  // A themed role the theme gave no class has nothing to roll as. The page
+  // shows why instead of the button, and rollRequest refuses rather than send
+  // a null class the roller would have to guess around.
+  const rollCity = generateCity(base(), 5, null, { intensity: 'total', pack: validateThemePack(westPack(), base()) });
+  const asRole = (c, role, raceId = 'human') => ({ ...c, npcs: c.npcs.map((n, i) => (i ? n : { ...n, role, raceId })) });
+  const mappedNpc = asRole(rollCity, '[W] npc_roles 1');
+  const noClass = asRole(rollCity, '[W] npc_roles 7');
+  check('a themed role the theme mapped rolls as its class, and nothing blocks it',
+    rollBlocker(mappedNpc, 'npc-0') === null && rollRequest(mappedNpc, 'npc-0').occ_class_id === 'soldier');
+  check('a themed role with no class is blocked, with the role named, and rollRequest refuses it',
+    /\[W\] npc_roles 7/.test(rollBlocker(noClass, 'npc-0') || '')
+      && (() => { try { rollRequest(noClass, 'npc-0'); return false; } catch (e) { return /no class/.test(e.message); } })());
+  check('an owner is never blocked, whatever the theme called their job',
+    rollBlocker(asRole(rollCity, 'owner of The Dusty Saloon'), 'npc-0') === null);
+  // Rifts: a race that is its R.C.C. alone needs no job, so a role with no
+  // class does not stop it - but a human, whose O.C.C. IS the job, is stopped.
+  const RR = tablesFor('rifts');
+  const themedRiftsSettings = { system: 'rifts', population: 12000, npcCount: 4, everyRace: false,
+    races: [{ id: 'human', name: 'Human', pct: 50 }, { id: 'dog-boy', name: 'Dog Boy', pct: 50 }] };
+  const riftsPack = validateThemePack({ ...westPack(), raceLines: {},
+    shopTypes: westPack().shopTypes.map((k, i) => ({ ...k, stockAs: Object.keys(RR.SHOP_STOCK)[i] })),
+    roleOcc: { '[W] npc_roles 1': 'merc-soldier' } }, themedRiftsSettings);
+  const riftsThemed = generateCity(themedRiftsSettings, 5, null, { intensity: 'total', pack: riftsPack });
+  check('in Rifts a race that is its R.C.C. alone rolls without a job, and a human without one is blocked',
+    rollBlocker(asRole(riftsThemed, '[W] npc_roles 7', 'dog-boy'), 'npc-0') === null
+      && rollRequest(asRole(riftsThemed, '[W] npc_roles 7', 'dog-boy'), 'npc-0').class_id === 'dog-boy'
+      && !!rollBlocker(asRole(riftsThemed, '[W] npc_roles 7', 'human'), 'npc-0'));
+  check('a city with no theme is never blocked: every one of its NPCs has a job',
+    [generateCity(base(), 5), generateCity({ ...themedRiftsSettings, npcCount: 12 }, 5)].every((c) => c.npcs.every((n) => rollBlocker(c, n.id) === null)));
+  check('the page shows the reason in place of the button',
+    /const blocked = !n\.sheet_id && rollBlocker\(S\.city, n\.id\);/.test(page));
 }

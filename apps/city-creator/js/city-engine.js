@@ -891,13 +891,29 @@ export const exportJson = (city) => JSON.stringify(city, null, 2);
 // R.C.C. with the job O.C.C. their role maps to. The roller REFUSES rather
 // than guesses - a pairing the race's page bars, a class it cannot build - and
 // the page shows that refusal as it comes; nothing here pads around it.
+// Why an NPC cannot be rolled, or null when they can. A theme's role that the
+// theme gave no class has no job to roll as, and a class guessed here would be
+// padding - so the page shows this instead of the button. Only where the
+// roller needs a job: a Rifts race that is its R.C.C. alone rolls without one.
+export function rollBlocker(city, npcId) {
+  const T = TABLES[city.settings.system];
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) return `No NPC ${npcId}`;
+  if (/^owner of /.test(n.role) || city.theme?.pack.roleOcc?.[n.role] || T.ROLE_OCC[n.role]) return null;
+  if (T.RACE_TAKES_OCC === false && n.raceId !== T.HUMAN.id
+    && !(city.settings.races || []).find((x) => x.id === n.raceId)?.takesOcc) return null;
+  return `The theme gave "${n.role}" no class to roll as, so there is nothing to roll`;
+}
+
 export function rollRequest(city, npcId) {
   const T = TABLES[city.settings.system];
   const n = city.npcs.find((x) => x.id === npcId);
   if (!n) throw new Error(`No NPC ${npcId}`);
+  const blocked = rollBlocker(city, npcId);
+  if (blocked) throw new Error(blocked);
   // A theme's role rolls as the class the theme mapped it to (checked against
   // the setting's own list when the theme was made); a role it did not map, as
-  // the setting's own role does, or not at all.
+  // the setting's own role does - or, above, not at all.
   const occ = /^owner of /.test(n.role) ? T.OWNER_OCC
     : city.theme?.pack.roleOcc?.[n.role] || T.ROLE_OCC[n.role] || null;
   const named = n.name ? { name: n.name } : {};
