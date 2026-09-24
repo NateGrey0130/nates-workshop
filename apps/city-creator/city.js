@@ -274,6 +274,14 @@ function mapHtml(c) {
   const labels = m.districts.map((d) =>
     `<text x="${d.label[0]}" y="${d.label[1]}" class="map-label">${esc(d.name)}</text>`).join('');
   const river = m.river ? `<polyline points="${pts(m.river)}" class="map-river"/>` : '';
+  // A theme's street plan (city-map.js): the canals, the core, the street
+  // grid and the railway over the districts (whose fills are opaque), under
+  // the labels and the pins.
+  const canals = (m.canals || []).map((c) => `<polyline points="${pts(c)}" class="map-canal"/>`).join('');
+  const core = m.core ? `<polygon points="${pts(m.core)}" class="map-core"/>` : '';
+  const streets = (m.streets || []).map((l) => `<polyline points="${pts(l)}" class="map-street"/>`).join('');
+  const rail = m.rail ? `<polyline points="${pts(m.rail)}" class="map-rail"/><polyline points="${pts(m.rail)}" class="map-rail-ties"/>`
+    + (m.station ? `<rect x="${m.station[0] - 18}" y="${m.station[1] - 10}" width="36" height="20" class="map-station"/>` : '') : '';
   const wall = m.wall ? `<polygon points="${pts(m.wall)}" class="map-wall"/>` : '';
   const roads = m.roads.map((r) => `<polyline points="${pts(r)}" class="map-road"/>`).join('');
   const gates = m.wall ? m.gates.map(([x, y]) => `<rect x="${x - 14}" y="${y - 14}" width="28" height="28" class="map-gate"/>`).join('') : '';
@@ -284,13 +292,14 @@ function mapHtml(c) {
         : `<circle cx="${p.at[0]}" cy="${p.at[1]}" r="17"/>`}
       <text x="${p.at[0]}" y="${p.at[1]}">${p.n}</text></g></a>`).join('');
   return `<div class="panel city-map-panel">
-    <h3 style="margin-top:0">Map <span class="muted small">— districts${m.wall ? ', walls and gates' : ''}${m.river ? ', the river' : ''};
+    <h3 style="margin-top:0">Map <span class="muted small">— districts${m.wall ? ', walls and gates' : ''}${m.river ? ', the river' : ''}${
+      m.canals ? ', canals' : ''}${m.rail ? ', the railway and its station' : ''}${m.core ? ', the towering core' : ''}${m.streets ? ', the street grid' : ''};
       numbers are places (○) and shops (■)</span></h3>
     <svg class="city-map" viewBox="${(m.view || [0, 0, m.size, m.size]).join(' ')}" role="img" aria-label="Map of ${esc(c.overview.name)}">
       <defs><pattern id="quarter-hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <rect width="16" height="16" class="map-hatch-bg"/><line x1="0" y1="0" x2="0" y2="16" class="map-hatch"/></pattern></defs>
       <polygon points="${pts(m.outline)}" class="map-ground"/>
-      ${river}${districts}${roads}${wall}${gates}${labels}${pins}
+      ${river}${districts}${canals}${core}${streets}${roads}${rail}${wall}${gates}${labels}${pins}
     </svg>
     <ol class="map-key small">${m.pins.map((p) => `<li value="${p.n}"><a href="#e-${esc(p.id)}"
       onclick="City.goto('${escJs(p.id)}'); return false;">${esc(p.label)}</a>

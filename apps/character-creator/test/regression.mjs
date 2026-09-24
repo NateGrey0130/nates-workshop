@@ -3035,6 +3035,11 @@ check('and none of them with ?mine=1',
   check('only the revealed pins, numbered 1..n so the hidden ones leave no gaps',
     v.pins.length === 2 && v.pins.map((p) => p.n).join() === '1,2' && v.pins.some((p) => p.text === 'Anyone can see the old tower from the road.'),
     JSON.stringify(v.pins.map((p) => [p.id, p.n])));
+  // The theme's street plan (a railway, for the test pack) is part of the map
+  // the players see - shapes only.
+  check('the players\' map carries the theme\'s street plan - the railway and its station',
+    v.map.rail?.length === 2 && JSON.stringify(v.map.rail) === JSON.stringify(city.map.rail)
+      && JSON.stringify(v.map.station) === JSON.stringify(city.map.station), JSON.stringify(v.map.rail));
   // By id: the map lists districts in its own order (the centre first), not the city's.
   check('and a district\'s players\' line comes with it',
     v.map.districts.find((d) => d.id === city.districts[0].id)?.text === 'The busy heart of town.');
