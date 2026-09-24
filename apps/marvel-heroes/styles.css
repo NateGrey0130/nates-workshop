@@ -464,3 +464,45 @@ table.gear th[scope="row"] { min-width: 10em; }
 .gear-keys dd { margin: 0; }
 .feat-result .follow { margin: 10px 0 0; }
 .feat-result .follow button { margin-left: 6px; }
+
+/* -- Point Buy (R24) -- */
+.pb-setup { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+/* The running total rides along the top of the screen while the hero is built. */
+.pb-readout { position: sticky; top: 0; z-index: 5; margin: 0 0 14px; padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline;
+  background: var(--panel); color: var(--ink); border: 3px solid var(--rule); border-radius: var(--radius); box-shadow: 3px 3px 0 var(--rule); }
+.pb-readout p { margin: 0; }
+.pb-readout .pb-total strong { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 26px; text-transform: uppercase; margin-right: 8px; }
+.pb-readout.low { background: var(--yellow); color: var(--on-yellow); }
+.pb-readout.over { background: var(--red); color: var(--on-red); }
+.pb-number { display: inline-flex; gap: 4px; align-items: center; }
+.pb-number input { width: 5.5em; }
+.pb-live { white-space: normal !important; }
+.pb-live > * { margin-right: 10px; }
+.pb-rank { font-weight: 700; }
+.pb-with { color: var(--ink-soft); }
+/* On a phone each ability is two lines: the name and its number box, then its
+   rank, cost and the most it can afford underneath. */
+@media (max-width: 560px) {
+  table.pb-abilities thead { display: none; }
+  table.pb-abilities tr { display: grid; grid-template-columns: 6.5em 1fr; align-items: center; border-bottom: 1px solid var(--rule); }
+  table.pb-abilities th, table.pb-abilities td { border-bottom: 0; }
+  table.pb-abilities td.pb-live { grid-column: 1 / -1; padding-top: 0; }
+}
+.pb-flag { font-weight: 700; font-size: 13px; padding: 1px 6px; background: var(--red); color: var(--on-red); border-radius: var(--radius); }
+.pb-line { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-top: 6px; }
+.pb-powers { list-style: none; padding: 0; }
+.pb-powers > li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.pb-search { margin: 10px 0; }
+.pb-search label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; max-width: 420px; }
+.pb-results { list-style: none; margin: 6px 0 0; padding: 0; }
+.pb-results button[disabled] { opacity: 0.6; cursor: not-allowed; text-decoration: none; }
+.pb-grants { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 10px; }
+.pb-grant { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+.pb-grant label:not(.check) { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
+.pb-grant label.grow { flex: 1 1 200px; }
+.pb-grant input[type="number"] { width: 6em; }
+.sh-bottom.single { grid-template-columns: 1fr; }
+@media print {
+  .pb-readout { display: none !important; }
+  .sheet .sh-bottom.single { grid-template-columns: 1fr !important; }
+}

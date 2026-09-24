@@ -514,8 +514,33 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
   check('the build comes back as the generator\'s own state, and rebuilds the same hero',
     JSON.stringify(gen.build(got.build).abilities) === JSON.stringify(built.abilities));
 
+  // A Point Buy hero (R24) has no seeds. Its build must come back with its
+  // mode, or it would reopen in the generator as an empty roll.
+  const { makePointBuy, emptyBuild, normalise } = await import(new URL('../js/pointbuy.js', import.meta.url));
+  const pbk = makePointBuy(data, gen);
+  const pbBuild = { ...emptyBuild({ limit: 300, cap: 'amazing' }), abilities: { fighting: 20, agility: 24, strength: 50, endurance: 30, reason: 6, intuition: 10, psyche: 10 },
+    powers: [{ code: data.powers.powers.find((p) => p.double).code, number: 30, gm: false, free: false }],
+    bonuses: [{ ability: 'strength', amount: 10, reason: 'the serum', free: true }], items: [{ name: 'Jet pack', notes: '', points: 0, free: true }] };
+  const pbHero = { name: 'Bought', build: { mode: 'pointbuy', pb: pbBuild }, snapshot: pbk.snapshot(pbBuild) };
+  const pbMade = await call('POST', { body: pbHero });
+  const pbGot = (await call('GET', { query: `?id=${pbMade.body.id}` })).body.hero || { snapshot: pbHero.snapshot };
+  check('a Point Buy hero saves with no seeds, and its build comes back with its mode and purchases',
+    pbMade.status === 201 && pbGot?.build?.mode === 'pointbuy' && JSON.stringify(normalise(pbGot.build.pb, pbk)) === JSON.stringify(pbBuild),
+    String(JSON.stringify(pbGot?.build)).slice(0, 160));
+  check('and nothing else rides along in its build', JSON.stringify(Object.keys(pbGot?.build || {})) === '["mode","pb"]');
+  check('a generator build still comes back as exactly its seeds and picks',
+    JSON.stringify(Object.keys(got.build)) === '["seeds","picks"]');
+  const pbHtml = sheetMod.renderSheet({ name: 'Bought', snapshot: pbGot.snapshot });
+  check('a Point Buy sheet draws with no body, origin or weakness, and shows the grants and a GM tag',
+    pbHtml.includes('GM grants') && pbHtml.includes('Strength +10') && pbHtml.includes('Jet pack')
+      && !pbHtml.includes('<h3>Weakness</h3>') && !pbHtml.includes('<h3>Contacts</h3>'));
+  check('its ability shows the bought number plus the grant', pbHtml.includes('>Amazing</td><td class="num">60<'));
+  check('and its line on My heroes says what it cost', sheetMod.tagline(pbGot.snapshot) === `Point Buy, ${(20 + 24 + 50 + 30 + 6 + 10 + 10) + 30 * 2}/300 pts; 1 Power`,
+    sheetMod.tagline(pbGot.snapshot));
+
   for (const [label, body] of [
     ['a hero with no name', { ...hero, name: '  ' }],
+    ['a Point Buy hero with no purchases', { ...pbHero, build: { mode: 'pointbuy' } }],
     ['one with no generator state', { ...hero, build: null }],
     ['one with no snapshot', { ...hero, snapshot: {} }],
     ['one with a malformed id', { ...hero, id: "x' OR 1=1" }],
@@ -908,6 +933,94 @@ section('Compound and Changeling, built the way the book\'s own examples describ
   }
   check('every Changeling form has a Power of its own, with at least one slot per form (R19)', unique && slotsOk);
   check('and a Changeling never keeps Alter Ego', noAlterEgo);
+}
+
+section('Point Buy (R24): the costs, the cap, the steps, and what a rolled hero costs');
+
+{
+  const { makeGenerator } = await import(new URL('../js/generator.js', import.meta.url));
+  const { makePointBuy, emptyBuild, normalise, DEFAULT_CAP } = await import(new URL('../js/pointbuy.js', import.meta.url));
+  const data = {};
+  for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) data[n] = load(`${n}.json`);
+  const gen = makeGenerator(data);
+  const pb = makePointBuy(data, gen);
+  const single = data.powers.powers.find((p) => !p.double).code;
+  const double = data.powers.powers.find((p) => p.double).code;
+  const b = emptyBuild({ limit: 200 });
+  const line = (l, kind, key) => l.lines.find((x) => x.kind === kind && x.key === key);
+
+  check('a fresh build has no numbers, the default cap, and the limit it was given',
+    Object.values(b.abilities).every((n) => n === null) && b.cap === DEFAULT_CAP && b.limit === 200);
+  b.abilities.fighting = 24;
+  check('an ability costs its exact number: Excellent 24 costs 24', line(pb.ledger(b), 'ability', 'fighting').cost === 24);
+  b.powers.push({ code: single, number: 30, gm: false, free: false }, { code: double, number: 30, gm: false, free: false });
+  let l = pb.ledger(b);
+  check('a Power costs its rank number, and a two-slot Power pays double', line(l, 'power', 0).cost === 30 && line(l, 'power', 1).cost === 60);
+  check('and choosing one costs nothing more', l.spent === 24 + 30 + 60);
+  b.powers.push({ code: data.powers.powers.find((p) => p.double && p.code !== double).code, number: 40, gm: true, free: true });
+  l = pb.ledger(b);
+  check('a GM-granted Power costs nothing while it is excluded', line(l, 'power', 2).cost === 0 && l.spent === 114);
+  b.powers[2].free = false;
+  check('and is charged, double, when the tick is taken off', pb.ledger(b).spent === 114 + 80);
+  b.powers[2].free = true;
+  b.bonuses.push({ ability: 'fighting', amount: 10, reason: '', free: true });
+  check('an excluded bonus costs nothing and still raises the ability', pb.ledger(b).spent === 114 && pb.hero(b).total.fighting === 34);
+  b.bonuses[0].free = false;
+  check('an included one is charged its amount', pb.ledger(b).spent === 124);
+  b.items.push({ name: 'Jet pack', notes: '', points: 15, free: true });
+  check('another grant costs nothing while excluded, and its points when not',
+    pb.ledger(b).spent === 124 && (b.items[0].free = false, pb.ledger(b).spent === 139));
+  b.limit = 100;
+  check('going over the limit gives a negative remainder, it does not refuse', pb.ledger(b).remaining === -39);
+  b.limit = 200;
+  check('Health is F+A+S+E and Karma R+I+P, with the grants in them',
+    (b.abilities.agility = 10, pb.hero(b).health === 34 + 10) && (b.abilities.psyche = 6, pb.hero(b).karma === 6));
+
+  b.cap = 'excellent';
+  l = pb.ledger(b);
+  check('the cap flags a bought ability above it', l.overCap.some((x) => x.kind === 'power' && x.key === 0) && !l.overCap.some((x) => x.key === 'fighting'));
+  b.abilities.strength = 26;
+  check('Remarkable 26 is above an Excellent cap; Excellent 25 is not',
+    pb.ledger(b).overCap.some((x) => x.key === 'strength') && (b.abilities.strength = 25, !pb.ledger(b).overCap.some((x) => x.key === 'strength')));
+  check('a granted Power ignores the cap', !pb.ledger(b).overCap.some((x) => x.kind === 'power' && x.key === 2));
+
+  check('up from 24 is Remarkable 30, down is Excellent 20, and 20 down is Good 10',
+    pb.step(24, 1) === 30 && pb.step(24, -1) === 20 && pb.step(20, -1) === 10);
+  check('up from nothing is Feeble 2, and nothing goes below Feeble', pb.step(null, 1) === 2 && pb.step(2, -1) === null && pb.step(1, -1) === null);
+  check('up stops at the cap', pb.step(20, 1, 'excellent') === null && pb.step(20, 1, 'remarkable') === 30);
+  check('the steps run the whole ladder to Class 5000', pb.step(3000, 1) === 5000 && pb.step(5000, 1) === null);
+
+  const m = emptyBuild({ limit: 100, cap: 'unearthly' });
+  m.abilities.fighting = 30;
+  m.abilities.agility = 20;
+  check('most affordable: what is left, within the cap', pb.maxAffordable(m, 'ability', 'fighting') === 80
+    && (m.cap = 'good', pb.maxAffordable(m, 'ability', 'fighting') === 15));
+  m.cap = 'unearthly';
+  m.powers.push({ code: double, number: 10, gm: false, free: false });
+  check('a two-slot Power affords half of what is left', pb.maxAffordable(m, 'power', 0) === Math.floor((100 - 50) / 2));
+  m.limit = 50;
+  check('and nothing when nothing is left', pb.maxAffordable(m, 'power', 0) === null);
+  m.limit = null;
+  check('with no limit set, only the cap bounds it', pb.maxAffordable(m, 'ability', 'fighting') === 125);
+
+  const s = emptyBuild({ limit: 60 });
+  s.abilities.fighting = 40;
+  check('a new Power starts at Good when there is room', pb.startingNumber(s, single) === 10);
+  check('at what is left when there is less, halved for two slots', (s.abilities.fighting = 54, pb.startingNumber(s, single) === 6 && pb.startingNumber(s, double) === 3));
+  check('and never below 1', (s.abilities.fighting = 60, pb.startingNumber(s, single) === 1));
+
+  const snap = pb.snapshot(b);
+  check('the snapshot names each ability\'s rank from its total, and marks a granted Power',
+    snap.abilities.fighting.name === 'Remarkable' && snap.abilities.fighting.number === 34 && snap.powers[2].source === 'granted');
+  check('an ability with no number is a dash on the sheet, not an error', snap.abilities.endurance.name === '-');
+  check('normalising a saved build gives it back unchanged', JSON.stringify(normalise(JSON.parse(JSON.stringify(b)), pb)) === JSON.stringify(b));
+  check('and makes anything malformed empty rather than throwing',
+    JSON.stringify(normalise({ limit: -3, cap: 'nope', abilities: { fighting: 'x' }, powers: [{ code: 'ZZ9' }], bonuses: 'no' }, pb)) === JSON.stringify(emptyBuild()));
+
+  const a = pb.rolledCosts();
+  check('what a rolled hero costs is the same every time', JSON.stringify(a) === JSON.stringify(pb.rolledCosts()));
+  check(`and is a sensible spread (median ${a.median}, half between ${a.low} and ${a.high})`,
+    a.low > 0 && a.low <= a.median && a.median <= a.high && a.high < 2000);
 }
 
 section('Every ruling in the data is in the README, and every README ruling is in the data');

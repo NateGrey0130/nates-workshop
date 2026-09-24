@@ -47,9 +47,18 @@ export function sanitizeHero(body) {
   if (body.id !== undefined && body.id !== null && !(typeof body.id === 'string' && ID.test(body.id))) {
     return { error: 'Not a hero id' };
   }
-  if (!plainObject(body.build) || !plainObject(body.build.seeds)) return { error: 'A hero needs the generator state it was built from' };
+  // Two kinds of build: the generator's seeds and picks, or a Point Buy tab's
+  // purchases (`mode: 'pointbuy'`, R24). Each is rebuilt from its own known
+  // keys, so nothing else rides along - and a Point Buy build keeps its mode,
+  // which is what sends it back to the right tab when it is opened.
+  const b = body.build;
+  const pointBuy = plainObject(b) && b.mode === 'pointbuy';
+  if (pointBuy ? !plainObject(b.pb) : !plainObject(b) || !plainObject(b.seeds)) {
+    return { error: 'A hero needs the generator state it was built from' };
+  }
   if (!plainObject(body.snapshot) || !plainObject(body.snapshot.abilities)) return { error: 'A hero needs a snapshot of what was built' };
-  const build = JSON.stringify({ seeds: body.build.seeds, picks: plainObject(body.build.picks) ? body.build.picks : {} });
+  const build = JSON.stringify(pointBuy ? { mode: 'pointbuy', pb: b.pb }
+    : { seeds: b.seeds, picks: plainObject(b.picks) ? b.picks : {} });
   const snapshot = JSON.stringify(body.snapshot);
   // No sheet at all means "leave the saved one alone": the generator saves a
   // hero's build without knowing what was written on its sheet.

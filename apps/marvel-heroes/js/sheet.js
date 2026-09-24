@@ -63,6 +63,11 @@ export function snapshot(h, gen, data, contactPicks = []) {
 
 // A one-line description for a list of heroes.
 export function tagline(s) {
+  if (s.mode === 'pointbuy') {
+    const p = s.pointbuy || {};
+    const pts = p.limit === null || p.limit === undefined ? `${p.spent} pts` : `${p.spent}/${p.limit} pts`;
+    return `Point Buy, ${pts}; ${s.powers.length} Power${s.powers.length === 1 ? '' : 's'}`;
+  }
   const body = s.body.special ? `${s.body.special === 'compound' ? 'Compound' : 'Changeling'} (${s.body.aspects.join(', ')})`
     : `${s.body.name}${s.body.variant ? ` (${s.body.variant})` : ''}`;
   return `${body}, ${s.origin.name}; ${s.powers.length} Power${s.powers.length === 1 ? '' : 's'}`;
@@ -88,6 +93,14 @@ export function renderSheet({ name, snapshot: s, sheet = {} }) {
   const num = (key, label, start) => `<label class="sh-box"><span class="sh-label">${esc(label)}</span>
       <input type="number" inputmode="numeric" data-number="${key}" value="${Number.isInteger(sheet[key]) ? sheet[key] : ''}" placeholder="${start ?? ''}"></label>`;
   const list = (items, empty) => (items.length ? `<ul class="sh-list">${items.join('')}</ul>` : `<p class="muted">${empty}</p>`);
+  // A Point Buy hero (R24) has no body, origin or weakness, and may carry the
+  // GM's grants; a granted Power is tagged where it is listed.
+  const gm = '<span class="tag">GM</span>';
+  const g = s.grants || { bonuses: [], items: [] };
+  const grants = g.bonuses.length || g.items.length ? `<h3>GM grants</h3>${list([
+    ...g.bonuses.map((x) => `<li><strong>${esc(LABEL[x.ability])} +${x.amount}</strong>${x.reason ? ` <span class="muted">${esc(x.reason)}</span>` : ''}</li>`),
+    ...g.items.map((x) => `<li><strong>${esc(x.name)}</strong>${x.notes ? ` <span class="muted">${esc(x.notes)}</span>` : ''}</li>`),
+  ], '')}` : '';
   return `
     <article class="sheet" aria-label="Character sheet: ${esc(name)}">
       <header class="sh-head">
@@ -110,16 +123,17 @@ export function renderSheet({ name, snapshot: s, sheet = {} }) {
         ${num('health', 'Health now', s.health)}${num('karma', 'Karma now', s.karma)}
         ${num('karma_pool', 'Karma pool', 0)}${num('advancement', 'Advancement fund', 0)}
       </div>
-      <div class="sh-bottom">
+      <div class="sh-bottom${s.mode === 'pointbuy' ? ' single' : ''}">
         <section class="sh-powers"><h3>Powers</h3>${list(s.powers.map((p) => `<li><strong>${esc(p.name)}</strong> <span class="code">${esc(p.code)}</span>
-            ${esc(p.rankName)} (${p.number})${p.form ? ` <span class="muted">${esc(p.form)} form</span>` : ''}</li>`), 'None.')}
-          <h3>Weakness</h3><p>${esc(s.weakness.stimulus)}; ${esc(s.weakness.effect)}; ${esc(s.weakness.duration)}</p>
-          ${s.body.notes.length ? `<h3>Body</h3><ul class="sh-list">${s.body.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+            ${esc(p.rankName)} (${p.number})${p.form ? ` <span class="muted">${esc(p.form)} form</span>` : ''}${p.source === 'granted' ? ` ${gm}` : ''}</li>`), 'None.')}
+          ${s.weakness ? `<h3>Weakness</h3><p>${esc(s.weakness.stimulus)}; ${esc(s.weakness.effect)}; ${esc(s.weakness.duration)}</p>` : ''}
+          ${s.body?.notes.length ? `<h3>Body</h3><ul class="sh-list">${s.body.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+          ${grants}
         </section>
-        <section class="sh-side">
+        ${s.mode === 'pointbuy' ? '' : `<section class="sh-side">
           <h3>Contacts</h3>${list(s.contacts.map((c) => `<li>${c ? esc(c.name) : '<span class="muted">to choose</span>'}</li>`), 'None.')}
           <h3>Talents</h3>${list(s.talents.map((t) => `<li>${esc(t.name)} <span class="muted">${esc(t.group)}</span></li>`), 'None.')}
-        </section>
+        </section>`}
       </div>
       <label class="sh-long"><span class="sh-label">Background</span><textarea data-field="background" rows="4">${esc(sheet.background)}</textarea></label>
       <label class="sh-long"><span class="sh-label">Notes</span><textarea data-field="notes" rows="3">${esc(sheet.notes)}</textarea></label>
