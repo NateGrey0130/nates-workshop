@@ -2049,6 +2049,23 @@ export function run() {
 
     check('the sheet points at it from the powers tab',
       /\/apps\/codex\//.test(sheet), 'nothing on the sheet mentions the codex');
+    // And from each thing it holds, to that thing's own entry. The key rule is
+    // the codex's (encoded, lower-cased); a sheet that built it differently
+    // would link every spell with a capital letter to "no entry by that name".
+    check('and each held skill, power, item and vessel links to its own entry',
+      /encodeURIComponent\(String\(key\)\.toLowerCase\(\)\)/.test(sheet)
+        && /codexLink\('skills', s\.name/.test(sheet)
+        && /codexLink\(POWER_SECTION\[kind\], p\.name/.test(sheet)
+        && /codexLink\('gear', it\.item_slug/.test(sheet)
+        && /codexLink\('vehicles', v\.vehicle_slug/.test(sheet),
+      'a row on the sheet has lost its link into the codex');
+    // Every power kind the sheet files must name a codex section, or its
+    // link silently renders nothing.
+    check('and every power kind the sheet sorts has a codex section to link to',
+      ['spell', 'psionic', 'super', 'talent'].every((k) =>
+        new RegExp(`POWER_SECTION = \\{[^}]*\\b${k}: '`).test(sheet))
+        && /const KIND_ORDER = \{ spell: 0, psionic: 1, super: 2, talent: 3 \}/.test(sheet),
+      'a power kind has no codex section, or the sheet sorts a kind this check does not know');
     // This pinned a literal `codex.html` anchor in both headers until the app
     // switcher replaced every page's ad-hoc links (shared/js/appnav.js). What
     // the check was ever FOR is that neither page leaves the codex reachable

@@ -2807,6 +2807,15 @@ body.show-play-keys .play-keys { display: block; }
 .codex-entry.focus { box-shadow: inset 3px 0 0 var(--accent); }
 .codex-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
+/* The sheet's way out to one codex entry: a glyph after a name, never the
+   name itself, which already opens the description inline. Quiet until
+   hovered - it is the second thing a row offers, not the first. */
+.codex-jump {
+  display: inline-block; margin-left: 4px; padding: 0 3px;
+  font-size: 11px; line-height: 1; color: var(--text-muted); text-decoration: none;
+}
+.codex-jump:hover, .codex-jump:focus-visible { color: var(--accent); }
+
 .codex-body { padding: 2px 10px 12px; border-left: 2px solid var(--border); margin-left: 8px; }
 
 /* The printed stat block, label beside value. `auto 1fr` rather than two equal
