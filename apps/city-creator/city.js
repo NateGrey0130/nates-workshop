@@ -360,10 +360,11 @@ function mapHtml(c) {
   // Labels on their own layer, over the roads and the wall, under the pins.
   const labels = m.districts.map((d) =>
     `<text x="${d.label[0]}" y="${d.label[1]}" class="map-label">${esc(d.name)}</text>`).join('');
+  // The river runs over the districts: their fills are opaque, and drawn
+  // under them it showed only its two ends outside the city (2026-09-24).
   const river = m.river ? `<polyline points="${pts(m.river)}" class="map-river"/>` : '';
   // A theme's street plan (city-map.js): the canals, the core, the street
-  // grid and the railway over the districts (whose fills are opaque), under
-  // the labels and the pins.
+  // grid and the railway over the districts too, under the labels and the pins.
   const canals = (m.canals || []).map((c) => `<polyline points="${pts(c)}" class="map-canal"/>`).join('');
   const core = m.core ? `<polygon points="${pts(m.core)}" class="map-core"/>` : '';
   const streets = (m.streets || []).map((l) => `<polyline points="${pts(l)}" class="map-street"/>`).join('');
@@ -386,7 +387,7 @@ function mapHtml(c) {
       <defs><pattern id="quarter-hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <rect width="16" height="16" class="map-hatch-bg"/><line x1="0" y1="0" x2="0" y2="16" class="map-hatch"/></pattern></defs>
       <polygon points="${pts(m.outline)}" class="map-ground"/>
-      ${river}${districts}${canals}${core}${streets}${roads}${rail}${wall}${gates}${labels}${pins}
+      ${districts}${river}${canals}${core}${streets}${roads}${rail}${wall}${gates}${labels}${pins}
     </svg>
     <ol class="map-key small">${m.pins.map((p) => `<li value="${p.n}"><a href="#e-${esc(p.id)}"
       onclick="City.goto('${escJs(p.id)}'); return false;">${esc(p.label)}</a>
