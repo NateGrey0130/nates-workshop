@@ -7,8 +7,9 @@ separate from them.
 
 **On the hub since the launch PR.** Until the generator worked the page existed
 at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
-decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Three tabs,
-each linkable: `#feat`, `#powers`, `#gen`.
+decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Four tabs,
+each linkable: `#feat`, `#powers`, `#gen` and `#heroes`, the heroes a person
+has saved.
 
 ## Sources
 
@@ -16,7 +17,7 @@ each linkable: `#feat`, `#powers`, `#gen`.
 |---|---|---|
 | UPB | *Ultimate Powers Book* (TSR 6876, 1987), with the *Dragon* #122 addenda printed in red | the generator's tables and the 263 powers |
 | PB | MARVEL SUPER HEROES Advanced Set, *Players' Book* | rank ladder, Universal Table, Talents, Contacts |
-| JB | MARVEL SUPER HEROES Advanced Set, *Judge's Book* | example heroes and the sheet layout (later) |
+| JB | MARVEL SUPER HEROES Advanced Set, *Judge's Book* | the character sheet's layout. Its Marvel characters are deliberately not in the app (Nate, 2026-09-23) |
 
 Citations are to the page number printed on the page.
 
@@ -38,7 +39,7 @@ app**, never the books' prose. Where the full text of a power is wanted it lives
 only in D1, loaded from an extraction that is written to the gitignored
 `.cache/msh/` and never committed.
 
-### The one table: `msh_power_text`
+### `msh_power_text`
 
 | column | what |
 |---|---|
@@ -71,6 +72,29 @@ tables. In a worktree, set `WORKSHOP_MSH_CACHE` to the main checkout's
 every tracked and untracked file under this app, its endpoint, the extractor
 and the migration against every run of ten words in the book's power text, and
 fails on any match. CI has no extraction and says the section skipped.
+
+## Saved heroes: `msh_heroes`
+
+The generator's **Save hero** writes the hero to D1, and **My heroes** lists
+them, opens each on a sheet laid out after the Judge's Book character sheet, and
+prints it. Migration `082`.
+
+| column | what |
+|---|---|
+| `id` | a UUID the endpoint makes; the page never chooses one |
+| `owner_email` | the Access email that saved it. **Every query is scoped to it**, as MediaVault's are, so a hero someone else owns answers exactly like one that does not exist |
+| `name` | the hero's name, 80 characters at most |
+| `build` | JSON: the generator's seeds and picks, so the hero reopens in the generator exactly as it was made |
+| `snapshot` | JSON: what that built, resolved to names and numbers at save time. **The sheet draws only from this**, so a later correction to a table here cannot quietly change a saved hero |
+| `sheet` | JSON: what the player writes on the sheet - identity lines, background, notes - and the numbers tracked in play (Health and Karma now, Karma pool, Advancement fund) |
+
+`/api/marvel-heroes/heroes` is GET (a list, or one hero by `?id=`), POST (no
+id saves a new hero; an id updates one the caller owns, and anything else is a
+404) and DELETE. A save from the generator sends no `sheet`, which keeps the
+one already written. The checks every write passes through - known sheet fields
+only, lengths, 48 KB per JSON column, 200 heroes each - are in
+`functions/api/marvel-heroes/_lib/heroes.js`, and the suite runs the endpoint
+against migration 082 itself in `node:sqlite`.
 
 ## Rulings
 
@@ -187,13 +211,15 @@ by roll, and they decide nothing here.
 | `data/power-tables.json` | the sixteen power classes and their roll tables, 263 codes; `double` is the book's asterisk, `addenda` its red rows |
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
+| `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
+| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database |
 
 The summaries in `powers.json` were written for the app by four subagents
 working from the extraction, each told to reuse no five-word run of the book's
 text, then checked together: none shares a six-word run with any Power's text.
-| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged |
 
 **The Universal Table's colours were read from the page, not by eye.** Its
 cells are vector fills on the PB back cover, and each cell's colour was taken

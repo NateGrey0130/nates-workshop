@@ -436,6 +436,118 @@ section('The power-text endpoint reads one row, GET only, and answers a missing 
   check('and nobody signed in is a 401', (await call('MG10', {})).status === 401);
 }
 
+section('Saved heroes: every read and write is the owner\'s own, against the real migration');
+
+{
+  // A D1 stand-in over node:sqlite, built from migration 082 itself, so the
+  // SQL the endpoint sends is the SQL that runs.
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('CREATE TABLE schema_migrations (filename TEXT PRIMARY KEY, applied_at TEXT)');
+  sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', '082-msh-heroes.sql'), 'utf8'));
+  const DB = {
+    prepare: (sql) => {
+      const st = sqlite.prepare(sql);
+      const bound = (args) => ({
+        first: async () => st.get(...args) ?? null,
+        all: async () => ({ results: st.all(...args) }),
+        run: async () => ({ meta: { changes: Number(st.run(...args).changes) } }),
+      });
+      return { bind: (...args) => bound(args), ...bound([]) };
+    },
+  };
+  const mod = await import(new URL('../../../functions/api/marvel-heroes/heroes.js', import.meta.url));
+  const lib = await import(new URL('../../../functions/api/marvel-heroes/_lib/heroes.js', import.meta.url));
+  const call = async (method, { who = 'ann@x.org', query = '', body, host = 'example.com' } = {}) => {
+    const headers = who ? { 'Cf-Access-Authenticated-User-Email': who } : {};
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const request = new Request(`https://${host}/api/marvel-heroes/heroes${query}`,
+      { method, headers, body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)) });
+    const handler = { GET: mod.onRequestGet, POST: mod.onRequestPost, DELETE: mod.onRequestDelete }[method];
+    const res = await handler({ request, env: { DB } });
+    return { status: res.status, body: await res.json() };
+  };
+
+  // A real hero out of the generator, snapshotted the way the page does it.
+  const { makeGenerator, PRIMARY: PRIMARY_ABILITIES } = await import(new URL('../js/generator.js', import.meta.url));
+  const sheetMod = await import(new URL('../js/sheet.js', import.meta.url));
+  const data = {};
+  for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) data[n] = load(`${n}.json`);
+  const gen = makeGenerator(data);
+  const seeds = { body: 11, origin: 2, abilities: 3, weakness: 4, counts: 5, powers: 6, talents: 7 };
+  const built = gen.build({ seeds, picks: {} });
+  const snap = sheetMod.snapshot(built, gen, data, []);
+  const hero = { name: 'Test Hero', build: { seeds, picks: {} }, snapshot: snap };
+
+  const made = await call('POST', { body: hero });
+  const id = made.body.id;
+  check('a new hero is saved and given an id by the server', made.status === 201 && lib.ID.test(id || ''), JSON.stringify(made));
+  const forged = await call('POST', { body: { ...hero, id: 'aaaaaaaa-0000-0000-0000-000000000000' } });
+  check('an id the owner does not have is a 404, not a new row under a chosen id', forged.status === 404);
+  const list = await call('GET');
+  check('the owner\'s list has it, with its snapshot', list.status === 200 && list.body.heroes.length === 1
+    && list.body.heroes[0].snapshot.abilities.fighting.name === snap.abilities.fighting.name);
+  check('another person\'s list does not', (await call('GET', { who: 'bob@x.org' })).body.heroes.length === 0);
+  check('another person cannot read it', (await call('GET', { who: 'bob@x.org', query: `?id=${id}` })).status === 404);
+  check('or overwrite it', (await call('POST', { who: 'bob@x.org', body: { ...hero, id, name: 'Stolen' } })).status === 404
+    && (await call('GET', { query: `?id=${id}` })).body.hero.name === 'Test Hero');
+  check('or delete it', (await call('DELETE', { who: 'bob@x.org', query: `?id=${id}` })).status === 404
+    && (await call('GET', { query: `?id=${id}` })).status === 200);
+  check('nobody signed in is a 401 for every method', (await Promise.all([
+    call('GET', { who: null }), call('POST', { who: null, body: hero }), call('DELETE', { who: null, query: `?id=${id}` }),
+  ])).every((r) => r.status === 401));
+  check('local dev, with no Access in front of it, is dev@localhost',
+    (await call('GET', { who: null, host: 'localhost' })).status === 200);
+
+  // The sheet: written fields are kept to the known ones and their lengths,
+  // and a save from the generator (no sheet) leaves them alone.
+  const sheet = { identity: 'Secret', base: 'x'.repeat(500), evil: 'dropped', health: 42, karma: 1.5, notes: '' };
+  await call('POST', { body: { ...hero, id, sheet } });
+  let got = (await call('GET', { query: `?id=${id}` })).body.hero;
+  check('the sheet keeps its known fields, cut to length', got.sheet.identity === 'Secret'
+    && got.sheet.base.length === lib.SHEET_FIELDS.base && !('evil' in got.sheet) && !('notes' in got.sheet), JSON.stringify(got.sheet).slice(0, 200));
+  check('and whole numbers only', got.sheet.health === 42 && !('karma' in got.sheet));
+  await call('POST', { body: { ...hero, id, name: 'Renamed' } });
+  got = (await call('GET', { query: `?id=${id}` })).body.hero;
+  check('a save with no sheet renames the hero and keeps what was written on it',
+    got.name === 'Renamed' && got.sheet.identity === 'Secret');
+  check('the build comes back as the generator\'s own state, and rebuilds the same hero',
+    JSON.stringify(gen.build(got.build).abilities) === JSON.stringify(built.abilities));
+
+  for (const [label, body] of [
+    ['a hero with no name', { ...hero, name: '  ' }],
+    ['one with no generator state', { ...hero, build: null }],
+    ['one with no snapshot', { ...hero, snapshot: {} }],
+    ['one with a malformed id', { ...hero, id: "x' OR 1=1" }],
+    ['one too large', { ...hero, snapshot: { ...snap, pad: 'x'.repeat(lib.MAX_JSON) } }],
+    ['a body that is not JSON', '{nope'],
+  ]) check(`${label} is refused with a 400`, (await call('POST', { body })).status === 400);
+
+  sqlite.prepare("UPDATE msh_heroes SET owner_email = 'full@x.org'").run();
+  for (let i = 1; i < lib.MAX_HEROES; i++) {
+    sqlite.prepare("INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES (?, 'full@x.org', 'n', '{}', '{}')").run(`filler-${String(i).padStart(4, '0')}`);
+  }
+  check(`an owner with ${lib.MAX_HEROES} heroes cannot save another`, (await call('POST', { who: 'full@x.org', body: hero })).status === 400);
+  check('the owner can delete one', (await call('DELETE', { who: 'full@x.org', query: `?id=${id}` })).status === 200
+    && (await call('GET', { who: 'full@x.org', query: `?id=${id}` })).status === 404);
+
+  // The sheet itself.
+  check('a snapshot is plain JSON: it survives the round trip unchanged', JSON.stringify(JSON.parse(JSON.stringify(snap))) === JSON.stringify(snap));
+  const html = sheetMod.renderSheet({ name: '<img src=x onerror=alert(1)>', snapshot: snap, sheet: { identity: '"><script>x</script>' } });
+  check('the sheet escapes the hero\'s name and everything written on it',
+    !/<img|<script/.test(html) && html.includes('&lt;img') && html.includes('&quot;&gt;&lt;script'));
+  check('it shows all seven abilities with rank and points',
+    PRIMARY_ABILITIES.every((k) => html.includes(`>${snap.abilities[k].name}</td><td class="num">${snap.abilities[k].number}<`)));
+  check('and every identity line of the Judge\'s Book sheet, each one a key the endpoint keeps',
+    sheetMod.IDENTITY.every(([k]) => html.includes(`data-field="${k}"`) && k in lib.SHEET_FIELDS));
+  check('every number the sheet tracks is one the endpoint keeps',
+    [...html.matchAll(/data-number="([a-z_]+)"/g)].map((m) => m[1]).sort().join() === [...lib.SHEET_NUMBERS].sort().join());
+  const kit = gen.build({ seeds, picks: { body: 'changeling', aspects: [{ id: 'robot-humanshape' }, { id: 'vegetable' }] } });
+  const kitHtml = sheetMod.renderSheet({ name: 'Kit', snapshot: sheetMod.snapshot(kit, gen, data, []) });
+  check('a Changeling\'s sheet has a table for its 2nd form instead of the blank line',
+    kitHtml.includes('2nd form: Vegetable') && !kitHtml.includes('data-field="second_form"'));
+}
+
 section('No book text is in any tracked file (local only: needs the extraction)');
 
 {

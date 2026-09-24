@@ -496,6 +496,24 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '081-msh-power-text.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_power_text');
 
+-- Marvel Heroes: the heroes people save, one row per hero, scoped to the
+-- Access email that saved it (migration 082).
+CREATE TABLE IF NOT EXISTS msh_heroes (
+  id TEXT PRIMARY KEY,
+  owner_email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  build TEXT NOT NULL,                   -- JSON: the generator's seeds and picks
+  snapshot TEXT NOT NULL,                -- JSON: what that built, resolved at save time
+  sheet TEXT NOT NULL DEFAULT '{}',      -- JSON: what the player wrote on the sheet
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_msh_heroes_owner ON msh_heroes (owner_email, updated_at);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '082-msh-heroes.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_heroes');
+
 -- Which entries mention whom, and who said so: `source` distinguishes a link a
 -- person typed from one the sweep inferred.
 CREATE TABLE IF NOT EXISTS npc_mentions (
