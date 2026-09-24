@@ -166,7 +166,8 @@ function gridSites(r, order, quarterCount, radius) {
 
 /**
  * The map for a city: { size, outline, districts, wall, gates, roads, river,
- * square, pins }. Every coordinate is in 0..SIZE. Deterministic in the city's
+ * square, pins }, and for a themed street plan its `style` with `streets`,
+ * `rail` and `station`, `canals` or `core`. Every coordinate is in 0..SIZE. Deterministic in the city's
  * seed and its entries' ids.
  */
 export function layoutMap(city) {
