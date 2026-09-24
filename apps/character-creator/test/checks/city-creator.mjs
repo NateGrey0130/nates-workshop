@@ -42,6 +42,9 @@
 // Map styles (PR 4), the same way: an organic theme drawing a style's extras,
 // grid avenues bent through the square, a canal city without its river, the station put off
 // the railway, and present mode not drawing the core.
+// Saved themes (PR 5), the same way: a race's name no longer kept with its
+// lines, validateSavedTheme accepting a pack with no name pool, a removed role
+// keeping its class, and the page's Generate losing the saved theme's id.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,14 +52,15 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
   FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS,
-  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker }
+  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker, validateSavedTheme, themeParts, editThemeTable }
   from '../../../city-creator/js/city-engine.js';
 import { W, westPack } from '../fixtures/city-theme-pack.mjs';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
   'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
-  'City Creator theme writing', 'City Creator themed rolls', 'City Creator map styles'];
+  'City Creator theme writing', 'City Creator themed rolls', 'City Creator map styles',
+  'City Creator saved themes'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -790,4 +794,52 @@ export function run() {
       && presentJs.indexOf("class: 'map-core'") > presentJs.indexOf('map-cell '));
   check('and the players\' view passes the shapes on',
     ['canals', 'streets', 'rail', 'station', 'core'].every((k) => new RegExp(`^\\s+${k}: `, 'm').test(viewJs)));
+
+  section('City Creator saved themes');
+
+  // A theme in the library is checked with no city in view. Its named races'
+  // lines carry the race's name, so the rule that a race must be named still
+  // runs - and a pack with lines for a race it never named is still refused.
+  const wholePack = { ...validateThemePack(westPack(), base()),
+    names: { city: ['Dust Creek'], district: ['Railside'], street: ['Main'], shop: ['The Last Chance'], cultures: {} } };
+  const savedBack = validateSavedTheme(JSON.parse(JSON.stringify(wholePack)));
+  check('a named race\'s lines keep the race\'s name, and a saved theme keeps them through the check',
+    wholePack.raceLines?.wolfen?.name === 'Wolfen' && savedBack.raceLines?.wolfen?.quirks?.length === 2);
+  check('a saved theme with lines for a race its words never name loses them',
+    !('dwarf' in (validateSavedTheme({ ...wholePack, raceLines: { ...wholePack.raceLines,
+      dwarf: { name: 'Dwarf', quirks: ['[W] a dwarf line'] } } }).raceLines || {})));
+  const savedRefuses = (edit) => { try { validateSavedTheme(edit(JSON.parse(JSON.stringify(wholePack)))); return false; } catch { return true; } };
+  check('a saved theme without its name pool, or for a game the City Creator has no tables for, is refused',
+    savedRefuses((pk) => { delete pk.names; return pk; }) && savedRefuses((pk) => ({ ...pk, system: 'nightbane' })));
+  check('and one that breaks a rule a written theme meets is refused the same way',
+    savedRefuses((pk) => { pk.shopTypes[0].stockAs = 'Gun shop'; return pk; }));
+
+  // A saved theme loads back as the five parts it was written in.
+  const split = themeParts(savedBack);
+  const rejoined = assembleThemePack(savedBack.prompt, split, base());
+  check('a saved theme splits back into its five parts, and those parts make the same theme',
+    Object.keys(split).join() === Object.keys(THEME_PARTS).join()
+      && JSON.stringify(rejoined) === JSON.stringify(validateThemePack(savedBack, base())));
+
+  // Editing one table: checked by the rules of its part.
+  const [lookPart, looks] = editThemeTable(split, 'LOOKS', W('new look', 12), base(), savedBack.prompt);
+  check('editing a table replaces its lines, in its own part', lookPart === 'people' && looks.tables.LOOKS[0] === '[W] new look 1');
+  const editRefused = (key, lines) => { try { editThemeTable(split, key, lines, base(), savedBack.prompt); return false; } catch { return true; } };
+  check('too few lines, or a rumour with a slot the city cannot fill, is refused',
+    editRefused('MOODS', W('mood', THEME_MIN_LINES - 1))
+      && editRefused('RUMOURS', [...W('rumour', 11), 'a rumour about {sheriff}']));
+  const [, fewerRoles] = editThemeTable(split, 'NPC_ROLES', W('npc_roles', 12).slice(1), base(), savedBack.prompt);
+  check('a role taken out of the roles takes its class with it, rather than being refused',
+    !('[W] npc_roles 1' in fewerRoles.roleOcc) && fewerRoles.roleOcc['[W] npc_roles 2'] === 'merchant');
+
+  // The page: the library's own endpoints, a part asked for again alone, and
+  // a city made from a saved theme keeps which one.
+  check('the page saves, lists, uses, renames and deletes themes through its own endpoints',
+    /post\('city-themes', 'POST', \{ pack \}\)/.test(page) && /city-themes\?system=/.test(page)
+      && /api\(`city-themes\/\$\{id\}`\)/.test(page) && /'PATCH', \{ name: name\.trim\(\) \}/.test(page)
+      && /city-themes\/\$\{id\}`, \{ method: 'DELETE' \}/.test(page));
+  check('a saved theme is checked on the way in, and a city made from it keeps which one',
+    /const pack = validateSavedTheme\(theme\.pack\);/.test(page)
+      && /theme = \{ intensity: S\.intensity, pack, \.\.\.\(S\.themeId \? \{ library_id: S\.themeId \} : \{\}\) \};/.test(page));
+  check('a written part can be asked for again alone', /onclick="City\.rewritePart\('\$\{p\}'\)"/.test(page));
 }

@@ -239,7 +239,9 @@ function checkBuildings(pack, T, settings, prompt) {
     // A named race's shops replace its own, so they may keep their names.
     const mine = new Set((T.RACE_LINES[id]?.shops || []).map((t) => t.label.toLowerCase()));
     if (lines?.shops) own.shops = shopKinds(lines.shops, T, new Set([...taken].filter((l) => !mine.has(l))), `${race.name} shops`);
-    if (Object.keys(own).length) raceLines[id] = own;
+    // The race's name goes with its lines, so a saved theme can be checked
+    // again with no city in view (validateSavedTheme).
+    if (Object.keys(own).length) raceLines[id] = { name: race.name, ...own };
   }
   return { tables, shopTypes, mapStyle, ...(Object.keys(raceLines).length ? { raceLines } : {}) };
 }
@@ -421,6 +423,53 @@ export function assembleThemePack(prompt, parts, settings) {
     tables: { ...people.tables, ...buildings.tables, ...overview.tables, ...streets.tables },
     roleOcc: people.roleOcc, shopTypes: buildings.shopTypes, mapStyle: buildings.mapStyle,
     raceLines: buildings.raceLines, overviewExtras: overview.overviewExtras, names }, settings);
+}
+
+// ── saved themes (migration 084) ──
+//
+// A theme kept in the library is checked with no city in view: the races it
+// may hold lines for are the ones its own raceLines name, each carrying the
+// race's name, so the rule that a race's lines need the race NAMED in the
+// theme still runs. The server checks every write with this, and the page
+// every load.
+export function validateSavedTheme(pack) {
+  const races = Object.entries(pack?.raceLines || {}).map(([id, x]) => ({ id, name: String(x?.name || id) }));
+  if (!TABLES[pack?.system]) throw new Error(`A saved theme needs a game the City Creator has tables for, not "${pack?.system}"`);
+  const out = validateThemePack(pack, { system: pack.system, races });
+  if (!out.names) throw new Error('A saved theme needs its name pool');
+  return out;
+}
+
+// A pack split back into the five parts it was written in, so a saved theme
+// loads onto the page as if it had just been written.
+export function themeParts(pack) {
+  const pick = (part) => Object.fromEntries(THEME_PARTS[part].map((k) => [k, pack.tables[k]]));
+  return {
+    people: { tables: pick('people'), roleOcc: { ...pack.roleOcc } },
+    buildings: { tables: pick('buildings'), shopTypes: pack.shopTypes, mapStyle: pack.mapStyle,
+      ...(pack.raceLines ? { raceLines: pack.raceLines } : {}) },
+    overview: { tables: pick('overview'), overviewExtras: pack.overviewExtras, title: pack.title },
+    streets: { tables: pick('streets') },
+    names: pack.names,
+  };
+}
+
+// One table's lines replaced by the G.M.'s own, checked by the same rules as
+// the part it belongs to. Returns [part, the part's new value]. A role that is
+// gone takes its class mapping with it rather than being refused.
+export function editThemeTable(parts, key, lines, settings, prompt) {
+  const part = Object.keys(THEME_PARTS).find((p) => THEME_PARTS[p].includes(key));
+  if (!part) throw new Error(`No theme table ${key}`);
+  const T = TABLES[settings.system];
+  const value = { ...parts[part], tables: { ...parts[part].tables, [key]: lines } };
+  if (part === 'people') {
+    const roles = new Set((Array.isArray(value.tables.NPC_ROLES) ? value.tables.NPC_ROLES : []).map((x) => String(x).trim()));
+    const roleOcc = Object.fromEntries(Object.entries(value.roleOcc || {}).filter(([r]) => roles.has(r)));
+    return [part, checkPeople({ ...value, roleOcc }, T)];
+  }
+  if (part === 'buildings') return [part, checkBuildings(value, T, settings, prompt)];
+  if (part === 'overview') return [part, checkOverview(value)];
+  return [part, checkStreets(value)];
 }
 
 // ── names ──

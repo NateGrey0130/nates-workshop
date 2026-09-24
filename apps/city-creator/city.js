@@ -14,7 +14,8 @@
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, rollBlocker, linkSheet,
   stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor,
-  THEME_PARTS, THEME_INTENSITY, themePrompt, parseThemePart, assembleThemePack }
+  THEME_PARTS, THEME_INTENSITY, THEME_TABLES, THEME_MIN_LINES, themePrompt, parseThemePart, assembleThemePack,
+  validateSavedTheme, themeParts, editThemeTable }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 import { needsOccupation } from '/apps/character-creator/js/parser.js';
@@ -42,6 +43,10 @@ const S = {
   themeText: '', intensity: 'strong',
   themeParts: {},    // part -> { key, value }
   themeStatus: {},   // part -> 'writing' | 'done' | an error message
+  // The saved themes (migration 084): the list for this game, which one the
+  // theme on the page came from or was saved as, and the table being edited.
+  library: null, libraryMsg: '', libraryErr: false, libraryOpen: false,
+  themeId: null, loadedPack: null, editKey: 'NPC_ROLES',
   seed: '',
   rccs: null,        // the setting's published R.C.C.s, for the race rows
   city: null,
@@ -62,7 +67,7 @@ const S = {
 function save() {
   try {
     localStorage.setItem(STORE, JSON.stringify({ settings: S.settings, themeText: S.themeText, intensity: S.intensity,
-      themeParts: S.themeParts, city: S.city, saved: S.saved, dirty: S.dirty }));
+      themeParts: S.themeParts, themeId: S.themeId, city: S.city, saved: S.saved, dirty: S.dirty }));
   }
   catch { /* private mode, full storage - the page works without it */ }
 }
@@ -75,6 +80,7 @@ function restore() {
     else if (typeof v?.nameTheme === 'string') S.themeText = v.nameTheme;
     if (THEME_INTENSITY[v?.intensity]) S.intensity = v.intensity;
     if (v?.themeParts && typeof v.themeParts === 'object') S.themeParts = v.themeParts;
+    if (Number.isInteger(v?.themeId)) S.themeId = v.themeId;
     // A city kept by Phase 1 has no map yet: draw it once, then it is kept.
     if (v?.city?.version === 1) S.city = v.city.map ? v.city : withMap(v.city);
     if (S.city && v?.saved?.id) { S.saved = v.saved; S.dirty = !!v.dirty; }
@@ -167,6 +173,7 @@ function settingsHtml() {
       rules. A race's own lines change only if the theme, or that race's box above, names the race. The players never see
       the theme. Without one, the built-in ${esc(SETTING_LABEL[s.system] || s.system)} lines and names.</p>
     ${themeStatusHtml()}
+    ${libraryHtml()}
 
     <div class="rowline" style="flex-wrap:wrap;margin-top:10px">
       <label class="small">Seed <input type="text" value="${esc(S.seed)}" placeholder="random" style="width:9em"
@@ -197,7 +204,11 @@ function themeStatusHtml() {
   const mark = (p) => {
     const st = S.themeStatus[p];
     if (st === 'writing') return `<span class="tag">${PART_LABEL[p]} …</span>`;
-    if (kept.includes(p)) return `<span class="tag">${PART_LABEL[p]} ✓</span>`;
+    // A written part can be asked for again on its own: click it, then Generate.
+    if (kept.includes(p)) {
+      return `<button type="button" class="tag city-part" title="Write the ${PART_LABEL[p]} again on the next Generate"
+        onclick="City.rewritePart('${p}')">${PART_LABEL[p]} ✓</button>`;
+    }
     if (st && st !== 'done') return `<span class="tag warn" title="${esc(st)}">${PART_LABEL[p]} ✗</span>`;
     return `<span class="tag muted">${PART_LABEL[p]}</span>`;
   };
@@ -239,6 +250,68 @@ async function writeTheme(text) {
   const parts = Object.fromEntries(Object.keys(THEME_PARTS).map((p) => [p, S.themeParts[p].value]));
   return assembleThemePack(text, parts, S.settings);
 }
+
+// ── saved themes (migration 084) ──
+// A theme costs five calls to write, so a good one is kept for the next town:
+// saved to the G.M.'s own library, used again with no call at all, renamed,
+// deleted. Its lines can be edited here too, one table at a time, checked by
+// the same rules the calls' answers meet. A city made from a saved theme
+// keeps its own copy, so a later edit here never changes a kept city.
+async function loadLibrary() {
+  try {
+    S.library = (await api(`city-themes?system=${encodeURIComponent(S.settings.system)}`)).themes || [];
+  } catch (err) {
+    S.library = []; S.libraryMsg = 'Could not load your saved themes: ' + err.message; S.libraryErr = true;
+  }
+}
+// The written parts for the theme on the page, or null for a part not yet written.
+function currentParts() {
+  const text = S.themeText.trim();
+  return Object.fromEntries(Object.keys(THEME_PARTS).map((p) =>
+    [p, S.themeParts[p]?.key === partKey(p, text) ? S.themeParts[p].value : null]));
+}
+// The whole theme on the page, or null until every part is written.
+function currentPack() {
+  const text = S.themeText.trim();
+  const parts = currentParts();
+  if (!text || Object.values(parts).some((v) => !v)) return null;
+  try { return assembleThemePack(text, parts, S.settings); } catch { return null; }
+}
+const tableLabel = (k) => k.toLowerCase().replace(/_/g, ' ');
+function libraryHtml() {
+  const list = S.library || [];
+  const pack = currentPack();
+  const mine = S.themeId && list.find((t) => t.id === S.themeId);
+  const key = THEME_TABLES.includes(S.editKey) ? S.editKey : THEME_TABLES[0];
+  return `<details class="city-theme-library" style="margin-top:8px"${S.libraryOpen ? ' open' : ''} ontoggle="City.libraryOpen(this.open)">
+    <summary class="small"><b>Saved themes</b> <span class="muted">- yours, for ${esc(SETTING_LABEL[S.settings.system] || S.settings.system)};
+      ${list.length} saved</span></summary>
+    <div class="rowline" style="flex-wrap:wrap;margin-top:6px">
+      ${pack ? (mine
+        ? `<button type="button" class="btn btn-sm btn-primary" onclick="City.saveTheme(true)">💾 Save changes to "${esc(mine.name)}"</button>
+           <button type="button" class="btn btn-sm" onclick="City.saveTheme(false)">💾 Save as a new theme</button>`
+        : '<button type="button" class="btn btn-sm btn-primary" onclick="City.saveTheme(false)">💾 Save this theme</button>')
+        : '<span class="muted small">A theme can be saved once all five parts are written.</span>'}
+    </div>
+    ${list.length ? `<ul class="small city-theme-list">${list.map((t) => `<li><b>${esc(t.name)}</b>
+      <span class="muted">${esc(t.prompt)}</span>
+      <button type="button" class="btn btn-sm" onclick="City.useTheme(${t.id})">Use</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="City.renameTheme(${t.id})">Rename</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="City.deleteTheme(${t.id})" aria-label="Delete ${esc(t.name)}">✕</button>
+      </li>`).join('')}</ul>` : ''}
+    ${pack ? `<div class="city-theme-edit" style="margin-top:6px">
+      <label class="small">Edit a table's lines <select aria-label="Theme table to edit" onchange="City.editKey(this.value)">
+        ${THEME_TABLES.map((k) => `<option value="${k}"${k === key ? ' selected' : ''}>${esc(tableLabel(k))}</option>`).join('')}
+      </select></label>
+      <textarea id="theme-edit" rows="8" style="width:100%" aria-label="The theme's ${esc(tableLabel(key))}, one per line">${
+        esc(pack.tables[key].join('\n'))}</textarea>
+      <div class="rowline" style="flex-wrap:wrap"><button type="button" class="btn btn-sm" onclick="City.applyEdit()">Apply</button>
+        <span class="muted small">One line each, ${THEME_MIN_LINES} or more. The next Generate uses them.</span></div>
+    </div>` : ''}
+    ${S.libraryMsg ? `<p class="small${S.libraryErr ? ' err' : ''}">${esc(S.libraryMsg)}</p>` : ''}
+  </details>`;
+}
+function libraryFail(err) { S.libraryMsg = err.message; S.libraryErr = true; render(); }
 
 // ── the city ──
 const locked = (id) => S.city.locks.includes(id);
@@ -535,7 +608,8 @@ async function generate() {
       // The names come with the theme, as its pool; the city keeps the rest.
       const { names, ...pack } = await writeTheme(text);
       pool = names;
-      theme = { intensity: S.intensity, pack };
+      // A city keeps its own copy of the pack, and which saved theme it came from.
+      theme = { intensity: S.intensity, pack, ...(S.themeId ? { library_id: S.themeId } : {}) };
     } else if (S.settings.races.some((x) => x.theme?.trim())) {
       S.msg = 'Asking for a name pool…'; render();
       const { system, prompt } = poolPrompt(S.settings, 'fantasy');
@@ -568,6 +642,8 @@ window.City = {
     else if (key === 'everyRace') s.everyRace = !!value;
     else if (key === 'system') {
       s.system = value; S.rccs = null;
+      // A saved theme belongs to one game, so the list is the new game's.
+      S.library = null; loadLibrary().then(render);
       // Races are the setting's own: a row the new setting has no class for
       // would build a city of a people that setting does not have.
       loadRaces().then(() => {
@@ -601,9 +677,77 @@ window.City = {
     S.settings.races = restAreHuman(S.settings.races, { ...human, theme: '' });
     save(); render();
   },
-  theme(v) { S.themeText = String(v || ''); save(); render(); },
+  theme(v) {
+    S.themeText = String(v || '');
+    // A different theme is no longer the saved one it was loaded from.
+    if (S.loadedPack && S.themeText.trim() !== S.loadedPack.prompt) { S.themeId = null; S.loadedPack = null; }
+    save(); render();
+  },
   intensity(v) { if (THEME_INTENSITY[v]) S.intensity = v; save(); },
   rewriteTheme() { S.themeParts = {}; S.themeStatus = {}; save(); render(); },
+  rewritePart(part) { delete S.themeParts[part]; delete S.themeStatus[part]; save(); render(); },
+  libraryOpen(open) { S.libraryOpen = !!open; },
+  editKey(k) { S.editKey = k; render(); },
+  async saveTheme(update) {
+    const pack = currentPack();
+    if (!pack) return;
+    // Lines for a race this city does not have, kept from the saved theme.
+    if (S.loadedPack?.raceLines) pack.raceLines = { ...S.loadedPack.raceLines, ...(pack.raceLines || {}) };
+    try {
+      const res = update && S.themeId
+        ? await post(`city-themes/${S.themeId}`, 'PATCH', { pack })
+        : await post('city-themes', 'POST', { pack });
+      S.themeId = res.theme.id; S.loadedPack = pack;
+      S.libraryMsg = update ? `Saved the changes to ${res.theme.name}.` : `Saved ${res.theme.name}.`; S.libraryErr = false;
+      await loadLibrary();
+      save(); render();
+    } catch (err) { libraryFail(err); }
+  },
+  async useTheme(id) {
+    try {
+      const { theme } = await api(`city-themes/${id}`);
+      // Checked on the way in too: a saved theme meets the rules a written one does.
+      const pack = validateSavedTheme(theme.pack);
+      const text = pack.prompt;
+      S.themeText = text;
+      S.themeParts = Object.fromEntries(Object.entries(themeParts(pack)).map(([p, value]) => [p, { key: partKey(p, text), value }]));
+      S.themeStatus = {}; S.themeId = theme.id; S.loadedPack = pack;
+      S.libraryMsg = `Using ${theme.name}. Generate builds a city from it with no AI call.`; S.libraryErr = false;
+      save(); render();
+    } catch (err) { libraryFail(err); }
+  },
+  async renameTheme(id) {
+    const t = (S.library || []).find((x) => x.id === id);
+    const name = prompt('A new name for this theme', t?.name || '');
+    if (!name || !name.trim()) return;
+    try {
+      await post(`city-themes/${id}`, 'PATCH', { name: name.trim() });
+      S.libraryMsg = `Renamed it ${name.trim()}.`; S.libraryErr = false;
+      await loadLibrary(); render();
+    } catch (err) { libraryFail(err); }
+  },
+  async deleteTheme(id) {
+    const t = (S.library || []).find((x) => x.id === id);
+    if (!confirm(`Delete the saved theme "${t?.name || id}"? Cities already made from it keep their own copy.`)) return;
+    try {
+      await api(`city-themes/${id}`, { method: 'DELETE' });
+      if (S.themeId === id) { S.themeId = null; S.loadedPack = null; }
+      S.libraryMsg = 'Deleted.'; S.libraryErr = false;
+      await loadLibrary(); save(); render();
+    } catch (err) { libraryFail(err); }
+  },
+  applyEdit() {
+    const key = THEME_TABLES.includes(S.editKey) ? S.editKey : THEME_TABLES[0];
+    const lines = ($('theme-edit')?.value || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const text = S.themeText.trim();
+    try {
+      const [part, value] = editThemeTable(currentParts(), key, lines, S.settings, text);
+      S.themeParts[part] = { key: partKey(part, text), value };
+      S.libraryMsg = `Changed the ${tableLabel(key)}. The next Generate uses them${S.themeId ? ' - save the theme to keep them' : ''}.`;
+      S.libraryErr = false;
+      save(); render();
+    } catch (err) { libraryFail(err); }
+  },
   seed(v) { S.seed = v; },
   generate,
   lock(id) { S.city = toggleLock(S.city, id); changed(); save(); render(); },
@@ -758,7 +902,7 @@ window.City = {
 };
 
 restore();
-await Promise.all([loadRaces(), loadCamps()]);
+await Promise.all([loadRaces(), loadCamps(), loadLibrary()]);
 // ?seed=N opens on that city, built from the settings on screen - a seed can
 // be passed on, and a printed page can be made without clicking. Built-in
 // names only: a URL never spends an AI call.

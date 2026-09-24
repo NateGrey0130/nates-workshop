@@ -482,6 +482,28 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '080-cities.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cities');
 
+-- The City Creator's saved themes (migration 084), a G.M.'s own for reuse.
+-- OWNER ONLY by owner_email, a 404 to anyone else. `pack` is the whole theme
+-- (validateThemePack's shape, name pool included), checked by the engine on
+-- every write; a city made from one keeps its own copy, so an edit here never
+-- changes a kept city. One game per pack: its shops and roles are that game's.
+CREATE TABLE IF NOT EXISTS city_themes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  system TEXT NOT NULL CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited')),
+  prompt TEXT NOT NULL,
+  pack TEXT NOT NULL,                    -- JSON, the theme pack
+  adapted_from INTEGER REFERENCES city_themes(id) ON DELETE SET NULL,  -- the theme this was adapted from, for another game
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_city_themes_owner ON city_themes (owner_email, system);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '084-city-themes.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'city_themes');
+
 -- Marvel Heroes (apps/marvel-heroes): the full text of the Ultimate Powers
 -- Book's power listings. Its rows are never in this repository - see migration
 -- 081 - so a database built from here has it empty, which the app allows for.
