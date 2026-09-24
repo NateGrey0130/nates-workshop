@@ -3128,3 +3128,7 @@ body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); 
 .inv-acts { white-space: nowrap; }
 /* How many of a stack to claim from the party stash. */
 .claim-qty { width: 64px; }
+
+/* The codex marks what the reader's own characters hold (me/holdings). */
+.codex-yours { margin-left: 6px; font-size: 10px; vertical-align: 1px; }
+.codex-mine { margin: 6px 0; }

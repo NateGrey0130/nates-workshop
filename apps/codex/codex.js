@@ -325,6 +325,7 @@ const S = {
   textError: {},        // -> what went wrong; cleared by the next attempt
   group: '',            // one meta value ("Level 3", "Weapons") or '' for all
   sort: '',             // a sortsFor() key, '' = the catalog's own order
+  holdings: null,       // me/holdings: { holds: {section: {key: [ids]}}, byId }
   focus: null,          // "<section>:<key>" a link named - scrolled to and marked
   missing: null,        // the key a link named that this section does not hold
 };
@@ -457,6 +458,29 @@ async function loadSection(id) {
   render();
   // A link may have named a row in this section before it had arrived.
   if (id === S.tab) settleFocus();
+}
+
+// Which of the reader's OWN characters hold what (me/holdings), fetched once
+// for the whole page - it is a few hundred keys at most, against a request per
+// opened entry otherwise. Keyed exactly as each section keys its rows, so a
+// lookup is sec.id + sec.key(r). A failure costs the "yours" marks and nothing
+// else: the codex is a reference first, and it must not wait on this.
+async function loadHoldings() {
+  try {
+    const res = await api('me/holdings');
+    S.holdings = {
+      holds: res.holds || {},
+      byId: Object.fromEntries((res.characters || []).map((c) => [c.id, c])),
+    };
+  } catch {
+    S.holdings = null;
+  }
+  render();
+}
+
+function heldBy(sec, r) {
+  const ids = S.holdings?.holds?.[sec.id]?.[sec.key(r)] || [];
+  return ids.map((id) => S.holdings.byId[id]).filter(Boolean);
 }
 
 async function loadIndex() {
@@ -640,9 +664,11 @@ function entry(sec, r) {
   // exists. It says so instead, which is also the visible edge of the Book of
   // Magic spells still to be filled in.
   const [sid, ...rest] = key.split(':');
+  const mine = heldBy(sec, r);
   return `<div class="codex-entry${open ? ' open' : ''}${S.focus === key ? ' focus' : ''}">
     <button type="button" class="codex-head" data-key="${escHtml(key)}" aria-expanded="${open}">
-      <span class="codex-name">${escHtml(sec.title(r))}</span>
+      <span class="codex-name">${escHtml(sec.title(r))}${mine.length
+        ? ` <span class="tag codex-yours" title="${escHtml(`Held by ${mine.map((c) => c.name).join(', ')}`)}">yours</span>` : ''}</span>
       <span class="codex-meta">${escHtml(sec.meta(r))}</span>
       <span class="codex-cost">${escHtml(cost)}</span>
     </button>
@@ -652,6 +678,9 @@ function entry(sec, r) {
       ${textHtml}
       ${sec.notes(r).filter(Boolean)
         .map((n) => `<p class="note small">${escHtml(n)}</p>`).join('')}
+      ${mine.length ? `<p class="small codex-mine noprint">${sec.id === 'classes'
+        ? 'Your characters of this class' : 'Your characters with this'}: ${mine.map((c) =>
+          `<a href="/apps/character-sheet/?id=${encodeURIComponent(c.id)}">${escHtml(c.name)}</a>`).join(', ')}</p>` : ''}
       <p class="muted small codex-foot">${escHtml(r.source_book || 'source not recorded')}
         <button type="button" class="btn btn-sm btn-ghost noprint" data-copy="${escHtml(entryHash(sid, rest.join(':')))}">Copy link</button></p>
     </div>` : ''}
@@ -882,5 +911,6 @@ window.addEventListener('hashchange', applyHash);
 
 render();
 loadIndex();
+loadHoldings();
 applyHash();
 loadSection(S.tab);

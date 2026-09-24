@@ -2103,6 +2103,22 @@ export function run() {
           && /else if \(S\.draftOffer\) S\.classOffer = c;\s*else \{ startWithClass\(c\); return; \}/.test(wizard),
         'the wizard ignores ?class=, keeps it in the address, or starts over a draft without asking');
     }
+    // "Your characters with this" (plan PR 9). One read for the whole page,
+    // and a route that cannot be widened: it binds the caller's email and
+    // reads NOTHING from the request. regression.mjs asks as a second person;
+    // this holds the shape that makes that answer true for every request.
+    {
+      const holdings = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'me', 'holdings.js'), 'utf8');
+      check('the codex asks once which of the reader\'s own characters hold what',
+        /api\('me\/holdings'\)/.test(js) && (js.match(/me\/holdings'/g) || []).length === 1
+          && /function heldBy\(sec, r\)/.test(js),
+        'the codex lost its holdings read, or asks for it more than once');
+      check('and that route reads nothing from the request but who is asking',
+        !/searchParams|new URL\(request|readJson|params\./.test(holdings)
+          && (holdings.match(/player_email = \? AND c\.kind = 'pc'/g) || []).length === 1
+          && /\.bind\(email\)/.test(holdings) && !/\.bind\((?!email\))/.test(holdings),
+        'me/holdings can be steered by the request, or binds something other than the caller');
+    }
     check('and a link to one entry clears whatever narrowing would hide it',
       /S\.system = '';\s*S\.filter = '';\s*S\.group = '';/.test(js),
       'an entry link can land under a filter that hides the entry it names');
