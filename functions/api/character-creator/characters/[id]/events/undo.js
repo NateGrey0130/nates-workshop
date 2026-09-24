@@ -8,7 +8,9 @@
 // are not the same test: an event of an unlisted kind with nothing to restore
 // is still selected, still stamped undone, and still restores nothing -- so it
 // eats the press and leaves the real last change standing. Any new kind that
-// carries no changes belongs in the list below, and `grant` is one.
+// carries no changes belongs in the list below, and `grant` is one. So is
+// `stash` - an item given to the party stash, which comes back by claiming it
+// from the stash, not by an undo here (items/[itemId]/stash.js).
 //
 // The undo is itself visible history — the row stays, marked, and the
 // response says what was restored so the client can update in place.
@@ -21,7 +23,7 @@ export async function onRequestPost({ request, env, params }) {
 
   const { results } = await env.DB.prepare(
     `SELECT id, kind, payload FROM play_events
-     WHERE character_id = ? AND undone_at IS NULL AND kind NOT IN ('roll', 'recap', 'grant')
+     WHERE character_id = ? AND undone_at IS NULL AND kind NOT IN ('roll', 'recap', 'grant', 'stash')
      ORDER BY id DESC LIMIT 1`
   ).bind(params.id).all();
   if (!results.length) return json({ error: 'Nothing to undo' }, 404);

@@ -1284,7 +1284,9 @@ async function endSession() {
     else if (e.kind === 'power') { const name = note.split(' −')[0] || note; powers[name] = (powers[name] || 0) + 1; }
     else if (e.kind === 'ammo') { if (/shot fired/.test(note)) shots++; else if (/reload/.test(note)) reloads++; }
     else if (e.kind === 'pool') pools++;
-    else if (e.kind === 'grant') grants.push(note);
+    // A gift to the party stash reads as a sentence too ("gave 2 × Arrows to
+    // the party stash"), so it rides with the grants rather than as a count.
+    else if (e.kind === 'grant' || e.kind === 'stash') grants.push(note);
     else if (e.kind === 'roll') { rolls++; if (/— pass/.test(note)) passes++; else if (/— fail/.test(note)) fails++; }
   }
   const lines = [`Play session: ${session.length} actions.`];
@@ -3728,7 +3730,15 @@ function inventoryRowsHtml() {
     // name, on every row. `name` is already escaped for an attribute - escHtml
     // escapes the quote now - so this needs no second pass.
     const rmLabel = `Remove ${name}`;
-    const rm = w ? `<td><button class="btn btn-sm btn-ghost upkeep" aria-label="${rmLabel}" title="${rmLabel}"
+    // Back to the party (items/[itemId]/stash.js): only for a character in a
+    // campaign, and not for an enchanted item - the stash has nowhere to keep
+    // its enchantments, and the server refuses it for that reason.
+    const enchanted = Array.isArray(it.enchantments) && it.enchantments.length > 0;
+    const giveLabel = `Give ${name} to the party stash`;
+    const give = w && C.data?.campaign_id && !enchanted
+      ? `<button class="btn btn-sm btn-ghost upkeep" aria-label="${giveLabel}" title="${giveLabel}"
+          onclick="giveToStash(${it.id})">to stash</button>` : '';
+    const rm = w ? `<td class="inv-acts">${give}<button class="btn btn-sm btn-ghost upkeep" aria-label="${rmLabel}" title="${rmLabel}"
       onclick="removeItem(${it.id})">✕</button></td>` : '<td></td>';
     // The block is its own row spanning the table rather than living inside the
     // name cell: a stat block in a 5-column table's first column would set the
@@ -4343,6 +4353,28 @@ function removeItem(rowId) {
       if (!keepalive) await refreshInventory();
     },
   });
+}
+
+// Hand an item back to the party. A stack asks how many (prompt, because it is
+// a number to type, not a yes to click through); one item just goes. The
+// server moves it in one batch and logs it, so the stash and the sheet can
+// never both hold it or both lose it.
+async function giveToStash(rowId) {
+  const it = C.items.find((x) => x.id === rowId);
+  if (!it) return;
+  const name = it.item_name || it.custom_name || 'the item';
+  let qty = it.qty;
+  if (it.qty > 1) {
+    const typed = prompt(`How many of the ${it.qty} ${name} go to the party stash?`, String(it.qty));
+    if (typed == null) return;
+    qty = Math.trunc(Number(typed));
+    if (!(qty >= 1 && qty <= it.qty)) { flash(`Give between 1 and ${it.qty}.`, true); return; }
+  }
+  try {
+    const res = await api(`characters/${id}/items/${rowId}/stash`, jsonReq('POST', { qty }));
+    await refreshInventory();
+    flash(res.note ? res.note.charAt(0).toUpperCase() + res.note.slice(1) + '.' : 'Given to the party stash.');
+  } catch (err) { flash(err.message, true); }
 }
 
 async function addItem() {

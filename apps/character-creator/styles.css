@@ -3122,3 +3122,9 @@ body.present.is-error .present-bottom { display: none; }
 .undo-toast[hidden] { display: none; }
 .undo-toast .err { color: var(--danger); }
 body.play-mode .undo-toast { bottom: calc(110px + env(safe-area-inset-bottom)); }
+
+/* The inventory row's actions: "to stash" (back to the party) beside the
+   remove. One line, so the table does not grow a second row per item. */
+.inv-acts { white-space: nowrap; }
+/* How many of a stack to claim from the party stash. */
+.claim-qty { width: 64px; }
