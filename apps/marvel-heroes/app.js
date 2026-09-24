@@ -8,6 +8,7 @@ import { rng, newSeed, d100 } from './js/dice.js';
 import { makeFeat } from './js/feat.js';
 import { makeBrowser } from './js/browser.js';
 import { makeGenerator, newSeeds, STEPS, PRIMARY } from './js/generator.js';
+import { snapshot, renderSheet, tagline } from './js/sheet.js';
 
 export const APP = 'marvel-heroes';
 
@@ -36,6 +37,7 @@ function initTabs() {
       $(`#${t.getAttribute('aria-controls')}`).hidden = !on;
     }
     try { localStorage.setItem('mh-tab', id); } catch { /* storage may be blocked */ }
+    document.dispatchEvent(new CustomEvent('mh-tab', { detail: id }));
   };
   tabs.forEach((t, i) => {
     t.addEventListener('click', () => show(t.dataset.tab));
@@ -52,7 +54,9 @@ function initTabs() {
   if (!tabs.some((t) => t.dataset.tab === saved)) {
     try { saved = localStorage.getItem('mh-tab'); } catch { /* ignore */ }
   }
-  show(tabs.some((t) => t.dataset.tab === saved) ? saved : tabs[0].dataset.tab);
+  // Shown once the rest of the page is wired, so a panel that loads when it is
+  // shown (My heroes) hears the first one too.
+  return { show, start: () => show(tabs.some((t) => t.dataset.tab === saved) ? saved : tabs[0].dataset.tab) };
 }
 
 // ---------------------------------------------------------------- FEAT roller
@@ -222,6 +226,31 @@ function initBrowser(browser, tables) {
   draw();
 }
 
+// ---------------------------------------------------------------- saved heroes
+
+// /api/marvel-heroes/heroes. Every call answers { ok, status, body }, so a
+// failure is a sentence on the page rather than an exception.
+const heroesApi = {
+  async call(method, query = '', payload) {
+    try {
+      const res = await fetch(`/api/marvel-heroes/heroes${query}`, {
+        method, credentials: 'same-origin',
+        headers: payload ? { 'Content-Type': 'application/json' } : {},
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
+      const body = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch {
+      return { ok: false, status: 0, body: { error: 'The server could not be reached.' } };
+    }
+  },
+  list() { return this.call('GET'); },
+  get(id) { return this.call('GET', `?id=${encodeURIComponent(id)}`); },
+  save(hero) { return this.call('POST', '', hero); },
+  remove(id) { return this.call('DELETE', `?id=${encodeURIComponent(id)}`); },
+};
+const failure = (r) => r.body?.error || (r.status ? `The server answered ${r.status}.` : 'The server could not be reached.');
+
 // ---------------------------------------------------------------- generator
 
 // Which picks belong to which step: rerolling a step forgets its picks too,
@@ -238,7 +267,7 @@ const STEP_PICKS = {
 const LABEL = { fighting: 'Fighting', agility: 'Agility', strength: 'Strength', endurance: 'Endurance',
   reason: 'Reason', intuition: 'Intuition', psyche: 'Psyche', resources: 'Resources', popularity: 'Popularity' };
 
-function initGenerator(gen, data) {
+function initGenerator(gen, data, tabs) {
   const root = $('#gen');
   const rankName = (id) => gen.ladder.find((r) => r.id === id)?.name ?? id;
   const byId = (list, id) => list.find((x) => x.id === id);
@@ -251,6 +280,7 @@ function initGenerator(gen, data) {
   } catch { /* a blocked or stale store just means a fresh hero */ }
   if (!state) state = fresh();
   const save = () => { try { localStorage.setItem('mh-hero', JSON.stringify(state)); } catch { /* ignore */ } };
+  let built = null;   // what draw() last built, which is what Save saves
 
   function reroll(step) {
     state.seeds[step] = newSeed();
@@ -288,7 +318,9 @@ function initGenerator(gen, data) {
 
   function draw() {
     const h = gen.build(state);
+    built = h;
     save();
+    drawSaved();
     const t = gen.typeById[h.body.id];
     const bodyTypes = gen.types;
     // What a trait key means, for a Compound's list of kept traits.
@@ -511,25 +543,152 @@ function initGenerator(gen, data) {
     if (hit) setPick('powers', [...new Set([...(state.picks.powers || []), hit])]);
   });
   $('#gen-roll').addEventListener('click', rollAll);
-  $('#gen-new').addEventListener('click', () => { state = fresh(); draw(); });
+  $('#gen-new').addEventListener('click', () => { state = fresh(); saveStatus.textContent = ''; draw(); });
+
+  // Saving. state.saved is the hero this build was opened from or last saved
+  // as; Save updates that hero and "Save as a new hero" makes another.
+  const saveForm = $('#gen-save');
+  const saveStatus = $('#gen-save-status');
+  function drawSaved() {
+    const s = state.saved;
+    $('#gen-save-btn').textContent = s ? 'Save changes' : 'Save hero';
+    $('#gen-save-new').hidden = !s;
+    if (s && document.activeElement !== saveForm.elements.name) saveForm.elements.name.value = s.name;
+  }
+  async function saveHero(asNew) {
+    const name = saveForm.elements.name.value.trim();
+    if (!name) { saveStatus.textContent = 'Give the hero a name first.'; saveForm.elements.name.focus(); return; }
+    saveStatus.textContent = 'Saving...';
+    const r = await heroesApi.save({
+      ...(state.saved && !asNew ? { id: state.saved.id } : {}),
+      name,
+      build: { seeds: state.seeds, picks: state.picks },
+      snapshot: snapshot(built, gen, data, state.picks.contacts || []),
+    });
+    if (!r.ok) { saveStatus.textContent = `Not saved: ${failure(r)}`; return; }
+    state.saved = { id: r.body.id, name };
+    save();
+    drawSaved();
+    saveStatus.textContent = `Saved ${name}. It is on the My heroes tab.`;
+  }
+  saveForm.addEventListener('submit', (e) => { e.preventDefault(); saveHero(false); });
+  $('#gen-save-new').addEventListener('click', () => saveHero(true));
   $('#gen-print').addEventListener('click', () => window.print());
   draw();
+
+  // A saved hero, reopened: its dice and picks, and the hero it saves back to.
+  return {
+    open(hero) {
+      state = { seeds: { ...hero.build.seeds }, picks: { ...hero.build.picks }, locks: {}, saved: { id: hero.id, name: hero.name } };
+      draw();
+      saveStatus.textContent = `Editing ${hero.name}. Save changes updates it and keeps its sheet.`;
+      tabs.show('gen');
+    },
+    forget(id) {
+      if (state.saved?.id !== id) return;
+      delete state.saved;
+      save();
+      drawSaved();
+      saveStatus.textContent = '';
+    },
+  };
+}
+
+// ---------------------------------------------------------------- my heroes
+
+function initHeroes(generator) {
+  const list = $('#heroes-list');
+  const status = $('#heroes-status');
+  const wrap = $('#sheet-wrap');
+  const sheetEl = $('#sheet');
+  const sheetStatus = $('#sheet-status');
+  let open = null;       // the hero on the sheet
+  let dirty = false;
+
+  async function load() {
+    status.textContent = 'Loading...';
+    const r = await heroesApi.list();
+    if (!r.ok) { status.textContent = `Your heroes could not be loaded: ${failure(r)}`; return; }
+    const heroes = r.body.heroes;
+    status.textContent = heroes.length ? `${heroes.length} saved.` : 'No heroes saved yet.';
+    list.innerHTML = heroes.map((h) => `<li><button type="button" class="hero-item${open?.id === h.id ? ' on' : ''}" data-hero="${esc(h.id)}">
+      <strong>${esc(h.name)}</strong> <span class="muted">${esc(tagline(h.snapshot))}</span></button></li>`).join('');
+  }
+
+  async function show(id) {
+    if (dirty && open && open.id !== id && !confirm(`Leave ${open.name}'s sheet without saving it?`)) return;
+    sheetStatus.textContent = 'Loading...';
+    const r = await heroesApi.get(id);
+    if (!r.ok) { sheetStatus.textContent = failure(r); return; }
+    open = r.body.hero;
+    dirty = false;
+    sheetEl.innerHTML = renderSheet(open);
+    wrap.hidden = false;
+    sheetStatus.textContent = '';
+    for (const b of list.querySelectorAll('.hero-item')) b.classList.toggle('on', b.dataset.hero === id);
+    if (matchMedia('(max-width: 760px)').matches) wrap.scrollIntoView({ block: 'start' });
+  }
+
+  // What is written on the sheet now, in the shape the endpoint stores.
+  function readSheet() {
+    const out = {};
+    for (const el of sheetEl.querySelectorAll('[data-field]')) if (el.value.trim()) out[el.dataset.field] = el.value;
+    for (const el of sheetEl.querySelectorAll('[data-number]')) {
+      if (el.value !== '' && Number.isInteger(Number(el.value))) out[el.dataset.number] = Number(el.value);
+    }
+    return out;
+  }
+
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-hero]'); if (b) show(b.dataset.hero); });
+  sheetEl.addEventListener('input', () => { dirty = true; sheetStatus.textContent = 'Changes not saved yet.'; });
+  $('#sheet-save').addEventListener('click', async () => {
+    if (!open) return;
+    sheetStatus.textContent = 'Saving...';
+    const sheet = readSheet();
+    const r = await heroesApi.save({ id: open.id, name: open.name, build: open.build, snapshot: open.snapshot, sheet });
+    if (!r.ok) { sheetStatus.textContent = `Not saved: ${failure(r)}`; return; }
+    open.sheet = sheet;
+    dirty = false;
+    sheetStatus.textContent = 'Saved.';
+    load();
+  });
+  $('#sheet-open-gen').addEventListener('click', () => {
+    if (!open) return;
+    if (dirty && !confirm('The sheet has changes that are not saved. Open the generator anyway?')) return;
+    dirty = false;
+    generator.open(open);
+  });
+  $('#sheet-print').addEventListener('click', () => window.print());
+  $('#sheet-delete').addEventListener('click', async () => {
+    if (!open || !confirm(`Delete ${open.name}? This cannot be undone.`)) return;
+    const r = await heroesApi.remove(open.id);
+    if (!r.ok) { sheetStatus.textContent = `Not deleted: ${failure(r)}`; return; }
+    const gone = open.name;
+    generator.forget(open.id);
+    open = null;
+    dirty = false;
+    wrap.hidden = true;
+    await load();
+    status.textContent = `Deleted ${gone}. ${status.textContent}`;
+  });
+  document.addEventListener('mh-tab', (e) => { if (e.detail === 'heroes') load(); });
 }
 
 // ---------------------------------------------------------------- boot
 
 async function boot() {
-  initTabs();
+  const tabs = initTabs();
   try {
     const data = await loadData('ranks', 'universal', 'powers', 'power-tables', 'tables', 'random-ranks',
       'body-types', 'origins', 'weakness', 'counts', 'talents', 'contacts');
     initFeat(makeFeat(data.ranks, data.universal));
     initBrowser(makeBrowser(data.powers, data['power-tables']), data.tables);
-    initGenerator(makeGenerator(data), data);
+    initHeroes(initGenerator(makeGenerator(data), data, tabs));
   } catch (err) {
     $('#load-error').hidden = false;
     $('#load-error').textContent = `The app's data did not load: ${err.message}`;
   }
+  tabs.start();
 }
 
 if (typeof document !== 'undefined') boot();

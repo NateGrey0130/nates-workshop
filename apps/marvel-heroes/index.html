@@ -27,6 +27,7 @@
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
   <button type="button" role="tab" id="tab-gen" data-tab="gen" aria-controls="panel-gen" aria-selected="false">Generator</button>
+  <button type="button" role="tab" id="tab-heroes" data-tab="heroes" aria-controls="panel-heroes" aria-selected="false">My heroes</button>
 </nav>
 
 <main id="app">
@@ -109,9 +110,36 @@
         <button type="button" class="btn secondary" id="gen-new">Start over</button>
         <button type="button" class="btn secondary" id="gen-print">Print the hero</button>
       </div>
+      <form id="gen-save" class="save-row">
+        <label>Hero name <input name="name" type="text" maxlength="80" autocomplete="off" required placeholder="e.g. Nightwing"></label>
+        <button type="submit" class="btn" id="gen-save-btn">Save hero</button>
+        <button type="button" class="btn secondary" id="gen-save-new" hidden>Save as a new hero</button>
+        <p id="gen-save-status" class="muted" aria-live="polite"></p>
+      </form>
     </div>
     <p id="gen-status" class="sr-only" aria-live="polite"></p>
     <div id="gen"></div>
+  </section>
+  <section id="panel-heroes" role="tabpanel" aria-labelledby="tab-heroes" hidden>
+    <div class="heroes">
+      <div class="panel hero-list-panel">
+        <span class="caption">Saved to your account</span>
+        <h1>My heroes</h1>
+        <p id="heroes-status" class="muted" aria-live="polite"></p>
+        <ol id="heroes-list" class="hero-list"></ol>
+        <p class="muted">Build one on the Generator tab and save it there.</p>
+      </div>
+      <div id="sheet-wrap" hidden>
+        <div class="panel sheet-tools row">
+          <button type="button" class="btn" id="sheet-save">Save the sheet</button>
+          <button type="button" class="btn secondary" id="sheet-open-gen">Open in the generator</button>
+          <button type="button" class="btn secondary" id="sheet-print">Print the sheet</button>
+          <button type="button" class="btn secondary" id="sheet-delete">Delete</button>
+          <p id="sheet-status" class="muted" aria-live="polite"></p>
+        </div>
+        <div id="sheet" class="panel"></div>
+      </div>
+    </div>
   </section>
 </main>
 

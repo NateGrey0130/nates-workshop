@@ -250,10 +250,10 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Fifty-three tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Fifty-four tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 The two prefixed `media_` belong to MediaVault, the six prefixed `ff_` belong
-to FilamentForge and the one prefixed `msh_` belongs to Marvel Heroes, each
+to FilamentForge and the two prefixed `msh_` belong to Marvel Heroes, each
 documented in its own app's README — that prefix is the collision boundary, because this app's
 tables are unprefixed, so anything another app adds must not be. `claude_usage`
 is the site's Claude-spend log (written fail-open by the `/api/claude` proxy
