@@ -135,6 +135,20 @@ constantly.
 
 ---
 
+## Starting from the codex
+
+A class entry in the codex carries **Start a character with this class**, a
+link to `/apps/character-creator/?class=<slug>`. The wizard reads it once on
+boot and takes it off the address, so a reload does not start a second build.
+With no draft waiting it goes straight to the Race step, in the class's own
+system, with the class chosen — the Race step lists O.C.C.s beside R.C.C.s, so
+either kind lands there. **With a draft waiting it asks first**, in a card above
+the draft's own that names what would be discarded; one draft per person means
+the link would otherwise be what throws a rolled character away. A slug the
+wizard does not have says so on the home view.
+
+---
+
 ## Two tabs cannot overwrite each other
 
 There is one draft per person, so every `PUT /draft` is a replace. That is fine

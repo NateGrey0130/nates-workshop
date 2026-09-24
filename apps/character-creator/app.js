@@ -665,6 +665,26 @@ async function dismissDraft() {
 function renderHome() {
   const d = S.draftOffer;
   const building = !d && S.rcc && !S.savedId;
+  // A codex link (?class=) that found a draft in the way, or named a class
+  // this wizard does not have. Above the draft card, because it is why the
+  // page opened.
+  const c = S.classOffer;
+  const rolledDraft = Object.values(d?.state?.attrs || {}).some((v) => v != null);
+  const offer = c && d ? `<div class="panel home-draft">
+      <h2>Start a character as ${esc(c.name)}?</h2>
+      <p>The codex sent you here to start a character as <b>${esc(c.name)}</b>
+         (${esc(c.category === 'rcc' ? 'R.C.C.' : c.category === 'occ' ? 'O.C.C.' : c.category || 'class')},
+         ${esc(SYSTEM_LABEL[c.system] || c.system || '')}). You also have the unfinished
+         ${esc(d.class_name || d.class_id || '')} build below, and there is one draft at a time.</p>
+      <div class="nav">
+        <button class="btn btn-primary" onclick="startOfferedClass()">Discard that build${
+          rolledDraft ? ' and its rolls' : ''} and start as ${esc(c.name)}</button>
+        <button class="btn btn-ghost" onclick="keepDraftOverClass()">Keep my build</button>
+      </div>
+    </div>`
+    : S.classMissing ? `<div class="panel"><p class="err small">The link asked for a class called
+        “${esc(S.classMissing)}”, and the wizard has no class by that id. It may have been renamed.</p></div>`
+    : '';
   let card = '';
   if (d) {
     const when = d.updated_at ? d.updated_at.replace('T', ' ').replace('Z', '') : 'earlier';
@@ -688,7 +708,7 @@ function renderHome() {
   }
 
   $('app').innerHTML = `
-  ${card}
+  ${offer}${card}
   <div class="panel">
     <div class="home-head">
       <h2>Start a character</h2>
@@ -721,6 +741,34 @@ async function newCharacter() {
 
 function continueBuild() {
   S.home = false;
+  render();
+}
+
+// Straight to the Race step with the class chosen, in its own system: the
+// state a player would reach by picking the system and then the card. The
+// Race step lists O.C.C.s beside R.C.C.s (an O.C.C. alone is the human
+// character), so either kind lands on the same step.
+function startWithClass(c) {
+  S.home = false;
+  S.classOffer = null; S.classMissing = null;
+  S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
+  resetBuild();
+  pickSystem(c.system);
+  pickClass(c.id);
+}
+
+// The draft card's other half when a codex link arrived with a draft on the
+// server. The button names what it discards, so it does not ask again.
+async function startOfferedClass() {
+  const c = S.classOffer;
+  if (!c) return;
+  S.draftOffer = null;
+  await discardDraft();
+  startWithClass(c);
+}
+
+function keepDraftOverClass() {
+  S.classOffer = null;
   render();
 }
 
@@ -5135,6 +5183,22 @@ async function boot(first = true) {
       // coherent, so it is dropped rather than half-applied.
       if (draft && S.classes.some((c) => c.id === draft.class_id)) S.draftOffer = migrateDraft(draft);
       else if (draft) await discardDraft();
+
+      // The codex's "Start a character with this class" arrives as
+      // ?class=<slug>. Taken off the address at once, so a reload or a
+      // bookmark of this page does not start a second build. With no draft
+      // there is nothing to lose and the build starts on the class; with one,
+      // the home view asks first - there is one draft per person, and a link
+      // followed from a reference page must not be what throws a half-rolled
+      // character away.
+      const want = new URLSearchParams(location.search).get('class');
+      if (want) {
+        history.replaceState(null, '', location.pathname + location.hash);
+        const c = S.classes.find((x) => x.id === want);
+        if (!c) S.classMissing = want;
+        else if (S.draftOffer) S.classOffer = c;
+        else { startWithClass(c); return; }
+      }
     }
     // goHome() after a save refreshes the lists through here, and the home view
     // it is showing has to catch up when they land.
@@ -5191,6 +5255,8 @@ Object.assign(window, {
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOccVariant, pickOcc, takeAbility, dropAbility,
+  // The codex's ?class= link, when a draft was waiting.
+  startOfferedClass, keepDraftOverClass,
   // The skill-program checkboxes are inline onchange handlers, so this is what
   // makes them callable at all. Without it the picker RENDERS correctly and
   // every checkbox throws ReferenceError on click - which no test caught,

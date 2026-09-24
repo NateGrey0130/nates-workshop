@@ -2032,6 +2032,22 @@ export function run() {
         && /new URLSearchParams\(location\.search\)/.test(js)
         && /history\.replaceState\(null, '', location\.pathname \+ \(qs \?/.test(js),
       'codex.js lost its group filter, its sort, or the query string that makes a filtered view a link');
+    // A class entry starts a character (plan PR 5). The codex half is a LINK
+    // so the page stays read-only; the wizard half must take the class off the
+    // address (or a reload starts a second build) and must NOT start over a
+    // draft without asking - one draft per person, and a link followed from a
+    // reference page is the last thing that should discard a rolled character.
+    {
+      const wizard = readFileSync(join(appDir, 'app.js'), 'utf8');
+      check('a class entry links to the wizard with that class',
+        /\/apps\/character-creator\/\?class=\$\{\s*encodeURIComponent\(r\.slug\)\}/.test(js),
+        'the codex class entry lost its way into the wizard');
+      check('and the wizard takes it, asking first when a draft is waiting',
+        /new URLSearchParams\(location\.search\)\.get\('class'\)/.test(wizard)
+          && /history\.replaceState\(null, '', location\.pathname \+ location\.hash\)/.test(wizard)
+          && /else if \(S\.draftOffer\) S\.classOffer = c;\s*else \{ startWithClass\(c\); return; \}/.test(wizard),
+        'the wizard ignores ?class=, keeps it in the address, or starts over a draft without asking');
+    }
     check('and a link to one entry clears whatever narrowing would hide it',
       /S\.system = '';\s*S\.filter = '';\s*S\.group = '';/.test(js),
       'an entry link can land under a filter that hides the entry it names');
