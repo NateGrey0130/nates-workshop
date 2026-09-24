@@ -839,3 +839,78 @@ three more things:
 - **Still cites this finding outside the repo:** the memory note
   `regression-ci-dev-server-dies.md`, updated in the same session to say it is
   taken.
+
+**Refuted by its own stopping rule, 2026-09-23 — the block came out, replaced
+by `G24`.** The rule said one death printing `connection keep-alive: 1s`
+refutes the hypothesis. Within three hours of the merge there were **five**, on
+three pull requests: run 35919575624 attempt 1, run 35921917883 attempts 1-3
+(one commit, three deaths in a row), and run 35926613639 attempt 1. Each died
+~50 s in, `UND_ERR_SOCKET`, server `STILL RUNNING`, idle 5.2-5.3 s. Read from
+`list_workflow_jobs` with `filter: all` and each job's log, 2026-09-23.
+
+**What was wrong was the lever, not the hypothesis.** A stale pooled socket
+*is* the cause, and `G24` shows why a shorter keep-alive cannot reach it:
+undici's keep-alive is a timer, and no timer fires while `spawnSync` holds
+the event loop.
+
+## Filed and taken at Nate's request, 2026-09-23
+
+### G24 — high — the `G20` deaths are a stale socket that no keep-alive timer can expire, because `spawnSync` blocks the loop; turn connection reuse off
+
+**Filed and taken in one PR, against `## When not to`, on purpose.** Nate
+asked for the recurring `regression` failure to be fixed after `G23` was
+refuted. A required check was failing about half its attempts, so it was not
+filed first and left for a second word. Said here so it does not read as the
+rule being missed.
+
+**The mechanism, reproduced on Linux 2026-09-23 (node v22.22.2, wrangler
+4.137.0).** `regression.mjs` blocks node's event loop in `spawnSync` wrangler
+calls for 5-6 s at a stretch. workerd closes an idle connection at 5.0 s
+(`G23`'s measurement). While the loop is blocked the client cannot read that
+close, and its keep-alive timer cannot fire either, stock 4 s or `G23`'s 1 s.
+So the first `fetch` after the pause is written to the dead pooled socket.
+That gives `other side closed`, with the server still up, which is every
+death in `G20`, `G22` and `G23`.
+
+**Evidence, all run in this Linux container on 2026-09-23:**
+
+| what ran | died |
+|---|---|
+| probe: a raw server closing idle sockets at 5.0 s with no `Keep-Alive` header, then client `fetch`, `spawnSync('sleep', 5.5)`, `fetch` — stock dispatcher | **3 / 6**, `UND_ERR_SOCKET other side closed` |
+| same probe, `G23`'s `keepAliveTimeout: 1000` | **3 / 6** |
+| same probe, `pipelining: 0` | **0 / 6** |
+| same probe, stock, 4.5 s pause (under the server's 5.0 s) | 0 / 4 |
+| `regression.mjs` at `d094f77`, `G23`'s block in, unflagged | **3 / 3**, idles 5.99 s, 5.98 s, 5.71 s |
+| `regression.mjs` with this change, unflagged | **0 / 3**, `REGRESSION PASSED (734 checks)` each time |
+
+`G23`'s note records that its local run lost 0 of 8. That run was on the
+Windows development machine. On Linux the suite dies every time, so a local
+run can now see this.
+
+**Proposal, and what shipped:** replace `G23`'s block with a dispatcher built
+from the same constructor with `pipelining: 0`, undici's documented setting
+for keep-alive disabled. Every request opens its own connection, so there is
+no pooled socket to go stale. **Posture as `G20` set it: no retry, and no
+check's verdict moves.** One thing is deliberately different from `G23`: if
+node's undocumented `Symbol.for('undici.globalDispatcher.1')` is missing,
+that is now a **failed check**, not a printed line. Running without the fix
+would bring the flake back without a sound, and a red check naming the symbol
+is the loud version. `G20`'s death block stays as the control and prints
+`connection reuse:` where it printed `connection keep-alive:`.
+
+**Confidence:** high on the mechanism. It went 3/3 to 0/3 on the real suite,
+and a probe reproduces it without the suite. It would still be good to see CI
+agree, and the obvious reading is the same `run_attempt > 1` query `G20`
+used. **Any death printing `connection reuse: off` refutes this**, since with
+nothing pooled there is no stale socket to write to.
+
+**Ongoing cost:** one block in one test file, still leaning on an
+undocumented node symbol, now with a check that says so if it moves. Each
+request pays a local TCP connect, which is far below this suite's noise.
+**Not changed and worth a later look:** `play-flow.mjs` boots its server the
+same way. It drives a browser rather than node's `fetch`, and `G21` records
+no deaths.
+
+**Taken, 2026-09-23 (PR #1313).** Still cites `G23` outside the repo: the
+memory note `regression-ci-dev-server-dies.md` on the development machine,
+which this session cannot reach.
