@@ -102,6 +102,157 @@ export function restAreHuman(races, human = { id: 'human', name: 'Human' }) {
   return left > 0 ? [...others, { ...human, pct: left }] : others;
 }
 
+// ── themes ──
+//
+// A theme ("Old West boomtown", "Neo Tokyo arcology") is a PACK of the city's
+// tables written for it, saved with the city like the name pool, and layered
+// on the setting: the setting still owns the races, the classes, the Codex and
+// the rules, and the theme owns the flavour. `city.theme` is { intensity, pack }.
+// Each draw from a themed table takes the theme's line with the intensity's
+// chance and the setting's otherwise; at Total it takes the theme's always,
+// and a theme that runs out says so rather than falling back.
+//
+// A city with NO theme draws exactly as it did before themes existed - not one
+// extra random number - so every kept and ?seed= city is unchanged.
+//
+// A theme's shop kinds each name the setting's stock rule they sell by
+// (`stockAs`), and its NPC roles the class they roll as (`roleOcc`); both are
+// checked against the setting's own lists. A race's own lines (RACE_LINES) are
+// themed ONLY for a race the G.M. named in the theme - anything else the pack
+// says about a race is thrown away.
+export const THEME_INTENSITY = { light: 0.3, strong: 0.7, total: 1 };
+export const MAP_STYLES = ['organic', 'grid', 'rail', 'canal', 'vertical'];
+export const THEME_TABLES = ['GOVERNMENTS', 'TRADES', 'WALLS', 'FACTIONS', 'DISTRICT_KINDS', 'MOODS', 'PLACES',
+  'NPC_ROLES', 'LOOKS', 'PERSONALITIES', 'WANTS', 'SECRETS', 'CITY_QUIRKS', 'RUMOURS', 'ENCOUNTERS', 'SHOP_ADJECTIVES'];
+export const THEME_MIN_LINES = 10;
+export const RUMOUR_SLOTS = ['npc', 'district', 'place', 'shop', 'faction', 'city', 'race'];
+const MAX_LINE = 300;
+const tableLabel = (key) => key.toLowerCase().replace(/_/g, ' ');
+
+// One line from table `key`.
+function draw(ctx, r, key) {
+  if (!ctx.theme) return pick(r, ctx.T[key]);
+  const own = ctx.theme.pack.tables[key];
+  return ctx.w >= 1 || r() < ctx.w ? pick(r, own) : pick(r, ctx.T[key]);
+}
+// n distinct lines from table `key`. At Total, fewer when the theme runs out.
+function drawMany(ctx, r, key, n) {
+  if (!ctx.theme) return sample(r, ctx.T[key], n);
+  let k = 0;
+  for (let i = 0; i < n; i++) if (ctx.w >= 1 || r() < ctx.w) k++;
+  const own = sample(r, ctx.theme.pack.tables[key], k);
+  if (ctx.w >= 1) {
+    if (own.length < n) ctx.warnings.add(`The theme ran out of ${tableLabel(key)}`);
+    return own;
+  }
+  const rest = sample(r, ctx.T[key].filter((x) => !own.includes(x)), n - own.length);
+  return sample(r, [...own, ...rest], own.length + rest.length);
+}
+// One line from table `key` that is not in `taken`, or null when none is left.
+function drawFree(ctx, r, key, taken) {
+  const free = (list) => list.filter((x) => !taken.has(x));
+  if (!ctx.theme) { const f = free(ctx.T[key]); return f.length ? pick(r, f) : null; }
+  const own = free(ctx.theme.pack.tables[key]);
+  if (ctx.w >= 1) return own.length ? pick(r, own) : null;
+  const base = free(ctx.T[key]);
+  if (own.length && (!base.length || r() < ctx.w)) return pick(r, own);
+  return base.length ? pick(r, base) : null;
+}
+// A race's own lines: the theme's when the G.M. named that race, else the setting's.
+function raceLines(ctx, raceId) {
+  const own = ctx.theme?.pack.raceLines?.[raceId];
+  return own ? { ...ctx.T.RACE_LINES[raceId], ...own } : ctx.T.RACE_LINES[raceId];
+}
+
+// Did the G.M. name this race - in the theme, or in the race's own naming box?
+export function raceNamed(race, text) {
+  // The name, its id as words, and a dwarf's or an elf's plural (dwarves, elves).
+  const words = [race.name, String(race.id).replace(/[-_]+/g, ' ')].filter(Boolean).map((w) => w.trim())
+    .flatMap((w) => (/f$/i.test(w) ? [w, w.replace(/f$/i, 'ves')] : [w]))
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+'));
+  const re = new RegExp(`(^|[^a-z])(${words.join('|')})(s|es)?($|[^a-z])`, 'i');
+  return re.test(String(text || '')) || re.test(String(race.theme || ''));
+}
+
+const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function lineList(v, what, min) {
+  if (!Array.isArray(v)) throw new Error(`The theme has no ${what}`);
+  const out = [...new Set(v.filter((x) => typeof x === 'string').map((x) => x.trim()).filter(Boolean))];
+  if (out.some((x) => x.length > MAX_LINE)) throw new Error(`A line of ${what} is longer than ${MAX_LINE} characters`);
+  if (out.length < min) throw new Error(`The theme has ${out.length} ${what}; it needs ${min}`);
+  return out;
+}
+function shopKinds(v, T, taken, what) {
+  if (!Array.isArray(v)) throw new Error(`The theme has no ${what}`);
+  return v.map((k) => {
+    const label = typeof k?.label === 'string' ? k.label.trim() : '';
+    if (!label) throw new Error(`A shop kind in ${what} has no name`);
+    if (taken.has(label.toLowerCase())) throw new Error(`The shop kind "${label}" is named twice, or is already one of the setting's`);
+    taken.add(label.toLowerCase());
+    if (!T.SHOP_STOCK[k.stockAs]) {
+      throw new Error(`The shop kind "${label}" sells as "${k.stockAs}", which is not one of the setting's stock rules`);
+    }
+    return { type: `theme-${slug(label)}`, label, stockAs: k.stockAs,
+      names: lineList(k.names, `name words for "${label}"`, 3), specialties: lineList(k.specialties, `specialties for "${label}"`, 3) };
+  });
+}
+
+/**
+ * A theme pack checked against the setting it is for, or an Error saying what
+ * is wrong. Returns a clean copy: every field the engine reads, and nothing
+ * else - except `raceLines` for a race the G.M. did not name, which is dropped.
+ */
+export function validateThemePack(pack, settings) {
+  const T = TABLES[settings.system];
+  if (!T) throw new Error(`No tables for ${settings.system}`);
+  if (!pack || typeof pack !== 'object') throw new Error('The theme is not an object');
+  if (pack.system && pack.system !== settings.system) throw new Error(`The theme is for ${pack.system}, not ${settings.system}`);
+  const prompt = String(pack.prompt || '').trim();
+  if (!prompt) throw new Error('The theme has no description');
+  const tables = {};
+  const extra = Object.keys(pack.tables || {}).filter((k) => !THEME_TABLES.includes(k));
+  if (extra.length) throw new Error(`The theme has tables the city does not use: ${extra.join(', ')}`);
+  for (const key of THEME_TABLES) tables[key] = lineList(pack.tables?.[key], tableLabel(key), THEME_MIN_LINES);
+  for (const line of tables.RUMOURS) {
+    const bad = [...line.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).filter((s) => !RUMOUR_SLOTS.includes(s));
+    if (bad.length) throw new Error(`A rumour uses {${bad[0]}}, which a city cannot fill`);
+  }
+  const taken = new Set([...T.SHOP_TYPES, ...Object.values(T.RACE_LINES).flatMap((x) => x.shops || [])]
+    .map((t) => t.label.toLowerCase()));
+  const shopTypes = shopKinds(pack.shopTypes, T, taken, 'shop kinds');
+  if (shopTypes.length < 3) throw new Error(`The theme has ${shopTypes.length} shop kinds; it needs 3`);
+  const rollable = new Set([...Object.values(T.ROLE_OCC), T.OWNER_OCC]);
+  const roleOcc = {};
+  for (const [role, occ] of Object.entries(pack.roleOcc || {})) {
+    if (!tables.NPC_ROLES.includes(role)) throw new Error(`The theme maps "${role}", which is not one of its roles`);
+    if (!rollable.has(occ)) throw new Error(`The theme's "${role}" rolls as "${occ}", which the setting cannot roll`);
+    roleOcc[role] = occ;
+  }
+  const mapStyle = pack.mapStyle ?? 'organic';
+  if (!MAP_STYLES.includes(mapStyle)) throw new Error(`The map style "${mapStyle}" is not one of ${MAP_STYLES.join(', ')}`);
+  const overviewExtras = (pack.overviewExtras || []).map((x) => {
+    const label = String(x?.label || '').trim();
+    if (!label) throw new Error('An overview line in the theme has no label');
+    return { key: `theme-${slug(label)}`, label, lines: lineList(x.lines, `lines for "${label}"`, 3) };
+  });
+  if (overviewExtras.length > 4) throw new Error('The theme has more than four overview lines');
+  const raceLines = {};
+  for (const [id, lines] of Object.entries(pack.raceLines || {})) {
+    const race = (settings.races || []).find((x) => x.id === id);
+    if (!race || !raceNamed(race, prompt)) continue;
+    const own = {};
+    if (lines?.quirks) own.quirks = lineList(lines.quirks, `${race.name} quirks`, 1);
+    // A named race's shops replace its own, so they may keep their names.
+    const mine = new Set((T.RACE_LINES[id]?.shops || []).map((t) => t.label.toLowerCase()));
+    if (lines?.shops) own.shops = shopKinds(lines.shops, T, new Set([...taken].filter((l) => !mine.has(l))), `${race.name} shops`);
+    if (Object.keys(own).length) raceLines[id] = own;
+  }
+  return { v: 1, system: settings.system, title: String(pack.title || prompt).trim().slice(0, 80), prompt,
+    tables, shopTypes, roleOcc, mapStyle, overviewExtras,
+    ...(Object.keys(raceLines).length ? { raceLines } : {}),
+    ...(pack.names ? { names: pack.names } : {}) };
+}
+
 // ── names ──
 //
 // With a pool (the one AI call), names come from it; without, from the
@@ -162,7 +313,7 @@ function namer(ctx) {
           if (!surname) continue;
           n = `${surname}${/s$/i.test(surname) ? "'" : "'s"} ${word}`;
         } else {
-          n = `${form === 1 ? 'The ' : ''}${pick(r, T.SHOP_ADJECTIVES)} ${word}`;
+          n = `${form === 1 ? 'The ' : ''}${draw(ctx, r, 'SHOP_ADJECTIVES')} ${word}`;
         }
         if (!ctx.used.has(n.toLowerCase())) { ctx.used.add(n.toLowerCase()); return n; }
       }
@@ -193,9 +344,9 @@ function fill(r, line, city) {
   });
   return ok ? out : null;
 }
-function fillFrom(r, table, city, tries = 30) {
+function fillFrom(ctx, r, key, city, tries = 30) {
   for (let i = 0; i < tries; i++) {
-    const got = fill(r, pick(r, table), city);
+    const got = fill(r, draw(ctx, r, key), city);
     if (got) return got;
   }
   return null;
@@ -210,13 +361,13 @@ function makeOverview(ctx, r, keepName = null) {
     : `${pick(r, T.CITY_NAME.pre)}${pick(r, T.CITY_NAME.suf)}`);
   const walled = r() < size.walls;
   const factionCount = between(r, size.factions);
-  return {
+  const o = {
     id: 'overview', name, population: settings.population, size: size.label,
-    walls: walled ? pick(r, T.WALLS) : null,
-    government: pick(r, T.GOVERNMENTS),
+    walls: walled ? draw(ctx, r, 'WALLS') : null,
+    government: draw(ctx, r, 'GOVERNMENTS'),
     wealth: pick(r, T.WEALTH).label,
-    trade: pick(r, T.TRADES),
-    factions: sample(r, T.FACTIONS, factionCount).map((line, i) => {
+    trade: draw(ctx, r, 'TRADES'),
+    factions: drawMany(ctx, r, 'FACTIONS', factionCount).map((line, i) => {
       const [name, goal] = line.split(/, (?=who )/);
       return { id: `faction-${i}`, name, goal: goal || '' };
     }),
@@ -224,6 +375,11 @@ function makeOverview(ctx, r, keepName = null) {
     // lines). Drawn last, so a setting without them draws exactly as before.
     ...(T.OVERVIEW_EXTRAS ? { extras: T.OVERVIEW_EXTRAS.map((x) => ({ key: x.key, label: x.label, text: pick(r, x.lines) })) } : {}),
   };
+  // A theme's own overview lines ("Law: a marshal and two deputies") come
+  // after the setting's, which a theme never replaces.
+  const own = ctx.theme?.pack.overviewExtras || [];
+  if (own.length) o.extras = [...(o.extras || []), ...own.map((x) => ({ key: x.key, label: x.label, text: pick(r, x.lines) }))];
+  return o;
 }
 
 // The race quarters first: every race at 20% or more has one.
@@ -233,29 +389,33 @@ function quarterRaces(settings) {
 
 function makeDistrict(ctx, r, i, quarter = null) {
   const { T } = ctx;
-  const kind = quarter ? `${quarter.name} Quarter` : pick(r, T.DISTRICT_KINDS);
+  const kind = quarter ? `${quarter.name} Quarter` : draw(ctx, r, 'DISTRICT_KINDS');
   const own = quarter ? '' : ctx.names.place(r, 'district');
   return {
     id: quarter ? `district-q-${quarter.id}` : `district-${i}`,
     name: quarter ? `${quarter.name} Quarter` : (own || kind),
     kind, race: quarter?.id || null,
-    mood: pick(r, T.MOODS),
-    encounters: sample(r, T.ENCOUNTERS, 6).map((text, n) => ({ roll: n + 1, text })),
+    mood: draw(ctx, r, 'MOODS'),
+    encounters: drawMany(ctx, r, 'ENCOUNTERS', 6).map((text, n) => ({ roll: n + 1, text })),
   };
 }
 
-// Which shop types this city can have: the setting's own, and any tied to a
-// race in its breakdown.
+// Which shop types this city can have: the setting's own (or the theme's),
+// and any tied to a race in its breakdown.
+const raceShops = (ctx) => (ctx.settings.races || []).flatMap((x) => raceLines(ctx, x.id)?.shops || []);
 function shopTypes(ctx) {
-  const extra = (ctx.settings.races || []).flatMap((x) => ctx.T.RACE_LINES[x.id]?.shops || []);
-  return [...ctx.T.SHOP_TYPES, ...extra];
+  return [...ctx.T.SHOP_TYPES, ...(ctx.theme?.pack.shopTypes || []), ...raceShops(ctx)];
+}
+function drawShopType(ctx, r) {
+  const kinds = ctx.theme && (ctx.w >= 1 || r() < ctx.w) ? ctx.theme.pack.shopTypes : ctx.T.SHOP_TYPES;
+  return pick(r, [...kinds, ...raceShops(ctx)]);
 }
 
 // The kind a stored shop is, from its label - the city stores the label.
 const shopTypeFor = (ctx, label) => shopTypes(ctx).find((t) => t.label === label) || null;
 
 function makeShop(ctx, r, i, city) {
-  const t = pick(r, shopTypes(ctx));
+  const t = drawShopType(ctx, r);
   const wealth = ctx.T.WEALTH.find((w) => w.label === city.overview.wealth);
   // Prices lean with the city's wealth, then a shop's own habits.
   const lean = Math.max(0, Math.min(ctx.T.PRICE_LEVELS.length - 1,
@@ -263,8 +423,10 @@ function makeShop(ctx, r, i, city) {
   return {
     id: `shop-${i}`, name: ctx.names.shop(r, t), type: t.label,
     specialty: pick(r, t.specialties), price: ctx.T.PRICE_LEVELS[lean],
-    quirk: pick(r, ctx.T.PERSONALITIES).replace(/^/, 'the owner '),
+    quirk: draw(ctx, r, 'PERSONALITIES').replace(/^/, 'the owner '),
     district: pick(r, city.districts)?.name || null, owner: null,
+    // A theme's kind sells by one of the setting's stock rules.
+    ...(t.stockAs ? { stockAs: t.stockAs } : {}),
   };
 }
 
@@ -281,8 +443,8 @@ function makeNpc(ctx, r, i, race = null, role = null) {
   const x = race || drawRace(r, ctx.settings.races);
   return {
     id: `npc-${i}`, name: ctx.names.person(r, x.id), race: x.name, raceId: x.id,
-    role: role || pick(r, T.NPC_ROLES), look: pick(r, T.LOOKS), quirk: pick(r, T.PERSONALITIES),
-    want: pick(r, T.WANTS), secret: pick(r, T.SECRETS),
+    role: role || draw(ctx, r, 'NPC_ROLES'), look: draw(ctx, r, 'LOOKS'), quirk: draw(ctx, r, 'PERSONALITIES'),
+    want: draw(ctx, r, 'WANTS'), secret: draw(ctx, r, 'SECRETS'),
   };
 }
 
@@ -311,10 +473,10 @@ function assignOwners(city, r) {
 }
 
 function makeQuirks(ctx, r, city) {
-  const extra = (ctx.settings.races || []).flatMap((x) => ctx.T.RACE_LINES[x.id]?.quirks || []);
+  const extra = (ctx.settings.races || []).flatMap((x) => raceLines(ctx, x.id)?.quirks || []);
   const n = between(r, [3, 5]);
   // A race's own line leads when that race is in the city, then the general ones.
-  const chosen = [...sample(r, extra, Math.min(extra.length, 1)), ...sample(r, ctx.T.CITY_QUIRKS, n)].slice(0, n);
+  const chosen = [...sample(r, extra, Math.min(extra.length, 1)), ...drawMany(ctx, r, 'CITY_QUIRKS', n)].slice(0, n);
   return chosen.map((text, i) => ({ id: `quirk-${i}`, text }));
 }
 
@@ -322,7 +484,7 @@ function makeRumours(ctx, r, city) {
   const out = [];
   const seen = new Set();
   for (let tries = 0; out.length < 10 && tries < 200; tries++) {
-    const text = fillFrom(r, ctx.T.RUMOURS, city);
+    const text = fillFrom(ctx, r, 'RUMOURS', city);
     if (!text || seen.has(text)) continue;
     seen.add(text);
     out.push({ id: `rumour-${out.length}`, roll: out.length + 1, text, true: r() < 0.5 });
@@ -332,9 +494,10 @@ function makeRumours(ctx, r, city) {
 
 // ── the whole city ──
 
-function context(settings, pool, used = []) {
+function context(settings, pool, used = [], theme = null) {
   const T = TABLES[settings.system];
-  const ctx = { T, settings, pool, used: new Set(used.map((n) => n.toLowerCase())), warnings: new Set() };
+  const ctx = { T, settings, pool, theme: theme || null, w: theme ? THEME_INTENSITY[theme.intensity] : 0,
+    used: new Set(used.map((n) => n.toLowerCase())), warnings: new Set() };
   ctx.names = namer(ctx);
   return ctx;
 }
@@ -345,13 +508,16 @@ const sectionRng = (seed, section, n = 0) => rng(hash(seed, section, n));
  *   settings  { system, population, npcCount, races: [{ id, name, pct }], everyRace }
  *   seed      a 32-bit number
  *   pool      the AI name pool, or null for the built-in names
+ *   theme     { intensity, pack } from validateThemePack, or null for none
  */
-export function generateCity(settings, seed, pool = null) {
+export function generateCity(settings, seed, pool = null, theme = null) {
   const problems = settingsProblems(settings);
+  if (theme && !THEME_INTENSITY[theme.intensity]) problems.push(`No theme intensity "${theme.intensity}"`);
   if (problems.length) throw new Error(problems.join('; '));
-  const ctx = context(settings, pool);
+  const ctx = context(settings, pool, [], theme);
   const size = sizeFor(settings.population, settings.system);
   const city = { version: 1, seed, settings: structuredClone(settings), pool: pool || null,
+    ...(theme ? { theme: structuredClone(theme) } : {}),
     overview: null, districts: [], places: [], shops: [], npcs: [], quirks: [], rumours: [], warnings: [],
     locks: [], rolls: {} };
 
@@ -364,7 +530,7 @@ export function generateCity(settings, seed, pool = null) {
     ...Array.from({ length: plain }, (_, i) => makeDistrict(ctx, rd, i)),
   ];
   const rp = sectionRng(seed, 'places');
-  city.places = sample(rp, ctx.T.PLACES, between(rp, size.places))
+  city.places = drawMany(ctx, rp, 'PLACES', between(rp, size.places))
     .map((name, i) => ({ id: `place-${i}`, name, district: pick(rp, city.districts)?.name || null }));
   const rs = sectionRng(seed, 'shops');
   city.shops = Array.from({ length: between(rs, size.shops) }, (_, i) => makeShop(ctx, rs, i, city));
@@ -389,7 +555,7 @@ function namesIn(city) {
  */
 export function rerollCity(city, seed) {
   const locked = new Set(city.locks);
-  const fresh = generateCity({ ...city.settings }, seed, city.pool);
+  const fresh = generateCity({ ...city.settings }, seed, city.pool, city.theme || null);
   const keep = (a, b) => a.map((x, i) => (locked.has(x.id) ? x : (b[i] || null))).filter(Boolean)
     .concat(b.slice(a.length));
   // What the players were shown of the city (Phase 3) is the G.M.'s decision,
@@ -408,7 +574,7 @@ export function rerollCity(city, seed) {
 }
 
 function dedupeNames(city, locked) {
-  const ctx = context(city.settings, city.pool, []);
+  const ctx = context(city.settings, city.pool, [], city.theme || null);
   for (const list of [city.districts, city.shops, city.npcs]) {
     for (const x of list) if (locked.has(x.id) && x.name) ctx.used.add(x.name.toLowerCase());
   }
@@ -436,7 +602,7 @@ export function rerollEntry(city, id) {
   const n = (out.rolls[id] || 0) + 1;
   out.rolls[id] = n;
   const r = rng(hash(out.seed, id, n));
-  const ctx = context(out.settings, out.pool, namesIn(out));
+  const ctx = context(out.settings, out.pool, namesIn(out), out.theme || null);
   const at = (list) => list.findIndex((x) => x.id === id);
   if (id === 'overview') {
     const o = makeOverview(ctx, r);
@@ -448,9 +614,8 @@ export function rerollEntry(city, id) {
     out.districts[i] = { ...makeDistrict(ctx, r, i, q), id };
   } else if (id.startsWith('place-')) {
     const i = at(out.places);
-    const taken = new Set(out.places.map((p) => p.name));
-    const free = ctx.T.PLACES.filter((p) => !taken.has(p));
-    out.places[i] = { id, name: free.length ? pick(r, free) : out.places[i].name,
+    const got = drawFree(ctx, r, 'PLACES', new Set(out.places.map((p) => p.name)));
+    out.places[i] = { id, name: got ?? out.places[i].name,
       district: pick(r, out.districts)?.name || null };
   } else if (id.startsWith('shop-')) {
     const i = at(out.shops);
@@ -467,14 +632,13 @@ export function rerollEntry(city, id) {
     for (const s of out.shops) if (s.owner === id && !/owner/.test(fresh.role)) out.npcs[i].role = `owner of ${s.name || 'a shop'}`;
   } else if (id.startsWith('quirk-')) {
     const i = at(out.quirks);
-    const taken = new Set(out.quirks.map((q) => q.text));
-    const free = ctx.T.CITY_QUIRKS.filter((q) => !taken.has(q));
-    if (free.length) out.quirks[i] = { id, text: pick(r, free) };
+    const got = drawFree(ctx, r, 'CITY_QUIRKS', new Set(out.quirks.map((q) => q.text)));
+    if (got !== null) out.quirks[i] = { id, text: got };
   } else if (id.startsWith('rumour-')) {
     const i = at(out.rumours);
     const taken = new Set(out.rumours.map((q) => q.text));
     for (let t = 0; t < 50; t++) {
-      const text = fillFrom(r, ctx.T.RUMOURS, out);
+      const text = fillFrom(ctx, r, 'RUMOURS', out);
       if (text && !taken.has(text)) { out.rumours[i] = { id, roll: i + 1, text, true: r() < 0.5 }; break; }
     }
   } else {
@@ -551,7 +715,11 @@ export function rollRequest(city, npcId) {
   const T = TABLES[city.settings.system];
   const n = city.npcs.find((x) => x.id === npcId);
   if (!n) throw new Error(`No NPC ${npcId}`);
-  const occ = /^owner of /.test(n.role) ? T.OWNER_OCC : T.ROLE_OCC[n.role] || null;
+  // A theme's role rolls as the class the theme mapped it to (checked against
+  // the setting's own list when the theme was made); a role it did not map, as
+  // the setting's own role does, or not at all.
+  const occ = /^owner of /.test(n.role) ? T.OWNER_OCC
+    : city.theme?.pack.roleOcc?.[n.role] || T.ROLE_OCC[n.role] || null;
   const named = n.name ? { name: n.name } : {};
   // Rifts: a human is their job's O.C.C. alone. Another race is their R.C.C.
   // alone, unless that R.C.C. takes an occupation - the race row's `takesOcc`,
@@ -587,7 +755,8 @@ export function stockShop(city, shopId, gear) {
   const T = TABLES[city.settings.system];
   const shop = city.shops.find((s) => s.id === shopId);
   if (!shop) throw new Error(`No shop ${shopId}`);
-  const rules = T.SHOP_STOCK[shop.type];
+  // A theme's kind of shop sells by the setting rule it named (`stockAs`).
+  const rules = T.SHOP_STOCK[shop.stockAs || shop.type];
   if (!rules) return withStock(city, shopId, [], `No stock rule for a ${shop.type.toLowerCase()} yet`);
   const sys = city.settings.system;
   const fits = (g) => rules.some((rule) => g.category === rule.category
