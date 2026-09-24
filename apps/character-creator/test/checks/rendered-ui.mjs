@@ -1193,6 +1193,19 @@ export function run() {
     check('and the notes panel is still GM-only',
       /\$\{D\.isGm \? `/.test(js), 'the GM notes are no longer gated');
 
+    // XP to CHOSEN characters (plan PR 6). The award reads the ticked party,
+    // never the whole roster; the tick is stored as who is LEFT OUT, so a
+    // roster refresh or a new arrival cannot silently drop someone; and an
+    // NPC never gets a tick, since the award skips NPCs whatever is ticked.
+    check('XP goes to the ticked party members, not the whole roster',
+      /const party = xpTargets\(\);/.test(js)
+        && /xpTargets = \(\) => xpParty\(\)\.filter\(\(c\) => !D\.xpSkip\.has\(c\.id\)\)/.test(js)
+        && /xpParty = \(\) => D\.roster\.filter\(\(c\) => c\.kind !== 'npc'\)/.test(js),
+      'the XP award no longer honours the ticks, or has started paying NPCs');
+    check('and an NPC row has no tick to offer',
+      /D\.isGm && c\.kind !== 'npc'\s*\? `<input type="checkbox" class="gm-xp-pick/.test(js),
+      'the roster offers an XP tick the award would ignore');
+
     // Source order: notes before journal, which is the "surface it" change.
     check('the notes come before the journal',
       js.indexOf('gm-notes') < js.indexOf('Campaign journal'),
