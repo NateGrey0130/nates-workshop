@@ -823,6 +823,27 @@ const charId = made.body.id;
 const sheet = await api('GET', `/characters/${charId}`);
 check('its sheet loads', sheet.status === 200 && sheet.body.character?.id === charId, sheet.body);
 
+// me/holdings - the codex's "Your characters with this". It is keyed the way
+// the codex keys its entries (lower-cased names, slugs, class ids), and its
+// whole scope is the CALLER'S OWN characters: asked as somebody else, none of
+// this character may come back, which is the property the route exists to keep.
+{
+  const mine = await api('GET', '/me/holdings');
+  const firstSkill = String(occSkills[0]?.name || '').toLowerCase();
+  check('me/holdings lists the caller\'s own character, by class and by skill',
+    mine.status === 200
+      && (mine.body.characters || []).some((c) => c.id === charId)
+      && (mine.body.holds?.classes?.[cls.id] || []).includes(charId)
+      && (!firstSkill || (mine.body.holds?.skills?.[firstSkill] || []).includes(charId)),
+    JSON.stringify({ status: mine.status, classes: mine.body.holds?.classes, skill: firstSkill }).slice(0, 300));
+  const theirs = await apiAs('someone-else-holdings@example.com', 'GET', '/me/holdings');
+  const leaked = (theirs.body.characters || []).some((c) => c.id === charId)
+    || Object.values(theirs.body.holds || {}).some((b) => Object.values(b).some((ids) => ids.includes(charId)));
+  check('and asked as somebody else, none of it comes back',
+    theirs.status === 200 && !leaked && (theirs.body.characters || []).length === 0,
+    JSON.stringify(theirs.body).slice(0, 300));
+}
+
 // A fighting style is a level schedule (RUE p.347), and the only proof that
 // matters is the number the sheet actually serves. Every piece has to line up -
 // the column exists, the data script ran, the loader selects it, compose passes
