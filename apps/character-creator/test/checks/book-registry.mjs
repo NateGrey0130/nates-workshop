@@ -84,6 +84,18 @@ export function run() {
     check('no two books in scripts/books.json claim the same spelling',
       clashes.length === 0, clashes.join(', '));
 
+    // SORTED BY SLUG, so two book sessions registering a book in parallel
+    // insert at different points instead of both appending at the end of the
+    // object, where their entries touch the same lines and conflict. Read from
+    // the live file: the order is the file's text, and loadBookRegistry keeps
+    // it because JSON.parse preserves string-key order. Nothing looks a book up
+    // by position (registryBookSlug refuses an ambiguous match), so this is a
+    // convention for merges and not for correctness.
+    const slugs = Object.keys(registry);
+    const outOfOrder = slugs.filter((s, i) => i > 0 && slugs[i - 1] > s);
+    check('scripts/books.json lists its books sorted by slug',
+      outOfOrder.length === 0, `out of place: ${outOfOrder.join(', ')}`);
+
     // A NOTE MAY NOT MAKE A STANDING CLAIM ABOUT LIVE DATA. Six notes ended
     // "Nothing in production cites this book yet" and FOUR of the six were false
     // when measured on 2026-09-09 - underseas by 87 gear rows, 74 spells, 50
