@@ -8,15 +8,15 @@ separate from them.
 **On the hub since the launch PR.** Until the generator worked the page existed
 at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
 decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Four tabs,
-each linkable: `#feat`, `#powers`, `#gen` and `#heroes`, the heroes a person
-has saved.
+each linkable: `#feat`, `#powers`, `#gen`, `#heroes` (the heroes a person has
+saved) and `#gear` (the Players' Book weapons and vehicles).
 
 ## Sources
 
 | short | book | used for |
 |---|---|---|
 | UPB | *Ultimate Powers Book* (TSR 6876, 1987), with the *Dragon* #122 addenda printed in red | the generator's tables and the 263 powers |
-| PB | MARVEL SUPER HEROES Advanced Set, *Players' Book* | rank ladder, Universal Table, Talents, Contacts |
+| PB | MARVEL SUPER HEROES Advanced Set, *Players' Book* | rank ladder, Universal Table and its Effects columns, Talents, Contacts, weapons and vehicles |
 | JB | MARVEL SUPER HEROES Advanced Set, *Judge's Book* | the character sheet's layout. Its Marvel characters are deliberately not in the app (Nate, 2026-09-23) |
 
 Citations are to the page number printed on the page.
@@ -169,6 +169,22 @@ Two the generator needed, where the books say nothing (`js/generator.js`):
   satisfiable. The first Power in each slot belongs to one form, the rest to
   all of them.
 
+Four more come from the Players' Book equipment tables (PB pp.42-49), which were
+transcribed twice, blind, and agreed cell for cell - so each of these is the
+book, not a slip:
+
+- **R20** Motor Trike and Jeep are **Off-Road**. Printed "Oft-Road" (PB p.48).
+- **R21** The **Security Limo**, with **Remarkable** Body and Protection.
+  Printed "Security Lime" with "Re" in both, which is no rank; the prose calls
+  it a limo, and Rm is the one rank abbreviation it can be.
+- **R22** The eight unnamed rows under "(also explosives)" in Other Weapons Cost
+  are **more Knock-Out Gas, or explosive, filling one area**, at rising
+  intensities. They carry on that entry's list with no name of their own (PB
+  p.46).
+- **R23** The **Fantasticar takes the table's figures** (Control Ex, Speed In,
+  Body Gd). Its description on PB p.52 gives Control In, Speed Ex, Body Ty; the
+  table is the book's statistics and the description is colour.
+
 How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
 many body types it combines and the chance of keeping each trait (50%, 33%,
 25%, 20%), then rolls each type - never Compound or Changeling again, never the
@@ -210,7 +226,9 @@ by roll, and they decide nothing here.
 | `data/counts.json` | how many Powers, Talents and Contacts, and what extra ones cost in Resources |
 | `data/power-tables.json` | the sixteen power classes and their roll tables, 263 codes; `double` is the book's asterisk, `addenda` its red rows |
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
+| `data/equipment.json` | the PB weapon, ammunition, missile, grenade and vehicle tables and the vehicle damage list, as printed apart from R20-R23, with column keys written for the app |
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `js/gear.js` | the Gear tab's search, and reading a printed rank abbreviation back onto the ladder |
 | `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |

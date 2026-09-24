@@ -449,3 +449,18 @@ button:focus-visible, [role="tab"]:focus-visible { outline: 3px solid var(--yell
   .sheet .sh-long textarea, .sheet .sh-box { border-color: #000; background: #fff; }
   #sheet.panel { padding: 12px; }
 }
+
+/* -- Gear, and the FEAT roller's follow-up -- */
+.gear-table { margin-top: 18px; }
+.gear-table h2 .muted { font-family: var(--font-body); font-size: 14px; font-weight: 400; text-transform: none; }
+table.gear td, table.gear th { white-space: normal; vertical-align: top; }
+table.gear th[scope="row"] { min-width: 10em; }
+.gear-note { display: block; font-weight: 400; font-size: 13px; color: var(--ink-soft); }
+.gear-help { margin-top: 10px; }
+.gear-help summary { cursor: pointer; font-weight: 600; padding: 12px 0; }   /* stays a list-item, so the marker shows */
+.gear-keys { display: grid; grid-template-columns: minmax(8em, 16em) 1fr; gap: 4px 14px; margin: 6px 0 12px; }
+@media (max-width: 520px) { .gear-keys { grid-template-columns: 1fr; gap: 0; } .gear-keys dd { margin-bottom: 8px; } }
+.gear-keys dt { font-weight: 700; }
+.gear-keys dd { margin: 0; }
+.feat-result .follow { margin: 10px 0 0; }
+.feat-result .follow button { margin-left: 6px; }
