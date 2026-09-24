@@ -525,9 +525,10 @@ What it offers (phase 1 of four):
   card — strike roll, damage roll off the **leading dice** of the gear row's
   damage string (the full string is displayed; "1D6 (small), 2D6 (large)" rolls
   the 1D6 and the table adjudicates the rest), and an ammo counter when the
-  payload states a capacity. Ammo lives in the inventory row's **notes** as
-  `ammo 7/10` — visible on the sheet lens, editable by hand, no schema
-  change. Unequipped weapons are listed with a **Draw** button that equips one
+  payload states a capacity. The count is `character_items.ammo_current`
+  (migration 083), NULL meaning full, with the magazine size left as the gear
+  row's payload; until 083 it lived in the row's notes as `ammo 7/10`, which
+  made every shot a rewrite of those notes. Unequipped weapons are listed with a **Draw** button that equips one
   without leaving play mode (UI-AUDIT F45). The dice evaluator reaches this
   classic-script page the same way
   language-skills does: `js/dice.js` installs a `globalThis.diceRoll` mirror
@@ -593,10 +594,10 @@ is what happens when the send *fails*:
 |---|---|---|
 | pool +/− | reverts | **queues** |
 | **Damage** | reverts | **queues** — one entry, both pools |
-| **a hit on armour or a vessel location** | reverts | **queues** — replayed unguarded, like ammo (UI-AUDIT F40) |
+| **a hit on armour or a vessel location** | reverts | **queues** — replayed unguarded (UI-AUDIT F40) |
 | **rest** | reverts | **queues** — every pool it recovered, in one entry |
 | **a power spend** | reverts | **queues** |
-| **ammo** | reverts | **queues** as an item change carrying no pools |
+| **ammo** | reverts | **queues** as an item change carrying no pools, and **composes** on replay |
 | a roll | — | stands on screen, and **says** it was not logged |
 
 Two of those rows are less obvious than they look. **A power spend had to
@@ -605,14 +606,15 @@ made it the one play action a drop swallowed in silence — the spell was cast,
 the table moved on, and the sheet still showed the P.P.E. unspent. You cannot
 queue a change you never applied locally.
 
-**And ammo replays UNGUARDED.** The guard is per pool: the endpoint compares
-each numeric `from` and refuses if it moved. `character_items.notes` has no
-such check — online either, today — so a replayed ammo write overwrites
-whatever the notes say when it lands. Queueing does not introduce that; it
-stretches the window from milliseconds to however long the wi-fi is out. The
-alternative was losing the shots a player fired offline, which is worse and far
-likelier than somebody hand-editing that row's notes mid-fight. Guarding a text
-field would also need a conflict UI that two numeric halves cannot express.
+**And ammo COMPOSES on replay.** Until migration 083 the count lived in the
+row's notes, so a replayed shot rewrote the whole notes string and whatever had
+been typed there in between was gone. Now the count is `ammo_current`, a shot
+touches nothing else, and a guarded replay that finds the count moved applies
+the shot to what is there - 4 rounds, then one queued shot, is 3 - clamped to 0
+and to the magazine the client sends as `cap`. Refusing instead would lose a
+shot the player really fired: a 409 naming no pool is dropped from the queue.
+A queued entry in the old notes shape still replays, because IndexedDB outlives
+a deploy. `play-flow.mjs` drives both halves.
 
 **A roll is deliberately not queued.** It carries no state change, the die was
 already seen at the table, and queueing every tap of an offline fight would
