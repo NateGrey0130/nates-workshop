@@ -801,11 +801,12 @@ export function run() {
     shapes.every((k) => page.includes(`class="map-${k}"`) && presentJs.includes(`class: 'map-${k}'`)
       && new RegExp(`\\.map-${k} \\{`).test(mapCss)));
   // District fills are opaque: a shape drawn before them is hidden inside the
-  // city, which is how the first draw of the canals showed only their ends.
-  check('and both draw the canals and the core over the districts, not under them',
-    page.includes('${districts}${canals}${core}')
-      && presentJs.indexOf("class: 'map-canal'") > presentJs.indexOf('map-cell ')
-      && presentJs.indexOf("class: 'map-core'") > presentJs.indexOf('map-cell '));
+  // city, which is how the first draw of the canals showed only their ends -
+  // and how every city's river had shown only its ends since Phase 2.
+  check('and both draw the river, the canals and the core over the districts, not under them',
+    page.includes('${districts}${river}${canals}${core}')
+      && ['map-river', 'map-canal', 'map-core'].every((k) =>
+        presentJs.indexOf(`class: '${k}'`) > presentJs.indexOf('map-cell ')));
   check('and the players\' view passes the shapes on',
     ['canals', 'streets', 'rail', 'station', 'core'].every((k) => new RegExp(`^\\s+${k}: `, 'm').test(viewJs)));
 

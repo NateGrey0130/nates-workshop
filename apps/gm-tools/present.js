@@ -207,13 +207,14 @@ async function loadCity() {
   const defs = svg('defs');
   defs.append(hatch);
   box.append(defs, svg('polygon', { points: svgPts(m.outline), class: 'map-ground' }));
-  if (m.river) box.append(svg('polyline', { points: svgPts(m.river), class: 'map-river' }));
   m.districts.forEach((d, i) => {
     const cell = svg('polygon', { points: svgPts(d.polygon), class: `map-cell ${d.quarter ? 'map-cell-quarter' : 'map-cell-' + (i % 4)}` });
     cell.append(svg('title', {}, d.name));
     box.append(cell);
   });
-  // A theme's street plan, as the City Creator draws it: over the districts.
+  // The river, then a theme's street plan, as the City Creator draws them:
+  // over the districts, whose fills are opaque.
+  if (m.river) box.append(svg('polyline', { points: svgPts(m.river), class: 'map-river' }));
   for (const c of m.canals || []) box.append(svg('polyline', { points: svgPts(c), class: 'map-canal' }));
   if (m.core) box.append(svg('polygon', { points: svgPts(m.core), class: 'map-core' }));
   for (const l of m.streets || []) box.append(svg('polyline', { points: svgPts(l), class: 'map-street' }));
