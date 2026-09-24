@@ -12,7 +12,7 @@
 // /apps/character-creator/js/api.js, claudeRequest() from /shared/js/api.js.
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
-  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, linkSheet,
+  suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, rollBlocker, linkSheet,
   stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor,
   THEME_PARTS, THEME_INTENSITY, themePrompt, parseThemePart, assembleThemePack }
   from './js/city-engine.js';
@@ -369,6 +369,10 @@ function keepHtml() {
 // refusal is shown here as it comes, and nothing is invented to stand in.
 function statsTools(n) {
   if (!S.saved) return '';
+  // A themed role the theme gave no class: say so, rather than a button that
+  // could only be refused.
+  const blocked = !n.sheet_id && rollBlocker(S.city, n.id);
+  if (blocked) return `<div class="rowline city-stats"><span class="small muted">${esc(blocked)}.</span></div>`;
   const r = S.rolls[n.id];
   const link = n.sheet_id
     ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.sheet_id}">📜 open sheet</a>`

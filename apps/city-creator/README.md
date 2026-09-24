@@ -148,6 +148,10 @@ the city's campaign as their race's R.C.C. with the job their role maps to
 Soldier, a shop owner a Merchant), under their own name. The sheet it makes is a
 statted NPC in that campaign like any other, and the entry keeps a **📜 open
 sheet** link to it; rerolling the entry makes a new person and drops the link.
+A themed city's NPC rolls as the class the theme gave their role; a role the
+theme gave none shows that in place of the button, since there is no job to
+send (`rollBlocker` in the engine) - except a Rifts race that is its R.C.C.
+alone, which needs none.
 
 **The roller refuses rather than guesses, and the page shows the refusal as it
 comes** - a race whose page bars that job, or a class the roller cannot build.
