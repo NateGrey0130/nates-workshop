@@ -557,10 +557,28 @@ variants:
     bonuses: { combat: { attacks: 3 } }
 ```
 
-A variant may override only `attribute_dice`, `attribute_requirements`,
-`attribute_maximums`, the pool bases and `bonuses`. Skills, abilities and lore
-stay shared — an override naming anything else is reported and ignored.
-`docs/leveling.md` carries the full list, and a test pins it against the code.
+A variant overrides a short, closed list of keys — attribute dice, requirements
+and maximums, the pool bases, `bonuses`, and a few scalars. **It can also ADD
+skills**, which is the shape a book prints as a common course plus a per-stage
+supplement:
+
+```yaml
+  - id: stage-b
+    name: "Stage B"
+    skills_additional:            # UNIONED onto the parent's skills, never replaces
+      occ_skills:
+        - { name: "<a skill the parent lacks>", base: 40 }
+    related_skills_count: 3       # moves the number of related picks, nothing else
+    skill_overrides:              # restates a skill the parent ALREADY grants;
+      - { name: "<a parent skill>", base: 60 }   # naming an ungranted one is an error
+```
+
+What a variant still **cannot** do: take a parent skill away, or override
+`xp_table`, `natural_abilities`, `special_abilities`, `magic` or `psionics`.
+Those stay shared, and a variant naming any of them is warned about and
+ignored. `VARIANT_OVERRIDES` in `js/parser.js` is the list, and
+`docs/leveling.md` → *Classes that come in stages* documents every key on it;
+read that rather than a copy here (`BOOK-INGEST-AUDIT.md` F31).
 
 **A variant is not a second body.** Two forms a character changes between in play
 - a Nightbane's Facade and Morphus - are `second_form`, below.
