@@ -2021,6 +2021,20 @@ export function run() {
     check('and a link to an entry that is not there says so',
       /S\.missing = want\.slice/.test(js) && /has no entry by that name/.test(js),
       'a broken entry link would land on the top of the list as if it had worked');
+    // Sort and group (plan PR 4). The group menu is each section's own META
+    // line, so a new section inherits it; the sort keeps missing numbers LAST
+    // in either order, since "no price" is not the cheapest item; and the
+    // whole narrowing rides in the query string, so a filtered view is a link.
+    check('the list can be narrowed to one group and sorted, and says so in its address',
+      /if \(group && sec\.meta\(r\) !== group\) return false/.test(js)
+        && /return sortRows\(sec, rows\)/.test(js)
+        && /x == null \? 1 : -1/.test(js)
+        && /new URLSearchParams\(location\.search\)/.test(js)
+        && /history\.replaceState\(null, '', location\.pathname \+ \(qs \?/.test(js),
+      'codex.js lost its group filter, its sort, or the query string that makes a filtered view a link');
+    check('and a link to one entry clears whatever narrowing would hide it',
+      /S\.system = '';\s*S\.filter = '';\s*S\.group = '';/.test(js),
+      'an entry link can land under a filter that hides the entry it names');
     check('and a super ability\'s text is asked for one entry at a time, its name encoded',
       /'codex\?section=super-ability&name=' \+ encodeURIComponent\(r\.name\)/.test(js),
       'codex.js no longer fetches a super ability by encoded name');
