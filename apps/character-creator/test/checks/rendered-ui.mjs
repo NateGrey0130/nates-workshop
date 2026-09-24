@@ -92,6 +92,7 @@ const SECTIONS = [
   'A permanent P.P.E. spend lowers the maximum wherever it is shown',
   'A Talent earned at level-up can be chosen, then or later',
   'The wizard rail',
+  'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
   'The printed sheet',
   'Play mode is a mode, not a layout',
@@ -1167,6 +1168,47 @@ export function run() {
   // The roster and the GM notes share a row; the journal runs full width under
   // them. Two of these pin things the redesign brief got wrong, so they are
   // worth more than the layout they describe.
+  // "Removed X. Undo" in place of confirm() (plan PR 7). What can go wrong
+  // silently: a page that calls undoable() without loading the script throws
+  // on the click, and a delete that quietly goes back to confirm() - or a
+  // character delete that quietly LOSES its confirm - passes every other check.
+  section('Undo instead of confirm for one-row deletes');
+  {
+    const toast = readFileSync(join(appDir, 'js', 'undo-toast.js'), 'utf8');
+    check('the helper waits before sending, and sends on leaving the page',
+      /setTimeout\(\(\) => send\(p, false\), WINDOW_MS\)/.test(toast)
+        && /addEventListener\('pagehide', \(\) => \{ if \(pending\) send\(pending, true\); \}\)/.test(toast)
+        && /if \(pending\) send\(pending, false\);/.test(toast),
+      'undo-toast.js no longer delays the request, commits on pagehide, or keeps one pending');
+    check('and a failed request puts the row back',
+      /catch \(err\) \{[\s\S]{0,200}p\.restore\(\)/.test(toast),
+      'a failed delete would leave a row that looks deleted and is not');
+    for (const [page, script, fns] of [
+      ['character-sheet', 'sheet.js', ['removeItem', 'removeVessel']],
+      ['campaign', 'campaign.js', ['removeEntry', 'deleteNpc', 'dropItem']],
+      ['gm-tools', 'dashboard.js', ['deletePicture']],
+    ]) {
+      const html = readFileSync(join(repoRoot, 'apps', page, 'index.html'), 'utf8');
+      const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
+      const at = (s) => html.indexOf(s);
+      check(`${page} loads the helper before ${script}`,
+        at('/apps/character-creator/js/undo-toast.js') > 0
+          && at('/apps/character-creator/js/undo-toast.js') < at(`src="${script}"`),
+        `${page}/index.html does not load undo-toast.js ahead of ${script}`);
+      for (const fn of fns) {
+        const body = (src.match(new RegExp(`function ${fn}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
+        check(`${script} ${fn}() uses the undo toast, not confirm()`,
+          /undoable\(\{/.test(body) && !/confirm\(/.test(body) && /keepalive/.test(body),
+          `${fn} is back on confirm(), or its request would not survive the page closing`);
+      }
+    }
+    const sheetSrc = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8');
+    const dashSrc = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'dashboard.js'), 'utf8');
+    check('and deleting a whole character, or a whole GM page, still asks first',
+      /confirm\(`Delete \$\{c\.name\} \(level/.test(sheetSrc) && /confirm\(`Delete "\$\{D\.entry\.title\}"/.test(dashSrc),
+      'a character or a GM page can now be deleted without a question');
+  }
+
   section('The GM dashboard');
   {
     const js = readFileSync(appPath('dashboard.js'), 'utf8');

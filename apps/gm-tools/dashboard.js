@@ -574,14 +574,23 @@ async function patchImage(id, body, msgId) {
 const toggleReveal = (id, on) => patchImage(id, { revealed: on }, 'edit-msg');
 const saveCaption = (id, caption) => patchImage(id, { caption }, 'edit-msg');
 
-async function deletePicture(id) {
-  if (!confirm('Delete this picture? It goes from storage too, and from anything the party has been shown.')) return;
-  try {
-    await api(`campaigns/${campaignId}/images/${id}`, { method: 'DELETE' });
-    D.entryImages = D.entryImages.filter((i) => i.id !== id);
-    await loadEntries();
-    render();
-  } catch (err) { setMsg('edit-msg', err.message, true); }
+// One picture goes with an Undo (js/undo-toast.js): nothing is removed from
+// storage until the window closes, so Undo loses nothing. Deleting a whole
+// PAGE keeps its confirm() - it takes every picture on it at once, and that
+// is a decision to read about first, not a slip to catch afterwards.
+function deletePicture(id) {
+  const at = D.entryImages.findIndex((i) => i.id === id);
+  if (at < 0) return;
+  const img = D.entryImages[at];
+  undoable({
+    label: img.caption ? `“${img.caption}”` : 'the picture',
+    hide: () => { D.entryImages = D.entryImages.filter((i) => i.id !== id); render(); },
+    restore: () => { D.entryImages.splice(Math.min(at, D.entryImages.length), 0, img); render(); },
+    commit: async (keepalive) => {
+      await api(`campaigns/${campaignId}/images/${id}`, { method: 'DELETE', keepalive });
+      if (!keepalive) { await loadEntries(); render(); }
+    },
+  });
 }
 
 function setMsg(id, text, isErr) {

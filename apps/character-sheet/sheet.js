@@ -3916,12 +3916,22 @@ async function addVessel() {
   } catch (err) { alert('Failed: ' + err.message); }
 }
 
-async function removeVessel(vid) {
-  if (!confirm('Remove this vessel? (History is kept.)')) return;
-  try {
-    await api('characters/' + id + '/vehicles/' + vid, jsonReq('DELETE', undefined));
-    await refreshVessels();
-  } catch (err) { alert('Failed: ' + err.message); }
+// Undo rather than confirm, as removeItem - see js/undo-toast.js.
+function removeVessel(vid) {
+  const all = C.vehicles || [];
+  const at = all.findIndex((x) => x.id === vid);
+  if (at < 0) return;
+  const v = all[at];
+  const paint = () => { const list = $('vessel-list'); if (list) list.innerHTML = vesselsHtml(); };
+  undoable({
+    label: v.nickname || v.vehicle_name || v.custom_name || 'the vessel',
+    hide: () => { C.vehicles = (C.vehicles || []).filter((x) => x.id !== vid); paint(); },
+    restore: () => { C.vehicles = C.vehicles || []; C.vehicles.splice(Math.min(at, C.vehicles.length), 0, v); paint(); },
+    commit: async (keepalive) => {
+      await api('characters/' + id + '/vehicles/' + vid, { method: 'DELETE', keepalive });
+      if (!keepalive) await refreshVessels();
+    },
+  });
 }
 
 // One location's damage. Sent as the whole object rather than a patch of one
@@ -4313,10 +4323,26 @@ async function removeEnchantment(rowId, slug) {
   await patchItem(rowId, { enchantments: held.filter((sl) => sl !== slug) });
 }
 
-async function removeItem(rowId) {
-  if (!confirm('Remove this item from inventory? (History is kept.)')) return;
-  try { await api(`characters/${id}/items/${rowId}`, { method: 'DELETE' }); await refreshInventory(); }
-  catch (err) { alert('Remove failed: ' + err.message); }
+// Gone from the table at once, with Undo for a few seconds before the DELETE
+// is sent (js/undo-toast.js). It was a confirm() - asked before the mistake,
+// when nobody reads it.
+function removeItem(rowId) {
+  const at = C.items.findIndex((x) => x.id === rowId);
+  if (at < 0) return;
+  const it = C.items[at];
+  const paint = () => {
+    const body = $('inv-rows');
+    if (body) body.innerHTML = inventoryRowsHtml() || '<tr><td class="muted" colspan="5">Empty.</td></tr>';
+  };
+  undoable({
+    label: it.item_name || it.custom_name || 'the item',
+    hide: () => { C.items = C.items.filter((x) => x.id !== rowId); paint(); },
+    restore: () => { C.items.splice(Math.min(at, C.items.length), 0, it); paint(); },
+    commit: async (keepalive) => {
+      await api(`characters/${id}/items/${rowId}`, { method: 'DELETE', keepalive });
+      if (!keepalive) await refreshInventory();
+    },
+  });
 }
 
 async function addItem() {

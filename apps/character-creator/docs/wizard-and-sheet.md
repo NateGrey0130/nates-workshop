@@ -149,6 +149,31 @@ wizard does not have says so on the home view.
 
 ---
 
+## Removing a row has an Undo, not a question
+
+Removing an inventory item or a vessel on the sheet, a note, a dossier or a
+stash item on the campaign page, and one picture in GM Tools all work the same
+way: the row goes at once and **Removed X. Undo** shows at the bottom for six
+seconds. Only when that closes is the request sent, so Undo cancels a request
+rather than reversing one, and no route had to learn to un-delete anything
+([`js/undo-toast.js`](../js/undo-toast.js)).
+
+They were `confirm()` dialogs, or nothing at all for the stash. A confirm is
+asked before the mistake, when the person is sure; the mistake is noticed
+after, when the row is gone. Three rules keep it honest:
+
+- **One pending at a time.** A second removal sends the first at once, so Undo
+  always means the row the toast names.
+- **Leaving the page sends it**, with `keepalive`, so closing the tab inside
+  the window does not quietly keep something that was removed.
+- **A failed request puts the row back** and says so.
+
+**What kept its `confirm()`:** deleting a whole character, deleting a GM page
+(it takes every picture on it), and bulk actions like an XP award. Those are
+decisions to read about first, not slips to catch afterwards.
+
+---
+
 ## Two tabs cannot overwrite each other
 
 There is one draft per person, so every `PUT /draft` is a replace. That is fine
