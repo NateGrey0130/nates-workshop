@@ -32,18 +32,25 @@
 // answering yes for every race, stockShop() ignoring stockAs, a rumour's
 // unknown {slot} let through, a reroll that dropped the theme, and a
 // themed role's class ignored by rollRequest().
+// Writing a theme (PR 2), the same way: a part's schema without the setting's
+// stock rules, the buildings prompt asking every race for lines, a stray
+// role/class pair kept, the flesh-out prompt without the theme, and a themed
+// shop named from the AI name pool again.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
-  FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS }
+  FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS,
+  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack }
   from '../../../city-creator/js/city-engine.js';
+import { W, westPack } from '../fixtures/city-theme-pack.mjs';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
-  'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes'];
+  'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
+  'City Creator theme writing'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -200,13 +207,18 @@ export function run() {
   check('the race list asks for this setting\'s R.C.C.s and never for retired ones',
     /classes\?system=\$\{encodeURIComponent\(S\.settings\.system\)\}&category=rcc/.test(page)
       && !/include_retired/.test(page));
-  // Every call is a press of a button: Generate (the name pool) and, since
-  // Phase 4d, Flesh out on one entry. Nothing on load, and never from ?seed=.
+  // Every call is a press of a button: Generate (the name pool, or a theme's
+  // five parts through writeTheme, which only Generate calls) and, since Phase
+  // 4d, Flesh out on one entry. Nothing on load, and never from ?seed=.
   const aiAt = [...page.matchAll(/await claudeRequest\(/g)].map((m) => m.index);
   const inFn = (at, start, end) => at > page.indexOf(start) && at < page.indexOf(end, page.indexOf(start));
-  check('the AI is called in two places, each behind a button: Generate and Flesh out',
-    aiAt.length === 2 && inFn(aiAt[0], 'async function generate()', 'function hashSeed(')
-      && inFn(aiAt[1], 'async flesh(id)', 'forget() {'));
+  const themeCalls = [...page.matchAll(/writeTheme\(text\)/g)].map((m) => m.index)
+    .filter((at) => at !== page.indexOf('async function writeTheme(text)') + 'async function '.length);
+  check('the AI is called in three places, each behind a button: a theme and the name pool on Generate, and Flesh out',
+    aiAt.length === 3 && inFn(aiAt[0], 'async function writeTheme(text)', '// ── the city ──')
+      && themeCalls.length === 1 && inFn(themeCalls[0], 'async function generate()', 'function hashSeed(')
+      && inFn(aiAt[1], 'async function generate()', 'function hashSeed(')
+      && inFn(aiAt[2], 'async flesh(id)', 'forget() {'));
 
   // ── the map (Phase 2) ──
   // Geometry the eye cannot audit across two hundred cities: every district
@@ -492,28 +504,7 @@ export function run() {
 
   section('City Creator themes');
 
-  // A test pack: every line carries [W], so a draw says where it came from.
-  // Written here, for this check only - PR 2 is where real packs come from.
-  const W = (what, n = 12) => Array.from({ length: n }, (_, i) => `[W] ${what} ${i + 1}`);
-  const westPack = () => ({
-    prompt: 'An Old West boomtown on the frontier, where the Wolfen run the cattle',
-    title: 'Old West boomtown',
-    tables: Object.fromEntries(THEME_TABLES.map((k) => [k, k === 'RUMOURS'
-      ? W('rumour', 11).map((l, i) => (i % 2 ? `${l} about {npc}` : l)).concat(['[W] they say {shop} waters the whiskey'])
-      : W(k.toLowerCase())])),
-    shopTypes: [
-      { label: 'Saloon', stockAs: 'Tavern', names: ['Saloon', 'Bar', 'Watering Hole'], specialties: W('saloon special', 3) },
-      { label: 'Gunsmith', stockAs: 'Smithy', names: ['Guns', 'Arms', 'Gunworks'], specialties: W('gun special', 3) },
-      { label: 'Livery', stockAs: 'Stable', names: ['Livery', 'Corral', 'Stables'], specialties: W('livery special', 3) },
-    ],
-    roleOcc: { '[W] npc_roles 1': 'soldier', '[W] npc_roles 2': 'merchant' },
-    mapStyle: 'rail',
-    overviewExtras: [{ label: 'Law', lines: W('law', 4) }],
-    raceLines: {
-      wolfen: { quirks: W('wolfen quirk', 2) },
-      dwarf: { quirks: W('dwarf quirk', 2) },   // dwarves are not named: thrown away
-    },
-  });
+  // The test pack (fixtures/city-theme-pack.mjs): every line carries [W].
   const westOk = validateThemePack(westPack(), base());
   const themed = (intensity, over = {}) => ({ intensity, pack: westOk, ...over });
   const themeRefuses = (edit, settings = base()) => {
@@ -610,4 +601,77 @@ export function run() {
     stockShop(saloon, 'shop-0', drinks).shops[0].inventory.length >= 6);
   check('a theme with an unknown intensity is refused before a city is made',
     (() => { try { generateCity(base(), 1, null, { intensity: 'wild', pack: westOk }); return false; } catch { return true; } })());
+
+  section('City Creator theme writing');
+
+  // The five calls: every table in exactly one part, and each schema holding
+  // the choices the check will enforce.
+  const partKeys = Object.values(THEME_PARTS).flat();
+  check('the five parts between them ask for every table, and no table twice',
+    partKeys.length === THEME_TABLES.length && THEME_TABLES.every((k) => partKeys.includes(k)), partKeys.join(', '));
+  const PFT = tablesFor('palladium-fantasy');
+  const people = themePrompt('people', base(), westPack().prompt);
+  const buildings = themePrompt('buildings', base(), westPack().prompt);
+  const streets = themePrompt('streets', base(), westPack().prompt);
+  const occEnum = people.schema.properties.roleOcc.items.properties.occ.enum;
+  const stockEnum = buildings.schema.properties.shopTypes.items.properties.stockAs.enum;
+  check('the people part may answer only a class the setting can roll, and every one of them',
+    JSON.stringify([...occEnum].sort()) === JSON.stringify([...new Set([...Object.values(PFT.ROLE_OCC), PFT.OWNER_OCC])].sort()));
+  check('the buildings part may answer only the setting\'s stock rules and the map styles the map knows',
+    JSON.stringify(stockEnum) === JSON.stringify(Object.keys(PFT.SHOP_STOCK))
+      && JSON.stringify(buildings.schema.properties.mapStyle.enum) === JSON.stringify(MAP_STYLES));
+  check('and it asks for a race\'s own lines only for the race the theme names',
+    JSON.stringify(Object.keys(buildings.schema.properties.raceLines?.properties || {})) === '["wolfen"]'
+      && !('raceLines' in themePrompt('buildings', base(), 'Neo Tokyo arcology').schema.properties));
+  check('the streets part names every slot a rumour may use',
+    RUMOUR_SLOTS.every((x) => streets.prompt.includes(`{${x}}`)));
+  check('every part\'s schema is strict: each object lists all its fields as required and allows no others',
+    Object.keys(THEME_PARTS).every((part) => {
+      const walk = (x) => !x || typeof x !== 'object' || (x.type !== 'object'
+        || (x.additionalProperties === false && JSON.stringify(Object.keys(x.properties).sort()) === JSON.stringify([...x.required].sort())))
+        && Object.values(x.properties || {}).every(walk) && walk(x.items);
+      return walk(themePrompt(part, base(), westPack().prompt).schema);
+    }));
+
+  // Five answers, as the calls return them, put back together.
+  const wp = westPack();
+  const tablesOf = (part) => Object.fromEntries(THEME_PARTS[part].map((k) => [k, wp.tables[k]]));
+  const answers = {
+    people: { tables: tablesOf('people'),
+      roleOcc: [...Object.entries(wp.roleOcc).map(([role, occ]) => ({ role, occ })), { role: 'a role it never listed', occ: 'soldier' }] },
+    buildings: { tables: tablesOf('buildings'), shopTypes: wp.shopTypes, mapStyle: wp.mapStyle, raceLines: wp.raceLines },
+    overview: { title: wp.title, tables: tablesOf('overview'), overviewExtras: wp.overviewExtras },
+    streets: { tables: tablesOf('streets') },
+    names: { city: ['Dust Creek'], district: ['Railside'], street: ['Main'], shop: ['The Last Chance'],
+      cultures: Object.fromEntries(base().races.map((x) => [x.id, { given: W('given', 6), family: W('family', 6) }])) },
+  };
+  const parts = Object.fromEntries(Object.entries(answers).map(([part, v]) =>
+    [part, parseThemePart(part, JSON.stringify(v), base(), wp.prompt)]));
+  const assembled = assembleThemePack(wp.prompt, parts, base());
+  const { names: _n, ...assembledRest } = assembled;
+  check('five answers put together make the same pack as the whole one, with the names alongside',
+    JSON.stringify(assembledRest) === JSON.stringify(validateThemePack(wp, base())) && assembled.names?.city[0] === 'Dust Creek');
+  check('a role/class pair for a role the answer never listed is dropped, not refused',
+    !('a role it never listed' in parts.people.roleOcc) && parts.people.roleOcc['[W] npc_roles 1'] === 'soldier');
+  check('an answer that is not JSON, or is missing a table, is refused with the part named',
+    (() => { try { parseThemePart('streets', 'Sure! Here are some rumours', base(), wp.prompt); return false; } catch (e) { return /streets/.test(e.message); } })()
+      && (() => { try { parseThemePart('overview', JSON.stringify({ tables: {} }), base(), wp.prompt); return false; } catch { return true; } })());
+
+  // The theme reaches the rest of the city.
+  const withTheme = generateCity(base(), 11, assembled.names, { intensity: 'total', pack: assembledRest });
+  check('a themed shop is named by its own kind\'s words, not from the AI name pool',
+    withTheme.shops.filter((s) => s.stockAs).every((s) => !s.name
+      || wp.shopTypes.find((k) => k.label === s.type).names.some((w) => s.name.endsWith(' ' + w))),
+    withTheme.shops.map((s) => `${s.name} [${s.type}]`).join('; '));
+  check('the flesh-out prompt tells the AI the city\'s theme, and a plain city\'s prompt has none',
+    fleshPrompt(withTheme, withTheme.npcs[0].id).prompt.includes(wp.prompt)
+      && !/theme/i.test(fleshPrompt(generateCity(base(), 11), 'npc-0').prompt));
+
+  // The page: five parts, low effort and a schema each, and the theme handed to the engine.
+  const themePage = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.js'), 'utf8');
+  check('the page writes a theme through the five parts, each at low effort with its schema, and builds the city with it',
+    /output_config: \{ effort: 'low', format: \{ type: 'json_schema', schema \} \}/.test(page)
+      && /Object\.keys\(THEME_PARTS\)/.test(page) && /generateCity\(S\.settings, seed, pool, theme\)/.test(page));
+  check('and a naming theme kept from before themes becomes the city theme',
+    /else if \(typeof v\?\.nameTheme === 'string'\) S\.themeText = v\.nameTheme;/.test(page) && !/S\.nameTheme/.test(page));
 }
