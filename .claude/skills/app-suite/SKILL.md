@@ -29,7 +29,12 @@ three things the template cannot do for you.
 **1. Add the manifest entry.** `apps/manifest.json` is what the hub reads at
 runtime, and it is **the source of what an app is** — the root `README.md` says
 so and deliberately does not repeat the descriptions. An entry is `slug`,
-`name`, `icon`, `description`, `status`.
+`name`, `group`, `icon`, `description`, `status`.
+
+- `group` is an `id` from the manifest's top-level `groups` list, which is the
+  hub's sections in order. The template's example says `other`; a Palladium or
+  Marvel app needs its own. One that names no declared group still renders, in
+  the last section, and `rendered-ui.mjs` fails on it.
 
 - `status` of `live` **and** a slug makes the card a link. Anything else renders
   as a non-link card, which is how the `slug: null` "More Coming Soon" tile
