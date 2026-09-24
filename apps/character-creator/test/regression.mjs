@@ -4618,7 +4618,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     halves.every((h) => h && h.cost == null),
     halves.map((h) => `${h?.slug}=${h?.cost}`).join(', '));
 
-  const shields = q("SELECT slug, sdc, cost FROM gear WHERE slug LIKE '%shield%'");
+  // Scoped to the Palladium table's own system: a Rifts shield (Madhaven's
+  // tw-barrier-shield, 2026-09-24) is not one of the five and made this six.
+  const shields = q("SELECT slug, sdc, cost FROM gear WHERE slug LIKE '%shield%' "
+    + "AND system = 'palladium-fantasy'");
   check('all five shields are in the catalog', shields.length === 5,
     shields.map((r) => r.slug).join(', '));
 
