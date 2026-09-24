@@ -2009,6 +2009,18 @@ export function run() {
     // by name, ENCODED - 16 of the 364 names carry an ampersand (production,
     // 2026-09-17), and an unencoded one asks for "Generate Fog " and gets a 404
     // that reads like missing data.
+    // A link to ONE entry (#spells/<key>): the sheet builds these, so the
+    // encoding and the lower-casing are a contract between two files, not a
+    // detail of one. 378 spell names carry a colon and some an apostrophe;
+    // an unencoded or case-sensitive key is a link that lands on nothing.
+    check('a link can name one entry, encoded and matched case-insensitively',
+      /function entryHash\(secId, key\)[\s\S]{0,120}encodeURIComponent\(key\)/.test(js)
+        && /decodeURIComponent\([^)]*\)\)\.toLowerCase\(\)/.test(js)
+        && /addEventListener\('hashchange', applyHash\)/.test(js),
+      'codex.js no longer opens #<section>/<key> links the sheet relies on');
+    check('and a link to an entry that is not there says so',
+      /S\.missing = want\.slice/.test(js) && /has no entry by that name/.test(js),
+      'a broken entry link would land on the top of the list as if it had worked');
     check('and a super ability\'s text is asked for one entry at a time, its name encoded',
       /'codex\?section=super-ability&name=' \+ encodeURIComponent\(r\.name\)/.test(js),
       'codex.js no longer fetches a super ability by encoded name');
