@@ -506,8 +506,8 @@ ${JSON.stringify({ ...lines, ...extra })}` };
 
 // ── names ──
 //
-// With a pool (the one AI call), names come from it; without, from the
-// setting's name themes. Either way through one function, so a used name is
+// With a pool (a theme's names part, or the one call a race's own naming box
+// makes), names come from it; without, from the setting's name themes. Either way through one function, so a used name is
 // never handed out twice in one city.
 function namer(ctx) {
   const T = ctx.T;
@@ -548,8 +548,8 @@ function namer(ctx) {
     // Anvil", from the kind's own words (`names` on the shop type) and the
     // setting's SHOP_ADJECTIVES. The places theme's shop names are generic, so
     // "Fitch's Energy Weapons" could be a clinic. A tavern, a kind with no
-    // words, or a city with an AI name pool keeps the old way: the pool was
-    // the G.M.'s own choice. A kind whose words run out says so and goes
+    // words, or a city whose only AI call was a name pool keeps the old way:
+    // the pool was the G.M.'s own choice. A themed city's kinds have words. A kind whose words run out says so and goes
     // unnamed, like every other name here.
     shop(r, t) {
       const kind = t?.type === 'tavern' ? 'tavern' : 'shop';
@@ -868,6 +868,9 @@ export function rerollEntry(city, id) {
   } else if (id.startsWith('place-')) {
     const i = at(out.places);
     const got = drawFree(ctx, r, 'PLACES', new Set(out.places.map((p) => p.name)));
+    // A theme with no place left says so, as a whole build does, rather than
+    // keeping the old one silently.
+    if (got === null && ctx.theme) ctx.warnings.add(`The theme ran out of ${tableLabel('PLACES')}`);
     out.places[i] = { id, name: got ?? out.places[i].name,
       district: pick(r, out.districts)?.name || null };
   } else if (id.startsWith('shop-')) {
@@ -886,6 +889,7 @@ export function rerollEntry(city, id) {
   } else if (id.startsWith('quirk-')) {
     const i = at(out.quirks);
     const got = drawFree(ctx, r, 'CITY_QUIRKS', new Set(out.quirks.map((q) => q.text)));
+    if (got === null && ctx.theme) ctx.warnings.add(`The theme ran out of ${tableLabel('CITY_QUIRKS')}`);
     if (got !== null) out.quirks[i] = { id, text: got };
   } else if (id.startsWith('rumour-')) {
     const i = at(out.rumours);
@@ -909,7 +913,8 @@ export function toggleLock(city, id) {
 
 // ── the AI name pool ──
 //
-// ONE call per city, only when the G.M. gives a naming theme. The prompt asks
+// ONE call per city: a theme's names part (one of its five calls), or, with no
+// theme, the call a race's own naming box makes. The prompt asks
 // for JSON and nothing else; parsePool() accepts only that shape and refuses
 // anything else, so a malformed answer is an error the page shows, not a city
 // half-named from nowhere.

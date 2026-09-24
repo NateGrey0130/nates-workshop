@@ -24,7 +24,9 @@ sheets). Built one phase per PR; the plan's phases are:
   own, so more NPCs changes the NPCs and nothing else, and a one-entry reroll
   reseeds that entry alone.
 - **`js/city-tables-pf.js`** is every line the Palladium Fantasy city is built
-  from - 40 or more entries per table, all written for this file. Nothing is
+  from - 40 or more lines in each table of lines (the shop adjectives are 30-odd
+  single words, and walls and shop kinds are shorter lists), all written for
+  this file. Nothing is
   copied from a sourcebook or an OCR cache. The setting is a switch, and
   **`js/city-tables-rifts.js`** is the second file in the same shape - see
   *Rifts* below.
@@ -35,10 +37,12 @@ sheets). Built one phase per PR; the plan's phases are:
   Anvil, a body-chop-shop's Cybernetics and Bionics), set with a surname or one
   of the setting's `SHOP_ADJECTIVES` - "Greenholt's Forge", "The Northern Body
   Works". Taverns and bars keep the places theme's names, which already read
-  as taverns. **With a theme** (below), the names come from the pool one of
-  the theme's calls writes, and **with only a race's own naming box** filled,
-  one call to `/api/claude` returns that pool alone. Either way it is saved
-  with the city; locks and rerolls draw from it and never call again.
+  as taverns. **With a theme** (below), people, districts and taverns are
+  named from the pool one of the theme's calls writes, and every other shop by
+  its themed kind's own words. **With only a race's own naming box** filled,
+  one call to `/api/claude` returns that pool alone, and it names the shops
+  too. Either way the pool is saved with the city; locks and rerolls draw from
+  it and never call again.
 - **Population** sets the number of districts, shops and places and whether
   there are walls. **The named-NPC count** is the G.M.'s alone, and shop owners
   are among those NPCs - with fewer NPCs than shops, one person owns two.
@@ -62,7 +66,8 @@ theme, the setting or the races change. It is **layered on the setting**: the
 setting still decides the races, classes, Codex gear and rules, and
 **Intensity** decides how much of each table the theme takes - Light about a
 third, Strong about two thirds, Total all of it. A Total theme that runs out
-says so rather than borrowing the setting's lines.
+says so rather than borrowing the setting's lines - in a whole build, and when
+a single place or quirk is rerolled.
 
 Every answer is checked before it is used (`validateThemePack`): each themed
 shop kind names one of the setting's stock rules and stocks by it, each mapped
@@ -123,7 +128,8 @@ reach it.
 
 The map is **computed when the city changes and kept with it**, not redrawn on
 load, so a later change to the layout never moves a saved city's districts.
-`?seed=N` opens on that city with the settings on screen (built-in names only),
+`?seed=N` opens on that city with the settings on screen (built-in names and
+lines only - no theme, since a URL never spends an AI call or reads a saved one),
 which is also how the print check renders a page without clicking. The map
 prints in the page's strokes, sized to share a page with the overview.
 
@@ -224,7 +230,7 @@ rumour would decide what the G.M. has not.
 ## Rifts
 
 Choose **Rifts** under *Setting* and the city is built from
-`js/city-tables-rifts.js` instead: 40 or more lines per table, all written
+`js/city-tables-rifts.js` instead: 40 or more lines in each table of lines, all written
 fresh for that file, and none carried over from the Palladium Fantasy one (a
 smoke check compares them). A Rifts overview adds three lines of its own - a
 **tech level**, how much the **Coalition** is present, and the **ley lines** -

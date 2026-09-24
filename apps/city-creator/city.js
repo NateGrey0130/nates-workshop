@@ -527,7 +527,8 @@ function cityHtml() {
       </span>
     </div>
     <p class="muted small">Seed ${esc(c.seed)}${c.theme ? ` · theme: ${esc(c.theme.pack.title)} (${esc(c.theme.intensity)})` : ''}${
-      c.pool ? ' · names from this city\'s own AI name pool' : ' · built-in names'}</p>
+      c.theme ? ' · people and taverns named from the theme, shops by their kind'
+        : c.pool ? ' · names from this city\'s own AI name pool' : ' · built-in names'}</p>
     ${c.warnings?.length ? `<ul class="small warn">${c.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
     ${card('overview', `<p><b>${esc(o.size)}</b> of ${Number(o.population).toLocaleString()} ·
       ruled by ${esc(o.government)} · ${esc(o.wealth)} · lives on ${esc(o.trade)}</p>

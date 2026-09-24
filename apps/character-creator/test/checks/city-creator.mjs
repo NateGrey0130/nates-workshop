@@ -595,6 +595,12 @@ export function run() {
   check('a Total theme that runs out of places stops at what it has and says so - no setting lines fill in',
     ranOut.places.length === THEME_MIN_LINES && ranOut.places.every((p) => p.name.startsWith('[W]'))
       && ranOut.warnings.some((w) => /ran out of places/.test(w)), `${ranOut.places.length} places; ${ranOut.warnings.join('; ')}`);
+  // And a one-entry reroll with nothing left says so too, rather than keeping
+  // the old place in silence (a claim audit found it silent, 2026-09-24).
+  const rerolledOut = rerollEntry({ ...ranOut, warnings: [] }, 'place-0');
+  check('and so does a reroll of one place when the theme has none left - it keeps the old one and says why',
+    rerolledOut.places[0].name === ranOut.places[0].name && rerolledOut.warnings.some((w) => /ran out of places/.test(w)),
+    rerolledOut.warnings.join('; '));
 
   // ── the theme is kept with the city, through rerolls ──
   check('a themed city keeps its theme, and a city with none has no theme key at all',
