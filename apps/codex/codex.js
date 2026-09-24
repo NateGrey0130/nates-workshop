@@ -308,6 +308,8 @@ const S = {
   text: {},             // "<section>:<key>" -> the entry's text, once fetched
   textLoading: {},      // -> a fetch for it is in flight
   textError: {},        // -> what went wrong; cleared by the next attempt
+  focus: null,          // "<section>:<key>" a link named - scrolled to and marked
+  missing: null,        // the key a link named that this section does not hold
 };
 
 const $ = (id) => document.getElementById(id);
@@ -436,6 +438,8 @@ async function loadSection(id) {
   }
   S.loading[id] = false;
   render();
+  // A link may have named a row in this section before it had arrived.
+  if (id === S.tab) settleFocus();
 }
 
 async function loadIndex() {
@@ -534,7 +538,8 @@ function entry(sec, r) {
   // it would make the codex quietly disagree with the pickers about what
   // exists. It says so instead, which is also the visible edge of the Book of
   // Magic spells still to be filled in.
-  return `<div class="codex-entry${open ? ' open' : ''}">
+  const [sid, ...rest] = key.split(':');
+  return `<div class="codex-entry${open ? ' open' : ''}${S.focus === key ? ' focus' : ''}">
     <button type="button" class="codex-head" data-key="${escHtml(key)}" aria-expanded="${open}">
       <span class="codex-name">${escHtml(sec.title(r))}</span>
       <span class="codex-meta">${escHtml(sec.meta(r))}</span>
@@ -546,7 +551,8 @@ function entry(sec, r) {
       ${textHtml}
       ${sec.notes(r).filter(Boolean)
         .map((n) => `<p class="note small">${escHtml(n)}</p>`).join('')}
-      <p class="muted small">${escHtml(r.source_book || 'source not recorded')}</p>
+      <p class="muted small codex-foot">${escHtml(r.source_book || 'source not recorded')}
+        <button type="button" class="btn btn-sm btn-ghost noprint" data-copy="${escHtml(entryHash(sid, rest.join(':')))}">Copy link</button></p>
     </div>` : ''}
   </div>`;
 }
@@ -587,6 +593,8 @@ function listHtml(sec) {
         shown.length && !sec.noText ? ` · ${withText} with text` : ''}</span>
     </div>
 
+    ${S.missing ? `<p class="err small">The link asked for “${escHtml(S.missing)}”, and ${
+      escHtml(sec.label)} has no entry by that name. It may have been renamed or merged — try the filter.</p>` : ''}
     <div class="panel codex-list" id="codex-list">
       ${shown.length ? shown.map((r) => entry(sec, r)).join('')
         : '<p class="muted small">Nothing matches that.</p>'}
@@ -620,12 +628,27 @@ document.addEventListener('click', (e) => {
     return;
   }
 
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    const url = location.origin + location.pathname + copy.dataset.copy;
+    const done = (msg) => { copy.textContent = msg; setTimeout(() => { copy.textContent = 'Copy link'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => done('Copied'), () => done('Copy failed'));
+    else done('Copy failed');
+    return;
+  }
+
   const head = e.target.closest('.codex-head');
   if (head) {
     const key = head.dataset.key;
     const opening = !S.open.has(key);
     if (opening) S.open.add(key); else S.open.delete(key);
     S.filterFocused = false;
+    S.focus = null;
+    S.missing = null;
+    // The address follows the row: opening one makes the URL bar a link to it,
+    // closing it falls back to the section. See "a link to one entry" below.
+    const sid = key.slice(0, key.indexOf(':'));
+    history.replaceState(null, '', opening ? entryHash(sid, key.slice(sid.length + 1)) : entryHash(sid));
     render();
     // A `detail` section's text is fetched by the act of opening the row. The
     // row is found again from the key rather than carried on the element: the
@@ -639,17 +662,88 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('input', (e) => {
-  if (e.target.id === 'codex-filter') { S.filter = e.target.value; S.filterFocused = true; render(); }
+  if (e.target.id === 'codex-filter') { S.filter = e.target.value; S.filterFocused = true; S.missing = null; render(); }
 });
 
 document.addEventListener('change', (e) => {
   if (e.target.id === 'codex-system') { S.system = e.target.value; S.filterFocused = false; render(); }
 });
 
-// A link may arrive pointed at any section.
-const fromHash = location.hash.replace(/^#/, '');
-if (SECTIONS.some((s) => s.id === fromHash)) S.tab = fromHash;
+// ─── a link to one entry ───
+//
+// `#spells` opens a section; `#spells/fireball` opens that section with that
+// ENTRY open, scrolled to and marked. The part after the slash is the
+// section's own `key` - the same string the open-set and the delegated handler
+// already use - so a link and a click can never disagree about which row is
+// meant. Name-keyed sections (spells, psionics, skills, talents, super
+// abilities) link by lower-cased name, encoded: "Ba'al's Blessing" and the
+// super abilities with an ampersand are exactly the names that break a link
+// built any other way. The sheet builds these links too, from the same rule.
+//
+// Opening an entry REPLACES the address rather than pushing it, so the URL bar
+// is always a link to what is on screen and Back still leaves the page rather
+// than walking back through every row you opened.
+
+function entryHash(secId, key) {
+  return '#' + secId + (key != null ? '/' + encodeURIComponent(key) : '');
+}
+
+function parseHash() {
+  const h = location.hash.replace(/^#/, '');
+  const at = h.indexOf('/');
+  const tab = at < 0 ? h : h.slice(0, at);
+  let key = null;
+  if (at >= 0) {
+    try { key = decodeURIComponent(h.slice(at + 1)).toLowerCase(); } catch { key = null; }
+  }
+  return { tab, key: key || null };
+}
+
+// Called once the section's rows are in. A link to a row that is not there -
+// a renamed spell, a typo in a hand-made link - says so rather than landing on
+// the top of the list as if it had worked.
+function settleFocus() {
+  const want = S.focus;
+  if (!want || !S.rows[S.tab]) return;
+  const sec = byId(S.tab);
+  const row = rowsFor(sec.id).find((r) => sec.id + ':' + sec.key(r) === want);
+  if (!row) {
+    S.focus = null;
+    S.missing = want.slice(sec.id.length + 1);
+    render();
+    return;
+  }
+  if (sec.detail) loadDetail(sec, row);
+  const el = document.querySelector(`.codex-head[data-key="${CSS.escape(want)}"]`);
+  if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }); }
+}
+
+function applyHash() {
+  const { tab, key } = parseHash();
+  if (!SECTIONS.some((s) => s.id === tab)) return;
+  if (tab !== S.tab) { S.filter = ''; S.filterFocused = false; }
+  S.tab = tab;
+  S.missing = null;
+  S.focus = null;
+  if (key) {
+    const k = tab + ':' + key;
+    S.open.add(k);
+    S.focus = k;
+    // The one row a link names must be on screen: a system filter chosen
+    // earlier would otherwise hide it and read as a broken link.
+    S.system = '';
+  }
+  render();
+  // Loaded already: settle now. Not yet: loadSection settles when it lands.
+  if (S.rows[tab]) settleFocus(); else loadSection(tab);
+}
+
+// Back and Forward between two entry links, and a link clicked on this page.
+// The page's own tab clicks set the hash too; that arrives here as well and
+// is harmless, because the state it describes is the state already showing.
+window.addEventListener('hashchange', applyHash);
 
 render();
 loadIndex();
+applyHash();
 loadSection(S.tab);
