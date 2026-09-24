@@ -199,7 +199,7 @@ What is deliberately left, with the reason:
 |---|---|---|
 | 2026-09-24 | — | cache built (136 pp, text layer), survey written, offset +1 verified at four folios, `madhaven` registered in `books.json` |
 | 2026-09-24 | [#1337](https://github.com/NateGrey0130/nates-workshop/pull/1337) | registry, survey and queue row. MERGED |
-| 2026-09-24 | gear PR | `add-madhaven-gear.sql`: 40 gear rows (15 weapon, 9 armor, 6 gear, 10 magic). All 40 missing in `catalog-diff --remote` against 2830 rows; every number from a render; `book-reconcile` 40 of 40 agree. Applied `--remote` before the PR, both read-backs hold |
+| 2026-09-24 | [#1338](https://github.com/NateGrey0130/nates-workshop/pull/1338) | `add-madhaven-gear.sql`: 40 gear rows (15 weapon, 9 armor, 6 gear, 10 magic). All 40 missing in `catalog-diff --remote` against 2830 rows; every number from a render; `book-reconcile` 40 of 40 agree. Applied `--remote` before the PR, both read-backs hold |
 
 ### What remains
 
