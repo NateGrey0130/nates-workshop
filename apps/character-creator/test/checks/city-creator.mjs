@@ -27,18 +27,23 @@
 // stripped of its words, an AI pool ignored, a clash renamed by the label
 // 'Tavern', and the used-name test removed. The last PASSED a 50-city sampled
 // check and is read from the source instead - see the comment there.
+// Themes, the same way, 2026-09-24: draw() ignoring the intensity, Total
+// falling back to the setting's lines when the theme ran out, raceNamed()
+// answering yes for every race, stockShop() ignoring stockAs, a rumour's
+// unknown {slot} let through, a reroll that dropped the theme, and a
+// themed role's class ignored by rollRequest().
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
-  FLESH_KINDS }
+  FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS }
   from '../../../city-creator/js/city-engine.js';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
-  'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names'];
+  'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -484,4 +489,125 @@ export function run() {
   const engineSrc = readFileSync(join(repoRoot, 'apps', 'city-creator', 'js', 'city-engine.js'), 'utf8');
   check('and a shop renamed after a clash is renamed by its kind, not by the label "Tavern"',
     /x\.name = ctx\.names\.shop\(r, shopTypeFor\(ctx, x\.type\)\)/.test(engineSrc) && !/x\.type === 'Tavern'/.test(engineSrc));
+
+  section('City Creator themes');
+
+  // A test pack: every line carries [W], so a draw says where it came from.
+  // Written here, for this check only - PR 2 is where real packs come from.
+  const W = (what, n = 12) => Array.from({ length: n }, (_, i) => `[W] ${what} ${i + 1}`);
+  const westPack = () => ({
+    prompt: 'An Old West boomtown on the frontier, where the Wolfen run the cattle',
+    title: 'Old West boomtown',
+    tables: Object.fromEntries(THEME_TABLES.map((k) => [k, k === 'RUMOURS'
+      ? W('rumour', 11).map((l, i) => (i % 2 ? `${l} about {npc}` : l)).concat(['[W] they say {shop} waters the whiskey'])
+      : W(k.toLowerCase())])),
+    shopTypes: [
+      { label: 'Saloon', stockAs: 'Tavern', names: ['Saloon', 'Bar', 'Watering Hole'], specialties: W('saloon special', 3) },
+      { label: 'Gunsmith', stockAs: 'Smithy', names: ['Guns', 'Arms', 'Gunworks'], specialties: W('gun special', 3) },
+      { label: 'Livery', stockAs: 'Stable', names: ['Livery', 'Corral', 'Stables'], specialties: W('livery special', 3) },
+    ],
+    roleOcc: { '[W] npc_roles 1': 'soldier', '[W] npc_roles 2': 'merchant' },
+    mapStyle: 'rail',
+    overviewExtras: [{ label: 'Law', lines: W('law', 4) }],
+    raceLines: {
+      wolfen: { quirks: W('wolfen quirk', 2) },
+      dwarf: { quirks: W('dwarf quirk', 2) },   // dwarves are not named: thrown away
+    },
+  });
+  const westOk = validateThemePack(westPack(), base());
+  const themed = (intensity, over = {}) => ({ intensity, pack: westOk, ...over });
+  const themeRefuses = (edit, settings = base()) => {
+    const pk = westPack(); edit(pk);
+    try { validateThemePack(pk, settings); return false; } catch { return true; }
+  };
+
+  check('a whole test pack is accepted, and keeps only what the engine reads',
+    westOk.tables.LOOKS.length === 12 && westOk.shopTypes.length === 3 && westOk.mapStyle === 'rail'
+      && westOk.system === 'palladium-fantasy' && westOk.roleOcc['[W] npc_roles 1'] === 'soldier');
+  check('a pack missing a table, or short of lines, or with a table the city does not use, is refused',
+    themeRefuses((pk) => { delete pk.tables.MOODS; })
+      && themeRefuses((pk) => { pk.tables.MOODS = W('mood', THEME_MIN_LINES - 1); })
+      && themeRefuses((pk) => { pk.tables.STREETS = W('street'); }));
+  check('a rumour with a {slot} the city cannot fill is refused, and one with every slot it can fill is not',
+    themeRefuses((pk) => { pk.tables.RUMOURS[0] += ' {sheriff}'; })
+      && !themeRefuses((pk) => { pk.tables.RUMOURS[0] += RUMOUR_SLOTS.map((x) => ` {${x}}`).join(''); }));
+  check('a shop kind that sells by no stock rule of the setting, or reuses a setting kind\'s name, is refused',
+    themeRefuses((pk) => { pk.shopTypes[0].stockAs = 'Gun shop'; })
+      && themeRefuses((pk) => { pk.shopTypes[0].label = 'Smithy'; }));
+  check('a role mapped to a class the setting cannot roll, or a role the theme does not have, is refused',
+    themeRefuses((pk) => { pk.roleOcc['[W] npc_roles 1'] = 'gunslinger'; })
+      && themeRefuses((pk) => { pk.roleOcc.sheriff = 'soldier'; }));
+  check('a map style the map does not draw is refused, and a pack for another setting is refused',
+    !MAP_STYLES.includes('hex') && themeRefuses((pk) => { pk.mapStyle = 'hex'; })
+      && MAP_STYLES.every((m) => !themeRefuses((pk) => { pk.mapStyle = m; })) && themeRefuses((pk) => { pk.system = 'rifts'; }));
+
+  // ── a race's own lines only for a race the G.M. named ──
+  check('the named race keeps its themed lines and the unnamed one\'s are thrown away',
+    !!westOk.raceLines?.wolfen && !westOk.raceLines?.dwarf);
+  check('a race counts as named in its own naming box, and by its plural, but not inside another word',
+    raceNamed({ id: 'dwarf', name: 'Dwarf', theme: 'dwarves are the town\'s miners' }, 'Old West')
+      && raceNamed({ id: 'elf', name: 'Elf' }, 'the Elfs of the valley')
+      && !raceNamed({ id: 'elf', name: 'Elf' }, 'a self-made town of shelf-builders'));
+  const quirkSeen = { wolfenBase: 0, wolfenTheme: 0, dwarfBase: 0 };
+  const PT = tablesFor('palladium-fantasy');
+  for (let seed = 0; seed < 40; seed++) {
+    for (const q of generateCity(base(), seed, null, themed('light')).quirks) {
+      if (PT.RACE_LINES.wolfen.quirks.includes(q.text)) quirkSeen.wolfenBase++;
+      if (q.text.startsWith('[W] wolfen quirk')) quirkSeen.wolfenTheme++;
+      if (PT.RACE_LINES.dwarf.quirks.includes(q.text)) quirkSeen.dwarfBase++;
+    }
+  }
+  check('so over 40 cities the Wolfen quirks are all the theme\'s, and the dwarves keep the setting\'s',
+    quirkSeen.wolfenBase === 0 && quirkSeen.wolfenTheme > 0 && quirkSeen.dwarfBase > 0, JSON.stringify(quirkSeen));
+
+  // ── intensity ──
+  const share = (intensity) => {
+    let own = 0, all = 0;
+    for (let seed = 0; seed < 60; seed++) {
+      const c = generateCity(base(), seed, null, themed(intensity));
+      for (const n of c.npcs) for (const f of ['look', 'want', 'secret']) { all++; if (n[f].startsWith('[W]')) own++; }
+    }
+    return own / all;
+  };
+  const shares = Object.fromEntries(Object.keys(THEME_INTENSITY).map((k) => [k, share(k)]));
+  check('Light draws about 30% of lines from the theme, Strong about 70%, Total all of them',
+    Object.keys(shares).join() === 'light,strong,total' && shares.light > 0.22 && shares.light < 0.38
+      && shares.strong > 0.62 && shares.strong < 0.78 && shares.total === 1,
+    JSON.stringify(shares));
+  const totalCity = generateCity({ ...base(), population: 90000 }, 7, null, themed('total'));
+  const raceKinds = Object.values(PT.RACE_LINES).flatMap((x) => x.shops || []).map((k) => k.label);
+  check('at Total every shop is one of the theme\'s kinds or a race\'s own, and every themed shop names its stock rule',
+    totalCity.shops.every((s) => raceKinds.includes(s.type) || westOk.shopTypes.some((k) => k.label === s.type && s.stockAs === k.stockAs)),
+    totalCity.shops.map((s) => s.type).join(', '));
+  check('and the theme\'s own overview line is added after the setting\'s',
+    totalCity.overview.extras?.at(-1)?.label === 'Law' && totalCity.overview.extras.at(-1).text.startsWith('[W] law'));
+  const shortPack = validateThemePack({ ...westPack(), tables: { ...westPack().tables, PLACES: W('place', THEME_MIN_LINES) } }, base());
+  const ranOut = generateCity({ ...base(), population: 90000 }, 7, null, { intensity: 'total', pack: shortPack });
+  check('a Total theme that runs out of places stops at what it has and says so - no setting lines fill in',
+    ranOut.places.length === THEME_MIN_LINES && ranOut.places.every((p) => p.name.startsWith('[W]'))
+      && ranOut.warnings.some((w) => /ran out of places/.test(w)), `${ranOut.places.length} places; ${ranOut.warnings.join('; ')}`);
+
+  // ── the theme is kept with the city, through rerolls ──
+  check('a themed city keeps its theme, and a city with none has no theme key at all',
+    totalCity.theme?.pack?.title === 'Old West boomtown' && !('theme' in generateCity(base(), 7)));
+  const rerolled = rerollCity(toggleLock(totalCity, 'npc-0'), 99);
+  const quirkRe = rerollEntry(totalCity, 'quirk-0');
+  const placeRe = rerollEntry(totalCity, 'place-0');
+  check('a reroll of the city or of one entry still draws from the theme',
+    rerolled.theme?.intensity === 'total' && rerolled.npcs.every((n) => n.look.startsWith('[W]'))
+      && quirkRe.quirks[0].text.startsWith('[W]') && placeRe.places[0].name.startsWith('[W]'),
+    `${quirkRe.quirks[0].text} / ${placeRe.places[0].name}`);
+
+  // ── the theme's roles roll, and its shops stock ──
+  let roleCity = totalCity;
+  const mapped = roleCity.npcs.find((n) => n.role === '[W] npc_roles 1')
+    || (roleCity = { ...totalCity, npcs: totalCity.npcs.map((n, i) => (i ? n : { ...n, role: '[W] npc_roles 1' })) }).npcs[0];
+  check('an NPC in a themed role rolls as the class the theme mapped it to',
+    rollRequest(roleCity, mapped.id).occ_class_id === 'soldier');
+  const saloon = { ...totalCity, shops: [{ id: 'shop-0', name: 'The Dusty Saloon', type: 'Saloon', stockAs: 'Tavern', owner: null }] };
+  const drinks = Array.from({ length: 8 }, (_, i) => ({ slug: `ale-${i}`, name: `Ale, keg ${i}`, category: 'gear', cost: 5 + i }));
+  check('and a themed shop stocks by the setting rule it names',
+    stockShop(saloon, 'shop-0', drinks).shops[0].inventory.length >= 6);
+  check('a theme with an unknown intensity is refused before a city is made',
+    (() => { try { generateCity(base(), 1, null, { intensity: 'wild', pack: westOk }); return false; } catch { return true; } })());
 }
