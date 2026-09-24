@@ -164,6 +164,28 @@ body {
   font-size: 16px;
   font-weight: 400;
 }
+/* One section per manifest group, in the manifest's order. The heading is the
+   card title's face one size up and in capitals, over a rule in --text: the
+   band above is the page's one block of colour, so a heading that is also
+   orange would read as a second band rather than as a label. */
+#appSections {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+.section-head {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-stretch: 75%;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--text);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -215,7 +237,7 @@ body {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: 0;
 }
-.card h2 {
+.card h3 {
   font-family: 'Archivo', system-ui, sans-serif;
   font-stretch: 75%;
   font-size: 20px;
@@ -262,7 +284,7 @@ body {
   border-style: dashed;
   pointer-events: none;
 }
-.card-soon h2, .card-soon .card-icon { color: var(--text-sub); }
+.card-soon h3, .card-soon .card-icon { color: var(--text-sub); }
 footer {
   margin-top: 80px;
   color: var(--text-muted);
@@ -280,7 +302,7 @@ footer {
   <p>Tools, toys, and experiments — built with Claude.</p>
 </div>
 
-<div class="grid" id="appGrid"></div>
+<main id="appSections"></main>
 
 <footer>powered by vibes & claude</footer>
 
@@ -293,8 +315,8 @@ function esc(str) {
 
 fetch('/apps/manifest.json')
   .then(res => res.json())
-  .then(({ apps }) => {
-    document.getElementById('appGrid').innerHTML = apps.map(app => {
+  .then(({ groups, apps }) => {
+    const card = app => {
       // `icon` is the ONE field not passed through esc(), and that is
       // deliberate: since WORKSHOP-UI-AUDIT W2 it holds inline SVG rather
       // than an emoji, so escaping it would print the markup as text on all
@@ -305,16 +327,30 @@ fetch('/apps/manifest.json')
       // both halves, so a well-meant "fix" here fails rather than shipping.
       const inner = `
         <div class="card-icon">${app.icon}</div>
-        <h2>${esc(app.name)}</h2>
+        <h3>${esc(app.name)}</h3>
         <p>${esc(app.description)}</p>
         <span class="card-tag">${esc(app.status)}</span>`;
       return app.status === 'live' && app.slug
         ? `<a class="card" href="/apps/${encodeURIComponent(app.slug)}/">${inner}</a>`
         : `<div class="card card-soon">${inner}</div>`;
+    };
+    // The LAST group is the catch-all. An app whose `group` is missing or
+    // names no group lands there, so a new manifest entry that forgets the
+    // field still gets a tile instead of silently vanishing from the hub.
+    const ids = groups.map(g => g.id);
+    const last = ids[ids.length - 1];
+    const groupOf = app => ids.includes(app.group) ? app.group : last;
+    document.getElementById('appSections').innerHTML = groups.map(g => {
+      const members = apps.filter(app => groupOf(app) === g.id);
+      if (!members.length) return '';
+      return `<section>
+        <h2 class="section-head">${esc(g.title)}</h2>
+        <div class="grid">${members.map(card).join('')}</div>
+      </section>`;
     }).join('');
   })
   .catch(err => {
-    document.getElementById('appGrid').innerHTML =
+    document.getElementById('appSections').innerHTML =
       `<p style="color:var(--text-muted)">Could not load app list: ${esc(err.message)}</p>`;
   });
 </script>

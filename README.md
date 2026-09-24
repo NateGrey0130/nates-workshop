@@ -37,6 +37,8 @@ And four that stand alone:
 **What each app *is* lives in [`apps/manifest.json`](apps/manifest.json)**, which
 the landing page reads at runtime. That file is the source; these tables are only
 a map, and deliberately do not repeat it. Adding one is the `app-suite` skill.
+The hub's sections come from the same file: its `groups` list, in order, and
+each app's `group`. An app naming no known group lands in the last section.
 
 **This table described four apps while eight were live**, for two days after the
 split. Nothing pins this file — no check reads it, which is not true of any app's

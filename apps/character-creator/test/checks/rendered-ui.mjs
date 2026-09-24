@@ -1785,6 +1785,19 @@ export function run() {
     check('while the fields a person types stay escaped',
       /\$\{esc\(app\.name\)\}/.test(landing) && /\$\{esc\(app\.description\)\}/.test(landing),
       'name or description lost its esc()');
+
+    // The hub is sectioned by manifest group since 2026-09-23. An app whose
+    // group is misspelt still renders - in the last, catch-all section - so a
+    // typo moves a tile and nothing on the page looks broken. This is the
+    // only place that notices.
+    const groupIds = (manifest.groups || []).map((g) => g.id);
+    const ungrouped = manifest.apps.filter((a) => !groupIds.includes(a.group));
+    check('every app names a group the manifest declares',
+      groupIds.length > 0 && ungrouped.length === 0,
+      groupIds.length ? ungrouped.map((a) => `${a.slug || '(soon)'}=${a.group}`).join(' ')
+        : 'the manifest has no groups list');
+    check('and the section titles are escaped like the other typed fields',
+      /\$\{esc\(g\.title\)\}/.test(landing), 'g.title reaches innerHTML unescaped');
   }
 
   // ---------- Changes that could not be sent ----------
