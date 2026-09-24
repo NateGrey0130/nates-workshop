@@ -3014,8 +3014,24 @@ check('and none of them with ?mine=1',
   const riftsRepack = await api('PATCH', `/city-themes/${themeId}`, { pack: { ...pack, system: 'rifts' } });
   check('a replacement that breaks the rules, or is for another game, is a 400',
     badRepack.status === 400 && riftsRepack.status === 400, `${badRepack.status} / ${riftsRepack.status}`);
+  // Adapting (PR 6): the adapted theme is a NEW theme for the new game that
+  // points at the one it came from - and deleting that one keeps the adapted
+  // theme, its pointer cleared (ON DELETE SET NULL).
+  const riftsPack = { ...validateThemePack({ ...westPack(), raceLines: {},
+    shopTypes: westPack().shopTypes.map((k, i) => ({ ...k, stockAs: ['Bar', 'Gun shop', 'Vehicle lot'][i] })),
+    roleOcc: { '[W] npc_roles 1': 'merc-soldier' } }, { system: 'rifts', races: [{ id: 'human', name: 'Human' }] }),
+    names: pack.names };
+  const adaptedTheme = await api('POST', '/city-themes', { pack: riftsPack, name: 'Dust and Hooves (Rifts)', adapted_from: themeId });
+  const adaptedId = adaptedTheme.body.theme?.id;
+  check('an adapted theme is saved as a new theme for its game, pointing at the one it came from',
+    adaptedTheme.status === 201 && adaptedTheme.body.theme.system === 'rifts' && adaptedTheme.body.theme.adapted_from === themeId,
+    JSON.stringify(adaptedTheme.body).slice(0, 200));
   const gone = await api('DELETE', `/city-themes/${themeId}`);
   check('the owner deletes it', gone.status === 200 && (await api('GET', `/city-themes/${themeId}`)).status === 404);
+  const orphan = await api('GET', `/city-themes/${adaptedId}`);
+  check('and the theme adapted from it stays, with nothing to point at',
+    orphan.status === 200 && orphan.body.theme.adapted_from === null, JSON.stringify(orphan.body.theme?.adapted_from));
+  await api('DELETE', `/city-themes/${adaptedId}`);
 }
 
 // ── The players' view of a city (Phase 4c, cities/:id/view) ─────────────────

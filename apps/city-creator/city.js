@@ -15,7 +15,7 @@ import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, re
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, rollBlocker, linkSheet,
   stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor,
   THEME_PARTS, THEME_INTENSITY, THEME_TABLES, THEME_MIN_LINES, themePrompt, parseThemePart, assembleThemePack,
-  validateSavedTheme, themeParts, editThemeTable }
+  validateSavedTheme, themeParts, editThemeTable, adaptPrompt }
   from './js/city-engine.js';
 import { layoutMap } from './js/city-map.js';
 import { needsOccupation } from '/apps/character-creator/js/parser.js';
@@ -47,6 +47,9 @@ const S = {
   // theme on the page came from or was saved as, and the table being edited.
   library: null, libraryMsg: '', libraryErr: false, libraryOpen: false,
   themeId: null, loadedPack: null, editKey: 'NPC_ROLES',
+  // An adaptation in progress: the saved theme, the game, and the parts
+  // written so far, so a part that fails is the only one asked again.
+  adapt: null,
   seed: '',
   rccs: null,        // the setting's published R.C.C.s, for the race rows
   city: null,
@@ -220,21 +223,27 @@ function themeStatusHtml() {
 // The five parts, in parallel: each is written unless it is already kept for
 // these inputs, and each is checked as it arrives. A part that fails leaves
 // the others kept, and Generate asks again for that part alone.
+// One part of a theme from the AI: the answer's text. Low effort and a
+// schema: measured 2026-09-24, the longest part took 68s (the proxy gives up
+// near 100s); without them it thought for 150s and spent all 12,000 tokens
+// before the answer ended. Called by writeTheme and adaptTheme, each behind a
+// button, and nothing else.
+async function askForPart({ system, prompt, schema }) {
+  const res = await claudeRequest({ model: MODEL, max_tokens: 16000, system,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+    messages: [{ role: 'user', content: prompt }] });
+  if (res.stop_reason === 'max_tokens') throw new Error('it was cut off before it finished');
+  return res.content?.map((b) => b.text || '').join('') || '';
+}
+
 async function writeTheme(text) {
   const todo = Object.keys(THEME_PARTS).filter((p) => S.themeParts[p]?.key !== partKey(p, text));
   for (const p of todo) S.themeStatus[p] = 'writing';
   render();
   await Promise.all(todo.map(async (part) => {
     try {
-      const { system, prompt, schema } = themePrompt(part, S.settings, text);
-      // Low effort and a schema: measured 2026-09-24, the longest part took 68s
-      // (the proxy gives up near 100s); without them it thought for 150s and
-      // spent all 12,000 tokens before the answer ended.
-      const res = await claudeRequest({ model: MODEL, max_tokens: 16000, system,
-        output_config: { effort: 'low', format: { type: 'json_schema', schema } },
-        messages: [{ role: 'user', content: prompt }] });
-      if (res.stop_reason === 'max_tokens') throw new Error('it was cut off before it finished');
-      const value = parseThemePart(part, res.content?.map((b) => b.text || '').join('') || '', S.settings, text);
+      const answer = await askForPart(themePrompt(part, S.settings, text));
+      const value = parseThemePart(part, answer, S.settings, text);
       S.themeParts[part] = { key: partKey(part, text), value };
       S.themeStatus[part] = 'done';
     } catch (err) {
@@ -298,6 +307,11 @@ function libraryHtml() {
       <button type="button" class="btn btn-sm" onclick="City.useTheme(${t.id})">Use</button>
       <button type="button" class="btn btn-sm btn-ghost" onclick="City.renameTheme(${t.id})">Rename</button>
       <button type="button" class="btn btn-sm btn-ghost" onclick="City.deleteTheme(${t.id})" aria-label="Delete ${esc(t.name)}">✕</button>
+      <select aria-label="Adapt ${esc(t.name)} to another game" onchange="City.adaptTheme(${t.id}, this.value); this.value=''"
+        ${S.adapt?.busy ? 'disabled' : ''}>
+        <option value="">Adapt to…</option>
+        ${SUPPORTED_SYSTEMS.filter((x) => x !== t.system).map((x) => `<option value="${x}">${esc(SETTING_LABEL[x] || x)}</option>`).join('')}
+      </select>
       </li>`).join('')}</ul>` : ''}
     ${pack ? `<div class="city-theme-edit" style="margin-top:6px">
       <label class="small">Edit a table's lines <select aria-label="Theme table to edit" onchange="City.editKey(this.value)">
@@ -735,6 +749,47 @@ window.City = {
       S.libraryMsg = 'Deleted.'; S.libraryErr = false;
       await loadLibrary(); save(); render();
     } catch (err) { libraryFail(err); }
+  },
+  // A saved theme written again for another game: five calls, each with the
+  // new game's rules and the old theme's lines for that part. Saved as a NEW
+  // theme that says which it came from; the old one is unchanged. A part that
+  // fails is kept apart, and adapting again asks for it alone.
+  async adaptTheme(id, system) {
+    if (!system || S.adapt?.busy) return;
+    const label = SETTING_LABEL[system] || system;
+    if (S.adapt?.id !== id || S.adapt?.system !== system) S.adapt = { id, system, parts: {} };
+    S.adapt.busy = true;
+    S.libraryMsg = `Adapting it to ${label} - five calls, about a minute…`; S.libraryErr = false; render();
+    try {
+      const { theme } = await api(`city-themes/${id}`);
+      const source = validateSavedTheme(theme.pack);
+      // The new game's races: Human, and any race the theme named that the
+      // new game has too - its own lines are written again for it.
+      const rccs = (await api(`classes?system=${encodeURIComponent(system)}&category=rcc`)).classes || [];
+      const human = tablesFor(system)?.HUMAN || { id: 'human', name: 'Human' };
+      const named = Object.entries(source.raceLines || {}).filter(([rid]) => rid !== human.id && rccs.some((c) => c.id === rid));
+      const races = [human, ...named.map(([rid, x]) => ({ id: rid, name: x.name }))]
+        .map((x, i, all) => ({ id: x.id, name: x.name, pct: 100 / all.length }));
+      const settings = { system, races };
+      const failed = [];
+      await Promise.all(Object.keys(THEME_PARTS).filter((part) => !S.adapt.parts[part]).map(async (part) => {
+        try {
+          S.adapt.parts[part] = parseThemePart(part, await askForPart(adaptPrompt(part, settings, source)), settings, source.prompt);
+        } catch (err) { failed.push(`${part} (${err.message})`); }
+      }));
+      if (failed.length) {
+        throw new Error(`The adaptation's ${failed.join(' and ')} ${failed.length === 1 ? 'was' : 'were'} not written. `
+          + 'Adapt again to ask for only what is missing.');
+      }
+      const pack = assembleThemePack(source.prompt, S.adapt.parts, settings);
+      const res = await post('city-themes', 'POST', { pack, name: `${theme.name} (${label})`, adapted_from: id });
+      S.adapt = null;
+      S.libraryMsg = `Saved ${res.theme.name}. Switch the setting to ${label} to use it.`; S.libraryErr = false;
+      await loadLibrary(); render();
+    } catch (err) {
+      if (S.adapt) S.adapt.busy = false;
+      libraryFail(err);
+    }
   },
   applyEdit() {
     const key = THEME_TABLES.includes(S.editKey) ? S.editKey : THEME_TABLES[0];

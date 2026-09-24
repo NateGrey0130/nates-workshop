@@ -83,6 +83,18 @@ saved theme keeps its own copy (and its `library_id`), so editing or deleting
 the saved one never changes a kept city. Saved themes are the owner's alone - a
 404 to anyone else.
 
+**Adapt to…** on a saved theme writes it again for another game. A theme
+belongs to its game - its shops sell by that game's stock rules and its roles
+roll as that game's classes - so adapting is five calls again, each with the
+new game's rules in its schema and the old theme's lines for that part to keep
+what fits. Nothing of the old game's stock rules or classes carries over. The
+new game's peoples are Human and any race the theme named that the new game
+also has. The result is a **new** saved theme, "(Rifts)" or "(Palladium
+Fantasy)" after its name, pointing at the one it came from (`adapted_from`);
+the old one is unchanged, and a part that fails is the only one asked again.
+Measured 2026-09-24: the Old West theme adapted to Rifts in 38 seconds, with no
+Palladium Fantasy stock rule left and every role mapped to a Rifts O.C.C.
+
 Each call runs at low effort with a JSON schema. Measured 2026-09-24: the
 slowest part took 68 seconds, where one unbounded call thought for 150 and ran
 out of tokens - and the proxy gives up near 100.
