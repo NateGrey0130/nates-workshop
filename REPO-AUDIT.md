@@ -911,6 +911,6 @@ request pays a local TCP connect, which is far below this suite's noise.
 same way. It drives a browser rather than node's `fetch`, and `G21` records
 no deaths.
 
-**Taken, 2026-09-23 (this PR).** Still cites `G23` outside the repo: the
+**Taken, 2026-09-23 (PR #1313).** Still cites `G23` outside the repo: the
 memory note `regression-ci-dev-server-dies.md` on the development machine,
 which this session cannot reach.
