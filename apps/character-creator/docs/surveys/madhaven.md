@@ -174,14 +174,17 @@ Everything above cost nothing. The work in order, one PR each, applied
 `--remote` before the PR:
 
 1. **Registry and survey**: this file, the `books.json` entry and the queue row.
-2. **The four White Rose O.C.C.s**, with any catalog stubs they turn up.
-3. **The eight Haven Mutant R.C.C.s**, with the Shaman as a variant on each and
+2. **Gear**: 40 rows from printed 36-37 and 81-91. Moved ahead of the classes
+   on 2026-09-24, because the O.C.C. drafts name TW Inferno Blade, Gateway TW
+   Body Armor, the bone weapons and more. Shipping the gear first means
+   `class-check --remote` finds real rows instead of emitting stubs, and a
+   stub that sorts before this file would win on a rebuild.
+3. **The four White Rose O.C.C.s**.
+4. **The eight Haven Mutant R.C.C.s**, with the Shaman as a variant on each and
    the finding filed.
-4. **Gear**: about 30 rows from printed 80-91, including the White Rose healing
-   items from printed 35-36.
-5. **Creatures**: the 11 monsters and 7 ghosts (18 rows plus `stat_attacks`),
-   through the Phase 3 pipeline: worker by NAME, a census of every
-   `Alignment:` line against the rows, reconcile, and a shingle copy-check.
+5. **Creatures**: 10 monsters (Undead Horrors prints no stat block), 7 ghosts
+   and the 8 mutants as their NPC view, with `stat_attacks`. Through the
+   Phase 3 pipeline: worker by NAME, reconcile, and a shingle copy-check.
 6. **Notable NPCs**: Colt and Davenport. Small enough to ride with PR 5.
 
 What is deliberately left, with the reason:
@@ -195,7 +198,9 @@ What is deliberately left, with the reason:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-24 | — | cache built (136 pp, text layer), survey written, offset +1 verified at four folios, `madhaven` registered in `books.json` |
+| 2026-09-24 | [#1337](https://github.com/NateGrey0130/nates-workshop/pull/1337) | registry, survey and queue row. MERGED |
+| 2026-09-24 | gear PR | `add-madhaven-gear.sql`: 40 gear rows (15 weapon, 9 armor, 6 gear, 10 magic). All 40 missing in `catalog-diff --remote` against 2830 rows; every number from a render; `book-reconcile` 40 of 40 agree. Applied `--remote` before the PR, both read-backs hold |
 
 ### What remains
 
-Everything in the extraction plan from step 2 on.
+Steps 3-6 of the extraction plan: the O.C.C.s, the R.C.C.s, the creatures and the notables.
