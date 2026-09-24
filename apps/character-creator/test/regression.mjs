@@ -2965,6 +2965,59 @@ check('and none of them with ?mine=1',
   check('the G.M. can delete it', gone.status === 200 && (await api('GET', `/cities/${cityId}`)).status === 404);
 }
 
+// ── Saved City Creator themes (migration 084, city-themes) ─────────────────
+//
+// OWNER ONLY, and every pack is checked by the engine before it is stored:
+// the same rules a freshly written theme meets. Nobody else can list, read,
+// change or delete one - a 404, not a 403.
+{
+  const { validateThemePack } = await import('../../city-creator/js/city-engine.js');
+  const { westPack } = await import('./fixtures/city-theme-pack.mjs');
+  const settings = { system: 'palladium-fantasy', population: 12000, npcCount: 4, everyRace: false,
+    races: [{ id: 'human', name: 'Human', pct: 75 }, { id: 'wolfen', name: 'Wolfen', pct: 25 }] };
+  const pack = { ...validateThemePack(westPack(), settings),
+    names: { city: ['Dust Creek'], district: ['Railside'], street: ['Main'], shop: ['The Last Chance'], cultures: {} } };
+  const stranger = 'stranger@example.com';
+
+  const made = await api('POST', '/city-themes', { pack });
+  const themeId = made.body.theme?.id;
+  check('a G.M. saves a theme, and the answer is a summary, not the pack',
+    made.status === 201 && !!themeId && made.body.theme.name === 'Old West boomtown' && !('pack' in made.body.theme),
+    JSON.stringify(made.body).slice(0, 200));
+  const badPack = await api('POST', '/city-themes', { pack: { ...pack, shopTypes: [{ ...pack.shopTypes[0], stockAs: 'Gun shop' }, ...pack.shopTypes.slice(1)] } });
+  check('a pack that breaks a theme\'s rules is a 400 that says which', badPack.status === 400 && /stock rules/.test(badPack.body.error || ''),
+    JSON.stringify(badPack.body));
+  const noNames = await api('POST', '/city-themes', { pack: { ...pack, names: undefined } });
+  check('and so is one without its name pool', noNames.status === 400, noNames.status);
+  const whole = await api('GET', `/city-themes/${themeId}`);
+  check('the owner reads the whole pack back, a named race\'s lines and the name pool included',
+    whole.status === 200 && whole.body.theme.pack.raceLines?.wolfen?.name === 'Wolfen'
+      && whole.body.theme.pack.names?.city?.[0] === 'Dust Creek' && whole.body.theme.pack.tables.LOOKS.length === 12);
+  const mine = await api('GET', '/city-themes?system=palladium-fantasy');
+  const otherGame = await api('GET', '/city-themes?system=rifts');
+  check('the list is the owner\'s, by game, as summaries',
+    (mine.body.themes || []).some((t) => t.id === themeId && !('pack' in t)) && !(otherGame.body.themes || []).some((t) => t.id === themeId));
+  const theirs = await apiAs(stranger, 'GET', '/city-themes');
+  const probes = [await apiAs(stranger, 'GET', `/city-themes/${themeId}`),
+    await apiAs(stranger, 'PATCH', `/city-themes/${themeId}`, { name: 'Mine now' }),
+    await apiAs(stranger, 'DELETE', `/city-themes/${themeId}`),
+    await apiAs(stranger, 'POST', '/city-themes', { pack, adapted_from: themeId })];
+  check('to anyone else it is not listed and does not exist - all 404, and they cannot point a theme at it',
+    !(theirs.body.themes || []).some((t) => t.id === themeId) && probes.slice(0, 3).every((p) => p.status === 404)
+      && probes[3].status === 400, probes.map((p) => p.status).join(', '));
+  const renamed = await api('PATCH', `/city-themes/${themeId}`, { name: 'Dust and Hooves' });
+  const repacked = await api('PATCH', `/city-themes/${themeId}`, { pack: { ...pack, tables: { ...pack.tables, LOOKS: ['a fresh look', ...pack.tables.LOOKS.slice(1)] } } });
+  const reread = await api('GET', `/city-themes/${themeId}`);
+  check('the owner renames it and replaces its pack, which is checked again',
+    renamed.body.theme?.name === 'Dust and Hooves' && repacked.status === 200 && reread.body.theme.pack.tables.LOOKS[0] === 'a fresh look');
+  const badRepack = await api('PATCH', `/city-themes/${themeId}`, { pack: { ...pack, tables: { ...pack.tables, MOODS: ['one mood'] } } });
+  const riftsRepack = await api('PATCH', `/city-themes/${themeId}`, { pack: { ...pack, system: 'rifts' } });
+  check('a replacement that breaks the rules, or is for another game, is a 400',
+    badRepack.status === 400 && riftsRepack.status === 400, `${badRepack.status} / ${riftsRepack.status}`);
+  const gone = await api('DELETE', `/city-themes/${themeId}`);
+  check('the owner deletes it', gone.status === 200 && (await api('GET', `/city-themes/${themeId}`)).status === 404);
+}
+
 // ── The players' view of a city (Phase 4c, cities/:id/view) ─────────────────
 //
 // THE CHECK THAT FAILS IF A G.M.-ONLY FIELD REACHES A NON-G.M. The view is

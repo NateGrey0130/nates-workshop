@@ -71,6 +71,18 @@ city fills. **A race's own lines change only for a race the theme names** - in
 the theme, or in that race's naming box; anything the answer says about
 another race is thrown away. The players never see the theme.
 
+**Saved themes** (`city_themes`, migration 084) keep a good theme for the next
+town: **💾 Save this theme** puts it in the G.M.'s own library, **Use** loads it
+back with no AI call, and it can be renamed, deleted, or saved again after a
+change. A theme's lines can be **edited one table at a time**, checked by the
+same rules a written theme meets, and any written part can be clicked to be
+asked for again alone on the next Generate. The server checks every saved pack
+with the engine's `validateSavedTheme`; a named race's lines keep that race's
+name, so the check still knows which races the theme named. A city made from a
+saved theme keeps its own copy (and its `library_id`), so editing or deleting
+the saved one never changes a kept city. Saved themes are the owner's alone - a
+404 to anyone else.
+
 Each call runs at low effort with a JSON schema. Measured 2026-09-24: the
 slowest part took 68 seconds, where one unbounded call thought for 150 and ran
 out of tokens - and the proxy gives up near 100.
