@@ -5,7 +5,9 @@
 // POST /api/character-creator/characters/:id/events — apply a play action and
 //      record it, in ONE batch: {kind, note?, changes?}. `changes` carries
 //      absolute from/to values — {character: {sdc_current: {from, to}}} and/or
-//      {item: {id, notes: {from, to}}} — applied as given. Since UI-AUDIT F40
+//      {item: {id, ammo_current: {from, to, cap}}} (migration 083; the older
+//      {item: {id, notes: {from, to}}} still replays) — applied as given, and
+//      composed rather than overwritten on a guarded replay. Since UI-AUDIT F40
 //      also {armor: {index, mdc_current: {from, to, raw_from}}} and
 //      {vehicle: {id, location, mdc: {from, to, absent}}}. The trust model is
 //      the sheet's existing PATCH (client-side arithmetic, owner/GM enforced
@@ -166,16 +168,57 @@ export async function onRequestPost({ request, env, params }) {
     }
   }
 
+  // AN ITEM CHANGE IS AMMO, in one of two shapes.
+  //
+  // {ammo_current: {from, to, cap}} since migration 083 - the count in a
+  // column of its own. A shot writes that column and nothing else, so it can
+  // no longer overwrite the row's notes.
+  //
+  // {notes: {from, to}} is the shape before it, when the count lived in the
+  // notes as "ammo 7/10". Still accepted, because a phone that queued a shot
+  // offline before 083 shipped holds that shape in IndexedDB and will replay
+  // it; refusing it would lose the shot. Nothing writes it any more.
+  //
+  // GUARDED REPLAY COMPOSES rather than refuses. A queued shot is "one fewer
+  // than there were", so when the count moved elsewhere in the meantime the
+  // shot is applied to what is there now - the move kept, the shot kept -
+  // clamped to 0 and to the magazine (`cap`, which the client sends because the
+  // server does not parse payloads). Refusing would drop a shot the player
+  // actually fired, and a 409 naming no pool is dropped by the queue.
   if (changes.item) {
-    const { id: itemId, notes } = changes.item;
-    if (typeof notes?.to !== 'string') return json({ error: 'item change needs notes.to' }, 400);
+    const { id: itemId, notes, ammo_current: ammo } = changes.item;
+    const isCount = (v) => Number.isInteger(v) && v >= 0;
+    const hasAmmo = ammo && isCount(ammo.to) && isCount(ammo.from);
+    const hasNotes = typeof notes?.to === 'string';
+    if (!hasAmmo && !hasNotes) {
+      return json({ error: 'item change needs ammo_current {from, to} as whole numbers, or notes.to' }, 400);
+    }
     const row = await env.DB.prepare(
-      'SELECT id FROM character_items WHERE id = ? AND character_id = ?'
+      'SELECT id, ammo_current FROM character_items WHERE id = ? AND character_id = ?'
     ).bind(itemId, params.id).first();
     if (!row) return json({ error: 'No such inventory item' }, 404);
-    statements.push(env.DB.prepare(
-      'UPDATE character_items SET notes = ? WHERE id = ?'
-    ).bind(notes.to, itemId));
+    if (hasNotes) {
+      statements.push(env.DB.prepare(
+        'UPDATE character_items SET notes = ? WHERE id = ?'
+      ).bind(notes.to, itemId));
+    }
+    if (hasAmmo) {
+      const cap = isCount(ammo.cap) ? ammo.cap : null;
+      let to = ammo.to;
+      const now = row.ammo_current ?? cap;
+      if (b.guard && now != null && now !== ammo.from) {
+        // Clamped, unlike every pool in this file: a pool runs below zero on
+        // the book's own rules, a magazine cannot hold fewer than none. Not
+        // written as a max(0, ...) call, because second-body.mjs forbids that
+        // shape here precisely so that no POOL gets clamped by accident.
+        to = now + (ammo.to - ammo.from);
+        if (to < 0) to = 0;
+        if (cap != null && to > cap) to = cap;
+      }
+      statements.push(env.DB.prepare(
+        'UPDATE character_items SET ammo_current = ? WHERE id = ?'
+      ).bind(to, itemId));
+    }
   }
 
   // WHERE A HIT LANDED (UI-AUDIT F40): an armour entry, or one location of a

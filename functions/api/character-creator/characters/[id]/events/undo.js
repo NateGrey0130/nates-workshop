@@ -66,6 +66,15 @@ export async function onRequestPost({ request, env, params }) {
     ).bind(changes.item.notes.from, changes.item.id, params.id));
     restored.item = { id: changes.item.id, notes: changes.item.notes.from };
   }
+  // The count since migration 083. Back to the `from` the shot recorded - on a
+  // replay that composed onto a count moved elsewhere, that is the client's
+  // belief rather than what was stored, the same standing a pool's undo has.
+  if (changes.item && Number.isInteger(changes.item.ammo_current?.from)) {
+    statements.push(env.DB.prepare(
+      'UPDATE character_items SET ammo_current = ? WHERE id = ? AND character_id = ?'
+    ).bind(changes.item.ammo_current.from, changes.item.id, params.id));
+    restored.item = { ...(restored.item || { id: changes.item.id }), ammo_current: changes.item.ammo_current.from };
+  }
 
   // An armour or vessel hit (UI-AUDIT F40): the value the hit replaced, exactly
   // - blank armour back to blank, an untouched location back to absent.

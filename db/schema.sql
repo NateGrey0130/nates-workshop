@@ -894,6 +894,9 @@ CREATE TABLE IF NOT EXISTS character_items (
                                                       -- INSTANCE: one long sword in a party of four
                                                       -- can be the Demon Slayer, the rest ordinary.
                                                       -- Migration 035.
+  ammo_current INTEGER,                               -- rounds left in a carried weapon; NULL = full,
+                                                      -- the magazine size being the gear row's payload.
+                                                      -- Migration 083.
   journal_entry_id INTEGER REFERENCES journal_entries(id) ON DELETE SET NULL,  -- ties acquisition/loss to a session
   added_at TEXT NOT NULL DEFAULT (datetime('now')),
   removed_at TEXT,                                    -- NULL = currently in inventory
@@ -1760,6 +1763,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear') WHERE name = 'sdc');
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '035-enchantments.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'enchantments');
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '083-character-item-ammo.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('character_items') WHERE name = 'ammo_current');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '036-enchantments-charm.sql'

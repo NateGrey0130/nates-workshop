@@ -171,8 +171,10 @@ VALUES (${CHAR}, ${CHAR}, 'dev@localhost', 'Play Flow', 'cyber-knight', 1,
   20, 20, 30, 5, NULL, NULL, 20, 20);
 -- A freeform inventory row, for the ammo path. Custom rather than catalog gear
 -- so the fixture does not depend on a particular slug surviving in the seed.
+-- ammo_current NULL is a full magazine (migration 083). The notes are the
+-- canary: an ammo write used to REWRITE them, and must not touch them now.
 INSERT INTO character_items (id, character_id, custom_name, qty, equipped, notes)
-VALUES (${ITEM}, ${CHAR}, 'Repro Rifle', 1, 1, 'ammo 10/10');
+VALUES (${ITEM}, ${CHAR}, 'Repro Rifle', 1, 1, 'scope zeroed at 300ft');
 `;
 const bootstrap = join(state, 'bootstrap.sql');
 writeFileSync(bootstrap, [
@@ -582,8 +584,9 @@ section('Ammo queues as an item change with no pools');
   await run(`await writeAmmo(${ITEM}, 7, 10, 'Repro Rifle: 3 fired');`);
   const q = await fakeQueue.all(CHAR);
   check('one entry', q.length === 1, q.length + ' entries');
-  check('carrying the item change', q[0] && q[0].item
-    && q[0].item.id === ITEM && /ammo 7\/10/.test(q[0].item.notes.to),
+  check('carrying the item change, as a count', q[0] && q[0].item && q[0].item.id === ITEM
+    && JSON.stringify(q[0].item.ammo_current) === JSON.stringify({ from: 10, to: 7, cap: 10 })
+    && q[0].item.notes === undefined,
     JSON.stringify(q[0] && q[0].item));
   // THE SHAPE THAT WOULD HAVE BROKEN IT: no pools at all. entryFields must
   // answer {} rather than building a field named `undefined_current`, which the
@@ -597,11 +600,28 @@ section('Ammo queues as an item change with no pools');
   await run('await flushQueue();');
   check('it replays as an ammo event', (await events()).length === before + 1,
     (await events()).length);
-  const item = (await (await fetch(`${BASE}/characters/${CHAR}`)).json())
+  const itemRow = async () => (await (await fetch(`${BASE}/characters/${CHAR}`)).json())
     .items.find((x) => x.id === ITEM);
-  check('and the magazine is written to the inventory row',
-    item && /ammo 7\/10/.test(item.notes || ''), item && item.notes);
+  let item = await itemRow();
+  check('and the count is written to its own column',
+    item && item.ammo_current === 7, item && item.ammo_current);
+  check('leaving the row\'s notes exactly as they were',
+    item && item.notes === 'scope zeroed at 300ft', item && item.notes);
   check('the queue drained', (await fakeQueue.count(CHAR)) === 0);
+
+  // THE CASE THE COLUMN EXISTS FOR. One more shot offline (7 -> 6), and while
+  // it waits somebody else's write moves the count to 4. The replay must
+  // COMPOSE - 4, then one shot, is 3 - rather than overwrite to 6 (the other
+  // write lost) or be refused (the shot lost; a 409 naming no pool is dropped).
+  mode = 'drop';
+  await run(`await writeAmmo(${ITEM}, 6, 10, 'Repro Rifle: 1 fired');`);
+  sql(`UPDATE character_items SET ammo_current = 4 WHERE id = ${ITEM};`);
+  mode = 'live';
+  await run('await flushQueue();');
+  item = await itemRow();
+  check('a replayed shot composes onto a count moved elsewhere',
+    item && item.ammo_current === 3, item && item.ammo_current);
+  check('and that queue drained too', (await fakeQueue.count(CHAR)) === 0);
 }
 
 section('A roll is not queued, and does not fail in silence');

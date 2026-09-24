@@ -733,14 +733,14 @@ const formExtra = (changes) => (changes?.second_form ? { second_form: changes.se
 // pools rather than instead of them, because the endpoint applies a whole
 // entry in one batch.
 //
-// AN ITEM CHANGE IS NOT GUARDED ON REPLAY, and that is worth knowing rather
-// than discovering. The guard is per POOL: the endpoint compares each numeric
-// `from` and refuses if it moved. `character_items.notes` has no such check -
-// online either, today - so a replayed ammo write overwrites whatever the notes
-// say when it lands. Queueing does not introduce that; it lengthens the window
-// from milliseconds to however long the wi-fi is out. The alternative was
-// losing the shots a player fired offline, which is worse and far likelier
-// than somebody hand-editing that row's notes mid-fight.
+// AN AMMO CHANGE COMPOSES ON REPLAY rather than being refused or overwriting.
+// It used to rewrite the row's notes ("ammo 7/10") and so, replayed after an
+// outage, overwrote whatever had been typed there in between. Since migration
+// 083 the count is a column of its own, and a guarded replay that finds it
+// moved applies the shot to what is there now, clamped to the magazine
+// (events.js). Refusing instead would lose a shot the player really fired -
+// a 409 naming no pool is dropped from the queue - which is worse and far
+// likelier than two people firing the same gun.
 // `extra` is an armour or vessel hit (UI-AUDIT F40) - `{armor}` or `{vehicle}`
 // - carried beside the pools for the same reason `item` is, and replayed
 // UNGUARDED for the same reason too: the guard is per pool.
@@ -1207,7 +1207,10 @@ async function undoLast() {
     if (res.restored.item) {
       const it = C.items.find((x) => x.id === res.restored.item.id);
       if (it) {
-        it.notes = res.restored.item.notes;
+        // The count's own column since migration 083; the notes only for an
+        // ammo event written before it.
+        if ('ammo_current' in res.restored.item) it.ammo_current = res.restored.item.ammo_current;
+        if ('notes' in res.restored.item) it.notes = res.restored.item.notes;
         const cap = payloadCapacity(it.item_payload);
         const el = $('play-ammo-' + it.id);
         if (el && cap != null) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
@@ -1315,11 +1318,13 @@ async function endSession() {
 // ── Play mode phase 2: weapon cards ──
 // An equipped catalog weapon becomes an attack card: strike roll, damage
 // roll off the leading dice of the gear row's damage string, and an ammo
-// counter when the payload states a capacity. Ammo lives in the inventory
-// row's NOTES as "ammo 7/10" - visible on the sheet lens, editable by hand,
-// no schema change. Phase 3 landed and deliberately did NOT formalise it:
-// play_events has an 'ammo' kind recording the notes change from/to, which
-// buys undo without giving the count a column of its own.
+// counter when the payload states a capacity. The count is
+// `character_items.ammo_current` (migration 083), NULL meaning full; the
+// magazine size stays the gear row's payload. It lived in the row's NOTES as
+// "ammo 7/10" until then, which made every shot a rewrite of the whole notes
+// string - so a shot replayed from the offline queue overwrote whatever had
+// been typed there in between. A play_events 'ammo' row records the count's
+// from/to, which is what undo reads.
 
 // The first dice expression in a damage string. Books write "1D6 (small),
 // 2D6 (large)" and "2D6 M.D. single shot" - the leading dice roll, the full
@@ -1335,10 +1340,10 @@ function payloadCapacity(payload) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-// Current ammo: the "ammo N/M" marker in notes, else full.
+// Current ammo: the stored count, else full. Clamped to the magazine, so a
+// catalog correction that shrinks a payload cannot show 12/10.
 function currentAmmo(it, cap) {
-  const m = String(it.notes || '').match(/ammo\s+(\d+)\s*\/\s*\d+/i);
-  return m ? Math.min(parseInt(m[1], 10), 999) : cap;
+  return Number.isInteger(it.ammo_current) ? Math.min(Math.max(it.ammo_current, 0), cap) : cap;
 }
 
 // `item_slug`, NOT `item_id`. This read `it.item_id` from the day play mode
@@ -1389,26 +1394,27 @@ function rollWeaponDamage(name, expr) {
 async function writeAmmo(invId, next, cap, ammoNote) {
   const it = C.items.find((x) => x.id === invId);
   if (!it) return;
-  const marker = `ammo ${next}/${cap}`;
-  const base = String(it.notes || '').replace(/ammo\s+\d+\s*\/\s*\d+/i, '').replace(/\s*;\s*$/, '').trim();
-  const notes = base ? `${base}; ${marker}` : marker;
-  const prev = it.notes;
-  it.notes = notes;
+  // `from` is the count as shown (full when nothing is stored), and `cap`
+  // rides along so a replay that lands on a count moved elsewhere can compose
+  // onto it and clamp - see events.js on AN ITEM CHANGE IS AMMO.
+  const stored = it.ammo_current;
+  const change = { id: invId, ammo_current: { from: currentAmmo(it, cap), to: next, cap } };
+  it.ammo_current = next;
   const el = $('play-ammo-' + invId);
   if (el) el.textContent = `${next}/${cap}`;
   try {
-    await postEvent('ammo', ammoNote, { item: { id: invId, notes: { from: prev || '', to: notes } } });
+    await postEvent('ammo', ammoNote, { item: change });
   } catch (err) {
     // Shots fired offline are the case this exists for: without it the counter
     // snaps back to full while the player knows they emptied the magazine, and
     // firing them again means inventing a number. Queued as an ITEM change
-    // carrying no pools - see queueChange on why it replays unguarded.
-    if (err.status === undefined && await queueChange('ammo', ammoNote, {},
-      { id: invId, notes: { from: prev || '', to: notes } })) {
+    // carrying no pools; its replay composes onto the stored count rather than
+    // overwriting it (queueChange says why that matters).
+    if (err.status === undefined && await queueChange('ammo', ammoNote, {}, change)) {
       renderQueueState();
       return;
     }
-    it.notes = prev;
+    it.ammo_current = stored;
     if (el) el.textContent = `${currentAmmo(it, cap)}/${cap}`;
     alert('Failed: ' + err.message);
   }
