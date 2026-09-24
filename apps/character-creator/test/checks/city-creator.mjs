@@ -45,6 +45,9 @@
 // Saved themes (PR 5), the same way: a race's name no longer kept with its
 // lines, validateSavedTheme accepting a pack with no name pool, a removed role
 // keeping its class, and the page's Generate losing the saved theme's id.
+// Adapting (PR 6), the same way: the adapt prompt built with the OLD game's
+// rules, the old theme's lines left out of it, the old game's stock rules
+// carried into it, and the page saving an adaptation without adapted_from.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -52,7 +55,7 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
   FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS,
-  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker, validateSavedTheme, themeParts, editThemeTable }
+  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker, validateSavedTheme, themeParts, editThemeTable, adaptPrompt }
   from '../../../city-creator/js/city-engine.js';
 import { W, westPack } from '../fixtures/city-theme-pack.mjs';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
@@ -60,7 +63,7 @@ import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
   'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
   'City Creator theme writing', 'City Creator themed rolls', 'City Creator map styles',
-  'City Creator saved themes'];
+  'City Creator saved themes', 'City Creator adapting'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -218,15 +221,20 @@ export function run() {
     /classes\?system=\$\{encodeURIComponent\(S\.settings\.system\)\}&category=rcc/.test(page)
       && !/include_retired/.test(page));
   // Every call is a press of a button: Generate (the name pool, or a theme's
-  // five parts through writeTheme, which only Generate calls) and, since Phase
-  // 4d, Flesh out on one entry. Nothing on load, and never from ?seed=.
+  // five parts), Adapt on a saved theme, and, since Phase 4d, Flesh out on one
+  // entry. A theme's parts go through askForPart, which only writeTheme (only
+  // Generate calls it) and adaptTheme call. Nothing on load, never from ?seed=.
   const aiAt = [...page.matchAll(/await claudeRequest\(/g)].map((m) => m.index);
   const inFn = (at, start, end) => at > page.indexOf(start) && at < page.indexOf(end, page.indexOf(start));
-  const themeCalls = [...page.matchAll(/writeTheme\(text\)/g)].map((m) => m.index)
-    .filter((at) => at !== page.indexOf('async function writeTheme(text)') + 'async function '.length);
+  const callsOf = (name) => [...page.matchAll(new RegExp(`\\b${name}\\(`, 'g'))].map((m) => m.index)
+    .filter((at) => at !== page.indexOf(`async function ${name}(`) + 'async function '.length);
+  const themeCalls = callsOf('writeTheme');
+  const partCalls = callsOf('askForPart');
   check('the AI is called in three places, each behind a button: a theme and the name pool on Generate, and Flesh out',
-    aiAt.length === 3 && inFn(aiAt[0], 'async function writeTheme(text)', '// ── the city ──')
+    aiAt.length === 3 && inFn(aiAt[0], 'async function askForPart(', 'async function writeTheme(')
       && themeCalls.length === 1 && inFn(themeCalls[0], 'async function generate()', 'function hashSeed(')
+      && partCalls.length === 2 && inFn(partCalls[0], 'async function writeTheme(', '// ── saved themes')
+      && inFn(partCalls[1], 'async adaptTheme(', 'applyEdit() {')
       && inFn(aiAt[1], 'async function generate()', 'function hashSeed(')
       && inFn(aiAt[2], 'async flesh(id)', 'forget() {'));
 
@@ -842,4 +850,42 @@ export function run() {
     /const pack = validateSavedTheme\(theme\.pack\);/.test(page)
       && /theme = \{ intensity: S\.intensity, pack, \.\.\.\(S\.themeId \? \{ library_id: S\.themeId \} : \{\}\) \};/.test(page));
   check('a written part can be asked for again alone', /onclick="City\.rewritePart\('\$\{p\}'\)"/.test(page));
+
+  section('City Creator adapting');
+
+  // Adapting a theme writes its five parts again under the NEW game's rules,
+  // with the old theme's lines for each part as a reference - and nothing of
+  // the old game's stock rules or classes carried over.
+  const pfSaved = validateSavedTheme({ ...validateThemePack(westPack(), base()),
+    names: { city: ['Dust Creek'], district: ['Railside'], street: ['Main'], shop: ['The Last Chance'], cultures: {} } });
+  const toRifts = { system: 'rifts', population: 12000, npcCount: 4, everyRace: false, races: [{ id: 'human', name: 'Human', pct: 100 }] };
+  const RA = tablesFor('rifts');
+  const adapted = Object.fromEntries(Object.keys(THEME_PARTS).map((part) => [part, adaptPrompt(part, toRifts, pfSaved)]));
+  check('each adapted part is asked for under the new game\'s rules: its stock rules and its classes',
+    JSON.stringify(adapted.buildings.schema.properties.shopTypes.items.properties.stockAs.enum) === JSON.stringify(Object.keys(RA.SHOP_STOCK))
+      && JSON.stringify([...adapted.people.schema.properties.roleOcc.items.properties.occ.enum].sort())
+        === JSON.stringify([...new Set([...Object.values(RA.ROLE_OCC), RA.OWNER_OCC])].sort()));
+  check('and carries the old theme\'s own lines for that part, naming both games',
+    adapted.people.prompt.includes(pfSaved.tables.LOOKS[0]) && adapted.streets.prompt.includes(pfSaved.tables.RUMOURS[0])
+      && adapted.overview.prompt.includes(pfSaved.tables.GOVERNMENTS[0]) && adapted.buildings.prompt.includes(pfSaved.shopTypes[0].label)
+      && /first written for Palladium Fantasy, and is being adapted to Rifts/.test(adapted.people.prompt));
+  const pfOnlyRules = Object.keys(tablesFor('palladium-fantasy').SHOP_STOCK).filter((k) => !RA.SHOP_STOCK[k]);
+  const adaptedBuilding = adapted.buildings.prompt.split('This theme was first written')[1] || '';
+  check('but none of the old game\'s stock rules, and none of its role classes',
+    !pfSaved.shopTypes.some((k) => adaptedBuilding.includes(`"stockAs":"${k.stockAs}"`))
+      && !Object.values(pfSaved.roleOcc).some((occ) => (adapted.people.prompt.split('This theme was first written')[1] || '').includes(`"${occ}"`))
+      && pfOnlyRules.length > 0);
+  check('the names are written fresh for the new game\'s peoples',
+    JSON.stringify(adapted.names) === JSON.stringify(themePrompt('names', toRifts, pfSaved.prompt)));
+  check('and an answer that keeps an old game\'s stock rule is refused, as any theme\'s would be',
+    (() => { try { parseThemePart('buildings', JSON.stringify({ tables: tablesOfPack(pfSaved, 'buildings'), shopTypes: pfSaved.shopTypes,
+      mapStyle: 'rail' }), toRifts, pfSaved.prompt); return false; } catch (e) { return /stock rules/.test(e.message); } })());
+  check('the page adapts through askForPart and saves a NEW theme that says which it came from',
+    /askForPart\(adaptPrompt\(part, settings, source\)\)/.test(page)
+      && /post\('city-themes', 'POST', \{ pack, name: `\$\{theme\.name\} \(\$\{label\}\)`, adapted_from: id \}\)/.test(page));
+}
+
+// A saved pack's tables for one part, as the answer to that part carries them.
+function tablesOfPack(pack, part) {
+  return Object.fromEntries(THEME_PARTS[part].map((k) => [k, pack.tables[k]]));
 }

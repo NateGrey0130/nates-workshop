@@ -472,6 +472,38 @@ export function editThemeTable(parts, key, lines, settings, prompt) {
   return [part, checkStreets(value)];
 }
 
+// ── adapting a theme to another game ──
+//
+// A pack belongs to one game: its shop kinds sell by that game's stock rules
+// and its roles roll as that game's classes. Adapting one writes the five
+// parts again for the new game - with the new game's rules in each schema, as
+// any theme is written - and hands each call the old theme's lines for that
+// part, to keep what fits and rewrite what does not. Nothing of the old game's
+// stock rules or classes is carried: the answer must choose again from the new
+// game's lists, and the check refuses anything else. The result is a NEW
+// theme; the one it came from is unchanged.
+export function adaptPrompt(part, settings, source) {
+  const base = themePrompt(part, settings, source.prompt);
+  if (part === 'names') return base;
+  const from = SETTING_NAMES[source.system] || source.system;
+  const to = SETTING_NAMES[settings.system] || settings.system;
+  const parts = themeParts(source);
+  const own = parts[part];
+  const lines = Object.fromEntries(Object.entries(own.tables).map(([k, v]) => [k, v]));
+  const extra = {
+    people: () => ({ roles: lines.NPC_ROLES }),
+    buildings: () => ({ shopKinds: (source.shopTypes || []).map((k) => ({ label: k.label, names: k.names, specialties: k.specialties })) }),
+    overview: () => ({ title: source.title, overviewExtras: source.overviewExtras }),
+    streets: () => ({}),
+  }[part]();
+  return { ...base, prompt: `${base.prompt}
+
+This theme was first written for ${from}, and is being adapted to ${to}. Here is what it had for this part. Keep what `
+    + `still fits ${to}, rewrite what belongs only to ${from}, and write new lines where it needs more. The stock rules and `
+    + `classes above are ${to}'s - choose from them afresh; nothing of ${from}'s carries over.
+${JSON.stringify({ ...lines, ...extra })}` };
+}
+
 // ── names ──
 //
 // With a pool (the one AI call), names come from it; without, from the
