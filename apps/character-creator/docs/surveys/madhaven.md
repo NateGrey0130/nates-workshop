@@ -201,8 +201,32 @@ What is deliberately left, with the reason:
 | 2026-09-24 | [#1337](https://github.com/NateGrey0130/nates-workshop/pull/1337) | registry, survey and queue row. MERGED |
 | 2026-09-24 | [#1338](https://github.com/NateGrey0130/nates-workshop/pull/1338) | `add-madhaven-gear.sql`: 40 gear rows (15 weapon, 9 armor, 6 gear, 10 magic). All 40 missing in `catalog-diff --remote` against 2830 rows; every number from a render; `book-reconcile` 40 of 40 agree. Applied `--remote` before the PR, both read-backs hold |
 | 2026-09-24 | [#1340](https://github.com/NateGrey0130/nates-workshop/pull/1340) | the four White Rose O.C.C.s: `knight-of-the-white-rose`, `squire-of-the-white-rose`, `gateway-knight`, `keeper-of-the-garden`, with their White Rose healing kits and the TW Barrier Shield as starting gear (live since #1338). `occ_group: magic` for the three Mystic Knights (printed 28 and 37 call them magic O.C.C.s) and `men-of-arms` for the Squire; `CORE_SDC_BY_CLASS` 1D6 / 3D6 to match. 0 stub rows. Applied `--remote` before the PR |
-| 2026-09-24 | R.C.C. PR | the eight Haven Mutant R.C.C.s (`beast-men`, `dyno-men`, `leopard-men`, `mantis-men`, `metal-morph`, `pseudo-men`, `quill-men`, `savage-lummox`), each with a `standard` and a `shaman` variant: the Shaman's attribute and P.P.E. bonuses and its eleven skills (`skills_additional`) are data; the skill removal, the prayers and the Shaman ladder are prose, filed as `BOOK-INGEST-AUDIT` F108. A secondary-skill count the book rolls is stored at its maximum, with the roll in the class note. 0 stub rows. Applied `--remote` before the PR |
+| 2026-09-24 | [#1341](https://github.com/NateGrey0130/nates-workshop/pull/1341) | the eight Haven Mutant R.C.C.s (`beast-men`, `dyno-men`, `leopard-men`, `mantis-men`, `metal-morph`, `pseudo-men`, `quill-men`, `savage-lummox`), each with a `standard` and a `shaman` variant: the Shaman's attribute and P.P.E. bonuses and its eleven skills (`skills_additional`) are data; the skill removal, the prayers and the Shaman ladder are prose, filed as `BOOK-INGEST-AUDIT` F108. A secondary-skill count the book rolls is stored at its maximum, with the roll in the class note. 0 stub rows. Applied `--remote` before the PR |
+| 2026-09-24 | creatures PR | `add-madhaven-creatures.sql`: 25 creatures (10 monsters, 7 Entities, the 8 Haven Mutants as their NPC view with `playable` 1 and slugs matching the class ids) and 2 notable NPCs (Sir Geoffrey Colt, Sir Gabriel Prescott Davenport), with 68 + 6 attacks. Every number from a render; `book-reconcile` found two faults, both fixed before the script was written. Applied `--remote` before the PR, five read-backs hold; production then held 335 creatures and 295 notable NPCs. **BOOK IMPORTED.** |
 
 ### What remains
 
-Steps 5-6 of the extraction plan: the creatures and the notables.
+Nothing from the extraction plan. What is left is the deliberate list above (the Raving Lunatic template, Isis and Rama-Set, the G.M. tables) and `BOOK-INGEST-AUDIT` F108, which is filed and not taken.
+
+`node scripts/source-coverage.mjs --remote`, 2026-09-24, after the creatures
+applied:
+
+```
+  madhaven            79 / 0
+```
+
+That is 40 gear rows, 12 classes, 25 creatures and 2 notable NPCs. All 79 are
+traceable to a cached page, and none is `other`.
+
+```
+BACKLOG       rows an importer created and nobody finished
+  gear stubs            14
+  skill stubs            5
+  spell stubs           18
+  psionic stubs          1
+  spell text missing     0
+  psionic text missing   0
+```
+
+None of it is Madhaven's. Every class here emitted 0 stub statements, and this
+book defines no spells or psionics.
