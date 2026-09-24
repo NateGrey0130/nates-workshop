@@ -305,6 +305,16 @@
       "printed_pages": 112,
       "page_offset": 1,
       "note": "A sourcebook for Heroes Unlimited 2nd Edition, per its credits page. THE ONLY BOOK IN THIS REGISTRY CACHED WITH --force-ocr, AND THE REASON IS BOOK-INGEST-AUDIT F73. Its text layer probes at median 5505 chars/page, 13.7x the 400-char threshold, and ocr-book.py --probe calls it a TEXT LAYER. That layer is glyph-dropped garbage: its credits page renders Kevin Siembieda as Kev Sebea, Wayne Smith as Waye S, Alex Marciniszyn as Alex acszy. A font-encoding fault maps many glyphs to nothing, so the CHARACTER COUNT survives and the WORDS do not - which is invisible to both corrupt_pages and substituted_digits, because what is left is ordinary letters. DO NOT re-cache this book without --force-ocr; a plain run would take the cheap path and refuse to overwrite only because the kinds now differ. Cached 2026-09-12 by OCR, medians 5,525. Offset verified by folio: 98 pages agree at +1 and NONE disagree, one region p002-p113. printed_pages 112, last content at cache p113; p114-p120 are house ads and an order form. CONTENT: new minor and major super abilities with self-contained stat blocks, printed 6-104, some marked Reprinted. Edition-portable for the same reason Powers Unlimited One is."
+    },
+
+    "madhaven": {
+      "title": "Rifts World Book 29: Madhaven",
+      "aliases": ["Madhaven", "Rifts World Book Twenty-Nine: Madhaven"],
+      "source_pdf": "974230361-Rifts-World-Book-29-Madhaven.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 128,
+      "page_offset": 1,
+      "note": "Cached 2026-09-24 from its TEXT LAYER, --probe median 4,786 chars/page and 36.8% stop words, so the words survive (not the F73 glyph-dropped kind). Offset verified by folio at four points rather than taken from the vote - cache p024 reads 23, p078 reads 77, p100 reads 99, p129 reads 128 - one region, no split. printed_pages is 128, the last numbered folio at cache p129; cache p130-p135 are Palladium house ads and an order form and p136 is the back cover. ocr-book.py measured printed_pages 99 and that is a max-folio misread; the registry outranks the manifest, as it does for bom and heroes-unlimited-core. welded_pages 4 (113, 130, 132, 133 - only 113 is content, the Beautiful/Harmful Ghost page), corrupt_pages 4 pages at one hit each, substituted_digits 26 pages. See apps/character-creator/docs/surveys/madhaven.md."
     }
   }
 }

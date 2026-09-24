@@ -20,6 +20,7 @@ the human view of the same thing plus the import status.
 | `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | **imported** |
 | `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
+| `madhaven` | Rifts WB 29: Madhaven (added 2026-09-24, outside the original seven) | 136 | text layer | 128 | +1 | **surveyed** |
 
 Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
 of 2026-08-31: surveyed on 2026-08-30, then shipped in ten category batches,
