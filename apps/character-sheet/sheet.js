@@ -1438,7 +1438,7 @@ function weaponCardsHtml(w, strikeBonus) {
     const cap = payloadCapacity(it.item_payload);
     const ammo = cap != null ? currentAmmo(it, cap) : null;
     return `<div class="play-weapon">
-      <div class="pw-head"><b>${escHtml(name)}</b>${it.qty > 1 ? ` <span class="muted small">×${it.qty}</span>` : ''}
+      <div class="pw-head"><b>${escHtml(name)}</b>${it.item_slug ? codexLink('gear', it.item_slug, name) : ''}${it.qty > 1 ? ` <span class="muted small">×${it.qty}</span>` : ''}
         ${it.item_damage ? `<span class="muted small">${escHtml(it.item_damage)}</span>` : ''}</div>
       <div class="pw-btns">
         <button onclick="strikeWith(${it.id}, '${safe}')">🎯 Strike</button>
@@ -2085,7 +2085,7 @@ function render() {
         <th>Skill</th><th class="num">+%/Lvl</th><th class="num">%</th>
       </tr></thead>
       <tbody>${list.map((s) => `<tr class="skill-row">
-        <td>${escHtml(s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</td>
+        <td>${escHtml(s.name)}${codexLink('skills', s.name, s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</td>
         <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
         <td class="num pct">${s.pct ? s.pct + '%' : '—'}${s.pct ? rollBtn({ name: s.name, pct: s.pct }) : ''}</td>
       </tr>${s.note ? `<tr class="skill-note"><td colspan="3">
@@ -2257,7 +2257,7 @@ function render() {
     // deducts it, and the note says how the real spend grows — the G.M. adjusts
     // the pool by hand for bigger spends, as at a real table.
     return head + `<div class="power-row${short ? ' short' : ''}">
-      <span>${nameCell}
+      <span>${nameCell}${codexLink(POWER_SECTION[kind], p.name, p.name)}
         ${Number.isFinite(p.acquire_cost)
           // BOUGHT OR FREE, said apart (BOOK-INGEST-AUDIT F101). This read
           // "spent permanently to acquire" on every Talent, which was false of a
@@ -3663,6 +3663,31 @@ function enchantHtml(it) {
 
 // The inventory table's rows. Hoisted for the same reason: an item change
 // re-renders this and nothing else.
+// ── a way out to the codex, from anything the catalog holds ──
+//
+// The codex opens one entry from `#<section>/<key>`, where the key is that
+// section's own: the LOWER-CASED NAME for skills, spells, psionics, super
+// abilities and Talents, the SLUG for gear and vessels. apps/codex/codex.js
+// ("a link to one entry") is the other half of this contract and
+// rendered-ui.mjs holds both ends to it.
+//
+// A small glyph after the name rather than the name itself: on this sheet the
+// name is already a control - it opens the description inline, which is the
+// quicker read mid-game. The codex is for the whole entry, and it opens in
+// its own named tab (`target="codex"`, reused on every press) so leaving to
+// read a spell never costs the sheet you are playing from.
+//
+// A custom item has no catalog row and gets nothing, so no link lands on
+// "no entry by that name". noprint: a link is useless on paper.
+const POWER_SECTION = { spell: 'spells', psionic: 'psionics', super: 'super-abilities', talent: 'talents' };
+
+function codexLink(section, key, label) {
+  if (!section || key == null || String(key).trim() === '') return '';
+  const href = `/apps/codex/#${section}/${encodeURIComponent(String(key).toLowerCase())}`;
+  const what = escHtml(`${label} in the codex`);
+  return `<a class="codex-jump noprint" href="${escHtml(href)}" target="codex" title="${what}" aria-label="${what}">↗</a>`;
+}
+
 function inventoryRowsHtml() {
   const w = C.canWrite;
   return C.items.map((it) => {
@@ -3712,7 +3737,8 @@ function inventoryRowsHtml() {
       ? `<tr class="item-desc-row" id="idesc-${it.id}"${open ? '' : ' hidden'}>
            <td colspan="5">${stats}</td></tr>`
       : '';
-    return `<tr><td>${nameCell} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
+    const jump = it.item_slug ? codexLink('gear', it.item_slug, it.item_name || it.item_slug) : '';
+    return `<tr><td>${nameCell}${jump} ${kind}${enchantHtml(it)}</td><td>${qty}</td><td>${eq}</td>
       <td class="muted small">${escHtml(it.notes || '')}</td>${rm}</tr>${statsRow}`;
   }).join('');
 }
@@ -3812,7 +3838,8 @@ function vesselHtml(v) {
   return `<div class="vessel${open ? ' open' : ''}">
     <div class="vessel-head">
       <button type="button" class="power-toggle" aria-expanded="${open}" aria-controls="vessel-${v.id}"
-        onclick="toggleVessel(${v.id})">${escHtml(v.nickname || name)}</button>
+        onclick="toggleVessel(${v.id})">${escHtml(v.nickname || name)}</button>${
+        v.vehicle_slug ? codexLink('vehicles', v.vehicle_slug, name) : ''}
       ${v.nickname ? `<span class="muted small">${escHtml(name)}</span>` : ''}
       ${kind} ${cls}${rm}
     </div>
