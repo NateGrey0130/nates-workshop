@@ -5,13 +5,13 @@
 //
 // Run from anywhere:  node apps/media-vault/test/smoke.mjs
 //
-// The harness is the character creator's: section/check/summary are app-
+// The harness is shared/test/harness.mjs: section/check/summary are app-
 // agnostic, and a second copy would drift from the first.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { section, check, summary } from '../../character-creator/test/harness.mjs';
+import { section, check, summary } from '../../../shared/test/harness.mjs';
 import {
   ITEM_FIELDS, MAX_ITEMS, MAX_FIELD_LEN, sanitizeItem, rowToItem, UPSERT_SQL,
   normalizeIsbn, isIsbnShape, looksLikeIsbn, isbnCheckDigitValid,

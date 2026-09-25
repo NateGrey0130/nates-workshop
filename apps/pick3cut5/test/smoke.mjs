@@ -36,12 +36,12 @@
 // Run from anywhere:  node apps/pick3cut5/test/smoke.mjs
 //              live:  node apps/pick3cut5/test/smoke.mjs --remote
 //
-// The harness is the character creator's, same as FilamentForge's.
+// The harness is shared/test/harness.mjs, same as FilamentForge's.
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { section, check, summary } from '../../character-creator/test/harness.mjs';
+import { section, check, summary } from '../../../shared/test/harness.mjs';
 import { validateCategory } from '../../../workers/pick3cut5-room/src/generate.js';
 import { soloLimitDecision, ipKey } from '../../../workers/pick3cut5-room/src/limits.js';
 
