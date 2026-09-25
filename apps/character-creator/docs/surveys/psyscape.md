@@ -1,8 +1,8 @@
 # Rifts World Book 12: Psyscape — survey
 
-**Status:** `importing` — psionic powers shipped; gear next, then classes. (2026-09-25)
+**Status:** `importing` — psionic powers and gear shipped; the psychic R.C.C.s next. (2026-09-25)
 
-**Rows citing this book:** psionic_powers 16
+**Rows citing this book:** gear 19, psionic_powers 16
 
 Slug `psyscape`. Cached 2026-09-25 from `Rifts- World Book 12 Psyscape.pdf`,
 162 PDF pages, **text layer** (no OCR). `--probe` median 5,172 chars/page,
@@ -148,7 +148,7 @@ class citing this book.
 
 | class | printed | ladder | proposed id | note |
 |---|---|---|---|---|
-| Mind Bleeder | 52-55 | Mind Bleeder | `mind-bleeder` | selects from the new `Mind Bleeder` category |
+| Mind Bleeder | 52-55 | Mind Bleeder | `mind-bleeder` | selects from the new `Mind Bleeder` category. **First printed in Rifts World Book 4: Africa** (1991, its printed 93-98, class and powers); this 1997 book reprints both and is the later one, so it wins. The `africa` survey planned the same class and powers; its session agreed on 2026-09-25 that class and powers come from here and dropped both from its plan. It checked all fifteen powers' I.S.P. against Africa printed 96-98: every one matches. Africa's Mind Bleeder XP ladder (its printed 160) is identical, level for level, to this book's on printed 157. So there is no variant to record |
 | Nega-Psychic | 57-59 | Psi-Tech/Nega/Zapper | `nega-psychic` | its powers work only against the supernatural and are always on. Mostly prose |
 | Psi-Druid | 59-62 | Psi-Druid/Ghost/Darkhound | `psi-druid` | two plant/weather abilities with base percentages |
 | Psi-Ghost | 63-66 | Psi-Druid/Ghost/Darkhound | `psi-ghost` | |
@@ -190,7 +190,7 @@ Dragon-Ape, Vyarnect), and the creature rows can say so.
 
 | group | printed | rows | note |
 |---|---|---|---|
-| Psi-Cola | 84-90 | 2 | Psi-Cola and Fake Psi-Cola. Price and legal status on 88-89. The addiction and side-effect tables are prose on the row |
+| Psi-Cola | 84-90 | 1 | Price and legal status on 88-89. The addiction and side-effect tables are prose on the row. **Fake Psi-Cola** (90) went in as a note on that row, not a row of its own: it is a powerless counterfeit of the same bottle |
 | Psi-implants | 152-153 | 7 | Psi-Blocker, Psionic Inhibitor, Psionic Booster, Psionic Actuator, Sensitive, Physical Reactor, Eruptor. The side-effect and removal tables (149-151) are prose |
 | CS psionic devices | 154-155 | 4 | Psionic Weapon Gauntlet, TK Artificial Limbs, Psi-Damper Helmet, Psi-Scanner. Several are **Status: Experimental** |
 | Techno-Wizard items | 155-156 | 7 | TW Psi-Blocker Helmet, TW Psi-Bloodhound tracker, TW TK Pistol, TW TK Assault Rifle, TW Flamethrower, Psychic Camera, TW Thought Projector. Priced partly as **P.P.E. cost to make** |
@@ -246,5 +246,6 @@ What is deliberately left, with the reason:
 
 | date | PR | what went in |
 |---|---|---|
-| 2026-09-25 | — | cache built (162 pp, text layer), offset +1 verified at five folios, `psyscape` registered in `books.json`, survey written |
-| 2026-09-25 | (this PR) | **psionic powers**: Astral Golem (Super, printed 42) and the fifteen Mind Bleeder powers (printed 45-48) in a new `Mind Bleeder` category, `add-psyscape-psionic-powers.sql`. Catalog 133 -> 149 psionic powers. Descriptions paraphrased; every cost read twice (listing and block) and checked by `book-reconcile`, one note wording fixed. Applied `--remote` before the PR. |
+| 2026-09-25 | [#1379](https://github.com/NateGrey0130/nates-workshop/pull/1379) | cache built (162 pp, text layer), offset +1 verified at five folios, `psyscape` registered in `books.json`, survey written |
+| 2026-09-25 | [#1382](https://github.com/NateGrey0130/nates-workshop/pull/1382) | **psionic powers**: Astral Golem (Super, printed 42) and the fifteen Mind Bleeder powers (printed 45-48) in a new `Mind Bleeder` category, `add-psyscape-psionic-powers.sql`. Catalog 133 -> 149 psionic powers. Descriptions paraphrased; every cost read twice (listing and block) and checked by `book-reconcile`, one note wording fixed. Applied `--remote` before the PR. |
+| 2026-09-25 | (this PR) | **gear**: 19 rows, `add-psyscape-gear.sql`. Psi-Cola (printed 84-90), the seven psi-implants as `cybernetics` (152-153), four CS psionic devices and seven Techno-Wizard items under the catalog's `TW ` prefix (154-156). Every number on printed 152-156 was read off a render; the render corrected the Eruptor Implant's last band (91-00, not the text layer's 97-00) and its Zapper (not "Tapper"). Checked by `book-reconcile`, which found six dropped mechanics (five on Psi-Cola, one on the TK limbs); all fixed. Applied `--remote` before the PR. |
