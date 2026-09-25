@@ -958,8 +958,12 @@ scripts/
 │                           `**Rows citing this book:**` line every survey
 │                           carries; test/regression.mjs checks each one
 │                           against a clean build
+├── build-local-d1.mjs      A local D1 built from the repo, from nothing, into
+│                           any directory: schema, seed, every data script, one
+│                           wrangler call. regression.mjs and book-worktree.mjs
+│                           both use it, so a clean build means one thing
 ├── book-worktree.mjs       One worktree per book, beside the main checkout: its
-│                           own copy of the local D1, the OCR cache and D1 env in
+│                           own local D1 built fresh, the OCR cache and D1 env in
 │                           its settings.local.json, memory linked. --remove
 │                           refuses on any junction inside the tree
 ├── book-board.mjs          Where every book stands and who is on it: survey

@@ -30,6 +30,7 @@ import { referencedGear } from '../../../functions/api/character-creator/_lib/ca
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
 import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
+import { bootstrapSql } from '../../../scripts/build-local-d1.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
@@ -267,19 +268,12 @@ console.log('[1/7] Building a database from nothing');
 
 // One concatenated file rather than 60 wrangler invocations: each costs seconds,
 // and the point is to prove the SQL composes, not to time the CLI.
-const parts = [
-  readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8'),
-  readFileSync(join(repoRoot, 'db', 'seed-catalogs.sql'), 'utf8'),
-];
-const dataDir = join(appDir, 'db');
-for (const f of readdirSync(dataDir).filter((x) => x.endsWith('.sql')).sort()) {
-  const sql = readFileSync(join(dataDir, f), 'utf8');
-  if (/^--\s*local-only\b/m.test(sql)) continue;      // seed-dev: unguarded inserts
-  parts.push(sql);
-}
-parts.push(marker.sql);          // proves at boot that the server reads THIS database
+// scripts/build-local-d1.mjs owns what a clean build is (schema, seed, every
+// data script in sorted order, local-only files skipped), so a book worktree's
+// fresh D1 and this one cannot drift apart. The run marker proves at boot that
+// the server reads THIS database.
 const bootstrap = join(state, 'bootstrap.sql');
-writeFileSync(bootstrap, parts.join('\n;\n'), 'utf8');
+writeFileSync(bootstrap, bootstrapSql(repoRoot, { extra: [marker.sql] }), 'utf8');
 
 const applied = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', bootstrap]);
 check('schema + catalogs + data scripts apply to an empty database',

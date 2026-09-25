@@ -883,7 +883,9 @@ session, set the same two in that shell or in its own `.claude/settings.local.js
 **A book worktree is one command:** `node scripts/book-worktree.mjs <slug>`.
 It makes the tree beside the main checkout, not inside it, and writes that
 `settings.local.json`. `WORKSHOP_OCR_CACHE` points at the main checkout's
-cache, and `WORKSHOP_LOCAL_D1` at the tree's **own copy** of the local D1. That
+cache, and `WORKSHOP_LOCAL_D1` at the tree's **own** local D1, built from the
+tree's files (`scripts/build-local-d1.mjs`; `--copy-d1` copies the main
+checkout's instead). That
 is the one place it departs from the working directory's settings above:
 those point every session at one database, so two book sessions started there
 would each read the other's unmerged `--local` rows. Start the book's session
