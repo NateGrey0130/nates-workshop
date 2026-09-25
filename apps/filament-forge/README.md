@@ -162,7 +162,7 @@ prompt as machine limits, nothing more.
 
 ## Tests
 
-`test/smoke.mjs` uses the character creator's test harness (`section` /
+`test/smoke.mjs` uses the shared test harness, `shared/test/harness.mjs` (`section` /
 `check` / `summary`) and covers what is deterministic:
 
 - the CSV parser (quoted fields, escaped quotes, CRLF, garbage lines, dedupe)

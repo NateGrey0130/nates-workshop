@@ -15,7 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { section, check, summary } from '../../character-creator/test/harness.mjs';
+import { section, check, summary } from '../../../shared/test/harness.mjs';
 import {
   KEEPS, CUTS, ITEMS_PER_ROUND, forcedChoice, itemsRemaining, budgetIsSpendable,
 } from '../../../workers/pick3cut5-room/src/rules.js';

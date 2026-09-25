@@ -9,14 +9,14 @@
 // file in this directory, and this app would get no parse, ASCII or line-ending
 // check at all unless this file provides them. It does, below.
 //
-// The harness is the character creator's, as FilamentForge's and MediaVault's
-// suites use it: section/check/summary are app-agnostic.
+// The harness is shared/test/harness.mjs, as every app suite's is:
+// section/check/summary are app-agnostic.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { section, check, summary } from '../../character-creator/test/harness.mjs';
+import { section, check, summary } from '../../../shared/test/harness.mjs';
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');

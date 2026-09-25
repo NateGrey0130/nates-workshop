@@ -5,13 +5,13 @@
 //
 // Run from anywhere:  node apps/filament-forge/test/smoke.mjs
 //
-// The harness is the character creator's: section/check/summary are app-
+// The harness is shared/test/harness.mjs: section/check/summary are app-
 // agnostic, and a second copy would drift from the first.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { section, check, summary } from '../../character-creator/test/harness.mjs';
+import { section, check, summary } from '../../../shared/test/harness.mjs';
 import {
   MIN_BRANDS, MIN_FILAMENTS, ROWS_PER_INSERT, FILAMENT_COLUMNS,
   parseCSV, parseCSVLine, dedupeById, sqlLit, insertChunks, buildSnapshotSql,
