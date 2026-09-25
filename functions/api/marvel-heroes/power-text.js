@@ -32,7 +32,7 @@ export async function onRequestGet({ request, env }) {
   const code = url.searchParams.get('code') || '';
   if (!CODE.test(code)) return json({ error: 'not a power code' }, 400);
 
-  const row = await env.DB.prepare('SELECT code, name, page, body FROM msh_power_text WHERE code = ?')
+  const row = await env.DB_MARVEL.prepare('SELECT code, name, page, body FROM msh_power_text WHERE code = ?')
     .bind(code).first();
   if (!row) return json({ code, missing: true }, 404);
   return json(row);

@@ -33,10 +33,10 @@ export async function onRequestGet({ request, env }) {
   const id = new URL(request.url).searchParams.get('id');
   if (id !== null) {
     if (!ID.test(id)) return json({ error: 'not a hero id' }, 400);
-    const row = await env.DB.prepare('SELECT * FROM msh_heroes WHERE id = ? AND owner_email = ?').bind(id, email).first();
+    const row = await env.DB_MARVEL.prepare('SELECT * FROM msh_heroes WHERE id = ? AND owner_email = ?').bind(id, email).first();
     return row ? json({ hero: rowToHero(row) }) : json({ error: 'no such hero' }, 404);
   }
-  const { results } = await env.DB
+  const { results } = await env.DB_MARVEL
     .prepare('SELECT id, name, snapshot, updated_at FROM msh_heroes WHERE owner_email = ? ORDER BY updated_at DESC, name')
     .bind(email).all();
   return json({ heroes: results.map((r) => { const h = rowToHero({ ...r, build: '{}', sheet: '{}' }); return { id: h.id, name: h.name, snapshot: h.snapshot, updated_at: h.updated_at }; }) });
@@ -49,7 +49,7 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch { return json({ error: 'Invalid JSON body' }, 400); }
   const { hero, error } = sanitizeHero(body);
   if (error) return json({ error }, 400);
-  const db = env.DB;
+  const db = env.DB_MARVEL;
 
   if (hero.id) {
     // An update touches only a row this owner already has; anything else is a 404,
@@ -73,6 +73,6 @@ export async function onRequestDelete({ request, env }) {
   if (!email) return json({ error: 'not signed in' }, 401);
   const id = new URL(request.url).searchParams.get('id');
   if (!id || !ID.test(id)) return json({ error: 'not a hero id' }, 400);
-  const res = await env.DB.prepare('DELETE FROM msh_heroes WHERE id = ? AND owner_email = ?').bind(id, email).run();
+  const res = await env.DB_MARVEL.prepare('DELETE FROM msh_heroes WHERE id = ? AND owner_email = ?').bind(id, email).run();
   return res.meta?.changes ? json({ ok: true }) : json({ error: 'no such hero' }, 404);
 }

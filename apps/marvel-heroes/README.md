@@ -57,6 +57,12 @@ Citations are to the page number printed on the page.
   `data-appnav`.
 - **Not in the Palladium catalog.** No catalog table, no `scripts/books.json`
   entry, no OCR cache, no README count.
+- **Not in Palladium's database.** Since 2026-09-25 this app's tables live in
+  a D1 of their own, `nates-workshop-marvel`, bound as `DB_MARVEL` and built
+  from `db/schema-marvel.sql`; its migrations are in `db/migrations/marvel/`.
+  Its endpoints use no other binding, and `groups.mjs --check` fails if one
+  names another group's table. The Marvel group is this app alone
+  (`groups.json`).
 
 ## Book text stays out of git
 
@@ -75,8 +81,8 @@ only in D1, loaded from an extraction that is written to the gitignored
 | `page` | the printed page the listing starts on |
 | `body` | the listing's text, folded to ASCII |
 
-Migration `081`. The `msh_` prefix marks it as this app's in the shared
-database. **Its rows are never in the repo**, so a database built from the repo
+Migration `081`, in `DB_MARVEL`. The `msh_` prefix dates from when it
+shared a database with the Palladium apps. **Its rows are never in the repo**, so a database built from the repo
 has it empty; `/api/marvel-heroes/power-text` then answers 404 `missing: true`
 and the app shows the committed summary.
 
@@ -84,7 +90,7 @@ and the app shows the committed summary.
 
 ```bash
 python scripts/msh-extract.py "<path to the Ultimate Powers Book PDF>"
-node scripts/d1-apply.mjs --remote .cache/msh/power-text.sql
+node scripts/d1-apply.mjs --remote --db marvel .cache/msh/power-text.sql
 ```
 
 The extractor finds each listing by walking the roll tables' codes in order,

@@ -373,6 +373,11 @@ the order given, and stops at the first failure — including a read-back
 assertion that fails on the target after its file is applied. Under `CLOUDFLARE_API_TOKEN` it prints
 `skipping auth warm-up` and goes straight to applying — expected, not a warning.
 
+**Which database is `--db`'s question**, and without it the answer is
+Palladium's (`DB`), as it always was. A group whose tables have moved to its own
+D1 is reached with `--db marvel` or `--db tools`, and so are `q.mjs` and
+`d1-backup.mjs`; `drift-check.mjs` checks every group's database on its own.
+
 ## The permission allowlist is read-only, and its gaps are the point
 
 `.claude/settings.json` allows the tests, the reporting scripts, and read-only

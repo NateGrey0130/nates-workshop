@@ -22,6 +22,15 @@ the columns, and the wizard's first call selected both. The smoke test could not
 see it either, because it applies `schema.sql` to a local database that had
 already been migrated by hand.
 
+**First, which database.** Since 2026-09-25 each group of apps is getting a D1
+of its own (`groups.json`, `CLAUDE.md` → *Three groups*). Palladium's is
+`db/schema.sql` and `db/migrations/`, and every path below is written for it.
+A group whose tables have moved uses `db/schema-<group>.sql` and
+`db/migrations/<group>/` instead — Marvel does, as `db/schema-marvel.sql` — and
+is applied with `d1-apply.mjs --db <group>`. The same rules hold in each: the
+smoke checks run once per group and name the group when it is not Palladium,
+and `groups.mjs --check` fails a table created in the wrong group's file.
+
 ## The five places
 
 | # | Where | What |
