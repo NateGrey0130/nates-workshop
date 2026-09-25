@@ -221,6 +221,22 @@ const unguarded = migrationFiles.filter((f) => {
 check('every seed line is guarded by a schema feature', unguarded.length === 0,
   'unguarded seed line for: ' + unguarded.join(', '));
 
+// Two sessions on two branches each take the next free number, both pull
+// requests pass on their own - branches need not be up to date with main to
+// merge - and main ends up holding two 085s. Nothing else here notices: the
+// runner applies both, the record stores both filenames. Each group working
+// concurrently (groups.json) makes that the likely case rather than a rare one,
+// so the first pull request after such a merge goes red here and names both.
+const byNumber = new Map();
+for (const f of migrationFiles) {
+  const n = f.match(/^(\d+)-/)?.[1];
+  if (n) byNumber.set(n, [...(byNumber.get(n) ?? []), f]);
+}
+const sharedNumbers = [...byNumber.values()].filter((fs) => fs.length > 1);
+check('no two migrations share a number', sharedNumbers.length === 0,
+  sharedNumbers.map((fs) => fs.join(' and ')).join('; ')
+  + ' - renumber the one that merged second, in its own pull request');
+
 section('Data script conventions');
 
 // Data scripts (apps/character-creator/db/*.sql) are not migrations - they
