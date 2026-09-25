@@ -13,6 +13,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { statements } from '../../../../scripts/sql-statements.mjs';
+import { catalogInserts, conflictingInserts } from '../../../../scripts/catalog-inserts-lib.mjs';
 import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
 import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
 import { bonusesFromSkills, combineClasses, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
@@ -26,7 +27,7 @@ import { KNOWN_SKILL_KEYS } from '../../../../scripts/class-check-lib.mjs';
 const SECTIONS = ['Core pools (p.18)', 'Hand to Hand level schedules (p.347-349)',
   'Weapon Proficiencies (p.326-329)', 'Spell descriptions',
   'Structural gear rows', 'Wilderness Scout bonuses (p.99)',
-  'Provenance of web-sourced rows'];
+  'Provenance of web-sourced rows', 'Catalog rows inserted by two scripts'];
 
 export function run() {
 if (!SECTIONS.some(wantSection)) return;
@@ -826,5 +827,90 @@ check('the README documents the estimate tier',
 check('and documents what it means',
   readmeText.includes('`source_book` says the source was the web'),
   'the section explaining the convention is missing');
+
+
+section('Catalog rows inserted by two scripts');
+
+// Every catalog table has a UNIQUE key, so when two data scripts insert the
+// same key with `INSERT OR IGNORE`, the later one's row is dropped silently and
+// its PR still passes. `scripts/catalog-inserts-lib.mjs` has the mechanism.
+// Re-inserting the SAME values from a second script is a deliberate pattern
+// here (class scripts each insert the stub gear their kit names) and loses
+// nothing. DIFFERENT values mean one script's row never reached the database.
+// Two book sessions in parallel each find the same missing item, which is
+// where this stops being rare.
+//
+// BASELINE: the keys that already conflicted when this was written, measured
+// 2026-09-24 over every apps/character-creator/db/*.sql. Every one differs in
+// source_book, and some in name, description or system. Most are harmless
+// (a stub's citation losing to another page of the same book). `gear|jet-pack`
+// is not: the Heroes Unlimited row won, and a Rifts class offers it. The list
+// may only shrink: a key that stops conflicting fails the check below until it
+// is removed from here.
+{
+  const BASELINE = new Set([
+    'skills|Language: Spanish',
+    'gear|c-10-laser-rifle',
+    'gear|c-12-laser-rifle',
+    'gear|huntsman-armor',
+    'gear|jet-pack',
+    'gear|marine-combat-armor',
+    'gear|m-2011-pistol',
+    'gear|m-160-assault-rifle',
+    'gear|hovercycle',
+    'gear|navy-body-armor',
+    'gear|t-10-infantry-cyclops-body-armor',
+    'gear|tx-42-laser-pulse-rifle',
+    'gear|wet-suit',
+    'gear|scuba-gear',
+    'gear|boots',
+    'gear|belt',
+    'gear|water-skin',
+    'gear|rope',
+    'gear|tinder-box',
+    'gear|meditation-chip',
+    'gear|light-mdc-body-armor',
+    'gear|scaling-knife',
+    'gear|fishing-pole',
+    'gear|fishing-hooks-and-lures',
+    'gear|tw-tree-trimmer',
+    'gear|tw-wing-board',
+    'gear|hand-computer',
+    'gear|bg-15-blue-green-laser-pistol',
+    'gear|scuba-body-armor',
+    'gear|bg-20-blue-green-laser-rifle',
+    'gear|triax-pump-weapon',
+    'gear|survival-knife',
+  ]);
+  const files = readdirSync(join(appDir, 'db')).filter((f) => f.endsWith('.sql')).sort()
+    .map((name) => ({ name, sql: readFileSync(join(appDir, 'db', name), 'utf8') }));
+
+  // The parser, against a fixture first, so a regex that read nothing cannot
+  // pass by finding no conflicts.
+  const fixture = catalogInserts([
+    { name: 'a.sql', sql: "INSERT OR IGNORE INTO gear (slug, name, source_book) VALUES ('rope', 'Rope', 'Book A p.1'), ('lamp', 'Lamp', 'Book A p.2');" },
+    { name: 'b.sql', sql: "-- a comment with an apostrophe's in it\nINSERT OR IGNORE INTO gear (slug, name, source_book) VALUES ('rope', 'Rope', 'Book B p.9');" },
+    { name: 'c.sql', sql: "INSERT OR IGNORE INTO gear (slug, name) VALUES ('lamp', 'Lamp');" },
+  ]);
+  const fixtureConflicts = conflictingInserts(fixture);
+  check('the insert reader finds a differing re-insert and passes an identical one',
+    fixtureConflicts.length === 1 && fixtureConflicts[0].key === 'gear|rope'
+      && fixtureConflicts[0].columns.join() === 'source_book',
+    JSON.stringify(fixtureConflicts));
+
+  const inserts = catalogInserts(files);
+  check('the reader finds catalog inserts in the data scripts',
+    Object.keys(inserts).length > 1000, `${Object.keys(inserts).length} keys`);
+  const conflicts = conflictingInserts(inserts);
+  const fresh = conflicts.filter((c) => !BASELINE.has(c.key));
+  check('no catalog key is inserted by two data scripts with different values',
+    fresh.length === 0,
+    fresh.map((c) => `${c.key} (${c.columns.join(', ')}) in ${c.files.join(', ')}`).join('; ')
+      + ' - update the existing row instead of inserting it again, or give the new row its own key');
+  const found = new Set(conflicts.map((c) => c.key));
+  const stale = [...BASELINE].filter((k) => !found.has(k));
+  check('every baseline conflict still occurs (remove the ones that were fixed)',
+    stale.length === 0, stale.join(', '));
+}
 
 }
