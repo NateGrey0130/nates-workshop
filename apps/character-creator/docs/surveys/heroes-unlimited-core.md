@@ -1,5 +1,7 @@
 # Revised Heroes Unlimited — survey
 
+**Status:** `imported` — with the exclusions recorded under D7; the batch decisions are below. (2026-09-24)
+
 Slug `heroes-unlimited-core`. Cached 2026-09-12 from
 `93229611-Heroes-Unlimited-Core-Book-Revised.pdf`, 240 PDF pages,
 **a scan (no text layer)**, OCR at 300 dpi, psm 3.

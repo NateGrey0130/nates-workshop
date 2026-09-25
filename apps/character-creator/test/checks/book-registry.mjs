@@ -97,6 +97,45 @@ export function run() {
     check('scripts/books.json lists its books sorted by slug',
       outOfOrder.length === 0, `out of place: ${outOfOrder.join(', ')}`);
 
+    // A BOOK'S STATUS IS ITS SURVEY'S `**Status:**` LINE, and only that line
+    // (docs/surveys/README.md, since 2026-09-24). It used to be a column in
+    // BOOK-INGEST-QUEUE.md, where two book sessions in parallel edited
+    // neighbouring rows and conflicted, and where mystic-russia read
+    // `surveyed` for eight days after its survey said fully imported.
+    // Three halves: every survey states one status in the vocabulary, every
+    // registered book has a survey (bar the two that are not books to import),
+    // and neither queue table has grown the column back.
+    {
+      const STATUSES = ['cached', 'surveyed', 'importing', 'imported', 'excluded', 'backfilled'];
+      // Registered for citations only; there is nothing to survey.
+      const NO_SURVEY = {
+        'rifts-core': 'the original core book, superseded by rue and not to be cached',
+        'rifts-skill-list': 'a compiled skill list, not a Palladium book',
+      };
+      const surveyDir = join(repoRoot, 'apps', 'character-creator', 'docs', 'surveys');
+      const surveys = readdirSync(surveyDir).filter((f) => f.endsWith('.md') && f !== 'README.md')
+        .map((f) => f.replace(/\.md$/, ''));
+      const bad = [];
+      for (const slug of surveys) {
+        const text = readFileSync(join(surveyDir, `${slug}.md`), 'utf8');
+        const lines = [...text.matchAll(/^\*\*Status:\*\* `([a-z-]+)`/gm)];
+        if (lines.length !== 1) bad.push(`${slug}: ${lines.length} status lines`);
+        else if (!STATUSES.includes(lines[0][1])) bad.push(`${slug}: "${lines[0][1]}" is not a status`);
+      }
+      check('every survey states exactly one status, in the README\'s vocabulary',
+        surveys.length > 0 && bad.length === 0, bad.join('; '));
+      const unregistered = surveys.filter((s) => !registry[s]);
+      check('every survey is named for a registered book',
+        unregistered.length === 0, unregistered.join(', '));
+      const unsurveyed = Object.keys(registry).filter((s) => !surveys.includes(s) && !NO_SURVEY[s]);
+      check('every registered book has a survey, so it has a status',
+        unsurveyed.length === 0, `${unsurveyed.join(', ')} - write docs/surveys/<slug>.md with a **Status:** \`cached\` line`);
+      const queue = readFileSync(join(repoRoot, 'BOOK-INGEST-QUEUE.md'), 'utf8');
+      check('BOOK-INGEST-QUEUE.md tables carry no status column',
+        !/^\|[^\n]*\|\s*status\s*\|\s*$/im.test(queue),
+        'the status lives in each survey; see docs/surveys/README.md');
+    }
+
     // book-worktree.mjs links a book worktree's memory by computing the
     // directory Claude Code keeps for it. Pinned against the names the
     // directories already carry on this machine (2026-09-24), because a wrong

@@ -1,5 +1,7 @@
 # Palladium Fantasy Dragons and Gods — survey
 
+**Status:** `backfilled` — written after the fact; gods and creatures came in with the NPC and bestiary plan, and no full inventory has been taken. (2026-09-24)
+
 Slug `dag`. Cached from `PFRPG - Dragons and Gods (1).pdf`, 240 PDF pages,
 **text layer**.
 

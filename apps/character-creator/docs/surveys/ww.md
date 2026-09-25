@@ -1,5 +1,7 @@
 # Rifts Dimension Book 1: Wormwood — survey
 
+**Status:** `imported` — 17 of 17 classes, per the ledger below. (2026-09-24)
+
 Slug `ww`. Cached 2026-08-27 from `Rifts- Dimension Book 1 Wormwood.pdf`,
 161 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

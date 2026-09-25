@@ -1,5 +1,7 @@
 # Rifts World Book 15: Spirit West — survey
 
+**Status:** `imported` — see the ledger below. (2026-09-24)
+
 Slug `spirit-west`. Cached 2026-08-28 from `Rifts- World Book 15 Spirit West.pdf`,
 210 PDF pages, **text layer** (median ~5,468 chars/page — no OCR, no cost).
 

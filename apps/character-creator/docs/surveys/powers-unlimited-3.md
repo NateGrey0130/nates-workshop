@@ -1,5 +1,7 @@
 # Powers Unlimited Three — survey
 
+**Status:** `imported` — under D0 in heroes-unlimited-core.md. (2026-09-24)
+
 Slug `powers-unlimited-3`. Cached 2026-09-12 from
 `793577120-HU-Powers-Unlimited-3-PAL523P.pdf`, 120 PDF pages, **OCR at 300 dpi,
 psm 3 — and the only book in this registry cached with `--force-ocr`.** See

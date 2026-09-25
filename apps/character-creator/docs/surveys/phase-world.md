@@ -1,5 +1,7 @@
 # Rifts Dimension Book 2: Phase World — survey
 
+**Status:** `imported` — all 34 playable classes; the ledger below is the authority. (2026-09-24)
+
 Slug `phase-world`. Cached 2026-08-28 from
 `Rifts- Dimension Book 2 Phase World.pdf`, 209 PDF pages,
 **scan (no text layer)**, OCR at 300 dpi, psm 3.

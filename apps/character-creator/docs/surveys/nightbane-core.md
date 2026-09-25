@@ -1,5 +1,7 @@
 # Nightbane RPG (core book) — survey
 
+**Status:** `imported` — the extraction plan is done; what was left on purpose is in the ledger. (2026-09-24)
+
 **Surveyed 2026-09-12**, offline, off the cache. No extraction has been spent
 yet: this file is what phases 1–3 of `book-survey` produced, and the extraction
 plan at the end is the thing to agree on before phase 4 costs anything.

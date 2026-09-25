@@ -98,9 +98,11 @@ naming the exact filenames in prompt A.
 > `books.json` entries:
 >
 > - **`BOOK-INGEST-QUEUE.md`** — one row per book: slug, title, PDF filename,
->   text-layer/scan, PDF page count, printed pages, page offset, and a status
->   column (`cached` / `surveyed` / `imported`). This is the cross-session
->   state; every later session reads it first and updates it last.
+>   text-layer/scan, PDF page count, printed pages and page offset. **No status
+>   column**: a book's status is the `**Status:**` line of its survey,
+>   `apps/character-creator/docs/surveys/<slug>.md`, with the vocabulary in that
+>   directory's `README.md` (since 2026-09-24). Every later session reads the
+>   queue first and adds its dated record last.
 > - **`BOOK-INGEST-AUDIT.md`** — empty numbered menu (`F1..Fn`) in the same
 >   format as the existing audit menus, with a header saying it holds
 >   **code changes deferred out of the book ingestion batch**, one finding per
@@ -203,8 +205,9 @@ naming the exact filenames in prompt A.
 >
 > ### Finish
 >
-> Update `BOOK-INGEST-QUEUE.md` — status, counts imported per category, and a
-> one-line "what is deliberately not imported from this book". Then report:
+> Set the `**Status:**` line of the book's survey. Then add to
+> `BOOK-INGEST-QUEUE.md` the counts imported per category and a one-line "what
+> is deliberately not imported from this book". Then report:
 > what was imported, what was deferred and under which finding numbers, and
 > anything you are unsure you read correctly.
 
