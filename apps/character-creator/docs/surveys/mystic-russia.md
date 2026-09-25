@@ -1,5 +1,7 @@
 # Rifts World Book 18: Mystic Russia — survey
 
+**Status:** `imported` — PRs #983-#1019. (2026-09-24)
+
 **FULLY IMPORTED 2026-09-13** (PRs #983–#1019). All five batches are complete:
 
 | | | production |

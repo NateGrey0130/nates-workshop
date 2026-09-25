@@ -1,5 +1,7 @@
 # Rifts Conversion Book Two: Pantheons of the Megaverse — survey
 
+**Status:** `imported` — finished in #268, before surveys existed; this file was written afterwards. (2026-09-24)
+
 Slug `potm`. Cached from `Pantheons of the Megaverse.pdf`, 210 PDF pages,
 **text layer**.
 

@@ -1,5 +1,7 @@
 # Rifts World Book 6: South America — survey
 
+**Status:** `surveyed` — nothing imported; on hold by Nate's word until the parallel-book-ingestion changes land. (2026-09-24)
+
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
 OCR). `--probe` median 4,239 chars/page, 36.9% stop words, so this is a real

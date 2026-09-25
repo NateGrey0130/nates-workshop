@@ -1,5 +1,7 @@
 # Rifts World Book 29: Madhaven — survey
 
+**Status:** `imported` — PRs #1337-#1342. (2026-09-24)
+
 Slug `madhaven`. Cached 2026-09-24 from
 `974230361-Rifts-World-Book-29-Madhaven.pdf`, 136 PDF pages, **text layer**
 (no OCR). `--probe` median 4,786 chars/page, 36.8% stop words, so this is a real

@@ -1,5 +1,7 @@
 # Rifts World Book 7: Underseas — survey
 
+**Status:** `imported` — see the ledger below. (2026-09-24)
+
 Slug `underseas`. Cached 2026-08-28 from `Rifts- World Book 7 Underseas.pdf`,
 216 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

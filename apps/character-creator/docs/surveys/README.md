@@ -26,37 +26,52 @@ Those move with every import, nothing pins a number written here, and a count in
 prose is wrong more often than it is right. The surveys carry their own numbers
 with their own dates attached, which is where a number belongs.
 
-## The ten surveys
+## The surveys, and where each book stands
 
-The slug is the file's name, the `.cache/books/<slug>/` directory, and the key in
-`scripts/books.json`. All three are the same word.
+One file per book, named by its slug. The slug is also the
+`.cache/books/<slug>/` directory and the key in `scripts/books.json`: all
+three are the same word. **`ls` this directory for the list.** This section
+used to be a table titled *The ten surveys*, and by 2026-09-24 it had fallen
+far behind the files beside it.
 
-| slug | book | surveyed |
-|---|---|---|
-| [`bom`](bom.md) | Rifts Book of Magic | 2026-08-28 |
-| [`cb1`](cb1.md) | Rifts Conversion Book One | 2026-08-28 |
-| [`dag`](dag.md) | Palladium Fantasy Dragons and Gods | 2026-08-28 |
-| [`fom`](fom.md) | Rifts World Book 16: Federation of Magic | 2026-08-28 |
-| [`ju`](ju.md) | Rifts World Book 10: Juicer Uprising | 2026-08-28 |
-| [`pf`](pf.md) | Palladium Fantasy RPG Main Book | 2026-08-28 |
-| [`phase-world`](phase-world.md) | Rifts Dimension Book 2: Phase World | 2026-08-28 |
-| [`potm`](potm.md) | Rifts Conversion Book Two: Pantheons of the Megaverse | 2026-08-28 |
-| [`rue`](rue.md) | Rifts Ultimate Edition | 2026-08-28 |
-| [`ww`](ww.md) | Rifts Dimension Book 1: Wormwood | 2026-08-27 |
+**Each survey's first line under its title is its status**, and that line is
+the only place a book's status is written:
 
-**Six of these ten have no inbound link from anywhere in the repo, and they are
-not orphans.** `book-survey` and `class-import` both address this directory by
+```
+**Status:** `imported` — a short note. (2026-09-24)
+```
+
+| status | means |
+|---|---|
+| `cached` | registered and cached; no survey yet |
+| `surveyed` | surveyed; nothing from the book's plan has shipped |
+| `importing` | some of the plan has shipped, and more is planned |
+| `imported` | the plan is done; what was left out on purpose is in the survey |
+| `excluded` | surveyed and deliberately not imported; the survey says why |
+| `backfilled` | rows arrived before surveys existed and no full inventory has been taken, so how complete the import is is not known |
+
+**Why here, and only here:** until 2026-09-24 the status sat in a table in
+`BOOK-INGEST-QUEUE.md`. Two book sessions running in parallel edit neighbouring
+rows of that table and conflict. The table also disagreed with the surveys:
+`mystic-russia` was recorded as `surveyed` there for eight days after its
+survey said *fully imported*. A book session updates its own survey anyway,
+so the status now moves in the same edit.
+`apps/character-creator/test/checks/book-registry.mjs` holds every survey to
+one status line in this vocabulary, and every registered book to a survey.
+
+**Surveys here often have no inbound link from anywhere in the repo, and they
+are not orphans.** `book-survey` and `class-import` both address this directory by
 **slug pattern** rather than by link, so every file here is reachable by the rule
 whether or not anything points at it. A link check run over this directory
-reports six dead ends and is wrong about all six — which is recorded in
+reported six dead ends on an earlier date and was wrong about all six — which is recorded in
 `DOCS-AUDIT-2.md` under *What was checked and found healthy*, because it read as
 a defect once already.
 
 ## Where the rest of the story is
 
-- **`BOOK-INGEST-QUEUE.md`** (repo root) — the `cached → surveyed → imported`
-  ladder, and which books are where on it. A survey says what a book holds; the
-  queue says what has been done about it.
+- **`BOOK-INGEST-QUEUE.md`** (repo root) — each batch's roster and the dated
+  record of what was done about each book. A book's current status is its
+  survey's status line, above, not the queue.
 - **`BOOK-INGEST-AUDIT.md`** (repo root) — code changes the ingestion turned up.
   Where a survey says something *cannot* be stored, the reason is usually a
   numbered finding there.

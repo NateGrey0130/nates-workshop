@@ -1,5 +1,7 @@
 # Powers Unlimited One — survey
 
+**Status:** `imported` — under D0 in heroes-unlimited-core.md. (2026-09-24)
+
 Slug `powers-unlimited-1`. Cached 2026-09-12 from
 `236094939-Powers-Unlimited-1-0.pdf`, 99 PDF pages, **a scan (no text layer)**,
 OCR at 300 dpi, psm 3.

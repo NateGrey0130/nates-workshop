@@ -1,5 +1,7 @@
 # Rifts World Book 5: Triax and the NGR — survey
 
+**Status:** `imported` — see the ledger below. (2026-09-24)
+
 Slug `triax`. Cached 2026-08-28 from `Rifts- World Book 5 Triax and the NGR.pdf`,
 225 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

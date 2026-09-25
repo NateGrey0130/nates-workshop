@@ -1,5 +1,7 @@
 # Palladium Fantasy RPG Main Book — survey
 
+**Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
+
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
 

@@ -1,5 +1,7 @@
 # Rifts Book of Magic — survey
 
+**Status:** `backfilled` — rows arrived before surveys existed; this file was written for the INGESTION-AUDIT F24 re-provenance, not as an import plan. (2026-09-24)
+
 Slug `bom`. Cached 2026-08-28 from `526065744-Rifts-Book-of-Magic.pdf`,
 360 PDF pages, **text layer**, no OCR.
 

@@ -1,5 +1,7 @@
 # Rifts Ultimate Edition — survey
 
+**Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
+
 Slug `rue`. Cached from `Rifts - Ultimate Edition.pdf`, 382 PDF pages,
 **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

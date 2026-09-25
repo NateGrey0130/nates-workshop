@@ -7,21 +7,27 @@ this file first and updating it last. Deferred code changes go in
 
 Slugs, offsets and printed page counts below are recorded in
 `scripts/books.json`, which is the authority the tooling reads. This table is
-the human view of the same thing plus the import status.
+the human view of the same thing. The import status is in each book's survey.
 
 ## The books
 
-| slug | book | PDF pages | layer | printed | offset | status |
-|---|---|---|---|---|---|---|
-| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** | **imported** |
-| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** | **imported** |
-| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 | **imported** |
-| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 | **imported** |
-| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 | **imported** |
-| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 | **imported** |
-| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** | **imported** |
-| `madhaven` | Rifts WB 29: Madhaven (added 2026-09-24, outside the original seven) | 136 | text layer | 128 | +1 | **imported** |
-| `south-america` | Rifts WB 6: South America (added 2026-09-24, outside the original seven) | 170 | text layer | 168 | +1 | **surveyed** |
+| slug | book | PDF pages | layer | printed | offset |
+|---|---|---|---|---|---|
+| `triax` | Rifts WB 5: Triax and the NGR | 225 | SCAN (OCR) | 224 — corrected 2026-09-07, see below | **+0** |
+| `underseas` | Rifts WB 7: Underseas | 216 | SCAN (OCR) | 214 | **+0 / -1 split** |
+| `new-west` | Rifts WB 14: New West | 226 | text layer | 224 | +1 |
+| `spirit-west` | Rifts WB 15: Spirit West | 210 | text layer | 208 | +1 |
+| `mystic-russia` | Rifts WB 18: Mystic Russia | 178 | text layer | 176 | +1 |
+| `free-quebec` | Rifts WB 22: Free Quebec | 194 | text layer | 192 | +1 |
+| `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** |
+| `madhaven` | Rifts WB 29: Madhaven (added 2026-09-24, outside the original seven) | 136 | text layer | 128 | +1 |
+| `south-america` | Rifts WB 6: South America (added 2026-09-24, outside the original seven) | 170 | text layer | 168 | +1 |
+
+**Status is not in this table any more.** It is each survey's `**Status:**`
+line, in `apps/character-creator/docs/surveys/<slug>.md`, since 2026-09-24:
+two book sessions in parallel edited neighbouring rows here and conflicted,
+and the column had already disagreed with the surveys once. The vocabulary
+is in that directory's `README.md`. What follows below is the dated record.
 
 Status is `cached` -> `surveyed` -> `imported`. `phase-world` is **imported** as
 of 2026-08-31: surveyed on 2026-08-30, then shipped in ten category batches,
@@ -1614,12 +1620,18 @@ share nothing else.
 
 ## The books
 
-| slug | book | PDF pages | layer | printed | offset | status |
-|---|---|---|---|---|---|---|
-| `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** | **imported** (abilities) |
-| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** | **imported** (abilities + psionics) |
-| `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** | **surveyed** |
-| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** | **imported** (abilities) |
+| slug | book | PDF pages | layer | printed | offset |
+|---|---|---|---|---|---|
+| `heroes-unlimited-core` | Revised Heroes Unlimited (1987) | 240 | SCAN (OCR) | 238 | **+0** |
+| `powers-unlimited-1` | Powers Unlimited One (2003) | 99 | SCAN (OCR) | 95 | **+2** |
+| `powers-unlimited-2` | Powers Unlimited Two (2004) | 98 | SCAN (OCR) | 96 | **+1** |
+| `powers-unlimited-3` | Powers Unlimited Three (2017) | 120 | **corrupt text layer, FORCE-OCR'd** | 112 | **+1** |
+
+**Status is not in this table any more.** It is each survey's `**Status:**`
+line, in `apps/character-creator/docs/surveys/<slug>.md`, since 2026-09-24:
+two book sessions in parallel edited neighbouring rows here and conflicted,
+and the column had already disagreed with the surveys once. The vocabulary
+is in that directory's `README.md`. What follows below is the dated record.
 
 Survey: `apps/character-creator/docs/surveys/heroes-unlimited-core.md`. It is the
 boot file for this batch and it carries the decision record.
