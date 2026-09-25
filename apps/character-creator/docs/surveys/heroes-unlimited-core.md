@@ -2,7 +2,7 @@
 
 **Status:** `imported` — with the exclusions recorded under D7; the batch decisions are below. (2026-09-24)
 
-**Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 88, spells 16, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5
+**Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 94, spells 16, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5
 
 **MOS:** hu-edu-high-school 6 choose 2, hu-edu-military 15 choose 2, hu-edu-trade-school 16 choose 2, hu-edu-one-year-college 13 choose 2, hu-edu-two-years-college 13 choose 2, hu-edu-three-years-college 13 choose 3, hu-edu-four-years-college 13 choose 3, hu-edu-military-specialist 16 choose 1, hu-edu-bachelors 13 choose 3, hu-edu-masters 13 choose 3, hu-edu-doctorate 14 choose 4
 

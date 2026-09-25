@@ -2600,7 +2600,7 @@ check('and none of them with ?mine=1',
   // moves this number on purpose.
   const untagged = q('SELECT name FROM skills WHERE systems IS NULL').map((r) => r.name);
   check('only the four-game skills and the language family are left untagged (skills.systems NULL)',
-    untagged.length === 79, `${untagged.length} untagged, want 79 - tag a new skill with its game(s)`);
+    untagged.length === 85, `${untagged.length} untagged, want 85 - tag a new skill with its game(s)`);
 }
 
 // ── Names (shared/js/namegen.js, campaigns/:id/names, names/themes) ─────────

@@ -1,8 +1,8 @@
 # Rifts World Book 9: South America 2 — survey
 
-**Status:** `surveyed` — nothing imported; the plan below is proposed and not yet agreed. (2026-09-25)
+**Status:** `importing` — skills shipped; spells next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 8
 
 Slug `south-america-2`. Cached 2026-09-25 from
 `Rifts- World Book 9 South America 2.pdf` (copied from a `kupdf.net` download),
@@ -239,3 +239,5 @@ What is deliberately left, with the reason for each:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-25 | — | cache built from a scan (193 pp, OCR 300 dpi), offset 0 verified by render, survey written, `south-america-2` registered in `books.json` |
+| 2026-09-25 | [#1381](https://github.com/NateGrey0130/nates-workshop/pull/1381) | survey and `books.json` registration. MERGED. |
+| 2026-09-25 | skills PR | 8 skills: `Language:` Quechua, Aymara, Creole, Arkhon, Larhold (p.162) and Amaki (p.155); `Art: Line Drawing` (p.28, never defined in the book, filed at Art's base); `Riding: War Bison` (p.186, Horsemanship +10). The six languages also get Heroes Unlimited's 55/5 row in `skill_system_bases`, which a clean build's HU sweep would add and production's never did; `heroes-unlimited-core`'s pin moves 88 -> 94 and regression's untagged-skill pin 79 -> 85. `~002-` re-tags the two Rifts-only skills after the scripts that clear `systems`. Applied `--remote` before the PR. |
