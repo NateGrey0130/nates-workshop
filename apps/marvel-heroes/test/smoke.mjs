@@ -423,7 +423,7 @@ section('The power-text endpoint reads one row, GET only, and answers a missing 
     catalog.powers.every((p) => mod.CODE.test(p.code)) && [...classCodes].every((c) => mod.CODE.test(c)));
   check('and refuses anything else', !['D0', 'X1', 'MG1;', "D1' OR 1=1", '', 'd1', 'MCo66x'].some((c) => mod.CODE.test(c)));
   const rows = { MG10: { code: 'MG10', name: 'Reality Alteration', page: 47, body: 'text' } };
-  const env = { DB: { prepare: () => ({ bind: (code) => ({ first: async () => rows[code] || null }) }) } };
+  const env = { DB_MARVEL: { prepare: () => ({ bind: (code) => ({ first: async () => rows[code] || null }) }) } };
   const call = async (code, headers = { 'Cf-Access-Authenticated-User-Email': 'a@b.c' }, host = 'example.com') => {
     const res = await mod.onRequestGet({ request: new Request(`https://${host}/api/marvel-heroes/power-text?code=${encodeURIComponent(code)}`, { headers }), env });
     return { status: res.status, body: await res.json() };
@@ -444,7 +444,7 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
   const { DatabaseSync } = await import('node:sqlite');
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec('CREATE TABLE schema_migrations (filename TEXT PRIMARY KEY, applied_at TEXT)');
-  sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', '082-msh-heroes.sql'), 'utf8'));
+  sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', 'marvel', '082-msh-heroes.sql'), 'utf8'));
   const DB = {
     prepare: (sql) => {
       const st = sqlite.prepare(sql);
@@ -464,7 +464,7 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
     const request = new Request(`https://${host}/api/marvel-heroes/heroes${query}`,
       { method, headers, body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)) });
     const handler = { GET: mod.onRequestGet, POST: mod.onRequestPost, DELETE: mod.onRequestDelete }[method];
-    const res = await handler({ request, env: { DB } });
+    const res = await handler({ request, env: { DB_MARVEL: DB } });
     return { status: res.status, body: await res.json() };
   };
 
@@ -603,7 +603,7 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     check(`the Players' Book text is there to compare against too (${rel(pb) || pb})`, existsSync(pb));
     if (existsSync(pb)) for (const page of Object.values(JSON.parse(readFileSync(pb, 'utf8')))) addText(page);
     const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
-      'scripts/msh-extract.py', 'db/migrations/081-msh-power-text.sql'], { cwd: repoRoot, encoding: 'utf8' })
+      'scripts/msh-extract.py', 'db/migrations/marvel/081-msh-power-text.sql'], { cwd: repoRoot, encoding: 'utf8' })
       .stdout.split('\0').filter(Boolean);
     // Files not yet committed count too: the check has to fire before the commit.
     const untracked = spawnSync('git', ['ls-files', '-z', '--others', '--exclude-standard', '--', 'apps/marvel-heroes',

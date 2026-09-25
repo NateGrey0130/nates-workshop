@@ -77,8 +77,8 @@
       "paths": [
         "apps/marvel-heroes/",
         "functions/api/marvel-heroes/",
-        "db/migrations/081-msh-power-text.sql",
-        "db/migrations/082-msh-heroes.sql",
+        "db/migrations/marvel/",
+        "db/schema-marvel.sql",
         "scripts/msh-extract.py"
       ],
       "tables": ["msh_power_text", "msh_heroes"]

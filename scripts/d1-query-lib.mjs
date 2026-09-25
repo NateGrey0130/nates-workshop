@@ -20,6 +20,23 @@ export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATABASES = { palladium: 'DB', marvel: 'DB_MARVEL', tools: 'DB_TOOLS' };
 
 /**
+ * Every group database the repo can build, with the files that define it:
+ * Palladium's is db/schema.sql and db/migrations/*.sql, as it always was; any
+ * other group's exists once its tables have moved, as db/schema-<group>.sql
+ * and db/migrations/<group>/*.sql. So a group is listed from the day its
+ * schema file lands, and a builder or checker that walks this list picks it up
+ * without being told.
+ */
+export function groupDatabases(root = repoRoot) {
+  const out = [{ group: 'palladium', binding: DATABASES.palladium, schema: join('db', 'schema.sql'), migrations: join('db', 'migrations') }];
+  for (const group of Object.keys(DATABASES)) {
+    if (group === 'palladium' || !existsSync(join(root, 'db', `schema-${group}.sql`))) continue;
+    out.push({ group, binding: DATABASES[group], schema: join('db', `schema-${group}.sql`), migrations: join('db', 'migrations', group) });
+  }
+  return out;
+}
+
+/**
  * `--db <group>` out of an argv: `{ group, binding, rest }`, where `rest` is
  * the argv without the flag and its value, so a caller that reads its
  * positional arguments (files, SQL) cannot mistake the group for one. Exits

@@ -25,11 +25,19 @@
 // and is NOT this: it replays into node's own SQLite in-process, which is
 // faster and legible per file but is not the engine D1 runs (it accepts a
 // fifteen-term compound SELECT that D1 refuses).
+//
+// ONE DATABASE PER GROUP (groups.json). The build above is Palladium's, DB.
+// Each group whose tables have moved to a database of their own
+// (db/schema-<group>.sql, see d1-query-lib.mjs groupDatabases) is built too,
+// into the same <persist-dir> under its own binding, so a dev server started on
+// that directory serves every app - with empty tables, as a clean build always
+// has. Those builds are a schema file each, and take seconds.
 
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { groupDatabases } from './d1-query-lib.mjs';
 
 // Reused by regression.mjs, which adds its own run marker to `extra`.
 export function bootstrapSql(repoRoot, { extra = [] } = {}) {
@@ -64,5 +72,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     console.error(`build failed after ${secs}s:\n${((r.stderr || '') + (r.stdout || '')).slice(-1500)}`);
     process.exit(1);
   }
-  console.log(`built ${dir} from the repo in ${secs}s`);
+  for (const g of groupDatabases(repoRoot).filter((x) => x.group !== 'palladium')) {
+    const rg = spawnSync('npx', ['wrangler', 'd1', 'execute', g.binding, '--local', '--persist-to', dir, '--file', join(repoRoot, g.schema)],
+      { cwd: repoRoot, shell: true, encoding: 'utf8', maxBuffer: 1e9 });
+    if (rg.status !== 0) {
+      console.error(`${g.group} (${g.binding}) build failed:
+${((rg.stderr || '') + (rg.stdout || '')).slice(-1500)}`);
+      process.exit(1);
+    }
+  }
+  console.log(`built ${dir} from the repo in ${Math.round((Date.now() - started) / 1000)}s`);
 }

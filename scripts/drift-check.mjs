@@ -32,7 +32,7 @@
 // is not over --remote - it has returned stale replica data mid-migration - so
 // columns are read out of sqlite_master's stored CREATE text.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { DB, d1Query, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
+import { DB, d1Query, groupDatabases, repoRoot, targetFromArgv } from './d1-query-lib.mjs';
 import { join } from 'node:path';
 import { cacheCoverage, loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { registryBookSlug } from './class-check-lib.mjs';
@@ -47,13 +47,44 @@ const d1 = (sql) => d1Query(sql, { target, db: DB });
 const problems = [];
 const note = (kind, msg) => problems.push(`${kind}: ${msg}`);
 
+// ONE DATABASE PER GROUP (groups.json). Checks 1, 3 and 4 run once per group
+// database the repo defines (d1-query-lib.mjs groupDatabases): Palladium's is
+// db/schema.sql and db/migrations/, a moved group's is db/schema-<group>.sql
+// and db/migrations/<group>/. Checks 2, 5 and 6 are about Palladium's catalog
+// and read its database only.
+//
+// A MOVE LEAVES THINGS BEHIND, ON PURPOSE. When a group's tables move to its
+// own database, the originals stay in Palladium's until the week-later drop,
+// so a bad move can be undone by switching a binding back. Palladium's record
+// also keeps the moved migrations, because it did apply them. Both are
+// reported below as LEFT BEHIND, which is information and not drift: it does
+// not fail the run. Once the originals are dropped, the tables stop being
+// listed; the migration records stay, as history.
+const groupDbs = groupDatabases(repoRoot);
+const tableOwner = new Map();
+for (const [id, g] of Object.entries(JSON.parse(readFileSync(join(repoRoot, 'groups.json'), 'utf8')).groups)) {
+  for (const t of g.tables ?? []) tableOwner.set(t, id);
+}
+const movedGroups = new Set(groupDbs.filter((g) => g.group !== 'palladium').map((g) => g.group));
+const movedMigrations = new Set(groupDbs.filter((g) => g.group !== 'palladium')
+  .flatMap((g) => readdirSync(join(repoRoot, g.migrations)).filter((f) => f.endsWith('.sql'))));
+const leftBehind = [];
+const tagOf = (g) => (g.group === 'palladium' ? '' : `[${g.group}] `);
+const queryOf = (g) => (sql) => d1Query(sql, { target, db: g.group === 'palladium' ? DB : g.binding });
+
 // ── 1. migrations ───────────────────────────────────────────────────────────
-const migDir = join(repoRoot, 'db', 'migrations');
-const migFiles = readdirSync(migDir).filter((f) => f.endsWith('.sql')).sort();
-const migRows = new Set(d1('SELECT filename FROM schema_migrations').map((r) => r.filename));
-console.log(`migrations:   ${migFiles.length} files, ${migRows.size} recorded`);
-for (const f of migFiles) if (!migRows.has(f)) note('MIGRATION NOT APPLIED', f);
-for (const f of migRows) if (!migFiles.includes(f)) note('RECORDED BUT NO FILE', f);
+for (const g of groupDbs) {
+  const tag = tagOf(g);
+  const migFiles = readdirSync(join(repoRoot, g.migrations)).filter((f) => f.endsWith('.sql')).sort();
+  const migRows = new Set(queryOf(g)('SELECT filename FROM schema_migrations').map((r) => r.filename));
+  console.log(`${tag}migrations:   ${migFiles.length} files, ${migRows.size} recorded`);
+  for (const f of migFiles) if (!migRows.has(f)) note(`${tag}MIGRATION NOT APPLIED`, f);
+  for (const f of migRows) {
+    if (migFiles.includes(f)) continue;
+    if (g.group === 'palladium' && movedMigrations.has(f)) leftBehind.push(`migration record ${f} (moved with its group)`);
+    else note(`${tag}RECORDED BUT NO FILE`, f);
+  }
+}
 
 // ── 2. data scripts ─────────────────────────────────────────────────────────
 const dataDir = join(repoRoot, 'apps', 'character-creator', 'db');
@@ -72,33 +103,38 @@ for (const f of dataRows) {
 }
 
 // ── 3 & 4. tables and columns ───────────────────────────────────────────────
-const schemaSql = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
-const declared = new Map();
-for (const m of schemaSql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?([A-Za-z_]\w*)\s*\(([\s\S]*?)\n\);/g)) {
-  const cols = m[2].split('\n')
-    .map((l) => l.replace(/--.*$/, '').trim())
-    .filter((l) => l && !/^(PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK|CONSTRAINT)\b/i.test(l))
-    .map((l) => (l.match(/^([A-Za-z_]\w*)/) || [])[1])
-    .filter(Boolean);
-  declared.set(m[1], new Set(cols));
-}
-const live = d1("SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf%'");
-const liveByName = new Map(live.filter((r) => r.name).map((r) => [r.name, r.sql || '']));
-console.log(`tables:       ${declared.size} in schema.sql, ${liveByName.size} live`);
-
-for (const [name, cols] of declared) {
-  const sql = liveByName.get(name);
-  if (sql === undefined) { note('TABLE MISSING LIVE', name); continue; }
-  for (const c of cols) {
-    if (!new RegExp(`[(,\\s]${c}\\s`, 'i').test(sql)) note('COLUMN MISSING LIVE', `${name}.${c}`);
+for (const g of groupDbs) {
+  const tag = tagOf(g);
+  const schemaName = g.schema.split('\\').join('/');
+  const schemaSql = readFileSync(join(repoRoot, g.schema), 'utf8');
+  const declared = new Map();
+  for (const m of schemaSql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?([A-Za-z_]\w*)\s*\(([\s\S]*?)\n\);/g)) {
+    const cols = m[2].split('\n')
+      .map((l) => l.replace(/--.*$/, '').trim())
+      .filter((l) => l && !/^(PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK|CONSTRAINT)\b/i.test(l))
+      .map((l) => (l.match(/^([A-Za-z_]\w*)/) || [])[1])
+      .filter(Boolean);
+    declared.set(m[1], new Set(cols));
   }
-}
-// FTS5 shadow tables are created by the virtual table, not declared in full.
-const shadow = /_fts$|_fts_(data|idx|content|docsize|config)$/;
-for (const name of liveByName.keys()) {
-  if (!declared.has(name) && !shadow.test(name)
-      && !['schema_migrations', 'data_script_runs'].includes(name)) {
-    note('LIVE TABLE NOT IN schema.sql', name);
+  const live = queryOf(g)("SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf%'");
+  const liveByName = new Map(live.filter((r) => r.name).map((r) => [r.name, r.sql || '']));
+  console.log(`${tag}tables:       ${declared.size} in ${schemaName}, ${liveByName.size} live`);
+
+  for (const [name, cols] of declared) {
+    const sql = liveByName.get(name);
+    if (sql === undefined) { note(`${tag}TABLE MISSING LIVE`, name); continue; }
+    for (const c of cols) {
+      if (!new RegExp(`[(,\\s]${c}\\s`, 'i').test(sql)) note(`${tag}COLUMN MISSING LIVE`, `${name}.${c}`);
+    }
+  }
+  // FTS5 shadow tables are created by the virtual table, not declared in full.
+  const shadow = /_fts$|_fts_(data|idx|content|docsize|config)$/;
+  for (const name of liveByName.keys()) {
+    if (!declared.has(name) && !shadow.test(name)
+        && !['schema_migrations', 'data_script_runs'].includes(name)) {
+      if (g.group === 'palladium' && movedGroups.has(tableOwner.get(name))) leftBehind.push(`table ${name} (${tableOwner.get(name)}'s, now in its own database)`);
+      else note(`${tag}LIVE TABLE NOT IN ${schemaName}`, name);
+    }
   }
 }
 
@@ -380,6 +416,10 @@ if (citationChecked) {
 
 // ── verdict ─────────────────────────────────────────────────────────────────
 console.log('');
+if (leftBehind.length) {
+  console.log(`LEFT BEHIND in Palladium's database by a group's move - not drift (${leftBehind.length}):`);
+  for (const l of leftBehind) console.log('  ' + l);
+}
 if (!problems.length) {
   console.log(`NO DRIFT (${target})`);
   process.exit(0);

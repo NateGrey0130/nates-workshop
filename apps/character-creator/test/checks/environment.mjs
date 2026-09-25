@@ -14,7 +14,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { batchStatements, trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
-import { localD1Args } from '../../../../scripts/d1-query-lib.mjs';
+import { groupDatabases, localD1Args } from '../../../../scripts/d1-query-lib.mjs';
 
 // The sections this file announces, declared once so a `--section` run can
 // skip the whole module — this is the file that shells out to wrangler, which
@@ -170,72 +170,79 @@ check('schema is idempotent (re-apply is clean)', reapply.status === 0, (reapply
 // would, and they hold even where there is no local D1 to apply them to.
 section('schema.sql self-sufficiency');
 
-const schemaSql = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
-const migrationFiles = readdirSync(join(repoRoot, 'db', 'migrations'))
-  .filter((f) => f.endsWith('.sql'))
-  .sort();
+// Once per group database (d1-query-lib.mjs groupDatabases): Palladium's is
+// db/schema.sql with db/migrations/*.sql, and a group whose tables have moved
+// has db/schema-<group>.sql with db/migrations/<group>/*.sql. The same rules
+// hold for each; a label names the group when it is not Palladium.
+for (const g of groupDatabases(repoRoot)) {
+  const label = g.group === 'palladium' ? '' : `${g.group}: `;
+  const schemaSql = readFileSync(join(repoRoot, g.schema), 'utf8');
+  const migrationFiles = existsSync(join(repoRoot, g.migrations))
+    ? readdirSync(join(repoRoot, g.migrations)).filter((f) => f.endsWith('.sql')).sort()
+    : [];
 
-// The CREATE body for one table, comments stripped, so a column named only in
-// prose does not count as declared.
-function createdColumns(table) {
-  const m = schemaSql.match(
-    new RegExp('CREATE TABLE IF NOT EXISTS ' + table + '\\s*\\(([\\s\\S]*?)\\n\\);')
-  );
-  if (!m) return null;
-  return new Set(
-    m[1].replace(/--[^\n]*/g, '')
-      .split('\n')
-      .flatMap((line) => [...line.matchAll(/(?:^|,)\s*(\w+)\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC)/g)])
-      .map((mm) => mm[1])
-  );
-}
-
-const missingColumns = [];
-const missingSeeds = [];
-for (const file of migrationFiles) {
-  const sql = readFileSync(join(repoRoot, 'db', 'migrations', file), 'utf8').replace(/--[^\n]*/g, '');
-  for (const m of sql.matchAll(/ALTER TABLE (\w+) ADD COLUMN (\w+)/gi)) {
-    const cols = createdColumns(m[1]);
-    if (cols && !cols.has(m[2])) missingColumns.push(`${m[1]}.${m[2]} (${file})`);
+  // The CREATE body for one table, comments stripped, so a column named only in
+  // prose does not count as declared.
+  function createdColumns(table) {
+    const m = schemaSql.match(
+      new RegExp('CREATE TABLE IF NOT EXISTS ' + table + '\\s*\\(([\\s\\S]*?)\\n\\);')
+    );
+    if (!m) return null;
+    return new Set(
+      m[1].replace(/--[^\n]*/g, '')
+        .split('\n')
+        .flatMap((line) => [...line.matchAll(/(?:^|,)\s*(\w+)\s+(?:TEXT|INTEGER|REAL|BLOB|NUMERIC)/g)])
+        .map((mm) => mm[1])
+    );
   }
-  if (!schemaSql.includes(`'${file}'`)) missingSeeds.push(file);
+
+  const missingColumns = [];
+  const missingSeeds = [];
+  for (const file of migrationFiles) {
+    const sql = readFileSync(join(repoRoot, g.migrations, file), 'utf8').replace(/--[^\n]*/g, '');
+    for (const m of sql.matchAll(/ALTER TABLE (\w+) ADD COLUMN (\w+)/gi)) {
+      const cols = createdColumns(m[1]);
+      if (cols && !cols.has(m[2])) missingColumns.push(`${m[1]}.${m[2]} (${file})`);
+    }
+    if (!schemaSql.includes(`'${file}'`)) missingSeeds.push(file);
+  }
+
+  check(label + 'every migrated column is also in a schema.sql CREATE', missingColumns.length === 0,
+    'missing from schema.sql: ' + missingColumns.join(', ') +
+    ' — a database built from ' + g.schema + ' alone would not have it');
+
+  check(label + 'every migration has a guarded seed line in schema.sql', missingSeeds.length === 0,
+    'no seed line for: ' + missingSeeds.join(', ') +
+    ' — a fresh database would report itself un-migrated');
+
+  // The guard has to test the schema feature, never insert unconditionally: on an
+  // existing database every CREATE above it is skipped, so an unguarded row would
+  // mark an un-migrated database as migrated. That is the lie the table exists to
+  // prevent, and it is invisible until someone trusts the record.
+  const unguarded = migrationFiles.filter((f) => {
+    const at = schemaSql.indexOf(`'${f}'`);
+    if (at < 0) return false;
+    return !/^[\s\S]{0,400}?WHERE EXISTS/.test(schemaSql.slice(at));
+  });
+  check(label + 'every seed line is guarded by a schema feature', unguarded.length === 0,
+    'unguarded seed line for: ' + unguarded.join(', '));
+
+  // Two sessions on two branches each take the next free number, both pull
+  // requests pass on their own - branches need not be up to date with main to
+  // merge - and main ends up holding two 085s. Nothing else here notices: the
+  // runner applies both, the record stores both filenames. Each group working
+  // concurrently (groups.json) makes that the likely case rather than a rare one,
+  // so the first pull request after such a merge goes red here and names both.
+  const byNumber = new Map();
+  for (const f of migrationFiles) {
+    const n = f.match(/^(\d+)-/)?.[1];
+    if (n) byNumber.set(n, [...(byNumber.get(n) ?? []), f]);
+  }
+  const sharedNumbers = [...byNumber.values()].filter((fs) => fs.length > 1);
+  check(label + 'no two migrations share a number', sharedNumbers.length === 0,
+    sharedNumbers.map((fs) => fs.join(' and ')).join('; ')
+    + ' - renumber the one that merged second, in its own pull request');
 }
-
-check('every migrated column is also in a schema.sql CREATE', missingColumns.length === 0,
-  'missing from schema.sql: ' + missingColumns.join(', ') +
-  ' — a database built from schema.sql alone would not have it');
-
-check('every migration has a guarded seed line in schema.sql', missingSeeds.length === 0,
-  'no seed line for: ' + missingSeeds.join(', ') +
-  ' — a fresh database would report itself un-migrated');
-
-// The guard has to test the schema feature, never insert unconditionally: on an
-// existing database every CREATE above it is skipped, so an unguarded row would
-// mark an un-migrated database as migrated. That is the lie the table exists to
-// prevent, and it is invisible until someone trusts the record.
-const unguarded = migrationFiles.filter((f) => {
-  const at = schemaSql.indexOf(`'${f}'`);
-  if (at < 0) return false;
-  return !/^[\s\S]{0,400}?WHERE EXISTS/.test(schemaSql.slice(at));
-});
-check('every seed line is guarded by a schema feature', unguarded.length === 0,
-  'unguarded seed line for: ' + unguarded.join(', '));
-
-// Two sessions on two branches each take the next free number, both pull
-// requests pass on their own - branches need not be up to date with main to
-// merge - and main ends up holding two 085s. Nothing else here notices: the
-// runner applies both, the record stores both filenames. Each group working
-// concurrently (groups.json) makes that the likely case rather than a rare one,
-// so the first pull request after such a merge goes red here and names both.
-const byNumber = new Map();
-for (const f of migrationFiles) {
-  const n = f.match(/^(\d+)-/)?.[1];
-  if (n) byNumber.set(n, [...(byNumber.get(n) ?? []), f]);
-}
-const sharedNumbers = [...byNumber.values()].filter((fs) => fs.length > 1);
-check('no two migrations share a number', sharedNumbers.length === 0,
-  sharedNumbers.map((fs) => fs.join(' and ')).join('; ')
-  + ' - renumber the one that merged second, in its own pull request');
 
 section('Data script conventions');
 
@@ -882,7 +889,12 @@ if (Array.isArray(recorded)) {
 
   // A row with no matching file means a migration was renamed or deleted after
   // being applied somewhere, which breaks the convention that they are immutable.
-  const orphans = recorded.filter((f) => !onDisk.includes(f));
+  // Except one that MOVED: a group's migrations went with its tables to that
+  // group's own database (db/migrations/<group>/), and this database applied
+  // them first, so its record of them is history rather than an orphan.
+  const moved = new Set(groupDatabases(repoRoot).filter((g) => g.group !== 'palladium')
+    .flatMap((g) => readdirSync(join(repoRoot, g.migrations)).filter((f) => f.endsWith('.sql'))));
+  const orphans = recorded.filter((f) => !onDisk.includes(f) && !moved.has(f));
   check('no recorded migration is missing its file', orphans.length === 0,
     'recorded but not on disk: ' + orphans.join(', '));
 }

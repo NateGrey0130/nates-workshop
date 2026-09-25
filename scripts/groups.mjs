@@ -21,8 +21,10 @@
 //   2. no entry is listed twice, in one group or across two
 //   3. every entry still matches a file, so a moved path cannot leave a dead
 //      rule behind that looks like it covers something
-//   4. every table db/schema.sql creates belongs to exactly one group, and
-//      every table a group lists is one the schema creates
+//   4. every table a schema file creates (db/schema.sql, and each group's
+//      db/schema-<group>.sql) belongs to exactly one group, every table a group
+//      lists is one a schema file creates, and a group's own schema file
+//      creates only that group's tables
 //   5. every app in apps/manifest.json sits in the group its tile is shown in
 //   6. no file under functions/ names another group's table in SQL, except
 //      the pairs groups.json lists in cross_group_tables - and each of those
@@ -97,8 +99,15 @@ export function check(root = repoRoot) {
     if (!files.some((f) => entryMatches(entry, f))) failures.push(`${id} lists "${entry}", which matches no file`);
   }
 
-  // 4. tables
-  const created = schemaTables(readFileSync(join(root, 'db/schema.sql'), 'utf8'));
+  // 4. tables, from db/schema.sql and every group's own db/schema-<group>.sql
+  const schemaFiles = ['db/schema.sql', ...files.filter((f) => /^db\/schema-[a-z]+\.sql$/.test(f))];
+  const createdIn = new Map();
+  for (const sf of schemaFiles) {
+    for (const t of schemaTables(readFileSync(join(root, sf), 'utf8'))) {
+      createdIn.set(t, [...(createdIn.get(t) ?? []), sf]);
+    }
+  }
+  const created = [...createdIn.keys()];
   const tableOwner = new Map();
   for (const [id, g] of Object.entries(groups)) {
     for (const t of g.tables ?? []) {
@@ -106,8 +115,19 @@ export function check(root = repoRoot) {
       else tableOwner.set(t, id);
     }
   }
-  for (const t of created) if (!tableOwner.has(t)) failures.push(`db/schema.sql creates ${t}, which no group lists in groups.json`);
-  for (const [t, id] of tableOwner) if (!created.includes(t)) failures.push(`${id} lists table ${t}, which db/schema.sql does not create`);
+  for (const t of created) if (!tableOwner.has(t)) failures.push(`${createdIn.get(t).join(', ')} creates ${t}, which no group lists in groups.json`);
+  for (const [t, id] of tableOwner) if (!created.includes(t)) failures.push(`${id} lists table ${t}, which no schema file creates`);
+  // A group's own schema file builds that group's database, so it may create
+  // only that group's tables - and schema_migrations, which every database has.
+  for (const [t, sfs] of createdIn) {
+    for (const sf of sfs) {
+      const g = sf.match(/^db\/schema-([a-z]+)\.sql$/)?.[1];
+      if (g && t !== 'schema_migrations' && tableOwner.get(t) !== g) {
+        failures.push(`${sf} creates ${t}, which is ${tableOwner.get(t) ?? 'no group'}'s - it builds the ${g} database`);
+      }
+    }
+    if (sfs.length > 1 && t !== 'schema_migrations') failures.push(`${t} is created in ${sfs.join(' and ')} - one database per table`);
+  }
 
   // 5. manifest tiles
   const manifest = JSON.parse(readFileSync(join(root, 'apps/manifest.json'), 'utf8'));
