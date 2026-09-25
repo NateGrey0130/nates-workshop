@@ -81,16 +81,24 @@ Complete — the book was finished in
 | — | [#268](https://github.com/NateGrey0130/nates-workshop/pull/268) | the last five classes — **the book is finished** |
 | — | [#303](https://github.com/NateGrey0130/nates-workshop/pull/303) | the PDF returned: re-cached, F12/F18 re-verified against the page |
 | 2026-08-28 | — | this file, backfilled offline |
+| 2026-09-25 | [#1374](https://github.com/NateGrey0130/nates-workshop/pull/1374) | the four languages cited to their pages: `fix-potm-language-citations.sql` |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-08-28:
+**Nothing.** `node scripts/source-coverage.mjs --remote`, 2026-09-25, after
+`fix-potm-language-citations.sql` was applied:
 
 ```
-  potm                14 / 4
+  potm               158 / 0
 ```
 
-**14 traceable, 4 not.** The 4 are the skills citing `pantheons-of-the-megaverse`
-with **no page range** — the alias resolves to this book, so they are attributed
-correctly, but nothing says where in it they came from. Giving them a page range
-is the whole of what is left here.
+The 4 that were not traceable were the languages two class imports created
+with `source_book` set to the bare alias `pantheons-of-the-megaverse`, which
+named the book and no page. The book gives none of them an entry of its own:
+each is named in the "Skills of Note" of the class that needed it, and that page
+is now the citation - `Language: Troll/Giant` and `Language: Ancient Greek`
+from the Greater Cyclops (printed 92), `Language: Dwarven` and
+`Language: Old Norse` from the Asgardian Dwarf (printed 166).
+
+It stood at 14 / 4 on 2026-08-28; the 140 notable NPCs added since are all
+traceable.

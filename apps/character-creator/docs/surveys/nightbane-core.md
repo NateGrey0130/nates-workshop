@@ -916,35 +916,29 @@ One line per shipped PR, appended when it merges.
 
 ### What remains
 
-Pasted from `node scripts/source-coverage.mjs --remote`, 2026-09-12. The slug
-does not appear, because nothing cites it yet:
+**Nothing this book defines and this app can hold.** Every step of the
+extraction plan shipped (#1129-#1141), and so did all five follow-ups Nate
+decided on 2026-09-17 (#1143-#1147). The ledger above is the record.
+
+`node scripts/source-coverage.mjs --remote`, 2026-09-25:
 
 ```
-  free-quebec         49 / 0
-  rifts-skill-list     0 / 34
-  potm                14 / 4
-  cb1                 10 / 0
-  dag                  1 / 0
-  rifts-core           0 / 1
+  nightbane-core     982 / 0
 ```
 
-```
-  BACKLOG       rows an importer created and nobody finished
-    gear stubs             6   description still says STUB — created by class import
-    skill stubs            5   created by an import and never given a base %, a bonus or a note
-    spell stubs            2   level 0 and 0 P.P.E.
-    psionic stubs          1   0 I.S.P.
-    spell text missing     0   nothing for the codex to show
-    psionic text missing   0   nothing for the codex to show
-```
+**982 traceable, 0 not.** Every row citing this book names a page this machine
+holds. The `rifts-skill-list` line this book could move went from 34 to 29
+with the five skills #1130 re-cited to printed 52 and 57, and this book moves it
+no further.
 
-Nothing on either list is this book's — nothing of this book has shipped. The
-`rifts-skill-list 0 / 34` line is the one this book can move, by the nine rows
-named above.
+What is left is left ON PURPOSE, and each reason is recorded where it was
+decided rather than restated here: the six entries D3 excluded, and
+`BOOK-INGEST-AUDIT` F77 and F78, DECLINED.
 
-**`spell stubs 2` is NOT a line this book moves, and this section said it was.**
-The two are `Impervious to Symbiotes` and `Open & Close Dimensional Rifts`,
-neither of them a Nightbane spell — checked `--remote` rather than reasoned
-about. `Summon Entities`, which the spell diff turns up, is level 0 with a real
-150 P.P.E. and so is not on that list at all; it is a half-stub the backlog
-count cannot see.
+**Not this book's:** the backlog's 18 spell stubs (level 0, 0 P.P.E.) are
+sixteen Heroes Unlimited spells and Wormwood's two. This section once pointed at
+two of them as a line the import would move; it never could.
+
+This section held a paste from 2026-09-12, taken before anything of this book
+had shipped, until 2026-09-25 - which is why the book went on reading as open
+work after the import was done.
