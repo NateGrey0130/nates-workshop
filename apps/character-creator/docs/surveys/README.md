@@ -54,6 +54,15 @@ the only place a book's status is written:
 book's worktree, branches and open PRs, and with `--remote`, production's row
 count beside the survey's.
 
+**Before merging several book PRs, run
+`node scripts/book-board.mjs --merge-check --tests --remote`.** Each PR's CI
+ran against the `main` it branched from, so PRs that are green alone can
+break together. It prints the order to merge them in, merges them all into a
+throwaway tree, runs CI's suites there, and traces every data script
+production has that the merged tree does not to the session holding it. It
+also catches a script renamed after it was applied. Merge with `--merge`, not
+squash.
+
 **The line after it is the book's row count**, per table, in a database built
 from the repo:
 

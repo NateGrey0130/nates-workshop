@@ -3,6 +3,9 @@
 //
 //   node scripts/book-board.mjs             status, rows, worktree, branches, open PRs
 //   node scripts/book-board.mjs --remote    also production's rows against the survey's
+//   node scripts/book-board.mjs --merge-check [--tests] [--remote]
+//                                           will the open PRs merge together, and in
+//                                           what order - scripts/merge-check-lib.mjs
 //
 // WHY. Several book sessions at once is only safe if each can see the others,
 // and none could: a session sees its own branch and nothing else. One place
@@ -30,8 +33,12 @@ import { basename, dirname, join } from 'node:path';
 import { loadBookRegistry, loadNotBooks } from './books-lib.mjs';
 import { bookRowsSql, citingTables, countRowsPerBook, parseRowsLine } from './book-rows-lib.mjs';
 import { d1Query, repoRoot } from './d1-query-lib.mjs';
+import { runMergeCheck } from './merge-check-lib.mjs';
 
 const remote = process.argv.includes('--remote');
+if (process.argv.includes('--merge-check')) {
+  process.exit(runMergeCheck({ repoRoot, tests: process.argv.includes('--tests'), remote }));
+}
 const run = (cmd, args) => {
   try { return execFileSync(cmd, args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); }
   catch { return null; }
