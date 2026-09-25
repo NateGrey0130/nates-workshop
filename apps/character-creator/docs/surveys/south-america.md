@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `importing` — gear, Biomancy spells, vehicles, all 8 O.C.C.s and 16 R.C.C.s shipped; creatures and notable NPCs next. (2026-09-25)
+**Status:** `imported` — PRs #1375-#1395 and this one: gear, Biomancy spells, vehicles, 8 O.C.C.s, 16 R.C.C.s, creatures and notable NPCs. (2026-09-25)
 
-**Rows citing this book:** classes 24, gear 36, vehicles 19, skills 1, spells 24
+**Rows citing this book:** classes 24, gear 36, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 25
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -161,8 +161,9 @@ That is sixteen rows: fifteen R.C.C.s plus the Werepanther as a variant.
   **creature**.
 - **True Atlantean** (printed 100): a racial block feeding the Monster Hunter.
   Recorded on that class.
-- **Loas, Trees of Wisdom, Memory Trees**: NPC beings. Loas become creatures;
-  the trees are left as setting.
+- **Loas, Trees of Wisdom, Memory Trees**: NPC beings. All three became
+  creatures: the survey planned to leave the trees as setting, but each prints
+  a full stat block (printed 58-60).
 
 ## Gear
 
@@ -219,6 +220,15 @@ convention allows it. Named with no stat block, and left out: General de la
 Plaza, General Collazo, Doctor Prometheus, Navaja, Amalia Collazo, Lord
 Temarkhos.
 
+**Shipped** (`add-south-america-creatures.sql`): **25 creatures** - nine with
+`playable` 0 (Giant Vampire Bat, one Loa row storing the Ghostly Loa with the
+Divine Loa's figures noted, Soul Worm, Ellal, Trelque-huecuve, Huecu, Aunyain,
+Tree of Wisdom, Memory Tree) and the sixteen playable R.C.C.s as their NPC
+view, slugged by class id except `grimbor-ape-man` (Conversion Book One owns
+`grimbor`) - and **16 notable NPCs**, 65 attacks in all. The Kryang pirate is a
+template, not a being, and has no row. A psionic force field or flame aura is
+not stored as a Felinoid's `mdc`, matching its class.
+
 ## Catalog diff
 
 Run against **production** on 2026-09-24:
@@ -264,7 +274,7 @@ Everything above cost nothing. The work in order, one PR each, applied
 
 What is deliberately left, with the reason:
 
-- The Mutant Cat pointer, the trees and the travelogue: no stats.
+- The Mutant Cat pointer and the travelogue: no stats.
 - Monster-Shaping Tattoos as catalog rows: a costing rule, not named items. It
   stays prose on the Monster Hunter.
 - NPCs named without a stat block.
@@ -280,3 +290,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1384 | the eight O.C.C.s (Anti-Monster, Sailor, Pirate, Voodoo Priest, Biomancer, Atlantean Monster Hunter, Tribal Shaman, Totem Warrior (South American)) and the Ship Mechanics skill they share. The Monster Hunter's ladder ("same as Undead Slayer") and the Tribal Shaman's ("same as the Mystic") have no catalog source: no `undead-slayer` class exists and `mystic` stores no `xp_table`, so both are left out and noted. Applied `--remote` first |
 | 2026-09-25 | #1389 | R.C.C.s part one: Jungle Elf, Lizard Man of Lagarto, Amazon, Ewaipanomas, Shaydor Spherian, Gatherer (Cibola), Pogtalian Dragon Slayer, Pincer Warrior (Cibola), Grimbor Ape-Man; plus four gear rows their equipment names (Grimbor armor, yumbuto club, NE-10 magazine, dragon-skin armor). No ladder for the Shaydor (none printed), Pogtalian ("same as the dragon"), Grimbor ("same as the Vagabond"): the catalog's dragon and vagabond classes store none. Also removes the stale `add-ship-mechanics-skill.sql` run record. Applied `--remote` first |
 | 2026-09-25 | #1395 | R.C.C.s part two, the seven Felinoids of Omagua: Felinoid (Jaguar Mutant), Flying Tiger, Flame Panther, Hunter Cat, Oracle Cat, Sekhmet, Werejaguar/Werepanther (one stat block, two name-only variants); plus the Flying Tiger's and Hunter Cat's armors as gear. No ladder for the Werejaguar ("same as the Psi-Stalker", which stores none). Salable-goods money is not stored as coin; Ancient Egyptian is a fixed Language: Other. Applied `--remote` first |
+| 2026-09-25 | #PR | creatures and notable NPCs: 25 creatures (9 monsters, spirits and trees; the 16 R.C.C.s as NPC views) and 16 notable NPCs, 65 attacks. Every creature row passes creatureFormulaGaps; both halves reconciled against renders. The book's import plan is complete. Applied `--remote` first |
