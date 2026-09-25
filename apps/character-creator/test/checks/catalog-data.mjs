@@ -262,6 +262,28 @@ const two = bonusesFromSkills([expert, h2h.find((r) => r.name.endsWith('Assassin
 check('two fighting styles take the better start, not the sum',
   two.combat.attacks_base === 4, two.combat.attacks_base);
 
+// ...and neither may a CLASS and its style. A class's attacks_base reaches the
+// skills' through sumBonusGroups (composeClass, and the wizard's
+// skillBonusClass), which summed every number it met until 2026-09-25: a class
+// stating five attacks with Hand to Hand: Expert fought at nine. The same
+// function joins a race to an occupation, which the frontmatter reference has
+// always said takes the higher.
+{
+  const assassin = h2h.find((r) => r.name.endsWith('Assassin'));
+  const withClass = (n, row) => composeClass({
+    rcc: { id: 'x', name: 'X', bonuses: { combat: { attacks_base: n, strike: 1 } } },
+    character: { level: 1 }, skillRows: [row] }).bonuses.combat;
+  const four = withClass(4, assassin);
+  check('a class stating four attacks with Assassin fights at four, not seven',
+    four.attacks_base === 4 && four.strike === 1 + (at(assassin, 1).strike ?? 0), JSON.stringify(four));
+  check('and a class stating two with Expert fights at the Expert\'s four',
+    withClass(2, expert).attacks_base === 4, withClass(2, expert).attacks_base);
+  const both = combineClasses({ name: 'R', bonuses: { combat: { attacks_base: 3 } } },
+    { name: 'O', bonuses: { combat: { attacks_base: 5, strike: 1 } } }).bonuses.combat;
+  check('a race and an occupation both stating attacks take the higher',
+    both.attacks_base === 5 && both.strike === 1, JSON.stringify(both));
+}
+
 // ...and everything ELSE about two styles did stack - strike, parry, dodge and
 // damage were summed, because only attacks_base takes the larger. A character
 // holds ONE style (js/hand-to-hand.js): a class grants Basic or Expert, and the
