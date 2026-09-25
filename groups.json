@@ -24,7 +24,13 @@
     "reason, because the MediaVault and Pick 3 Cut 5 suites read it.",
     "",
     "The 'group' of each app in apps/manifest.json must agree with this file; 'other' there",
-    "is 'tools' here. `node scripts/groups.mjs --check` holds all of that, and runs in CI."
+    "is 'tools' here. `node scripts/groups.mjs --check` holds all of that, and runs in CI.",
+    "",
+    "ONE D1 PER GROUP OF APPS. Each group's 'd1_binding' is the wrangler.jsonc binding of its",
+    "database, and a group's server code may reach no other: tables are checked by name and",
+    "bindings by 'env.<binding>'. Shared code reaches none, except a cross_group_tables file,",
+    "which may reach the database that holds the tables it is let use. scripts/d1-query-lib.mjs",
+    "reads --db's groups from here too, so a binding is named in this file and wrangler.jsonc only."
   ],
   "cross_group_tables": {
     "//": "The ONLY server files allowed to name a table another group owns, and which. groups.mjs --check fails on any other. The Claude client is shared code and logs every call to claude_usage, which is Palladium's by decision (2026-09-25): FilamentForge's calls reach it through the shared proxy.",
@@ -34,6 +40,7 @@
     "palladium": {
       "title": "Palladium / Rifts",
       "manifest_group": "palladium",
+      "d1_binding": "DB",
       "paths": [
         "apps/character-creator/",
         "apps/character-sheet/",
@@ -75,6 +82,7 @@
     "marvel": {
       "title": "Marvel",
       "manifest_group": "marvel",
+      "d1_binding": "DB_MARVEL",
       "paths": [
         "apps/marvel-heroes/",
         "functions/api/marvel-heroes/",
@@ -87,6 +95,7 @@
     "tools": {
       "title": "Tools",
       "manifest_group": "other",
+      "d1_binding": "DB_TOOLS",
       "paths": [
         "apps/filament-forge/",
         "apps/media-vault/",

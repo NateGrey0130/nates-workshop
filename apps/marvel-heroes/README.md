@@ -61,7 +61,7 @@ Citations are to the page number printed on the page.
   a D1 of their own, `nates-workshop-marvel`, bound as `DB_MARVEL` and built
   from `db/schema-marvel.sql`; its migrations are in `db/migrations/marvel/`.
   Its endpoints use no other binding, and `groups.mjs --check` fails if one
-  names another group's table. The Marvel group is this app alone
+  reaches another group's binding or names another group's table. The Marvel group is this app alone
   (`groups.json`).
 
 ## Book text stays out of git

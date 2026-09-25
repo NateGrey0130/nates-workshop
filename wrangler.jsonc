@@ -33,11 +33,14 @@
   // made for MediaVault - and a D1 cannot be renamed, so the name is wrong on
   // purpose rather than by accident. `DB_MARVEL` and `DB_TOOLS` hold the Marvel
   // app's and the tools' tables (FilamentForge, MediaVault; Pick 3 Cut 5 uses
-  // none), and a group's code names only its own tables (groups.mjs --check).
+  // none). A group's code names only its own tables and reaches only its own
+  // binding - groups.json gives each group its d1_binding, and groups.mjs
+  // --check fails on either, and on a binding here that no group has.
   //
-  // A group's tables move one group at a time, each in the pull request that
-  // switches its code to its binding. Until a group's move lands, its tables
-  // are still in DB and the new database is empty.
+  // The tables moved one group at a time, each in the pull request that
+  // switched its code to its binding, and all three had moved on 2026-09-25.
+  // The moved tables' old copies are still in DB, unread, as a rollback until
+  // they are dropped; drift-check lists them as LEFT BEHIND.
   "d1_databases": [
     {
       "binding": "DB",

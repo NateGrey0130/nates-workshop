@@ -55,7 +55,9 @@ sessions on different groups can run at once without colliding.
 - **Each group has its own D1** since 2026-09-25: Palladium's `DB` is built
   from `db/schema.sql`, Marvel's `DB_MARVEL` from `db/schema-marvel.sql`, the
   tools' `DB_TOOLS` from `db/schema-tools.sql`, each with its own
-  `db/migrations/` folder. `--db <group>` reaches one (*Applying migrations*). Change one
+  `db/migrations/` folder. `--db <group>` reaches one (*Applying migrations*).
+  A group's server code may reach only its own binding, and `groups.mjs --check`
+  fails on `env.DB_TOOLS` in Palladium's code and the like. Change one
   in a pull request of its own, not inside a group's work.
 - **A new file must have an owner.** `groups.mjs --check` runs in `smoke` and
   fails on a path no entry covers. When unsure, the owner is `shared`.
