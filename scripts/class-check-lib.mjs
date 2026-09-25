@@ -39,6 +39,13 @@ export const KNOWN_KEYS = new Set([
   // reason: the instruction attached to UNMODELLED is to delete the key or
   // change the app, and both would break a working field.
   'xp_table',
+  // Countable things a class hands out that are not pools - uses per day,
+  // doses, charges. Drawn by the sheet through trackableRows()
+  // (js/sheet-layout.js, apps/character-sheet/sheet.js) and documented in
+  // class-import's frontmatter reference. Missing here only because no
+  // published class used it until South America's Anti-Monster and Totem
+  // Warrior (2026-09-25) - the same false alarm as the two keys above.
+  'trackable_resources',
   // Which of the book's five groupings an O.C.C. belongs to, and which
   // occupations a race may take. Both are modelled and validated in
   // parser.js; a race's restrictions were free text and display-only until
