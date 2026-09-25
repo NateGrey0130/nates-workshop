@@ -85,13 +85,15 @@ of eyes on a run you already did, never as the reason to skip one.**
      check that sees a bypass covering the app's own paths but not the shared
      CSS and JS it loads. `pick3cut5` has the case, and read it before touching
      an Access policy.
-   - added a class or catalog rows: **update the README's pinned counts in the
-     same commit.** `test/regression.mjs` reads them out of the prose and
-     compares against a database built from nothing, so they fail the run rather
-     than drifting — the clean-run table (classes published-and-live, skills,
-     spells, psionic powers, gear) and the sentence *"N of M published classes
-     state no hit point formula"*, which is parsed as WORDS. Adding a class
-     moves at least two of those.
+   - added a class or catalog rows: **update the book's
+     `**Rows citing this book:**` line in its survey in the same commit**, and its
+     `**Status:**` line if that moved. `test/regression.mjs` counts each book's
+     rows in a database built from nothing and fails a line that disagrees,
+     printing the line to paste. Rows citing no surveyed book are the one
+     shared count, in `docs/operations.md`. These replaced the catalog totals
+     and the README's *"N of M published classes"* sentence on 2026-09-24,
+     because every import moved those and two parallel book PRs always
+     collided on them.
 
      **The current values are deliberately not quoted here.** They used to be,
      and went stale on the next import; a skill naming a moving number is wrong
