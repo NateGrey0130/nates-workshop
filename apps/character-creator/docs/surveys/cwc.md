@@ -1,8 +1,8 @@
 # Rifts World Book 11: Coalition War Campaign — survey
 
-**Status:** `surveyed` — registered and surveyed; nothing imported yet. (2026-09-25)
+**Status:** `importing` — gear shipped; the O.C.C.s, R.C.C.s, vehicles and creatures are next. (2026-09-25)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 25
 
 Slug `cwc`. Cached 2026-09-25 from
 `Rifts- World Book 11 Coalition War Campaign.pdf`, 226 PDF pages, **text layer**
@@ -150,7 +150,7 @@ an O.C.C. instead of its R.C.C. skills. That is prose.
 
 Run against **production** (`--remote`) on 2026-09-25.
 
-### skills: 27 marked new, 1 genuinely missing
+### skills: 27 marked new, 0 genuinely missing
 
 `node scripts/catalog-diff.mjs --remote --table skills --entries <the 27>`
 against 390 rows returned **matched 20** (two by alias: Boat: Warships & Patrol
@@ -166,8 +166,10 @@ held under RUE's names:
 | Nuclear, Biological, & Chemical Warfare | NBC Warfare |
 | Underwater Demolitions | Demolitions: Underwater |
 
-**Armorer is the one new skill.** Read its description (printed 60-61) before
-deciding whether RUE folded it into Field Armorer or dropped it.
+**Armorer is a false gap too**, settled 2026-09-25 by reading printed 61: the
+book's *Military: Armorer* is 40% +5% and includes Basic Mechanics, which is the
+skill RUE renamed Field Armorer & Munitions Expert (40/5 in the catalog). **This
+book adds no skills.** A class naming Armorer grants the catalog row.
 
 ### classes: 20 new, 1 collision
 
@@ -213,7 +215,7 @@ Everything above was free. Proposed, one PR each, applied `--remote` before the
 PR, in this order so that class-check finds real gear rows instead of stubs:
 
 1. **Registry and survey**: this file and the `books.json` entry.
-2. **Weapons, armor and the Armorer skill** (printed 60-61, 89-104): about 30
+2. **Weapons and armor** (printed 89-104): about 30
    gear rows, the two estimate rows updated, every number read off a render for
    the welded p090 and the substituted-digit pages.
 3. **The nine CS military O.C.C.s**, plus the CS Juicer resolution.
@@ -243,3 +245,5 @@ What is deliberately left, with the reason:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-25 | — | cache built (226 pp, text layer), survey written, offset +1 verified at five folios, `cwc` registered in `books.json` |
+| 2026-09-25 | [#1377](https://github.com/NateGrey0130/nates-workshop/pull/1377) | registry and survey. MERGED |
+| 2026-09-25 | gear PR | `add-cwc-gear.sql`: 20 new rows (11 weapons, the micro-fusion rifle grenade, the giant vibro-sword, CA-3 through CA-7, the CAJ-5 arm). `zzzzzzzzzzzzz-cwc-fill-estimate-gear.sql`: C-14, C-27 and the explosive, fragmentation and smoke grenades filled from estimate or web-reference rows. RUE's C-10, C-12, C-18, Neural Mace, vibro-blades and CA-1/CA-2 stand, RUE being the later book. Every number off a render; `book-reconcile` 25 rows, one short citation fixed. Applied `--remote` before the PR: gear 2900 -> 2920, 25 rows cite the book |
