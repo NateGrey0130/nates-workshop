@@ -272,6 +272,16 @@
       "note": "A sourcebook for Heroes Unlimited 2nd Edition, per its credits page. THE ONLY BOOK IN THIS REGISTRY CACHED WITH --force-ocr, AND THE REASON IS BOOK-INGEST-AUDIT F73. Its text layer probes at median 5505 chars/page, 13.7x the 400-char threshold, and ocr-book.py --probe calls it a TEXT LAYER. That layer is glyph-dropped garbage: its credits page renders Kevin Siembieda as Kev Sebea, Wayne Smith as Waye S, Alex Marciniszyn as Alex acszy. A font-encoding fault maps many glyphs to nothing, so the CHARACTER COUNT survives and the WORDS do not - which is invisible to both corrupt_pages and substituted_digits, because what is left is ordinary letters. DO NOT re-cache this book without --force-ocr; a plain run would take the cheap path and refuse to overwrite only because the kinds now differ. Cached 2026-09-12 by OCR, medians 5,525. Offset verified by folio: 98 pages agree at +1 and NONE disagree, one region p002-p113. printed_pages 112, last content at cache p113; p114-p120 are house ads and an order form. CONTENT: new minor and major super abilities with self-contained stat blocks, printed 6-104, some marked Reprinted. Edition-portable for the same reason Powers Unlimited One is."
     },
 
+    "psyscape": {
+      "title": "Rifts World Book 12: Psyscape",
+      "aliases": [],
+      "source_pdf": "Rifts- World Book 12 Psyscape.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 158,
+      "page_offset": 1,
+      "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 5,172 chars/page and 36.1% stop words (not the F73 glyph-dropped kind). Second printing, 1999; copyright 1997. Offset verified by folio at five points - cache p020 reads 19, p080 reads 79, p120 reads 119, p160 reads 159, p161 reads 160 - one region, no split. printed_pages is 158: the Experience Tables are printed 157 (cache p158) and printed 158 (cache p159) is a map of eastern North America with no text; cache p160-p161 (printed 159-160) are Rifter house ads and p162 the back cover. ocr-book.py measured 160, counting the ads. welded_pages 6 (5, 6, 8 = the contents and index pages; 27, 40, 52 = printed 26, 39, 51), corrupt_pages 3 (5 = contents, 147 = one hit, 159 = the map labels), substituted_digits 50 pages, heaviest on the class and monster pages (!D4xlO style). The Experience Tables page loses its column geometry in the cache; read it from a render. See apps/character-creator/docs/surveys/psyscape.md."
+    },
+
     "rifts-core": {
       "title": "Rifts RPG (original core book)",
       "aliases": ["Rifts RPG"],
