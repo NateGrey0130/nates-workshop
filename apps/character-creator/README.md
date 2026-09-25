@@ -852,6 +852,10 @@ scripts/
 │                           catalog-merge.js
 ├── catalog-diff.mjs        That, behind a CLI: disagree / missing / matched /
 │                           extra, plus the vocabulary warning
+├── catalog-inserts-lib.mjs Which catalog keys two data scripts insert with
+│                           DIFFERENT values, where OR IGNORE drops one row
+│                           silently. Read by smoke's "Catalog rows inserted
+│                           by two scripts", which carries the baseline
 ├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
 │                           Builds from scratch and diffs the NAMES, then every
 │                           COLUMN of the rows whose names match. A missing or
