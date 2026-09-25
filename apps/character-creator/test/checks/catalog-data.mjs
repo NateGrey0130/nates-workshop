@@ -840,47 +840,52 @@ section('Catalog rows inserted by two scripts');
 // Two book sessions in parallel each find the same missing item, which is
 // where this stops being rare.
 //
-// BASELINE: the keys that already conflicted when this was written, measured
-// 2026-09-24 over every apps/character-creator/db/*.sql. Every one differs in
-// source_book, and some in name, description or system. Most are harmless
-// (a stub's citation losing to another page of the same book). `gear|jet-pack`
-// is not: the Heroes Unlimited row won, and a Rifts class offers it. The list
-// may only shrink: a key that stops conflicting fails the check below until it
-// is removed from here.
+// BASELINE: the keys that already conflicted, each labelled with what the
+// conflict cost, by `node scripts/insert-conflicts.mjs --build <file> --remote`
+// on 2026-09-25 (replay the inserts in filename order, then compare the
+// winner with a clean build and with production):
+//   resolved   a later statement set the differing columns after the insert
+//   harmless   the winner is a real row and stands; the loser differed only in
+//              ways nothing reads (a stub, or another page's citation)
+// None was `wrong` (a stub beating a full row) and none drifted from
+// production. `gear|jet-pack` is harmless: the Heroes Unlimited row owns the
+// slug, and the Mind Melter's kit names `wilk-s-jet-pack` (a sentence here
+// until 2026-09-25 said a Rifts class offered the HU row; it did not).
+//
+// A later UPSERT or OR REPLACE of the same key is not a conflict at all, so
+// the seven Underseas keys whose `add-underseas-gear.sql` upsert fills in a
+// class script's stub left this list on 2026-09-25.
+//
+// The list may only shrink: a key that stops conflicting fails the check below
+// until it is removed from here. The labels are not checked by anything
+// here (that needs a build and production); re-run the script to refresh them.
 {
-  const BASELINE = new Set([
-    'skills|Language: Spanish',
-    'gear|c-10-laser-rifle',
-    'gear|c-12-laser-rifle',
-    'gear|huntsman-armor',
-    'gear|jet-pack',
-    'gear|marine-combat-armor',
-    'gear|m-2011-pistol',
-    'gear|m-160-assault-rifle',
-    'gear|hovercycle',
-    'gear|navy-body-armor',
-    'gear|t-10-infantry-cyclops-body-armor',
-    'gear|tx-42-laser-pulse-rifle',
-    'gear|wet-suit',
-    'gear|scuba-gear',
-    'gear|boots',
-    'gear|belt',
-    'gear|water-skin',
-    'gear|rope',
-    'gear|tinder-box',
-    'gear|meditation-chip',
-    'gear|light-mdc-body-armor',
-    'gear|scaling-knife',
-    'gear|fishing-pole',
-    'gear|fishing-hooks-and-lures',
-    'gear|tw-tree-trimmer',
-    'gear|tw-wing-board',
-    'gear|hand-computer',
-    'gear|bg-15-blue-green-laser-pistol',
-    'gear|scuba-body-armor',
-    'gear|bg-20-blue-green-laser-rifle',
-    'gear|triax-pump-weapon',
-    'gear|survival-knife',
+  const BASELINE = new Map([
+    ['gear|c-10-laser-rifle', 'resolved'],
+    ['gear|c-12-laser-rifle', 'resolved'],
+    ['gear|huntsman-armor', 'resolved'],
+    ['gear|hovercycle', 'resolved'],
+    ['gear|t-10-infantry-cyclops-body-armor', 'resolved'],
+    ['gear|tx-42-laser-pulse-rifle', 'resolved'],
+    ['gear|wet-suit', 'resolved'],
+    ['gear|scuba-gear', 'resolved'],
+    ['gear|meditation-chip', 'resolved'],
+    ['gear|light-mdc-body-armor', 'resolved'],
+    ['gear|scaling-knife', 'resolved'],
+    ['gear|fishing-pole', 'resolved'],
+    ['gear|tw-tree-trimmer', 'resolved'],
+    ['gear|tw-wing-board', 'resolved'],
+    ['gear|survival-knife', 'resolved'],
+    ['skills|Language: Spanish', 'harmless'],
+    ['gear|jet-pack', 'harmless'],
+    ['gear|boots', 'harmless'],
+    ['gear|belt', 'harmless'],
+    ['gear|water-skin', 'harmless'],
+    ['gear|rope', 'harmless'],
+    ['gear|tinder-box', 'harmless'],
+    ['gear|fishing-hooks-and-lures', 'harmless'],
+    ['gear|hand-computer', 'harmless'],
+    ['gear|triax-pump-weapon', 'harmless'],
   ]);
   const files = readdirSync(join(appDir, 'db')).filter((f) => f.endsWith('.sql')).sort()
     .map((name) => ({ name, sql: readFileSync(join(appDir, 'db', name), 'utf8') }));
@@ -891,12 +896,20 @@ section('Catalog rows inserted by two scripts');
     { name: 'a.sql', sql: "INSERT OR IGNORE INTO gear (slug, name, source_book) VALUES ('rope', 'Rope', 'Book A p.1'), ('lamp', 'Lamp', 'Book A p.2');" },
     { name: 'b.sql', sql: "-- a comment with an apostrophe's in it\nINSERT OR IGNORE INTO gear (slug, name, source_book) VALUES ('rope', 'Rope', 'Book B p.9');" },
     { name: 'c.sql', sql: "INSERT OR IGNORE INTO gear (slug, name) VALUES ('lamp', 'Lamp');" },
+    // A stub, then a later upsert that fills it in on purpose: not a conflict,
+    // and ON CONFLICT's parentheses are not a row.
+    { name: 'd.sql', sql: "INSERT OR IGNORE INTO gear (slug, name, source_book) VALUES ('oar', 'Oar', 'stub');" },
+    { name: 'e.sql', sql: "INSERT INTO gear (slug, name, source_book) VALUES ('oar', 'Oar', 'Book E p.3') ON CONFLICT(slug) DO UPDATE SET source_book = excluded.source_book;" },
   ]);
   const fixtureConflicts = conflictingInserts(fixture);
-  check('the insert reader finds a differing re-insert and passes an identical one',
+  check('the insert reader finds a differing re-insert and passes an identical one or an upsert',
     fixtureConflicts.length === 1 && fixtureConflicts[0].key === 'gear|rope'
-      && fixtureConflicts[0].columns.join() === 'source_book',
+      && fixtureConflicts[0].columns.join() === 'source_book'
+      && !('gear|slug' in fixture) && fixture['gear|oar']?.[1]?.mode === 'upsert',
     JSON.stringify(fixtureConflicts));
+  const BAD_LABELS = [...BASELINE].filter(([, l]) => !['resolved', 'harmless'].includes(l));
+  check('every baseline conflict is labelled resolved or harmless (a wrong one gets fixed, not listed)',
+    BAD_LABELS.length === 0, BAD_LABELS.map(([k, l]) => `${k}=${l}`).join(', '));
 
   const inserts = catalogInserts(files);
   check('the reader finds catalog inserts in the data scripts',
@@ -908,7 +921,7 @@ section('Catalog rows inserted by two scripts');
     fresh.map((c) => `${c.key} (${c.columns.join(', ')}) in ${c.files.join(', ')}`).join('; ')
       + ' - update the existing row instead of inserting it again, or give the new row its own key');
   const found = new Set(conflicts.map((c) => c.key));
-  const stale = [...BASELINE].filter((k) => !found.has(k));
+  const stale = [...BASELINE.keys()].filter((k) => !found.has(k));
   check('every baseline conflict still occurs (remove the ones that were fixed)',
     stale.length === 0, stale.join(', '));
 }
