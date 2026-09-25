@@ -67,7 +67,7 @@ export async function onRequestPost(context) {
     items.push(clean);
   }
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     const { results } = await db
       .prepare('SELECT item_id, title, type FROM media_items WHERE user_email = ?')

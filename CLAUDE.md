@@ -51,7 +51,11 @@ sessions on different groups can run at once without colliding.
   The character creator's smoke suite runs on everything, because it also pins
   every skill, agent, audit menu and app tile.
 - **A shared path runs every group's suites** — `shared/`, the middleware,
-  `db/schema.sql`, `apps/manifest.json`, `SETUP.md`, the workflows. Change one
+  `apps/manifest.json`, `SETUP.md`, the workflows.
+- **Each group has its own D1** since 2026-09-25: Palladium's `DB` is built
+  from `db/schema.sql`, Marvel's `DB_MARVEL` from `db/schema-marvel.sql`, the
+  tools' `DB_TOOLS` from `db/schema-tools.sql`, each with its own
+  `db/migrations/` folder. `--db <group>` reaches one (*Applying migrations*). Change one
   in a pull request of its own, not inside a group's work.
 - **A new file must have an owner.** `groups.mjs --check` runs in `smoke` and
   fails on a path no entry covers. When unsure, the owner is `shared`.

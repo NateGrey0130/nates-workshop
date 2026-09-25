@@ -30,7 +30,7 @@ export async function onRequestPost(context) {
     items.push(clean);
   }
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     // The cap counts what the library will hold, not just this batch. Upserts
     // of existing ids don't grow it, so count only the genuinely new ids.

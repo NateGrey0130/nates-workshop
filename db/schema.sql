@@ -1,4 +1,11 @@
 -- ═══════════════════════════════════════════════════════════════════
+-- PALLADIUM'S DATABASE (DB, nates-workshop-media): the character creator and
+-- the apps split from it. Since 2026-09-25 each group of apps has a D1 of its
+-- own (groups.json): Marvel's is db/schema-marvel.sql and the tools' is
+-- db/schema-tools.sql. The database's name is older than the split.
+-- ═══════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════
 -- Migration bookkeeping. Which db/migrations/*.sql files a database has
 -- had applied. Everything else in this file is CREATE ... IF NOT EXISTS,
 -- so re-running it is safe; the seeding block at the bottom keeps this
@@ -9,54 +16,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   applied_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- MediaVault library storage, scoped per Cloudflare Access user email
-CREATE TABLE IF NOT EXISTS media_items (
-  user_email TEXT NOT NULL,
-  item_id    TEXT NOT NULL,
-  type       TEXT NOT NULL DEFAULT 'audiobook',
-  format     TEXT NOT NULL DEFAULT 'digital',
-  title      TEXT NOT NULL,
-  author     TEXT NOT NULL DEFAULT '',
-  actors     TEXT NOT NULL DEFAULT '',
-  producers  TEXT NOT NULL DEFAULT '',
-  genre      TEXT NOT NULL DEFAULT '',
-  series     TEXT NOT NULL DEFAULT '',
-  location   TEXT NOT NULL DEFAULT '',
-  cover      TEXT NOT NULL DEFAULT '',
-  notes      TEXT NOT NULL DEFAULT '',
-  -- Where this row came from, so its lookup can be run again exactly: the
-  -- normalised ISBN for a book, 'tmdb:movie:1234' / 'tmdb:tv:1234' for video.
-  -- Empty on every row saved before 040, which is honest rather than a gap.
-  source_id  TEXT NOT NULL DEFAULT '',
-  added_at   INTEGER NOT NULL,
-  PRIMARY KEY (user_email, item_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_media_items_user ON media_items (user_email);
-
--- This MediaVault user lets that one READ their library. The pair is the key,
--- so granting twice is idempotent and revoking is a DELETE of one known row.
--- NO token: the viewer passes Cloudflare Access to reach the site at all, so
--- the reader checks the VIEWER'S OWN Access email against viewer_email, and a
--- leaked row identifier grants nothing. NO foreign key - this site has no users
--- table, and a grant naming an address that cannot sign in is inert rather than
--- broken. NO revoked_at: revocation is a DELETE, and a row claiming a share was
--- revoked would be a second copy of what the row's absence already states.
--- See migration 051 and apps/media-vault/SHARE-AUDIT.md V1.
-CREATE TABLE IF NOT EXISTS media_shares (
-  owner_email  TEXT NOT NULL,             -- whose library is being shared
-  viewer_email TEXT NOT NULL,             -- who may read it, Access identity
-  created_at   INTEGER NOT NULL,          -- epoch ms, like media_items.added_at
-  PRIMARY KEY (owner_email, viewer_email)
-);
-CREATE INDEX IF NOT EXISTS idx_media_shares_viewer ON media_shares (viewer_email);
-
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '051-media-shares.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'media_shares');
-
--- Who is spending the Anthropic key, on what. Site-level, like media_items:
--- it belongs to the /api/claude proxy rather than to any one app. One row per
+-- Who is spending the Anthropic key, on what. Site-level: it belongs to the
+-- /api/claude proxy rather than to any one app, and lives in this database by
+-- decision (2026-09-25) - the shared Claude client is the one file outside
+-- Palladium allowed to write it (groups.json cross_group_tables). One row per
 -- call, written fail-open (a metering failure must never break the call it
 -- measures). The log half of the audit's F3 - spend visibility, not a cap.
 CREATE TABLE IF NOT EXISTS claude_usage (
@@ -567,8 +530,8 @@ CREATE TABLE IF NOT EXISTS character_grants (
 CREATE INDEX IF NOT EXISTS idx_character_grants_character
   ON character_grants (character_id, kind);
 -- Shared gear catalog for character sheets. Named `gear` rather than `items`
--- because this database is shared with MediaVault's `media_items`, and a table
--- called `items` sitting next to it was the most likely future collision.
+-- because this database was shared with MediaVault's `media_items` until
+-- 2026-09-25, and a table called `items` beside it was the likeliest collision.
 CREATE TABLE IF NOT EXISTS gear (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT NOT NULL UNIQUE,            -- matches equipment_starting item_id refs in class markdown,
@@ -1682,10 +1645,6 @@ WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'claud
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '077-claude-usage-cache-tokens.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('claude_usage') WHERE name = 'cache_read_tokens');
-
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '040-media-vault-source-id.sql'
-WHERE EXISTS (SELECT 1 FROM pragma_table_info('media_items') WHERE name = 'source_id');
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '043-character-grants.sql'

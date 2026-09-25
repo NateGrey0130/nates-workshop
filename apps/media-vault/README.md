@@ -50,7 +50,7 @@ functions/api/media-vault/
 │                         caller does not own
 └── lookup.js             GET  — OpenLibrary + TMDB, proxied
 
-db/schema.sql             media_items, media_shares — see "Data model"
+db/schema-tools.sql       media_items, media_shares — see "Data model"
 ```
 
 Run the tests from anywhere:
@@ -66,7 +66,8 @@ The shared framework rules apply: the app is registered in
 ## Storage: D1, and only D1
 
 **The browser stores no library data.** The app loads the caller's rows from
-D1 on startup, writes every change straight through to the API, and holds the
+D1 on startup - the tools group's own database, `nates-workshop-tools`, bound
+as `DB_TOOLS` since 2026-09-25 and shared with FilamentForge alone - writes every change straight through to the API, and holds the
 result in memory for filtering, sorting, paging and stats. There is no
 localStorage copy, no offline mode and no sync step, because there are no
 longer two copies to reconcile.
@@ -275,9 +276,9 @@ Two tables in the site's shared D1 database.
 predates that convention and holds live data; renaming it would buy consistency
 at the price of a data-copy migration. `db/schema.sql` notes that the character
 creator's gear table is called `gear` rather than `items` specifically to stay
-clear of it. `media_shares` is new and takes the `media_` prefix deliberately —
-the character creator's tables are unprefixed, so the prefix is the collision
-boundary, and `apps/character-creator/test/checks/documented-counts.mjs` exempts
+clear of it, from when the two shared a database. `media_shares` takes the
+`media_` prefix deliberately — the character creator's tables are unprefixed,
+so the prefix was the collision boundary while they shared one, and `apps/character-creator/test/checks/documented-counts.mjs` exempts
 another app's tables by that prefix rather than by name.
 
 ## Sharing a library

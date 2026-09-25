@@ -22,7 +22,7 @@ export async function onRequestPost(context) {
     return json({ error: 'Every id must be a string' }, 400);
   }
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     // Chunked because D1 caps bound parameters per query.
     const statements = [];

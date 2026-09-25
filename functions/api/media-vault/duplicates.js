@@ -22,7 +22,7 @@ export async function onRequestGet(context) {
     // Same ORDER BY as items.js, so a group's members are listed in the order
     // the library shows them and the survivor is not merely the first row the
     // database felt like returning. dupSurvivor sorts explicitly regardless.
-    const { results } = await context.env.DB
+    const { results } = await context.env.DB_TOOLS
       .prepare('SELECT * FROM media_items WHERE user_email = ? ORDER BY added_at')
       .bind(email)
       .all();

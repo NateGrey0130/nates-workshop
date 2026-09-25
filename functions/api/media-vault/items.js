@@ -12,7 +12,7 @@ export async function onRequestGet(context) {
   const email = getUserEmail(context.request);
   if (!email) return json({ error: 'Not authenticated' }, 401);
   try {
-    const { results } = await context.env.DB
+    const { results } = await context.env.DB_TOOLS
       .prepare('SELECT * FROM media_items WHERE user_email = ? ORDER BY added_at')
       .bind(email)
       .all();
@@ -39,7 +39,7 @@ export async function onRequestPost(context) {
   const item = sanitizeItem(body);
   if (!item) return json({ error: 'Item needs a string id and non-empty title' }, 400);
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     const existing = await db
       .prepare('SELECT 1 FROM media_items WHERE user_email = ? AND item_id = ?')
@@ -64,7 +64,7 @@ export async function onRequestDelete(context) {
   if (!id) return json({ error: 'Missing id query parameter' }, 400);
 
   try {
-    await context.env.DB
+    await context.env.DB_TOOLS
       .prepare('DELETE FROM media_items WHERE user_email = ? AND item_id = ?')
       .bind(email, id)
       .run();
