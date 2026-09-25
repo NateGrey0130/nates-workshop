@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `surveyed` — nothing imported; on hold by Nate's word until the parallel-book-ingestion changes land. (2026-09-24)
+**Status:** `importing` — gear shipped; Biomancy spells next. (2026-09-25)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 30
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -169,14 +169,17 @@ That is sixteen rows: fifteen R.C.C.s plus the Werepanther as a variant.
 | group | printed | rows | note |
 |---|---|---|---|
 | Colombian weapons | 22-24 | 7 | RC-10, RC-15, Dragon-1, RP-C20, RR-C40, RAR-C15, RA-C15. **Render 22-23** |
-| Bio-weapons and armor | 69-70 | 8 | priced in P.P.E. to create, not credits. `magic` category |
+| Bio-weapons and armor | 69-70 | 10 | priced in P.P.E. to create, not credits. `magic` category |
 | Manoan weapons and armor | 91-92 | 8 | TW energy cell, 3 enchanted armors, Flamer, SK Stun Gun, Fireball Rifle, Stun Pistol |
-| Cibolan weapons | 139 | 3 | NE-4P, NE-10, NE-200. **Render 139** |
+| Cibolan weapons | 139 | 0 | NE-4P, NE-10, NE-200 are **already catalogued** from Phase World p.117-118 with identical stats (Phase World calls the pistol NE-4). Not re-imported |
 | Drugs and potions | 143-144 | 5 | Dream, the Energizer, the Transformer, Enhancer, Lightning Nectar |
 | Named artifacts | 120, 122-123 | 2 | the Cat's Gauntlet and Simba's War Club. They ride with their gods' NPC rows, not the gear catalog |
 
-About **31 gear rows**. Everything else NPCs carry is unnamed or already
-catalogued (Kittani Explorer Armor, rune swords by grade).
+**30 gear rows shipped** (`add-south-america-gear.sql`): the bio-weapons
+counted as ten, because *Enchanted Spears, Swords & Clubs* prints three
+damage lines and became three rows. Everything else NPCs carry is unnamed or
+already catalogued (Kittani Explorer Armor, rune swords by grade, the Naruni
+guns).
 
 ## Vehicles (the `vehicles` table)
 
@@ -253,3 +256,4 @@ What is deliberately left, with the reason:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-24 | — | cache built (170 pp, text layer), offset +1 verified at five folios, `south-america` registered in `books.json`, survey written |
+| 2026-09-25 | #1375 | gear: 30 rows (7 Colombian C-series weapons, 10 bio-weapons and bio-armors, 8 Manoan TW items and enchanted armors, 5 Cibolan drugs); the 3 Naruni NE weapons were already catalogued. Applied `--remote` first |
