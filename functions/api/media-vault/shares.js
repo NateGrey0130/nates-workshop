@@ -76,7 +76,7 @@ export async function onRequestGet(context) {
   if (!email) return json({ error: 'Not authenticated' }, 401);
 
   try {
-    const db = context.env.DB;
+    const db = context.env.DB_TOOLS;
     const [mine, theirs] = await db.batch([
       db.prepare('SELECT viewer_email, created_at FROM media_shares WHERE owner_email = ? ORDER BY created_at')
         .bind(email),
@@ -139,7 +139,7 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     const existing = await db
       .prepare('SELECT 1 FROM media_shares WHERE owner_email = ? AND viewer_email = ?')
@@ -180,7 +180,7 @@ export async function onRequestDelete(context) {
   if (!viewer) return json({ error: 'Missing email query parameter' }, 400);
 
   try {
-    await context.env.DB
+    await context.env.DB_TOOLS
       .prepare('DELETE FROM media_shares WHERE owner_email = ? AND viewer_email = ?')
       .bind(email, viewer)
       .run();

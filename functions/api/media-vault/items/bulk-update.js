@@ -85,7 +85,7 @@ export async function onRequestPost(context) {
 
   const assignments = fields.map((f) => `${f} = ?`).join(', ');
   const values = fields.map((f) => (SETTABLE[f].values ? set[f] : cleanText(set[f])));
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     // Chunked because D1 caps bound parameters per query.
     const statements = [];

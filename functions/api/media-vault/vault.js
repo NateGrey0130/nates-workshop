@@ -38,7 +38,7 @@ export async function onRequestGet(context) {
   const owner = (new URL(context.request.url).searchParams.get('owner') || '').trim();
   if (!owner) return json({ error: 'Missing owner query parameter' }, 400);
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     // The grant is checked FIRST and separately, so the library read below can
     // never run without one. Bundling the two into a single joined statement

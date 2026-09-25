@@ -250,15 +250,15 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-seven tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-five tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
-The two prefixed `media_` belong to MediaVault, documented in its own README —
-that prefix is the collision boundary, because this app's tables are
-unprefixed, so anything another app adds must not be. **Each group is moving to
-a database of its own** (`groups.json`): on 2026-09-25 Marvel Heroes' `msh_`
-tables left this one for `DB_MARVEL` (`db/schema-marvel.sql`) and
-FilamentForge's `ff_` tables for `DB_TOOLS` (`db/schema-tools.sql`), and
-MediaVault's follow them there. `claude_usage`
+**Shared by this app and the five split from it, and by no other app since
+2026-09-25**, when each group of apps got a database of its own
+(`groups.json`): Marvel Heroes' `msh_` tables are in `DB_MARVEL`
+(`db/schema-marvel.sql`), and FilamentForge's `ff_` and MediaVault's
+`media_` tables in `DB_TOOLS` (`db/schema-tools.sql`). Those prefixes
+predate the split, from when they shared this database with tables that have
+none. `claude_usage`
 is the site's Claude-spend log (written fail-open by the `/api/claude` proxy
 and the campaign Ask — see SETUP.md for the query), and `schema_migrations` is
 database bookkeeping shared by all; the rest are this app.

@@ -26,7 +26,7 @@ const repoRoot = join(appDir, '..', '..');
 const apiDir = join(repoRoot, 'functions', 'api', 'media-vault');
 const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
 const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+const schema = readFileSync(join(repoRoot, 'db', 'schema-tools.sql'), 'utf8');
 const commonSrc = readFileSync(join(apiDir, '_lib', 'common.js'), 'utf8');
 
 // DERIVED FROM DISK, not listed. This was a hardcoded array of seven until
@@ -608,7 +608,7 @@ section('The README’s claims');
 }
 {
   const cols = (schema.match(/CREATE TABLE IF NOT EXISTS media_items \(([\s\S]*?)\n\);/) || [])[1];
-  check('media_items still exists in schema.sql', !!cols);
+  check('media_items still exists in schema-tools.sql', !!cols);
   const names = cols.split('\n')
     .map((l) => (l.trim().match(/^([a-z_]+)/) || [])[1])
     .filter((w) => w && w !== 'PRIMARY');
