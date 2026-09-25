@@ -954,6 +954,10 @@ scripts/
 ├── books-lib.mjs           Reading it, and cacheCoverage - is this cache long
 │                           enough to be believed? The title matching is in
 │                           class-check-lib.mjs, which stays free of file I/O
+├── book-worktree.mjs       One worktree per book, beside the main checkout: its
+│                           own copy of the local D1, the OCR cache and D1 env in
+│                           its settings.local.json, memory linked. --remove
+│                           refuses on any junction inside the tree
 ├── agent-usage.mjs         Which subagent has been spawned how often, from
 │                           this machine’s session transcripts. Reads nothing
 │                           in this repo, and nothing gates on it. The block
