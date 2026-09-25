@@ -832,12 +832,13 @@ four times, with `git status` looking clean throughout.
    book with someone else's branch or PR on it is taken.
 2. **Make the book its own tree:** `node scripts/book-worktree.mjs <slug>`, then
    start the session **in that tree**, not in the main checkout or the working
-   directory. It gives the tree its own copy of the local D1, points it at the
-   shared OCR cache, and links memory. `--remove` takes it down afterwards.
-   The `worktree` skill has why each of those matters. **The D1 copy is taken
-   from the main checkout at that moment**, so it holds any `--local` applies
-   made there and not yet merged. Treat `--local` as scratch, and ask
-   `--remote` or a clean build (`regression`) for anything you will act on.
+   directory. It builds the tree its own local D1 from the repo (a few
+   minutes), points it at the shared OCR cache, and links memory. `--remove`
+   takes it down afterwards. The `worktree` skill has why each of those
+   matters. `--copy-d1` copies the main checkout's D1 instead, which is faster
+   and carries any `--local` applies made there and not yet merged. Either way,
+   treat `--local` as scratch, and ask `--remote` or a clean build
+   (`regression`) for anything you will act on.
 3. **Name every branch `<slug>-...`.** The board finds a book's work by that
    prefix.
 4. **Re-diff against production right before each extraction batch** (§4).

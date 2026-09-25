@@ -30,7 +30,9 @@ node scripts/book-worktree.mjs <slug>
 ```
 
 It makes `../nates-apps-books/<slug>` off `origin/main` on a `<slug>-` branch.
-It copies the local D1 in as real files, and writes both environment variables
+It builds the tree its own local D1 from the tree's files (about three
+minutes; `--copy-d1` copies the main checkout's instead, as real files), and
+writes both environment variables
 below into the tree's own `.claude/settings.local.json`. It links the tree's
 memory directory to the real store. Start the book's session in that tree.
 `--remove` refuses while the tree holds uncommitted changes or any junction,

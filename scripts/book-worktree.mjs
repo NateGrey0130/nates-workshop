@@ -3,6 +3,8 @@
 //
 //   node scripts/book-worktree.mjs <slug>                 make it
 //   node scripts/book-worktree.mjs <slug> --branch <name> first branch (default <slug>-work)
+//   node scripts/book-worktree.mjs <slug> --copy-d1       copy the main checkout's local D1
+//                                                          instead of building one (seconds, not minutes)
 //   node scripts/book-worktree.mjs <slug> --remove        take it down, safely
 //
 // WHY. Book sessions run one book each, and two at once need two trees
@@ -15,10 +17,16 @@
 //   a local D1        of its OWN. The book work's usual env points
 //                     WORKSHOP_LOCAL_D1 at the main checkout's, so two book
 //                     sessions would apply --local into one database and each
-//                     read the other's unmerged rows. This copies the main
-//                     checkout's .wrangler/state into the tree as real files -
-//                     not a junction, because a junction is what a worktree
-//                     removal deleted through on 2026-09-19.
+//                     read the other's unmerged rows. This BUILDS one from the
+//                     tree's own files with scripts/build-local-d1.mjs - the
+//                     clean build regression.mjs uses - about three minutes
+//                     on this machine
+//                     (166 s, 2026-09-25). Until 2026-09-25 it copied the main
+//                     checkout's .wrangler/state, which carried any --local
+//                     applies made there and not yet merged; --copy-d1 still
+//                     does that, as real files and never a junction, because a
+//                     junction is what a worktree removal deleted through on
+//                     2026-09-19.
 //   the env itself    written to the tree's own .claude/settings.local.json
 //                     (gitignored), so a session STARTED in the tree gets both
 //                     variables without anyone typing them.
@@ -37,14 +45,13 @@
 // tree, and is left: it is a pointer, and a later worktree for the same book
 // reuses it.
 //
-// A dev server started in the tree serves the tree's own .wrangler/state, which
-// is the copy. Use one of .claude/launch.json's -879x hatch ports if another
+// A dev server started in the tree serves the tree's own .wrangler/state. Use one of .claude/launch.json's -879x hatch ports if another
 // checkout has 8788.
 
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { loadBookRegistry } from './books-lib.mjs';
 
@@ -68,7 +75,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
 function main() {
   const args = process.argv.slice(2);
   const slug = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--branch');
-  if (!slug) die('usage: node scripts/book-worktree.mjs <slug> [--branch <name>] [--remove]');
+  if (!slug) die('usage: node scripts/book-worktree.mjs <slug> [--branch <name>] [--copy-d1] [--remove]');
   if (!loadBookRegistry()[slug]) die(`"${slug}" is not in scripts/books.json - register the book first`);
 
   // The MAIN checkout, even when this runs inside another worktree.
@@ -88,11 +95,24 @@ function main() {
   mkdirSync(dirname(dest), { recursive: true });
   git(['worktree', 'add', '--quiet', dest, '-b', branch, 'origin/main'], { cwd: mainTree, stdio: ['ignore', 'ignore', 'inherit'] });
 
-  // Its own local D1, copied as files.
+  // Its own local D1: built from the tree's files, or copied when asked.
   const d1From = join(mainTree, '.wrangler', 'state');
   const d1To = join(dest, '.wrangler', 'state');
-  if (existsSync(d1From)) cpSync(d1From, d1To, { recursive: true, dereference: true });
-  else mkdirSync(d1To, { recursive: true });
+  let d1Note;
+  if (args.includes('--copy-d1') && existsSync(d1From)) {
+    cpSync(d1From, d1To, { recursive: true, dereference: true });
+    d1Note = `copied from ${d1From} (it carries any unmerged --local applies made there)`;
+  } else {
+    console.log('building the local D1 from the tree\'s files - a few minutes...');
+    const builder = join(dirname(fileURLToPath(import.meta.url)), 'build-local-d1.mjs');
+    try {
+      execFileSync(process.execPath, [builder, d1To, '--repo', dest], { stdio: ['ignore', 'inherit', 'inherit'] });
+    } catch {
+      die(`the tree exists at ${dest} but its local D1 did not build (the error is above).\n`
+        + `  Take it down with: node scripts/book-worktree.mjs ${slug} --remove, then fix the build or re-run with --copy-d1`);
+    }
+    d1Note = `built from the repo at ${d1To}`;
+  }
 
   // The two variables, for a session started in the tree.
   const settings = {
@@ -121,7 +141,7 @@ function main() {
 
   console.log(`worktree   ${dest}`);
   console.log(`branch     ${branch} (off origin/main)`);
-  console.log(`local D1   ${existsSync(d1From) ? 'copied from' : 'EMPTY - the main checkout has none at'} ${d1From}`);
+  console.log(`local D1   ${d1Note}`);
   console.log(`env        WORKSHOP_OCR_CACHE, WORKSHOP_LOCAL_D1 in .claude/settings.local.json`);
   console.log(`memory     ${memoryNote}`);
   console.log(`\nStart the ${slug} session with its working directory at ${dest}.`);
