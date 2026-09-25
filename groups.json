@@ -1,0 +1,138 @@
+{
+  "//": [
+    "Which group owns each path in this repo, and each D1 table. Read by scripts/groups.mjs.",
+    "",
+    "WHY. The site is three unrelated things sharing one repo: the Palladium/Rifts suite, the",
+    "Marvel app, and the tools (FilamentForge, MediaVault, Pick 3 Cut 5). Two sessions working",
+    "on different groups should not collide, and a change to one should not be able to break",
+    "another. Knowing which group a path belongs to is what CI filters on and what the",
+    "per-group checks read, so it is written down once, here, instead of in each of them.",
+    "",
+    "HOW A PATH IS MATCHED. An entry ending in '/' is a directory prefix; any other entry is",
+    "one exact file, except '*', which means a file at the repo root. The LONGEST matching",
+    "entry wins, so 'scripts/' can belong to palladium while 'scripts/d1-apply.mjs' is shared.",
+    "",
+    "WHEN UNSURE, SAY SHARED. A shared path makes CI run every group's suites. Calling a",
+    "shared file one group's costs the other groups their tests on the change that breaks",
+    "them; calling a group's file shared costs some CI minutes. The second is the safe mistake.",
+    "",
+    "The 'group' of each app in apps/manifest.json must agree with this file; 'other' there",
+    "is 'tools' here. `node scripts/groups.mjs --check` holds all of that, and runs in CI."
+  ],
+  "groups": {
+    "palladium": {
+      "title": "Palladium / Rifts",
+      "manifest_group": "palladium",
+      "paths": [
+        "apps/character-creator/",
+        "apps/character-sheet/",
+        "apps/codex/",
+        "apps/campaign/",
+        "apps/gm-tools/",
+        "apps/city-creator/",
+        "functions/api/character-creator/",
+        "db/migrations/",
+        "db/seed-catalogs.sql",
+        "scripts/",
+        "BOOK-INGEST-AUDIT.md",
+        "BOOK-INGEST-AUDIT.closed.md",
+        "BOOK-INGEST-QUEUE.md",
+        ".claude/skills/book-survey/",
+        ".claude/skills/class-import/",
+        ".claude/agents/book-extract-worker.md",
+        ".claude/agents/book-reconcile.md",
+        "docs/prompts/BOOK-INGEST-PROMPT.md",
+        "docs/prompts/class-audit-prompt.md",
+        "docs/prompts/gm-grants-prompt.md",
+        "docs/prompts/surveycommittableprompt.md"
+      ],
+      "tables": [
+        "claude_usage",
+        "campaigns", "characters", "journal_entries", "journal_fts", "campaign_items",
+        "campaign_currency", "npcs", "campaign_entries", "campaign_images", "npc_library",
+        "cities", "city_themes", "npc_mentions", "npc_sweeps", "npc_proposals_dismissed",
+        "level_history", "pending_skill_picks", "pending_power_picks", "character_grants",
+        "gear", "enchantments", "vehicles", "vehicle_locations", "vehicle_weapons", "totems",
+        "character_items", "character_vehicles", "imported_classes", "skills",
+        "skill_system_bases", "spells", "psionic_powers", "psionic_system_costs",
+        "super_abilities", "talents", "morphus_characteristics", "notable_npcs",
+        "stat_attacks", "creatures", "catalog_redirects", "play_events", "data_script_runs",
+        "catalog_pair_dismissals", "character_drafts"
+      ]
+    },
+    "marvel": {
+      "title": "Marvel",
+      "manifest_group": "marvel",
+      "paths": [
+        "apps/marvel-heroes/",
+        "functions/api/marvel-heroes/",
+        "db/migrations/081-msh-power-text.sql",
+        "db/migrations/082-msh-heroes.sql",
+        "scripts/msh-extract.py"
+      ],
+      "tables": ["msh_power_text", "msh_heroes"]
+    },
+    "tools": {
+      "title": "Tools",
+      "manifest_group": "other",
+      "paths": [
+        "apps/filament-forge/",
+        "apps/media-vault/",
+        "apps/pick3cut5/",
+        "functions/api/filament-forge/",
+        "functions/api/media-vault/",
+        "functions/api/pick3cut5/",
+        "workers/pick3cut5-room/",
+        "db/migrations/039-filament-forge.sql",
+        "db/migrations/040-media-vault-source-id.sql",
+        "db/migrations/051-media-shares.sql",
+        "scripts/deploy-room.mjs",
+        "scripts/ofd-refresh.mjs",
+        "scripts/ofd-refresh-lib.mjs",
+        ".claude/skills/media-vault/",
+        ".claude/skills/pick3cut5/",
+        "docs/prompts/filament-forge-standardization-prompt.md",
+        "docs/prompts/media-vault-isbn-bulk-research-prompt.md",
+        "docs/prompts/media-vault-standardization-prompt.md",
+        "docs/prompts/pick3cut5-claude-code-prompt.md"
+      ],
+      "tables": [
+        "media_items", "media_shares",
+        "ff_brands", "ff_filaments", "ff_config", "ff_history", "ff_presets", "ff_custom_filaments"
+      ]
+    },
+    "shared": {
+      "title": "Shared by every group",
+      "paths": [
+        "*",
+        ".claude/",
+        ".github/",
+        ".impeccable/",
+        "apps/_template/",
+        "apps/manifest.json",
+        "db/schema.sql",
+        "docs/",
+        "functions/api/_lib/",
+        "functions/api/_middleware.js",
+        "functions/api/claude.js",
+        "shared/",
+        "scripts/agent-usage.mjs",
+        "scripts/build-local-d1.mjs",
+        "scripts/d1-apply.mjs",
+        "scripts/d1-backup.mjs",
+        "scripts/d1-query-lib.mjs",
+        "scripts/deploy-sweep.mjs",
+        "scripts/drift-check.mjs",
+        "scripts/groups.mjs",
+        "scripts/menu-check.mjs",
+        "scripts/q.mjs",
+        "scripts/readback-lib.mjs",
+        "scripts/readme-section.mjs",
+        "scripts/rebuild-local.mjs",
+        "scripts/repo-vs-live.mjs",
+        "scripts/sql-statements.mjs"
+      ],
+      "tables": ["schema_migrations"]
+    }
+  }
+}

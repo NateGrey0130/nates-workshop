@@ -984,6 +984,11 @@ scripts/
 │                           is the block id - both rules are in its header,
 │                           because this measurement has been hand-built
 │                           three times and two of the three got one wrong
+├── groups.mjs              Which group owns a path or a table - Palladium,
+│                           Marvel, tools, or shared - as the file at the
+│                           repo root, groups.json, says. --check holds that every file
+│                           and table has one owner, and runs in CI on every
+│                           pull request
 ├── readme-section.mjs      One section of this README by heading, bounded by
 │                           the next heading of ANY depth; no arguments prints
 │                           the heading index. The alternative kept being the
