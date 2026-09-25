@@ -1,8 +1,8 @@
 # Rifts World Book 12: Psyscape — survey
 
-**Status:** `surveyed` — surveyed; nothing from the plan has shipped yet. (2026-09-25)
+**Status:** `importing` — psionic powers shipped; gear next, then classes. (2026-09-25)
 
-**Rows citing this book:** none
+**Rows citing this book:** psionic_powers 16
 
 Slug `psyscape`. Cached 2026-09-25 from `Rifts- World Book 12 Psyscape.pdf`,
 162 PDF pages, **text layer** (no OCR). `--probe` median 5,172 chars/page,
@@ -247,3 +247,4 @@ What is deliberately left, with the reason:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-25 | — | cache built (162 pp, text layer), offset +1 verified at five folios, `psyscape` registered in `books.json`, survey written |
+| 2026-09-25 | (this PR) | **psionic powers**: Astral Golem (Super, printed 42) and the fifteen Mind Bleeder powers (printed 45-48) in a new `Mind Bleeder` category, `add-psyscape-psionic-powers.sql`. Catalog 133 -> 149 psionic powers. Descriptions paraphrased; every cost read twice (listing and block) and checked by `book-reconcile`, one note wording fixed. Applied `--remote` before the PR. |
