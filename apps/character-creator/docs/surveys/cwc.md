@@ -1,8 +1,12 @@
 # Rifts World Book 11: Coalition War Campaign — survey
 
-**Status:** `importing` — gear shipped; the O.C.C.s, R.C.C.s, vehicles and creatures are next. (2026-09-25)
+**Status:** `importing` — gear and the nine CS military O.C.C.s shipped; ISS/NTSET, the D-Bees, vehicles and creatures are next. (2026-09-25)
 
-**Rows citing this book:** gear 25
+**Rows citing this book:** classes 9, gear 25
+
+**MOS:** cs-rcsg-scientist 7, cs-special-forces 8
+
+*Each class's MOS packages, pinned by `test/regression.mjs` against a clean build. The RCSG Scientist (printed 83) and Special Forces (printed 86-87) each take four skills from ONE area of specialty, stored as a pick of four inside each area.*
 
 Slug `cwc`. Cached 2026-09-25 from
 `Rifts- World Book 11 Coalition War Campaign.pdf`, 226 PDF pages, **text layer**
@@ -247,3 +251,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | — | cache built (226 pp, text layer), survey written, offset +1 verified at five folios, `cwc` registered in `books.json` |
 | 2026-09-25 | [#1377](https://github.com/NateGrey0130/nates-workshop/pull/1377) | registry and survey. MERGED |
 | 2026-09-25 | gear PR | `add-cwc-gear.sql`: 20 new rows (11 weapons, the micro-fusion rifle grenade, the giant vibro-sword, CA-3 through CA-7, the CAJ-5 arm). `zzzzzzzzzzzzz-cwc-fill-estimate-gear.sql`: C-14, C-27 and the explosive, fragmentation and smoke grenades filled from estimate or web-reference rows. RUE's C-10, C-12, C-18, Neural Mace, vibro-blades and CA-1/CA-2 stand, RUE being the later book. Every number off a render; `book-reconcile` 25 rows, one short citation fixed. Applied `--remote` before the PR: gear 2900 -> 2920, 25 rows cite the book |
+| 2026-09-25 | CS O.C.C.s PR | eight new classes, one `add-<id>-class.sql` each: `cs-cyborg-strike-trooper` (the book heads it Coalition Cyborg Strike Trooper; Light and Heavy chassis as variants), `cs-commando` (Hand to Hand: Commando, unchangeable), `cs-eod-specialist`, `cs-nautical-specialist`, `cs-ranger`, `cs-rcsg-scientist` and `cs-special-forces` (their pick-four specialty areas as `skills.mos`), `cs-rpa-fly-boy-ace`. `zzzzzzzzzzzzzzz-cwc-recite-coalition-juicer.sql` replaces `coalition-juicer`'s markdown with the CWC printing (p.76-78), Juicer Uprising's differing figures kept in its extraction_notes; the class_id is unchanged. All men-of-arms, humans only. 0 stub rows. `book-reconcile` over all nine: one fix (the Fly Boy's armor choice is CA-3 or CA-4; CA-1 is the ISS's, printed 104). Applied `--remote` before the PR: 9 live classes cite the book |
