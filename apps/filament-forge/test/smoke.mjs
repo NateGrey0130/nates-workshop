@@ -24,7 +24,7 @@ const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..', '..');
 const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
 const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+const schema = readFileSync(join(repoRoot, 'db', 'schema-tools.sql'), 'utf8');
 
 const ascii = (s) => [...s].every((ch) => {
   const c = ch.codePointAt(0);
@@ -206,7 +206,7 @@ check('the data-model table lists every ff_ table in schema.sql',
 
 check('the migration the README names exists',
   readme.includes('039-filament-forge.sql')
-  && existsSync(join(repoRoot, 'db', 'migrations', '039-filament-forge.sql')));
+  && existsSync(join(repoRoot, 'db', 'migrations', 'tools', '039-filament-forge.sql')));
 
 {
   const endpoints = readdirSync(join(repoRoot, 'functions', 'api', 'filament-forge'))
@@ -252,7 +252,7 @@ check('the README says how to run this test',
 section('Schema copies agree');
 
 {
-  const migration = readFileSync(join(repoRoot, 'db', 'migrations', '039-filament-forge.sql'), 'utf8');
+  const migration = readFileSync(join(repoRoot, 'db', 'migrations', 'tools', '039-filament-forge.sql'), 'utf8');
   const tableBody = (src, name) => {
     const m = src.match(new RegExp('CREATE TABLE IF NOT EXISTS ' + name + ' \\(([\\s\\S]*?)\\n\\);'));
     if (!m) return null;

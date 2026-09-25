@@ -86,7 +86,7 @@ export function entryOut(row) {
 export async function onRequestGet(context) {
   const email = getUserEmail(context.request);
   if (!email) return json({ error: 'Not authenticated' }, 401);
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   try {
     const [config, history, presets, custom] = await Promise.all([
       db.prepare('SELECT printer, nozzle, ams FROM ff_config WHERE email = ?').bind(email).all(),
@@ -123,7 +123,7 @@ export async function onRequestPut(context) {
   }
   if (!body || typeof body !== 'object') return json({ error: 'Body must be an object' }, 400);
 
-  const db = context.env.DB;
+  const db = context.env.DB_TOOLS;
   const statements = [];
 
   if ('config' in body) {

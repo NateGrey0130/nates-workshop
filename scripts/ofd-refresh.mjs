@@ -26,7 +26,11 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { DB, d1Query, localD1Args } from './d1-query-lib.mjs';
+import { d1Query, localD1Args } from './d1-query-lib.mjs';
+
+// FilamentForge's tables live in the tools group's database (groups.json),
+// bound as DB_TOOLS, since 2026-09-25.
+const DB = 'DB_TOOLS';
 import { MIN_BRANDS, MIN_FILAMENTS, parseCSV, dedupeById, buildSnapshotSql } from './ofd-refresh-lib.mjs';
 
 const OFD = 'https://api.openfilamentdatabase.org/csv';
@@ -84,7 +88,7 @@ if (r.code !== 0) {
 // Exit codes are advisory in this repo; the counts are the truth.
 const [check] = d1Query(
   'SELECT (SELECT COUNT(*) FROM ff_brands) AS brands, (SELECT COUNT(*) FROM ff_filaments) AS filaments, (SELECT MAX(fetched_at) FROM ff_filaments) AS fetched_at',
-  { target });
+  { target, db: DB });
 console.log(`${target} now holds ${check.brands} brands, ${check.filaments} filaments (fetched_at ${check.fetched_at})`);
 if (check.brands !== brands.length || check.filaments !== filaments.length) {
   console.error('MISMATCH between what was fetched and what the database holds — re-run this script.');

@@ -32,8 +32,9 @@ functions/api/filament-forge/
 ├── catalog.js            GET  /api/filament-forge/catalog — the OFD snapshot
 └── data.js               GET/PUT /api/filament-forge/data — everything per-user
 
-db/schema.sql             The six ff_ tables (and migration 039-filament-forge.sql,
-                          which brought them to a database that predates them)
+db/schema-tools.sql       The six ff_ tables, in the tools group's database (and
+                          db/migrations/tools/039-filament-forge.sql, which
+                          brought them to a database that predates them)
 scripts/ofd-refresh.mjs   Rebuild the OFD snapshot; the ONLY code that talks to OFD
 scripts/ofd-refresh-lib.mjs  Its deterministic half, so the smoke test can run it
 ```
@@ -51,10 +52,12 @@ The shared framework rules apply: the app is registered in
 
 ## Data model
 
-Six tables in the site's shared D1 database, every one prefixed `ff_` — the
-character creator's tables share that database unprefixed, so the prefix is
-the collision boundary. Nothing here joins to, reads, or is read by any other
-app's table.
+Six tables, every one prefixed `ff_`, in the tools group's own D1 database
+(`nates-workshop-tools`, bound as `DB_TOOLS`, since 2026-09-25) beside
+MediaVault's. The prefix dates from when the character creator's unprefixed
+tables shared their database, and still keeps FilamentForge's apart from
+MediaVault's `media_`. Nothing here joins to, reads, or is read by any other
+app's table, and `groups.mjs --check` fails if an endpoint names one.
 
 | Table | Notes |
 |---|---|
@@ -170,7 +173,7 @@ prompt as machine limits, nothing more.
   reversible, chunking at the statement cap, deletes before inserts)
 - the `data.js` sanitizers (what they refuse, what they cap, and that an
   entry survives the row round-trip)
-- this README's claims: the six table names against `db/schema.sql`, the
+- this README's claims: the six table names against `db/schema-tools.sql`, the
   migration file, the endpoint files, the history cap against the endpoint's
   constant, the printer count against `app.js`, the localStorage keys, the
   vendored JSZip's version against its own header, and that `app.js` names no
