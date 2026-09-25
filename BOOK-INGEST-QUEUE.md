@@ -25,6 +25,7 @@ the human view of the same thing. The import status is in each book's survey.
 | `phase-world` | Rifts DB 2: Phase World | 209 | SCAN (OCR) | 208 | **+0** |
 | `madhaven` | Rifts WB 29: Madhaven (added 2026-09-24, outside the original seven) | 136 | text layer | 128 | +1 |
 | `south-america` | Rifts WB 6: South America (added 2026-09-24, outside the original seven) | 170 | text layer | 168 | +1 |
+| `south-america-2` | Rifts WB 9: South America 2 (added 2026-09-25, outside the original seven) | 193 | SCAN (OCR) | 192 | **+0** |
 
 **Status is not in this table any more.** It is each survey's `**Status:**`
 line, in `apps/character-creator/docs/surveys/<slug>.md`, since 2026-09-24:
