@@ -1,9 +1,12 @@
 # Book-ingestion batch — queue, opened 2026-08-28
 
 Seven books handed over on 2026-08-28, cached in one kickoff session. This file
-is the cross-session state: **one session per book** from here, each reading
-this file first and updating it last. Deferred code changes go in
-`BOOK-INGEST-AUDIT.md`, not here.
+is the batch's roster and what spans books: **one session per book** from
+here, each reading this file first. **Since 2026-09-25 a book session records
+its work in the book's survey** (its `## Ledger` and status line), **not
+here**: two sessions in parallel both appended to this file and conflicted.
+The per-book sections below are the record from before that date. Deferred
+code changes go in `BOOK-INGEST-AUDIT.md`, not here.
 
 Slugs, offsets and printed page counts below are recorded in
 `scripts/books.json`, which is the authority the tooling reads. This table is

@@ -786,8 +786,16 @@ too. The OCR caches do not travel; the judgement in this file does.
 
 The survey is per book. When several books are handed over at once — which is
 how they arrive — **`BOOK-INGEST-QUEUE.md`** at the repo root holds the batch's
-roster and the dated record of what each session did. **Read it first and add
-your record last**, every session.
+roster and what applies to the whole batch. **Read it first**, every session.
+
+**A book session's record goes in its own survey, not the queue**: the
+`## Ledger` table (one row per PR: date, PR, what went in) and, when the
+session ends, the survey's status line and a short *where it stands / what is
+next* note. Every survey has a ledger. Until 2026-09-25 each session added a
+dated section to the end of the queue instead, and two sessions in parallel
+both append there, so they always conflict. The queue takes only what spans
+books: a kickoff's roster, a batch-wide decision, the planning pass after the
+batch.
 
 **A book's status is NOT in the queue.** It is the `**Status:**` line at the top
 of its survey, and the line under it is its row count:

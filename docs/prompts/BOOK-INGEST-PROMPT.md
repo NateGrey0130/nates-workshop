@@ -102,7 +102,9 @@ naming the exact filenames in prompt A.
 >   column**: a book's status is the `**Status:**` line of its survey,
 >   `apps/character-creator/docs/surveys/<slug>.md`, with the vocabulary in that
 >   directory's `README.md` (since 2026-09-24). Every later session reads the
->   queue first and adds its dated record last.
+>   queue first. **It records its own work in the book's survey, not here**:
+>   the `## Ledger` table and the status line (since 2026-09-25). Two sessions
+>   appending to the queue always conflicted.
 > - **`BOOK-INGEST-AUDIT.md`** — empty numbered menu (`F1..Fn`) in the same
 >   format as the existing audit menus, with a header saying it holds
 >   **code changes deferred out of the book ingestion batch**, one finding per
@@ -205,9 +207,11 @@ naming the exact filenames in prompt A.
 >
 > ### Finish
 >
-> Set the `**Status:**` line of the book's survey. Then add to
-> `BOOK-INGEST-QUEUE.md` the counts imported per category and a one-line "what
-> is deliberately not imported from this book". Then report:
+> In the book's survey: set the `**Status:**` line and the
+> `**Rows citing this book:**` line (`regression` prints it), add a `## Ledger`
+> row per PR, and write a short "what is deliberately not imported from this
+> book, and what is next". Do not add a section to `BOOK-INGEST-QUEUE.md`.
+> Then report:
 > what was imported, what was deferred and under which finding numbers, and
 > anything you are unsure you read correctly.
 
