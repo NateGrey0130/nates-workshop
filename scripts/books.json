@@ -291,6 +291,16 @@
       "note": "Cached 2026-09-24 from its TEXT LAYER, --probe median 4,239 chars/page and 36.9% stop words (not the F73 glyph-dropped kind). Offset verified by folio at five points - cache p020 reads 19, p060 reads 59, p100 reads 99, p140 reads 139, p169 reads 168 - one region, no split. printed_pages is 168, the Experience Tables at cache p169, whose file also carries the page-169 'same as' ladder notes because the text layer did not break there; cache p170 is the blank back cover. ocr-book.py measured 167. welded_pages 1 (160 = printed 159, the Black Galleon / Black Ship weapons), corrupt_pages 5 pages (87 = map labels, 105 = a near-empty art page, 31/47/116 one hit each), substituted_digits 3 pages (46, 82, 110). Printed 22-23 (Colombian weapons) and 139 (NE plasma weapons) have stat blocks out of order in the cache though no detector flags them; read those from a render. See apps/character-creator/docs/surveys/south-america.md."
     },
 
+    "south-america-2": {
+      "title": "Rifts World Book 9: South America 2",
+      "aliases": ["South America 2", "South America Two", "Rifts World Book 9: South America Two", "Rifts South America 2"],
+      "source_pdf": "Rifts- World Book 9 South America 2.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 192,
+      "page_offset": 0,
+      "note": "Cached 2026-09-25 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Not World Book 6 (slug south-america). Offset 0 verified by render at printed 4, 30, 190 and 192 (d[3], d[29], d[189], d[191]); ocr-book.py measured +0 over the whole book. printed_pages is 192, the Experience Tables; the manifest says 184 because the OCR lost the folios of 185-192. Cache p193 is the back cover. p085 is EMPTY in the cache (render it); p074, p082 and p192 have merged or reordered columns. See apps/character-creator/docs/surveys/south-america-2.md."
+    },
+
     "spirit-west": {
       "title": "Rifts World Book 15: Spirit West",
       "aliases": [],
