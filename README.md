@@ -2,8 +2,8 @@
 
 Tools, toys, and experiments — built with Claude.
 
-A personal site of small apps sharing one Cloudflare Pages project, one D1
-database and one R2 bucket. Plain HTML, JS and CSS: **no build step, no
+A personal site of small apps sharing one Cloudflare Pages project and one R2
+bucket, with a D1 database per group of apps (`groups.json`). Plain HTML, JS and CSS: **no build step, no
 framework, no dependencies, no `package.json`.**
 
 The site sits behind Cloudflare Access, so the deployed URL will redirect you to
