@@ -1,8 +1,8 @@
 # Rifts World Book 9: South America 2 — survey
 
-**Status:** `importing` — skills, spells and gear shipped; vehicles next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
+**Status:** `importing` — skills, spells, gear and vehicles shipped; classes next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
 
-**Rows citing this book:** gear 60, skills 8, spells 35
+**Rows citing this book:** gear 60, vehicles 23, skills 8, spells 35
 
 Slug `south-america-2`. Cached 2026-09-25 from
 `Rifts- World Book 9 South America 2.pdf` (copied from a `kupdf.net` download),
@@ -37,7 +37,7 @@ readers found that touches a number:
 | pages | fault | remedy |
 |---|---|---|
 | 22, 27, 110, 172, 174 | full-page art, glyph noise only | nothing to read |
-| **85** | **empty** — 0 bytes in `txt` and `raw.txt` | render printed 85 before the Arkhon robots / Ghost Wasp import |
+| **85** | **empty** — 0 bytes in `txt` and `raw.txt` | rendered 2026-09-25: a full-page illustration of Arkhon power armor; nothing lost |
 | 30, 34, 90, 97, 111, 117, 142, 166, 191 | `|` or `l` for **1** (`|D6x1000`, `| minute`) | read as the dice/number it has to be |
 | 21, 54, 143, 150, 155, 187 | `[.Q.` / `1.Q.` for I.Q.; `8.D.C.` for S.D.C. | cosmetic |
 | **74** | two columns merged: Spectral Hunter Related list interleaved with Secondary and Money | render printed 74 |
@@ -243,3 +243,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1385](https://github.com/NateGrey0130/nates-workshop/pull/1385) | 8 skills: `Language:` Quechua, Aymara, Creole, Arkhon, Larhold (p.162) and Amaki (p.155); `Art: Line Drawing` (p.28, never defined in the book, filed at Art's base); `Riding: War Bison` (p.186, Horsemanship +10). The six languages also get Heroes Unlimited's 55/5 row in `skill_system_bases`, which a clean build's HU sweep would add and production's never did; `heroes-unlimited-core`'s pin moves 88 -> 94 and regression's untagged-skill pin 79 -> 85. `~002-` re-tags the two Rifts-only skills after the scripts that clear `systems`. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1390](https://github.com/NateGrey0130/nates-workshop/pull/1390) | 35 spells: 25 `Nazca:` line drawings at level 0 (p.31-38, tradition `nazca`, Time to Draw as casting_time) and 10 `Blue Flame:` spells at their printed levels (p.190-191, tradition `blue-flame`). Names and costs follow the p.190 list; Flamewings keeps the list's 15 with the entry's 25 in variant_note. `Nazca: Close Rift` is NOT linked to the invocation (same-spell-lib). book-reconcile 35/35. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1392](https://github.com/NateGrey0130/nates-workshop/pull/1392) | 60 gear rows: 32 weapons, 15 armors, 12 magic items, 1 gear (the Larhold demon-mask) - Empire (23-35, 56-58), Ancient and Pucara (50, 55), Arkhon (79-84), Legion (113-115, cost NULL: not for sale), Silver River (163-168), Larhold (186-190). book-reconcile agreed with all 54 extracted rows and found the six Ancient/Pucara items, added by hand. Applied `--remote` before the PR. |
+| 2026-09-25 | [#1394](https://github.com/NateGrey0130/nates-workshop/pull/1394) | 23 vehicles (11 power armor, 9 vehicles, 3 robots) with 158 M.D.C. locations and 122 weapon-system entries: Empire (59-67), Arkhon (84-97), Legion (116-121), Silver River (168-183). Armor of the Sun has no main body (M.D.C. by the wearer's M.E.). book-reconcile checked all 23 and found the three Legion "Sensors, etc." entries the OCR had unnumbered; added. Applied `--remote` before the PR. |
