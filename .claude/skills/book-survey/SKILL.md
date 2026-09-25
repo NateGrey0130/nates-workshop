@@ -614,6 +614,13 @@ Necessary. **Not sufficient — see phase 5.**
 Keep batches small. Spell entries are long, and a reply that overruns the output
 ceiling is rejected rather than half-saved.
 
+**Re-run the catalog diff against production immediately before writing each
+batch's data script** — `node scripts/catalog-diff.mjs --remote` for that
+table, with that batch's entries. The survey's phase-3 diff is dated, and by
+extraction time another book's session may have shipped some of the same rows.
+A second `INSERT OR IGNORE` of an existing key is silently dropped. §8 has the
+parallel-book case this matters most for.
+
 **A book too big for one pass fans out to the `book-extract-worker` subagent**,
 one invocation per slice. It returns rows cited to the **printed folio** and
 stops there — it does not map to catalog vocabulary, because twenty slices
@@ -775,25 +782,65 @@ repo, the skills, the OCR cache, and this file. **Start a fresh session every
 Because the survey is tracked, a fresh session on a fresh clone boots from it
 too. The OCR caches do not travel; the judgement in this file does.
 
-## 8. A BATCH has a second state file, and it is not the survey
+## 8. A BATCH: where each book's state lives, and running two at once
 
 The survey is per book. When several books are handed over at once — which is
-how they arrive — the cross-session state lives in **`BOOK-INGEST-QUEUE.md`** at
-the repo root. **Read it first and update it last**, every session.
+how they arrive — **`BOOK-INGEST-QUEUE.md`** at the repo root holds the batch's
+roster and the dated record of what each session did. **Read it first and add
+your record last**, every session.
 
-It holds the roster and each book's status on a three-step ladder:
+**A book's status is NOT in the queue.** It is the `**Status:**` line at the top
+of its survey, and the line under it is its row count:
 
 ```
-cached  ->  surveyed  ->  imported
+**Status:** `importing` — gear and spells shipped; classes next. (2026-09-25)
+
+**Rows citing this book:** classes 8, gear 31, spells 24
 ```
+
+The vocabulary is in `apps/character-creator/docs/surveys/README.md`: `cached`,
+`surveyed`, `importing`, `imported`, `excluded`, `backfilled`. **Set both lines in
+the PR that changes them.** Smoke fails a survey with no valid status, and
+`regression` fails a rows line that does not match a clean build, printing the
+line to paste. The queue carried a status column until 2026-09-24, and it
+disagreed with the surveys for eight days before anyone noticed.
 
 `cached` is what the kickoff session does for every book at once — §0b, plus a
-`scripts/books.json` entry. A book sitting at `cached` is not neglected; it is
-waiting its turn, and the queue says so. A long batch also passes through
-`importing`, for a book shipping across many sessions.
+`scripts/books.json` entry, sorted by slug (smoke checks the order). A book
+sitting at `cached` is not neglected; it is waiting its turn.
 
 **One session per book.** Not one session per batch — see §7 on why a
 conversation is the most expensive place to keep what a repo can hold.
+
+### Two books at once: one worktree each, and look before you start
+
+Two book sessions may run in parallel. **Each must be in its own tree.** Two
+sessions in one checkout is what put one session's commit on another's branch,
+four times, with `git status` looking clean throughout.
+
+1. **Look at the board first.** `node scripts/book-board.mjs` shows every
+   book's status and row count, and which worktrees, branches and open PRs
+   belong to it. Add `--remote` for production's rows beside the survey's. A
+   book with someone else's branch or PR on it is taken.
+2. **Make the book its own tree:** `node scripts/book-worktree.mjs <slug>`, then
+   start the session **in that tree**, not in the main checkout or the working
+   directory. It gives the tree its own copy of the local D1, points it at the
+   shared OCR cache, and links memory. `--remove` takes it down afterwards.
+   The `worktree` skill has why each of those matters. **The D1 copy is taken
+   from the main checkout at that moment**, so it holds any `--local` applies
+   made there and not yet merged. Treat `--local` as scratch, and ask
+   `--remote` or a clean build (`regression`) for anything you will act on.
+3. **Name every branch `<slug>-...`.** The board finds a book's work by that
+   prefix.
+4. **Re-diff against production right before each extraction batch** (§4).
+   The survey's catalog diff is from the survey date, and the other book may
+   have added the same skill, spell or gear since. Smoke fails a catalog key
+   two data scripts insert with different values, but it fires only after
+   you've written the duplicate.
+5. **Expect to rebase, and expect it to be small.** The shared lines are gone:
+   status and counts live in your own survey. What is left is a finding number
+   in `BOOK-INGEST-AUDIT.md`. If both sessions took the same `F` number, smoke
+   fails at your rebase. Renumber the one your branch added.
 
 **The rule that keeps a batch moving is the one worth memorising:**
 

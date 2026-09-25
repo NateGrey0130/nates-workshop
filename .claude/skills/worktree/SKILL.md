@@ -23,6 +23,22 @@ and nothing warned.
 
 ## Making one
 
+**For a sourcebook, use the script instead:**
+
+```bash
+node scripts/book-worktree.mjs <slug>
+```
+
+It makes `../nates-apps-books/<slug>` off `origin/main` on a `<slug>-` branch.
+It copies the local D1 in as real files, and writes both environment variables
+below into the tree's own `.claude/settings.local.json`. It links the tree's
+memory directory to the real store. Start the book's session in that tree.
+`--remove` refuses while the tree holds uncommitted changes or any junction,
+which is the removal hazard below. `book-survey` §8 has the parallel-book
+routine it belongs to.
+
+Anything else:
+
 ```bash
 git worktree add ../nates-apps-wt -b short-kebab-description origin/main
 ```
@@ -151,7 +167,9 @@ memory directory at all**, verified 2026-09-21: the one worktree project folder
 under `C:\Users\natha\.claude\projects` holds a transcript and nothing else.
 
 So a session in a worktree starts blind to everything memory holds — including
-the removal incident this page exists for. **Say what you learned into the PR
+the removal incident this page exists for. **The exception is a tree made by
+`scripts/book-worktree.mjs`**, which links the new project directory's `memory`
+to the real store before any session starts there. **Say what you learned into the PR
 body or the audit menu**, which are the two stores a worktree session does share,
 and do not assume the next session in one will know what this one did.
 

@@ -282,8 +282,8 @@ of the rule is not evidence of following it.
 A corrected sentence goes stale again. Where the claim is checkable, pin it:
 
 - a **count** the database can answer → `test/regression.mjs`, which builds a
-  database from nothing and asks the running worker. That is where the README's
-  clean-run table and the MOS package counts live.
+  database from nothing and asks the running worker. That is where each
+  survey's rows line and the MOS package counts are checked.
 - a **number read out of a book** → `test/smoke.mjs` as well, transcribed beside
   the code it checks. The nine rows of the Attribute Bonus Chart are pinned
   column by column against printed 16, because nothing else compared `derive.js`

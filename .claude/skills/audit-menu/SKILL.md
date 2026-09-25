@@ -705,8 +705,8 @@ all of them, and a correction to it is not either. Say which scope you mean.
 `source-coverage.mjs --remote`, `claude_usage`, the smoke summary — and the day.
 Ask production: `--local` accumulates, and has reported catalog duplicates that
 production merged away weeks earlier. Quote a moving number only where something
-pins it; the test suite pins the README's counts, so those survive, and a count
-in prose does not.
+pins it; the test suite pins each book's row count in its survey, so those survive,
+and a count in prose does not.
 
 ### And a `Proposal` says whether its central claim was measured or reasoned to
 
