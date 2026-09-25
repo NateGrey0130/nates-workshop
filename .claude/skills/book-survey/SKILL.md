@@ -881,15 +881,16 @@ necessarily open. Measured 2026-09-07 with `git log` and
 stayed false for ten days. Both files now point here.
 
 **Tier 1 — part of an import. Do it, and file nothing.** A class stating no
-`sdc_base` and no `mdc_base` needs a `CORE_SDC_BY_CLASS` entry in
-`apps/character-creator/js/compose.js`, or
-`apps/character-creator/test/checks/catalog-data.mjs` fails it — so `class-import`
-orders the edit the ban forbade, and the suite enforces the order. **Eleven
+`sdc_base` and no `mdc_base` needs a `men_of_arms` line in its own
+frontmatter, or `apps/character-creator/test/checks/catalog-data.mjs` fails it
+(`class-import` has the rule). Until 2026-09-25 that grouping was a map in
+`apps/character-creator/js/compose.js`, `CORE_SDC_BY_CLASS`, so the tier-1 edit
+was a code file, which is the case this tier was written for. **Eleven
 book-session PRs made that edit**: seven in `phase-world` (#406, #409, #411,
 #412, #413, #416, #417) and four in `triax` (#776–#779), covering 15 of that
 book's 21 classes. Not one was recorded as a violation, because it is not one.
-`scripts/books.json` is the same shape. These are catalog vocabulary that
-happens to live in a `.js` file.
+`scripts/books.json` is the same shape: catalog vocabulary in a file that is
+not a data script.
 
 **Tier 2 — Nate asks, and then it is in scope.** Say so in the outcome note; do
 not write it up as a rule broken. On 2026-09-07 one book produced a migration

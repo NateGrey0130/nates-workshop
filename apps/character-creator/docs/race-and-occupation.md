@@ -366,10 +366,10 @@ as the Stone Master's flat P.P.E. term is. The same reading covers the four
 races whose page says *"only those gained from O.C.C.s and physical skills"* —
 they state no bonus at all, and the occupation's roll stands alone.
 
-Because no race states `sdc_base`, all fourteen need an entry in
-`CORE_SDC_BY_CLASS`, and all fourteen are `1D6`. **A race is never a man of
-arms** — the job decides that, and `withCorePools` looks the occupation up
-first — so those entries fire only for a race played with no occupation at all,
+Because no race states `sdc_base`, all fourteen need a `men_of_arms` line, and
+all fourteen are `false` (1D6). **A race is never a man of
+arms** — the job decides that, and `withCorePools` reads the occupation's line
+first — so those lines matter only for a race played with no occupation at all,
 where printed 18's third bucket, *"practitioners of magic, scholars and all
 others"*, is the one that applies.
 

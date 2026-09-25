@@ -71,15 +71,17 @@ gnome, goblin, troll — is a Palladium race restricting Palladium occupations,
 where both sides had the key. `zz-rifts-occ-groups.sql` closes it, using RUE's
 own section headings: Men of Arms (45-85) plus Coalition Military (231-237),
 practitioners of magic (100-135), psychics (139-156), and Adventurers & Scholars
-(86-99). Those are the same headings `CORE_SDC_BY_CLASS` cites for its 3D6/1D6
-split, so the two tables agree by construction rather than by coincidence.
+(86-99). Those are the same headings each class's `men_of_arms` line cites for
+its 3D6/1D6 split (the comments in
+`db/~001-men-of-arms-frontmatter.sql` for the classes that line
+was moved into), so the two agree by construction rather than by coincidence.
 
 Two calls in that script are worth knowing. **Adventurers & Scholars are filed
 as `optional`** — the five group names are fixed in `OCC_GROUPS` and none of
 them is "adventurer", and `optional` carries the closest meaning, being
 Palladium's own heading for the O.C.C.s that are neither men of arms nor spell
 casters. And the **two Psi-Stalkers are `psychic`** even though
-`CORE_SDC_BY_CLASS` gives them a man-of-arms 3D6: that table's comment says why
+their `men_of_arms: true` gives them a man-of-arms 3D6: the comment beside it says why
 — *psychics by the book's grouping, but hunters by trade* — so the S.D.C.
 follows the trade and the group follows the book.
 
