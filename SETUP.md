@@ -58,7 +58,7 @@ Two standing checks fetch it anyway, on purpose:
 ```
 nates-workshop/
 ├── index.html                Dashboard — renders cards from apps/manifest.json
-├── wrangler.jsonc            Pages config; the D1 binding (DB) lives here
+├── wrangler.jsonc            Pages config; the D1 bindings (DB, DB_MARVEL, DB_TOOLS) live here
 ├── CLAUDE.md                 Cloudflare auth facts + the migration routine
 ├── shared/
 │   ├── styles.css            Shared design system (tokens, header, buttons, modals)
