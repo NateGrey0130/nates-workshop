@@ -87,6 +87,8 @@
         "db/migrations/040-media-vault-source-id.sql",
         "db/migrations/051-media-shares.sql",
         "scripts/deploy-room.mjs",
+        "scripts/ofd-refresh.mjs",
+        "scripts/ofd-refresh-lib.mjs",
         ".claude/skills/media-vault/",
         ".claude/skills/pick3cut5/",
         "docs/prompts/filament-forge-standardization-prompt.md",
