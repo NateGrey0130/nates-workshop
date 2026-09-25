@@ -850,6 +850,13 @@ four times, with `git status` looking clean throughout.
    status and counts live in your own survey. What is left is a finding number
    in `BOOK-INGEST-AUDIT.md`. If both sessions took the same `F` number, smoke
    fails at your rebase. Renumber the one your branch added.
+6. **Before merging more than one PR, run
+   `node scripts/book-board.mjs --merge-check --tests --remote`.** Each PR's CI
+   ran against an older `main`. This check gives the merge order, test-merges
+   every open PR together, and traces what production has that `main` does
+   not. **Never rename a data script after applying it `--remote`**: the run
+   record keeps the old name. If you must rename, make the new file delete the
+   old name's `data_script_runs` row, then apply it again.
 
 **The rule that keeps a batch moving is the one worth memorising:**
 
