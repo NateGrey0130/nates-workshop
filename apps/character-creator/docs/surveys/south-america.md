@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `importing` — gear and Biomancy spells shipped; vehicles next. (2026-09-25)
+**Status:** `importing` — gear, Biomancy spells and vehicles shipped; O.C.C.s next. (2026-09-25)
 
-**Rows citing this book:** gear 30, spells 24
+**Rows citing this book:** gear 30, spells 24, vehicles 19
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -195,6 +195,16 @@ guns).
 **19 vessels.** Kittani and Splugorth rows already in production are Underseas
 and Triax vessels; none of these nineteen names collide.
 
+**Shipped** (`add-south-america-vessels.sql`): 19 vehicles, 150 M.D.C.
+locations, 61 weapon entries. Printed 25 (the D-20's weight, `ISOlbs` = 180),
+81 (the Raptor's `!D4xlO` = 1D4x10) and 159 (welded) were read off renders.
+The Slaver Raider, Mothership and Black Ship print only what they *would*
+fetch, so their cost is NULL with the figure in `cost_note`; the Black Ship
+names no main body. Book slips are stored as printed and noted: the Lictor's
+laser range "(610 km)", the Black Galleon's "50 mph (80 mph)", and the
+Hoplite's ley-line recharge (three times four hours on printed 92, eight hours
+on printed 94).
+
 ## Creatures and notable NPCs
 
 **Creatures (about 9):** Giant Vampire Bat (41-42), Ghostly Loa and Divine Loa
@@ -266,3 +276,4 @@ What is deliberately left, with the reason:
 | 2026-09-24 | — | cache built (170 pp, text layer), offset +1 verified at five folios, `south-america` registered in `books.json`, survey written |
 | 2026-09-25 | #1375 | gear: 30 rows (7 Colombian C-series weapons, 10 bio-weapons and bio-armors, 8 Manoan TW items and enchanted armors, 5 Cibolan drugs); the 3 Naruni NE weapons were already catalogued. Applied `--remote` first |
 | 2026-09-25 | #1378 | Biomancy spells: 24 rows, `Biomancy: ` prefix, tradition `biomancy`, level and cost from the index on printed 64; Suspended Animation linked to `Earth: Suspended Animation`. Applied `--remote` first |
+| 2026-09-25 | #1380 | vehicles: 19 (6 Colombian, 3 Kittani of Lagarto, 2 Manoan, 2 Cibolan, 5 ships, the Demon Black Ship), 150 locations, 61 weapons. Applied `--remote` first |
