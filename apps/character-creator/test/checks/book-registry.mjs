@@ -16,9 +16,10 @@ import { detectPageOffset, detectPageOffsetRegions, isNotABook, normalizeBookTit
 import { buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings } from '../../../../scripts/source-coverage-lib.mjs';
 import { projectDirName } from '../../../../scripts/book-worktree.mjs';
+import { coreName, orderPrs, traceNames } from '../../../../scripts/merge-check-lib.mjs';
 
 // Declared so a --section run can skip the module without reading it.
-const SECTIONS = ['Book registry'];
+const SECTIONS = ['Book registry', 'Merge check'];
 
 export function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -608,5 +609,52 @@ export function run() {
       const body = fn.slice(fn.indexOf('"""', fn.indexOf('"""') + 3) + 3);
       return body.length > 0 && !/\bWORDS\b/.test(body);
     })());
+  }
+
+  // ---------- The merge check (book-board.mjs --merge-check) ----------
+  // Several book PRs merge as a batch, and each one's CI ran against the main
+  // it branched from. The order and the trace below are the two judgements the
+  // mode makes without asking git or production, so they are pinned here, on
+  // the batch that prompted it (2026-09-25): #1382 carried #1379's commit and
+  // #1383 carried #1376's, and a script renamed after it was applied left
+  // production a run record naming a file nothing held.
+  section('Merge check');
+
+  {
+    // Numbered so that PR-number order is the WRONG order - the 2026-09-25
+    // batch happened to be right by number, so it could not tell a working
+    // rule from none at all.
+    const { order, before, partial } = orderPrs([
+      { number: 20, commits: ['s2', 's1'] },
+      { number: 21, commits: ['s1'] },
+      { number: 22, commits: ['c1'] },
+    ]);
+    check('a PR carrying the commits of another merges after it',
+      order.indexOf(21) < order.indexOf(20), `order was ${order.join(', ')}`);
+    check('and says which one it waits for', before[20].join() === '21', JSON.stringify(before));
+    check('an unrelated PR keeps its place and waits for nothing', before[22].length === 0 && partial.length === 0);
+    check('two PRs sharing SOME commits are reported, since no order is safe',
+      orderPrs([{ number: 1, commits: ['s', 'a'] }, { number: 2, commits: ['s', 'b'] }]).partial.length === 1);
+    check('and so are two PRs on identical commits',
+      orderPrs([{ number: 1, commits: ['a'] }, { number: 2, commits: ['a'] }]).partial.length === 1);
+  }
+
+  {
+    check('a sort-order prefix is not part of the name of a script',
+      coreName('zzzzzzzzzzzzzzzzz-add-ship-mechanics-skill.sql') === 'add-ship-mechanics-skill.sql'
+        && coreName('~001-men-of-arms-frontmatter.sql') === 'men-of-arms-frontmatter.sql'
+        && coreName('add-zzz-class.sql') === 'add-zzz-class.sql');
+    const traced = traceNames(['add-ship-mechanics-skill.sql', 'add-cwc-gear.sql', 'gone.sql'], {
+      'worktree south-america': ['zzzzzzzzzzzzzzzzz-add-ship-mechanics-skill.sql', 'south-america.md'],
+      'branch origin/cwc-gear': ['add-cwc-gear.sql'],
+    });
+    check('a run record whose file was renamed is traced to the new name, not called held',
+      traced['add-ship-mechanics-skill.sql'].exact.length === 0
+        && traced['add-ship-mechanics-skill.sql'].renamed.join() === 'worktree south-america: zzzzzzzzzzzzzzzzz-add-ship-mechanics-skill.sql',
+      JSON.stringify(traced['add-ship-mechanics-skill.sql']));
+    check('a script applied ahead of its PR is traced to the branch holding it',
+      traced['add-cwc-gear.sql'].exact.join() === 'branch origin/cwc-gear');
+    check('and one nothing holds is traced to nothing',
+      traced['gone.sql'].exact.length === 0 && traced['gone.sql'].renamed.length === 0);
   }
 }

@@ -985,7 +985,15 @@ scripts/
 ├── book-board.mjs          Where every book stands and who is on it: survey
 │                           status and rows, worktree, <slug>- branches, open
 │                           PRs; --remote adds production's rows per book.
-│                           Read-only, reports only
+│                           Read-only, reports only. --merge-check is the
+│                           check before merging a batch (next entry)
+├── merge-check-lib.mjs     Will the open PRs merge TOGETHER: the order (a PR
+│                           carrying another's commits goes after it), a trial
+│                           merge of all of them at origin/main in a throwaway
+│                           tree, --tests runs CI's suites on that tree and
+│                           --remote traces what production has that it does
+│                           not to the worktree or branch holding it. Exits 1
+│                           on a conflict, a red suite or an unexplained drift
 ├── agent-usage.mjs         Which subagent has been spawned how often, from
 │                           this machine’s session transcripts. Reads nothing
 │                           in this repo, and nothing gates on it. The block
