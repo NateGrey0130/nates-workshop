@@ -2,6 +2,8 @@
 
 **Status:** `imported` — with the exclusions recorded under D7; the batch decisions are below. (2026-09-24)
 
+**Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 88, spells 16, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5
+
 Slug `heroes-unlimited-core`. Cached 2026-09-12 from
 `93229611-Heroes-Unlimited-Core-Book-Revised.pdf`, 240 PDF pages,
 **a scan (no text layer)**, OCR at 300 dpi, psm 3.

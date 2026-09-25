@@ -2,6 +2,8 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
+**Rows citing this book:** classes 15, gear 59, vehicles 6, totems 40, skills 1, spells 34, notable_npcs 16, creatures 28
+
 Slug `spirit-west`. Cached 2026-08-28 from `Rifts- World Book 15 Spirit West.pdf`,
 210 PDF pages, **text layer** (median ~5,468 chars/page — no OCR, no cost).
 

@@ -2,6 +2,8 @@
 
 **Status:** `imported` — the extraction plan is done; what was left on purpose is in the ledger. (2026-09-24)
 
+**Rows citing this book:** classes 19, gear 663, vehicles 35, skills 6, skill_system_bases 3, spells 39, psionic_powers 4, talents 25, morphus_characteristics 173, creatures 15
+
 **Surveyed 2026-09-12**, offline, off the cache. No extraction has been spent
 yet: this file is what phases 1–3 of `book-survey` produced, and the extraction
 plan at the end is the thing to agree on before phase 4 costs anything.

@@ -321,7 +321,7 @@ because the class definitions live in D1 rather than in the repo.
 
 ### Standing up a new environment
 
-Verified end to end; the counts below are what a clean run produces.
+Verified end to end. What a clean run produces is counted **per book**, below.
 
 ```bash
 node scripts/d1-apply.mjs --remote db/schema.sql
@@ -334,26 +334,36 @@ expand globs for native commands, so the same line works in either shell. It
 prints `skipping ... marked local-only` for `seed-dev.sql`, which inserts a test
 campaign and character and must never reach production. That exclusion is the
 file's own `-- local-only` marker, not a list kept in the script, so a new
-local-only script is protected as soon as it says so.
+local-only script is protected as soon as it **Each book's rows are pinned in its own survey**, on the line under its
+status: `**Rows citing this book:** classes 12, gear 40, ...`, in
+`apps/character-creator/docs/surveys/<slug>.md`. `test/regression.mjs` builds a
+database from nothing under a scratch directory, counts the rows citing each
+book in every table with a `source_book` column plus the published classes, and
+checks each survey's line. A wrong line fails with the line to paste.
+
+Rows that cite no surveyed book are the one count left here: no
+`source_book`, a not-a-book marker, or a registry-only slug such as
+`rifts-skill-list`. The per-book lines and this row together account for every
+counted row:
 
 | After | Rows |
 |---|---|
-| classes (published, live) | 349 |
-| skills | 390 |
-| per-system skill bases | 92 |
-| spells | 974 |
-| psionic powers | 133 |
-| gear | 2870 |
-| vehicles | 255 |
+| catalog rows citing no surveyed book | 231 |
 
-**These are pinned by `test/regression.mjs`**, which is the only thing that can
-honestly check them: it builds a database from nothing under a scratch directory
-and asks the running worker what it serves. The previous version of this table
-claimed 23/231/366/52/407 and was verified by nothing - three paragraphs after
-the note above about prose counts drifting silently.
+**Why per book (2026-09-24):** this table used to hold the totals (classes,
+skills, spells, psionic powers, gear, vehicles, per-system skill bases). Every
+import moved one of them, so two book sessions in parallel both edited the
+same lines, and the second to merge was always wrong until rebased. A book's
+own line moves only with that book. What the totals also proved, that the
+endpoints serve every row, is checked without a written number:
+`regression.mjs` compares each endpoint's count with the database's own. The
+version before the totals claimed 23/231/366/52/407 and was verified by
+nothing.
 
-**What a rebuild produces, and what it does not.** The table above is the
-CATALOG and the class definitions. That is the whole of what this repo can
+ilently.
+
+**What a rebuild produces, and what it does not.** The rows counted
+above are the CATALOG and the class definitions. That is the whole of what this repo can
 rebuild, and it is worth stating because the sentence "rebuild from the repo"
 is read as "restore production" often enough that an audit brief opened on the
 assumption.

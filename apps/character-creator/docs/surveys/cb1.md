@@ -2,6 +2,8 @@
 
 **Status:** `backfilled` — written after the fact; creatures came in with the NPC and bestiary plan, and no full inventory has been taken. (2026-09-24)
 
+**Rows citing this book:** classes 10, creatures 77
+
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,
 200 PDF pages, **text layer**.

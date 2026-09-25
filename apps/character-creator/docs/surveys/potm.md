@@ -2,6 +2,8 @@
 
 **Status:** `imported` — finished in #268, before surveys existed; this file was written afterwards. (2026-09-24)
 
+**Rows citing this book:** classes 14, skills 4, notable_npcs 140
+
 Slug `potm`. Cached from `Pantheons of the Megaverse.pdf`, 210 PDF pages,
 **text layer**.
 

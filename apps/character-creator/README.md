@@ -746,7 +746,7 @@ differs from the standard:
 | S.D.C. | **3D6** for men of arms, **1D6** for practitioners of magic, scholars and everyone else |
 
 The app used to read that silence as "this character has none" and store
-`hp_max` NULL. One-hundred-and-seventy-one of three-hundred-and-forty-nine published classes state no hit point
+`hp_max` NULL. About half of the published classes state no hit point
 formula, so this was the common path, not an edge case — two Priests of Light
 reached production with no hit points and no S.D.C., and nothing on the sheet
 suggested anything was missing.
@@ -954,6 +954,10 @@ scripts/
 ├── books-lib.mjs           Reading it, and cacheCoverage - is this cache long
 │                           enough to be believed? The title matching is in
 │                           class-check-lib.mjs, which stays free of file I/O
+├── book-rows-lib.mjs       Rows citing each book, per table, for the
+│                           `**Rows citing this book:**` line every survey
+│                           carries; test/regression.mjs checks each one
+│                           against a clean build
 ├── book-worktree.mjs       One worktree per book, beside the main checkout: its
 │                           own copy of the local D1, the OCR cache and D1 env in
 │                           its settings.local.json, memory linked. --remove

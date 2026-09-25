@@ -28,6 +28,8 @@ import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE
 import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
+import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
+import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
@@ -717,54 +719,76 @@ check('/items returns the gear catalog', items.status === 200 && items.body.item
     crossed.status === 200, crossed.status);
 }
 
-// ── the README's clean-run counts ───────────────────────────────────────────
-// The README prints a table of what "a clean run produces", and until now
-// nothing checked it: every number in it was stale - 23 classes against 39,
-// 366 spells against 542 - three paragraphs below its own warning that prose
-// counts drift silently.
+// ── rows per book, and what the endpoints serve ─────────────────────────────
+// A clean-run count is only honest here. smoke.mjs never builds a full
+// database and drift-check talks to an environment somebody has been using;
+// this one was built from schema + seed + every data script, minutes ago.
 //
-// This is the only place that can honestly check it. smoke.mjs never builds a
-// full database and drift-check talks to an environment somebody has been
-// using; here the database was built from schema + seed + every data script,
-// minutes ago, from nothing.
-// The clean-run table moved to docs/operations.md with the README split; it is
-// part of `Production configuration`, which is where a rebuild is described.
-const OPERATIONS = readFileSync(join(appDir, 'docs', 'operations.md'), 'utf8');
-// Anchor to the clean-run table, not to the whole file: matching
-// "spells" anywhere found "| spells missing | 5 | 0 |" in the
-// import-tooling section and asserted the catalog held five. Labels are
-// escaped because one of them contains parentheses.
-const TABLE = (OPERATIONS.split('| After | Rows |')[1] || '').split('\n\n')[0];
-const documented = (label) => {
-  const lit = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const m = new RegExp('^\\|\\s*' + lit + '[^|]*\\|\\s*(\\d+)\\s*\\|', 'm').exec(TABLE);
-  return m ? Number(m[1]) : null;
-};
-// `vehicles` is counted through the codex index because it is the ONLY route
-// that reports it: the table has no picker, no boot-payload SELECT and nothing
-// in `catalogs`. That is why this row could not exist until the codex learned
-// the section, and it is the reason the pin lands in this PR rather than the
-// documentation one — a row in the table with no matching key here is silently
-// ignored by the loop below, so both halves or neither.
-const codexIndex = await api('GET', '/codex?section=index');
-const actual = {
-  'classes (published, live)': classes.body.classes.length,
-  skills: catalogs.body.skills.length,
-  // One game's own percentages (BOOK-INGEST-AUDIT.md F83). Counted through the
-  // boot payload like the rest, and it is the only route that reports them -
-  // the table has no picker and no codex section. A count here that drifts
-  // means a book's figures were added or lost without the record moving.
-  'per-system skill bases': (catalogs.body.skillSystemBases || []).length,
-  spells: catalogs.body.spells.length,
-  'psionic powers': catalogs.body.psionics.length,
-  gear: items.body.items.length,
-  vehicles: codexIndex.body.counts?.vehicles,
-};
-for (const [label, got] of Object.entries(actual)) {
-  const want = documented(label);
-  check(`README clean-run count for ${label}`, want === got,
-    want === null ? `no row for "${label}" in the README table`
-                  : `README says ${want}, a clean run produced ${got}`);
+// PER BOOK since 2026-09-24. docs/operations.md used to pin catalog TOTALS
+// (classes, skills, spells, gear...). Every import moved one, so two book
+// sessions in parallel edited the same lines, and the second to merge was
+// wrong until rebased. Now each survey pins its own book's rows on the line
+// under its status, and only the rows citing NO surveyed book stay in
+// operations.md. Together they still account for every counted row, so a row
+// gained or lost anywhere fails a check. scripts/book-rows-lib.mjs has the
+// mechanism. The tables come from db/schema.sql, not from a list here.
+{
+  const tables = citingTables(repoRoot);
+  const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
+    '--command', `"${bookRowsSql(tables)}"`]);
+  let rows = [];
+  const out = r.stdout || '';
+  for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+    try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) { rows = v.flatMap((x) => x.results || []); break; } }
+    catch { /* wrangler's own log line opens with a bracket too */ }
+  }
+  check('the rows citing each book can be read from the fresh database', rows.length > 1000,
+    `${rows.length} rows; ${(r.stderr || '').slice(0, 300)}`);
+
+  const surveyDir = join(appDir, 'docs', 'surveys');
+  const surveyed = readdirSync(surveyDir).filter((f) => f.endsWith('.md') && f !== 'README.md')
+    .map((f) => f.replace(/\.md$/, ''));
+  const { perBook, unsurveyed } = countRowsPerBook(rows,
+    { registry: loadBookRegistry(), notBooks: loadNotBooks(), surveyed });
+  for (const slug of surveyed) {
+    const want = parseRowsLine(readFileSync(join(surveyDir, `${slug}.md`), 'utf8'));
+    const got = perBook[slug] || {};
+    const same = want !== null && JSON.stringify(Object.entries(want).sort())
+      === JSON.stringify(Object.entries(got).sort());
+    check(`${slug}: the survey's row counts match a clean build`, same,
+      `set the line in docs/surveys/${slug}.md to: ${formatRowsLine(got, tables)}`);
+  }
+
+  const OPERATIONS = readFileSync(join(appDir, 'docs', 'operations.md'), 'utf8');
+  // Anchored to the table: matching the label anywhere in the file once read a
+  // different table's row and asserted the catalog held five spells.
+  const TABLE = (OPERATIONS.split('| After | Rows |')[1] || '').replace(/\r\n/g, '\n').split('\n\n')[0];
+  const m = /^\|\s*catalog rows citing no surveyed book\s*\|\s*(\d+)\s*\|/m.exec(TABLE);
+  check('docs/operations.md: the rows citing no surveyed book match a clean build',
+    m && Number(m[1]) === unsurveyed,
+    m ? `operations.md says ${m[1]}, a clean build has ${unsurveyed}` : 'no such row in the | After | Rows | table');
+
+  // WHAT THE TOTALS ALSO PROVED, kept without a written number: that each
+  // endpoint serves every row the database holds. `vehicles` goes through the
+  // codex index because it is the only route that reports it.
+  const inDb = {};
+  for (const row of rows) inDb[row.t] = (inDb[row.t] ?? 0) + 1;
+  const codexIndex = await api('GET', '/codex?section=index');
+  const served = {
+    classes: classes.body.classes.length,
+    skills: catalogs.body.skills.length,
+    // One game's own percentages (BOOK-INGEST-AUDIT.md F83); the boot payload
+    // is the only route that reports them.
+    skill_system_bases: (catalogs.body.skillSystemBases || []).length,
+    spells: catalogs.body.spells.length,
+    psionic_powers: catalogs.body.psionics.length,
+    gear: items.body.items.length,
+    vehicles: codexIndex.body.counts?.vehicles,
+  };
+  for (const [t, got] of Object.entries(served)) {
+    check(`the endpoints serve every ${t} row the database holds`, got === inDb[t],
+      `served ${got}, the database holds ${inDb[t]}`);
+  }
 }
 
 // BOOK-INGEST-AUDIT F103. The count above moves for any reason; this pins the
@@ -3453,34 +3477,6 @@ if (runs('data')) {
 console.log('\n' + '[7/7] Checks that only a database can make');
 {
   const readme = readFileSync(join(appDir, 'README.md'), 'utf8');
-  const WORDS = {
-    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
-    nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
-    fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
-    eighty: 80, ninety: 90,
-    // The catalog crossed a hundred classes with the Juicer Uprising import,
-    // and this vocabulary stopped at ninety-nine. `hundred` is the only
-    // MULTIPLICATIVE word here - everything above sums - so it needs the
-    // handling below rather than an entry that would make one-hundred-four
-    // read as 105.
-    hundred: 100,
-  };
-  // Hyphenated compounds sum their parts, so "thirty-seven" does not have to be
-  // listed and neither does the next count. Listing each compound means the
-  // list goes stale exactly when the number changes - which is the moment this
-  // check is supposed to fire.
-  const word = (w) => {
-    // "and" is punctuation in a number word, not a value: one-hundred-and-four.
-    const parts = String(w).toLowerCase().split('-').filter((p) => p !== 'and');
-    if (!parts.every((p) => p in WORDS)) return undefined;
-    let total = 0;
-    let run = 0;
-    for (const p of parts) {
-      if (p === 'hundred') { total += (run || 1) * 100; run = 0; } else { run += WORDS[p]; }
-    }
-    return total + run;
-  };
 
   const { parseClassMarkdown } = await import(
     pathToFileURL(join(appDir, 'js', 'parser.js')).href);
@@ -3497,17 +3493,19 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     if (c.hit_points_base == null) silent++;
   }
 
-  const claim = readme.match(/([A-Za-z-]+) of ([A-Za-z-]+) published classes state no hit point/);
-  check('the README still states the hit-point-silence count', !!claim,
-    'the sentence changed shape');
-  if (claim) {
-    check('and the number of published classes matches the database',
-      word(claim[2]) === classes.length,
-      'README says ' + claim[2] + ' (' + word(claim[2]) + '), database has ' + classes.length);
-    check('and the count of classes stating no hit point formula matches',
-      word(claim[1]) === silent,
-      'README says ' + claim[1] + ' (' + word(claim[1]) + '), database has ' + silent);
-  }
+  // The README says ABOUT HALF, in words, since 2026-09-24. It used to state
+  // both numbers ("one-hundred-and-seventy-one of three-hundred-and-forty-nine"),
+  // parsed as words and pinned exactly, so every class import edited that line.
+  // Two book sessions in parallel then conflicted on it, and the second to merge
+  // was wrong until rebased. The claim that matters is the proportion: silence
+  // is the COMMON path, not an edge case. So the sentence says that, and this
+  // holds it to a band wide enough that one book cannot cross it by accident.
+  check('the README still says about half of the published classes state no hit point formula',
+    /About half of the published classes state no hit point/.test(readme), 'the sentence changed shape');
+  const silentShare = silent / classes.length;
+  check('and it is still about half (between 35% and 65%)',
+    silentShare >= 0.35 && silentShare <= 0.65,
+    `${silent} of ${classes.length} (${Math.round(silentShare * 100)}%) - reword the README sentence if the share has moved`);
 
   // Every named spell list must still resolve, or the README's "all 34 resolve
   // now" becomes the next stale claim.

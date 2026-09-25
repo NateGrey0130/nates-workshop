@@ -2,6 +2,8 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
+**Rows citing this book:** classes 38, gear 206, vehicles 6, skills 219, spells 115, psionic_powers 89
+
 Slug `rue`. Cached from `Rifts - Ultimate Edition.pdf`, 382 PDF pages,
 **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

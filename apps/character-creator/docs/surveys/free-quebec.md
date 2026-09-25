@@ -2,6 +2,8 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
+**Rows citing this book:** classes 10, gear 17, vehicles 22, notable_npcs 8
+
 Slug `free-quebec`. Cached 2026-08-28 from `Rifts- World Book 22 Free Quebec.pdf`,
 194 PDF pages, **text layer** (no OCR), read with `scripts/read-columns.py`.
 

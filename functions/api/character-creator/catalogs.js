@@ -101,8 +101,8 @@ export async function onRequestGet({ request, env }) {
     // because this endpoint is called ONCE at boot and the wizard does not yet
     // know which game the player is about to build in - the same reason
     // `skills.systems` is filtered client-side rather than in the query.
-    // Small. The row count lives in
-    // `docs/operations.md`'s clean-run table, which a test pins; this comment
+    // Small. The row count lives in each book's survey (the
+    // `**Rows citing this book:**` line), which a test pins; this comment
     // carried its own copy and was wrong about it.
     // `level_bonuses` since F102: a game's own W.P. schedule rides the same rows.
     env.DB.prepare('SELECT skill_name, system, base, per_level, level_bonuses, note, source_book FROM skill_system_bases ORDER BY system, skill_name').all(),
