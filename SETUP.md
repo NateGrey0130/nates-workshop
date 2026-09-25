@@ -691,6 +691,12 @@ nothing to junction until it exists. A session in one starts with no memory at
 all — checked 2026-09-21, the one worktree project folder holds a transcript and
 no `memory` directory. The `worktree` skill says what to do about it.
 
+**A book worktree is the exception, since 2026-09-24.** `scripts/book-worktree.mjs`
+creates the tree before any session starts in it, so its path, and with it the
+project slug, is known. It links that slug's `memory` to the store the repo's
+own link resolves to. A worktree made any other way still starts with no
+memory.
+
 **That is the junction, not the harness. An agent file written during a session
 cannot be spawned in that session** — the file is on disk and `ls
 ~/.claude/agents` lists it, and a spawn still answers `Agent type '<name>' not
@@ -873,6 +879,18 @@ They are set for the working directory in
 the main checkout's two directories, so a session started there — the book
 work — reads the real caches wherever the code it runs lives. For a worktree
 session, set the same two in that shell or in its own `.claude/settings.local.json`.
+
+**A book worktree is one command:** `node scripts/book-worktree.mjs <slug>`.
+It makes the tree beside the main checkout, not inside it, and writes that
+`settings.local.json`. `WORKSHOP_OCR_CACHE` points at the main checkout's
+cache, and `WORKSHOP_LOCAL_D1` at the tree's **own copy** of the local D1. That
+is the one place it departs from the working directory's settings above:
+those point every session at one database, so two book sessions started there
+would each read the other's unmerged `--local` rows. Start the book's session
+in the tree, not in the working directory. `--remove` takes the tree down.
+It refuses on uncommitted changes and on any junction inside the tree. A
+junction is what a worktree removal deleted through on 2026-09-19 (the
+`worktree` skill).
 
 **Two things they do not cover.** `regression.mjs` and `play-flow.mjs` build
 their own scratch database under a temp `--persist-to` and must keep doing so.

@@ -15,6 +15,7 @@ import { detectPageOffset, detectPageOffsetRegions, isNotABook, normalizeBookTit
   offsetForPrintedPage, registryBookSlug, resolveBookSlug } from '../../../../scripts/class-check-lib.mjs';
 import { buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings } from '../../../../scripts/source-coverage-lib.mjs';
+import { projectDirName } from '../../../../scripts/book-worktree.mjs';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['Book registry'];
@@ -95,6 +96,18 @@ export function run() {
     const outOfOrder = slugs.filter((s, i) => i > 0 && slugs[i - 1] > s);
     check('scripts/books.json lists its books sorted by slug',
       outOfOrder.length === 0, `out of place: ${outOfOrder.join(', ')}`);
+
+    // book-worktree.mjs links a book worktree's memory by computing the
+    // directory Claude Code keeps for it. Pinned against the names the
+    // directories already carry on this machine (2026-09-24), because a wrong
+    // name links memory into a directory no session ever opens, and nothing
+    // would say so.
+    check('book-worktree names a working directory\'s project directory the way Claude Code does',
+      projectDirName('C:\\Users\\natha\\Projects\\nates-apps') === 'C--Users-natha-Projects-nates-apps'
+        && projectDirName('C:\\Users\\natha\\Projects\\nates-apps\\.claude\\worktrees\\elastic-boyd-06e35b')
+          === 'C--Users-natha-Projects-nates-apps--claude-worktrees-elastic-boyd-06e35b',
+      projectDirName('C:\\Users\\natha\\Projects\\nates-apps') + ' / '
+        + projectDirName('C:\\Users\\natha\\Projects\\nates-apps\\.claude\\worktrees\\elastic-boyd-06e35b'));
 
     // A NOTE MAY NOT MAKE A STANDING CLAIM ABOUT LIVE DATA. Six notes ended
     // "Nothing in production cites this book yet" and FOUR of the six were false
