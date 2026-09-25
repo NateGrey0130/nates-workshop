@@ -8,6 +8,9 @@
 
 > **All 20 findings (`F1`–`F20`) are closed**, re-verified on 2026-09-02.
 >
+> **Added 2026-09-25: four findings after `F20`, filed open.** Read under each
+> heading for its state; the line above was true on its own date.
+>
 > **The one that misreads:** `F16` has no `Taken` note and is not open. It ends
 > *"Posture: blocked, no action. This finding exists so the negative result is
 > not re-derived"* — a deliberate dead end, recorded so two plausible OCR runs
@@ -283,6 +286,117 @@ re-derived — two plausible OCR runs were about to be spent on it.**
 - **F19** — the six classes where the REBUILD is ahead of production — Taken, 2026-08-28 (PR #397). Posture held: this changed production, on a — full text in `REBUILD-AUDIT.closed.md` under its own `### F19` heading.
 
 - **F20** — five spells missing their Palladium Fantasy P.P.E. variant — Taken, 2026-08-28 (PR #395). `spells` is at zero — the third table to reach — full text in `REBUILD-AUDIT.closed.md` under its own `### F20` heading.
+
+**Added 2026-09-25**, after PRs #1352, #1353 and #1354 reconciled every offender
+`repo-vs-live.mjs --offenders` reported (31 fields; the tool printed "The repo
+rebuilds the live catalog exactly" for every table on 2026-09-24, `--remote`).
+Those PRs are the evidence below; the four findings are what they left behind.
+One of them went past a decision recorded here and says so: #1354 set
+production's `wizard` extraction note to the repo's text, where `F19` said
+*"Leave `wizard`"* about a one-word difference. By 2026-09-24 the two versions
+differed by two sentences, the repo's being the file that merged
+(`zzz-wizard-the-seventh-spell-pick.sql`).
+
+### F21 — medium — `fix-fq-deep-intel-agent-pb-cap.sql` inserts with no guard, and ran twice live
+
+Its first `UPDATE` (lines 26-32) replaces the `attribute_requirements` block
+with itself plus `attribute_maximums: { PB: 12 }`, filtered on `class_id` alone.
+Run a second time it inserts the key again. Production held the key **twice**
+until #1354 removed the duplicate (dumped `--remote` 2026-09-24; the rebuild
+held it once). The parser read the same value twice, so nothing visible broke.
+The next re-run would add it back.
+
+**Proposal:** add `AND instr(markdown, 'attribute_maximums:') = 0` to that
+statement. Then do one read-only sweep of `db/*.sql` for the same shape (a
+`replace()` whose replacement contains its own search string, filtered on the
+key alone) and list what it finds in the outcome note. Fix nothing else in this
+PR; each hit gets its own number or is dropped in writing.
+**Posture:** repo-only. Adding a guard changes no row in either environment, so
+nothing is applied.
+**Evidence:** the duplicate was measured `--remote` 2026-09-24. That the
+statement is unguarded comes from reading lines 26-32 on 2026-09-25. The sweep
+has **not** been run, and how many files share the shape is unknown.
+**Confidence:** high on this file. Unknown on the sweep until someone runs it.
+**Ongoing cost:** none.
+
+### F22 — low — `light-mdc-body-armor` outlived its purpose, and nothing cites it now
+
+`fix-category-gear-rows.sql` step 4 deletes the four category placeholders
+(`light-`, `heavy-`, `mdc-body-armor`, `ns-turbo-cyclone`) once no live class
+and no inventory row points at them. Three are gone from both production and a
+rebuild. `light-mdc-body-armor` survived because `sea-inquisitor` still cited
+it live, and #1354 converted that class to the choice block the other 29
+classes carry. On 2026-09-25, `--remote`: **0** classes cite it, **0**
+`character_items` rows hold it, and **0** `catalog_redirects` point from it.
+The row's description ("Unspecified light Mega-Damage body armour...") is
+`zzz-gear-tidy-2-stub-stats.sql`'s stopgap for while it was still cited. It is
+not an item.
+
+**Proposal:** a data script that sorts last, repeating step 4's `DELETE` for
+this slug under the same two `NOT EXISTS` guards, applied `--remote` before the
+merge. It cites `Estimate - no published price found`, which is no surveyed
+book, so the "rows citing no surveyed book" line in `docs/operations.md` moves
+by one. Regression prints the number.
+**Posture:** changes production (one row deleted), guarded so it cannot delete
+a row something cites.
+**Evidence:** the counts above were run `--remote` on 2026-09-25. That the
+rebuild keeps the row was read from a `rebuild-local.mjs` build the same day.
+**Why a rebuild keeps it was not traced.**
+**Confidence:** high that it is uncited. Medium on the claim that nobody wants
+it as a generic "any light suit" item, until Nate says so. That judgement is the
+decline path.
+**Ongoing cost:** none.
+
+### F23 — low — a long read-back fails after the apply has succeeded, and pre-flight cannot see it coming
+
+`d1-apply.mjs` re-runs a file's trailing `SELECT`s as **one `--command`** on the
+target (`scripts/d1-apply.mjs` around line 245, read 2026-09-25). On 2026-09-24
+the first version of `zzzzzzzzzzzzzzzzz-sync-gear-and-classes.sql` carried 16
+assertions of about 21 KB in total, each repeating the full replaced block. The
+apply ran (37 queries, 17 rows written). Then the read-back died with
+`wrangler d1 execute failed:` and an **empty** reason, and the script exited 1.
+Pre-flight had passed the same assertions in its scratch replay, which has no
+command line to overflow. The file shipped with ten short assertions instead.
+
+**Proposal:** have pre-flight fail a file whose joined read-back exceeds a byte
+budget, before anything is applied, naming the budget. That is the same moment
+it already refuses a failing assertion.
+**Posture:** a new pre-flight refusal, which moves an exit code. Nate may prefer
+a warning.
+**Evidence:** the failure was measured 2026-09-24. **The cause is inferred, not
+measured**: a Windows command-line limit, where `npx` through `cmd.exe` caps a
+line at 8,191 characters and `CreateProcess` at 32,767. Which of the two
+applies, and what the budget should be, is unknown.
+**Confidence:** low on the cause, until someone applies `--local` a throwaway
+file with one read-back at 8 KB and one at 30 KB. That test also sets the
+budget.
+**Ongoing cost:** one constant to keep honest.
+
+### F24 — medium — `repo-vs-live.mjs` runs only when someone decides to, and 31 differences accumulated
+
+Every difference #1352-#1354 closed came from a script whose effect one
+environment lost. Most were a correction sorting before the file it corrects;
+some were a class imported live after a blanket fix had already run. Regression
+builds only the repo and cannot see any of them, and CI cannot run the
+comparison because it has no production credentials. The oldest had been
+standing since `fix-labelled-saves.sql` landed on 2026-08-31, about 24 days.
+Nothing reported any of them until someone ran the tool by hand on 2026-09-24.
+`deploy-sweep.mjs` is the precedent for a report nobody gates on: `ship-pr`
+tells a session to run it at the end of its work.
+
+**Proposal:** add `node scripts/repo-vs-live.mjs --offenders` beside
+`deploy-sweep.mjs` in `ship-pr`'s end-of-session step, report-only. Say which
+kind of PR makes it worth running: any data script, and any class import.
+**Posture:** documentation only. No check, no gate, no exit code. It changes a
+skill, so it is pressure-tested before it merges, per `CLAUDE.md`.
+**Evidence:** the 31 fields and the landing dates were measured 2026-09-24 and
+2026-09-25 (`git log --diff-filter=A`). The run time was **not timed**; it was
+several minutes on 2026-09-24.
+**Confidence:** high that the gap is real. Medium that a line in a skill closes
+it: *"rules that are read do not fire"* is this page's own finding. What would
+raise it: a session log showing the step being run unprompted.
+**Ongoing cost:** a few minutes per session that touches data, and a skill line
+to keep true.
 
 ## The question the brief asked
 
