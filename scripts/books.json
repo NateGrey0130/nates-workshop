@@ -75,6 +75,16 @@
   ],
 
   "books": {
+    "africa": {
+      "title": "Rifts World Book 4: Africa",
+      "aliases": ["Africa", "Rifts Africa", "Rifts World Book Four: Africa"],
+      "source_pdf": "604225358-Rifts-World-Book-04-Africa.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 4,968 chars/page and 35.1% stop words (not the F73 glyph-dropped kind). Offset verified by folio at six points - cache p010 reads 9, p030 reads 29, p060 reads 59, p090 reads 89, p150 reads 149, p161 reads 160 - one region, no split. printed_pages is 160, the last numbered folio at cache p161; cache p162 is the back cover. ocr-book.py measured 158 and that is a max-folio misread (p160/p161 print their folios split as '1 59' and '1 60'); the registry outranks the manifest. welded_pages 2 (5, 6 - front matter), corrupt_pages 7 pages at one or two hits each, substituted_digits 19 pages. See apps/character-creator/docs/surveys/africa.md."
+    },
+
     "bom": {
       "title": "Rifts Book of Magic",
       "aliases": [],
