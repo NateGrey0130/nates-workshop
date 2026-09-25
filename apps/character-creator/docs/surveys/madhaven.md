@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 12, gear 40, notable_npcs 2, creatures 25
 
+**MOS:** squire-of-the-white-rose 10
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build since 2026-09-25. Printed 30-31: the Squire of the White Rose picks ONE of ten areas of specialty. The book's two-MOS trade is prose.*
+
 Slug `madhaven`. Cached 2026-09-24 from
 `974230361-Rifts-World-Book-29-Madhaven.pdf`, 136 PDF pages, **text layer**
 (no OCR). `--probe` median 4,786 chars/page, 36.8% stop words, so this is a real

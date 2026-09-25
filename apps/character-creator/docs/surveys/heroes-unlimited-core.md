@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 88, spells 16, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5
 
+**MOS:** hu-edu-high-school 6 choose 2, hu-edu-military 15 choose 2, hu-edu-trade-school 16 choose 2, hu-edu-one-year-college 13 choose 2, hu-edu-two-years-college 13 choose 2, hu-edu-three-years-college 13 choose 3, hu-edu-four-years-college 13 choose 3, hu-edu-military-specialist 16 choose 1, hu-edu-bachelors 13 choose 3, hu-edu-masters 13 choose 3, hu-edu-doctorate 14 choose 4
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build since 2026-09-25. The option counts are not all sixteen, and that is the point: printed 27's Special Restrictions cut each level's list (High School may take only six named programs; Espionage only for Military Specialist and Trade School; the Military program only for Military, Military Specialist and Trade School; Pilot Advanced for those three plus Doctorate), so Trade School alone offers all sixteen. A number drifting toward 16 means a restriction was lost. `choose 1` for the Military Specialist is not a typo: restriction 2 gives it six espionage skills and four W.P.s outright, then ONE whole program on top (BOOK-INGEST-AUDIT F82).*
+
 Slug `heroes-unlimited-core`. Cached 2026-09-12 from
 `93229611-Heroes-Unlimited-Core-Book-Revised.pdf`, 240 PDF pages,
 **a scan (no text layer)**, OCR at 300 dpi, psm 3.

@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 17, gear 73, vehicles 2, skills 3, spells 37, notable_npcs 8, creatures 15
 
+**MOS:** demon-goblin 3, monk 3
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build since 2026-09-25. The demon-goblin's three R.C.C. skill packages (printed 123-124) and the monk's three Areas of Mastery (printed 60-61) arrived by correction, RETRO-AUDIT R2: they sat in prose until 031-character-mos.sql landed.*
+
 Slug `ww`. Cached 2026-08-27 from `Rifts- Dimension Book 1 Wormwood.pdf`,
 161 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

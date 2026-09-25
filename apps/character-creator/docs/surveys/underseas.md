@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 30
 
+**MOS:** navy-seaman 9
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build since 2026-09-25. The book prints nine Navy specialties as part of the O.C.C. itself (printed 111-112), so it arrived with its MOS block.*
+
 Slug `underseas`. Cached 2026-08-28 from `Rifts- World Book 7 Underseas.pdf`,
 216 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 
@@ -455,7 +459,9 @@ groups:
   list on purpose - *nothing else may claim an MOS the list does not know
   about*. It is registered at nine packages, the count read off
   `add-navy-seaman-class.sql` rather than off this survey, which said nine and
-  could have been wrong the way #805's arithmetic was.
+  could have been wrong the way #805's arithmetic was. *(Since 2026-09-25 that
+  closed list is the union of the surveys' `**MOS:**` lines, this book's at the
+  top of this file, not a literal in `regression.mjs`.)*
 - **Nine O.C.C.s with no `occ_group`.** Every class from #800 through #807
   shipped without one. That is not cosmetic: a race's `occ_restrictions` may
   carry a `group:<name>` token, and an occupation with no group matches
