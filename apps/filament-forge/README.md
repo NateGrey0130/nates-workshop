@@ -57,7 +57,8 @@ Six tables, every one prefixed `ff_`, in the tools group's own D1 database
 MediaVault's. The prefix dates from when the character creator's unprefixed
 tables shared their database, and still keeps FilamentForge's apart from
 MediaVault's `media_`. Nothing here joins to, reads, or is read by any other
-app's table, and `groups.mjs --check` fails if an endpoint names one.
+app's table, and `groups.mjs --check` fails if an endpoint names one or
+reaches any binding but `DB_TOOLS`.
 
 | Table | Notes |
 |---|---|

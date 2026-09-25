@@ -30,6 +30,12 @@
 //      the pairs groups.json lists in cross_group_tables - and each of those
 //      is still used. This is what makes a database per group possible: a
 //      group whose code reaches only its own tables can be given only them.
+//   7. no file under functions/ reaches a D1 binding (`env.DB...`) but its own
+//      group's d1_binding - shared code none, except that a cross_group_tables
+//      file may reach the database holding the tables it is let use - and the
+//      bindings groups.json names are exactly the D1s wrangler.jsonc binds.
+//      Rule 6 reads table names; this reads the handle the query runs on, so a
+//      query written against the wrong database cannot pass by naming no table.
 //
 // Read-only. Exits 1 on any failure and names each one.
 
@@ -153,6 +159,25 @@ export function check(root = repoRoot) {
     if (!files.includes(f)) { failures.push(`cross_group_tables names ${f}, which does not exist`); continue; }
     const named = tablesNamed(readFileSync(join(root, f), 'utf8'), tableOwner);
     for (const t of ts) if (!named.has(t)) failures.push(`cross_group_tables lets ${f} use ${t}, and it no longer does - remove the exception`);
+  }
+
+  // 7. server code reaches only its group's database
+  const bindingOf = Object.fromEntries(Object.entries(groups).filter(([, g]) => g.d1_binding).map(([id, g]) => [id, g.d1_binding]));
+  const bindings = new Set(Object.values(bindingOf));
+  const config = readFileSync(join(root, 'wrangler.jsonc'), 'utf8');
+  const bound = [...config.matchAll(/"binding"\s*:\s*"(\w+)"\s*,\s*"database_name"/g)].map((m) => m[1]);
+  for (const b of bindings) if (!bound.includes(b)) failures.push(`groups.json gives a group the D1 binding ${b}, which wrangler.jsonc does not bind`);
+  for (const b of bound) if (!bindings.has(b)) failures.push(`wrangler.jsonc binds a D1 as ${b}, and no group in groups.json has it as its d1_binding`);
+  for (const f of files.filter((p) => p.startsWith('functions/') && p.endsWith('.js'))) {
+    const id = ownerOf(f, groups);
+    const may = new Set(bindingOf[id] ? [bindingOf[id]] : []);
+    for (const t of allowed[f] ?? []) if (bindingOf[tableOwner.get(t)]) may.add(bindingOf[tableOwner.get(t)]);
+    const src = readFileSync(join(root, f), 'utf8');
+    for (const m of src.matchAll(/\benv\??\.(\w+)/g)) {
+      if (!bindings.has(m[1]) || may.has(m[1])) continue;
+      failures.push(`${f} (${id}) reaches env.${m[1]}, ${Object.keys(bindingOf).find((g) => bindingOf[g] === m[1])}'s database - ${may.size ? `it may reach only ${[...may].join(', ')}` : 'shared code reaches none'}`);
+      may.add(m[1]); // one failure per file and binding
+    }
   }
 
   return { failures, files: files.length, entries: seen.size, tables: created.length };

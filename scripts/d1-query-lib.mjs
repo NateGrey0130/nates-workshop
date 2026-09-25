@@ -16,8 +16,11 @@ export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 // keeps `DB`, the database this repo has always had; Marvel and the tools get
 // their own. A script that takes `--db <group>` resolves it here, and without
 // the flag it means palladium, so every command typed before the split still
-// reaches the database it always did.
-const DATABASES = { palladium: 'DB', marvel: 'DB_MARVEL', tools: 'DB_TOOLS' };
+// reaches the database it always did. The map is each group's d1_binding in
+// groups.json, which groups.mjs --check holds against wrangler.jsonc.
+const DATABASES = Object.fromEntries(
+  Object.entries(JSON.parse(readFileSync(join(repoRoot, 'groups.json'), 'utf8')).groups)
+    .filter(([, g]) => g.d1_binding).map(([id, g]) => [id, g.d1_binding]));
 
 /**
  * Every group database the repo can build, with the files that define it:
