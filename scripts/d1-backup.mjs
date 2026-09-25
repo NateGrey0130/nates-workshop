@@ -41,12 +41,13 @@
 // documented one somebody runs, because the first kind is believed.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { d1Query, targetFromArgv, DB } from './d1-query-lib.mjs';
+import { d1Query, dbFromArgv, targetFromArgv } from './d1-query-lib.mjs';
 
-const argv = process.argv.slice(2);
+// --db <palladium|marvel|tools>, default palladium (d1-query-lib.mjs).
+const { group, binding: db, rest: argv } = dbFromArgv(process.argv.slice(2));
 const outDir = argv.find((a) => !a.startsWith('--'));
 if (!outDir) {
-  console.error('usage: node scripts/d1-backup.mjs <out-dir> [--local|--remote]');
+  console.error('usage: node scripts/d1-backup.mjs <out-dir> [--local|--remote] [--db <palladium|marvel|tools>]');
   process.exit(2);
 }
 const target = targetFromArgv(process.argv);
@@ -58,7 +59,7 @@ mkdirSync(outDir, { recursive: true });
 // through a shell string that cannot carry an embedded double quote.
 const tables = d1Query(
   "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
-  { target },
+  { target, db },
 );
 
 const virtual = tables
@@ -75,13 +76,13 @@ for (const { name } of tables) {
   wanted.push(name);
 }
 
-console.log(`\n${DB} ${target} -> ${outDir}\n`);
+console.log(`\n${group} (${db}) ${target} -> ${outDir}\n`);
 
 let total = 0;
 const failed = [];
 for (const name of wanted) {
   try {
-    const rows = d1Query(`SELECT * FROM ${name}`, { target });
+    const rows = d1Query(`SELECT * FROM ${name}`, { target, db });
     const file = join(outDir, `${name}.json`);
     const text = JSON.stringify(rows, null, 2);
     writeFileSync(file, text, 'utf8');
