@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `importing` — gear shipped; Biomancy spells next. (2026-09-25)
+**Status:** `importing` — gear and Biomancy spells shipped; vehicles next. (2026-09-25)
 
-**Rows citing this book:** gear 30
+**Rows citing this book:** gear 30, spells 24
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -225,6 +225,14 @@ go in as `Biomancy: <Name>` with `tradition` `biomancy`, following the
 `Nature:` / `warlock` convention (`spell-tradition-namespaces`). The
 Biomancer's class grants the tradition plus the named common spells.
 
+**Shipped as decided** (`add-south-america-biomancy-spells.sql`): 24 rows,
+level and cost from the index on printed 64. The text layer sets the *Tree
+Teleport* heading at the foot of *Strengthen Plants* (printed 67); the parser
+puts it back. **One retelling is linked**: *Suspended Animation* ->
+`Earth: Suspended Animation`. *Shrink Plant* agrees with `Earth: Shrink Plant`
+on every number but fails `same-spell-lib`'s vocabulary floor (0.33 against
+0.35) because that row's description is a paraphrase, so it is not linked.
+
 Run `scripts/catalog-diff.mjs --remote` on each extracted set before writing
 SQL. The name checks above are not a matcher.
 
@@ -257,3 +265,4 @@ What is deliberately left, with the reason:
 |---|---|---|
 | 2026-09-24 | — | cache built (170 pp, text layer), offset +1 verified at five folios, `south-america` registered in `books.json`, survey written |
 | 2026-09-25 | #1375 | gear: 30 rows (7 Colombian C-series weapons, 10 bio-weapons and bio-armors, 8 Manoan TW items and enchanted armors, 5 Cibolan drugs); the 3 Naruni NE weapons were already catalogued. Applied `--remote` first |
+| 2026-09-25 | #PR | Biomancy spells: 24 rows, `Biomancy: ` prefix, tradition `biomancy`, level and cost from the index on printed 64; Suspended Animation linked to `Earth: Suspended Animation`. Applied `--remote` first |
