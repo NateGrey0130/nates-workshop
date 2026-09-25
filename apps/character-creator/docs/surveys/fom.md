@@ -2,6 +2,8 @@
 
 **Status:** `backfilled` — written after the fact; no book-shaped import has been run, and a few rows cite it from other work. (2026-09-24)
 
+**Rows citing this book:** notable_npcs 13
+
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**.
 

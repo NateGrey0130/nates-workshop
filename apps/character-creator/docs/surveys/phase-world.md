@@ -2,6 +2,8 @@
 
 **Status:** `imported` — all 34 playable classes; the ledger below is the authority. (2026-09-24)
 
+**Rows citing this book:** classes 34, gear 50, vehicles 1, skills 17, psionic_powers 15, notable_npcs 11, creatures 12
+
 Slug `phase-world`. Cached 2026-08-28 from
 `Rifts- Dimension Book 2 Phase World.pdf`, 209 PDF pages,
 **scan (no text layer)**, OCR at 300 dpi, psm 3.

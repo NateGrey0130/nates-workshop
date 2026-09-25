@@ -2,6 +2,8 @@
 
 **Status:** `imported` — PRs #983-#1019. (2026-09-24)
 
+**Rows citing this book:** classes 23, gear 53, vehicles 7, skills 7, spells 146, notable_npcs 1, creatures 26
+
 **FULLY IMPORTED 2026-09-13** (PRs #983–#1019). All five batches are complete:
 
 | | | production |

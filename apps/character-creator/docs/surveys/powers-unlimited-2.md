@@ -2,6 +2,8 @@
 
 **Status:** `excluded` — D0 in heroes-unlimited-core.md excludes it; that is where to look before reopening it. (2026-09-24)
 
+**Rows citing this book:** none
+
 Slug `powers-unlimited-2`. Cached 2026-09-12 from `97891933-Powers-Unlimited-2.pdf`,
 98 PDF pages, **a scan (no text layer)**, OCR at 300 dpi, psm 3.
 

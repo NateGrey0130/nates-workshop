@@ -111,9 +111,11 @@ ones that fail LATE:
 - **Filename order is execution order.** A rebuild applies
   `apps/character-creator/db/*.sql` as one sorted glob, so a `fix-` that sorts
   before the file it corrects is silently undone.
-- **The README's counts are pinned by the test suite** — classes, skills,
-  spells, psionic powers, gear, and a sentence parsed as words. Adding a class
-  moves two of them.
+- **Each book's row counts are pinned by the test suite**, on the
+  `**Rows citing this book:**` line of its survey. Since 2026-09-24 they
+  replace the catalog totals the README and `docs/operations.md` used to
+  pin. A data PR updates its own book's line, and `regression` prints the
+  line to paste when it is wrong.
 - **`--local` is not a mirror of production.** It accumulates. Ask production.
 
 **When a check goes red, the rows it names are not the whole cause.** Before

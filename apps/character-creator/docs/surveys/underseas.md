@@ -2,6 +2,8 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
+**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 30
+
 Slug `underseas`. Cached 2026-08-28 from `Rifts- World Book 7 Underseas.pdf`,
 216 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

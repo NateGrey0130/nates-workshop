@@ -2,6 +2,8 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
+**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 7, skill_system_bases 1, spells 28, psionic_powers 2, creatures 36
+
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
 

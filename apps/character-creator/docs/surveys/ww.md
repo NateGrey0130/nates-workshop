@@ -2,6 +2,8 @@
 
 **Status:** `imported` — 17 of 17 classes, per the ledger below. (2026-09-24)
 
+**Rows citing this book:** classes 17, gear 73, vehicles 2, skills 3, spells 37, notable_npcs 8, creatures 15
+
 Slug `ww`. Cached 2026-08-27 from `Rifts- Dimension Book 1 Wormwood.pdf`,
 161 PDF pages, **scan (no text layer)**, OCR at 300 dpi, psm 3.
 

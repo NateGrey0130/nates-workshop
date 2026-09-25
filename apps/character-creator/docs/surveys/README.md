@@ -50,6 +50,18 @@ the only place a book's status is written:
 | `excluded` | surveyed and deliberately not imported; the survey says why |
 | `backfilled` | rows arrived before surveys existed and no full inventory has been taken, so how complete the import is is not known |
 
+**The line after it is the book's row count**, per table, in a database built
+from the repo:
+
+```
+**Rows citing this book:** classes 12, gear 40, notable_npcs 2, creatures 25
+```
+
+`test/regression.mjs` checks it against a clean build, and a wrong line fails with
+the line to paste. **Update it in the PR that adds the rows.** It replaced the
+catalog totals in `docs/operations.md`, which every import moved. This is the
+one number in these files that is pinned; see *No counts* above for the rest.
+
 **Why here, and only here:** until 2026-09-24 the status sat in a table in
 `BOOK-INGEST-QUEUE.md`. Two book sessions running in parallel edit neighbouring
 rows of that table and conflict. The table also disagreed with the surveys:
