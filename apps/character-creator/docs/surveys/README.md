@@ -50,6 +50,10 @@ the only place a book's status is written:
 | `excluded` | surveyed and deliberately not imported; the survey says why |
 | `backfilled` | rows arrived before surveys existed and no full inventory has been taken, so how complete the import is is not known |
 
+**`node scripts/book-board.mjs` shows every book's status at once**, with each
+book's worktree, branches and open PRs, and with `--remote`, production's row
+count beside the survey's.
+
 **The line after it is the book's row count**, per table, in a database built
 from the repo:
 

@@ -962,6 +962,10 @@ scripts/
 │                           own copy of the local D1, the OCR cache and D1 env in
 │                           its settings.local.json, memory linked. --remove
 │                           refuses on any junction inside the tree
+├── book-board.mjs          Where every book stands and who is on it: survey
+│                           status and rows, worktree, <slug>- branches, open
+│                           PRs; --remote adds production's rows per book.
+│                           Read-only, reports only
 ├── agent-usage.mjs         Which subagent has been spawned how often, from
 │                           this machine’s session transcripts. Reads nothing
 │                           in this repo, and nothing gates on it. The block
