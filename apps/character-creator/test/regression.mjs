@@ -5307,8 +5307,13 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // both ways - and a human cannot be one, so admitting RACE_NONE would offer a
   // human character a Nightbane package. NAMED, so a new bar that forgets the
   // human case still fails here; an exemption has to be argued into this list.
+  // pucara-mind-mage (Rifts World Book 9: South America 2 printed 55-56) is
+  // the Pucara Red Giant's own psychic training: it grants the giant's stone
+  // powers and nothing a human could hold, and the book offers it to no other
+  // race.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
-    'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic'];
+    'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
+    'pucara-mind-mage'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),

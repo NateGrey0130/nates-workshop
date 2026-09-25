@@ -1,8 +1,8 @@
 # Rifts World Book 9: South America 2 — survey
 
-**Status:** `importing` — skills, spells, gear and vehicles shipped; classes next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
+**Status:** `importing` — skills, spells, gear, vehicles and the Empire's seven classes shipped; Arkhon and Legion classes next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
 
-**Rows citing this book:** gear 60, vehicles 23, skills 8, spells 35
+**Rows citing this book:** classes 7, gear 60, vehicles 23, skills 8, spells 35
 
 Slug `south-america-2`. Cached 2026-09-25 from
 `Rifts- World Book 9 South America 2.pdf` (copied from a `kupdf.net` download),
@@ -244,3 +244,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1390](https://github.com/NateGrey0130/nates-workshop/pull/1390) | 35 spells: 25 `Nazca:` line drawings at level 0 (p.31-38, tradition `nazca`, Time to Draw as casting_time) and 10 `Blue Flame:` spells at their printed levels (p.190-191, tradition `blue-flame`). Names and costs follow the p.190 list; Flamewings keeps the list's 15 with the entry's 25 in variant_note. `Nazca: Close Rift` is NOT linked to the invocation (same-spell-lib). book-reconcile 35/35. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1392](https://github.com/NateGrey0130/nates-workshop/pull/1392) | 60 gear rows: 32 weapons, 15 armors, 12 magic items, 1 gear (the Larhold demon-mask) - Empire (23-35, 56-58), Ancient and Pucara (50, 55), Arkhon (79-84), Legion (113-115, cost NULL: not for sale), Silver River (163-168), Larhold (186-190). book-reconcile agreed with all 54 extracted rows and found the six Ancient/Pucara items, added by hand. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1394](https://github.com/NateGrey0130/nates-workshop/pull/1394) | 23 vehicles (11 power armor, 9 vehicles, 3 robots) with 158 M.D.C. locations and 122 weapon-system entries: Empire (59-67), Arkhon (84-97), Legion (116-121), Silver River (168-183). Armor of the Sun has no main body (M.D.C. by the wearer's M.E.). book-reconcile checked all 23 and found the three Legion "Sensors, etc." entries the OCR had unnumbered; added. Applied `--remote` before the PR. |
+| 2026-09-25 | [#1399](https://github.com/NateGrey0130/nates-workshop/pull/1399) | 7 classes: True Inca R.C.C. (20-23; the four patron gods are a choose-1 of abilities, each carrying its own magic and psionics), Inca Warrior (23-24), Inca Sun-Priest (24-26; god choice carries the elemental spell lists), Nazca Line Maker (26-28; picks from named lists, the six Secret drawings from level 6), Rune Warrior (28-30), Pucara Red Giant R.C.C. (52-55), Pucara Mind Mage (55-56, Red Giant only). Drafted and checked with class-check --remote, no stubs. Applied `--remote` before the PR. |
