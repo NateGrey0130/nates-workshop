@@ -937,6 +937,17 @@ export function sumBonusGroups(a, b) {
     const merged = mergeBonusBlock(a?.[group], b?.[group]);
     if (Object.keys(merged).length) out[group] = merged;
   }
+  // `attacks_base` STATES a starting number (p.347), so of two it is the
+  // higher that stands - the rule bonusesFromSkills() already kept between two
+  // styles. Summed with the rest, a race and an occupation added their counts,
+  // and a class stating four attacks with Hand to Hand: Assassin's three
+  // fought at seven. A class whose book says "one ADDITIONAL attack" or "plus
+  // those gained from hand to hand" means a bonus, and says so as `attacks`.
+  const baseA = a?.combat?.attacks_base;
+  const baseB = b?.combat?.attacks_base;
+  if (typeof baseA === 'number' && typeof baseB === 'number') {
+    out.combat.attacks_base = Math.max(baseA, baseB);
+  }
   // The labelled saves both halves state, kept side by side (F7).
   const otherSaves = [...(a?.saves?.other || []), ...(b?.saves?.other || [])];
   if (otherSaves.length) out.saves = { ...(out.saves || {}), other: otherSaves };
