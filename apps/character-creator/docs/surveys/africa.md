@@ -1,6 +1,6 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — the necromancy and witch spells are in; ceremonial spells next. (2026-09-25)
+**Status:** `importing` — the necromancy and witch spells are in; ceremonial spells next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
 
 **Rows citing this book:** spells 30
 
@@ -126,11 +126,10 @@ mattered.
 | Necromancer | 99-104 | Necromancer & Phoenixi | `necromancer` | **optional**, alignment-restricted. `necromancer-russian` (Mystic Russia) exists beside it; this is the original. Union with the Dead and Augmentation are tables of P.P.E.-priced options: prose plus a pool, not 26 abilities |
 | African Witch | 72-74 | African Witch | `african-witch` | the book marks it an NPC villain and not recommended for players. **Proposed for import anyway**, flagged in the class note, on the Hidden Witch precedent (Mystic Russia imported that NPC-villain O.C.C.), because the NPC generator rolls from published classes. Witch Insanity Table is prose |
 
-### Playable R.C.C.s (9)
+### Playable R.C.C.s (8)
 
 | class | printed | ladder | proposed id | note |
 |---|---|---|---|---|
-| Mind Bleeder | 93-95 | Mind Bleeder | `mind-bleeder` | master psionic; draws on the new Mind Bleeder powers plus the ordinary categories |
 | Pygmy Hunter | 114-115 | Tree People, Pygmy Hunter & Tautons | `pygmy-hunter` | |
 | Pygmy Shaman | 115-116 | Pygmy Shaman & Ramen | `pygmy-shaman` | no spellcasting; makes talismans and charms (below) |
 | Agogwe | 117-119 | Agogwe & Crocodillians | `agogwe` | three psionic tiers by percentile (60/37/3). Expect three variants |
@@ -140,7 +139,12 @@ mattered.
 | Tautons | 63-65 | Tree People, Pygmy Hunter & Tautons | `tauton` | |
 | Crocodillian | 67-70 | Agogwe & Crocodillians | `crocodillian` | carries Psionic Empathy with Reptiles |
 
-**None of the fourteen ids exists in production** (checked 2026-09-25).
+**None of the thirteen ids exists in production** (checked 2026-09-25).
+
+**The Mind Bleeder R.C.C. (printed 93-95) is NOT this book's to import.**
+Psyscape reprints it (its printed 52-55) and plans `mind-bleeder` in its own
+class PR; the later book wins. Its ladder here (printed 160) can be compared
+then, and a difference goes in that class's note.
 
 ### Not a class
 
@@ -192,9 +196,17 @@ treatment.
 
 ## Psionic powers
 
+**Refreshed 2026-09-25 after other sessions merged.** Psyscape (World Book 12,
+the later book) reprints the Mind Bleeder powers and shipped all fifteen in
+#1382, in the `Mind Bleeder` category this survey also proposed. Every I.S.P.
+there equals this book's printing, so nothing is left for a `variant_note`.
+The fifteenth power this survey could not pin is **Brain Scan** (printed 97).
+Only the two empathy powers remain for this book; they ride with the R.C.C.
+PR that needs them.
+
 | group | printed | rows | category |
 |---|---|---|---|
-| Mind Bleeder powers | 96-98 | 15 | **`Mind Bleeder`**, a new category value on the `Phase` precedent (Phase World, 2026-08-31) |
+| Mind Bleeder powers | 96-98 | 15 | `Mind Bleeder` — **shipped by Psyscape (#1382)**, identical costs; none from this book |
 | Psionic Empathy with Animals / with Reptiles | 62-63, 69 | 2 | the book files them under their races; `Sensitive` |
 
 The fifteen, in book order: Bleed Aura, Bleed P.E. Energy, Bleed Memory,
@@ -234,7 +246,10 @@ summarises it and points to Conversion Book One, and `magots` exists.
 **Notable NPCs (about 31):** the four Horsemen and the Armageddon Creature;
 the fifteen gods (Set, Anubis, Apepi, Amon, Anhur, Ammit, Bes, Osiris, Ra,
 Thoth, Isis, Horus, Bennu, Apis, Sebek) plus Katrina Sun as her own row; Pharaoh
-Rama-Set; Erin Tarn, Sir Winslow Thorpe, Victor Lazlo, Lo Fung, Fang-Lo, Abkii.
+Rama-Set; Victor Lazlo, Lo Fung, Fang-Lo, Abkii. **Erin Tarn and Sir Winslow
+Thorpe belong to Coalition War Campaign** (World Book 11, the later book,
+printed 15 and 17 there), whose survey plans them; this book's versions are
+compared at that import, not landed beside it.
 
 **All fifteen gods already exist** as `set`, `ra`, `sebek` and so on — from
 *Palladium Fantasy Dragons and Gods*, `system` `palladium-fantasy`, in S.D.C.
@@ -277,15 +292,17 @@ One PR each, applied `--remote` before the PR, in this order:
    `african-witch`.
 3. **Spells: ceremonial** — about 24 chants, dances and rituals,
    `african-ceremonial`.
-4. **Psionics** — 15 Mind Bleeder powers in the new `Mind Bleeder` category,
-   and the two empathy powers.
+4. ~~Psionics~~ — **dropped 2026-09-25**: Psyscape shipped the fifteen
+   Mind Bleeder powers (#1382); the two empathy powers move to step 7.
 5. **Gear and vehicles** — 8 Phoenix weapons (render 140-141), 8 Medicine Man
    items, 4 vehicles.
 6. **O.C.C.s** — Medicine Man, Rain Maker, Priest, Necromancer, African Witch.
-7. **R.C.C.s** — Mind Bleeder, Pygmy Hunter, Pygmy Shaman, Agogwe, Tree
-   People, Phoenixi, Ramen, Tauton, Crocodillian.
+7. **R.C.C.s** — Pygmy Hunter, Pygmy Shaman, Agogwe, Tree People, Phoenixi,
+   Ramen, Tauton, Crocodillian; with Psionic Empathy with Animals and with
+   Reptiles, which Ramen and Crocodillian carry. The Mind Bleeder is
+   Psyscape's.
 8. **Creatures** — about 22.
-9. **Notable NPCs** — about 31, with their named weapons.
+9. **Notable NPCs** — about 29, with their named weapons; Erin Tarn and Thorpe are Coalition War Campaign's.
 
 What is deliberately left, with the reason for each:
 
@@ -302,4 +319,4 @@ What is deliberately left, with the reason for each:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-25 | [#1376](https://github.com/NateGrey0130/nates-workshop/pull/1376) | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
-| 2026-09-25 | this PR | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
+| 2026-09-25 | [#1383](https://github.com/NateGrey0130/nates-workshop/pull/1383) | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
