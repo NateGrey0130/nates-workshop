@@ -26,6 +26,10 @@
     "The 'group' of each app in apps/manifest.json must agree with this file; 'other' there",
     "is 'tools' here. `node scripts/groups.mjs --check` holds all of that, and runs in CI."
   ],
+  "cross_group_tables": {
+    "//": "The ONLY server files allowed to name a table another group owns, and which. groups.mjs --check fails on any other. The Claude client is shared code and logs every call to claude_usage, which is Palladium's by decision (2026-09-25): FilamentForge's calls reach it through the shared proxy.",
+    "functions/api/_lib/claude-client.js": ["claude_usage"]
+  },
   "groups": {
     "palladium": {
       "title": "Palladium / Rifts",
