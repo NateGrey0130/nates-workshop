@@ -39,6 +39,18 @@ memory directory to the real store. Start the book's session in that tree.
 which is the removal hazard below. `book-survey` §8 has the parallel-book
 routine it belongs to.
 
+**For a group of apps, the same setup:**
+
+```bash
+node scripts/group-worktree.mjs <palladium|marvel|tools>
+```
+
+It makes `../nates-apps-groups/<group>` on a `<group>-work` branch, with the same
+local D1, env and memory as a book's tree (`scripts/worktree-lib.mjs` does
+both). `--name <n>` makes a second tree for one group; `--remove` has the same
+refusals. `groups.json` says which group a path is in, and `CLAUDE.md` →
+*Three groups* says why sessions on different groups want separate trees.
+
 Anything else:
 
 ```bash

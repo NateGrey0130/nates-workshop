@@ -35,6 +35,12 @@ so and deliberately does not repeat the descriptions. An entry is `slug`,
   hub's sections in order. The template's example says `other`; a Palladium or
   Marvel app needs its own. One that names no declared group still renders, in
   the last section, and `rendered-ui.mjs` fails on it.
+- **`groups.json` must own the new directories, in the matching group** — the
+  app's `apps/<slug>/`, its `functions/api/<slug>/`, and any table it creates.
+  The manifest's `other` is `tools` there. `node scripts/groups.mjs --check`
+  fails on a path with no owner and on a tile whose manifest group disagrees,
+  and CI decides which suites a change runs from that owner (`CLAUDE.md` →
+  *Three groups*).
 
 - `status` of `live` **and** a slug makes the card a link. Anything else renders
   as a non-link card, which is how the `slug: null` "More Coming Soon" tile
@@ -102,6 +108,7 @@ shape is worth copying because the expensive parts were not the obvious ones.
   own URL — see `verify-ui`, and check the app is yours before trusting the page
 - `apps/manifest.json` has its entry, with an `<svg` icon and the status you
   meant
+- `groups.json` owns its directories and tables, and `groups.mjs --check` passes
 - the stylesheets it links are the visual system you intended, checked by
   looking rather than by reading the file list
 - if it is in the RPG suite: `shared/js/appnav.js` is loaded and the page
