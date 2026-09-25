@@ -48,24 +48,17 @@
 // A dev server started in the tree serves the tree's own .wrangler/state. Use one of .claude/launch.json's -879x hatch ports if another
 // checkout has 8788.
 
-import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { existsSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { loadBookRegistry } from './books-lib.mjs';
+import { mainCheckout, removeTree, setUpTree } from './worktree-lib.mjs';
 
-// Claude Code's project directory name for a working directory: every
-// character that is not a letter or a digit becomes '-'. Read off the
-// directories on this machine, 2026-09-24: `C:\Users\natha\Projects\nates-apps`
-// is `C--Users-natha-Projects-nates-apps`, and a worktree under its
-// `.claude\worktrees\` is `...-nates-apps--claude-worktrees-<name>`.
-export function projectDirName(path) {
-  return path.replace(/[^A-Za-z0-9]/g, '-');
-}
+// The setup itself is scripts/worktree-lib.mjs, shared with group-worktree.mjs.
+// This name stays exported here because the smoke test imports it from here.
+export { projectDirName } from './worktree-lib.mjs';
 
 const die = (msg) => { console.error(`book-worktree: ${msg}`); process.exit(1); };
-const git = (args, opts = {}) => (execFileSync('git', args, { encoding: 'utf8', ...opts }) ?? '').trim();
 
 // Only when run, not when smoke imports projectDirName.
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
@@ -78,11 +71,10 @@ function main() {
   if (!slug) die('usage: node scripts/book-worktree.mjs <slug> [--branch <name>] [--copy-d1] [--remove]');
   if (!loadBookRegistry()[slug]) die(`"${slug}" is not in scripts/books.json - register the book first`);
 
-  // The MAIN checkout, even when this runs inside another worktree.
-  const mainTree = dirname(git(['rev-parse', '--path-format=absolute', '--git-common-dir']));
+  const mainTree = mainCheckout();
   const dest = join(dirname(mainTree), 'nates-apps-books', slug);
 
-  if (args.includes('--remove')) return remove(dest);
+  if (args.includes('--remove')) return removeTree(dest, die);
 
   if (existsSync(dest)) die(`${dest} already exists`);
   const bi = args.indexOf('--branch');
@@ -91,80 +83,13 @@ function main() {
     die(`branch "${branch}" must start with "${slug}-" - a book's branches are found by that prefix`);
   }
 
-  git(['fetch', '--quiet', 'origin', 'main'], { cwd: mainTree, stdio: ['ignore', 'ignore', 'inherit'] });
-  mkdirSync(dirname(dest), { recursive: true });
-  git(['worktree', 'add', '--quiet', dest, '-b', branch, 'origin/main'], { cwd: mainTree, stdio: ['ignore', 'ignore', 'inherit'] });
-
-  // Its own local D1: built from the tree's files, or copied when asked.
-  const d1From = join(mainTree, '.wrangler', 'state');
-  const d1To = join(dest, '.wrangler', 'state');
-  let d1Note;
-  if (args.includes('--copy-d1') && existsSync(d1From)) {
-    cpSync(d1From, d1To, { recursive: true, dereference: true });
-    d1Note = `copied from ${d1From} (it carries any unmerged --local applies made there)`;
-  } else {
-    console.log('building the local D1 from the tree\'s files - a few minutes...');
-    const builder = join(dirname(fileURLToPath(import.meta.url)), 'build-local-d1.mjs');
-    try {
-      execFileSync(process.execPath, [builder, d1To, '--repo', dest], { stdio: ['ignore', 'inherit', 'inherit'] });
-    } catch {
-      die(`the tree exists at ${dest} but its local D1 did not build (the error is above).\n`
-        + `  Take it down with: node scripts/book-worktree.mjs ${slug} --remove, then fix the build or re-run with --copy-d1`);
-    }
-    d1Note = `built from the repo at ${d1To}`;
-  }
-
-  // The two variables, for a session started in the tree.
-  const settings = {
-    env: {
-      WORKSHOP_OCR_CACHE: join(mainTree, '.cache', 'books'),
-      WORKSHOP_LOCAL_D1: d1To,
-    },
-  };
-  writeFileSync(join(dest, '.claude', 'settings.local.json'), JSON.stringify(settings, null, 2) + '\n');
-
-  // Memory: point the tree's project directory at the store the main
-  // checkout's memory already resolves to.
-  const projects = join(homedir(), '.claude', 'projects');
-  const mainMemory = join(projects, projectDirName(mainTree), 'memory');
-  let memoryNote = 'not linked: the main checkout has no memory directory';
-  if (existsSync(mainMemory)) {
-    const store = lstatSync(mainMemory).isSymbolicLink() ? readlinkSync(mainMemory) : mainMemory;
-    const link = join(projects, projectDirName(dest), 'memory');
-    if (existsSync(link)) memoryNote = `already present at ${link}`;
-    else {
-      mkdirSync(dirname(link), { recursive: true });
-      execFileSync('cmd', ['/c', 'mklink', '/J', link, store], { stdio: 'ignore' });
-      memoryNote = `linked ${link} -> ${store}`;
-    }
-  }
-
-  console.log(`worktree   ${dest}`);
-  console.log(`branch     ${branch} (off origin/main)`);
-  console.log(`local D1   ${d1Note}`);
-  console.log(`env        WORKSHOP_OCR_CACHE, WORKSHOP_LOCAL_D1 in .claude/settings.local.json`);
-  console.log(`memory     ${memoryNote}`);
-  console.log(`\nStart the ${slug} session with its working directory at ${dest}.`);
-}
-
-function remove(dest) {
-  if (!existsSync(dest)) die(`${dest} does not exist`);
-  const dirty = git(['status', '--porcelain'], { cwd: dest });
-  if (dirty) die(`${dest} has uncommitted changes:\n${dirty}`);
-  const links = [];
-  (function walk(dir) {
-    for (const e of readdirSync(dir, { withFileTypes: true })) {
-      const p = join(dir, e.name);
-      if (lstatSync(p).isSymbolicLink()) links.push(p);
-      else if (e.isDirectory()) walk(p);
-    }
-  })(dest);
-  if (links.length) {
-    die(`refusing: ${links.length} junction(s) or symlink(s) inside the tree, which a removal can delete through:\n  `
-      + links.join('\n  ') + '\n  remove each with `cmd /c rmdir <path>` (removes the link, not its target), then re-run');
-  }
-  // --force: the tree's own .wrangler/state and settings.local.json are
-  // ignored files, and plain `worktree remove` refuses on them.
-  git(['worktree', 'remove', '--force', dest], { stdio: ['ignore', 'ignore', 'inherit'] });
-  console.log(`removed ${dest}`);
+  setUpTree({
+    mainTree, dest, branch,
+    copyD1: args.includes('--copy-d1'),
+    env: { WORKSHOP_OCR_CACHE: join(mainTree, '.cache', 'books') },
+    die,
+    removeHint: `node scripts/book-worktree.mjs ${slug} --remove`,
+  });
+  console.log(`
+Start the ${slug} session with its working directory at ${dest}.`);
 }

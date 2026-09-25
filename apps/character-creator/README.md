@@ -973,6 +973,12 @@ scripts/
 │                           own local D1 built fresh, the OCR cache and D1 env in
 │                           its settings.local.json, memory linked. --remove
 │                           refuses on any junction inside the tree
+├── group-worktree.mjs      One worktree per group of apps (palladium, marvel,
+│                           tools), set up the way a book's is, so sessions
+│                           on different groups never share a tree
+├── worktree-lib.mjs        The setup and the guarded removal both worktree
+│                           scripts share: own local D1, env in the tree's
+│                           settings.local.json, memory linked
 ├── book-board.mjs          Where every book stands and who is on it: survey
 │                           status and rows, worktree, <slug>- branches, open
 │                           PRs; --remote adds production's rows per book.

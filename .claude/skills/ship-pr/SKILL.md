@@ -26,8 +26,12 @@ mistake, so the checks happen before the merge or they do not happen.
 `22209348`, *"main: require a pull request"*, requires the `smoke` and `menus`
 check-runs (`.github/workflows/tests.yml`, the five smoke suites and the
 menu-check, `REPO-AUDIT.md` G8) and `regression` (`regression.yml`,
-`SKILL-AUDIT` `F32`/`F36`, unfiltered so a green run means the suite ran) to
-succeed before a PR can merge. The merge button is disabled and `gh pr merge`
+`SKILL-AUDIT` `F32`/`F36`) to succeed before a PR can merge. **Since
+2026-09-25 a green check is not always a suite that ran:** `regression` and
+`play-flow` run only when a Palladium or shared file changed, and the tools and
+Marvel suites only for their own group or a shared file (`groups.json`,
+`CLAUDE.md` → *Three groups*). A skipped suite's log says so in words, and the
+check still reports. The character creator's smoke suite runs on every PR. The merge button is disabled and `gh pr merge`
 is refused until they do. `play-flow` and `deploy-alarm` are reporting only.
 The ruleset is also what refuses the direct push step 1 describes. From
 2026-09-03 to 2026-09-16 it carried zero required checks, and before that this

@@ -41,7 +41,9 @@ character creator and the five apps split from it), **Marvel**
 and `node scripts/groups.mjs <path>` answers for one file. The point is that
 sessions on different groups can run at once without colliding.
 
-- **One session per group, each in its own worktree** — the `worktree` skill.
+- **One session per group, each in its own worktree** —
+  `node scripts/group-worktree.mjs <palladium|marvel|tools>` makes one, and the
+  `worktree` skill has the rest.
 - **CI runs a group's suites only when that group, or a shared path, changed**
   (`node scripts/groups.mjs --affected origin/main...HEAD` shows what a branch
   will run). `regression` and `play-flow` are Palladium's; a tools-only pull

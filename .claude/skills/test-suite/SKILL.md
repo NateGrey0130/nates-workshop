@@ -40,6 +40,15 @@ the first five under one job, so a job id is a check-run name: renaming a job
 leaves a required check that never reports and nothing can merge.** Do not rename
 one without editing the ruleset.
 
+**Not every suite runs on every pull request** (since 2026-09-25). Each job
+first asks `node scripts/groups.mjs --affected HEAD^1 HEAD` which groups the
+change touches (`groups.json`). The character creator's smoke suite and the
+menu check always run, because they pin every skill, agent, menu and tile.
+`regression` and `play-flow` run for Palladium or shared changes. The tools and
+Marvel suites run for their own group or a shared change. A skipped step still
+leaves the job green, so **a new suite belongs to a group**: gate its step the
+same way, or it runs everywhere, which is the safe mistake.
+
 **CI gets no credentials, deliberately.** Every D1 call in the suites is
 `--local`, which is a SQLite file the runner throws away. A write to production
 here costs a deliberate keystroke, so CI is not given a token that could perform
@@ -71,8 +80,10 @@ rather than a gate.
 
 ## The harness, and the two things it will not let you hand-maintain
 
-`apps/character-creator/test/harness.mjs` exports `section()`, `check()`,
-`appDir`, `repoRoot` and `wantSection`. Use them; a bare `console.log` is how the
+`shared/test/harness.mjs` exports `section()`, `check()`, `summary()`,
+`repoRoot` and `wantSection`, and every app's suite imports it. The character
+creator's `apps/character-creator/test/harness.mjs` re-exports those and adds
+`appDir`, `appPath` and `siblingAppDirs`. Use them; a bare `console.log` is how the
 section numbering came to assert something false about the file it labelled —
 `[1c25l]`-style labels had stopped matching execution order in nine places.
 
