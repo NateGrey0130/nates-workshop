@@ -60,6 +60,9 @@ jobs:
       NPM_CONFIG_YES: "true"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The merge commit and the base it merges into, for --affected below.
+          fetch-depth: 2
 
       - uses: actions/setup-node@v4
         with:
@@ -68,12 +71,28 @@ jobs:
           # key - there is no lockfile to key on.
           node-version: '24'
 
+      # PALLADIUM ONLY (groups.json). This suite drives the character creator's
+      # routes and nothing else, so a change that touches neither a Palladium
+      # file nor a shared one skips it. The job still runs and reports success,
+      # and the step below says the suite did not run.
+      - name: which groups changed
+        id: groups
+        run: node scripts/groups.mjs --affected HEAD^1 HEAD >> "$GITHUB_OUTPUT"
+
+      # Says so in words, so a green check on a skipped run cannot be read as
+      # the suite having passed.
+      - name: skipped - no Palladium or shared file changed
+        if: steps.groups.outputs.palladium != 'true'
+        run: echo "play-flow did not run - this change touches no Palladium or shared file (groups.json)"
+
       # WARM THE npx CACHE BEFORE ANYTHING IS TIMED. Same reason as tests.yml
       # and regression.yml, SHIP-PR-AUDIT.md F13: this suite spawns wrangler,
       # and a cold download inside a timed region is what turned that job red
       # on PRs #668 and #669.
       - name: warm the npx cache
+        if: steps.groups.outputs.palladium == 'true'
         run: npx wrangler --version
 
       - name: play flow
+        if: steps.groups.outputs.palladium == 'true'
         run: node apps/character-creator/test/play-flow.mjs

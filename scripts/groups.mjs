@@ -3,6 +3,8 @@
 //
 //   node scripts/groups.mjs --check          every path and table has one owner (CI runs this)
 //   node scripts/groups.mjs <path>...        print the group that owns each path
+//   node scripts/groups.mjs --affected <revs> which groups a diff touches, as
+//                                            name=true|false lines for $GITHUB_OUTPUT
 //
 // WHY. The repo holds three unrelated groups - Palladium/Rifts, Marvel, and the
 // tools - and the point of naming them is that two sessions can work on two of
@@ -115,6 +117,45 @@ export function check(root = repoRoot) {
   return { failures, files: files.length, entries: seen.size, tables: created.length };
 }
 
+// Which groups' suites a change needs. `revs` go to `git diff` as they are:
+// CI passes `HEAD^1 HEAD`, the pull request's merge commit against the base it
+// merges into; a person on a branch passes `origin/main...HEAD`.
+//
+// A group is affected when a file it owns changed, and EVERY group is affected
+// when a shared file changed - shared/, the middleware, the schema, the
+// workflows - because that is how one group's change reaches another's. A
+// process file turns nothing on (groups.json says why). A diff of nothing but
+// process files runs only what every pull request runs regardless.
+// Anything that stops the diff being read turns every group on: a filter that
+// fails closed skips the suite that would have said what broke.
+function affected(revs, root = repoRoot) {
+  const all = (why) => ({ groups: { palladium: true, marvel: true, tools: true }, why: [why] });
+  let out;
+  try {
+    out = execFileSync('git', ['diff', '--name-only', '--no-renames', ...revs], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (e) {
+    return all(`could not diff ${revs.join(' ') || '(no revs)'} - running every group: ${String(e.stderr || e.message).trim().split('\n')[0]}`);
+  }
+  const files = out.split('\n').filter(Boolean);
+  if (files.length === 0) return all('the diff is empty - running every group rather than none');
+  const groups = loadGroups(root);
+  const result = { palladium: false, marvel: false, tools: false };
+  const why = [];
+  for (const f of files) {
+    const id = ownerOf(f, groups);
+    if (id === null || id === 'shared') {
+      why.push(`${f}: ${id ?? 'no owner'} - every group`);
+      for (const g of Object.keys(result)) result[g] = true;
+    } else if (id === 'process') {
+      why.push(`${f}: process - no group; the checks every pull request runs read it`);
+    } else {
+      why.push(`${f}: ${id}`);
+      result[id] = true;
+    }
+  }
+  return { groups: result, why };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
   if (args[0] === '--check') {
@@ -125,11 +166,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       process.exit(1);
     }
     console.log(`groups.json: ${files} files and ${tables} tables, each with one owner, from ${entries} entries`);
+  } else if (args[0] === '--affected') {
+    const { groups, why } = affected(args.slice(1));
+    for (const line of why) console.error(line);
+    for (const [id, on] of Object.entries(groups)) console.log(`${id}=${on}`);
   } else if (args.length) {
     const groups = loadGroups();
     for (const p of args) console.log(`${ownerOf(p.replace(/\\/g, '/'), groups) ?? '(none)'}\t${p}`);
   } else {
-    console.log('usage: node scripts/groups.mjs --check | <path>...');
+    console.log('usage: node scripts/groups.mjs --check | --affected <git diff revs> | <path>...');
     process.exit(2);
   }
 }

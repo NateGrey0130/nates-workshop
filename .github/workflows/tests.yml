@@ -65,12 +65,26 @@ jobs:
       NPM_CONFIG_YES: "true"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Two commits: the pull request's merge commit and its first parent,
+          # the base it merges into. `groups.mjs --affected` diffs the pair.
+          fetch-depth: 2
 
       - uses: actions/setup-node@v4
         with:
           # Matches the version this repo is developed on. No cache key: there
           # is no lockfile to key on.
           node-version: '24'
+
+      # WHICH GROUPS THIS CHANGE TOUCHES (groups.json). A group's own suites run
+      # only when a file it owns changed, or a shared file did. The character
+      # creator's suite is NOT filtered: besides its own app it pins every
+      # skill, agent, audit menu and app tile in the repo, so it is the check
+      # every pull request needs. The job always runs and always reports, so
+      # the required check stays the same check-run whatever is skipped.
+      - name: which groups changed
+        id: groups
+        run: node scripts/groups.mjs --affected HEAD^1 HEAD >> "$GITHUB_OUTPUT"
 
       # WARM THE npx CACHE BEFORE ANYTHING IS TIMED. SHIP-PR-AUDIT.md F13.
       #
@@ -108,18 +122,23 @@ jobs:
         run: node apps/character-creator/test/smoke.mjs
 
       - name: filament-forge
+        if: steps.groups.outputs.tools == 'true'
         run: node apps/filament-forge/test/smoke.mjs
 
       - name: pick3cut5 smoke
+        if: steps.groups.outputs.tools == 'true'
         run: node apps/pick3cut5/test/smoke.mjs
 
       - name: pick3cut5 game
+        if: steps.groups.outputs.tools == 'true'
         run: node apps/pick3cut5/test/game.mjs
 
       - name: media-vault
+        if: steps.groups.outputs.tools == 'true'
         run: node apps/media-vault/test/smoke.mjs
 
       - name: marvel-heroes
+        if: steps.groups.outputs.marvel == 'true'
         run: node apps/marvel-heroes/test/smoke.mjs
 
   # DOES EVERY NEW CLAIM ABOUT ANOTHER FILE SAY WHERE IT WAS READ?
