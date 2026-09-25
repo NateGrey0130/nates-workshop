@@ -28,7 +28,7 @@ import { validateBonuses, occAllowedForRace, raceAllowedForOcc, OCC_GROUPS, RACE
 import { composeClass } from '../js/compose.js';
 import { referencedGear } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair } from '../../../scripts/same-spell-lib.mjs';
-import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
+import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseMosLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { bootstrapSql } from '../../../scripts/build-local-d1.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
@@ -3663,67 +3663,34 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // This lives here rather than in smoke.mjs because the answer is a property
   // of the COMPOSED class, and the Merc Soldier's and Robot Pilot's arrive by
   // correction rather than at import: no single file has the answer.
-  const MOS_PACKAGES = {
-    'coalition-technical-officer': 7,
-    'merc-soldier': 7,
-    'robot-pilot': 2,
-    // Both Wormwood, and both arrived by correction the same way the two above
-    // did - RETRO-AUDIT R2. The demon-goblin's three R.C.C. skill packages
-    // (printed 123-124) and the monk's three Areas of Mastery (printed 60-61)
-    // sat in prose under a note saying the app could not grant skills on a
-    // choice, which stopped being true when 031-character-mos.sql landed.
-    'demon-goblin': 3,
-    'monk': 3,
-    // Underseas, and the only one of the five that arrived WITH its MOS
-    // block rather than by a later correction - the book prints nine Navy
-    // specialties as part of the O.C.C. itself, so it needed no fixing up.
-    'navy-seaman': 9,
-    // ---- Heroes Unlimited's eleven EDUCATIONAL LEVELS, printed 27 ----------
-    //
-    // The first classes to use an MOS for what the key was always shaped for
-    // and could not do: `choose` above one. Every class above states
-    // `choose: 1`, which is why BOOK-INGEST-AUDIT.md F82 - `choose` validated
-    // and read by nothing - survived the whole of the key's life unnoticed.
-    //
-    // THE COUNTS ARE THE POINT, and they are not all sixteen. The book prints
-    // sixteen skill programs and printed 27's Special Restrictions cut each
-    // level's list down: 7) High School may take only six named programs; 1)
-    // Espionage only for Military Specialist and Trade School; 6) the Military
-    // program only for Military, Military Specialist and Trade School; 5)
-    // Pilot Advanced for those three plus Doctorate. Trade School is the only
-    // level all three admit, so it alone offers all sixteen. A number here
-    // drifting toward 16 means a restriction has been lost.
-    'hu-edu-high-school': 6,
-    'hu-edu-military': 15,
-    'hu-edu-trade-school': 16,
-    'hu-edu-one-year-college': 13,
-    'hu-edu-two-years-college': 13,
-    'hu-edu-three-years-college': 13,
-    'hu-edu-four-years-college': 13,
-    'hu-edu-military-specialist': 16,
-    'hu-edu-bachelors': 13,
-    'hu-edu-masters': 13,
-    'hu-edu-doctorate': 14,
-    // Madhaven, printed 30-31: the Squire of the White Rose picks ONE of ten
-    // areas of specialty. The book's two-MOS trade is prose.
-    'squire-of-the-white-rose': 10,
-  };
-  // How many programs each level GRANTS, which is the half `choose` holds and
-  // the half that did nothing before F82. Pinned separately from the option
-  // counts above: a level offering the right list and granting the wrong
-  // number is the exact failure F82 describes, and it is invisible in a
-  // composed class.
-  const MOS_CHOOSE = {
-    'hu-edu-high-school': 2, 'hu-edu-military': 2, 'hu-edu-trade-school': 2,
-    'hu-edu-one-year-college': 2, 'hu-edu-two-years-college': 2,
-    'hu-edu-three-years-college': 3, 'hu-edu-four-years-college': 3,
-    // ONE, and it is not a typo. Printed 27 restriction 2 gives the Military
-    // Specialist six espionage skills and four W.P.s outright - those are in
-    // `occ_skills` - and then ONE whole program on top, which may be Espionage
-    // again for twelve espionage skills in total.
-    'hu-edu-military-specialist': 1,
-    'hu-edu-bachelors': 3, 'hu-edu-masters': 3, 'hu-edu-doctorate': 4,
-  };
+  //
+  // THE PINS LIVE IN THE SURVEYS since 2026-09-25: one `**MOS:**` line in
+  // each book that prints an MOS class, `<class-id> <packages>[ choose <n>]`
+  // (scripts/book-rows-lib.mjs parseMosLine), with the page reasoning beside
+  // it. They were two literals here, which every book with an MOS class
+  // edited, so two book sessions in parallel conflicted on them.
+  //
+  // `packages` is how many MOS options the class offers; `choose` is how many
+  // it GRANTS, the half that did nothing before BOOK-INGEST-AUDIT F82. Pinned
+  // separately: a class offering the right list and granting the wrong number
+  // is the exact failure F82 describes, and it is invisible in a composed class.
+  const MOS_PACKAGES = {};
+  const MOS_CHOOSE = {};
+  {
+    const surveyDir = join(appDir, 'docs', 'surveys');
+    const unparsed = [];
+    for (const f of readdirSync(surveyDir).filter((x) => x.endsWith('.md') && x !== 'README.md')) {
+      const pins = parseMosLine(readFileSync(join(surveyDir, f), 'utf8'));
+      if (pins === null) { unparsed.push(f); continue; }
+      for (const [id, pin] of Object.entries(pins)) {
+        MOS_PACKAGES[id] = pin.packages;
+        if (pin.choose !== null) MOS_CHOOSE[id] = pin.choose;
+      }
+    }
+    check('every survey MOS line parses', unparsed.length === 0,
+      unparsed.join(', ') + ' - expected <class-id> <packages>[ choose <n>], comma-separated');
+    check('and the surveys pin some MOS classes', Object.keys(MOS_PACKAGES).length > 0);
+  }
   for (const [id, want] of Object.entries(MOS_CHOOSE)) {
     const cls = classes.find((c) => c.id === id);
     check(`${id} grants ${want} skill program${want === 1 ? '' : 's'}`,
@@ -3780,7 +3747,7 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   const withMos = classes.filter((c) => c.skills?.mos).map((c) => c.id).sort();
   check('and no other class has one',
     withMos.join() === Object.keys(MOS_PACKAGES).sort().join(),
-    'classes with an MOS: ' + withMos.join(', '));
+    'classes with an MOS: ' + withMos.join(', ') + ' - a class with an MOS block needs its pin on the **MOS:** line of its book survey');
 
   // -- totems (BOOK-INGEST-AUDIT F56) ----------------------------------------
   //

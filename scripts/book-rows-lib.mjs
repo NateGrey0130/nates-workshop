@@ -92,3 +92,20 @@ export function parseRowsLine(text) {
   }
   return out;
 }
+
+// A survey's `**MOS:**` line: `merc-soldier 7, hu-edu-doctorate 14 choose 4`.
+// { classId: { packages, choose } } with `choose` null when the line gives
+// none; {} when the survey has no line; null when the line does not parse.
+// Pinned by test/regression.mjs since 2026-09-25 (the pins were a literal in
+// that file, which every book with an MOS class edited).
+export function parseMosLine(text) {
+  const m = /^\*\*MOS:\*\* (.+)$/m.exec(text);
+  if (!m) return {};
+  const out = {};
+  for (const part of m[1].split(',')) {
+    const pm = /^\s*([a-z0-9-]+) (\d+)(?: choose (\d+))?\s*$/.exec(part);
+    if (!pm) return null;
+    out[pm[1]] = { packages: Number(pm[2]), choose: pm[3] ? Number(pm[3]) : null };
+  }
+  return out;
+}

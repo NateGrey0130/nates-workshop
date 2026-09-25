@@ -4,6 +4,10 @@
 
 **Rows citing this book:** classes 38, gear 206, vehicles 6, skills 216, spells 115, psionic_powers 89
 
+**MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
+
+*Each class's MOS packages (and, with `choose`, how many it grants), pinned by `test/regression.mjs` against a clean build since 2026-09-25. The Merc Soldier's and Robot Pilot's packages arrived by correction, not at import: the Robot Pilot once carried them as GM prose under a note saying the schema could not hold them, which it could.*
+
 Slug `rue`. Cached from `Rifts - Ultimate Edition.pdf`, 382 PDF pages,
 **scan (no text layer)**, OCR at 300 dpi, psm 3.
 
