@@ -5,12 +5,44 @@
 // bearing and none of it is obvious, which is exactly the kind of thing that
 // should exist once.
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const DB = 'nates-workshop-media';
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+// ONE D1 PER GROUP OF APPS (groups.json), by wrangler.jsonc binding. Palladium
+// keeps `DB`, the database this repo has always had; Marvel and the tools get
+// their own. A script that takes `--db <group>` resolves it here, and without
+// the flag it means palladium, so every command typed before the split still
+// reaches the database it always did.
+const DATABASES = { palladium: 'DB', marvel: 'DB_MARVEL', tools: 'DB_TOOLS' };
+
+/**
+ * `--db <group>` out of an argv: `{ group, binding, rest }`, where `rest` is
+ * the argv without the flag and its value, so a caller that reads its
+ * positional arguments (files, SQL) cannot mistake the group for one. Exits
+ * with a message on an unknown group, and on a group whose binding is not in
+ * wrangler.jsonc yet - wrangler's own error for that names neither.
+ */
+export function dbFromArgv(argv) {
+  const i = argv.indexOf('--db');
+  if (i === -1) return { group: 'palladium', binding: DATABASES.palladium, rest: argv };
+  const group = argv[i + 1];
+  const rest = [...argv.slice(0, i), ...argv.slice(i + 2)];
+  if (!Object.hasOwn(DATABASES, group ?? '')) {
+    console.error(`--db takes one of: ${Object.keys(DATABASES).join(', ')} (got ${group ?? 'nothing'})`);
+    process.exit(2);
+  }
+  const binding = DATABASES[group];
+  const config = readFileSync(join(repoRoot, 'wrangler.jsonc'), 'utf8');
+  if (!new RegExp(`"binding"\\s*:\\s*"${binding}"`).test(config)) {
+    console.error(`--db ${group}: wrangler.jsonc binds no D1 as ${binding} yet, so there is no ${group} database to reach`);
+    process.exit(2);
+  }
+  return { group, binding, rest };
+}
 
 /**
  * The extra wrangler arguments that point a `--local` call at the local D1

@@ -29,14 +29,16 @@
 // (MACHINE-AUDIT M26). Results come back numbered, one block per statement,
 // in order.
 import { readFileSync } from 'node:fs';
-import { d1Batch, d1Query } from './d1-query-lib.mjs';
+import { d1Batch, d1Query, dbFromArgv } from './d1-query-lib.mjs';
 import { batchStatements } from './sql-statements.mjs';
 
 const USAGE = 'usage: node scripts/q.mjs (--local|--remote) "<one SQL statement>"\n'
   + '       node scripts/q.mjs (--local|--remote) --batch <file.sql>\n'
-  + '       the target is required: there is no default database.';
+  + '       the target is required: there is no default database.\n'
+  + '       --db <palladium|marvel|tools> picks that group\'s database (default palladium).';
 
-const args = process.argv.slice(2);
+// --db <palladium|marvel|tools>, default palladium (d1-query-lib.mjs).
+const { binding: db, rest: args } = dbFromArgv(process.argv.slice(2));
 const batchAt = args.indexOf('--batch');
 const target = args.includes('--local') ? '--local' : args.includes('--remote') ? '--remote' : null;
 if (!target) {
@@ -55,7 +57,7 @@ if (batchAt !== -1) {
     console.error(`q.mjs --batch: no statements in ${file}`);
     process.exit(2);
   }
-  const blocks = d1Batch(stmts, { target });
+  const blocks = d1Batch(stmts, { target, db });
   if (blocks.length !== stmts.length) {
     // Should not happen — wrangler returns one block per statement — but if it
     // ever does, pairing silently by index would caption results with the
@@ -73,5 +75,5 @@ if (batchAt !== -1) {
       + '       node scripts/q.mjs [--local|--remote] --batch <file.sql>');
     process.exit(2);
   }
-  console.log(JSON.stringify(d1Query(sql, { target }), null, 1));
+  console.log(JSON.stringify(d1Query(sql, { target, db }), null, 1));
 }
