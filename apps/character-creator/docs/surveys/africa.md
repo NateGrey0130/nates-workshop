@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `surveyed` — nothing imported yet; the plan below is nine PRs. (2026-09-25)
+**Status:** `importing` — the necromancy and witch spells are in; ceremonial spells next. (2026-09-25)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 30
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -152,7 +152,22 @@ mattered.
 
 ## Spells
 
-All four groups are new; none of the names exists in production.
+**Corrected 2026-09-25, at the first spell import.** This section first said
+all four groups were new and stored unprefixed. Both were wrong:
+
+- **The eighteen necro-magic spells are REPRINTED in Mystic Russia's Bone
+  Magic** and were already in production as `Bone:` rows. The survey's diff
+  compared bare names and missed every one, which is the namespace trap the
+  catalog's half-prefixed spell table sets. They were imported as their own
+  `Necromancy:` rows anyway, seventeen carrying `same_spell_as` to the `Bone:`
+  row (checked by `scripts/same-spell-lib.mjs`), because the tradition gates
+  the picker and Bone Magic holds 59 spells this book's Necromancer does not
+  know. **Maggots stays unlinked**: Mystic Russia prints it at level 4 and "2
+  days" against this book's level 5 and "days".
+- **Names ARE prefixed**, by the convention every World Book tradition in the
+  catalog follows: `Necromancy:` and `Bad Medicine:` (the book's own name for
+  the witch's list, printed 78). `Bad Medicine: Poison Touch` is a different
+  spell from `Bone: Poison Touch` and is on regression's `mustNotLink`.
 
 | group | printed | rows | level | tradition |
 |---|---|---|---|---|
@@ -162,11 +177,9 @@ All four groups are new; none of the names exists in production.
 | Dances, and the rain maker dances | 88-92 | 15 | 0 | `african-ceremonial` |
 | Medicine Man rituals (Protection against Witches area ritual, Witch Lure) | 82 | 2 | 0 | `african-ceremonial` |
 
-**Names are stored unprefixed.** Every name above is distinct from the
-catalog's existing spells, and the necromancy spells are the ones the Book of
-Magic reprints, so a later `bom` backfill should land on them rather than beside
-them. `Taboo` and `Remove Taboo` are both a witch spell and a Medicine Man
-starting spell; they are one row each.
+The ceremonial group still wants a prefix of its own at import; diff it
+prefix-folded against production first. `Taboo` is a witch spell the Medicine
+Man also starts with, and is one row.
 
 **Variable costs:** several chants and dances print two costs by caster or
 by weather (Water Doubling 30/50, Rain Dance 300/950, Ride the Lightning
@@ -245,7 +258,7 @@ Run against **production** on 2026-09-25, by name across every table:
 | table | result |
 |---|---|
 | `imported_classes` | **0 of 14** by id or name. Four witches and `necromancer-russian` exist; none is this book's |
-| `spells` | **0 of 54**. No `necromancy` tradition exists; the Book of Magic's necromancy chapter was never imported |
+| `spells` | **WRONG AS FIRST WRITTEN** — see *Spells*. The eighteen necro-magic spells exist as Mystic Russia `Bone:` rows; the witch's twelve and the ceremonial rites were genuinely new |
 | `psionic_powers` | **0 of 17** |
 | `gear` | **1 overlap**: `Kittani Plasma Sword` (Triax). `Kittani Double Blade Plasma Axe` (Triax) is a different weapon from this book's Plasma Axe; compare at extraction |
 | `vehicles` | **0 of 4** |
@@ -288,4 +301,5 @@ What is deliberately left, with the reason for each:
 
 | date | PR | what went in |
 |---|---|---|
-| 2026-09-25 | — | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
+| 2026-09-25 | [#1376](https://github.com/NateGrey0130/nates-workshop/pull/1376) | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
+| 2026-09-25 | this PR | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |

@@ -5763,7 +5763,8 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     'Ocean: Float on Water', 'Ocean: Water Seal', 'Dolphin: Sonic Blast',
     'Living Fire: Cloud of Smoke', 'Living Fire: Extinguish Fire',
     'Living Fire: Impervious to Fire', 'Living Fire: Fire Ball',
-    'Living Fire: Ballistic Fire', 'Living Fire: Fire Gout'];
+    'Living Fire: Ballistic Fire', 'Living Fire: Fire Gout',
+    'Bad Medicine: Poison Touch'];
   const wronglyLinked = links.filter((r) => mustNotLink.includes(r.name)).map((r) => r.name);
   check('and the pairs that only share a NAME are not linked',
     wronglyLinked.length === 0, wronglyLinked.join(', '));
