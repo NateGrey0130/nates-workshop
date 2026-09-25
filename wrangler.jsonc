@@ -39,8 +39,8 @@
   //
   // The tables moved one group at a time, each in the pull request that
   // switched its code to its binding, and all three had moved on 2026-09-25.
-  // The moved tables' old copies are still in DB, unread, as a rollback until
-  // they are dropped; drift-check lists them as LEFT BEHIND.
+  // Their old copies stayed in DB as a rollback until migration 085 dropped
+  // them, after a last row-for-row compare and a backup of all three.
   "d1_databases": [
     {
       "binding": "DB",

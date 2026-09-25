@@ -54,12 +54,13 @@ const note = (kind, msg) => problems.push(`${kind}: ${msg}`);
 // and read its database only.
 //
 // A MOVE LEAVES THINGS BEHIND, ON PURPOSE. When a group's tables move to its
-// own database, the originals stay in Palladium's until the week-later drop,
-// so a bad move can be undone by switching a binding back. Palladium's record
-// also keeps the moved migrations, because it did apply them. Both are
+// own database, the originals stay in Palladium's until a migration drops
+// them, so a bad move can be undone by switching a binding back. Palladium's
+// record also keeps the moved migrations, because it did apply them. Both are
 // reported below as LEFT BEHIND, which is information and not drift: it does
-// not fail the run. Once the originals are dropped, the tables stop being
-// listed; the migration records stay, as history.
+// not fail the run. The three moves of 2026-09-25 had their originals dropped
+// by 085 the same day, so only the migration records are listed now, as
+// history; a future move would list its tables again until its own drop.
 const groupDbs = groupDatabases(repoRoot);
 const tableOwner = new Map();
 for (const [id, g] of Object.entries(JSON.parse(readFileSync(join(repoRoot, 'groups.json'), 'utf8')).groups)) {
