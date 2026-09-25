@@ -95,6 +95,13 @@ jobs:
       - name: warm the npx cache
         run: npx wrangler --version
 
+      # Every path and table has exactly one group. Not an app's suite: it
+      # belongs to all of them, and it must run on every pull request whatever
+      # the change touches, because a new file with no owner is exactly the
+      # change that no group's filter would otherwise catch. groups.json.
+      - name: groups
+        run: node scripts/groups.mjs --check
+
       # Named individually rather than looped, so a failure names its own app in
       # the step list instead of inside a log.
       - name: character-creator
