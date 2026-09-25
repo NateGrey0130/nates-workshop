@@ -121,13 +121,28 @@ check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdou
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
 const checkSql = join(appDir, 'test', '.smoke-check.sql');
 writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'media_items') AS media_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('import_sessions','import_staged')) AS stale_import_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
+  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('import_sessions','import_staged')) AS stale_import_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
 const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
 rmSync(checkSql, { force: true });
 let row = null;
 try { row = JSON.parse(query.stdout)[0].results[0]; } catch { /* fall through to checks */ }
 check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout?.slice(-300));
-check('media_items still intact alongside them', row?.media_tables === 1);
+// MediaVault's table used to sit in this database, and this line held that it
+// survived the character creator's schema. Since 2026-09-25 it lives in the
+// tools group's own database (groups.json), so the same question is asked
+// there: the tools schema applies to DB_TOOLS, and media_items is in it.
+// Deliberately not "absent from DB": a local database that predates the move
+// still holds the original, and --local accumulates rather than mirrors.
+const toolsApply = wrangler(['d1', 'execute', 'DB_TOOLS', '--local', '--file', 'db/schema-tools.sql']);
+check('the tools schema applies to its own database', toolsApply.status === 0,
+  (toolsApply.stderr || toolsApply.stdout || '').slice(-500));
+const toolsSql = join(appDir, 'test', '.smoke-tools.sql');
+writeFileSync(toolsSql, "SELECT count(*) AS n FROM sqlite_master WHERE type='table' AND name = 'media_items';\n");
+const toolsQuery = wrangler(['d1', 'execute', 'DB_TOOLS', '--local', '--json', '--file', toolsSql]);
+rmSync(toolsSql, { force: true });
+let toolsRow = null;
+try { toolsRow = JSON.parse(toolsQuery.stdout)[0].results[0]; } catch { /* checked below */ }
+check('and media_items is in it', toolsRow?.n === 1, toolsQuery.stdout?.slice(-300));
 check('class + catalog tables exist', row?.catalog_tables === 4, query.stdout?.slice(-300));
 check('catalog_redirects exists', row?.redirect_table === 1, query.stdout?.slice(-300));
 check('character_drafts exists', row?.draft_table === 1, query.stdout?.slice(-300));
