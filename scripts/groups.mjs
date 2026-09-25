@@ -24,6 +24,10 @@
 //   4. every table db/schema.sql creates belongs to exactly one group, and
 //      every table a group lists is one the schema creates
 //   5. every app in apps/manifest.json sits in the group its tile is shown in
+//   6. no file under functions/ names another group's table in SQL, except
+//      the pairs groups.json lists in cross_group_tables - and each of those
+//      is still used. This is what makes a database per group possible: a
+//      group whose code reaches only its own tables can be given only them.
 //
 // Read-only. Exits 1 on any failure and names each one.
 
@@ -114,7 +118,34 @@ export function check(root = repoRoot) {
     if (want !== app.group) failures.push(`apps/manifest.json shows ${app.slug} under "${app.group}", but groups.json gives it to ${id} (manifest group "${want}")`);
   }
 
+  // 6. server code stays in its group's tables
+  const allowed = JSON.parse(readFileSync(join(root, 'groups.json'), 'utf8')).cross_group_tables ?? {};
+  for (const f of files.filter((p) => p.startsWith('functions/') && p.endsWith('.js'))) {
+    const id = ownerOf(f, groups);
+    for (const t of tablesNamed(readFileSync(join(root, f), 'utf8'), tableOwner)) {
+      if (tableOwner.get(t) === id || tableOwner.get(t) === 'shared') continue;
+      if ((allowed[f] ?? []).includes(t)) continue;
+      failures.push(`${f} (${id}) names ${tableOwner.get(t)}'s table ${t} - move the code, or list it in groups.json cross_group_tables with the reason`);
+    }
+  }
+  for (const [f, ts] of Object.entries(allowed)) {
+    if (f === '//') continue;
+    if (!files.includes(f)) { failures.push(`cross_group_tables names ${f}, which does not exist`); continue; }
+    const named = tablesNamed(readFileSync(join(root, f), 'utf8'), tableOwner);
+    for (const t of ts) if (!named.has(t)) failures.push(`cross_group_tables lets ${f} use ${t}, and it no longer does - remove the exception`);
+  }
+
   return { failures, files: files.length, entries: seen.size, tables: created.length };
+}
+
+// Known tables a source file names where SQL would: after FROM, JOIN, INTO,
+// UPDATE or TABLE. Comments count too, deliberately - a stray reference in a
+// comment is cheap to reword, and stripping comments from JS reliably is not.
+function tablesNamed(src, tableOwner) {
+  const named = new Set();
+  const re = /\b(?:FROM|JOIN|INTO|UPDATE|TABLE(?:\s+IF\s+NOT\s+EXISTS)?)\s+[`"]?([A-Za-z_]\w*)/g;
+  for (const m of src.matchAll(re)) if (tableOwner.has(m[1])) named.add(m[1]);
+  return named;
 }
 
 // Which groups' suites a change needs. `revs` go to `git diff` as they are:
