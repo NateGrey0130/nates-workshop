@@ -148,13 +148,19 @@ const TABLES = [
 // predate the data-script convention, 'data-script' for the file that recreates
 // them. A rebuild saying 'data-script' is telling the truth about itself, and
 // reporting it as a difference would be reporting the mechanism as a defect.
-// The same argument is open for `skills.source` under F14.
+// `source` is the same column under another name, and was left open by F14
+// until 2026-09-24: 'seed' | 'import' | 'manual' on every compared table that
+// has it (catalogs/rows.js writes 'manual' on an editor save), so a rebuild
+// says 'seed' about a row the importer or a hand put into production, and both
+// are true. It was the whole of eight skills offenders nobody could close,
+// because zzzz-restore-skill-notes-and-citations.sql declines, rightly, to
+// write 'manual' into a row no hand touched.
 // `to_id` joins the same way `id` does - it is the ROWID of the gear or skill
 // a redirect points at, so two correct databases built in a different order
 // disagree about it by construction. Comparing it would report all 23 shared
 // redirects as broken while every one of them resolves.
 const uncomparable = (c) => c === 'id' || c === 'to_id' || c === 'created_by'
-  || c.endsWith('_at');
+  || c === 'source' || c.endsWith('_at');
 
 // `deleted_at` is the exception to the rule above, and is compared as PRESENCE
 // rather than as a timestamp: a class soft-deleted in one database and live in
