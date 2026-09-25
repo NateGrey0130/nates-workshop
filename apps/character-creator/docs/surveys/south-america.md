@@ -265,4 +265,4 @@ What is deliberately left, with the reason:
 |---|---|---|
 | 2026-09-24 | — | cache built (170 pp, text layer), offset +1 verified at five folios, `south-america` registered in `books.json`, survey written |
 | 2026-09-25 | #1375 | gear: 30 rows (7 Colombian C-series weapons, 10 bio-weapons and bio-armors, 8 Manoan TW items and enchanted armors, 5 Cibolan drugs); the 3 Naruni NE weapons were already catalogued. Applied `--remote` first |
-| 2026-09-25 | #PR | Biomancy spells: 24 rows, `Biomancy: ` prefix, tradition `biomancy`, level and cost from the index on printed 64; Suspended Animation linked to `Earth: Suspended Animation`. Applied `--remote` first |
+| 2026-09-25 | #1378 | Biomancy spells: 24 rows, `Biomancy: ` prefix, tradition `biomancy`, level and cost from the index on printed 64; Suspended Animation linked to `Earth: Suspended Animation`. Applied `--remote` first |
