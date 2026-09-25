@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `importing` — gear, Biomancy spells, vehicles, the eight O.C.C.s and nine R.C.C.s shipped; the seven Felinoids next. (2026-09-25)
+**Status:** `importing` — gear, Biomancy spells, vehicles, all 8 O.C.C.s and 16 R.C.C.s shipped; creatures and notable NPCs next. (2026-09-25)
 
-**Rows citing this book:** classes 17, gear 34, vehicles 19, skills 1, spells 24
+**Rows citing this book:** classes 24, gear 36, vehicles 19, skills 1, spells 24
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -279,3 +279,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1380 | vehicles: 19 (6 Colombian, 3 Kittani of Lagarto, 2 Manoan, 2 Cibolan, 5 ships, the Demon Black Ship), 150 locations, 61 weapons. Applied `--remote` first |
 | 2026-09-25 | #1384 | the eight O.C.C.s (Anti-Monster, Sailor, Pirate, Voodoo Priest, Biomancer, Atlantean Monster Hunter, Tribal Shaman, Totem Warrior (South American)) and the Ship Mechanics skill they share. The Monster Hunter's ladder ("same as Undead Slayer") and the Tribal Shaman's ("same as the Mystic") have no catalog source: no `undead-slayer` class exists and `mystic` stores no `xp_table`, so both are left out and noted. Applied `--remote` first |
 | 2026-09-25 | #1389 | R.C.C.s part one: Jungle Elf, Lizard Man of Lagarto, Amazon, Ewaipanomas, Shaydor Spherian, Gatherer (Cibola), Pogtalian Dragon Slayer, Pincer Warrior (Cibola), Grimbor Ape-Man; plus four gear rows their equipment names (Grimbor armor, yumbuto club, NE-10 magazine, dragon-skin armor). No ladder for the Shaydor (none printed), Pogtalian ("same as the dragon"), Grimbor ("same as the Vagabond"): the catalog's dragon and vagabond classes store none. Also removes the stale `add-ship-mechanics-skill.sql` run record. Applied `--remote` first |
+| 2026-09-25 | #1395 | R.C.C.s part two, the seven Felinoids of Omagua: Felinoid (Jaguar Mutant), Flying Tiger, Flame Panther, Hunter Cat, Oracle Cat, Sekhmet, Werejaguar/Werepanther (one stat block, two name-only variants); plus the Flying Tiger's and Hunter Cat's armors as gear. No ladder for the Werejaguar ("same as the Psi-Stalker", which stores none). Salable-goods money is not stored as coin; Ancient Egyptian is a fixed Language: Other. Applied `--remote` first |
