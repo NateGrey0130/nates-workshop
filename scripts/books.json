@@ -95,6 +95,16 @@
       "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number. The last folio is 192 (file p193, the Zavor), read off a render on 2026-09-18; this said 172 until then. Its one reader, cacheCoverage, passes either way (all 200 pages are cached), but a reader scoping the book by it stopped twenty pages short, in the middle of the monsters. The cache manifest records 172 as well; the text layer prints the late folios with an interior space ('1 91', '1 92')."
     },
 
+    "cwc": {
+      "title": "Rifts World Book 11: Coalition War Campaign",
+      "aliases": ["Coalition War Campaign", "Rifts World Book Eleven: Coalition War Campaign", "Rifts Coalition War Campaign"],
+      "source_pdf": "Rifts- World Book 11 Coalition War Campaign.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 3,666 chars/page and 35.2% stop words. Offset verified by folio at five points - cache p020 reads 19, p100 reads 99, p200 reads 199, p223 reads 222, p225 reads 224 - one region, no split. printed_pages is 224, the Experience Tables at cache p225; cache p226 is the blank back cover. ocr-book.py measured 222 because p224 (printed 223) carries no bare folio line. welded_pages 4 (9, 72, 90, 151), corrupt_pages 3 (39, 136, 146, low counts), substituted_digits 54 pages, heaviest p098 (19). See apps/character-creator/docs/surveys/cwc.md."
+    },
+
     "dag": {
       "title": "Palladium Fantasy Dragons and Gods",
       "aliases": ["dragons-and-gods"],
