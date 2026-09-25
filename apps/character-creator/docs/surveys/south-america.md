@@ -1,8 +1,8 @@
 # Rifts World Book 6: South America — survey
 
-**Status:** `importing` — gear, Biomancy spells and vehicles shipped; O.C.C.s next. (2026-09-25)
+**Status:** `importing` — gear, Biomancy spells, vehicles and the eight O.C.C.s shipped; R.C.C.s next. (2026-09-25)
 
-**Rows citing this book:** gear 30, spells 24, vehicles 19
+**Rows citing this book:** classes 8, gear 30, vehicles 19, skills 1, spells 24
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -277,3 +277,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1375 | gear: 30 rows (7 Colombian C-series weapons, 10 bio-weapons and bio-armors, 8 Manoan TW items and enchanted armors, 5 Cibolan drugs); the 3 Naruni NE weapons were already catalogued. Applied `--remote` first |
 | 2026-09-25 | #1378 | Biomancy spells: 24 rows, `Biomancy: ` prefix, tradition `biomancy`, level and cost from the index on printed 64; Suspended Animation linked to `Earth: Suspended Animation`. Applied `--remote` first |
 | 2026-09-25 | #1380 | vehicles: 19 (6 Colombian, 3 Kittani of Lagarto, 2 Manoan, 2 Cibolan, 5 ships, the Demon Black Ship), 150 locations, 61 weapons. Applied `--remote` first |
+| 2026-09-25 | #1384 | the eight O.C.C.s (Anti-Monster, Sailor, Pirate, Voodoo Priest, Biomancer, Atlantean Monster Hunter, Tribal Shaman, Totem Warrior (South American)) and the Ship Mechanics skill they share. The Monster Hunter's ladder ("same as Undead Slayer") and the Tribal Shaman's ("same as the Mystic") have no catalog source: no `undead-slayer` class exists and `mystic` stores no `xp_table`, so both are left out and noted. Applied `--remote` first |
