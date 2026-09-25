@@ -15,7 +15,7 @@ export async function onRequestGet(context) {
   const email = getUserEmail(context.request);
   if (!email) return json({ error: 'Not authenticated' }, 401);
   try {
-    const db = context.env.DB;
+    const db = context.env.DB_TOOLS;
     const [brands, filaments, meta] = await Promise.all([
       db.prepare('SELECT id, name FROM ff_brands ORDER BY name').all(),
       db.prepare('SELECT * FROM ff_filaments').all(),
