@@ -15,6 +15,10 @@ export const KNOWN_KEYS = new Set([
   'id', 'name', 'system', 'source_book', 'category',
   'attribute_requirements', 'attribute_maximums', 'attribute_dice',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
+  // The book's O.C.C. grouping for a class that prints no S.D.C. formula:
+  // compose.js rolls 3D6 for true and 1D6 for false. Since 2026-09-25; it was
+  // a map in compose.js before that.
+  'men_of_arms',
   'starting_money', 'skills', 'equipment_starting', 'level_progression',
   'psionics', 'magic', 'bonuses', 'special_abilities', 'natural_abilities',
   'restrictions', 'side_effects', 'variants', 'extraction_notes',

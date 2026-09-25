@@ -758,18 +758,21 @@ silence really is the statement.
 
 ### Which classes are men of arms
 
-Nothing in the class data records the book's O.C.C. grouping — `category` only
-separates O.C.C. from R.C.C. — so it lives in `CORE_SDC_BY_CLASS` in the same
-file, read off the section headings in the book.
+A class that prints no S.D.C. formula says which group it is in, in its own
+frontmatter: `men_of_arms: true` (3D6) or `false` (1D6), read off the section
+headings in the book. `category` only separates O.C.C. from R.C.C., so it cannot
+say this. Until 2026-09-25 the grouping was a map in `js/compose.js`, which every
+class import appended to; its entries and their reasons moved into the classes
+with `db/~001-men-of-arms-frontmatter.sql`.
 
 The **occupation** decides it, not the race: what makes a character a man of
 arms is the job, so a dragon that took a Merc Soldier rolls the soldier's 3D6.
 
-A class that states no S.D.C. and is missing from that table gets **no S.D.C.
-at all** rather than a guessed 1D6, which would quietly under-roll every new
-man of arms. The smoke test fails on any such class, so adding one forces the
-decision instead of hiding it. Adding a class that prints its own formula
-needs no entry.
+A class that states no S.D.C. and no `men_of_arms` gets **no S.D.C. at all**
+rather than a guessed 1D6, which would quietly under-roll every new man of
+arms. Smoke and regression both fail on such a class, so adding one forces the
+decision instead of hiding it. A class that prints its own formula needs no
+line.
 
 Characters already saved without pools were repaired by
 [`db/backfill-core-pools.sql`](db/backfill-core-pools.sql), which rolls them

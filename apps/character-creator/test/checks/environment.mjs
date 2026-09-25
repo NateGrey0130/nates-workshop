@@ -289,7 +289,8 @@ check('no data script carries an eighteenth z', overDeep.length === 0,
   + 'sort after every z tier takes `~NNN-` instead; see the last row of the '
   + 'ordering table in docs/operations.md');
 
-// Not a vacuous check: there are no `~` files yet, so this pins the MECHANISM
+// Not a vacuous check: it was written before any `~` file existed (the first,
+// `~001-men-of-arms-frontmatter.sql`, landed 2026-09-25), so it pins the MECHANISM
 // the paragraph above and operations.md both promise, using the same `.sort()`
 // every consumer calls. If it ever stops being true, the documentation is
 // wrong before any file depends on it.

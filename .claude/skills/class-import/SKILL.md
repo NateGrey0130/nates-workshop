@@ -251,11 +251,15 @@ cites the same old string and is fine.
   Troll Knight carries 40 instead of 40 + 3D6 and nothing on the sheet looks
   unusual. Palladium Fantasy printed 18 states the rule outright — *"All S.D.C.
   points/bonuses are cumulative."*
-- **A class stating no `sdc_base` and no `mdc_base` needs a `CORE_SDC_BY_CLASS`
-  entry** in `js/compose.js`, or the smoke test fails it. The value is `3D6` for
-  a man of arms and `1D6` for everyone else, read off the book's own section
-  heading — and for a RACE it is always `1D6`, because a race is never a man of
-  arms and the entry only fires for a race played with no occupation at all.
+- **A class stating no `sdc_base` and no `mdc_base` needs a `men_of_arms` line
+  in its own frontmatter**: `men_of_arms: true` rolls the core 3D6, `false` the
+  core 1D6. Read it off the book's own section heading, and say which heading
+  in `extraction_notes`. For a RACE it is always `false`, because a race is
+  never a man of arms and the line only matters for a race played with no
+  occupation at all. Smoke and regression both fail a class that prints no
+  formula and states neither. **Do not edit `js/compose.js` for this.** Until
+  2026-09-25 the grouping was a map there, `CORE_SDC_BY_CLASS`, and every import
+  appended to it; the map is gone, and its entries live in the classes now.
 
 ## An extraction note that describes the APP will go stale
 
@@ -317,8 +321,8 @@ the tree now — so do not go looking for it. The hazard is what survives, not
 the file.
 
 **One class per `add-<id>-class.sql`.** The smoke test maps each file to exactly
-one id and checks `CORE_SDC_BY_CLASS` against that map; four classes in one file
-left all four unaccounted for. A `fix-` script may touch several — the MOS fix
+one id and reads each class's `men_of_arms` line against that map; four classes
+in one file left all four unaccounted for. A `fix-` script may touch several — the MOS fix
 covers two — because nothing maps those to ids.
 
 The class markdown lives in D1, so a fix script edits it with `replace()`:

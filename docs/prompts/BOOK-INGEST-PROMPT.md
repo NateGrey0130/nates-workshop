@@ -182,7 +182,7 @@ naming the exact filenames in prompt A.
 > ### THE STANDING CONSTRAINT — the book does not get to start engineering work
 >
 > **`book-survey` §8 governs this and is the copy to read.** It sets three
-> tiers: the `CORE_SDC_BY_CLASS` and `books.json` edits that are *part of* an
+> tiers: the `men_of_arms` line and `books.json` edits that are *part of* an
 > import and are not a code change; a change **Nate asks for**, which is in
 > scope the moment he asks; and everything else, which waits. It also carries
 > the rule that a proposal written and implemented in the same session goes

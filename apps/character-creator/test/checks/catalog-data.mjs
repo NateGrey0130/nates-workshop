@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { statements } from '../../../../scripts/sql-statements.mjs';
 import { catalogInserts, conflictingInserts } from '../../../../scripts/catalog-inserts-lib.mjs';
 import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
-import { composeClass, CORE_SDC_BY_CLASS } from '../../js/compose.js';
+import { composeClass } from '../../js/compose.js';
 import { bonusesFromSkills, combineClasses, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 import { isHandToHand, oneHandToHand, replacePrompt, styleKey, handToHandCost, handToHandCondition,
@@ -38,11 +38,16 @@ section('Core pools (p.18)');
 // p.18 states hit points and S.D.C. once, for every character, rather than per
 // class, so most class pages print neither and compose.js supplies them.
 //
-// The S.D.C. half has to know whether the class is a man of arms, and nothing
-// in the class data records that, so the grouping lives in CORE_SDC_BY_CLASS.
-// A class that states no formula and is missing from that table gets no S.D.C.
-// at all — which is silent, looks exactly like the two Priests of Light that
-// reached production with hp_max NULL, and nothing else would catch it.
+// The S.D.C. half has to know whether the class is a man of arms: its
+// frontmatter says `men_of_arms: true` or `false`. A class that states no
+// formula and neither value gets no S.D.C. at all — which is silent, looks
+// exactly like the two Priests of Light that reached production with hp_max
+// NULL, and nothing else would catch it.
+//
+// Until 2026-09-25 the grouping was CORE_SDC_BY_CLASS, a map in compose.js.
+// Its entries moved into the classes' markdown with one late data script, so
+// a class says it in one of two places: its own add-*-class.sql (every class
+// imported since), or that script. Both are read here, as text.
 const classFiles = readdirSync(join(appDir, 'db'))
   .filter((f) => /^add-.*-class\.sql$/.test(f)).sort();
 check('class definition scripts found', classFiles.length > 0, 'no add-*-class.sql in db/');
@@ -55,34 +60,40 @@ const states = (sql, key) => new RegExp('^\\s*' + key + ':', 'm').test(sql);
 const classes = classFiles.map((f) => {
   const sql = readFileSync(join(appDir, 'db', f), 'utf8');
   const id = sql.match(/^id: ([a-z0-9-]+)/m)?.[1] ?? null;
-  return { f, id, hp: states(sql, 'hit_points_base'), sdc: states(sql, 'sdc_base'), mdc: states(sql, 'mdc_base') };
+  const moa = sql.match(/^\s*men_of_arms: (true|false)\s*$/m)?.[1] ?? null;
+  return { f, id, hp: states(sql, 'hit_points_base'), sdc: states(sql, 'sdc_base'), mdc: states(sql, 'mdc_base'),
+    moa: moa === null ? null : moa === 'true' };
 });
+// The late script: one UPDATE per class it classifies.
+const MOA_FILE = readdirSync(join(appDir, 'db')).find((f) => /-men-of-arms-frontmatter\.sql$/.test(f));
+const moaFileText = MOA_FILE ? readFileSync(join(appDir, 'db', MOA_FILE), 'utf8') : '';
+const moaFromFile = new Map([...moaFileText.matchAll(/'men_of_arms: (true|false)'[^\n]*WHERE class_id = '([a-z0-9-]+)'/g)]
+  .map((m) => [m[2], m[1] === 'true']));
+check('the men-of-arms data script is found and read', MOA_FILE && moaFromFile.size > 100,
+  `${MOA_FILE} holds ${moaFromFile.size} classes`);
+const menOfArms = (c) => c.moa ?? moaFromFile.get(c.id);
 check('every class script declares an id', classes.every((c) => c.id), 
   classes.filter((c) => !c.id).map((c) => c.f).join(', '));
 
 // An M.D.C. being tracks M.D.C. instead, so its silence is a statement.
 const needsSdc = classes.filter((c) => c.id && !c.sdc && !c.mdc);
-const unclassified = needsSdc.filter((c) => !CORE_SDC_BY_CLASS[c.id]);
+const unclassified = needsSdc.filter((c) => menOfArms(c) === undefined || menOfArms(c) === null);
 check('every class without an S.D.C. formula is classified as men-of-arms or not',
   unclassified.length === 0,
-  'missing from CORE_SDC_BY_CLASS: ' + unclassified.map((c) => c.id).join(', ')
-    + ' — these characters would be saved with sdc_max NULL');
+  unclassified.map((c) => c.id).join(', ')
+    + ' — add `men_of_arms: true` (3D6) or `false` (1D6) to the class frontmatter, or the character is saved with sdc_max NULL');
 
-// The reverse: an entry for a class that states its own formula is dead, and
-// an entry for a class that does not exist is a typo that silently does nothing.
+// The reverse: a grouping for a class that states its own formula is dead, and
+// one for a class that does not exist is a typo that silently does nothing.
+// `true`/`false` is enforced by the reading itself: anything else is not
+// read, so the class counts as unclassified above.
 const byId = new Map(classes.filter((c) => c.id).map((c) => [c.id, c]));
-const stale = Object.keys(CORE_SDC_BY_CLASS).filter((id) => byId.get(id)?.sdc);
-const unknown = Object.keys(CORE_SDC_BY_CLASS).filter((id) => !byId.has(id));
-check('no S.D.C. grouping overrides a class that states its own', stale.length === 0,
-  stale.join(', ') + ' — the class page prints a formula, so the entry never applies');
+const stale = classes.filter((c) => c.sdc && menOfArms(c) != null).map((c) => c.id);
+const unknown = [...moaFromFile.keys()].filter((id) => !byId.has(id));
+check('no S.D.C. grouping sits on a class that states its own', stale.length === 0,
+  stale.join(', ') + ' — the class page prints a formula, so the grouping never applies');
 check('every S.D.C. grouping names a class that exists', unknown.length === 0,
   unknown.join(', ') + ' — no add-*-class.sql defines this id');
-
-// p.18 gives exactly two values. Anything else is a per-class formula wearing
-// the core rule's clothes and belongs in the class markdown instead.
-const badDice = Object.entries(CORE_SDC_BY_CLASS).filter(([, d]) => d !== '3D6' && d !== '1D6');
-check('every S.D.C. grouping rolls 3D6 or 1D6', badDice.length === 0,
-  badDice.map(([id, d]) => id + '=' + d).join(', '));
 
 // The defaults have to survive composition, not merely exist as constants.
 //
@@ -90,7 +101,7 @@ check('every S.D.C. grouping rolls 3D6 or 1D6', badDice.length === 0,
 // formulas, so a class whose own page prints one would look like a gap here
 // when it is exactly the case the default is meant to stay out of.
 const mk = (id, extra = {}) => ({ id, name: id, system: 'rifts', category: 'occ', ...extra });
-const composedFor = (list) => list.map((c) => composeClass({ rcc: mk(c.id) }));
+const composedFor = (list) => list.map((c) => composeClass({ rcc: mk(c.id, { men_of_arms: menOfArms(c) }) }));
 const noHp = composedFor(classes.filter((c) => c.id && !c.hp && !c.mdc));
 check('every class stating no hit points composes with the core formula',
   noHp.length > 0 && noHp.every((c) => c.hit_points_base),
@@ -111,8 +122,14 @@ check('a stated hit point formula is never overridden',
   ownFormula.hit_points_base === 'P.E. x 2 plus 2D6 per level of experience', ownFormula.hit_points_base);
 
 // What makes a character a man of arms is the job, not the race.
-const dragonMerc = composeClass({ rcc: mk('chiang-ku-dragon'), occ: mk('merc-soldier') });
+const dragonMerc = composeClass({ rcc: mk('chiang-ku-dragon', { men_of_arms: false }), occ: mk('merc-soldier', { men_of_arms: true }) });
 check('S.D.C. follows the occupation, not the race', dragonMerc.sdc_base === '3D6', dragonMerc.sdc_base);
+const soldierMage = composeClass({ rcc: mk('a-warrior-race', { men_of_arms: true }), occ: mk('a-mage', { men_of_arms: false }) });
+check('and the other way round: a warrior race that took a magic occupation rolls 1D6',
+  soldierMage.sdc_base === '1D6', soldierMage.sdc_base);
+const raceAlone = composeClass({ rcc: mk('a-warrior-race', { men_of_arms: true }) });
+check('an R.C.C. played without an occupation is classified by its own line',
+  raceAlone.sdc_base === '3D6', raceAlone.sdc_base);
 
 // ---------- 1b. A racial S.D.C. is a BONUS, never sdc_base ----------
 //
@@ -152,9 +169,11 @@ const PF_RACES = ['human', 'elf', 'dwarf', 'gnome', 'troglodyte', 'kobold', 'gob
     wrong.join(', '));
 
   // And it survives composition with a man of arms, which is the whole point.
+  // The grouping comes from the real classes' own lines, not the fixture.
+  const moaOf = (id) => menOfArms(byId.get(id) ?? {});
   const troll = composeClass({
-    rcc: mk('troll', { bonuses: { pools: { sdc: 40 } } }),
-    occ: mk('knight'),
+    rcc: mk('troll', { bonuses: { pools: { sdc: 40 } }, men_of_arms: moaOf('troll') }),
+    occ: mk('knight', { men_of_arms: moaOf('knight') }),
   });
   check('a Troll Knight rolls the Knight 3D6 and keeps the troll +40',
     troll.sdc_base === '3D6' && troll.bonuses?.pools?.sdc === 40,
@@ -162,7 +181,7 @@ const PF_RACES = ['human', 'elf', 'dwarf', 'gnome', 'troglodyte', 'kobold', 'gob
 
   // Played alone - which the books do not do and the app allows - the race
   // still gets a core roll rather than a NULL pool.
-  const alone = composeClass({ rcc: mk('troll', { bonuses: { pools: { sdc: 40 } } }) });
+  const alone = composeClass({ rcc: mk('troll', { bonuses: { pools: { sdc: 40 } }, men_of_arms: moaOf('troll') }) });
   check('and a troll with no occupation still gets a core S.D.C. roll',
     alone.sdc_base === '1D6', alone.sdc_base);
 }

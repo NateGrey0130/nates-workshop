@@ -245,7 +245,9 @@ export function run() {
     const dsRest = operations.slice(dsStart);
     const dsEnd = dsRest.slice(1).search(/\r?\n#{1,6} /);
     const dsSection = dsEnd === -1 ? dsRest : dsRest.slice(0, dsEnd + 1);
-    const patterns = [...dsSection.matchAll(/`([a-z0-9*-]+\.sql)`/g)].map((m) =>
+    // `~` since 2026-09-25: the tier after every z- tier is `~NNN-`, and a
+    // pattern this could not read left its first file uncovered.
+    const patterns = [...dsSection.matchAll(/`([~a-z0-9*-]+\.sql)`/g)].map((m) =>
       new RegExp('^' + m[1].replace(/[.]/g, '\\.').replace(/\*/g, '.*') + '$'));
     const uncovered = dataScripts.filter((f) => !patterns.some((p) => p.test(f)));
     check('every data script is covered by the Data scripts table',

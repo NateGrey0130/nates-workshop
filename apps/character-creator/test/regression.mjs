@@ -3487,6 +3487,21 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     if (c.hit_points_base == null) silent++;
   }
 
+  // A class that prints no S.D.C. formula rolls the core 3D6 or 1D6 by its own
+  // `men_of_arms` line (since 2026-09-25; a map in compose.js before). Smoke
+  // reads the line out of the data scripts' TEXT; this reads what a database
+  // built from nothing actually serves, which is the only place a later script
+  // that rewrites a whole markdown and drops the line would show.
+  // A staged class (the Chiang-Ku Dragon's hatchling and adult) states its pool
+  // per stage in `variants`, so it prints a formula even though the base row
+  // does not: smoke's text reading counts it the same way.
+  const stagesState = (c) => Object.values(c.variants || {})
+    .some((v) => v && (v.sdc_base != null || v.mdc_base != null));
+  const unclassified = classes.filter((c) => c.mdc_base == null && c.sdc_base == null
+    && !stagesState(c) && typeof c.men_of_arms !== 'boolean');
+  check('every published class that prints no S.D.C. formula says whether it is a man of arms',
+    unclassified.length === 0, unclassified.map((c) => c.id).join(', '));
+
   // The README says ABOUT HALF, in words, since 2026-09-24. It used to state
   // both numbers ("one-hundred-and-seventy-one of three-hundred-and-forty-nine"),
   // parsed as words and pinned exactly, so every class import edited that line.
