@@ -233,11 +233,12 @@ for (const g of groupDatabases(repoRoot)) {
   // The guard has to test the schema feature, never insert unconditionally: on an
   // existing database every CREATE above it is skipped, so an unguarded row would
   // mark an un-migrated database as migrated. That is the lie the table exists to
-  // prevent, and it is invisible until someone trusts the record.
+  // prevent, and it is invisible until someone trusts the record. A migration
+  // that DROPS something is guarded by its absence, WHERE NOT EXISTS (085).
   const unguarded = migrationFiles.filter((f) => {
     const at = schemaSql.indexOf(`'${f}'`);
     if (at < 0) return false;
-    return !/^[\s\S]{0,400}?WHERE EXISTS/.test(schemaSql.slice(at));
+    return !/^[\s\S]{0,400}?WHERE (?:NOT )?EXISTS/.test(schemaSql.slice(at));
   });
   check(label + 'every seed line is guarded by a schema feature', unguarded.length === 0,
     'unguarded seed line for: ' + unguarded.join(', '));

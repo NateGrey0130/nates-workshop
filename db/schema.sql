@@ -1679,3 +1679,10 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'tradition'
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '067-spell-ppe-permanent.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('spells') WHERE name = 'ppe_permanent');
+
+-- 085 drops the ten tables that moved to DB_MARVEL and DB_TOOLS. This file
+-- never creates them, so a database built from it is already past 085; the
+-- guard is that none of the ten exists.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '085-drop-moved-group-tables.sql'
+WHERE NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name IN ('ff_brands', 'ff_filaments', 'ff_config', 'ff_history', 'ff_presets', 'ff_custom_filaments', 'media_items', 'media_shares', 'msh_power_text', 'msh_heroes'));
