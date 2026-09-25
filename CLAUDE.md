@@ -13,9 +13,12 @@ Plain HTML/JS/CSS, zero dependencies, no build step. There is no `package.json`
 and no `node_modules`; `npx wrangler` resolves from the npx cache. Merging to
 `main` IS the deploy, and **since 2026-09-16 CI blocks that merge**.
 
-The five smoke suites run on every pull request (`.github/workflows/tests.yml`,
+The smoke suites run on pull requests (`.github/workflows/tests.yml`,
 `REPO-AUDIT.md` G8, since 2026-09-03) and so does `regression.mjs`
-(`regression.yml`, since 2026-09-04). **Their three check-runs — `smoke`,
+(`regression.yml`, since 2026-09-04). **Since 2026-09-25 not every suite runs
+on every pull request** — see *Three groups* below: the character creator's
+smoke suite and the menu check always do, and the rest run for the group a
+change touches. **Their three check-runs — `smoke`,
 `menus`, `regression` — are required status checks** on `main`'s ruleset
 `22209348`, *"main: require a pull request"*: the merge button is disabled and
 `gh pr merge` is refused until all three report success. `play-flow` and
@@ -28,6 +31,28 @@ rather than trusting this paragraph —
 That does not move the rule below — the checks still run
 before the merge, and step 4 of `ship-pr` is still yours — it means a red run
 now stops the merge instead of being noticed afterwards.
+
+## Three groups, and which one you are in
+
+The repo is three unrelated groups plus what they share: **Palladium** (the
+character creator and the five apps split from it), **Marvel**
+(`marvel-heroes`), and **tools** (FilamentForge, MediaVault, Pick 3 Cut 5).
+`groups.json` at the root says which group owns every path and every D1 table,
+and `node scripts/groups.mjs <path>` answers for one file. The point is that
+sessions on different groups can run at once without colliding.
+
+- **One session per group, each in its own worktree** — the `worktree` skill.
+- **CI runs a group's suites only when that group, or a shared path, changed**
+  (`node scripts/groups.mjs --affected origin/main...HEAD` shows what a branch
+  will run). `regression` and `play-flow` are Palladium's; a tools-only pull
+  request skips them and says so in the log, and the check still reports.
+  The character creator's smoke suite runs on everything, because it also pins
+  every skill, agent, audit menu and app tile.
+- **A shared path runs every group's suites** — `shared/`, the middleware,
+  `db/schema.sql`, `apps/manifest.json`, `SETUP.md`, the workflows. Change one
+  in a pull request of its own, not inside a group's work.
+- **A new file must have an owner.** `groups.mjs --check` runs in `smoke` and
+  fails on a path no entry covers. When unsure, the owner is `shared`.
 
 App conventions and the data model live in `apps/character-creator/README.md`.
 **The migration list is not there** — it moved to

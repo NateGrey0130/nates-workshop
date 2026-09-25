@@ -16,6 +16,13 @@
     "shared file one group's costs the other groups their tests on the change that breaks",
     "them; calling a group's file shared costs some CI minutes. The second is the safe mistake.",
     "",
+    "PROCESS IS NOT A GROUP OF APPS. Audit menus, skills, agents, CLAUDE.md and docs/ are read",
+    "only by the checks that run on EVERY pull request - the character creator's smoke suite,",
+    "which pins them, and the menus job - and by no group's own suite and not by regression.",
+    "So a change to them turns no group on. A process file that a group's suite starts",
+    "reading must move out of it: SETUP.md is shared rather than process for exactly that",
+    "reason, because the MediaVault and Pick 3 Cut 5 suites read it.",
+    "",
     "The 'group' of each app in apps/manifest.json must agree with this file; 'other' there",
     "is 'tools' here. `node scripts/groups.mjs --check` holds all of that, and runs in CI."
   ],
@@ -105,13 +112,11 @@
       "title": "Shared by every group",
       "paths": [
         "*",
-        ".claude/",
         ".github/",
         ".impeccable/",
         "apps/_template/",
         "apps/manifest.json",
         "db/schema.sql",
-        "docs/",
         "functions/api/_lib/",
         "functions/api/_middleware.js",
         "functions/api/claude.js",
@@ -133,6 +138,27 @@
         "scripts/sql-statements.mjs"
       ],
       "tables": ["schema_migrations"]
+    },
+    "process": {
+      "title": "Process and documentation, read only by the checks every pull request runs",
+      "paths": [
+        ".claude/",
+        "CLAUDE.md",
+        "DESIGN.md",
+        "PRODUCT.md",
+        "SETUP-v2-CHANGES.md",
+        "docs/",
+        "DOCS-AUDIT.md", "DOCS-AUDIT-2.md",
+        "EFFICIENCY-AUDIT.md", "EFFICIENCY-AUDIT.closed.md",
+        "HEALTH-AUDIT.md", "HEALTH-AUDIT.closed.md",
+        "MACHINE-AUDIT.md", "MACHINE-AUDIT.closed.md",
+        "META-AUDIT.md", "META-AUDIT.closed.md",
+        "REPO-AUDIT.md", "REPO-AUDIT.closed.md",
+        "SHIP-PR-AUDIT.md", "SHIP-PR-AUDIT.closed.md",
+        "SKILL-AUDIT.md", "SKILL-AUDIT.closed.md",
+        "WORKSHOP-UI-AUDIT.md", "WORKSHOP-UI-AUDIT.closed.md"
+      ],
+      "tables": []
     }
   }
 }
