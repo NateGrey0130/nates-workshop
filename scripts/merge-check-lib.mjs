@@ -187,7 +187,10 @@ export function runMergeCheck({ repoRoot, tests, remote }) {
         const out = (r.stdout ?? '') + (r.stderr ?? '');
         const log = join(logDir, `${name}.txt`);
         writeFileSync(log, out);
-        const last = out.trim().split(/\r?\n/).filter(Boolean).pop() ?? '';
+        // The suite's own verdict line, not the last line: stderr is appended
+        // after stdout, and a Node deprecation warning there ended one run.
+        const outLines = out.trim().split(/\r?\n/).filter(Boolean);
+        const last = outLines.filter((l) => /\b(PASSED|FAILED)\b|each with one owner/.test(l)).pop() ?? outLines.pop() ?? '';
         console.log(`  ${r.status === 0 ? 'ok      ' : 'FAILED  '}  ${name}: ${last}`);
         if (r.status !== 0) {
           for (const line of out.split(/\r?\n/).filter((l) => /^\s*FAIL\b/.test(l)).slice(0, 15)) console.log(`      ${line.trim()}`);
