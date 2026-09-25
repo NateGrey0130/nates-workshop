@@ -1,8 +1,8 @@
 # Rifts World Book 11: Coalition War Campaign — survey
 
-**Status:** `importing` — gear, all 21 classes and all 33 vehicles shipped; the creatures and notable NPCs are next. (2026-09-25)
+**Status:** `imported` — PRs #1377-#1407 and the creatures PR: gear, 21 classes, 33 vehicles, 9 creatures, 7 notable NPCs. What was left out on purpose is under *Extraction plan*. (2026-09-25)
 
-**Rows citing this book:** classes 21, gear 25, vehicles 33
+**Rows citing this book:** classes 21, gear 25, vehicles 33, notable_npcs 7, creatures 9
 
 **MOS:** cs-rcsg-scientist 7, cs-special-forces 8, iss-peacekeeper 7, iss-specter 8, iss-intel-specter 10, ntset-protector 7, psi-net-agent 10, kremin-cyborg 7
 
@@ -254,4 +254,29 @@ What is deliberately left, with the reason:
 | 2026-09-25 | [#1398](https://github.com/NateGrey0130/nates-workshop/pull/1398) | eight new classes, one `add-<id>-class.sql` each: `cs-cyborg-strike-trooper` (the book heads it Coalition Cyborg Strike Trooper; Light and Heavy chassis as variants), `cs-commando` (Hand to Hand: Commando, unchangeable), `cs-eod-specialist`, `cs-nautical-specialist`, `cs-ranger`, `cs-rcsg-scientist` and `cs-special-forces` (their pick-four specialty areas as `skills.mos`), `cs-rpa-fly-boy-ace`. `zzzzzzzzzzzzzzz-cwc-recite-coalition-juicer.sql` replaces `coalition-juicer`'s markdown with the CWC printing (p.76-78), Juicer Uprising's differing figures kept in its extraction_notes; the class_id is unchanged. All men-of-arms, humans only. 0 stub rows. `book-reconcile` over all nine: one fix (the Fly Boy's armor choice is CA-3 or CA-4; CA-1 is the ISS's, printed 104). Applied `--remote` before the PR: 9 live classes cite the book |
 | 2026-09-25 | [#1403](https://github.com/NateGrey0130/nates-workshop/pull/1403) | six new classes, one `add-<id>-class.sql` each: `iss-peacekeeper`, `iss-specter`, `iss-intel-specter` (printed 180-185), `ntset-psi-hound`, `ntset-protector` (187-189) and `psi-net-agent` (193-195, headed PRP/Psi-Net Agent). The Psi-Hound is a mutant dog taking an NTSET O.C.C.; the book defers the dog's powers to the Rifts RPG, so it carries `dog-boy`'s racial package plus the NTSET skills and bonuses, standalone like `dog-boy`, `occ_group: psychic`. The ISS classes and the Protector are men-of-arms; Psi-Net is psychic and stores no psionics block, because the book prints none for the class. The Intel Specter's save line is misprinted in the book (printed 184); stored as +1 vs magic illusion, mind control and possession at levels 1 and 12, the reading recorded in its extraction_notes. Investigation (ISS and Psi-Net) has no catalog skill row and is special-ability prose. 0 stub rows. `book-reconcile` over all six: no disagreements. Applied `--remote` before the PR: 15 live classes cite the book |
 | 2026-09-25 | [#1406](https://github.com/NateGrey0130/nates-workshop/pull/1406) | six races, one `add-<id>-class.sql` each: `nmbyr-gorilla-man`, `tirrvol-sword-fist`, `quick-flex-alien`, `vanguard-brawler`, `trimadore`, `kremin-cyborg` (printed 202-211). Quick-Flex, Trimadore and Vanguard carry the book's ladders from printed 224; the Vanguard's prints two overlapping lower bounds (level 6 at 24,561 inside level 5's 16,801-25,560; level 15 at 331,401 inside level 14's), stored as the previous top plus one, 25,561 and 331,801. Gorilla Man and Tirrvol print no ladder and have no skill list of their own; the Kremin is told to use the Rifts RPG 'Borg table, which this book does not print, so none is stored. The Kremin's skills are the CS Technical Officer's by the book's instruction (printed 210), copied from that production row, hence its MOS line. The Trimadore's bonuses are printed word for word as the Vanguard's (printed 206 and 208), transcribed as printed. Where the book states a language bonus twice and the two disagree (Vanguard, Quick-Flex), the R.C.C. skill list wins and the note is in extraction_notes. 0 stub rows. `book-reconcile` over all six: no disagreements. Applied `--remote` before the PR: 21 live classes cite the book |
-| 2026-09-25 | vehicles PR | 33 vehicles, 382 M.D.C. locations, 119 weapon entries in three files by printed range. `add-cwc-vessels-p105-121.sql`: the 7 power armors (Mauler, Terror Trooper, Glitter Boy Killer, Death's Head, Smiling Jack and Super SAMAS, Striker SAMAS). `add-cwc-vessels-p122-149.sql`: 4 Skelebots as `drone` (the FASSAR-20 and -30 are one row, because printed 125 stats them together) and 6 robots (IAR-2 to IAR-5, CR-004, CR-005). `add-cwc-vessels-p150-177.sql`: 16 ground vehicles and aircraft; the Fire Storm, Death Bringer, Sky Lifter and Talon print only a top-secret estimate, so cost is NULL with the estimate in cost_note, as the South America vessels do. The Mark V APC is named but not statted here. Book slips are stored as printed and noted on the row. Every number off a render; `book-reconcile` covered all 33 in three passes, no disagreements. Applied `--remote` before the PR: 33 vehicles cite the book |
+| 2026-09-25 | [#1407](https://github.com/NateGrey0130/nates-workshop/pull/1407) | 33 vehicles, 382 M.D.C. locations, 119 weapon entries in three files by printed range. `add-cwc-vessels-p105-121.sql`: the 7 power armors (Mauler, Terror Trooper, Glitter Boy Killer, Death's Head, Smiling Jack and Super SAMAS, Striker SAMAS). `add-cwc-vessels-p122-149.sql`: 4 Skelebots as `drone` (the FASSAR-20 and -30 are one row, because printed 125 stats them together) and 6 robots (IAR-2 to IAR-5, CR-004, CR-005). `add-cwc-vessels-p150-177.sql`: 16 ground vehicles and aircraft; the Fire Storm, Death Bringer, Sky Lifter and Talon print only a top-secret estimate, so cost is NULL with the estimate in cost_note, as the South America vessels do. The Mark V APC is named but not statted here. Book slips are stored as printed and noted on the row. Every number off a render; `book-reconcile` covered all 33 in three passes, no disagreements. Applied `--remote` before the PR: 33 vehicles cite the book |
+| 2026-09-25 | creatures PR | `add-cwc-creatures.sql`: 9 creatures (the Devil Sloth, Vampire Flat Worm and Spiny Ravager, printed 211-214, whose stat block is on 214; the six Burbs D-Bees as their NPC view, `playable` 1, slugs matching the class ids) and 7 notable NPCs (Erin Tarn, Sir Winslow Thorpe, Lt. Jack "Crazy" Cavanaugh, Emperor Karl Prosek, Joseph Prosek II, General Cabot, General Ross Underhill), with 39 attacks. The book never names Cabot's first name; the text calls him General Marshall Cabot, stored as `real_name` with a note that it may be a rank. Rifts World Book 4: Africa, the earlier book, also stats Tarn and Thorpe; CWC wins and Africa's differing figures are in the notes. Every creature passes `creatureFormulaGaps`; an 8-word shingle check against the cache finds no copied prose. `book-reconcile`: no disagreements. Applied `--remote` before the PR: production then held 369 creatures and 318 notable NPCs. **BOOK IMPORTED.** |
+
+### What remains
+
+Nothing from the extraction plan. What is left is the deliberate list under *Extraction plan*, plus what the classes record as prose rather than data: Homemade Explosives (EOD) and Investigation (ISS, Psi-Net) have no catalog skill rows, and a few bonuses the schema cannot scope (the Nautical's water-only Pilot bonus, the Fly Boy's aircraft-only +15%).
+
+`node scripts/source-coverage.mjs --remote`, 2026-09-25, after the creatures applied:
+
+```
+  cwc                 95 / 0
+```
+
+That is 25 gear rows, 21 classes, 33 vehicles, 9 creatures and 7 notable NPCs, all traceable to a cached page.
+
+```
+BACKLOG       rows an importer created and nobody finished
+  gear stubs            14
+  skill stubs            5
+  spell stubs           19
+  psionic stubs          1
+  spell text missing     0
+  psionic text missing   0
+```
+
+None of it is this book's: every class here emitted 0 stub statements, and the book defines no spells or psionics.
