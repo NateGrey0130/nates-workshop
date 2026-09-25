@@ -24,7 +24,7 @@
 import { statements } from './sql-statements.mjs';
 
 // The UNIQUE key of each catalog table, read from db/schema.sql on 2026-09-24.
-const CATALOG_KEYS = {
+export const CATALOG_KEYS = {
   gear: ['slug'], vehicles: ['slug'], creatures: ['slug'], notable_npcs: ['slug'],
   enchantments: ['slug'], totems: ['slug'],
   skills: ['name'], spells: ['name'], psionic_powers: ['name'],
@@ -42,8 +42,13 @@ function insertRows(stmt) {
   const cols = head[3].split(',').map((c) => c.trim().toLowerCase());
   const rows = [];
   let depth = 0, inStr = false, cur = '', vals = [];
+  let tail = '';
   for (let i = head[0].length; i < stmt.length; i++) {
     const c = stmt[i];
+    // Past the last tuple: anything but a comma or whitespace at depth 0 is
+    // the clause after VALUES, such as `ON CONFLICT(slug) DO UPDATE SET ...`,
+    // whose parentheses are not a row.
+    if (!inStr && depth === 0 && c !== '(' && c !== ',' && !/\s/.test(c)) { tail = stmt.slice(i); break; }
     if (inStr) {
       if (c === "'") {
         if (stmt[i + 1] === "'") { cur += "'"; i++; } else inStr = false;
@@ -60,10 +65,17 @@ function insertRows(stmt) {
     } else if (c === ',' && depth === 1) { vals.push(cur.trim()); cur = ''; continue; }
     if (depth >= 1) cur += c;
   }
-  return { table: head[2].toLowerCase(), mode: (head[1] || 'plain').toLowerCase(), cols, rows };
+  // An upsert overwrites on purpose, the way OR REPLACE does; DO NOTHING is
+  // OR IGNORE by another name.
+  let mode = (head[1] || 'plain').toLowerCase();
+  if (/^ON\s+CONFLICT\b[\s\S]*\bDO\s+UPDATE\b/i.test(tail)) mode = 'upsert';
+  else if (/^ON\s+CONFLICT\b[\s\S]*\bDO\s+NOTHING\b/i.test(tail)) mode = 'ignore';
+  return { table: head[2].toLowerCase(), mode, cols, rows };
 }
 
-// { 'table|key': [{ file, values: {col: text} }, ...] } over a set of files.
+// { 'table|key': [{ file, mode, values: {col: text} }, ...] } over a set of
+// files, in the order given. `mode` is plain, ignore or replace: which insert a
+// build keeps depends on it (scripts/insert-conflicts.mjs).
 export function catalogInserts(files) {
   const out = {};
   for (const { name, sql } of files) {
@@ -75,7 +87,7 @@ export function catalogInserts(files) {
       for (const row of ins.rows) {
         const values = Object.fromEntries(ins.cols.map((c, i) => [c, row[i]]));
         const k = ins.table + '|' + keyCols.map((c) => values[c]).join('|');
-        (out[k] ??= []).push({ file: name, values });
+        (out[k] ??= []).push({ file: name, mode: ins.mode, values });
       }
     }
   }
@@ -88,6 +100,11 @@ export function conflictingInserts(inserts) {
   const out = [];
   for (const [k, list] of Object.entries(inserts)) {
     if (new Set(list.map((x) => x.file)).size < 2) continue;
+    // A later upsert or OR REPLACE overwrites on PURPOSE: that is how a real
+    // row replaces a class script's stub (add-underseas-gear.sql's upsert, for
+    // one). Nothing is lost silently there, so it is not a conflict. An upsert
+    // sets only the columns it names; the rest keep the first row's values.
+    if (list.slice(1).some((x) => x.mode === 'upsert' || x.mode === 'replace')) continue;
     let differs = [];
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < list.length; j++) {

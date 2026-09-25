@@ -856,6 +856,10 @@ scripts/
 │                           DIFFERENT values, where OR IGNORE drops one row
 │                           silently. Read by smoke's "Catalog rows inserted
 │                           by two scripts", which carries the baseline
+├── insert-conflicts.mjs    What each baselined conflict cost: replays the
+│                           inserts in filename order, then compares the winner
+│                           with a clean build (--build, from rebuild-local.mjs)
+│                           and production (--remote). Read-only
 ├── repo-vs-live.mjs        Can the repo rebuild the live catalog, row for row?
 │                           Builds from scratch and diffs the NAMES, then every
 │                           COLUMN of the rows whose names match. A missing or
