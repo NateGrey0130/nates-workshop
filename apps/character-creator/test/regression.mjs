@@ -5310,10 +5310,14 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // pucara-mind-mage (Rifts World Book 9: South America 2 printed 55-56) is
   // the Pucara Red Giant's own psychic training: it grants the giant's stone
   // powers and nothing a human could hold, and the book offers it to no other
-  // race.
+  // race. So are four more of that book's: the Arkhon Spectral Hunter and ESP
+  // Specialist (printed 73-76, an Arkhon volunteer program and the Arkhons'
+  // psychics), the Fallam Battlemaster (77-79, open to the Fallam only) and the
+  // Ojahee 'Borg (109-111, a conversion built on an Ojahee body).
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
-    'pucara-mind-mage'];
+    'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
+    'fallam-battlemaster', 'ojahee-borg'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
