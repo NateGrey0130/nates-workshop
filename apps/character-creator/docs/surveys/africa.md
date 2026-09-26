@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — spells, gear, vehicles, all thirteen classes and the two racial psionics are in; creatures and notable NPCs next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
+**Status:** `imported` — every playable class, spell, gear row, vehicle, creature and named NPC the plan listed is in; what was left out, and why, is under *Extraction plan*. The Mind Bleeder is Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-26)
 
-**Rows citing this book:** classes 13, gear 14, psionic_powers 2, spells 53, vehicles 4
+**Rows citing this book:** classes 13, creatures 24, gear 15, notable_npcs 29, psionic_powers 2, spells 53, vehicles 4
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -330,8 +330,21 @@ One PR each, applied `--remote` before the PR, in this order:
    skill list does not; the Crocodillian's reptile empathy is the 85% master
    tier's only. The creatures PR adds each race's NPC-view row, suffixed
    `-africa` where Dragons and Gods holds the slug.
-8. **Creatures** — about 22.
-9. **Notable NPCs** — about 29, with their named weapons; Erin Tarn and Thorpe are Coalition War Campaign's.
+8. **Creatures** — 24, shipped: Nightmare Zombie, Devil Skull, Magic Beetle;
+   Jinn (`jinn-africa`), Transfortifier, Chest Amalgamate, Zombitron; five
+   animals and four monsters; and the NPC view (`playable` 1) of the eight
+   races, `phoenixi-africa` and `ramen-africa` where Dragons and Gods holds the
+   slug. Only PRINTED attack damage is stored: derived punches were removed.
+   The four mounts are notable NPCs, not creatures, because every printed
+   block is a named individual; no generic netherbeast row.
+9. **Notable NPCs** — 29, shipped, with their named weapons: the four
+   Horsemen, the Armageddon Creature and their four mounts; thirteen gods as
+   `-africa` rows (no Osiris row: he has no stat block, so his fourteen body
+   parts are ONE `magic` gear row, `body-parts-of-osiris`); Rama-Set,
+   Katrina Sun, Victor Lazlo, Lo Fung, Fang-Lo, Abkii and Sebek. Erin Tarn and
+   Thorpe are Coalition War Campaign's. Named with no stat block, and so no
+   row: Lyphan the White Sphinx, Kryanthal, Tygre-Slnn, Hass Uyban, Mbau
+   Ngbuto.
 
 What is deliberately left, with the reason for each:
 
@@ -353,3 +366,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1419](https://github.com/NateGrey0130/nates-workshop/pull/1419) | 14 gear rows (6 Phoenix arms and armor, 8 Medicine Man items) and 4 Phoenix Empire vehicles with 28 locations and 4 weapon systems. Applied `--remote` before the PR |
 | 2026-09-26 | [#1422](https://github.com/NateGrey0130/nates-workshop/pull/1422) | 5 O.C.C.s: Medicine Man, Rain Maker, African Priest, Necromancer, African Witch (NPC villain, flagged). Applied `--remote` before the PR |
 | 2026-09-26 | [#1423](https://github.com/NateGrey0130/nates-workshop/pull/1423) | 8 R.C.C.s and the 2 racial empathy psionics (category `Special`). Applied `--remote` before the PR |
+| 2026-09-26 | [#1424](https://github.com/NateGrey0130/nates-workshop/pull/1424) | 24 creatures (8 of them the playable races' NPC view), 29 notable NPCs, their 239 printed attacks, and the body parts of Osiris as one magic gear row. Applied `--remote` before the PR. Book `imported` |
