@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — tattoos, all 22 new classes and the gear shipped; vehicles, then creatures and NPCs, are next. (2026-09-26)
+**Status:** `importing` — tattoos, all 22 new classes, the gear and the vehicles shipped; creatures and notable NPCs are last. (2026-09-26)
 
-**Rows citing this book:** classes 22, gear 61, spells 32
+**Rows citing this book:** classes 22, gear 61, vehicles 20, spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -219,9 +219,8 @@ this order:
    (`add-atlantis-rune-weapons.sql`), and the estimated `lesser-rune-weapon`
    given its printed price (`~007-atlantis-lesser-rune-weapon-price.sql`).
    See *Gear decisions* below.
-8. **Vehicles: Kittani power armor, robots and vehicles** (139-158) into
-   `vehicles` / `vehicle_weapons` / `vehicle_locations`, every M.D.C. figure
-   read off a render.
+8. **Vehicles** — **SHIPPED**: `add-atlantis-vehicles.sql`, 20 vehicles, 133
+   M.D.C. locations, 38 weapon entries. See *Vehicle decisions* below.
 9. **Creatures and notable NPCs**: the NPC-only minions and slave stock,
    rune statues, Eylor constructs; Splynncryth, Styphathal, the Azlum
    inmates, the Alchemist.
@@ -357,6 +356,33 @@ draft went through `book-reconcile` before any data script.
   I.S.P. is 15, not 12; all fixed. The K-Universal Light Power Armor's
   heading is on 138 and its stats on 139, so it is batch 8.
 
+### Vehicle decisions
+
+- **Twenty rows**: the Kittani K-Universal, Serpent, Equestrian and Manling
+  power armor; the ABSS-2, ABS-3 and ABW-4 drones; the Insecton and Creax
+  rovers; the Dragon Dreadnought; the K-ATV Hover Jet, K-GTRV and K-GTV
+  skimmers, K-ATV land and water skimmer and KM-700 uni-motorcycle; the
+  Eylor Slave Barge (printed 124-125); and the Splugorth flying ships as FOUR
+  rows, one per size, because printed 155 gives each size its own M.D.C.,
+  speed and price in one table.
+- **None was already in the catalog**; its Kittani and Splugorth vehicles come
+  from Underseas, South America and Africa.
+- **Every M.D.C. table and weapon block was read off a render.** Printed
+  150-151 are full-page art, so the Dreadnought cites 149 and 152; printed 157
+  interleaves two skimmers in the OCR, and the render gives the K-GTV's model
+  as K-HV (the OCR says K-HV LW).
+- **Book slips kept as printed**: the Creax carries the Insecton's model code;
+  the KM-700's stat block is headed "The K-GTV Motorcycle"; the Dreadnought's
+  M.D.C. table lists six wing particle beams and its weapon list eight (two are
+  rear-mounted); the Slave Barge is priced "50 million (?)" (cost NULL).
+- **Prices**: the Kittani power armor is never sold; cost is the low end of
+  what the book says the Kittani could get. The Dreadnought's 200 billion is
+  hypothetical, so cost is NULL.
+- `book-reconcile` checked all 20, 133 locations and 38 weapons: the plasma
+  axe's rate of fire came from the prose rather than the stat block, the
+  Dreadnought's wing turrets were missing their 152 lines, and the ABS-3's
+  mini-missile range was not printed; all fixed.
+
 What is deliberately left, with the reason for each:
 
 - **Bio-wizard transmutation and reconstruction** (107-110): augmentation
@@ -387,11 +413,12 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1430](https://github.com/NateGrey0130/nates-workshop/pull/1430) | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantis-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1431](https://github.com/NateGrey0130/nates-workshop/pull/1431) | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1432](https://github.com/NateGrey0130/nates-workshop/pull/1432) | batch 4: the seven slave-stock races (`add-adarok-class.sql` ... `add-zembahk-class.sql`) and `fix-stone-master-xp.sql`. `book-reconcile` checked all seven; Hawrk-ohl's W.P. Targeting added. Applied `--remote` before the PR. MERGED. |
-| 2026-09-26 | — | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. |
+| 2026-09-26 | [#1433](https://github.com/NateGrey0130/nates-workshop/pull/1433) | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. |
+| 2026-09-26 | — | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batches 8 and 9 of the plan. `node scripts/source-coverage.mjs --remote`,
+Batch 9 of the plan. `node scripts/source-coverage.mjs --remote`,
 2026-09-26, after the tattoos:
 
 ```
