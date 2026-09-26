@@ -237,8 +237,9 @@ export function composeClass({ rcc, occ = null, character = {}, skillRows = null
   // composed class untouched.
   if (!skillRows) return withPsionics;
   // Level matters now: a Hand to Hand skill grants a different set at each
-  // level, and everything up to the character's is summed (p.347).
-  const fromSkills = bonusesFromSkills(skillRows, character.level ?? null);
+  // level, and everything up to the character's is summed (p.347). The class
+  // goes with it for `ignores_style_attacks`.
+  const fromSkills = bonusesFromSkills(skillRows, character.level ?? null, withPsionics);
   if (!fromSkills) return withPsionics;
   return { ...withPsionics, bonuses: sumBonusGroups(withPsionics.bonuses, fromSkills) };
 }

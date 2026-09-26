@@ -284,6 +284,32 @@ check('two fighting styles take the better start, not the sum',
     both.attacks_base === 5 && both.strike === 1, JSON.stringify(both));
 }
 
+// And a class whose book says the style adds NO attacks - "Do not add the
+// melee round attacks from the hand to hand combat skill, only use it for
+// bonuses and fighting techniques" (Underseas p.52) - keeps its own count at
+// every level, and keeps everything else the style grants.
+{
+  const biform = { id: 'b', name: 'B', ignores_style_attacks: true,
+    bonuses: { combat: { attacks_base: 3 }, at_level: [{ level: 4, combat: { attacks: 1 } }] } };
+  const boxing = { name: 'Boxing', bonuses: { combat: { attacks: 1 } } };
+  const comp = (lvl, rows) => composeClass({ rcc: biform, character: { level: lvl }, skillRows: rows }).bonuses.combat;
+  const l1 = comp(1, [expert]);
+  check('a class that ignores style attacks keeps its own three beside Expert',
+    l1.attacks_base === 3 && !l1.attacks, JSON.stringify(l1));
+  check('and gains none of the Expert\'s attacks by level 15',
+    !comp(15, [expert]).attacks && comp(15, [expert]).attacks_base === 3, JSON.stringify(comp(15, [expert])));
+  check('while the style\'s other bonuses still land',
+    comp(15, [expert]).parry === at(expert, 15).parry, JSON.stringify(comp(15, [expert])));
+  check('and a skill that is not a style still adds its attack',
+    comp(1, [expert, boxing]).attacks === 1, JSON.stringify(comp(1, [expert, boxing])));
+  const job = combineClasses({ name: 'R', bonuses: { combat: { attacks_base: 3 } } },
+    { name: 'O', ignores_style_attacks: true, bonuses: {} });
+  check('an occupation\'s flag survives the join with a race', job.ignores_style_attacks === true);
+  check('and the validator refuses the flag without attacks of the class\'s own',
+    parseClassMarkdown('---\nid: x\nname: X\nsystem: rifts\nsource_book: B p.1\ncategory: rcc\nignores_style_attacks: true\n---\n')
+      .errors.some((e) => e.startsWith('ignores_style_attacks needs')));
+}
+
 // ...and everything ELSE about two styles did stack - strike, parry, dodge and
 // damage were summed, because only attacks_base takes the larger. A character
 // holds ONE style (js/hand-to-hand.js): a class grants Basic or Expert, and the

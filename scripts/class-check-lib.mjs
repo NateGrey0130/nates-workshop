@@ -59,6 +59,10 @@ export const KNOWN_KEYS = new Set([
   // occupation's pools and skills and the HIGHER of the two attribute dice.
   // BOOK-INGEST-AUDIT.md F11.
   'supersedes_race',
+  // A class whose own attacks stand and whose Hand to Hand style adds none -
+  // the Pneuma-Biforms' "do not add the melee round attacks from the hand to
+  // hand combat skill". Read by bonusesFromSkills, carried by combineClasses.
+  'ignores_style_attacks',
   // A class whose BOOK defines it as another class - "create the character as
   // usual" for the Euro-Juicer, "Same as the Ley Line Walker" for the Rifter -
   // is stored as a full copy, because nothing here composes one class from

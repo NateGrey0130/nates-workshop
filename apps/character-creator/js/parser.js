@@ -1,4 +1,5 @@
 import { diceBounds, isAbsentAttribute, poolFormulaBounds } from './dice.js';
+import { isHandToHand } from './hand-to-hand.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
@@ -1074,15 +1075,30 @@ export function skillConditionalBonuses(rows, level) {
 
 // `level` is optional: omit it and only the flat `bonuses` column applies,
 // which is exactly what every caller did before Hand to Hand had a schedule.
-export function bonusesFromSkills(rows, level = null) {
+//
+// `cls` is optional too, and matters for one flag: `ignores_style_attacks`.
+// Some books give a creature its own attacks and say a Hand to Hand style adds
+// none of them - "Do not add the melee round attacks from the hand to hand
+// combat skill, only use it for bonuses and fighting techniques" (Underseas
+// p.52, for each Pneuma-Biform). For such a class a style's `attacks_base`
+// and per-level `attacks` are dropped and everything else it grants stands.
+// Only a style's: Boxing's extra attack is a skill's, not a style's, and the
+// books that say this name the hand to hand skill.
+export function bonusesFromSkills(rows, level = null, cls = null) {
   let out;
   // `attacks_base` STATES a starting number rather than adding to one, so it
   // cannot go through the summing path - two fighting styles would give eight
   // attacks. The strongest training wins, which is also what a character with
   // two Hand to Hand skills would actually fight at.
   let attacksBase = null;
+  const noStyleAttacks = cls?.ignores_style_attacks === true;
+  let styleRow = false;
   const take = (block) => {
     if (!block) return;
+    if (noStyleAttacks && styleRow && block.combat) {
+      const { attacks_base: _base, attacks: _attacks, ...kept } = block.combat;
+      block = { ...block, combat: kept };
+    }
     const combat = block.combat;
     if (combat && typeof combat.attacks_base === 'number') {
       attacksBase = Math.max(attacksBase ?? 0, combat.attacks_base);
@@ -1093,6 +1109,9 @@ export function bonusesFromSkills(rows, level = null) {
   };
 
   for (const row of rows || []) {
+    // A style is recognised by name, as everywhere (js/hand-to-hand.js); the
+    // regression suite pins every row stating attacks_base to that name.
+    styleRow = isHandToHand(row?.name);
     take(asBlock(row?.bonuses));
     for (const entry of levelGrants(row?.level_bonuses, level)) {
       // A W.P. grants its strike and parry only "whenever that particular type
@@ -1157,6 +1176,9 @@ export function combineClasses(rcc, occ) {
   // it to stop calling the merged expressions "racial dice" when half of them
   // are the occupation's.
   if (superseded) out.supersedes_race = true;
+  // A race whose book says a style adds no attacks keeps saying so through
+  // `out`, the race spread; an occupation that says it is carried the same way.
+  if (occ.ignores_style_attacks === true) out.ignores_style_attacks = true;
   // A mega-damage conversion is the OCCUPATION's when it states one - the Totem
   // Warrior's supernatural P.E. comes from its infusion, not from a race - and
   // `out` starts as the race spread, so it is carried (BOOK-INGEST-AUDIT F62).
@@ -2903,6 +2925,17 @@ export function parseClassMarkdown(text) {
     }
     if (data.category !== 'occ') {
       warnings.push('supersedes_race is set on something that is not an O.C.C. and will do nothing');
+    }
+  }
+  // A class whose own attacks stand and whose Hand to Hand style adds none
+  // (bonusesFromSkills). Opt-in, from a book that says so or states a whole
+  // attack schedule of its own; without one to stand in, it would leave the
+  // character at the default two.
+  if (data.ignores_style_attacks !== undefined) {
+    if (data.ignores_style_attacks !== true) {
+      errors.push('ignores_style_attacks is a flag and may only be true; omit it otherwise');
+    } else if (typeof data.bonuses?.combat?.attacks_base !== 'number') {
+      errors.push('ignores_style_attacks needs bonuses.combat.attacks_base - the attacks that stand instead of the style\'s');
     }
   }
   // F62. A mega-damage creature whose S.D.C. and hit points ARE its M.D.C. -
