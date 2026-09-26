@@ -82,7 +82,7 @@ not** — read its ladder from Rifts Africa, or store the Monster Hunter's ladde
 as a note, at import time.
 
 **At import none of those RUE classes stored a ladder either**, so the
-"same as" classes had nothing to copy. `~004-rue-xp-ladders.sql`
+"same as" classes had nothing to copy. `~006-rue-xp-ladders.sql`
 then read RUE printed 295 off a render and gave the Mystic, Psi-Stalker,
 Vagabond, Mind Melter, their printed partners and the seven dragon hatchlings
 their ladders, and copied them to the Tribal Shaman, Werejaguar, Grimbor,
@@ -300,4 +300,5 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1389 | R.C.C.s part one: Jungle Elf, Lizard Man of Lagarto, Amazon, Ewaipanomas, Shaydor Spherian, Gatherer (Cibola), Pogtalian Dragon Slayer, Pincer Warrior (Cibola), Grimbor Ape-Man; plus four gear rows their equipment names (Grimbor armor, yumbuto club, NE-10 magazine, dragon-skin armor). No ladder for the Shaydor (none printed), Pogtalian ("same as the dragon"), Grimbor ("same as the Vagabond"): the catalog's dragon and vagabond classes store none. Also removes the stale `add-ship-mechanics-skill.sql` run record. Applied `--remote` first |
 | 2026-09-25 | #1395 | R.C.C.s part two, the seven Felinoids of Omagua: Felinoid (Jaguar Mutant), Flying Tiger, Flame Panther, Hunter Cat, Oracle Cat, Sekhmet, Werejaguar/Werepanther (one stat block, two name-only variants); plus the Flying Tiger's and Hunter Cat's armors as gear. No ladder for the Werejaguar ("same as the Psi-Stalker", which stores none). Salable-goods money is not stored as coin; Ancient Egyptian is a fixed Language: Other. Applied `--remote` first |
 | 2026-09-25 | #1400 | creatures and notable NPCs: 25 creatures (9 monsters, spirits and trees; the 16 R.C.C.s as NPC views) and 16 notable NPCs, 65 attacks. Every creature row passes creatureFormulaGaps; both halves reconciled against renders. The book's import plan is complete. Applied `--remote` first |
-| 2026-09-25 | #1415 | follow-ups Nate asked for: RUE ladders on 20 classes (the five "same as" South America classes among them); the Loa split into Ghostly and Divine (creatures 26); RUE's TW Flaming Sword and TK-Machine-Gun added and given to the Amazon. Applied `--remote` first |
+| 2026-09-25 | #1415 | follow-ups Nate asked for: RUE ladders on 21 classes (the five "same as" South America classes among them); the Loa split into Ghostly and Divine (creatures 26); RUE's TW Flaming Sword and TK-Machine-Gun added and given to the Amazon. Applied `--remote` first |
+| 2026-09-25 | #1420 | `~004-rue-xp-ladders.sql` renamed `~006-rue-xp-ladders.sql`: #1413 landed `~004-ignores-style-attacks.sql` and two files shared the prefix. Re-applied `--remote` as a no-op on the ladders; it repoints the five South America notes and replaces the run record |
