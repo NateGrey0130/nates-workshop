@@ -2366,3 +2366,63 @@ until someone reads the 13 mentions and sorts rules from mentions.
 occupation, forever. That is exactly the cost `ntset-psi-hound` already pays
 by copying, so the choice is about where that cost lives, not whether there
 is one.
+
+### F111 — medium — a non-superseding race keeps its own P.P.E. and starting money over a spell-casting or salaried occupation's
+
+**Opened 2026-09-25** by the `south-america-2` import
+(`apps/character-creator/docs/surveys/south-america-2.md`). Filed under
+`book-survey` §8 Tier 3: filed, not built, on Nate's call the same day.
+
+`combineClasses` resolves eight pool and body keys with one rule
+(`apps/character-creator/js/parser.js:1183-1187`, read 2026-09-25): a
+superseding occupation replaces the race's value, and otherwise **the race's
+wins whenever both state one**. The comment above it gives the reason for
+`horror_factor` and `second_form` - they belong to the body. **F11 took this
+loop on 2026-08-31 (PR #430)** and deliberately left the non-superseding case
+as it is: its outcome note says a class without the flag still loses its pools
+to the race, *"which is the posture."* This finding does not reopen F11. It
+names two keys for which the body argument does not hold and the book shows
+the opposite.
+
+- **`ppe_base` on a spell-casting occupation.** The Larhold Barbarian R.C.C.
+  (printed 185-186) states P.P.E. 3D6, which is the book's figure for a
+  Larhold who does **not** take a magic O.C.C. The Larhold Shaman O.C.C.
+  (printed 188-190, `occ_group: magic`) states 3D6x10 + P.E., +3D6 per level.
+  Paired, the loop keeps the race's 3D6, so a Larhold shaman casts from a
+  pool about a tenth the size the book prints. A human shaman, who has no
+  race, gets the printed figure.
+- **`starting_money` on any occupation.** The Arkhon R.C.C. states 1D6x1000,
+  so the Arkhon Spectral Hunter (2D4x1000) and ESP Specialist (2D6x1000),
+  both Arkhon-only, never start with their own money. The Larhold Shaman
+  starts with the Barbarian's 1D6x1000, not its own 2D6x1000. `xp_table`,
+  six lines further down, already runs the other way for the reason that
+  applies here too: it comes from what a character does, not what it is.
+
+Each affected class's `extraction_notes` records the effect and cites this
+finding.
+
+**Proposal:** in that loop, let the OCCUPATION win for two keys, the way
+`xp_table` already does. `starting_money` would always prefer the occupation.
+`ppe_base` would prefer the occupation when its `occ_group` is `magic`, and
+stay race-first otherwise, because a race's P.P.E. is a property of the body
+for every men-of-arms pairing. The `class-check` warning that lists what a
+race would discard (added under F11) should stop naming those two keys where
+they no longer apply.
+
+**Posture:** a composition change for two keys. It adds no check, and it
+touches no class file.
+
+**Evidence:** the loop was read at `parser.js:1183`, 2026-09-25. The three
+pairings are this book's drafts (`class-check --remote`, 2026-09-25), which
+print the discard warning on each. **Not measured:** how many already-published
+pairings change. A taker must run `combineClasses` over every published
+race-and-occupation pair before and after, as F11's own table did, and list
+every pair whose `ppe_base` or `starting_money` moves.
+
+**Confidence:** high on the three cases here. Medium on the rule, until that
+census runs. A Palladium Fantasy race whose book says its P.P.E. REPLACES a
+mage O.C.C.'s would argue for keeping race-first there, and the census is what
+finds one.
+
+**Ongoing cost:** none recurring. It is one conditional in a loop, and the doc
+comment above it grows two sentences.
