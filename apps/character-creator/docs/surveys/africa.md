@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — the necromancy and witch spells are in; ceremonial spells next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
+**Status:** `importing` — all 53 spells are in; gear and vehicles next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
 
-**Rows citing this book:** spells 30
+**Rows citing this book:** spells 53
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -124,7 +124,7 @@ mattered.
 | Rain Maker | 83-85 | African Rain Maker | `rain-maker` | mega-damage lightning as an ability; the rain maker dances |
 | Priest | 85-87 | African Priest | `african-priest` | chants and dances. `priest` alone is too generic an id for the catalog |
 | Necromancer | 99-104 | Necromancer & Phoenixi | `necromancer` | **optional**, alignment-restricted. `necromancer-russian` (Mystic Russia) exists beside it; this is the original. Union with the Dead and Augmentation are tables of P.P.E.-priced options: prose plus a pool, not 26 abilities |
-| African Witch | 72-74 | African Witch | `african-witch` | the book marks it an NPC villain and not recommended for players. **Proposed for import anyway**, flagged in the class note, on the Hidden Witch precedent (Mystic Russia imported that NPC-villain O.C.C.), because the NPC generator rolls from published classes. Witch Insanity Table is prose |
+| African Witch | 72-74 | African Witch | `african-witch` | the book marks it an NPC villain and not recommended for players. **Imported anyway (Nate, 2026-09-25)**, flagged in the class note, on the Hidden Witch precedent (Mystic Russia imported that NPC-villain O.C.C.), because the NPC generator rolls from published classes. Witch Insanity Table is prose |
 
 ### Playable R.C.C.s (8)
 
@@ -177,13 +177,17 @@ all four groups were new and stored unprefixed. Both were wrong:
 |---|---|---|---|---|
 | African Witch's bad medicine | 74-78 | 12 | **0** — the book states no level for them; `ppe` from the page 78 list | `african-witch` |
 | Necro-magic | 105-108 | 18 | from the 108 list | `necromancy` |
-| Chants | 86-88 | 7 | 0 | `african-ceremonial` |
-| Dances, and the rain maker dances | 88-92 | 15 | 0 | `african-ceremonial` |
-| Medicine Man rituals (Protection against Witches area ritual, Witch Lure) | 82 | 2 | 0 | `african-ceremonial` |
+| Chants and the Drums of Protection | 86-88 | 8 | 0 | `african-ceremonial`, prefix `Ceremony:` |
+| Dances, and the rain maker's seven | 88-93 | 15 | 0 | `african-ceremonial`, prefix `Ceremony:` |
 
-The ceremonial group still wants a prefix of its own at import; diff it
-prefix-folded against production first. `Taboo` is a witch spell the Medicine
-Man also starts with, and is one row.
+**Imported 2026-09-25: 23 rites**, not the "about 24" first counted. The
+Medicine Man's two rituals (printed 81-82: the area version of his protection
+charm, and Witch Lure) are prose paragraphs inside his charm list with no
+stat block, so they ride with those items in the gear import. `Ceremony:` is
+Nate's choice of prefix. No rite matched production prefixed or bare; the near
+names (`Water: Rain Dance`, `Water: Part Waters`, `Air: Calm Storms`, `Clouds
+of Survival: Calm Storms`) are different spells by `same-spell-lib`. `Taboo`
+is a witch spell the Medicine Man also starts with, and is one row.
 
 **Variable costs:** several chants and dances print two costs by caster or
 by weather (Water Doubling 30/50, Rain Dance 300/950, Ride the Lightning
@@ -285,13 +289,18 @@ book sessions are running today.
 
 ## Extraction plan
 
+**Nate's answers, 2026-09-25:** I apply each PR `--remote` and open it, he
+merges. The rites take `Ceremony:`. Katrina Sun gets her own notable row
+(`katrina-sun`, real name Isis). The African Witch is imported as a class,
+flagged NPC villain.
+
 One PR each, applied `--remote` before the PR, in this order:
 
 1. **Survey and registry** — this PR.
 2. **Spells: necro-magic and the witch** — 30 rows, `necromancy` and
    `african-witch`.
-3. **Spells: ceremonial** — about 24 chants, dances and rituals,
-   `african-ceremonial`.
+3. **Spells: ceremonial** — 23 rites, `Ceremony:` / `african-ceremonial`.
+   Shipped.
 4. ~~Psionics~~ — **dropped 2026-09-25**: Psyscape shipped the fifteen
    Mind Bleeder powers (#1382); the two empathy powers move to step 7.
 5. **Gear and vehicles** — 8 Phoenix weapons (render 140-141), 8 Medicine Man
@@ -320,3 +329,4 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-09-25 | [#1376](https://github.com/NateGrey0130/nates-workshop/pull/1376) | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
 | 2026-09-25 | [#1383](https://github.com/NateGrey0130/nates-workshop/pull/1383) | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
+| 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
