@@ -1,8 +1,8 @@
 # Rifts World Book 9: South America 2 — survey
 
-**Status:** `importing` — skills, spells, gear, vehicles and all 35 classes shipped; NPCs and creatures next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
+**Status:** `imported` — the whole plan shipped (#1381-#1418 and the NPCs PR); what was left out on purpose is under Extraction plan. (2026-09-25)
 
-**Rows citing this book:** classes 35, gear 60, vehicles 23, skills 8, spells 35
+**Rows citing this book:** classes 35, notable_npcs 6, creatures 2, gear 60, vehicles 23, skills 8, spells 35
 
 Slug `south-america-2`. Cached 2026-09-25 from
 `Rifts- World Book 9 South America 2.pdf` (copied from a `kupdf.net` download),
@@ -248,3 +248,28 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1402](https://github.com/NateGrey0130/nates-workshop/pull/1402) | 10 classes: Arkhon R.C.C. (71-73), Arkhon Spectral Hunter (73-74) and ESP Specialist (75-76), Fallam R.C.C. (76-78) and Fallam Battlemaster (77-79); Megaversal Trooper (104-106), Ojahee R.C.C. with its trooper skill block as one class (106-107), Destroyer 'Borg (107-109), Ojahee 'Borg (109-111, supersedes_race), Men-Rall (111-112). The four single-race O.C.C.s join regression's RACE_OWN_TRAINING. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1416](https://github.com/NateGrey0130/nates-workshop/pull/1416) | 12 classes: Gaucho (128-129), Plains 'Borg (129-131), Ultra-Crazy (131-133; insanities are prose by Nate's call, the book points at the older Crazy), Blood Rider (133-135; its Related list omits Physical/Pilot as printed, render-confirmed), Master Blood Rider (135-137, an O.C.C. despite its R.C.C. heading), Blood Lizard R.C.C. (137-138, optional PC); the Achilles mutants Serpentoid, Mutant Capybara, Equinoid, Condoroid, Falconoid and Neo-Human (141-151). Applied `--remote` before the PR. |
 | 2026-09-25 | [#1418](https://github.com/NateGrey0130/nates-workshop/pull/1418) | 6 classes: Amaki Stone-Man R.C.C. (154-155, a race that takes an O.C.C.), Duelist and Gizmoteer (155-159, O.C.C.s despite their R.C.C. headings; Gizmoteer starts with two powers from each of four categories, by Nate's call), Larhold Barbarian R.C.C. (185-186), Larhold Human Renegade (186-187, human only), Larhold Shaman (188-190). Also fix-men-rall-isp-base.sql: the Men-Rall gets the standard major-psionic I.S.P., which the book does not print (Nate's call). BOOK-INGEST-AUDIT F111 filed for the race keeping its P.P.E. and money over the Shaman's and the two Arkhon O.C.C.s'. Applied `--remote` before the PR. |
+| 2026-09-25 | NPCs and creatures PR | 6 notable NPCs (Viracocha, Inti, Pachamama, Illapa, Manco Capac, Yahuar Huacac; 41-52) and 2 creatures (the Ancient, 48-50; the War Bison, 187-188) with 15 stat_attacks. Every number off a render; book-reconcile agreed and restored the printed regeneration and sense figures to natural_abilities. Book imported. Applied `--remote` before the PR. |
+
+### What remains
+
+Nothing from the plan. `node scripts/source-coverage.mjs --remote`, 2026-09-25, before the NPCs PR (so these 161 rows are the skills, spells, gear, vehicles and classes):
+
+```
+  south-america-2    161 / 0
+```
+
+Its BACKLOG block the same day:
+
+```
+  BACKLOG       rows an importer created and nobody finished
+    gear stubs            14   description still says STUB - created by class import
+    skill stubs            5   created by an import and never given a base %, a bonus or a note
+    spell stubs           19   level 0 and 0 P.P.E.
+    psionic stubs          1   0 I.S.P.
+    spell text missing     0   nothing for the codex to show
+    psionic text missing   0   nothing for the codex to show
+```
+
+**One of the 19 spell stubs is this book's and is finished**: `Nazca: Permanency` is level 0 (no drawing prints a level) with 0 P.P.E. because its cost is a tenth of the drawing it fixes, taken from permanent P.P.E.; the rule is in its `ppe_note`. None of the gear, skill or psionic stubs is this book's: every class was drafted with `class-check --remote` and emitted 0 stub statements.
+
+Open elsewhere: `BOOK-INGEST-AUDIT` F111 (a race's P.P.E. and money over a spell-casting or salaried occupation's), filed by this import.
