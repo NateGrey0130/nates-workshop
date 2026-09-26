@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — the spells, gear and vehicles are in; the O.C.C.s next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
+**Status:** `importing` — the spells, gear, vehicles and five O.C.C.s are in; the R.C.C.s next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
 
-**Rows citing this book:** gear 14, spells 53, vehicles 4
+**Rows citing this book:** classes 5, gear 14, spells 53, vehicles 4
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -54,7 +54,7 @@ cover.
 |---|---|---|
 | **4-5** (cache p005-p006) | *Contents* | page of every section, class, spell list and NPC. Welded, but the entries survive |
 | **78** | *Alphabetical List of Bad Medicine* | the African Witch's twelve own spells, with P.P.E. |
-| **78** | *Available Common Spell Magic* (Witch) | 39 existing invocations by level 1-13, at **double** their normal P.P.E. for a witch |
+| **78** | *Available Common Spell Magic* (Witch) | **54** existing invocations by level 1-13 (the survey first said 39; recounted at the class import, 5+5+6+4+5+3+6+8+3+4+2+1+2), at **double** their normal P.P.E. for a witch |
 | **108** | *Necro-Magic alphabetical list* | level and P.P.E. of all eighteen necromancy spells. **The level authority**: the descriptions at 105-107 print no level |
 | **108** | *Available Common Spell Magic* (Necromancer) | existing invocations levels 1-15, double P.P.E. |
 | **108-109** | *The Cost of Specific Components* | necromancy body-part prices by creature type |
@@ -308,6 +308,13 @@ One PR each, applied `--remote` before the PR, in this order:
 5. **Gear and vehicles** — 6 Phoenix arms, 8 Medicine Man items, 4 vehicles.
    Shipped.
 6. **O.C.C.s** — Medicine Man, Rain Maker, Priest, Necromancer, African Witch.
+   Shipped: `medicine-man`, `rain-maker`, `african-priest`, `necromancer`,
+   `african-witch`, drafted one per subagent and checked by `book-reconcile`.
+   Decided at import: "N secondary skills at levels X, Y and Z" is N at EACH
+   listed level (the other reading cannot divide, and the Agogwe on printed 118
+   says it per level); valuables are not coin; the Necromancer's six starting
+   common spells come from the printed 108 list, which the book calls those
+   associated with necromancy.
 7. **R.C.C.s** — Pygmy Hunter, Pygmy Shaman, Agogwe, Tree People, Phoenixi,
    Ramen, Tauton, Crocodillian; with Psionic Empathy with Animals and with
    Reptiles, which Ramen and Crocodillian carry. The Mind Bleeder is
@@ -333,3 +340,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1383](https://github.com/NateGrey0130/nates-workshop/pull/1383) | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
 | 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
 | 2026-09-25 | [#1419](https://github.com/NateGrey0130/nates-workshop/pull/1419) | 14 gear rows (6 Phoenix arms and armor, 8 Medicine Man items) and 4 Phoenix Empire vehicles with 28 locations and 4 weapon systems. Applied `--remote` before the PR |
+| 2026-09-26 | [#1422](https://github.com/NateGrey0130/nates-workshop/pull/1422) | 5 O.C.C.s: Medicine Man, Rain Maker, African Priest, Necromancer, African Witch (NPC villain, flagged). Applied `--remote` before the PR |
