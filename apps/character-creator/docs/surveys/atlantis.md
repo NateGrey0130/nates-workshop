@@ -1,6 +1,6 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `surveyed` — cached, registered and surveyed; the extraction plan below is awaiting agreement. (2026-09-26)
+**Status:** `surveyed` — cached, registered and surveyed; the extraction plan below is agreed, tattoos first. (2026-09-26)
 
 **Rows citing this book:** none
 
@@ -197,7 +197,7 @@ this order:
    Names are namespaced `Tattoo: <image>`. Monster tattoos are a costing
    rule and go in the Tattooed Man classes' prose, not rows. The classes
    need the tattoos to reference, so they ship first. **Needs Nate's word on
-   the table**, below.
+   the table**, below (answered: yes).
 2. **Atlantean and T-Man classes (6)**: True Atlantean, Atlantean Nomad,
    Tattooed Man, T-Monster Man, Maxi-Man, Undead Slayer. Also backfill
    `atlantean-monster-hunter`'s ladder.
@@ -231,15 +231,14 @@ What is deliberately left, with the reason for each:
 - **Splugorth Witch**: no mechanics here.
 - **Stone Master, Chiang-Ku, Shaydor Spherian**: already in from other books.
 
-### Decisions for Nate before batch 1
+### Decisions, answered by Nate 2026-09-26
 
-1. Tattoos as `spells` with `tradition = 'tattoo'`, following Nazca. The
-   alternative is `gear`, `category = 'magic'`, which loses the P.P.E. column.
-2. Include the three Splugorth R.C.C.s the book calls a rarity as PCs
-   (Conservator, Overlord, Powerlord) and the Sunaj Assassin it discourages?
-   The plan above includes them because the book tags each optional.
-3. Bio-wizard microbes, parasites and symbiotes as gear rows (they are
-   bought, installed or ingested), or leave them as prose?
+1. **Tattoos go in `spells` with `tradition = 'tattoo'`**, following Nazca,
+   not `gear` (which would lose the P.P.E. column). Yes.
+2. **The Conservator, Overlord and Powerlord (a rarity as PCs) and the Sunaj
+   Assassin (discouraged) are imported**, since the book tags each optional.
+   Yes.
+3. **Bio-wizard microbes, parasites and symbiotes become `gear` rows.** Yes.
 
 ## Ledger
 
