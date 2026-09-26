@@ -2257,3 +2257,112 @@ one list entry.
 
 **Ongoing cost:** one more key on a list a test already pins against
 `docs/leveling.md`, so that doc gets one more word. Nothing recurring.
+
+### F109 — low — a related-skill category bonus cannot be scoped to part of a category
+
+**Opened 2026-09-25** by the `cwc` import (`apps/character-creator/docs/surveys/cwc.md`).
+Filed under `book-survey` §8 Tier 3: filed, not built.
+
+Books print a category bonus that applies to only some of the category's
+skills. Coalition War Campaign has four:
+
+| class | printed | the line |
+|---|---|---|
+| `cs-nautical-specialist` | 79 | Pilot: Any, +10% to water vehicles only |
+| `cs-rpa-fly-boy-ace` | 84 | Pilot: Any, +15% to aircraft and flying machines, otherwise +10% |
+| `cs-rcsg-scientist`, `cs-special-forces` | 83, 86-87 | Technical: +10%, but +20% (RCSG) or +15% (Special Forces) to Literacy and Language skills |
+| `cs-nautical-specialist` | 79 | Domestic: +5%, and +10% to Fishing |
+
+Each is stored as the whole category at the lower figure, or at none, with
+the scoped part in a note the player applies by hand.
+
+**The obvious workaround does not work, which is why this is a finding and
+not a data fix.** A class can list one category twice, once with `only` plus
+the bonus and once with `except`. The parser accepts that; run 2026-09-25,
+`parseClassMarkdown` on a two-entry `Pilot` block returned both entries
+unchanged, with no error about them. But `categoryBonus`
+(`apps/character-creator/js/parser.js:1493`, read 2026-09-25) takes the FIRST
+entry whose name matches the skill's category. So with `only` first, every
+Pilot skill gets the +10%, and with `except` first, none does. The same
+function's cross-category branch (line 1486) does pay an `only` entry's bonus,
+but only when that entry is filed under a DIFFERENT category name than the
+skill's own. A class could abuse that by filing the water skills under some
+other category it grants. That is a trick, not a model, and it is not
+proposed.
+
+**Proposal:** make `categoryBonus` prefer a same-category entry whose `only`
+names the skill, then an entry whose `except` does not exclude it, then the
+plain entry. `categoryAllows` must agree on which entry admits the skill.
+Then rewrite the four lines above as split entries. Wherever the book gives a
+different figure outside the named skills (the Fly Boy's +10%), that goes on
+the `except` entry.
+
+**Posture:** a mechanism change to one function, with the data following it.
+It adds no check.
+
+**Evidence:** `categoryBonus` read at `parser.js:1479-1496`, 2026-09-25, and
+the two-entry parse run the same day. What `categoryAllows` does with two
+same-named entries was **not measured**: that is the premise a taker checks
+first, because the wizard, the sheet and `npc-generate.js` (lines 198, 215,
+245, 250) all call both.
+
+**Confidence:** high that the four lines are stored wrong today. Medium on the
+fix's size, until someone reads `categoryAllows` for duplicate entries and
+counts the other books with scoped bonuses. This import found four in one
+book, and none was looked for elsewhere.
+
+**Ongoing cost:** none recurring. One function gets one more rule, and the
+smoke test that pins `categoryBonus` gets a case.
+
+### F110 — low — Psi-Stalker and Dog Boy are O.C.C.s, so "humans or Psi-Stalkers only" cannot be stated
+
+**Opened 2026-09-25** by the `cwc` import (`apps/character-creator/docs/surveys/cwc.md`).
+Filed under `book-survey` §8 Tier 3: filed, not built.
+
+Coalition books open their classes to "humans or Psi-Stalkers", and sometimes
+to Dog Boys:
+- the NTSET Protector (Coalition War Campaign printed 188);
+- the Coalition Grunt (Rifts Ultimate Edition p.230, whose class note says so).
+
+The catalog stores `psi-stalker`, `wild-psi-stalker` and `dog-boy` as
+**O.C.C.s** (`category: occ`; queried `--remote`, 2026-09-25). A mutant's
+racial package rides inside the occupation, and there is no race row to pair
+with. `race_restrictions` accepts only race ids or `"none"`
+(`apps/character-creator/js/parser.js:2848-2853`, read 2026-09-25). So these
+classes store `only: ["none"]`, humans only, and say in the note that a
+Psi-Stalker Protector cannot be built. The book allows one.
+
+`ntset-psi-hound` shows the other half of the cost. The book makes it an O.C.C.
+for a mutant dog (printed 187). With no dog race to pair it with, the class
+carries a full copy of `dog-boy`'s racial package, attributes, pools, psionics
+and senses. That is a second copy to keep in step with the first.
+
+A `--remote` query on 2026-09-25 found 13 live classes mentioning Psi-Stalkers,
+Dog Boys or Dog Packs beside a race restriction. That counts mentions. How many
+of them the book actually opens to those races was **not measured**.
+
+**Proposal:** split each mutant into a race row (R.C.C.) carrying the racial
+package and an occupation carrying the O.C.C. Then point `race_restrictions`
+at the new race ids. The live `psi-stalker` and `dog-boy` classes would become
+a race plus a default O.C.C., in the way Nightbane's race-and-package pairing
+works. **This is not a small change**, because characters already built on
+the combined classes must keep working. A taker should weigh that against
+leaving these few classes humans-only with a note, which is what ships today.
+**If the weighing comes out against it, record that and decline this
+finding.**
+
+**Posture:** a data-model decision first. No code until Nate chooses. It adds
+no check.
+
+**Evidence:** the class categories from `q.mjs --remote`, 2026-09-25; the
+parser rule read at `parser.js:2848-2853` the same day; the 13-class mention
+count from the same query session. The Grunt's rule is **reported by** its
+own class note, not re-read from RUE, which is not cached on this machine.
+
+**Confidence:** high on the gap. Low on how many classes it really affects,
+until someone reads the 13 mentions and sorts rules from mentions.
+
+**Ongoing cost:** if taken, a race row per mutant kept in step with its
+occupation, forever. That is exactly the cost `ntset-psi-hound` already pays
+by copying, so the choice is about where that cost lives, not whether there
+is one.

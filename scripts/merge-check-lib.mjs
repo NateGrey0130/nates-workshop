@@ -31,6 +31,9 @@
 //                                  the class's slug.
 //           Anything traced to a worktree or branch is AHEAD - a session
 //           mid-import, expected - and is not a blocker; the rest is.
+//   stale   at the end it fetches again: if main moved, a PR in the run was
+//           pushed to or merged, or a PR opened meanwhile, the verdict is
+//           about a state that is gone, and that is a blocker - re-run.
 //
 // Read-only as far as the repo and production go: it merges nothing on
 // GitHub, applies nothing, and the throwaway tree is detached (no branch).
@@ -95,6 +98,24 @@ export function traceNames(names, holders) {
   return out;
 }
 
+// What changed on GitHub while the check ran. `start` and `end` are
+// { main: sha, heads: { <PR number>: sha } } over the non-draft open PRs.
+// Any entry means the verdict describes a state that no longer exists: on
+// 2026-09-25 two runs in a row finished after other sessions had merged four
+// PRs under them, and a PR opened mid-run was never checked at all.
+export function staleness(start, end) {
+  const out = [];
+  if (start.main !== end.main) out.push(`main moved during the check (${start.main.slice(0, 8)} -> ${end.main.slice(0, 8)})`);
+  for (const [n, sha] of Object.entries(start.heads)) {
+    if (!(n in end.heads)) out.push(`#${n} closed or merged during the check`);
+    else if (end.heads[n] !== sha) out.push(`#${n} was pushed to during the check (${sha.slice(0, 8)} -> ${end.heads[n].slice(0, 8)})`);
+  }
+  for (const n of Object.keys(end.heads)) {
+    if (!(n in start.heads)) out.push(`#${n} opened during the check and is not in it`);
+  }
+  return out;
+}
+
 export function runMergeCheck({ repoRoot, tests, remote }) {
   const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts });
   const git = (args, opts) => sh('git', args, opts).trim();
@@ -113,6 +134,12 @@ export function runMergeCheck({ repoRoot, tests, remote }) {
 
   console.log(`origin/main ${git(['rev-parse', '--short', 'origin/main'])}; ${prs.length} open PR(s)`
     + (drafts.length ? `, ${drafts.length} draft(s) left out: ${drafts.map((p) => `#${p.number}`).join(' ')}` : ''));
+
+  // What this run tests, to compare against GitHub once it ends.
+  const start = {
+    main: git(['rev-parse', 'origin/main']),
+    heads: Object.fromEntries(prs.map((p) => [p.number, git(['rev-parse', p.ref])])),
+  };
 
   // ---- order ----
   const { order, before, partial } = orderPrs(prs);
@@ -272,6 +299,21 @@ export function runMergeCheck({ repoRoot, tests, remote }) {
     // plain `git worktree add` and nothing here links anything into it.
     const rm = spawnSync('git', ['worktree', 'remove', '--force', tree], { cwd: repoRoot, encoding: 'utf8' });
     if (rm.status !== 0) console.log(`\ncould not remove ${tree}: ${rm.stderr.trim()} - remove it by hand`);
+  }
+
+  // ---- still current? ----
+  // A full run takes minutes, and other sessions merge and push meanwhile.
+  git(['fetch', '--quiet', 'origin']);
+  const openNow = JSON.parse(sh('gh', ['pr', 'list', '--state', 'open', '--limit', '100', '--json', 'number,headRefOid,isDraft']))
+    .filter((p) => !p.isDraft);
+  const moved = staleness(start, {
+    main: git(['rev-parse', 'origin/main']),
+    heads: Object.fromEntries(openNow.map((p) => [p.number, p.headRefOid])),
+  });
+  if (moved.length) {
+    console.log('\nGitHub moved while this ran - the result below is about a state that is gone:');
+    for (const m of moved) console.log(`  ${m}`);
+    blockers.push(`stale: ${moved.length} change(s) on GitHub during the check - re-run it`);
   }
 
   console.log('');
