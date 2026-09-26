@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — the 32 tattoos shipped; the six Atlantean and T-Man classes are next. (2026-09-26)
+**Status:** `importing` — the tattoos and the six Atlantean and T-Man classes shipped; the nine Splugorth minion classes are next. (2026-09-26)
 
-**Rows citing this book:** spells 32
+**Rows citing this book:** classes 6, spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -201,9 +201,11 @@ this order:
    above: 2 simple-weapon, 6 magic-weapon, 22 power, 1 animal, 1 monster.
    `Animals` and `Monsters` are plural because the singular `Tattoo: Animal`
    alias-matched `Metamorphosis: Animal` in `catalog-diff`.
-2. **Atlantean and T-Man classes (6)**: True Atlantean, Atlantean Nomad,
-   Tattooed Man, T-Monster Man, Maxi-Man, Undead Slayer. Also backfill
-   `atlantean-monster-hunter`'s ladder.
+2. **Atlantean and T-Man classes (6)** — **SHIPPED**: `true-atlantean`
+   (R.C.C.), `atlantean-nomad`, `tattooed-man`, `t-monster-man`,
+   `maxi-man`, `undead-slayer`. `atlantean-monster-hunter` got the Undead
+   Slayer's ladder (`fix-atlantean-monster-hunter-xp.sql`). How they were
+   modelled is under *Batch 2 decisions* below.
 3. **Splugorth minion classes (8)**: Conservator, Overlord, Powerlord, Blind
    Warrior Women, three Kittani, Murvoma Metztla. Plus the Sunaj Assassin.
 4. **Slave-stock classes (8)**: Adarok, Erta, Hawrk-duhk, Hawrk-ka, Hawrk-ohl,
@@ -219,8 +221,41 @@ this order:
    rune statues, Eylor constructs; Splynncryth, Styphathal, the Azlum
    inmates, the Alchemist.
 
-Batches 2-4 fan out to `book-extract-worker` per class group and go through
-`book-reconcile` before any data script.
+Batches 2-4 were drafted by one general-purpose agent per two or three classes
+from a shared brief, each iterating `class-check --remote` to `ready`, and every
+draft went through `book-reconcile` before any data script.
+
+### Batch 2 decisions (the six Atlantean and T-Man classes)
+
+- **Tattoos are granted as spells.** A class's fixed tattoos are `spells` by
+  name; chosen ones are picks from named `spell_lists`, with
+  `spell_traditions_allowed: ["tattoo"]`. Simple weapons, animals and
+  monsters are one row each, so a class holds the row once and its COUNT is in
+  a `special_abilities` entry.
+- **P.P.E. is stored at its starting-level value.** A flat `+10 per level` is
+  not dice, so `perLevelDiceOf` (`js/leveling.js`) gives it no growth: it is a
+  note. The stored constant is therefore tattoos x6 plus the transformation
+  base plus the starting level's +10 — twice for the Maxi-Man, which starts at
+  second level and so matches the book's own 143-168 example (5D6+138).
+  `book-reconcile` caught the Maxi-Man and Undead Slayer stored one and two
+  levels short.
+- **Two books' own examples disagree with their own formulas**, and the
+  formula is stored with the example in prose: the Undead Slayer (printed 97,
+  example 24 higher) and the female Tattooed Man (printed 93, 95-130).
+- **The True Atlantean is a race** (`true-atlantean`, pools as bonuses: S.D.C.
+  +70, P.P.E. +22, the Marks of Heritage as two tattoo spells, no ladder —
+  printed 68 prints none for the race). **The Atlantean Nomad pairs only with
+  it**, so it is on regression's `RACE_OWN_TRAINING` list. **The Undead Slayer
+  stays self-contained** (`none`, racial block in prose), as South America's
+  Monster Hunter and `stone-master` are: its pools already include the Marks,
+  and pairing it with the race would count them twice.
+- **The three T-Man O.C.C.s are `none` only.** The book's T-Men are human,
+  ogre or elf, but the catalog's `human`, `ogre` and `elf` are Palladium
+  Fantasy races whose own `ppe_base` would replace the tattoo pools. Ogres
+  take the ogre variants the classes carry; elves are in prose.
+- **The Maxi-Man has no `xp_table`**: printed 95-97 and 68 name none.
+- **Ladders** read off renders of printed 68 and cross-checked against the
+  OCR: Atlantean Vagabond, Tattooed Men, T-Monster Men, Undead Slayers.
 
 What is deliberately left, with the reason for each:
 
@@ -248,11 +283,12 @@ What is deliberately left, with the reason for each:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-26 | [#1427](https://github.com/NateGrey0130/nates-workshop/pull/1427) | cache built (161 pp, scan, OCR 300 dpi), `atlantis` registered in `books.json`, survey written. MERGED. |
-| 2026-09-26 | — | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
+| 2026-09-26 | [#1429](https://github.com/NateGrey0130/nates-workshop/pull/1429) | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
+| 2026-09-26 | — | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantean-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batches 2-9 of the plan. `node scripts/source-coverage.mjs --remote`,
+Batches 3-9 of the plan. `node scripts/source-coverage.mjs --remote`,
 2026-09-26, after the tattoos:
 
 ```
