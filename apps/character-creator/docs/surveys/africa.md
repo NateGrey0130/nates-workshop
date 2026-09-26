@@ -352,4 +352,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
 | 2026-09-25 | [#1419](https://github.com/NateGrey0130/nates-workshop/pull/1419) | 14 gear rows (6 Phoenix arms and armor, 8 Medicine Man items) and 4 Phoenix Empire vehicles with 28 locations and 4 weapon systems. Applied `--remote` before the PR |
 | 2026-09-26 | [#1422](https://github.com/NateGrey0130/nates-workshop/pull/1422) | 5 O.C.C.s: Medicine Man, Rain Maker, African Priest, Necromancer, African Witch (NPC villain, flagged). Applied `--remote` before the PR |
-| 2026-09-26 | this PR | 8 R.C.C.s and the 2 racial empathy psionics (category `Special`). Applied `--remote` before the PR |
+| 2026-09-26 | [#1423](https://github.com/NateGrey0130/nates-workshop/pull/1423) | 8 R.C.C.s and the 2 racial empathy psionics (category `Special`). Applied `--remote` before the PR |
