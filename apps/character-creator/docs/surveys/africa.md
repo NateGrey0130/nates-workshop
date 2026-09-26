@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — all 53 spells are in; gear and vehicles next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
+**Status:** `importing` — the spells, gear and vehicles are in; the O.C.C.s next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
 
-**Rows citing this book:** spells 53
+**Rows citing this book:** gear 14, spells 53, vehicles 4
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -225,8 +225,8 @@ costs; those are prose.
 
 | group | printed | rows | note |
 |---|---|---|---|
-| Phoenix Empire weapons | 140-141 | 7 + a shield | K-4, K-30, KEP-Special, K-E4, K-500, Kittani Plasma Axe, Kittani Plasma Sword, Kittani Class Two Combat Shield. **Render 140-141.** **`Kittani Plasma Sword` exists** (Triax p.214): compare numbers; if they agree, this book adds nothing, and if they differ it lands as `Kittani Plasma Sword (Africa)` with the difference in `variant_note` |
-| Medicine Man items | 79-82 | 8 | medicine stick, medicine horn, kifaalu taboo horn, mayembe horns of divining, magic wings, three protection charms. Priced in P.P.E. to make |
+| Phoenix Empire weapons | 140-141 | **6 imported** | K-4, K-30, KEP-Special, K-E4, K-500 and the Kittani Class Two Combat Shield, every number read off a render. **The Kittani Plasma Sword and Plasma Axe are NOT rows**: Triax holds both (printed 214 there) with every number equal, the axe as the human-size Kittani Double Blade Plasma Axe. Printed 139 says the whole list is reprinted from Rifts World Book Two: Atlantis, which the catalog does not hold, so this book is the citation |
+| Medicine Man items | 80-82 | **8 imported** | medicine stick, medicine horn, Kifaalu taboo horn, Mayembe horns of divining, Magic Wings, three protection charms. `magic`, cost NULL, the P.P.E. to make in `cost_note`. The area protection ritual (160) and Witch Lure (120) ride on the charm and the horn |
 | Named rune weapons and artifacts | 17-156 | about 30 | the Horsemen's four, the gods' weapons, Osiris's body-part artifacts (**one row for the set**, the fourteen parts in its description), the heroes' seven. **These ride with their owners' NPC rows** rather than the gear catalog, as South America did with the Cat's Gauntlet |
 
 **Pygmy talismans and charms are a SYSTEM, not 32 items**: a talisman holds
@@ -237,7 +237,9 @@ class, not as gear rows.
 ## Vehicles (the `vehicles` table)
 
 Phoenix Power Armor (136-137), Phoenix Sand Skimmer (138), Phoenix Sand
-Crawler (138-139), Robot Spy Wing (139-140). **4 rows**, none in production.
+Crawler (138-139), Robot Spy Wing (139-140). **4 rows, imported**, with 28
+M.D.C. locations and 4 weapon systems. The script sorts after
+`zzzzzz-vehicle-class-vocabulary.sql`, which asserts a global vehicle count.
 
 ## Creatures and notable NPCs
 
@@ -303,8 +305,8 @@ One PR each, applied `--remote` before the PR, in this order:
    Shipped.
 4. ~~Psionics~~ — **dropped 2026-09-25**: Psyscape shipped the fifteen
    Mind Bleeder powers (#1382); the two empathy powers move to step 7.
-5. **Gear and vehicles** — 8 Phoenix weapons (render 140-141), 8 Medicine Man
-   items, 4 vehicles.
+5. **Gear and vehicles** — 6 Phoenix arms, 8 Medicine Man items, 4 vehicles.
+   Shipped.
 6. **O.C.C.s** — Medicine Man, Rain Maker, Priest, Necromancer, African Witch.
 7. **R.C.C.s** — Pygmy Hunter, Pygmy Shaman, Agogwe, Tree People, Phoenixi,
    Ramen, Tauton, Crocodillian; with Psionic Empathy with Animals and with
@@ -330,3 +332,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1376](https://github.com/NateGrey0130/nates-workshop/pull/1376) | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
 | 2026-09-25 | [#1383](https://github.com/NateGrey0130/nates-workshop/pull/1383) | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
 | 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
+| 2026-09-25 | this PR | 14 gear rows (6 Phoenix arms and armor, 8 Medicine Man items) and 4 Phoenix Empire vehicles with 28 locations and 4 weapon systems. Applied `--remote` before the PR |
