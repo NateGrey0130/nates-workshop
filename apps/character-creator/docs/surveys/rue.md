@@ -162,7 +162,7 @@ Physical.
 | date | PR | what went in |
 |---|---|---|
 | — | — | rows accumulated across the project; no book-shaped import run |
-| 2026-09-25 | #PR | from the South America session: the O.C.C. Experience Tables (printed 295, read off a render) as `xp_table` on the Burster, Psi-Stalker, Mystic, City Rat, Vagabond, Mind Melter, Ley Line Walker, Ley Line Rifter and the seven dragon hatchlings; and the TW Flaming Sword and TK-Machine-Gun (printed 137-138) as gear, gear 206 -> 208 |
+| 2026-09-25 | #1415 | from the South America session: the O.C.C. Experience Tables (printed 295, read off a render) as `xp_table` on the Burster, Psi-Stalker, Mystic, City Rat, Vagabond, Mind Melter, Ley Line Walker, Ley Line Rifter and the seven dragon hatchlings; and the TW Flaming Sword and TK-Machine-Gun (printed 137-138) as gear, gear 206 -> 208 |
 | — | `5c66a60` | RUE's six dragon hatchling species |
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `rue` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
