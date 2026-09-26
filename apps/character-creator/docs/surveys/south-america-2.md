@@ -1,8 +1,8 @@
 # Rifts World Book 9: South America 2 — survey
 
-**Status:** `importing` — skills, spells, gear, vehicles and 17 classes shipped; Silver River, Achilles, New Babylon and Larhold classes next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
+**Status:** `importing` — skills, spells, gear, vehicles and 29 classes shipped; New Babylon and Larhold classes, then NPCs and creatures, next. The plan below was agreed by Nate on 2026-09-25. (2026-09-25)
 
-**Rows citing this book:** classes 17, gear 60, vehicles 23, skills 8, spells 35
+**Rows citing this book:** classes 29, gear 60, vehicles 23, skills 8, spells 35
 
 Slug `south-america-2`. Cached 2026-09-25 from
 `Rifts- World Book 9 South America 2.pdf` (copied from a `kupdf.net` download),
@@ -246,3 +246,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1394](https://github.com/NateGrey0130/nates-workshop/pull/1394) | 23 vehicles (11 power armor, 9 vehicles, 3 robots) with 158 M.D.C. locations and 122 weapon-system entries: Empire (59-67), Arkhon (84-97), Legion (116-121), Silver River (168-183). Armor of the Sun has no main body (M.D.C. by the wearer's M.E.). book-reconcile checked all 23 and found the three Legion "Sensors, etc." entries the OCR had unnumbered; added. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1399](https://github.com/NateGrey0130/nates-workshop/pull/1399) | 7 classes: True Inca R.C.C. (20-23; the four patron gods are a choose-1 of abilities, each carrying its own magic and psionics), Inca Warrior (23-24), Inca Sun-Priest (24-26; god choice carries the elemental spell lists), Nazca Line Maker (26-28; picks from named lists, the six Secret drawings from level 6), Rune Warrior (28-30), Pucara Red Giant R.C.C. (52-55), Pucara Mind Mage (55-56, Red Giant only). Drafted and checked with class-check --remote, no stubs. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1402](https://github.com/NateGrey0130/nates-workshop/pull/1402) | 10 classes: Arkhon R.C.C. (71-73), Arkhon Spectral Hunter (73-74) and ESP Specialist (75-76), Fallam R.C.C. (76-78) and Fallam Battlemaster (77-79); Megaversal Trooper (104-106), Ojahee R.C.C. with its trooper skill block as one class (106-107), Destroyer 'Borg (107-109), Ojahee 'Borg (109-111, supersedes_race), Men-Rall (111-112). The four single-race O.C.C.s join regression's RACE_OWN_TRAINING. Applied `--remote` before the PR. |
+| 2026-09-25 | [#1416](https://github.com/NateGrey0130/nates-workshop/pull/1416) | 12 classes: Gaucho (128-129), Plains 'Borg (129-131), Ultra-Crazy (131-133; insanities are prose by Nate's call, the book points at the older Crazy), Blood Rider (133-135; its Related list omits Physical/Pilot as printed, render-confirmed), Master Blood Rider (135-137, an O.C.C. despite its R.C.C. heading), Blood Lizard R.C.C. (137-138, optional PC); the Achilles mutants Serpentoid, Mutant Capybara, Equinoid, Condoroid, Falconoid and Neo-Human (141-151). Applied `--remote` before the PR. |
