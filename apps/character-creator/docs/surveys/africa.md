@@ -1,8 +1,8 @@
 # Rifts World Book 4: Africa — survey
 
-**Status:** `importing` — the spells, gear, vehicles and five O.C.C.s are in; the R.C.C.s next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
+**Status:** `importing` — spells, gear, vehicles, all thirteen classes and the two racial psionics are in; creatures and notable NPCs next. Mind Bleeder powers and class are Psyscape's, Erin Tarn and Thorpe Coalition War Campaign's. (2026-09-25)
 
-**Rows citing this book:** classes 5, gear 14, spells 53, vehicles 4
+**Rows citing this book:** classes 13, gear 14, psionic_powers 2, spells 53, vehicles 4
 
 Slug `africa`. Cached 2026-09-25 from
 `604225358-Rifts-World-Book-04-Africa.pdf`, 162 PDF pages, **text layer** (no
@@ -318,7 +318,18 @@ One PR each, applied `--remote` before the PR, in this order:
 7. **R.C.C.s** — Pygmy Hunter, Pygmy Shaman, Agogwe, Tree People, Phoenixi,
    Ramen, Tauton, Crocodillian; with Psionic Empathy with Animals and with
    Reptiles, which Ramen and Crocodillian carry. The Mind Bleeder is
-   Psyscape's.
+   Psyscape's. Shipped: the eight classes (ids `pygmy-hunter`, `pygmy-shaman`,
+   `agogwe`, `tree-people`, `phoenixi`, `ramen`, `tauton`, `crocodillian`) and
+   the two empathy powers in a new psionic category `Special` (racial, so no
+   "any Sensitive" picker offers them). Decided at import: a race split by a
+   percentile roll (the Agogwe's three psionic tiers, the Ramen's 40% mystics,
+   the Crocodillian's 85/10/5 master, Mind Melter and Mind Bleeder) is a set of
+   choose-1 ABILITIES, because a variant cannot carry psionics or magic; the
+   Tree People's 10% healers stay prose, the book giving no numbers; a Combat
+   line's "martial arts and boxing" is an NPC average and grants nothing the
+   skill list does not; the Crocodillian's reptile empathy is the 85% master
+   tier's only. The creatures PR adds each race's NPC-view row, suffixed
+   `-africa` where Dragons and Gods holds the slug.
 8. **Creatures** — about 22.
 9. **Notable NPCs** — about 29, with their named weapons; Erin Tarn and Thorpe are Coalition War Campaign's.
 
@@ -341,3 +352,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
 | 2026-09-25 | [#1419](https://github.com/NateGrey0130/nates-workshop/pull/1419) | 14 gear rows (6 Phoenix arms and armor, 8 Medicine Man items) and 4 Phoenix Empire vehicles with 28 locations and 4 weapon systems. Applied `--remote` before the PR |
 | 2026-09-26 | [#1422](https://github.com/NateGrey0130/nates-workshop/pull/1422) | 5 O.C.C.s: Medicine Man, Rain Maker, African Priest, Necromancer, African Witch (NPC villain, flagged). Applied `--remote` before the PR |
+| 2026-09-26 | [#1423](https://github.com/NateGrey0130/nates-workshop/pull/1423) | 8 R.C.C.s and the 2 racial empathy psionics (category `Special`). Applied `--remote` before the PR |
