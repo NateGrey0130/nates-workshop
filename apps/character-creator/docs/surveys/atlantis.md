@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — the tattoos and all 22 new classes shipped; gear is next. (2026-09-26)
+**Status:** `importing` — tattoos, all 22 new classes and the gear shipped; vehicles, then creatures and NPCs, are next. (2026-09-26)
 
-**Rows citing this book:** classes 22, spells 32
+**Rows citing this book:** classes 22, gear 61, spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -213,11 +213,12 @@ this order:
 4. **Slave-stock classes (7)** — **SHIPPED**: `adarok`, `erta`, `hawrk-duhk`,
    `hawrk-ka`, `hawrk-ohl`, `shaydor-intel`, `zembahk`. `stone-master` got
    its ladder (`fix-stone-master-xp.sql`). See *Batch 4 decisions* below.
-5. **Gear: Kittani equipment and misc. weapons** (printed 137-138, 152-154),
-   plus the Sunaj environmental armor (printed 66).
-6. **Gear: bio-wizardry** — bio-wizard weapons and devices (120-125),
-   microbes, parasites and symbiotes (111-120), as `category = 'magic'`.
-7. **Gear: rune weapons** (127-131), plus the `Lesser Rune Weapon` citation fix.
+5-7. **Gear** — **SHIPPED as one PR, 60 new rows and one corrected**: 13
+   Kittani and misc. (`add-atlantis-kittani-and-misc-gear.sql`), 33
+   bio-wizardry (`add-atlantis-bio-wizardry.sql`), 14 rune weapons
+   (`add-atlantis-rune-weapons.sql`), and the estimated `lesser-rune-weapon`
+   given its printed price (`~007-atlantis-lesser-rune-weapon-price.sql`).
+   See *Gear decisions* below.
 8. **Vehicles: Kittani power armor, robots and vehicles** (139-158) into
    `vehicles` / `vehicle_weapons` / `vehicle_locations`, every M.D.C. figure
    read off a render.
@@ -321,6 +322,41 @@ draft went through `book-reconcile` before any data script.
   later is not granted automatically.
 - **Shaydor Intel** is printed 79-80; printed 81 is the Yll Tree Climber.
 
+### Gear decisions
+
+- **Most of the Kittani slice was already in the catalog** from books that
+  reprinted it, and stays there: K-4, K-30, K-E4, K-500 and KEP-Special
+  (Africa p.140); the wrist blasters, plasma axe, plasma sword and energy
+  lance (Triax p.213-214); every high-tech arrowhead (Triax p.150, Spirit West
+  p.203). New here: K-1, K-1000 Spider Defense System, Kittani Explorer and
+  Centaur armor, six bio-wizard weapons, the Splugorth Bio-Power Armor, the
+  Talisman of Armor and the Sunaj environmental armor.
+- **`explorer-armor`** (an estimate from the Book of Magic import, no maker)
+  is left alone; `kittani-explorer-armor` is its own row.
+- **Bio-wizardry** rows are `magic`, except the Overlord Power Armor
+  (`armor`). Microbes, parasites and symbiotes are gear by Nate's decision.
+  Left out: transmutation, augmentation, the bio-wizard eyes and sensor
+  grafts (107-112), which are body modifications with no class that installs
+  them; the Floating Eyes and Seeker-Hunter Eye (124), which are constructs
+  with no price (batch 9); and the Slave Barge (124-125, batch 8).
+- **Rune weapons**: the priced grades are rows (greater, soul drinker, holy
+  simple and greater, greatest) plus the nine named greatest weapons, whose
+  own price is not printed (cost NULL; three are never below 500 million).
+  Printed 128 interleaves the greater weapons, the Soul Drinker and the Holy
+  Weapons; printed 130's OCR lost four headings, recovered from a render.
+- **The Lesser Rune Weapon correction is `~007-`**, because the row is created
+  by `add-godling-class.sql` and re-estimated by
+  `estimate-mundane-gear-prices.sql` and `zzz-gear-tidy-2-stub-stats.sql`; a
+  first draft inside the rune script sorted before them and `d1-apply`'s
+  pre-flight refused it.
+- **The book disagrees with itself**: the Eylor Helm of Omnipotence prints
+  1150 and 400 P.P.E. (both kept); the Slaver's Net Gun prints "250,00"
+  (stored as 250,000).
+- `book-reconcile` checked all 60 rows: nine page citations were wrong
+  (column-folio confusion on two-column pages) and the Talo Mind Worms' own
+  I.S.P. is 15, not 12; all fixed. The K-Universal Light Power Armor's
+  heading is on 138 and its stats on 139, so it is batch 8.
+
 What is deliberately left, with the reason for each:
 
 - **Bio-wizard transmutation and reconstruction** (107-110): augmentation
@@ -347,14 +383,15 @@ What is deliberately left, with the reason for each:
 | date | PR | what went in |
 |---|---|---|
 | 2026-09-26 | [#1427](https://github.com/NateGrey0130/nates-workshop/pull/1427) | cache built (161 pp, scan, OCR 300 dpi), `atlantis` registered in `books.json`, survey written. MERGED. |
-| 2026-09-26 | [#1429](https://github.com/NateGrey0130/nates-workshop/pull/1429) | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
-| 2026-09-26 | — | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantean-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. |
-| 2026-09-26 | — | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. |
-| 2026-09-26 | — | batch 4: the seven slave-stock races (`add-adarok-class.sql` ... `add-zembahk-class.sql`) and `fix-stone-master-xp.sql`. `book-reconcile` checked all seven; Hawrk-ohl's W.P. Targeting added. Applied `--remote` before the PR. |
+| 2026-09-26 | [#1429](https://github.com/NateGrey0130/nates-workshop/pull/1429) | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. MERGED. |
+| 2026-09-26 | [#1430](https://github.com/NateGrey0130/nates-workshop/pull/1430) | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantis-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. MERGED. |
+| 2026-09-26 | [#1431](https://github.com/NateGrey0130/nates-workshop/pull/1431) | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. MERGED. |
+| 2026-09-26 | [#1432](https://github.com/NateGrey0130/nates-workshop/pull/1432) | batch 4: the seven slave-stock races (`add-adarok-class.sql` ... `add-zembahk-class.sql`) and `fix-stone-master-xp.sql`. `book-reconcile` checked all seven; Hawrk-ohl's W.P. Targeting added. Applied `--remote` before the PR. MERGED. |
+| 2026-09-26 | — | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batches 5-9 of the plan. `node scripts/source-coverage.mjs --remote`,
+Batches 8 and 9 of the plan. `node scripts/source-coverage.mjs --remote`,
 2026-09-26, after the tattoos:
 
 ```
