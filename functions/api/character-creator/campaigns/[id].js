@@ -8,8 +8,11 @@
 //       `open` is the join gate: joining a campaign IS creating a character in
 //       it, so whether creation is open to the site is the GM's call and
 //       nobody else's. See POST /characters for where it is enforced.
+// DELETE /api/character-creator/campaigns/:id — the GM who created it, and
+//       only while no one else has a character in it. Everything else the
+//       campaign owns goes with it by ON DELETE CASCADE.
 
-import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson, requireCampaign } from '../_lib/auth.js';
 
 const REST_POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 
@@ -61,4 +64,44 @@ export async function onRequestPatch({ request, env, params }) {
   await env.DB.prepare(`UPDATE campaigns SET ${sets.join(', ')} WHERE id = ?`)
     .bind(...binds, params.id).run();
   return json({ ok: true });
+}
+
+export async function onRequestDelete({ request, env, params }) {
+  // gm_email IS the creator: POST /campaigns sets it to the caller and nothing
+  // changes it afterwards.
+  const guard = await requireCampaign(request, env, params.id, { gm: true });
+  if (guard.res) return guard.res;
+  const gmEmail = guard.access.campaign.gm_email;
+
+  // OTHER PLAYERS' CHARACTERS ARE NOT THE GM'S TO DELETE. characters cascades
+  // from campaigns, so deleting the row would take every player's sheet with
+  // it. Refuse, and name what is in the way, so the table can sort it out -
+  // each player deletes their own character, and then the GM can go ahead.
+  // The GM's own characters and statted NPCs are theirs, and go.
+  const { results: others } = await env.DB.prepare(
+    'SELECT name, player_email FROM characters WHERE campaign_id = ? AND player_email <> ? ORDER BY name'
+  ).bind(params.id, gmEmail).all();
+  if (others?.length) {
+    return json({
+      error: `Other players still have ${others.length} character${others.length === 1 ? '' : 's'} in this campaign`,
+      characters: others,
+    }, 409);
+  }
+
+  // THE BUCKET FIRST, and by hand, as entries/[entryId].js does: no cascade
+  // reaches R2, and an object nobody can name is invisible and billed every
+  // month. A failed object delete is swallowed so the campaign is never left
+  // half-deleted.
+  const { results: keys } = await env.DB.prepare(
+    `SELECT r2_key AS k FROM campaign_images WHERE campaign_id = ?
+     UNION ALL SELECT portrait_key FROM npcs WHERE campaign_id = ? AND portrait_key IS NOT NULL`
+  ).bind(params.id, params.id).all();
+  if (env.MEDIA) {
+    for (const row of keys ?? []) {
+      try { await env.MEDIA.delete(row.k); } catch { /* see above */ }
+    }
+  }
+  await env.DB.prepare('DELETE FROM campaigns WHERE id = ? AND gm_email = ?')
+    .bind(params.id, gmEmail).run();
+  return json({ ok: true, objects_deleted: (keys ?? []).length });
 }

@@ -341,6 +341,7 @@ function render() {
       <span class="muted">— anyone on the site can join this campaign by creating one here; unticked, only you and current players can</span>
       <span id="open-msg" class="muted small"></span></label>
     ${restRatesHtml(camp)}
+    <div class="rowline"><button class="btn btn-sm btn-danger" onclick="deleteCampaign()">Delete campaign</button><span id="delete-msg" class="muted small"></span></div>
   </div>` : ''}
   </div>
 
@@ -666,6 +667,25 @@ async function saveNotes() {
   } catch (err) {
     $('notes-msg').textContent = 'Save failed: ' + err.message;
     $('notes-msg').className = 'err small';
+  }
+}
+
+// The whole campaign, and everything in it: pages, pictures, dossiers, the
+// stash, the journal, cities, and the GM's own NPCs. Typing the name rather
+// than an OK, because one misclick here is the entire game. The server refuses
+// while another player still has a character in it, and names them.
+async function deleteCampaign() {
+  const name = D.campaign.name;
+  const typed = prompt(`Delete "${name}" and everything in it - its pages, pictures, NPCs, `
+    + `stash, journal and cities? This cannot be undone.\n\nType the campaign's name to confirm.`);
+  if (typed == null) return;
+  if (typed.trim() !== name) { setMsg('delete-msg', 'The name did not match, so nothing was deleted.', true); return; }
+  try {
+    await api('campaigns/' + campaignId, { method: 'DELETE' });
+    location.href = '/apps/gm-tools/';
+  } catch (err) {
+    const who = (err.detail?.characters || []).map((c) => `${c.name} (${c.player_email})`).join(', ');
+    setMsg('delete-msg', err.message + (who ? `: ${who}. Each player can delete their own first.` : ''), true);
   }
 }
 
