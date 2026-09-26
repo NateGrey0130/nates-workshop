@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `surveyed` — cached, registered and surveyed; the extraction plan below is agreed, tattoos first. (2026-09-26)
+**Status:** `importing` — the 32 tattoos shipped; the six Atlantean and T-Man classes are next. (2026-09-26)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -191,13 +191,16 @@ above and anything another session ships in the meantime.
 Phase 4 costs money; everything above was free. Proposed, one PR each, in
 this order:
 
-1. **Tattoos (~55) as `spells`, `tradition = 'tattoo'`**, printed 86-93. That
-   follows South America 2's Nazca line magic (`tradition = 'nazca'`, 25
-   rows): P.P.E. to activate, duration and effect fit the spell columns.
-   Names are namespaced `Tattoo: <image>`. Monster tattoos are a costing
-   rule and go in the Tattooed Man classes' prose, not rows. The classes
-   need the tattoos to reference, so they ship first. **Needs Nate's word on
-   the table**, below (answered: yes).
+1. **Tattoos as `spells`, `tradition = 'tattoo'`**, printed 86-93 — **SHIPPED,
+   32 rows.** That follows South America 2's Nazca line magic (`tradition =
+   'nazca'`): P.P.E. to activate, duration and effect fit the spell columns.
+   Names are `Tattoo: <heading>`, keeping the book's parenthetical label. As
+   Nazca's animal and monster drawings are, animal and monster tattoos are
+   ONE row each (`Tattoo: Animals`, `Tattoo: Monsters`) with the size tiers
+   in `ppe_note`, which is why the count is 32 and not the ~55 estimated
+   above: 2 simple-weapon, 6 magic-weapon, 22 power, 1 animal, 1 monster.
+   `Animals` and `Monsters` are plural because the singular `Tattoo: Animal`
+   alias-matched `Metamorphosis: Animal` in `catalog-diff`.
 2. **Atlantean and T-Man classes (6)**: True Atlantean, Atlantean Nomad,
    Tattooed Man, T-Monster Man, Maxi-Man, Undead Slayer. Also backfill
    `atlantean-monster-hunter`'s ladder.
@@ -244,9 +247,24 @@ What is deliberately left, with the reason for each:
 
 | date | PR | what went in |
 |---|---|---|
-| 2026-09-26 | — | cache built (161 pp, scan, OCR 300 dpi), `atlantis` registered in `books.json`, survey written |
+| 2026-09-26 | [#1427](https://github.com/NateGrey0130/nates-workshop/pull/1427) | cache built (161 pp, scan, OCR 300 dpi), `atlantis` registered in `books.json`, survey written. MERGED. |
+| 2026-09-26 | — | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
 
 ### What remains
 
-The whole plan above. `source-coverage.mjs --remote` has no rows to report for
-this book yet; paste it here after the first data PR.
+Batches 2-9 of the plan. `node scripts/source-coverage.mjs --remote`,
+2026-09-26, after the tattoos:
+
+```
+  atlantis            32 / 0
+```
+
+`BACKLOG` did not move: 14 gear stubs, 5 skill stubs, 19 spell stubs, 1
+psionic stub, 0 spell or psionic text missing. None is this book's: every
+tattoo carries its P.P.E. and its description.
+
+**Transcription notes for later batches.** The small-canine animal entry on
+printed 89 prints track by smell **0%** in clean ink where the South America 2
+reprint prints 60%; the row keeps 0% and says so in `variant_note`. The OCR
+also merged `1D6+4 S.D.C.` into `1D6+48.D.C.` on that page, which only the
+reconciler caught; expect the same `S` -> `8` merge elsewhere in this cache.
