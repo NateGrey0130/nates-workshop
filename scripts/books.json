@@ -85,6 +85,16 @@
       "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 4,968 chars/page and 35.1% stop words (not the F73 glyph-dropped kind). Offset verified by folio at six points - cache p010 reads 9, p030 reads 29, p060 reads 59, p090 reads 89, p150 reads 149, p161 reads 160 - one region, no split. printed_pages is 160, the last numbered folio at cache p161; cache p162 is the back cover. ocr-book.py measured 158 and that is a max-folio misread (p160/p161 print their folios split as '1 59' and '1 60'); the registry outranks the manifest. welded_pages 2 (5, 6 - front matter), corrupt_pages 7 pages at one or two hits each, substituted_digits 19 pages. See apps/character-creator/docs/surveys/africa.md."
     },
 
+    "atlantis": {
+      "title": "Rifts World Book 2: Atlantis",
+      "aliases": ["Atlantis", "Rifts Atlantis", "Rifts World Book Two: Atlantis", "Rifts World Book 2 Atlantis"],
+      "source_pdf": "Rifts- World Book 2 Atlantis.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 158,
+      "page_offset": 0,
+      "note": "Cached 2026-09-26 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Offset 0 verified by render: d[2] prints folio 3 (credits), d[3] prints 4 (Contents); ocr-book.py measured +0 over the whole book and last folio 158 at cache p158. Cache p159-p161 are advertisements and the back cover (Cat. No. 804). The Quick Find (printed 5) cites 'Magic Weapons (misc.)' at 159, past the last folio - the misc. weapons are on printed 152-154. See apps/character-creator/docs/surveys/atlantis.md."
+    },
+
     "bom": {
       "title": "Rifts Book of Magic",
       "aliases": [],
