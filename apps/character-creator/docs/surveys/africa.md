@@ -329,4 +329,4 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-09-25 | [#1376](https://github.com/NateGrey0130/nates-workshop/pull/1376) | cache built (162 pp, text layer), registered in `books.json`, offset +1 verified at six folios, survey written |
 | 2026-09-25 | [#1383](https://github.com/NateGrey0130/nates-workshop/pull/1383) | 30 spells: 18 `Necromancy:` (17 linked to their Mystic Russia `Bone:` reprint) and 12 `Bad Medicine:`; production spells 998 -> 1028. Applied `--remote` before the PR, all 8 read-backs held |
-| 2026-09-25 | this PR | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
+| 2026-09-25 | [#1412](https://github.com/NateGrey0130/nates-workshop/pull/1412) | 23 `Ceremony:` rites (chants, dances, rain maker dances), level 0; production spells 1063 -> 1086. Applied `--remote` before the PR |
