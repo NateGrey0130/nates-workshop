@@ -993,7 +993,8 @@ scripts/
 │                           tree, --tests runs CI's suites on that tree and
 │                           --remote traces what production has that it does
 │                           not to the worktree or branch holding it. Exits 1
-│                           on a conflict, a red suite or an unexplained drift
+│                           on a conflict, a red suite, an unexplained drift,
+│                           or GitHub moving while it ran (re-run it then)
 ├── agent-usage.mjs         Which subagent has been spawned how often, from
 │                           this machine’s session transcripts. Reads nothing
 │                           in this repo, and nothing gates on it. The block

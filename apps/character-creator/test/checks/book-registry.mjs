@@ -16,7 +16,7 @@ import { detectPageOffset, detectPageOffsetRegions, isNotABook, normalizeBookTit
 import { buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { bucketFor, summarise, summariseValues, valuePresent, valueSpellings } from '../../../../scripts/source-coverage-lib.mjs';
 import { projectDirName } from '../../../../scripts/book-worktree.mjs';
-import { coreName, orderPrs, traceNames } from '../../../../scripts/merge-check-lib.mjs';
+import { coreName, orderPrs, staleness, traceNames } from '../../../../scripts/merge-check-lib.mjs';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['Book registry', 'Merge check'];
@@ -656,5 +656,18 @@ export function run() {
       traced['add-cwc-gear.sql'].exact.join() === 'branch origin/cwc-gear');
     check('and one nothing holds is traced to nothing',
       traced['gone.sql'].exact.length === 0 && traced['gone.sql'].renamed.length === 0);
+  }
+
+  {
+    // The guard: a full run takes minutes, and on 2026-09-25 other sessions
+    // merged under two runs in a row and opened a PR mid-run that no run held.
+    const start = { main: 'aaaaaaaa11', heads: { 1397: 'bbbbbbbb11', 1401: 'cccccccc11' } };
+    check('nothing moved, nothing reported', staleness(start, structuredClone(start)).length === 0);
+    const moved = staleness(start, { main: 'dddddddd11', heads: { 1397: 'bbbbbbbb11', 1401: 'eeeeeeee11', 1402: 'ffffffff11' } });
+    check('main moving under the check is reported', moved.some((m) => /^main moved/.test(m)), moved.join(' | '));
+    check('a push to a PR in the check is reported', moved.some((m) => /^#1401 was pushed to/.test(m)), moved.join(' | '));
+    check('a PR opened mid-run is reported as not in the check', moved.some((m) => /^#1402 opened/.test(m)), moved.join(' | '));
+    check('and a PR merged or closed mid-run is reported',
+      staleness(start, { main: 'aaaaaaaa11', heads: { 1401: 'cccccccc11' } }).join() === '#1397 closed or merged during the check');
   }
 }
