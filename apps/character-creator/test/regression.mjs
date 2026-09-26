@@ -953,6 +953,39 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
     gen.status === 403 && patch.status === 403,
     JSON.stringify({ generate: gen.status, patch: patch.status }));
   check('and a stranger is not a member of it', npcsPost.status === 403, `POST npcs → ${npcsPost.status}`);
+
+  // DELETING IT. Only the G.M. who created it, and not while another player's
+  // character is in it: characters cascades from campaigns, so a delete that
+  // ignored them would take the player's sheet too. The G.M.'s own things -
+  // a setting page, a statted NPC - are theirs, and go with it.
+  const byPlayer = await apiAs(player, 'DELETE', `/campaigns/${lone.id}`);
+  const byStranger = await apiAs('stranger@example.com', 'DELETE', `/campaigns/${lone.id}`);
+  check('only its G.M. can delete a campaign',
+    byPlayer.status === 403 && byStranger.status === 403,
+    JSON.stringify({ player: byPlayer.status, stranger: byStranger.status }));
+  const blocked = await apiAs(loneGm, 'DELETE', `/campaigns/${lone.id}`);
+  check('and not while another player still has a character in it, which it names',
+    blocked.status === 409 && blocked.body.characters?.[0]?.name === 'First Player',
+    JSON.stringify(blocked.body));
+
+  const prep = await apiAs(loneGm, 'POST', `/campaigns/${lone.id}/entries`, { title: 'Prep' });
+  const gmNpc = await apiAs(loneGm, 'POST', '/characters', {
+    campaign_id: lone.id, name: 'Lone NPC', class_id: cls.id, kind: 'npc',
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+  await apiAs(player, 'DELETE', `/characters/${joined.body.id}`);
+  const deleted = await apiAs(loneGm, 'DELETE', `/campaigns/${lone.id}`);
+  const [after, pageAfter, npcAfter] = await Promise.all([
+    apiAs(loneGm, 'GET', `/campaigns/${lone.id}`),
+    apiAs(loneGm, 'GET', `/campaigns/${lone.id}/entries/${prep.body.entry?.id}`),
+    apiAs(loneGm, 'GET', `/characters/${gmNpc.body.id}`),
+  ]);
+  check('once the players are out, its G.M. deletes it',
+    prep.status === 201 && gmNpc.status === 201 && deleted.status === 200 && after.status === 404,
+    JSON.stringify({ page: prep.status, npc: gmNpc.status, deleted: deleted.status, after: after.status }));
+  check('and its setting pages and the G.M.\'s own characters go with it',
+    pageAfter.status === 404 && npcAfter.status === 404,
+    JSON.stringify({ page: pageAfter.status, npc: npcAfter.status }));
 }
 
 // ── the join gate ───────────────────────────────────────────────────────────
