@@ -5347,10 +5347,13 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Specialist (printed 73-76, an Arkhon volunteer program and the Arkhons'
   // psychics), the Fallam Battlemaster (77-79, open to the Fallam only) and the
   // Ojahee 'Borg (109-111, a conversion built on an Ojahee body).
+  // atlantean-nomad (Rifts World Book 2: Atlantis printed 17) is the True
+  // Atlantean's own wandering life: the book gives it the race's abilities and
+  // nobody else's, so it pairs only with the true-atlantean R.C.C.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
-    'fallam-battlemaster', 'ojahee-borg'];
+    'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
