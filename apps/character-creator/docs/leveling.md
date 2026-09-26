@@ -39,7 +39,10 @@ everything at or below the character's level is summed.
   fighting styles fights at the better one instead of adding them together —
   and, since 2026-09-25, so does a class that states its own `attacks_base`
   beside a style: the higher stands. A class whose book says "one additional
-  attack" or "plus those gained from hand to hand" states `attacks` instead.
+  attack" or "plus those gained from hand to hand" states `attacks` instead,
+  and one whose book says the style adds no attacks at all carries
+  `ignores_style_attacks: true`: the style's `attacks_base` and per-level
+  `attacks` are dropped and the rest of its schedule still applies.
 - **What is not a number goes in `note`.** "Karate Kick (2D6 damage)", "Death
   blow on a Natural 20", and the Assassin's bonuses that apply only to guns or
   thrown weapons. A conditional bonus written into `combat` would apply

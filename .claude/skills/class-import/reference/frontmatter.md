@@ -471,6 +471,16 @@ dogfighting line.
 starting number of attacks rather than adding to one, is taken as the higher
 when a race and an occupation both give it, and is stripped before the combat
 map reaches the sheet — so it is correctly absent from `COMBAT_FIELDS`.
+Against a Hand to Hand style it is also the higher, not the sum (since
+2026-09-25): a class stating 4 with Assassin's 3 fights at 4.
+
+So read the book's attack line for which of three things it says:
+
+| the book says | write |
+|---|---|
+| "three attacks per melee" (and no style, or "those without combat training have two") | `attacks_base: 3` — the higher of it and any style stands |
+| "one additional attack per melee", or "N attacks, plus those gained from hand to hand" | `attacks:` as a bonus. "Plus those gained" counts what a style gains over an untrained character, whose default is two, so "four, plus those gained" is `attacks: 2` — six with Expert. Nate's reading, 2026-09-25 (the Lyn-Srial, Sky Knight) |
+| "do not add the melee round attacks from the hand to hand skill", or a whole attack schedule of its own beside a granted style | `attacks_base` plus `ignores_style_attacks: true` at the top level. The style's `attacks_base` and per-level `attacks` are dropped; its other bonuses stand. Boxing's attack is not a style's and still adds. The parser refuses the flag without an `attacks_base` to stand instead (the Pneuma-Biforms, the Holy Terror) |
 
 ## Abilities
 
