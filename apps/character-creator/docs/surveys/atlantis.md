@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — the tattoos and the six Atlantean and T-Man classes shipped; the nine Splugorth minion classes are next. (2026-09-26)
+**Status:** `importing` — the tattoos and 15 classes shipped; the seven slave-stock classes are next. (2026-09-26)
 
-**Rows citing this book:** classes 6, spells 32
+**Rows citing this book:** classes 15, spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -206,11 +206,14 @@ this order:
    `maxi-man`, `undead-slayer`. `atlantean-monster-hunter` got the Undead
    Slayer's ladder (`fix-atlantean-monster-hunter-xp.sql`). How they were
    modelled is under *Batch 2 decisions* below.
-3. **Splugorth minion classes (8)**: Conservator, Overlord, Powerlord, Blind
-   Warrior Women, three Kittani, Murvoma Metztla. Plus the Sunaj Assassin.
+3. **Splugorth minion classes (9)** — **SHIPPED**: `splugorth-conservator`,
+   `splugorth-overlord`, `splugorth-powerlord`, `blind-warrior-women`,
+   `kittani-warrior`, `kittani-field-mechanic`, `kittani-espionage`,
+   `murvoma-metztla`, `sunaj-assassin`. See *Batch 3 decisions* below.
 4. **Slave-stock classes (8)**: Adarok, Erta, Hawrk-duhk, Hawrk-ka, Hawrk-ohl,
    Shaydor Intel, Zembahk.
-5. **Gear: Kittani equipment and misc. weapons** (printed 137-138, 152-154).
+5. **Gear: Kittani equipment and misc. weapons** (printed 137-138, 152-154),
+   plus the Sunaj environmental armor (printed 66).
 6. **Gear: bio-wizardry** — bio-wizard weapons and devices (120-125),
    microbes, parasites and symbiotes (111-120), as `category = 'magic'`.
 7. **Gear: rune weapons** (127-131), plus the `Lesser Rune Weapon` citation fix.
@@ -257,6 +260,40 @@ draft went through `book-reconcile` before any data script.
 - **Ladders** read off renders of printed 68 and cross-checked against the
   OCR: Atlantean Vagabond, Tattooed Men, T-Monster Men, Undead Slayers.
 
+### Batch 3 decisions (the nine Splugorth minion classes)
+
+- **Borrowed ladders.** Overlord and Powerlord take the Sunaj Assassin's
+  (printed 68). The Conservator's "Borg" table is RUE printed 295's *Combat
+  Cyborg, Headhunter & Robot Pilot* column, RUE's name for the full-conversion
+  Borg. The Kittani and Blind Warrior Women take RUE 295's *Cyber-Knight,
+  Crazy & Juicer* column. None was stored on any production class, so both
+  were read off a render of RUE 295 (`d[297]`); `book-reconcile` listed every
+  RUE 295 column heading and confirmed both choices. The Murvoma copies
+  `dragon-hatchling`'s dragon ladder.
+- **"Bonuses included" is stored net.** The Powerlord (printed 49) and the
+  Murvoma (printed 60) print totals that include their fixed attributes'
+  bonuses, so the class stores what is left after the app's own attribute
+  tables. The Conservator and Overlord print bonuses on top of attributes and
+  store them as printed.
+- **Blind Warrior Women: six attacks** regardless of training (printed 51).
+  Boxing is granted and adds its +1 as a skill, so `attacks_base` is 5 with
+  `ignores_style_attacks`.
+- **Murvoma P.P.E.**: printed 58 says 1D6x10 and printed 60 says 1D4x10; the
+  stat line's 1D6x10 is stored and the other reading is in the notes.
+- **Sunaj Assassin**: `none` with the True Atlantean block in prose, as the
+  Undead Slayer. Printed 66 calls the Marks "the cross and the magic sword";
+  printed 16 and 97 give the staked heart and flaming sword, which are stored.
+  No P.P.E. is printed for the assassin; 64 follows the True Atlantean rule
+  (10 + 6 per tattoo, nine tattoos).
+- **Gear these classes name and the catalog lacks** stays prose until the gear
+  batches land: Staffs of Pacification and Power, Overlord power armor,
+  psi-interrogator, the net gun and mental incapacitator, the Blind Warrior
+  Women's padded armor, and the **Sunaj environmental armor (printed 66, 110
+  M.D.C.)**, which no gear batch above covers — add it to batch 5. When those
+  rows exist, a follow-up puts them into these classes' equipment.
+- **Playable R.C.C.s also get an NPC-view `creatures` row** (South America's
+  convention); that is batch 9.
+
 What is deliberately left, with the reason for each:
 
 - **Bio-wizard transmutation and reconstruction** (107-110): augmentation
@@ -285,10 +322,11 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1427](https://github.com/NateGrey0130/nates-workshop/pull/1427) | cache built (161 pp, scan, OCR 300 dpi), `atlantis` registered in `books.json`, survey written. MERGED. |
 | 2026-09-26 | [#1429](https://github.com/NateGrey0130/nates-workshop/pull/1429) | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
 | 2026-09-26 | — | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantean-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. |
+| 2026-09-26 | — | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batches 3-9 of the plan. `node scripts/source-coverage.mjs --remote`,
+Batches 4-9 of the plan. `node scripts/source-coverage.mjs --remote`,
 2026-09-26, after the tattoos:
 
 ```
