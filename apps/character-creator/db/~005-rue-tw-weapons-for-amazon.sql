@@ -4,7 +4,7 @@
 --
 -- One-off data script, run once per environment.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~005-rue-tw-weapons-for-amazon.sql
 --
 -- WHY. Rifts World Book 6: South America issues an Amazon in Manoa's service
 -- "a Fireball (TW Flame) Rifle or TK-Machinegun" and "a TW Flaming Sword"
@@ -22,7 +22,7 @@
 --
 -- THE AMAZON. Its rifle line becomes the book's either/or, and the sword is
 -- added. The edits are guarded on the text they replace, so a re-run does
--- nothing; the name sorts after add-amazon-class.sql.
+-- nothing; the ~ prefix sorts it after add-amazon-class.sql and every z- tier.
 
 INSERT OR IGNORE INTO gear (slug, name, system, category, weight_lbs, cost, cost_note, damage, is_mega_damage, range, payload, rate_of_fire, ar, sdc, mdc, description, source_book) VALUES
 ('tw-flaming-sword', 'TW Flaming Sword', 'rifts', 'weapon', NULL, 90000, 'Black Market Cost 90,000 credits.', '4D6 M.D.', 1, 'Handheld melee weapon', '10 minutes (40 melee rounds) per activation; activating costs 14 P.P.E. or 28 I.S.P.', NULL, NULL, NULL, NULL,
@@ -40,10 +40,15 @@ WHERE class_id = 'amazon'
 
 UPDATE imported_classes SET markdown = replace(markdown,
   'The TK-Machinegun alternative and the TW Flaming Sword are Rifts RPG items with no catalog row; rather than stub them from this book, both are named in the equipment prose and left out of equipment_starting.',
-  'The TK-Machinegun alternative and the TW Flaming Sword are Rifts RPG items; zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql added both from RUE printed 137-138 and put them in equipment_starting.'),
+  'The TK-Machinegun alternative and the TW Flaming Sword are Rifts RPG items; ~005-rue-tw-weapons-for-amazon.sql added both from RUE printed 137-138 and put them in equipment_starting.'),
   updated_at = datetime('now')
 WHERE class_id = 'amazon'
   AND instr(markdown, 'The TK-Machinegun alternative and the TW Flaming Sword are Rifts RPG items with no catalog row') > 0;
+
+-- Where the first run already wrote that note, it names the old file.
+UPDATE imported_classes SET markdown = replace(markdown, 'zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql', '~005-rue-tw-weapons-for-amazon.sql'),
+  updated_at = datetime('now')
+WHERE class_id = 'amazon' AND instr(markdown, 'zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql') > 0;
 
 -- Read the result back. This script asserts its OWN rows and nothing else.
 SELECT 'the two RUE TW weapons are in' AS assertion, count(*) AS got, 2 AS want
@@ -51,5 +56,13 @@ SELECT 'the two RUE TW weapons are in' AS assertion, count(*) AS got, 2 AS want
 SELECT 'the Amazon offers the TK-Machine-Gun and carries the sword' AS assertion, count(*) AS got, 1 AS want
   FROM imported_classes WHERE class_id = 'amazon'
    AND instr(markdown, '"tw-tk-machine-gun"') > 0 AND instr(markdown, 'item_id: "tw-flaming-sword"') > 0;
+SELECT 'and the note names this file' AS assertion, count(*) AS got, 1 AS want
+  FROM imported_classes WHERE class_id = 'amazon' AND instr(markdown, '~005-rue-tw-weapons-for-amazon.sql') > 0;
 
-INSERT INTO data_script_runs (filename) VALUES ('zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql');
+-- The run record follows the file. This script reached production as
+-- zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql - an eighteenth z, a tier
+-- the ordering table in docs/operations.md retires in favour of ~NNN- - and was
+-- renamed afterwards, so that row names a file the repo does not have. Removed,
+-- on the zzzz-cite-pf-rows.sql precedent.
+DELETE FROM data_script_runs WHERE filename = 'zzzzzzzzzzzzzzzzzz-rue-tw-weapons-for-amazon.sql';
+INSERT INTO data_script_runs (filename) VALUES ('~005-rue-tw-weapons-for-amazon.sql');

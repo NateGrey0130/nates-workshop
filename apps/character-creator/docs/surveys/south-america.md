@@ -82,7 +82,7 @@ not** — read its ladder from Rifts Africa, or store the Monster Hunter's ladde
 as a note, at import time.
 
 **At import none of those RUE classes stored a ladder either**, so the
-"same as" classes had nothing to copy. `zzzzzzzzzzzzzzzzzz-rue-xp-ladders.sql`
+"same as" classes had nothing to copy. `~004-rue-xp-ladders.sql`
 then read RUE printed 295 off a render and gave the Mystic, Psi-Stalker,
 Vagabond, Mind Melter, their printed partners and the seven dragon hatchlings
 their ladders, and copied them to the Tribal Shaman, Werejaguar, Grimbor,
