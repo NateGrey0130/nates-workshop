@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — tattoos, all 22 new classes, the gear and the vehicles shipped; creatures and notable NPCs are last. (2026-09-26)
+**Status:** `imported` — the whole plan shipped: tattoos, 22 classes, gear, vehicles, creatures and notable NPCs. What was left out on purpose is under Extraction plan. (2026-09-26)
 
-**Rows citing this book:** classes 22, gear 61, vehicles 20, spells 32
+**Rows citing this book:** classes 22, gear 61, vehicles 20, spells 32, notable_npcs 7, creatures 35
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -221,9 +221,10 @@ this order:
    See *Gear decisions* below.
 8. **Vehicles** — **SHIPPED**: `add-atlantis-vehicles.sql`, 20 vehicles, 133
    M.D.C. locations, 38 weapon entries. See *Vehicle decisions* below.
-9. **Creatures and notable NPCs**: the NPC-only minions and slave stock,
-   rune statues, Eylor constructs; Splynncryth, Styphathal, the Azlum
-   inmates, the Alchemist.
+9. **Creatures and notable NPCs** — **SHIPPED**:
+   `add-atlantis-creatures-and-npcs.sql`, 35 creatures (19 NPC-only, 16 NPC
+   views of the playable races), 7 notable NPCs, 179 attacks. See *Creature
+   decisions* below.
 
 Batches 2-4 were drafted by one general-purpose agent per two or three classes
 from a shared brief, each iterating `class-check --remote` to `ready`, and every
@@ -383,6 +384,30 @@ draft went through `book-reconcile` before any data script.
   Dreadnought's wing turrets were missing their 152 lines, and the ABS-3's
   mini-missile range was not printed; all fixed.
 
+### Creature decisions
+
+- **NPC-only creatures (19)**: the average Splugorth, High Lord and Slaver;
+  Murex, Volute and Murvolva Metztla; Kreelong and Kreewarr Carapace; the
+  Dragonsaurus, Yll Tree Climber and Yazhing Multipede; the Eyes of Eylor,
+  Floating Eye and Seeker-Hunter Eye; and five rune statues (dragon head,
+  dragon, gargoyle, fire-breathing lion, combat/guardian).
+- **Playable races (16)** get an NPC-view row with slug = class id, as South
+  America's do: every R.C.C. this book added. `shaydor-spherian` already has
+  one from South America. The three Kittani rows share the race's stats.
+- **Notable NPCs (7)**: Splynncryth, Styphathal, Stydro, Gph, Pluu and Plax
+  (one row, as the book prints the pair), Narga the Terrible, Lord Ahziree
+  Aerihza. Beings named without a stat block are left out.
+- **The book disagrees with itself, and both readings are kept**: the Eyes
+  of Eylor's P.P.E. and spell level (printed 73 vs 124); the Adarok's and
+  Murvoma's P.P.E. (stat line stored). Printed 30 spells Murvoma "Murma" and
+  Volute "Volate"; the rows use the species names.
+- **Not stored as creatures**: the Sunaj (a True Atlantean clan with an O.C.C.,
+  no creature stat block), the Splugorth Witch (no mechanics here), the "Eyes
+  of Statues" and the Azlum gate eyes (installations of the Eyes of Eylor).
+- Every creature row passes `creatureFormulaGaps`; M.D.C. by location,
+  per-level growth and second speeds are in `pools_note`. `book-reconcile`
+  checked every row against the pages and found no disagreements.
+
 What is deliberately left, with the reason for each:
 
 - **Bio-wizard transmutation and reconstruction** (107-110): augmentation
@@ -414,20 +439,27 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1431](https://github.com/NateGrey0130/nates-workshop/pull/1431) | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1432](https://github.com/NateGrey0130/nates-workshop/pull/1432) | batch 4: the seven slave-stock races (`add-adarok-class.sql` ... `add-zembahk-class.sql`) and `fix-stone-master-xp.sql`. `book-reconcile` checked all seven; Hawrk-ohl's W.P. Targeting added. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1433](https://github.com/NateGrey0130/nates-workshop/pull/1433) | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. |
-| 2026-09-26 | — | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. |
+| 2026-09-26 | [#1434](https://github.com/NateGrey0130/nates-workshop/pull/1434) | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. |
+| 2026-09-26 | — | creatures and NPCs: `add-atlantis-creatures-and-npcs.sql`, 35 creatures, 7 notable NPCs, 179 attacks. `book-reconcile` checked every row; no disagreements. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batch 9 of the plan. `node scripts/source-coverage.mjs --remote`,
-2026-09-26, after the tattoos:
+Nothing in the plan. `node scripts/source-coverage.mjs --remote`,
+2026-09-26, after the creatures and NPCs - every row traceable, none other:
 
 ```
-  atlantis            32 / 0
+  atlantis           177 / 0
 ```
 
-`BACKLOG` did not move: 14 gear stubs, 5 skill stubs, 19 spell stubs, 1
-psionic stub, 0 spell or psionic text missing. None is this book's: every
-tattoo carries its P.P.E. and its description.
+`BACKLOG` did not move across the whole import: 14 gear stubs, 5 skill stubs,
+19 spell stubs, 1 psionic stub, 0 spell or psionic text missing. None is this
+book's: no batch created a stub.
+
+**Left for a later decision, not gaps**: the gear the minion classes name
+(staffs, Overlord armor, psi-interrogator, net gun, Sunaj armor) now exists as
+rows but is still prose in those classes' equipment; wiring it in is a
+follow-up. Bio-wizard transmutation, augmentation and grafts (printed 107-112)
+stay out until a class installs them.
 
 **Transcription notes for later batches.** The small-canine animal entry on
 printed 89 prints track by smell **0%** in clean ink where the South America 2
