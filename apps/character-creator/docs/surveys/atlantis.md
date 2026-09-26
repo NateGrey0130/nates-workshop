@@ -1,8 +1,8 @@
 # Rifts World Book 2: Atlantis — survey
 
-**Status:** `importing` — the tattoos and 15 classes shipped; the seven slave-stock classes are next. (2026-09-26)
+**Status:** `importing` — the tattoos and all 22 new classes shipped; gear is next. (2026-09-26)
 
-**Rows citing this book:** classes 15, spells 32
+**Rows citing this book:** classes 22, spells 32
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -210,8 +210,9 @@ this order:
    `splugorth-overlord`, `splugorth-powerlord`, `blind-warrior-women`,
    `kittani-warrior`, `kittani-field-mechanic`, `kittani-espionage`,
    `murvoma-metztla`, `sunaj-assassin`. See *Batch 3 decisions* below.
-4. **Slave-stock classes (8)**: Adarok, Erta, Hawrk-duhk, Hawrk-ka, Hawrk-ohl,
-   Shaydor Intel, Zembahk.
+4. **Slave-stock classes (7)** — **SHIPPED**: `adarok`, `erta`, `hawrk-duhk`,
+   `hawrk-ka`, `hawrk-ohl`, `shaydor-intel`, `zembahk`. `stone-master` got
+   its ladder (`fix-stone-master-xp.sql`). See *Batch 4 decisions* below.
 5. **Gear: Kittani equipment and misc. weapons** (printed 137-138, 152-154),
    plus the Sunaj environmental armor (printed 66).
 6. **Gear: bio-wizardry** — bio-wizard weapons and devices (120-125),
@@ -294,6 +295,32 @@ draft went through `book-reconcile` before any data script.
 - **Playable R.C.C.s also get an NPC-view `creatures` row** (South America's
   convention); that is batch 9.
 
+### Batch 4 decisions (the seven slave-stock races)
+
+- **Each entry names its own ladder**, and printed 68 agrees where it lists
+  one: Adarok and Zembahk the dragon's (copied from `dragon-hatchling`); Erta
+  the Stone Master's (printed 68); Hawrk-duhk the City Rat/Vagabond's;
+  Hawrk-ka and Hawrk-ohl the Headhunter's (RUE 295's *Combat Cyborg,
+  Headhunter & Robot Pilot*); Shaydor Intel the Mind Melter's.
+- **`stone-master` had no ladder** (Book of Magic import); printed 68 prints
+  one, so `fix-stone-master-xp.sql` gives it the same one the Erta borrows.
+- **These races print their own related and secondary skill lists**, for a
+  race played without an O.C.C.; they are stored, following
+  `shaydor-spherian`. Natural swim, climb and prowl percentages are fixed
+  skills with no per-level gain.
+- **Adarok P.P.E.**: printed 69 says 2D4x10+45 on the stat line and +40 in
+  its magic paragraph; the stat line is stored.
+- **The Erta** is tagged an optional player character and monster, and its
+  own entry (printed 72) also says it is not recommended as one. It is
+  imported, with that note as a restriction.
+- **Hawrk-ohl's "W.P. Archery and Targeting"** is two catalog rows, both
+  granted (`book-reconcile` caught one missing).
+- **Zembahk** knows every level 1-5 spell and has every healing and sensitive
+  psionic power: both are granted BY NAME, as the catalog stood on 2026-09-26
+  (105 spells, 54 powers plus the 11 the book names). A spell or power added
+  later is not granted automatically.
+- **Shaydor Intel** is printed 79-80; printed 81 is the Yll Tree Climber.
+
 What is deliberately left, with the reason for each:
 
 - **Bio-wizard transmutation and reconstruction** (107-110): augmentation
@@ -323,10 +350,11 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1429](https://github.com/NateGrey0130/nates-workshop/pull/1429) | `add-atlantis-tattoos.sql`: the 32 magic tattoos as spells, `tradition = 'tattoo'`, level 0 (spells 1086 -> 1118). `book-reconcile` checked all 32 against printed 84-93 and the p.91 index: no disagreements, one OCR artifact in the animal list fixed from a render. Applied `--remote` before the PR. |
 | 2026-09-26 | — | batch 2: `add-true-atlantean-class.sql`, `add-atlantean-nomad-class.sql`, `add-tattooed-man-class.sql`, `add-t-monster-man-class.sql`, `add-maxi-man-class.sql`, `add-undead-slayer-class.sql`, and `fix-atlantean-monster-hunter-xp.sql`. `book-reconcile` checked all six; two P.P.E. constants corrected. `atlantean-nomad` added to regression's `RACE_OWN_TRAINING`. Applied `--remote` before the PR. |
 | 2026-09-26 | — | batch 3: the nine Splugorth minion classes (`add-splugorth-conservator-class.sql` ... `add-sunaj-assassin-class.sql`). `book-reconcile` found no disagreements in all nine. Applied `--remote` before the PR. |
+| 2026-09-26 | — | batch 4: the seven slave-stock races (`add-adarok-class.sql` ... `add-zembahk-class.sql`) and `fix-stone-master-xp.sql`. `book-reconcile` checked all seven; Hawrk-ohl's W.P. Targeting added. Applied `--remote` before the PR. |
 
 ### What remains
 
-Batches 4-9 of the plan. `node scripts/source-coverage.mjs --remote`,
+Batches 5-9 of the plan. `node scripts/source-coverage.mjs --remote`,
 2026-09-26, after the tattoos:
 
 ```
