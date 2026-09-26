@@ -1,8 +1,8 @@
 # Rifts World Book 12: Psyscape — survey
 
-**Status:** `importing` — psionic powers, gear and all eighteen playable R.C.C.s shipped; creatures and notable NPCs next. (2026-09-25)
+**Status:** `imported` — every part of the plan shipped: psionic powers, gear, all eighteen playable classes, the bestiary and the book's two named NPCs; what was left out on purpose is under *Extraction plan*. (2026-09-25)
 
-**Rows citing this book:** classes 18, gear 19, psionic_powers 16
+**Rows citing this book:** classes 18, gear 19, psionic_powers 16, notable_npcs 2, creatures 22
 
 Slug `psyscape`. Cached 2026-09-25 from `Rifts- World Book 12 Psyscape.pdf`,
 162 PDF pages, **text layer** (no OCR). `--probe` median 5,172 chars/page,
@@ -252,4 +252,25 @@ What is deliberately left, with the reason:
 | 2026-09-25 | [#1397](https://github.com/NateGrey0130/nates-workshop/pull/1397) | **psychic R.C.C.s, part one**: `mind-bleeder` (printed 52-55), `nega-psychic` (57-59), `psi-druid` (59-62), `psi-ghost` (63-66), `psi-nullifier` (66-69), one `add-<id>-class.sql` each. Stored as `occ` / `occ_group: psychic` like RUE's Mind Melter, each with its printed-157 XP ladder. The Mind Bleeder is a human-looking D-bee race by its own page, so it takes no other race. `book-reconcile` checked all five: one fix (the Psi-Nullifier's Military skills are CS-trained only, so they left the open list). **Open reading for Nate:** the Psi-Druid's later-level powers are stored as two Healing/Sensitive picks at every level 2-15; printed 61 says "a total of two additional abilities" at subsequent levels, which could also mean two in all. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1401](https://github.com/NateGrey0130/nates-workshop/pull/1401) | **psychic R.C.C.s, part two**: `psi-slayer` (printed 69-74, humans only by its own page), `psi-tech` (74-76), `psi-warrior` (76-81), `zapper` (81-83), one `add-<id>-class.sql` each, same shape as part one. The Psi-Slayer's four exclusive powers (Sleepwalk, Locate & Track Mark, Telekinetic Air Walk, Psi-Dagger) and the Psi-Tech's Machine & Electrical Diagnosis have no catalog rows and are special abilities on their classes. Applied `--remote` before the PR. |
 | 2026-09-25 | [#1404](https://github.com/NateGrey0130/nates-workshop/pull/1404) | **D-Bee and monster R.C.C.s, part one**: `darkhound` (printed 94-98), `dragon-cat` (99-101), `amorph` (117-120), `demon-dragonmage` (120-123, the Young stage; the adult is NPC-only and in GM Notes), `lanotaur-hunter` (123-126, playable with a G.M.-permission note by Nate's decision). `category: rcc`, one `add-<id>-class.sql` each. The two dragon-type classes store no `xp_table`, like RUE's dragon-hatchling, whose ladder they share. The Darkhound's page says it uses the Juicer's ladder while printed 157 lists it with the Psi-Druid; printed 157 is stored and the Juicer line recorded. `book-reconcile` checked all five and found no data errors. Applied `--remote` before the PR. |
-| 2026-09-25 | (this PR) | **D-Bee R.C.C.s, part two**: `psi-goblin` (printed 128-130), `yhabbayar` (130-135; Bubble Magic stays prose), `zaayr-crystal-dragon` (135-138, playable as a first-level hatchling only; no `xp_table`, literacy at 98% like RUE's dragon-hatchling), `zenith-moon-warper` (138-140). The Yhabbayar's "all Healing and Sensitive powers" and "all level one spells", and the Zaayr's all-Sensitive-or-all-Healing choice, are granted by name from the Rifts rows of each category. `book-reconcile` checked all four and found no data errors. Every playable class in the book is now in. Applied `--remote` before the PR. |
+| 2026-09-25 | [#1405](https://github.com/NateGrey0130/nates-workshop/pull/1405) | **D-Bee R.C.C.s, part two**: `psi-goblin` (printed 128-130), `yhabbayar` (130-135; Bubble Magic stays prose), `zaayr-crystal-dragon` (135-138, playable as a first-level hatchling only; no `xp_table`, literacy at 98% like RUE's dragon-hatchling), `zenith-moon-warper` (138-140). The Yhabbayar's "all Healing and Sensitive powers" and "all level one spells", and the Zaayr's all-Sensitive-or-all-Healing choice, are granted by name from the Rifts rows of each category. `book-reconcile` checked all four and found no data errors. Every playable class in the book is now in. Applied `--remote` before the PR. |
+| 2026-09-25 | (this PR) | **creatures and notable NPCs**, `add-psyscape-creatures.sql`: 13 NPC-only monsters and villains (the Harvester, which the book prints as an O.C.C. not for players, the Soulless Xombie, Blood Hawk, Dark Behemoth, Dragon-Ape, Land Ray, Necrophim, Soul Snake, Psymbiote, Shadeling, Lipoca Sun Demon, Vyarnect, Power Leech), the 9 playable D-Bee R.C.C.s as their NPC view (`playable 1`, slugs matching the class ids), and the two named beings with stat blocks, Nxla (printed 21-24) and Lt. Col. Carol Black (147); 66 attacks in `stat_attacks`. Six extraction workers read every number off a render; four `book-reconcile` passes found no data errors. Every creature row passes `creatureFormulaGaps`, and the generator refuses to write the file while any prose field shares an 8-word run with the text layer (13 passages were reworded). The Psi-Druid keeps two powers per level, by Nate's decision. Applied `--remote` before the PR. |
+
+## Where it stands
+
+Imported. Every playable class, the psionic powers, the gear, the bestiary and the named NPCs are in. Deliberately left, and recorded above: the RUE reprints (Burster, Mind Melter), Bubble Magic and the Psi-Cola and psi-implant side-effect tables as prose, the Psyscape city's special powers, the Spiny Ravager and dragon notes, the fiction and lore chapters, and the Psi-Slayer's four exclusive powers and the Psi-Tech's Machine & Electrical Diagnosis, which stay special abilities on their classes. A few ordinary items the class drafts named have no catalog row (fake ID papers, the Lone Star Electro-Stunner, an eraser); each is noted on its class.
+
+### What remains
+
+`node scripts/source-coverage.mjs --remote` after this PR's apply, 2026-09-25. `other` is 0: every row resolves to a cached page. The BACKLOG counts are catalog-wide, and none of them moved in this book's PRs - no class, gear or power import here emitted a stub.
+
+```
+  psyscape            77 / 0
+
+BACKLOG       rows an importer created and nobody finished
+  gear stubs            14   description still says STUB — created by class import
+  skill stubs            5   created by an import and never given a base %, a bonus or a note
+  spell stubs           19   level 0 and 0 P.P.E.
+  psionic stubs          1   0 I.S.P.
+  spell text missing     0   nothing for the codex to show
+  psionic text missing   0   nothing for the codex to show
+```
