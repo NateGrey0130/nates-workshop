@@ -276,19 +276,21 @@ for (const table of CITATION_TABLES) {
 // reader does not repeat the work.
 //
 // WHY A LIST AND NOT A LOOSER MATCHER. Every miss below is a different fuzz -
-// "or" against a slash, a curly apostrophe, and twice an OCR stroke confusion -
-// and absorbing all three means treating `/`, `l`, `I` and `1` as
-// interchangeable and allowing elided conjunctions. That silences these four
-// and quietly silences the next genuinely wrong citation too. The matcher stays
-// strict; the exceptions are named, dated, and carry what the book actually
-// prints.
+// "or" against a slash, a curly apostrophe, OCR stroke confusions, a word the
+// OCR split in two, and a catalog name the book only prints in the plural or
+// in pieces - and absorbing them all means treating `/`, `l`, `I` and `1` as
+// interchangeable, ignoring spaces inside words and allowing elided
+// conjunctions. That silences these and quietly silences the next genuinely
+// wrong citation too. The matcher stays strict; the exceptions are named,
+// dated, and carry what the book actually prints.
 //
 // KEYED ON THE BOOK AS WELL AS THE NAME, which is the part that keeps this
 // honest: re-cite one of these rows to a DIFFERENT book and it drops out of
 // this list and is flagged again. An entry excuses one row's claim on one
 // book, not the row forever.
 //
-// All four verified 2026-09-21 against the cached page text.
+// The first four verified 2026-09-21 against the cached page text, the last
+// four 2026-09-26 (printed page = cache file minus the book's offset of 1).
 const CLEARED_CITATIONS = [
   { table: 'spells', name: 'Water: Summon Sharks/Whales', book: 'Rifts Book of Magic',
     printed: 'Summon Sharks or Whales (50) — p.87. The book writes "or" where the catalog writes "/".' },
@@ -298,6 +300,14 @@ const CLEARED_CITATIONS = [
     printed: 'Full Horse/BovinelDeer Form — p.98. The OCR read the SECOND slash as an "l"; the first survived.' },
   { table: 'morphus_characteristics', name: 'Half-Man, Half-Animal/Were-Animal/Minotaur', book: 'Nightbane RPG',
     printed: 'Half-Man, Half-Animal/Were-AnimallMinotaur: — the same slash-as-l, in the same book.' },
+  { table: 'spells', name: 'Ceremony: Dance to Chase Away Evil Spirits & Witches', book: 'Rifts World Book 4: Africa',
+    printed: 'Dance to Chase / A way Evil Spirits & Witches — p.89. The OCR split "Away" into "A way" across the line break.' },
+  { table: 'creatures', name: 'Erythrusuchus/Mokele-mbembe', book: 'Rifts World Book 4: Africa',
+    printed: 'Monster: Mokele-mbembelErythrusuchus — p.144. The slash read as an "l" again, and the book names the two the other way round.' },
+  { table: 'creatures', name: 'Lizard Man of Lagarto', book: 'Rifts World Book 6: South America',
+    printed: 'Lizard Men R.C.C. — p.79, "the lizard men inhabitants of Lagarto". The catalog name is singular and joins the heading to the kingdom.' },
+  { table: 'creatures', name: 'Grimbor Ape-Man', book: 'Rifts World Book 6: South America',
+    printed: 'Grimbor Ape-Men — p.138. The book prints the heading plural.' },
 ];
 
 let citationChecked = 0;
