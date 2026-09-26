@@ -162,7 +162,18 @@ for (const path of sources) {
   const sql = readFileSync(path, 'utf8');
   for (const m of sql.matchAll(CREATE_RE)) creators.add(m[1]);
 }
-console.log(`classes:      ${published.length} published live, ${creators.size} creatable from the repo`);
+// The repo can create MORE than is live, and that is not drift: a retired
+// class keeps its script so characters built on it keep working, and the
+// published count leaves it out. Named here, so the gap between the two
+// numbers never needs investigating to be understood (446 against 448 took a
+// session to trace to warlock and elemental-shaman, 2026-09-26).
+const retired = new Set(d1("SELECT class_id FROM imported_classes WHERE deleted_at IS NOT NULL")
+  .map((r) => r.class_id));
+const livePublished = new Set(published);
+const notLive = [...creators].filter((c) => !livePublished.has(c)).sort();
+const describe = (c) => (retired.has(c) ? `${c} (retired)` : c);
+console.log(`classes:      ${published.length} published live, ${creators.size} creatable from the repo`
+  + (notLive.length ? ` - ${notLive.length} not live: ${notLive.map(describe).join(', ')}` : ''));
 for (const c of published) {
   if (!creators.has(c)) note('CLASS NOT REPRODUCIBLE', `${c} — no data script creates it`);
 }
