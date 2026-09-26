@@ -2426,3 +2426,110 @@ finds one.
 
 **Ongoing cost:** none recurring. It is one conditional in a loop, and the doc
 comment above it grows two sentences.
+
+### F112 — low — the creatures and notables SQL generator is rebuilt in a session scratchpad for every book
+
+**Opened 2026-09-25** by the `psyscape` import (`apps/character-creator/docs/surveys/psyscape.md`,
+ledger line for the creatures PR). Filed under `book-survey` §8 Tier 3: filed, not built.
+
+Every book that ships `creatures` / `notable_npcs` / `stat_attacks` rows writes
+its own generator from worker JSON to one data script, and the generator lives
+in that session's scratchpad. The memory store records it three times: Phase 2a
+of the bestiary plan (`normalize.mjs`, `gen-sql.mjs`, *"both were in the session
+scratchpad, now gone - rebuild from the SQL file's shape"*), Phase 3 (`p3/` in
+that session's scratchpad, with `copycheck.mjs`), and South America's
+`add-south-america-creatures.sql` header, which states an 8-word shingle check
+that no tracked file runs. Psyscape rebuilt it again on 2026-09-25, from
+`add-south-america-creatures.sql`'s shape.
+
+Each rebuild re-decides things the previous one had settled:
+
+- which fields the copy check reads. A check over every text field flagged 40
+  stat lists (spell names, psionic powers, skill percentages, allies) as copied
+  prose on the first Psyscape run. The working rule was prose fields only, and
+  skipping runs that are mostly numbers. The rule was proven by planting a
+  sentence copied from the text layer and watching the check refuse it;
+- the gate on `creatureFormulaGaps` before a row is written;
+- 50-row batching, the read-back assertions, and the `data_script_runs` footer.
+
+**Proposal:** add `scripts/bestiary-sql.mjs`, a tracked version of the
+Psyscape generator: `node scripts/bestiary-sql.mjs <slug> <worker-json-dir> <out.sql>`.
+It validates columns against `db/migrations/072`/`073`/`074`, refuses a row
+that fails `creatureFormulaGaps` or holds non-ASCII text, refuses an 8-word
+run shared with the book's cached text layer in the prose fields only, and
+writes the batched INSERTs and read-backs. Cite it from `book-survey` §6 and
+from the NPC-and-bestiary part of the relevant skill. **Leave extraction and
+reconcile as agent work.** This covers only the step from JSON to SQL.
+
+**Posture:** a new tool, opt-in. No check fails a PR that does not use it, and
+no existing data script is regenerated.
+
+**Evidence:** the three scratchpad generators are **reported by** the memory
+files `npc-bestiary-plan.md` and `south-america-survey.md`, read 2026-09-25.
+The Psyscape generator's behaviour (40 false copy hits, then 13 real passages
+after narrowing to prose fields, 7 more in the last race file) was measured in
+this session, 2026-09-25. Whether the South America and Phase 3 copy checks read
+the same fields was **not measured**; their scripts are gone.
+
+**Confidence:** high that the generator is rebuilt per book. Medium on whether
+one generator fits every book: South America stored a few fields
+differently, per its header. That settles when a taker diffs the Psyscape
+generator's output shape against `add-south-america-creatures.sql`.
+
+**Ongoing cost:** one script that must track `creatures` / `notable_npcs` if
+either table gains a column. Migration 074's shape has not changed since it
+landed.
+
+### F113 — low — `class-check` passes three class shapes that smoke and regression refuse
+
+**Opened 2026-09-25** by the `psyscape` class imports (#1401, #1404, #1405). Filed
+under `book-survey` §8 Tier 3: filed, not built.
+
+A class draft that reads `class-check: ready — 0 errors, 0 warnings` against
+production still fails the suite, found only after the data script is emitted
+and applied locally. Three shapes, each measured this session:
+
+| shape | `class-check --remote` | caught by |
+|---|---|---|
+| a fixed grant of the placeholder row `Literacy: Other` | ready, 0 warnings | `regression.mjs:4116`, *no class GRANTS the placeholder row as a fixed skill* |
+| `men_of_arms` on a class that states its own `sdc_base` | ready, 0 warnings | smoke, `test/checks/catalog-data.mjs:93`, *no S.D.C. grouping sits on a class that states its own* |
+| an equipment slug present in production but not in a build from the repo | ready (it looks the slug up `--remote`) | `regression.mjs:5635`, *every gear slug a rebuilt class references resolves* |
+
+The first two were reproduced on 2026-09-25 by editing a copy of a shipped
+draft back into the refused shape and running `class-check --remote` on it.
+Both came back ready. The third is by construction: the draft offered South
+America 2's `ip-7-ion-pistol`, which production held and this branch's base
+did not.
+
+South America hit more of the same (`south-america-survey.md` in the memory
+store): an `isp_base` identical to `ppe_base`, and a fixed `Language: Other`
+without `per_level: 0`. `INGESTION-AUDIT` (closed) recorded the first instance
+of the pattern, two presence checks `class-check` is silent on. The
+table in `class-import`'s `reference/frontmatter.md` ("What each tool actually
+catches") comes from that note. That table documents the gap and proposes no fix.
+
+The cost is a full regression run per miss, about 10 minutes, and a
+regenerated script.
+
+**Proposal:** in `scripts/class-check-lib.mjs`, warn (not error) on the first
+two shapes, reusing the predicates the suite checks run where they can be
+imported. Leave the third alone: `class-check --remote` is right that the slug
+exists in production, and a slug newer than the branch base is a rebase
+question, not a class defect.
+
+**Posture:** warnings only. The exit code does not move, and the suites stay the
+authority.
+
+**Evidence:** the three suite failures, with their line numbers, read on
+2026-09-25 from this session's smoke and regression output. The two
+`class-check` reproductions were run on 2026-09-25. The South America shapes are
+**reported by** the memory store and were not re-run here.
+
+**Confidence:** high on the two reproduced shapes. Medium on sharing predicates
+with the suites. That settles when a taker reads whether the two checks' tests
+are importable functions or inline loops.
+
+**Ongoing cost:** two warnings that must follow their suite rules if either rule
+changes, which is the drift this finding exists to shrink. If the predicates
+cannot be shared, the rule text is duplicated in two places, and the finding
+should say so and consider declining.
