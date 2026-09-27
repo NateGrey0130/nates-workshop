@@ -99,8 +99,13 @@ checked. **Check the geometry before filing a page as damaged.**
 | **34** | *O.C.C.s of the Free Quebec Military* | the percentage roster of who serves, and what is **absent** |
 | **33** | *O.C.C. Overview & Reference* | which existing O.C.C.s are and are not found here |
 
-**This book has NO Experience Table**, and that is a real absence rather than a
-page not found: `Experience Table` appears nowhere in 194 pages, and the closest
+**This book prints ONE experience box, on printed 191, and this survey said it had
+none until 2026-09-26.** The box is headed *Experience Points*, not *Experience
+Table*, which is the string that was searched for; it sits under the adventure
+hooks and holds three columns - *Descended Glitter Boy Pilot*, *Glitter "Girl"
+Pilot*, *Side Kick RPA & Reloader O.C.C.* - and nothing for the Deep Intel Agent
+or the cyborgs. Read it off a render: cache `p192` prints the Side Kick heading
+above the first column's figures. Apart from that box the closest
 thing — printed 190-192 — is adventure hooks. So the roster question has a
 **single authority, the Contents**, and `phase-world` is the standing warning
 about that: its Royal Kreeghor was surveyed as playable off the Contents alone
@@ -349,6 +354,7 @@ describes".*
 | #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
 | #821 | vessels, printed 52-134, in four slices | **22** | vehicles 105 -> **127** |
 | #822 | classes: the cyborg O.C.C. and its four chassis | **5** | classes 220 -> **225** |
+| #TBD | ladders: printed 191's *Experience Points* box, by `~012-cwc-fq-xp-ladders.sql`, read off a 300 dpi render and re-read by `book-reconcile` (no disagreements): `fq-descended-glitter-boy-pilot`, `fq-glitter-girl-pilot`, and `fq-side-kick-rpa` with `fq-gb-reloader` (one column). Not stored: `fq-deep-intel-agent` and the five `fq-cyborg-*` rows - the box has no column for them and their entries name no table (printed 32 points the agent at the ISS classes and printed 113 points the cyborgs at CWC's service programs, neither naming a ladder). The survey's "NO Experience Table" is corrected above | 0 | unchanged |
 
 ### Batch 2 — gear (PR #819)
 
