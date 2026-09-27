@@ -1,8 +1,8 @@
 # Rifts Conversion Book One — survey
 
-**Status:** `importing` — the Palladium Character Conversions section is inventoried; batch 1 (the nine races the Palladium Fantasy catalog already holds) and batch 2 (the seven new humanoids) are in; batches 3-4 are planned below. (2026-09-26)
+**Status:** `importing` — the Palladium Character Conversions section is inventoried; batch 1 (the nine races the Palladium Fantasy catalog already holds), batch 2 (the seven new humanoids) and batch 3 (the eight giants) are in; batch 4 is planned below. (2026-09-26)
 
-**Rows citing this book:** classes 26, creatures 77
+**Rows citing this book:** classes 34, creatures 77
 
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,
@@ -97,14 +97,14 @@ enemies and allies.
 | 84-86 (p085-p087) | Dwarves | S.D.C. 20 | `dwarf` | **1** |
 | 86-87 (p087-p088) | Elves | S.D.C. 10 | `elf` | **1** |
 | 87 (p088) | Giants — introduction | | | |
-| 87-88 (p088-p089) | Algor, Frost Giant | P.E. + 4D6 M.D.C., frost breath | — | 3 |
-| 88-89 (p089-p090) | Cyclops, Lightning Giant | P.E. + 3D6 M.D.C. | — | 3 |
-| 90 (p091) | Jotan, Earth Giant | P.E. + 1D6x10+20 M.D.C. | — | 3 |
-| 91-92 (p092-p093) | Gigantes, Mutant Giants | 1D6x10 + P.E. M.D.C.; **Gigante Mutation & Special Abilities Table** 91-92, **Gigante Insanity Table** 92 | — | 3 |
-| 92-93 (p093-p094) | Minotaur, the Bull | 6D6+18 M.D.C. | — | 3 |
-| 93-94 (p094-p095) | Nimro, Fire Giant | 6D6+20 M.D.C. | — | 3 |
-| 94-96 (p095-p097) | Rahu-Man | 6D6x10 M.D.C.; minor psionics, printed 96 | — | 3 |
-| 97-98 (p098-p099) | Titan, Hero Giant | 3D6x10+60 M.D.C. | — | 3 |
+| 87-88 (p088-p089) | Algor, Frost Giant | P.E. + 4D6 M.D.C., frost breath | — | **3** |
+| 88-89 (p089-p090) | Cyclops, Lightning Giant | P.E. + 3D6 M.D.C. | — | **3** |
+| 90 (p091) | Jotan, Earth Giant | P.E. + 1D6x10+20 M.D.C. | — | **3** |
+| 91-92 (p092-p093) | Gigantes, Mutant Giants | 1D6x10 + P.E. M.D.C.; **Gigante Mutation & Special Abilities Table** 91-92, **Gigante Insanity Table** 92 | — | **3** |
+| 92-93 (p093-p094) | Minotaur, the Bull | 6D6+18 M.D.C. | — | **3** |
+| 93-94 (p094-p095) | Nimro, Fire Giant | 6D6+20 M.D.C. | — | **3** |
+| 94-97 (p095-p098) | Rahu-Man; printed 95 is a full-page illustration | 6D6x10 M.D.C.; minor psionics, printed 96 | — | **3** |
+| 97-98 (p098-p099) | Titan, Hero Giant | 3D6x10+60 M.D.C. | — | **3** |
 | 98-99 (p099-p100) | Goblin, with the **Cobbler Goblin** on printed 99 | S.D.C. 10 | `goblin` | **1** |
 | 99-101 (p100-p102) | Gosai; the **Gosai Assassin R.C.C.** pointer and **Hand to Hand: Skudasa** (a 15-level table) on printed 100-101 | S.D.C. 3D6, A.R. 10, metal allergy | — | 2 (race), 4 (R.C.C., Skudasa) |
 | 101-102 (p102-p103) | Orc | S.D.C. 10, no psionics | `orc` | **1** |
@@ -127,7 +127,7 @@ was closed against this book as class-audit item **CB1** in
 [#304](https://github.com/NateGrey0130/nates-workshop/pull/304), and is carried
 as one row per element and element pair (`warlock-air` through
 `warlock-fire-water`); the original `warlock` row is deleted. The other nine are
-batch 1 below. **Batch 2 takes it to twenty-six.**
+batch 1 below. **Batch 2 takes it to twenty-six, and batch 3 to thirty-four.**
 
 ### Batch 1 — the nine races the Palladium Fantasy catalog already holds
 
@@ -208,12 +208,44 @@ prefix. Batch 1's shared decisions hold, with these additions:
   Quorian Oneiromancer and the Chant of Dreaming are not in these rows; they
   are batch 4.
 
+### Batch 3 — the eight giants
+
+`rifts-algor`, `rifts-cyclops`, `rifts-jotan`, `rifts-gigantes`,
+`rifts-minotaur`, `rifts-nimro`, `rifts-rahu-man`, `rifts-titan`. No
+Palladium Fantasy row exists for any of them on 2026-09-26, and none is a
+`creatures` row; they take batch 1's `rifts-` prefix because a Palladium
+Fantasy giant could later arrive. `rifts-cyclops` is unrelated to
+`greater-cyclops`, and `rifts-titan` to `titan-juicer` and `sea-titan`.
+
+- **All eight are M.D.C. beings on Rifts Earth**, so each states `mdc_base` and,
+  as `rifts-troll` does, carries its S.D.C.-world Hit Points, S.D.C. and A.R.
+  as a natural ability rather than pools.
+- **The Gigante Mutation & Special Abilities Table is a `choose: 4`** over
+  twenty-one `special_abilities` entries, the `keeper-of-the-desert` shape: the
+  percentile band heads each entry so the roll can still be made. The flat
+  numbers (+20 and +10 M.D.C., +1 attack, +2 initiative) and the two skin
+  entries' M.D.C. dice are bonuses; the rest is prose. The **Insanity Table** is
+  prose in `side_effects`, since it points into the Rifts RPG's own tables.
+- **The Rahu-Man carries a psionics block**: minor, eight Sensitive picks, I.S.P.
+  M.E. +30 +1D6 per level.
+- **The Cyclops's P.P.E. is added to a magic O.C.C.'s base** on the page, and
+  the app keeps a race's `ppe_base` and drops the occupation's, so that sum is
+  not modelled; the class says to add the O.C.C.'s by hand.
+- **Occupation lists are judgements where the page is loose.** The Gigantes'
+  "basic Man at Arms ... simple ones like Raider, Bandit, Vagabond" is an `only`
+  of eleven low-tech fighters and drifters; the Minotaur's "any Men of Arms ...
+  or any Adventurer or Scholar except Cyber-Doc" is `group:men-of-arms` plus the
+  thirty `optional` O.C.C.s other than `cyber-doc`. Each note says so.
+- Breath attacks (Algor, Nimro) are prose, not `combat.attacks`, because the
+  extra attack can only be a breath.
+
 ## Catalog diff
 
 Run for batch 1 by `class-check --remote` on each draft, 2026-09-26: every skill
 the nine grant resolves, and no stub rows were needed. The same for batch 2's
 seven, 2026-09-26: every skill and every `occ_restrictions` id resolves, no stubs. No spell, psionic or gear
-diff has been run; batch 1 needs none.
+diff has been run; batch 1 needs none. Batch 3's eight, 2026-09-26: every skill,
+every psionic category and every `occ_restrictions` id resolves, no stubs.
 
 ## Extraction plan
 
@@ -232,7 +264,7 @@ Agreed 2026-09-26. One PR each, in order.
    Rifts Earth. The **Gigante Mutation & Special Abilities Table** (printed
    91-92) is a roll table, not stats; decide there whether it is prose on the
    class or a modelled roll. The Gigante Insanity Table (92) points into the Rifts
-   RPG's tables.
+   RPG's tables. *Shipped — see Batch 3 above.*
 4. **The three R.C.C. pointers and what they bring** — the Quorian Oneiromancer
    (`copy_of: mystic` if its except list stays short), the Quillback Scavenger
    (built on the Vagabond), the Gosai Assassin (built on the Palladium Assassin),
@@ -257,6 +289,7 @@ Elemental Spell list's descriptions, which the book defers to the Book of Magic
 | 2026-09-18 | [#1170](https://github.com/NateGrey0130/nates-workshop/pull/1170) | 77 creatures (NPC & bestiary plan, Phase 3) |
 | 2026-09-26 | #1443 | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
 | 2026-09-26 | #TBD | batch 2, seven new Rifts race classes (`rifts-bearman`, `rifts-kankoran`, `rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`, `rifts-vrill`), reconciled against the book with no figure in dispute; no stub rows; classes citing this book 19 -> 26. Applied `--remote` before the merge |
+| 2026-09-26 | #TBD | batch 3, the eight giants (`rifts-algor`, `rifts-cyclops`, `rifts-jotan`, `rifts-gigantes`, `rifts-minotaur`, `rifts-nimro`, `rifts-rahu-man`, `rifts-titan`); classes citing this book 26 -> 34. Applied `--remote` before the merge |
 
 ### What remains
 
@@ -268,6 +301,5 @@ was applied:
 ```
 
 **87 traceable, nothing untraceable** — ten Warlock rows and 77 creatures.
-Batch 1 takes it to 96 and batch 2 to 103. What remains to take is batches
-3-4 above: the eight giants and three R.C.C.s, one hand to hand style and one
-chant.
+Batch 1 takes it to 96, batch 2 to 103 and batch 3 to 111. What remains to take
+is batch 4 above: three R.C.C.s, one hand to hand style and one chant.
