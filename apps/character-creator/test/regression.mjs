@@ -4351,6 +4351,31 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     classes.some((c) => c.id === 'nb-nightbane')
     && classes.find((c) => c.id === 'nb-nightbane').xp_table === undefined);
 
+  // Heroes Unlimited prints its ladders per POWER CATEGORY (printed 17: "Each
+  // random power category has a listing for levels of experience"), and the
+  // category sits in the R.C.C. slot with the Educational Level in the O.C.C.
+  // slot. So every category carries one and no education does: an education's
+  // ladder would win the pairing and replace the category's. Stored by #1463.
+  const huCategories = rccs.filter((c) => c.system === 'heroes-unlimited');
+  const huEducations = classes.filter((c) => c.system === 'heroes-unlimited' && c.category === 'occ');
+  check('the Heroes Unlimited Power Categories and educations are there to check',
+    huCategories.length >= 14 && huEducations.length >= 16,
+    `${huCategories.length} categories, ${huEducations.length} educations`);
+  const huNoLadder = huCategories.filter((c) => !Array.isArray(c.xp_table));
+  check('every Heroes Unlimited Power Category carries its printed ladder',
+    huNoLadder.length === 0, huNoLadder.map((c) => c.id).join(', '));
+  const huEduLadder = huEducations.filter((c) => c.xp_table !== undefined);
+  check('and no Heroes Unlimited education carries one',
+    huEduLadder.length === 0, huEduLadder.map((c) => c.id).join(', '));
+  // Every pairing, not a sample: 14 x 16 is cheap, and a sample misses the one
+  // education that went wrong.
+  const huPairLost = [];
+  for (const c of huCategories) for (const e of huEducations) {
+    if (JSON.stringify(combineClasses(c, e).xp_table) !== JSON.stringify(c.xp_table)) huPairLost.push(`${c.id}+${e.id}`);
+  }
+  check('so a category paired with any education levels on the category’s ladder',
+    huEducations.length > 0 && huPairLost.length === 0, huPairLost.slice(0, 5).join(', '));
+
   // The composition half, over every race that carries one rather than a
   // fixture: paired with an O.C.C. whose ladder DIFFERS from the race's, the
   // occupation's is the one the character levels on - and alone, the race's.
@@ -4383,7 +4408,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   for (const [a, b] of [['knight', 'noble'], ['thief', 'merchant'],
     ['mind-mage', 'wizard'], ['priest-of-light', 'priest-of-darkness'],
     ['nb-ashmedai', 'nb-psychic'], ['nb-ashmedai', 'nb-sorcerer'],
-    ['nb-snake-bird', 'nb-mystic'], ['nb-guardian', 'nb-package-basic']]) {
+    ['nb-snake-bird', 'nb-mystic'], ['nb-guardian', 'nb-package-basic'],
+    ['hu-ancient-master', 'hu-hunter'], ['hu-ancient-master', 'hu-secret-operative'],
+    ['hu-ancient-master', 'hu-stage-magician'], ['hu-ancient-master', 'hu-super-sleuth']]) {
     const ta = classes.find((c) => c.id === a)?.xp_table;
     const tb = classes.find((c) => c.id === b)?.xp_table;
     check(`${a} and ${b} share the chart the book prints for both`,
