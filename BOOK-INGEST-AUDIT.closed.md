@@ -3057,7 +3057,7 @@ made those same two class files mean different things.
 
 ### F26 — one spell, two traditions, two costs, and one row
 
-**Taken, 2026-09-08 (PR pending), as the smaller option** - `spells.same_spell_as`
+**Taken, 2026-09-08 (PR #815), as the smaller option** - `spells.same_spell_as`
 plus a checker, not the `spell_traditions` join table. Both questions this
 finding left "to settle when taken" are settled, and **three of its own factual
 claims did not survive being checked**, which is recorded here because the
@@ -3200,7 +3200,7 @@ Two things to settle when this is taken, not before:
 
 ### F27 - `class-check` does not validate skill names inside an MOS option, and they fail silently
 
-**Taken, 2026-09-08 (PR pending).** Both of the questions this finding left
+**Taken, 2026-09-08 (PR #812).** Both of the questions this finding left
 "to settle when taken" are settled, and the second was settled by MEASURING
 rather than by agreeing with the guess written here.
 
@@ -3303,7 +3303,7 @@ wrong grant whenever somebody forgets.
 
 ### F28 - the coverage ledger checks five catalogs and there are six, so no vessel's citation is verified
 
-**Taken, 2026-09-08 (PR pending) - filed and taken in one change**, on the
+**Taken, 2026-09-08 (PR #813) - filed and taken in one change**, on the
 `SHIP-PR-AUDIT` precedent, because the fix is one line and holding it as a
 proposal would have cost more to write than to make.
 
