@@ -163,6 +163,7 @@ Physical.
 |---|---|---|
 | — | — | rows accumulated across the project; no book-shaped import run |
 | 2026-09-25 | #1415 | from the South America session: the O.C.C. Experience Tables (printed 295, read off a render) as `xp_table` on the Burster, Psi-Stalker, Mystic, City Rat, Vagabond, Mind Melter, Ley Line Walker, Ley Line Rifter and the seven dragon hatchlings; and the TW Flaming Sword and TK-Machine-Gun (printed 137-138) as gear, gear 206 -> 208 |
+| 2026-09-26 | #TBD | `~008-rue-ju-xp-ladders.sql`: the REST of the O.C.C. Experience Tables (printed 295, read off a 200 dpi render and reconciled against it) as `xp_table` on the 23 live RUE classes that still ran on the app's default ladder - Cyber-Knight, Crazy, Juicer, Glitter Boy, Merc Soldier, Robot Pilot, Headhunter, Combat Cyborg, Techno-Wizard, both Elemental Fusionists, Shifter, Dog Boy, Wild Psi-Stalker (the Psi-Stalker column), Body Fixer, Cyber-Doc, Rogue Scholar, Rogue Scientist, Wilderness Scout, Operator and the CS Grunt, SAMAS Pilot and Technical Officer. Every live RUE class now carries its printed ladder. `euro-juicer` (Triax) adds `xp_table` to its `copy_of` except list, because Triax printed 224 prints it a ladder of its own. Applied `--remote` before the merge. |
 | — | `5c66a60` | RUE's six dragon hatchling species |
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `rue` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
