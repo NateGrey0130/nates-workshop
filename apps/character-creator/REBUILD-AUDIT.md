@@ -307,6 +307,27 @@ machine does not hold.
 answer is a data PR, taken on Nate's word with the three-readings check this
 finding asks for.
 
+**Corrected 2026-09-27, the same day.** The paragraph before the last named two
+rows that were not remaining: `Strategy/Tactics` and `Toxicology` already cite
+`Nightbane RPG p.52` (read `--remote` 2026-09-27). The names the search found are
+the book's skill list; the definitions are on cache `p060`, printed 59.
+
+**Taken in part, 2026-09-27 (branch `pal/data/rebuild-audit-f16-nightbane-wp`),
+on Nate's word.** Four `rifts-skill-list` rows now cite `Nightbane RPG p.59-60`
+by `~037-nightbane-wp-citations.sql`: `W.P. Revolver`, `W.P. Automatic Pistol`,
+`W.P. Bolt Action Rifle` and `W.P. Automatic and Semi-automatic Rifles`. The
+three readings held: printed 59 defines each, printed 60 prints the aimed,
+burst and per-level bonuses the rows store, and no other cached book defines
+any of the four. The premise audit before scoping found the two rifle rows the
+first plan left out, and a stored note on `W.P. Automatic Pistol` that described
+a semi-automatic where printed 59 defines a weapon that keeps firing while the
+trigger is held; that sentence is rewritten to the page. This reverses
+`fix-wp-source-pre-rue-citations.sql`'s choice of the non-book (INGESTION-AUDIT
+F25) for these four, whose reason was that no cached book defined them.
+`rifts-skill-list` goes from 29 rows to 25. **The rest of this finding stays
+held**: the remaining rows need books this machine does not hold, or reading
+off pages not yet checked.
+
 - **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `REBUILD-AUDIT.closed.md` under its own `### F17` heading.
 
 - **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F18` heading.
