@@ -456,7 +456,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1433](https://github.com/NateGrey0130/nates-workshop/pull/1433) | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1434](https://github.com/NateGrey0130/nates-workshop/pull/1434) | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1435](https://github.com/NateGrey0130/nates-workshop/pull/1435) | creatures and NPCs: `add-atlantis-creatures-and-npcs.sql`, 35 creatures, 7 notable NPCs, 179 attacks. `book-reconcile` checked every row; no disagreements. Applied `--remote` before the PR. MERGED. |
-| 2026-09-26 | — | follow-ups (decisions 4-5): `fix-atlantis-minion-class-gear.sql` wires the new gear into the Overlord, Powerlord, Conservator, Blind Warrior Women and Sunaj Assassin; `add-atlantis-bio-wizard-augmentation.sql` adds 39 bio-wizard transmutation, reconstruction, eye and sensor rows as `cybernetics` gear (gear 61 -> 100). `book-reconcile` checked the 39. Applied `--remote` before the PR. |
+| 2026-09-26 | [#1437](https://github.com/NateGrey0130/nates-workshop/pull/1437) | follow-ups (decisions 4-5): `fix-atlantis-minion-class-gear.sql` wires the new gear into the Overlord, Powerlord, Conservator, Blind Warrior Women and Sunaj Assassin; `add-atlantis-bio-wizard-augmentation.sql` adds 39 bio-wizard transmutation, reconstruction, eye and sensor rows as `cybernetics` gear (gear 61 -> 100). `book-reconcile` checked the 39. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -466,6 +466,9 @@ Nothing in the plan. `node scripts/source-coverage.mjs --remote`,
 ```
   atlantis           177 / 0
 ```
+
+**Re-measured 2026-09-27**, after the follow-ups (#1437) added the 39
+bio-wizard rows: `atlantis           216 / 0`.
 
 `BACKLOG` did not move across the whole import: 14 gear stubs, 5 skill stubs,
 19 spell stubs, 1 psionic stub, 0 spell or psionic text missing. None is this

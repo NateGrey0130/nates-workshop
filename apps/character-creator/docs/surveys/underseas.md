@@ -345,7 +345,9 @@ Phase 4 costs money; everything above was free.
 What is deliberately left, with the reason:
 
 - **The creature entries in pp.20-46 that p.214 gives no ladder** — the book's
-  own authority says they are not player characters.
+  own authority says they are not player characters. *(Still not classes.
+  Corrected 2026-09-27: they are `creatures` rows since #1177, and two named
+  NPCs are `notable_npcs` rows since #1166 and #1183; see the ledger.)*
 - **The "Additional Spell Magic for Ocean Wizards" list (p.63)** — every row is
   already in the catalog; it is a grant list, not new data.
 - **The three rules notes on p.210** — they change how existing skills behave
@@ -379,7 +381,10 @@ The merged PR body cannot be edited into truth retroactively and is left as the 
 | 2026-09-08 | [#807](https://github.com/NateGrey0130/nates-workshop/pull/807) | class batch 7 of 7: **Naut'Yll Soldier**, **Naut'Yll Devastator**, **Naut'Yll Koral Shaper**, **Kreel-Lok Nomad**, **Horune Pirate** (210 -> **215** live classes). **THE CLASS ROSTER IS COMPLETE: 25 of 25**, verified by counting `imported_classes` against the p.214 ladder rather than by adding up batches - which is the check whose absence produced the #805 miscount. Applied `--remote` before the PR. |
 | 2026-09-08 | [#808](https://github.com/NateGrey0130/nates-workshop/pull/808) | **gear**: 87 rows - weapons, armour, bionics and the book's 33 priced sea vessels (1154 -> **1241** gear). Seven of the 87 are stub upgrades that also correct auto-generated names. The boats go in `gear` with category `vehicle` on the existing 36-row precedent, and are the first vessels to use `gear.sdc`; that also makes the Salvage Expert's starting vessel storable. Applied `--remote` before the PR. |
 | 2026-09-08 | [#809](https://github.com/NateGrey0130/nates-workshop/pull/809) | **vehicles**: 50 stat blocks across five files, split by the page their HEADING falls on - `p081-105` (8), `p118-133` (9), `p139-161` (11), `p167-190` (13), `p195-210` (9). 415 M.D.C. locations and 247 weapon systems with them (55 -> **105** vessels; the other 55 are Triax). **THE BOOK IS NOW FULLY IMPORTED**: 25 classes, 8 skills, 74 spells, 87 gear, 50 vessels. Applied `--remote` before the PR. |
-| 2026-09-26 | #TBD | **XP ladders**, `~014-underseas-xp-ladders.sql`: all **25** classes take the p.214 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. Two odd lower bounds stored as printed (Pneuma Biform level 5, Dragon Ray level 5). **The Navy Seaman is on the Navy Seaman / Salvage Expert / Kreel-Lok Warrior column**, not the Amphib one; the class table above said otherwise and is corrected. **The Sea Titan takes the "Sea Titan, Whale Singer" column** although its entry names the dragon's tables, two of them; its note says so. No row count moves. `--remote` is applied before the merge |
+| 2026-09-18 | [#1166](https://github.com/NateGrey0130/nates-workshop/pull/1166) | **notable NPCs** (NPC and bestiary plan, Phase 2b): `add-notable-npcs-dragons-and-gods.sql`, 1 `notable_npcs` row citing this book. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-19 | [#1177](https://github.com/NateGrey0130/nates-workshop/pull/1177) | **creatures** (Phase 3): `add-creatures-underseas.sql`, 30 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27. |
+| 2026-09-19 | [#1183](https://github.com/NateGrey0130/nates-workshop/pull/1183) | **notable NPCs**: `add-notable-npcs-juicer-uprising-and-others.sql`, 1 `notable_npcs` row citing this book. Row added 2026-09-27. |
+| 2026-09-26 | #1451 | **XP ladders**, `~014-underseas-xp-ladders.sql`: all **25** classes take the p.214 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. Two odd lower bounds stored as printed (Pneuma Biform level 5, Dragon Ray level 5). **The Navy Seaman is on the Navy Seaman / Salvage Expert / Kreel-Lok Warrior column**, not the Amphib one; the class table above said otherwise and is corrected. **The Sea Titan takes the "Sea Titan, Whale Singer" column** although its entry names the dragon's tables, two of them; its note says so. No row count moves. `--remote` is applied before the merge |
 
 ### What the vehicle pass had to decide
 
@@ -435,6 +440,14 @@ written.
 only consumer - not `js/`, not `functions/`, not `app.js` or `sheet.js`, and not
 the test suite. That was true of the Triax import too and is worth knowing
 before anyone expects a vessel to appear in the wizard.
+**Corrected 2026-09-27:** that was true on 2026-09-08 and is not now. The codex
+lists vessels (`functions/api/character-creator/codex.js` joins `vehicles`),
+a character can own one (`character_vehicles`, migration 052, through
+`characters/[id]/vehicles.js`), and the sheet reads and damages owned vessels
+(`characters/[id].js`, `apps/character-sheet/sheet.js`). The wizard still
+issues no vessel directly: a class whose book issues one lists a `gear` row
+carrying `vehicle_slug` (migration 053), as the class-vessels change did in
+#1450.
 
 ### The debt this book's import left in CI, and closing it
 

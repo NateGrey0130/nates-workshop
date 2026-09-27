@@ -183,7 +183,12 @@ nor the changed pick count is expressible.
 
 So they ship as **five separate classes**, each restating the eleven shared basic
 skills. That is the duplication `variants` exists to prevent, and it is filed as
-`BOOK-INGEST-AUDIT.md` **F31**. The four bodies are ALSO vessel rows — a
+`BOOK-INGEST-AUDIT.md` **F31**. **Corrected 2026-09-27:** the two sentences
+above describing what a variant cannot do were the state of 2026-09-06. F31
+was taken on 2026-09-08 in #834 - a variant may now carry `skills_additional`
+and `related_skills_count` - but as the mechanism only: on Nate's decision the
+five cyborg classes were **not** restructured into variants, because that would
+retire four `class_id`s characters point at. They stay five classes. The four bodies are ALSO vessel rows — a
 full-conversion cyborg here has M.D.C. by location and numbered weapon systems,
 exactly like a power armor.
 
@@ -320,6 +325,9 @@ are named on printed 34 with no stats. No new class is defined there.
 James Lorne), 151 (Colonel Robert Miller) and 175 (les Soldats de St. Jean's
 leader) are individual stat blocks — attributes, Hit Points, S.D.C., age,
 disposition — for specific characters, not classes. They are setting.
+*(Still not classes. Corrected 2026-09-27: eight named characters from this
+book are `notable_npcs` rows since the NPC and bestiary plan - six in #1164,
+two in #1183; see the ledger.)*
 
 **Setting and narrative.** The Coalition-at-war chapter (printed 6-31), Free
 Quebec's history and worldview (printed 133-153), Old Bones (printed 152-184)
@@ -354,8 +362,10 @@ describes".*
 | #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
 | #821 | vessels, printed 52-134, in four slices | **22** | vehicles 105 -> **127** |
 | #822 | classes: the cyborg O.C.C. and its four chassis | **5** | classes 220 -> **225** |
+| #1164 | notable NPCs (NPC and bestiary plan, Phase 2a, 2026-09-18): `add-notable-npcs.sql`. Row added 2026-09-27; the PR did not write one | **6** | notable NPCs citing this book 0 -> **6** |
+| #1183 | notable NPCs (2026-09-19): `add-notable-npcs-juicer-uprising-and-others.sql`. Row added 2026-09-27 | **2** | notable NPCs citing this book 6 -> **8** |
 | #1447 | ladders: printed 191's *Experience Points* box, by `~012-cwc-fq-xp-ladders.sql`, read off a 300 dpi render and re-read by `book-reconcile` (no disagreements): `fq-descended-glitter-boy-pilot`, `fq-glitter-girl-pilot`, and `fq-side-kick-rpa` with `fq-gb-reloader` (one column). Not stored: `fq-deep-intel-agent` and the five `fq-cyborg-*` rows - the box has no column for them and their entries name no table (printed 32 points the agent at the ISS classes and printed 113 points the cyborgs at CWC's service programs, neither naming a ladder). The survey's "NO Experience Table" is corrected above | 0 | unchanged |
-| #TBD | `~018-class-vessels.sql`: the Side Kick RPA and the Reloader list the vessel their book issues them, through two `gear` pointer rows (`glitter-boy-side-kick-qpa-98`, `rhv-60-reloader-hover-vehicle`) carrying `vehicle_slug` - F41's Glitter Boy shape. Restriction lines dropped, notes rewritten as the decision. `--remote` is applied before the merge | **2** | gear citing this book 17 -> **19** |
+| #1450 | `~018-class-vessels.sql`: the Side Kick RPA and the Reloader list the vessel their book issues them, through two `gear` pointer rows (`glitter-boy-side-kick-qpa-98`, `rhv-60-reloader-hover-vehicle`) carrying `vehicle_slug` - F41's Glitter Boy shape. Restriction lines dropped, notes rewritten as the decision. `--remote` is applied before the merge | **2** | gear citing this book 17 -> **19** |
 
 ### Batch 2 — gear (PR #819)
 
@@ -434,6 +444,10 @@ Recorded in both classes' `extraction_notes` rather than resolved.
   Agent's *"P.B. of 12 or lower"* is a **ceiling**. Writing it there would state
   the exact inverse of the book and render to the player as `PB 12+`. It is in
   `restrictions` instead, which displays it and enforces nothing.
+  **Corrected 2026-09-27:** that was the state when this batch shipped. F32 was
+  taken on 2026-09-08 in #824, which added `attribute_maximums`; the
+  `fq-deep-intel-agent` record carries the key (checked `--remote`
+  2026-09-27).
 - **F33** — the gear catalog holds the same item twice under two slugs (four
   pairs verified), found while resolving this class's `equipment_starting`. Not
   this book's rows. Filed **without** a merge script on purpose: three detectors
@@ -539,7 +553,7 @@ player will see it. **F3**, and the same cost the Noro Mystic Warrior paid. The
 two Glitter Boy pilots escape it only because a pre-migration-048
 `glitter-boy-power-armor` row still exists in `gear`.
 
-**Closed 2026-09-26 by `~018-class-vessels.sql` (#TBD)**, in the shape that
+**Closed 2026-09-26 by `~018-class-vessels.sql` (#1450)**, in the shape that
 Glitter Boy row already had: each vessel gained a `gear` row of its own slug
 carrying `vehicle_slug` (migration 053, `BOOK-INGEST-AUDIT.md` F41), both
 classes list it in `equipment_starting`, and both restriction lines are gone.
@@ -643,6 +657,14 @@ class **already grants** and explicitly cannot add one. Each chassis does two
 things a variant cannot: it **adds skills**, and it **changes the related-skill
 count**. So the twelve shared Basic O.C.C. Skills are restated four times, which
 is precisely the drift `variants` exists to prevent.
+
+**Corrected 2026-09-27:** the paragraph above was true on 2026-09-06 and is not
+now. F31 (#834, 2026-09-08) added `skills_additional` and
+`related_skills_count` to what a variant may carry, so both things a chassis
+does are expressible. The restructure was **declined** on Nate's decision -
+four `class_id`s would retire under characters that cite them - so the book
+still ships as five classes, and the note below that the five change together
+still holds.
 
 **The four were generated from one source rather than copied by hand.** A small
 generator holds the shared twelve once and the per-chassis delta separately, so

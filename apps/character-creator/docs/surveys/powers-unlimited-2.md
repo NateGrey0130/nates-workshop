@@ -180,7 +180,7 @@ registry entry rather than discarding them.
 |---|---|---|
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached, registered in `books.json`, offset +1 verified |
 | 2026-09-13 | — | surveyed in full; excluded by D0. **No data.** |
-| 2026-09-26 | #TBD | **D0's carve-out**: the four New Super Abilities (printed 94-95) into `super_abilities`, `~019-pu2-new-super-abilities.sql` - Directed Force and Super Power Punch (major), Sidestep and Spit Spikes (minor). The survey had counted two; the page prints four. Super abilities **364 -> 368**. Both pages rendered; OCR slips and Directed Force's column interleave fixed against the render. `--remote` is applied before the merge. |
+| 2026-09-26 | #1453 | **D0's carve-out**: the four New Super Abilities (printed 94-95) into `super_abilities`, `~019-pu2-new-super-abilities.sql` - Directed Force and Super Power Punch (major), Sidestep and Spit Spikes (minor). The survey had counted two; the page prints four. Super abilities **364 -> 368**. Both pages rendered; OCR slips and Directed Force's column interleave fixed against the render. `--remote` is applied before the merge. |
 
 ### What remains
 

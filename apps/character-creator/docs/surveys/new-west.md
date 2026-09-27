@@ -359,6 +359,9 @@ What is deliberately left, with the reason:
 
 - **The 22 NPC creature entries, printed 139-170** — the book tags each one
   NPC, per-entry. Importing them would contradict its own statement.
+  *(As classes, still true. Corrected 2026-09-27: they are `creatures` rows
+  since #1176, the NPC and bestiary plan's shape for exactly this, and seven
+  named people are `notable_npcs` since #1164 and #1183; see the ledger.)*
 - **Setting: territories, baronies, Silvereno, the rodeo and medicine-show
   rules, organizations, named NPCs (printed 9-69)** — narrative and GM
   procedure, nothing the schema models.
@@ -407,9 +410,12 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 | 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
+| 2026-09-18 | [#1164](https://github.com/NateGrey0130/nates-workshop/pull/1164) | **notable NPCs** (NPC and bestiary plan, Phase 2a): `add-notable-npcs.sql`, 6 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-19 | [#1176](https://github.com/NateGrey0130/nates-workshop/pull/1176) | **creatures** (Phase 3): `add-creatures-new-west.sql`, 28 `creatures` rows - six the NPC view of published playable races, the rest the book's NPC animals and monsters (the Silonar left to its Conversion Book One row) - attacks in `stat_attacks`. Row added 2026-09-27. |
+| 2026-09-19 | [#1183](https://github.com/NateGrey0130/nates-workshop/pull/1183) | **notable NPCs**: `add-notable-npcs-juicer-uprising-and-others.sql`, 1 `notable_npcs` row citing this book. Row added 2026-09-27. |
 | 2026-09-26 | #1440 | Backfill, `~009-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
 | 2026-09-26 | #1450 | `~018-class-vessels.sql`: **the Mining 'Borg's two chassis as `vehicles` rows** (vehicles citing this book 15 -> **17**, 9 M.D.C. locations, no weapon systems - the page prints tool attachments, not weapons), read off a render of printed 113 (PDF page 114) and matching the text layer: Partial Reconstruction main body 130 (+120 bionic armour), hands 25, arms 75, legs 110; Full Construction main body 200 (+150), hands 30, arms 100, legs 180, head 90. The class names both in a restriction line, as the Free Quebec cyborgs name theirs, and its "vessel import has not run yet" note is rewritten as the decision. `--remote` is applied before the merge. |
-| 2026-09-26 | #TBD | **XP ladders**, `~015-new-west-xp-ladders.sql` and `~016-new-west-xp-ladders-2.sql` (one change, split only to keep each file's read-backs under the Windows command-line limit): **24 of 25** classes take the printed 223-224 column whose heading names them, read off renders and re-read by a `book-reconcile` agent; none had one. `mining-borg` copies `combat-cyborg`'s 'Borg ladder, which printed 223 names. **`fennodi` is not stored** - printed 223 says it advances on the O.C.C. selected. Three printed bounds adjusted: Bounty Hunter levels 5 and 12 repeat the previous top and are stored +1, and the Sky-Knight's level 12 prints `18,301` for 181,301. Four ladders the class table above called "own" are shared, and the table is corrected. `lyn-srial-cloudweaver` and `lyn-srial-sky-knight` add `xp_table` to their `copy_of` except lists: the book gives the three Lyn-Srial classes three columns. No row count moves. `--remote` is applied before the merge |
+| 2026-09-26 | #1451 | **XP ladders**, `~015-new-west-xp-ladders.sql` and `~016-new-west-xp-ladders-2.sql` (one change, split only to keep each file's read-backs under the Windows command-line limit): **24 of 25** classes take the printed 223-224 column whose heading names them, read off renders and re-read by a `book-reconcile` agent; none had one. `mining-borg` copies `combat-cyborg`'s 'Borg ladder, which printed 223 names. **`fennodi` is not stored** - printed 223 says it advances on the O.C.C. selected. Three printed bounds adjusted: Bounty Hunter levels 5 and 12 repeat the previous top and are stored +1, and the Sky-Knight's level 12 prints `18,301` for 181,301. Four ladders the class table above called "own" are shared, and the table is corrected. `lyn-srial-cloudweaver` and `lyn-srial-sky-knight` add `xp_table` to their `copy_of` except lists: the book gives the three Lyn-Srial classes three columns. No row count moves. `--remote` is applied before the merge |
 
 ### What remains
 
@@ -442,6 +448,10 @@ line is unchanged**, which is the answer to "did we finish?" for that batch:
 `spell stubs` is still 2 and `spell text missing` still 0, so none of the 58
 landed as a stub. Checked directly as well — all 58 carry a non-empty
 description and a non-zero P.P.E. `BOOK-INGEST-AUDIT` F22.
+
+**Re-measured 2026-09-27**, with the whole book and the NPC and bestiary rows
+in: `new-west           240 / 0`. The `1` above is gone - `W.P. Rope` was
+re-cited to RUE in #882.
 
 ## What the classes needed from the app
 
@@ -590,7 +600,7 @@ far, and the text layer interleaves both.
   was nothing to point at and the figures went in the ability text. **The two
   vessel batches that followed (#899, #900) covered printed 183-223 and never
   these bodies**, which print inside the O.C.C.; `~018-class-vessels.sql`
-  (#TBD, 2026-09-26) added them as `partial-reconstruction-mining-cyborg` and
+  (#1450, 2026-09-26) added them as `partial-reconstruction-mining-cyborg` and
   `full-construction-mining-cyborg`, and the class's restriction line names
   both.
 - **The Preacher's two types are `variants` using `skills_additional`** — the

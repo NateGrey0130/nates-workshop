@@ -81,8 +81,9 @@ Complete — the book was finished in
 | — | [#268](https://github.com/NateGrey0130/nates-workshop/pull/268) | the last five classes — **the book is finished** |
 | — | [#303](https://github.com/NateGrey0130/nates-workshop/pull/303) | the PDF returned: re-cached, F12/F18 re-verified against the page |
 | 2026-08-28 | — | this file, backfilled offline |
+| 2026-09-18 | [#1167](https://github.com/NateGrey0130/nates-workshop/pull/1167) | **notable NPCs - the gods** (NPC and bestiary plan, Phase 2b): `add-notable-npcs-pantheons.sql`, 140 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-25 | [#1374](https://github.com/NateGrey0130/nates-workshop/pull/1374) | the four languages cited to their pages: `fix-potm-language-citations.sql` |
-| 2026-09-26 | #TBD | `norse-giant` copies the dragon ladder, by `~011-borrowed-xp-ladders.sql`: printed 163 says *"Experience: Use same table as the Dragon R.C.C."*, and `dragon-hatchling` has stored RUE's dragon ladder since #1415. The import stored none because both rows then fell through to the app default. Nate's rule, 2026-09-26: a class whose book names another class's table copies that ladder. The note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-26 | #1444 | `norse-giant` copies the dragon ladder, by `~011-borrowed-xp-ladders.sql`: printed 163 says *"Experience: Use same table as the Dragon R.C.C."*, and `dragon-hatchling` has stored RUE's dragon ladder since #1415. The import stored none because both rows then fell through to the app default. Nate's rule, 2026-09-26: a class whose book names another class's table copies that ladder. The note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
 
 ### What remains
 

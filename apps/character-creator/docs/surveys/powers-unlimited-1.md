@@ -193,8 +193,8 @@ Deliberately left:
 | 2026-09-13 | - | surveyed in full; rosters confirmed by two authorities each; psionics diffed `--remote`. **No data.** |
 | 2026-09-13 | [#1028](https://github.com/NateGrey0130/nates-workshop/pull/1028) | **all 170 super abilities** - 125 minor, 45 major. |
 | 2026-09-13 | `af196d9` | **the NEW psionic powers**, of the 21 on printed 87-95. |
-| 2026-09-18 | this PR | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **81 of the 170** rows. Mostly two-digit page numbers inside the text, which the core's folio fix deliberately left alone; plus illustration junk on eight endings and the major roster (printed 51) read onto the end of `Whip Attack`. `Weapon Melding` stopped at the page turn and is completed from printed 87. Applied `--remote` before the merge. |
-| 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
+| 2026-09-18 | [#1153](https://github.com/NateGrey0130/nates-workshop/pull/1153) | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **81 of the 170** rows. Mostly two-digit page numbers inside the text, which the core's folio fix deliberately left alone; plus illustration junk on eight endings and the major roster (printed 51) read onto the end of `Whip Attack`. `Weapon Melding` stopped at the page turn and is completed from printed 87. Applied `--remote` before the merge. |
+| 2026-09-15 | [#1068](https://github.com/NateGrey0130/nates-workshop/pull/1068) | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains
 
@@ -227,7 +227,9 @@ That was accurate when written and it is accurate today - and this book has held
 179 production rows since 2026-09-13. `source-coverage.mjs:115` walks `gear`,
 `skills`, `spells`, `psionic_powers` and `vehicles`, read 2026-09-15, and
 `super_abilities` is not among them, so 170 of those 179 rows are invisible to
-it. **Do not re-derive this book's state from that tool.** That is
-`BOOK-INGEST-AUDIT` **F85**, filed 2026-09-14, which quotes this very sentence.
-(PR #1068 cited it as F94, a duplicate filed a day later and withdrawn the same
-day; F85 is the open finding.)
+it. That is `BOOK-INGEST-AUDIT` **F85**, filed 2026-09-14, which quotes this
+very sentence. (PR #1068 cited it as F94, a duplicate filed a day later and
+withdrawn the same day.) **Corrected 2026-09-27: F85 was taken on 2026-09-15 in
+#1075**, and the tool now walks `super_abilities` - on 2026-09-27
+`source-coverage.mjs --remote` printed `powers-unlimited-1 179 / 0`, every row
+this book holds. The blindness described above is a record of 2026-09-15.

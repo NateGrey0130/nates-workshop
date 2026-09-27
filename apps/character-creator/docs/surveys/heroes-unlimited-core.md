@@ -630,9 +630,12 @@ ability carries `related_skills_count` and nothing else. Both were tried.
   Mutant's STEP FOUR offers psionics INSTEAD of two super abilities, and a class
   granting the abilities outright cannot also offer a branch that grants none.
   A psionic mutant is built as the Psionics category.
-- **`campaigns.system` is still two values** (D2), so no Heroes Unlimited
-  campaign can be created and none of this can be played yet. That is
-  `BOOK-INGEST-AUDIT` F73, filed one book earlier by the Nightbane survey.
+- ~~**`campaigns.system` is still two values** (D2)~~ - **no longer a gap,
+  corrected 2026-09-27.** This bullet was the state on 2026-09-12. F73's
+  blocking half (#1037, 2026-09-14, migration 058) widened the `CHECK` on
+  `campaigns.system` to four games, and `campaigns.js` and the wizard's picker
+  accept `heroes-unlimited`, so a Heroes Unlimited campaign can be created and
+  played. `BOOK-INGEST-AUDIT` F73 carries the record.
 
 ## Ledger
 
@@ -649,18 +652,19 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-13 | #1031 | stat-block repair on 15 core abilities - a `savings_throw` key typo that left 0 of 364 rows with a saving throw, and a `range` that had swallowed 621 characters of prose. |
 | 2026-09-13 | #1032 | the core's **16 new spells**, printed 96-103. Spells **919 -> 935**. |
 | 2026-09-14 | #1033 | **D1's R.C.C. half built**: the `super_abilities` grant block, wired from the parser through the wizard, the create validator and the sheet. `BOOK-INGEST-AUDIT` F81 filed. Code only. |
-| 2026-09-14 | this PR | the core's **4 new psionic powers**, printed 128-135, of thirty-three extracted. Psionics **125 -> 129**. Plus a folio repair on **23 super abilities**. |
-| 2026-09-14 | this PR | **NINE of the ten Power Categories as R.C.C. classes** - Aliens, Bionics, Experiments, Hardware, Magic, Mutants, Physical Training, Psionics, Robotics. Classes **288 -> 297**. Plus the 5 skills Hardware needs (skills **379 -> 384**), and `class-check` taught to look inside a `from` list. Special Training is the tenth and is five separate classes; it follows. |
-| 2026-09-14 | this PR | **SPECIAL TRAINING, the tenth category, as FIVE classes** - Ancient Master, Hunter/Vigilante, Secret Operative, Stage Magician, Super Sleuth. Classes **297 -> 302**, skills **384 -> 388**. **All ten Power Categories are now imported.** |
-| 2026-09-14 | this PR | **`BOOK-INGEST-AUDIT` F82 TAKEN** - `skills.mos.choose` honoured end to end. Code only, no book data; the Educational Levels were blocked on it. Its own table was wrong twice and the outcome note says so. |
-| 2026-09-14 | this PR | **THE ELEVEN EDUCATIONAL LEVELS**, printed 27, as O.C.C.s - D1's O.C.C. half. Each one's `skills.mos` offers the skill programs printed 27's Special Restrictions allow it and `choose` is 2, 3 or 4. Plus the ONE new skill the sixteen programs need (`Radio: Satellite Relay`, skills **388 -> 389**). |
-| 2026-09-14 | this PR | **THE ALIEN'S FIVE EDUCATION PACKAGES**, printed 56, which replace the table on 27 for that Power Category alone. Classes **302 -> 318**. Plus `occ_restrictions` on nine Power Categories, which needed the sixteen ids to exist first. **`BOOK-INGEST-AUDIT` F83 filed.** |
-| 2026-09-14 | this PR | **`BOOK-INGEST-AUDIT` F83 TAKEN** - migration **061**, `skill_system_bases`, and **59** rows: this book prints its own percentage for every skill and 59 of the 68 names it shares with the catalog disagree. A skill the PLAYER picks now arrives at the book's number. Plus two data corrections the extraction turned up - `Locksmith` in ten classes (the book prints TWO lock skills) and `Weapon Systems` in four (50%/+2, not 30%/+5). **`BOOK-INGEST-AUDIT` F84 filed** - a restriction written on the choice GROUP is stored and never read. |
-| 2026-09-14 | this PR | **F83's override table was SHORT, and completing it is this row.** Printed 30-36 re-read with a reader rebuilt from scratch and made to prove itself first: it reproduces all **59** rows already shipped, reaches every one, and contradicts none. **Five skills no pass had read** - `Basic Mechanics`, `Pathology`, `Land Navigation`, `Medical Doctor`, `Impersonation` - plus **the language rule** printed 35 states once for the whole family, 23 rows. Per-system bases **59 -> 87**, applied `--remote` before the merge. The marker is spelled **five** ways on those seven pages and two further heading shapes steal a percentage; all of it is in the data script's header. |
-| 2026-09-14 | this PR | **F83 LEFTOVER CLOSED - the SEVENTEEN named entries, not thirty classes.** `hu-hardware` (14) and `hu-hunter` (3) rewritten from an absolute `base:` to the `bonus:` the book prints, so the figure comes from `skill_system_bases` and cannot go stale. `per_level` dropped from all seventeen, which repaired the three that disagreed. Eleven classes had no named entry at all and the thirteen education classes already stated this book base - implementing the finding as written would have made 323 correct entries wrong. |
+| 2026-09-14 | #1034 | the core's **4 new psionic powers**, printed 128-135, of thirty-three extracted. Psionics **125 -> 129**. Plus a folio repair on **23 super abilities**. |
+| 2026-09-14 | #1035 | **NINE of the ten Power Categories as R.C.C. classes** - Aliens, Bionics, Experiments, Hardware, Magic, Mutants, Physical Training, Psionics, Robotics. Classes **288 -> 297**. Plus the 5 skills Hardware needs (skills **379 -> 384**), and `class-check` taught to look inside a `from` list. Special Training is the tenth and is five separate classes; it follows. |
+| 2026-09-14 | #1036 | **SPECIAL TRAINING, the tenth category, as FIVE classes** - Ancient Master, Hunter/Vigilante, Secret Operative, Stage Magician, Super Sleuth. Classes **297 -> 302**, skills **384 -> 388**. **All ten Power Categories are now imported.** |
+| 2026-09-14 | #1039 | **`BOOK-INGEST-AUDIT` F82 TAKEN** - `skills.mos.choose` honoured end to end. Code only, no book data; the Educational Levels were blocked on it. Its own table was wrong twice and the outcome note says so. |
+| 2026-09-14 | #1040 | **THE ELEVEN EDUCATIONAL LEVELS**, printed 27, as O.C.C.s - D1's O.C.C. half. Each one's `skills.mos` offers the skill programs printed 27's Special Restrictions allow it and `choose` is 2, 3 or 4. Plus the ONE new skill the sixteen programs need (`Radio: Satellite Relay`, skills **388 -> 389**). |
+| 2026-09-14 | #1040 | **THE ALIEN'S FIVE EDUCATION PACKAGES**, printed 56, which replace the table on 27 for that Power Category alone. Classes **302 -> 318**. Plus `occ_restrictions` on nine Power Categories, which needed the sixteen ids to exist first. **`BOOK-INGEST-AUDIT` F83 filed.** |
+| 2026-09-14 | #1041 | **`BOOK-INGEST-AUDIT` F83 TAKEN** - migration **061**, `skill_system_bases`, and **59** rows: this book prints its own percentage for every skill and 59 of the 68 names it shares with the catalog disagree. A skill the PLAYER picks now arrives at the book's number. Plus two data corrections the extraction turned up - `Locksmith` in ten classes (the book prints TWO lock skills) and `Weapon Systems` in four (50%/+2, not 30%/+5). **`BOOK-INGEST-AUDIT` F84 filed** - a restriction written on the choice GROUP is stored and never read. |
+| 2026-09-14 | #1043 | **F83's override table was SHORT, and completing it is this row.** Printed 30-36 re-read with a reader rebuilt from scratch and made to prove itself first: it reproduces all **59** rows already shipped, reaches every one, and contradicts none. **Five skills no pass had read** - `Basic Mechanics`, `Pathology`, `Land Navigation`, `Medical Doctor`, `Impersonation` - plus **the language rule** printed 35 states once for the whole family, 23 rows. Per-system bases **59 -> 87**, applied `--remote` before the merge. The marker is spelled **five** ways on those seven pages and two further heading shapes steal a percentage; all of it is in the data script's header. |
+| 2026-09-14 | #1046 | **F83 LEFTOVER CLOSED - the SEVENTEEN named entries, not thirty classes.** `hu-hardware` (14) and `hu-hunter` (3) rewritten from an absolute `base:` to the `bonus:` the book prints, so the figure comes from `skill_system_bases` and cannot go stale. `per_level` dropped from all seventeen, which repaired the three that disagreed. Eleven classes had no named entry at all and the thirteen education classes already stated this book base - implementing the finding as written would have made 323 correct entries wrong. |
 | 2026-09-18 | [#1153](https://github.com/NateGrey0130/nates-workshop/pull/1153) | **OCR text repair across all three books' super abilities**, `fix-super-ability-ocr-text.sql`: **198 of 364** rows, **41 of this book's 69**. The codex (#1152) was the first reader to show a whole description. Here: every list bullet the scan read as `@` (26 rows), the major-ability roster read onto the end of `Underwater`, four stat columns cut at a blank line, and `Weight Manipulation`'s printed 192 put back in reading order from a render of the page. Applied `--remote` before the merge. |
-| 2026-09-18 | this PR | **The same sweep over this book's spells**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`: two of the core's spells carried a printed page number - `Spontaneous Combustion` ending in `103` and `Sorcerer's Seal` reading "must be 100 completely sealed". **Two super abilities #1153 missed**, in the digit cipher and NOT its mechanical reading: `Animal Abilities`' "4O0ft (12.2m)" and `Growth`'s "5O0lbs per foot" are printed 40ft and 50lbs (175, 184). Applied `--remote` before the merge. |
-| 2026-09-26 | #TBD | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~019-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
+| 2026-09-18 | #1154 | **The same sweep over this book's spells**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`: two of the core's spells carried a printed page number - `Spontaneous Combustion` ending in `103` and `Sorcerer's Seal` reading "must be 100 completely sealed". **Two super abilities #1153 missed**, in the digit cipher and NOT its mechanical reading: `Animal Abilities`' "4O0ft (12.2m)" and `Growth`'s "5O0lbs per foot" are printed 40ft and 50lbs (175, 184). Applied `--remote` before the merge. |
+| 2026-09-18 | #1164 | **notable NPCs** (NPC and bestiary plan, Phase 2a): `add-notable-npcs.sql`, 5 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-26 | #1453 | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~019-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
@@ -670,8 +674,16 @@ subject line is not, and it cannot be corrected now.
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote` has not been run for these slugs —
-run it from here on, now that production rows cite three of the four books.
+`node scripts/source-coverage.mjs --remote` had not been run for these slugs
+when this was written. **Run 2026-09-27**, after F85 (#1075) taught it
+`super_abilities`, every row of all four books is traceable:
+
+```
+  heroes-unlimited-core 986 / 0
+  powers-unlimited-1 179 / 0
+  powers-unlimited-3 125 / 0
+  powers-unlimited-2   4 / 0
+```
 
 **D1 IS BUILT, BOTH HALVES** (2026-09-14). All ten Power Categories in the
 R.C.C. slot, and all sixteen educations in the O.C.C. slot - the eleven
@@ -688,7 +700,9 @@ Mystic Russia batch, and here the finding was.
 Heroes Unlimited gear rows), the two point-budget builders (G7), the Powers
 Unlimited One and Three classes, and `BOOK-INGEST-AUDIT` F83 - a choice
 group took the catalog's percentage where this book prints its own - **taken
-2026-09-14**.
+2026-09-14**. *(Superseded: the equipment chapter was imported 2026-09-14 and
+Powers Unlimited One and Three were closed out 2026-09-15 in #1068; see* **WHAT IS
+ACTUALLY LEFT OF THIS BOOK** *below, which leaves only G7.)*
 
 **F83's leftover is NOT a pass over thirty classes, and the sentence that stood
 here said it was.** Measured against production 2026-09-14, through the real
@@ -858,6 +872,9 @@ true today, with 295 of those books' rows live - because
 read 2026-09-15. A tool blind to the one table those books populate reported
 them as untouched, and three documents repeated it. That is
 `BOOK-INGEST-AUDIT` **F85**, filed 2026-09-14. (PR #1068 cited it as F94, a
-duplicate filed a day later and withdrawn the same day; F85 is the open
+duplicate filed a day later and withdrawn the same day; F85 was then the open
 finding, and it is larger - it also carries a second omitted list and a standing
-phantom -171 in `--vs-build`.)
+phantom -171 in `--vs-build`.) **F85 was taken on 2026-09-15 in #1075**, so the
+blindness above is a record: `source-coverage.mjs --remote` lists
+`super_abilities` among its catalogs, and on 2026-09-27 it printed
+`heroes-unlimited-core 986 / 0`.
