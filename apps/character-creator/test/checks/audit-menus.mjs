@@ -14,8 +14,9 @@
 // What counts as a finding is a heading `## F12 — ...` / `### G7 - ...`: a
 // letter prefix, a number, then a dash. Follow-up headings such as
 // `## F41 is closed, 2026-09-09` name a finding without being one, and the
-// dash is what tells them apart. Measured 2026-09-24: 527 findings across 22
-// menus, no number used twice.
+// dash is what tells them apart. One menu, `apps/pick3cut5/AUDIT.md`, writes
+// `### F1. Title` instead, and until 2026-09-27 its findings were invisible
+// here, so a full stop counts as the separator too.
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -27,7 +28,7 @@ const SECTIONS = ['Audit menus number each finding once'];
 
 // The finding heading. Exported so the check below can be proved against a
 // fixture, and so a future reader of the menus parses the same shape.
-export const FINDING_HEADING = /^#{2,4} ([A-Z]{1,3}\d+)[a-z]? (?:—|-) /gm;
+export const FINDING_HEADING = /^#{2,4} ([A-Z]{1,3}\d+)[a-z]?(?: (?:—|-) |\. )/gm;
 
 // { number: [line, ...] } for one file's text.
 export function findingNumbers(text) {
@@ -63,10 +64,12 @@ export function run() {
       '## F2 is closed, 2026-09-09',
       '#### F3 — a deeper heading',
       '### F2 — the collision',
+      '### F4. the full-stop form pick3cut5 uses',
+      '## F4.5 is not a heading form anyone writes',
     ].join('\n');
     const got = findingNumbers(fixture);
-    check('the finding-heading parser reads both dash forms and skips follow-ups',
-      JSON.stringify(got) === JSON.stringify({ F1: [1], F2: [2, 5], F3: [4] }), JSON.stringify(got));
+    check('the finding-heading parser reads both dash forms and the full stop, and skips follow-ups',
+      JSON.stringify(got) === JSON.stringify({ F1: [1], F2: [2, 5], F3: [4], F4: [6] }), JSON.stringify(got));
   }
 
   const groups = menuGroups();
