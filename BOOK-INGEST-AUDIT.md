@@ -2527,7 +2527,7 @@ summoner, diabolist or witch composes to the race's 2D6, measured the same day.
 The note now says so; the composition is unchanged and is the same open
 question as the Shaman's.
 
-**The Larhold part closed, 2026-09-27 (PR #PRNUM), as a RACE-side key - on
+**The Larhold part closed, 2026-09-27 (PR #1470), as a RACE-side key - on
 Nate's word ("fix the Larhold Shaman with the race-side key").** A new R.C.C.
 key, `yields_to_occupation`, maps `ppe_base` or `starting_money` to the
 occupation groups whose stated figure wins it in a pairing; a race without it,
