@@ -16,6 +16,9 @@
 > **Adjusted 2026-09-19.** The line above stopped being true when `F35` was
 > filed at the foot of this file. Read under each heading for what is open.
 >
+> **Adjusted 2026-09-27.** Nothing is open on this menu again, as of that day,
+> read under every finding's heading by the `open-findings-scout` agent.
+>
 > **Two that misread, in opposite directions.** `F12`, `F16` and `F19` close as
 > **moot** in a retirement table roughly 1,300 lines from their headings, so
 > reading only under the heading reports three open that are not. And `F14` —

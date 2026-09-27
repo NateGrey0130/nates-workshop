@@ -12,6 +12,10 @@ brief at `Downloads\workstation-consolidation-prompt.md`. Findings are `M1`,
 `low`. Nothing here is taken until Nate names it; one PR per finding, outcome
 note appended under the finding in the same PR.
 
+**Status: nothing is open on this menu, as of 2026-09-27**, read under every
+finding's heading by the `open-findings-scout` agent that day. The line below is
+a dated record.
+
 **Status: work was opened on this menu on 2026-09-22.** Status for any finding lives under its
 own heading, and this line deliberately does not count them. `M20` is **closed
 without being taken**, superseded by `M22`; `M22` was filed and taken the same
