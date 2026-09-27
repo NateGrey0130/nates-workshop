@@ -3,8 +3,14 @@
 Three prompts. Run **A** once, then **B** once per book (one session each),
 then **C** when every book is cached and imported.
 
-Books are handed over by dropping the PDFs in `C:\Users\natha\Downloads` and
+Books are handed over by dropping the PDFs in `C:\Users\natha\Projects\workshop\books` and
 naming the exact filenames in prompt A.
+
+*(PDF paths corrected 2026-09-27: the books moved from `Downloads` to
+`C:\Users\natha\Projects\workshop\books` on 2026-09-02, `MACHINE-AUDIT.md` M7, and
+`scripts/books.json` records that folder as every book's `source_pdf_dir`.
+Sessions still start in `Downloads`, which is why the two
+"does not auto-load from Downloads" lines below are unchanged.)*
 
 ---
 
@@ -14,7 +20,7 @@ naming the exact filenames in prompt A.
 > it does not auto-load from Downloads.
 >
 > I'm ingesting a batch of seven Rifts sourcebooks. The PDFs are in
-> `C:\Users\natha\Downloads`:
+> `C:\Users\natha\Projects\workshop\books`:
 >
 > | file | proposed slug | note |
 > |---|---|---|
@@ -74,7 +80,7 @@ naming the exact filenames in prompt A.
 > is already fully imported, so this is a re-verification, not an import.
 >
 > ```
-> python scripts/ocr-book.py "C:\Users\natha\Downloads\Rifts- World Book 10 Juicer Uprising.pdf" --slug ju --force
+> python scripts/ocr-book.py "C:\Users\natha\Projects\workshop\books\Rifts- World Book 10 Juicer Uprising.pdf" --slug ju --force
 > ```
 >
 > `--force` is required and will say what it destroys. The book has a text
