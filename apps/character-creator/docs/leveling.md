@@ -194,7 +194,14 @@ variants:
 A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice`,
 `attribute_requirements`, `attribute_maximums`, the four pool bases (`hit_points_base`, `sdc_base`,
 `mdc_base`, `ppe_base`), `starting_money`, `bonuses`, `skill_overrides`,
-`skills_additional`, `related_skills_count` and `horror_factor`.
+`skills_additional`, `related_skills_count`, `horror_factor` and `xp_table`.
+
+`xp_table` is on that list for an option that levels on its own chart: Rifts
+World Book 29 printed 79 gives the Madhaven Mutant Shaman the Gateway Knight &
+Mutant Shaman column, and the Shaman is a `shaman` variant on each of the eight
+Haven Mutants (`BOOK-INGEST-AUDIT` F108). It replaces the parent's ladder; an
+O.C.C.'s ladder still wins a pairing. A variant still cannot take a skill away,
+so the Shaman's lost Secondary, Piloting and modern W.P. skills stay prose.
 
 `horror_factor` is on that list for classes that print "none normally, N if
 revealed". It was first argued from the Nightbane, which projects none in its

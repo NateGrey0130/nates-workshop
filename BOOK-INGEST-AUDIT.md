@@ -2273,6 +2273,26 @@ one list entry.
 **Ongoing cost:** one more key on a list a test already pins against
 `docs/leveling.md`, so that doc gets one more word. Nothing recurring.
 
+**Taken, 2026-09-27 (PR #1465), as written: `xp_table` only, the removal left
+alone.** Taken through `/take` on Nate's word ("take both now", with F111).
+The premise the finding marked unmeasured holds: the premise auditor traced
+every reader of a class's ladder - six server call sites through
+`_lib/class-loader.js`'s `loadClass` or `composeClass`, three in `app.js`
+through `composeClass` / `applyVariant` - and all nine read the class after
+`applyVariant`; `xpTableFor` is the only reader of `cls.xp_table`. So the
+mechanism is the one list entry (`js/parser.js`), plus `docs/leveling.md`
+naming it, which `documented-counts.mjs` failed on until it did (seen red).
+The data is `~030-f108-shaman-ladders.sql`: the Gateway Knight & Mutant
+Shaman column, copied from `gateway-knight`, on all eight `shaman` variants,
+and the notes sentence that called the ladder prose rewritten. Proved on the
+real parser: a parsed `beast-men` levels at 2,241 at level 2 and its Shaman at
+2,351, through both `applyVariant` and `composeClass`; with the parser change
+stashed the Shaman fell back to 2,241. Posture kept: no check added.
+**Correction to the evidence:** the level-15 figures above (395,920 against
+435,000) are the tops of each level-15 band, not the stored thresholds, which
+are 335,921 and 360,801; the level-2 pair and "a little early all the way up"
+hold.
+
 ### F109 — low — a related-skill category bonus cannot be scoped to part of a category
 
 **Opened 2026-09-25** by the `cwc` import (`apps/character-creator/docs/surveys/cwc.md`).
