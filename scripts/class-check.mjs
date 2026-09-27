@@ -220,7 +220,10 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
   const LOST_TO_RACE = ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',
     'ppe_base', 'starting_money', 'horror_factor', 'second_form'];
   if (data?.category === 'occ' && data?.supersedes_race !== true) {
-    const stated = LOST_TO_RACE.filter((k) => data?.[k] != null);
+    // A key the occupation takes over through `overrides_race` (F111) is not
+    // discarded, so it is not named.
+    const taken = Array.isArray(data?.overrides_race) ? data.overrides_race : [];
+    const stated = LOST_TO_RACE.filter((k) => data?.[k] != null && !taken.includes(k));
     if (stated.length) {
       warnings.push(stated.length + ' field(s) a racial class would discard - '
         + stated.join(', ') + '. Taken with a race that states its own,'

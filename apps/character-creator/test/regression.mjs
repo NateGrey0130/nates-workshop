@@ -4859,13 +4859,73 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   for (const occ of plain.slice(0, 25)) {
     for (const r of races.slice(0, 12)) {
       const c = combineClasses(r, occ);
-      for (const k of ['mdc_base', 'ppe_base', 'sdc_base']) {
+      // A key the occupation opts into through `overrides_race` (F111) is its
+      // own by declaration and is checked in the block below, not here.
+      const taken = Array.isArray(occ.overrides_race) ? occ.overrides_race : [];
+      // starting_money joined this list with F111, the second key an
+      // occupation may now opt into, so its race-first default is asserted too.
+      for (const k of ['mdc_base', 'ppe_base', 'sdc_base', 'starting_money']) {
+        if (taken.includes(k)) continue;
         if (r[k] != null && c[k] !== r[k]) drifted.push(`${r.id}+${occ.id}: ${k}`);
       }
     }
   }
   check('and an occupation without the flag still loses its pools to the race',
     drifted.length === 0, drifted.slice(0, 5).join('; '));
+}
+
+// ---------- an occupation that takes its P.P.E. or money over the race ----------
+// BOOK-INGEST-AUDIT.md F111, taken 2026-09-27 as an OPT-IN per occupation on
+// Nate's word, not as the global rule it proposed: a census of every legal
+// published pairing found that rule would move ~9,390 pairings' P.P.E. (2,451
+// of them down) and ~6,048 pairings' money. `overrides_race` lists which of
+// ppe_base and starting_money the occupation takes over.
+{
+  const classes = (await api('GET', '/classes?limit=200')).body.classes || [];
+  const byId = new Map(classes.map((c) => [c.id, c]));
+  const races = classes.filter((c) => c.category === 'rcc');
+  const takers = classes.filter((c) => c.overrides_race != null);
+
+  // PINNED BY NAME, because the key reaches every race the occupation can be
+  // taken with: adding it to an occupation open to all races (the Larhold
+  // Shaman, which F111 names) moves some 200 pairings, the ADD and own-figure
+  // races among them. That should be a decision someone makes, so it fails here.
+  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter'];
+  const got = takers.map((c) => c.id).sort();
+  check('the occupations declaring overrides_race are the pinned ones',
+    JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
+
+  // Each taker composes to its OWN value for every listed key, with every race
+  // it can be taken with; every key it does not list stays the race's.
+  const wrong = [];
+  for (const occ of takers) {
+    const only = occ.race_restrictions?.only;
+    const with_ = Array.isArray(only) ? races.filter((r) => only.includes(r.id)) : races;
+    for (const r of with_) {
+      const c = combineClasses(r, occ);
+      for (const k of ['ppe_base', 'starting_money']) {
+        const listed = occ.overrides_race.includes(k);
+        const expect = listed && occ[k] != null ? occ[k] : (r[k] ?? occ[k]);
+        if (c[k] !== expect) wrong.push(`${r.id}+${occ.id}: ${k} ${c[k]} (want ${expect})`);
+      }
+    }
+  }
+  check('and each composes to its own figure for the keys it lists, and only those',
+    takers.length > 0 && wrong.length === 0, wrong.slice(0, 5).join('; '));
+
+  // The two production pairings, against the stored figures the book prints:
+  // South America 2 printed 74 (2D4x1000) and 76 (2D6x1000) over the Arkhon
+  // R.C.C.'s 1D6x1000 (printed 73).
+  const arkhon = byId.get('arkhon');
+  const hunter = byId.get('arkhon-spectral-hunter');
+  const esp = byId.get('arkhon-esp-specialist');
+  check('an Arkhon Spectral Hunter starts with its own 2D4x1000, not the race\'s 1D6x1000',
+    !!(arkhon && hunter) && arkhon.starting_money === '1d6x1000'
+    && combineClasses(arkhon, hunter).starting_money === '2d4x1000',
+    arkhon && hunter ? String(combineClasses(arkhon, hunter).starting_money) : 'class missing');
+  check('and an Arkhon ESP Specialist with its own 2D6x1000',
+    !!(arkhon && esp) && combineClasses(arkhon, esp).starting_money === '2d6x1000',
+    arkhon && esp ? String(combineClasses(arkhon, esp).starting_money) : 'class missing');
 }
 
 // ---------- a pool formula copied from its neighbour ----------

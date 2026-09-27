@@ -59,6 +59,10 @@ export const KNOWN_KEYS = new Set([
   // occupation's pools and skills and the HIGHER of the two attribute dice.
   // BOOK-INGEST-AUDIT.md F11.
   'supersedes_race',
+  // The narrow opt-in beside it: which of ppe_base and starting_money an O.C.C.
+  // takes over from a race that states its own. Read by combineClasses.
+  // BOOK-INGEST-AUDIT.md F111.
+  'overrides_race',
   // A class whose own attacks stand and whose Hand to Hand style adds none -
   // the Pneuma-Biforms' "do not add the melee round attacks from the hand to
   // hand combat skill". Read by bonusesFromSkills, carried by combineClasses.

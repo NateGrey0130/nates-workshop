@@ -7520,6 +7520,53 @@ skills:
   })());
 }
 
+section('An occupation may take its P.P.E. or money over the race (BOOK-INGEST-AUDIT F111)');
+{
+  // F111 was taken as an OPT-IN per occupation, not the global rule it
+  // proposed: a census found that rule would move ~9,390 pairings' P.P.E. and
+  // ~6,048 pairings' money. So the list is closed, it is read key by key, and
+  // an occupation without it composes exactly as it always did.
+  const doc = (cat, extra) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n` + extra + '---\n\n## Lore\n\nx\n');
+  const pools = 'ppe_base: "3d6x10"\nstarting_money: "2d6x1000"\nsdc_base: "30"\n';
+  const only = 'race_restrictions: { only: ["r"] }\n';
+  const both = doc('occ', pools + only + 'overrides_race: [ppe_base, starting_money]\n');
+  check('overrides_race parses on an O.C.C. as a list of keys',
+    both.ok && JSON.stringify(both.data.overrides_race) === '["ppe_base","starting_money"]'
+    && both.warnings.length === 0, both.errors.concat(both.warnings).join('; '));
+  check('and refuses any key but ppe_base and starting_money',
+    !doc('occ', pools + only + 'overrides_race: [sdc_base]\n').ok
+    && !doc('occ', pools + only + 'overrides_race: [ppe_base, mdc_base]\n').ok);
+  check('and refuses a bare value, an empty list or a key named twice',
+    !doc('occ', pools + only + 'overrides_race: ppe_base\n').ok
+    && !doc('occ', pools + only + 'overrides_race: []\n').ok
+    && !doc('occ', pools + only + 'overrides_race: [ppe_base, ppe_base]\n').ok);
+  check('and warns on a race, where it does nothing', (() => {
+    const r = doc('rcc', pools + 'overrides_race: [ppe_base]\n');
+    return r.ok && r.warnings.some((w) => /overrides_race is set on something that is not an O\.C\.C\./.test(w));
+  })());
+  // The census is why: an occupation open to every race replaces every race's
+  // figure, the ones whose book ADDS its P.P.E. to a mage's included.
+  check('and warns when the occupation is open to every race', (() => {
+    const r = doc('occ', pools + 'overrides_race: [ppe_base]\n');
+    return r.ok && r.warnings.some((w) => /not limited by race_restrictions\.only/.test(w));
+  })());
+
+  const race = { id: 'r', category: 'rcc', ppe_base: '3d6', starting_money: '1d6x1000', sdc_base: '10' };
+  const occOf = (list) => doc('occ', pools + only + (list ? `overrides_race: [${list}]\n` : '')).data;
+  const none = combineClasses(race, occOf(null));
+  check('without the list the race still wins P.P.E., money and S.D.C.',
+    none.ppe_base === '3d6' && none.starting_money === '1d6x1000' && none.sdc_base === '10');
+  const money = combineClasses(race, occOf('starting_money'));
+  check('a listed key takes the occupation\'s value, and only that key',
+    money.starting_money === '2d6x1000' && money.ppe_base === '3d6' && money.sdc_base === '10');
+  const ppe = combineClasses(race, occOf('ppe_base, starting_money'));
+  check('both listed: both are the occupation\'s, the body keys still the race\'s',
+    ppe.ppe_base === '3d6x10' && ppe.starting_money === '2d6x1000' && ppe.sdc_base === '10');
+  check('and a listed key the occupation does not state leaves the race\'s',
+    combineClasses(race, doc('occ', 'sdc_base: "30"\n' + only + 'overrides_race: [ppe_base]\n').data).ppe_base === '3d6');
+}
+
 // The four Nightbane second-body sections used to be written out here. They
 // live in checks/second-body.mjs now and are CALLED here rather than at the
 // bottom with the other modules, so the suite still announces its 164 sections

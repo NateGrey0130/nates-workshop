@@ -182,6 +182,7 @@ pool bases as before — none of them knows a character can have two classes.
 | | comes from |
 |---|---|
 | attribute dice, pool formulas | the **race** |
+| `ppe_base`, `starting_money` listed in the occupation's `overrides_race` | the **occupation's** when it states one (see below) |
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
@@ -212,6 +213,26 @@ Four rules earned by getting them wrong first:
 - **The audit and the stage-change endpoint compose too.** Judging a Chiang-Ku
   Wizard against the dragon alone reports every skill its occupation grants as a
   violation.
+
+### An occupation may take its P.P.E. or money over the race's
+
+`overrides_race: [ppe_base, starting_money]` on an O.C.C. names which of those
+two keys the occupation takes over from a race that states its own
+(BOOK-INGEST-AUDIT.md F111). Nothing else changes: every other key stays
+race-first, and an occupation without the list composes as the table says. The
+parser refuses any other key, warns when it is set on a race, and warns when the
+occupation is not limited by `race_restrictions.only` - because then it
+replaces the figure of every race it can be taken with.
+
+It is **opt-in per occupation, not a rule**, on Nate's word (2026-09-27). F111
+proposed that an occupation's money always win and a magic occupation's P.P.E.
+win; a census of every legal published pairing found that would move about
+9,390 pairings' P.P.E. - 2,451 of them downward, a Phoenixi mage losing its
+3D4x100 - and about 6,048 pairings' money, including races whose book prints
+none. It would also break the races whose P.P.E. ADDS to a mage's
+(`rifts-cyclops`, `rifts-elf`) or prints its own mage figure (`godling`,
+`true-inca`, `draconid`). The Arkhon Spectral Hunter and ESP Specialist carry
+`[starting_money]`: both are Arkhon-only, and the book prints their own money.
 
 ### A class may supersede its race
 
