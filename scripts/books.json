@@ -142,7 +142,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": 159,
       "page_offset": 1,
-      "note": "As of 2026-09-09 production held 13 published classes citing this book, and no catalog rows. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
+      "note": "As of 2026-09-26 production held 13 notable_npcs rows citing this book and no class; the 13 classes a 2026-09-09 note counted were prose mentions, not source_book citations. Surveyed 2026-09-26: docs/surveys/fom.md. Its cache stopped at file p073 - printed 72, mid-word and mid-class - until the resume fix in F2 read the remaining 88 pages off the source PDF; it now holds all 161."
     },
 
     "free-quebec": {
