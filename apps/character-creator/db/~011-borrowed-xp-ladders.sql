@@ -3,14 +3,14 @@
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~010-borrowed-xp-ladders.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~011-borrowed-xp-ladders.sql
 --
 -- THE DECISIONS. An R.C.C. may carry the ladder its book prints for it (Nate,
 -- 2026-09-17, docs/surveys/nightbane-core.md), and an O.C.C.'s ladder wins a
 -- pairing. And a class whose book says "use X's experience table" copies X's
 -- ladder (Nate, 2026-09-26): Atlantis's practice, which replaces the own-book-only
--- rule the Coalition War Campaign import followed. ~009-own-book-xp-ladders.sql
--- and ~010-borrowed-xp-ladders.sql are one change in two files, split only so
+-- rule the Coalition War Campaign import followed. ~010-own-book-xp-ladders.sql
+-- and ~011-borrowed-xp-ladders.sql are one change in two files, split only so
 -- each file's read-backs stay short: d1-apply re-runs them as ONE command line,
 -- and Windows refused the single file's 5,900 characters of SELECTs.
 --
@@ -268,4 +268,4 @@ SELECT 'no note still says one of these ladders is not stored' AS assertion, cou
         OR instr(markdown, 'Man-Wolf pointer resolves') > 0);
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~010-borrowed-xp-ladders.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~011-borrowed-xp-ladders.sql');
