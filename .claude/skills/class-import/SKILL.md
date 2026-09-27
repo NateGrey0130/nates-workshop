@@ -104,9 +104,13 @@ measured the same PR-shaped import costing 2–7× more late in a marathon
 session than early, purely from re-carried context. The durable state lives in
 `apps/character-creator/docs/surveys/<slug>.md` (see the `book-survey` skill).
 It is tracked, so **the ledger line goes in the same PR as the work it
-describes** — append it before you open the PR rather than after it merges, and
-say what went in, the catalog total it moved, and that the data was applied
-`--remote` first. Then **start a fresh session every 2–4 PRs**, booted from that
+describes**, written before you open the PR. **Its PR column holds the
+branch name** (`pal/data/<slug>-<what>`), never `#TBD` and never a later
+commit to fill in a number: the number does not exist until `gh pr create`,
+and `gh pr list --state all --head <branch>` finds it from the branch. Rows
+before 2026-09-27 carry `#N`, or a `#TBD` filled in by a second commit. That
+was the old convention, and it is not a precedent to copy. Say what went in,
+the catalog total it moved, and that the data was applied `--remote` first. Then **start a fresh session every 2–4 PRs**, booted from that
 file plus `git log --oneline -15`. If the next class needs something a previous
 conversation knew and the file does not hold, that is a gap in the file — write
 it down there, not a reason to keep the session alive.

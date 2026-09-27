@@ -40,8 +40,11 @@ so no glob for that word will find it.
    premise audit from *Taking a finding is also AUDITING the finding* below,
    in that order, and creates the branch last. It adds no rule to this file.
 3. **One PR per finding.** Not two in a PR, not one across two.
-4. A dated outcome note — `**Taken, <date> (PR #N)**` — appended under the
-   finding **in the same PR**, including whatever you found that contradicts it.
+4. A dated outcome note — `**Taken, <date> (branch <name>)**` — appended under
+   the finding **in the same PR**, including whatever you found that contradicts
+   it. The branch, not `PR #N`: the number does not exist when the note is
+   written, and a second commit to fill it in is the cost this avoids.
+   `gh pr list --state all --head <name>` finds the PR.
 5. **Correct every class note that cites the finding, in the same PR.** A
    class's `extraction_notes` records both what the book prints and what the app
    could do that day; taking a finding falsifies the second half wherever it was

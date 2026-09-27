@@ -121,14 +121,16 @@ What is deliberately left, with the reason for each:
 
 ## Ledger
 
-One line per shipped PR, appended when it merges. `class-import` §"A batch
-outlives the session on purpose" is what asks for it, and this is the file a
-fresh session boots from every 2–4 PRs.
+One line per PR, written in that PR before it opens. The second column is the
+PR's **branch**, which exists before the PR does; `gh pr list --state all
+--head <branch>` gives the number. No `#TBD`, no fill-in commit. `class-import`
+§"A batch outlives the session on purpose" is what asks for it, and this is the
+file a fresh session boots from every 2–4 PRs.
 
-| date | PR | what went in |
+| date | branch | what went in |
 |---|---|---|
 | 2026-08-27 | — | cache built (161 pp), survey written, offset 0 verified |
-| 2026-08-27 | [#352](https://github.com/NateGrey0130/nates-workshop/pull/352) | `ww` registered in `books.json`; 3 skills (336 total); 37 prayers at level 0 (607 spells). Applied `--remote` before the PR. MERGED. |
+| 2026-08-27 | `pal/data/ww-register-and-prayers` | `ww` registered in `books.json`; 3 skills (336 total); 37 prayers at level 0 (607 spells). Applied `--remote` before the PR. |
 
 <The two lines above are `ww`'s real first two, kept as the worked example.
 Replace them. A ledger line says what went in, the running catalog total it
