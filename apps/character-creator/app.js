@@ -3993,9 +3993,37 @@ function psiRollHtml() {
 // sorting the combined list files those into their proper groups instead of
 // leaving them dangling at the end. With a header per group, the per-row
 // "L3 ·" / "Healing ·" prefix is redundant and gone.
-function spellGroupRows(list, count, kind = 'spell', gi = null) {
+//
+// A TRADITION'S SPELLS FOLD UNDER THEIR OWN HEADING (js/traditions.js), below
+// the general invocations. A pool only ever holds the traditions this class may
+// reach, so each fold is the class's own and starts OPEN - Nate's call on
+// 2026-09-26, where the codex's start closed. It can be closed, except while the
+// filter has text or the fold holds a ticked spell: typing must reach
+// everything, and a pick must never be out of sight - the rule the skill
+// categories fold by (UI-AUDIT F43). `query` is the filter the list was cut by.
+function spellGroupRows(list, count, kind = 'spell', gi = null, query = '') {
   const sorted = [...list].sort((a, b) =>
     ((a.level ?? Infinity) - (b.level ?? Infinity)) || (a.name || '').localeCompare(b.name || ''));
+  const { general, traditions } = SpellTraditions.partition(sorted);
+  if (!traditions.length) return spellLevelRows(general, count, kind, gi);
+  const sel = powerList(kind, gi);
+  const typed = !!String(query || '').trim();
+  const folds = traditions.map((t) => {
+    const uiKey = `spell-trad:${kind}:${gi ?? ''}:${t.id}`;
+    const forced = typed || t.rows.some((sp) => sel.includes(sp.name));
+    const open = forced || S.groupUi?.[uiKey]?.open !== false;
+    const label = `${esc(t.label)}<span class="pick-group-n">${t.rows.length}</span>`;
+    const head = forced
+      ? `<div class="pick-group pick-trad">${label}</div>`
+      : `<button type="button" class="pick-group pg-toggle pick-trad" aria-expanded="${open}"
+          onclick="groupUi('${escJs(uiKey)}', 'open', ${!open})">${label}</button>`;
+    return head + (open ? `<div class="pick-trad-body">${spellLevelRows(t.rows, count, kind, gi)}</div>` : '');
+  }).join('');
+  return spellLevelRows(general, count, kind, gi)
+    + `<p class="pick-band">Tradition spells <span class="muted">— your class's own</span></p>` + folds;
+}
+
+function spellLevelRows(sorted, count, kind, gi) {
   const sizes = sorted.reduce((m, x) => { const g = x.level != null ? `Level ${x.level}` : 'Unleveled';
     return m.set(g, (m.get(g) || 0) + 1); }, new Map());
   let last = null;
@@ -4334,7 +4362,7 @@ function startingSpellHtml() {
       + Picker.inputHtml({ id: many ? `spell-filter-${gi}` : 'spell-filter', value: S.spellFilter,
           placeholder: 'Filter spells…',
           shown: Picker.filter(pool, S.spellFilter).length, total: pool.length })
-      + spellGroupRows(list, g.count, kind, idx);
+      + spellGroupRows(list, g.count, kind, idx, S.spellFilter);
   }).join('');
 
   const one = groups[0];

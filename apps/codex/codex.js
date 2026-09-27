@@ -45,7 +45,8 @@ const SECTIONS = [
                    ['Casting time', r.casting_time]],
     notes: (r) => [r.ppe_note && `Cost varies — ${r.ppe_note}`,
                    r.variant_note && `An earlier book prints: ${r.variant_note}`],
-    hay: (r) => `${r.name} ${r.source_book || ''}`,
+    // The tradition's name too, so "warlock" or "ocean" finds the fold.
+    hay: (r) => `${r.name} ${r.source_book || ''} ${r.tradition ? SpellTraditions.label(r.tradition) : ''}`,
   },
   {
     id: 'psionics',
@@ -328,6 +329,8 @@ const S = {
   holdings: null,       // me/holdings: { holds: {section: {key: [ids]}}, byId }
   focus: null,          // "<section>:<key>" a link named - scrolled to and marked
   missing: null,        // the key a link named that this section does not hold
+  folds: new Set(),     // spell tradition folds opened by hand: "air" or "warlock/air"
+  traditionClasses: {}, // tradition slug -> the class names that can learn it
 };
 
 const $ = (id) => document.getElementById(id);
@@ -450,6 +453,7 @@ async function loadSection(id) {
   try {
     const res = await api('codex?section=' + encodeURIComponent(id));
     S.rows[id] = res[id] || [];
+    if (res.traditions) S.traditionClasses = res.traditions;
     delete S.error[id];
   } catch (err) {
     S.error[id] = err.message;
@@ -687,6 +691,66 @@ function entry(sec, r) {
   </div>`;
 }
 
+// ── spell traditions ──
+//
+// General invocations keep the main list; each tradition folds under a heading
+// of its own, closed until opened (js/traditions.js has why). A fold opens by
+// itself in two cases, and cannot be closed while either holds: the filter has
+// text and the fold holds a match - typing must still reach everything - or a
+// link named a row inside it, which has to be on screen. A spell one of your
+// characters holds does NOT open it: a Warlock's twenty would pin its fold open
+// for good, so the heading counts them instead.
+//
+// Inside a fold the rows take level headings when the sort is the catalog's
+// own, which is by level; under any other sort a heading would split the order
+// the reader asked for.
+function spellListHtml(sec, rows) {
+  const { general, traditions } = SpellTraditions.partition(rows);
+  if (!traditions.length) return general.map((r) => entry(sec, r)).join('');
+  const typed = !!S.filter.trim();
+  const keyOf = (r) => sec.id + ':' + sec.key(r);
+
+  const leveled = (list) => {
+    if (S.sort) return list.map((r) => entry(sec, r)).join('');
+    let last;
+    return list.map((r) => {
+      const lvl = r.level != null ? `Level ${r.level}` : 'Unleveled';
+      const head = lvl !== last ? `<div class="codex-lvl">${escHtml(lvl)}</div>` : '';
+      last = lvl;
+      return head + entry(sec, r);
+    }).join('');
+  };
+
+  const fold = (key, name, list, who, families, inner) => {
+    const forced = typed || (!!S.focus && list.some((r) => keyOf(r) === S.focus));
+    const open = forced || S.folds.has(key);
+    const mine = list.filter((r) => heldBy(sec, r).length).length;
+    const count = `${list.length} ${typed ? (list.length === 1 ? 'match' : 'matches')
+      : (list.length === 1 ? 'spell' : 'spells')}`;
+    const inside = `<span class="codex-fold-name">${escHtml(name)}${mine
+        ? ` <span class="tag codex-yours">${mine} yours</span>` : ''}</span>
+      <span class="codex-fold-n">${count}</span>
+      ${who != null ? `<span class="codex-fold-who">${who.length
+        ? `Only for: ${escHtml(who.join(', '))}` : 'No published class learns these yet'}</span>` : ''}`;
+    const cls = `codex-fold${inner ? ' inner' : ''}`;
+    const head = forced
+      ? `<div class="${cls} forced">${inside}</div>`
+      : `<button type="button" class="${cls}" data-fold="${escHtml(key)}" aria-expanded="${open}">${inside}</button>`;
+    if (!open) return head;
+    const body = families
+      ? families.map((f) => fold(`${key}/${f.id}`, f.label, f.rows, null, null, true)).join('')
+      : leveled(list);
+    return head + `<div class="codex-fold-body">${body}</div>`;
+  };
+
+  return (general.length ? `<div class="codex-band"><h2>General spells</h2>
+        <span>Any caster whose class allows the level · ${general.length}</span></div>`
+        + general.map((r) => entry(sec, r)).join('') : '')
+    + `<div class="codex-band"><h2>Tradition spells</h2>
+        <span>Only for the classes named under each heading · ${rows.length - general.length}</span></div>`
+    + traditions.map((t) => fold(t.id, t.label, t.rows, S.traditionClasses[t.id] || [], t.families, false)).join('');
+}
+
 function tabsHtml() {
   return `<div class="tabbar codex-tabs">
     ${SECTIONS.map((s) => {
@@ -736,8 +800,9 @@ function listHtml(sec) {
     ${S.missing ? `<p class="err small">The link asked for “${escHtml(S.missing)}”, and ${
       escHtml(sec.label)} has no entry by that name. It may have been renamed or merged — try the filter.</p>` : ''}
     <div class="panel codex-list" id="codex-list">
-      ${shown.length ? shown.map((r) => entry(sec, r)).join('')
-        : '<p class="muted small">Nothing matches that.</p>'}
+      ${!shown.length ? '<p class="muted small">Nothing matches that.</p>'
+        : sec.id === 'spells' ? spellListHtml(sec, shown)
+        : shown.map((r) => entry(sec, r)).join('')}
     </div>`;
 }
 
@@ -779,6 +844,15 @@ document.addEventListener('click', (e) => {
     const done = (msg) => { copy.textContent = msg; setTimeout(() => { copy.textContent = 'Copy link'; }, 1500); };
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => done('Copied'), () => done('Copy failed'));
     else done('Copy failed');
+    return;
+  }
+
+  const fold = e.target.closest('button.codex-fold');
+  if (fold) {
+    const k = fold.dataset.fold;
+    if (S.folds.has(k)) S.folds.delete(k); else S.folds.add(k);
+    S.filterFocused = false;
+    render();
     return;
   }
 

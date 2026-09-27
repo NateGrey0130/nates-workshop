@@ -86,6 +86,39 @@ function loreExcerpt(text, max = 700) {
   return (stop > max * 0.6 ? cut.slice(0, stop + 1) : cut.replace(/\s+\S*$/, '')) + ' …';
 }
 
+// WHICH CLASSES CAN LEARN FROM EACH SPELL TRADITION, as { slug: [class names] }.
+//
+// Two ways in, and reading only the first would leave most traditions saying
+// nobody can learn them. A class states `magic.spell_traditions_allowed` when a
+// LEVEL-GATED pick may reach a tradition (BOOK-INGEST-AUDIT F57) - the Ocean
+// Wizard, the Tattooed Man. But the Warlocks, the Necromancer and the shamans
+// NAME their spells instead, in whichever of the magic block's list shapes the
+// book suited: a starting `from`, a schedule entry's `from`, `spell_lists`,
+// `spells_per_level_from`, spells granted outright. So every string anywhere in
+// the block is compared with the tradition spells' names, which covers each
+// shape and the next one someone adds. A string that is not a spell name - a
+// note, a level rule - matches nothing and costs nothing.
+function traditionClasses(spells, classes) {
+  const tradOf = new Map();
+  for (const s of spells) if (s.tradition) tradOf.set(String(s.name).toLowerCase(), String(s.tradition).toLowerCase());
+  const out = {};
+  const add = (t, name) => { (out[t] ||= new Set()).add(name); };
+  const walk = (v, hit) => {
+    if (typeof v === 'string') { const t = tradOf.get(v.trim().toLowerCase()); if (t) hit(t); }
+    else if (Array.isArray(v)) v.forEach((x) => walk(x, hit));
+    else if (v && typeof v === 'object') Object.values(v).forEach((x) => walk(x, hit));
+  };
+  for (const c of classes) {
+    const magic = c.magic;
+    if (!magic || typeof magic !== 'object') continue;
+    const allowed = Array.isArray(magic.spell_traditions_allowed) ? magic.spell_traditions_allowed : [];
+    for (const t of allowed) if (typeof t === 'string' && t.trim()) add(t.trim().toLowerCase(), c.name);
+    walk(magic, (t) => add(t, c.name));
+  }
+  return Object.fromEntries(Object.entries(out).map(([t, names]) =>
+    [t, [...names].sort((a, b) => a.localeCompare(b))]));
+}
+
 // The whole printed entry, not the trimmed projection `catalogs` sends: a codex
 // that omitted range or duration would send you back to the book, which is the
 // errand it exists to save. `variant_note` rides along because an older book's
@@ -131,13 +164,20 @@ const SECTIONS = {
     ).all()).results,
   }),
 
-  spells: async (env) => ({
-    spells: (await env.DB.prepare(
+  // `tradition` folds a tradition's spells under a heading of their own (the
+  // codex page's traditions.js; this route does not load it), and `traditions` names, per
+  // tradition, the published classes that can learn from it - which is what
+  // that heading says under its name.
+  spells: async (env) => {
+    const spells = (await env.DB.prepare(
       `SELECT name, level, ppe, ppe_note, variant_note, range, duration, damage,
-              saving_throw, area_of_effect, casting_time, description, system, source_book
+              saving_throw, area_of_effect, casting_time, description, system, source_book,
+              tradition
        FROM spells ORDER BY level, name`
-    ).all()).results,
-  }),
+    ).all()).results;
+    const { classes } = await loadPublished(env);
+    return { spells, traditions: traditionClasses(spells, classes) };
+  },
 
   psionics: async (env) => ({
     psionics: (await env.DB.prepare(
