@@ -1,8 +1,8 @@
 # Powers Unlimited Two — survey
 
-**Status:** `excluded` — D0 in heroes-unlimited-core.md excludes it; that is where to look before reopening it. (2026-09-24)
+**Status:** `excluded` — D0 in heroes-unlimited-core.md excludes its twelve power categories; that is where to look before reopening them. Its four New Super Abilities are the one carve-out and are imported. (2026-09-26)
 
-**Rows citing this book:** none
+**Rows citing this book:** super_abilities 4
 
 Slug `powers-unlimited-2`. Cached 2026-09-12 from `97891933-Powers-Unlimited-2.pdf`,
 98 PDF pages, **a scan (no text layer)**, OCR at 300 dpi, psm 3.
@@ -34,7 +34,7 @@ taken from the sections themselves rather than from the contents.
 |---|---|---|
 | **7** | *Random Power Category Table* | **twenty** power categories by percentile, and which are new |
 | **4-5** | *Contents*, two pages | the section roster with page numbers |
-| **94-95** | *New Super Abilities* | two new major abilities, by Kevin Siembieda |
+| **94-95** | *New Super Abilities* | four new abilities, two major and two minor, by Kevin Siembieda |
 | **96** | *Hero Character Sheet* | a blank record sheet |
 
 ### The Random Power Category Table is the most important page in the book
@@ -77,15 +77,18 @@ Counted by structure over all 98 cached pages.
 | **Supersoldier** | 76-86 | an EXPANSION of an existing option, plus three alternative types and equipment |
 | **Symbiotic Superhuman** | 86-89 | |
 | **Ancient Weapons Master** | 90-93 | weapon expertise trees |
-| New Super Abilities | 94-95 | **2** |
+| New Super Abilities | 94-95 | **4** - Directed Force and Super Power Punch (major), Sidestep and Spit Spikes (minor) |
 | Hero Character Sheet | 96 | |
 
 **Twelve new power categories** (thirteen entries if the four Gestalt sub-types
-are counted separately, sixteen), plus **two** new major super abilities.
+are counted separately, sixteen), plus **four** new super abilities, two major
+and two minor. *(This line said two new major abilities until 2026-09-26: the
+two minors sit at the foot of printed 95's right-hand column and were read
+past. Both pages were rendered for the import.)*
 
 ### What this book has ZERO of
 
-- **Almost no new super abilities** — **2**, against PU1's 170 and PU3's 125.
+- **Almost no new super abilities** — **4**, against PU1's 170 and PU3's 125.
   Its categories draw their powers from other books' rosters.
 - **No spells**, no spell lists.
 - **No psionic power descriptions** — it has a Psychic Human Gestalt that USES
@@ -93,7 +96,7 @@ are counted separately, sixteen), plus **two** new major super abilities.
 - **No skills or skill programs of its own.**
 
 **So its entire value is the twelve categories.** A survey that treated this
-book as "more super abilities" would have imported two rows and missed the book.
+book as "more super abilities" would have imported four rows and missed the book.
 
 ## Catalog diff
 
@@ -104,8 +107,13 @@ Power Category occupies the R.C.C. slot, so the comparable catalog rows are
 yet. There is nothing to diff against, and creating the first ten from the
 Revised core has to happen before a supplement's categories mean anything.
 
-The two new super abilities are blocked on **D3** like every other ability in
-this batch.
+The new super abilities were blocked on **D3** like every other ability in this
+batch, and then on D0. **Both are past:** D3 built `super_abilities` (#1025),
+and on 2026-09-26 Nate carved the New Super Abilities section out of D0, since
+its four entries are self-contained - no HU2 page citation, no P.P.E. - and
+have the shape of Powers Unlimited One's and Three's rows. They were diffed
+`--remote` against all 364 rows (no match) and imported by
+`~019-pu2-new-super-abilities.sql`. The twelve categories stay excluded.
 
 ## Edition coupling, measured
 
@@ -157,8 +165,9 @@ substance. The citation argument above is the one that actually decides it.
 
 ## Extraction plan
 
-**Nothing, under D0's answer.** This book is excluded — see
-`heroes-unlimited-core.md` for the reasoning and for what would reopen it.
+**Nothing more, under D0's answer.** The book's categories are excluded — see
+`heroes-unlimited-core.md` for the reasoning and for what would reopen them.
+The four New Super Abilities, D0's one carve-out, are in.
 
 If an HU2 core is ever acquired, this book becomes the most valuable of the
 three, because it is the only one of the four that adds new **character types**
@@ -171,8 +180,10 @@ registry entry rather than discarding them.
 |---|---|---|
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached, registered in `books.json`, offset +1 verified |
 | 2026-09-13 | — | surveyed in full; excluded by D0. **No data.** |
+| 2026-09-26 | #TBD | **D0's carve-out**: the four New Super Abilities (printed 94-95) into `super_abilities`, `~019-pu2-new-super-abilities.sql` - Directed Force and Super Power Punch (major), Sidestep and Spit Spikes (minor). The survey had counted two; the page prints four. Super abilities **364 -> 368**. Both pages rendered; OCR slips and Directed Force's column interleave fixed against the render. `--remote` is applied before the merge. |
 
 ### What remains
 
-Nothing is planned. `node scripts/source-coverage.mjs --remote` reports nothing
-for this slug and is expected to keep doing so.
+Nothing is planned. `node scripts/source-coverage.mjs --remote` reports the
+four super abilities for this slug once the carve-out is applied, and nothing
+else is expected.

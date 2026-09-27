@@ -132,7 +132,7 @@ hand-checked where they disagreed.
 | Pirate | 47-48 | Pirate & Lizard Man | `pirate` | Hand to Hand swap by alignment is a choice plus prose |
 | Voodoo Priest | 51-53 | Voodoo / Jungle Elf / Totem | `voodoo-priest` | its own spell ladder; loa commune and control are abilities, not spells |
 | Biomancer | 61-64 | Biomancer | `biomancer` | Biomancy tradition plus the named common spells (printed 68). Create Bio-Weapons is an ability |
-| Atlantean Monster Hunter | 99-101 | same as Undead Slayer | `atlantean-monster-hunter` | a Tattooed Man. Monster-Shaping Tattoos are a SYSTEM (cost scales by the target's M.D.C. tier), not a list of named tattoos, and its other tattoos are picked by category from Rifts Atlantis. Race limited to True Atlantean, human, ogre, Chiang-Ku |
+| Atlantean Monster Hunter | 99-101 | same as Undead Slayer | `atlantean-monster-hunter` | a Tattooed Man. Monster-Shaping Tattoos are a SYSTEM (cost scales by the target's M.D.C. tier), not a list of named tattoos, and its other tattoos are picked by category from Rifts Atlantis - granted as Atlantis's tattoo spells since `~022-monster-hunter-tattoos.sql`. Race limited to True Atlantean, human, ogre, Chiang-Ku |
 | Tribal Shaman | 145-146 | same as Mystic | `tribal-shaman` | spell ladder and two percentile rituals |
 | Totem Warrior | 146-147 | Voodoo / Jungle Elf / Totem | `totem-warrior-south-american` | **`totem-warrior` is taken** by Spirit West's (printed 42-44 there). This one channels one of seven Amazon totems into its own body; the suffix follows the `-russian` precedent |
 
@@ -168,7 +168,10 @@ That is sixteen rows: fifteen R.C.C.s plus the Werepanther as a variant.
 - **Aunyain** (printed 152): R.C.C.-shaped, no player note, no ladder. A
   **creature**.
 - **True Atlantean** (printed 100): a racial block feeding the Monster Hunter.
-  Recorded on that class.
+  Recorded on that class. Atlantis later added a `true-atlantean` R.C.C.; the
+  Monster Hunter still takes `none` for a True Atlantean, as the Undead Slayer
+  does: the race's S.D.C. and P.P.E. bonuses and Marks of Heritage are already
+  counted in the class's own pools and tattoos.
 - **Loas, Trees of Wisdom, Memory Trees**: NPC beings. All three became
   creatures: the survey planned to leave the trees as setting, but each prints
   a full stat block (printed 58-60).
@@ -302,3 +305,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1400 | creatures and notable NPCs: 25 creatures (9 monsters, spirits and trees; the 16 R.C.C.s as NPC views) and 16 notable NPCs, 65 attacks. Every creature row passes creatureFormulaGaps; both halves reconciled against renders. The book's import plan is complete. Applied `--remote` first |
 | 2026-09-25 | #1415 | follow-ups Nate asked for: RUE ladders on 21 classes (the five "same as" South America classes among them); the Loa split into Ghostly and Divine (creatures 26); RUE's TW Flaming Sword and TK-Machine-Gun added and given to the Amazon. Applied `--remote` first |
 | 2026-09-25 | #1420 | `~004-rue-xp-ladders.sql` renamed `~006-rue-xp-ladders.sql`: #1413 landed `~004-ignores-style-attacks.sql` and two files shared the prefix. Re-applied `--remote` as a no-op on the ladders; it repoints the five South America notes and replaces the run record |
+| 2026-09-26 | #TBD | **The Monster Hunter's magic tattoos as data**, `~022-monster-hunter-tattoos.sql`: Atlantis (#1429) added the 32 tattoo-tradition spells, and the class now grants them in undead-slayer's shape - the two Marks of Heritage, All Simple Weapons, Animals and Monsters outright, starting picks of two magic weapons, three powers and one of any category, one major tattoo per level 2-15. The four Monster-Shaping tattoos stay prose. Its race note's "the catalog has no True Atlantean race" is rewritten. No row count moves. `--remote` is applied before the merge. |
