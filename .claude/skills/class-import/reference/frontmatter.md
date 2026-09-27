@@ -413,7 +413,9 @@ the Arkhon Spectral Hunter and ESP Specialist carry `[starting_money]`. **Not
 for an occupation open to every race**, however plainly its book prints a
 P.P.E.: the list reaches every race it pairs with, including those whose P.P.E.
 adds to a mage's or prints its own, and the parser warns. Why, with the census:
-`apps/character-creator/docs/race-and-occupation.md`.
+`apps/character-creator/docs/race-and-occupation.md`. Regression pins the
+carriers by name, so a new one updates that list in
+`apps/character-creator/test/regression.mjs` in the same PR.
 
 **`yields_to_occupation: { ppe_base: [magic, clergy] }` is the same two keys
 from the RACE's side** (BOOK-INGEST-AUDIT.md F111, the Larhold part). It goes on
