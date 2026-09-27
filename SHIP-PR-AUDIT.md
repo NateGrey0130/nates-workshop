@@ -6,6 +6,9 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **Work was opened on this menu on 2026-09-27.** Read under each finding's
+> heading for its state.
+>
 > **Nothing is open on this menu, as of 2026-09-22.** **Read each finding's own
 > note for its state — this header is a summary and summaries here go stale.**
 > The original pass was filed and closed 2026-09-03/04, PRs #658–#673.
@@ -289,3 +292,52 @@ an admin can disable the ruleset. **`F10` assigning the unattended alarm to
 sweeping: `grep -rn F15 ~/.claude/skills/` returns nothing, because each skill
 is its own junction and a recursive grep does not traverse them from the parent
 — grep the repo's `.claude/skills/` instead.
+
+## Deferred by the context-diet rollout, 2026-09-27
+
+### F16 — low — a retargeted stacked child merges on checks computed against its old base, and step 7 stops at the retarget
+
+**Opened 2026-09-27.** PR #1482 rewrote `ship-pr` step 7 to retarget a stacked
+child before its base merges, and recorded this under *"Found, not fixed here"*
+without a number. `audit-menu` → *A deferral is work* gives it one. Found by the
+fourth pressure-test run of that PR, which refreshed the child after
+retargeting it.
+
+**What step 7 says.** `.claude/skills/ship-pr/SKILL.md:107-108` (read
+2026-09-27 on `origin/main`): retarget with `gh pr edit <child> --base main`,
+confirm with `gh pr view`, then merge the base. Nothing after that refreshes the
+child's checks. `scripts/merge-check-lib.mjs:152` prints the same order and also
+stops at the retarget.
+
+**Why the checks are stale.** The workflows behind all three required checks
+trigger on a bare `pull_request:` with no `types:` (`.github/workflows/tests.yml:44-45`,
+`.github/workflows/regression.yml:37-38`, read 2026-09-27). GitHub's default
+types for that event are `opened`, `synchronize` and `reopened`; a base change
+is `edited`, so nothing runs. The child's green was computed against its merge
+into the old base, with `groups.mjs --affected HEAD^1 HEAD` (`tests.yml:87`)
+choosing suites from that diff. With strict mode off, the ruleset accepts it.
+Two refreshes look right and are not: `gh run rerun` replays the original event
+and its old merge ref, and step 6's freshness diff is often empty once the base
+has merged, because the child already carries the base's commits.
+
+**Proposal:** one sentence in `ship-pr` step 7, and one clause in the
+`merge-check-lib.mjs:152` string: once the base has merged, merge `origin/main`
+into the child and push **even when the freshness diff is empty**, then wait
+for `smoke`, `menus` and `regression` on that push before merging the child.
+**Posture: documentation only.** No new check and no workflow change; adding
+`edited` to the workflows' `types:` is not proposed, because it would re-run
+every suite on every title or body edit.
+
+**Evidence:** step 7, the lib string and the workflow triggers were read
+2026-09-27. That a base edit starts no run, and that a re-run reuses the old
+merge ref, are **reported by GitHub's documentation, not measured here.**
+
+**Confidence:** medium. It rises to high with one comparison: a past
+retargeted PR's `base_ref_changed` timeline event against its check-runs'
+`started_at` (`gh api repos/NateGrey0130/nates-workshop/issues/<n>/timeline`).
+
+**Ongoing cost:** one sentence to keep true, and one extra CI cycle per
+stacked child. Stacks are rare here, and step 7 already says to avoid them.
+
+**Decline path:** the risk is a narrow case of one already accepted: with
+strict mode off, any PR can merge green against an older `main`.
