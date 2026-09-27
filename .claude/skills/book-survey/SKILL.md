@@ -5,22 +5,17 @@ description: Survey a whole sourcebook PDF before importing any of it, so the im
 
 # Surveying a book before importing it
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
-> `book-registry.mjs` also pins that phase 3 shows the `--remote` form of
-> `scripts/catalog-diff.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`), and (`book-registry.mjs`) that
+> phase 3 shows the `--remote` form of `scripts/catalog-diff.mjs`. The incident
+> behind each rule is in `reference/why.md`; worked cases are in
+> `reference/WORKED-EXAMPLES.md`.
 
-A 360-page sourcebook does not fit in one model call and should not be fed to
-one. **Read the book's structure offline first, decide what is worth importing,
-then extract only that.** Every step below exists because skipping it produced a
-plausible-looking wrong answer.
-
-Offline structural work is free — `pymupdf` and a script. Only extraction costs
-money, and it is the step to spend the least on.
+A whole sourcebook does not fit in one model call and should not be fed to one.
+**Read the book's structure offline first, decide what is worth importing, then
+extract only that.** Offline structural work is free; extraction costs money and
+is the step to spend least on. Every step below exists because skipping it
+produced a plausible-looking wrong answer.
 
 ## The loop
 
@@ -33,148 +28,49 @@ money, and it is the step to spend the least on.
 | 5. reconcile | does every row agree with the authority? | free |
 | 6. ship | data script, rebuild, verify | free |
 
-Phases 1-3 routinely cut phase 4 by more than half. The Book of Magic has ~1038
-stat blocks; the invocation import needed 108 of them.
+Phases 1–3 routinely cut phase 4 by more than half. **Get agreement on the
+survey (see *What "surveyed" means*) before spending anything.**
 
 ## 0. Does it have a text layer? Ask before you OCR
-
-**One command, before anything else:**
 
 ```bash
 python scripts/ocr-book.py "path/to/Book.pdf" --probe
 ```
 
-It samples twenty pages spread through the book, prints the character count of
-each, and says TEXT LAYER or SCAN. It writes nothing.
+It samples twenty pages, prints each one's character count, says TEXT LAYER or
+SCAN, and writes nothing. **Use it, not a hand-rolled `python -c`**: the same
+script writes the page-addressed cache and manifest everything else reads.
+Thousands of characters a page means a text layer (no OCR, no model call, no
+cost); zeros mean a scan.
 
-**Use it rather than a bare `python -c`, and the reason is the cache rather than
-the keystrokes.** `ocr-book.py` is one command that also writes the
-page-addressed cache `class-check --field-sources` and `drift-check` both read,
-records `page_offset` and `welded_pages` in the manifest, resumes correctly on a
-re-run, and refuses to overwrite a text-layer cache with OCR.
-
-**`welded_pages` is the one to read before extracting anything.** A page listed
-there has both columns in a single text block, so its cached lines **do not
-follow one another** — a `Money:` line can read on into the far column and take
-the wrong figure with it, and nothing about the file looks wrong. Re-run
-`ocr-book.py` on an already-cached book to fill the key in (it recomputes from
-the PDF and skips every page it already has), and read those pages off a
-**render**. `class-check --field-sources` prints a `WELDED` advisory when a
-class's window lands on one. Measured across the twelve text-layer caches on
-this machine: **42 welded pages in ten of them**, `cb1` the only clean book, and
-`pf` — the most-cited book in the database — carrying six.
-`BOOK-INGEST-AUDIT.md` F30. A hand-rolled probe does none
-of that, and §0b below is the cost of finding out: **seven of the first eight
-caches were built by throwaway code that is in no commit, and they do not agree
-with each other.**
-
-*This paragraph has been wrong twice, in opposite directions. It first argued
-that `python -c` sits outside the allowlist and prompts every time; it was then
-corrected to say the working directory's own settings granted that family by
-wildcard, so the friction argument was false exactly where this skill fires.
-**Both readings are now out of date.** On 2026-09-02 the working directory moved
-to `C:\Users\natha\Projects\workshop` (`MACHINE-AUDIT.md` M7/M9/M12), taking
-that settings file with it, and the same day's prune took the
-arbitrary-execution wildcards out of it — what is left for `python -c` is a
-handful of fully-literal command strings, so anything not already listed prompts
-again. **Do not rebuild an argument on top of this line:** check the allowlist
-governing the directory you are actually in, on the day you are in it. The
-reason above does not depend on where the session started, which is the point.*
-
-Zeros mean a scan. Thousands mean a text layer, and a text layer changes
-everything downstream: **no OCR, no model call, no confidence problem, and no
-cost.** The Palladium Fantasy main book has one — median ~5,700 characters a
-page — and every extraction from it, twenty-five classes and fifty-seven spells
-and two authority tables, was read with `scripts/read-columns.py` and nothing
-else. Rifts Ultimate Edition has none, and needs everything below. The gap is
-not delicate: every text layer measured here medians 4,000–6,100 characters a
-page and every scan medians zero.
-
-This step is first because the version of this skill that did not have it led
-with "OCR it once, properly", and OCRing a book that did not need it would have
-spent hours reproducing text that was already there, worse.
-
-A text layer is not perfect, and its damage is different from OCR's — it is
-typesetting, not misreading: missing spaces, a mis-set character, a hyphen kept
-from the end of a column line, a heading welded onto the previous paragraph.
-**None of it is fixed by a better reader.** It is fixed by knowing what the value
-should look like — a one-character parenthetical where a cost belongs is a
-mis-set digit, and the OTHER authority table has the real one.
-
-Five real examples from the Palladium book: `reference/WORKED-EXAMPLES.md` →
+A text layer's damage is typesetting, not misreading: missing spaces, a mis-set
+character, a kept hyphen, a heading welded to a paragraph. It is fixed by
+knowing what the value should look like, and by the book's other authority
+table, not by a better reader. Cases: `reference/WORKED-EXAMPLES.md` →
 *Palladium Fantasy's text layer*.
 
-**And there is a worse kind, where that remedy fails: a page whose FONT MAPPING
-is broken.** The whole page's characters are wrong, not one of them, and
-`ocr-book.py` now reports it — `GLYPHS` in its output, `corrupt_pages` in the
-manifest, as a **count per page**. `class-check --field-sources` repeats it for
-any page a class was drawn from.
+**Before extracting, read three manifest keys**, all keyed by **cache page, not
+folio** (convert with §0d):
 
-**The count is the point, and so is the fact that it is not a verdict.** Across
-the twelve text-layer caches here, real damage shows up at **3 and 4 hits** as
-often as at 30, so there is no threshold to set — one stray character is not
-seven, and both need a human.
-
-**THE RULE THAT MATTERS MORE THAN THE DETECTOR: a page with corrupt prose is
-corrupt EVERYWHERE, including in the parts that look fine.** Free Quebec printed
-95 announces itself — `vsv&sis. \Vs. %\%vausttft` — and on the same page an
-M.D.C. table reads `- 115` where the ink says **175**. `115` is a perfectly
-ordinary figure in a column of ordinary figures, and an extraction pass reported
-it in good faith. The remedy above does not reach this: `115` *is* what the value
-should look like, and a per-location M.D.C. has no second authority table to
-check it against. **Render the page and read the numbers off the render.**
-
-**Two failure modes, and only one of them a render cures.** Printed 95 is an
-encoding fault — the ink is right and the text layer is wrong, so a render
-fixes it, and re-caching cannot (`read-columns.py` and a raw `page.get_text()`
-return the same garbage). Free Quebec printed **118** is the other kind: the
-render shows `a\\` on the page itself. Expect both.
+- **`welded_pages`**: both columns in one text block, so cached lines do not
+  follow one another and a `Money:` line can take the far column's figure.
+  Read those pages off a **render**. `class-check --field-sources` prints a
+  `WELDED` advisory.
+- **`corrupt_pages`** (`GLYPHS` in the output): a broken font mapping, as a
+  count per page. There is no safe threshold; small counts are real damage too.
+  **A page with corrupt prose is corrupt everywhere, including numbers that look
+  ordinary**: render it and read the numbers off the render. Some damage is in
+  the ink itself; expect both kinds.
 
 ### And there is a THIRD kind, which neither of those detectors sees
 
-**`corrupt_pages` looks for characters a clean text layer never makes.** A fault
-that swaps a digit for a letter that LOOKS like it produces perfectly ordinary
-characters, so that detector cannot count it and does not.
-
-`ocr-book.py` reports this one separately, as **`DIGITS`** in its output and
-**`substituted_digits`** in the manifest. It is a **separate key on purpose**:
-the two faults need OPPOSITE remedies, and folding them together would tell a
-reader to render a page a render cannot fix.
-
-New West is the reference case, and it renders **1 as `!` or `l`** and **0 as
-`O` or `Q`** inside almost every `NDNx10` construction - `!D4xlO` for 1D4x10,
-`3D4xlOO` for 3D4x100, `10Q` for 100. Measured 2026-09-10:
-
-| cache | `corrupt_pages` | `substituted_digits` |
-|---|---|---|
-| `new-west` | 3 | **75** |
-| `cb1` | 0 | **69** |
-| `bom` | 9 | **116** |
-
-**It is NOT a New West quirk.** `cb1` prints `lD6`, `lD4xl00` and `lD20`; `bom`
-carries more of it than either. Assume any Palladium text layer has it.
-
-**The damage is in the INK.** Clipping New West printed 223 at 600 dpi shows the
-page itself printing `!D4xlO`, two words after a correctly-set `4D6`. So the
-remedy above - render it - does not work here, and that is the whole reason for
-the third category. **Read the token as the dice expression it can only be**:
-`!D4xlO` has no other reading.
-
-**It reaches STARTING MONEY**, which is where it costs the most: almost every
-New West O.C.C. prints `Money: Starts with 3D4xlOO credits`.
-`BOOK-INGEST-AUDIT.md` F53.
-
-**It is worth running on a book you did not cache today.** `ocr-book.py`
-recomputes this key, and the two beside it, on **every** run — outside the page
-loop, which skips anything already cached — so a re-run on a complete cache
-takes seconds, reads no page again, and rewrites only the manifest. That is how
-every text-layer cache on disk came to carry it: the key did not exist before
-2026-09-10, so a cache built earlier has it only because somebody re-ran.
-
-**And these maps are keyed by the CACHE page, not by the folio**, which is the
-one thing §0 never says and the agents reading it are told. `bom`’s largest
-single entry is nine hits at cache 80, which is printed 79. Convert before you
-cite one — *Read the offset from the registry* below has the arithmetic.
+**`substituted_digits`** (`DIGITS` in the output): a digit swapped for a letter
+that looks like it (`1` as `!` or `l`, `0` as `O` or `Q`), producing ordinary
+characters the glyph detector cannot see. **Assume any Palladium text layer
+has it.** The damage is in the ink, so a render does not help: **read the token
+as the dice expression it can only be** (`!D4xlO` is 1D4x10). It reaches
+starting money. Re-running `ocr-book.py` on an existing cache recomputes all
+three keys in seconds without re-reading a page.
 
 ## 0b. Cache it — the SAME command either way
 
@@ -182,120 +78,37 @@ cite one — *Read the offset from the registry* below has the arithmetic.
 python scripts/ocr-book.py "path/to/Book.pdf" --slug rue
 ```
 
-**Do this whichever answer step 0 gave**, and do it before anything else. The
-page-addressed cache under `.cache/books/<slug>/txt/` is what `class-check
---field-sources` and `drift-check`'s citation check both read; without it a row
-cannot be traced back to the page it came from at all.
+**Do this whichever answer step 0 gave, before anything else, for the WHOLE
+book.** `class-check --field-sources` and `drift-check` read the page cache
+under `.cache/books/<slug>/txt/`; without it a row cannot be traced to its page.
+Then add the book to `scripts/books.json`, sorted by slug (smoke checks the
+order). The cache is gitignored: it is a commercial book.
 
-**That path is the default, not the location, and in a worktree the literal one
-is empty.** Since 2026-09-16 `scripts/books-lib.mjs` (`ocrCacheDir()`) and
-`scripts/ocr-book.py` both read `$WORKSHOP_OCR_CACHE` first and fall back to
-`<repo>/.cache/books`; `scripts/d1-query-lib.mjs` (`localD1Args()`) does the
-same for `$WORKSHOP_LOCAL_D1` and passes it as `--persist-to`. Everything here
-that reads a cache or runs a `--local` query goes through one of the two.
+- **In a worktree, check `$WORKSHOP_OCR_CACHE`** (`echo "$WORKSHOP_OCR_CACHE"`).
+  Empty means `<repo>/.cache/books`, which is right in the main checkout and
+  empty in a worktree. `SETUP.md` has the table of what reads each variable.
+- **A text layer** takes the cheap path by itself (`"text_layer": true`,
+  seconds for a whole book). **A scan** gets Tesseract; add the table pages you
+  know about:
 
-The reason is that `git worktree` re-roots the repo to itself, so every path
-derived from the repo root pointed at an empty directory — and two smoke
-sections failed there for that reason and no other. Ask rather than assume:
-
-```bash
-echo "$WORKSHOP_OCR_CACHE"    # empty means <repo>/.cache/books
-```
-
-An empty answer is correct in the main checkout and wrong in a worktree, where
-it means the cache you are about to read does not exist. Set both variables or
-work in the main checkout. `SETUP.md` carries the table of what reads each one.
-
-One command, no flags required, because the failure this prevents is a session
-writing its own caching loop. Seven of the first eight caches were built that
-way — six by throwaway code that is in no commit — and they do not agree with
-each other. `ju`'s is raw `page.get_text()`, columns welded across the gutter,
-which is exactly the corrupting read `read-columns.py` exists to prevent.
-
-**If it has a TEXT LAYER** the script takes the cheap path by itself:
-`read-columns.read` into the same `txt/pNNN.txt` layout, no images, no
-Tesseract, no cost, and a manifest recording `"text_layer": true`. Seconds for a
-whole book.
-
-**If it is a SCAN**, add the table pages you already know about:
-
-```bash
-python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
-```
-
-Emits normalised `txt/`, raw `txt/*.raw.txt`, and `tsv/` word geometry, using
-`--psm 3` and a Palladium wordlist.
-
-**Re-running is safe and resumes.** A page is already done when its `txt`
-exists (text layer) or its `txt` and `tsv` both do (OCR) — keyed on both
-regardless, as it once was, a plain re-run against a text-layer cache resumed
-NOTHING and overwrote every page with Tesseract output. Switching a cache from
-one kind to the other now needs `--force` and says what it would destroy, which
-is why `bom` — a book that has a text layer and was OCR'd anyway — refuses.
-
-**Do not reach for a higher DPI when the text is wrong.** Measured: 300 -> 600
-dpi took one error class from 7 to 5, `--oem 1` changed nothing, preprocessing
-changed nothing worth having. The OCR is CONFIDENT about its mistakes - `Ibs`
-scores 91-94 and `18.000` scores 93-97, and only 1.3% of words score under 70
-with none of the known misreads among them. A confidence filter finds nothing.
-
-**That measurement does not say the PAGE is unreadable.** It says a cleaner scan
-of the same layout returns the same mistakes, which is why the remedy is
-contextual rather than optical. **A page whose LAYOUT ANALYSIS failed is a
-different fault, and a render does reach it.** `triax` p110 sets a fifteen-item
-bionics list beside a full-page line-art plate: `--psm 3` loses the list to the
-hatching, and items 11, 12 and 14 are absent from the cached page entirely. A
-160 dpi render reads all ten of 6-15 without difficulty.
-
-**So do not raise the DPI, but do look at the page** - and note the two DPI
-instructions here are not in conflict: `--dpi-tables 500` buys legibility on
-small TYPE, and nothing buys layout analysis. §0c is the render, for either
-kind of cache.
-
-*(A grep of the rest of this cache also recovers those three, because Triax
-reprints the same list for its other cyborgs - `p086`, `p098`, `p100`, `p102`.
-That is a property of this book, not a method. The render answers the page you
-are actually reading.)* `BOOK-INGEST-AUDIT.md` F39.
-
-Fix it where the meaning is, not where the pixels are: contextual repairs at
-ingest, and the typed readers in `scripts/ocr-fields-lib.mjs` for the rest.
-`--renormalise` re-applies the substitution table to cached raw text without
-running Tesseract, so improving a rule costs seconds rather than a re-scan.
-
-Cache the WHOLE book, not the pages you think you need: the alternative is
-discovering mid-task that you need geometry you did not save, or that
-`I.S.P.` reads as `LS.P.` on most pages. The cache is gitignored; it is a
-commercial book.
+  ```bash
+  python scripts/ocr-book.py "path/to/Book.pdf" --slug rue --tables 167,200-202 --dpi-tables 500
+  ```
+- **Re-running resumes.** Switching a cache between kinds needs `--force`.
+- **Do not raise the DPI when text is wrong**: OCR is confident about its
+  mistakes, and higher DPI or preprocessing barely moves them. Fix meaning at
+  ingest and in `scripts/ocr-fields-lib.mjs`; `--renormalise` re-applies the
+  substitution table without re-running Tesseract. But **do look at the page**:
+  failed layout analysis (a list beside line art) loses items, and a render
+  (§0c) reads them.
 
 ## 0c. A cache of EITHER kind can lose a page. Render it and look
 
-This is the trap that costs the most time, because step 0 says "text layer" and
-you believe it. A text layer extracts *prose* faithfully and **loses the
-geometry of a chart**: the columns arrive as disconnected runs, the header row
-lands somewhere else, and nothing tells you it happened.
-
-Every authority table in this repo that mattered had to be read as an image:
-
-| table | cache kind | what the cache gave |
-|---|---|---|
-| Attribute Bonus Chart (PF 16) | text layer | nothing findable — greps for the row values returned no page at all |
-| Types of Armor (PF 270) | text layer | column fragments on the page *after* it, headers detached from values |
-| Coalition SAMAS Pilot's skills (RUE 233) | **scan** | merged with the Coalition Grunt's column beside it, six wrong numbers |
-
-**The third row is a SCAN, and this table said otherwise for a long time.**
-`rue` is Rifts Ultimate Edition - `text_layer: false`, and §0b above uses
-`--slug rue` as its worked example of one. The column used to read *"what the
-text layer gave"*, which quietly filed the one scan case here under the other
-kind and is why this section read as a text-layer remedy. It is not one.
-
-**And a scan loses more than tables.** `triax` p110 sets a fifteen-item bionics
-list beside a full-page line-art plate; the cache has items 6-9, then `0.
-Gyro-compass` and glyph noise, and 11, 12 and 14 are absent from that page
-altogether. Nothing about it is a chart. §0b has the rest of that case.
-
-**Render it and read it.** This one *is* a throwaway probe — it writes a PNG you
-look at once and nothing depends on it afterwards, which is the whole difference
-from §0b's cache:
+A text layer extracts prose faithfully and **loses a chart's geometry**: columns
+arrive as disconnected runs, headers land elsewhere, silently. A scan can merge
+adjacent columns or drop a list beside artwork. Every authority table that
+mattered here had to be read as an image. **Render it and read it** (a
+throwaway probe; nothing depends on the PNG):
 
 ```python
 import pymupdf
@@ -303,21 +116,14 @@ doc = pymupdf.open(pdf)
 doc[printed_page_to_pdf_index].get_pixmap(dpi=200).save('page.png')
 ```
 
-then read `page.png`. 200 dpi is enough for a stat block and cheap; the images
-above were all legible at it.
-
-**Use the rows you already have as a check on the reading.** When the catalog
-holds five of a table's sixteen rows, those five are five independent
-confirmations that the transcription is right — and a generator that refuses to
-run when one has drifted turns that into a guarantee rather than a spot-check.
+200 dpi is enough for a stat block. **Use rows the catalog already holds as a
+check on the reading**: each is an independent confirmation.
 
 ## 0d. Read the offset from the registry. Derive it only if there is none
 
-`scripts/books.json` records `page_offset` per book, and `ocr-book.py` writes
-the same number into the cache manifest at build time. **Look there first** —
-it is a per-book constant that is free to record once and costs a wrong page
-read every time it is guessed. `class-check --field-sources` already prefers it,
-in this order:
+`scripts/books.json` records `page_offset` per book, and the manifest records
+what `ocr-book.py` measured. `class-check --field-sources` resolves it in this
+order and prints which it used:
 
 ```
 --offset            you override everything
@@ -327,78 +133,28 @@ live detection      majority vote over the folios, for an unregistered book
 0                   and it SAYS so, rather than quietly using it
 ```
 
-It prints which of those it used, on the FIELD SOURCES line. It also prints an
-advisory when the pages disagree with what is recorded — that is the signature
-of a re-cached book, a duplicated page, or the split below. Advisory only: it
-never changes the exit code, because the recorded value can be right while the
-cache is newly partial.
-
-**The offset is not always constant, and a majority vote cannot see that.**
-`pf` is the live case and the reason this section exists. An extra page sits at
-cache `p018`/`p019` — `p019` holds `p018`'s text plus a *Throwing Objects*
-table — so the offset is **+1 for printed 1-16 and +2 for printed 18-336**.
-Measured over the whole cache the vote is **287 to 11** for +2, so a single
-number sends every lookup in the first sixteen pages one page early. Hunting the
-Attribute Bonus Chart at printed 16 with the late-book offset lands on the wrong
-page and finds nothing, which reads exactly like "the chart is not in this book".
-
-That is what `page_offset_exceptions` is for:
+**The offset is not always constant.** `page_offset_exceptions` covers a book
+whose offset changes part-way (`pf` early, `underseas` mid-book); **ask the
+registry who has one**, not this sentence:
 
 ```json
 "page_offset": 2,
 "page_offset_exceptions": [ { "printed_through": 16, "offset": 1 } ]
 ```
 
-First match wins; everything past the last exception falls through to
-`page_offset`. **`pf` and `underseas` both have one, and `scripts/books.json` is
-the authority on who else does — not this sentence, which said `pf` was the only
-one for five days while `BOOK-INGEST-QUEUE.md` recorded `underseas` as the
-second.** Both files were written on 2026-08-28 and disagreed from that day.
-`underseas` is the case to know about: **its split falls in the middle of the
-book**, where `pf`'s is early enough to dismiss as a front-matter quirk. Ask the
-registry for the number. If you cache a new book,
-`class-check --field-sources` will tell you when it needs one — it reports every
-offset region it detects and says so when the registry does not describe them,
-and the smoke test fails if any cache on this machine shows a region
-`scripts/books.json` cannot resolve.
+**With no recorded offset**, render a candidate next to the page you want and
+read its printed folio, then record it. `class-check --field-sources` reports
+every offset region it detects and says when the registry does not describe
+them, and smoke fails a cache with a region `books.json` cannot resolve.
 
-**When there IS no recorded offset**, derive it next to the page you actually
-want — render a candidate and read the folio printed on it — not once for the
-whole book. Then record it, so the next session does not repeat this.
-
-**And the two tools you verify it with disagree about what "page" means.**
-`scripts/read-columns.py` takes the number a PDF VIEWER shows — 1-based, it
-calls `doc[n - 1]` — while `pymupdf` in a probe script is 0-based. Derive the
-offset with one and read with the other and you land one page early: a whole
-page of the wrong class, which reads as the book not saying what you expected
-rather than as an off-by-one.
-
-**A zero offset is the worst case, not the easiest**, and it is no longer rare:
-`ww`, `triax` and `phase-world` are all registered `page_offset: 0`, meaning the
-**cache page IS the printed folio**. There is then no real offset to hunt, so it
-becomes the ONLY discrepancy left to explain, and a wrong page reads as the book
-not saying what you expected. It cost a wrong page read on the first attempt at
-the Godling.
-
-**State an offset in the registry's base, or say which base you mean.** That
-Godling read is in Pantheons of the Megaverse, which `scripts/books.json`
-registers at **`page_offset: 1`** — and this paragraph used to call it a
-zero-offset book, because `printed N is d[N]` is true in 0-based `pymupdf` and
-describes the same page. Both were right and they could not both be checked: a
-reader doing what §0d says — *read the offset from the registry* — opened
-`books.json`, saw `1` where this file said `0`, and had no way to tell which was
-wrong. That is the base collision three paragraphs down, committed in the
-paragraph warning about it.
-
-**One rule converts all of them**, verified against three caches by reading the
-folio printed on the page:
+**One rule converts every base:**
 
 ```
 cache page = printed folio + page_offset        cache pNNN = pymupdf d[NNN - 1]
 ```
 
-`read-columns.py` takes the cache page number directly, because it is the number
-a PDF viewer shows.
+`read-columns.py` takes the cache page number (1-based, what a PDF viewer
+shows); a `pymupdf` probe is 0-based. Mixing them lands one page early.
 
 | printed p.16 in a book registered… | cache page | pymupdf probe | `read-columns.py` |
 |---|---|---|---|
@@ -406,197 +162,92 @@ a PDF viewer shows.
 | `page_offset: 1` — `potm` and most books | `p017` | `d[16]` | `... 17 17` |
 | `page_offset: 2` — `pf` past its exception | `p018` | `d[17]` | `... 18 18` |
 
-**This table used to label its first row "zero-offset book" and give `d[16]` for
-it — which is the `potm` row, a book the registry records at 1.** Every value
-was right in a base the registry does not use, so checking any of them against
-`books.json` produced a contradiction and no way to resolve it.
-
-The folio at the end of read-columns' output is the check, and it is free. Read
-it every time. Note that a SINGLE-page call prints no `===== pN =====` header at
-all — only a range does — so passing the page twice is the cheaper habit.
+**A zero offset is the worst case**: there is then no offset to hunt, so a wrong
+page reads as the book not saying what you expected. **State an offset in the
+registry's base.** Read the folio at the end of `read-columns` output every
+time; a single-page call prints no header, so pass the page twice.
 
 ## 0e. Extracting priced entries out of prose
 
-Item lists are paragraphs with a price somewhere inside, not tables. An
-extractor finds the boundaries; it does not find the answers. Three failures
-recur, and all three put a plausible wrong number in a numeric column:
+Item lists are paragraphs with a price inside. An extractor finds boundaries,
+not answers. Three failures put a plausible wrong number in a numeric column:
 
-- **A price wrapped across a line.** `20,000-\n30,000` becomes the single number
-  **2,000,030,000** if the de-hyphenation that rejoins a broken *word* is let
-  near it. A hyphen BETWEEN DIGITS is a range and must survive.
-- **A long entry labels its own parts** — `Duration:`, `A.R.:`, `Cost:` — each
-  of which looks exactly like the start of a new item. The Cape of Dimensions'
-  700,000 gold was filed under an item called *"Use Limits"*.
-- **The first price in an entry is not its price.** That same Cape mentions
-  25,000 gold to repair a tear long before its own cost line.
+- **A price wrapped across a line**: `20,000-\n30,000` must stay a range. A
+  hyphen BETWEEN DIGITS is never de-hyphenated.
+- **A long entry labels its own parts** (`Duration:`, `A.R.:`, `Cost:`), each
+  looking like a new item.
+- **The first price in an entry is not its price.**
 
-Two more worth knowing: a book may print four items under one name
-(`Contact poison: Numbstrike:`), and a section may price by **band** rather than
-per row — the faerie foods say so in their own preamble and give no individual
-figures at all.
-
-**Check the extraction against itself.** The experience tables were checked by
-asserting each level's low equals the previous level's high plus one: the two
-numbers are printed separately, so they only agree if both were read correctly.
-All 225 passed, and that check is worth more than re-reading the page.
+A book may print several items under one name, and a section may price by
+**band** rather than per row. **Check an extraction against itself** where the
+book prints redundant numbers (each level's low = previous high + 1).
 
 ## 1. Inventory: what is in here?
 
-Count structure, not prose. A spell has a stat block, a class has attribute
-requirements — so count those markers per page range rather than trying to read
-the book.
+**Count structure, not prose**: stat-block markers per page range.
 
 ```python
 PPE   = re.compile(r'^\s*P\.?\s?P\.?\s?E\.?\s*(Cost)?\s*:', re.M | re.I)   # a spell/power
 CLASS = ['Attribute Requirement', 'O.C.C. Skills', 'R.C.C. Skills', 'Standard Equipment']
 ```
 
-**A mention is not a definition.** Search for the stat block, never the name. The
-Book of Magic names a dozen R.C.C.s in a cross-reference list and *defines* one
-class in 360 pages — page 224, the only page in the book carrying two or more
-class markers.
-
-Report the inventory as a table before extracting anything. It is the thing worth
-agreeing on.
+**A mention is not a definition**: search for the stat block, never the name.
+**Report the inventory as a table before extracting anything.**
 
 ## 2. The authority table
 
-**Find where the book states the fact you cannot get from a description.** For
-spells that is the level: a description prints its stat block and never its
-level, because the book states it once, in the section heading. Import
-descriptions alone and 69 of 84 rows come back level 0.
+**Find where the book states the fact a description cannot give you**, such as
+a spell's level, stated once in a section heading or a master index. The index
+is the single most valuable page; spend passes on it.
 
-Most books have a master index that states level *and* cost in one place. It is
-the single most valuable page in the book and it is worth three passes to parse
-correctly.
-
-**Read it geometrically.** An index set in columns does not come out of
-`get_text()` in reading order. Read linearly, the Book of Magic's index puts
-`Blinding Flash` — a level one spell — under level three, and returns levels one
-and two **empty**.
-
-Use **`scripts/read-columns.py`**, in the repo. It buckets blocks by their left
-edge, splits columns on the GAP rather than an assumed count, emits full-width
-blocks first as page headings, and takes a page range:
+**Read it geometrically.** Columns do not come out of `get_text()` in reading
+order. Use **`scripts/read-columns.py`** (columns split on the gap, full-width
+blocks first as headings, a page range):
 
 ```bash
 python scripts/read-columns.py "book.pdf" 189 191
 ```
 
-This skill used to ship its own copy of that file under `reference/`, and the
-two had forked completely — the copy was an older line-based implementation with
-a `probe()` helper that the repo does not have, while every Palladium Fantasy
-extraction actually ran the block-based one in `scripts/`. A reference that is a
-FORK of working code is worse than a pointer to it: it reads as authoritative
-and is not. The copy is gone.
-
-**That script assumes the PDF has a text layer. A scan has none** —
-`page.get_text()` returns `''` for every page of Rifts Ultimate Edition, so the
-geometry has to come from Tesseract, and *how you ask it* matters more than the
-bucketing:
-
-Let Tesseract do the layout analysis and group by its blocks. Reconstructing
-columns from raw x coordinates is the thing that looks rigorous and keeps being
-wrong.
-
-Four approaches were tried and three failed, including the rigorous-looking one:
-`reference/WORKED-EXAMPLES.md` → *Reading a column index off a SCAN*.
+**A scan has no text layer**: let Tesseract do the layout analysis and group by
+its blocks, never reconstruct columns from raw x coordinates
+(`reference/WORKED-EXAMPLES.md` → *Reading a column index off a SCAN*):
 
 ```
 tesseract page.png out --psm 3 tsv     # then group rows by block_num
 ```
 
-
-**Then check the parse against something you already know.** Probe three or four
-spells whose level you can verify independently. A column reader that is subtly
-wrong looks exactly like one that works.
-
-**Be generous about what an entry looks like.** Two passes were quietly wrong
-here for the opposite reason — too strict:
-
-| pattern | silently dropped |
-|---|---|
-| names of letters only | every `Summon & Control ...`, and `Doppleganger (Superior) (1,000)` |
-| costs that must be numeric | `(l)` (an OCR'd 1), `(400 to 1000+)`, `(1,600 or Special)` |
-
-A cost is anything carrying a digit, or the words Special/Varies. A name is
-whatever precedes the **last** parenthetical on the line.
-
-**Find a heading by looking BACKWARDS from the field that is always there.** Not
-by trying to recognise a title — that cannot be done reliably, because a title
-is just a short line and so is the last line of the previous paragraph. Every
-description block has some field that is always present and always spelled the
-same way; anchor on it and walk back.
-
-For Palladium Fantasy's spell descriptions that anchor is `Range:`, and the walk
-back has one trap worth stating: **every other field name has to be in the list
-too, or the walk stops on one and calls it the title.** `Level:` appears on only
-the handful of entries that sit outside the numbered ladder, and leaving it out
-is what broke the only two blocks that failed to match — The Finger of Lictalon
-and Metamorphosis: Dragon.
-
-The same argument decides where NAMES come from: the index, not the headings. A
-heading is set differently often enough to matter — the book prints
-*Invulnerability (limited)* where its own index says *Invulnerability: Limited*.
-This is §4c stated from the parser's side.
-
-`scripts/parse-pf-spell-index.mjs` and `scripts/parse-pf-spell-descriptions.mjs`
-are the worked examples of all three rules. They are **PF-shaped and hard-coded
-to that book's two tables** — copy the rules, not the scripts.
+- **Probe the parse against three or four facts you can verify independently.**
+  A subtly wrong reader looks exactly like a working one.
+- **Be generous about what an entry looks like**: a cost is anything carrying a
+  digit or *Special*/*Varies*; a name is whatever precedes the **last**
+  parenthetical. Strict patterns silently drop rows.
+- **Find a heading by looking BACKWARDS from the field that is always there**,
+  with every other field name in the stop list.
+- **Names come from the index, not the headings.**
+- `scripts/parse-pf-spell-index.mjs` and `parse-pf-spell-descriptions.mjs` are
+  worked examples, hard-coded to one book: copy the rules, not the scripts.
 
 ## 3. Diff before you extract
 
-**Use `scripts/catalog-diff.mjs`. Do not write another matcher.** Every import
-that hand-rolled one produced a confidently wrong answer:
-
-| import | hand-rolled answer | truth |
-|---|---|---|
-| psionics missing | 21 | 16 |
-| psionics wrong category | 23 | 0 |
-| spells missing | 5 | 0 |
+**Use `scripts/catalog-diff.mjs`. Do not write another matcher**; every
+hand-rolled one here was confidently wrong.
 
 ```bash
 node scripts/catalog-diff.mjs --remote --table psionic_powers \
      --entries book-entries.json --compare category,isp
 ```
 
-**`--remote` when the answer is going to be spent against.** The script defaults
-to `--local` so an offline diff still works, and a local answer is fine while
-you are still poking at the book. It is not fine as the input to phase 4, which
-is the only step that costs money: `--local` accumulates rows from failed
-confirms and abandoned experiments, and CLAUDE.md's own list of things that fail
-late ends with "`--local` is not a mirror of production." One session's local
-held 327 skills where production had 324; another held 336 against 333. A
-`--local` run now prints production's row count beside its own and says outright
-when the two disagree, but it cannot make the decision for you.
-
-It prints its target on the first line, then four buckets and a vocabulary
-warning. The rules it encodes -- exact
-first, relaxed only when unambiguous on both sides, nearest-candidate advisory
-only -- are in `scripts/catalog-match-lib.mjs` and pinned in the smoke test.
-
-Two things it will tell you that are easy to get backwards:
+**`--remote` when the answer will be spent against.** `--local` accumulates
+rows and is not a mirror of production; a local run prints production's count
+beside its own. The matching rules live in `scripts/catalog-match-lib.mjs`.
 
 - **A dominant single substitution is a vocabulary difference, not N
-  corrections.** 29 of 30 category "errors" were the book writing
-  "Super-Psionics" where the catalog says "Super". Applying them would have
-  broken every picker that filters on category.
-- **A small edit distance is not permission to merge.** `Telekinetic Push` and
-  `Telekinetic Punch` are 2 apart and different; `Animate/Control Dead` and
-  `Animate and Control Dead` are 4 apart and the same.
-
-
-Get the catalog and subtract it. Extracting 300 spells to add 108 wastes money
-and puts 200 needless rows through review.
-
-**Normalise both sides** — lowercase, `&`→`and`, strip punctuation — or the diff
-manufactures gaps. And **spot-check the "missing" list by hand**: OCR produces
-`Tum Dead`, `Barrier ofThoth`, `ControllEnslave Entity`, and the catalog has all
-three under their real spellings. Roughly one in twenty was a false gap.
-
-The catalog may also tag rows inconsistently. `WHERE system = 'rifts'` missed 129
-spells stored with `system IS NULL` and reported 225 missing where 106 were.
-Query the whole table and filter in the diff.
+  corrections** (the book's "Super-Psionics" is the catalog's "Super").
+- **A small edit distance is not permission to merge.**
+- **Normalise both sides** (lowercase, `&`→`and`, strip punctuation) and
+  **hand-check the "missing" list**: OCR-mangled names are false gaps.
+- **Query the whole table and filter in the diff**; rows are tagged
+  inconsistently (`system IS NULL`).
 
 ## 4. Extract, batched by what the book states
 
@@ -609,197 +260,88 @@ hints: 'Every spell in these pages is a level 7 invocation.
         Do NOT infer a level from the text; use the level given.'
 ```
 
-Necessary. **Not sufficient — see phase 5.**
+Necessary, **not sufficient** (phase 5). Keep batches small: a reply that
+overruns the output ceiling is rejected. **Re-run
+`node scripts/catalog-diff.mjs --remote` for that batch right before writing its
+data script**: another session may have shipped the same rows since, and a
+second `INSERT OR IGNORE` is silently dropped.
 
-Keep batches small. Spell entries are long, and a reply that overruns the output
-ceiling is rejected rather than half-saved.
-
-**Re-run the catalog diff against production immediately before writing each
-batch's data script** — `node scripts/catalog-diff.mjs --remote` for that
-table, with that batch's entries. The survey's phase-3 diff is dated, and by
-extraction time another book's session may have shipped some of the same rows.
-A second `INSERT OR IGNORE` of an existing key is silently dropped. §8 has the
-parallel-book case this matters most for.
-
-**A book too big for one pass fans out to the `book-extract-worker` subagent**,
-one invocation per slice. It returns rows cited to the **printed folio** and
-stops there — it does not map to catalog vocabulary, because twenty slices
-guessing at conventions in parallel produce uniform, confident, wrong output
-that all agrees with itself.
-
-**Give each worker one page beyond each end of its range.** Two things a slice
-loses that a whole-book pass does not: a stat block straddling **its slice
-edge**, and a governing heading sitting outside the range — the same mid-page
-heading problem that put 13 spells one level too high in phase 5 below. The
-worker reports both rather than reconstructing them; the far side belongs to
-another slice.
-
-**Say slice edge rather than boundary when you brief a worker.** A page break
-inside the range loses nothing — the worker holds both pages — and a worker told
-to flag rows crossing "a boundary" will over-flag internal straddles, which
-costs a reconcile pass on rows that were never broken. `SKILL-AUDIT` `F41`.
-
-**Fanning out does not skip phase 5.** More parallel extraction is more for
-`book-reconcile` to check, not less.
+**A book too big for one pass fans out to `book-extract-worker`**, one per
+slice. It cites the **printed folio** and does not map to catalog vocabulary.
+**Give each worker one page beyond each end of its range**, and say **slice
+edge**, not boundary, when briefing it. **Fanning out does not skip phase 5.**
 
 ## 4b. A book may ship TWO authorities, and they check each other
 
-**Look for a second one before parsing the first.** Where a book indexes its
-entries twice — by level and by page, say — parsing both gives you independent
-readings of every value, and a third if the entry's own stat block repeats it.
-
-That is not belt and braces. It is what rescues an entry whose cost the first
-table mangled, and what tells you how far two tables disagree instead of leaving
-you assuming they do not. The Palladium Fantasy case, and the two accidents it
-turned into data: `reference/WORKED-EXAMPLES.md` → *Two authorities*.
-
-Reconcile them by NAME with the same normalisation the catalog diff uses, and
-keep a tiny explicit alias list for the names the book spells differently
-BETWEEN ITS OWN TABLES — `Thunderclap` against `Thunder Clap`, `Faeries' Dance`
-against `Faerie's Dance`. That is the book disagreeing with the book, not a
-match to guess at, so list them rather than lowering the edit-distance bar.
+**Look for a second index before parsing the first.** Two tables (and an
+entry's own stat block) give independent readings of every value. Reconcile them
+by name with the catalog diff's normalisation, plus a tiny explicit alias list
+for names the book spells differently between its own tables; never lower the
+edit-distance bar instead. (`reference/WORKED-EXAMPLES.md` → *Two authorities*.)
 
 ## 4c. When a description page argues with the index
 
-**The index wins, and the page is recorded.** But go and find out which is
-wrong before deciding, because the answer is not always the index.
-
-**Settle it with independent readings and a magnitude argument, not with the
-rule.** Count the readings that agree, and ask whether the disputed value is the
-right SIZE for where it would sit — a cost three orders of magnitude off its
-claimed tier is an argument by itself. Store the winner and put the losing
-reading in `variant_note`: the same doctrine as *the later book wins, and the
-losing number is recorded*, applied to a book disagreeing with itself.
-
-The worked case is *The Finger of Lictalon*, where three things decided it and
-none was "the index is the authority":
-`reference/WORKED-EXAMPLES.md` → *The Finger of Lictalon*.
-
-**A page that states a fact only a handful of times in a whole chapter is
-telling you something by the exception.** Count how often the field appears
-before deciding what its presence means — on those spell pages it was six times
-in 180 entries, and five of the six were a category of their own.
+**The index usually wins, and the losing reading is recorded** in
+`variant_note`. But find out which is wrong first: count independent readings,
+and ask whether the disputed value is the right **size** for where it sits.
+(`reference/WORKED-EXAMPLES.md` → *The Finger of Lictalon*.) A field a chapter
+states only a handful of times marks those entries as a category of their own.
 
 ## 5. Reconcile — the step that is easiest to skip
 
-**Hand this to the `book-reconcile` subagent.** It has no write tools and did
-not write the parse, which is the point: the failures worth catching all look
-ordinary from inside it.
+**Hand this to `book-reconcile`**, which has no write tools and did not write
+the parse. **Check every extracted row against the authority, not a sample.**
+Section headings sit partway down a page, so a batch's first page carries the
+previous section's tail, stamped with the wrong fact. **The index is the
+authority; page position is not.** Also:
 
-**Check every extracted row against the authority, not a sample.** Supplying the
-level per batch still produced 13 rows exactly one level too high, because
-section headings sit **partway down a page**: the first page of each batch
-carries the tail of the previous section, and those rows get stamped with the new
-batch's level. Every one of them looked completely ordinary.
-
-So: **the index is the authority and the page position is not.** Override.
-
-Three more checks worth running every time:
-
-- **A failed probe is a question, not a verdict.** Four RUE spells parsed to a
-  level that contradicted what I expected. Every one of them was checked against
-  its description section, and the book agreed with itself both times - the
-  expectations came from a different edition. Probe to find disagreement, then
-  go and find out who is wrong.
-- **Two independent readings of every number.** The stat block's own cost and the
-  cost the index prints. 108 of 108 agreed here; where a class page disagreed on
-  an earlier import, the other two agreed with each other and the class page was
-  the outlier.
-- **A row straddling a BATCH or SLICE edge loses whatever fell on the far
-  side.** `Rift Teleportation` starts on p143 and its `P.P.E.:` line is on
-  p144 — and **p143/p144 was where one batch stopped and the next began**, which
-  is why the next batch produced a second row: conflated name, wrong level,
-  **no cost**. Look for cost 0 with no note.
-
-  **The page break is not what broke it; the batch edge is.** A row crossing a
-  page break *inside* one range is complete, because whoever read it held both
-  pages. This bullet said "page break" until 2026-09-04 and that was the wrong
-  lesson from its own example — `SKILL-AUDIT` `F41`.
-- **Anything the authority does not list at all.** Either the name is mangled or
-  the book never defines it. Both need eyes, neither is a guess.
+- **A failed probe is a question, not a verdict**: find out who is wrong.
+- **Two independent readings of every number** (stat block and index).
+- **A row straddling a BATCH or SLICE edge loses its far side**: look for cost 0
+  with no note. A page break inside one range is harmless.
+- **Anything the authority does not list** needs eyes, not a guess.
 
 ## 6. Ship it
 
-A data script, per the `class-import` skill — production sits behind Access, so
-the import UI cannot reach it. Then prove the artifact rather than the session:
-
-**Delete the rows and re-apply the script from scratch.** A local database
-carries whatever the review left behind; the script is what ships. This caught
-rows written by a failed confirm that the script then skipped with
-`INSERT OR IGNORE`, leaving eight rows with a stale note and a NULL `system`.
-
-Then `node scripts/drift-check.mjs --remote` and drive one real user path in the
-browser — a picker that offers the new rows is the only proof they are reachable.
+A data script, per `class-import` (production is behind Access, so the import
+UI cannot reach it). **Delete the rows and re-apply the script from scratch**:
+the script is what ships, not the review's leftovers. Then
+`node scripts/drift-check.mjs --remote`, and drive one real user path in the
+browser: a picker offering the new rows is the only proof they are reachable.
 
 ## 7. Persist the survey — it is the next session's boot file
 
-Write the survey to **`apps/character-creator/docs/surveys/<slug>.md`**, from
-the template at `.claude/skills/book-survey/reference/SURVEY.md`. It is
-**tracked** — it ships in the same commit as the work it describes, and it
-survives the machine it was written on. It holds what the session learned that
-the repo does not: the inventory table, the authority pages and the printed-to-PDF
-offset, the catalog diff with its hand-checked false gaps, the agreed extraction
-plan, and a progress ledger — one line per PR, written in that PR before it
-opens and citing its **branch** (see `class-import` → *A batch outlives the
-session on purpose*), saying what went in and what remains.
+Write **`apps/character-creator/docs/surveys/<slug>.md`** from
+`.claude/skills/book-survey/reference/SURVEY.md`. It is tracked and ships with
+the work. It holds the inventory, authority pages, offset, catalog diff with its
+hand-checked false gaps, the agreed plan, and a progress ledger: one line per
+PR, written in that PR before it opens and citing its **branch** (see
+`class-import` → *A batch outlives the session on purpose*).
 
-**Read the offset from `scripts/books.json`; do not re-derive it.** That registry
-is the authority for `page_offset`, `printed_pages` and any
-`page_offset_exceptions`, and the extractor and `class-check` both read it. The
-"what remains" section is a **paste from `node scripts/source-coverage.mjs
---remote`**, which reports per book — not a count you do yourself.
+**Read the offset from `scripts/books.json`**, and paste "what remains" from
+`node scripts/source-coverage.mjs --remote`, never a count you did yourself.
 
 ### It states facts about the book. It quotes no prose from it
 
-This is the rule that lets the file be tracked at all, and it is not a
-formality. The 2026-08-25 efficiency audit put the survey in `.cache/` beside
-the OCR text deliberately — *local beside the OCR cache it quotes, so no
-commercial text enters the repo* — and that reason was real. The file moved
-because it turned out not to need the quotes.
+Page numbers, offsets, counts, names, ranges, table locations and diffs are
+**facts about** the book, and they are all the next session needs. Paraphrase a
+rule and cite the page. Smoke fails a **markdown blockquote** in
+`docs/surveys/*.md`, but cannot see an italic inline quote: **the check is a
+floor, not the rule.**
 
-Page numbers, offsets, counts, class names, section ranges, table locations and
-catalog diffs are **facts about** a book, and they are the whole of what the next
-session needs. The book's sentences are not. Where a rule matters, paraphrase it
-and cite the page: *p.157 lists eleven creature types as not available as player
-characters* carries everything an import needs, and the book's wording carries
-nothing extra. Wormwood's survey was 251 lines and **three** of them were quoted
-prose; all three paraphrased with the fact intact.
-
-The smoke test enforces the crude half — **no markdown blockquote** in
-`docs/surveys/*.md`, because verbatim excerpts are written as blockquotes by
-convention here. It cannot see an inline quotation in italics, and Wormwood's
-survey carried two of those as well as the blockquote. **The check is a floor,
-not the rule.**
-
-Then let the session go. The 2026-08-25 efficiency audit measured the same
-import PR costing 2–7× more tokens late in a long session than early, because
-every call re-carries the whole conversation — and when a mid-book context
-reset dropped that carry from ~790K to ~235K tokens per call, the imports
-continued without losing a thing, because everything they needed was in the
-repo, the skills, the OCR cache, and this file. **Start a fresh session every
-2–4 PRs**, booted from `apps/character-creator/docs/surveys/<slug>.md` plus
-`git log --oneline -15`, not from the memory of a conversation.
-
-Because the survey is tracked, a fresh session on a fresh clone boots from it
-too. The OCR caches do not travel; the judgement in this file does.
+**Start a fresh session every 2–4 PRs**, booted from the survey plus
+`git log --oneline -15`. The caches do not travel; the survey does.
 
 ## 8. A BATCH: where each book's state lives, and running two at once
 
-The survey is per book. When several books are handed over at once — which is
-how they arrive — **`BOOK-INGEST-QUEUE.md`** at the repo root holds the batch's
-roster and what applies to the whole batch. **Read it first**, every session.
+**`BOOK-INGEST-QUEUE.md`** holds a batch's roster and batch-wide decisions:
+**read it first**, every session. **A book session's record goes in its own
+survey, not the queue**: the `## Ledger` table (one row per PR: date, branch,
+what went in) and, at session end, the status line and a short *where it stands
+/ what is next*.
 
-**A book session's record goes in its own survey, not the queue**: the
-`## Ledger` table (one row per PR: date, branch, what went in) and, when the
-session ends, the survey's status line and a short *where it stands / what is
-next* note. Every survey has a ledger. Until 2026-09-25 each session added a
-dated section to the end of the queue instead, and two sessions in parallel
-both append there, so they always conflict. The queue takes only what spans
-books: a kickoff's roster, a batch-wide decision, the planning pass after the
-batch.
-
-**A book's status is NOT in the queue.** It is the `**Status:**` line at the top
-of its survey, and the line under it is its row count:
+**A book's status is the `**Status:**` line at the top of its survey**, with its
+row count under it:
 
 ```
 **Status:** `importing` — gear and spells shipped; classes next. (2026-09-25)
@@ -807,142 +349,68 @@ of its survey, and the line under it is its row count:
 **Rows citing this book:** classes 8, gear 31, spells 24
 ```
 
-The vocabulary is in `apps/character-creator/docs/surveys/README.md`: `cached`,
-`surveyed`, `importing`, `imported`, `excluded`, `backfilled`. **Set both lines in
-the PR that changes them.** Smoke fails a survey with no valid status, and
-`regression` fails a rows line that does not match a clean build, printing the
-line to paste. The queue carried a status column until 2026-09-24, and it
-disagreed with the surveys for eight days before anyone noticed.
-
-`cached` is what the kickoff session does for every book at once — §0b, plus a
-`scripts/books.json` entry, sorted by slug (smoke checks the order). A book
-sitting at `cached` is not neglected; it is waiting its turn.
-
-**One session per book.** Not one session per batch — see §7 on why a
-conversation is the most expensive place to keep what a repo can hold.
+The vocabulary is in `apps/character-creator/docs/surveys/README.md` (`cached`,
+`surveyed`, `importing`, `imported`, `excluded`, `backfilled`). **Set both lines
+in the PR that changes them**: smoke fails an invalid status, and `regression`
+fails a rows line that disagrees with a clean build and prints the line to
+paste. `cached` is what a kickoff does for every book at once (§0b plus a
+`books.json` entry). **One session per book.**
 
 ### Two books at once: one worktree each, and look before you start
 
-Two book sessions may run in parallel. **Each must be in its own tree.** Two
-sessions in one checkout is what put one session's commit on another's branch,
-four times, with `git status` looking clean throughout.
+**Each session in its own tree.** Two in one checkout put one session's commits
+on another's branch with `git status` looking clean.
 
-1. **Look at the board first.** `node scripts/book-board.mjs` shows every
-   book's status and row count, and which worktrees, branches and open PRs
-   belong to it. Add `--remote` for production's rows beside the survey's. A
-   book with someone else's branch or PR on it is taken.
-2. **Make the book its own tree:** `node scripts/book-worktree.mjs <slug>`, then
-   start the session **in that tree**, not in the main checkout or the working
-   directory. It builds the tree its own local D1 from the repo (a few
-   minutes), points it at the shared OCR cache, and links memory. `--remove`
-   takes it down afterwards. The `worktree` skill has why each of those
-   matters. `--copy-d1` copies the main checkout's D1 instead, which is faster
-   and carries any `--local` applies made there and not yet merged. Either way,
-   treat `--local` as scratch, and ask `--remote` or a clean build
-   (`regression`) for anything you will act on.
-3. **Name every branch `<slug>-...`.** The board finds a book's work by that
-   prefix.
+1. **Look at the board first**: `node scripts/book-board.mjs` (`--remote` adds
+   production's rows). A book with someone else's branch or PR on it is taken.
+2. **Make the book its own tree**: `node scripts/book-worktree.mjs <slug>`, and
+   start the session **in that tree**. It builds its own local D1 (or
+   `--copy-d1`), points at the shared OCR cache and links memory; `--remove`
+   takes it down (`worktree` skill). Treat `--local` as scratch.
+3. **Name branches `pal/data/<slug>-...`** (`CLAUDE.md` → *Naming*). The board
+   and `book-worktree.mjs` find a book's work by the `<slug>-` prefix after the
+   `<group>/<type>/` part.
 4. **Re-diff against production right before each extraction batch** (§4).
-   The survey's catalog diff is from the survey date, and the other book may
-   have added the same skill, spell or gear since. Smoke fails a catalog key
-   two data scripts insert with different values, but it fires only after
-   you've written the duplicate.
-5. **Expect to rebase, and expect it to be small.** The shared lines are gone:
-   status and counts live in your own survey. What is left is a finding number
-   in `BOOK-INGEST-AUDIT.md`. If both sessions took the same `F` number, smoke
-   fails at your rebase. Renumber the one your branch added.
-6. **Before merging more than one PR, run
-   `node scripts/book-board.mjs --merge-check --tests --remote`.** Each PR's CI
-   ran against an older `main`. This check gives the merge order, test-merges
-   every open PR together, and traces what production has that `main` does
-   not. **Never rename a data script after applying it `--remote`**: the run
-   record keeps the old name. If you must rename, make the new file delete the
-   old name's `data_script_runs` row, then apply it again.
+5. **Expect a small rebase**: status and counts live in your survey. What can
+   collide is a `BOOK-INGEST-AUDIT.md` finding number or a `~NNN` script number;
+   smoke fails the duplicate, so renumber the one your branch added.
+6. **Before merging more than one PR**, run
+   `node scripts/book-board.mjs --merge-check --tests --remote`: merge order, a
+   combined test-merge, and what production has that `main` does not. **Never
+   rename a data script after applying it `--remote`**; if you must, the new
+   file deletes the old name's `data_script_runs` row and is applied again.
 
-**The rule that keeps a batch moving is the one worth memorising:**
+**The rule that keeps a batch moving:**
 
 > Import what the schema supports, record what was dropped in the row's
 > `extraction_notes`, file the gap in `BOOK-INGEST-AUDIT.md`, and keep going.
 > **Do not stop to implement.**
 
-So a book that needs a mechanic the app cannot express does not block. The
-finding goes in `BOOK-INGEST-AUDIT.md` — code changes only — and the book ships
-without it. **Data ships with its book; UNASKED-FOR code waits** — read the next
-two sections before treating that as "no code", because it is not, and saying it
-was is what made the old wording false. Classes, skills, spells, psionics, gear
-and `books.json` entries all go in with the book they came from, applied
-`--remote` before the merge that needs them, per `ship-pr`.
-
-That division is what stops a batch turning into one enormous PR. It also means
-`BOOK-INGEST-AUDIT.md` accumulates open findings *while* a batch runs, which is
-the one menu here where that is correct rather than a backlog — read its own
-header for where it currently stands, not this sentence.
+**Data ships with its book; UNASKED-FOR code waits** (next section). Classes,
+skills, spells, psionics, gear and `books.json` entries go in with the book,
+applied `--remote` before the merge, per `ship-pr`.
 
 ### What "no code from a book" forbids: three tiers, and this is the copy that governs
 
-**The rule binds the SESSION, not Nate**, and until 2026-09-07 it was stated as
-an absolute ban — *"No application code, schema, validator or generator changes
-from a book"* — in `BOOK-INGEST-QUEUE.md` and `docs/prompts/BOOK-INGEST-PROMPT.md`,
-neither of which a session that fires this skill from its description will
-necessarily open. Measured 2026-09-07 with `git log` and
-`gh pr view --json files`, that sentence was false on the day it was written and
-stayed false for ten days. Both files now point here.
+**The rule binds the SESSION, not Nate.**
 
-**Tier 1 — part of an import. Do it, and file nothing.** A class stating no
-`sdc_base` and no `mdc_base` needs a `men_of_arms` line in its own
-frontmatter, or `apps/character-creator/test/checks/catalog-data.mjs` fails it
-(`class-import` has the rule). Until 2026-09-25 that grouping was a map in
-`apps/character-creator/js/compose.js`, `CORE_SDC_BY_CLASS`, so the tier-1 edit
-was a code file, which is the case this tier was written for. **Eleven
-book-session PRs made that edit**: seven in `phase-world` (#406, #409, #411,
-#412, #413, #416, #417) and four in `triax` (#776–#779), covering 15 of that
-book's 21 classes. Not one was recorded as a violation, because it is not one.
-`scripts/books.json` is the same shape: catalog vocabulary in a file that is
-not a data script.
-
-**Tier 2 — Nate asks, and then it is in scope.** Say so in the outcome note; do
-not write it up as a rule broken. On 2026-09-07 one book produced a migration
-and three tables (#787), 55 rows of vessel data into them (#791), a
-parser-and-validator change (#789), and one change touching `app.js`,
-`sheet.js`, `js/parser.js`, `db/schema.sql`, `_lib/catalog.js` and
-`scripts/class-check-lib.mjs` at once (#794) — the complete set the ban names,
-inside a day, every piece of it asked for. Four decisions recorded as four
-violations is a worse record than four decisions.
-
-**Tier 3 — everything else still waits, and this half is unchanged.** A mechanic
-the app cannot express, a bug noticed in passing, a shape that would be nicer:
-file the finding, keep going, **do not stop to ask and do not implement**.
+- **Tier 1: part of an import. Do it, and file nothing.** A class's
+  `men_of_arms` line, a `scripts/books.json` entry: catalog vocabulary outside
+  a data script.
+- **Tier 2: Nate asks, and then it is in scope.** Say so in the outcome note;
+  it is a decision, not a rule broken.
+- **Tier 3: everything else waits.** A mechanic the app cannot express, a bug
+  noticed in passing, a nicer shape: **file the finding, keep going, do not stop
+  to ask and do not implement.**
 
 ### What the deferral was actually buying, which is not what the ban claimed
 
-Across the 25 findings on `BOOK-INGEST-AUDIT.md` the lag from filing to taking
-is under a day, and six were taken the **same day** they were filed (`git log
--S'### Fn '` against that file for the filing date, the outcome notes for the
-take, both read 2026-09-07). `phase-world`'s last book PR merged at 09:05 on
-2026-08-31 and the first deferred-code PR merged at **10:09** — the deferral
-bought sixty-four minutes, and then 17 findings shipped across 18 PRs in one
-afternoon. Prompt C, the planning pass *"after every book is imported"*, has
-never run and now cannot: 23 of 25 findings are closed with five of seven books
-not yet surveyed.
-
-**What the wait bought was never time. It was that the session which read the
-book was not the session that wrote the code off its own reading** — and that is
-worth keeping, so keep it directly:
+Not time: deferred findings were routinely taken within the day. What it bought
+was that **the session which read the book was not the session that wrote code
+off its own reading.** Keep that directly:
 
 > **A proposal written and implemented in the same session goes through
 > `audit-premise-auditor` before it is scoped.**
-
-`F23(b)` is the worked case. Its outcome note opens by saying the proposal *"was
-written this morning by the session that then implemented it - which is the
-conflict `audit-premise-auditor` exists to break, and it broke it"*, and **seven
-of that proposal's own claims did not survive the check** — including a stated
-failure direction that was inverted, so a typo it warned would grant too much
-would in fact have granted too little, silently. PR #795 then fixed three more
-defects a browser found and the suite could not.
-
-The subagent is a hand-off you can perform inside one session. The ban was a
-hand-off you could only perform by waiting, and the measurements above say
-nobody waited.
 
 ## What "surveyed" means
 
