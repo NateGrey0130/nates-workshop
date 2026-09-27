@@ -255,7 +255,7 @@ Elemental Spell list's descriptions, which the book defers to the Book of Magic
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `cb1` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-18 | [#1170](https://github.com/NateGrey0130/nates-workshop/pull/1170) | 77 creatures (NPC & bestiary plan, Phase 3) |
-| 2026-09-26 | #TBD | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
+| 2026-09-26 | #1443 | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
 | 2026-09-26 | #TBD | batch 2, seven new Rifts race classes (`rifts-bearman`, `rifts-kankoran`, `rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`, `rifts-vrill`), reconciled against the book with no figure in dispute; no stub rows; classes citing this book 19 -> 26. Applied `--remote` before the merge |
 
 ### What remains
