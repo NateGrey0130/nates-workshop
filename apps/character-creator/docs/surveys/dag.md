@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — written after the fact; gods and creatures came in with the NPC and bestiary plan, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 4, gear 23, notable_npcs 73, creatures 38
+**Rows citing this book:** classes 7, gear 23, notable_npcs 73, creatures 38
 
 Slug `dag`. Cached from `PFRPG - Dragons and Gods (1).pdf`, 240 PDF pages,
 **text layer**.
@@ -59,6 +59,12 @@ Lo-Dox and Night Stalker are in as `kukulcan-dragon`, `lo-dox-dragon` and
 shape - a hatchling and an adult variant - carries the printed-17 dragon
 experience table as `xp_table`, and starts with no money or gear.
 
+**Serpent of the Wind, Thunder Lizard and Ultucan are imported** (2026-09-27,
+Nate's decision to import the playable hatchlings): `serpent-of-the-wind-dragon`,
+`thunder-lizard-dragon` and `ultucan-dragon`, each in the Chiang-Ku's shape - a
+hatchling and an adult variant, the printed 17 ladder as `xp_table`, magic and
+psionics the hatchling's. See the ledger.
+
 ## Catalog diff
 
 **Not run.**
@@ -79,6 +85,7 @@ None agreed.
 | 2026-09-26 | #1442 | **Magic weapons, printed 228-232: 23 `gear` rows** (`add-dag-magic-weapons.sql`), the book's first gear. Castlerake and Frostfoil (Swords of Legend), the dragon bone weapons, spear, arrows and eight spell-charged arrows, the arrow with angel feathers, the Dragon Eye Medallion, Dragon Claw Gloves, Sorcerer's Dragon Helm, Mantle of Dragon Endurance, the Feathered Dragon's Wings, the generic Dragon Slayer Weapon, the Black Sword of Styphon and the Dragon Slayer Rune Armor and Axe. Shape copied from `add-pf-magic-items.sql` and the Atlantis rune weapons: `palladium-fantasy`, `magic` for generic items, `weapon` for named ones, `armor` for the suit; unpriced items store NULL. **Not imported:** the standard Dragon Helm (the Dragon's Skull, 800,000-1.5 million gold), because `dragon-helm` already exists citing the main book at 200,000 - left for a decision; the optional rune weapon powers (printed 232), which are not items. book-reconcile: 23/23 clean. Applied `--remote` before the merge. |
 | 2026-09-27 | #1459 | **The Dragon Helm, settled.** Nate's decision: no second row. `~024-dragon-helm-and-annihilate.sql` writes printed 231's price for the standard Dragon Helm, the Dragon's Skull (800,000 to 1.5 million gold, read off a 300 dpi render), into the existing `dragon-helm` row's `cost_note`, keyed on slug; the row keeps its 200,000 and its Palladium Fantasy RPG citation, so no row cites this book for it. No row count moves. `--remote` is applied before the merge. |
 | 2026-09-27 | #TBD | **Hatchling R.C.C.s: Kukulcan, Lo-Dox, Night Stalker** (printed 34-40), `add-kukulcan-dragon-class.sql`, `add-lo-dox-dragon-class.sql`, `add-night-stalker-dragon-class.sql`: classes 1 -> 4. Shape copied from `chiang-ku-dragon` (hatchling + adult variants for dice, pools, horror factor and bonuses); top-level skills, magic and psionics are the hatchling's because printed 50 makes the hatchling the player character. `xp_table` from the Dragon Exp. Table, printed 17; `starting_money: 0` and no equipment, printed 50. Dice-valued spell counts stay in `special_abilities`; the magic block states only the level gate. Every number read off a render. book-reconcile: 3 classes, 6 variants, no disagreements. Applied `--remote` before the merge. |
+| 2026-09-27 | #TBD | **Three hatchling R.C.C.s, printed 40-47**: `add-serpent-of-the-wind-dragon-class.sql`, `add-thunder-lizard-dragon-class.sql`, `add-ultucan-dragon-class.sql` - classes 4 to 7. Shape copied from `chiang-ku-dragon`: hatchling and adult variants (dice, pools, horror factor, bonuses, `attacks_base`), `xp_table` the Dragon Exp. Table levels 1-15 (printed 17, render-read), no starting possessions (printed 50). Magic and psionics are the hatchling's, since a variant cannot override either; the adult's are prose. Judgements, each in its class's `extraction_notes`: the Serpent's "all warlock magic from levels one and two" read as the Air warlock rows; the 1D4 spells per later level are prose, a schedule count being a number; "+N on all other saving throws" spread across the sheet's d20 saves; literate-N plus M more spoken as N+M `Language: Other` picks. The Ultucan's voice abilities are granted as Ventriloquism, Imitate Voices & Sounds and Impersonation. Also `~026-chiang-ku-dragon-xp-ladder.sql`: the Chiang-Ku gains the same printed 17 ladder, which printed 50 gives every hatchling and the class never stored. The Ultucan's recognize and use poison has no catalog row and is prose. Every number read off renders of printed 17, 40-42, 44, 45 and 47; book-reconcile: 3/3 clean. Applied `--remote` before the merge. |
 
 ### What remains
 
