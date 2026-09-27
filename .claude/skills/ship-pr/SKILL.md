@@ -5,336 +5,204 @@ description: Take a change in this repo from branch to deployed, the way this re
 
 # Shipping a change
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`. Four
-> runnable lines are pinned too: that it merges with `--delete-branch`, that
-> it records the one-time `git config remote.origin.prune true`, and that it
-> no longer teaches the manual prune.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`), and four runnable lines: it
+> merges with `--delete-branch`, records `git config remote.origin.prune true`,
+> and teaches no manual prune. The incident behind each rule is in
+> `reference/why.md`.
 
-**Merging to `main` IS the deploy.** Cloudflare Pages publishes the repo root on
-every merge. There is no build step. Whatever is on `main` is live within a
-minute or two.
+**Merging to `main` IS the deploy.** Pages publishes the repo root on every
+merge with no build step, so nothing after the merge catches a mistake: the
+checks happen before it or not at all.
 
-That single fact drives everything below: nothing after the merge catches a
-mistake, so the checks happen before the merge or they do not happen.
+**Three checks are required** by `main`'s ruleset `22209348`: `smoke` and
+`menus` (`.github/workflows/tests.yml`) and `regression` (`regression.yml`).
+The merge button and `gh pr merge` are refused until all three pass.
+`play-flow` and `deploy-alarm` report only. Ask the ruleset itself:
+`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`. A green check is
+not always a suite that ran: `regression` and `play-flow` run only for a
+Palladium or shared change, and each group's suites only for that group or a
+shared change (`CLAUDE.md` → *Three groups*). A skipped suite says so in its log.
 
-**Since 2026-09-16 three of those checks are required.** `main`'s ruleset
-`22209348`, *"main: require a pull request"*, requires the `smoke` and `menus`
-check-runs (`.github/workflows/tests.yml`, the five smoke suites and the
-menu-check, `REPO-AUDIT.md` G8) and `regression` (`regression.yml`,
-`SKILL-AUDIT` `F32`/`F36`) to succeed before a PR can merge. **Since
-2026-09-25 a green check is not always a suite that ran:** `regression` and
-`play-flow` run only when a Palladium or shared file changed, and the tools and
-Marvel suites only for their own group or a shared file (`groups.json`,
-`CLAUDE.md` → *Three groups*). A skipped suite's log says so in words, and the
-check still reports. The character creator's smoke suite runs on every PR. The merge button is disabled and `gh pr merge`
-is refused until they do. `play-flow` and `deploy-alarm` are reporting only.
-The ruleset is also what refuses the direct push step 1 describes. From
-2026-09-03 to 2026-09-16 it carried zero required checks, and before that this
-passage denied it existed (`F29`) — ask it rather than this paragraph:
-`gh api repos/NateGrey0130/nates-workshop/rulesets/22209348`.
-
-**Step 4 is still yours.** CI reports *after* you have opened the PR, which is
-after the point where step 4 would have saved you, and a required check that
-fails costs a round trip that a local run would not. **Treat it as a second pair
-of eyes on a run you already did, never as the reason to skip one.**
+**Step 4 is still yours.** CI reports after the PR is open. Treat it as a
+second pair of eyes on a run you already did.
 
 ## The loop
 
-1. **Branch.** Never commit to `main` — it deploys. Since 2026-09-03 a GitHub
-   ruleset refuses a direct push to `main` server-side, so this is enforced
-   rather than remembered (`REPO-AUDIT.md` G1) — but it fires at `git push`,
-   after you have already committed, and unpicking a commit made on `main` is
-   still your problem. Branch first.
+1. **Branch.** Never commit to `main`; the ruleset refuses the push, but only
+   after you have committed. Name it per `CLAUDE.md` → *Naming*
+   (`<group>/<type>/<slug>`), and check the name is free with the three
+   commands there:
    ```bash
-   git checkout -b short-kebab-description
+   git checkout -b pal/data/triax-ngr-police-club
    ```
-   **If the change takes a numbered finding, the branch and the commit subject
-   name the menu** — `ui-audit-f30-banked-picks` and `Take UI-AUDIT F30: …`,
-   not `f30-banked-picks` and `Take F30: …`. Eleven menus number with `F`,
-   three with `D` and two with `N`, so a bare number identifies nothing once
-   the branch is deleted and `git log --grep` is all that is left. Anything
-   that is **not** a finding keeps the plain slug above. `audit-menu` →
-   *Which is why a finding reference names its menu*; `REPO-AUDIT.md` G12/G13.
+   **A branch that takes a numbered finding names the menu** in its slug and
+   its commit subject: `proc/audit/ui-audit-f30-banked-picks` and
+   `Take UI-AUDIT F30: …`, never a bare `f30`. Menus number with `F`, `D` and
+   `N`, so a bare number identifies nothing once the branch is gone.
 2. **Make the change.**
-3. **Apply schema and data FIRST, if the change needs them.** See
-   [ordering](#the-ordering-rule) below. This is the step that is wrong by
-   default.
+3. **Apply schema and data FIRST**, if the change needs them. See
+   [the ordering rule](#the-ordering-rule). This step is wrong by default.
 4. **Verify**, at the layer the change lives in:
-   - always: `node apps/character-creator/test/smoke.mjs` and
-     `node apps/filament-forge/test/smoke.mjs` — the second is fast (no
-     wrangler) and pins FilamentForge's README, the snapshot SQL generator and
-     the data endpoint's sanitizers, plus
-     `node apps/pick3cut5/test/smoke.mjs`, which derives from `index.html` the
-     paths that must be outside the Access wall and checks they are documented
-     and exempted, and `node apps/pick3cut5/test/game.mjs`, which walks all 56
-     reachable rounds and proves the server's budget rules and the client's copy
-     of them still agree. Finally `node apps/media-vault/test/smoke.mjs`, which
-     proves the merge planner that retires MediaVault's localStorage cache,
-     pins that app's README, and fails if any endpoint regains the power to
-     replace a whole library — the bug that app was rebuilt to end.
+   - **always**, the five smoke suites:
+     `node apps/character-creator/test/smoke.mjs`,
+     `node apps/filament-forge/test/smoke.mjs`,
+     `node apps/pick3cut5/test/smoke.mjs`,
+     `node apps/pick3cut5/test/game.mjs`,
+     `node apps/media-vault/test/smoke.mjs`.
+     `smoke.mjs --section <name>` is for iterating; **the merge gate is the
+     flagless run**, and a partial run labels itself `PARTIAL SMOKE PASSED` so
+     it cannot be quoted as this step.
+   - **touched anything Pick 3 Cut 5 loads, or an Access policy:**
+     `node apps/pick3cut5/test/smoke.mjs --remote`, the only check that fetches
+     production's assets with no session (`pick3cut5`).
+   - **added a class or catalog rows:** update the book's
+     `**Rows citing this book:**` line in its survey **in the same commit**, and
+     its `**Status:**` line if it moved. `test/regression.mjs` prints the line to
+     paste. Rows citing no surveyed book are the one shared count, in
+     `docs/operations.md`. Never quote a current value from memory; run the test.
+   - **touched documentation, class prose or a `note`, or lifted a limitation
+     one describes:** sweep the sentences describing the old limit, in the same
+     change, and hand them to `claim-capability-verifier` (*the app cannot do
+     X*) and `claim-count-verifier` (a count in prose). `claim-audit` owns the
+     method. Nothing fails if you skip this; it is still required.
+   - **touched an endpoint, the schema or a data script:**
+     `node apps/character-creator/test/regression.mjs`, which builds a database
+     from nothing and drives the real routes.
+   - **changed anything visible:** `verify-ui`, then drive it in a browser.
 
-     The character-creator smoke test takes `--section <name>` for iterating
-     between edits — it runs only the matching sections and skips the
-     wrangler-backed environment half. **The merge gate is the flagless run.**
-     A partial run labels its summary `PARTIAL SMOKE PASSED` precisely so its
-     output cannot be quoted as this step.
-   - **touched anything Pick 3 Cut 5 loads, or any Access policy:**
-     `node apps/pick3cut5/test/smoke.mjs --remote`. It fetches the app *and its
-     assets* from production with **no** Access session, and it is the only
-     check that sees a bypass covering the app's own paths but not the shared
-     CSS and JS it loads. `pick3cut5` has the case, and read it before touching
-     an Access policy.
-   - added a class or catalog rows: **update the book's
-     `**Rows citing this book:**` line in its survey in the same commit**, and its
-     `**Status:**` line if that moved. `test/regression.mjs` counts each book's
-     rows in a database built from nothing and fails a line that disagrees,
-     printing the line to paste. Rows citing no surveyed book are the one
-     shared count, in `docs/operations.md`. These replaced the catalog totals
-     and the README's *"N of M published classes"* sentence on 2026-09-24,
-     because every import moved those and two parallel book PRs always
-     collided on them.
-
-     **The current values are deliberately not quoted here.** They used to be,
-     and went stale on the next import; a skill naming a moving number is wrong
-     more often than right. Run the test — it prints what it wanted against what
-     it found, which is the answer anyway.
-   - **touched documentation, class prose or a `note` — or lifted a limitation
-     one of them describes:** sweep the sentences that described the old limit,
-     in the same change, and hand them to the two claim agents rather than
-     reading around them. `claim-capability-verifier` takes *the app cannot do
-     X*; `claim-count-verifier` takes a count in prose. Neither has write
-     tools, so neither can correct a sentence it misread. `claim-audit` owns
-     the method — bound each hit with `scripts/readme-section.mjs` and hand
-     them claims, not a corpus.
-
-     **No check, no exit code, nothing that can go red.** These notes vary in
-     wording by design and every mechanical reader of them here has been wrong
-     in both directions. The rule is not new either — `claim-audit` → *The rule
-     that makes it cheap* has said *"when you lift a limitation, grep for the
-     sentence that described it — in the same change"* since it was written.
-     What is new is that it is named at the step where a change is verified,
-     instead of only in the file that describes the method. `SKILL-AUDIT` F47.
-   - touched an endpoint, the schema or a data script:
-     `node apps/character-creator/test/regression.mjs` — it builds a database
-     from nothing and drives the real routes, which is the only thing that
-     catches a fresh environment being broken
-   - changed anything visible: **`verify-ui`**, then drive it in a browser
-
-   The three catch different classes of bug and none substitutes for another.
-   A class picker that rendered everything 1300px below the fold passed all 768
-   smoke checks and was reported as "nothing happens".
+   None of these substitutes for another.
 5. **Commit.** See [commit messages](#commit-messages).
-6. **Push and open the PR.**
+6. **Freshness, push, and the PR.** Run `CLAUDE.md` → *Before you open a PR*
+   first: `git fetch origin`, then `git diff --name-only HEAD...origin/main`.
+   If `main` touched your paths or any shared path, merge `origin/main` in and
+   re-run step 4.
    ```bash
-   git push -u origin short-kebab-description
-   gh pr create --base main --head short-kebab-description --title "..." --body-file pr-body.tmp
+   git push -u origin pal/data/triax-ngr-police-club
+   gh pr create --base main --head pal/data/triax-ngr-police-club --title "[pal/data] ..." --body-file pr-body.tmp
    ```
-   **What goes in the body**, one line each, and delete any that does not apply —
-   a short honest PR beats a padded one:
-   - **The gap** — what was wrong, and why it mattered. Not what files moved.
-   - **What was measured** — numbers with their SOURCE and their DATE, and
-     whether `--remote` or `--local`. **If a claim was reasoned to rather than
-     run, say so in those words.**
-   - **Posture** — log/cap, warn/block, opt-in, documentation only, no new gate.
-     Half of what is being agreed to, and the cheapest thing to get wrong.
-   - **Nothing regresses — checked, not assumed** — what could have broken and
-     the check that says it did not. *"Nothing else uses this"* is an absence
-     claim: prove it by reading, not by grepping one of its two shapes.
-   - **Decline path** — the honest case for NOT doing this, so declining stays a
-     real option.
-   - **Verification** — paste the pass lines. **The merge gate is the flagless
-     run**; a `--section` run labels itself `PARTIAL` so it cannot stand in.
-     Touched D1? Say which files are **already applied**.
+   The body, one line each, dropping any that do not apply:
+   - **The gap**: what was wrong and why it mattered, not which files moved.
+   - **What was measured**: numbers with source and date, `--remote` or
+     `--local`. **Say so in words if a claim was reasoned to rather than run.**
+   - **Posture**: log/cap, warn/block, opt-in, docs only, no new gate.
+   - **Nothing regresses, checked, not assumed**: what could have broken and the
+     check that says it did not. An absence claim is proved by reading.
+   - **Decline path**: the honest case for not doing this.
+   - **Verification**: the flagless pass lines. Touched D1? Say which files are
+     **already applied**.
 
-   `.github/pull_request_template.md` carries the same six as a compose-box
-   prompt for a PR opened in the browser. `--body-file` replaces it, which is
-   this path, so **this list is the copy that gets read** and the template
-   follows it.
-7. **Merge**, only when asked. It deploys. **The ruleset owns the gate now:**
-   since 2026-09-16 `gh pr merge` is refused until `smoke`, `menus` and
-   `regression` report success, so read the checks if you like but nothing
-   rests on your reading them. `--delete-branch` removes the
-   branch from GitHub *and* locally, so there is nothing left to tidy.
-   Since 2026-09-03 the repository also has **`delete_branch_on_merge`** on, so
-   the **remote** branch goes whether or not you pass the flag — including on a
-   merge from the web UI, which is the case the setting was turned on for
-   (`REPO-AUDIT.md` G4). **Keep passing `--delete-branch` anyway:** the setting
-   does nothing about your *local* branch, and that half is still yours.
+   `.github/pull_request_template.md` carries the same six for the browser.
+7. **Merge**, only when asked. It deploys. Re-run the freshness check first.
+   Run the merge as a command on its own (the hook refuses it chained):
    ```bash
    gh pr merge <n> --merge --delete-branch
    ```
-   **If another open PR is based on this branch, that flag closes it, and a
-   closed PR whose base is gone cannot be recovered.** GitHub retargets a
-   stacked child only when the base merges *without* the branch being deleted in
-   the same operation, and this command always deletes. #261 went that way on
-   2026-08-24 and had to be replaced by #262 from the same head branch —
-   `gh pr reopen` answers *"Could not open the pull request"* and
-   `gh pr edit --base main` refuses on a closed PR. **Prefer not to stack.** If a
-   stack already exists: merge the base with no `--delete-branch`, retarget the
-   child with `gh pr edit <child> --base main`, then delete the base branch by
-   hand.
+   `--delete-branch` removes the branch on GitHub and locally. Keep passing it
+   even though `delete_branch_on_merge` is on, because that setting does not
+   touch your local branch.
 
-   **`--merge` is the shape this repo uses, and squash and rebase are enabled
-   and not wrong.** `REPO-AUDIT.md` G5(b) decided that deliberately. The reason
-   for the default is that this history reads as prose and a merge commit keeps
-   the branch's own messages; a large fraction of `main` arrived by squash
-   anyway. **Nothing downstream cares**: a squash still lands exactly one
-   first-parent commit, which is the commit step 9 reads and the one both deploy
-   monitors walk. They walk `--first-parent` rather than `--merges` precisely so
-   that a squash is not invisible to them.
-8. **Sync**, then confirm the merge from GitHub rather than from the pull.
+   **Never stack PRs if you can avoid it. If one is stacked on this branch,
+   `--delete-branch` closes the child, and a closed PR whose base is gone cannot
+   be reopened.** For a stack, **retarget the child first**:
+   `gh pr edit <child> --base main`, confirm with `gh pr view <child> --json
+   baseRefName,state`, and only then merge the base. Merging the base without
+   `--delete-branch` is not enough, because `delete_branch_on_merge` deletes it
+   anyway.
+
+   `--merge` is the default shape (the branch's own messages survive); squash
+   and rebase are enabled and not wrong.
+8. **Sync, then confirm the merge from GitHub**, not from the pull:
    ```bash
    git checkout main && git pull
    ```
-   **Bare, with no `origin main` after it.** Naming a refspec is what stops the
-   merged branch's tracking ref being pruned — see [pruning](#pruning-is-a-step-only-when-you-name-a-refspec).
+   **Bare, with no `origin main`**, or the merged branch's tracking ref is not
+   pruned (see *Pruning*).
    ```bash
    gh pr view <n> --json state,mergeCommit --jq '.state + "  " + .mergeCommit.oid'
    ```
-   **`Already up to date` means nothing on its own.** `gh pr merge` fast-forwards
-   local `main` itself, so a successful merge and a merge that never happened
-   print the same line. PR #165 printed it because the PR was still open; #176
-   and #177 printed it because the work was already local. Only `state` and the
-   merge commit distinguish them, and `git log --oneline -2 origin/main` should
-   show the merge commit on top.
-9. **Confirm the deploy actually ran.** Not optional, and not the same step as
-   confirming the merge. See [the deploy is not
-   guaranteed](#the-deploy-is-not-guaranteed).
+   **`Already up to date` means nothing**: `gh pr merge` fast-forwards local
+   `main` itself, so a merge that happened and one that did not print the same
+   line. Only `state` and the merge commit tell them apart.
+9. **Confirm the deploy ran.** Not the same step as confirming the merge:
    ```bash
    gh api repos/NateGrey0130/nates-workshop/commits/<sha>/check-runs \
      --jq '[.check_runs[] | select(.name=="Cloudflare Pages")]
            | if length == 0 then "NO RUN" else (.[0].status + "/" + (.[0].conclusion // "pending")) end'
    ```
-   **Filtered to the Pages run, and printing status as well as conclusion.**
-   Both halves are load-bearing. Another workflow posts `check-recent-deploys`
-   to `main`, so an unfiltered read fails the commit when a *different* monitor
-   is red — `deploy-sweep.mjs` did exactly that on 2026-09-03 and calls it
-   "two tools feeding each other false alarms". And `conclusion` is **null while
-   a build is in flight**, which is where you are standing: this runs seconds
-   after the merge and a Pages build takes 20-35 of them. `gh`'s jq is gojq,
-   where `null` is the identity for `+`, so the old command printed the check's
-   name and nothing else — a blank that is not `success` and is not a failure
-   either. `completed/success` is the pass. `pending` means wait and look again.
-10. **Verify production**, by asking it — not by reading the exit code.
+   Filtered to the Pages run, because another workflow posts to `main` too.
+   `completed/success` is the pass. **`pending` means wait and look again**: a
+   build takes 20–35 seconds and `conclusion` is null while it runs. `NO RUN`
+   right after the merge may be too early; `NO RUN` a minute later is a merge
+   that registered no deploy at all.
+10. **Verify production by asking it** for a string this change added (see
+    below). D1 cannot answer it: the database moved before the merge.
 
 ## The deploy is not guaranteed
 
-Merging to `main` starts a deploy. It does not finish one. Cloudflare Pages
-compiles **every** file under `functions/` — routed or not — plus everything
-they import, with the wrangler its build image ships rather than the one here.
-Syntax that image cannot parse fails the whole deploy, and nothing on the
-request path changes: the site keeps serving the last build that compiled.
-Merges landed on `main` for four days in August 2026 without one of them
-reaching production. `SETUP.md` → *When the merge does not deploy* has the
-mechanism.
+Pages compiles **every** file under `functions/`, routed or not, plus their
+imports, with its build image's wrangler (3.x), not the one here (4.x). Syntax
+that image cannot parse fails the whole deploy, and the site keeps serving the
+last build, so nothing looks wrong. `SETUP.md` → *When the merge does not
+deploy* has the mechanism; `environment.mjs` §9 catches the known shape in
+step 4. `gh pr checks` has shown a red Pages mark on PRs that deployed fine, so
+read step 9, not that.
 
-So the merge commit's own check-runs are the step, above — and anything but
-`completed/success` on the Pages run means the merge has not shipped **yet**.
-`NO RUN` is the one that misreads: a merge registering no check-run at all looks
-exactly like a quiet healthy merge and is not one, which is why the query says
-so in words rather than printing nothing. `gh pr checks` is not a substitute: it
-has shown a red "Cloudflare Pages fail" on PRs that deployed perfectly well, so
-the mark there is noise.
+**Merges seconds apart skip builds, and that is not a failure.** Cloudflare
+**skips** a deployment a later build overtakes, and its check-run says
+`Building` forever, so step 9 stays `pending` for that merge. Nothing is
+missing: the next build publishes the whole repo root. **Tell skipped from
+wedged by whether a later commit deployed, never by how long it has been
+pending, and never delete a deployment on a pending check-run.** `SETUP.md` →
+*A skipped deployment looks exactly like a wedged one* has the table.
 
-**Step 9 is per-merge, and it is a thing to remember.** The signal was never the
-problem: every merge commit across those four days reports
-`Cloudflare Pages=failure` — 65 consecutive, no flapping, no ambiguity — and
-every merge since reports `success`. Nobody read it, at a merge rate that has
-twice passed 45 in a day. So end a working session with the backstop:
+**End a session, or a batch of merges, with the sweep:**
 
 ```bash
 node scripts/deploy-sweep.mjs
 ```
 
-It walks the last twenty **first-parent** commits on `origin/main` and names any
-that did
-not ship, including one that registered no check-run at all — which looks
-exactly like a quiet healthy merge and is not one. Report only: it never moves
-the exit code, because a deploy that failed needs a person rather than a
-non-zero, and a script that failed on four-day-old history would fail every run
-until someone rewrote the past.
+It walks the last twenty first-parent commits on `origin/main`, names any that
+did not ship (including one with no check-run), and says which pending ones a
+later deploy already carried. It also compares `workers/pick3cut5-room`'s
+newest commit with its live `GIT_SHA`, because a merge never deploys that
+Worker. A timestamp gap there says the Worker may be stale, not that it
+matters: read the diff, then deploy or decide not to. Report only; it never
+fails. It does not replace step 9.
 
-**Merging a batch back to back produces builds that never run, and that is not
-a failure.** Cloudflare collapses the production queue and **skips** the
-deployments a later build overtakes — `latest_stage.status = skipped` — and a
-skipped deployment's check-run says `Building` for good. It never concludes, so
-step 9 above sits at `pending` for that merge no matter how long you wait, and
-running it again is not the answer.
+`.github/workflows/deploy-alarm.yml` runs the same walk daily over 26 hours and
+fails its own run, which is how it emails Nate. It is not a gate, covers only
+Pages, and goes silent if Actions notifications are muted.
 
-**Nothing is missing when that happens**: a Pages build publishes the whole repo
-root, so the next build that *does* run carries every commit under it. On
-2026-09-04, `#714`–`#717` merged inside 17 seconds, all four were skipped, and
-all four shipped with `#718`, which merged four seconds later.
+## Verify production by asking it
 
-The sweep now separates that from a genuinely wedged build and says which is
-which. **The test is whether a later commit deployed, not how long the build has
-been pending** — for eight hours the sweep called those four *probably stuck*
-and pointed at deleting a deployment to release a queue that did not exist. So
-take the answer from the sweep rather than from step 9's `pending`, and **do not
-delete a deployment on the strength of a pending check-run**; `SETUP.md` → *A
-skipped deployment looks exactly like a wedged one* has the table. When you are
-merging a batch, the cheap habit is one sweep at the end rather than step 9
-after each merge.
+```bash
+node scripts/drift-check.mjs --remote
+```
 
-**It answers for both deploy paths, and that is the second half.**
-`workers/pick3cut5-room` produces no check-run at all — a merge does not deploy
-it — so the Pages half is silent about it by construction, and the sweep once
-printed a clean summary while saying nothing about the one component you deploy
-by hand. It now compares the newest commit touching that directory against the
-active deployment's timestamp and reports the gap.
+It compares migrations, data scripts, tables, columns and published classes
+against production. **Run it before the merge as well as after**: an unapplied
+data script shows as `DATA SCRIPT NOT RUN`. A clean run prints `NO DRIFT`.
 
-**A timestamp cannot tell you whether the change mattered.** A `$schema` line
-fires it as loudly as a rewrite of `room.js`. Read the diff it names, then either
-deploy or decide it does not need deploying — but do not silence it, because the
-alternative it replaced was a gap nothing reported at all.
-
-It does **not** replace step 9. The sweep tells you something is broken; step 9
-tells you *while you still remember what you merged*.
-
-**There is a third one, and it is the only one that does not depend on you.**
-`.github/workflows/deploy-alarm.yml` runs daily on a schedule, walks the same
-`--first-parent` history over a 26-hour window, and **fails on purpose** —
-because a failed scheduled run is what GitHub emails about, and that email is
-the whole alarm. Three things about it are worth knowing at a merge and are not
-worth reading its header for:
-
-- **It is not a gate.** It runs on a schedule, never on a pull request, and it
-  is not a required status check. It cannot block a merge or a deploy.
-- **Its channel is notification email**, confirmed reaching Nate on its first
-  red run, 2026-09-03. Mute this repo's Actions notifications and the alarm goes
-  silent without failing.
-- **It answers only for Pages.** `workers/pick3cut5-room` needs Cloudflare
-  credentials that CI deliberately does not get, so the sweep above remains the
-  only thing covering that half.
-
-It changes nothing about steps 9 and 10, which still happen at the merge. What
-it changes is the consequence of forgetting them: a day, rather than the four
-that went unnoticed in August.
-
-Then ask production for **a string this change added** — a route, a heading, a
-new class name. It is the only check that distinguishes deployed from merged,
-and D1 cannot answer it: the database moved *before* the merge, so it looks
-identical whether or not the code shipped.
+Then ask production for a string the change added:
 
 ```bash
 curl -s https://nates-workshop.pages.dev/apps/pick3cut5/ | grep -c '<a string the change added>'
 ```
 
-Most of the site 302s to the Access login wall, so a fetch like that only works
-on the Pick 3 Cut 5 bypass paths. For anything else, load the page in a logged-in
-browser and look for the string there — the point is the string, not the tool.
+Most of the site 302s to the Access wall, so that works only on the Pick 3
+Cut 5 bypass paths; elsewhere, load the page in a logged-in browser and look for
+the string.
 
-The known shape of this is caught *before* the merge by the smoke test's
-*What Pages will compile* section
-(`apps/character-creator/test/checks/environment.mjs` §9), which the flagless
-run in step 4 already covers. It is a text check on purpose: building with the
-wrangler that resolves here compiles the broken syntax happily, so a
-build-based check would pass straight through the outage it exists to prevent.
+Exit codes from `wrangler d1 execute` are advisory: query the thing back.
+
+```bash
+npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
+```
+
+**Three ways that query comes back wrong without failing** (`\"` in PowerShell,
+`--file` over `--remote`, transcribing from the terminal) are in
+**`windows-shell`**. Read it before a query you will act on.
 
 ## Pruning is a step only when you name a refspec
 
@@ -344,146 +212,52 @@ This clone sets:
 git config remote.origin.prune true
 ```
 
-**That config is necessary and it is not sufficient, and the difference is the
-form of the command you fetch with.** Pruning only ever considers the refs the
-refspec covers. Fetch with an explicit one — `git pull origin main` — and the
-refspec is that branch alone, so no other ref is even a candidate and the
-merged branch's `origin/*` survives. Fetch bare, and the default refspec covers
-every branch, so the dead ones go.
+That is necessary and not sufficient. Pruning considers only the refs the
+refspec covers:
 
-Measured 2026-09-02, both with `remote.origin.prune` and `fetch.prune` already
-`true`, against a tracking ref pointed at a branch that does not exist on the
-remote:
-
-| command | the dead ref |
+| command | a merged branch's dead tracking ref |
 |---|---|
 | `git pull origin main` | **survives** |
 | `git pull` | pruned |
 | `git fetch` | pruned |
 
-So step 8 above is bare on purpose. This section previously reasoned from the
-config to the outcome and got it wrong in the direction that hides: the config
-was set, the reasoning was plausible, and nothing failed — the stale ref just
-sat in `git branch -r` looking like a branch that had not been cleaned up. It
-was caught twice in one session, after two merges that had both deleted their
-branch correctly.
-
-It is set **per clone**, not in the repo, because git has no way to ship
-config with a checkout. A fresh clone needs the one line above; until then it
-accumulates stale `origin/*` refs that are cosmetic but keep showing up in
-`git branch -r`.
-
-What used to be here was a four-command dance — delete the remote branch,
-delete the local branch, fetch with `--prune`. Three of those four are still
-unnecessary: `gh pr merge --delete-branch` does both deletions, and the config
-plus a bare fetch does the pruning. The dance was being repeated by hand every
-few PRs, which is the tell that it should have been configuration rather than
-instructions.
-
----
+So step 8 is bare. The setting is per clone; a fresh clone needs the line
+above. `gh pr merge --delete-branch` plus the config plus a bare fetch replaces
+any manual pruning.
 
 ## The ordering rule
 
-**Schema and data changes are applied to production BEFORE the merge that needs
-them**, never after. Pages deploys the moment `main` moves, so code that expects
-a column merged first is code running against a database that does not have it.
+**Schema and data are applied to production BEFORE the merge that needs them**,
+because Pages deploys the moment `main` moves:
 
 ```bash
 node scripts/d1-apply.mjs --remote db/migrations/NNN-thing.sql
 ```
 
-The PR body should then say plainly which files are **already applied**, because
-by the time anyone reviews it, merging those is a no-op and the branch is only
-catching the repo up to a database that already moved. A reviewer who does not
-know that will look for the deploy step and not find one.
-
-**This step writes to production ahead of any review, so know what recovery
-is before you run it.** D1 Time Travel is the mechanism, and it is a *rolling*
-30 days held by Cloudflare in the same account as the data it protects;
-`scripts/d1-backup.mjs` is the copy you hold yourself, and it exists because
-`wrangler d1 export` fails outright here — one fts5 virtual table makes the
-whole database un-exportable and no flag skips it.
-`apps/character-creator/docs/operations.md` → *Recovery* has both.
-**No backup step is prescribed per apply.** Most applies here are one data
-script, and a ritual attached to every one of them would be skipped inside a
-week.
-
-For anything about migrations themselves, use the `schema-change` skill.
+The PR body then says which files are **already applied**, so a reviewer does
+not look for a deploy step. This writes production ahead of review, so know the
+recovery first: D1 Time Travel (a rolling 30 days) and `scripts/d1-backup.mjs`
+(`apps/character-creator/docs/operations.md` → *Recovery*). No backup is
+prescribed per apply. Migrations themselves: `schema-change`.
 
 ## `--local` is not a mirror of production
 
-**Do not audit against the local database.** It accumulates: rows from a failed
-confirm, a draft class from an experiment, whatever a review left behind. Mine
-carried **327 skills where the repo and production both have 324**, and an
-audit run against it reported two catalog duplicates that production merged away
-weeks ago — a finding that would have been fixed twice and was never real.
-
-**It drifts the other way too, and that direction is worse.** On 2026-08-30 the
-same database held **293 skills against production's 345** — 52 short. An extra
-row costs a false report; a missing one makes `class-check` print stub SQL to
-create a row that already exists, which `--emit-script` then writes into a file
-that ships. See `class-import` → *Rules that are easy to get wrong*. Neither
-direction is detectable from inside the local database, which is the argument
-for `--remote` rather than for keeping local tidy.
-
-Local is for *applying and testing a script*. Production is for *asking what is
-true*, and `repo-vs-live.mjs` is what proves the two agree:
+**Never audit against the local database.** It drifts in both directions and
+neither is visible from inside it: extra rows give false reports, and missing
+rows make `class-check` print stub SQL for rows that exist, which
+`--emit-script` writes into a file that ships (`class-import`). Local is for
+applying and testing a script; production is for asking what is true, and this
+proves the repo and production agree, by name:
 
 ```bash
 node scripts/repo-vs-live.mjs
 ```
 
-It builds a database from the repo in a scratch directory and diffs **names**
-against live, not counts.
-
-## Verify production by asking it
-
-Start with the whole picture, which is one command and read-only:
-
-```bash
-node scripts/drift-check.mjs --remote
-```
-
-It compares every migration against `schema_migrations`, every data script
-against `data_script_runs`, every table and column against `sqlite_master`, and
-every published class against one a data script can recreate. **Run it before
-merging as well as after**: an unapplied data script on the branch shows up as
-`DATA SCRIPT NOT RUN`, which is the ordering rule checked rather than
-remembered. A clean run prints `NO DRIFT`.
-
-It is also what catches the failure nobody looks for — a row that exists only in
-production. Two classes were in that state for weeks, recreatable from nothing
-in the repo, and no test could see it.
-
-Then query the specific thing the change intended.
-
-`wrangler d1 execute` has reported a non-zero exit on runs that fully applied,
-and an `Authentication error [code: 10000]` on one that succeeded. Exit codes
-here are advisory, and so is a parse of its output — a `--remote` apply that
-worked was reported as failed this week because the *reader* choked on
-wrangler's multi-block JSON, not because anything went wrong. Query the thing
-back:
-
-```bash
-npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
-```
-
-**Three ways that query comes back wrong rather than failing** — `\"` escapes
-nothing in PowerShell, `--file` returns a summary instead of rows over
-`--remote`, and transcribing from terminal output has put a wrong gear slug one
-keystroke from a class definition. Each is in the **`windows-shell`** skill with
-its case. Read it before writing a query whose answer you intend to act on.
-
 ## Commit messages
 
-This repo's history reads as prose. A message says what was wrong and why, not
-what files moved — `git log` is the only place some of these decisions are
-recorded. Match the surrounding style before writing one.
-
-**Write it to a file and use `-F`** — backticks in a `-m` string are evaluated by
-the shell, and this repo's prose is full of them. **Name it `.tmp`**: `*.tmp` is
-gitignored, so `git add -A` cannot sweep it into the commit the way one shipped
-inside PR #404. Details in the **`windows-shell`** skill.
+The history reads as prose: say what was wrong and why, not which files moved.
+**Write the message to a file named `.tmp` and commit with `-F`**, because
+backticks in `-m` are evaluated by the shell and `*.tmp` is gitignored:
 
 ```bash
 git commit -F commit-msg.tmp
@@ -491,25 +265,22 @@ git commit -F commit-msg.tmp
 
 ## Line endings
 
-`.sql` is pinned to LF by `.gitattributes` and the smoke test fails a `.sql`
-carrying a CR. **Read `windows-shell` before any in-place edit** — the usual
-tools do not preserve what a file had, and the obvious check reports them clean
-anyway.
+`.sql` is pinned to LF by `.gitattributes`, and smoke fails a `.sql` with a CR.
+**Read `windows-shell` before any in-place edit.**
 
 ## A rotated secret is two places
 
 Production reads its own copy as a Pages secret, so rotating a key is a change
-**here and there**, and only the second one ships. The local half — that
-`wrangler pages dev` reads `.dev.vars` at boot, and a 0-second failure is a
-stale server rather than a bad key — is in **`windows-shell`**.
+here and there, and only the second ships. The local half (`.dev.vars` is read
+at boot) is in **`windows-shell`**.
 
 ## What "done" means
 
-- smoke test passes on `main` after the merge
+- the smoke test passes on `main` after the merge
 - `node scripts/drift-check.mjs --remote` prints `NO DRIFT`
-- production queried and matching what the change intended
-- the PR shows `MERGED` and its merge commit is on top of `origin/main`
-- **the merge commit's check-runs show the Pages deploy at `success`, and
-  production answers with a string the change added** — merged is not deployed
-- branch deleted on both sides, `git status` clean
-- if the change is user-visible, it has been exercised in a browser
+- production queried, and matching what the change intended
+- the PR is `MERGED` and its merge commit is on top of `origin/main`
+- **the merge commit's Pages check-run is `completed/success`, and production
+  answers with a string the change added**; merged is not deployed
+- the branch deleted on both sides, `git status` clean
+- a user-visible change exercised in a browser
