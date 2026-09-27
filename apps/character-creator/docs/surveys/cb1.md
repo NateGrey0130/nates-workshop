@@ -1,8 +1,8 @@
 # Rifts Conversion Book One — survey
 
-**Status:** `backfilled` — written after the fact; creatures came in with the NPC and bestiary plan, and no full inventory has been taken. (2026-09-24)
+**Status:** `importing` — the Palladium Character Conversions section is inventoried and batch 1 (the nine races the Palladium Fantasy catalog already holds) is in; batches 2-4 are planned below. (2026-09-26)
 
-**Rows citing this book:** classes 10, creatures 77
+**Rows citing this book:** classes 19, creatures 77
 
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,
@@ -10,8 +10,9 @@ Slug `cb1`. Cached from
 
 *Facts about this book, not prose from it — see `book-survey` §7.*
 
-**Backfilled offline on 2026-08-28.** One row traces to this book. It was cached
-and registered but never surveyed.
+**Backfilled offline on 2026-08-28; the conversions section surveyed on
+2026-09-26.** The rest of the book was inventoried from its contents page
+(printed 4-5), not page by page.
 
 ## Page offset
 
@@ -26,28 +27,187 @@ folios with an interior space (`1 91`, `1 92`), and the derived figure stopped
 twenty pages short, in the middle of the monster section. The render of file
 p193 shows 192.
 
+**Printed 77 (file p078) is a full-page illustration** with no text, which is
+why the Wolfen entry reads printed 76, then 78.
+
+## Cache health
+
+`cb1` is the one text-layer cache with no welded pages. It does carry the
+Palladium digit cipher (`lD6`, `ID4xlO`, `1 1` for 11) — `substituted_digits`
+69 on 2026-09-10 — so every dice figure below was read as the expression it can
+only be.
+
 ## The book's authority tables
 
-**Not found — the book has not been surveyed.**
+None that an import depends on. The conversions section states every figure
+inside each entry; there is no index of races, no experience table (a race takes
+its occupation's), and no equipment or money (those come from the O.C.C.).
+
+Two reference tables in the rules chapters are cited by the race entries: the
+**Bionic Strength Table** and the **Supernatural Physical Strength Table**
+(Rules Clarifications, printed 8-9 per the contents page). A race whose P.S.
+"is considered Bionic" or "becomes Supernatural" on Rifts Earth reads its damage
+off one of them. The app has no P.S.-class key, so each class says so in prose.
 
 ## Inventory
 
-**Not counted.**
+By chapter, from the contents page (printed 4-5). Only the last three rows were
+read page by page.
+
+| printed | chapter | imports |
+|---|---|---|
+| 7-43 | Rules Clarifications & Reference Data — attributes beyond 30, the strength tables, combat notes, pain and damage, Mega-Damage conversions, integrating S.D.C. characters, general conversion rules | nothing: rules reference |
+| 43-65 | Heroes Unlimited, Ninjas & Superspies, After the Bomb and Beyond the Supernatural conversions | nothing: conversion advice for other games' characters |
+| 66-71 | Magic & Spells; **the Warlock O.C.C.** (66-71) | the Warlock — imported as ten element rows (see Classes) |
+| 71-72 | **Elemental Spell Magic** — the Warlock's spell list by element (Air, Earth, Fire, Water) and level, with P.P.E. in parentheses; descriptions deferred to the Book of Magic | names only here; no diff has been run |
+| 72-73 | Magic index by book — which book prints each magic discipline | nothing: a cross-reference |
+| **73-109** | **Palladium Character Conversions** — 24 race entries and three R.C.C. pointers (table below) | **the subject of this survey** |
+| 110-~128 | Faerie Folk | creatures, already imported (see Ledger) |
+| ~130-192 | Palladium Monsters & Animals | creatures, already imported |
+
+### Palladium Character Conversions, printed 73-109
+
+Printed 73-74 introduce the section: the races are mortal Hit Point and S.D.C.
+beings who need M.D.C. armor, except where an entry states an M.D.C.
+transformation; the author's conversion is H.P. + S.D.C. less 20%, and a mortal
+with a hundred or more combined points keeps the old 100 S.D.C. = 1 M.D.C.
+Printed 74 also gives **the section-wide rule on learning Rifts skills**: within
+a few weeks a new arrival picks up the regional language (+5%) and two Modern
+W.P.s; after 2D4+4 months or one level, three skills from Communications, Pilot
+(basic vehicles), Technical and W.P. Modern; then one language, literacy or skill
+from those four every two levels, with others at the G.M.'s discretion. It is
+not stored on any class, because it applies to a character who came from
+Palladium and not to one raised on Rifts Earth.
+
+Every entry prints alignment, attribute dice, hit points, S.D.C., natural A.R.
+where it has one, M.D.C. (or "None"), Horror Factor, P.P.E., size and weight,
+natural abilities, attacks per melee, damage (with a Bionic or Supernatural P.S.
+note where it applies), bonuses, magic and psionics, life span, **two O.C.C.
+lines — one for Palladium Fantasy, one for Rifts** — skills of note, habitat,
+enemies and allies.
+
+| printed (file) | entry | on Rifts Earth | Palladium Fantasy row | batch |
+|---|---|---|---|---|
+| 74-76 (p075-p077) | Bearmen of the North | S.D.C. 2D4x10, A.R. 11, Bionic P.S., H.F. 14 | — | 2 |
+| 76-79 (p077-p080) | Canines: Wolfen | S.D.C. 20, A.R. 6, Bionic P.S., H.F. 12 | `wolfen` | **1** |
+| 79-80 (p080-p081) | Canines: Coyle | S.D.C. 20, human P.S., H.F. 11 | `coyle` | **1** |
+| 80-82 (p081-p083) | Canines: Kankoran | S.D.C. 20, A.R. 6, H.F. 12 | — | 2 |
+| 82-83 (p083-p084) | Changelings | S.D.C. by O.C.C. only, H.F. 10 | `changeling` | **1** |
+| 83-84 (p084-p085) | Dragonmen | 6D6+20 M.D.C., A.R. 12, Bionic P.S., fire breath | — | 2 |
+| 84-86 (p085-p087) | Dwarves | S.D.C. 20 | `dwarf` | **1** |
+| 86-87 (p087-p088) | Elves | S.D.C. 10 | `elf` | **1** |
+| 87 (p088) | Giants — introduction | | | |
+| 87-88 (p088-p089) | Algor, Frost Giant | P.E. + 4D6 M.D.C., frost breath | — | 3 |
+| 88-89 (p089-p090) | Cyclops, Lightning Giant | P.E. + 3D6 M.D.C. | — | 3 |
+| 90 (p091) | Jotan, Earth Giant | P.E. + 1D6x10+20 M.D.C. | — | 3 |
+| 91-92 (p092-p093) | Gigantes, Mutant Giants | 1D6x10 + P.E. M.D.C.; **Gigante Mutation & Special Abilities Table** 91-92, **Gigante Insanity Table** 92 | — | 3 |
+| 92-93 (p093-p094) | Minotaur, the Bull | 6D6+18 M.D.C. | — | 3 |
+| 93-94 (p094-p095) | Nimro, Fire Giant | 6D6+20 M.D.C. | — | 3 |
+| 94-96 (p095-p097) | Rahu-Man | 6D6x10 M.D.C.; minor psionics, printed 96 | — | 3 |
+| 97-98 (p098-p099) | Titan, Hero Giant | 3D6x10+60 M.D.C. | — | 3 |
+| 98-99 (p099-p100) | Goblin, with the **Cobbler Goblin** on printed 99 | S.D.C. 10 | `goblin` | **1** |
+| 99-101 (p100-p102) | Gosai; the **Gosai Assassin R.C.C.** pointer and **Hand to Hand: Skudasa** (a 15-level table) on printed 100-101 | S.D.C. 3D6, A.R. 10, metal allergy | — | 2 (race), 4 (R.C.C., Skudasa) |
+| 101-102 (p102-p103) | Orc | S.D.C. 10, no psionics | `orc` | **1** |
+| 102-103 (p103-p104) | Ogre | S.D.C. 40, Bionic P.S. | `ogre` | **1** |
+| 104-105 (p105-p106) | Quillback; the **Quillback Scavenger R.C.C.** pointer on printed 105 | 3D6+12 M.D.C. | — | 2 (race), 4 (R.C.C.) |
+| 105-107 (p106-p108) | Quorian; the **Quorian Oneiromancer** and the **Chant of Dreaming** on printed 107 | S.D.C. 25 | — | 2 (race), 4 (R.C.C., chant) |
+| 107-108 (p108-p109) | Troll | P.E. + 6D6+12 M.D.C., Supernatural P.S., no psionics | `troll` | **1** |
+| 108-109 (p109-p110) | Vrill | P.E. + 2D6+2 M.D.C.; radar | — | 2 |
+
+**24 race entries and three occupation-style R.C.C.s.** Each R.C.C. is a pointer
+rather than a stat block: the Gosai Assassin is the Palladium Assassin with
+Skudasa in place of Hand to Hand: Assassin and four extra skills in place of its
+four W.P.s; the Quillback Scavenger is the Palladium Vagabond with added skills;
+the Quorian Oneiromancer is a dream shaman built on the Mystic.
 
 ## Classes
 
-One class traces to this book. The Warlock was closed against it as class-audit
-item **CB1** in [#304](https://github.com/NateGrey0130/nates-workshop/pull/304).
+**Nineteen rows cite this book after batch 1.** The Warlock is ten of them: it
+was closed against this book as class-audit item **CB1** in
+[#304](https://github.com/NateGrey0130/nates-workshop/pull/304), and is carried
+as one row per element and element pair (`warlock-air` through
+`warlock-fire-water`); the original `warlock` row is deleted. The other nine are
+batch 1 below.
+
+### Batch 1 — the nine races the Palladium Fantasy catalog already holds
+
+Each is a **new class with `system: rifts`**, because a variant cannot cross
+systems. **The id is the Palladium id with a `rifts-` prefix** (`rifts-wolfen`,
+`rifts-troll`, ...), matching the one existing twin, `rifts-priest`; no
+production id ends in `-rifts`. The name is the book's (Wolfen, Troll), as
+`mystic` and `nb-mystic` share theirs across systems.
+
+None is a `copy_of` its Palladium row. Every pair differs in more than a short
+`except` list could name — natural abilities, the granted skills, the O.C.C.
+restrictions and usually a bonus — and several differ in the stats themselves:
+
+| class | differs from the Palladium Fantasy row |
+|---|---|
+| `rifts-coyle` | S.D.C. 20 (PF 10) |
+| `rifts-dwarf` | S.D.C. 20 (PF 15); no `group:magic` bar on Rifts Earth |
+| `rifts-goblin` | S.D.C. 10 (PF 5) |
+| `rifts-orc` | P.E. 3D6 (PF 3D6+2) |
+| `rifts-ogre` | P.S. 4D6+2, P.E. 4D6, P.B. 2D6+2, Spd 3D6+2, S.D.C. 40; **psionics standard** (PF none) |
+| `rifts-troll` | an M.D.C. being (P.E. + 6D6+12); S.D.C.-world H.P. +2D6/level, S.D.C. 60, P.B. 2D6 |
+| `rifts-wolfen` | Horror Factor save ladder at 4, 8 and 12 |
+
+Decisions every one of them shares:
+
+- **`occ_restrictions` is read from the "O.C.C.s Rifts" line**, never the
+  Palladium one. Wolfen, Coyle and Dwarf state none (their Rifts lines allow any
+  O.C.C.). The rest name catalog ids; each list's note says what the book said
+  and which ids stand for it, and an O.C.C. imported later is not covered until
+  it is added — the same posture as the felinoid and lizard-man restrictions.
+- **Skills of Note are granted** as `occ_skills`, languages included. Where the
+  book gives them to a share of the race (two thirds of Wolfen, 70% of Dwarves,
+  90% of Elves) the grant says so. Wolfen, Ogre and Faerie Speak have no language
+  row, so they are `Language: Other` with the name in the note.
+- **Bionic and Supernatural P.S., natural A.R. and per-skill percentage
+  bonuses** (the Coyle's +5% Espionage/Wilderness, the Dwarf's +5% tech, the
+  Elf's +2% Wilderness, the Goblin's +2% Rogue) are prose. The app has no key for
+  the first two and no race-level per-skill modifier for the third.
+- **The Cobbler Goblin is prose, not a variant** — the Palladium `goblin` row's
+  note gives the reasons, and they hold here. The book disagrees with itself on
+  the odds: one in 20 in the text, 1-15 on percentile in the procedure.
+- Horror Factor is the top-level `horror_factor` key, which the Palladium rows
+  predate.
 
 ## Catalog diff
 
-**Not run.**
+Run for batch 1 by `class-check --remote` on each draft, 2026-09-26: every skill
+the nine grant resolves, and no stub rows were needed. No spell, psionic or gear
+diff has been run; batch 1 needs none.
 
 ## Extraction plan
 
-None agreed. A conversion book is mostly rules for moving characters between
-systems rather than new classes, so an inventory pass (step 3) should come
-before any assumption that there is a lot here.
+Agreed 2026-09-26. One PR each, in order.
+
+1. **The nine races the Palladium Fantasy catalog holds** — Wolfen, Coyle,
+   Changeling, Dwarf, Elf, Goblin (with the Cobbler as prose), Orc, Ogre, Troll.
+   *Shipped, this PR.*
+2. **The seven new humanoids** — Bearman, Kankoran, Dragonman, Gosai, Quillback,
+   Quorian, Vrill. `rifts-` ids only if Palladium Fantasy rows for them could
+   later exist; check the catalog first. The Dragonman, Quillback and Vrill are
+   M.D.C. beings on Rifts Earth; the Bearman is the book's example of a 100
+   S.D.C. = 1 M.D.C. mortal.
+3. **The eight giants** — Algor, Cyclops, Jotan, Gigantes, Minotaur, Nimro,
+   Rahu-Man (with its minor psionics, printed 96) and Titan, all M.D.C. beings on
+   Rifts Earth. The **Gigante Mutation & Special Abilities Table** (printed
+   91-92) is a roll table, not stats; decide there whether it is prose on the
+   class or a modelled roll. The Gigante Insanity Table (92) points into the Rifts
+   RPG's tables.
+4. **The three R.C.C. pointers and what they bring** — the Quorian Oneiromancer
+   (`copy_of: mystic` if its except list stays short), the Quillback Scavenger
+   (built on the Vagabond), the Gosai Assassin (built on the Palladium Assassin),
+   plus **Hand to Hand: Skudasa** as a skill row usable only by the Gosai
+   Assassin and the **Chant of Dreaming** as a spell or ability row. Needs
+   batch 2's races first.
+
+**Left out, with reasons:** the rules chapters and the other-game conversion
+chapters (rules reference, no rows); the magic index (a cross-reference); the
+Elemental Spell list's descriptions, which the book defers to the Book of Magic
+(`bom` is the authority for those rows). The section-wide skill rule on printed
+74 stays prose until someone asks for it to be modelled.
 
 ## Ledger
 
@@ -57,15 +217,18 @@ before any assumption that there is a lot here.
 | — | [#304](https://github.com/NateGrey0130/nates-workshop/pull/304) | the Warlock closed against this book (class audit CB1) |
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `cb1` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
+| 2026-09-18 | [#1170](https://github.com/NateGrey0130/nates-workshop/pull/1170) | 77 creatures (NPC & bestiary plan, Phase 3) |
+| 2026-09-26 | #TBD | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
 
 ### What remains
 
-From `node scripts/source-coverage.mjs --remote`, 2026-08-28:
+From `node scripts/source-coverage.mjs --remote`, 2026-09-26, before batch 1
+was applied:
 
 ```
-  cb1                  1 / 0
+  cb1                 87 / 0
 ```
 
-**1 traceable, nothing untraceable.** Everything this book has ever been asked
-for resolves. Whether there is more in it to take is an open question nobody has
-asked.
+**87 traceable, nothing untraceable** — ten Warlock rows and 77 creatures.
+Batch 1 takes it to 96. What remains to take is batches 2-4 above: fifteen
+races and three R.C.C.s, one hand to hand style and one chant.
