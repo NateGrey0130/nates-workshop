@@ -1,8 +1,8 @@
 # Rifts World Book 16: Federation of Magic — survey
 
-**Status:** `importing` — PR B (25 Techno-Wizard gear rows) and PR C (12 vehicles and automatons) have shipped; the eight classes (D, E) are next. (2026-09-26)
+**Status:** `imported` — the whole plan shipped: 25 Techno-Wizard gear rows (#1448), 12 vehicles and automatons (#1446), and all eight O.C.C.s (#1454 and this PR). The 129 spells were already held under Book of Magic and RUE. (2026-09-27)
 
-**Rows citing this book:** classes 4, gear 25, vehicles 12, notable_npcs 13
+**Rows citing this book:** classes 8, gear 25, vehicles 12, notable_npcs 13
 
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**. Second printing, March 1999; copyright 1997.
@@ -313,15 +313,17 @@ Left out on purpose, with the reason:
 | 2026-09-26 | [#1441](https://github.com/NateGrey0130/nates-workshop/pull/1441) | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
 | 2026-09-26 | #1446 | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
 | 2026-09-26 | #1448 | **PR B: 25 Techno-Wizard devices and weapons** into `gear` (`add-fom-tw-gear.sql`), printed 112-120. Re-diffed `--remote` first (3,144 rows: missing 25), reconciled by `book-reconcile`, applied `--remote` before the merge |
-| 2026-09-26 | #TBD | **PR E, four classes**: Conjurer, Corrupt, Grey Seer and Mystic Knight (`add-<id>-class.sql` each), with their printed 160 ladders; `book-reconcile` over all four found no disagreement. The Corrupt keeps the Elite and Repentant, and the book's villain caveat, in its body; it does not carry `supersedes_race`, which would drop a magic race's spells. The Mystic Knight is not merged with Madhaven's Knight of the White Rose, a different book's class. Applied `--remote` before the PR |
+| 2026-09-26 | #1454 | **PR E, four classes**: Conjurer, Corrupt, Grey Seer and Mystic Knight (`add-<id>-class.sql` each), with their printed 160 ladders; `book-reconcile` over all four found no disagreement. The Corrupt keeps the Elite and Repentant, and the book's villain caveat, in its body; it does not carry `supersedes_race`, which would drop a magic race's spells. The Mystic Knight is not merged with Madhaven's Knight of the White Rose, a different book's class. Applied `--remote` before the PR |
+| 2026-09-26 | #TBD | **PR D, the four Magi**: `battle-magus`, `battle-magus-controller`, `lord-magus`, `high-magus` (printed 71-82), one `add-<id>-class.sql` each, `imported_classes` +4. Each carries its printed-160 ladder read off a render (the Controller shares the Conjurer's, the Lord Magus the Mystic Knight's, the High Magus the Corrupt's). Every granted spell resolves to an existing BoM/RUE row. The Lord Magus's "all illusions" and "all of levels 1-2", and the High Magus's "all 11th-15th level spells", are named lists drawn from production on 2026-09-26, and later imports at those levels do not join them. Create Mummy and Create Zombie are left out (the Magi never practice Necromancy). The High Magus's *Healing Touch* has no catalog row and is not granted. The automaton bond, Create Automaton and the Bonding Ritual are special abilities that name the PR C `vehicles` slugs. A `book-reconcile` pass over all four found no disagreements. Applied `--remote` before the PR |
 
 ## Where it stands
 
-Importing. PR B (TW gear) and PR C (vehicles and automatons) have shipped.
-Next is PR D, the four Magi.
+Imported. Every row the extraction plan named has shipped: PR B (#1448), PR C
+(#1446), PR E (#1454) and PR D, the four Magi, last.
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote` on 2026-09-26 lists `fom` at
-**13 traceable / 0 other**: the 13 notable NPCs. That was before PRs B and C.
-What is left of the plan is the 8 classes.
+**13 traceable / 0 other**: the 13 notable NPCs. That was before PRs B-E, which add 25 gear, 12 vehicles and 8 classes.
+Nothing of the plan is left; what was left out on purpose is under
+Extraction plan.
