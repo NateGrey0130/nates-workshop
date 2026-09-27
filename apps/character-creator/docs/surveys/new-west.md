@@ -117,19 +117,19 @@ Counted by structure over all 226 cached pages, not by reading prose.
 | class | printed | ladder (p.223-224) |
 |---|---|---|
 | Bandit O.C.C. | 83-85 | own |
-| Highwayman O.C.C. | 85-87 | own |
+| Highwayman O.C.C. | 85-87 | shared with Justice Ranger and 1st Cavalry |
 | Bounty Hunter O.C.C. | 87-90 | shared with Mountain Giant |
 | Gunfighter O.C.C. | 90-92 | own |
 | Gunslinger O.C.C. | 92-96 | shared with Wired Gunslinger |
-| Justice Ranger O.C.C. | 96-98 | shared with 1st Cavalry |
+| Justice Ranger O.C.C. | 96-98 | shared with Highwayman and 1st Cavalry |
 | **Psi-Slinger P.C.C.** | 98-101 | shared with Lyn-Srial Cloudweaver |
-| Saddle Tramp O.C.C. | 101-102 | own |
+| Saddle Tramp O.C.C. | 101-102 | shared with Preacher |
 | Sheriff/Lawman O.C.C. | 102-105 | own |
 | Sheriff's Deputy O.C.C. | 105-107 | own |
 | Wired Gunslinger O.C.C. | 107-110 | shared with Gunslinger |
-| Cowboy O.C.C. | 110-113 | own |
+| Cowboy O.C.C. | 110-113 | shared with Lyn-Srial Average Citizen |
 | Mining 'Borg/Prospector O.C.C. | 113-115 | 'Borg tables, core rules |
-| Preacher O.C.C. | 115-117 | own, and the ladder line covers two Preachers |
+| Preacher O.C.C. | 115-117 | shared with Saddle Tramp, and the ladder line covers two Preachers |
 | Professional Gambler O.C.C. | 117-120 | shared with Professional Thief & Smuggler |
 | Saloon Bum/Stoolie O.C.C. | 120-123 | shared with Saloon Girl |
 | Saloon Girl/Barmaid O.C.C. | 123-125 | shared with Saloon Bum |
@@ -174,14 +174,14 @@ NPC-only. These eight carry the player-character tag:
 
 | class | printed | ladder |
 |---|---|---|
-| Cactus People R.C.C. | 127-128 | own |
+| Cactus People R.C.C. | 127-128 | shared with Psi-Ponies |
 | Fennodi R.C.C. | 128-130 | **none — advances on the chosen O.C.C.'s** |
 | Keepers of the Desert R.C.C. | 130-133 | own — **welded page, printed 130** |
-| Lyn-Srial (Average Citizen) R.C.C. | 133-134 | own |
+| Lyn-Srial (Average Citizen) R.C.C. | 133-134 | shared with Cowboy |
 | Lyn-Srial Sky-Knight R.C.C. | 134-135 | own |
 | Lyn-Srial Cloudweaver R.C.C. | 135-136 | shared with Psi-Slinger |
 | Mountain Giant R.C.C. | 136-138 | shared with Bounty Hunter |
-| Psi-Ponies R.C.C. | 156-158 | own, marked optional |
+| Psi-Ponies R.C.C. | 156-158 | shared with Cactus People, marked optional |
 
 **Cactus People and Mountain Giant are invisible to a stat-block scan** — their
 headings carry no `R.C.C.` at all, and both were found only by scanning for the
@@ -407,8 +407,9 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 | 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
-| 2026-09-26 | #TBD | Backfill, `~009-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
-| 2026-09-26 | #TBD | `~018-class-vessels.sql`: **the Mining 'Borg's two chassis as `vehicles` rows** (vehicles citing this book 15 -> **17**, 9 M.D.C. locations, no weapon systems - the page prints tool attachments, not weapons), read off a render of printed 113 (PDF page 114) and matching the text layer: Partial Reconstruction main body 130 (+120 bionic armour), hands 25, arms 75, legs 110; Full Construction main body 200 (+150), hands 30, arms 100, legs 180, head 90. The class names both in a restriction line, as the Free Quebec cyborgs name theirs, and its "vessel import has not run yet" note is rewritten as the decision. `--remote` is applied before the merge. |
+| 2026-09-26 | #1440 | Backfill, `~009-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
+| 2026-09-26 | #1450 | `~018-class-vessels.sql`: **the Mining 'Borg's two chassis as `vehicles` rows** (vehicles citing this book 15 -> **17**, 9 M.D.C. locations, no weapon systems - the page prints tool attachments, not weapons), read off a render of printed 113 (PDF page 114) and matching the text layer: Partial Reconstruction main body 130 (+120 bionic armour), hands 25, arms 75, legs 110; Full Construction main body 200 (+150), hands 30, arms 100, legs 180, head 90. The class names both in a restriction line, as the Free Quebec cyborgs name theirs, and its "vessel import has not run yet" note is rewritten as the decision. `--remote` is applied before the merge. |
+| 2026-09-26 | #TBD | **XP ladders**, `~015-new-west-xp-ladders.sql` and `~016-new-west-xp-ladders-2.sql` (one change, split only to keep each file's read-backs under the Windows command-line limit): **24 of 25** classes take the printed 223-224 column whose heading names them, read off renders and re-read by a `book-reconcile` agent; none had one. `mining-borg` copies `combat-cyborg`'s 'Borg ladder, which printed 223 names. **`fennodi` is not stored** - printed 223 says it advances on the O.C.C. selected. Three printed bounds adjusted: Bounty Hunter levels 5 and 12 repeat the previous top and are stored +1, and the Sky-Knight's level 12 prints `18,301` for 181,301. Four ladders the class table above called "own" are shared, and the table is corrected. `lyn-srial-cloudweaver` and `lyn-srial-sky-knight` add `xp_table` to their `copy_of` except lists: the book gives the three Lyn-Srial classes three columns. No row count moves. `--remote` is applied before the merge |
 
 ### What remains
 
