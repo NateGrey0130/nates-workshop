@@ -66,6 +66,7 @@ export function isChoiceGroup(entry) {
 // the two of combineClasses's race-first keys that come from what a character
 // DOES rather than what it IS. Deliberately only these two - the body keys stay
 // the race's, and a class that replaces the whole body wants supersedes_race.
+// A race's `yields_to_occupation` map may name the same two and no others.
 const OVERRIDES_RACE_KEYS = ['ppe_base', 'starting_money'];
 
 export const VARIANT_OVERRIDES = [
@@ -1239,6 +1240,25 @@ export function combineClasses(rcc, occ) {
   if (!superseded && Array.isArray(occ.overrides_race)) {
     for (const key of occ.overrides_race) {
       if (OVERRIDES_RACE_KEYS.includes(key) && occ[key] != null) out[key] = occ[key];
+    }
+  }
+  // THE SAME TWO KEYS, DECLARED FROM THE RACE'S SIDE (BOOK-INGEST-AUDIT F111,
+  // the Larhold part, on Nate's word 2026-09-27). `yields_to_occupation` maps a
+  // key to the occupation groups whose stated value wins it:
+  //
+  //   yields_to_occupation: { ppe_base: [magic, clergy] }   # PF human, elf
+  //
+  // For a race whose book prints its figure as the one for a character who does
+  // NOT take that kind of occupation - "2D6 for most adults, unless a mage or
+  // clergy O.C.C." - when the occupation it can pair with is open to every race,
+  // so `overrides_race` would reach the races whose P.P.E. ADDS to a mage's or
+  // prints its own. Only a race that says so yields; every other race is
+  // race-first exactly as above.
+  const yields = rcc.yields_to_occupation;
+  if (!superseded && yields && typeof yields === 'object' && !Array.isArray(yields)) {
+    for (const key of OVERRIDES_RACE_KEYS) {
+      const groups = yields[key];
+      if (Array.isArray(groups) && groups.includes(occ.occ_group) && occ[key] != null) out[key] = occ[key];
     }
   }
   // `xp_table` runs the OTHER way: when both halves state one, the OCCUPATION's
@@ -2989,6 +3009,43 @@ export function parseClassMarkdown(text) {
       warnings.push('overrides_race is not limited by race_restrictions.only, so it replaces'
         + ' the figure of EVERY race this class can be taken with - check the races whose'
         + ' own book adds to it or prints its own (BOOK-INGEST-AUDIT F111)');
+    }
+  }
+  // F111, the race's side. Which of the same two keys this race gives up, and to
+  // which occupation groups. Closed on both levels: only OVERRIDES_RACE_KEYS,
+  // only OCC_GROUPS, because a group name matching nothing would yield to no
+  // one and say nothing.
+  if (data.yields_to_occupation !== undefined) {
+    const y = data.yields_to_occupation;
+    if (!y || typeof y !== 'object' || Array.isArray(y) || Object.keys(y).length === 0) {
+      errors.push(`yields_to_occupation must be a non-empty map of ${OVERRIDES_RACE_KEYS.join(' | ')}`
+        + ' to a list of occupation groups');
+    } else {
+      for (const [k, groups] of Object.entries(y)) {
+        if (!OVERRIDES_RACE_KEYS.includes(k)) {
+          errors.push(`yields_to_occupation may name only ${OVERRIDES_RACE_KEYS.join(' | ')}, got: ${k}`);
+          continue;
+        }
+        if (!Array.isArray(groups) || groups.length === 0) {
+          errors.push(`yields_to_occupation.${k} must be a non-empty list of ${OCC_GROUPS.join(' | ')}`);
+          continue;
+        }
+        for (const g of groups) {
+          if (!OCC_GROUPS.includes(g)) {
+            errors.push(`yields_to_occupation.${k} names ${g}, which is not one of ${OCC_GROUPS.join(' | ')}`);
+          }
+        }
+        if (new Set(groups).size !== groups.length) errors.push(`yields_to_occupation.${k} names a group twice`);
+        if (data[k] == null) {
+          warnings.push(`yields_to_occupation names ${k}, which this race does not state, so there is nothing to yield`);
+        }
+      }
+    }
+    // An error, not overrides_race's warning: on an occupation it reads as the
+    // occupation declaring what IT yields, which is the opposite of what it does.
+    if (data.category !== 'rcc') {
+      errors.push('yields_to_occupation belongs on an R.C.C.; an occupation that takes a race\'s'
+        + ' figure says so with overrides_race');
     }
   }
   // A class whose own attacks stand and whose Hand to Hand style adds none

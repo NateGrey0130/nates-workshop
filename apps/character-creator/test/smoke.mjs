@@ -7567,6 +7567,49 @@ section('An occupation may take its P.P.E. or money over the race (BOOK-INGEST-A
     combineClasses(race, doc('occ', 'sdc_base: "30"\n' + only + 'overrides_race: [ppe_base]\n').data).ppe_base === '3d6');
 }
 
+section('A race may yield its P.P.E. or money to an occupation (BOOK-INGEST-AUDIT F111)');
+{
+  // The Larhold part of F111, taken 2026-09-27 as a RACE-side key on Nate's
+  // word: the Larhold Shaman is open to every race, so only a race whose own
+  // book prints its P.P.E. as the non-magic figure should give it up.
+  const doc = (cat, extra) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n` + extra + '---\n\n## Lore\n\nx\n');
+  const racePools = 'ppe_base: "3d6"\nstarting_money: "1d6x1000"\nsdc_base: "10"\n';
+  const ok = doc('rcc', racePools + 'yields_to_occupation: { ppe_base: [magic], starting_money: [magic, men-of-arms] }\n');
+  check('yields_to_occupation parses on an R.C.C. as a map of key to occupation groups',
+    ok.ok && JSON.stringify(ok.data.yields_to_occupation) === '{"ppe_base":["magic"],"starting_money":["magic","men-of-arms"]}'
+    && ok.warnings.length === 0, ok.errors.concat(ok.warnings).join('; '));
+  check('and is an error on an occupation, where it would read as the reverse',
+    !doc('occ', racePools + 'yields_to_occupation: { ppe_base: [magic] }\n').ok);
+  check('and refuses any key but ppe_base and starting_money, and a group outside the five',
+    !doc('rcc', racePools + 'yields_to_occupation: { sdc_base: [magic] }\n').ok
+    && !doc('rcc', racePools + 'yields_to_occupation: { ppe_base: [wizards] }\n').ok);
+  check('and refuses a bare list, an empty map, an empty group list or a group named twice',
+    !doc('rcc', racePools + 'yields_to_occupation: [ppe_base]\n').ok
+    && !doc('rcc', racePools + 'yields_to_occupation: {}\n').ok
+    && !doc('rcc', racePools + 'yields_to_occupation: { ppe_base: [] }\n').ok
+    && !doc('rcc', racePools + 'yields_to_occupation: { ppe_base: [magic, magic] }\n').ok);
+  check('and warns when the race does not state the key it yields', (() => {
+    const r = doc('rcc', 'sdc_base: "10"\nyields_to_occupation: { ppe_base: [magic] }\n');
+    return r.ok && r.warnings.some((w) => /nothing to yield/.test(w));
+  })());
+
+  const race = doc('rcc', racePools + 'yields_to_occupation: { ppe_base: [magic], starting_money: [magic] }\n').data;
+  const plainRace = doc('rcc', racePools).data;
+  const occ = (group) => doc('occ', `occ_group: ${group}\nppe_base: "3d6x10"\nstarting_money: "2d6x1000"\nsdc_base: "30"\n`).data;
+  const mage = combineClasses(race, occ('magic'));
+  check('a magic occupation takes the yielded P.P.E. and money, the body keys still the race\'s',
+    mage.ppe_base === '3d6x10' && mage.starting_money === '2d6x1000' && mage.sdc_base === '10');
+  const soldier = combineClasses(race, occ('men-of-arms'));
+  check('an occupation of a group the race does not name gets the race\'s figures',
+    soldier.ppe_base === '3d6' && soldier.starting_money === '1d6x1000');
+  const unkeyed = combineClasses(plainRace, occ('magic'));
+  check('and a race without the key is race-first exactly as before',
+    unkeyed.ppe_base === '3d6' && unkeyed.starting_money === '1d6x1000');
+  check('and a named group whose occupation states no figure leaves the race\'s',
+    combineClasses(race, doc('occ', 'occ_group: magic\nsdc_base: "30"\n').data).ppe_base === '3d6');
+}
+
 // The four Nightbane second-body sections used to be written out here. They
 // live in checks/second-body.mjs now and are CALLED here rather than at the
 // bottom with the other modules, so the suite still announces its 164 sections

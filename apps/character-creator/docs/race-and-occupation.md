@@ -183,6 +183,7 @@ pool bases as before — none of them knows a character can have two classes.
 |---|---|
 | attribute dice, pool formulas | the **race** |
 | `ppe_base`, `starting_money` listed in the occupation's `overrides_race` | the **occupation's** when it states one (see below) |
+| `ppe_base`, `starting_money` the race's `yields_to_occupation` gives to the occupation's `occ_group` | the **occupation's** when it states one (see below) |
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
 | related & secondary allowances | the **occupation** |
@@ -233,6 +234,41 @@ none. It would also break the races whose P.P.E. ADDS to a mage's
 (`rifts-cyclops`, `rifts-elf`) or prints its own mage figure (`godling`,
 `true-inca`, `draconid`). The Arkhon Spectral Hunter and ESP Specialist carry
 `[starting_money]`: both are Arkhon-only, and the book prints their own money.
+
+### A race may yield its P.P.E. or money to an occupation
+
+The same two keys, declared from the other side. A race whose own book prints
+its P.P.E. as the figure for a character who does NOT take a magic occupation
+says so, and names the occupation groups that take it over:
+
+```yaml
+yields_to_occupation: { ppe_base: [magic, clergy] }
+```
+
+In a pairing, an occupation whose `occ_group` is listed for a key takes that key
+when it states one; every other occupation, and every race without the map,
+composes as the table says. The parser refuses a key other than `ppe_base` or
+`starting_money`, a group outside the five, an empty list or a repeat, and
+refuses the map outright on an O.C.C., where it would read as the occupation
+declaring what it gives up (BOOK-INGEST-AUDIT.md F111, the Larhold part).
+
+It exists because `overrides_race` could not reach the Larhold Shaman. That
+O.C.C. is open to every race, so the list on it would have replaced the P.P.E.
+of every race it pairs with, including the ones whose book adds theirs to a
+mage's. The race knows which kind it is; the occupation does not. Nate's
+decision, 2026-09-27. Four races carry it, each on its own book's wording:
+
+| race | yields | the book |
+|---|---|---|
+| `larhold-barbarian` | `ppe_base` to magic; `starting_money` to all five groups | South America 2 printed 186: P.P.E. 3D6 beside *Magic Powers: None unless a magical O.C.C. is selected*. Its 1D6x1000 is the R.C.C.'s own equipment line, and the same page has a Larhold take an O.C.C. in place of the basic R.C.C. |
+| `amphib` | `ppe_base` to magic | Underseas printed 99: *P.P.E.: 3D6 unless a magic O.C.C.* |
+| `human`, `elf` | `ppe_base` to magic and clergy | Palladium Fantasy printed 289 and 291: *for most adults, unless a mage or clergy O.C.C.* |
+
+A census of every legal same-system pairing against production, 2026-09-27,
+found the four move 298 pairings and no others, none of them to a P.P.E. below
+the race's own. The races whose P.P.E. adds (`rifts-cyclops`, `rifts-elf`,
+`true-atlantean`) or that print their own mage figure (`godling`, `true-inca`,
+`draconid`) do not carry it, and regression pins the four by name.
 
 ### A class may supersede its race
 

@@ -2527,6 +2527,56 @@ summoner, diabolist or witch composes to the race's 2D6, measured the same day.
 The note now says so; the composition is unchanged and is the same open
 question as the Shaman's.
 
+**The Larhold part closed, 2026-09-27 (PR #PRNUM), as a RACE-side key - on
+Nate's word ("fix the Larhold Shaman with the race-side key").** A new R.C.C.
+key, `yields_to_occupation`, maps `ppe_base` or `starting_money` to the
+occupation groups whose stated figure wins it in a pairing; a race without it,
+and an occupation of a group it does not name, composes as before.
+`parseClassMarkdown` refuses any other key, a group outside the five, an empty
+map or list and a repeat, and refuses the key on an O.C.C.; `class-check`
+knows it, and its racial-discard warning now says a race may take the
+occupation's P.P.E. or money this way. Regression pins the carriers by name.
+`~032-f111-race-yields-ppe.sql` sets it on four races, each on its own book's
+wording, found by searching every race's stored text and every cached book for
+the conditional:
+
+- **`larhold-barbarian`**: `ppe_base` to `magic`, and `starting_money` to all
+  five groups. The money half goes further than the P.P.E. half on the book's
+  evidence, not by analogy: the Barbarian's 1D6x1000 is in the R.C.C.'s own
+  *Other Equipment* line (printed 186, cache p186 line 129), the same page's
+  O.C.C.s paragraph has a Larhold take an O.C.C. in place of the basic R.C.C.
+  and keep only War Bison riding and W.P. Archery, and nothing there limits
+  that to a magic O.C.C. The Shaman prints its own 2D6x1000 (printed 190).
+  Cutting money to `[magic]` would have been a line the book does not draw.
+- **`amphib`**: `ppe_base` to `magic` - Underseas printed 99, *"P.P.E.: 3D6
+  unless a magic O.C.C."*, the plainest statement of the shape in the catalog.
+- **`human` and `elf`** (Palladium Fantasy): `ppe_base` to `magic` and
+  `clergy`. The book says *"mage or clergy O.C.C."* (printed 289 and 291), so
+  the condition is the occupation's group rather than "states a ppe_base", and
+  clergy is named with it. The four clergy occupations that state P.P.E. - the
+  priests of light and darkness, the druid and the warrior monk, whose page
+  calls it *"a member of the clergy"* (printed 71) - are in the catalog's
+  `clergy` group. The PF witch states no `ppe_base` and keeps the race's.
+
+**Measured.** A census over a production snapshot of the 525 published
+classes, 2026-09-27: 37,024 legal same-system pairings, race variants
+included, legality as the wizard applies it. The key moves **298** of them and
+no others - `larhold-barbarian` 65 P.P.E. and 154 money, `amphib` 65 P.P.E.,
+`human` 7 and `elf` 7 - and no P.P.E. it moves lands below the race's own
+figure. **Not keyed:** `rifts-cyclops`, `rifts-elf` and `true-atlantean`
+(their P.P.E. adds to a mage's), `godling`, `true-inca` and `draconid` (they
+print a mage figure of their own), and `felinoid`, whose *"Magic: none,
+unless a magic O.C.C."* is about spells and states no P.P.E. Palladium
+Fantasy's goblin, orc, ogre, troll, wolfen and coyle print "for the typical"
+race (cache `pf` p302-p314, read 2026-09-27), which hedges without naming an O.C.C., and are left race-first.
+
+**Found while doing it.** The Larhold Barbarian's own skill note records that
+in a pairing its whole R.C.C. skill list unions onto the O.C.C.'s (its
+`extraction_notes`, read `--remote` 2026-09-27), where
+printed 186 grants only War Bison riding and W.P. Archery beside an O.C.C. That
+is the same page this money decision reads, and it is unchanged here - recorded
+in the class's note already, not taken up.
+
 ### F112 — low — the creatures and notables SQL generator is rebuilt in a session scratchpad for every book
 
 **Opened 2026-09-25** by the `psyscape` import (`apps/character-creator/docs/surveys/psyscape.md`,

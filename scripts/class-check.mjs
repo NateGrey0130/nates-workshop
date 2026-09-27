@@ -230,7 +230,13 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
         + ' combineClasses keeps the RACE value and this class\'s is dropped;'
         + ' taken alone (a human character) they all apply. If the book says this'
         + ' class REPLACES what the character was, it wants supersedes_race: true'
-        + ' (BOOK-INGEST-AUDIT F11). If it does not, this is correct as it stands.');
+        + ' (BOOK-INGEST-AUDIT F11). If it does not, this is correct as it stands.'
+        // A race may give either of these two up from its own side (F111, the
+        // Larhold part), so the drop is not universal and the warning says so.
+        + (stated.some((k) => k === 'ppe_base' || k === 'starting_money')
+          ? ' A race whose yields_to_occupation names this class\'s occ_group for'
+            + ' ppe_base or starting_money takes this class\'s figure instead (F111).'
+          : ''));
     }
   }
 }
