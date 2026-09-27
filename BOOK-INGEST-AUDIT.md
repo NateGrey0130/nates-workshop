@@ -2479,6 +2479,54 @@ finds one.
 **Ongoing cost:** none recurring. It is one conditional in a loop, and the doc
 comment above it grows two sentences.
 
+**Taken in part, 2026-09-27 (PR #1467), as an OPT-IN per occupation rather than
+the proposal's rule - on Nate's word, after the census the proposal asked for.**
+That census ran `combineClasses` over every legal published race-and-occupation
+pairing, variants included, before and after the proposed rule (session
+scratchpad `census.mjs`, production snapshot 2026-09-27). The rule would have
+moved about **9,390 pairings' P.P.E., 2,451 of them downward** - a Phoenixi
+mage falling from 3D4x100 - and about **6,048 pairings' money**, including
+races whose book prints none. It would also have broken two shapes the
+proposal's confidence line anticipated: races whose P.P.E. **adds** to a mage
+O.C.C.'s (`rifts-cyclops`, `rifts-elf`) and races that print their own mage
+figure (`godling`, `true-inca`, `draconid`). So the general rule was declined.
+
+**What shipped.** A new O.C.C. key, `overrides_race`, a list drawn only from
+`ppe_base` and `starting_money`. `combineClasses` gives the occupation the
+listed keys when it states them and composes everything else as before;
+`supersedes_race` is unchanged. `parseClassMarkdown` refuses any other key, a
+bare value, an empty list or a repeat, and warns when the key sits on a race or
+on an occupation not limited by `race_restrictions.only`. `class-check`'s
+racial-discard warning (F11's cheaper alternative) no longer names a key the
+occupation takes. `~031-f111-occupation-pools.sql` sets `[starting_money]` on
+the **Arkhon Spectral Hunter** (2D4x1000, printed 74) and **Arkhon ESP
+Specialist** (2D6x1000, printed 76), both Arkhon-only, over the Arkhon R.C.C.'s
+1D6x1000 (printed 73): one pairing each. Regression pins the two takers by
+name. Posture: an opt-in with no effect on any occupation that does not declare
+it, which regression's existing race-first invariant still asserts.
+
+**The Larhold Shaman, this finding's headline case, is NOT given the key, and
+that is a question back to Nate rather than a decision.** The brief named it,
+but the class carries no `race_restrictions` - printed 189 says humans, ogres,
+wolfen and others train in the Ways of the Flame - so the key would reach every
+race it pairs with. Measured against the same snapshot: **206 pairings over 150
+races** (165 P.P.E., 41 money), among them `rifts-cyclops`, `rifts-elf`,
+`godling`, `true-inca`, `draconid` and a Phoenixi falling from 3D4x100 - the
+cases the decision said to leave alone. A Larhold Shaman therefore still
+composes to the Larhold Barbarian's 3D6 P.P.E. and 1D6x1000. Two ways to close
+it, neither built: a race-scoped form of the key, or a key on the **race**
+saying its figure yields to a magic occupation. The Palladium Fantasy human
+prints its P.P.E. that way ("2D6 for most adults, unless a mage or clergy
+O.C.C."); the Larhold Barbarian prints a flat P.P.E. 3D6 beside "Magic Powers:
+None unless a magical O.C.C. (see below) is selected" (printed 186, cache
+p186 line 33, read 2026-09-27), which points the same way less directly.
+
+**Found while doing it.** The Palladium Fantasy `human` note said a mage or
+clergy O.C.C.'s P.P.E. wins the pairing. It never did: a human wizard,
+summoner, diabolist or witch composes to the race's 2D6, measured the same day.
+The note now says so; the composition is unchanged and is the same open
+question as the Shaman's.
+
 ### F112 — low — the creatures and notables SQL generator is rebuilt in a session scratchpad for every book
 
 **Opened 2026-09-25** by the `psyscape` import (`apps/character-creator/docs/surveys/psyscape.md`,

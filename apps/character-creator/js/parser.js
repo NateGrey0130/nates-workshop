@@ -62,6 +62,12 @@ export function isChoiceGroup(entry) {
 // shared on purpose: a variant that could override anything is not a variant,
 // it is a second class wearing the first one's name, and the inheritance would
 // obscure rather than explain.
+// The keys an O.C.C.'s `overrides_race` list may name (BOOK-INGEST-AUDIT F111):
+// the two of combineClasses's race-first keys that come from what a character
+// DOES rather than what it IS. Deliberately only these two - the body keys stay
+// the race's, and a class that replaces the whole body wants supersedes_race.
+const OVERRIDES_RACE_KEYS = ['ppe_base', 'starting_money'];
+
 export const VARIANT_OVERRIDES = [
   'attribute_dice', 'attribute_requirements', 'attribute_maximums',
   'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
@@ -1215,6 +1221,25 @@ export function combineClasses(rcc, occ) {
                      'starting_money', 'horror_factor', 'second_form']) {
     if (superseded && occ[key] != null) out[key] = occ[key];
     else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
+  }
+  // AN OCCUPATION MAY OPT IN, KEY BY KEY, FOR TWO OF THOSE (BOOK-INGEST-AUDIT
+  // F111). `overrides_race: [ppe_base, starting_money]` makes the occupation's
+  // value win the listed keys when it states one; every other key, and every
+  // occupation without the list, composes exactly as above.
+  //
+  // Opt-in rather than the rule F111 proposed (the occupation's money always
+  // wins, a magic occupation's P.P.E. wins), on Nate's word, 2026-09-27: a
+  // census of every legal published pairing found that rule would move ~9,390
+  // pairings' P.P.E. - 2,451 of them DOWN, a Phoenixi mage losing its 3D4x100 -
+  // and ~6,048 pairings' money, including races whose book prints none, and
+  // would break races whose P.P.E. ADDS to a mage's (rifts-cyclops, rifts-elf)
+  // or prints its own mage figure (godling, true-inca, draconid). The list
+  // reaches every race the occupation can pair with, which is why
+  // parseClassMarkdown warns when it is not limited by race_restrictions.only.
+  if (!superseded && Array.isArray(occ.overrides_race)) {
+    for (const key of occ.overrides_race) {
+      if (OVERRIDES_RACE_KEYS.includes(key) && occ[key] != null) out[key] = occ[key];
+    }
   }
   // `xp_table` runs the OTHER way: when both halves state one, the OCCUPATION's
   // wins, superseding or not. Palladium names its experience charts by O.C.C. -
@@ -2934,6 +2959,36 @@ export function parseClassMarkdown(text) {
     }
     if (data.category !== 'occ') {
       warnings.push('supersedes_race is set on something that is not an O.C.C. and will do nothing');
+    }
+  }
+  // F111. Which of the race-first keys this occupation takes over in a pairing.
+  // Opt-in and closed: only OVERRIDES_RACE_KEYS, because the body keys belong
+  // to the race and a whole-body replacement is supersedes_race's job.
+  if (data.overrides_race !== undefined) {
+    const list = data.overrides_race;
+    if (!Array.isArray(list) || list.length === 0) {
+      errors.push(`overrides_race must be a non-empty list of ${OVERRIDES_RACE_KEYS.join(' | ')}`);
+    } else {
+      for (const k of list) {
+        if (!OVERRIDES_RACE_KEYS.includes(k)) {
+          errors.push(`overrides_race may name only ${OVERRIDES_RACE_KEYS.join(' | ')}, got: ${k}`);
+        } else if (data[k] == null) {
+          warnings.push(`overrides_race names ${k}, which this class does not state, so it takes nothing`);
+        }
+      }
+      if (new Set(list).size !== list.length) errors.push('overrides_race names a key twice');
+    }
+    if (data.category !== 'occ') {
+      warnings.push('overrides_race is set on something that is not an O.C.C. and will do nothing');
+    } else if (data.supersedes_race === true) {
+      warnings.push('overrides_race is redundant beside supersedes_race, which already takes every pool');
+    } else if (!Array.isArray(data.race_restrictions?.only)) {
+      // The census that declined F111's global rule is the reason: an O.C.C.
+      // open to every race moves every race's figure, including the ones whose
+      // book ADDS its P.P.E. to a mage's or prints its own.
+      warnings.push('overrides_race is not limited by race_restrictions.only, so it replaces'
+        + ' the figure of EVERY race this class can be taken with - check the races whose'
+        + ' own book adds to it or prints its own (BOOK-INGEST-AUDIT F111)');
     }
   }
   // A class whose own attacks stand and whose Hand to Hand style adds none
