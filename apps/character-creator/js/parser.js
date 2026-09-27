@@ -77,6 +77,15 @@ export const VARIANT_OVERRIDES = [
   // second body that differs by stage, and a variant naming one is warned about
   // below as a key a variant cannot override rather than silently ignored.
   'horror_factor',
+  // A stage or option that levels on its own chart. Rifts World Book 29
+  // printed 79 gives the Madhaven Mutant Shaman the Gateway Knight & Mutant
+  // Shaman column while every other Haven Mutant takes the Haven Mutant R.C.C.
+  // column, and the Shaman is a `shaman` variant on each of the eight mutants.
+  // A scalar array, so it replaces. Every reader goes through `xpTableFor`
+  // with the class AFTER `applyVariant` (the server's `loadClass`, and the
+  // wizard's `composeClass` / `applyVariant`); an O.C.C.'s ladder still wins a
+  // pairing in `combineClasses`. BOOK-INGEST-AUDIT F108.
+  'xp_table',
   'bonuses',
   // NOT the skills block. `skill_overrides` below restates numbers on skills
   // the class already grants, which is a different and much smaller power.
