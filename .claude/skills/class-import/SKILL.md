@@ -5,124 +5,82 @@ description: Transcribe a Rifts or Palladium Fantasy O.C.C. or R.C.C. from a sou
 
 # Importing a class
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
-> `smoke.mjs` also pins that it separates the permanent half from the
-> perishable, `rendered-ui.mjs` pins `reference/frontmatter.md` against the
-> sheet, and `environment.mjs` pins `reference/data-script.sql`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here
+> (`environment.mjs`), every absolute path (`instruction-paths.mjs`), and that
+> it separates the permanent half of `extraction_notes` from the perishable
+> (`smoke.mjs`). `rendered-ui.mjs` pins `reference/frontmatter.md`;
+> `environment.mjs` pins `reference/data-script.sql`. Why each rule exists,
+> with its incident: `reference/why.md`.
 
-A class is a markdown file — YAML frontmatter for mechanics, prose body for
-lore — stored as one row in `imported_classes`. Adding one means writing a
-one-off SQL data script under `apps/character-creator/db/`.
+A class is a markdown file (YAML frontmatter for mechanics, prose body for
+lore) stored as one row in `imported_classes`. Adding one means a one-off SQL
+data script under `apps/character-creator/db/`.
 
-**Do not read `js/parser.js` to work out the format.** It is the largest file in
-the app and `reference/frontmatter.md` covers what it accepts. Read the parser
-only when modelling something new (see the last section) — and when you do, read
-it rather than the reference, which describes the blocks worth explaining and is
-not the whole key list.
+**Do not read `js/parser.js` to learn the format**; `reference/frontmatter.md`
+covers it. Read the parser only when modelling something new, and then read it
+rather than the reference, which is not the whole key list.
 
 ## The loop
 
-1. **Read the pages.** Check for a text layer FIRST — see the `book-survey`
-   skill. A scan arrives as image renders and needs OCR; a book with a text
-   layer is read straight with `python scripts/read-columns.py <pdf> <first>
-   [last]`, geometrically, for nothing. The Palladium Fantasy main book has one
-   and every class taken from it was read that way. Transcribe rather than
-   guess either way: a wrong percentage is worse than a missing one, because
-   nothing will ever flag it.
-2. **Write the markdown to a scratch `.md` file first**, not straight into SQL.
-   Iterating on bare markdown avoids re-escaping quotes every pass.
-3. **Check it — against production:**
+1. **Read the pages.** Check for a text layer first (`book-survey`). A text
+   layer is read with `python scripts/read-columns.py <pdf> <first> [last]`; a
+   scan needs OCR. Transcribe, never guess: a wrong percentage is worse than a
+   missing one, because nothing flags it.
+2. **Write the markdown to a scratch `.md` file**, not straight into SQL.
+3. **Check it against production**, and iterate until it reads `ready`:
    ```bash
    node scripts/class-check.mjs draft.md --remote
    ```
-   Parses through the real parser and cross-references the real catalogs. No API
-   call, no writes. Iterate here until it reads `ready`.
-
-   **`--remote`, not the default.** `class-check` defaults to `--local`, and a
-   local database that is BEHIND production makes it report a skill or gear row
-   as absent and print stub `INSERT OR IGNORE` SQL to create it. See *Rules that
-   are easy to get wrong*: that stub then outlives the mistake. It is slower —
-   slow enough to time out a two-minute call on four classes, so run them a
-   couple at a time.
-
-   Then check the fields nothing pins against the page they came from:
+   **Always `--remote`.** A local D1 behind production reports real rows as
+   missing and prints stub SQL that then ships. It is slow; run two classes at
+   a time. Then check the unpinned fields against their page:
    ```bash
    node scripts/class-check.mjs draft.md --field-sources
    ```
-   It prints the OCR-cache lines `starting_money` and the equipment prose were
-   drawn from — and, when a source span ends near the bottom of its page, the
-   first lines of the NEXT page. **Read that continuation block.** Both shipped
-   `starting_money` errors were paragraphs that continued past a page break the
-   reading stopped at (PR #280); this is the check that would have caught them.
-   It resolves the book, window and page offset from `source_book` and the
-   cache itself (`--book` / `--offset` override).
-4. **Wrap it in a data script.** `class-check` writes the whole thing from a
-   validated draft — header, the stub rows it already found, the
-   `imported_classes` INSERT with apostrophes doubled and non-ASCII spliced
-   through `char()`, the readback `SELECT`s and the `data_script_runs` footer
-   naming its own file:
+   **Read the continuation block** it prints when a source span ends near a
+   page bottom. `starting_money` has shipped wrong from a paragraph continued
+   past a page break.
+4. **Emit the data script**, still `--remote`, because this is the step that
+   writes stubs into a file that ships:
    ```bash
    node scripts/class-check.mjs draft.md --remote --emit-script <id> > apps/character-creator/db/add-<id>-class.sql
    ```
-   **`--remote` here above all**, because this is the step that writes the stubs
-   into a file that ships.
-   It writes to **stdout only** — the report goes to stderr, it creates no file
-   and applies nothing — and it refuses to emit from a draft that is not
-   `ready`, or when the id disagrees with the frontmatter. The escaping is what
-   is automated here; deciding to ship is still yours.
-
-   `reference/data-script.sql` remains the annotated skeleton, for reading and
-   for the rare script this does not fit.
-
-   **Then check the finished script too**, as a separate step:
+   It writes stdout only, applies nothing, and refuses a draft that is not
+   `ready`. `reference/data-script.sql` is the annotated skeleton for a script
+   this does not fit. **Then check the finished `.sql` as its own step**, which
+   runs the ASCII/CRLF pre-flight against the real artifact:
    ```bash
    node scripts/class-check.mjs apps/character-creator/db/add-<id>-class.sql
    ```
-   Checking the `.sql` also runs the ASCII/CRLF pre-flight, which the `.md`
-   form cannot — and that pre-flight has to fire against the real artifact, not
-   against the generator's intentions.
-5. **Apply it:**
+5. **Apply** `--local`, then `--remote` once it looks right. **Ask before
+   `--remote`**: it writes the live database, before the merge.
    ```bash
    node scripts/d1-apply.mjs --local apps/character-creator/db/add-<id>-class.sql
    ```
-   Then `--remote` once it looks right locally. **Ask before `--remote`** — it
-   writes to the live database. Merging to `main` is the deploy; data scripts
-   are applied by hand, separately, to each environment.
 6. **Run the smoke test** before opening a PR:
    `node apps/character-creator/test/smoke.mjs`
 
+**One class per `add-<id>-class.sql`.** The smoke test maps each file to one id.
+A `fix-` script may touch several.
+
 ## A batch outlives the session on purpose
 
-An import run is many PRs, and one conversation carrying all of them is the
-most expensive way to hold what it knows: the 2026-08-25 efficiency audit
-measured the same PR-shaped import costing 2–7× more late in a marathon
-session than early, purely from re-carried context. The durable state lives in
-`apps/character-creator/docs/surveys/<slug>.md` (see the `book-survey` skill).
-It is tracked, so **the ledger line goes in the same PR as the work it
-describes**, written before you open the PR. **Its PR column holds the
-branch name** (`pal/data/<slug>-<what>`), never `#TBD` and never a later
-commit to fill in a number: the number does not exist until `gh pr create`,
-and `gh pr list --state all --head <branch>` finds it from the branch. Rows
-before 2026-09-27 carry `#N`, or a `#TBD` filled in by a second commit. That
-was the old convention, and it is not a precedent to copy. Say what went in,
-the catalog total it moved, and that the data was applied `--remote` first. Then **start a fresh session every 2–4 PRs**, booted from that
-file plus `git log --oneline -15`. If the next class needs something a previous
-conversation knew and the file does not hold, that is a gap in the file — write
-it down there, not a reason to keep the session alive.
+The durable state of an import run is `apps/character-creator/docs/surveys/<slug>.md`
+(`book-survey`), not the conversation. **Start a fresh session every 2–4 PRs**,
+booted from that file plus `git log --oneline -15`. Anything a session needed
+that the file lacks is a gap in the file: write it there.
 
-## The README is not working memory
+**The ledger line goes in the same PR as the work it describes**, written
+before you open the PR. **Its PR column holds the branch name**
+(`pal/data/<slug>-<what>`), never `#TBD` and never a later commit to fill in a
+number: the number does not exist until `gh pr create`, and
+`gh pr list --state all --head <branch>` finds it from the branch. Rows before
+2026-09-27 carry `#N`, or a `#TBD` filled in by a second commit. That was the
+old convention, and it is not a precedent to copy. Say what went in, the
+catalog total it moved, and that the data was applied `--remote` first.
 
-**Never read `apps/character-creator/README.md` end to end.** The same audit
-measured it read ~460 times across the book sessions, 37 of them in full, and
-every full read re-carries for the rest of the session. The counts you would
-skim it for — classes, skills, spells, gear — are pinned by the test suite, so
-the test's own output is both cheaper and more current than the prose. For
-everything else, index first, one section at a time:
+**Never read `apps/character-creator/README.md` end to end.** The counts are
+pinned by the tests, whose output is cheaper and current. Read one section:
 
 ```bash
 node scripts/readme-section.mjs
@@ -132,293 +90,161 @@ node scripts/readme-section.mjs
 node scripts/readme-section.mjs "Class definition format"
 ```
 
-No arguments prints the heading index; a heading prints exactly one section,
-bounded by the **next heading of any depth**, with its line range on stderr for
-a bounded edit. The any-depth bound is the rule a 544-line section-eating edit
-taught: a subsection is its own read, asked for by name.
-
 ## What class-check tells you
 
 | Section | Meaning |
 |---|---|
 | `ERRORS` | The parser rejects it. Blocking. |
-| `WARNINGS` | Parses, but does something you may not have meant. Read each one. |
-| `SQL PRE-FLIGHT` | A CR or a non-ASCII byte. Blocking — both reached production before. |
-| `UNMODELLED` | A top-level key nothing in the app reads. A decision, not a defect — see below. |
-| `CATALOG` | Missing skills/spells/psionics/gear, plus stub SQL to add them. |
+| `WARNINGS` | Parses, but may not do what you meant. Read each one. |
+| `SQL PRE-FLIGHT` | A CR or a non-ASCII byte. Blocking. |
+| `UNMODELLED` | A top-level key nothing reads. A decision, see the last section. |
+| `CATALOG` | Missing skills/spells/psionics/gear, with stub SQL. |
 | `restrictions` | Restriction names matching no catalog row. They do nothing. |
-| `unreachable` | An `only` naming a skill whose real category the class does not grant. **The class grants a skill nobody can take.** |
-| `cross-category` | An `only` naming a skill the catalog files elsewhere, where the class *does* grant that category. Works — shown so it reads as deliberate. |
+| `unreachable` | An `only` naming a skill whose real category the class does not grant: a skill nobody can take. |
+| `cross-category` | An `only` naming a skill filed elsewhere, where the class does grant that category. Works. |
 | `no-op except` | An `except` naming a skill from another category. Excludes nothing. |
 
-Only `ERRORS` and `SQL PRE-FLIGHT` set the exit code. The rest are findings
-about the books, not a file the parser rejects.
+Only `ERRORS` and `SQL PRE-FLIGHT` set the exit code.
 
-**A restriction naming a row the catalog does not have is not always a bug.**
-The Priest of Light names `W.P. Siege` and `W.P. Large Axes` ahead of those rows
-existing, and says so in its note; the exclusions activate by themselves when
-the rows arrive. **The audit floor is TWO names, not zero** — it was three until
-`W.P. Lance` was imported and that exclusion started working by itself, which is
-the mechanism keeping its promise. The floor moves; check it rather than
-trusting this sentence. **Re-measured `--remote` on 2026-09-08: still exactly
-two, both the Priest of Light's, out of 1,499 restriction names across 225 live
-published classes. No dead exclusion anywhere in the live catalog.**
-
-**But "not always a bug" is not "usually not a bug", and the ratio runs the
-other way.** Sweeping every `only`/`except` name in every published class
-against the live catalog on 2026-08-25 found **nine** unmatched names. Two were
-the Priest of Light's. **Seven were dead exclusions** — six classes naming
-`Robots and Power Armor` after the catalog renamed that row to
-`Robots & Power Armor`, each silently offering the one Pilot skill its book
-forbids, because an unmatched `except` fails OPEN.
-
-A catalog rename breaks restrictions that were correct when they were written,
-and nothing routine says so. **Re-run that sweep after any rename** — it is a
-parse of every class against `SELECT name FROM skills`, and it is the only thing
-that has ever caught this. **It does ship, and not as a command:**
-`apps/character-creator/test/regression.mjs:863` runs it over every class on
-every test run and pins the floor by NAME rather than by count — but against the
-scratch D1 it builds from the repo, never against `--remote`, which its own
-header says outright. If you write the `--remote` version by hand,
-`parseClassMarkdown` returns `{ ok, data, errors, warnings }`: hand
-`restrictionNames()` the **`.data`**, or it returns `[]` for every class and the
-sweep reports a clean catalog it never read. Note the asymmetry it has to
-respect: a GRANTED skill naming an old name still resolves, because redirects
-are consulted for references; only restrictions skip them. The Robot Pilot
-cites the same old string and is fine.
+**An unmatched restriction is usually a bug.** An unmatched `except` fails
+OPEN: the class offers what its book forbids. The known exceptions are the
+Priest of Light's `W.P. Siege` and `W.P. Large Axes`, named ahead of their rows
+and noted as such. **After any catalog rename, re-run the restriction sweep**:
+`apps/character-creator/test/regression.mjs` runs it over every class against a
+scratch D1. To run it `--remote` by hand, pass `restrictionNames()` the
+`.data` of `parseClassMarkdown`'s result, not the result itself.
 
 ## Rules that are easy to get wrong
 
 - **Related and secondary skills come from the O.C.C., not the R.C.C.** An
-  R.C.C. granting zero of each is correct, not missing data.
-- **`base` is the catalog base plus the class's printed bonus**, already added.
-  The book prints "Lore: Magic (+15%)" and the catalog holds it at 25%, so the
-  class file says `base: 40`. The app does not add the two at runtime.
-- **`base` fixes a percentage, `bonus` adds to each pick's own base.** A
-  choice-group spanning a category almost always wants `bonus`.
-- **Look the row up. Do not carry a name in your head, and do not infer a
-  convention from the ones you remember.** The `Pilot` category is **mixed** —
-  51 rows `--remote` on 2026-09-08, **29** carrying a `Military:`, `Boat:`,
-  `Space:` or `Robot Combat Elite:` prefix and **22** carrying none, so
-  `Helicopter` and `Jet Aircraft` sit bare beside `Military: Combat Helicopter`.
-  `class-check --remote` does the lookup for you and prints whatever matched
-  nothing. **This bullet asserted the opposite until 2026-09-08** — *"Pilot
-  skills store without a `Pilot:` or `Military:` prefix"* — which was TRUE the
-  day it was written (PR #133, 2026-08-19) and was inverted two days later by
-  PR #180, which renamed `Jet Fighters` to `Military: Jet Fighters` and rewrote
-  every class naming the old form, leaving this sentence as the last surviving
-  copy of a dead convention. It produced a dead `except` on its first use in
-  2026-09. `BOOK-INGEST-AUDIT.md` F35.
-- **The same wrong name fails in opposite directions on the two sides.** A
-  GRANT resolves through `catalog_redirects` — `Jet Fighters` still forwards to
-  `Military: Jet Fighters` today — so nothing reports it and the class works. An
-  `only`/`except` skips redirects, so that identical string matches no row and
-  dies silently, `except` failing OPEN: the class offers what its book forbids.
-- **Local D1 drifts in BOTH directions, and BEHIND is the dangerous one.**
-  `ship-pr` and `CLAUDE.md` both describe it accumulating — extra rows, a false
-  duplicate report, harmless. It has also been **52 skills SHORT**: 293 against
-  production's 345 on 2026-08-30. A missing row makes `class-check` report the
-  skill as absent and print stub SQL for it, `--emit-script` writes that stub
-  into `add-<id>-class.sql`, and the stub **sorts before the file that creates
-  the row properly** — so on a clean rebuild the stub wins and the real row is
-  ignored. An extra local row costs a false report; a missing one produces a
-  confident instruction to create a bad one. Pass `--remote`.
-  `rebuild-local.mjs` does not help: it builds a separate sqlite file, not the
-  wrangler `--local` D1 that `class-check` and the app read.
-- **Money is coin only.** `starting_money` is credits or gold; starting gear
-  goes in `equipment_starting`.
-- **Every gear item needs a catalog row.** Missing ones get a stub carrying the
-  exact marker `STUB — created by class import, needs stats`, which is how the
-  gear importer later recognises it as unfilled. `class-check` generates these.
-- **Pure ASCII, LF endings** — in the WHOLE file, comments included, not just
-  the executable SQL. An em-dash in a value is spliced as `' || char(8212) || '`;
-  one in a comment has to go too, because wrangler on Windows has turned a
-  commented non-ASCII character into mojibake in production. The smoke test
-  checks both separately: `every data script is pure ASCII` covers the file,
-  `no .sql has non-ASCII in executable SQL` covers the values. Both rules exist
-  because both failure modes reached production (#93, #101).
-- **Conditional bonuses are prose.** `bonuses:` is applied unconditionally, so
-  "+2 to strike when flying" belongs in `special_abilities` or `side_effects`.
-- **D1 caps compound SELECT terms below six.** A readback that `UNION`s six
-  names fails and rolls the whole file back. Count with `IN` instead.
-- **SQLite caps an expression tree at depth 100**, and a `||` chain is one node
-  per term. Splicing a 60-line YAML block into `markdown` with
-  `replace(markdown, anchor, '<line>' || char(10) || '<line>' || ...)` is
-  rejected outright: `Expression tree is too large (maximum depth 100)`. Do it
-  in CHUNKS of about 24 lines — plant a marker, append to it, then remove it.
-  The sequence stays idempotent because the first statement cannot fire once the
-  block is present and the rest cannot fire once the marker is gone.
-- **A racial S.D.C. is a POOL BONUS, never `sdc_base`.** A race page saying
-  *"20 plus those gained from O.C.C.s and physical skills"* means
-  `bonuses: { pools: { sdc: 20 } }`. Written as `sdc_base` it is SILENTLY wrong:
-  `combineClasses` gives the race's pool precedence over the occupation's, so a
-  Troll Knight carries 40 instead of 40 + 3D6 and nothing on the sheet looks
-  unusual. Palladium Fantasy printed 18 states the rule outright — *"All S.D.C.
-  points/bonuses are cumulative."*
-- **A class stating no `sdc_base` and no `mdc_base` needs a `men_of_arms` line
-  in its own frontmatter**: `men_of_arms: true` rolls the core 3D6, `false` the
-  core 1D6. Read it off the book's own section heading, and say which heading
-  in `extraction_notes`. For a RACE it is always `false`, because a race is
-  never a man of arms and the line only matters for a race played with no
-  occupation at all. Smoke and regression both fail a class that prints no
-  formula and states neither. **Do not edit `js/compose.js` for this.** Until
-  2026-09-25 the grouping was a map there, `CORE_SDC_BY_CLASS`, and every import
-  appended to it; the map is gone, and its entries live in the classes now.
+  R.C.C. granting zero of each is correct.
+- **`base` is the catalog base plus the class's printed bonus**, added by you.
+  The book prints "Lore: Magic (+15%)", the catalog holds 25%, so the class
+  says `base: 40`. The app does not add them at runtime.
+- **`base` fixes a percentage; `bonus` adds to each pick's own base.** A choice
+  group spanning a category almost always wants `bonus`.
+- **Look every name up; never carry one in your head.** Conventions are mixed:
+  the `Pilot` category holds both prefixed (`Military: Combat Helicopter`) and
+  bare (`Helicopter`) rows. `class-check --remote` prints whatever matched nothing.
+- **A wrong name fails in opposite directions.** A grant resolves through
+  `catalog_redirects` and works; an `only`/`except` skips redirects and dies
+  silently, with `except` failing open.
+- **Money is coin only.** `starting_money` is credits or gold; gear goes in
+  `equipment_starting`.
+- **Every gear item needs a catalog row.** A missing one gets a stub marked
+  exactly `STUB — created by class import, needs stats`. `class-check` writes it.
+- **Pure ASCII and LF, in the whole file, comments included.** An em-dash in a
+  value is spliced as `' || char(8212) || '`; one in a comment must go.
+- **Conditional bonuses are prose.** `bonuses:` apply unconditionally, so "+2 to
+  strike when flying" goes in `special_abilities` or `side_effects`.
+- **D1 caps a compound SELECT at five terms.** A readback that `UNION`s six
+  fails and rolls the file back; count with `IN`.
+- **SQLite caps an expression tree at depth 100.** Splice a long YAML block with
+  `replace(... || char(10) || ...)` in chunks of about 24 lines: plant a
+  marker, append to it, then remove it.
+- **A racial S.D.C. is a POOL BONUS, never `sdc_base`.** *"20 plus those gained
+  from O.C.C.s and physical skills"* is `bonuses: { pools: { sdc: 20 } }`.
+  As `sdc_base` it silently overrides the occupation's pool.
+- **A class stating no `sdc_base` and no `mdc_base` needs a `men_of_arms` line**
+  in its own frontmatter: `true` rolls the core 3D6, `false` the core 1D6. Read
+  it off the book's section heading and name that heading in
+  `extraction_notes`. **A race is always `false`.** Smoke and regression fail a
+  class that states neither. Never edit `js/compose.js` for this.
 
 ## An extraction note that describes the APP will go stale
 
-`extraction_notes` does two jobs at once, and only one of them is permanent:
+`extraction_notes` does two jobs, and only one is permanent:
 
 | | |
 |---|---|
-| what the book prints, and what was stored | **permanent** — it is the record |
-| what the app could do on the day of the import | **perishable** — it rots silently |
+| what the book prints, and what was stored | **permanent**: the record |
+| what the app could do on the day of the import | **perishable**: it rots silently |
 
-They end up in the same paragraph and nothing marks the seam, so write the
-DECISION and cite the finding rather than explaining the mechanism:
+Write the DECISION and cite the finding, not the mechanism:
 
 > Not stored; see BOOK-INGEST-AUDIT.md F8.  ← never goes stale
 > `rollAttribute` parses only NdM forms, so a fixed value falls back to 3d6.  ← always will
 
-Where the mechanism has to be in the class, write it past-tense and name the PR.
-
-`node scripts/audit-citations.mjs --remote F8` lists every class citing a
-finding, which is the command that makes the correction step possible when a
-finding is taken. It has no opinion about whether the finding still stands.
+Where the mechanism has to be in the class, write it past tense and name the
+PR. `node scripts/audit-citations.mjs --remote F8` lists every class citing a
+finding.
 
 ## Correcting a class that already shipped
 
-**Do not edit the original `add-*-class.sql`.** Those are one-shot scripts,
-already applied. Add a new `fix-*.sql` alongside, guarded on the text it
-replaces so re-running is a no-op, with readback `SELECT`s that assert the
-result. That is the standard shape for a correction here. `fix-` and `apply-`
-are the usual prefixes; `backfill-`, `merge-`, `rename-` and `retire-` name more
-specific jobs.
+**Never edit the original `add-*-class.sql`**: it was applied once. Add a new
+`fix-*.sql`, guarded on the text it replaces so a re-run is a no-op, with
+readback `SELECT`s asserting the result. (`backfill-`, `merge-`, `rename-` and
+`retire-` name more specific jobs.)
 
-**CHECK WHERE THE NEW NAME SORTS BEFORE YOU CHOOSE IT.** A clean rebuild applies
-`apps/character-creator/db/*.sql` as one sorted glob, so filename order IS
-execution order, and a correction that sorts BEFORE the file it corrects is
-silently undone:
+**Check where the new name sorts BEFORE choosing it.** A rebuild applies
+`apps/character-creator/db/*.sql` as one sorted glob, so a correction that sorts
+before the file it corrects is silently undone:
 
 ```bash
 (ls apps/character-creator/db/*.sql | sed 's|.*/||'; echo "my-new-name.sql")   | sort | grep -n -B1 -A1 my-new-name
 ```
 
-`fix-long-bowman-armor.sql` sorted before `fix-long-bowman.sql` — `-` is 0x2D
-and `.` is 0x2E — and was overwritten by it on every rebuild. Only
-`repo-vs-live.mjs` caught it, because production had them in the order they were
-run by hand.
+Never reason from a prefix convention: `z`-tiers have escalated past `zzzzz-`,
+and `-` (0x2D) sorts before `.` (0x2E), so `fix-x-y.sql` sorts before
+`fix-x.sql`. Run the command and read where the name lands.
 
-**A `z`-prefix buys position against what is in the directory TODAY, and nothing
-more.** `zz-` was adopted to mean "sorts after everything"; the tier has since
-escalated to `zzz-`, `zzzz-` and `zzzzz-`, so a new `zz-` file now sorts
-**before** three dozen others. Nothing announced that, and nothing will announce
-the next one.
-
-So the prefix is not the answer — **the command above is.** It is three lines
-long, it costs nothing, and it is right on the day you run it whatever anyone has
-added since. Run it, read where your name lands, and pick a prefix that puts you
-after the files you must not be undone by. Do not reason from the convention.
-
-The armor file has **since been folded away** — only `fix-long-bowman.sql` is in
-the tree now — so do not go looking for it. The hazard is what survives, not
-the file.
-
-**One class per `add-<id>-class.sql`.** The smoke test maps each file to exactly
-one id and reads each class's `men_of_arms` line against that map; four classes
-in one file left all four unaccounted for. A `fix-` script may touch several — the MOS fix
-covers two — because nothing maps those to ids.
-
-The class markdown lives in D1, so a fix script edits it with `replace()`:
+The markdown lives in D1, so a fix edits it with `replace()`:
 
 ```sql
 UPDATE imported_classes SET markdown = replace(markdown, '"Old Name"', '"New Name"')
   WHERE class_id = 'x' AND instr(markdown, '"Old Name"') > 0;
 ```
 
-A consequence worth knowing: running `class-check` against the original `.sql`
-afterwards still reports the pre-fix state. **The `.sql` reports the state it
-creates; the database is the current truth.**
+Checking the original `.sql` afterwards still reports the pre-fix state: **the
+`.sql` reports what it creates; the database is the current truth.**
 
-**Key a CATALOG write on `name`, or on `slug` for gear - never on a literal
-`id`.** Classes are keyed on `class_id`, which is a slug and stable, so the
-example above is right. A catalog row is not: `spells.id` and its siblings are
-`INTEGER PRIMARY KEY AUTOINCREMENT`, so they are insertion order, and insertion
-order differs per environment. Measured on 2026-09-05, a database rebuilt from
-the repo matched production on **0 of 1025 gear ids**. `WHERE id = 283` is
-`Fire: Fire Gout` in production and `Earth: Track` in that rebuild - the right
-data on the wrong row, with no error. `name` and `slug` are `UNIQUE`, so the
-safe key costs nothing, and `test/smoke.mjs` refuses a literal one.
+**Key a CATALOG write on `name`, or `slug` for gear, never a literal `id`.**
+Catalog ids are autoincrement insertion order, which differs per environment,
+so `WHERE id = 283` hits the wrong row with no error. `test/smoke.mjs` refuses a
+literal one. Classes are keyed on `class_id`, a stable slug.
 
 ## When a class needs the app to change
 
-Expected, not a failure of the import. The Godling's Magic Powers demanding an
-occupation, staged R.C.C.s needing `variants`, variable P.P.E. costs, and
-skills granting attribute bonuses all started this way.
+Expected, not a failure. `class-check` reports it as `UNMODELLED`, a key that
+parses and that nothing reads. **Never leave one unresolved**: silent storage is
+how a class ships looking complete and doing nothing.
 
-`class-check` reports it as `UNMODELLED`: a top-level key that parses fine and
-that nothing then reads. **Never leave one unresolved.** Silent storage is how
-a class ships looking complete and doing nothing.
+**Verify the report first.** `KNOWN_KEYS` in `scripts/class-check-lib.mjs` is
+hand-kept and has falsely reported modelled keys (`psionics_allowed`,
+`xp_table`). **Grep the key across `js/` and `functions/`**; one hit in a
+`??`/`?.` chain means it is read.
 
-**CHECK THE REPORT BEFORE ACTING ON IT — it is a hand-maintained list and it has
-been wrong twice.** `KNOWN_KEYS` in `scripts/class-check-lib.mjs` is written out
-by hand, deliberately, because the question is not "does the parser touch it"
-but "does anything downstream act on it". The cost of that is a FALSE alarm when
-a key is modelled and nobody added it to the list:
+Then it is Nate's call:
 
-| key | reported as unmodelled | actually |
-|---|---|---|
-| `psionics_allowed` | by the first six races to use it | modelled all along — `rollsForPsionics()`, the wizard's Race briefing, and a smoke check |
-| `xp_table` | by anything that ever uses it | supported since `leveling.js` was written, read by six call sites, pinned by the smoke test |
-
-A false alarm here is worse than a missing one, because the instruction attached
-to the report is *delete the key or change the app*, and both break a working
-field. **Grep for the key across `js/` and `functions/` before believing it.**
-One hit in a `??`/`?.` chain is enough to mean it is read.
-
-Two legitimate answers, and it is the user's call which:
-
-- **Ship now, model later.** Move it into the body as prose so it is at least
-  visible on the class detail, and note it in `extraction_notes`.
-- **Model it.** A real change, touching a predictable set of places:
+- **Ship now, model later.** Move it into the body as prose and note it in
+  `extraction_notes`.
+- **Model it**, touching a predictable set of places:
 
   | File | What goes in it |
   |---|---|
-  | `js/parser.js` | Validate the new block; add it to `VARIANT_OVERRIDES` if a variant may override it |
-  | `scripts/class-check-lib.mjs` | Add the key to `KNOWN_KEYS`, or it keeps reporting as unmodelled |
+  | `js/parser.js` | Validate the block; add it to `VARIANT_OVERRIDES` if a variant may override it |
+  | `scripts/class-check-lib.mjs` | Add the key to `KNOWN_KEYS` |
   | `functions/api/.../validate-character.js` | Enforce it server-side, if a character can violate it |
-  | `js/compose.js` | Fold it in, if an R.C.C.+O.C.C. pair has to combine it |
+  | `js/compose.js` | Fold it in, if an R.C.C.+O.C.C. pair combines it |
   | `js/derive.js` | Turn it into a number, if the sheet adds it up |
-  | `app.js` / `sheet.js` | Show it in the wizard and on the sheet — **both**, they are separate paths |
-  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data. Record it in the `docs/operations.md` migration table or the smoke test fails |
+  | `app.js` / `sheet.js` | Show it in the wizard **and** on the sheet; they are separate paths |
+  | `db/migrations/NNN-*.sql` + `db/schema.sql` | A column, if it is catalog data (`schema-change`); record it in the `docs/operations.md` migration table |
   | `test/smoke.mjs` | A case for the new shape |
-  | `apps/character-creator/README.md` or the right file under `docs/` | What it means and why it exists |
+  | `apps/character-creator/README.md` or the right file under `docs/` | What it means and why |
 
-  Prefer extending an existing block over adding a top-level key — `bonuses`
-  already covers attributes, combat, saves, pools, `attribute_minimums` and
-  `at_level`.
-
-  **But `combat` and `saves` are open at the validator and CLOSED at the
-  sheet**, which is the opposite of what "open set" suggests and is why this
-  sentence used to end *"so a new key there costs nothing"*. It costs silence:
-  `validateBonuses` checks group names rather than the keys inside them, and
-  `addBonus` adds any finite number under any key, so an invented key parses,
-  validates, composes and renders nowhere. `sheet.js` draws two literal lists —
-  `SAVE_FIELDS` and `COMBAT_FIELDS` — and a key outside them is stored and
-  invisible. A new key means editing `derive.js` **and** that list; they have
-  drifted once already. Use `saves.other` for a book-stated save the sixteen do
-  not name, and a `special_abilities` entry for a combat bonus. See
-  `reference/frontmatter.md` → *Bonuses*.
-
-  **Reuse the validator.** A skill's bonuses go through the same
-  `validateBonuses()` a class's do, which is why `derive.js` needed no new
-  cases for them. Two validators for one shape is the pair that drifts.
+  Prefer extending an existing block: `bonuses` covers attributes, combat,
+  saves, pools, `attribute_minimums` and `at_level`. **But `combat` and `saves`
+  are open at the validator and CLOSED at the sheet**: an invented key parses,
+  composes and renders nowhere, because `sheet.js` draws the literal lists
+  `SAVE_FIELDS` and `COMBAT_FIELDS`. A new key means editing `derive.js` **and**
+  that list. Use `saves.other` for an unnamed save and `special_abilities` for a
+  combat bonus. **Reuse `validateBonuses()`**; two validators for one shape drift.
 
 ## Reference
 
-- `reference/frontmatter.md` — every block, its shape, and what reads it
-- `reference/catalog.md` — catalog conventions: naming, renames, disagreements,
-  skill bonuses, and extracting a skill list from a PDF
-- `reference/data-script.sql` — the annotated data-script skeleton.
-  `class-check --emit-script` writes one for you; read this to know what it
-  emitted and why
+- `reference/frontmatter.md`: every block, its shape, and what reads it
+- `reference/catalog.md`: naming, renames, disagreements, skill bonuses, and
+  extracting a skill list from a PDF
+- `reference/data-script.sql`: the annotated data-script skeleton
+- `reference/why.md`: the incident behind each rule above, for when a rule
+  looks wrong and you are about to break it
