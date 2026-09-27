@@ -405,6 +405,16 @@ the only class in the catalog that carries it:
 does, and the race is meant to win. The test is whether the book says the
 character ceases to be its race.
 
+**`overrides_race: [ppe_base, starting_money]` is the narrow form, key by key**
+(BOOK-INGEST-AUDIT.md F111): a listed key is the occupation's when it states
+one, and everything else stays race-first. It is for an occupation locked by
+`race_restrictions.only` to a race or a few, whose book prints its own figure -
+the Arkhon Spectral Hunter and ESP Specialist carry `[starting_money]`. **Not
+for an occupation open to every race**, however plainly its book prints a
+P.P.E.: the list reaches every race it pairs with, including those whose P.P.E.
+adds to a mage's or prints its own, and the parser warns. Why, with the census:
+`apps/character-creator/docs/race-and-occupation.md`.
+
 **A race and an occupation that BOTH state psionics are MERGED, not chosen
 between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
 born with and an occupation says what training adds, so `powers` and
