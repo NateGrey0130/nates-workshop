@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all 34 playable classes; the ledger below is the authority. (2026-09-24)
 
-**Rows citing this book:** classes 34, gear 50, vehicles 1, skills 17, psionic_powers 15, notable_npcs 11, creatures 12
+**Rows citing this book:** classes 34, gear 50, vehicles 24, skills 17, psionic_powers 15, notable_npcs 11, creatures 12
 
 Slug `phase-world`. Cached 2026-08-28 from
 `Rifts- Dimension Book 2 Phase World.pdf`, 209 PDF pages,
@@ -137,7 +137,7 @@ Counted by structure over all 209 cached pages, not by reading prose.
 | Weapons and personal technology | 114-129 | ~42 gear stat blocks |
 | Robots & Powered Armor | 130-142 | 6 vehicles |
 | Tanks & Infantry Fighting Vehicles | 143-149 | 5 vehicles |
-| Starships & Space | 150-173 | **12 new skills (150-151)**, then ship rules and 14 vessels |
+| Starships & Space | 150-173 | **12 new skills (150-151)**, then ship rules and ~~14~~ **12** vessels (recounted 2026-09-26: `Star Ships`, 173, has no stat block) |
 | Campaign ideas and NPC crew | 173-182 | NPC stat blocks, no new classes |
 | **Experience Tables** | **183** | the playable-class authority |
 | Character record sheets | 184-208 | blank forms — NOT an inventory source |
@@ -397,7 +397,7 @@ break** on the pages that set it in a narrow column, which is why a naive
 parsing this section has to join lines first.
 
 The vehicles (130-149) and starships (157-173) are a separate question and were
-~~**not** planned~~ - **partly done since.** `vehicles`, `vehicle_locations` and `vehicle_weapons` landed 2026-09-03 in migration 048, and the **Psionic Power Armor (128-130)** was imported 2026-09-09 as `BOOK-INGEST-AUDIT` F41's Phase World session. The other ten vessels of 130-149 and every starship of 157-173 are still out, and are not F41's scope - see below.
+~~**not** planned~~ - **done since.** `vehicles`, `vehicle_locations` and `vehicle_weapons` landed 2026-09-03 in migration 048, and the **Psionic Power Armor (128-130)** was imported 2026-09-09 as `BOOK-INGEST-AUDIT` F41's Phase World session. **The rest went in on 2026-09-26** (see the ledger): **23 vessels**, not the 25 this survey and F3 carried. Counted off the `M.D.C. by Location` blocks and checked against the book's own Contents, 130-149 holds **eleven** (6 robots and power armour, 5 tanks and IFVs - this line said "ten") and 157-173 holds **twelve** starships and shuttles, not fourteen: `Star Ships` on printed 173 is a prose paragraph about capital ships with no stat block. With the Psionic Power Armor the book stats 24 vessels, and all 24 are in `vehicles`.
 
 ## Extraction plan
 
@@ -835,9 +835,11 @@ What is deliberately left, with the reason for each:
   **Corrected 2026-09-09:** `F3` was reopened and its first option built - migration
   048 added the three tables on 2026-09-03 - so the sentence above is a record of
   2026-08-31 and not the state today. One of this book's vessels is now imported, the
-  Psionic Power Armor, under `F41`. The rest of 130-149 and 157-173 remain out, and
-  `F41` covers only the gear rows that were already vessels in disguise - importing
-  this book's vessel sections whole would be a different job.
+  Psionic Power Armor, under `F41`. ~~The rest of 130-149 and 157-173 remain out~~ -
+  **imported 2026-09-26**, all 23 remaining stat blocks, in
+  `zzzzzzzz-pw-vessels-p130-150.sql` and `zzzzzzzz-pw-vessels-p157-173.sql`; see the
+  ledger. Variable (six-facing) force fields stayed prose in each vessel's
+  `description`, because printed 156 makes them a pool the crew redistributes.
 - ~~**Phase Powers (32-35).**~~ **Imported after all, in batch 9** - fifteen
   `psionic_powers` rows in a new `Phase` category. This line said they were one
   NPC class's racial abilities and belonged in `special_abilities`; printed 32
@@ -873,7 +875,8 @@ What is deliberately left, with the reason for each:
 
 | 2026-08-31 | [#418](https://github.com/NateGrey0130/nates-workshop/pull/418) | **classes, batch 10 - the two Cosmo-Knights, and the last**: Cosmo-Knight (printed 99-102) and Fallen Cosmo-Knight (102-104). Catalog 158 -> 160 classes; no new skills, gear, spells or psionics, because neither entry prints a `Money:` line anywhere in printed 99-104 and the Cosmo-Knight's Standard Equipment is prose naming no item. **34 of 34 playable classes are in and the book is closed** - `BOOK-INGEST-QUEUE.md` moves `phase-world` from `importing` to `imported`. The Fallen Knight's own prose sends level improvement to a Fallen Knight Experience Table that printed 183 does not contain; the table won, the pair share the Cosmo-Knight ladder, and the losing reading is recorded. Not a variant: `VARIANT_OVERRIDES` excludes `special_abilities`, so a variant would have kept every power the entry exists to remove. Finding F11 filed, with a 57-race sweep behind it - a class whose book says it REPLACES the race cannot say so, and exactly one race of 57 composes the Cosmo-Knight correctly. One line of code changed, the only code this book changed: `regression.mjs` required a POSITIVE bonus on every language pick and a fallen knight's is exactly zero, so the comparison moved to `>= 0`. Applied `--remote` before the PR. |
 | 2026-09-09 | #TBD | **`BOOK-INGEST-AUDIT` F41 vessels.** The **Psionic Power Armor** (printed 128-130) moved from prose in `gear` into `vehicles` + `vehicle_locations` + `vehicle_weapons`: 1 vessel, 6 M.D.C. locations, 6 weapon systems, and a `gear.vehicle_slug` pointer on the surviving gear row. **F41's count was RIGHT for this book** - the first of the four taken where it was. The gear row's stored `mdc` 210 and `cost` 4,000,000 both match the book, read before the catalog was consulted. Weapon ordinals are the book's own 1-6. The cache WELDS printed 129 - `Speed:`/`Running:` from the left column interleaves with `Flying:`/`Range:`/`Statistical Data:` from the right - so every figure was confirmed against a 200 dpi render. **`--remote` applied before the MERGE, not before this row** - the row was written first and the apply is the gate on the PR, per `ship-pr`. The premise audit for this session ran CONCURRENTLY with the implementation rather than ahead of it; see the F41 note. |
-| 2026-09-26 | #TBD | **Eleven race ladders move out of their notes into `xp_table`**, by `~010-own-book-xp-ladders.sql`: `catyr`, `seljuk`, `kreeghor` (Seljuk, Noro Mystic Warrior, Kreeghor & Catyr), `machine-people`, `phantom`, `vacuum-wasp`, `silhouette`, `draconid`, `pleasurer`, `termite-engineer`, `first-stage-promethean`. Every value re-read off a 170 dpi render of printed 183 and agrees with the class's own note; the shared columns equal `noro-mystic-warrior` and `noro-psychic`. The import had stored none because a race's table then won a pairing; since 2026-09-17 an O.C.C.'s wins. `noro` and `space-wolfen` stay without one. Each note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-26 | #1444 | **Eleven race ladders move out of their notes into `xp_table`**, by `~010-own-book-xp-ladders.sql`: `catyr`, `seljuk`, `kreeghor` (Seljuk, Noro Mystic Warrior, Kreeghor & Catyr), `machine-people`, `phantom`, `vacuum-wasp`, `silhouette`, `draconid`, `pleasurer`, `termite-engineer`, `first-stage-promethean`. Every value re-read off a 170 dpi render of printed 183 and agrees with the class's own note; the shared columns equal `noro-mystic-warrior` and `noro-psychic`. The import had stored none because a race's table then won a pairing; since 2026-09-17 an O.C.C.'s wins. `noro` and `space-wolfen` stay without one. Each note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-26 | #TBD | **vessels - the rest of the book** (`BOOK-INGEST-AUDIT` F3, and the survey's own "left on purpose"). `zzzzzzzz-pw-vessels-p130-150.sql`: 11 vessels (6 robots and power armour, 5 tanks and IFVs), 107 M.D.C. locations, 66 weapon entries. `zzzzzzzz-pw-vessels-p157-173.sql`: 12 starships and shuttles, 69 locations, 49 weapon entries. Catalog `vehicles` 354 -> 377; `phase-world` 1 -> 24 vessels, `source-coverage` 140 -> 163. **The count was 23, not the 25 this survey and F3 carried**: 11 stat blocks in 130-150 (this survey said "ten") and 12 in 157-173 (it said 14; `Star Ships`, 173, is prose with no stat block). No duplicate of any other book (checked by name `--remote`). Extracted by four `book-extract-worker` slices off the cache and 150-250 dpi renders, then two `book-reconcile` passes; the reconcile caught a wrong Phalanx page range, two dropped cost notes, two dropped cargo/power lines and a cost chosen by two different rules - `cost` is now the price of the vessel as statted, with stripped and knock-off versions in `cost_note`. Two stat blocks run past the section edges the survey gave (the Kartuhm-Terek onto 150, the Shadow Bolt onto 165) and the Scimitar onto 170. Variable (six-facing) force fields stay prose in `description`; single-value ones printed in the M.D.C. list are location rows. **`--remote` is applied before the MERGE, not before this row**, per `ship-pr`. |
 
 ### What remains
 
@@ -884,16 +887,29 @@ alongside 9 skills, 8 re-citations, 47 gear rows and 15 psionic powers.
 the same PR.
 
 What is left is left ON PURPOSE, and each reason is in the extraction plan
-above rather than restated here: the **25 vessels** of printed 130-149 and
-157-173, which `gear` has no shape for (`BOOK-INGEST-AUDIT.md` F3); the **12
+above rather than restated here: ~~the **25 vessels** of printed 130-149 and
+157-173, which `gear` has no shape for (`BOOK-INGEST-AUDIT.md` F3)~~ - **no
+longer left**: the count was 23, not 25, and all 23 were imported 2026-09-26
+into the vessel tables migration 048 built (see the ledger and the gear
+section); the **12
 entries the book names but does not make playable**, seven labelled NPC or GM
 material in its own Contents, one in its section heading, three that are lore
 or a cross-reference or the alien-race generator, and the Dominator; the
 **dog-fighting and space combat rules** of 151-157, which are rules text and
 not catalog data; and the **`Space:` family rename**, which is duplicate-tool
 work rather than an import. Ten findings, F2 through F11, record every
-mechanic the book asked for and the app could not express; none was
-implemented, per the standing constraint.
+mechanic the book asked for and the app could not express. ~~None was
+implemented, per the standing constraint.~~ **All ten were taken on
+2026-08-31, in #421-#431** (F3's first answer being the one vessel a class is
+issued, #431), so that sentence was a record of the survey's own batch and
+was false by the end of the same day.
+
+**Re-measured 2026-09-26, before the vessel PR:** `node scripts/source-coverage.mjs
+--remote` prints `phase-world        140 / 0` - the 115 below plus the rows
+cited since (the vessel, notable NPCs and creatures). The vessel PR adds 23
+`vehicles` rows, so it reads **163 / 0** once that PR is applied; its
+locations and weapons hang off those rows and are not counted separately.
+The paste below is the historical one, kept as the record of batch 10.
 
 `node scripts/source-coverage.mjs --remote`, after batch 10 - the last:
 
