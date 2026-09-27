@@ -2479,7 +2479,7 @@ finds one.
 **Ongoing cost:** none recurring. It is one conditional in a loop, and the doc
 comment above it grows two sentences.
 
-**Taken in part, 2026-09-27 (PR #TBD), as an OPT-IN per occupation rather than
+**Taken in part, 2026-09-27 (PR #1467), as an OPT-IN per occupation rather than
 the proposal's rule - on Nate's word, after the census the proposal asked for.**
 That census ran `combineClasses` over every legal published race-and-occupation
 pairing, variants included, before and after the proposed rule (session
