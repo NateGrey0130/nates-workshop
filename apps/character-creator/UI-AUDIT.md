@@ -6,6 +6,10 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **Nothing is open on this menu, as of 2026-09-27**, read under every
+> finding's heading by the `open-findings-scout` agent that day. The line below
+> is a dated record.
+>
 > **Work was opened on this menu on 2026-09-22.** A finding's
 > state is its outcome note, directly under its proposal; the headings carry only
 > severity. The line here read *"No numbered finding on this menu is open"* from

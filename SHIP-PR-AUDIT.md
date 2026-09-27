@@ -6,8 +6,9 @@
 > every finding whose own section records no outcome. The closed file is a
 > record like this one, and the `*AUDIT*.md` glob reaches both.
 
-> **Work was opened on this menu on 2026-09-27.** Read under each finding's
-> heading for its state.
+> **Nothing is open on this menu, as of 2026-09-27 (evening).** Work was opened
+> and closed again that day; read under each finding's heading for its state.
+> The line below is a dated record.
 >
 > **Nothing is open on this menu, as of 2026-09-22.** **Read each finding's own
 > note for its state — this header is a summary and summaries here go stale.**

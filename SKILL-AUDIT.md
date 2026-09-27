@@ -6,6 +6,10 @@
 > was. Every finding of this menu recorded an outcome, so every one moved. The
 > closed file is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **Nothing is open on this menu, as of 2026-09-27**, read under every
+> finding's heading by the `open-findings-scout` agent that day. The paragraph
+> below is a dated record.
+>
 > **`F44` was taken 2026-09-11 (PR #957)**, filed 2026-09-04 — the three ways
 > a worker cannot learn a book's page offset from the two sources both agents
 > send it to. **One of its three parts is a cost `F43` created**, so read

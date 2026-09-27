@@ -6,6 +6,10 @@
 > in full every finding whose own section records no outcome. The closed file
 > is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **Nothing is open on this menu, as of 2026-09-27**, read under every
+> finding's heading by the `open-findings-scout` agent that day. The line below
+> is a dated record.
+>
 > **Work was opened on this menu on 2026-09-22.** Read each finding's own
 > heading for its state and its PR number; this line does not give it. Later
 > passes have added sections after the original one, each under its own dated

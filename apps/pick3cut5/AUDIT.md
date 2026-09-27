@@ -1,5 +1,9 @@
 # Pick 3 Cut 5 — outstanding items, 2026-08-24
 
+> **Nothing is open on this menu, as of 2026-09-27**, read under every
+> finding's heading by the `open-findings-scout` agent that day. The line below
+> is a dated record.
+>
 > **Work was opened on this menu on 2026-09-22.** Read under a finding's own
 > heading for its state; this line does not give it. The sentence here said
 > *"Nothing is open"* from 2026-09-03 until then, naming a range of closed
