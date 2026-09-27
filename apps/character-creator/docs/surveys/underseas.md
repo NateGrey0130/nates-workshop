@@ -49,7 +49,7 @@ stripped before any SQL.
 
 | page | table | states |
 |---|---|---|
-| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across nine ladders. Twenty-five of them are importable; see the Gene-Splicer note below. |
+| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across ten ladders. Twenty-five of them are importable; see the Gene-Splicer note below. |
 | **57** | *Alphabetical List of Spellsongs* | the 21 Whale Singer spellsongs and each one's P.P.E. cost |
 | **63** | *Alphabetical List of Ocean Spells* | the 41 ocean spells and each one's P.P.E. cost |
 | **70** | *Alphabetical Spell List* (Dolphin Magic) | the 10 dolphin spells and each one's P.P.E. cost |
@@ -137,16 +137,16 @@ belongs in the class's `special_abilities`, not in `psionic_powers`.
 | Sperm Whale R.C.C. | 88-90 | Dragon Ray / Sperm Whale / Naut'Yll Devastator |
 | Humpback Whale R.C.C. | 90-92 | Dolphin / Humpback Whale / Gene-Splicer Mutants |
 | Tritonian Sea Wolf O.C.C. | 96-97 | Sea Wolf / Sea Druid / Sea Inquisitioner |
-| Tritonian Scientist O.C.C. | 97-98 | Navy Seaman / Amphib / Navy Marine / Tritonian Scientist |
-| Amphib R.C.C. | 98-100 | Navy Seaman / Amphib / Navy Marine / Tritonian Scientist |
-| Navy Seaman O.C.C. | 111-112 | Navy Seaman / Amphib / Navy Marine / Tritonian Scientist |
-| Marine O.C.C. | 112-113 | Navy Seaman / Amphib / Navy Marine / Tritonian Scientist |
+| Tritonian Scientist O.C.C. | 97-98 | Amphib / Navy Marine / Tritonian Scientist |
+| Amphib R.C.C. | 98-100 | Amphib / Navy Marine / Tritonian Scientist |
+| Navy Seaman O.C.C. | 111-112 | Navy Seaman / Salvage Expert / Kreel-Lok Warrior (corrected 2026-09-26; this row read the Amphib column) |
+| Marine O.C.C. | 112-113 | Amphib / Navy Marine / Tritonian Scientist |
 | Sea Titan R.C.C. | 113-115 | Sea Titan / Whale Singer |
-| Salvage Expert O.C.C. | 133-134 | Salvage Expert / Kreel-Lok Warrior |
+| Salvage Expert O.C.C. | 133-134 | Navy Seaman / Salvage Expert / Kreel-Lok Warrior |
 | Naut'Yll Soldier R.C.C. | 149-150 | Horune Pirate / Naut'Yll Soldier |
 | Naut'Yll Devastator R.C.C. | 150-151 | Dragon Ray / Sperm Whale / Naut'Yll Devastator |
 | Naut'Yll Koral Shaper R.C.C. | 151-152 | Ocean Mage / Naut'Yll Koral Shaper |
-| Kreel-Lok Nomad R.C.C. | 152-153 | Salvage Expert / Kreel-Lok Warrior |
+| Kreel-Lok Nomad R.C.C. | 152-153 | Navy Seaman / Salvage Expert / Kreel-Lok Warrior |
 | Horune Pirate R.C.C. | 164-165 | Horune Pirate / Naut'Yll Soldier |
 
 ### Gene-Splicer Mutants has a ladder and NO class data — not imported
@@ -379,6 +379,7 @@ The merged PR body cannot be edited into truth retroactively and is left as the 
 | 2026-09-08 | [#807](https://github.com/NateGrey0130/nates-workshop/pull/807) | class batch 7 of 7: **Naut'Yll Soldier**, **Naut'Yll Devastator**, **Naut'Yll Koral Shaper**, **Kreel-Lok Nomad**, **Horune Pirate** (210 -> **215** live classes). **THE CLASS ROSTER IS COMPLETE: 25 of 25**, verified by counting `imported_classes` against the p.214 ladder rather than by adding up batches - which is the check whose absence produced the #805 miscount. Applied `--remote` before the PR. |
 | 2026-09-08 | [#808](https://github.com/NateGrey0130/nates-workshop/pull/808) | **gear**: 87 rows - weapons, armour, bionics and the book's 33 priced sea vessels (1154 -> **1241** gear). Seven of the 87 are stub upgrades that also correct auto-generated names. The boats go in `gear` with category `vehicle` on the existing 36-row precedent, and are the first vessels to use `gear.sdc`; that also makes the Salvage Expert's starting vessel storable. Applied `--remote` before the PR. |
 | 2026-09-08 | [#809](https://github.com/NateGrey0130/nates-workshop/pull/809) | **vehicles**: 50 stat blocks across five files, split by the page their HEADING falls on - `p081-105` (8), `p118-133` (9), `p139-161` (11), `p167-190` (13), `p195-210` (9). 415 M.D.C. locations and 247 weapon systems with them (55 -> **105** vessels; the other 55 are Triax). **THE BOOK IS NOW FULLY IMPORTED**: 25 classes, 8 skills, 74 spells, 87 gear, 50 vessels. Applied `--remote` before the PR. |
+| 2026-09-26 | #TBD | **XP ladders**, `~014-underseas-xp-ladders.sql`: all **25** classes take the p.214 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. Two odd lower bounds stored as printed (Pneuma Biform level 5, Dragon Ray level 5). **The Navy Seaman is on the Navy Seaman / Salvage Expert / Kreel-Lok Warrior column**, not the Amphib one; the class table above said otherwise and is corrected. **The Sea Titan takes the "Sea Titan, Whale Singer" column** although its entry names the dragon's tables, two of them; its note says so. No row count moves. `--remote` is applied before the merge |
 
 ### What the vehicle pass had to decide
 
