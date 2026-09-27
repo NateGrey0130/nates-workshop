@@ -739,8 +739,9 @@ the template at `.claude/skills/book-survey/reference/SURVEY.md`. It is
 survives the machine it was written on. It holds what the session learned that
 the repo does not: the inventory table, the authority pages and the printed-to-PDF
 offset, the catalog diff with its hand-checked false gaps, the agreed extraction
-plan, and a progress ledger — one line per shipped PR, appended when it merges,
-saying what went in and what remains.
+plan, and a progress ledger — one line per PR, written in that PR before it
+opens and citing its **branch** (see `class-import` → *A batch outlives the
+session on purpose*), saying what went in and what remains.
 
 **Read the offset from `scripts/books.json`; do not re-derive it.** That registry
 is the authority for `page_offset`, `printed_pages` and any
@@ -789,7 +790,7 @@ how they arrive — **`BOOK-INGEST-QUEUE.md`** at the repo root holds the batch'
 roster and what applies to the whole batch. **Read it first**, every session.
 
 **A book session's record goes in its own survey, not the queue**: the
-`## Ledger` table (one row per PR: date, PR, what went in) and, when the
+`## Ledger` table (one row per PR: date, branch, what went in) and, when the
 session ends, the survey's status line and a short *where it stands / what is
 next* note. Every survey has a ledger. Until 2026-09-25 each session added a
 dated section to the end of the queue instead, and two sessions in parallel
