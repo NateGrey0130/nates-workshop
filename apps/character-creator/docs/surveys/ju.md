@@ -65,7 +65,11 @@ near-match was hand-checked for a false gap is not written down anywhere.
 Complete for the book's own content. The seven vehicles of printed 77-88 were 
 re-read into `vehicles` on 2026-09-09 under `BOOK-INGEST-AUDIT` F41 — they had 
 been imported as `gear` rows in PR #283, before migration 048 gave vessels 
-three tables of their own.
+three tables of their own. The Experience Tables of printed 156 were the last
+piece of the book's own content not stored: every class ran on the app's
+default ladder until 2026-09-26, when `~008-rue-ju-xp-ladders.sql` gave each
+its printed column. The Murder-Wraith stores none, because the page lists it
+as an NPC Villain with no column and its experience is frozen at death.
 
 ## Ledger
 
@@ -81,6 +85,7 @@ three tables of their own.
 | — | [#285](https://github.com/NateGrey0130/nates-workshop/pull/285) | stats for the blank gear rows, and the slug-cased names fixed |
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-09 | — | the seven vessels of printed 77-88 re-read from the book into `vehicles` (43 M.D.C. locations, 21 weapon systems); the seven `gear` rows STAY and now point at them. `BOOK-INGEST-AUDIT` F41, taken for this book. Read from the PDF with `read-columns.py`, **not** from this book's OCR cache — `book-survey` section 0b names `ju`'s cache as one built by throwaway code, and it is welded across the gutter. |
+| 2026-09-26 | #TBD | `~008-rue-ju-xp-ladders.sql`: the Experience Tables of printed 156 as `xp_table` on 13 of the 14 classes, each read off a 200 dpi render and reconciled against it - Standard & Gladiator (Gladiator), Juicer Scout, Titan/Hyperion/Delphi/Phaeton, Psycho-Stalker & Juicer Assassin, Mega-Juicer & Maxi-Killer, Dragon Juicer, and Juicer Wannabe & Gambler. The Murder-Wraith has no column and stores none. Two printed lower bounds that repeat the previous band's upper bound are stored plus one (Dragon Juicer level 11, Wannabe level 5). Applied `--remote` before the merge. |
 
 Dates are absent because these merged before the ledger existed; the PR numbers
 are the durable handle and `git log` carries the dates.
