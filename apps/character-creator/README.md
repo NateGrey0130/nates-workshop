@@ -141,6 +141,8 @@ apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 ├── js/picker.js              Catalog picker filtering — matching, the filter
 │                             input, and caret restore (classic script, same
 │                             reason as derive.js)
+├── js/traditions.js          Splits spells into general ones and per-tradition
+│                             folds, for the codex and the wizard (classic script)
 ├── js/class-template.js      Annotated OCC/RCC skeletons for writing a class by
 │                             hand. Printed by scripts/new-class.mjs; a classic
 │                             script because the page that used to load it was
@@ -227,7 +229,7 @@ classic scripts — and why inline handlers in the wizard need explicit `window`
 exposure (see the `Object.assign(window, …)` block at the bottom of `app.js`).
 `catalog.js` avoids the problem entirely by binding with `addEventListener`.
 
-`js/derive.js`, `js/picker.js` and `js/api.js` are deliberately *classic*
+`js/derive.js`, `js/picker.js`, `js/traditions.js` and `js/api.js` are deliberately *classic*
 scripts rather than modules, so the plain-script pages can use them without
 converting the whole file. `js/api.js` is loaded by all six pages and defines
 `api()` and `errorDetails()`; there used to be five copies of `api()` in three
