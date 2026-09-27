@@ -1,8 +1,8 @@
 # Rifts Conversion Book One — survey
 
-**Status:** `importing` — the Palladium Character Conversions section is inventoried and batch 1 (the nine races the Palladium Fantasy catalog already holds) is in; batches 2-4 are planned below. (2026-09-26)
+**Status:** `importing` — the Palladium Character Conversions section is inventoried; batch 1 (the nine races the Palladium Fantasy catalog already holds) and batch 2 (the seven new humanoids) are in; batches 3-4 are planned below. (2026-09-26)
 
-**Rows citing this book:** classes 19, creatures 77
+**Rows citing this book:** classes 26, creatures 77
 
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,
@@ -127,7 +127,7 @@ was closed against this book as class-audit item **CB1** in
 [#304](https://github.com/NateGrey0130/nates-workshop/pull/304), and is carried
 as one row per element and element pair (`warlock-air` through
 `warlock-fire-water`); the original `warlock` row is deleted. The other nine are
-batch 1 below.
+batch 1 below. **Batch 2 takes it to twenty-six.**
 
 ### Batch 1 — the nine races the Palladium Fantasy catalog already holds
 
@@ -172,10 +172,47 @@ Decisions every one of them shares:
 - Horror Factor is the top-level `horror_factor` key, which the Palladium rows
   predate.
 
+### Batch 2 — the seven new humanoids
+
+`rifts-bearman` (named *Bearman of the North*), `rifts-kankoran`,
+`rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`,
+`rifts-vrill`: seven rows, classes citing this book 19 -> 26. No Palladium
+Fantasy row exists for any of them and no production id names them (checked
+`--remote`, 2026-09-26), but every one is a Palladium World race that a
+Palladium Fantasy import could later claim, so the ids keep batch 1's `rifts-`
+prefix. Batch 1's shared decisions hold, with these additions:
+
+- **The Dragonman, Quillback and Vrill are M.D.C. beings on Rifts Earth** and
+  take `rifts-troll`'s shape: `mdc_base` as printed, the S.D.C.-world Hit Points
+  and S.D.C. in a natural ability rather than pools.
+- **The Bearman is not an M.D.C. being.** His 2D4x10 S.D.C. is a pool bonus;
+  the 100 S.D.C. = 1 M.D.C. rule the book illustrates with him is prose.
+- **Where the Rifts O.C.C. line names what it allows** (Bearman, Dragonman,
+  Quillback, Quorian, Vrill) it is an `only` list, with `group:` tokens where
+  the line says "any Men at Arms" or "any Psychic"; Kankoran and Gosai are
+  `except` lists. Each note says which catalog ids stand for the book's names
+  and which names have no row (a plain Ranger, Hunter-Woodsman, Professional
+  Thief, Freelance Spy, Smuggler, villager, any Temporal Magic O.C.C.).
+  Judgement calls the reconcile pass named and that stand as written: the
+  Bearman's "Grunt (equivalent)" is the Coalition Grunt plus the Merc Soldier,
+  the Kankoran's "likely never an Operator or Power Armor pilot" is a bar, and
+  the Vrill adds the Mystic (its psionics line) and the Healing Shaman (a
+  "healer type").
+- **The Vrill's radar bonuses are stored**, because the radar is always on and
+  the page counts its attack in the Vrill's three; what removes or halves them
+  is a natural ability. Its psionics-only-as-Mystic-or-Psi-Healer rule is a
+  prose restriction.
+- **Dwarven literacy is prose** on the Vrill as on `rifts-dwarf`: the catalog
+  has no Dwarven literacy row, and a fixed `Literacy: Other` fails regression.
+- The Gosai Assassin, Hand to Hand: Skudasa, the Quillback Scavenger, the
+  Quorian Oneiromancer and the Chant of Dreaming are not in these rows; they
+  are batch 4.
+
 ## Catalog diff
 
 Run for batch 1 by `class-check --remote` on each draft, 2026-09-26: every skill
-the nine grant resolves, and no stub rows were needed. No spell, psionic or gear
+the nine grant resolves, and no stub rows were needed. The same for batch 2's
+seven, 2026-09-26: every skill and every `occ_restrictions` id resolves, no stubs. No spell, psionic or gear
 diff has been run; batch 1 needs none.
 
 ## Extraction plan
@@ -189,7 +226,7 @@ Agreed 2026-09-26. One PR each, in order.
    Quorian, Vrill. `rifts-` ids only if Palladium Fantasy rows for them could
    later exist; check the catalog first. The Dragonman, Quillback and Vrill are
    M.D.C. beings on Rifts Earth; the Bearman is the book's example of a 100
-   S.D.C. = 1 M.D.C. mortal.
+   S.D.C. = 1 M.D.C. mortal. *Shipped, with `rifts-` ids; see Batch 2.*
 3. **The eight giants** — Algor, Cyclops, Jotan, Gigantes, Minotaur, Nimro,
    Rahu-Man (with its minor psionics, printed 96) and Titan, all M.D.C. beings on
    Rifts Earth. The **Gigante Mutation & Special Abilities Table** (printed
@@ -219,6 +256,7 @@ Elemental Spell list's descriptions, which the book defers to the Book of Magic
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-18 | [#1170](https://github.com/NateGrey0130/nates-workshop/pull/1170) | 77 creatures (NPC & bestiary plan, Phase 3) |
 | 2026-09-26 | #TBD | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
+| 2026-09-26 | #TBD | batch 2, seven new Rifts race classes (`rifts-bearman`, `rifts-kankoran`, `rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`, `rifts-vrill`), reconciled against the book with no figure in dispute; no stub rows; classes citing this book 19 -> 26. Applied `--remote` before the merge |
 
 ### What remains
 
@@ -230,5 +268,6 @@ was applied:
 ```
 
 **87 traceable, nothing untraceable** — ten Warlock rows and 77 creatures.
-Batch 1 takes it to 96. What remains to take is batches 2-4 above: fifteen
-races and three R.C.C.s, one hand to hand style and one chant.
+Batch 1 takes it to 96 and batch 2 to 103. What remains to take is batches
+3-4 above: the eight giants and three R.C.C.s, one hand to hand style and one
+chant.
