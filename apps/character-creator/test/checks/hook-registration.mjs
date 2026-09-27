@@ -37,8 +37,8 @@
 // instruction file, and for the same reason.
 //
 // checks/instruction-paths.mjs is the near neighbour and deliberately does NOT
-// cover this: its ROOTS are CLAUDE.md, SETUP.md, .claude/skills and
-// .claude/agents, read 2026-09-22, and its READABLE extension list is
+// cover this: its ROOTS are CLAUDE.md, SETUP.md, docs/cloudflare-credentials.md,
+// .claude/skills and .claude/agents, read 2026-09-27, and its READABLE extension list is
 // md|json|ps1|mjs|js. `.claude/hooks` is not a root, `.sh` is not readable, and
 // `.claude/settings.json` is outside ROOTS - so neither the script nor either
 // registration is reached by it. checks/environment.mjs does not reach them
@@ -71,8 +71,9 @@
 // ~/.claude/settings.json is absent ENTIRELY, the early return below reports a
 // PASS. That is right for CI and wrong for a second machine, where the file has
 // never been written and nothing notices. A machine-setup check would have to
-// live somewhere that knows it is on this machine; SETUP.md documents no hook
-// at all today.
+// live somewhere that knows it is on this machine. SETUP.md -> *Setting up a
+// machine* records the registration since 2026-09-27, but nothing checks that a
+// second machine followed it.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
