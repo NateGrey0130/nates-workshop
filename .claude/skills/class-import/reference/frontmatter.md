@@ -71,7 +71,7 @@ and fails the regression run — so read this section rather than discovering it
 
 ```yaml
 occ_group: men-of-arms            # occ ONLY — one of five, listed below
-xp_table: [0, 2100, 4200, ... ]   # every palladium-fantasy occ; a race only when its book prints one — 15 entries
+xp_table: [0, 2100, 4200, ... ]   # whenever the class's book prints one or names one to use — 15 entries
 ```
 
 ### `occ_group` — every O.C.C., not just the Palladium ones
@@ -88,23 +88,37 @@ Two more rules the same block enforces: the value must be one of the five above,
 and **a group belongs on an O.C.C. and a restriction on a race, never the other
 way round.**
 
-### `xp_table` — every Palladium Fantasy O.C.C., and a race only when its book prints one
+### `xp_table` — whenever the class's book prints one, or names one to use
 
-The check is `every Palladium O.C.C. has its own experience table`, and it
-applies when `system: palladium-fantasy` and `category: occ`. Fifteen integers,
-the **lower bound** of each band, starting at 0 and strictly rising — that is
-what `levelForXp` compares against. A Rifts O.C.C. does not need one. Where the
-book misprints a lower bound as the previous band's upper bound (*"level 12
+Fifteen integers, the **lower bound** of each band, starting at 0 and strictly
+rising — that is what `levelForXp` compares against. A class that states none
+levels on `DEFAULT_XP_TABLE`, which `js/leveling.js` calls a house rule, so an
+omitted ladder is a wrong number on the sheet rather than a neutral gap. Where
+the book misprints a lower bound as the previous band's upper bound (*"level 12
 ends at 225,920, level 13 starts at 225,920"*), store that number plus one and
 say so in `extraction_notes`.
 
-**A race carries one only when its book prints a ladder FOR THE RACE** — Nightbane
-printed 233 prints nine, *"Hound & Hunter"*, *"Wampyr"*, *"Nightprince &
-Vampire"* among them, beside the O.C.C. charts. Nate's decision, 2026-09-17
-(`apps/character-creator/docs/surveys/nightbane-core.md`, *Follow-up decisions
-after the import*). Do not invent one for a race whose book prints none:
+**Store every ladder the book prints, Rifts or Palladium, O.C.C. or R.C.C.**
+Regression REQUIRES one only on a Palladium Fantasy O.C.C. (`every Palladium
+O.C.C. has its own experience table`); a Rifts O.C.C. missing one passes every
+check and still levels on the house rule. The charts usually sit together on
+one page near the back of the book, with column headings naming several classes
+— a class takes the column that names it. Read them off a render: the caches
+scramble those columns.
+
+**A class whose book says to use ANOTHER class's table copies that ladder**
+(*"use the 'Borg tables"*, *"same as the Dragon R.C.C."*). Nate's decision, 2026-09-26: copy the named class's stored
+`xp_table` and say where it came from in `extraction_notes`. Before that date
+some imports stored nothing under an "own book only" rule, and their notes may
+still say so.
+
+**A race whose book prints no ladder for it and names none stores none** —
 experience comes from what you do, and Palladium names its charts by occupation
-— "Knight & Noble", "Thief & Merchant".
+("Knight & Noble", "Thief & Merchant"). Nightbane printed 233 is the case where
+the book does print race ladders (*"Hound & Hunter"*, *"Wampyr"*) beside the
+O.C.C. charts; Nate's decision, 2026-09-17
+(`apps/character-creator/docs/surveys/nightbane-core.md`, *Follow-up decisions
+after the import*).
 
 **In a pairing the occupation's ladder wins.** `combineClasses` takes `xp_table`
 from the O.C.C. whenever it states one, so a race's ladder applies only when the
