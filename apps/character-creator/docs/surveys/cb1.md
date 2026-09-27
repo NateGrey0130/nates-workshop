@@ -1,8 +1,8 @@
 # Rifts Conversion Book One — survey
 
-**Status:** `importing` — the Palladium Character Conversions section is inventoried; batch 1 (the nine races the Palladium Fantasy catalog already holds), batch 2 (the seven new humanoids) and batch 3 (the eight giants) are in; batch 4 is planned below. (2026-09-26)
+**Status:** `imported` — the Palladium Character Conversions section is inventoried and all four batches are in: the nine races the Palladium Fantasy catalog already holds, the seven new humanoids, the eight giants, and the three race occupations with Hand to Hand: Skudasa and the Chant of Dreaming. (2026-09-27)
 
-**Rows citing this book:** classes 34, creatures 77
+**Rows citing this book:** classes 37, skills 1, spells 1, creatures 77
 
 Slug `cb1`. Cached from
 `595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf`,
@@ -117,7 +117,8 @@ enemies and allies.
 **24 race entries and three occupation-style R.C.C.s.** Each R.C.C. is a pointer
 rather than a stat block: the Gosai Assassin is the Palladium Assassin with
 Skudasa in place of Hand to Hand: Assassin and four extra skills in place of its
-four W.P.s; the Quillback Scavenger is the Palladium Vagabond with added skills;
+four W.P.s; the Quillback Scavenger is the Vagabond ("Vagabond Optional O.C.C.",
+the Rifts `vagabond`) with added skills;
 the Quorian Oneiromancer is a dream shaman built on the Mystic.
 
 ## Classes
@@ -127,7 +128,8 @@ was closed against this book as class-audit item **CB1** in
 [#304](https://github.com/NateGrey0130/nates-workshop/pull/304), and is carried
 as one row per element and element pair (`warlock-air` through
 `warlock-fire-water`); the original `warlock` row is deleted. The other nine are
-batch 1 below. **Batch 2 takes it to twenty-six, and batch 3 to thirty-four.**
+batch 1 below. **Batch 2 takes it to twenty-six, batch 3 to thirty-four, and
+batch 4 to thirty-seven.**
 
 ### Batch 1 — the nine races the Palladium Fantasy catalog already holds
 
@@ -239,6 +241,55 @@ Fantasy giant could later arrive. `rifts-cyclops` is unrelated to
 - Breath attacks (Algor, Nimro) are prose, not `combat.attacks`, because the
   extra attack can only be a breath.
 
+### Batch 4 — the three race occupations, Skudasa and the Chant
+
+`rifts-gosai-assassin`, `rifts-quillback-scavenger`,
+`rifts-quorian-oneiromancer`: three occupations (`category: occ`), classes
+citing this book 34 -> 37, plus one skill row and one spell row.
+
+- **Each is its race's own occupation.** `race_restrictions: { only:
+  ["rifts-<race>"] }` limits it to its race, and regression's
+  `RACE_OWN_TRAINING` list names all three, because no human may take one.
+  `fix-cb1-race-own-occupations.sql` adds the Oneiromancer and the Scavenger
+  to the Quorian's and Quillback's `only` lists, which could not pair them
+  otherwise; the Gosai's list is an `except` list and already allowed the
+  Assassin.
+- **The Oneiromancer is `copy_of: mystic`** (the RUE Mystic), except
+  `psionics`, `magic`, `natural_abilities` and `race_restrictions`: four
+  granted powers plus four Sensitive, then one Healing, Sensitive or Physical
+  power a level; four spells of levels 1-2, then two a level up to his own
+  level; and the Chant granted by name.
+- **The Scavenger is `copy_of: vagabond`** (the RUE Vagabond; the page says
+  "Vagabond Optional O.C.C.", and `vagabond-peasant` is Palladium Fantasy's),
+  except `skills` - Detect Ambush, Detect Concealment and Find Contraband at
+  catalog base - and `race_restrictions`. The ladder is the Vagabond's, as the
+  page says. The page states nothing but skills and ladder, so the Vagabond's
+  O.C.C. bonuses, Eyeball a Fella and money come with the copy; the class's note
+  says so.
+- **The Gosai Assassin is written out in full** from the Palladium Fantasy
+  `assassin`, not a `copy_of`: the pair would differ on `system`, and no
+  copy in the catalog crosses systems. Skudasa replaces Hand to Hand: Assassin
+  (`costs: {}` - nothing else is sold); one Espionage (never Disguise),
+  Military, Rogue and "Scholar" pick replace the four W.P.s, Scholar spanning
+  Technical and Science because the catalog has no such category; W.P.s and
+  Horsemanship leave the related list. Equipment drops the weapons and - by
+  inference from the Gosai's metal allergy, not from this page - the studded
+  leather. Money is the Assassin's 200, gold in Palladium Fantasy.
+- **Hand to Hand: Skudasa** is a Physical skill row in the other styles' shape,
+  `systems` ["rifts"], the fifteen levels in `level_bonuses`
+  (`add-cb1-skudasa-and-chant-of-dreaming.sql`, sorting before the class
+  scripts; `~023-cb1-skudasa-skill-systems.sql` re-tags it after the scripts
+  that clear `skills.systems` on a clean build). "ONLY the Gosai Assassin" is
+  its note, as the catalog's other exclusive skills are: **nothing enforces a
+  skill's exclusivity**, and a class that states no Hand to Hand price is still
+  offered it by the picker.
+- **The Chant of Dreaming** is a spell row at level 0 with no tradition, 20
+  P.P.E., the shape Wormwood's class-specific prayers take; its success ratio
+  is in the description.
+- Reconciled against printed 99-101, 105 and 107 by `book-reconcile` with no
+  figure in dispute. It flagged the studded leather as an inference, and the
+  class now says so.
+
 ## Catalog diff
 
 Run for batch 1 by `class-check --remote` on each draft, 2026-09-26: every skill
@@ -246,6 +297,9 @@ the nine grant resolves, and no stub rows were needed. The same for batch 2's
 seven, 2026-09-26: every skill and every `occ_restrictions` id resolves, no stubs. No spell, psionic or gear
 diff has been run; batch 1 needs none. Batch 3's eight, 2026-09-26: every skill,
 every psionic category and every `occ_restrictions` id resolves, no stubs.
+Batch 4's three, 2026-09-27: every skill, psionic, spell and gear row resolves
+except Hand to Hand: Skudasa and the Chant of Dreaming, which the batch adds in
+its own catalog script; the stubs `--emit-script` printed for them were removed.
 
 ## Extraction plan
 
@@ -270,7 +324,7 @@ Agreed 2026-09-26. One PR each, in order.
    (built on the Vagabond), the Gosai Assassin (built on the Palladium Assassin),
    plus **Hand to Hand: Skudasa** as a skill row usable only by the Gosai
    Assassin and the **Chant of Dreaming** as a spell or ability row. Needs
-   batch 2's races first.
+   batch 2's races first. *Shipped — see Batch 4 above.*
 
 **Left out, with reasons:** the rules chapters and the other-game conversion
 chapters (rules reference, no rows); the magic index (a cross-reference); the
@@ -289,7 +343,8 @@ Elemental Spell list's descriptions, which the book defers to the Book of Magic
 | 2026-09-18 | [#1170](https://github.com/NateGrey0130/nates-workshop/pull/1170) | 77 creatures (NPC & bestiary plan, Phase 3) |
 | 2026-09-26 | #1443 | conversions section surveyed; batch 1, nine Rifts race classes (`rifts-wolfen`, `rifts-coyle`, `rifts-changeling`, `rifts-dwarf`, `rifts-elf`, `rifts-goblin`, `rifts-orc`, `rifts-ogre`, `rifts-troll`); classes citing this book 10 -> 19. Applied `--remote` before the merge |
 | 2026-09-26 | #1449 | batch 2, seven new Rifts race classes (`rifts-bearman`, `rifts-kankoran`, `rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`, `rifts-vrill`), reconciled against the book with no figure in dispute; no stub rows; classes citing this book 19 -> 26. Applied `--remote` before the merge |
-| 2026-09-26 | #TBD | batch 3, the eight giants (`rifts-algor`, `rifts-cyclops`, `rifts-jotan`, `rifts-gigantes`, `rifts-minotaur`, `rifts-nimro`, `rifts-rahu-man`, `rifts-titan`); classes citing this book 26 -> 34. Applied `--remote` before the merge |
+| 2026-09-26 | #1452 | batch 3, the eight giants (`rifts-algor`, `rifts-cyclops`, `rifts-jotan`, `rifts-gigantes`, `rifts-minotaur`, `rifts-nimro`, `rifts-rahu-man`, `rifts-titan`); classes citing this book 26 -> 34. Applied `--remote` before the merge |
+| 2026-09-27 | #TBD | batch 4, the three race occupations (`rifts-gosai-assassin`, `rifts-quillback-scavenger` as `copy_of: vagabond`, `rifts-quorian-oneiromancer` as `copy_of: mystic`), the skill row Hand to Hand: Skudasa and the spell row Chant of Dreaming; the Quorian and Quillback opened to their occupations; reconciled with no figure in dispute; classes citing this book 34 -> 37, skills 0 -> 1, spells 0 -> 1. Applied `--remote` before the merge |
 
 ### What remains
 
@@ -301,5 +356,6 @@ was applied:
 ```
 
 **87 traceable, nothing untraceable** — ten Warlock rows and 77 creatures.
-Batch 1 takes it to 96, batch 2 to 103 and batch 3 to 111. What remains to take
-is batch 4 above: three R.C.C.s, one hand to hand style and one chant.
+Batch 1 takes it to 96, batch 2 to 103, batch 3 to 111 and batch 4 to 116.
+**Nothing remains to take** from the extraction plan. Left out on purpose: the
+chapters listed under *Left out, with reasons* above.
