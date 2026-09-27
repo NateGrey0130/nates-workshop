@@ -231,11 +231,16 @@ XP ladders are shared; the column names the ladder as printed on p.183.
 | Cosmo-Knight | 99-102 | Cosmo-Knight |
 | Fallen Cosmo-Knight | 102-104 | Cosmo-Knight (its own prose names a *Fallen Knight* table p.183 does not have) |
 
-**`xp_table` goes on the O.C.C.s only.** `frontmatter.md` is explicit that a race
-carrying one wins over the occupation's and silently drops it — the bug that
-cost a rebuild during the Wormwood import. Every R.C.C. here records its ladder
-in `extraction_notes` instead. Nineteen Rifts O.C.C.s in the catalog already
-carry an `xp_table`, so this is a followed convention, not a new one.
+**`xp_table` went on the O.C.C.s only, and since 2026-09-26 on the races p.183
+names too.** At import `frontmatter.md` was explicit that a race carrying one
+won over the occupation's and silently dropped it — the bug that cost a rebuild
+during the Wormwood import — so every R.C.C. here recorded its ladder in
+`extraction_notes` instead. Composition changed on 2026-09-17 (an O.C.C.'s ladder
+now wins a pairing, `nightbane-core.md`), and `~009-own-book-xp-ladders.sql`
+stored the ladder on the eleven races a p.183 column names: Catyr, Seljuk,
+Kreeghor, Machine People, Phantom, Vacuum Wasp, Silhouette, Draconid, Pleasurer,
+Termite Engineer and the First Stage Promethean. The Noro and the Space Wolfen
+still carry none: the columns that mention them name their O.C.C.s.
 
 **Two ladders are identical and that is not a transcription error.** *TVIA Agent,
 CAF Fleet Officer, Imperial Legionnaire* and *Freedom Fighter & Imperial
@@ -868,6 +873,7 @@ What is deliberately left, with the reason for each:
 
 | 2026-08-31 | [#418](https://github.com/NateGrey0130/nates-workshop/pull/418) | **classes, batch 10 - the two Cosmo-Knights, and the last**: Cosmo-Knight (printed 99-102) and Fallen Cosmo-Knight (102-104). Catalog 158 -> 160 classes; no new skills, gear, spells or psionics, because neither entry prints a `Money:` line anywhere in printed 99-104 and the Cosmo-Knight's Standard Equipment is prose naming no item. **34 of 34 playable classes are in and the book is closed** - `BOOK-INGEST-QUEUE.md` moves `phase-world` from `importing` to `imported`. The Fallen Knight's own prose sends level improvement to a Fallen Knight Experience Table that printed 183 does not contain; the table won, the pair share the Cosmo-Knight ladder, and the losing reading is recorded. Not a variant: `VARIANT_OVERRIDES` excludes `special_abilities`, so a variant would have kept every power the entry exists to remove. Finding F11 filed, with a 57-race sweep behind it - a class whose book says it REPLACES the race cannot say so, and exactly one race of 57 composes the Cosmo-Knight correctly. One line of code changed, the only code this book changed: `regression.mjs` required a POSITIVE bonus on every language pick and a fallen knight's is exactly zero, so the comparison moved to `>= 0`. Applied `--remote` before the PR. |
 | 2026-09-09 | #TBD | **`BOOK-INGEST-AUDIT` F41 vessels.** The **Psionic Power Armor** (printed 128-130) moved from prose in `gear` into `vehicles` + `vehicle_locations` + `vehicle_weapons`: 1 vessel, 6 M.D.C. locations, 6 weapon systems, and a `gear.vehicle_slug` pointer on the surviving gear row. **F41's count was RIGHT for this book** - the first of the four taken where it was. The gear row's stored `mdc` 210 and `cost` 4,000,000 both match the book, read before the catalog was consulted. Weapon ordinals are the book's own 1-6. The cache WELDS printed 129 - `Speed:`/`Running:` from the left column interleaves with `Flying:`/`Range:`/`Statistical Data:` from the right - so every figure was confirmed against a 200 dpi render. **`--remote` applied before the MERGE, not before this row** - the row was written first and the apply is the gate on the PR, per `ship-pr`. The premise audit for this session ran CONCURRENTLY with the implementation rather than ahead of it; see the F41 note. |
+| 2026-09-26 | #TBD | **Eleven race ladders move out of their notes into `xp_table`**, by `~009-own-book-xp-ladders.sql`: `catyr`, `seljuk`, `kreeghor` (Seljuk, Noro Mystic Warrior, Kreeghor & Catyr), `machine-people`, `phantom`, `vacuum-wasp`, `silhouette`, `draconid`, `pleasurer`, `termite-engineer`, `first-stage-promethean`. Every value re-read off a 170 dpi render of printed 183 and agrees with the class's own note; the shared columns equal `noro-mystic-warrior` and `noro-psychic`. The import had stored none because a race's table then won a pairing; since 2026-09-17 an O.C.C.'s wins. `noro` and `space-wolfen` stay without one. Each note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
 
 ### What remains
 

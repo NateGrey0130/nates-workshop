@@ -137,12 +137,21 @@ Specialist is not**, and it belongs to `rue`, not to this book.
 
 | class | printed | XP ladder (printed 224) | proposed id |
 |---|---|---|---|
-| N'mbyr Gorilla Man | 202-203 | D-Bee Vagabond | `nmbyr-gorilla-man` |
-| Tirrvol Sword Fist | 203-205 | D-Bee Vagabond | `tirrvol-sword-fist` |
+| N'mbyr Gorilla Man | 202-203 | none named; always takes an O.C.C. | `nmbyr-gorilla-man` |
+| Tirrvol Sword Fist | 203-205 | none named; always takes an O.C.C. | `tirrvol-sword-fist` |
 | Quick-Flex Alien (Rogue) | 205-207 | Quick Flex Rogue | `quick-flex-alien` |
 | Vanguard Brawler | 207-208 | Vanguard Brawler Thug | `vanguard-brawler` |
 | Trimadore | 208-209 | Trimadore Mechanic | `trimadore` |
-| Kremin Cyborg | 209-210 | D-Bee Vagabond | `kremin-cyborg` |
+| Kremin Cyborg | 209-210 | the Rifts RPG 'Borg table (printed 210), not printed here | `kremin-cyborg` |
+
+**This table said "D-Bee Vagabond" for three rows until 2026-09-26, and it was
+wrong for all three.** A render of printed 224 shows a column headed *D-Bee
+Vagabond* and nothing else - it names no race. The Gorilla Man's and Tirrvol's
+entries name no table (both take an O.C.C.; the Gorilla Man's list offers
+*vagabond* among them, which is likely what the column is for), and the
+Kremin's entry says *"Use the 'Borg experience table"* (printed 210). The class
+notes said so from the import; this survey guessed. The Kremin now copies RUE's
+'Borg ladder (ledger, 2026-09-26); the other two store none.
 
 Each prints an *Available O.C.C.s (optional)* paragraph letting the race take
 an O.C.C. instead of its R.C.C. skills. That is prose.
@@ -258,6 +267,8 @@ What is deliberately left, with the reason:
 | 2026-09-25 | [#1407](https://github.com/NateGrey0130/nates-workshop/pull/1407) | 33 vehicles, 382 M.D.C. locations, 119 weapon entries in three files by printed range. `add-cwc-vessels-p105-121.sql`: the 7 power armors (Mauler, Terror Trooper, Glitter Boy Killer, Death's Head, Smiling Jack and Super SAMAS, Striker SAMAS). `add-cwc-vessels-p122-149.sql`: 4 Skelebots as `drone` (the FASSAR-20 and -30 are one row, because printed 125 stats them together) and 6 robots (IAR-2 to IAR-5, CR-004, CR-005). `add-cwc-vessels-p150-177.sql`: 16 ground vehicles and aircraft; the Fire Storm, Death Bringer, Sky Lifter and Talon print only a top-secret estimate, so cost is NULL with the estimate in cost_note, as the South America vessels do. The Mark V APC is named but not statted here. Book slips are stored as printed and noted on the row. Every number off a render; `book-reconcile` covered all 33 in three passes, no disagreements. Applied `--remote` before the PR: 33 vehicles cite the book |
 | 2026-09-25 | [#1408](https://github.com/NateGrey0130/nates-workshop/pull/1408) | `add-cwc-creatures.sql`: 9 creatures (the Devil Sloth, Vampire Flat Worm and Spiny Ravager, printed 211-214, whose stat block is on 214; the six Burbs D-Bees as their NPC view, `playable` 1, slugs matching the class ids) and 7 notable NPCs (Erin Tarn, Sir Winslow Thorpe, Lt. Jack "Crazy" Cavanaugh, Emperor Karl Prosek, Joseph Prosek II, General Cabot, General Ross Underhill), with 39 attacks. The book never names Cabot's first name; the text calls him General Marshall Cabot, stored as `real_name` with a note that it may be a rank. Rifts World Book 4: Africa, the earlier book, also stats Tarn and Thorpe; CWC wins and Africa's differing figures are in the notes. Every creature passes `creatureFormulaGaps`; an 8-word shingle check against the cache finds no copied prose. `book-reconcile`: no disagreements. Applied `--remote` before the PR: production then held 369 creatures and 318 notable NPCs. **BOOK IMPORTED.** |
 | 2026-09-25 | follow-ups PR | Nate's decisions after the import. `zzzzzzzzzzzzzzzzz-cwc-skills-and-iss-group.sql` adds two skills the book prints as class-special, Homemade Explosives (Military, 40% +4%, printed 74-75) and Investigation (Espionage, catalog base 30% +5%, printed 181-194), and replaces five classes' markdown so they grant them as O.C.C. skills at their printed bases (EOD 40; Peacekeeper 25, Specter 40, Intel Specter 45, Psi-Net 30) instead of special-ability prose. It also moves the ISS Specter and Intel Specter to `occ_group: optional`, `men_of_arms: false`, matching other books' police and intelligence classes; the Peacekeeper stays men-of-arms. Applied `--remote` before the PR |
+| 2026-09-26 | #TBD | `kremin-cyborg` copies the 'Borg ladder, by `~010-borrowed-xp-ladders.sql`: printed 210 says *"Use the 'Borg experience table"*, which is RUE printed 295's Combat Cyborg, Headhunter & Robot Pilot column, copied from `combat-cyborg` (stored by #1439; `splugorth-conservator` and `hawrk-ka` carry the same ladder). Nate's decision that day: a class whose book names another class's table copies that ladder - Atlantis's practice, replacing the own-book-only rule #1406 followed. The Kremin's note is rewritten as the decision. The *Playable D-Bee R.C.C.s* table above is corrected: printed 224's *D-Bee Vagabond* column names none of the three races it was assigned to. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-26 | #TBD | `coalition-juicer` stores this book's own ladder, by `~009-own-book-xp-ladders.sql`: printed 224's column *CS Juicer, CS Commando, CS Strike Cyborg*, read off a 300 dpi render (0, 2,151, 4,301 ... 385,001). Juicer Uprising printed 156 names a *Coalition Juicer* in a different column (Psycho-Stalker, Juicer Assassin, Coalition Juicer); this book is the later one and the one the row cites, so its ladder wins, and the note says so. **Its two column-mates, `cs-commando` and `cs-cyborg-strike-trooper`, and every other O.C.C. this book defines still store no ladder** although printed 224 prints one for each (*Every class defined here has one*, above) - not in this PR's scope, which was ladders held only in notes or borrowed. No row count moves. `--remote` is applied before the merge. |
 
 ### What remains
 
