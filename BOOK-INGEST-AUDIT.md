@@ -1014,6 +1014,23 @@ or jeep") or offers a choice of bodies (`ngr-cyborg-soldier`,
 `ngr-robot-soldier`) were not changed; the survey ledgers of `free-quebec`,
 `triax` and `cwc` say which and why. Found with
 `node scripts/q.mjs --remote` over `instr(markdown, 'F3')`, 2026-09-26.
+
+**Adjusted 2026-09-27 (#TBD).** The three classes the paragraph above left
+unchanged took the shape the next day, by `~029-class-vessel-notes.sql`:
+`cs-rpa-fly-boy-ace` offers a choice of the generic `hovercycle` and `jeep`
+gear rows, which the search above had looked past because they are not
+vessels; `ngr-cyborg-soldier` and `ngr-robot-soldier` name their bodies' vessel
+rows in a restriction line, the way `mining-borg` does, with no gear pointer.
+`ngr-police` gained an `x-60-flanker` pointer as a choice against the
+hovercycle. The same file rewrote every other class note still giving F3 as
+the reason a vessel was absent - thirteen more across CWC, Phase World and
+Underseas - found with `node scripts/q.mjs --remote` over
+`instr(markdown, 'F3')`, 2026-09-27; the Heroes Unlimited power categories
+keep their F3 citations, which are about a missing builder rather than a
+missing vessel row. A verification pass then found three classes giving the
+same retired reason without citing F3 - `cs-commando`, `nb-sorcerer` and
+`nb-psychic` - and the same file rewords them.
+
 - **F42** — high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them — Taken, 2026-09-09 (PR #864). Nate chose RUE, so the values move and the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F42` heading.
 
 - **F43** — two gear rows cite Rifts Ultimate Edition for machines it does not print — Taken, 2026-09-09 (PR #863). Posture held: a merge and a re-citation, no — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F43` heading.
