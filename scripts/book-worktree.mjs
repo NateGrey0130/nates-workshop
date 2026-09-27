@@ -79,8 +79,9 @@ function main() {
   if (existsSync(dest)) die(`${dest} already exists`);
   const bi = args.indexOf('--branch');
   const branch = bi === -1 ? `${slug}-work` : args[bi + 1];
-  if (!branch || !branch.startsWith(`${slug}-`)) {
-    die(`branch "${branch}" must start with "${slug}-" - a book's branches are found by that prefix`);
+  // `pal/data/<slug>-...` (CLAUDE.md -> Naming) is the same book; book-board strips the prefix too.
+  if (!branch || !branch.replace(/^[a-z]+\/[a-z]+\//, '').startsWith(`${slug}-`)) {
+    die(`branch "${branch}" must start with "${slug}-", after any <group>/<type>/ prefix - a book's branches are found by that prefix`);
   }
 
   setUpTree({

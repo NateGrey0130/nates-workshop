@@ -189,7 +189,7 @@ Two things make it hard to recognise:
   `functions/` — in a diff that may touch no code at all.
 
 **Ask Cloudflare for the real stage**, which the `cloudflare-api` MCP plugin can
-do (`CLAUDE.md` → *Three credentials*):
+do (`docs/cloudflare-credentials.md` → *Which credential to reach for*):
 
 ```
 GET /accounts/{id}/pages/projects/nates-workshop/deployments

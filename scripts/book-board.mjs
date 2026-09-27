@@ -60,9 +60,13 @@ for (const slug of books) {
   };
 }
 
-// The book a branch or path belongs to: the longest slug it starts with.
+// The book a branch or path belongs to: the longest slug it starts with, after
+// the `<group>/<type>/` prefix CLAUDE.md's naming rule puts in front of it.
 const bySlugLength = [...books].sort((a, b) => b.length - a.length);
-const ownerOf = (name) => bySlugLength.find((s) => name === s || name.startsWith(`${s}-`)) ?? null;
+const ownerOf = (raw) => {
+  const name = raw.replace(/^[a-z]+\/[a-z]+\//, '');
+  return bySlugLength.find((s) => name === s || name.startsWith(`${s}-`)) ?? null;
+};
 
 // Worktrees.
 const trees = {};
