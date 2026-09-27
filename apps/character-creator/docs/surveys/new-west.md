@@ -407,7 +407,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 | 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
-| 2026-09-26 | #TBD | Backfill, `~008-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
+| 2026-09-26 | #TBD | Backfill, `~009-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -935,7 +935,7 @@ outcome notes name what would reopen them.
 
 ## The New West backfill
 
-**2026-09-26, `~008-new-west-dice-and-horror-factor.sql`.** Two things the
+**2026-09-26, `~009-new-west-dice-and-horror-factor.sql`.** Two things the
 class batches left in prose, both of which the app could hold:
 
 - **Dice attribute bonuses.** Batches 2-5 recorded six "dice-attribute drops"

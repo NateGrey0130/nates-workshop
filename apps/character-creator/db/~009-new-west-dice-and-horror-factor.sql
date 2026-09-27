@@ -3,7 +3,7 @@
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~008-new-west-dice-and-horror-factor.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~009-new-west-dice-and-horror-factor.sql
 --
 -- == A. DICE ATTRIBUTE BONUSES LEFT IN PROSE ==
 --
@@ -54,7 +54,7 @@
 -- written against was read from production on 2026-09-26 and matched the
 -- local database byte for byte.
 --
--- WHY ~008: it must sort after ~001-men-of-arms-frontmatter.sql and
+-- WHY ~009: it must sort after ~001-men-of-arms-frontmatter.sql and
 -- zzzzzzzzzzzzzz-hand-to-hand-prices.sql, the last files that touch these
 -- classes, and ~007 was the highest number in the tree when it was written.
 
@@ -504,4 +504,4 @@ SELECT 'no dice-in-prose sentence survives' AS assertion, count(*) AS got, 0 AS 
      OR instr(markdown, 'ARE NOT STORED AS NUMBERS') > 0);
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~008-new-west-dice-and-horror-factor.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~009-new-west-dice-and-horror-factor.sql');
