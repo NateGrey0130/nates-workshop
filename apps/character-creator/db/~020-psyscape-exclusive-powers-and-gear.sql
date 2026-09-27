@@ -7,10 +7,10 @@
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~019-psyscape-exclusive-powers-and-gear.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~020-psyscape-exclusive-powers-and-gear.sql
 --
 -- The classes are wired to these rows by the NEXT file,
--- ~020-psyscape-classes-take-the-new-rows.sql, which must sort after this one.
+-- ~021-psyscape-classes-take-the-new-rows.sql, which must sort after this one.
 --
 -- NONE IS A DUPLICATE. Checked --remote on 2026-09-26: no psionic_powers name
 -- contains sleep-, track, air walk, dagger or diagnos- except Induce Sleep and
@@ -94,4 +94,4 @@ SELECT 'no stub marker on them' AS assertion, count(*) AS got, 0 AS want
    AND description LIKE '%STUB%';
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~019-psyscape-exclusive-powers-and-gear.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~020-psyscape-exclusive-powers-and-gear.sql');

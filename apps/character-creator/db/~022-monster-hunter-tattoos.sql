@@ -4,7 +4,7 @@
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~021-monster-hunter-tattoos.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~022-monster-hunter-tattoos.sql
 --
 -- WHY NOW. The class was imported with its tattoos as prose because there was
 -- no tattoo catalog. Rifts World Book 2: Atlantis (#1429) added 32 spells with
@@ -40,7 +40,7 @@
 -- this O.C.C.'s own M.D.C., P.P.E. and tattoos already count them, so the pair
 -- would count them twice. The false parenthesis is rewritten.
 --
--- MECHANICS as in ~020: one replace() per change on text appearing once,
+-- MECHANICS as in ~021: one replace() per change on text appearing once,
 -- guarded, a re-run a no-op, generated read-backs. Sorts after
 -- add-atlantean-monster-hunter-class.sql, fix-atlantean-monster-hunter-xp.sql
 -- and every Atlantis script that writes the tattoo spells.
@@ -89,7 +89,7 @@ special_abilities:
 UPDATE imported_classes SET markdown = replace(markdown, 'Never more than two at a time, and at least six months between pairs. The individual tattoos are described in Rifts Atlantis."', 'Never more than two at a time, and at least six months between pairs. The individual tattoos are described in Rifts Atlantis. Granted as tattoo spells: the two Marks, All Simple Weapons, Animals and Monsters outright (one row each; the second animal and second monster are images under the same row), then two magic weapons, three powers and one of any category as picks. The four Monster-Shaping tattoos have no catalog row and are recorded in the Monster-Shaping Tattoos ability."'), updated_at = datetime('now')
  WHERE class_id = 'atlantean-monster-hunter' AND deleted_at IS NULL AND instr(markdown, 'Never more than two at a time, and at least six months between pairs. The individual tattoos are described in Rifts Atlantis."') > 0;
 
-UPDATE imported_classes SET markdown = replace(markdown, '|| TATTOOS follow the catalog''s convention (stone-master): magic tattoos are prose special abilities, there being no tattoo catalog. The 15 starting picks are listed by category; Monster-Shaping is a costing system by M.D.C. tier and stays prose. ', '|| TATTOOS: imported as prose special abilities, there being no tattoo catalog then. Rifts World Book 2: Atlantis (#1429) added the 32 tattoo-tradition spells, and ~021-monster-hunter-tattoos.sql granted them as undead-slayer does: the two Marks of Heritage and All Simple Weapons, Animals and Monsters as fixed spells (the book''s one simple weapon, two animals and two monsters; a second image adds no row), then starting picks of two magic weapons, three powers and one of any category, and one major tattoo per level 2-15. The Marks are granted to every Monster Hunter, human, ogre and Chiang-Ku included, because the stored M.D.C. and P.P.E. already count all 17 starting tattoos. Monster-Shaping is a costing system by M.D.C. tier with no named tattoos, so its four starting tattoos and any later ones stay prose. || RACE, later: the note that the catalog had no True Atlantean race went false with Atlantis''s true-atlantean R.C.C.; ~021-monster-hunter-tattoos.sql rewrote it. The class keeps only none rather than naming that R.C.C., as undead-slayer does: the race carries S.D.C. +70, P.P.E. +22 and the two Marks, all of which this class''s own pools and tattoos already count, so the pair would count them twice. '), updated_at = datetime('now')
+UPDATE imported_classes SET markdown = replace(markdown, '|| TATTOOS follow the catalog''s convention (stone-master): magic tattoos are prose special abilities, there being no tattoo catalog. The 15 starting picks are listed by category; Monster-Shaping is a costing system by M.D.C. tier and stays prose. ', '|| TATTOOS: imported as prose special abilities, there being no tattoo catalog then. Rifts World Book 2: Atlantis (#1429) added the 32 tattoo-tradition spells, and ~022-monster-hunter-tattoos.sql granted them as undead-slayer does: the two Marks of Heritage and All Simple Weapons, Animals and Monsters as fixed spells (the book''s one simple weapon, two animals and two monsters; a second image adds no row), then starting picks of two magic weapons, three powers and one of any category, and one major tattoo per level 2-15. The Marks are granted to every Monster Hunter, human, ogre and Chiang-Ku included, because the stored M.D.C. and P.P.E. already count all 17 starting tattoos. Monster-Shaping is a costing system by M.D.C. tier with no named tattoos, so its four starting tattoos and any later ones stay prose. || RACE, later: the note that the catalog had no True Atlantean race went false with Atlantis''s true-atlantean R.C.C.; ~022-monster-hunter-tattoos.sql rewrote it. The class keeps only none rather than naming that R.C.C., as undead-slayer does: the race carries S.D.C. +70, P.P.E. +22 and the two Marks, all of which this class''s own pools and tattoos already count, so the pair would count them twice. '), updated_at = datetime('now')
  WHERE class_id = 'atlantean-monster-hunter' AND deleted_at IS NULL AND instr(markdown, '|| TATTOOS follow the catalog''s convention (stone-master): magic tattoos are prose special abilities, there being no tattoo catalog. The 15 starting picks are listed by category; Monster-Shaping is a costing system by M.D.C. tier and stays prose. ') > 0;
 
 SELECT 'atlantean-monster-hunter: every new text is in' AS assertion, (instr(markdown, 'the catalog does hold a true-atlantean R.C.C.') > 0) + (instr(markdown, 'spell_traditions_allowed: ["tattoo"]') > 0) + (instr(markdown, 'Granted as tattoo spells: the two Marks') > 0) + (instr(markdown, 'granted them as undead-slayer does') > 0) AS got, 4 AS want
@@ -99,4 +99,4 @@ SELECT 'atlantean-monster-hunter: every replaced text is gone' AS assertion, (in
   FROM imported_classes WHERE class_id = 'atlantean-monster-hunter' AND deleted_at IS NULL;
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~021-monster-hunter-tattoos.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~022-monster-hunter-tattoos.sql');

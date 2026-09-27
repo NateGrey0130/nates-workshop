@@ -428,7 +428,7 @@ it: its four entries (Directed Force and Super Power Punch, major; Sidestep and
 Spit Spikes, minor; printed 94-95) cite no HU2 page, use no P.P.E., and are
 rows of the same shape as PU1's and PU3's. The only cross-reference, Spit
 Spikes' combo with Chemical Secretion, points at PU1 printed 64, which the
-catalog holds. `~018-pu2-new-super-abilities.sql` imports them; the survey
+catalog holds. `~019-pu2-new-super-abilities.sql` imports them; the survey
 had said two, and the page prints four. D0's exclusion of the twelve
 categories stands unchanged.
 
@@ -660,7 +660,7 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-14 | this PR | **F83 LEFTOVER CLOSED - the SEVENTEEN named entries, not thirty classes.** `hu-hardware` (14) and `hu-hunter` (3) rewritten from an absolute `base:` to the `bonus:` the book prints, so the figure comes from `skill_system_bases` and cannot go stale. `per_level` dropped from all seventeen, which repaired the three that disagreed. Eleven classes had no named entry at all and the thirteen education classes already stated this book base - implementing the finding as written would have made 323 correct entries wrong. |
 | 2026-09-18 | [#1153](https://github.com/NateGrey0130/nates-workshop/pull/1153) | **OCR text repair across all three books' super abilities**, `fix-super-ability-ocr-text.sql`: **198 of 364** rows, **41 of this book's 69**. The codex (#1152) was the first reader to show a whole description. Here: every list bullet the scan read as `@` (26 rows), the major-ability roster read onto the end of `Underwater`, four stat columns cut at a blank line, and `Weight Manipulation`'s printed 192 put back in reading order from a render of the page. Applied `--remote` before the merge. |
 | 2026-09-18 | this PR | **The same sweep over this book's spells**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`: two of the core's spells carried a printed page number - `Spontaneous Combustion` ending in `103` and `Sorcerer's Seal` reading "must be 100 completely sealed". **Two super abilities #1153 missed**, in the digit cipher and NOT its mechanical reading: `Animal Abilities`' "4O0ft (12.2m)" and `Growth`'s "5O0lbs per foot" are printed 40ft and 50lbs (175, 184). Applied `--remote` before the merge. |
-| 2026-09-26 | #TBD | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~018-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
+| 2026-09-26 | #TBD | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~019-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.

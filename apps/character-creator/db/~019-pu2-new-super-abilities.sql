@@ -5,7 +5,7 @@
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~018-pu2-new-super-abilities.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~019-pu2-new-super-abilities.sql
 --
 -- WHY THESE COME IN WHEN THE BOOK IS EXCLUDED. Decision D0
 -- (docs/surveys/heroes-unlimited-core.md) excludes Powers Unlimited Two because
@@ -86,4 +86,4 @@ SELECT 'the three earlier books are untouched' AS assertion, count(*) AS got, 36
     OR source_book LIKE 'Powers Unlimited Three%';
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~018-pu2-new-super-abilities.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~019-pu2-new-super-abilities.sql');

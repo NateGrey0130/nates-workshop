@@ -1,10 +1,10 @@
 -- Wires six Rifts World Book 12: Psyscape classes to the rows
--- ~019-psyscape-exclusive-powers-and-gear.sql added, and rewrites each note
+-- ~020-psyscape-exclusive-powers-and-gear.sql added, and rewrites each note
 -- that said the row did not exist.
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local apps/character-creator/db/~020-psyscape-classes-take-the-new-rows.sql
+--   node scripts/d1-apply.mjs --local apps/character-creator/db/~021-psyscape-classes-take-the-new-rows.sql
 --
 --   psi-slayer          the four exclusive powers become a starting group of
 --                       two picks from the four (printed 71: "select any two
@@ -24,7 +24,7 @@
 -- the class's live markdown (checked against a --remote read on 2026-09-26 by
 -- the generator that wrote this file). A replacement is guarded on its old
 -- text being present; an insertion also on its new text being absent. A
--- re-run is a no-op. The file sorts after ~019, whose rows it names, and after
+-- re-run is a no-op. The file sorts after ~020, whose rows it names, and after
 -- every add-*-class.sql it edits.
 --
 -- The read-backs assert a short marker of each change present and, where
@@ -76,8 +76,8 @@ UPDATE imported_classes SET markdown = replace(markdown, '  - The four exclusive
     pick-two rule is not enforced. Candidate catalog rows for a later PR.
 ', '  - The four exclusive powers (Sleepwalk, Locate & Track Mark, Telekinetic Air
     Walk, Psi-Dagger; printed 71-73) were special_abilities with their stats
-    until ~019-psyscape-exclusive-powers-and-gear.sql made them psionic_powers
-    rows (category Special). ~020-psyscape-classes-take-the-new-rows.sql then made them a starting group of
+    until ~020-psyscape-exclusive-powers-and-gear.sql made them psionic_powers
+    rows (category Special). ~021-psyscape-classes-take-the-new-rows.sql then made them a starting group of
     two picks from the four, so the pick-two rule is enforced, and
     powers_starting went from 8 to 10.
 '), updated_at = datetime('now')
@@ -99,7 +99,7 @@ UPDATE imported_classes SET markdown = replace(markdown, '  - { item_id: "walkie
 UPDATE imported_classes SET markdown = replace(markdown, 'NOT stored:
     "1D4+1 sets of fake identification" (no gear row), "some personal items",', '"1D4+1 sets
     of fake identification" as fake-identification 1d4+1 (the row arrived
-    with ~019). NOT stored: "some personal items",'), updated_at = datetime('now')
+    with ~020). NOT stored: "some personal items",'), updated_at = datetime('now')
  WHERE class_id = 'psi-slayer' AND deleted_at IS NULL AND instr(markdown, 'NOT stored:
     "1D4+1 sets of fake identification" (no gear row), "some personal items",') > 0;
 
@@ -127,12 +127,12 @@ UPDATE imported_classes SET markdown = replace(markdown, '  - name: "Machine & E
 ') > 0;
 
 UPDATE imported_classes SET markdown = replace(markdown, '  - Machine & Electrical Diagnosis (6 I.S.P.) is a class ability, not a catalog psionic row; stored as a special ability, not in powers.
-', '  - Machine & Electrical Diagnosis (6 I.S.P., printed 75) was a special ability until ~019-psyscape-exclusive-powers-and-gear.sql made it a psionic_powers row (category Special); ~020-psyscape-classes-take-the-new-rows.sql granted it by name in powers and dropped the special ability.
+', '  - Machine & Electrical Diagnosis (6 I.S.P., printed 75) was a special ability until ~020-psyscape-exclusive-powers-and-gear.sql made it a psionic_powers row (category Special); ~021-psyscape-classes-take-the-new-rows.sql granted it by name in powers and dropped the special ability.
 '), updated_at = datetime('now')
  WHERE class_id = 'psi-tech' AND deleted_at IS NULL AND instr(markdown, '  - Machine & Electrical Diagnosis (6 I.S.P.) is a class ability, not a catalog psionic row; stored as a special ability, not in powers.
 ') > 0;
 
-SELECT 'psi-tech: every new text is in' AS assertion, (instr(markdown, '- "Machine & Electrical Diagnosis"') > 0) + (instr(markdown, 'was a special ability until ~019') > 0) AS got, 2 AS want
+SELECT 'psi-tech: every new text is in' AS assertion, (instr(markdown, '- "Machine & Electrical Diagnosis"') > 0) + (instr(markdown, 'was a special ability until ~020') > 0) AS got, 2 AS want
   FROM imported_classes WHERE class_id = 'psi-tech' AND deleted_at IS NULL;
 
 SELECT 'psi-tech: every replaced text is gone' AS assertion, (instr(markdown, '- name: "Machine & Electrical Diagnosis"') > 0) + (instr(markdown, 'is a class ability, not a catalog psionic row') > 0) AS got, 0 AS want
@@ -148,7 +148,7 @@ UPDATE imported_classes SET markdown = replace(markdown, '"Neuro-Mace or
     Electro-Stunner (Rifts Lone Star)" - no Electro-Stunner row exists, so the
     neural-mace is granted.', '"Neuro-Mace or
     Electro-Stunner (Rifts Lone Star)" is a choice of neural-mace or
-    electro-stunner; the neural-mace was granted outright until ~019 added
+    electro-stunner; the neural-mace was granted outright until ~020 added
     the Electro-Stunner row.'), updated_at = datetime('now')
  WHERE class_id = 'psi-nullifier' AND deleted_at IS NULL AND instr(markdown, '"Neuro-Mace or
     Electro-Stunner (Rifts Lone Star)" - no Electro-Stunner row exists, so the
@@ -170,7 +170,7 @@ UPDATE imported_classes SET markdown = replace(markdown, '"Neuro-Mace or Electro
     Rifts Lone Star)": no Electro-Stunner row exists, so the neural-mace is
     granted.', '"Neuro-Mace or Electro-Stunner (see
     Rifts Lone Star)" is a choice of neural-mace or electro-stunner; the
-    neural-mace was granted outright until ~019 added the Electro-Stunner row.'), updated_at = datetime('now')
+    neural-mace was granted outright until ~020 added the Electro-Stunner row.'), updated_at = datetime('now')
  WHERE class_id = 'zapper' AND deleted_at IS NULL AND instr(markdown, '"Neuro-Mace or Electro-Stunner (see
     Rifts Lone Star)": no Electro-Stunner row exists, so the neural-mace is
     granted.') > 0;
@@ -192,7 +192,7 @@ UPDATE imported_classes SET markdown = replace(markdown, '  - { item_id: "e-clip
 
 UPDATE imported_classes SET markdown = replace(markdown, 'NOT STORED:
     jewelry, 1D4+1 sets of fake identification (no gear row), personal', '1D4+1 sets of fake
-    identification are fake-identification 1d4+1 (the row arrived with ~019).
+    identification are fake-identification 1d4+1 (the row arrived with ~020).
     NOT STORED: jewelry, personal'), updated_at = datetime('now')
  WHERE class_id = 'zenith-moon-warper' AND deleted_at IS NULL AND instr(markdown, 'NOT STORED:
     jewelry, 1D4+1 sets of fake identification (no gear row), personal') > 0;
@@ -220,15 +220,15 @@ UPDATE imported_classes SET markdown = replace(markdown, '  - { item_id: "pencil
 
 UPDATE imported_classes SET markdown = replace(markdown, 'two marker pens and two
     pencils (no eraser row);', 'two marker pens, two
-    pencils and an eraser (the eraser row arrived with ~019);'), updated_at = datetime('now')
+    pencils and an eraser (the eraser row arrived with ~020);'), updated_at = datetime('now')
  WHERE class_id = 'yhabbayar' AND deleted_at IS NULL AND instr(markdown, 'two marker pens and two
     pencils (no eraser row);') > 0;
 
-SELECT 'yhabbayar: every new text is in' AS assertion, (instr(markdown, 'item_id: "eraser", qty: 1') > 0) + (instr(markdown, 'and an eraser (the eraser row arrived with ~019)') > 0) AS got, 2 AS want
+SELECT 'yhabbayar: every new text is in' AS assertion, (instr(markdown, 'item_id: "eraser", qty: 1') > 0) + (instr(markdown, 'and an eraser (the eraser row arrived with ~020)') > 0) AS got, 2 AS want
   FROM imported_classes WHERE class_id = 'yhabbayar' AND deleted_at IS NULL;
 
 SELECT 'yhabbayar: every replaced text is gone' AS assertion, (instr(markdown, '(no eraser row)') > 0) AS got, 0 AS want
   FROM imported_classes WHERE class_id = 'yhabbayar' AND deleted_at IS NULL;
 
 -- Records this run. See db/migrations/024-data-script-runs.sql.
-INSERT INTO data_script_runs (filename) VALUES ('~020-psyscape-classes-take-the-new-rows.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~021-psyscape-classes-take-the-new-rows.sql');
