@@ -278,7 +278,9 @@ What is deliberately left, with the reason for each:
   carry the `totem` key.
 - **The Kachina Dancer** — a role on top of an O.C.C., not an O.C.C.
 - **Every NPC monster, spirit and god, printed 106-188** — the book tags each
-  one NPC.
+  one NPC. *(Still not classes. Corrected 2026-09-27: the NPC and bestiary
+  plan imported them as 28 `creatures` rows in #1173 and 16 `notable_npcs`
+  rows in #1182; see the ledger.)*
 - **Setting: history, tribes, factions, the Spirit Realm, the preserves** —
   narrative.
 - **The Mask Shaman's masks and the shamans' blessings and Bad Medicine** —
@@ -297,7 +299,9 @@ What is deliberately left, with the reason for each:
 | 2026-09-10 | [#939](https://github.com/NateGrey0130/nates-workshop/pull/939) | The last four classes: **Paradox, Elemental and Fetish Shaman** (printed 62-69) and the **Wendigo R.C.C.** (printed 126-128) (classes 258 -> **262**). **ALL TWELVE PLAYABLE CLASSES ARE IN.** The Paradox Shaman is granted the five Paradox spells and draws on a 35-spell list; the Rifts England temporal spells it may also take are not held (the Time Master precedent). The Elemental Shaman picks one element as its totem; its three starting Warlock spells are offered from all four elements with a note, because a pick cannot be tied to the element chosen. The Wendigo's M.D.C. line prints `P.E.xS` and was read off a render as P.E. x5. Three `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. `regression.mjs` failed twice with "cannot build a database": the bootstrap build now takes 251 s and the harness kills it at 180 s - filed as `BOOK-INGEST-AUDIT` F58, not fixed here; the pins were verified by one run with the timeout raised in the working tree only. (The CI regression job builds the same database in 18 s and passed this PR unmodified - the 251 s is this machine, under load; see F58's correction.) |
 | 2026-09-10 | [#940](https://github.com/NateGrey0130/nates-workshop/pull/940) | Weapons of Note, printed 203: **13 gear rows** (gear 1395 -> **1408**) - the two Modern Indian bows and the NA-SW4's M.D.C. arrows, two new arrowheads, six bows and crossbows priced in credits, and two vibro weapons; seven arrowheads already held from Triax were not duplicated, and the smoke arrowhead's 80 credits went in `cost_note` beside Triax's 60. Vessels, printed 189-202: **6 vehicles, 60 M.D.C. locations, 32 weapon entries** (vehicles 158 -> **164**), none priced. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
 | 2026-09-11 | [#952](https://github.com/NateGrey0130/nates-workshop/pull/952) | `BOOK-INGEST-AUDIT` F63: the Elemental Shaman split into **Air, Earth, Fire and Water** classes (live classes 262 -> **265**: four added, the one-class row retired, not deleted). Each offers three picks from only its element's level-one spells and carries its 98% skill as a skill; the Fire Shaman prints none. Earth, Fire and Water are declared copies of Air. Four `CORE_SDC_BY_CLASS` entries at 1D6. Applied `--remote` before the PR. |
-| 2026-09-26 | #TBD | **XP ladders**, `~017-spirit-west-xp-ladders.sql`: all **15** classes take the printed 7 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. The four `elemental-shaman-*` rows share the one Elemental Shaman column, so the copy pairs stay equal. Every printed bound is the previous top plus one; nothing adjusted. No row count moves. `--remote` is applied before the merge |
+| 2026-09-19 | [#1173](https://github.com/NateGrey0130/nates-workshop/pull/1173) | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-spirit-west.sql`, 28 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-19 | [#1182](https://github.com/NateGrey0130/nates-workshop/pull/1182) | **notable NPCs**: `add-notable-npcs-spirit-west.sql`, 16 `notable_npcs` rows citing this book. Row added 2026-09-27. |
+| 2026-09-26 | #1451 | **XP ladders**, `~017-spirit-west-xp-ladders.sql`: all **15** classes take the printed 7 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. The four `elemental-shaman-*` rows share the one Elemental Shaman column, so the copy pairs stay equal. Every printed bound is the previous top plus one; nothing adjusted. No row count moves. `--remote` is applied before the merge |
 
 ### What remains
 
@@ -333,6 +337,10 @@ The `NO PRICE` counters did not move either (gear 29, vessels 0), although
 46 fetishes and 6 vessels have no `cost`. That is correct rather than missed:
 every one of them carries a `cost_note` saying why, and those counters count
 unpriced rows with nothing said.
+
+**Re-measured 2026-09-27:** `spirit-west        199 / 0`. The 87 rows since
+are the 40 totems (F56, #944), 3 classes from the Elemental Shaman split
+(F63, #952), and the creatures and notable NPCs in the ledger.
 
 ## The book is fully imported
 

@@ -165,8 +165,8 @@ Deliberately left:
 | 2026-09-12 | [#992](https://github.com/NateGrey0130/nates-workshop/pull/992) | cached with `--force-ocr`, registered, offset +1 verified, F79 filed |
 | 2026-09-13 | - | surveyed in full; the three-column list un-welded and reconciled against the Contents. **No data.** |
 | 2026-09-13 | [#1029](https://github.com/NateGrey0130/nates-workshop/pull/1029) | **all 125 super abilities** - 46 minor, 79 major. Catalog total 364. |
-| 2026-09-18 | this PR | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **76 of the 125** rows, almost all two-digit page numbers inside the text, often splitting a hyphenated word. The new-major roster read onto the end of `Without Sustenance`; `Zombie Flesh`'s regeneration rate put back where the scan lifted it from. Applied `--remote` before the merge. |
-| 2026-09-15 | this PR | **closed out.** Nothing outstanding; the verification is below. |
+| 2026-09-18 | [#1153](https://github.com/NateGrey0130/nates-workshop/pull/1153) | **OCR text repair**, `fix-super-ability-ocr-text.sql`: **76 of the 125** rows, almost all two-digit page numbers inside the text, often splitting a hyphenated word. The new-major roster read onto the end of `Without Sustenance`; `Zombie Flesh`'s regeneration rate put back where the scan lifted it from. Applied `--remote` before the merge. |
+| 2026-09-15 | [#1068](https://github.com/NateGrey0130/nates-workshop/pull/1068) | **closed out.** Nothing outstanding; the verification is below. |
 
 ### What remains
 
@@ -206,5 +206,7 @@ rows since 2026-09-13 - because `source-coverage.mjs:115` does not walk
 that table. This book is the worst case of the gap: **100% of its rows are
 invisible to the coverage report.** That is `BOOK-INGEST-AUDIT` **F85**, filed
 2026-09-14, which quotes this very sentence and counts the same 125 rows. (PR
-#1068 cited it as F94, a duplicate filed a day later and withdrawn the same day;
-F85 is the open finding.)
+#1068 cited it as F94, a duplicate filed a day later and withdrawn the same
+day.) **Corrected 2026-09-27: F85 was taken on 2026-09-15 in #1075**, and the
+tool now walks `super_abilities` - on 2026-09-27 `source-coverage.mjs --remote`
+printed `powers-unlimited-3 125 / 0`. The 100% above is a record of 2026-09-15.

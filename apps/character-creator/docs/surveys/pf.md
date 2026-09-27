@@ -83,6 +83,7 @@ None. This book has no open import.
 | 2026-08-27 | [#340](https://github.com/NateGrey0130/nates-workshop/pull/340) | the `printed_through: 16` exception recorded, per printed page |
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-08-28 | [#376](https://github.com/NateGrey0130/nates-workshop/pull/376) | `zzzz-cite-pf-rows.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
+| 2026-09-18 | #1172 | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-palladium-fantasy.sql`, 36 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
 
 ### What remains
 
@@ -104,6 +105,13 @@ cached, so anything with a folio resolves.
 
 **Catalog-wide, `spells` with no page range went to ZERO** in the same run:
 every spell in this database that names a book now names a page.
+
+**Re-measured 2026-09-27**, after later work cited this book (the creatures of
+#1172 among it):
+
+```
+  pf                 685 / 1
+```
 
 ## The 42, and how each kind was located
 

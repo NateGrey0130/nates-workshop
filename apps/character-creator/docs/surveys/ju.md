@@ -84,9 +84,12 @@ as an NPC Villain with no column and its experience is frozen at death.
 | — | [#284](https://github.com/NateGrey0130/nates-workshop/pull/284) | the classes wired to their gear rows |
 | — | [#285](https://github.com/NateGrey0130/nates-workshop/pull/285) | stats for the blank gear rows, and the slug-cased names fixed |
 | 2026-08-28 | — | this file, backfilled offline |
-| 2026-09-09 | — | the seven vessels of printed 77-88 re-read from the book into `vehicles` (43 M.D.C. locations, 21 weapon systems); the seven `gear` rows STAY and now point at them. `BOOK-INGEST-AUDIT` F41, taken for this book. Read from the PDF with `read-columns.py`, **not** from this book's OCR cache — `book-survey` section 0b names `ju`'s cache as one built by throwaway code, and it is welded across the gutter. |
-| 2026-09-26 | #TBD | `~008-rue-ju-xp-ladders.sql`: the Experience Tables of printed 156 as `xp_table` on 13 of the 14 classes, each read off a 200 dpi render and reconciled against it - Standard & Gladiator (Gladiator), Juicer Scout, Titan/Hyperion/Delphi/Phaeton, Psycho-Stalker & Juicer Assassin, Mega-Juicer & Maxi-Killer, Dragon Juicer, and Juicer Wannabe & Gambler. The Murder-Wraith has no column and stores none. Two printed lower bounds that repeat the previous band's upper bound are stored plus one (Dragon Juicer level 11, Wannabe level 5). Applied `--remote` before the merge. |
-| 2026-09-26 | #TBD | The two other names in printed 156's columns, settled. **Coalition Juicer** (in the Psycho-Stalker & Juicer Assassin column): `coalition-juicer` cites Coalition War Campaign, the later book, whose printed 224 prints it a different ladder (*CS Juicer, CS Commando, CS Strike Cyborg*); `~010-own-book-xp-ladders.sql` stores CWC's, and the class note records this column. **Vallax (alien) and Newcomer Android**: no class of either name exists in the catalog, so there is nothing to store. `--remote` is applied before the merge. |
+| 2026-09-09 | #857 | the seven vessels of printed 77-88 re-read from the book into `vehicles` (43 M.D.C. locations, 21 weapon systems); the seven `gear` rows STAY and now point at them. `BOOK-INGEST-AUDIT` F41, taken for this book. Read from the PDF with `read-columns.py`, **not** from this book's OCR cache — `book-survey` section 0b names `ju`'s cache as one built by throwaway code, and it is welded across the gutter. |
+| 2026-09-18 | #1164 | **notable NPCs** (NPC and bestiary plan, Phase 2a): `add-notable-npcs.sql`, 2 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-19 | #1180 | **creatures** (Phase 3): `add-creatures-juicer-uprising-and-triax.sql`, 4 `creatures` rows citing this book. Row added 2026-09-27. |
+| 2026-09-19 | #1183 | **notable NPCs**: `add-notable-npcs-juicer-uprising-and-others.sql`, 7 `notable_npcs` rows citing this book. Row added 2026-09-27. |
+| 2026-09-26 | #1439 | `~008-rue-ju-xp-ladders.sql`: the Experience Tables of printed 156 as `xp_table` on 13 of the 14 classes, each read off a 200 dpi render and reconciled against it - Standard & Gladiator (Gladiator), Juicer Scout, Titan/Hyperion/Delphi/Phaeton, Psycho-Stalker & Juicer Assassin, Mega-Juicer & Maxi-Killer, Dragon Juicer, and Juicer Wannabe & Gambler. The Murder-Wraith has no column and stores none. Two printed lower bounds that repeat the previous band's upper bound are stored plus one (Dragon Juicer level 11, Wannabe level 5). Applied `--remote` before the merge. |
+| 2026-09-26 | #1444 | The two other names in printed 156's columns, settled. **Coalition Juicer** (in the Psycho-Stalker & Juicer Assassin column): `coalition-juicer` cites Coalition War Campaign, the later book, whose printed 224 prints it a different ladder (*CS Juicer, CS Commando, CS Strike Cyborg*); `~010-own-book-xp-ladders.sql` stores CWC's, and the class note records this column. **Vallax (alien) and Newcomer Android**: no class of either name exists in the catalog, so there is nothing to store. `--remote` is applied before the merge. |
 
 Dates are absent because these merged before the ledger existed; the PR numbers
 are the durable handle and `git log` carries the dates.
@@ -102,3 +105,6 @@ From `node scripts/source-coverage.mjs --remote`, 2026-08-28:
 **62 traceable, nothing untraceable.** One of two books here that read clean —
 `ww` is the other. Every row cites this book with a page range the cache can
 confirm.
+
+**Re-measured 2026-09-27**, after the vessels (#857), creatures and notable
+NPCs above: `ju                  80 / 0` - still nothing untraceable.

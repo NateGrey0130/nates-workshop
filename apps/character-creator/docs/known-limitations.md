@@ -278,20 +278,27 @@ Measured on production 2026-09-03: of **36** rows with `category = 'vehicle'`,
 is the **main body alone** — a Glitter Boy's arms and legs are not in it — and
 the rest is present but unreadable, sitting in prose no code parses.
 
-**The 25 vessels Phase World prints are deliberately not imported at all**, and
-its survey says so in its extraction plan. The one exception is the Noro Mystic
-Warrior's `Psionic Power Armor`, imported because a class is *issued* it and the
-sheet was wrong without it.
+~~**The 25 vessels Phase World prints are deliberately not imported at all**~~
+— **corrected 2026-09-27.** That was the state on 2026-09-03. The count was
+23, not 25, and all 23 were imported on 2026-09-26 (#1445) into the vessel
+tables below, beside the Noro Mystic Warrior's `Psionic Power Armor` (#860):
+24 Phase World vessels in all. See `docs/surveys/phase-world.md`.
 
-**Why there is no `vehicles` table and no JSON `systems` column.** Both were
-considered and neither is built, because nothing in the app does anything with a
-starship: re-checked 2026-09-03, no table and no column anywhere in 40 tables
-names a vehicle, vessel or ship. A JSON column nothing reads is the
-silent-storage failure `class-import` warns about, and a nine-place table for a
-feature nobody has asked for is worse. **Reopen this the moment something asks**
-— the 24 rows whose breakdown already sits in prose are the backfill it would
-start from. `BOOK-INGEST-AUDIT.md` `F3` carries the full reasoning and the
-options.
+~~**Why there is no `vehicles` table and no JSON `systems` column.**~~ —
+**corrected 2026-09-27; the paragraph that stood here was true on 2026-09-03
+and is not now.** Something asked on 2026-09-07 and `BOOK-INGEST-AUDIT.md` `F3`
+was reopened: migration `048` built `vehicles`, `vehicle_locations` and
+`vehicle_weapons` — M.D.C. by location and a numbered weapon list as real rows;
+`052` added `character_vehicles`, so a character can own one; and `053` added
+`gear.vehicle_slug`, so a `gear` row a class cites can point at its vessel
+(`F41`). The JSON `systems` column is still not built, for the reason given
+then. On production, 2026-09-27: **391** `vehicles` rows, and **20** of the
+**69** `gear` rows with `category = 'vehicle'` carry `vehicle_slug`; the rest
+still hold their breakdown in prose, as the paragraph above describes. The
+codex lists vessels and the sheet shows and damages a character's own. **The
+wizard issues no vessel directly** — a class whose book issues one lists a
+`gear` pointer row in `equipment_starting`, as `~018-class-vessels.sql` did in
+#1450.
 
 **Migrations are still applied by hand.** `schema_migrations` records what has
 run where and the smoke test checks it, but applying a migration is still a

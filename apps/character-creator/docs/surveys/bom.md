@@ -203,7 +203,8 @@ all**. They are a separate, larger question this survey does not answer.
 
 The general invocations, printed 91-159. `source-coverage --remote` reads
 **`bom  409 / 0`** after the repair, up from `232 / 177`, and catalog-wide spells
-went **268 → 445**.
+went **268 → 445**. **Re-measured 2026-09-27:** `bom  428 / 0` - rows citing
+this book have been added since, and none of them is untraceable.
 
 **This is the mirror image of #372 and worth holding beside it.** That repair
 changed 231 citations from wrong to right and moved the ledger by zero. This one

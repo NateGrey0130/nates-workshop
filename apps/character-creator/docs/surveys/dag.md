@@ -67,7 +67,9 @@ None agreed.
 | — | — | cached, 240 pages |
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `dag` registered in `books.json`, with the `dragons-and-gods` alias |
 | 2026-08-28 | — | this file, backfilled offline |
-| 2026-09-26 | #TBD | **Magic weapons, printed 228-232: 23 `gear` rows** (`add-dag-magic-weapons.sql`), the book's first gear. Castlerake and Frostfoil (Swords of Legend), the dragon bone weapons, spear, arrows and eight spell-charged arrows, the arrow with angel feathers, the Dragon Eye Medallion, Dragon Claw Gloves, Sorcerer's Dragon Helm, Mantle of Dragon Endurance, the Feathered Dragon's Wings, the generic Dragon Slayer Weapon, the Black Sword of Styphon and the Dragon Slayer Rune Armor and Axe. Shape copied from `add-pf-magic-items.sql` and the Atlantis rune weapons: `palladium-fantasy`, `magic` for generic items, `weapon` for named ones, `armor` for the suit; unpriced items store NULL. **Not imported:** the standard Dragon Helm (the Dragon's Skull, 800,000-1.5 million gold), because `dragon-helm` already exists citing the main book at 200,000 - left for a decision; the optional rune weapon powers (printed 232), which are not items. book-reconcile: 23/23 clean. Applied `--remote` before the merge. |
+| 2026-09-18 | #1166 | **notable NPCs - the gods** (NPC and bestiary plan, Phase 2b): `add-notable-npcs-dragons-and-gods.sql`, 73 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-18 | #1171 | **creatures** (Phase 3): `add-creatures-dragons-and-gods.sql`, 38 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27. |
+| 2026-09-26 | #1442 | **Magic weapons, printed 228-232: 23 `gear` rows** (`add-dag-magic-weapons.sql`), the book's first gear. Castlerake and Frostfoil (Swords of Legend), the dragon bone weapons, spear, arrows and eight spell-charged arrows, the arrow with angel feathers, the Dragon Eye Medallion, Dragon Claw Gloves, Sorcerer's Dragon Helm, Mantle of Dragon Endurance, the Feathered Dragon's Wings, the generic Dragon Slayer Weapon, the Black Sword of Styphon and the Dragon Slayer Rune Armor and Axe. Shape copied from `add-pf-magic-items.sql` and the Atlantis rune weapons: `palladium-fantasy`, `magic` for generic items, `weapon` for named ones, `armor` for the suit; unpriced items store NULL. **Not imported:** the standard Dragon Helm (the Dragon's Skull, 800,000-1.5 million gold), because `dragon-helm` already exists citing the main book at 200,000 - left for a decision; the optional rune weapon powers (printed 232), which are not items. book-reconcile: 23/23 clean. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -77,6 +79,9 @@ magic weapons were applied (a `--local` run with them reads 135 / 0):
 ```
   dag                112 / 0
 ```
+
+**Re-measured 2026-09-27**, after #1442 was applied `--remote`:
+`dag                135 / 0`, matching the `--local` figure above.
 
 **112 traceable, nothing untraceable.** That is a statement about what has been
 asked for, not about what the book holds. Still open: the nine playable
