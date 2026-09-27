@@ -118,6 +118,11 @@ later printings. The later book wins, so no spell is re-cited to this book.
 disagreements stay as they are. They are recorded here and in no
 `variant_note`.
 
+**Resolved 2026-09-27: *Annihilate* no longer disagrees.** Nate decided the BoM
+row stores the normal cost, and `~024-dragon-helm-and-annihilate.sql` sets its
+`ppe` to 600 with the note kept (`bom.md` ledger), so this book and the catalog
+now agree. The row above is left as the 2026-09-26 diff read it.
+
 Two more readings worth keeping:
 
 - *Death Curse*: the index says Special, the stat block (printed 135) says 15,
