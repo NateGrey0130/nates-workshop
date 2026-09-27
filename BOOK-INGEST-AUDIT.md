@@ -999,6 +999,21 @@ finding predicted:
   came from an earlier printing.
 - **Three findings came out of the work** — `F42`, `F43`, `F44` — none of which
   this finding anticipated, all from reading books it assumed had been read.
+
+**The citation decision reused for class equipment, 2026-09-26 (#TBD).** Nate
+chose this finding's shape for classes whose book issues them a vessel: a
+`gear` row whose slug is the vessel's own, carrying `vehicle_slug`, listed in
+`equipment_starting` - no frontmatter key, no code. `~018-class-vessels.sql`
+added four such rows (`glitter-boy-side-kick-qpa-98`,
+`rhv-60-reloader-hover-vehicle`, `t-31-super-trooper`, `x-2000-dyna-max`) for
+`fq-side-kick-rpa`, `fq-gb-reloader`, `ngr-power-armor-commando` and
+`ngr-robot-combat-pilot`, whose notes had left the vessel out under F3. These
+pointers are NEW rows, where the nineteen above pointed rows that already
+existed. Classes whose book names no model (`cs-rpa-fly-boy-ace`'s "hovercycle
+or jeep") or offers a choice of bodies (`ngr-cyborg-soldier`,
+`ngr-robot-soldier`) were not changed; the survey ledgers of `free-quebec`,
+`triax` and `cwc` say which and why. Found with
+`node scripts/q.mjs --remote` over `instr(markdown, 'F3')`, 2026-09-26.
 - **F42** — high - six Rifts Ultimate Edition gear rows carry FIRST-EDITION figures under a RUE citation, and ten published class references point at them — Taken, 2026-09-09 (PR #864). Nate chose RUE, so the values move and the — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F42` heading.
 
 - **F43** — two gear rows cite Rifts Ultimate Edition for machines it does not print — Taken, 2026-09-09 (PR #863). Posture held: a merge and a re-citation, no — full text in `BOOK-INGEST-AUDIT.closed.md` under its own `### F43` heading.
