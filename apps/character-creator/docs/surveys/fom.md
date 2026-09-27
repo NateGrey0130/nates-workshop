@@ -311,7 +311,7 @@ Left out on purpose, with the reason:
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-18 | — | 13 notable NPCs cite this book (Phase 2a NPC data, commit `1355500f`) |
 | 2026-09-26 | [#1441](https://github.com/NateGrey0130/nates-workshop/pull/1441) | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
-| 2026-09-26 | #TBD | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
+| 2026-09-26 | #1446 | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
 | 2026-09-26 | #TBD | **PR B: 25 Techno-Wizard devices and weapons** into `gear` (`add-fom-tw-gear.sql`), printed 112-120. Re-diffed `--remote` first (3,144 rows: missing 25), reconciled by `book-reconcile`, applied `--remote` before the merge |
 
 ## Where it stands
