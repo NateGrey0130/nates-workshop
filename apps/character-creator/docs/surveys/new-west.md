@@ -407,6 +407,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#899](https://github.com/NateGrey0130/nates-workshop/pull/899) | Vessels 1 of 2, printed 183-195: **6 vehicles, 57 M.D.C. locations, 16 weapon entries** (vehicles 143 -> **149**) - the two Bandito SAMAS, the three CyberSlinger bodies and the Tarantula ATV. The CyberSlingers land here rather than as classes. The Tarantula has TWO main bodies, so `mdc_main_body` is NULL. Applied `--remote` before the PR. |
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 | 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
+| 2026-09-26 | #TBD | Backfill, `~008-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -482,9 +483,12 @@ written the wrong way and caught by the regression run, not by `class-check`.
 
 - The Gunfighter's Quick-Draw Initiative scales on **P.P.**, not on level →
   prose, like `W.P. Quick Draw`.
-- The Gunfighter's Horror Factor of 8 at 6th level is one he **projects**;
+- ~~The Gunfighter's Horror Factor of 8 at 6th level is one he **projects**;
   `bonuses.saves.horror_factor` is the save against one → prose, like the
-  demigod.
+  demigod.~~ **Superseded 2026-09-26.** It is still not the save, but it is
+  no longer prose only: `BOOK-INGEST-AUDIT` F75 (PR #1081) added a class-level
+  `horror_factor` key, and the New West backfill (see *The New West backfill*
+  below) gave it to this class and nine others.
 - "+1 attack when using any gun" and "+3 to disarm on a called shot" are
   conditional on holding a gun → `special_abilities`, not `bonuses.combat`.
 - The Bounty Hunter's *"two piloting skills and five other skills, at least two
@@ -522,9 +526,12 @@ catalog files `psi-stalker` and `wild-psi-stalker` as `category: occ`**, so
 there is no race id to name. Both are `restrictions` prose. The second was
 written the "correct" way first and refused by the regression run.
 
-**`bonuses.attributes` takes a fixed number, so the Saddle Tramp's `+1D4 to
+~~**`bonuses.attributes` takes a fixed number, so the Saddle Tramp's `+1D4 to
 M.A.` is not stored as one** — it is in `extraction_notes`, to be rolled at
-creation. Rounding it to an invented figure would have been worse.
+creation. Rounding it to an invented figure would have been worse.~~ **WRONG,
+and corrected 2026-09-26.** `bonuses.attributes` takes a dice string and rolls
+it once at creation (`BOOK-INGEST-AUDIT` F52, falsified 2026-09-10). The
+Saddle Tramp's M.A. bonus is `MA: "1d4"` since the New West backfill.
 
 ### Batch 3 added to the "what the classes needed" list
 
@@ -533,14 +540,18 @@ creation. Rounding it to an invented figure would have been worse.
 - **No new catalog rows and no new findings.** Everything these four needed was
   already expressible, already in the catalog, or already filed.
 
-**The Wired Gunslinger is the most heavily dropped class in this book, and all
+~~**The Wired Gunslinger is the most heavily dropped class in this book, and all
 of it is recorded rather than rounded.** Four of its augmentation bonuses are
 **dice**, which `bonuses.attributes` and `bonuses.combat` do not take: P.S.
 `+1D4`, Speed `+2D6`, initiative `+3+1D4`, and **P.P. SET to `17+1D6`** — which
 is not a bonus at all but an assignment, and nothing in the schema expresses
-one. All four are in a `special_abilities` entry to be rolled at creation. The
-extra attack and the automatic dodge from the same paragraph *are* fixed and are
-in `bonuses`.
+one. All four are in a `special_abilities` entry to be rolled at creation.~~
+**WRONG, and corrected 2026-09-26.** Both blocks take dice (F52), and an
+occupation's `attribute_dice` expresses a set attribute — the Anti-Monster
+stores its fixed-dice attributes that way. Since the New West backfill P.S.,
+Speed and initiative are `bonuses` (`"1d4"`, `"2d6"`, `"1d4+3"`) and P.P. is
+`attribute_dice` `"1d6+17"`. The extra attack and the automatic dodge from the
+same paragraph *are* fixed and were always in `bonuses`.
 
 **Its twenty-entry insanity table (printed 108-109, rolled at levels 3, 5, 7,
 10 and 13) is not stored either** — there is no insanity mechanic in this app at
@@ -587,11 +598,13 @@ far, and the text layer interleaves both.
   at all** — it states an `mdc_base`, and the rule only fires on a class with
   neither.
 
-**A fourth and fifth dice-attribute drop**: the Preacher's `+1D4+2 to M.A.` and
+~~**A fourth and fifth dice-attribute drop**: the Preacher's `+1D4+2 to M.A.` and
 the Saloon Bum's `+1D4 to P.E.`, joining the Saddle Tramp and the Wired
 Gunslinger. Five classes in this book now carry an attribute bonus the schema
 will not take. That is enough of a pattern to be worth a finding if it recurs in
-the next book.
+the next book.~~ **WRONG, and corrected 2026-09-26: the schema took all of them
+all along** (F52). None was a drop; each was prose where a dice string belonged.
+All five classes carry their dice in `bonuses` since the New West backfill.
 
 **The Professional Gambler's skill list is the THIRD two-column one** (after the
 Highwayman on printed 86 and the Wired Gunslinger on 109), confirmed on a 320
@@ -607,8 +620,9 @@ fit than `optional`.
 **All seventeen occupations are in.** The Saloon Girl needed nothing new:
 `occ_group: optional` like the Gambler and the Saloon Bum, `1D6` in
 `CORE_SDC_BY_CLASS`, and one `occ_related_skills.minimums` floor of 2 Rogue for
-her *"two rogue skills plus six other skills"* line. Her `+1D4+1 to M.A.` is the
-sixth dice-attribute drop in this book.
+her *"two rogue skills plus six other skills"* line. Her `+1D4+1 to M.A.` was
+recorded as the sixth dice-attribute drop in this book; it was not one, and it
+is `MA: "1d4+1"` since the New West backfill.
 
 **THE CYBERSLINGER IS NOT A CLASS, and this survey claimed it was from the day
 it was written.** Reading printed 189-193 to import it is what found that out:
@@ -918,3 +932,35 @@ regression check refused (`BOOK-INGEST-AUDIT` F54, PR #906), and the
 `corrupt_pages` detector that could not see a substitution cipher (F53, PR
 #904). `BOOK-INGEST-AUDIT` F50 and F55 are HELD rather than open - their
 outcome notes name what would reopen them.
+
+## The New West backfill
+
+**2026-09-26, `~008-new-west-dice-and-horror-factor.sql`.** Two things the
+class batches left in prose, both of which the app could hold:
+
+- **Dice attribute bonuses.** Batches 2-5 recorded six "dice-attribute drops"
+  on the belief that `bonuses.attributes` takes only a fixed number. It never
+  did — a dice string is rolled once at creation and stored (`js/derive.js`
+  `diceBonuses`, `app.js` `rollDiceBonusesOf`), which is what falsified
+  `BOOK-INGEST-AUDIT` F52 on 2026-09-10. That PR moved the Sky-Knight's; the
+  other five waited until this one. Saddle Tramp `MA: "1d4"`, Preacher
+  `MA: "1d4+2"`, Saloon Bum `PE: "1d4"`, Saloon Girl `MA: "1d4+1"`, and the
+  Wired Gunslinger `PS: "1d4"`, `Spd: "2d6"` and initiative `"1d4+3"`. Its
+  **P.P. SET to 17+1D6** is an assignment, stored as the occupation's
+  `attribute_dice` `PP: "1d6+17"`, the Anti-Monster's shape; a race stating its
+  own `attribute_dice` replaces it in a pairing. The Saddle Tramp's and the
+  Saloon Bum's `+1D4` were read off renders of printed 102 and 122, because
+  the text layer prints both as `+!D4`.
+- **The Preacher's variant.** A variant's `bonuses` replace the base block, so
+  the M.A. dice went into the Fire and Brimstone variant's too — and that block,
+  written to restate the shared figures, had dropped the +1 save vs Horror
+  Factor at levels 1, 3, 5, 6, 7, 9, 11, 13 and 15 printed 116 gives every
+  Preacher. Restored.
+- **Projected Horror Factor.** F75 (PR #1081) added the class-level
+  `horror_factor` key and did not backfill. Ten classes here carried the value
+  as an ability with *"the sheet has no field for it"*: the six gunmen and the
+  Cactus People (`9+1D4`), Fennodi (`9`), Keeper of the Desert and Mountain
+  Giant (`10+1D4`). The key holds the book's phrase, with the level schedule
+  written in, because nothing reads a level for it; the ability keeps the rules
+  text. The Gunfighter, Justice Ranger and Sheriff read *"None until 5th/6th
+  level, then 8"*.
