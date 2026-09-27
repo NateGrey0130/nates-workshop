@@ -415,6 +415,25 @@ P.P.E.: the list reaches every race it pairs with, including those whose P.P.E.
 adds to a mage's or prints its own, and the parser warns. Why, with the census:
 `apps/character-creator/docs/race-and-occupation.md`.
 
+**`yields_to_occupation: { ppe_base: [magic, clergy] }` is the same two keys
+from the RACE's side** (BOOK-INGEST-AUDIT.md F111, the Larhold part). It goes on
+an R.C.C. - the parser refuses it on an O.C.C. - and maps `ppe_base` and/or
+`starting_money` to the occupation groups (`occ_group`, the five) whose stated
+figure wins that key in a pairing. Every other occupation, and every race
+without it, composes race-first. Where `overrides_race` suits an occupation
+locked to a race or a few, this suits one open to every race: the occupation
+cannot know which races' figures give way, and the race can. Use it only when
+the race's own book prints its figure as the one for a character who does NOT
+take that kind of occupation - *"2D6 for most adults, unless a mage or clergy
+O.C.C."* (Palladium Fantasy `human`, `elf`), *"P.P.E.: 3D6 unless a magic
+O.C.C."* (`amphib`). **Never on a race whose book ADDS its P.P.E. to a mage's**
+(`rifts-cyclops`, `rifts-elf`, `true-atlantean`) **or prints its own mage
+figure** (`godling`, `true-inca`, `draconid`). Money yields only on the book's
+evidence: `larhold-barbarian` yields it to all five groups because its 1D6x1000
+is the R.C.C.'s own equipment line and an O.C.C. replaces that package (printed
+186). Regression pins the carriers by name, so a new one updates that list in
+`apps/character-creator/test/regression.mjs`.
+
 **A race and an occupation that BOTH state psionics are MERGED, not chosen
 between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
 born with and an occupation says what training adds, so `powers` and
