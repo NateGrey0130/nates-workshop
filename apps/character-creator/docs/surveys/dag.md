@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — written after the fact; gods and creatures came in with the NPC and bestiary plan, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 1, gear 23, notable_npcs 73, creatures 38
+**Rows citing this book:** classes 4, gear 23, notable_npcs 73, creatures 38
 
 Slug `dag`. Cached from `PFRPG - Dragons and Gods (1).pdf`, 240 PDF pages,
 **text layer**.
@@ -35,7 +35,8 @@ it holds or which import used it. Debris, not a record.
 
 ## Classes
 
-One class: `chiang-ku-dragon`, with a hatchling variant.
+`chiang-ku-dragon`, with a hatchling variant, was the book's only class until
+2026-09-27; the hatchling R.C.C.s below followed it.
 
 **The other hatchlings are playable by the book, and not imported.** Read
 2026-09-26. Printed 50, *Hatchling Dragon as an optional Player Character*, is
@@ -51,6 +52,12 @@ Fire, Great Horned, Ice, Kukulcan, Lo-Dox, Night Stalker, Serpent of the Wind,
 Thunder Lizard and Ultucan. The Great Horned's Rifts hatchling
 (`dragon-hatchling`, Rifts Ultimate Edition) is a different system's class and
 does not cover it.
+
+**Nate decided on 2026-09-27 to import them**, three species per branch. Kukulcan,
+Lo-Dox and Night Stalker are in as `kukulcan-dragon`, `lo-dox-dragon` and
+`night-stalker-dragon` (see the ledger). Each copies the `chiang-ku-dragon`
+shape - a hatchling and an adult variant - carries the printed-17 dragon
+experience table as `xp_table`, and starts with no money or gear.
 
 ## Catalog diff
 
@@ -70,7 +77,8 @@ None agreed.
 | 2026-09-18 | #1166 | **notable NPCs - the gods** (NPC and bestiary plan, Phase 2b): `add-notable-npcs-dragons-and-gods.sql`, 73 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-18 | #1171 | **creatures** (Phase 3): `add-creatures-dragons-and-gods.sql`, 38 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27. |
 | 2026-09-26 | #1442 | **Magic weapons, printed 228-232: 23 `gear` rows** (`add-dag-magic-weapons.sql`), the book's first gear. Castlerake and Frostfoil (Swords of Legend), the dragon bone weapons, spear, arrows and eight spell-charged arrows, the arrow with angel feathers, the Dragon Eye Medallion, Dragon Claw Gloves, Sorcerer's Dragon Helm, Mantle of Dragon Endurance, the Feathered Dragon's Wings, the generic Dragon Slayer Weapon, the Black Sword of Styphon and the Dragon Slayer Rune Armor and Axe. Shape copied from `add-pf-magic-items.sql` and the Atlantis rune weapons: `palladium-fantasy`, `magic` for generic items, `weapon` for named ones, `armor` for the suit; unpriced items store NULL. **Not imported:** the standard Dragon Helm (the Dragon's Skull, 800,000-1.5 million gold), because `dragon-helm` already exists citing the main book at 200,000 - left for a decision; the optional rune weapon powers (printed 232), which are not items. book-reconcile: 23/23 clean. Applied `--remote` before the merge. |
-| 2026-09-27 | #TBD | **The Dragon Helm, settled.** Nate's decision: no second row. `~024-dragon-helm-and-annihilate.sql` writes printed 231's price for the standard Dragon Helm, the Dragon's Skull (800,000 to 1.5 million gold, read off a 300 dpi render), into the existing `dragon-helm` row's `cost_note`, keyed on slug; the row keeps its 200,000 and its Palladium Fantasy RPG citation, so no row cites this book for it. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-27 | #1459 | **The Dragon Helm, settled.** Nate's decision: no second row. `~024-dragon-helm-and-annihilate.sql` writes printed 231's price for the standard Dragon Helm, the Dragon's Skull (800,000 to 1.5 million gold, read off a 300 dpi render), into the existing `dragon-helm` row's `cost_note`, keyed on slug; the row keeps its 200,000 and its Palladium Fantasy RPG citation, so no row cites this book for it. No row count moves. `--remote` is applied before the merge. |
+| 2026-09-27 | #TBD | **Hatchling R.C.C.s: Kukulcan, Lo-Dox, Night Stalker** (printed 34-40), `add-kukulcan-dragon-class.sql`, `add-lo-dox-dragon-class.sql`, `add-night-stalker-dragon-class.sql`: classes 1 -> 4. Shape copied from `chiang-ku-dragon` (hatchling + adult variants for dice, pools, horror factor and bonuses); top-level skills, magic and psionics are the hatchling's because printed 50 makes the hatchling the player character. `xp_table` from the Dragon Exp. Table, printed 17; `starting_money: 0` and no equipment, printed 50. Dice-valued spell counts stay in `special_abilities`; the magic block states only the level gate. Every number read off a render. book-reconcile: 3 classes, 6 variants, no disagreements. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -85,6 +93,6 @@ magic weapons were applied (a `--local` run with them reads 135 / 0):
 `dag                135 / 0`, matching the `--local` figure above.
 
 **112 traceable, nothing untraceable.** That is a statement about what has been
-asked for, not about what the book holds. Still open: the nine playable
-hatchling R.C.C.s (see *Classes*), and the book has never had a full inventory.
-The Dragon Helm name collision was settled on 2026-09-27 (ledger).
+asked for, not about what the book holds. Still open: the playable
+hatchling R.C.C.s not yet imported (see *Classes*), and the book has never had
+a full inventory. The Dragon Helm name collision was settled on 2026-09-27 (ledger).
