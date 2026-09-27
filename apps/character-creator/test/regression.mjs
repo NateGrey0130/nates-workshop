@@ -5350,10 +5350,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // atlantean-nomad (Rifts World Book 2: Atlantis printed 17) is the True
   // Atlantean's own wandering life: the book gives it the race's abilities and
   // nobody else's, so it pairs only with the true-atlantean R.C.C.
+  // Rifts Conversion Book One prints three occupations inside a race's own
+  // entry: the Gosai Assassin (printed 100, and "ONLY the Gosai Assassin" may
+  // take its Hand to Hand: Skudasa), the Quillback Scavenger (105) and the
+  // Quorian Oneiromancer (107). Each is that race's R.C.C., offered to no one
+  // else, so each pairs only with its rifts- race.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
-    'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad'];
+    'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
+    'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
