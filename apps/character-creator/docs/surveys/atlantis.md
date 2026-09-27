@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the whole plan shipped: tattoos, 22 classes, gear, vehicles, creatures and notable NPCs. What was left out on purpose is under Extraction plan. (2026-09-26)
 
-**Rows citing this book:** classes 22, gear 61, vehicles 20, spells 32, notable_npcs 7, creatures 35
+**Rows citing this book:** classes 22, gear 100, vehicles 20, spells 32, notable_npcs 7, creatures 35
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -410,9 +410,8 @@ draft went through `book-reconcile` before any data script.
 
 What is deliberately left, with the reason for each:
 
-- **Bio-wizard transmutation and reconstruction** (107-110): augmentation
-  options costed like cybernetics but with no class that installs them. Left
-  unless Nate wants them as `cybernetics` gear.
+- ~~**Bio-wizard transmutation and reconstruction** (107-110)~~: imported
+  after all, as `cybernetics` gear, by decision 5 below.
 - **Stone powers and gem powers** (100-104): already on `stone-master` as
   abilities.
 - **Random encounter, insanity and slave-market price tables**: rules and
@@ -429,6 +428,22 @@ What is deliberately left, with the reason for each:
    Yes.
 3. **Bio-wizard microbes, parasites and symbiotes become `gear` rows.** Yes.
 
+### Follow-up decisions, answered by Nate 2026-09-26 (after the import)
+
+4. **Wire the gear the minion classes name into their equipment.** Yes:
+   `fix-atlantis-minion-class-gear.sql` gives the Overlord, Powerlord and
+   Conservator the staffs, Overlord armor, psi-interrogator, microbes, leeches
+   and zombitrons their notes asked to backfill; the Blind Warrior Women the
+   Slaver-escort kit; the Sunaj Assassin the Sunaj armor as its first choice.
+5. **Import the bio-wizard body modifications (printed 106-112) as
+   `cybernetics` gear.** Yes, reversing the survey's original "left out":
+   the Powerlord's entry tells its player to pick two augmentations, so a
+   class does install them.
+6. **The Maxi-Man keeps no `xp_table`.** The book names none; no house rule.
+7. **The Zembahk's by-name spell and power grants stay as they are**, frozen
+   at the catalog of 2026-09-26; refresh them by hand after a later spell or
+   psionic import.
+
 ## Ledger
 
 | date | PR | what went in |
@@ -441,6 +456,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1433](https://github.com/NateGrey0130/nates-workshop/pull/1433) | gear: `add-atlantis-kittani-and-misc-gear.sql` (13), `add-atlantis-bio-wizardry.sql` (33), `add-atlantis-rune-weapons.sql` (14), `~007-atlantis-lesser-rune-weapon-price.sql` (one row corrected). `book-reconcile` checked all 60; ten fixes. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1434](https://github.com/NateGrey0130/nates-workshop/pull/1434) | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1435](https://github.com/NateGrey0130/nates-workshop/pull/1435) | creatures and NPCs: `add-atlantis-creatures-and-npcs.sql`, 35 creatures, 7 notable NPCs, 179 attacks. `book-reconcile` checked every row; no disagreements. Applied `--remote` before the PR. MERGED. |
+| 2026-09-26 | — | follow-ups (decisions 4-5): `fix-atlantis-minion-class-gear.sql` wires the new gear into the Overlord, Powerlord, Conservator, Blind Warrior Women and Sunaj Assassin; `add-atlantis-bio-wizard-augmentation.sql` adds 39 bio-wizard transmutation, reconstruction, eye and sensor rows as `cybernetics` gear (gear 61 -> 100). `book-reconcile` checked the 39. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -455,11 +471,9 @@ Nothing in the plan. `node scripts/source-coverage.mjs --remote`,
 19 spell stubs, 1 psionic stub, 0 spell or psionic text missing. None is this
 book's: no batch created a stub.
 
-**Left for a later decision, not gaps**: the gear the minion classes name
-(staffs, Overlord armor, psi-interrogator, net gun, Sunaj armor) now exists as
-rows but is still prose in those classes' equipment; wiring it in is a
-follow-up. Bio-wizard transmutation, augmentation and grafts (printed 107-112)
-stay out until a class installs them.
+**Decided after the import** (decisions 4-7 above): the minion classes' gear is
+wired in, and the bio-wizard body modifications are imported as cybernetics.
+Nothing else is outstanding.
 
 **Transcription notes for later batches.** The small-canine animal entry on
 printed 89 prints track by smell **0%** in clean ink where the South America 2
