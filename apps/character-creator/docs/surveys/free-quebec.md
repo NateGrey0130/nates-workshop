@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 10, gear 17, vehicles 22, notable_npcs 8
+**Rows citing this book:** classes 10, gear 19, vehicles 22, notable_npcs 8
 
 Slug `free-quebec`. Cached 2026-08-28 from `Rifts- World Book 22 Free Quebec.pdf`,
 194 PDF pages, **text layer** (no OCR), read with `scripts/read-columns.py`.
@@ -354,7 +354,8 @@ describes".*
 | #820 | classes: all five O.C.C.s of printed 32-42 | **5** | classes 215 -> **220** |
 | #821 | vessels, printed 52-134, in four slices | **22** | vehicles 105 -> **127** |
 | #822 | classes: the cyborg O.C.C. and its four chassis | **5** | classes 220 -> **225** |
-| #TBD | ladders: printed 191's *Experience Points* box, by `~012-cwc-fq-xp-ladders.sql`, read off a 300 dpi render and re-read by `book-reconcile` (no disagreements): `fq-descended-glitter-boy-pilot`, `fq-glitter-girl-pilot`, and `fq-side-kick-rpa` with `fq-gb-reloader` (one column). Not stored: `fq-deep-intel-agent` and the five `fq-cyborg-*` rows - the box has no column for them and their entries name no table (printed 32 points the agent at the ISS classes and printed 113 points the cyborgs at CWC's service programs, neither naming a ladder). The survey's "NO Experience Table" is corrected above | 0 | unchanged |
+| #1447 | ladders: printed 191's *Experience Points* box, by `~012-cwc-fq-xp-ladders.sql`, read off a 300 dpi render and re-read by `book-reconcile` (no disagreements): `fq-descended-glitter-boy-pilot`, `fq-glitter-girl-pilot`, and `fq-side-kick-rpa` with `fq-gb-reloader` (one column). Not stored: `fq-deep-intel-agent` and the five `fq-cyborg-*` rows - the box has no column for them and their entries name no table (printed 32 points the agent at the ISS classes and printed 113 points the cyborgs at CWC's service programs, neither naming a ladder). The survey's "NO Experience Table" is corrected above | 0 | unchanged |
+| #TBD | `~018-class-vessels.sql`: the Side Kick RPA and the Reloader list the vessel their book issues them, through two `gear` pointer rows (`glitter-boy-side-kick-qpa-98`, `rhv-60-reloader-hover-vehicle`) carrying `vehicle_slug` - F41's Glitter Boy shape. Restriction lines dropped, notes rewritten as the decision. `--remote` is applied before the merge | **2** | gear citing this book 17 -> **19** |
 
 ### Batch 2 — gear (PR #819)
 
@@ -530,13 +531,18 @@ mean together.
 already exist under different slugs. Accepting the stubs would have created three
 duplicate rows — the exact shape **F33** is about, which is how F33 was found.
 
-**Two classes ship without the vehicle their own book issues them.** The Side
+**Two classes shipped without the vehicle their own book issues them.** The Side
 Kick RPA starts with a Side Kick power armor and the Reloader with an RHV-60
 Reloader Hover Vehicle; both are `vehicles` rows and `equipment_starting` can
 only reference `gear` slugs. Recorded in each class's `restrictions` where a
 player will see it. **F3**, and the same cost the Noro Mystic Warrior paid. The
 two Glitter Boy pilots escape it only because a pre-migration-048
 `glitter-boy-power-armor` row still exists in `gear`.
+
+**Closed 2026-09-26 by `~018-class-vessels.sql` (#TBD)**, in the shape that
+Glitter Boy row already had: each vessel gained a `gear` row of its own slug
+carrying `vehicle_slug` (migration 053, `BOOK-INGEST-AUDIT.md` F41), both
+classes list it in `equipment_starting`, and both restriction lines are gone.
 
 **The Side Kick declares itself a copy and ships without `copy_of`.** Printed 39
 calls it *"basically the same as the Elite RPA Pilot O.C.C. described in the

@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see *The book is fully imported* below. (2026-09-24)
 
-**Rows citing this book:** classes 25, gear 100, vehicles 15, skills 5, spells 58, notable_npcs 7, creatures 28
+**Rows citing this book:** classes 25, gear 100, vehicles 17, skills 5, spells 58, notable_npcs 7, creatures 28
 
 Slug `new-west`. Cached 2026-08-28 from `Rifts- World Book 14 New West.pdf`,
 226 PDF pages, **text layer** (median ~3,784 chars/page — no OCR, no cost).
@@ -408,6 +408,7 @@ standing edges of prefixed names and are unchanged by this.
 | 2026-09-10 | [#900](https://github.com/NateGrey0130/nates-workshop/pull/900) | Vessels 2 of 2, printed 196-223: **9 vehicles, 46 M.D.C. locations, 7 weapon entries** (vehicles 149 -> **158**) - FOUR robot horses (not three), the K-9, the Bronco Scooter, the War Wagon, the Glittermount and the TW Ironhorse. Found the book-wide glyph substitution `corrupt_pages` cannot see. Applied `--remote` before the PR. |
 | 2026-09-10 | [#901](https://github.com/NateGrey0130/nates-workshop/pull/901) | Gear batch E, printed 196 and 200: **13 robot animal options** (gear 1336 -> **1349**) - the entries the earlier "all accounted for" summary missed. **THE BOOK IS FULLY IMPORTED.** Applied `--remote` before the PR. |
 | 2026-09-26 | #TBD | Backfill, `~009-new-west-dice-and-horror-factor.sql`: dice attribute bonuses out of prose and into `bonuses` on **5 classes** (Wired Gunslinger's P.P. as `attribute_dice`), and the projected `horror_factor` key (F75) on **10 classes**; also the Preacher's Fire and Brimstone variant regains its save vs Horror Factor ladder. No rows added, no catalog total moves. See *The New West backfill*. Applied `--remote` before the PR. |
+| 2026-09-26 | #TBD | `~018-class-vessels.sql`: **the Mining 'Borg's two chassis as `vehicles` rows** (vehicles citing this book 15 -> **17**, 9 M.D.C. locations, no weapon systems - the page prints tool attachments, not weapons), read off a render of printed 113 (PDF page 114) and matching the text layer: Partial Reconstruction main body 130 (+120 bionic armour), hands 25, arms 75, legs 110; Full Construction main body 200 (+150), hands 30, arms 100, legs 180, head 90. The class names both in a restriction line, as the Free Quebec cyborgs name theirs, and its "vessel import has not run yet" note is rewritten as the decision. `--remote` is applied before the merge. |
 
 ### What remains
 
@@ -584,8 +585,13 @@ far, and the text layer interleaves both.
   **range**, 28-30, which is neither a fixed value nor dice. Free Quebec set the
   precedent on printed 114-116 — the chassis body, its M.D.C. by location, its
   armour and its weapons are a **`vehicles` row**, and the class carries
-  `mdc_base` plus a pointer. **New West's vessel import has not run**, so there
-  is nothing to point at yet and the figures are in the ability text.
+  `mdc_base` plus a pointer. **New West's vessel import had not run**, so there
+  was nothing to point at and the figures went in the ability text. **The two
+  vessel batches that followed (#899, #900) covered printed 183-223 and never
+  these bodies**, which print inside the O.C.C.; `~018-class-vessels.sql`
+  (#TBD, 2026-09-26) added them as `partial-reconstruction-mining-cyborg` and
+  `full-construction-mining-cyborg`, and the class's restriction line names
+  both.
 - **The Preacher's two types are `variants` using `skills_additional`** — the
   first use in this book of the mechanism **F31 shipped in PR #834**. The base
   class is the Peacemaker and carries no hand to hand at all, which is what the
