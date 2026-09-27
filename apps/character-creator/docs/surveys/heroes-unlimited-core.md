@@ -330,7 +330,7 @@ had been surveyed in full.
 
 | id | question | status |
 |---|---|---|
-| **D0** | **which edition** - Revised only, get an HU2 core, or adapt | **ANSWERED 2026-09-13** - build against the Revised core; take PU1 and PU3; EXCLUDE PU2. See *D0, answered* |
+| **D0** | **which edition** - Revised only, get an HU2 core, or adapt | **ANSWERED 2026-09-13** - build against the Revised core; take PU1 and PU3; EXCLUDE PU2. See *D0, answered*. **Carve-out 2026-09-26:** PU2's four New Super Abilities (printed 94-95) are taken; its twelve categories stay excluded |
 | **D1** | how deep to integrate | **ANSWERED** - a third `system` value reusing the class chassis: Power Category in the R.C.C. slot, Educational Level in the O.C.C. slot, sub-type as the variant |
 | **D2** | campaigns or catalog first | **ANSWERED** - catalog and classes first; `campaigns.system` `CHECK` is left alone, so HU rows exist before an HU campaign can |
 | **D3** | where super abilities live | **ANSWERED** - a new `super_abilities` table with a minor/major tier column. A schema change, so NOT this session |
@@ -352,7 +352,7 @@ supplements in full.
 |---|---|---|---|
 | PU1 | **170** (125 minor, 45 major) | **21** | 0 |
 | PU3 | **125** (46 minor, 79 major) | 0 | 0 |
-| PU2 | **2** | 0 | **12** |
+| PU2 | **4** *(counted 2 on 2026-09-13; the two minors on printed 95 were read past)* | 0 | **12** |
 
 Each roster was read twice - the book's Contents and its own alphabetical list
 page - and the two agree exactly for PU1 and resolve to a one-entry
@@ -419,6 +419,18 @@ Superhuman, Ancient Weapons Master.
 
 **What would reopen it:** an HU2 core book. PU2 becomes the most valuable of the
 three the moment one exists, which is why its cache and registry entry stay.
+
+### The carve-out, 2026-09-26
+
+**PU2's New Super Abilities section is taken; the rest of the book is not.**
+Nate carved it out of D0 on 2026-09-26. None of the three reasons above touches
+it: its four entries (Directed Force and Super Power Punch, major; Sidestep and
+Spit Spikes, minor; printed 94-95) cite no HU2 page, use no P.P.E., and are
+rows of the same shape as PU1's and PU3's. The only cross-reference, Spit
+Spikes' combo with Chemical Secretion, points at PU1 printed 64, which the
+catalog holds. `~018-pu2-new-super-abilities.sql` imports them; the survey
+had said two, and the page prints four. D0's exclusion of the twelve
+categories stands unchanged.
 
 ### Sequencing this answer implies
 
@@ -648,6 +660,7 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-14 | this PR | **F83 LEFTOVER CLOSED - the SEVENTEEN named entries, not thirty classes.** `hu-hardware` (14) and `hu-hunter` (3) rewritten from an absolute `base:` to the `bonus:` the book prints, so the figure comes from `skill_system_bases` and cannot go stale. `per_level` dropped from all seventeen, which repaired the three that disagreed. Eleven classes had no named entry at all and the thirteen education classes already stated this book base - implementing the finding as written would have made 323 correct entries wrong. |
 | 2026-09-18 | [#1153](https://github.com/NateGrey0130/nates-workshop/pull/1153) | **OCR text repair across all three books' super abilities**, `fix-super-ability-ocr-text.sql`: **198 of 364** rows, **41 of this book's 69**. The codex (#1152) was the first reader to show a whole description. Here: every list bullet the scan read as `@` (26 rows), the major-ability roster read onto the end of `Underwater`, four stat columns cut at a blank line, and `Weight Manipulation`'s printed 192 put back in reading order from a render of the page. Applied `--remote` before the merge. |
 | 2026-09-18 | this PR | **The same sweep over this book's spells**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`: two of the core's spells carried a printed page number - `Spontaneous Combustion` ending in `103` and `Sorcerer's Seal` reading "must be 100 completely sealed". **Two super abilities #1153 missed**, in the digit cipher and NOT its mechanical reading: `Animal Abilities`' "4O0ft (12.2m)" and `Growth`'s "5O0lbs per foot" are printed 40ft and 50lbs (175, 184). Applied `--remote` before the merge. |
+| 2026-09-26 | #TBD | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~018-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
