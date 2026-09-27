@@ -2273,7 +2273,7 @@ one list entry.
 **Ongoing cost:** one more key on a list a test already pins against
 `docs/leveling.md`, so that doc gets one more word. Nothing recurring.
 
-**Taken, 2026-09-27 (PR #TBD), as written: `xp_table` only, the removal left
+**Taken, 2026-09-27 (PR #1465), as written: `xp_table` only, the removal left
 alone.** Taken through `/take` on Nate's word ("take both now", with F111).
 The premise the finding marked unmeasured holds: the premise auditor traced
 every reader of a class's ladder - six server call sites through
