@@ -5,190 +5,93 @@ description: The shell traps on this Windows machine that corrupt a file, a comm
 
 # Shell traps on this machine
 
-> **What pins this file:** its frontmatter and every repo path it names, by
-> `apps/character-creator/test/checks/environment.mjs`; every absolute path it
-> names, by `apps/character-creator/test/checks/instruction-paths.mjs`.
->
-> **The prose is pinned by nothing** — read an undated claim here as true on
-> the day it was written.
+> **Pinned:** the frontmatter and every repo path named here (`environment.mjs`),
+> every absolute path (`instruction-paths.mjs`). The incident behind each rule
+> is in `reference/why.md`.
 
-Every one of these **succeeds**. Nothing exits non-zero, nothing warns, and in
-three cases the obvious check reports clean. They are collected here because
-each cost a session or reached production.
+Every one of these **succeeds**: nothing exits non-zero, nothing warns, and in
+three cases the obvious check reports clean.
 
 ## Six of these are a hook now, and it fires everywhere on this machine
 
-Since 2026-09-16 `.claude/hooks/guard-bash.sh` runs before every `Bash` call and
-exits 2 — the only code Claude Code treats as a block — on six shapes that were
-prose rules here and in `ship-pr` until then:
+`.claude/hooks/guard-bash.sh` runs before every `Bash` call and exits 2 (a
+block) on six shapes:
 
-- `git add -A`, `git add --all`, `git add .` — *Commit messages*, below
-- `sed -i` on a path under the repo — *Editing a file in place*, below
-- `scripts/q.mjs` or `scripts/d1-apply.mjs` with neither `--local` nor
-  `--remote` — `ship-pr` → *`--local` is not a mirror of production*
-- `gh pr merge` sharing a line with a chaining operator or a pipe — *A pipe
-  throws away the exit code you were testing*, below
-- `git commit -m` with a backtick in it — *Commit messages*, below
-- `find` rooted at a filesystem or drive root, **at a command position only** —
-  added 2026-09-22 (`SKILL-AUDIT` `F54`), after eighteen whole-disk searches
-  that outlived the agents that started them. It is narrower than the other
-  five on purpose: this rule's trigger words are its own subject, so a
-  permissive matcher would refuse the act of writing about it.
+- `git add -A`, `git add --all`, `git add .` (see *Commit messages*)
+- `sed -i` on a path under the repo (see *Editing a file in place*)
+- `scripts/q.mjs` or `scripts/d1-apply.mjs` with neither `--local` nor `--remote`
+- `gh pr merge` on a line with a chaining operator or a pipe
+- `git commit -m` with a backtick in it
+- `find` rooted at a drive or filesystem root, at a command position
 
-**The script prints `guard-bash:`. A TRANSCRIPT does not start with it.** Claude
-Code wraps the hook's stderr, so the tool result reads
+- **A refusal reads** `PreToolUse:Bash hook error: [<registered command>]: guard-bash: <reason>`.
+  To count refusals, grep for `PreToolUse:Bash hook error`, never a leading
+  `guard-bash:` (zero by construction) or the bare string (matches quotes of it).
+- **A refusal is not a permission denial.** A denial waits for Nate to approve
+  your command; a refusal tells you to write a different one.
+- **It is registered twice, on purpose:** in the repo's `.claude/settings.json`
+  and at user level in `C:\Users\natha\.claude\settings.json`, so it guards
+  every directory. Each copy guards only the tree it lives in, so in a git
+  worktree only the repo's registration guards the worktree. A doubled refusal
+  is expected. **Do not remove either** (`SKILL-AUDIT` `F60`).
+- **It fails closed** on an envelope it cannot parse. A wrong path in a
+  registration fails as `sh` exit 127, which is reported, not blocking;
+  `hook-registration.mjs` is the local check for that.
+- **The hook covers six shapes, not the traps.** Everything below still applies.
 
-```
-PreToolUse:Bash hook error: [<the registered command>]: guard-bash: <reason>
-```
-
-and the reason sits in the middle. That distinction is not cosmetic, and it has
-now cost two findings their central number: a scan anchored on a **leading**
-`guard-bash:` returns zero by construction, which is how `SKILL-AUDIT` `F55`
-came to report that the hook had never refused anything, and a scan matching the
-**bare string** anywhere returns results that merely quote it, which is how
-`F54` came to report 42 refusals. **Grep for `PreToolUse:Bash hook error`.** The
-bracket holds whichever registration fired, so it is not one fixed string to
-match on.
-
-A refusal is still the hook rather than a permission denial, and the two repairs
-are opposite: a permission denial is waiting for Nate to approve the command you
-wrote, and this is telling you to write a different one. The script's header
-names the incident behind each rule.
-
-**It is registered at USER level and fires in every directory on this machine.**
-Until 2026-09-22 it was registered only in this repo's `.claude/settings.json`,
-and `CLAUDE.md`'s four-cell probe established that project settings govern the
-directory they sit in and do not compose — so for six days it guarded nothing
-that mattered, the book work running from `C:\Users\natha\Projects\workshop` and
-sessions starting outside the repo. `SKILL-AUDIT` `F55` moved it to
-`C:\Users\natha\.claude\settings.json` with an absolute path, which covers every
-project key on this machine and anything future.
-
-**Both registrations are live**, the repo's and the user-level one, so a session
-started in the repo runs the hook twice. A doubled refusal is not a bug when you
-meet one.
-
-**They are NOT interchangeable, and that is why both are kept.** Each copy of
-`guard-bash.sh` guards only the tree it lives in — `repo_posix` is derived from
-the script's own location, not from the session. So in a **git worktree** the
-repo's registration runs the worktree's own copy and guards the worktree, while
-the user-level one runs the main checkout's copy and does not. Measured
-2026-09-22 by running each copy against each tree: a target resolves as
-in-repo only for the copy living in that tree. `SKILL-AUDIT` `F60` proposed
-removing the repo's registration and was **declined** on exactly this — the
-other half being that the repo block is the only one checked in, and `SETUP.md`
-documents no hook at all.
-
-**So nothing here has been retired.** The six rules have a backstop everywhere
-now rather than in one directory — but a backstop is one edited settings file
-away from being gone, and a wrong path there fails as `sh` exit 127, which is
-**reported rather than blocking**, so the guard would read as installed and stop
-nothing. `apps/character-creator/test/checks/hook-registration.mjs` is the
-local-only check that catches that; it asserts nothing off this machine and says
-so in its own label.
-
-**It fails closed.** If the hook cannot parse the JSON envelope Claude Code hands
-it, it refuses rather than running unguarded — so a broken hook is noticed on the
-first command instead of never. `.gitattributes` pins `.claude/hooks/*.sh` to LF
-for the same reason: a CR on the shebang line fails as `/bin/sh^M: bad
-interpreter`, which is a hook that silently stops guarding anything.
-
-**The repo is CRLF except where `.gitattributes` says otherwise, and it says so
-about more than one thing.** Two paths are pinned to LF: `*.sql`, *because a
-CRLF checkout once changed the bytes that reached the database*, and
-`.github/workflows/*.yml`, because a runner hands each `run:` step to bash,
-where a trailing CR fails as `$'\r': command not found`. Two more are `-text` —
-normalised in neither direction — the vendored FilamentForge libraries and the
-self-hosted woff2 fonts.
-
-**Read `.gitattributes` before writing anything that rewrites line endings.** It
-is the list; the paragraph above is a summary of it, and a summary goes stale the
-next time a rule lands. This sentence named only `*.sql` until 2026-09-04, and a
-normaliser written from it put a workflow file back to CRLF that same day —
-git's own warning on the next `add` was the only thing that caught it.
+**Line endings: read `.gitattributes`; do not summarise it.** The repo is CRLF
+except what it pins: `*.sql`, `.github/workflows/*.yml` and `.claude/hooks/*.sh`
+are LF, and the vendored FilamentForge libraries and woff2 fonts are `-text`.
 
 ## Editing a file in place
 
-**`sed -i` rewrites the whole file as LF.** One small substitution flips every
-line in a CRLF file, and the change lands in the PR as every line modified.
+- **`sed -i` rewrites the whole file as LF**, so one substitution turns a CRLF
+  file into every line modified, and can fail unrelated byte-compare tests.
+  Use the **Edit tool**, or node with an explicit encoding.
+- **`grep -c $'\r$' file` lies**: it returns the total line count for every
+  file, CRLF or not. Count endings with node:
 
-**The natural check for it lies.** `grep -c $'\r$' file` returns a count equal to
-the file's total line count for *every* file, CRLF or not — a degenerate match
-that reads as "all clean". It reported one file as 272/272 CRLF while the file
-was pure LF.
+  ```bash
+  node -e "const s=require('fs').readFileSync(p,'latin1');const lf=(s.match(/\n/g)||[]).length,crlf=(s.match(/\r\n/g)||[]).length;console.log(crlf,lf-crlf)"
+  ```
 
-It also produces false test results: a `sed -i` on `app.js` made four unrelated
-byte-for-byte comparison checks fail, which looked exactly like the break being
-tested for.
-
-Use the **Edit tool**, or node with an explicit encoding. Count endings with
-node, never with grep:
-
-```bash
-node -e "const s=require('fs').readFileSync(p,'latin1');const lf=(s.match(/\n/g)||[]).length,crlf=(s.match(/\r\n/g)||[]).length;console.log(crlf,lf-crlf)"
-```
-
-`git diff --numstat` is the other tell — a line-ending flip shows the whole file
-changed. To repair one: `s.replace(/\r\n/g,'\n').replace(/\n/g,'\r\n')`.
-
-**`latin1` preserves CRLF exactly, and silently truncates anything new.** It is
-the right round-trip for bytes already in the file. But any string *you supply*
-with a character above U+00FF is cut to its low byte: an em-dash (U+2014) lands
-as U+0014, a control character that renders as nothing and is invisible in a
-diff. This repo's prose is full of em-dashes and curly quotes, so almost any
-inserted sentence hits it — it produced a DC4 byte inside an audit header.
-
-**Use `'utf8'` whenever the replacement text contains non-ASCII.** It round-trips
-CRLF just as well; reach for `latin1` only when the goal is byte preservation of
-content you are not reading. Afterwards, scan for
-`/[\x00-\x08\x0B\x0C\x0E-\x1F]/`.
+  `git diff --numstat` showing the whole file changed is the other tell. To
+  repair: `s.replace(/\r\n/g,'\n').replace(/\n/g,'\r\n')`.
+- **`latin1` preserves CRLF and silently truncates anything you add above
+  U+00FF**: an em-dash becomes the invisible control byte U+0014. **Use
+  `'utf8'` whenever the replacement contains non-ASCII**; it round-trips CRLF
+  too. Afterwards scan for `/[\x00-\x08\x0B\x0C\x0E-\x1F]/`.
 
 ## The Bash tool unescapes before bash sees it
 
 **`\\` becomes `\` one round before execution**, and a quoted heredoc
-(`<<'EOF'`) cannot protect against it, because the substitution happens
-upstream. `\n`, `\t` and a lone `\` pass through unchanged.
+(`<<'EOF'`) does not protect against it. `\n`, `\t` and a lone `\` pass through.
 
 | you wrote | bash received | result |
 |---|---|---|
 | `f.replace('\\','/')` | `f.replace('\','/')` | unterminated string |
-| `"console.log('\\n')"` | `'\n'` | Python wrote a REAL newline into the generated `.js` |
-| `'C:\\Users\\natha'` | `'C:\Users\natha'` | Python read `\U` as a truncated escape |
+| `"console.log('\\n')"` | `'\n'` | a REAL newline written into generated `.js` |
+| `'C:\\Users\\natha'` | `'C:\Users\natha'` | Python reads `\U` as a truncated escape |
 
-`\U` and `\N` hard-error. **Everything else corrupts silently.** And the
-traceback shows the already-collapsed text, so it reads as a mistake in the
-source rather than a transport problem — which invites re-escaping, which
-collapses again.
-
-**Write the script to the scratchpad with the Write tool and run it by path.**
-Write content is not unescaped. Inside Python, build a backslash with `chr(92)`.
-Keep Windows paths out of inline heredocs.
+`\U` and `\N` hard-error; everything else corrupts silently, and the traceback
+shows the collapsed text. **Write the script to the scratchpad with the Write
+tool and run it by path.** In Python build a backslash with `chr(92)`. Keep
+Windows paths out of inline heredocs.
 
 ## A pipe throws away the exit code you were testing
 
-**Never pipe a command whose exit status is the thing you are checking.** A
-pipeline exits with its *last* command's status, and `pipefail` is **off** here:
+A pipeline exits with its **last** command's status, and `pipefail` is off:
 
 ```bash
 false | tail -1 ; echo $?              # 0
 ( set -o pipefail; false | tail -1 ) ; echo $?   # 1
 ```
 
-So `gh pr checks <n> | tail -2 && gh pr merge <n>` **merges on a red build**.
-That is not hypothetical: PR #668 merged with `smoke` at `failure` on
-2026-09-04, and the word `fail` was on screen when it did. Nine PRs in the same
-batch used the identical construction and were green, so nothing ever showed
-that the guard did not work — which is this page's whole thesis, applied to the
-shell rather than to a file.
-
-**That exact line is refused by the hook now, in this repo.** `gh pr merge` on a
-line with a chaining operator or a pipe is rule 4 above. It is the narrowest of
-the five and it does not cover the trap: `gh pr checks | tail` is still a
-pipeline whose exit code is gone, and every other command in this section is
-untouched by the hook in either directory.
-
-**Three fixes, in order of preference:**
+So `gh pr checks <n> | tail -2 && gh pr merge <n>` **merges on a red build**
+(it has). The hook refuses that exact line, but `gh pr checks | tail` alone is
+still a pipeline with its exit code gone. `| head`, `| tail`, `| grep`, `| jq`
+are all the trap; `grep` is worst, having an exit code of its own. Fixes, in
+order of preference:
 
 ```bash
 OUT=$(gh pr checks 670 2>&1); RC=$?; echo "$OUT" | tail -3   # capture first, display after
@@ -196,25 +99,28 @@ set -o pipefail                                              # per-command-block
 gh run watch <id> --exit-status                              # let the tool carry the status
 ```
 
-The first is the one to reach for, because it survives being copied into a
-context where `pipefail` was never set. **`| head`, `| tail`, `| grep` and
-`| jq` are all the same trap** — and `grep` is the worst of them, because it has
-a meaningful exit code of its own that then becomes the pipeline's.
+Run `gh pr merge` as a command on its own.
 
 ## Killing a dev server
 
-**`taskkill` on whatever is LISTENING kills a `workerd` child, not the server.**
-The parent node process respawns it, the port never frees, and each new
-`wrangler pages dev` stacks another instance. It looks like it worked: the kill
-reports success and the PID is gone.
+**`taskkill` on the LISTENING process kills a `workerd` child, not the server.**
+The node parent respawns it, the port never frees, and each new
+`wrangler pages dev` stacks another instance. **`curl.exe` returning `HTTP 000`
+against a port that IS listening is the tell.**
 
-Fifteen dev servers accumulated in one session before the port began returning
-`HTTP 000` and a test run failed for reasons unrelated to the code. **A
-`curl.exe` returning `HTTP 000` against a port that IS listening is the tell** —
-`.exe`, because in PowerShell a bare `curl` is `Invoke-WebRequest` and never
-prints a bare status code at all.
+**Other wranglers may be running, and a blanket kill takes them too.**
+`regression.mjs` and `play-flow.mjs` boot their own on OS-assigned ports, and
+8788 may be another worktree's server. So list first, from PowerShell:
 
-Stop both halves, from PowerShell:
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe' OR Name='workerd.exe'" |
+  Select-Object ProcessId, ParentProcessId, Name, CommandLine
+```
+
+Stop **only** the `node` whose command line runs `wrangler pages dev` on your
+port, and the `workerd` processes under it (follow `ParentProcessId`). Then
+confirm the port is empty. The blanket form, when you are sure nothing else is
+running:
 
 ```powershell
 Get-Process workerd -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -223,162 +129,82 @@ Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 ```
 
-Then confirm the port is empty before starting a new one. The same
-kill-by-command-line rule applies to headless Chrome: match its
-`--user-data-dir`, never the image name, or a blanket `taskkill /IM chrome.exe`
-takes Nate's real browser with it.
+Kill headless Chrome by its `--user-data-dir` in the command line, never
+`taskkill /IM chrome.exe`, which takes Nate's real browser.
 
 **A running server holds the secrets it booted with.** `wrangler pages dev`
-reads `.dev.vars` **at boot**, so rotating a key leaves the live server sending
-the old one: the importer reported `credit balance is too low` against an
-account that had just been topped up, while the same key answered `200 OK`
-called directly. **The tell is the shape of the failure, not its text** — real
-API calls take seconds and every one of these returned in **0s**. A fast failure
-is a local one. Stop and restart the server, then retry one small request.
-
-Production reads its own copy as a Pages secret, so a rotation is two places;
-`ship-pr` carries that half, because only one of the two ships.
+reads `.dev.vars` at boot, so after a key rotation or a top-up the live server
+still sends the old key. **The tell is speed: a failure returning in 0s is
+local.** Restart the server and retry one small request. Production reads its
+own copy as a Pages secret (`ship-pr`).
 
 ## PowerShell, and queries that return wrong data
 
-- **`\"` does not escape anything.** The string ends early and the rest
-  word-splits into arguments wrangler rejects. Class markdown cites gear as
-  `item_id: "slug"`, so the queries most worth running are the ones that break.
-  Build the quote in SQL instead: `char(34)`. Same trick as `char(8212)` for an
-  em-dash.
-- **`--file` returns a summary over `--remote`, not results.** A `SELECT` sent
-  with `--file` comes back as *Total queries executed / Rows read*, so every
-  count reads as 1 and a drift check built on it reports everything missing. Use
-  `--command` for anything whose rows you need.
-- **Read results from a file, not the terminal.** `--json | Out-File -Encoding
-  utf8 out.json`, then read `out.json`. Transcribing from terminal output put
-  `ng-15-northern-gun-laser-rifle` a keystroke away from being written into a
-  class definition; the real slug is `ng-l5-`.
+- **`\"` escapes nothing in PowerShell.** The string ends early and the rest
+  word-splits. Build a double quote in SQL with `char(34)`, as `char(8212)` for
+  an em-dash.
+- **`--file` over `--remote` returns a summary, not rows.** Use `--command`
+  for anything whose rows you need.
+- **Read results from a file, not the terminal**: `--json | Out-File -Encoding
+  utf8 out.json`, then read the file. Transcribing a slug off the screen has put
+  a wrong one (`ng-15-` for `ng-l5-`) a keystroke from a class definition.
 
 ## Commit messages
 
-**Backticks in a `-m` string are evaluated by the shell.** A commit message here
-once ran `wrangler d1 execute` and pasted its help output into the commit.
-Backticks are natural in this repo's prose, so this is not hypothetical.
+**Backticks in a `-m` string are evaluated by the shell** (one ran `wrangler`
+and pasted its help into a commit). Write the message to a file named `.tmp`
+and commit with `-F`:
 
 ```bash
 git commit -F commit-msg.tmp
 ```
 
-**`git add -A` used to sweep that file into the commit, and configuration closed
-it.** `commit-msg.tmp` shipped inside PR #404 that way, and `.gitignore:31` has
-carried `*.tmp` since **2026-08-30** in answer. Measured 2026-09-03:
-`git check-ignore -v commit-msg.tmp` returns `.gitignore:31:*.tmp`, and
-`git add -A` with that file present stages nothing.
-
-**Name the scratch file `.tmp` and the trap cannot fire.** That is the whole of
-the surviving instruction — a scratch file under any other extension is not
-covered, and `git ls-tree -r HEAD --name-only` is still how you check what
-actually landed.
-
-**This page forbade the command for three days after it stopped being
-possible.** The rule was written here on 2026-09-02 and this file was edited
-again on 2026-09-03, both after the fix. A hand step retired by configuration
-and written down anyway is the same failure `ship-pr`'s pruning section
-describes from the other direction.
+`*.tmp` is gitignored, so it cannot be swept into the commit. A scratch file
+under any other extension is not covered; `git ls-tree -r HEAD --name-only`
+shows what landed.
 
 ## Nate's shell is not your shell
 
-**Your Bash is Git Bash. His is Windows PowerShell 5.1.** That is the whole
-difference, and it is permanent rather than broken. Git Bash prepends its own
-toolchain — `/mingw64/bin`, `/usr/local/bin`, `/usr/bin` — ahead of everything
-Windows persists. A freshly-opened PowerShell gets the Machine PATH and the User
-PATH concatenated, and nothing else.
-
-So a command can exist for you and not for him, or exist for both and **be a
-different program**. Measured 2026-09-02, in a shell whose PATH was rebuilt from
-the persisted values alone:
+**Your Bash is Git Bash; his is Windows PowerShell 5.1.** Git Bash prepends
+`/mingw64/bin`, `/usr/local/bin` and `/usr/bin`; his new window gets the
+Machine and User PATH only. So a command can exist for you and not for him, or
+be a **different program**:
 
 | you type | you get | he gets |
 |---|---|---|
 | `git` | `/mingw64/bin/git` | `C:\Program Files\Git\cmd\git.exe` |
 | `sed` `awk` `file` `tr` `grep` | `/usr/bin/…` | **nothing** |
-| `find` | `/usr/bin/find`, GNU | `C:\WINDOWS\system32\find.exe`, not GNU |
-| `diff` `curl` | `/usr/bin/diff`, `/mingw64/bin/curl` | PowerShell **aliases** for `Compare-Object` and `Invoke-WebRequest` |
+| `find` | GNU `find` | `C:\WINDOWS\system32\find.exe`, not GNU |
+| `diff` `curl` | the Unix tools | PowerShell aliases for `Compare-Object` and `Invoke-WebRequest` |
 
-The bottom two rows are the dangerous ones: nothing fails, and the wrong program
-answers.
-
-### In PowerShell, write `curl.exe`
-
-**Sixteen Unix names are aliases there** — measured 2026-09-02, not a
-representative sample. Appending `.exe` reaches the real binary, and
-`C:\WINDOWS\system32\curl.exe` wins over the Git one in both PowerShell and
-`cmd`. **Leave the aliases alone**; they are defaults other things rely on. What
-matters is which ones take a Unix argument and quietly do something else with it:
+**In PowerShell write `curl.exe`**, and leave the aliases alone. The aliases to
+fear succeed with a wrong answer:
 
 | you write | you get | what it does |
 |---|---|---|
-| `diff a b` | `Compare-Object` | compares the two *path strings*. On two **identical** files it reports both as differing, and `$?` is `True` |
-| `sort f` | `Sort-Object` | reads no file. Prints **nothing**, succeeds |
-| `curl` `wget` | `Invoke-WebRequest` | `-s -o -w '%{http_code}'` is not its syntax |
-| `ls` `cat` `rm` `cp` `mv` `ps` `kill` `echo` `pwd` `tee` `sleep` `man` | the obvious cmdlet | fine bare; error on `-la`, `-n`, `-rf` |
+| `diff a b` | `Compare-Object` | compares the path *strings*; two identical files "differ", `$?` is `True` |
+| `sort f` | `Sort-Object` | reads no file, prints nothing, succeeds |
+| `curl` `wget` | `Invoke-WebRequest` | not Unix curl's syntax |
+| `ls` `cat` `rm` `cp` `mv` `ps` `kill` `echo` `pwd` `tee` `sleep` `man` | the cmdlet | fine bare; error on Unix flags |
 
-The first two are the ones to fear. Everything else either works or fails
-loudly; `diff` **inverts** its answer and `sort` **erases** its answer, and both
-report success. A check built on either is worse than no check.
-
-**Ask what his PATH is; do not model it.** One line prints what a new window of
-his will resolve against:
+**Ask what his PATH is; do not model it:**
 
 ```powershell
 ([Environment]::GetEnvironmentVariable('PATH','Machine') + ';' +
  [Environment]::GetEnvironmentVariable('PATH','User')) -split ';'
 ```
 
-**Two things that are not the mechanism**, both believed here on 2026-09-01 and
-neither surviving a check a day later:
+- A PATH change reaches only a **new** window. An already-open one is frozen;
+  that is the only stale environment here.
+- **No workaround by absolute paths.** Handing him full paths hides a real
+  PATH gap; the repair is a PATH entry or a different command name.
+- To observe his environment rather than model it, have `explorer.exe` launch
+  the probe.
 
-- **An inherited environment block is not going stale.** Tested by trying to
-  make it: a fresh value was written to `HKCU\Environment` with **no**
-  `WM_SETTINGCHANGE` broadcast at all, and a process launched by an
-  `explorer.exe` that had been running six days saw it immediately. Explorer
-  picks up registry changes here on its own. The one environment that really is
-  frozen is **a window that is already open** — a process's block is fixed when
-  it starts and nothing updates it afterwards. That is a reason to open a new
-  window, never a reason to work around anything.
-- **PATH was not what failed.** That session's own record shows an *absolute*
-  path to the npm shim failing as well. PATH cannot make an absolute path fail,
-  so resolution was never the fault — and `%APPDATA%\npm` is on his PATH, where
-  `wrangler` resolves for him today.
+### `--remote` from your shell
 
-To observe his environment rather than model it, have `explorer.exe` launch the
-probe so the probe inherits the block in question. A shell you rebuild yourself
-answers a question about your reconstruction.
-
-**There is no workaround here, and absolute paths are not one.** Writing full
-paths into everything you hand him hides the asymmetry rather than showing it,
-and then every command that would have exposed a real gap has been
-pre-worked-around. That is how `pdftotext` stayed off his PATH for as long as it
-did while every agent session ran it without noticing. When something you hand
-him fails, the table above says why at a glance, and the repair is a PATH entry
-or a different command name — never a longer string.
-
-**A PATH change does not reach an already-open terminal.** New window, or a
-correct fix reads as broken.
-
-### `--remote` from your shell: measured, not assumed
-
-Hand-off briefs have carried a caution that `drift-check --remote`,
-`deploy-sweep` and a one-row `q.mjs --remote` all **hang past 500s** from the
-agent's Bash tool, and to hand them to Nate instead. Re-measured **2026-09-03**
-from that shell, all three ran clean — `drift-check` five times at ~4 min each,
-`deploy-sweep` in **17s**, `q.mjs` in **8s**, plus six other `--remote` D1 calls.
-The `deploy-sweep` output was byte-identical to the same command in his shell
-minutes earlier.
-
-**That is not a promise, and one clean day does not disprove an intermittent
-fault.** What it does mean is that **deferring these commands is a cost, not a
-default** — a session that hands all three over is paying for a fault nobody has
-reproduced. Run them; if one hangs, that is new information.
-
-**If it hangs, capture it before retrying** — the same instruction `M18` gives,
-for the same reason. The command, how long it ran, whether any output appeared,
-and `Get-Process node,workerd` while it is still stuck. Anything gathered after a
-retry describes a machine that already recovered. `MACHINE-AUDIT.md` `M21` holds
-the measurements and the two citations that sent readers to the wrong findings.
+`drift-check --remote`, `deploy-sweep` and `q.mjs --remote` run fine from the
+agent's Bash (re-measured). **Run them; do not hand them to Nate by default.**
+If one hangs, **capture before retrying**: the command, how long it ran,
+whether output appeared, and `Get-Process node,workerd` while it is stuck
+(`MACHINE-AUDIT.md` `M21`).
