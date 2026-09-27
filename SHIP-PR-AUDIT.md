@@ -341,3 +341,18 @@ stacked child. Stacks are rare here, and step 7 already says to avoid them.
 
 **Decline path:** the risk is a narrow case of one already accepted: with
 strict mode off, any PR can merge green against an older `main`.
+
+**Taken, 2026-09-27 (branch `pal/audit/ship-pr-audit-f16-stacked-child`), as
+proposed, with one wording correction.** Posture held: documentation only, one
+paragraph in `ship-pr` step 7 and one clause in the `merge-check-lib.mjs:152`
+string; no check, no workflow change. The premise audit found no
+disagreements (10 of 12 premises settled, the two GitHub-event claims still
+**reported by its documentation, not measured**). It corrected the wording:
+*"even when the freshness diff is empty"* is narrower than the case, because the
+freshness check also says "no merge needed" when `main` moved outside your
+paths, so step 7 says *"even when the freshness check says no merge is needed"*.
+The auditor also measured the empty-diff case in a throwaway repo rather than
+inferring it. Pressure test on #1482's scenario: on the text before this change,
+one of two runs refreshed the child; after it, both did, citing step 7. Both
+after-runs could also read this finding on `main`, so the result is not clean of
+it.
