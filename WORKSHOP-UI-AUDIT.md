@@ -44,7 +44,9 @@ interface. What has had no home until now is the other three apps and the landin
 page.
 
 **`W1` was handed here explicitly, and that is the reason this file exists at all.**
-`apps/media-vault/SHARE-AUDIT.md:446-453` records the bulk-bar defect, states that
+`apps/media-vault/SHARE-AUDIT.closed.md:358-365`, under `## V3` (moved there
+from `SHARE-AUDIT.md` in the 2026-09-16 split; path re-read 2026-09-27),
+records the bulk-bar defect, states that
 it is *"named rather than filed"*, and says it
 <!-- claim-ok: quoting SHARE-AUDIT's own deferral, cited by line above -->
 *"belongs to whoever next opens a UI menu for this app"*. This is that file.

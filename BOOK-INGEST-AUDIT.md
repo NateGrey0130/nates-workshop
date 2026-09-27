@@ -1000,7 +1000,7 @@ finding predicted:
 - **Three findings came out of the work** — `F42`, `F43`, `F44` — none of which
   this finding anticipated, all from reading books it assumed had been read.
 
-**The citation decision reused for class equipment, 2026-09-26 (#TBD).** Nate
+**The citation decision reused for class equipment, 2026-09-26 (#1450).** Nate
 chose this finding's shape for classes whose book issues them a vessel: a
 `gear` row whose slug is the vessel's own, carrying `vehicle_slug`, listed in
 `equipment_starting` - no frontmatter key, no code. `~018-class-vessels.sql`
@@ -1015,7 +1015,7 @@ or jeep") or offers a choice of bodies (`ngr-cyborg-soldier`,
 `triax` and `cwc` say which and why. Found with
 `node scripts/q.mjs --remote` over `instr(markdown, 'F3')`, 2026-09-26.
 
-**Adjusted 2026-09-27 (#TBD).** The three classes the paragraph above left
+**Adjusted 2026-09-27 (#1466).** The three classes the paragraph above left
 unchanged took the shape the next day, by `~029-class-vessel-notes.sql`:
 `cs-rpa-fly-boy-ace` offers a choice of the generic `hovercycle` and `jeep`
 gear rows, which the search above had looked past because they are not
