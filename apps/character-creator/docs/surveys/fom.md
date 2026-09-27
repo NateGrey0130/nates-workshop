@@ -1,8 +1,8 @@
 # Rifts World Book 16: Federation of Magic — survey
 
-**Status:** `surveyed` — whole book surveyed 2026-09-26; nothing from the plan has shipped. The 13 notable NPCs predate the survey. (2026-09-26)
+**Status:** `importing` — PR B (25 Techno-Wizard gear rows) and PR C (12 vehicles and automatons) have shipped; the eight classes (D, E) are next. (2026-09-26)
 
-**Rows citing this book:** vehicles 12, notable_npcs 13
+**Rows citing this book:** gear 25, vehicles 12, notable_npcs 13
 
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**. Second printing, March 1999; copyright 1997.
@@ -181,6 +181,16 @@ Several magic items are priced as ranges in the millions (store the low end
 plus a `cost_note`, per the gear convention). **Printed 117 is glyph-corrupt**:
 read its four prices off a render.
 
+**Shipped in PR B** (`add-fom-tw-gear.sql`). The four printed-117 prices and
+the Disrupter's 2D4 were read off renders, and printed 114-116 were attributed
+off renders too, because the text layer interleaves their stat lines. Guns,
+grenades, the mine and the enchanted melee weapons are `weapon`. The energy cell
+is `magic`, as the Manoan TW Energy Cell is. The Shadow Cloak is `gear`. The
+thirteen items the book does not name "TW" carry a `tw-` slug prefix, and the
+cell is `stormspire-ppe-energy-cell`. The Starfire Pulse Cannon is a gear row
+and not a PR C vehicle add-on, because the book prices it as a stand-alone
+weapon.
+
 ## Vehicles and automatons
 
 On 2026-09-26, `catalog-diff.mjs --remote --table vehicles` (354 rows) was run
@@ -269,8 +279,8 @@ The work in order, one PR each, applied `--remote` before the PR:
 
 | PR | rows | tables | notes |
 |---|---|---|---|
-| **A** (this) | 0 | none | this survey, and the `books.json` note corrected |
-| **B — TW gear** | **25** | `gear` | printed 112-120. Printed 117 is read from a render, and so is the TW Disrupter's duration (printed 114: the text layer reads `204` where the ink prints 2D4). Re-diff `--remote` first |
+| **A** (shipped, #1441) | 0 | none | this survey, and the `books.json` note corrected |
+| **B — TW gear** (shipped) | **25** | `gear` | printed 112-120. Printed 117 is read from a render, and so is the TW Disrupter's duration (printed 114: the text layer reads `204` where the ink prints 2D4). Re-diff `--remote` first |
 | **C — TW vehicles and automatons** | **11** (4 vehicles, 7 automatons) plus `vehicle_locations` for each M.D.C.-by-location table | `vehicles`, `vehicle_locations` | printed 95-112 and 120-125. Welded 101 and 125 and the empty 103 are read from renders. Automaton `cost` is NULL, with the "unavailable" note. **Settled in that PR:** the Battle Streaker is its own row (12 rows in all), and the Zone Ranger's six add-ons are its `vehicle_weapons` rows, not gear. See *Imported* above |
 | **D — the four Magi** | **4** | `imported_classes` | Battle Magus, Controller, Lord Magus, High Magus, printed 71-82. Every initial spell must resolve to an existing row. The Controller and High Magus carry the bond and rituals in prose. Lands after C, so an owned automaton is a real `vehicles` row |
 | **E — Conjurer, Grey Seer, Mystic Knight, Corrupt** | **4** | `imported_classes` | printed 82-95; the Corrupt's Repentant variant and villain caveat go in the body |
@@ -300,15 +310,17 @@ Left out on purpose, with the reason:
 | 2026-08-27 | [#337](https://github.com/NateGrey0130/nates-workshop/pull/337) | `fom` registered in `books.json` |
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-18 | — | 13 notable NPCs cite this book (Phase 2a NPC data, commit `1355500f`) |
-| 2026-09-26 | #TBD | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
+| 2026-09-26 | [#1441](https://github.com/NateGrey0130/nates-workshop/pull/1441) | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
 | 2026-09-26 | #TBD | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
+| 2026-09-26 | #TBD | **PR B: 25 Techno-Wizard devices and weapons** into `gear` (`add-fom-tw-gear.sql`), printed 112-120. Re-diffed `--remote` first (3,144 rows: missing 25), reconciled by `book-reconcile`, applied `--remote` before the merge |
 
 ## Where it stands
 
-Surveyed. Nothing from the plan has shipped. Start with PR B.
+Importing. PR B (TW gear) and PR C (vehicles and automatons) have shipped.
+Next is PR D, the four Magi.
 
 ### What remains
 
 `node scripts/source-coverage.mjs --remote` on 2026-09-26 lists `fom` at
-**13 traceable / 0 other**: the 13 notable NPCs. The plan above is the
-remainder: 25 gear rows, 11 vehicles, 8 classes.
+**13 traceable / 0 other**: the 13 notable NPCs. That was before PRs B and C.
+What is left of the plan is the 8 classes.
