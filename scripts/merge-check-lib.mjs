@@ -149,7 +149,7 @@ export function runMergeCheck({ repoRoot, tests, remote }) {
     const p = byNumber[n];
     const notes = [];
     if (before[n].length) notes.push(`after ${before[n].map((m) => `#${m}`).join(', ')}, whose commits it carries`);
-    if (p.baseRefName !== 'main') notes.push(`BASE IS ${p.baseRefName}: retarget this one to main FIRST (gh pr edit <n> --base main), then merge that (ship-pr step 7)`);
+    if (p.baseRefName !== 'main') notes.push(`BASE IS ${p.baseRefName}: retarget this one to main FIRST (gh pr edit <n> --base main), then merge that, then merge origin/main into this one and push so its checks re-run against main (ship-pr step 7)`);
     console.log(`  ${i + 1}. #${n} ${p.headRefName}${notes.length ? `  - ${notes.join('; ')}` : ''}`);
   });
   for (const [a, b] of partial) {

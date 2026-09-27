@@ -108,7 +108,12 @@ second pair of eyes on a run you already did.
    `gh pr edit <child> --base main`, confirm with `gh pr view <child> --json
    baseRefName,state`, and only then merge the base. Merging the base without
    `--delete-branch` is not enough, because `delete_branch_on_merge` deletes it
-   anyway.
+   anyway. **Then refresh the child before merging it**: its checks still
+   describe its merge into the OLD base, and a base change re-runs nothing. Once
+   the base has merged, merge `origin/main` into the child and push, **even when
+   the freshness check says no merge is needed**, and merge the child only on
+   `smoke`, `menus` and `regression` from that push. `gh run rerun` is not a
+   refresh; it replays the old merge.
 
    `--merge` is the default shape (the branch's own messages survive); squash
    and rebase are enabled and not wrong.
