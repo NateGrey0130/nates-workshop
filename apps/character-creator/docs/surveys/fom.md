@@ -2,7 +2,7 @@
 
 **Status:** `importing` — PR B (25 Techno-Wizard gear rows) and PR C (12 vehicles and automatons) have shipped; the eight classes (D, E) are next. (2026-09-26)
 
-**Rows citing this book:** gear 25, vehicles 12, notable_npcs 13
+**Rows citing this book:** classes 4, gear 25, vehicles 12, notable_npcs 13
 
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**. Second printing, March 1999; copyright 1997.
@@ -312,7 +312,8 @@ Left out on purpose, with the reason:
 | 2026-09-18 | — | 13 notable NPCs cite this book (Phase 2a NPC data, commit `1355500f`) |
 | 2026-09-26 | [#1441](https://github.com/NateGrey0130/nates-workshop/pull/1441) | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
 | 2026-09-26 | #1446 | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
-| 2026-09-26 | #TBD | **PR B: 25 Techno-Wizard devices and weapons** into `gear` (`add-fom-tw-gear.sql`), printed 112-120. Re-diffed `--remote` first (3,144 rows: missing 25), reconciled by `book-reconcile`, applied `--remote` before the merge |
+| 2026-09-26 | #1448 | **PR B: 25 Techno-Wizard devices and weapons** into `gear` (`add-fom-tw-gear.sql`), printed 112-120. Re-diffed `--remote` first (3,144 rows: missing 25), reconciled by `book-reconcile`, applied `--remote` before the merge |
+| 2026-09-26 | #TBD | **PR E, four classes**: Conjurer, Corrupt, Grey Seer and Mystic Knight (`add-<id>-class.sql` each), with their printed 160 ladders; `book-reconcile` over all four found no disagreement. The Corrupt keeps the Elite and Repentant, and the book's villain caveat, in its body; it does not carry `supersedes_race`, which would drop a magic race's spells. The Mystic Knight is not merged with Madhaven's Knight of the White Rose, a different book's class. Applied `--remote` before the PR |
 
 ## Where it stands
 
