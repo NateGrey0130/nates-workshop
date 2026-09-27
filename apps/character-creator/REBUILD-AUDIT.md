@@ -279,6 +279,34 @@ the `unknown-book` bucket.
 **Posture: blocked, no action. This finding exists so the negative result is not
 re-derived — two plausible OCR runs were about to be spent on it.**
 
+**Adjusted 2026-09-27.** Books this finding waited on have landed since, so the
+numbers above are the 2026-08-28 record and these are that day's, from
+`node scripts/source-coverage.mjs --remote` (2026-09-27, 28 of 30 registered
+books cached):
+
+| | 2026-08-28 | 2026-09-27 |
+|---|---|---|
+| `not-cached`, all tables | 51 | **30** |
+| `rifts-skill-list` | 48 | **29** |
+| `triax` | 1 | **0** — cached and imported |
+| `new-west` | 1 | **0** — cached and imported |
+| `rifts-core` | 1 | **1**, a different row: `gear.Northern Gun Sky King` (the original row was re-cited by `F17`, PR #393) |
+
+The `rifts-skill-list` rows left one at a time, re-cited by page as their books
+were cached, which is this finding's proposal working as written.
+
+**What the trigger allows now.** `nightbane-core` is cached, and a plain-text
+search of its cache on 2026-09-27 finds four of the remaining names on cache
+pages `p049` and `p053`: `Strategy/Tactics`, `Toxicology`, `W.P. Revolver`,
+`W.P. Automatic Pistol`. Five more are placed on that book's skill list by a
+session-memory note (**reported, not re-checked here**) and were not found as
+plain strings; each needs reading off the page. The rest need books this
+machine does not hold.
+
+**Still held, posture unchanged.** Re-citing the rows the cached books can now
+answer is a data PR, taken on Nate's word with the three-readings check this
+finding asks for.
+
 - **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `REBUILD-AUDIT.closed.md` under its own `### F17` heading.
 
 - **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F18` heading.
