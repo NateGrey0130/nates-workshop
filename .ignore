@@ -1,0 +1,5 @@
+# Hidden from ripgrep (and so from Claude Code's Grep and Glob) without
+# untracking anything. docs/prompts/ holds one-off prompts nothing points at.
+# The .closed audit menus stay searchable: take, audit-menu and three agents
+# search them on purpose.
+docs/prompts/

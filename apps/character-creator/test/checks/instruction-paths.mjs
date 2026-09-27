@@ -47,8 +47,9 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['Instruction-layer paths'];
 
-// The instruction layer, exactly as D1 scopes it.
-const ROOTS = ['CLAUDE.md', 'SETUP.md', '.claude/skills', '.claude/agents'];
+// The instruction layer, exactly as D1 scopes it, plus the credentials doc
+// CLAUDE.md sends every Cloudflare session to (its paths moved out of CLAUDE.md).
+const ROOTS = ['CLAUDE.md', 'SETUP.md', 'docs/cloudflare-credentials.md', '.claude/skills', '.claude/agents'];
 const READABLE = /\.(md|json|ps1|mjs|js)$/i;
 
 // Inline code, then double-quoted strings. Both survive a space in a path.
