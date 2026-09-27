@@ -2,7 +2,7 @@
 
 **Status:** `surveyed` — whole book surveyed 2026-09-26; nothing from the plan has shipped. The 13 notable NPCs predate the survey. (2026-09-26)
 
-**Rows citing this book:** notable_npcs 13
+**Rows citing this book:** vehicles 12, notable_npcs 13
 
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**. Second printing, March 1999; copyright 1997.
@@ -35,7 +35,7 @@ off the source PDF. **The figure 73 appears in older audit text and is stale.**
 | **not in the map, still there** | automatons, printed 95-112 | every `1D` reads `ID` (`ID6`, `ID4x10`), and a few `x` multipliers read `~` (`1D6~10+12` = 1D6x10+12). One saving throw on printed 107 reads `l l` (11) |
 | **not flagged, still lost** | cache `p131` = printed 130 | **the spell index's fourth column (levels 13-15) is absent from the text layer entirely.** Read off a render for this survey |
 | **not flagged, still lost** | printed 130-159 | several description **headings** are missing from the text layer: Power Weapon, Giant, Firequake, Enemy Mind, Energy Sphere, Null Sphere. The stat blocks survive, but the headings do not |
-| **not flagged, still lost** | cache `p104` = printed 103 | holds only a page number. **The Earth Thunder's closing combat bonuses and Horror Factor were not found in the cache.** Render printed 102-103 before transcribing it |
+| **not flagged, nothing lost** | cache `p103`, `p106`, `p110` = printed 102, 105, 109 | each holds only a page number, because each is a **full-page illustration** (the Earth Thunder, the Fire Demon, the Infiltrator), checked on renders 2026-09-26. This row used to say cache `p104` = printed 103 was empty and the Earth Thunder's bonuses were missing: the empty page is cache `p103`, and the Earth Thunder's bonuses and Horror Factor 14 are on printed 104 (cache `p105`) |
 
 ## The book's authority tables
 
@@ -207,9 +207,9 @@ Printed 95-96 settles what an automaton is:
 
 | printed | automaton | height | main body M.D.C. | P.P.E. battery | who may pilot or control it |
 |---|---|---|---|---|---|
-| 97-98 | Battlelord | 18-24 ft | 1,000 | 200 | Controller level 7+, Lord Magus level 5+, High Magus level 4+ |
+| 97-99 | Battlelord | 18-24 ft | 1,000 | 200 | Controller level 7+, Lord Magus level 5+, High Magus level 4+ |
 | 99-101 | Colossus | 60-68 ft | 2,000 | 1,200 | the most heroic High Magi and the three Lords only. **Not a Controller** |
-| 101-103 | Earth Thunder | 10-12 ft | 500 | 100 (the spell paragraph says 120: the book disagrees with itself) | typically a Battle Magus Controller |
+| 101-104 | Earth Thunder | 10-12 ft | 500 | 100, regenerating 10 an hour (the spell paragraph says 120 and 20: the book disagrees with itself) | typically a Battle Magus Controller |
 | 104-106 | Fire Demon | 16-20 ft | 500 | 280 | typically a Battle Magus Controller |
 | 106-108 | Ice Drake | 12-15 ft to the head | 300 | 180 | typically a Controller; the only flier |
 | 108-110 | Infiltrator | 6-8 ft | 220 | 120 | **not ridden**: bonded Controllers or the Lords of Magic only, by remote control out to 500 ft |
@@ -219,6 +219,33 @@ Each automaton prints M.D.C. by location, speed, weapons, a spell list drawn
 from its battery, hand-to-hand damage, Horror Factor and bonuses. The common
 powers are on printed 96. Several spell lists wrap to the top of the next
 page, so read each list to its end.
+
+### Imported (PR C, 2026-09-26)
+
+All eleven, plus the Battle Streaker, are in `vehicles` (12 rows), with 80
+`vehicle_locations` and 34 `vehicle_weapons` rows. The script is
+`add-fom-vehicles.sql`. Nothing was already in production under any name.
+
+- **The automatons are `robot` rows** with `cost` NULL, and the note says
+  "completely unavailable". Their numbered weapons and spell lists are weapon
+  rows. Hand-to-hand damage, attacks, bonuses and Horror Factor are in the
+  description. The Infiltrator's never-ridden remote control and the
+  Colossus's closed door to the Controller are stated in `crew` and the
+  description.
+- **The Battle Streaker is its own row.** It has its own price (8 million
+  against 5-6) and two weapon systems. It repeats the Ley Streaker's stat
+  block, which the book says it shares.
+- **The Zone Ranger's six add-ons are `vehicle_weapons` rows 1-6**, each
+  with its price in the note, and the prices are also in the vehicle's
+  `cost_note`. They are not `gear` rows: `gear.vehicle_slug` means "this gear
+  row is a vessel", not "an option for one". The Trailblazer's item 6 points
+  at them in prose.
+- **Recorded as the book prints them, both ways:**
+  - the Earth Thunder's battery (above);
+  - the Battle Skimmer's cannons, 4-6 in its M.D.C. table and four in its
+    weapon entry;
+  - the Starfire Pulse Cannon's range, 2,000 feet on the Skimmer and 4,500 on
+    the Trailblazer.
 
 ## Extraction plan
 
@@ -244,7 +271,7 @@ The work in order, one PR each, applied `--remote` before the PR:
 |---|---|---|---|
 | **A** (this) | 0 | none | this survey, and the `books.json` note corrected |
 | **B — TW gear** | **25** | `gear` | printed 112-120. Printed 117 is read from a render, and so is the TW Disrupter's duration (printed 114: the text layer reads `204` where the ink prints 2D4). Re-diff `--remote` first |
-| **C — TW vehicles and automatons** | **11** (4 vehicles, 7 automatons) plus `vehicle_locations` for each M.D.C.-by-location table | `vehicles`, `vehicle_locations` | printed 95-112 and 120-125. Welded 101 and 125 and the empty 103 are read from renders. Automaton `cost` is NULL, with the "unavailable" note. **Open for that PR:** whether the Battle Streaker is its own row or a note on the Ley Streaker, and whether the Zone Ranger's six add-ons are `gear` rows carrying `vehicle_slug`, or prose in the vehicle's description and `cost_note` |
+| **C — TW vehicles and automatons** | **11** (4 vehicles, 7 automatons) plus `vehicle_locations` for each M.D.C.-by-location table | `vehicles`, `vehicle_locations` | printed 95-112 and 120-125. Welded 101 and 125 and the empty 103 are read from renders. Automaton `cost` is NULL, with the "unavailable" note. **Settled in that PR:** the Battle Streaker is its own row (12 rows in all), and the Zone Ranger's six add-ons are its `vehicle_weapons` rows, not gear. See *Imported* above |
 | **D — the four Magi** | **4** | `imported_classes` | Battle Magus, Controller, Lord Magus, High Magus, printed 71-82. Every initial spell must resolve to an existing row. The Controller and High Magus carry the bond and rituals in prose. Lands after C, so an owned automaton is a real `vehicles` row |
 | **E — Conjurer, Grey Seer, Mystic Knight, Corrupt** | **4** | `imported_classes` | printed 82-95; the Corrupt's Repentant variant and villain caveat go in the body |
 
@@ -274,6 +301,7 @@ Left out on purpose, with the reason:
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-09-18 | — | 13 notable NPCs cite this book (Phase 2a NPC data, commit `1355500f`) |
 | 2026-09-26 | #TBD | **the whole-book survey**: inventory, authority tables, the XP ladders, catalog diffs for spells, gear and vehicles, and the extraction plan. `books.json` note corrected |
+| 2026-09-26 | #TBD | **PR C, vehicles and automatons**: 12 `vehicles` rows (7 automatons as `robot`, 4 TW vehicles, the Battle Streaker), 80 `vehicle_locations`, 34 `vehicle_weapons`. The Zone Ranger's add-ons are weapon rows. `add-fom-vehicles.sql`, applied `--remote` before the merge |
 
 ## Where it stands
 
