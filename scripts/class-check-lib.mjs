@@ -63,6 +63,10 @@ export const KNOWN_KEYS = new Set([
   // takes over from a race that states its own. Read by combineClasses.
   // BOOK-INGEST-AUDIT.md F111.
   'overrides_race',
+  // The same two keys from the RACE's side: which occupation groups a race's
+  // ppe_base or starting_money yields to. Read by combineClasses.
+  // BOOK-INGEST-AUDIT.md F111, the Larhold part.
+  'yields_to_occupation',
   // A class whose own attacks stand and whose Hand to Hand style adds none -
   // the Pneuma-Biforms' "do not add the melee round attacks from the hand to
   // hand combat skill". Read by bonusesFromSkills, carried by combineClasses.

@@ -4866,6 +4866,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       // occupation may now opt into, so its race-first default is asserted too.
       for (const k of ['mdc_base', 'ppe_base', 'sdc_base', 'starting_money']) {
         if (taken.includes(k)) continue;
+        // And a key the RACE yields to this occupation's group through
+        // `yields_to_occupation` (F111, the Larhold part), likewise below.
+        const yielded = r.yields_to_occupation?.[k];
+        if (Array.isArray(yielded) && yielded.includes(occ.occ_group) && occ[k] != null) continue;
         if (r[k] != null && c[k] !== r[k]) drifted.push(`${r.id}+${occ.id}: ${k}`);
       }
     }
@@ -4926,6 +4930,83 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and an Arkhon ESP Specialist with its own 2D6x1000',
     !!(arkhon && esp) && combineClasses(arkhon, esp).starting_money === '2d6x1000',
     arkhon && esp ? String(combineClasses(arkhon, esp).starting_money) : 'class missing');
+}
+
+// ---------- a race that yields its P.P.E. or money to an occupation ----------
+// BOOK-INGEST-AUDIT.md F111, the Larhold part, taken 2026-09-27 on Nate's word
+// as a RACE-side key: the Larhold Shaman is open to every race, so the
+// occupation-side `overrides_race` would have reached the races whose P.P.E.
+// adds to a mage's or prints its own. `yields_to_occupation` maps ppe_base or
+// starting_money to the occupation groups whose stated figure wins it, and
+// only a race whose own book says so carries it.
+{
+  const classes = (await api('GET', '/classes')).body.classes || [];
+  const byId = new Map(classes.map((c) => [c.id, c]));
+  const races = classes.filter((c) => c.category === 'rcc');
+  const occs = classes.filter((c) => c.category === 'occ');
+  const yielders = races.filter((c) => c.yields_to_occupation != null);
+
+  // PINNED BY NAME: each of these prints its P.P.E. as the figure for a
+  // character who does NOT take a magic (or, in Palladium Fantasy, clergy)
+  // occupation - Underseas printed 99, PF printed 289 and 291, South America 2
+  // printed 186. A race added here should be a decision someone reads the book
+  // for, and the ADD races (rifts-cyclops, rifts-elf) must never be among them.
+  const want = ['amphib', 'elf', 'human', 'larhold-barbarian'];
+  const got = yielders.map((c) => c.id).sort();
+  check('the races declaring yields_to_occupation are the pinned ones',
+    JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
+
+  // Every legal pairing of each: a key the race yields to the occupation's
+  // group is the occupation's when it states one, and every other stays the
+  // race's. Legal as the wizard offers it: same system, both restrictions.
+  const wrong = [];
+  let pairs = 0;
+  for (const r of yielders) {
+    for (const occ of occs) {
+      if (occ.system !== r.system || occ.supersedes_race === true) continue;
+      if (!occAllowedForRace(r, occ).allowed || !raceAllowedForOcc(occ, r).allowed) continue;
+      pairs++;
+      const c = combineClasses(r, occ);
+      for (const k of ['ppe_base', 'starting_money']) {
+        const groups = r.yields_to_occupation[k];
+        const takes = (Array.isArray(groups) && groups.includes(occ.occ_group))
+          || (Array.isArray(occ.overrides_race) && occ.overrides_race.includes(k));
+        const expect = takes && occ[k] != null ? occ[k] : (r[k] ?? occ[k]);
+        if (c[k] !== expect) wrong.push(`${r.id}+${occ.id}: ${k} ${c[k]} (want ${expect})`);
+      }
+    }
+  }
+  check('and each yields exactly the keys and groups it names, in every legal pairing',
+    yielders.length > 0 && pairs > 0 && wrong.length === 0, `${pairs} pairings; ` + wrong.slice(0, 5).join('; '));
+
+  // The pairing F111 opened on, against the stored figures the book prints:
+  // the Shaman's 3D6x10 + P.E. and 2D6x1000 (printed 189-190) over the
+  // Barbarian's 3D6 and 1D6x1000 (printed 186).
+  const larhold = byId.get('larhold-barbarian');
+  const shaman = byId.get('larhold-shaman');
+  const ls = larhold && shaman ? combineClasses(larhold, shaman) : null;
+  check('a Larhold Shaman casts from the Shaman\'s P.P.E., not the Barbarian\'s 3D6',
+    !!ls && larhold.ppe_base === '3d6' && /^3d6x10/.test(shaman.ppe_base) && ls.ppe_base === shaman.ppe_base,
+    ls ? String(ls.ppe_base) : 'class missing');
+  check('and starts with the Shaman\'s 2D6x1000, not the Barbarian\'s 1D6x1000',
+    !!ls && larhold.starting_money === '1d6x1000' && ls.starting_money === '2d6x1000',
+    ls ? String(ls.starting_money) : 'class missing');
+  // And the ADD race beside it, which carries no key, is untouched.
+  const cyclops = byId.get('rifts-cyclops');
+  const llw = byId.get('ley-line-walker');
+  check('while a Cyclops ley line walker keeps the race\'s P.P.E. (its book adds, so it yields nothing)',
+    !!(cyclops && llw) && cyclops.yields_to_occupation == null
+    && combineClasses(cyclops, llw).ppe_base === cyclops.ppe_base,
+    cyclops && llw ? String(combineClasses(cyclops, llw).ppe_base) : 'class missing');
+  // Palladium Fantasy: "2D6 for most adults, unless a mage or clergy O.C.C."
+  const human = byId.get('human');
+  const wizard = byId.get('wizard');
+  const priest = byId.get('priest-of-light');
+  check('a PF human wizard and priest of light take their occupation\'s P.P.E., not the race\'s 2D6',
+    !!(human && wizard && priest) && human.ppe_base === '2d6'
+    && combineClasses(human, wizard).ppe_base === wizard.ppe_base
+    && combineClasses(human, priest).ppe_base === priest.ppe_base,
+    human && wizard ? String(combineClasses(human, wizard).ppe_base) : 'class missing');
 }
 
 // ---------- a pool formula copied from its neighbour ----------
