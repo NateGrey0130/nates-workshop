@@ -218,5 +218,5 @@ console.log(`Each of these asserts what some other file does or does not say.`);
 console.log(`Open that file, read the section, and put the path, the grep or the date`);
 console.log(`in the same paragraph. If the phrasing is not a claim about another`);
 console.log(`file, mark the line "<!-- claim-ok: why -->" and it is ignored.`);
-console.log(`\naudit-menu -> "A claim about another file is the one that fails"`);
+console.log(`\naudit-menu -> "A claim about ANOTHER FILE is the shape that fails"`);
 process.exit(1);
