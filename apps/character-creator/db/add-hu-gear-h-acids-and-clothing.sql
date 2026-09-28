@@ -403,115 +403,80 @@ INSERT OR IGNORE INTO gear (slug, name, system, category, cost, cost_note, weigh
 VALUES ('security-guard-uniform-badge-and-i-d-pocket-case', 'Security Guard Uniform - Badge and I.D. Pocket Case', 'heroes-unlimited', 'gear', 18, NULL, NULL, NULL, NULL, NULL, 0, 'Printed 221, closing the clothing lists. The book''s note on this page: generally DOUBLE OR TRIPLE the price for fancy or dress articles, and multiply the price by TEN TIMES or more for custom-made articles. The security guard uniform is usually navy blue or brown.', 'Revised Heroes Unlimited p.221');
 
 -- ASSERTIONS.
+--
+-- SHORT ON PURPOSE (REBUILD-AUDIT F26, 2026-09-27). d1-apply.mjs re-runs these
+-- as ONE --command, and cmd.exe caps that line at 8,191 characters once npm has
+-- caret-escaped every space and parenthesis. The first version of this block
+-- escaped to 10,389 and failed "The command line is too long" AFTER the apply
+-- had landed (F23). Same thirty-two assertions, same predicates: the labels are
+-- terse, the prose that explained each is in the comments above it, and
+-- H = the three pages, p.219, p.220 and p.221.
 
-SELECT 'all one hundred and forty-six rows landed' AS assertion, count(*) AS got, 146 AS want
-  FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219', 'Revised Heroes Unlimited p.220',
-                                  'Revised Heroes Unlimited p.221');
+-- H: all 146, per page 47/84/15, all HU gear, every row priced.
+SELECT 'H-146-rows' AS assertion,count(*)AS got,146 AS want FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219','Revised Heroes Unlimited p.220','Revised Heroes Unlimited p.221');
+SELECT 'p219-47' AS assertion,count(*)AS got,47 AS want FROM gear WHERE source_book='Revised Heroes Unlimited p.219';
+SELECT 'p220-84' AS assertion,count(*)AS got,84 AS want FROM gear WHERE source_book='Revised Heroes Unlimited p.220';
+SELECT 'p221-15' AS assertion,count(*)AS got,15 AS want FROM gear WHERE source_book='Revised Heroes Unlimited p.221';
+SELECT 'H-all-hu-gear' AS assertion,count(*)AS got,146 AS want FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219','Revised Heroes Unlimited p.220','Revised Heroes Unlimited p.221')AND system='heroes-unlimited' AND category='gear';
+-- Both pages price everything they print, so a NULL means a lost figure.
+SELECT 'H-no-null-cost' AS assertion,count(*)AS got,0 AS want FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219','Revised Heroes Unlimited p.220','Revised Heroes Unlimited p.221')AND cost IS NULL;
 
-SELECT 'forty-seven from printed 219' AS assertion, count(*) AS got, 47 AS want
-  FROM gear WHERE source_book = 'Revised Heroes Unlimited p.219';
-SELECT 'eighty-four from printed 220' AS assertion, count(*) AS got, 84 AS want
-  FROM gear WHERE source_book = 'Revised Heroes Unlimited p.220';
-SELECT 'and fifteen from printed 221, above the vehicles' AS assertion, count(*) AS got, 15 AS want
-  FROM gear WHERE source_book = 'Revised Heroes Unlimited p.221';
+-- THE TWO THE PARSER LOST OUTRIGHT: the tape recorder's price its wrap
+-- separated, the hip high boots (unsigned price), and the ankle pair under it.
+SELECT 'tape-recorder' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Tape Recorder' AND cost=100;
+SELECT 'boots-hip' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Waterproof Rubber Boots - Hip High' AND cost=50;
+SELECT 'boots-ankle' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Waterproof Rubber Boots - Ankle High' AND cost=20;
 
-SELECT 'every one is Heroes Unlimited gear' AS assertion, count(*) AS got, 146 AS want
-  FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219', 'Revised Heroes Unlimited p.220',
-                                  'Revised Heroes Unlimited p.221')
-   AND system = 'heroes-unlimited' AND category = 'gear';
+-- THE COLOUR VARIANTS CARRY THEIR PARENT: eighteen name it, the heavy
+-- coveralls are four rows at four prices, the fatigues five pants and five
+-- shirts, and the two tiger stripe rows at $30 are told apart.
+SELECT 'colour-18' AS assertion,count(*)AS got,18 AS want FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219','Revised Heroes Unlimited p.220')AND(instr(name,'Camouflage Coveralls - ')>0 OR instr(name,'Battle Dress Uniform')>0);
+SELECT 'heavy-coveralls-4' AS assertion,count(*)AS got,4 AS want FROM gear WHERE instr(name,'Heavy Camouflage Coveralls - ')>0 AND cost IN (80,85,75);
+SELECT 'fatigues-10' AS assertion,count(*)AS got,10 AS want FROM gear WHERE instr(name,'Battle Dress Uniform (Fatigues)')>0;
+SELECT 'tiger-stripe-2' AS assertion,count(*)AS got,2 AS want FROM gear WHERE name IN ('Battle Dress Uniform (Fatigues) - Pants - Tiger Stripe Camouflage','Battle Dress Uniform (Fatigues) - Shirt - Tiger Stripe Camouflage')AND cost=30;
 
--- EVERY ROW CARRIES A PRICE. Both pages price everything they print, so a NULL
--- here means a row lost its figure rather than that the book withheld one.
-SELECT 'every row carries its printed price' AS assertion, count(*) AS got, 0 AS want
-  FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219', 'Revised Heroes Unlimited p.220',
-                                  'Revised Heroes Unlimited p.221')
-   AND cost IS NULL;
-
--- THE TWO THE PARSER LOST OUTRIGHT.
-SELECT 'the tape recorder kept the price its wrap separated' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Tape Recorder' AND cost = 100;
-SELECT 'the hip high rubber boots are a row, unsigned price and all' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Waterproof Rubber Boots - Hip High' AND cost = 50;
-SELECT 'and the ankle high pair it hides under is still here' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Waterproof Rubber Boots - Ankle High' AND cost = 20;
-
--- THE COLOUR VARIANTS CARRY THEIR PARENT. Eighteen rows, and the four parents
--- are distinguishable rather than collapsing into repeated colour words.
-SELECT 'eighteen colour variants name their parent' AS assertion, count(*) AS got, 18 AS want
-  FROM gear WHERE source_book IN ('Revised Heroes Unlimited p.219', 'Revised Heroes Unlimited p.220')
-   AND (instr(name, 'Camouflage Coveralls - ') > 0 OR instr(name, 'Battle Dress Uniform') > 0);
-SELECT 'the heavy coveralls are four rows at four prices' AS assertion, count(*) AS got, 4 AS want
-  FROM gear WHERE instr(name, 'Heavy Camouflage Coveralls - ') > 0 AND cost IN (80, 85, 75);
-SELECT 'the fatigues are five pants and five shirts' AS assertion, count(*) AS got, 10 AS want
-  FROM gear WHERE instr(name, 'Battle Dress Uniform (Fatigues)') > 0;
-SELECT 'and the two tiger stripe rows at thirty dollars are told apart' AS assertion, count(*) AS got, 2 AS want
-  FROM gear WHERE name IN ('Battle Dress Uniform (Fatigues) - Pants - Tiger Stripe Camouflage',
-                           'Battle Dress Uniform (Fatigues) - Shirt - Tiger Stripe Camouflage')
-   AND cost = 30;
-
--- THE ACIDS, priced per HALF gallon rather than the cache's `4 gallon`.
-SELECT 'four acids landed' AS assertion, count(*) AS got, 4 AS want
-  FROM gear WHERE name IN ('Organic Acid', 'Organic Acid (concentrated)', 'Cleanser', 'Metal Dissolver')
-   AND source_book = 'Revised Heroes Unlimited p.219';
-SELECT 'and every one of them says half gallon' AS assertion, count(*) AS got, 4 AS want
-  FROM gear WHERE name IN ('Organic Acid', 'Organic Acid (concentrated)', 'Cleanser', 'Metal Dissolver')
-   AND source_book = 'Revised Heroes Unlimited p.219' AND instr(cost_note, 'half gallon') > 0;
-SELECT 'the two organics keep the book''s I and II labels' AS assertion, count(*) AS got, 2 AS want
-  FROM gear WHERE name IN ('Organic Acid', 'Organic Acid (concentrated)')
-   AND (instr(cost_note, 'Organic I') > 0 OR instr(cost_note, 'Organic II') > 0);
-SELECT 'and each acid carries the damage it does' AS assertion, count(*) AS got, 4 AS want
-  FROM gear WHERE name IN ('Organic Acid', 'Organic Acid (concentrated)', 'Cleanser', 'Metal Dissolver')
-   AND source_book = 'Revised Heroes Unlimited p.219' AND damage IS NOT NULL;
+-- THE ACIDS, priced per HALF gallon rather than the cache's `4 gallon`: four
+-- landed, every one says half gallon, the two organics keep the book's I and
+-- II labels, and each carries its damage.
+SELECT 'acids-4' AS assertion,count(*)AS got,4 AS want FROM gear WHERE name IN ('Organic Acid','Organic Acid (concentrated)','Cleanser','Metal Dissolver')AND source_book='Revised Heroes Unlimited p.219';
+SELECT 'acids-half-gallon' AS assertion,count(*)AS got,4 AS want FROM gear WHERE name IN ('Organic Acid','Organic Acid (concentrated)','Cleanser','Metal Dissolver')AND source_book='Revised Heroes Unlimited p.219' AND instr(cost_note,'half gallon')>0;
+SELECT 'organic-I-II' AS assertion,count(*)AS got,2 AS want FROM gear WHERE name IN ('Organic Acid','Organic Acid (concentrated)')AND(instr(cost_note,'Organic I')>0 OR instr(cost_note,'Organic II')>0);
+SELECT 'acids-damage' AS assertion,count(*)AS got,4 AS want FROM gear WHERE name IN ('Organic Acid','Organic Acid (concentrated)','Cleanser','Metal Dissolver')AND source_book='Revised Heroes Unlimited p.219' AND damage IS NOT NULL;
 
 -- THE THREE BATTLE DRESS UTILITY WEIGHTS, one paragraph in the book.
-SELECT 'three battle dress utility weights at three prices' AS assertion, count(*) AS got, 3 AS want
-  FROM gear WHERE instr(name, 'Battle Dress Utility - ') > 0 AND cost IN (65, 90, 365);
+SELECT 'bdu-utility-3' AS assertion,count(*)AS got,3 AS want FROM gear WHERE instr(name,'Battle Dress Utility - ')>0 AND cost IN (65,90,365);
 
--- THE TWO PAIRS THAT ARE NOT DUPLICATES.
-SELECT 'both goggles rows are here at their own prices' AS assertion, count(*) AS got, 2 AS want
-  FROM gear WHERE name IN ('Protective Goggles', 'Protective Goggles or Tinted Visor')
-   AND cost IN (10, 20) AND source_book = 'Revised Heroes Unlimited p.219';
-SELECT 'and both ponchos' AS assertion, count(*) AS got, 2 AS want
-  FROM gear WHERE name IN ('Ponchos', 'Rain Poncho') AND cost IN (30, 35)
-   AND source_book = 'Revised Heroes Unlimited p.220';
+-- THE TWO PAIRS THAT ARE NOT DUPLICATES: both goggles rows at their own
+-- prices, and both ponchos.
+SELECT 'goggles-2' AS assertion,count(*)AS got,2 AS want FROM gear WHERE name IN ('Protective Goggles','Protective Goggles or Tinted Visor')AND cost IN (10,20)AND source_book='Revised Heroes Unlimited p.219';
+SELECT 'ponchos-2' AS assertion,count(*)AS got,2 AS want FROM gear WHERE name IN ('Ponchos','Rain Poncho')AND cost IN (30,35)AND source_book='Revised Heroes Unlimited p.220';
 
--- THE NUMBERS THAT LAND IN THEIR OWN COLUMNS.
-SELECT 'the jet pack keeps its S.D.C.' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Jet Pack' AND sdc = 100 AND cost = 80000;
-SELECT 'the padded helmet keeps its A.R.' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Padded Helmet' AND ar = 10;
-SELECT 'the ration crate keeps its shipping weight' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Rations' AND weight_lbs = 200 AND cost = 470;
-SELECT 'the utility cap keeps its half dollar' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Utility Cap' AND cost = 14.5;
+-- THE NUMBERS THAT LAND IN THEIR OWN COLUMNS: the jet pack's S.D.C., the
+-- padded helmet's A.R., the ration crate's shipping weight, the utility cap's
+-- half dollar.
+SELECT 'jet-pack' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Jet Pack' AND sdc=100 AND cost=80000;
+SELECT 'helmet-ar' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Padded Helmet' AND ar=10;
+SELECT 'rations' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Rations' AND weight_lbs=200 AND cost=470;
+SELECT 'utility-cap' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Utility Cap' AND cost=14.5;
 
 -- TEXT CHECKS, because batch C passed every count while every string in it was
--- mangled - a fold had replaced the letter s throughout.
-SELECT 'the police jumpsuit description survived' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Police Style Jumpsuit' AND instr(description, 'bi-swing pleated back') > 0;
-SELECT 'the safari hat kept its Aussie style flip' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Safari Hat' AND instr(description, 'Aussie style') > 0;
-SELECT 'and the wool sweaters kept their s letters' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Wool Sweaters' AND instr(description, 'reinforcements at shoulders') > 0;
+-- mangled - a fold had replaced the letter s throughout. The police jumpsuit
+-- description, the safari hat's Aussie style flip, the sweaters' s letters.
+SELECT 'jumpsuit-text' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Police Style Jumpsuit' AND instr(description,'bi-swing pleated back')>0;
+SELECT 'safari-text' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Safari Hat' AND instr(description,'Aussie style')>0;
+SELECT 'sweater-text' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Wool Sweaters' AND instr(description,'reinforcements at shoulders')>0;
 
--- PRINTED 221, the clothing tail that sits above CONVENTIONAL VEHICLES.
-SELECT 'the security guard uniform is eight rows' AS assertion, count(*) AS got, 8 AS want
-  FROM gear WHERE instr(name, 'Security Guard Uniform - ') > 0;
-SELECT 'including the belt and holster the cache read as `28 bullet whet`' AS assertion, count(*) AS got, 1 AS want
-  FROM gear WHERE name = 'Security Guard Uniform - Belt and Holster' AND cost = 60
-   AND instr(cost_note, '28 bullet loops') > 0;
-SELECT 'three capes and three robes, each on its own slug' AS assertion, count(*) AS got, 6 AS want
-  FROM gear WHERE source_book = 'Revised Heroes Unlimited p.221'
-   AND (instr(name, 'Cape - ') > 0 OR instr(name, 'Robe - ') > 0);
-SELECT 'and every row from that page carries the fancy/custom pricing note' AS assertion, count(*) AS got, 15 AS want
-  FROM gear WHERE source_book = 'Revised Heroes Unlimited p.221'
-   AND instr(description, 'TEN TIMES') > 0;
+-- PRINTED 221, the clothing tail above CONVENTIONAL VEHICLES: the security
+-- guard uniform is eight rows, including the belt and holster the cache read
+-- as `28 bullet whet`; three capes and three robes, each on its own slug; and
+-- every row from that page carries the fancy/custom pricing note.
+SELECT 'guard-uniform-8' AS assertion,count(*)AS got,8 AS want FROM gear WHERE instr(name,'Security Guard Uniform - ')>0;
+SELECT 'guard-holster' AS assertion,count(*)AS got,1 AS want FROM gear WHERE name='Security Guard Uniform - Belt and Holster' AND cost=60 AND instr(cost_note,'28 bullet loops')>0;
+SELECT 'capes-robes-6' AS assertion,count(*)AS got,6 AS want FROM gear WHERE source_book='Revised Heroes Unlimited p.221' AND(instr(name,'Cape - ')>0 OR instr(name,'Robe - ')>0);
+SELECT 'p221-note-15' AS assertion,count(*)AS got,15 AS want FROM gear WHERE source_book='Revised Heroes Unlimited p.221' AND instr(description,'TEN TIMES')>0;
 
 -- THE SLUG THAT STARTED THE REBUILD DIVERGENCE. This file's generator reads
--- catalog_redirects as well as gear, so nothing here can land on a retired key.
-SELECT 'no row in this batch sits on a retired slug' AS assertion, count(*) AS got, 0 AS want
-  FROM gear g JOIN catalog_redirects r ON r.catalog = 'gear' AND r.from_key = g.slug
- WHERE g.source_book IN ('Revised Heroes Unlimited p.219', 'Revised Heroes Unlimited p.220',
-                         'Revised Heroes Unlimited p.221');
+-- catalog_redirects as well as gear, so no row here sits on a retired key.
+SELECT 'H-no-retired-slug' AS assertion,count(*)AS got,0 AS want FROM gear g JOIN catalog_redirects r ON r.catalog='gear' AND r.from_key=g.slug WHERE g.source_book IN ('Revised Heroes Unlimited p.219','Revised Heroes Unlimited p.220','Revised Heroes Unlimited p.221');
 
 INSERT INTO data_script_runs (filename) VALUES ('add-hu-gear-h-acids-and-clothing.sql');

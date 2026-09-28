@@ -135,7 +135,8 @@ UPDATE imported_classes
 
 UPDATE imported_classes
    SET markdown = replace(markdown, 'can be.', 'can be. Since 2026-09-26 xp_table carries dog-boy''s ladder (RUE printed 295), copied; Nate, 2026-09-26: a class whose book says to use another class''s experience table copies that class''s ladder.'), updated_at = datetime('now')
- WHERE class_id IN ('gargoylite') AND instr(markdown, 'can be.') > 0;
+ WHERE class_id IN ('gargoylite') AND instr(markdown, 'can be.') > 0
+   AND instr(markdown, 'Since 2026-09-26 xp_table carries dog-boy') = 0;
 
 UPDATE imported_classes
    SET markdown = replace(markdown, 'xp_table: NONE. Printed 123', 'xp_table: THE DRAGON''S, copied 2026-09-26. Printed 123'), updated_at = datetime('now')

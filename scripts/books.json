@@ -309,7 +309,7 @@
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "printed_pages": null,
       "page_offset": null,
-      "note": "Not a Palladium book - a compiled skill list PDF. Cited by 29 skills, measured --remote 2026-09-22; this note said 48, an undated count that had drifted (BOOK-INGEST-AUDIT F104). Registered so those rows read as known vocabulary rather than as an unknown book."
+      "note": "Not a Palladium book - a compiled skill list PDF. Cited by 22 skills, measured --remote 2026-09-27 after REBUILD-AUDIT F16 re-cited seven rows to cached books that day (29 on 2026-09-22); an older note said 48, an undated count that had drifted (BOOK-INGEST-AUDIT F104). Registered so those rows read as known vocabulary rather than as an unknown book."
     },
 
     "rue": {
