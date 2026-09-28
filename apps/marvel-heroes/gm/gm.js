@@ -11,6 +11,9 @@
 //     reads it from there, so the screen turned to the table follows along;
 //   - a FEAT roller on the Universal Table (js/feat.js, data/universal.json);
 //   - the GM's own notes (msh_campaigns.gm_notes);
+//   - the setting: the GM's own pages and their pictures, the shared view
+//     (shared/js/campaign/setting.js). A picture revealed there is a handout
+//     on the Campaigns page, and Present opens it in present.html;
 //   - an NPC roller: the hero generator run on the server with a body type,
 //     origin, number of Powers and highest rank, writing a hidden NPC sheet
 //     that can join the initiative list.
@@ -22,6 +25,7 @@ import { rng, newSeed, d100 } from '../js/dice.js';
 import { makeFeat } from '../js/feat.js';
 import { esc, renderSheet, tagline } from '../js/sheet.js';
 import { rollInitiative, initiativeTalents } from '../js/initiative.js';
+import { campaignUi } from '../js/campaign-ui.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const FIELDS = [['health', 'Health'], ['karma', 'Karma'], ['karma_pool', 'Karma pool']];
@@ -272,6 +276,26 @@ function initNpcForm(data) {
   });
 }
 
+// ---------------------------------------------------------------- setting
+
+const MC = globalThis.mcCampaign;
+const drawSetting = () => { $('#gm-setting').innerHTML = MC.setting.html({ presentHref: 'present.html' }); };
+async function loadSetting() { await MC.setting.load(); drawSetting(); }
+
+function initSetting(campaignId) {
+  MC.init({
+    base: '/api/marvel-heroes', campaignId,
+    ui: campaignUi(status),
+    render: drawSetting,
+    reload: loadSetting,
+  });
+  MC.setting.state.entry = null;
+  MC.setting.state.entryImages = [];
+  // Present mode sends the GM back here naming the page it showed.
+  const back = Number(new URLSearchParams(location.search).get('entry_id'));
+  if (back) MC.setting.open(back);
+}
+
 // ---------------------------------------------------------------- FEAT
 
 function initFeat(feat) {
@@ -316,7 +340,8 @@ async function open(id) {
   drawRoster();
   loadInit();
   drawInit();
-  await Promise.all([loadLog(), loadNpcs()]);
+  initSetting(id);
+  await Promise.all([loadLog(), loadNpcs(), loadSetting()]);
 }
 
 function wire() {

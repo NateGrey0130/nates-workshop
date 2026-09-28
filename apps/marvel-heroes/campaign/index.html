@@ -61,6 +61,17 @@
         <p id="cd-status" class="muted" aria-live="polite"></p>
       </section>
 
+      <!-- Notes, People and Handouts are the shared campaign views
+           (shared/js/campaign/), drawn into #cd-view; members only. -->
+      <nav class="tabs camp-tabs" role="tablist" aria-label="This campaign" id="cd-tabs" hidden>
+        <button type="button" role="tab" id="cd-tab-heroes" data-view="heroes" aria-controls="cd-panel-heroes" aria-selected="true">Heroes</button>
+        <button type="button" role="tab" id="cd-tab-notes" data-view="notes" aria-controls="cd-view" aria-selected="false">Notes</button>
+        <button type="button" role="tab" id="cd-tab-people" data-view="people" aria-controls="cd-view" aria-selected="false">People</button>
+        <button type="button" role="tab" id="cd-tab-handouts" data-view="handouts" aria-controls="cd-view" aria-selected="false">Handouts</button>
+      </nav>
+      <div id="cd-view" role="tabpanel" hidden></div>
+
+      <div id="cd-panel-heroes">
       <section class="panel alt">
         <h2>Heroes in it</h2>
         <ol id="cd-heroes" class="hero-list"></ol>
@@ -77,10 +88,18 @@
         </div>
         <div id="cd-sheet" class="panel"></div>
       </div>
+      </div>
     </div>
   </div>
 </main>
 
+<!-- The shared campaign views are classic scripts that add themselves to
+     globalThis.mcCampaign; core.js first, downscale.js before people.js. -->
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/downscale.js"></script>
+<script src="/shared/js/campaign/notes.js"></script>
+<script src="/shared/js/campaign/people.js"></script>
+<script src="/shared/js/campaign/handouts.js"></script>
 <script type="module" src="campaign.js"></script>
 </body>
 </html>

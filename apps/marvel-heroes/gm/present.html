@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Present &mdash; Marvel Heroes</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<meta name="theme-color" content="#16130f">
+<!-- The app's own stylesheet ONLY, one directory up. See the header of styles.css. -->
+<link rel="stylesheet" href="../styles.css">
+</head>
+<!-- Present mode: one of the GM's pictures on black, for the screen turned to
+     the table. The behaviour is shared/js/campaign/present.js, which fills the
+     ids below and writes no markup; this page is only the skeleton, in this
+     app's look. Showing a picture here does NOT reveal it - the Reveal button
+     is the one thing on this page that writes. -->
+<body class="present">
+  <figure class="present-frame" id="frame" hidden>
+    <img id="pic" alt="">
+  </figure>
+  <p class="present-state" id="state">Loading...</p>
+
+  <div class="present-chrome" id="chrome">
+    <div class="present-top">
+      <span class="present-title" id="title"></span>
+      <span class="present-count" id="count"></span>
+      <button type="button" class="mc-btn mc-btn-sm mc-btn-ghost" id="fullscreen" title="Fill the screen">Fullscreen</button>
+      <button type="button" class="mc-btn mc-btn-sm mc-btn-ghost" id="close" title="Back to GM tools (Esc)">Close</button>
+    </div>
+    <button type="button" class="present-arrow present-prev" id="prev" aria-label="Previous picture">&lsaquo;</button>
+    <button type="button" class="present-arrow present-next" id="next" aria-label="Next picture">&rsaquo;</button>
+    <div class="present-bottom">
+      <p class="present-caption" id="caption"></p>
+      <div class="present-actions">
+        <button type="button" class="mc-btn mc-btn-primary" id="reveal"></button>
+        <span class="present-shown" id="shown"></span>
+        <span class="present-msg" id="msg"></span>
+      </div>
+    </div>
+  </div>
+
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/present.js"></script>
+<script type="module" src="present.js"></script>
+</body>
+</html>

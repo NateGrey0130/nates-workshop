@@ -168,6 +168,37 @@ The heroes endpoint stays owner-only. A GM reads the sheets of heroes linked to
 their campaign through the campaign's own endpoint, and changes only the four
 play numbers, through `PATCH /api/marvel-heroes/campaigns/:id/heroes/:heroId`.
 
+### Notes, People and handouts
+
+The Campaigns page's **Notes**, **People** and **Handouts** tabs, and the GM
+page's **Setting** panel and present mode, are the campaign views every game
+shares (`shared/js/campaign/`, PR #1507). They write markup and no styles:
+every class they emit starts `mc-`, `styles.css` styles each one in this
+app's look, and the suite fails on one it does not. The page hands them
+`/api/marvel-heroes` as their base, so they reach only this group's
+database, and the endpoints behind them are Marvel's own copies of the
+Palladium ones, written against the `msh_` tables:
+
+- **Members only.** A member is the GM or anyone with a hero in the
+  campaign. Anyone else signed in can see a campaign exists and join it, and
+  reads none of its notes, People or handouts.
+- **Notes**: anyone at the table writes one; only its author or the GM
+  changes or deletes it. `@Name` links the note to that person's dossier and
+  makes one on first mention. A possessive is the same person
+  (`@Kingpin's men` is the Kingpin), and an apostrophe inside a name stays.
+  Search is FTS5 and free.
+- **Ask** is the paid button beside the search box: Claude answers from the
+  notes and People and cites the notes it used, through the shared Claude
+  client, which logs the call. A hidden NPC sheet never goes into the
+  question.
+- **No People sweep** (Nate, 2026-09-28): it would need two more tables and a
+  second paid call. The shared view always draws the panel, so `styles.css`
+  hides it, and `npcs/sweep.js` answers 501.
+- **Handouts** are the pictures on the GM's pages that the GM has revealed:
+  each one's caption and nothing of the page behind it. A picture that is not
+  revealed answers a player exactly like one that does not exist. Every
+  stored picture and portrait is in R2 under `msh/`.
+
 ## Rulings
 
 **Where the books disagree, the Ultimate Powers Book wins**, because it was
@@ -310,6 +341,8 @@ by roll, and they decide nothing here.
 | `js/initiative.js` | R25 as a pure function: a round's d100s, the order, and which tie-breaker - Talent, Agility or re-roll - placed each row; which Talents count is derived from `talents.json` |
 | `js/npc.js` | the NPC roller: the generator run with a GM's body type, origin, exact number of Powers (rolled until one has it, extras bought as UPB p.14 allows, refused rather than padded) and highest rank, ending in a hero-shaped snapshot |
 | `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
+| `js/campaign-ui.js`, `js/undo.js` | the ui adapter the shared campaign views take - `esc`, an `escJs` that carries O'Brien through an inline handler, a yes/no question, the page's status line - and "Removed. Undo" in place of "Are you sure?", with the Palladium pages' contract |
+| `gm/present.html`, `gm/present.js` | present mode: one of the GM's pictures on black, for the screen turned to the table. The behaviour is `shared/js/campaign/present.js`; this is the skeleton of ids it fills, and where Escape goes. Showing is not revealing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
 | `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
@@ -340,8 +373,12 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/campaigns/[id]/events.js` | the GM's last 50 changes, and `{ undo: id }`, which writes the reverse as a new event |
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
 | `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
+| `/functions/api/marvel-heroes/journal.js`, `journal/[entryId].js`, `_lib/notes.js` | a campaign's notes: list and write (members), change and delete (author or GM); @mentions, and the full-text query |
+| `/functions/api/marvel-heroes/campaigns/[id]/search.js`, `ask.js` | full-text search over the notes, and Ask, the paid answer from them |
+| `/functions/api/marvel-heroes/campaigns/[id]/npcs.js`, `npcs/[npcId].js`, `npcs/[npcId]/portrait.js`, `npcs/sweep.js` | People: the roster, one dossier and every note mentioning them, its portrait in R2; the sweep answers 501 |
+| `/functions/api/marvel-heroes/campaigns/[id]/entries.js`, `entries/[entryId].js`, `entries/[entryId]/images.js`, `images/[imageId].js`, `handouts.js` | the GM's pages and their pictures (GM only), revealing one, and the revealed ones as handouts |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
-| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database - the campaign ones included: the GM's PATCH refuses every field but the four play numbers and every hero outside its campaign, a second open campaign for a hero is refused by the index itself, the NPC roller's ceiling and hiding, and R25's four tie cases |
+| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database - the campaign ones included: the GM's PATCH refuses every field but the four play numbers and every hero outside its campaign, a second open campaign for a hero is refused by the index itself, the NPC roller's ceiling and hiding, and R25's four tie cases; and for the shared views, members only, @mentions, who may change a note, the GM's pages and reveals, every picture under `msh/`, script order and API base, every `mc-` class styled, and escJs |
 
 The summaries in `powers.json` were written for the app by four subagents
 working from the extraction, each told to reuse no five-word run of the book's

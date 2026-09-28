@@ -578,12 +578,12 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
     kitHtml.includes('2nd form: Vegetable') && !kitHtml.includes('data-field="second_form"'));
 }
 
-section('Campaigns: the GM changes only the play numbers, and a hero plays in one open campaign');
-
-{
-  // The same stand-in as above, built from the two migrations a database has
-  // by now (082, 086), with foreign keys on as D1 has them, and a batch that
-  // is one transaction as D1's is.
+// A D1 stand-in over node:sqlite for the campaign endpoints: built from the
+// migrations a database has by now (082, 086), with foreign keys on as D1 has
+// them, and a batch that is one transaction as D1's is. `media` is an R2
+// stand-in that remembers every key written, and `call` runs a route's
+// handler the way Pages would, with the caller's Access email.
+async function marvelStandIn() {
   const { DatabaseSync } = await import('node:sqlite');
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec('PRAGMA foreign_keys = ON');
@@ -603,8 +603,34 @@ section('Campaigns: the GM changes only the play numbers, and a hero plays in on
       try { const out = list.map((s) => s.runNow()); sqlite.exec('COMMIT'); return out; } catch (e) { sqlite.exec('ROLLBACK'); throw e; }
     },
   };
-  const env = { DB_MARVEL: DB, ASSETS: { fetch: async (url) => new Response(readFileSync(join(repoRoot, new URL(url).pathname.slice(1)))) } };
+  const objects = new Map();
+  const media = {
+    objects,
+    put: async (key, bytes, opts) => { objects.set(key, { bytes: new Uint8Array(bytes), contentType: opts?.httpMetadata?.contentType }); },
+    get: async (key) => (objects.has(key) ? { body: objects.get(key).bytes, httpMetadata: { contentType: objects.get(key).contentType } } : null),
+    delete: async (key) => { objects.delete(key); },
+  };
+  const env = { DB_MARVEL: DB, MEDIA: media,
+    ASSETS: { fetch: async (url) => new Response(readFileSync(join(repoRoot, new URL(url).pathname.slice(1)))) } };
   const route = async (p) => import(new URL(`../../../functions/api/marvel-heroes/${p}`, import.meta.url));
+  const call = async (mod, method, { who = 'gm@x.org', params = {}, query = '', body, raw, type } = {}) => {
+    const headers = { 'Cf-Access-Authenticated-User-Email': who };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (type) headers['Content-Type'] = type;
+    const request = new Request(`https://example.com/api/marvel-heroes/x${query}`,
+      { method, headers, body: raw ?? (body === undefined ? undefined : JSON.stringify(body)) });
+    const handler = mod[`onRequest${method[0]}${method.slice(1).toLowerCase()}`] || mod.onRequest;
+    const res = await handler({ request, env, params });
+    const isJson = (res.headers.get('Content-Type') || '').includes('json');
+    return { status: res.status, body: isJson ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
+  };
+  return { sqlite, DB, env, media, route, call };
+}
+
+section('Campaigns: the GM changes only the play numbers, and a hero plays in one open campaign');
+
+{
+  const { sqlite, env, route, call } = await marvelStandIn();
   const R = {
     list: await route('campaigns.js'),
     one: await route('campaigns/[id].js'),
@@ -614,14 +640,6 @@ section('Campaigns: the GM changes only the play numbers, and a hero plays in on
     generate: await route('campaigns/[id]/npcs/generate.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'),
     heroes: await route('heroes.js'),
-  };
-  const call = async (mod, method, { who = 'gm@x.org', params = {}, query = '', body } = {}) => {
-    const headers = { 'Cf-Access-Authenticated-User-Email': who };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
-    const request = new Request(`https://example.com/api/marvel-heroes/x${query}`,
-      { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-    const res = await mod[`onRequest${method[0]}${method.slice(1).toLowerCase()}`]({ request, env, params });
-    return { status: res.status, body: await res.json() };
   };
   const { SNAPSHOT_VERSION: sheetModV } = await import(new URL('../js/sheet.js', import.meta.url));
   const heroRow = (id) => sqlite.prepare('SELECT name, owner_email, build, snapshot, sheet FROM msh_heroes WHERE id = ?').get(id);
@@ -735,6 +753,167 @@ section('Campaigns: the GM changes only the play numbers, and a hero plays in on
   check('deleting the campaign leaves every hero where it was',
     (await call(R.one, 'DELETE', { params: p1 })).status === 200 && sqlite.prepare('SELECT count(*) AS n FROM msh_heroes').get().n === 2
       && sqlite.prepare('SELECT count(*) AS n FROM msh_hero_events').get().n === 0);
+}
+
+section('Notes, People and handouts: the shared views on Marvel\'s own tables, members only');
+
+{
+  const { sqlite, env, media, route, call } = await marvelStandIn();
+  const R = {
+    list: await route('campaigns.js'),
+    link: await route('campaigns/[id]/heroes.js'),
+    journal: await route('journal.js'),
+    entry: await route('journal/[entryId].js'),
+    search: await route('campaigns/[id]/search.js'),
+    ask: await route('campaigns/[id]/ask.js'),
+    people: await route('campaigns/[id]/npcs.js'),
+    person: await route('campaigns/[id]/npcs/[npcId].js'),
+    portrait: await route('campaigns/[id]/npcs/[npcId]/portrait.js'),
+    sweep: await route('campaigns/[id]/npcs/sweep.js'),
+    handouts: await route('campaigns/[id]/handouts.js'),
+    pages: await route('campaigns/[id]/entries.js'),
+    page: await route('campaigns/[id]/entries/[entryId].js'),
+    upload: await route('campaigns/[id]/entries/[entryId]/images.js'),
+    image: await route('campaigns/[id]/images/[imageId].js'),
+  };
+  // gm@ runs it; ann@ has a hero in it; eve@ is signed in and has none.
+  sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES ('hero-ann-0001', 'ann@x.org', 'Ann', '{}', '{}')`).run();
+  const c = (await call(R.list, 'POST', { body: { name: 'Tuesday' } })).body.campaign;
+  const p = { id: String(c.id) };
+  await call(R.link, 'POST', { who: 'ann@x.org', params: p, body: { hero_id: 'hero-ann-0001' } });
+
+  const outsider = await Promise.all([
+    call(R.journal, 'GET', { who: 'eve@x.org', query: `?campaign_id=${c.id}` }),
+    call(R.journal, 'POST', { who: 'eve@x.org', body: { campaign_id: c.id, body: 'hi' } }),
+    call(R.search, 'GET', { who: 'eve@x.org', params: p, query: '?q=x' }),
+    call(R.people, 'GET', { who: 'eve@x.org', params: p }),
+    call(R.handouts, 'GET', { who: 'eve@x.org', params: p }),
+    call(R.ask, 'POST', { who: 'eve@x.org', params: p, body: { question: 'who?' } }),
+  ]);
+  check('someone with no hero in the campaign reads and writes none of it (403 on all six)',
+    outsider.every((r) => r.status === 403), outsider.map((r) => r.status).join());
+
+  // @mentions: a dossier on first mention, a possessive resolving to the same
+  // person, an apostrophe inside a name kept.
+  const n1 = await call(R.journal, 'POST', { who: 'ann@x.org', body: { campaign_id: c.id, title: 'Docks', body: 'We cornered @Kingpin at the docks with @O\'Brien.' } });
+  const n2 = await call(R.journal, 'POST', { body: { campaign_id: c.id, body: '@Kingpin\'s men took the crate.' } });
+  const names = sqlite.prepare('SELECT name FROM msh_npcs ORDER BY name').all().map((r) => r.name);
+  check('a player\'s note is saved, and @Name makes a dossier on first mention',
+    n1.status === 201 && n2.status === 201 && names.join() === 'Kingpin,O\'Brien', names.join());
+  const king = sqlite.prepare("SELECT id FROM msh_npcs WHERE name = 'Kingpin'").get().id;
+  check('"@Kingpin\'s" is the Kingpin: both notes list under one dossier',
+    (await call(R.person, 'GET', { who: 'ann@x.org', params: { ...p, npcId: String(king) } })).body.mentions.length === 2);
+  await call(R.entry, 'PATCH', { who: 'ann@x.org', params: { entryId: String(n1.body.entry.id) }, body: { body: 'We cornered @O\'Brien alone.' } });
+  check('an edit that takes a name out stops listing the note under them',
+    (await call(R.person, 'GET', { params: { ...p, npcId: String(king) } })).body.mentions.length === 1);
+  check('a note is changed only by its author or the GM',
+    (await call(R.entry, 'DELETE', { who: 'ann@x.org', params: { entryId: String(n2.body.entry.id) } })).status === 403
+      && (await call(R.entry, 'DELETE', { params: { entryId: String(n2.body.entry.id) } })).status === 200);
+  const hit = await call(R.search, 'GET', { who: 'ann@x.org', params: p, query: '?q=' + encodeURIComponent('o\'bri') });
+  check('search takes an apostrophe as a word break, and marks the match with \\u0001 and \\u0002, never markup',
+    hit.status === 200 && hit.body.entries.length === 1 && hit.body.entries[0].snippet.includes('\u0001') && !hit.body.entries[0].snippet.includes('<mark>'),
+    JSON.stringify(hit.body).slice(0, 160));
+
+  // A dossier's link to a statted sheet is the GM's to set and to see.
+  sqlite.prepare("INSERT INTO msh_npc_sheets (campaign_id, name, build, snapshot, created_by) VALUES (?, 'Kingpin', '{}', '{}', 'gm@x.org')").run(c.id);
+  const kp = { ...p, npcId: String(king) };
+  check('only the GM links a dossier to a statted NPC sheet',
+    (await call(R.person, 'PATCH', { who: 'ann@x.org', params: kp, body: { sheet_id: 1 } })).status === 403
+      && (await call(R.person, 'PATCH', { params: kp, body: { sheet_id: 1 } })).status === 200);
+  check('and a player never sees which sheet stands behind a dossier',
+    !('sheet_id' in (await call(R.person, 'GET', { who: 'ann@x.org', params: kp })).body.npc)
+      && !(await call(R.people, 'GET', { who: 'ann@x.org', params: p })).body.npcs.some((n) => 'sheet_id' in n)
+      && (await call(R.person, 'GET', { params: kp })).body.npc.sheet_id === 1);
+
+  // Pictures: every key under msh/, a portrait read back through the Function.
+  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3]);
+  check('a portrait is stored under msh/ and read back through the Function',
+    (await call(R.portrait, 'POST', { who: 'ann@x.org', params: kp, type: 'image/png', raw: png })).status === 200
+      && [...media.objects.keys()].every((k) => k.startsWith(`msh/npc/${c.id}/${king}/`))
+      && (await call(R.portrait, 'GET', { who: 'ann@x.org', params: kp })).body.length === png.length);
+  check('a file that is not an image is refused', (await call(R.portrait, 'POST', { params: kp, type: 'text/html', raw: '<b>' })).status === 415);
+  let refused = false;
+  try { sqlite.prepare("UPDATE msh_npcs SET portrait_key = 'npc/1/x.png' WHERE id = ?").run(king); } catch { refused = true; }
+  check('and the table itself refuses a key outside msh/', refused);
+
+  // The GM's pages stay the GM's; a picture from one is a handout once revealed.
+  check('a player cannot list the GM\'s pages', (await call(R.pages, 'GET', { who: 'ann@x.org', params: p })).status === 403);
+  const pg = (await call(R.pages, 'POST', { params: p, body: { title: 'The docks', kind: 'place', body: 'GM only' } })).body.entry;
+  const img = (await call(R.upload, 'POST', { params: { ...p, entryId: String(pg.id) }, query: '?caption=Map', type: 'image/png', raw: png })).body.image;
+  const ip = { ...p, imageId: String(img.id) };
+  check('an unrevealed picture is not a handout, and a player asking for it gets a 404',
+    (await call(R.handouts, 'GET', { who: 'ann@x.org', params: p })).body.handouts.length === 0
+      && (await call(R.image, 'GET', { who: 'ann@x.org', params: ip })).status === 404
+      && (await call(R.image, 'GET', { params: ip })).status === 200);
+  check('only the GM reveals one', (await call(R.image, 'PATCH', { who: 'ann@x.org', params: ip, body: { revealed: true } })).status === 403
+    && (await call(R.image, 'PATCH', { params: ip, body: { revealed: true } })).status === 200);
+  const shown = (await call(R.handouts, 'GET', { who: 'ann@x.org', params: p })).body.handouts;
+  check('once revealed it is a handout: its id and caption, and nothing of the page behind it',
+    shown.length === 1 && shown[0].caption === 'Map' && !('entry_id' in shown[0]) && !('title' in shown[0])
+      && (await call(R.image, 'GET', { who: 'ann@x.org', params: ip })).status === 200, JSON.stringify(shown));
+  check('deleting the page deletes its pictures from R2', (await call(R.page, 'DELETE', { params: { ...p, entryId: String(pg.id) } })).status === 200
+    && ![...media.objects.keys()].some((k) => k.startsWith('msh/campaign/')));
+
+  // Nate, 2026-09-28: Ask yes, the sweep no.
+  check('the sweep answers 501 and says so', (await call(R.sweep, 'POST', { params: p })).status === 501);
+  check('Ask checks the question before anything that costs money',
+    (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: {} })).status === 400
+      && (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: { question: 'x'.repeat(1001) } })).status === 400);
+}
+
+section('The shared campaign views are loaded in order, reach only this app\'s API, and are styled here');
+
+{
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const MODULES = { 'campaign/index.html': ['notes', 'people', 'handouts'], 'gm/index.html': ['setting'], 'gm/present.html': ['present'] };
+  for (const [page, mods] of Object.entries(MODULES)) {
+    const html = readFileSync(join(appDir, page), 'utf8');
+    const srcs = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map((m) => m[1]);
+    const at = (name) => srcs.indexOf(`/shared/js/campaign/${name}.js`);
+    check(`${page} loads core.js, then ${mods.join(', ')}, before its own module`,
+      at('core') >= 0 && mods.every((m) => at(m) > at('core')) && srcs.findIndex((s) => !s.startsWith('/shared/')) > Math.max(...mods.map(at)),
+      srcs.join(' '));
+    check(`${page} loads no other app's script`, srcs.every((s) => s.startsWith('/shared/js/campaign/') || !s.startsWith('/')), srcs.join(' '));
+  }
+  const pageScripts = ['campaign/campaign.js', 'gm/gm.js', 'gm/present.js'].map((f) => readFileSync(join(appDir, f), 'utf8'));
+  // The page code names only this app's API (the suite itself is left out: it
+  // names the other one in these very lines), and no endpoint imports another
+  // group's code - a comment naming the Palladium file it mirrors is fine.
+  check('every page hands the shared views /api/marvel-heroes, no page names another group\'s API, and no endpoint imports its code',
+    pageScripts.every((s) => s.includes("base: '/api/marvel-heroes'"))
+      && !textFiles.filter((f) => f.startsWith(appDir) && !f.startsWith(join(appDir, 'test')))
+        .some((f) => readFileSync(f, 'utf8').includes('/api/character-creator'))
+      && !scripts.filter((f) => f.startsWith(fnDir))
+        .some((f) => /\bfrom\s+'[^']*character-creator/.test(readFileSync(f, 'utf8'))));
+
+  // Every mc- class the four views Marvel draws can emit has a rule here, so a
+  // class added there without one here fails instead of rendering unstyled.
+  const emitted = new Set();
+  for (const m of ['notes', 'people', 'handouts', 'setting']) {
+    const src = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', `${m}.js`), 'utf8');
+    for (const cls of src.matchAll(/class="([^"$]*)/g)) for (const c of cls[1].split(/\s+/)) if (/^mc-[a-z-]+$/.test(c)) emitted.add(c);
+    for (const lit of src.matchAll(/'(mc-[a-z-]+(?: mc-[a-z-]+)*)'/g)) for (const c of lit[1].split(' ')) emitted.add(c);
+  }
+  const unstyled = [...emitted].filter((c) => !new RegExp(`\\.${c}(?![a-z-])`).test(css));
+  check(`every one of the ${emitted.size} mc- classes those views emit is styled in styles.css`, emitted.size > 30 && unstyled.length === 0, unstyled.join(', '));
+  check('the People sweep panel is hidden, by the button it carries', /\.mc-panel:has\(button\[onclick\^="mcCampaign\.people\.sweep"\]\)\s*\{\s*display:\s*none/.test(css));
+
+  // Present mode writes no markup: the page must carry every id it fills.
+  const present = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'present.js'), 'utf8');
+  const ids = [...new Set([...present.matchAll(/\$\('([a-z]+)'\)/g)].map((m) => m[1]))];
+  const skeleton = readFileSync(join(appDir, 'gm', 'present.html'), 'utf8');
+  const lacking = ids.filter((id) => !skeleton.includes(`id="${id}"`));
+  check(`gm/present.html carries all ${ids.length} ids present.js fills`, ids.length >= 10 && lacking.length === 0, lacking.join(', '));
+  check('and a hidden frame or state stays hidden against its own display rule',
+    /\.present-frame\[hidden\],\s*\.present-state\[hidden\]\s*\{\s*display:\s*none/.test(css));
+
+  // escJs: the O'Brien bug - a name through the attribute decode and the JS parse, whole.
+  const { escJs } = await import(new URL('../js/campaign-ui.js', import.meta.url));
+  const name = 'O\'Brien "the" <b> \\ x';
+  const decoded = escJs(name).replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  let back = null;
+  try { back = new Function(`return '${decoded}';`)(); } catch { /* reported below */ }
+  check('escJs carries a name with an apostrophe, a quote, a tag and a backslash through an inline handler unchanged', back === name, String(back));
 }
 
 section('Initiative (R25): d100, then a Talent that applies, then Agility, then the tied re-roll');

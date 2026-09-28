@@ -128,6 +128,11 @@
       </form>
       <div id="npc-sheet" class="panel" hidden></div>
 
+      <!-- The GM's pages and the pictures shown from them: the shared setting
+           view (shared/js/campaign/setting.js). A revealed picture is a
+           handout on the Campaigns page. -->
+      <div id="gm-setting"></div>
+
       <section class="panel" aria-labelledby="log-h">
         <h2 id="log-h">Recent changes</h2>
         <ol id="gm-log" class="log"></ol>
@@ -146,6 +151,9 @@
   </div>
 </main>
 
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/downscale.js"></script>
+<script src="/shared/js/campaign/setting.js"></script>
 <script type="module" src="gm.js"></script>
 </body>
 </html>

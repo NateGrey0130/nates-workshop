@@ -5,13 +5,57 @@
 // four play numbers are changed on the GM page, which logs each change - and a
 // player reads their own. Nothing here writes to a hero.
 //
+// Notes, People and Handouts are the shared campaign views
+// (shared/js/campaign/), loaded as classic scripts before this module and
+// drawn in this app's look: they write mc- classes and no styles, and
+// styles.css styles every one. They reach only this group's API, because the
+// base passed to them is /api/marvel-heroes. Members only - the GM, or someone
+// with a hero here - so a visitor to an open campaign sees the Heroes tab.
+//
 // ?c=<id> opens a campaign, so a GM can hand the link round the table.
 
 import { api, errorOf } from '../js/api.js';
 import { renderSheet, tagline, esc } from '../js/sheet.js';
+import { campaignUi } from '../js/campaign-ui.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
-const S = { campaigns: [], myHeroes: null, current: null, detail: null };
+const S = { campaigns: [], myHeroes: null, current: null, detail: null, view: 'heroes', member: false };
+const MC = globalThis.mcCampaign;
+
+// ---------------------------------------------------------------- the shared views
+
+function drawView() {
+  const tabs = [...document.querySelectorAll('#cd-tabs [role="tab"]')];
+  for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.view === S.view));
+  $('#cd-panel-heroes').hidden = S.view !== 'heroes';
+  const box = $('#cd-view');
+  box.hidden = S.view === 'heroes';
+  if (S.view === 'heroes') return;
+  box.setAttribute('aria-labelledby', `cd-tab-${S.view}`);
+  box.innerHTML = S.view === 'notes' ? MC.notes.html() : S.view === 'people' ? MC.people.html() : MC.handouts.html();
+  if (S.view === 'notes') MC.notes.afterRender();
+}
+
+async function loadViews() {
+  try {
+    await Promise.all([MC.notes.load(), MC.people.load(), MC.handouts.load()]);
+  } catch (e) { $('#cd-status').textContent = e.message; }
+  drawView();
+}
+
+function initViews(campaignId) {
+  MC.init({
+    base: '/api/marvel-heroes', campaignId,
+    ui: campaignUi((text) => { $('#cd-status').textContent = text; }),
+    render: drawView,
+    reload: loadViews,
+    showPeople: () => { S.view = 'people'; },
+  });
+  MC.people.state.npc = null;
+  MC.notes.state.results = null;
+  MC.notes.state.query = '';
+  MC.notes.state.answer = null;
+}
 
 function setParam(id) {
   const u = new URL(location.href);
@@ -79,6 +123,13 @@ async function open(id) {
   $('#cd-join-hero').innerHTML = avail.length ? avail.map((h) => `<option value="${esc(h.id)}">${esc(h.name)}</option>`).join('')
     : '<option value="">No hero to add</option>';
   $('#cd-join-btn').disabled = !avail.length;
+
+  // For anyone else the server gives each hero's name only, so a hero arriving
+  // with its sheet is one of yours.
+  S.member = gm || heroes.some((h) => h.snapshot);
+  $('#cd-tabs').hidden = !S.member;
+  if (!S.member) S.view = 'heroes';
+  if (S.member) { initViews(c.id); await loadViews(); } else drawView();
 }
 
 function showSheet(id) {
@@ -96,6 +147,12 @@ function showSheet(id) {
 }
 
 function wire() {
+  $('#cd-tabs').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-view]');
+    if (!t) return;
+    S.view = t.dataset.view;
+    drawView();
+  });
   $('#camp-list').addEventListener('click', (e) => {
     const b = e.target.closest('[data-c]');
     if (b) open(Number(b.dataset.c));

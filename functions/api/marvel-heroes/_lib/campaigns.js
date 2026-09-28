@@ -161,3 +161,52 @@ export async function heroAndEvents(db, campaignId, heroId, n) {
     ORDER BY id DESC LIMIT ?`).bind(campaignId, heroId, n).all();
   return { hero: hero && heroView(hero, { full: true }), events: events.reverse() };
 }
+
+// A member is the campaign's GM, or anyone with a hero linked to it. Notes,
+// People and handouts are the table's own record, so they are member-only -
+// narrower than "any signed-in friend may see the campaign exists".
+// -> { email, campaign, isGm, isMember } or { res }.
+export async function requireMember(request, env, id, { gm = false } = {}) {
+  const g = await requireCampaign(request, env, id, { gm });
+  if (g.res) return g;
+  const linked = g.isGm || !!(await env.DB_MARVEL.prepare(`SELECT 1 FROM msh_campaign_heroes ch
+    JOIN msh_heroes h ON h.id = ch.hero_id WHERE ch.campaign_id = ? AND h.owner_email = ?`).bind(g.campaign.id, g.email).first());
+  if (!linked) return { res: json({ error: 'Only the GM or a player with a hero in this campaign can do that' }, 403) };
+  return { ...g, isMember: true };
+}
+
+// Pictures (People portraits, the GM's setting pages): the types allowed, the
+// cap, and the R2 key. Every key starts msh/, which the tables CHECK (086).
+export const IMAGE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const imageKey = (parts, ext) => `msh/${parts.join('/')}/${crypto.randomUUID()}.${ext}`;
+
+// One upload body, checked: -> { bytes, contentType, ext } or { res }.
+export async function readImage(request) {
+  const contentType = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
+  const ext = IMAGE_TYPES[contentType];
+  if (!ext) return { res: json({ error: `Unsupported image type. Send one of: ${Object.keys(IMAGE_TYPES).join(', ')}` }, 415) };
+  const bytes = await request.arrayBuffer();
+  if (!bytes.byteLength) return { res: json({ error: 'Empty upload' }, 400) };
+  if (bytes.byteLength > IMAGE_MAX_BYTES) return { res: json({ error: `An image must be under ${IMAGE_MAX_BYTES / 1024 / 1024}MB` }, 413) };
+  return { bytes, contentType, ext };
+}
+
+// An object from R2 as a response. Private and immutable: every key carries a
+// uuid, and this sits behind Access, so it must not land in a shared cache.
+export async function serveImage(env, key, fallbackType) {
+  if (!env.MEDIA) return json({ error: 'Image storage is not configured on this environment' }, 501);
+  const object = await env.MEDIA.get(key);
+  if (!object) return json({ error: 'Image is recorded but missing from storage' }, 502);
+  return new Response(object.body, { headers: {
+    'Content-Type': object.httpMetadata?.contentType || fallbackType || 'application/octet-stream',
+    'Cache-Control': 'private, max-age=31536000, immutable', 'Content-Disposition': 'inline',
+  } });
+}
+
+// A failed object delete is swallowed: a row that would not delete because R2
+// could not be reached is worse than an orphan nobody points at.
+export async function dropObject(env, key) {
+  if (!key || !env.MEDIA) return;
+  try { await env.MEDIA.delete(key); } catch { /* see above */ }
+}
