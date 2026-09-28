@@ -14,6 +14,9 @@
     "  sections        the printed Contents: [section, subsection or null, printed first page]",
     "  contents_errata where the Contents and the pages disagree: {section, contents_page, page, note}; the page wins",
     "  character_pages the printed range scripts/msh/roster.py reads for characters; the rest of the book is items and an adventure",
+    "  item_pages      the printed range scripts/msh/extras.py reads for items and locations",
+    "  item_parts      run-in names that are PARTS of an item or location, not new ones (the Danger Room's event kinds)",
+    "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text",
     "  index           the printed index: [name, [printed pages]], transcribed and checked against the page images",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
@@ -230,6 +233,27 @@
         4,
         81
       ],
+      "item_pages": [
+        82,
+        86
+      ],
+      "item_parts": {
+        "THE X-MEN MANSION DANGER ROOM": [
+          "ENERGY WEAPONS",
+          "MISSILES",
+          "NORMAL WEAPONS",
+          "OBSTACLES",
+          "ROBOTICS",
+          "TRAPS"
+        ]
+      },
+      "adventure": {
+        "title": "Dreamchild",
+        "pages": [
+          87,
+          95
+        ]
+      },
       "index_note": "Printed p.3, transcribed by eye from 150 dpi renders of its three columns: Tesseract reads the dot leaders as noise and dropped or garbled about a fifth of the lines. 'Nightrawler' is the book's own misprint of Nightcrawler (entry printed p.7) and is kept as printed; index_aliases maps it, and the two names the index spells differently from the entry's own header: Agents (printed VILLAINOUS AGENTS, p.67) and Neramani, Lilandra (printed NERAMANI, PRINCESS-MAJESTRIX LILANDRA, p.74).",
       "index_aliases": {
         "Nightrawler": "Nightcrawler",

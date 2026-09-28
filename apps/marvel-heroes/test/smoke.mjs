@@ -1066,6 +1066,14 @@ section('No book text is in any tracked file (local only: needs the extraction)'
           .forEach((t) => addText(t || ''));
       }
     }
+    // And the rest of each book: its items, locations and adventure
+    // (scripts/msh/extras.py), whose text is msh_book_text's too.
+    const extras = existsSync(booksDir) ? readdirSync(booksDir).map((b) => join(booksDir, b, 'extras.json')).filter(existsSync) : [];
+    for (const f of extras) {
+      const x = JSON.parse(readFileSync(f, 'utf8'));
+      for (const piece of [...x.items, ...x.adventure.sections].flatMap((i) => i.text)) addText(piece[2].join(' '));
+    }
+    check(`and each parsed book's items and adventure too (${extras.length})`, extras.length === rosters.length);
     const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
       'scripts/msh-extract.py', 'scripts/msh', 'db/migrations/marvel'], { cwd: repoRoot, encoding: 'utf8' })
       .stdout.split('\0').filter(Boolean);
@@ -1266,8 +1274,8 @@ section('The codex: every section loads, searches, filters and keeps its address
   const attempt = (fn) => { try { return fn(); } catch (e) { err = e.message; return null; } };
   const codex = attempt(() => makeCodex(data));
   check('the codex builds from the shipped data', !!codex, err);
-  const want = ['powers', 'talents', 'contacts', 'weaknesses', 'gear', 'npcs'];
-  check('its sections are Powers, Talents, Contacts, Weaknesses, Gear and Notable NPCs, in that order',
+  const want = ['powers', 'talents', 'contacts', 'weaknesses', 'gear', 'npcs', 'items', 'adventures'];
+  check('its sections are Powers, Talents, Contacts, Weaknesses, Gear, Notable NPCs, Items and locations, and Adventures, in that order',
     SECTIONS.map((s) => s.id).join() === want.join(), SECTIONS.map((s) => s.id).join());
   // Each count read from the data file that owns it, not typed here.
   const expected = {
@@ -1277,6 +1285,8 @@ section('The codex: every section loads, searches, filters and keeps its address
     weaknesses: ['stimulus', 'effect', 'duration'].reduce((n, k) => n + data.weakness[k].length, 0),
     gear: [...data.equipment.weapons, ...data.equipment.vehicles].reduce((n, t) => n + t.rows.length, 0),
     npcs: data.npcs.characters.length,
+    items: data.items.items.length,
+    adventures: data.adventures.adventures.reduce((n, a) => n + a.sections.length, 0),
   };
   for (const s of codex?.sections || []) {
     const all = codex.search(s.id);
@@ -1428,6 +1438,42 @@ section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'
     !gone.ok && gone.missing && !down.ok && !down.missing && bookMissingNote(gone) !== bookMissingNote(down));
   check('a power keeps its printed name as a run-in head, escaped',
     renderParts([{ part: 'power', name: 'A<b>', body: 'x & y' }]) === '<p><strong>A&lt;b&gt;:</strong> x &amp; y</p>');
+  check('and so does an adventure\'s run-in and a location\'s part',
+    renderParts([{ part: 'section', name: 'Karma', body: 'k' }, { part: 'part', name: 'Traps', body: 't' }])
+      === '<p><strong>Karma:</strong> k</p><p><strong>Traps:</strong> t</p>');
+
+  // An item's or an adventure section's rows are all numbered in print order,
+  // and that number is the order, whatever the parts are called.
+  const numbered = [
+    { key: 'ma1:dreamchild-encounter-1:section:3', part: 'section', name: 'Encounter', page: 87, body: 'c' },
+    { key: 'ma1:dreamchild-encounter-1:prose:1', part: 'prose', name: null, page: 87, body: 'a' },
+    { key: 'ma1:dreamchild-encounter-1:section:2', part: 'section', name: 'Summary', page: 87, body: 'b' },
+    { key: 'ma1:dreamchild-encounter-1:notes:4', part: 'notes', name: null, page: 87, body: 'd' },
+  ];
+  const envN = { DB_MARVEL: { prepare: () => ({ bind: () => ({ all: async () => ({ results: numbered }) }) }) } };
+  const resN = await mod.onRequestGet({ request: new Request('https://example.com/api/marvel-heroes/book-text?book=ma1&entry=dreamchild-encounter-1',
+    { headers: { 'Cf-Access-Authenticated-User-Email': 'a@b.c' } }), env: envN });
+  check('rows numbered in print order come back in that order',
+    (await resN.json()).parts.map((p) => p.body).join('') === 'abcd');
+}
+
+section('Items, locations and the adventure: facts only, one id each, every id one the endpoint takes');
+
+{
+  const items = load('items.json');
+  const adv = load('adventures.json');
+  const { ENTRY, BOOK } = await import(new URL('../../../functions/api/marvel-heroes/book-text.js', import.meta.url));
+  const ids = [...items.items.map((i) => i.id), ...adv.adventures.flatMap((a) => a.sections.map((s) => s.id))];
+  check(`there are items and adventure sections (${items.items.length}, ${ids.length - items.items.length})`,
+    items.items.length > 0 && adv.adventures.every((a) => a.sections.length > 0));
+  check('every id is unique and one the book-text endpoint takes', new Set(ids).size === ids.length
+    && ids.every((id) => ENTRY.test(id)) && BOOK.test(items.book) && items.book === adv.book, ids.filter((id) => !ENTRY.test(id)).join());
+  check('an item\'s kind is item, vehicle or location, and only a vehicle has Control, Speed and Body',
+    items.items.every((i) => ['item', 'vehicle', 'location'].includes(i.kind)
+      && (i.kind === 'vehicle') === !!i.vehicle && (!i.vehicle || Object.keys(i.vehicle).join() === 'Control,Speed,Body')));
+  check('every numbered encounter is in order from 1, with a title of its own',
+    adv.adventures.every((a) => a.sections.filter((s) => s.number).every((s, i) => s.number === i + 1 && /^Encounter \d+: \S/.test(s.title))),
+    adv.adventures.flatMap((a) => a.sections.map((s) => s.title)).join(' | '));
 }
 
 section('A missing power text degrades to the summary, never an error');

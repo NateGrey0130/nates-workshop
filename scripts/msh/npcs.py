@@ -243,7 +243,10 @@ def main(slug_arg):
             return str(v)
         return "'" + v.replace("'", "''") + "'"
     sql = ['-- msh_book_text for %s, written by scripts/msh/npcs.py. NEVER COMMIT THIS FILE: it is the book\'s text.' % slug_arg,
-           "DELETE FROM msh_book_text WHERE book = '%s';" % slug_arg]
+           # The book's character rows only: its items' and its adventure's are
+           # scripts/msh/extras.py's, so either script can be re-run alone.
+           "DELETE FROM msh_book_text WHERE book = '%s' AND entry NOT LIKE 'item-%%'%s;" % (
+               slug_arg, " AND entry NOT LIKE '%s-%%'" % slug(book['adventure']['title']) if book.get('adventure') else '')]
     for r in rows:
         sql.append('INSERT INTO msh_book_text (key, book, entry, part, name, page, body) VALUES (%s);' % ', '.join(q(v) for v in r))
     path = os.path.join(CACHE, 'books', slug_arg, 'book-text.sql')

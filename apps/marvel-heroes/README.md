@@ -17,10 +17,10 @@ vehicles). Three more links on the tab bar open pages of their own: the
 
 `/apps/marvel-heroes/codex/` is every list the app ships, one section at a
 time: **Powers** (with the full text when `msh_power_text` has it), **Talents**,
-**Contacts**, **Weaknesses**, **Gear and vehicles** and **Notable NPCs**. Each
-section searches by word, filters by its own grouping (a Power's class, a
-Talent's category, a gear table, an NPC's team), and opens a card for the
-detail. The address carries the view -
+**Contacts**, **Weaknesses**, **Gear and vehicles**, **Notable NPCs**, **Items
+and locations** and **Adventures**. Each section searches by word, filters by
+its own grouping (a Power's class, a Talent's category, a gear table, an NPC's
+team, an item's kind), and opens a card for the detail. The address carries the view -
 `?section=`, `q=`, `group=` and `entry=` for one open card - so a filtered
 list or one entry is a link; a value the page does not offer is dropped.
 
@@ -70,6 +70,23 @@ untouched. What makes it different:
 - **It has no body type, origin or weakness, and its Powers no rank**,
   because the book gives a Power's rank in prose. The sheet links to the
   Codex card for that, and for its Talents and Contacts.
+
+### Items and locations, and Adventures
+
+The rest of a sourcebook after its characters, from `scripts/msh/extras.py`,
+on the same terms as the Notable NPCs: **facts committed, prose in
+`msh_book_text`**.
+- `data/items.json`: MA1's devices, vehicles and places (pp.82-86), each with
+  its name, kind and page. A vehicle carries its printed Control, Speed and
+  Body; a location carries the names of the parts it lists (the Danger Room's
+  six kinds of event).
+- `data/adventures.json`: *Dreamchild* (pp.87-95), one row per section. Its
+  seven numbered encounters are titled as printed, and the introduction,
+  background and locales are the rest. Each section lists the run-ins it
+  prints (Summary, Starting, Encounter, Aftermath, Karma).
+
+The adventure has no stat blocks of its own; its opponents are the book's
+Notable NPCs.
 
 ## Point Buy
 
@@ -199,10 +216,13 @@ the book's order, and answers 404 `missing: true` when there are none.
 ```bash
 python scripts/msh/roster.py ma1
 python scripts/msh/npcs.py ma1
+python scripts/msh/extras.py ma1
 node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/book-text.sql
+node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/extras-text.sql
 ```
 
-The script deletes the book's rows first, so re-running it replaces them.
+Each script deletes its own rows first - the characters', or the items' and
+the adventure's - so either can be re-run alone and replaces only its own.
 
 ## Saved heroes: `msh_heroes`
 

@@ -1,0 +1,151 @@
+{
+ "about": [
+  "The adventure from MA1 Children of the Atom, built by scripts/msh/extras.py from the OCR of the book.",
+  "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. The book's prose is in D1 (msh_book_text, migration 087), keyed ma1:<id>:<part>:<n>, and never in this file."
+ ],
+ "sources": [
+  {
+   "book": "MA1 Children of the Atom",
+   "code": "TSR6872",
+   "pages": "87-95"
+  }
+ ],
+ "book": "ma1",
+ "adventures": [
+  {
+   "id": "dreamchild",
+   "title": "Dreamchild",
+   "pages": [
+    87,
+    95
+   ],
+   "sections": [
+    {
+     "id": "dreamchild-introduction",
+     "title": "Introduction",
+     "page": 87,
+     "parts": []
+    },
+    {
+     "id": "dreamchild-background",
+     "title": "Background",
+     "page": 87,
+     "parts": []
+    },
+    {
+     "id": "dreamchild-encounter-1",
+     "title": "Encounter 1: A Dazzling Performance",
+     "page": 87,
+     "number": 1,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-2",
+     "title": "Encounter 2: Speed and Spells",
+     "page": 88,
+     "number": 2,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-3",
+     "title": "Encounter 3: Fe Fi Fo Fum",
+     "page": 88,
+     "number": 3,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-4",
+     "title": "Encounter 4: It's All Done With Mirrors",
+     "page": 88,
+     "number": 4,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-5",
+     "title": "Encounter 5: Knights Errant",
+     "page": 89,
+     "number": 5,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Note",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-6",
+     "title": "Encounter 6: A Magnetic Personality",
+     "page": 90,
+     "number": 6,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath",
+      "Karma"
+     ]
+    },
+    {
+     "id": "dreamchild-encounter-7",
+     "title": "Encounter 7: Siege of the Federal Building",
+     "page": 90,
+     "number": 7,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Note"
+     ]
+    },
+    {
+     "id": "dreamchild-floating-encounter",
+     "title": "Floating Encounter",
+     "page": 92,
+     "parts": [
+      "Summary",
+      "Starting",
+      "Encounter",
+      "Aftermath"
+     ]
+    },
+    {
+     "id": "dreamchild-the-federal-building",
+     "title": "The Federal Building",
+     "page": 92,
+     "parts": [
+      "Personnel",
+      "CIA",
+      "Aftermath",
+      "Karma"
+     ]
+    }
+   ]
+  }
+ ]
+}
