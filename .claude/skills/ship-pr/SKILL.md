@@ -175,6 +175,22 @@ Worker. A timestamp gap there says the Worker may be stale, not that it
 matters: read the diff, then deploy or decide not to. Report only; it never
 fails. It does not replace step 9.
 
+**If the session wrote D1** (any data script, any class import), **follow the
+sweep with:**
+
+```bash
+node scripts/repo-vs-live.mjs --offenders
+```
+
+It builds the catalog from the repo in a scratch database and compares it with
+production, row names and then every field. A correction one environment lost
+shows up here and nowhere else: `regression` builds only the repo, and CI has
+no production credentials. It takes about five minutes. **Report what it
+prints.** Unlike the sweep it can exit 1: a row missing from either side moves
+the exit code, and a differing value does not. It reads the data directory,
+not git, so an uncommitted script counts. Run it on a clean tree, or read the
+output knowing that.
+
 `.github/workflows/deploy-alarm.yml` runs the same walk daily over 26 hours and
 fails its own run, which is how it emails Nate. It is not a gate, covers only
 Pages, and goes silent if Actions notifications are muted.
@@ -252,7 +268,7 @@ neither is visible from inside it: extra rows give false reports, and missing
 rows make `class-check` print stub SQL for rows that exist, which
 `--emit-script` writes into a file that ships (`class-import`). Local is for
 applying and testing a script; production is for asking what is true, and this
-proves the repo and production agree, by name:
+compares what the repo builds with production, by row name and by field value:
 
 ```bash
 node scripts/repo-vs-live.mjs
