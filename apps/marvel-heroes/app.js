@@ -10,6 +10,7 @@ import { makeBrowser } from './js/browser.js';
 import { makeGenerator, newSeeds, STEPS, PRIMARY } from './js/generator.js';
 import { snapshot, renderSheet, tagline } from './js/sheet.js';
 import { makeGear } from './js/gear.js';
+import { makePowerText, missingNote, paragraphs } from './js/power-text.js';
 import { makePointBuy, emptyBuild as emptyPb, normalise as normalisePb } from './js/pointbuy.js';
 
 export const APP = 'marvel-heroes';
@@ -181,31 +182,12 @@ function initGear(gear, equipment) {
 
 // ---------------------------------------------------------------- power browser
 
-// The full text comes from D1 and may not be there: a database built from the
-// repo has msh_power_text empty, and the endpoint says so with a 404 carrying
-// `missing`. Either way the committed summary is already on screen.
-const textCache = new Map();
-async function fullText(code) {
-  if (textCache.has(code)) return textCache.get(code);
-  let out;
-  try {
-    const res = await fetch(`/api/marvel-heroes/power-text?code=${encodeURIComponent(code)}`, { credentials: 'same-origin' });
-    const body = await res.json().catch(() => ({}));
-    out = res.ok ? { ok: true, body } : { ok: false, missing: !!body.missing, status: res.status };
-  } catch {
-    out = { ok: false, missing: false, status: 0 };
-  }
-  textCache.set(code, out);
-  return out;
-}
+// The full text comes from D1 through js/power-text.js, which the codex
+// shares; the committed summary is already on screen whatever it answers.
+const fullText = makePowerText();
 
 // 'shift-x' -> 'Shift X', 'class-1000' -> 'Class 1000': the tables name ranks by id.
 const rankLabel = (id) => id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-// Book prose arrives as one run of text; break it into paragraphs at the
-// sentence boundaries the listings use for their own sub-heads.
-const paragraphs = (s) => esc(s).split(/(?<=\.)\s+(?=(?:Power Stunts?|Optional Powers?|Bonus Powers?|The Nemesis|Nemesis|Example|Note)\b)/)
-  .map((p) => `<p>${p}</p>`).join('');
 
 function initBrowser(browser, tables) {
   const q = $('#pw-query');
@@ -281,7 +263,7 @@ function initBrowser(browser, tables) {
     const box = $('.pw-text', detail);
     box.innerHTML = r.ok
       ? `<h3>The book's text</h3>${paragraphs(r.body.body)}`
-      : `<p class="muted">${r.missing ? 'The full text is not loaded on this server; the summary above is what the app ships.' : 'The full text could not be fetched just now.'}</p>`;
+      : `<p class="muted">${esc(missingNote(r))}</p>`;
   }
 
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-code]'); if (b) show(b.dataset.code); });

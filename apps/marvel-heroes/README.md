@@ -10,7 +10,24 @@ at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
 decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Six tabs,
 each linkable: `#feat`, `#powers`, `#gen`, `#pb` (Point Buy, below), `#heroes`
 (the heroes a person has saved) and `#gear` (the Players' Book weapons and
-vehicles).
+vehicles). A seventh link on the tab bar opens the **Codex**, a page of its own.
+
+## Codex
+
+`/apps/marvel-heroes/codex/` is every list the app ships, one section at a
+time: **Powers** (with the full text when `msh_power_text` has it), **Talents**,
+**Contacts**, **Weaknesses** and **Gear and vehicles**. Each section searches by
+word, filters by its own grouping (a Power's class, a Talent's category, a
+gear table), and opens a card for the detail. The address carries the view -
+`?section=`, `q=`, `group=` and `entry=` for one open card - so a filtered
+list or one entry is a link; a value the page does not offer is dropped.
+
+It is separate from the Palladium codex (`apps/codex/`), which belongs to
+another group and reads another database. It borrows that page's idea, one
+descriptor per section, and none of its code: `SECTIONS` in `js/codex.js` is
+the whole list, so a later section (Notable NPCs) is one entry naming its data
+file and how a row reads. It is a page of this app, not an app of its own, so
+it has no hub tile and no `apps/manifest.json` entry.
 
 ## Point Buy
 
@@ -269,6 +286,9 @@ by roll, and they decide nothing here.
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
 | `data/equipment.json` | the PB weapon, ammunition, missile, grenade and vehicle tables and the vehicle damage list, as printed apart from R20-R23, with column keys written for the app |
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `codex/index.html`, `codex/app.js` | the Codex page and its entry module; it links `../styles.css`, this app's one stylesheet |
+| `js/codex.js` | the Codex's sections as descriptors, its search, and reading and writing its address; pure |
+| `js/power-text.js` | fetching a Power's full text, shared by the Powers tab and the Codex; a missing row or a failed fetch is an answer, never a throw |
 | `js/gear.js` | the Gear tab's search, and reading a printed rank abbreviation back onto the ladder |
 | `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
 | `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
