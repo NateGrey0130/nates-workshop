@@ -21,8 +21,11 @@ import { getAccessEmail } from '../_lib/access.js';
 export const BOOK = /^[a-z][a-z0-9]{0,15}$/;
 export const ENTRY = /^[a-z0-9]+(?:-[a-z0-9]+){0,12}$/;
 
-// The book's order within an entry: its powers as printed, then the sections
-// in the order they follow the powers, then members and cross-references.
+// The book's order within an entry. An item's, a location's and an
+// adventure section's rows are every one numbered in print order
+// (scripts/msh/extras.py), so the number is the order. A character's are not:
+// its powers as printed, then the sections in the order they follow the
+// powers, then members and cross-references.
 const PART_ORDER = ['powers-intro', 'power', 'talents', 'contacts', 'background', 'notes', 'running', 'prose', 'member', 'appearance'];
 
 function json(body, status = 200) {
@@ -34,6 +37,7 @@ function json(body, status = 200) {
 
 function orderRows(rows) {
   const n = (k) => Number(k.split(':')[3] || 0);
+  if (rows.every((r) => n(r.key) > 0)) return [...rows].sort((a, b) => n(a.key) - n(b.key));
   return [...rows].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part) || n(a.key) - n(b.key));
 }
 

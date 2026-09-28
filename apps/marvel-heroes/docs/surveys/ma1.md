@@ -3,11 +3,17 @@
 Marvel Super Heroes Advanced Set, Official Guidebook to Mutants, Kim Eastland,
 1986. Registry entry: `scripts/msh/books.json` -> `ma1`. Measured 2026-09-28.
 
-**Rows citing this book:** 894 `msh_book_text` rows over 181 entries in
-production (`DB_MARVEL`, applied and read back 2026-09-28), and 172 characters
-in `apps/marvel-heroes/data/npcs.json`: 174 versions, 189 stat blocks, 7
-cross-reference appearances and 434 powers, 105 of them linked to the Ultimate
-Powers Book.
+**Rows citing this book:** 967 `msh_book_text` rows over 212 entries in
+production (`DB_MARVEL`, read back 2026-09-28):
+- 894 over 181 character entries
+- 73 over 20 items and 11 adventure sections
+
+Committed:
+- 172 characters in `apps/marvel-heroes/data/npcs.json`: 174 versions, 189
+  stat blocks, 7 cross-reference appearances and 434 powers, 105 of them
+  linked to the Ultimate Powers Book
+- 20 items in `data/items.json`
+- the *Dreamchild* adventure's 11 sections in `data/adventures.json`
 
 This is the first Marvel book surveyed, and nothing here touches the Palladium
 book pipeline: the cache, the registry, the scripts and this file are all
@@ -264,12 +270,32 @@ cross-reference (kind 2).
 
 ## Two sections that are not character-shaped
 
-- **Locations and Items (printed 83-87):** the X-Men mansion, its Danger Room
-  and special items; the banner art shows aircraft. Not yet read closely.
-  Phase 6 surveys this section before choosing a parser mode.
-- **Dreamchild (printed 88-95) and maps (96-100):** a mini-adventure "for
-  four or five medium-level characters", in numbered encounters. Not yet read
-  for statted NPCs.
+*These two paragraphs were written before the pages were read, with the
+Contents' page numbers. Both are corrected below from the pages themselves.*
+
+- **Items and Locations (printed 82-86):**
+  - **Twenty run-in entries** (`ACID BOMB:`) under two headings, Special
+    Items and Locations: 15 special items, 2 vehicles and 3 locations.
+  - The vehicles (the Blackbird, the X-Factor plane) follow the run-in with
+    Control:, Speed: and Body: lines.
+  - The Danger Room's entry lists six kinds of event as run-ins of its own
+    (Energy Weapons ... Traps), which `item_parts` in the registry names.
+    It also prints rules for programming the room (floor-plate codes like
+    `A1 - FLYING BOMB (Hit-Ex, Rng-4, Dam-Re)`), kept as its text.
+  - No item has a stat grid; mechanics are ranks in the prose.
+- **Dreamchild (printed 87-95) and maps (96-100):**
+  - The adventure is **eleven sections**: an introduction, the background,
+    seven numbered encounters, a floating encounter and the Federal
+    Building.
+  - Each section divides into run-ins (Summary, Starting, Encounter,
+    Aftermath, Karma).
+  - **It has no stat blocks of its own**; its opponents are the book's
+    Notable NPCs.
+  - One encounter title (Encounter 4) is set tall but reads as prose to the
+    header test, because its apostrophe OCRs as U+FFFD, so the extractor takes
+    the tall line after "Encounter N" as the title.
+- Both are built by `scripts/msh/extras.py` into `data/items.json` and
+  `data/adventures.json` (facts) and 73 `msh_book_text` rows (prose).
 
 ## Decisions this survey leaves open
 

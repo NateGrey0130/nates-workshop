@@ -35,6 +35,10 @@ const slug = (s) => norm(s).replace(/ /g, '-');
 const band = ([lo, hi]) => (lo === hi ? String(lo) : `${lo}-${hi}`);
 const d100 = (r) => band(r.roll.map((n) => String(n).padStart(2, '0')).map((s) => (s === '100' ? '00' : s)));
 
+// A rank as the book sets it in capitals, in the case a card uses:
+// "SHIFT Z" is Shift Z, "EXCELLENT" is Excellent.
+const rankWords = (v) => String(v).toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
   R: 'Reason', I: 'Intuition', P: 'Psyche' };
@@ -271,6 +275,65 @@ export const SECTIONS = [
       return [...r.versions.map((v) => ({ book: this.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
         ...r.appearances.map((a) => ({ book: this.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
     },
+  },
+  {
+    id: 'items',
+    label: 'Items and locations',
+    source: 'MA1 Children of the Atom, pp.82-86',
+    files: ['items'],
+    groupLabel: 'Kind',
+    // The book's devices, vehicles and places, as data/items.json lists them:
+    // facts only, with each one's text fetched from msh_book_text when its
+    // card opens. A vehicle's Control, Speed and Body are printed ranks.
+    build(data) {
+      const n = data.items;
+      this.book = n.book;
+      const kinds = [['item', 'Special items'], ['vehicle', 'Vehicles'], ['location', 'Locations']];
+      this.kindName = Object.fromEntries(kinds);
+      return {
+        rows: n.items.map((r) => ({ ...r, group: r.kind })),
+        groups: kinds.filter(([id]) => n.items.some((r) => r.kind === id)).map(([id, name]) => ({ id, name })),
+      };
+    },
+    key: (r) => r.id,
+    title: (r) => r.name,
+    meta(r) { return `${this.kindName[r.kind]}, MA1 p.${r.page}`; },
+    summary(r) {
+      if (r.vehicle) return Object.entries(r.vehicle).map(([k, v]) => `${k} ${rankWords(v)}`).join(', ');
+      if (r.parts) return `Lists ${r.parts.join(', ')}`;
+      return this.kindName[r.kind].replace(/s$/, '').replace('Special item', 'A special item');
+    },
+    stats: (r) => [
+      ...(r.vehicle ? Object.entries(r.vehicle).map(([k, v]) => [k, rankWords(v)]) : []),
+      ['Page', `MA1 p.${r.page}`],
+    ],
+    hay: (r) => [r.name, r.kind, ...(r.parts || [])].join(' '),
+    bookText(r) { return [{ book: this.book, entry: r.id, label: '' }]; },
+  },
+  {
+    id: 'adventures',
+    label: 'Adventures',
+    source: 'MA1 Children of the Atom, pp.87-95: Dreamchild',
+    files: ['adventures'],
+    groupLabel: 'Part',
+    // One row per section of a book's adventure: its numbered encounters, and
+    // the introduction, background and locales around them. The adventure
+    // runs on the book's own characters (Notable NPCs); its text is fetched
+    // from msh_book_text when a card opens.
+    build(data) {
+      const a = data.adventures;
+      this.book = a.book;
+      const rows = a.adventures.flatMap((adv) => adv.sections.map((s) => ({
+        ...s, adventure: adv.title, group: s.number ? 'encounter' : 'setting' })));
+      return { rows, groups: [{ id: 'encounter', name: 'Encounters' }, { id: 'setting', name: 'Background and locales' }] };
+    },
+    key: (r) => r.id,
+    title: (r) => r.title,
+    badge: (r) => (r.number ? `E${r.number}` : ''),
+    meta: (r) => `${r.adventure}, MA1 p.${r.page}`,
+    summary: (r) => (r.parts.length ? r.parts.join(', ') : 'Before the encounters'),
+    hay: (r) => [r.title, r.adventure, ...r.parts].join(' '),
+    bookText(r) { return [{ book: this.book, entry: r.id, label: '' }]; },
   },
 ];
 
