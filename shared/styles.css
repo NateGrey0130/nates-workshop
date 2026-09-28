@@ -245,7 +245,7 @@
   --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-h1, h2, h3, h4, .logo, .btn, th, .display {
+h1, h2, h3, h4, .logo, .btn, th, .display, .mc-btn {
   font-family: var(--font-display);
   font-stretch: 75%;
 }
@@ -396,7 +396,7 @@ body {
 }
 
 /* ─── BUTTONS (app adds padding / display specifics) ─── */
-.btn {
+.btn, .mc-btn {
   font-size: 13px;
   font-weight: 500;
   border-radius: var(--radius-sm);
@@ -409,7 +409,7 @@ body {
   transition: all var(--transition);
 }
 
-.btn:hover { border-color: var(--text-muted); background: var(--bg-input); }
+.btn:hover, .mc-btn:hover { border-color: var(--text-muted); background: var(--bg-input); }
 
 /* A control you cannot use has to LOOK like one. Nothing styled :disabled,
    so a disabled button was pixel-identical to a live one — same fill, same
@@ -420,13 +420,13 @@ body {
    :hover is neutralised too. Without that, a dead button still lit up under
    the pointer, which is the same false promise one layer down. */
 .btn:disabled,
-.btn[disabled] {
+.btn[disabled], .mc-btn:disabled, .mc-btn[disabled] {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
 .btn:disabled:hover,
-.btn[disabled]:hover {
+.btn[disabled]:hover, .mc-btn:disabled:hover, .mc-btn[disabled]:hover {
   border-color: var(--border);
   background: var(--bg-tertiary);
 }
@@ -434,7 +434,7 @@ body {
 /* The primary variant sets its own background and border, so its disabled
    hover has to be pinned back to those rather than to the neutral button's. */
 .btn-primary:disabled:hover,
-.btn-primary[disabled]:hover {
+.btn-primary[disabled]:hover, .mc-btn-primary:disabled:hover, .mc-btn-primary[disabled]:hover {
   border-color: var(--accent);
   background: var(--accent);
 }
@@ -459,7 +459,7 @@ body {
    both. UI-AUDIT F34 named background and color; color was never at risk —
    `.btn:hover` does not set it — and border-color was. Restated anyway, so
    the rule states the whole resting appearance rather than a subset of it. */
-.btn-primary:hover {
+.btn-primary:hover, .mc-btn-primary:hover {
   border-color: var(--accent);
   background: var(--accent);
   color: var(--bg-primary);
@@ -475,7 +475,7 @@ body {
    never re-measured through the verdigris retone. The file already carried the
    right figure for the same pair two hundred lines up, in the ::selection
    note, so it disagreed with itself. Re-measured while taking UI-AUDIT F34. */
-.btn-primary {
+.btn-primary, .mc-btn-primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--bg-primary);

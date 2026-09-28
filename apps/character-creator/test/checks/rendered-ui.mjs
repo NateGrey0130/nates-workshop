@@ -13,7 +13,7 @@
 //
 // Split out of smoke.mjs unchanged.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
@@ -73,11 +73,16 @@ function printCss(css) {
 // The column-0 `}` assumption is the original's and is kept: a function body
 // indents its inner braces, so the first line-initial `}` after the signature
 // is the function's own.
+// The body ends at the first `}` standing at the SIGNATURE'S OWN INDENT, so a
+// function inside a module's IIFE (shared/js/campaign/, two spaces in) is read
+// to its own close rather than to the end of the whole module - which is where
+// a column-0 `}` would be. A top-level function reads exactly as it always did.
 function functionBody(src, signature) {
   const from = src.indexOf(signature);
   if (from === -1) return null;
+  const indent = /[ \t]*$/.exec(src.slice(src.lastIndexOf('\n', from) + 1, from))[0];
   const rest = src.slice(from);
-  const end = rest.search(/\r?\n\}/);
+  const end = rest.search(new RegExp(`\\r?\\n${indent}\\}`));
   return end === -1 ? null : rest.slice(0, end);
 }
 
@@ -106,6 +111,7 @@ const SECTIONS = [
   'The codex',
   'One header for five apps',
   'Present mode shows without revealing',
+  'The campaign views are shared, and style nothing',
   'Statted NPCs: one panel, two pages',
   'The name panel beside every Name box',
 ];
@@ -600,21 +606,25 @@ export function run() {
     // This platform cannot resize an image (docs/pages-to-workers-migration.md
     // row: Workers yes, Pages no), so the only place the bytes can be made
     // smaller is before they leave the browser.
-    const down = readFileSync(join(appDir, 'js', 'downscale.js'), 'utf8');
+    // The picture upload is the shared setting view's (shared/js/campaign/),
+    // and the downscaler moved beside it, so every game's GM page has both.
+    const campaignJs = join(repoRoot, 'shared', 'js', 'campaign');
+    const down = readFileSync(join(campaignJs, 'downscale.js'), 'utf8');
     const gmHtml = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'index.html'), 'utf8');
     // Matched as SCRIPT TAGS, not as bare filenames: the comment above the tag
-    // names dashboard.js, and a plain indexOf found that first and reported the
-    // order backwards. The same shape of mistake the appnav checks make.
+    // names the file it loads before, and a plain indexOf found that first and
+    // reported the order backwards. The same shape of mistake the appnav
+    // checks make.
     const tagAt = (f) => gmHtml.indexOf(`<script src="${f}"`);
-    check('the downscaler is loaded before the page that uses it',
-      tagAt('/apps/character-creator/js/downscale.js') > 0
-      && tagAt('/apps/character-creator/js/downscale.js') < tagAt('dashboard.js'),
-      'downscale.js is missing or loads after dashboard.js');
+    check('the downscaler is loaded before the view that uses it',
+      tagAt('/shared/js/campaign/downscale.js') > 0
+      && tagAt('/shared/js/campaign/downscale.js') < tagAt('/shared/js/campaign/setting.js'),
+      'downscale.js is missing or loads after setting.js');
     // THE HEADER COMES FROM THE BLOB. The server reads that one header for the
     // R2 key's extension, the stored content_type AND the Content-Type it
     // serves later, so a re-encoded blob described by the original file's type
     // is wrong in three places at once. The finding's text omitted this.
-    const dashSrc = readFileSync(appPath('dashboard.js'), 'utf8');
+    const dashSrc = readFileSync(join(campaignJs, 'setting.js'), 'utf8');
     const upload = functionBody(dashSrc, 'async function uploadPicture(');
     check('the upload describes what it actually sends',
       !!upload && /const body = await downscale\.toUpload\(file\);/.test(upload)
@@ -646,7 +656,7 @@ export function run() {
     // were left at full size, painted at 34px and 120px. The check above reads
     // apps/gm-tools/index.html ONLY, so it could not have noticed.
     const campHtml = readFileSync(join(repoRoot, 'apps', 'campaign', 'index.html'), 'utf8');
-    const campSrc = readFileSync(join(repoRoot, 'apps', 'campaign', 'campaign.js'), 'utf8');
+    const campSrc = readFileSync(join(campaignJs, 'people.js'), 'utf8');
     // THE PATH IS THE PART THE FINDING GOT WRONG. It proposed `js/downscale.js`,
     // and apps/campaign has no js/ directory - that tag 404s, leaves `downscale`
     // undefined, and every portrait upload dies in uploadPortrait's own catch.
@@ -654,9 +664,9 @@ export function run() {
     // here rather than in a GM's browser.
     const campTagAt = (f) => campHtml.indexOf(`<script src="${f}"`);
     check('the campaign page loads the downscaler by absolute path',
-      campTagAt('/apps/character-creator/js/downscale.js') > 0
-      && campTagAt('/apps/character-creator/js/downscale.js') < campTagAt('campaign.js'),
-      'downscale.js is missing, relative, or loads after campaign.js');
+      campTagAt('/shared/js/campaign/downscale.js') > 0
+      && campTagAt('/shared/js/campaign/downscale.js') < campTagAt('/shared/js/campaign/people.js'),
+      'downscale.js is missing, relative, or loads after people.js');
     // The same three-places rule as F57: the server reads this one header for
     // the R2 key's extension, the stored content_type and what it serves back.
     const portraitUp = functionBody(campSrc, 'async function uploadPortrait(');
@@ -1183,29 +1193,41 @@ export function run() {
     check('and a failed request puts the row back',
       /catch \(err\) \{[\s\S]{0,200}p\.restore\(\)/.test(toast),
       'a failed delete would leave a row that looks deleted and is not');
+    // The campaign's deletes live in the shared views (shared/js/campaign/),
+    // which reach the toast through the page's adapter - so the PAGE must load
+    // the helper before its own script, which hands `undoable` over at init.
+    const shared = (f) => ['shared/js/campaign', f];
     for (const [page, script, fns] of [
-      ['character-sheet', 'sheet.js', ['removeItem', 'removeVessel']],
-      ['campaign', 'campaign.js', ['removeEntry', 'deleteNpc', 'dropItem']],
-      ['gm-tools', 'dashboard.js', ['deletePicture']],
+      ['character-sheet', 'sheet.js', [['removeItem', null], ['removeVessel', null]]],
+      ['campaign', 'campaign.js', [['removeEntry', shared('notes.js')], ['remove', shared('people.js')], ['dropItem', null]]],
+      ['gm-tools', 'dashboard.js', [['deletePicture', shared('setting.js')]]],
     ]) {
       const html = readFileSync(join(repoRoot, 'apps', page, 'index.html'), 'utf8');
-      const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
+      const pageSrc = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
       const at = (s) => html.indexOf(s);
       check(`${page} loads the helper before ${script}`,
         at('/apps/character-creator/js/undo-toast.js') > 0
           && at('/apps/character-creator/js/undo-toast.js') < at(`src="${script}"`),
         `${page}/index.html does not load undo-toast.js ahead of ${script}`);
-      for (const fn of fns) {
-        const body = (src.match(new RegExp(`function ${fn}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
-        check(`${script} ${fn}() uses the undo toast, not confirm()`,
-          /undoable\(\{/.test(body) && !/confirm\(/.test(body) && /keepalive/.test(body),
-          `${fn} is back on confirm(), or its request would not survive the page closing`);
+      if (page !== 'character-sheet') {
+        check(`and ${script} hands it to the shared views`, /ui: \{\s*esc: escHtml, escJs, undoable,/.test(pageSrc),
+          `${script} does not pass undoable in its adapter`);
+      }
+      for (const [fn, where] of fns) {
+        const file = where ? join(repoRoot, ...where) : join(repoRoot, 'apps', page, script);
+        const src = readFileSync(file, 'utf8');
+        const body = functionBody(src, `function ${fn}(`) || '';
+        const label = where ? where[1] : script;
+        check(`${label} ${fn}() uses the undo toast, not confirm()`,
+          /undoable\(\{/.test(body) && !/confirm\(/.test(body) && !/modal\(/.test(body) && /keepalive/.test(body),
+          `${fn} is back on a question, or its request would not survive the page closing`);
       }
     }
     const sheetSrc = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8');
-    const dashSrc = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'dashboard.js'), 'utf8');
+    const settingSrc = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'setting.js'), 'utf8');
     check('and deleting a whole character, or a whole GM page, still asks first',
-      /confirm\(`Delete \$\{c\.name\} \(level/.test(sheetSrc) && /confirm\(`Delete "\$\{D\.entry\.title\}"/.test(dashSrc),
+      /confirm\(`Delete \$\{c\.name\} \(level/.test(sheetSrc)
+        && /await M\.ctx\.ui\.modal\(`Delete "\$\{S\.entry\.title\}"/.test(settingSrc),
       'a character or a GM page can now be deleted without a question');
   }
 
@@ -1249,8 +1271,10 @@ export function run() {
       'the roster offers an XP tick the award would ignore');
 
     // Source order: notes before journal, which is the "surface it" change.
+    // The journal panel is the shared notes view's feed now
+    // (shared/js/campaign/notes.js), placed where this page calls it.
     check('the notes come before the journal',
-      js.indexOf('gm-notes') < js.indexOf('Campaign journal'),
+      js.indexOf('gm-notes') > 0 && js.indexOf('gm-notes') < js.indexOf('C.notes.feedHtml('),
       'the notes panel is still below the journal');
 
     // Read DOWN the column, so the digits line up. This one never had a
@@ -2312,11 +2336,24 @@ export function run() {
   // described - the argument `instructions-do-not-fire-by-themselves` makes.
   section('Present mode shows without revealing');
   {
+    // The room view is shared by every game's GM page
+    // (shared/js/campaign/present.js), so that file is where SHOW IS NOT
+    // REVEAL is held and read. apps/gm-tools/present.js is this game's half:
+    // where leaving goes, and the City Creator's maps.
     const gmDir = join(repoRoot, 'apps', 'gm-tools');
     const presentHtml = readFileSync(join(gmDir, 'present.html'), 'utf8');
-    const presentJs = readFileSync(join(gmDir, 'present.js'), 'utf8');
+    const presentJs = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'present.js'), 'utf8');
+    const pageJs = readFileSync(join(gmDir, 'present.js'), 'utf8');
+    const setting = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'setting.js'), 'utf8');
     const dash = readFileSync(appPath('dashboard.js'), 'utf8');
     const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+    check('the page loads the shared room view before its own half',
+      presentHtml.indexOf('<script src="/shared/js/campaign/core.js"') > 0
+        && presentHtml.indexOf('<script src="/shared/js/campaign/core.js"')
+          < presentHtml.indexOf('<script src="/shared/js/campaign/present.js"')
+        && presentHtml.indexOf('<script src="/shared/js/campaign/present.js"')
+          < presentHtml.indexOf('<script src="present.js"'));
+    check('and the page\'s half sends no write of its own', !/method: '(PATCH|POST|PUT|DELETE)'/.test(pageJs));
 
     // ── the one write, and where it is allowed to come from ──
     const reveal = functionBody(presentJs, 'async function toggleReveal()');
@@ -2348,7 +2385,9 @@ export function run() {
     check('arrows and a clicker move through the page',
       /ArrowRight/.test(keyBlock) && /ArrowLeft/.test(keyBlock)
       && /PageDown/.test(keyBlock) && /PageUp/.test(keyBlock));
-    check('Escape leaves', /e\.key === 'Escape'/.test(keyBlock) && /function leave\(\)/.test(presentJs));
+    check('Escape leaves', /e\.key === 'Escape'\) leave\(\)/.test(keyBlock)
+      && /function leave\(\) \{ O\.leave\(\); \}/.test(presentJs) && /function leave\(\)/.test(pageJs)
+      && /mcPresent\.start\(\{[\s\S]{0,200}\bleave,/.test(pageJs));
     check('and no key press reveals anything',
       !/toggleReveal/.test(keyBlock) && !/' '/.test(keyBlock) && !/Spacebar|'Space'/.test(keyBlock));
 
@@ -2368,33 +2407,41 @@ export function run() {
     // A caption is the one piece of the GM's text that reaches a screen the
     // party can see. It is set as textContent, and the page loads no escaping
     // helper because it writes no markup at all.
+    // Both halves: neither writes markup, and the page loads no escaping
+    // helper - the room view is why the shared module takes no ui adapter.
     check('the page writes no markup',
-      !/\.innerHTML/.test(presentJs) && !/<script[^>]+ui\.js/.test(presentHtml));
+      !/\.innerHTML/.test(presentJs) && !/\.innerHTML/.test(pageJs) && !/<script[^>]+ui\.js/.test(presentHtml));
     check('and the caption is set as text', /\$\('caption'\)\.textContent/.test(presentJs));
     check('it reads the GM-only entry endpoint',
       /api\(`campaigns\/\$\{campaignId\}\/entries\/\$\{entryId\}`\)/.test(presentJs));
+    // The shared half reaches its own group's API through the base the page
+    // passes, never a hard-coded one.
+    check('and through the base the page hands it',
+      /api = global\.mcCampaign\.client\(opts\.base\)/.test(presentJs) && !/\/api\/[a-z-]+\//.test(presentJs)
+        && /base: '\/api\/character-creator'/.test(pageJs));
     // A City Creator city (?city_id=, Phase 4c) is shown from the SERVER's
     // player view and nothing else - never the G.M.'s whole city, which this
     // page would then have to hide parts of. Drawn with DOM calls, so the
     // no-markup check above still covers it, and it adds no write.
-    const cityPart = presentJs.slice(presentJs.indexOf('async function loadCity()'),
-      presentJs.indexOf('// ---------- the chrome'));
+    const cityPart = pageJs.slice(pageJs.indexOf('async function loadCity()'), pageJs.indexOf('mcPresent.start('));
+    const calls = (s) => (s.match(/\bapi\(`/g) || []).length;
     check('a city is shown from the players\' view, and only from it',
-      /api\(`cities\/\$\{cityId\}\/view`\)/.test(cityPart) && !/api\(`cities\/\$\{cityId\}`\)/.test(presentJs)
-        && (presentJs.match(/\bapi\(`/g) || []).length === 3, `${(presentJs.match(/\bapi\(`/g) || []).length} api() calls`);
+      /api\(`cities\/\$\{cityId\}\/view`\)/.test(cityPart) && !/api\(`cities\/\$\{cityId\}`\)/.test(pageJs)
+        && calls(pageJs) === 1 && calls(presentJs) === 2, `${calls(pageJs)} + ${calls(presentJs)} api() calls`);
 
     // ── the way in, and the way back ──
-    check('the dashboard offers Present on a picture and on a page',
-      /presentUrl\(i\.id\)/.test(dash) && /presentUrl\(\)/.test(dash));
+    check('the setting view offers Present on a picture and on a page',
+      /presentUrl\(i\.id\)/.test(setting) && /presentUrl\(\)/.test(setting));
     check('and the link carries the campaign and the page',
-      /present\.html\?campaign_id=\$\{encodeURIComponent\(campaignId\)\}&entry_id=/.test(dash));
+      /\$\{S\.presentHref\}\?campaign_id=\$\{encodeURIComponent\(cid\(\)\)\}&entry_id=/.test(setting)
+        && /C\.setting\.html\(\{ presentHref: 'present\.html' \}\)/.test(dash));
     // Leaving lands on the page that was being presented rather than at the
     // top of the roster, which takes both ends: present.js names the page in
     // the URL it goes back to, and the dashboard opens what it is handed.
     check('leaving returns to the page it was presenting',
-      /q\.set\('entry_id', entryId\)/.test(presentJs) && /'\/apps\/gm-tools\/'/.test(presentJs));
+      /q\.set\('entry_id', entryId\)/.test(pageJs) && /'\/apps\/gm-tools\/'/.test(pageJs));
     check('and the dashboard reopens that page',
-      /const openEntryId = /.test(dash) && /if \(D\.isGm && openEntryId\) await openEntry\(openEntryId\)/.test(dash));
+      /const openEntryId = /.test(dash) && /if \(D\.isGm && openEntryId\) await C\.setting\.open\(openEntryId\)/.test(dash));
 
     // ── the stage ──
     // The slice runs to the end of the file, which is where this block sits. A
@@ -2412,6 +2459,81 @@ export function run() {
     check('and it still casts no shadow', !/box-shadow/.test(stage));
     check('the chrome fades when nothing is happening',
       /body\.present\.idle \.present-chrome \{ opacity: 0; \}/.test(stage));
+  }
+
+  // ---------- The campaign views are shared, and style nothing ----------
+  // The notes, people, handouts, setting pages, ledger and present mode live in
+  // shared/js/campaign/ so every game's campaign and GM pages use one copy, each
+  // in its own look: the Palladium pages in this app's stylesheet, the Marvel
+  // app in its standalone one. That holds only while the views carry NO style
+  // of their own and reach nothing that belongs to one game - which is what a
+  // quick fix inside one of them would quietly undo, so it is asserted here.
+  section('The campaign views are shared, and style nothing');
+  {
+    const dir = join(repoRoot, 'shared', 'js', 'campaign');
+    const files = readdirSync(dir).filter((f) => f.endsWith('.js')).sort();
+    check('the views are all there',
+      ['core.js', 'downscale.js', 'handouts.js', 'ledger.js', 'notes.js', 'people.js', 'present.js', 'setting.js']
+        .every((f) => files.includes(f)), files.join(', '));
+    // Code only: the files explain in comments what they must not do.
+    const code = Object.fromEntries(files.map((f) => [f, readFileSync(join(dir, f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')]));
+    const offenders = (re) => files.filter((f) => re.test(code[f])).join(', ');
+
+    check('no view writes a style', !offenders(/\bstyle=|\.style\.|<style|<link/),
+      offenders(/\bstyle=|\.style\.|<style|<link/));
+    // Every class a view emits is `mc-`, so a game styles all of them and none
+    // leans on a class some other stylesheet happens to define. Read from the
+    // class attributes and className assignments, with the string literals
+    // inside a ${...} counted as the classes they are.
+    const classTokens = (src) => {
+      const out = [];
+      for (const [, attr] of src.matchAll(/class="((?:[^"$]|\$\{[^}]*\})*)"/g)) {
+        for (const [, lit] of attr.matchAll(/\$\{[^}]*?'([^']*)'[^}]*\}/g)) out.push(...lit.split(/\s+/));
+        out.push(...attr.replace(/\$\{[^}]*\}/g, ' ').split(/\s+/));
+      }
+      for (const [, rhs] of src.matchAll(/className = ([^;]+);/g)) {
+        for (const [, lit] of rhs.matchAll(/'([^']*)'/g)) out.push(...lit.split(/\s+/));
+      }
+      return out.filter(Boolean);
+    };
+    const tokens = files.flatMap((f) => classTokens(code[f]).map((t) => [f, t]));
+    const foreign = tokens.filter(([, t]) => !t.startsWith('mc-')).map(([f, t]) => `${f}: ${t}`);
+    check('and every class it emits is an mc- class', tokens.length > 100 && !foreign.length,
+      foreign.join('; ') || `${tokens.length} class tokens read`);
+    // The other direction, for THIS game: every mc- class is styled here, or
+    // is on the short list of hooks nothing in this look needs to paint.
+    // `mc-on` marks the setting page that is open, which the Palladium pages
+    // have never coloured.
+    const UNSTYLED = new Set(['mc-on']);
+    const pal = readFileSync(join(appDir, 'styles.css'), 'utf8') + readFileSync(join(repoRoot, 'shared', 'styles.css'), 'utf8');
+    const emitted = [...new Set(tokens.map(([, t]) => t))];
+    const unstyled = emitted.filter((c) => !UNSTYLED.has(c) && !new RegExp(`\\.${c}(?![\\w-])`).test(pal));
+    check('and the Palladium stylesheet styles each one', !unstyled.length, unstyled.join(', '));
+
+    // The page's adapter is the only road to its helpers: no view calls ui.js,
+    // a native dialog, or another game's globals by name.
+    // A BARE call: `M.ctx.ui.escJs(v)` is the adapter's, and is the point.
+    const reach = /(?<![.\w])(escHtml|escJs|openModal|closeModal|alert|confirm|prompt)\(/;
+    check('no view reaches ui.js or a native dialog except through the adapter', !offenders(reach), offenders(reach));
+    // Server code stays per group, so no view names a group's API: every URL
+    // is built from the base the page passes.
+    check('and no view names an API of its own', !offenders(/\/api\//), offenders(/\/api\//));
+    for (const [page, script] of [['campaign', 'campaign.js'], ['gm-tools', 'dashboard.js']]) {
+      const src = readFileSync(join(repoRoot, 'apps', page, script), 'utf8');
+      check(`${script} hands the views this group's API and its adapter`,
+        /C\.init\(\{\s*base: '\/api\/character-creator', campaignId,/.test(src)
+          && /modal: \(text\) => Promise\.resolve\(confirm\(text\)\)/.test(src)
+          && /toast: \(text\) => alert\(text\)/.test(src));
+    }
+    // The views' request helper answers a failure the way this app's api()
+    // does, so a caller reading err.status or err.detail (a 409's code, a
+    // 422's violations) behaves the same whichever one it was handed.
+    const appApi = readFileSync(join(appDir, 'js', 'api.js'), 'utf8');
+    const failure = [/const err = new Error\(data\.error \|\| \('API ' \+ res\.status\)\);/,
+      /err\.status = res\.status;/, /err\.detail = data;/];
+    check('and its requests fail the way api() does',
+      failure.every((re) => re.test(code['core.js']) && re.test(appApi)));
   }
 
   // ---------- Statted NPCs: one panel, two pages ----------
@@ -2436,11 +2558,14 @@ export function run() {
       check(`${dir} loads the shared panel`, html.includes('/apps/character-creator/js/npc-sheets.js'));
       const own = rollers.filter((r) => js.includes(r));
       check(`${dir} carries no roller of its own`, own.length === 0, own.join(', '));
-      // Exactly one mount, inside a function the render calls only behind isGm.
+      // Exactly one mount, inside a function the render calls only behind isGm
+      // - in the page's markup on the dashboard, and on the campaign page as
+      // the hook the shared people view places under its roster.
       const mountFn = (js.match(/function (\w+)\(\) \{\s*return npcSheets\.mount\(/) || [])[1];
       check(`${dir} mounts it once, and only for the G.M.`,
         !!mountFn && (js.match(/npcSheets\.mount\(/g) || []).length === 1
-          && js.includes(`\${D.isGm ? ${mountFn}() : ''}`), mountFn || 'no mount function');
+          && (js.match(new RegExp(`(?<!function )\\b${mountFn}\\(\\)`, 'g')) || []).length === 1
+          && js.includes(`D.isGm ? ${mountFn}() : ''`), mountFn || 'no mount function');
       // The library (migration 079) is the panel's too, so both pages have it
       // and neither has a copy.
       check(`${dir} reaches the NPC library only through the shared panel`, !/npc-library/.test(js));

@@ -423,9 +423,9 @@ exactly that, read off the table with no parsing.
 | `app.js` | ~4,510 | the wizard; the largest file in the app |
 | `sheet.js` | ~3,850 | |
 | `js/parser.js` | ~2,975 | **third** largest, and not a page script at all |
-| `campaign.js` | ~870 | its statted-NPC panel moved to `js/npc-sheets.js` (~390), shared with GM Tools |
 | `catalog.js` | ~800 | |
-| `dashboard.js` | ~640 | |
+| `dashboard.js` | ~490 | its setting pages and journal feed moved to `/shared/js/campaign/` |
+| `campaign.js` | ~360 | its notes, people, handouts and ledger moved to `/shared/js/campaign/`; its statted-NPC panel is `js/npc-sheets.js`, shared with GM Tools |
 
 **A smoke check now holds these to 25%**, because the previous two sets of
 figures both went stale in the same way. The set before this one said `app.js`
@@ -448,6 +448,14 @@ classic-script/module distinction to keep straight. The cost is real and the
 benefit is aesthetic. That case was argued when `sheet.js` was around 900 lines
 and it has since more than doubled, so it is worth re-examining rather than
 inheriting.
+
+`campaign.js` and `dashboard.js` paid that cost anyway on 2026-09-28, and not
+for size: their campaign views moved to `/shared/js/campaign/` so the Marvel app
+can use the same notes, people, handouts, setting pages and ledger in its own
+look. Campaign now loads five more classic scripts and GM Tools three, in a
+fixed order, and the orders that matter are held by the smoke suite rather
+than by these pages' comments. That is the price this paragraph names, paid for reuse, which is a
+benefit that is not aesthetic.
 
 **That cost is a fact about CLASSIC scripts, and it stopped covering the whole
 table.** Measured 2026-09-02: `index.html` loads `app.js` as `type="module"`, it

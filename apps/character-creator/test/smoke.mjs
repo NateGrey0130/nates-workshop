@@ -381,8 +381,12 @@ section('Escaping a value into markup');
   // Comments stripped first. Both files that lost a workaround now carry a
   // comment SAYING what the workaround was, which reads to a naive search
   // exactly like the workaround - the same trap the landing-page check names.
-  const consumers = ['sheet.js', 'app.js', 'campaign.js', 'catalog.js']
-    .map((f) => readFileSync(appPath(f), 'utf8'))
+  // The campaign views that moved to shared/js/campaign/ are read too: the
+  // people view is where the O'Brien bug lived.
+  const consumers = [...['sheet.js', 'app.js', 'campaign.js', 'catalog.js'].map(appPath),
+    ...['notes.js', 'people.js', 'handouts.js', 'ledger.js', 'setting.js']
+      .map((f) => join(repoRoot, 'shared', 'js', 'campaign', f))]
+    .map((f) => readFileSync(f, 'utf8'))
     .join('\n')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '');
@@ -6224,7 +6228,9 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
   }
 
   // The three call sites the finding moved, and the ones it deliberately did not.
-  check('the shared button takes it', /\.btn \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(sharedCss));
+  // `.mc-btn` rides on the same rule: the shared campaign views' buttons
+  // (shared/js/campaign/) are this button under another name, not a second one.
+  check('the shared button takes it', /\.btn, \.mc-btn \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(sharedCss));
   check('every text-entry control takes it',
     /input\[type=text\], input\[type=number\], select, textarea \{[\s\S]{0,400}?border: 1px solid var\(--border-control\);/.test(appCss));
   check('and the stepper state that N4 left carrying itself',
@@ -8636,7 +8642,7 @@ section('Search snippets are not markup');
 {
   const searchSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
     'campaigns', '[id]', 'search.js'), 'utf8');
-  const pageSrc = readFileSync(appPath('campaign.js'), 'utf8');
+  const pageSrc = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'notes.js'), 'utf8');
 
   // snippet() wraps matches in whatever it is given and the text AROUND them is
   // a note somebody typed. Asking for '<mark>' means building HTML out of user
@@ -8788,7 +8794,7 @@ section('Portraits are never public');
 
   // A stable URL with an immutable cache header needs the query to change, or
   // a replaced portrait is never seen again.
-  const pageSrc = readFileSync(appPath('campaign.js'), 'utf8');
+  const pageSrc = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'people.js'), 'utf8');
   check('the page busts the cache with the object key', /portrait_key \|\| ''\)/.test(pageSrc));
   check('and encodes it', /encodeURIComponent/.test(pageSrc));
   check('no img src interpolates a raw timestamp', !/portrait\?v=\$\{esc\(n\.updated_at\)\}/.test(pageSrc));
