@@ -32,6 +32,7 @@ And four that stand alone:
 | [`apps/filament-forge/`](apps/filament-forge/) | 3D print settings engine |
 | [`apps/media-vault/`](apps/media-vault/) | Personal audiobook and film library |
 | [`apps/pick3cut5/`](apps/pick3cut5/) | Party game, playable in a shared room — the only public one |
+| [`apps/the-button/`](apps/the-button/) | One big red button on a black screen |
 | [`apps/marvel-heroes/`](apps/marvel-heroes/) | MARVEL SUPER HEROES: a hero generator, a power browser and a FEAT roller from the Ultimate Powers Book, and a sheet for each hero you save - [its README](apps/marvel-heroes/README.md) holds the rulings where the books disagree |
 
 **What each app *is* lives in [`apps/manifest.json`](apps/manifest.json)**, which
