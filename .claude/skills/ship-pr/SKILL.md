@@ -191,6 +191,18 @@ the exit code, and a differing value does not. It reads the data directory,
 not git, so an uncommitted script counts. Run it on a clean tree, or read the
 output knowing that.
 
+**When a value differs, production wins** (Nate's decision, 2026-09-27,
+`BOOK-INGEST-AUDIT` `F105`). The repo is what gets repaired, by one
+last-sorting script that writes production's value, guarded so it is a no-op
+against production. **Do not write production to match the repo**, however
+sure the repo's side looks: a data script that says it was deliberate is still
+the side one environment lost. If production is wrong against the book, or
+against a rule a data script states, the sync STILL takes production's value
+for that row, and the correction is separate: its own script citing the page
+or the rule, or a numbered finding. Never fold it into the sync, and never
+leave the row out of it. Before writing, dump each table the sync touches in production, then
+dump it again after the apply. The two must be identical.
+
 `.github/workflows/deploy-alarm.yml` runs the same walk daily over 26 hours and
 fails its own run, which is how it emails Nate. It is not a gate, covers only
 Pages, and goes silent if Actions notifications are muted.
