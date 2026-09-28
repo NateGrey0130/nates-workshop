@@ -321,7 +321,7 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
 | `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
-| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database |
+| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database - the campaign ones included: the GM's PATCH refuses every field but the four play numbers and every hero outside its campaign, a second open campaign for a hero is refused by the index itself, the NPC roller's ceiling and hiding, and R25's four tie cases |
 
 The summaries in `powers.json` were written for the app by four subagents
 working from the extraction, each told to reuse no five-word run of the book's

@@ -579,6 +579,199 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
     kitHtml.includes('2nd form: Vegetable') && !kitHtml.includes('data-field="second_form"'));
 }
 
+section('Campaigns: the GM changes only the play numbers, and a hero plays in one open campaign');
+
+{
+  // The same stand-in as above, built from the two migrations a database has
+  // by now (082, 086), with foreign keys on as D1 has them, and a batch that
+  // is one transaction as D1's is.
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('PRAGMA foreign_keys = ON');
+  sqlite.exec('CREATE TABLE schema_migrations (filename TEXT PRIMARY KEY, applied_at TEXT)');
+  for (const f of ['082-msh-heroes.sql', '086-msh-campaigns.sql']) {
+    sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', 'marvel', f), 'utf8'));
+  }
+  const statement = (sql, args) => {
+    const st = sqlite.prepare(sql);
+    const run = () => ({ meta: { changes: Number(st.run(...args).changes) } });
+    return { first: async () => st.get(...args) ?? null, all: async () => ({ results: st.all(...args) }), run: async () => run(), runNow: run };
+  };
+  const DB = {
+    prepare: (sql) => ({ bind: (...args) => statement(sql, args), ...statement(sql, []) }),
+    batch: async (list) => {
+      sqlite.exec('BEGIN');
+      try { const out = list.map((s) => s.runNow()); sqlite.exec('COMMIT'); return out; } catch (e) { sqlite.exec('ROLLBACK'); throw e; }
+    },
+  };
+  const env = { DB_MARVEL: DB, ASSETS: { fetch: async (url) => new Response(readFileSync(join(repoRoot, new URL(url).pathname.slice(1)))) } };
+  const route = async (p) => import(new URL(`../../../functions/api/marvel-heroes/${p}`, import.meta.url));
+  const R = {
+    list: await route('campaigns.js'),
+    one: await route('campaigns/[id].js'),
+    link: await route('campaigns/[id]/heroes.js'),
+    hero: await route('campaigns/[id]/heroes/[heroId].js'),
+    events: await route('campaigns/[id]/events.js'),
+    generate: await route('campaigns/[id]/npcs/generate.js'),
+    npcs: await route('campaigns/[id]/npc-sheets.js'),
+    heroes: await route('heroes.js'),
+  };
+  const call = async (mod, method, { who = 'gm@x.org', params = {}, query = '', body } = {}) => {
+    const headers = { 'Cf-Access-Authenticated-User-Email': who };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const request = new Request(`https://example.com/api/marvel-heroes/x${query}`,
+      { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const res = await mod[`onRequest${method[0]}${method.slice(1).toLowerCase()}`]({ request, env, params });
+    return { status: res.status, body: await res.json() };
+  };
+  const { SNAPSHOT_VERSION: sheetModV } = await import(new URL('../js/sheet.js', import.meta.url));
+  const heroRow = (id) => sqlite.prepare('SELECT name, owner_email, build, snapshot, sheet FROM msh_heroes WHERE id = ?').get(id);
+  const addHero = (id, owner, snap) => sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet)
+    VALUES (?, ?, ?, '{"seeds":{}}', ?, '{"notes":"mine"}')`).run(id, owner, `Hero ${id}`, JSON.stringify(snap));
+  addHero('hero-ann-0001', 'ann@x.org', { health: 80, karma: 30 });
+  addHero('hero-bob-0002', 'bob@x.org', { health: 50, karma: 20 });
+
+  const one = (await call(R.list, 'POST', { body: { name: 'Tuesday' } })).body.campaign;
+  const two = (await call(R.list, 'POST', { who: 'gm2@x.org', body: { name: 'Friday' } })).body.campaign;
+  const p1 = { id: String(one.id) }, p2 = { id: String(two.id) };
+  check('a GM creates a campaign and is its GM', one?.gm_email === 'gm@x.org' && one.open === 1);
+  check('a player links their own hero to it',
+    (await call(R.link, 'POST', { who: 'ann@x.org', params: p1, body: { hero_id: 'hero-ann-0001' } })).status === 201);
+  check('but not someone else\'s', (await call(R.link, 'POST', { who: 'bob@x.org', params: p1, body: { hero_id: 'hero-ann-0001' } })).status === 404);
+
+  // One open campaign at a time: the index, not the endpoint, is what refuses.
+  const second = await call(R.link, 'POST', { who: 'ann@x.org', params: p2, body: { hero_id: 'hero-ann-0001' } });
+  check('a second open campaign for a hero is refused with a 409 that names the first',
+    second.status === 409 && /Tuesday/.test(second.body.error || ''), JSON.stringify(second));
+  let threw = false;
+  try { sqlite.prepare("INSERT INTO msh_campaign_heroes (campaign_id, hero_id, campaign_open, added_by) VALUES (?, 'hero-ann-0001', 1, 'x')").run(two.id); } catch { threw = true; }
+  check('and the database itself refuses it, whatever the endpoint does', threw);
+  check('closing the first frees the hero to join another',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: false } })).status === 200
+    && (await call(R.link, 'POST', { who: 'ann@x.org', params: p2, body: { hero_id: 'hero-ann-0001' } })).status === 201);
+  check('and reopening the first is then refused, because the hero is in an open one',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: true } })).status === 409);
+  await call(R.link, 'DELETE', { who: 'ann@x.org', params: p2, query: '?hero_id=hero-ann-0001' });
+  check('once the hero leaves the second, the first reopens',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: true } })).status === 200);
+  await call(R.link, 'POST', { who: 'bob@x.org', params: p2, body: { hero_id: 'hero-bob-0002' } });
+
+  // The GM's PATCH: the four play numbers, on heroes in this campaign, and nothing else.
+  const before = heroRow('hero-ann-0001');
+  const hp = { id: p1.id, heroId: 'hero-ann-0001' };
+  for (const [label, body] of [
+    ['a name', { name: 'Renamed' }], ['a sheet field', { notes: 'the GM wrote this' }], ['the snapshot', { snapshot: {} }],
+    ['the owner', { owner_email: 'gm@x.org' }], ['an ability, though it is a whole number', { strength: 5 }],
+    ['a play number alongside another field', { health: -1, name: 'x' }],
+    ['a play number that is not a whole amount', { karma: 1.5 }], ['an empty change', {}],
+  ]) check(`the GM's PATCH refuses ${label} with a 400`, (await call(R.hero, 'PATCH', { params: hp, body })).status === 400);
+  check('and none of those wrote anything', JSON.stringify(heroRow('hero-ann-0001')) === JSON.stringify(before));
+  const outside = await call(R.hero, 'PATCH', { params: { id: p1.id, heroId: 'hero-bob-0002' }, body: { health: -5 } });
+  check('a hero outside the campaign is a 404, and is not written', outside.status === 404
+    && JSON.parse(heroRow('hero-bob-0002').sheet).health === undefined);
+  check('the other campaign\'s GM cannot reach this campaign\'s hero', (await call(R.hero, 'PATCH', { who: 'gm2@x.org', params: { id: p2.id, heroId: 'hero-ann-0001' }, body: { health: -5 } })).status === 404);
+  check('a player cannot use it, even on their own hero', (await call(R.hero, 'PATCH', { who: 'ann@x.org', params: hp, body: { health: 5 } })).status === 403);
+
+  const hit = await call(R.hero, 'PATCH', { params: hp, body: { health: -10, karma_pool: 7 } });
+  const after = JSON.parse(heroRow('hero-ann-0001').sheet);
+  check('the GM\'s change lands on the hero\'s own row, starting from the snapshot', hit.status === 200
+    && after.health === 70 && after.karma_pool === 7 && after.notes === 'mine', JSON.stringify(after));
+  const logged = sqlite.prepare('SELECT field, delta, before, after, actor_email FROM msh_hero_events ORDER BY id').all();
+  check('and each field is one msh_hero_events row with its before and after', logged.length === 2
+    && logged[0].field === 'health' && logged[0].before === 80 && logged[0].after === 70 && logged[1].after === 7
+    && logged.every((e) => e.actor_email === 'gm@x.org'), JSON.stringify(logged));
+  check('the numbers are stored as integers, as the owner\'s own save writes them',
+    sqlite.prepare("SELECT typeof(json_extract(sheet, '$.health')) AS t FROM msh_heroes WHERE id = 'hero-ann-0001'").get().t === 'integer');
+
+  const ev = (await call(R.events, 'GET', { params: p1 })).body.events;
+  const hpEvent = ev.find((e) => e.field === 'health');
+  const undone = await call(R.events, 'POST', { params: p1, body: { undo: hpEvent.id } });
+  check('undo writes the reverse as a new event and puts the number back',
+    undone.status === 200 && JSON.parse(heroRow('hero-ann-0001').sheet).health === 80 && undone.body.events[0].undoes === hpEvent.id);
+  check('and an event is undone once', (await call(R.events, 'POST', { params: p1, body: { undo: hpEvent.id } })).status === 409);
+  check('the change log is the GM\'s alone', (await call(R.events, 'GET', { who: 'ann@x.org', params: p1 })).status === 403);
+
+  // What each reader sees.
+  const gmView = (await call(R.one, 'GET', { params: p1 })).body;
+  const annView = (await call(R.one, 'GET', { who: 'ann@x.org', params: p1 })).body;
+  await call(R.one, 'PATCH', { params: p1, body: { gm_notes: 'The villain is her uncle' } });
+  check('the GM reads the linked hero\'s sheet through the campaign', gmView.is_gm && gmView.heroes[0].sheet?.karma_pool === 7);
+  check('a player never gets gm_notes', !('gm_notes' in (await call(R.one, 'GET', { who: 'ann@x.org', params: p1 })).body.campaign)
+    && (await call(R.one, 'GET', { params: p1 })).body.campaign.gm_notes === 'The villain is her uncle');
+  check('and heroes.js stays owner-only: the GM cannot open the hero there',
+    annView.heroes[0].sheet && (await call(R.heroes, 'GET', { query: '?id=hero-ann-0001' })).status === 404);
+
+  // The NPC roller: hidden until shown, and only the GM rolls.
+  const npc = await call(R.generate, 'POST', { params: p1, body: { name: 'Thug', powers: 3, ceiling: 'good', body: 'normal-human', dossier: true } });
+  const ns = npc.body.npc?.snapshot;
+  const LADDER = load('ranks.json').ranks.map((r) => r.id);
+  const above = (id) => LADDER.indexOf(id) > LADDER.indexOf('good');
+  check('the NPC roller writes a hero-shaped sheet with exactly the Powers asked for, none above the ceiling',
+    npc.status === 201 && ns.v === sheetModV && ns.powers.length === 3 && ns.body.id === 'normal-human'
+      && !ns.powers.some((p) => above(p.rank)) && !Object.values(ns.abilities).some((a) => above(a.rank)), JSON.stringify(npc.body).slice(0, 200));
+  // The endpoint rolls fresh seeds, so a low roll could pass the check above
+  // with no ceiling at all. With fixed seeds, the same NPC is built twice: the
+  // ceiling has to be what brought every rank down.
+  {
+    const { rollNpc } = await import(new URL('../js/npc.js', import.meta.url));
+    const { makeGenerator } = await import(new URL('../js/generator.js', import.meta.url));
+    const d = {};
+    for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) d[n] = load(`${n}.json`);
+    const g = makeGenerator(d);
+    const seedsFrom = () => { let i = 0; return () => { i += 1; return Object.fromEntries(['body', 'origin', 'abilities', 'weakness', 'counts', 'powers', 'talents'].map((s, k) => [s, 1000 * i + k])); }; };
+    const ranksOf = (s) => [...Object.values(s.abilities).map((x) => x.rank), ...s.powers.map((p) => p.rank)];
+    const free = rollNpc(d, g, { powers: 4 }, seedsFrom()).snapshot;
+    const capped = rollNpc(d, g, { powers: 4, ceiling: 'poor' }, seedsFrom()).snapshot;
+    const over = (id) => LADDER.indexOf(id) > LADDER.indexOf('poor');
+    check('the rank ceiling is what holds an NPC down: the same seeds with no ceiling go above Poor, with it nothing does',
+      ranksOf(free).some(over) && !ranksOf(capped).some(over) && capped.powers.length === 4, JSON.stringify(ranksOf(capped)));
+  }
+  check('its Health is the sum of the capped numbers', ns && ns.health === ['fighting', 'agility', 'strength', 'endurance'].reduce((s, k) => s + ns.abilities[k].number, 0));
+  check('and a People dossier backed by it, when asked', sqlite.prepare('SELECT sheet_id FROM msh_npcs WHERE id = ?').get(npc.body.dossier_id)?.sheet_id === npc.body.npc.id);
+  check('a rolled NPC is hidden from players until the GM shows it',
+    (await call(R.npcs, 'GET', { who: 'ann@x.org', params: p1 })).body.npcs.length === 0
+    && (await call(R.npcs, 'GET', { params: p1 })).body.npcs.length === 1);
+  check('a player cannot roll one', (await call(R.generate, 'POST', { who: 'ann@x.org', params: p1, body: { name: 'X' } })).status === 403);
+  check('a count past the table\'s highest maximum is refused', (await call(R.generate, 'POST', { params: p1, body: { name: 'X', powers: 19 } })).status === 400);
+  check('deleting the campaign leaves every hero where it was',
+    (await call(R.one, 'DELETE', { params: p1 })).status === 200 && sqlite.prepare('SELECT count(*) AS n FROM msh_heroes').get().n === 2
+      && sqlite.prepare('SELECT count(*) AS n FROM msh_hero_events').get().n === 0);
+}
+
+section('Initiative (R25): d100, then a Talent that applies, then Agility, then the tied re-roll');
+
+{
+  const { orderRolled, rollInitiative, initiativeTalents, TAGS } = await import(new URL('../js/initiative.js', import.meta.url));
+  const { rng } = await import(new URL('../js/dice.js', import.meta.url));
+  check('the Talents it reads are exactly the two that give +1 initiative (talents.json:155, :210)',
+    JSON.stringify(initiativeTalents(load('talents.json')).sort()) === '["martial-arts-e","weapons-specialist"]');
+  const who = (o) => o.map((r) => r.key).join('');
+  const c = (key, roll, agility, talent = false, applies = false) => ({ key, name: key, roll, agility, talent, applies });
+
+  const t = orderRolled([c('A', 50, 40), c('B', 50, 10, true, true), c('C', 90, 1)], rng(1));
+  check('a tie broken by a Talent that applies: the lower Agility goes first, tagged Talent',
+    who(t) === 'CBA' && t[1].tags.includes(TAGS.talent) && t[2].tags.includes(TAGS.talent) && t[0].tags.length === 0, JSON.stringify(t.map((r) => [r.key, r.tags])));
+  const a = orderRolled([c('A', 50, 20), c('B', 50, 22)], rng(1));
+  check('a tie broken by the Agility NUMBER: 22 beats 20, both Excellent, tagged Agility',
+    who(a) === 'BA' && a.every((r) => r.tags.join() === TAGS.agility && r.rerolls.length === 0));
+  const r = orderRolled([c('A', 50, 20), c('B', 50, 20), c('C', 10, 20)], rng(7));
+  const byKey = Object.fromEntries(r.map((x) => [x.key, x]));
+  check('a tie still standing is broken by a re-roll of the tied combatants only',
+    byKey.A.rerolls.length > 0 && byKey.B.rerolls.length > 0 && byKey.C.rerolls.length === 0
+      && byKey.A.tags.includes(TAGS.reroll) && r[2].key === 'C'
+      && byKey[r[0].key].rerolls.at(-1) > byKey[r[1].key].rerolls.at(-1), JSON.stringify(r));
+  const u = orderRolled([c('A', 50, 30), c('B', 50, 10, true, false)], rng(1));
+  check('an unticked Talent box breaks nothing: Agility decides, and no row is tagged Talent',
+    who(u) === 'AB' && !u.some((x) => x.tags.includes(TAGS.talent)));
+  const tickedNoTalent = orderRolled([c('A', 50, 30), c('B', 50, 10, false, true)], rng(1));
+  check('nor does a tick on someone with no initiative Talent', who(tickedNoTalent) === 'AB' && !tickedNoTalent.some((x) => x.tags.includes(TAGS.talent)));
+  const both = orderRolled([c('A', 50, 10, true, true), c('B', 50, 30, true, true)], rng(1));
+  check('two whose Talents both apply go on to Agility', who(both) === 'BA' && both.every((x) => x.tags.join() === TAGS.agility));
+  const round = rollInitiative([c('A', 0, 5), c('B', 0, 6), c('C', 0, 7), c('D', 0, 8)], rng(12345));
+  check('a rolled round is highest first, every roll a d100',
+    round.every((x, i) => x.roll >= 1 && x.roll <= 100 && (i === 0 || round[i - 1].roll >= x.roll)), JSON.stringify(round.map((x) => x.roll)));
+}
+
 section('No book text is in any tracked file (local only: needs the extraction)');
 
 {
@@ -752,6 +945,19 @@ section('Every element the page script looks up is on the page');
   check(`app.js looks up ${ids.length} ids and index.html has them all`, ids.length > 0 && missing.length === 0, missing.join(', '));
   const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"/g)].map((m) => m[1]);
   check('every tab controls a panel that exists', tabs.length > 0 && tabs.every((p) => html.includes(`id="${p}"`)), tabs.join());
+  // The Campaigns page, the GM page and the room view, each against its own
+  // page. room.js looks ids up without the '#', by getElementById.
+  for (const [page, script, re] of [
+    ['campaign/index.html', 'campaign/campaign.js', /\$\('#([a-z0-9-]+)'\)/g],
+    ['gm/index.html', 'gm/gm.js', /\$\('#([a-z0-9-]+)'\)/g],
+    ['gm/room.html', 'gm/room.js', /\$\('([a-z0-9-]+)'\)/g],
+  ]) {
+    const pHtml = readFileSync(join(appDir, page), 'utf8');
+    const pIds = [...new Set([...readFileSync(join(appDir, script), 'utf8').matchAll(re)].map((m) => m[1]))];
+    const pMissing = pIds.filter((id) => !new RegExp(`id="${id}"`).test(pHtml));
+    check(`${script} looks up ${pIds.length} ids and ${page} has them all`, pIds.length > 0 && pMissing.length === 0, pMissing.join(', '));
+  }
+  check('the main page links the Campaigns and GM pages', /href="campaign\/"/.test(html) && /href="gm\/"/.test(html));
 }
 
 section('The power browser finds Powers by code, name, word and class');
