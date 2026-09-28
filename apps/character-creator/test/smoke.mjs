@@ -8732,6 +8732,22 @@ section('Mentions');
     JSON.stringify(parseMentions('@Jean-Luc waited')) === '["Jean-Luc"]');
   check("and an apostrophe does too",
     JSON.stringify(parseMentions("@O'Dell waited")) === '["O\'Dell"]');
+
+  // But a possessive does not. The apostrophe the class allows for O'Brien also
+  // let "@Kevik's men" parse as "Kevik's", and resolveMentions then opened a
+  // second dossier under that name instead of linking Kevik.
+  check("a possessive 's is not part of the name",
+    JSON.stringify(parseMentions("@Kevik's men")) === '["Kevik"]',
+    JSON.stringify(parseMentions("@Kevik's men")));
+  check('nor is a curly-apostrophe possessive',
+    JSON.stringify(parseMentions('@Kevik’s men')) === '["Kevik"]',
+    JSON.stringify(parseMentions('@Kevik’s men')));
+  check("an inner apostrophe still survives",
+    JSON.stringify(parseMentions("@O'Brien waited")) === '["O\'Brien"]',
+    JSON.stringify(parseMentions("@O'Brien waited")));
+  check("and a possessive comes off a name that has one",
+    JSON.stringify(parseMentions("@O'Brien's aunt")) === '["O\'Brien"]',
+    JSON.stringify(parseMentions("@O'Brien's aunt")));
 }
 
 section('The sweep proposes, it does not create');
