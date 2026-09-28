@@ -36,13 +36,21 @@ folio 7 on the image. The Ultimate Powers Book has the same offset
 
 - **Contents (printed p.2).** Seven sections, and fourteen teams under
   Mutant Teams. Stored as `sections` in the registry.
-  **One error:** it puts The Mutant Menace at 79, but the banner is on printed
-  77, above the Sentinels that the index also puts at 77. The page wins
-  (`contents_errata`).
+  **Seven entries are wrong, each by one or two pages.** Every banner through
+  printed 82 was read on its page image, and these differ from the Contents:
+  Hellfire Club 23 (Contents 21), Miscellaneous Mutants 50 (51), Supporting
+  Characters 68 (69), Aliens 71 (72), The Mutant Menace 77 (79), Locations and
+  Items 82 (83), Dreamchild 87 (88). The page wins (`contents_errata`). The
+  first survey caught only the Mutant Menace. The parser found the rest,
+  because a section header placed at the Contents' page cut the Brood's entry
+  in half.
 - **Index (printed p.3).** 183 names and 190 page references, stored as
   `index`. Seven names have two pages: Blob, Lorelei, Magneto, Quicksilver,
   Rogue, Scarlet Witch and Warlock. The index misprints Nightcrawler as
   "Nightrawler", which is kept as printed and mapped by `index_aliases`.
+  Two more aliases cover names the index spells differently from the entry's
+  header: Agents (VILLAINOUS AGENTS) and Neramani, Lilandra (NERAMANI,
+  PRINCESS-MAJESTRIX LILANDRA).
 
 ## What an entry looks like
 
@@ -79,10 +87,16 @@ headers. A column boundary is never an entry boundary.
 | `Resources: Fb (2)` (a colon, not `=`) | Average Fighters, p.45 |
 | rank codes `Fb`, `Po`, `Go`, `Re` | this book's misprints of Fe, Pr, Gd, Rm (`rank_aliases`) |
 
-## Stat blocks: 184
+## Stat blocks: 188, plus one table
 
-`scripts/msh/survey.py ma1` finds one `Health =` line per stat block, and
-**184** of them. That number is the target every later step is held to.
+**The count is 188 printed grids**, plus the Further Morlocks generation table.
+That is the number from the parser (below), which the first survey
+undercounted. `scripts/msh/survey.py` finds 184, missing five:
+- Binary's two forms, whose `Health =` OCRs as `Health " 110` and `Health 2080`
+- two blocks on p.57, where its twelve-line header window lost Nekra and Nuklo
+- the table, which is not a grid
+
+The first survey's measurements are kept below as they were taken.
 
 | measure | count |
 |---|---|
@@ -109,6 +123,69 @@ The other five need the image before anyone decides: Ursa Major's Human Form
 (p.44), Miss Locke and Mr. Chambers (p.63), and Brood Hunter and Brood Queen
 (p.72). Andreas's block on p.63 was also checked on the image, and it is
 correct.
+
+*Resolved by the parser; see [The parser](#the-parser): Human Form was an OCR
+misread; Brood Hunter and Brood Queen are misprints; Miss Locke and Mr.
+Chambers print Karma 0.*
+
+## The parser
+
+`python scripts/msh/roster.py ma1` turns the cache into entries and writes
+`$WORKSHOP_MSH_CACHE/books/ma1/roster.json`. That file holds the book's prose,
+so it stays in the local cache and is never committed. It exits 1 on any
+failed check, any override that no longer matches exactly one block, or any
+index name it cannot place. Its docstring gives the method; the short version:
+- words come from TSV geometry
+- columns are cut at the two least-inked gutters, and the book is read as one
+  stream, so an entry never breaks at a column or a page
+- headers are lines set 1.35 times the page's word height or more, in capitals
+  or short title case
+- each grid is re-read from a crop of the page image with `--psm 6`
+
+**Why the grid crop.** On some blocks the page-layout pass had read the grid's
+letter and number columns as sideways junk (Changeling, p.5:
+`v-pDmorn DMAAMDAMAAAD`), so the numbers were not in the TSV at all. This is
+part of the 48 that the survey could not read from lines. Read from the crop,
+all 188 grids have all seven numbers.
+
+Measured 2026-09-28:
+
+| measure | count |
+|---|---|
+| entries | 205 (174 with a block, 31 headings and cross-references) |
+| stat blocks | 189: 188 grids and the Further Morlocks table |
+| pass rank, Health and Karma checks | 180 |
+| explained by an override read off the page | 9: six misprints, two as printed, one table |
+| failing | 0 |
+| members without a block (run-in names) | 37: Gladiators 5, Savage Land Mutates 9, Imperial Guard 19, Starjammers 4 |
+| powers named | 434, across 143 entries |
+| index names in printed 4-81 found | 182 of 182 (the Danger Room, p.85, is phase 6) |
+
+**Every misprint, read off the page.** Each is in
+`scripts/msh/ma1-overrides.json`, with the printed value and the corrected one:
+
+| entry | printed | the book's own arithmetic |
+|---|---|---|
+| Northstar, p.57 | Health 70 | F+A+S+E = 90 |
+| Poltergeist, p.46 | S 4 Ty | 4 is Pr |
+| Corbeau, p.69 | F 4 Fb | 4 is Pr |
+| Brood Hunter, p.72 | Health 60 | F+A+S+E = 70 |
+| Brood Queen, p.72 | F 30 In | 30 is Rm; Health 110 agrees with 30 |
+| Nimrod, p.81 | A 50 In | 50 is Am; Health 300 agrees with 50 |
+| Miss Locke, Mr. Chambers, p.63 | Karma 0 | R+I+P = 30 and 32; kept as printed, perhaps deliberate |
+
+**Decision 1 below is taken the recommended way:** the override stores both
+values. The data phase uses the corrected one for play and shows the printed
+one on the Codex card.
+
+**Alternate values in parentheses** (`S 10 Gd(30Rm)`, the book's own convention
+for an altered statistic, printed p.2) are kept on the row as `alt`. So are
+Class ranks (`C-1000`, `C-3000`) and Shift Y (`200 ShiftY`, Acanti).
+
+**Resources and Popularity stay as printed**, lightly cleaned:
+`Am (50) (through his agency)`, `0 on Earth (30 in the Empire)`,
+`see Corsair`, `N/A`. Parsing them into a rank and a number is the data
+phase's job, and no rule for it is guessed here.
 
 ## Entry kinds
 
@@ -193,7 +270,8 @@ cross-reference (kind 2).
    printed with a flag, or store the corrected value with the printed one
    kept alongside? The recommendation is corrected-plus-printed, so the GM tools
    compute with the right number and the Codex can still show what the page
-   says.
+   says. **Taken that way in the parser PR:** `scripts/msh/ma1-overrides.json`
+   holds both, for all six misprints.
 2. **Members without a block** (kind 5). Store each as a character whose
    stats are its tier's block, with the prose changes applied by hand
    (Barbarus's "106 Health" and Amazing Strength), or as a name and text under
