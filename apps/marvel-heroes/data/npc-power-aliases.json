@@ -1,0 +1,25 @@
+{
+  "about": [
+    "Sourcebook power names that are an Ultimate Powers Book power under another name, for the Notable NPCs' links to the Powers section (scripts/msh/npcs.py).",
+    "A name that IS a UPB power's name links without an entry here. Only clear equivalents are listed: a book power that is a bundle, a stunt or a character's own trick stays book-only rather than being forced onto the nearest UPB entry.",
+    "Keys are the book's name (compared without case or punctuation); values are UPB codes from powers.json."
+  ],
+  "aliases": {
+    "Flight": "T21",
+    "Teleportation": "T16",
+    "Teleport": "T16",
+    "Magnetic Control": "EC15",
+    "Astral Projection": "T1",
+    "Astral Form": "T1",
+    "Weather Control": "MC12",
+    "Plasma Blasts": "EE10",
+    "Illusion Generation": "I2",
+    "Illusions": "I2",
+    "Shapeshifting": "S29",
+    "Shape-Shifting": "S29",
+    "Hyper-Speed": "P5",
+    "Hyper-Leaping": "T9",
+    "Mind Blast": "M21",
+    "Mental Bolts": "M21"
+  }
+}

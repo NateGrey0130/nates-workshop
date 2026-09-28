@@ -17,18 +17,44 @@ vehicles). Three more links on the tab bar open pages of their own: the
 
 `/apps/marvel-heroes/codex/` is every list the app ships, one section at a
 time: **Powers** (with the full text when `msh_power_text` has it), **Talents**,
-**Contacts**, **Weaknesses** and **Gear and vehicles**. Each section searches by
-word, filters by its own grouping (a Power's class, a Talent's category, a
-gear table), and opens a card for the detail. The address carries the view -
+**Contacts**, **Weaknesses**, **Gear and vehicles** and **Notable NPCs**. Each
+section searches by word, filters by its own grouping (a Power's class, a
+Talent's category, a gear table, an NPC's team), and opens a card for the
+detail. The address carries the view -
 `?section=`, `q=`, `group=` and `entry=` for one open card - so a filtered
 list or one entry is a link; a value the page does not offer is dropped.
 
 It is separate from the Palladium codex (`apps/codex/`), which belongs to
 another group and reads another database. It borrows that page's idea, one
 descriptor per section, and none of its code: `SECTIONS` in `js/codex.js` is
-the whole list, so a later section (Notable NPCs) is one entry naming its data
-file and how a row reads. It is a page of this app, not an app of its own, so
-it has no hub tile and no `apps/manifest.json` entry.
+the whole list. It is a page of this app, reached from the hub through its own
+`apps/manifest.json` entry (`marvel-heroes/codex`).
+
+### Notable NPCs
+
+The characters of the Marvel sourcebooks, MA1 *Children of the Atom* first
+(`docs/surveys/ma1.md`): 172 names from the book's printed pp.4-81.
+- **One card per printed name.** Its **versions** are the book's entries under
+  that name: Phoenix original and current, Thunderbird original and current.
+  Each version's **blocks** are its stat grids, so forms and tiers are
+  labelled blocks: Ursa Major's Human Form and Bear Form, the Brood's three.
+- **A cross-reference** (Magneto on p.30, Rogue on p.34) is an *appearance*
+  on the character, with its text. No block is derived from an early-version
+  modifier.
+- **A team member the book gives no block of its own** (the Savage Land
+  Mutates, the Imperial Guard) is listed by name and page under its team.
+- A Power whose name is an Ultimate Powers Book power, or is in
+  `data/npc-power-aliases.json`, links to that Power's card.
+
+`data/npcs.json` is **facts only**: names, the identity lines under a header,
+every grid's numbers and rank codes, Health, Karma, Resources and Popularity as
+printed, power and member names, and pages. Each misprint the book's own
+arithmetic exposes keeps both values, the printed one and the corrected one
+(`override`). A rank code the OCR could not read, and so derived from its
+number, is listed under `derived`. The book's sentences are in
+`msh_book_text` only, and each card fetches its entries' text when it opens.
+Without that table the card shows the statistics and says the text is not
+loaded.
 
 ## Point Buy
 
@@ -120,9 +146,12 @@ tables. In a worktree, set `WORKSHOP_MSH_CACHE` to the main checkout's
 `.cache/msh` so both the extractor and the suite's leak check find it.
 
 **The leak check.** When the extraction is present, the smoke suite compares
-every tracked and untracked file under this app, its endpoint, the extractor
-and the migration against every run of ten words in the book's power text, and
-fails on any match. CI has no extraction and says the section skipped.
+every tracked and untracked file under this app, its endpoints, `scripts/msh/`,
+the extractor and the Marvel migrations against every run of ten words in the
+book's power text and in each parsed sourcebook's prose (`msh_book_text`'s
+source), and fails on any match. CI has no extraction and says the section
+skipped. It caught its first leak the day the sourcebooks were added: the MA1
+survey had quoted the book.
 
 ### `msh_book_text`
 
@@ -136,7 +165,7 @@ a card fetches one entry's rows by `(book, entry)` in one query.
 | `key` | `<book>:<entry>:<part>[:<n>]`, unique - `ma1:nightcrawler:power:1` |
 | `book` | the registry slug, `scripts/msh/books.json` |
 | `entry` | the entry's slug, as the committed data names it |
-| `part` | `power`, `talents`, `contacts`, `running`, `background`, `notes`, `member` or `prose` |
+| `part` | `power`, `powers-intro`, `talents`, `contacts`, `running`, `background`, `notes`, `member`, `appearance` (a cross-reference's text) or `prose` |
 | `name` | the power's or member's printed name, when the part has one |
 | `page` | the printed page the piece starts on |
 | `body` | the text, folded to ASCII |
@@ -145,9 +174,20 @@ Migration `087`, in `DB_MARVEL`. The same rule as `msh_power_text`: **its rows
 are never in the repo**, and a database built from the repo has it empty. The
 numbers, rank codes, power names and page citations of each entry are committed;
 the sentences are not. `scripts/msh/roster.py` parses the local OCR cache
-(`$WORKSHOP_MSH_CACHE/books/<slug>/`). The data script that fills this table is
-written beside it, and the leak check above is extended to it when the data
-lands.
+(`$WORKSHOP_MSH_CACHE/books/<slug>/`), and `scripts/msh/npcs.py` writes both
+halves: `data/npcs.json` here, and this table's data script beside the cache.
+`/api/marvel-heroes/book-text?book=ma1&entry=<id>` serves one entry's rows in
+the book's order, and answers 404 `missing: true` when there are none.
+
+**Loading it.** On the machine with the cache:
+
+```bash
+python scripts/msh/roster.py ma1
+python scripts/msh/npcs.py ma1
+node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/book-text.sql
+```
+
+The script deletes the book's rows first, so re-running it replaces them.
 
 ## Saved heroes: `msh_heroes`
 
@@ -384,13 +424,17 @@ by roll, and they decide nothing here.
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
 | `data/equipment.json` | the PB weapon, ammunition, missile, grenade and vehicle tables and the vehicle damage list, as printed apart from R20-R23, with column keys written for the app |
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `data/npcs.json` | the Notable NPCs, built by `scripts/msh/npcs.py`: every character, version, stat block, power and member name, and page, with each misprint's printed and corrected value; facts only, never the book's prose |
+| `data/npc-power-aliases.json` | sourcebook power names that are a UPB Power under another name, for the Notable NPCs' links; clear equivalents only |
 | `codex/index.html`, `codex/app.js` | the Codex page and its entry module; it links `../styles.css`, this app's one stylesheet |
 | `js/codex.js` | the Codex's sections as descriptors, its search, and reading and writing its address; pure |
 | `js/power-text.js` | fetching a Power's full text, shared by the Powers tab and the Codex; a missing row or a failed fetch is an answer, never a throw |
+| `js/book-text.js` | fetching a sourcebook entry's text for a Notable NPC's card, on the same terms, and laying its parts out |
 | `js/gear.js` | the Gear tab's search, and reading a printed rank abbreviation back onto the ladder |
 | `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
 | `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
+| `/functions/api/marvel-heroes/book-text.js` | GET one sourcebook entry's text from `msh_book_text`, in the book's order; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
 | `/functions/api/marvel-heroes/campaigns.js`, `campaigns/[id].js`, `_lib/campaigns.js` | list and create campaigns; read, edit (GM) and delete (GM) one; who may do what, and the checks every write goes through |
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |

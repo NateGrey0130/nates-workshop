@@ -1,11 +1,12 @@
 // The Marvel codex's rules: every Power, Talent, Contact, Weakness and piece of
-// gear the app ships, as one list per section. Pure, so the smoke suite runs
-// it; codex/app.js is the only code that draws it.
+// gear the app ships, and the sourcebooks' Notable NPCs, as one list per
+// section. Pure, so the smoke suite runs it; codex/app.js is the only code that
+// draws it.
 //
 // ONE DESCRIPTOR PER SECTION. SECTIONS below is the whole list, and the page
 // walks it: the tabs, the filter, the cards and the address all come from these
-// entries. A new section - Notable NPCs, when they arrive - is one more entry
-// naming its data file and saying how a row reads. Nothing else changes.
+// entries. A new section is one more entry naming its data file and saying how
+// a row reads.
 //
 // A descriptor says:
 //   id, label        the tab, and ?section=<id>
@@ -16,7 +17,11 @@
 //   key(r)           unique within the section; ?entry=<key> opens that card
 //   title, badge, meta, summary, tags, stats, related, hay   how a row reads
 //   fullText(r)      optional: a power-text code, fetched when the card opens
+//   bookText(r)      optional: [{ book, entry, label }], sourcebook entries whose
+//                    text (msh_book_text) is fetched when the card opens
 //   groupText(g)     optional: a power-text code for a filter group's introduction
+//   related items    { name, code?, section? }: a code links to that key, in
+//                    `section` when it is another section's (an NPC's Power)
 //   search           optional: replaces the default word search
 //
 // It shares the Palladium codex's idea (apps/codex/codex.js) and none of its
@@ -29,6 +34,14 @@ export const norm = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, 
 const slug = (s) => norm(s).replace(/ /g, '-');
 const band = ([lo, hi]) => (lo === hi ? String(lo) : `${lo}-${hi}`);
 const d100 = (r) => band(r.roll.map((n) => String(n).padStart(2, '0')).map((s) => (s === '100' ? '00' : s)));
+
+// An override's field, as a card names it.
+const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
+  R: 'Reason', I: 'Intuition', P: 'Psyche' };
+
+// A version's name on a card: the book's parenthetical, capitalised the one
+// way (MA1 prints both "(original)" and "(Current)"), or its first identity line.
+const versionName = (v) => (v.label ? v.label.charAt(0).toUpperCase() + v.label.slice(1) : v.identity[0] || '');
 
 // The Gear tab's column names, and the ones the tables abbreviate.
 const HEAD = { special_damage: 'Special damage' };
@@ -177,6 +190,87 @@ export const SECTIONS = [
       });
     },
     hay: (r) => Object.values(r).join(' '),
+  },
+  {
+    id: 'npcs',
+    label: 'Notable NPCs',
+    source: 'MA1 Children of the Atom, pp.4-81',
+    files: ['npcs', 'powers'],
+    groupLabel: 'Team',
+    // One row per printed name. Its versions are the book's entries under that
+    // name (Phoenix original and current), each with its stat blocks (forms and
+    // tiers: Ursa Major's Human and Bear Form, the Brood's three). The prose is
+    // not in data/npcs.json - it is the book's - and each card fetches it from
+    // msh_book_text through bookText below.
+    build(data) {
+      const n = data.npcs;
+      this.book = n.book;
+      this.upbName = Object.fromEntries(data.powers.powers.map((p) => [p.code, p.name]));
+      return {
+        rows: n.characters.map((c) => ({ ...c, group: slug(c.team) })),
+        groups: n.teams.map((t) => ({ id: slug(t), name: t })),
+      };
+    },
+    key: (r) => r.id,
+    title: (r) => r.name,
+    badge: (r) => (r.versions.length > 1 ? `${r.versions.length} versions` : ''),
+    meta(r) {
+      const pages = [...new Set(r.versions.flatMap((v) => v.pages))].sort((a, b) => a - b);
+      return `${r.team}, MA1 ${pages.length > 1 ? 'pp.' : 'p.'}${band([pages[0], pages[pages.length - 1]])}`;
+    },
+    // The name and status lines printed under the header: "Kurt Wagner. Mutant
+    // hero". A line that starts lower-case continues the one before it, as
+    // Phoenix's "Alien entity who had assumed the personality / of Jean Grey".
+    summary: (r) => r.versions[0].identity
+      .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
+      || `One of the ${r.team}`,
+    tags: (r) => [
+      r.versions.some((v) => v.blocks.length > 1) && 'forms',
+      r.versions.some((v) => v.members.length) && 'team',
+      r.versions.some((v) => v.blocks.some((b) => b.override && b.override.verdict === 'misprint')) && 'misprint',
+    ],
+    stats(r) {
+      const out = [];
+      for (const v of r.versions) {
+        for (const b of v.blocks) {
+          const head = [r.versions.length > 1 && versionName(v), b.label].filter(Boolean).join(', ');
+          const grid = b.abilities.map(([l, n, c, alt]) => `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`).join(' | ');
+          out.push([head || 'Abilities', grid]);
+          out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
+          out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
+          const o = b.override;
+          const field = o && (FIELD[o.field] || o.field);
+          if (o && o.verdict === 'misprint') {
+            const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
+            out.push(['Misprint', `${field} is printed ${show(o.printed)}; the book's own ranks give ${show(o.corrected)}`]);
+          } else if (o && o.verdict === 'as_printed') {
+            out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
+          }
+        }
+      }
+      for (const a of r.appearances) out.push(['Also appears', `${a.team}, p.${a.page}`]);
+      return out;
+    },
+    related(r) {
+      const out = [];
+      for (const v of r.versions) {
+        const prefix = r.versions.length > 1 ? `${versionName(v)}: ` : '';
+        if (v.powers.length) {
+          out.push([`${prefix}Powers`, v.powers.map((p) => (p.upb
+            ? { name: p.name, code: p.upb, section: 'powers', title: `UPB ${p.upb} ${this.upbName[p.upb]}` }
+            : { name: p.name }))]);
+        }
+        if (v.members.length) out.push([`${prefix}Members`, v.members.map((m) => ({ name: `${m.name} (p.${m.page})` }))]);
+      }
+      return out;
+    },
+    hay: (r) => [r.name, r.team, ...r.versions.flatMap((v) => [v.label, ...v.identity,
+      ...v.powers.map((p) => p.name), ...v.members.map((m) => m.name)])].filter(Boolean).join(' '),
+    // Each version's entry, and each cross-reference, in the book's own text.
+    bookText(r) {
+      return [...r.versions.map((v) => ({ book: this.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
+        ...r.appearances.map((a) => ({ book: this.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
+    },
   },
 ];
 
