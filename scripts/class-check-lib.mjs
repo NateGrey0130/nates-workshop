@@ -194,6 +194,40 @@ export function unmodelledSkillKeys(data) {
 }
 
 /**
+ * Two class shapes the suites refuse, as predicates the suites and `class-check`
+ * both import (BOOK-INGEST-AUDIT F113).
+ *
+ * Until 2026-09-27 each lived inline in its suite, and `class-check --remote`
+ * called a draft in either shape `ready - 0 errors, 0 warnings`; the refusal
+ * came a full regression run later. MOVED HERE RATHER THAN COPIED, so the rule
+ * has one text: `test/regression.mjs` and `test/checks/catalog-data.mjs` call
+ * these exact functions, and `catalog-data.mjs` already imported
+ * `KNOWN_SKILL_KEYS` from this file. `class-check` WARNS on them and moves no
+ * exit code - the suites stay the authority.
+ *
+ * The inputs differ and the predicate does not. Regression hands it a class the
+ * running worker parsed; smoke reads `sdc_base:` and `men_of_arms:` off a data
+ * script's text; `class-check` reads the draft it just parsed.
+ */
+
+// `Literacy: Other` is a placeholder row: it exists to be picked FROM, so the
+// player names the script. An entry that grants it by name is a pick that was
+// never offered, and the character holds a skill called "Literacy: Other".
+// Regression: "no class GRANTS the placeholder row as a fixed skill".
+export const LITERACY_PLACEHOLDER = 'Literacy: Other';
+export function grantsLiteracyPlaceholder(entry) {
+  return entry != null && typeof entry === 'object' && entry.name === LITERACY_PLACEHOLDER;
+}
+
+// `men_of_arms` picks the core S.D.C. roll for a class that states no formula of
+// its own. Beside a stated `sdc_base` it is dead: compose.js's `withCorePools`
+// consults it only when `sdc_base` is null, so the grouping never applies.
+// Smoke: "no S.D.C. grouping sits on a class that states its own".
+export function menOfArmsBesideOwnSdc(statesSdcBase, menOfArms) {
+  return Boolean(statesSdcBase) && menOfArms != null;
+}
+
+/**
  * Read the class markdown back out of a data script.
  *
  * A class arrives one of two ways: as loose markdown while it is being written,

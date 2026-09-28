@@ -52,6 +52,9 @@
 //   replay is wrong about something, and it says so loudly when used.
 // - One automatic retry per file on the 10000 auth error, in case the token
 //   expires mid-sequence.
+// - On Windows, a file whose read-back is too long for one cmd.exe line is
+//   WARNED about before anything runs. It is a warning only; the exit code
+//   does not move (READBACK_BUDGET).
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -129,6 +132,21 @@ files = files.filter((f) => !skipped.includes(f));
 for (const f of skipped) console.log(`skipping ${f} — marked local-only; apply it on its own.`);
 if (!files.length) die('nothing left to apply: every file given is local-only');
 
+// How long an argument is once npm has escaped it for cmd.exe: quoted, embedded
+// quotes backslashed, then every space and !%^&()<>|" caret-escaped TWICE,
+// because wrangler.cmd is a .cmd (npm's @npmcli/promise-spawn escape.js). So a
+// space costs four characters, and SQL, being full of spaces and parentheses,
+// often escapes to twice its length.
+function cmdLineLength(s) {
+  const quoted = /[ \t\n\v"]/.test(s) ? '"' + s.replace(/"/g, '\\"') + '"' : s;
+  return quoted.length + 3 * (quoted.match(/[ !%^&()<>|"]/g) || []).length;
+}
+// Measured 2026-09-27 through d1Batch --local: an escaped read-back of 7,908
+// ran, and 8,324 failed "The command line is too long", for three batches whose
+// RAW lengths at failure ranged from 3,527 to 7,839. The gap to 8,191 is the
+// rest of the command line.
+const READBACK_BUDGET = 7900;
+
 // ── pre-flight: every file checked before anything runs ──
 for (const f of files) {
   if (!existsSync(f)) die(`${f}: no such file`);
@@ -166,6 +184,19 @@ for (const f of files) {
       + "'a' || char(10) || 'b' || ... nests one level per link; write ONE literal with a "
       + "placeholder instead: replace('a~~b~~c', '~~', char(10)). Statement begins: "
       + JSON.stringify(deep[0][1].slice(0, 120)));
+  }
+  // The read-back below goes out as ONE --command, and on Windows npx reaches
+  // wrangler.cmd through cmd.exe, which caps a line at 8,191 characters. Too
+  // long, and it fails AFTER the apply has landed, so the assertions go
+  // unevaluated. A WARNING, not a refusal (REBUILD-AUDIT.md F23): it moves no
+  // exit code. Here rather than in the assertion pre-flight below, so it covers
+  // migrations and --skip-preflight too.
+  const readback = cmdLineLength(trailingSelects(buf.toString('utf8')).join(' '));
+  if (process.platform === 'win32' && readback > READBACK_BUDGET) {
+    console.log(`WARNING ${f}: its read-back is ${readback} characters once cmd.exe has escaped it, `
+      + `over the ${READBACK_BUDGET} budget. The apply will land and the read-back will then fail with `
+      + '"The command line is too long", leaving its assertions unchecked. Shorten the trailing SELECTs: '
+      + 'a count plus a short signature per edit, not the full text.');
   }
 }
 
