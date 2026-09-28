@@ -56,6 +56,21 @@ number, is listed under `derived`. The book's sentences are in
 Without that table the card shows the statistics and says the text is not
 loaded.
 
+**In a campaign.** The GM tools' **Add an NPC from the book** puts any of them
+in a campaign as an NPC sheet, hidden until shown, like a rolled NPC. The
+sheet is the hero shape with `mode: 'book'` (`js/npc-book.js`), under the same
+`SNAPSHOT_VERSION`, as Point Buy's `mode: 'pointbuy'` is, so saved heroes are
+untouched. What makes it different:
+- **Its abilities are the printed numbers**, placed on the ladder by the
+  number's range, not by the printed code.
+- **Each misprint is played corrected** (Northstar's Health is 90, not the
+  printed 70).
+- **Forms** (Ursa Major's Human and Bear) are forms; a **tier** (the Brood
+  Queen) is one choice among its version's blocks.
+- **It has no body type, origin or weakness, and its Powers no rank**,
+  because the book gives a Power's rank in prose. The sheet links to the
+  Codex card for that, and for its Talents and Contacts.
+
 ## Point Buy
 
 A second way to make a hero, and **a house rule, not from any book** (R24). The
@@ -225,7 +240,7 @@ only its own database (`groups.json`).
 | `msh_campaign_heroes` | the link, and only the link: `campaign_id`, `hero_id`, who added it. **A hero is never copied into a campaign**, so the sheet a player opens and the roster the GM adjusts are one row (Nate, 2026-09-28). `campaign_open` is a copy of the campaign's `open`, kept true by a trigger, because the unique index that allows a hero into **one open campaign at a time** cannot look at another table |
 | `msh_hero_events` | every change the GM makes to a hero's `health`, `karma`, `karma_pool` or `advancement`: who, the `before` and `after`, the `delta`. Written in the same batch as the change. Undo is a new row whose `undoes` names the one it reverses; unique, so a change is undone once |
 | `msh_journal_entries`, `msh_journal_fts` | the campaign's notes, optionally about one hero, and their full-text index (external-content FTS5 kept current by triggers) |
-| `msh_npc_sheets` | a statted NPC in **the hero shape** - `build`, `snapshot` (`js/sheet.js`, `SNAPSHOT_VERSION`), `sheet` - so the sheet renderer draws it as it draws a hero. `hidden` is 1 until the GM shows it; the NPC roller writes these |
+| `msh_npc_sheets` | a statted NPC in **the hero shape** - `build`, `snapshot` (`js/sheet.js`, `SNAPSHOT_VERSION`), `sheet` - so the sheet renderer draws it as it draws a hero. `hidden` is 1 until the GM shows it; the NPC roller writes these, and so does **Add an NPC from the book**, whose snapshot has `mode: 'book'` (below) |
 | `msh_npcs`, `msh_npc_mentions` | People: one dossier per name per campaign, optionally backed by an `msh_npc_sheets` row, and which notes mention whom |
 | `msh_campaign_entries`, `msh_campaign_images` | the GM's own pages, never revealed, and the pictures that can be. **An R2 key must start `msh/`**, a `CHECK` rather than a convention, so nothing Marvel stores can land in another app's part of the bucket |
 
@@ -405,6 +420,7 @@ by roll, and they decide nothing here.
 | `gm/room.html`, `gm/room.js` | the room view: the initiative order and whose turn it is, large, for the screen turned to the table. It makes no request - it reads the list the GM page keeps in the same browser and redraws on each change |
 | `js/initiative.js` | R25 as a pure function: a round's d100s, the order, and which tie-breaker - Talent, Agility or re-roll - placed each row; which Talents count is derived from `talents.json` |
 | `js/npc.js` | the NPC roller: the generator run with a GM's body type, origin, exact number of Powers (rolled until one has it, extras bought as UPB p.14 allows, refused rather than padded) and highest rank, ending in a hero-shaped snapshot |
+| `js/npc-book.js` | a Notable NPC as a campaign NPC: one version and stat block of `data/npcs.json` to a hero-shaped snapshot with `mode: 'book'` - the printed numbers placed on the ladder by their range, each misprint the book's arithmetic exposes corrected, forms as forms and tiers as a choice; and the list of choices the GM picks from |
 | `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
 | `js/campaign-ui.js`, `js/undo.js` | the ui adapter the shared campaign views take - `esc`, an `escJs` that carries O'Brien through an inline handler, a yes/no question, the page's status line - and "Removed. Undo" in place of "Are you sure?", with the Palladium pages' contract |
 | `gm/present.html`, `gm/present.js` | present mode: one of the GM's pictures on black, for the screen turned to the table. The behaviour is `shared/js/campaign/present.js`; this is the skeleton of ids it fills, and where Escape goes. Showing is not revealing |
@@ -441,6 +457,7 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes/[heroId].js` | GET a linked hero's sheet (its GM or owner); PATCH `{ field: delta }` for the four play numbers, GM only, written with its `msh_hero_events` row in one batch |
 | `/functions/api/marvel-heroes/campaigns/[id]/events.js` | the GM's last 50 changes, and `{ undo: id }`, which writes the reverse as a new event |
 | `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
+| `/functions/api/marvel-heroes/campaigns/[id]/npcs/from-book.js` | POST, GM only: add a Notable NPC with `js/npc-book.js`, on the same terms as the roller - a hidden sheet, a dossier when asked, a 400 that says which version or block to choose |
 | `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
 | `/functions/api/marvel-heroes/journal.js`, `journal/[entryId].js`, `_lib/notes.js` | a campaign's notes: list and write (members), change and delete (author or GM); @mentions, and the full-text query |
 | `/functions/api/marvel-heroes/campaigns/[id]/search.js`, `ask.js` | full-text search over the notes, and Ask, the paid answer from them |

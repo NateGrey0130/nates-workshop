@@ -16,7 +16,10 @@
 //     on the Campaigns page, and Present opens it in present.html;
 //   - an NPC roller: the hero generator run on the server with a body type,
 //     origin, number of Powers and highest rank, writing a hidden NPC sheet
-//     that can join the initiative list.
+//     that can join the initiative list;
+//   - an NPC from the book: one of the codex's Notable NPCs (js/npc-book.js),
+//     its printed numbers with the book's misprints corrected, written as the
+//     same hidden NPC sheet.
 //
 // ?c=<id> opens a campaign.
 
@@ -26,6 +29,7 @@ import { makeFeat } from '../js/feat.js';
 import { esc, renderSheet, tagline } from '../js/sheet.js';
 import { rollInitiative, initiativeTalents } from '../js/initiative.js';
 import { campaignUi } from '../js/campaign-ui.js';
+import { bookChoices } from '../js/npc-book.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const FIELDS = [['health', 'Health'], ['karma', 'Karma'], ['karma_pool', 'Karma pool']];
@@ -276,6 +280,39 @@ function initNpcForm(data) {
   });
 }
 
+// An NPC from the book: the codex's Notable NPCs (data/npcs.json), one choice
+// per character, version and tier (js/npc-book.js). The file is a few hundred
+// KB, so it loads the first time the field is used rather than with the page.
+function initBookForm() {
+  let choices = null;
+  const pick = $('#book-pick');
+  const load = async () => {
+    if (choices) return choices;
+    const res = await fetch('../data/npcs.json');
+    if (!res.ok) { $('#book-status').textContent = `The book's NPCs could not load: ${res.status}`; return null; }
+    choices = bookChoices(await res.json());
+    $('#book-choices').innerHTML = choices.map((c) => `<option value="${esc(c.label)}">${esc(c.team)}</option>`).join('');
+    return choices;
+  };
+  pick.addEventListener('focus', load, { once: true });
+  $('#book-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const list = await load();
+    const c = list && list.find((x) => x.label === f.get('pick'));
+    if (!c) { $('#book-status').textContent = 'Pick a name from the list.'; return; }
+    const body = { character: c.character, version: c.version, dossier: f.get('dossier') === 'on' };
+    if (c.block !== null) body.block = c.block;
+    if (String(f.get('name') || '').trim()) body.name = f.get('name');
+    $('#book-status').textContent = 'Adding...';
+    const r = await api(`campaigns/${G.id}/npcs/from-book`, { method: 'POST', body });
+    $('#book-status').textContent = r.ok ? `${r.data.npc.name} added${r.data.dossier_id ? ' and put in People' : ''}.` : errorOf(r);
+    if (!r.ok) return;
+    showNpc({ ...r.data.npc, sheet: {} });
+    await loadNpcs();
+  });
+}
+
 // ---------------------------------------------------------------- setting
 
 const MC = globalThis.mcCampaign;
@@ -369,6 +406,7 @@ try {
   initFeat(makeFeat(data.ranks, data.universal));
   G.initTalents = new Set(initiativeTalents(data.talents));
   initNpcForm(data);
+  initBookForm();
 } catch (e) { fail(`The app's tables did not load: ${e.message}`); }
 wire();
 const list = await api('campaigns');

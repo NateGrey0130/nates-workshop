@@ -755,6 +755,78 @@ section('Campaigns: the GM changes only the play numbers, and a hero plays in on
       && sqlite.prepare('SELECT count(*) AS n FROM msh_hero_events').get().n === 0);
 }
 
+section('An NPC from the book: the printed numbers, misprints corrected, as a hidden sheet the GM adds');
+
+{
+  const { makeBookNpc, bookChoices, isForms, NPC_BOOK_DATA } = await import(new URL('../js/npc-book.js', import.meta.url));
+  const { renderSheet, tagline, SNAPSHOT_VERSION } = await import(new URL('../js/sheet.js', import.meta.url));
+  const data = Object.fromEntries(NPC_BOOK_DATA.map((n) => [n, load(`${n}.json`)]));
+  const bookNpc = makeBookNpc(data);
+  const LADDER = new Set(data.ranks.ranks.map((r) => r.id));
+  const abil = (s) => ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'].map((k) => s.abilities[k]);
+
+  const nc = bookNpc({ character: 'nightcrawler' });
+  check('Nightcrawler comes out as MA1 p.7 prints him: F20 A50 S6 E30 R10 I20 P20, Health 106, Karma 50',
+    !nc.error && abil(nc.snapshot).map((a) => a.number).join() === '20,50,6,30,10,20,20'
+    && abil(nc.snapshot).map((a) => a.rank).join() === 'excellent,amazing,typical,remarkable,good,excellent,excellent'
+    && nc.snapshot.health === 106 && nc.snapshot.karma === 50 && nc.snapshot.mode === 'book' && nc.snapshot.v === SNAPSHOT_VERSION,
+    JSON.stringify(nc.snapshot?.abilities));
+  check('a Power the UPB has carries its code, and no Power carries a rank the book gives only in prose',
+    nc.snapshot.powers.find((p) => p.name === 'Teleportation')?.code === 'T16' && nc.snapshot.powers.every((p) => p.number === null));
+  check('Northstar\'s misprinted Health (printed 70) is played as the corrected 90',
+    bookNpc({ character: 'northstar' }).snapshot.health === 90);
+  check('a misprinted rank code cannot move a number: Poltergeist\'s "S 4 Ty" is Poor',
+    bookNpc({ character: 'poltergeist' }).snapshot.abilities.strength.rank === 'poor');
+  const ph = bookNpc({ character: 'phoenix' });
+  check('a character with two versions asks which, and each version builds', /versions/.test(ph.error || '')
+    && bookNpc({ character: 'phoenix', version: 'phoenix-current' }).snapshot?.health === 70);
+  check('a version whose blocks are tiers asks which', /stat blocks/.test(bookNpc({ character: 'brood' }).error || '')
+    && bookNpc({ character: 'brood', block: 2 }).name === 'Brood - Brood Queen');
+  const ursa = bookNpc({ character: 'ursa-major' });
+  check('a version whose blocks are forms is one NPC with forms, as a Changeling hero is',
+    ursa.snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Human Form 70,Bear Form 130', JSON.stringify(ursa.snapshot?.forms));
+  const choices = bookChoices(data.npcs);
+  const broken = choices.filter((c) => { const r = bookNpc(c); return r.error || abil(r.snapshot).some((a) => !LADDER.has(a.rank)); });
+  check(`every choice the GM is offered builds, with every ability on the ladder (${choices.length})`,
+    choices.length > data.npcs.characters.length && broken.length === 0, broken.slice(0, 3).map((c) => c.label).join(' | '));
+  check('and the forms test reads only labels that say so', data.npcs.characters.flatMap((c) => c.versions).filter(isForms).length > 0);
+
+  const html = renderSheet({ name: nc.name, snapshot: nc.snapshot, sheet: {} });
+  check('the sheet draws a book NPC: its tagline, its Powers without a rank, and a link to its Codex card',
+    tagline(nc.snapshot).startsWith('MA1 Children of the Atom, p.7') && html.includes('../codex/?section=npcs&amp;entry=nightcrawler')
+    && !/undefined|\(null\)|NaN/.test(html) && !html.includes('sh-side'), tagline(nc.snapshot));
+  check('the forms render as forms', renderSheet({ name: 'U', snapshot: ursa.snapshot }).includes('2nd form: Bear Form'));
+
+  const { sqlite, env, route, call } = await marvelStandIn();
+  const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
+    npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
+  const camp = (await call(R.list, 'POST', { body: { name: 'Mutant Menace' } })).body.campaign;
+  const p = { id: String(camp.id) };
+  sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet) VALUES ('hero-cy-0001', 'cy@x.org', 'Cy', '{}', '{"health":1}', '{}')`).run();
+  await call(R.link, 'POST', { who: 'cy@x.org', params: p, body: { hero_id: 'hero-cy-0001' } });
+  const added = await call(R.book, 'POST', { params: p, body: { character: 'nightcrawler', dossier: true } });
+  check('the GM adds Nightcrawler: a 201, the book\'s name, and the snapshot the builder makes',
+    added.status === 201 && added.body.npc.name === 'Nightcrawler' && added.body.npc.snapshot.health === 106, JSON.stringify(added.body).slice(0, 160));
+  check('with a People dossier backed by it, when asked',
+    sqlite.prepare('SELECT sheet_id FROM msh_npcs WHERE id = ?').get(added.body.dossier_id)?.sheet_id === added.body.npc.id);
+  check('hidden from the players until the GM shows it',
+    (await call(R.npcs, 'GET', { who: 'cy@x.org', params: p })).body.npcs.length === 0 && (await call(R.npcs, 'GET', { params: p })).body.npcs.length === 1);
+  const renamed = await call(R.book, 'POST', { params: p, body: { character: 'brood', block: 1, name: 'Hunter #2' } });
+  check('a tier and a name of the GM\'s own', renamed.status === 201 && renamed.body.npc.name === 'Hunter #2' && renamed.body.npc.snapshot.health === 70);
+  check('a player cannot add one', (await call(R.book, 'POST', { who: 'cy@x.org', params: p, body: { character: 'nightcrawler' } })).status === 403);
+  const refusals = await Promise.all([
+    call(R.book, 'POST', { params: p, body: { character: 'nobody-at-all' } }),
+    call(R.book, 'POST', { params: p, body: { character: 'phoenix' } }),
+    call(R.book, 'POST', { params: p, body: { character: "x' OR 1=1" } }),
+    call(R.book, 'POST', { params: p, body: { character: 'brood', block: 'queen' } }),
+  ]);
+  check('an unknown character, a missing version, a malformed id and a block that is not a number are each a 400',
+    refusals.every((r) => r.status === 400) && /versions/.test(refusals[1].body.error), refusals.map((r) => r.status).join());
+  check('and People refuses a second dossier of one name before anything is written',
+    (await call(R.book, 'POST', { params: p, body: { character: 'nightcrawler', dossier: true } })).status === 409
+    && sqlite.prepare('SELECT count(*) AS n FROM msh_npc_sheets').get().n === 2);
+}
+
 section('Notes, People and handouts: the shared views on Marvel\'s own tables, members only');
 
 {
