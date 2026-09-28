@@ -3133,3 +3133,86 @@ declining, and leaving the note as the record) should be weighed.
 the skills merge that `F11`'s smoke coverage of `pastLife` has to cover. If the
 search finds the Larhold alone, that cost is carried for one class, and this
 finding should say so and consider declining.
+
+**Taken, 2026-09-27 (branch `pal/fix/book-ingest-audit-f114-larhold-skills`)**,
+as proposed. Posture said back: **opt-in per race.** No race without the key
+changes, there is no new gate, and the union default `F11` chose stays.
+
+- **What was built.** A new R.C.C. key, `pairing_skills: [{ name, base?, note? }]`.
+  `combineClasses` reads it through `racePairingSkills` (`apps/character-creator/js/parser.js`).
+  In a pairing, only the race's listed named `occ_skills` carry over, with the
+  key's `base` and `note` laid over the race's entry. The race's choice groups
+  do not carry. The higher base still wins a skill that both halves grant, and
+  a superseding occupation still keeps none of them.
+- **What the parser refuses:** the key on an O.C.C., a name that the race's
+  own `occ_skills` does not hold, a repeated name, any field other than
+  `name`, `base` or `note`, and a `base` that is not a number.
+- **Where else it is recorded.** `class-check` has it in `KNOWN_KEYS`. It is
+  documented in `apps/character-creator/docs/race-and-occupation.md` and in
+  the class-import frontmatter reference.
+- **Checks.** A new smoke section has 10 checks. Seven went red with the merge
+  and the validator disabled; the other three are guards. Regression pins the
+  carriers by name, checks every legal pairing of each, and checks the Larhold
+  Shaman and ley line walker figures.
+- **Data.** `~041-f114-larhold-pairing-skills.sql` sets the key on
+  `larhold-barbarian` and rewrites that class's SKILLS note in past tense.
+  The coordinating session reserved the number.
+
+**Two premise corrections, from the `audit-premise-auditor`, 2026-09-27.**
+
+1. **The paired War Bison figure is 50, not 60.** The evidence paragraph above
+   sets the composed 70 against the Shaman's 60, "where the sentence above
+   prints Horsemanship +10%". But the catalog row `Riding: War Bison` has base
+   50 (`apps/character-creator/db/add-a-south-america-2-skills.sql:79-80`,
+   production agreeing, read 2026-09-27). That base is already Horsemanship:
+   General's 40 plus the sentence's +10. The proposal's "at the Horsemanship
+   +10% base" reads the same way. Nate chose 50 on 2026-09-27. The Shaman's 60
+   is its own printed line, and it still wins that pairing by the
+   higher-base rule.
+2. **The eight-page count does not reproduce.**
+   - A one-line `grep -liE "in addition to .*O\.C\.C\. skills"` over
+     `.cache/books/*/txt/p*.txt` matched 14 pages in six books.
+   - A version that allows the phrase to wrap matched 25 pages in seven books.
+     That includes `south-america-2` p186 itself, which a one-line grep cannot
+     see, because the sentence wraps.
+   - The conclusion held: every matched page read is additive.
+
+**Wider than written, on Nate's word (2026-09-27).** The key also keeps
+`Language: Larhold` at the race's 98. The printed sentence names only War
+Bison riding and W.P. Archery. A census on a production snapshot of the 525
+published classes, same day, measured what the two-skill key would do:
+
+- **The language:** 188 of the 189 legal Larhold pairings lost the language.
+  Only 89 of those occupations grant a generic `Language: Native Tongue`.
+- **The numbers with the three-skill key:**
+  - The pairings average 17.33 fixed-skill entries, against 23.74 before.
+  - Pairings that hold two named Hand to Hand skills fall from 111 to 1.
+  - No pairing loses the language.
+
+**The search the proposal asks for found the Larhold alone.** It was a
+wrap-aware search with five patterns (additive wording, "regardless of
+O.C.C.", "retain the following skills", "in place of the R.C.C.") over every
+cached book's `txt/p*.txt`, run 2026-09-27. It returned 15 page hits:
+
+- **13 are additive:** `cb1` p080, p081, p083, p088, p138, p140 and p152;
+  `cwc` p204 and p206; `pf` p088; `potm` p167; `south-america-2` p155;
+  `spirit-west` p097.
+- **One is unrelated:** `phase-world` p026 lets a race trade related skills for
+  spells, which is not about pairing.
+- **One is this finding's own page:** `south-america-2` p186.
+- **Stored race markdown:** a sweep found only `larhold-barbarian`'s own note.
+
+So the key is carried for one class, which is the case **Ongoing cost**
+says should consider declining. It was built as the finding proposes because
+the take was as written. Declining it at merge stays open to Nate.
+
+**Found while doing it, and dropped rather than filed.** The race's
+`skills.hand_to_hand` price list (martial arts or assassin for one skill) is
+still the fallback for an occupation that states none. That is the `h2h` line
+in `combineClasses`, and `pairing_skills` does not touch it.
+- The same census counts 22 such Larhold pairings. In 17 of them the
+  occupation grants a named Hand to Hand.
+- In those 22, the race's "Expert can be changed" price applies even though
+  the race's Hand to Hand: Expert no longer carries over.
+- It is recorded here, not numbered, because this take was limited to this
+  section. Nate can number it.
