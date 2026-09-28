@@ -5,12 +5,15 @@
 // It is a script rather than app code, so nothing else in the suite pins it;
 // these checks are the whole guard. Split out of smoke.mjs unchanged.
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceSpans,
   fieldTokens, freeTextFields, parseSourcePages, resolveBookSlug, unclosedFlowLines,
-  unmodelledKeys, unmodelledSkillKeys, KNOWN_SKILL_KEYS } from '../../../../scripts/class-check-lib.mjs';
+  unmodelledKeys, unmodelledSkillKeys, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
+  grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
 import { parseClassMarkdown } from '../../js/parser.js';
@@ -145,6 +148,48 @@ export function run() {
   })();
   check('no shipped class leaves a flow value unclosed', unclosedOffenders.length === 0,
     unclosedOffenders.join(' | '));
+
+  // ── two shapes the suites refuse, warned on at class-check time (BOOK-INGEST-AUDIT F113) ──
+  // The predicates are the ones regression.mjs and catalog-data.mjs call. These
+  // pin the predicates, then run the real CLI on a draft in each shape: a
+  // warning that is computed and never printed would pass the first half.
+  check('a fixed grant of the literacy placeholder is recognised',
+    grantsLiteracyPlaceholder({ name: LITERACY_PLACEHOLDER, base: 30 }));
+  check('and a choice group FROM it is not',
+    !grantsLiteracyPlaceholder({ choose: 1, from: [LITERACY_PLACEHOLDER] })
+    && !grantsLiteracyPlaceholder('Literacy: Other') && !grantsLiteracyPlaceholder(null));
+  check('men_of_arms beside a stated sdc_base is recognised, false included',
+    menOfArmsBesideOwnSdc(true, false) && menOfArmsBesideOwnSdc(true, true));
+  check('and neither half alone is',
+    !menOfArmsBesideOwnSdc(false, true) && !menOfArmsBesideOwnSdc(true, null)
+    && !menOfArmsBesideOwnSdc(true, undefined));
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'f113-'));
+    const cli = join(repoRoot, 'scripts', 'class-check.mjs');
+    const runOn = (name, body) => {
+      const f = join(dir, name + '.md');
+      writeFileSync(f, '---\nid: x\nname: X\nsystem: rifts\nsource_book: B\ncategory: rcc\n'
+        + body + '---\n\n## Lore\n\nA class.\n');
+      return spawnSync(process.execPath, [cli, f, '--no-catalog'], { encoding: 'utf8' });
+    };
+    try {
+      const lit = runOn('lit', 'skills:\n  occ_skills:\n    - { name: "Literacy: Other", base: 30, per_level: 5 }\n');
+      check('class-check WARNS on a fixed literacy placeholder, and exits 0',
+        lit.status === 0 && /WARNINGS[\s\S]*grants "Literacy: Other" by name/.test(lit.stdout),
+        `exit ${lit.status}: ${lit.stdout.slice(-400)}`);
+      const moa = runOn('moa', 'sdc_base: "2d6"\nmen_of_arms: true\n');
+      check('class-check WARNS on men_of_arms beside sdc_base, and exits 0',
+        moa.status === 0 && /WARNINGS[\s\S]*men_of_arms sits beside a stated sdc_base/.test(moa.stdout),
+        `exit ${moa.status}: ${moa.stdout.slice(-400)}`);
+      const clean = runOn('clean', 'men_of_arms: true\nskills:\n  occ_skills:\n'
+        + '    - { choose: 1, from: ["Literacy: Other"], bonus: 10 }\n');
+      check('and says neither on a class in the accepted shapes',
+        clean.status === 0 && !/placeholder row|men_of_arms sits/.test(clean.stdout),
+        clean.stdout.slice(-400));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
 
   // The --field-sources mode: trace a free-text field (starting_money, the
   // equipment prose — the fields nothing else pins) back to the OCR-cache lines

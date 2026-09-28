@@ -20,7 +20,7 @@ import { bonusesFromSkills, combineClasses, levelGrants, parseClassMarkdown, ski
 import { rollPoolFormula } from '../../js/dice.js';
 import { isHandToHand, oneHandToHand, replacePrompt, styleKey, handToHandCost, handToHandCondition,
          handToHandSurcharge } from '../../js/hand-to-hand.js';
-import { KNOWN_SKILL_KEYS } from '../../../../scripts/class-check-lib.mjs';
+import { KNOWN_SKILL_KEYS, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 
 // Declared once for the same skip-the-module contract as environment.mjs —
 // see the note there for why drift in either direction fails loud.
@@ -88,7 +88,8 @@ check('every class without an S.D.C. formula is classified as men-of-arms or not
 // `true`/`false` is enforced by the reading itself: anything else is not
 // read, so the class counts as unclassified above.
 const byId = new Map(classes.filter((c) => c.id).map((c) => [c.id, c]));
-const stale = classes.filter((c) => c.sdc && menOfArms(c) != null).map((c) => c.id);
+// The predicate is shared with class-check, which warns on it (BOOK-INGEST-AUDIT F113).
+const stale = classes.filter((c) => menOfArmsBesideOwnSdc(c.sdc, menOfArms(c))).map((c) => c.id);
 const unknown = [...moaFromFile.keys()].filter((id) => !byId.has(id));
 check('no S.D.C. grouping sits on a class that states its own', stale.length === 0,
   stale.join(', ') + ' — the class page prints a formula, so the grouping never applies');
