@@ -32,6 +32,7 @@ import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseMosLi
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { bootstrapSql } from '../../../scripts/build-local-d1.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
+import { grantsLiteracyPlaceholder } from '../../../scripts/class-check-lib.mjs';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -4125,7 +4126,8 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   for (const c of classes) {
     for (const e of (c.skills?.occ_skills || [])) {
       if (!e) continue;
-      if (e.name === 'Literacy: Other') literacyFixed.push(c.id);
+      // Shared with class-check, which warns on it (BOOK-INGEST-AUDIT F113).
+      if (grantsLiteracyPlaceholder(e)) literacyFixed.push(c.id);
       if (e.name) continue;
       const about = /^Literate/i.test(e.note || '') || /^Literacy: Other,/.test(e.note || '')
         || (Array.isArray(e.from) && e.from.some((n) => /^Literacy/.test(n)));
