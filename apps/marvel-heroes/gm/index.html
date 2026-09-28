@@ -126,6 +126,24 @@
         <p class="muted">A rolled NPC is hidden from the players until you show it.</p>
         <ol id="npc-list" class="log"></ol>
       </form>
+
+      <form id="book-form" class="panel" aria-labelledby="book-h">
+        <span class="caption">The Codex's Notable NPCs, as the sourcebooks print them</span>
+        <h2 id="book-h">Add an NPC from the book</h2>
+        <div class="fields">
+          <label>From the book <input name="pick" id="book-pick" type="text" list="book-choices" autocomplete="off" required
+            placeholder="Start typing a name, e.g. Nightcrawler"></label>
+          <datalist id="book-choices"></datalist>
+          <label>Name <input name="name" type="text" maxlength="80" autocomplete="off" placeholder="as the book names them"></label>
+          <label class="check"><input name="dossier" type="checkbox"> Also add to People</label>
+        </div>
+        <div class="save-row">
+          <button type="submit" class="btn">Add the NPC</button>
+          <p id="book-status" class="muted" aria-live="polite"></p>
+        </div>
+        <p class="muted">Its numbers are the book's, with each misprint the book's own arithmetic exposes corrected.
+          Like a rolled NPC, it is hidden from the players until you show it.</p>
+      </form>
       <div id="npc-sheet" class="panel" hidden></div>
 
       <!-- The GM's pages and the pictures shown from them: the shared setting

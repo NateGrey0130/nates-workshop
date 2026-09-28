@@ -63,6 +63,9 @@ export function snapshot(h, gen, data, contactPicks = []) {
 
 // A one-line description for a list of heroes.
 export function tagline(s) {
+  if (s.mode === 'book') {
+    return `${s.book.source}, p.${s.book.page}; ${s.powers.length} Power${s.powers.length === 1 ? '' : 's'}`;
+  }
   if (s.mode === 'pointbuy') {
     const p = s.pointbuy || {};
     const pts = p.limit === null || p.limit === undefined ? `${p.spent} pts` : `${p.spent}/${p.limit} pts`;
@@ -117,20 +120,23 @@ export function renderSheet({ name, snapshot: s, sheet = {} }) {
       </div>
       <div class="sh-boxes">
         ${box('Health', s.health)}${box('Karma', s.karma)}
-        ${box('Resources', s.abilities.resources.name)}${box('Popularity', `${s.abilities.popularity.name} (${s.abilities.popularity.number})`)}
+        ${box('Resources', s.abilities.resources.name)}${box('Popularity', s.abilities.popularity.rank === null
+          ? s.abilities.popularity.name : `${s.abilities.popularity.name} (${s.abilities.popularity.number})`)}
       </div>
       <div class="sh-boxes play">
         ${num('health', 'Health now', s.health)}${num('karma', 'Karma now', s.karma)}
         ${num('karma_pool', 'Karma pool', 0)}${num('advancement', 'Advancement fund', 0)}
       </div>
-      <div class="sh-bottom${s.mode === 'pointbuy' ? ' single' : ''}">
-        <section class="sh-powers"><h3>Powers</h3>${list(s.powers.map((p) => `<li><strong>${esc(p.name)}</strong> <span class="code">${esc(p.code)}</span>
-            ${esc(p.rankName)} (${p.number})${p.form ? ` <span class="muted">${esc(p.form)} form</span>` : ''}${p.source === 'granted' ? ` ${gm}` : ''}</li>`), 'None.')}
+      <div class="sh-bottom${s.mode === 'pointbuy' || s.mode === 'book' ? ' single' : ''}">
+        <section class="sh-powers"><h3>Powers</h3>${list(s.powers.map((p) => `<li><strong>${esc(p.name)}</strong>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
+            ${p.number === null ? '' : `${esc(p.rankName)} (${p.number})`}${p.form ? ` <span class="muted">${esc(p.form)} form</span>` : ''}${p.source === 'granted' ? ` ${gm}` : ''}</li>`), 'None.')}
+          ${s.mode === 'book' ? `<p class="muted">A Power's rank, and the Talents, Contacts and notes, are in the book's text:
+            <a href="../codex/?section=npcs&amp;entry=${encodeURIComponent(s.book.character)}">${esc(s.book.source)} in the Codex</a>.</p>` : ''}
           ${s.weakness ? `<h3>Weakness</h3><p>${esc(s.weakness.stimulus)}; ${esc(s.weakness.effect)}; ${esc(s.weakness.duration)}</p>` : ''}
           ${s.body?.notes.length ? `<h3>Body</h3><ul class="sh-list">${s.body.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
           ${grants}
         </section>
-        ${s.mode === 'pointbuy' ? '' : `<section class="sh-side">
+        ${s.mode === 'pointbuy' || s.mode === 'book' ? '' : `<section class="sh-side">
           <h3>Contacts</h3>${list(s.contacts.map((c) => `<li>${c ? esc(c.name) : '<span class="muted">to choose</span>'}</li>`), 'None.')}
           <h3>Talents</h3>${list(s.talents.map((t) => `<li>${esc(t.name)} <span class="muted">${esc(t.group)}</span></li>`), 'None.')}
         </section>`}
