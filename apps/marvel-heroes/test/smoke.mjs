@@ -1336,10 +1336,14 @@ section('The codex: every section loads, searches, filters and keeps its address
       nc && npcs.summary(nc) === 'Kurt Wagner. Mutant hero'
       && npcs.stats(nc)[0][1] === 'F 20 Ex | A 50 Am | S 6 Ty | E 30 Rm | R 10 Gd | I 20 Ex | P 20 Ex'
       && npcs.stats(nc)[1][1] === '106 / 50', nc ? JSON.stringify(npcs.stats(nc).slice(0, 2)) : 'no nightcrawler');
-    const links = npcs.rows.flatMap((r) => npcs.related(r)).flatMap(([, items]) => items).filter((x) => x.code);
+    const linked = npcs.rows.flatMap((r) => npcs.related(r)).flatMap(([, items]) => items).filter((x) => x.code);
+    const links = linked.filter((x) => x.section === 'powers');
     check(`Notable NPCs: every linked Power (${links.length}) is a Powers card, in the Powers section`,
-      links.length > 0 && links.every((x) => x.section === 'powers' && codex.byId.powers.byKey.has(x.code)),
+      links.length > 0 && links.every((x) => codex.byId.powers.byKey.has(x.code)),
       links.filter((x) => !codex.byId.powers.byKey.has(x.code)).map((x) => x.code).join());
+    const cards = linked.filter((x) => x.section !== 'powers');
+    check(`Notable NPCs: every other link (${cards.length}, team to member and back) opens a Notable NPCs card`,
+      cards.every((x) => x.section === 'npcs' && npcs.byKey.has(x.code)), cards.filter((x) => !npcs.byKey.has(x.code)).map((x) => x.code).join());
     check('Notable NPCs: every card asks for its own entries\' text, one per version and cross-reference',
       npcs.rows.every((r) => npcs.bookText(r).length === r.versions.length + r.appearances.length
         && npcs.bookText(r).every((b) => b.book === data.npcs.book)));
@@ -1395,6 +1399,27 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const long = n.characters.flatMap((c) => c.versions).filter((v) => v.identity.length > 2);
   check('no identity is longer than two lines, so no paragraph of the book rides in on one',
     long.length === 0, long.map((v) => v.id).join());
+
+  // Team members given their team's stats (scripts/msh/<slug>-members.json):
+  // the tier block with only the ranks their text states, and wherever the
+  // text prints a Health, the build reproduces it.
+  const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const built = blocks.filter(({ b }) => b.built_from);
+  const byId = Object.fromEntries(n.characters.map((c) => [c.id, c]));
+  check(`every member built from a team's block names its team and a tier that team has (${built.length})`,
+    built.length > 0 && built.every(({ c, b }) => byId[slug(c.member_of)]?.versions.some((v) => v.blocks.some((t) => t.label === b.built_from.tier))),
+    built.filter(({ c }) => !byId[slug(c.member_of)]).map(({ c }) => c.id).join());
+  const drift = built.filter(({ c, b }) => {
+    const tier = byId[slug(c.member_of)].versions.flatMap((v) => v.blocks).find((t) => t.label === b.built_from.tier);
+    return b.abilities.some((a, i) => (a[0] in b.built_from.changes ? RANK[b.built_from.changes[a[0]]] !== a[1] : a[1] !== tier.abilities[i][1]));
+  });
+  check('and differs from that tier only in the abilities its text names', drift.length === 0, drift.map(({ c }) => c.id).join());
+  const printed = built.filter(({ b }) => b.built_from.printed_health !== undefined);
+  check(`where the text prints a Health, the build gives that Health (${printed.map(({ c, b }) => `${c.name} ${b.health}`).join(', ')})`,
+    printed.length >= 2 && printed.every(({ b }) => Number(b.health) === b.built_from.printed_health));
+  const links = n.characters.flatMap((c) => c.versions.flatMap((v) => v.members)).filter((m) => m.id);
+  check('every member a team lists with an id opens a card that exists', links.length > 0 && links.every((m) => byId[m.id]),
+    links.filter((m) => !byId[m.id]).map((m) => m.id).join());
 }
 
 section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'s order, and answers none with missing');

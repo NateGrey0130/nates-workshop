@@ -214,6 +214,53 @@ def main(slug_arg):
         text_row(eslug, 'appearance', None, None, e['pages'][0], ' '.join(e['identity']) + ' ' + e['prose'])
         c['appearances'].append({'id': eslug, 'team': section_at(book, e['pages'][0]), 'page': e['pages'][0]})
 
+    # Team members the book gives no block of their own, given one
+    # (scripts/msh/<slug>-members.json): the team's tier block, with the ranks
+    # the member's own text states. Where the text prints a Health the build
+    # must reproduce it - Barbarus 106, Gaza 96 - or nothing is written.
+    mpath = os.path.join(ROOT, 'scripts', 'msh', '%s-members.json' % slug_arg)
+    std = {code: n for n, code in CODE_OF.items()}
+    for m in (json.load(io.open(mpath, encoding='utf-8'))['members'] if os.path.exists(mpath) else []):
+        team_entry = next((e for e in entries if (e['header'] or '').upper() == m['team'].upper()), None)
+        team = next((c for c in chars for v in c['versions'] if team_entry and v['id'] == slug(roman(team_entry['header']))), None)
+        member = team_entry and next((x for x in team_entry['members'] if x['name'].upper() == m['member'].upper()), None)
+        if not team or not member:
+            sys.exit('%s-members.json: no member %s under %s' % (slug_arg, m['member'], m['team']))
+        if m.get('skip'):
+            # a cross-reference: the member links to their own statted entry
+            own = by_id.get(slug(display(m['member'])))
+            for x in team['versions'][0]['members']:
+                if own and x['name'].upper() == display(m['member']).upper():
+                    x['id'] = own['id']
+            continue
+        tier = next((b for v in team['versions'] for b in v['blocks'] if (b['label'] or '').upper() == m['tier'].upper()), None)
+        if not tier:
+            sys.exit('%s-members.json: %s has no block %s' % (slug_arg, team['name'], m['tier']))
+        abilities = [[l, std[m['changes'][l]], m['changes'][l]] if l in m['changes'] else [l, n, c]
+                     for l, n, c, *_ in tier['abilities']]
+        health = sum(a[1] for a in abilities[:4])
+        karma = sum(a[1] for a in abilities[4:])
+        if m.get('printed_health') not in (None, health):
+            sys.exit('%s: the text prints Health %s and the build gives %d' % (m['member'], m['printed_health'], health))
+        name = m.get('name') or display(m['member'])
+        cid = slug(name)
+        if cid in by_id:
+            sys.exit('%s-members.json: %s collides with a character; give it a name' % (slug_arg, name))
+        text_row(cid, 'prose', None, None, m['page'], member['text'])
+        for x in team['versions'][0]['members']:
+            if x['name'].upper() == display(m['member']).upper():
+                x['id'] = cid
+        c = {'id': cid, 'name': name, 'team': team['team'], 'member_of': team['name'], 'appearances': [], 'versions': [{
+            'id': cid, 'label': None, 'team': team['team'], 'pages': [m['page']], 'identity': [],
+            'blocks': [{'label': None, 'page': m['page'], 'abilities': abilities,
+                        'health': str(health), 'karma': str(karma), 'resources': tier['resources'], 'popularity': tier['popularity'],
+                        'built_from': {'tier': tier['label'], 'page': tier['page'], 'changes': m['changes'],
+                                       **({'printed_health': m['printed_health']} if 'printed_health' in m else {})}}],
+            'powers': [{'name': p, 'rank': r, **({'upb': upb[norm(p)]} if norm(p) in upb else {})} for p, r in m.get('powers', [])],
+            'members': [], 'text': ['prose']}]}
+        chars.append(c)
+        by_id[cid] = c
+
     chars.sort(key=lambda c: (min(v['pages'][0] for v in c['versions']), c['name']))
     teams = []
     for c in chars:

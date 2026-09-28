@@ -1803,7 +1803,8 @@
        "name": "Balance"
       },
       {
-       "name": "Leaping"
+       "name": "Leaping",
+       "upb": "T9"
       },
       {
        "name": "Speed"
@@ -4607,7 +4608,8 @@
      ],
      "powers": [
       {
-       "name": "Leaping"
+       "name": "Leaping",
+       "upb": "T9"
       }
      ],
      "members": [],
@@ -11987,6 +11989,551 @@
    "appearances": []
   },
   {
+   "id": "amphibus",
+   "name": "Amphibus",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "amphibus",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "42",
+       "karma": "20",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {}
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Leaping",
+       "rank": "Mn",
+       "upb": "T9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "barbarus",
+   "name": "Barbarus",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "barbarus",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "106",
+       "karma": "20",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {
+         "F": "Ex",
+         "S": "Am",
+         "E": "Rm"
+        },
+        "printed_health": 106
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "brainchild",
+   "name": "Brainchild",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "brainchild",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "86",
+       "karma": "66",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {
+         "A": "Am",
+         "R": "Am"
+        }
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "equilibrius",
+   "name": "Equilibrius",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "equilibrius",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "42",
+       "karma": "54",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {
+         "P": "In"
+        }
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gaza",
+   "name": "Gaza",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "gaza",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "96",
+       "karma": "20",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {
+         "S": "In",
+         "E": "In"
+        },
+        "printed_health": 96
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lupo",
+   "name": "Lupo",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "lupo",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "42",
+       "karma": "20",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {}
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "piper-mutate",
+   "name": "Piper (mutate)",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "piper-mutate",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "42",
+       "karma": "20",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {}
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
+  },
+  {
    "id": "savage-land-mutates",
    "name": "Savage Land Mutates",
    "team": "Villains",
@@ -12053,39 +12600,48 @@
      "members": [
       {
        "name": "Amphibus",
-       "page": 66
+       "page": 66,
+       "id": "amphibus"
       },
       {
        "name": "Barbarus",
-       "page": 66
+       "page": 66,
+       "id": "barbarus"
       },
       {
        "name": "Brainchild",
-       "page": 66
+       "page": 66,
+       "id": "brainchild"
       },
       {
        "name": "Equilibrius",
-       "page": 66
+       "page": 66,
+       "id": "equilibrius"
       },
       {
        "name": "Gaza",
-       "page": 66
+       "page": 66,
+       "id": "gaza"
       },
       {
        "name": "Lorelei",
-       "page": 66
+       "page": 66,
+       "id": "lorelei"
       },
       {
        "name": "Lupo",
-       "page": 66
+       "page": 66,
+       "id": "lupo"
       },
       {
        "name": "Piper",
-       "page": 66
+       "page": 66,
+       "id": "piper-mutate"
       },
       {
        "name": "Vertigo",
-       "page": 66
+       "page": 66,
+       "id": "vertigo"
       }
      ],
      "text": [
@@ -12095,6 +12651,83 @@
     }
    ],
    "appearances": []
+  },
+  {
+   "id": "vertigo",
+   "name": "Vertigo",
+   "team": "Villains",
+   "member_of": "Savage Land Mutates",
+   "appearances": [],
+   "versions": [
+    {
+     "id": "vertigo",
+     "label": null,
+     "team": "Villains",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "42",
+       "karma": "54",
+       "resources": "Fb (2)",
+       "popularity": "0",
+       "built_from": {
+        "tier": "Average Mutate Abilities",
+        "page": 66,
+        "changes": {
+         "P": "In"
+        }
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ]
   },
   {
    "id": "viper",

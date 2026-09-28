@@ -109,7 +109,13 @@ export function makeBookNpc(data) {
       abilities: first.abilities,
       health: first.health, karma: first.karma,
       forms: forms ? v.blocks.map((b) => ({ name: b.label, variant: null, ...block(b) })) : null,
-      powers: v.powers.map((p) => ({ code: p.upb || '', name: p.name, rank: null, rankName: '', number: null, slots: 1, source: 'book' })),
+      // A Power carries a rank only where the book's text states one with it
+      // (Amphibus's Monstrous Leaping, scripts/msh/<slug>-members.json).
+      powers: v.powers.map((p) => {
+        const r = p.rank ? ladder.find((x) => x.abbr === p.rank) : null;
+        return { code: p.upb || '', name: p.name, rank: r ? r.id : null, rankName: r ? r.name : '', number: r ? r.standard : null,
+          slots: 1, source: 'book' };
+      }),
       talents: [], contacts: [],
     };
     return { name, snapshot, build: { mode: 'book', book: data.npcs.book, character: c.id, version: v.id, block: forms ? null : chosen } };

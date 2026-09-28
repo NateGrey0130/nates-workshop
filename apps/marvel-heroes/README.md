@@ -33,7 +33,8 @@ the whole list. It is a page of this app, reached from the hub through its own
 ### Notable NPCs
 
 The characters of the Marvel sourcebooks, MA1 *Children of the Atom* first
-(`docs/surveys/ma1.md`): 172 names from the book's printed pp.4-81.
+(`docs/surveys/ma1.md`): 180 names from the book's printed pp.4-81, eight of
+them team members given their team's stats (below).
 - **One card per printed name.** Its **versions** are the book's entries under
   that name: Phoenix original and current, Thunderbird original and current.
   Each version's **blocks** are its stat grids, so forms and tiers are
@@ -41,8 +42,15 @@ The characters of the Marvel sourcebooks, MA1 *Children of the Atom* first
 - **A cross-reference** (Magneto on p.30, Rogue on p.34) is an *appearance*
   on the character, with its text. No block is derived from an early-version
   modifier.
-- **A team member the book gives no block of its own** (the Savage Land
-  Mutates, the Imperial Guard) is listed by name and page under its team.
+- **A team member the book gives no block of its own** is listed by name and
+  page under its team. Where `scripts/msh/<slug>-members.json` says so, the
+  member is also a card of its own, built from the team's tier block with only
+  the ranks its text states (`built_from`), and linked from the team's card and
+  back. Where the text prints a Health, the build must reproduce it or
+  `npcs.py` stops: Barbarus's 106 and Gaza's 96 check the method. In MA1 that
+  is the eight Savage Land Mutates; Lorelei's run-in points to her own
+  Brotherhood card instead. The Imperial Guard, the Gladiators and the other
+  Starjammers are still listed by name only.
 - A Power whose name is an Ultimate Powers Book power, or is in
   `data/npc-power-aliases.json`, links to that Power's card.
 

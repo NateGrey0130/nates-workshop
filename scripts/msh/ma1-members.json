@@ -1,0 +1,33 @@
+{
+  "about": [
+    "Team members MA1 prints without a stat block of their own, given one: their team's tier block with the ranks their own text states, read off the page. scripts/msh/npcs.py makes each a character of its own.",
+    "Facts only - which member, which tier, which rank changes - never the book's sentences; the member's text stays in msh_book_text.",
+    "  team, member   the team's header and the member's run-in name, as printed",
+    "  tier           the label of the team's block the member starts from",
+    "  changes        ability letter -> the rank code the text states for it; an ability not named keeps the tier's rank",
+    "  powers         [name, rank code]: a Power the text names with a rank",
+    "  printed_health the member's Health where the text prints one; the build must reproduce it, which checks the method",
+    "  name           the display name, where the index prints the member differently (Piper (mutate), p.66, beside the Morlock Piper, p.41)",
+    "  skip           a run-in that is a cross-reference to the member's own statted entry, not a member without a block",
+    "A rank the text gives only for one power (Piper's Psyche 'in this power') changes nothing; it stays in the text."
+  ],
+  "members": [
+    {"team": "SAVAGE LAND MUTATES", "member": "AMPHIBUS", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {}, "powers": [["Leaping", "Mn"]]},
+    {"team": "SAVAGE LAND MUTATES", "member": "BARBARUS", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {"F": "Ex", "S": "Am", "E": "Rm"}, "printed_health": 106},
+    {"team": "SAVAGE LAND MUTATES", "member": "BRAINCHILD", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {"A": "Am", "R": "Am"}},
+    {"team": "SAVAGE LAND MUTATES", "member": "EQUILIBRIUS", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {"P": "In"}},
+    {"team": "SAVAGE LAND MUTATES", "member": "GAZA", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {"S": "In", "E": "In"}, "printed_health": 96},
+    {"team": "SAVAGE LAND MUTATES", "member": "LORELEI", "page": 66, "skip": "a cross-reference: statted in the Brotherhood of Evil Mutants, p.30"},
+    {"team": "SAVAGE LAND MUTATES", "member": "LUPO", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {}},
+    {"team": "SAVAGE LAND MUTATES", "member": "PIPER", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {}, "name": "Piper (mutate)"},
+    {"team": "SAVAGE LAND MUTATES", "member": "VERTIGO", "page": 66, "tier": "Average Mutate Abilities",
+     "changes": {"P": "In"}}
+  ]
+}
