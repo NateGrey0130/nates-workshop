@@ -108,6 +108,26 @@
         <div id="feat-result" class="feat-result" aria-live="polite"></div>
       </form>
 
+      <form id="npc-form" class="panel" aria-labelledby="npc-h">
+        <span class="caption">The hero generator, on the GM's terms</span>
+        <h2 id="npc-h">Roll an NPC</h2>
+        <div class="fields">
+          <label>Name <input name="name" type="text" maxlength="80" autocomplete="off" required placeholder="e.g. Hydra agent"></label>
+          <label>Body type <select name="body" id="npc-body"></select></label>
+          <label>Origin <select name="origin" id="npc-origin"></select></label>
+          <label>Powers <input name="powers" type="number" min="1" max="18" step="1" inputmode="numeric" placeholder="as rolled"></label>
+          <label>Highest rank <select name="ceiling" id="npc-ceiling"></select></label>
+          <label class="check"><input name="dossier" type="checkbox"> Also add to People</label>
+        </div>
+        <div class="save-row">
+          <button type="submit" class="btn roll">Roll the NPC</button>
+          <p id="npc-status" class="muted" aria-live="polite"></p>
+        </div>
+        <p class="muted">A rolled NPC is hidden from the players until you show it.</p>
+        <ol id="npc-list" class="log"></ol>
+      </form>
+      <div id="npc-sheet" class="panel" hidden></div>
+
       <section class="panel" aria-labelledby="log-h">
         <h2 id="log-h">Recent changes</h2>
         <ol id="gm-log" class="log"></ol>

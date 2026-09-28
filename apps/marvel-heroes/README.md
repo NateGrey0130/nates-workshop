@@ -291,6 +291,7 @@ by roll, and they decide nothing here.
 | `gm/index.html`, `gm/gm.js` | GM tools for one campaign you run: the roster (Health, Karma and Karma pool, each - and + by a chosen step, every press logged and undoable), initiative by R25, a FEAT roller, and the GM's notes. `?c=<id>` opens one |
 | `gm/room.html`, `gm/room.js` | the room view: the initiative order and whose turn it is, large, for the screen turned to the table. It makes no request - it reads the list the GM page keeps in the same browser and redraws on each change |
 | `js/initiative.js` | R25 as a pure function: a round's d100s, the order, and which tie-breaker - Talent, Agility or re-roll - placed each row; which Talents count is derived from `talents.json` |
+| `js/npc.js` | the NPC roller: the generator run with a GM's body type, origin, exact number of Powers (rolled until one has it, extras bought as UPB p.14 allows, refused rather than padded) and highest rank, ending in a hero-shaped snapshot |
 | `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
@@ -317,6 +318,8 @@ by roll, and they decide nothing here.
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes/[heroId].js` | GET a linked hero's sheet (its GM or owner); PATCH `{ field: delta }` for the four play numbers, GM only, written with its `msh_hero_events` row in one batch |
 | `/functions/api/marvel-heroes/campaigns/[id]/events.js` | the GM's last 50 changes, and `{ undo: id }`, which writes the reverse as a new event |
+| `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
+| `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
 | `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database |
 

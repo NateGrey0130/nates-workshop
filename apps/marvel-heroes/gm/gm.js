@@ -10,14 +10,17 @@
 //     this browser (localStorage, one list per campaign) and the room view
 //     reads it from there, so the screen turned to the table follows along;
 //   - a FEAT roller on the Universal Table (js/feat.js, data/universal.json);
-//   - the GM's own notes (msh_campaigns.gm_notes).
+//   - the GM's own notes (msh_campaigns.gm_notes);
+//   - an NPC roller: the hero generator run on the server with a body type,
+//     origin, number of Powers and highest rank, writing a hidden NPC sheet
+//     that can join the initiative list.
 //
 // ?c=<id> opens a campaign.
 
 import { api, errorOf } from '../js/api.js';
 import { rng, newSeed, d100 } from '../js/dice.js';
 import { makeFeat } from '../js/feat.js';
-import { esc } from '../js/sheet.js';
+import { esc, renderSheet, tagline } from '../js/sheet.js';
 import { rollInitiative, initiativeTalents } from '../js/initiative.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -210,14 +213,63 @@ function wireInit() {
   });
 }
 
-// NPC sheets the GM has rolled for this campaign (migration 086,
-// msh_npc_sheets). An older server without the route answers 404, and the
-// picker stays hidden.
+// ---------------------------------------------------------------- NPCs
+
+// NPC sheets the GM has rolled for this campaign (msh_npc_sheets): listed under
+// the roller with show/hide, and offered to the initiative list.
 async function loadNpcs() {
   const r = await api(`campaigns/${G.id}/npc-sheets`);
   G.npcs = r.ok ? r.data.npcs : [];
   $('#init-npc').hidden = !G.npcs.length;
   $('#init-npc-pick').innerHTML = G.npcs.map((n) => `<option value="${n.id}">${esc(n.name)}</option>`).join('');
+  $('#npc-list').innerHTML = G.npcs.map((n) => `<li class="log-row">
+      <span><button type="button" class="linklike" data-npc-show="${n.id}">${esc(n.name)}</button>
+        <span class="muted">${esc(tagline(n.snapshot))}; ${n.hidden ? 'hidden' : 'shown to players'}</span></span>
+      <span class="row"><button type="button" class="btn secondary small" data-npc-hide="${n.id}" data-hidden="${n.hidden}">${n.hidden ? 'Show' : 'Hide'}</button>
+        <button type="button" class="btn secondary small" data-npc-drop="${n.id}" aria-label="Delete ${esc(n.name)}">Delete</button></span>
+    </li>`).join('');
+}
+
+function showNpc(n) {
+  const box = $('#npc-sheet');
+  box.hidden = false;
+  box.innerHTML = renderSheet({ name: n.name, snapshot: n.snapshot, sheet: n.sheet || {} });
+  for (const el of box.querySelectorAll('input, textarea')) el.readOnly = true;
+}
+
+function initNpcForm(data) {
+  const opt = (list) => '<option value="">Roll it</option>' + list.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  $('#npc-body').innerHTML = opt(data['body-types'].types);
+  $('#npc-origin').innerHTML = opt(data.origins.origins);
+  $('#npc-ceiling').innerHTML = '<option value="">No limit</option>'
+    + data.ranks.ranks.filter((r) => !['shift-0', 'beyond'].includes(r.id)).map((r) => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  $('#npc-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const body = { name: f.get('name'), dossier: f.get('dossier') === 'on' };
+    for (const k of ['body', 'origin', 'ceiling']) if (f.get(k)) body[k] = f.get(k);
+    if (f.get('powers')) body.powers = Number(f.get('powers'));
+    $('#npc-status').textContent = 'Rolling...';
+    const r = await api(`campaigns/${G.id}/npcs/generate`, { method: 'POST', body });
+    $('#npc-status').textContent = r.ok ? `${r.data.npc.name} rolled${r.data.dossier_id ? ' and added to People' : ''}.` : errorOf(r);
+    if (!r.ok) return;
+    showNpc({ ...r.data.npc, sheet: {} });
+    await loadNpcs();
+  });
+  $('#npc-list').addEventListener('click', async (e) => {
+    const show = e.target.closest('[data-npc-show]');
+    if (show) { showNpc(G.npcs.find((n) => String(n.id) === show.dataset.npcShow)); return; }
+    const hide = e.target.closest('[data-npc-hide]');
+    const drop = e.target.closest('[data-npc-drop]');
+    if (!hide && !drop) return;
+    const id = (hide || drop).dataset.npcHide || (hide || drop).dataset.npcDrop;
+    if (drop && !confirm('Delete this NPC? A People page for it stays, without the stats.')) return;
+    const r = hide
+      ? await api(`campaigns/${G.id}/npc-sheets?id=${id}`, { method: 'PATCH', body: { hidden: hide.dataset.hidden !== '1' } })
+      : await api(`campaigns/${G.id}/npc-sheets?id=${id}`, { method: 'DELETE' });
+    $('#npc-status').textContent = r.ok ? '' : errorOf(r);
+    await loadNpcs();
+  });
 }
 
 // ---------------------------------------------------------------- FEAT
@@ -288,9 +340,10 @@ function wire() {
 }
 
 try {
-  const data = await loadData('ranks', 'universal', 'talents');
+  const data = await loadData('ranks', 'universal', 'talents', 'body-types', 'origins');
   initFeat(makeFeat(data.ranks, data.universal));
   G.initTalents = new Set(initiativeTalents(data.talents));
+  initNpcForm(data);
 } catch (e) { fail(`The app's tables did not load: ${e.message}`); }
 wire();
 const list = await api('campaigns');
