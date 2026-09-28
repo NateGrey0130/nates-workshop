@@ -5011,6 +5011,74 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     human && wizard ? String(combineClasses(human, wizard).ppe_base) : 'class missing');
 }
 
+// ---------- a race that keeps only a few skills in a pairing ----------
+// BOOK-INGEST-AUDIT.md F114, taken 2026-09-27: a race's `pairing_skills` names
+// which of its named occ_skills survive a pairing, where its book's R.C.C. list
+// is the kit of a member who takes no occupation. F11's union stays the default
+// for every race that does not declare it.
+{
+  const classes = (await api('GET', '/classes')).body.classes || [];
+  const byId = new Map(classes.map((c) => [c.id, c]));
+  const races = classes.filter((c) => c.category === 'rcc');
+  const occs = classes.filter((c) => c.category === 'occ');
+  const keepers = races.filter((c) => c.pairing_skills != null);
+
+  // PINNED BY NAME: a wrap-aware search of every cached book on 2026-09-27
+  // found only South America 2 printed 186 keeping a subset of a full R.C.C.
+  // list; every other "in addition to O.C.C. skills" race ADDS its list. A
+  // race added here should be a decision someone reads the book for.
+  const want = ['larhold-barbarian'];
+  const got = keepers.map((c) => c.id).sort();
+  check('the races declaring pairing_skills are the pinned ones',
+    JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
+
+  // Every legal pairing of each: none of the race's unlisted named skills and
+  // none of its choice groups survive unless the occupation grants them too.
+  const leaked = [];
+  let pairs = 0;
+  for (const r of keepers) {
+    const kept = new Set(r.pairing_skills.map((p) => String(p.name).toLowerCase()));
+    for (const occ of occs) {
+      if (occ.system !== r.system || occ.supersedes_race === true) continue;
+      if (!occAllowedForRace(r, occ).allowed || !raceAllowedForOcc(occ, r).allowed) continue;
+      pairs++;
+      const c = combineClasses(r, occ).skills.occ_skills;
+      const occNamed = new Set((occ.skills?.occ_skills || []).filter((s) => s.name).map((s) => String(s.name).toLowerCase()));
+      for (const s of r.skills?.occ_skills || []) {
+        if (s.name) {
+          const k = String(s.name).toLowerCase();
+          const held = c.some((x) => x.name && String(x.name).toLowerCase() === k);
+          if (kept.has(k) !== held && !occNamed.has(k)) leaked.push(`${r.id}+${occ.id}: ${s.name} ${held ? 'held' : 'lost'}`);
+        } else if (c.includes(s)) {
+          leaked.push(`${r.id}+${occ.id}: a race choice group`);
+        }
+      }
+    }
+  }
+  check('and each keeps exactly the skills it lists, in every legal pairing',
+    keepers.length > 0 && pairs > 0 && leaked.length === 0, `${pairs} pairings; ` + leaked.slice(0, 5).join('; '));
+
+  // The pairing F114 opened on, against the book: War Bison at the Shaman's
+  // own 60 over the key's 50, W.P. Archery and Language: Larhold kept, and
+  // none of Detect Ambush, the second Hand to Hand or the race's W.P. pick.
+  const larhold = byId.get('larhold-barbarian');
+  const shaman = byId.get('larhold-shaman');
+  const ls = larhold && shaman ? combineClasses(larhold, shaman).skills.occ_skills : null;
+  const base = (n) => ls?.find((s) => s.name === n)?.base;
+  check('a Larhold Shaman keeps War Bison at its own 60, W.P. Archery and Language: Larhold 98',
+    !!ls && base('Riding: War Bison') === 60 && base('W.P. Archery') === 0 && base('Language: Larhold') === 98,
+    ls ? `${base('Riding: War Bison')}/${base('W.P. Archery')}/${base('Language: Larhold')}` : 'class missing');
+  check('and none of the race\'s Detect Ambush, Hand to Hand: Expert or W.P. of choice',
+    !!ls && base('Detect Ambush') == null && base('Hand to Hand: Expert') == null
+    && !ls.some((s) => !s.name && (s.categories || []).includes('Weapon Proficiencies')),
+    ls ? ls.map((s) => s.name || '[group]').join(', ') : 'class missing');
+  const llw = byId.get('ley-line-walker');
+  const ll = larhold && llw ? combineClasses(larhold, llw).skills.occ_skills : null;
+  check('and a Larhold ley line walker carries War Bison at the key\'s 50',
+    !!ll && ll.find((s) => s.name === 'Riding: War Bison')?.base === 50,
+    ll ? String(ll.find((s) => s.name === 'Riding: War Bison')?.base) : 'class missing');
+}
+
 // ---------- a pool formula copied from its neighbour ----------
 // BOOK-INGEST-AUDIT.md F17. The Crazy's `isp_base` was "6d6" where its book
 // prints "6D6 plus the M.E. attribute number, +1D6 per level" - and two lines

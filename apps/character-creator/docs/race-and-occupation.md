@@ -186,6 +186,7 @@ pool bases as before — none of them knows a character can have two classes.
 | `ppe_base`, `starting_money` the race's `yields_to_occupation` gives to the occupation's `occ_group` | the **occupation's** when it states one (see below) |
 | attribute minimums | **both** — the stricter of each |
 | fixed skills | **both**, a shared skill held once at the higher base |
+| the race's fixed skills, when it declares `pairing_skills` | only the ones it lists (see below) |
 | related & secondary allowances | the **occupation** |
 | experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's (see below) |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
@@ -269,6 +270,35 @@ found the four move 298 pairings and no others, none of them to a P.P.E. below
 the race's own. The races whose P.P.E. adds (`rifts-cyclops`, `rifts-elf`,
 `true-atlantean`) or that print their own mage figure (`godling`, `true-inca`,
 `draconid`) do not carry it, and regression pins the four by name.
+
+### A race may name the few skills a pairing keeps
+
+Fixed skills from both classes is the default, and it stays the default: most
+races' books say their skills are *in addition to* an O.C.C.'s. One prints the
+opposite. South America 2 printed 186 gives the Larhold R.C.C. list as the kit
+of a Larhold who takes no O.C.C., and says what carries over when one is taken:
+*"In addition to the specific O.C.C. skills, all Larhold will have Riding: War
+Bison (same basic level as Horsemanship at +10%), and W.P.: Archery and
+Targeting."* A race like that lists what it keeps:
+
+```yaml
+pairing_skills: [{ name: "Riding: War Bison", base: 50 }, { name: "W.P. Archery" }, { name: "Language: Larhold" }]
+```
+
+In a pairing, only those of the race's named `occ_skills` carry over, each with
+the key's `base` or `note` where it gives one; the race's choice groups do not.
+A skill the occupation also grants is still held once at the higher base, and a
+superseding occupation still keeps none. The parser refuses the key on an
+O.C.C., a name the race's own `occ_skills` does not hold, a repeat, and any
+entry field but `name`, `base` and `note` (BOOK-INGEST-AUDIT.md F114, taken
+2026-09-27).
+
+`larhold-barbarian` is the only race that carries it. A wrap-aware search of
+every cached book on 2026-09-27 found every other *in addition to O.C.C.
+skills* race adding its list. The Larhold keeps its native `Language: Larhold`
+as well, which the sentence does not name, on Nate's word: without it 188 of
+the 189 legal Larhold pairings lost the language. Regression pins the carrier
+by name.
 
 ### A class may supersede its race
 

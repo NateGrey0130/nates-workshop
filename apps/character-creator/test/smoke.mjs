@@ -6257,9 +6257,13 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   check('xp_table is NOT among them: the occupation’s ladder wins a pairing',
     !/LOST_TO_RACE[\s\S]{0,200}xp_table/.test(cc)
     && /if \(occ\.xp_table != null\) out\.xp_table = occ\.xp_table;/.test(parser));
+  // A race's `pairing_skills` (F114) narrows its own list in a pairing; with
+  // no key the helper hands back the whole list, so the union is still the
+  // default and still nothing an occupation is warned about.
   check('occ_skills is deliberately NOT among them, because the lists union',
     !/LOST_TO_RACE[\s\S]{0,200}occ_skills/.test(cc)
-    && /const pastLife = superseded \? \[\] : \(rcc\.skills\?\.occ_skills \|\| \[\]\);/.test(parser));
+    && /const pastLife = superseded \? \[\] : racePairingSkills\(rcc\);/.test(parser)
+    && /const own = rcc\.skills\?\.occ_skills \|\| \[\];\s*\n\s*if \(!Array\.isArray\(rcc\.pairing_skills\)\) return own;/.test(parser));
 }
 
 section('A level-up pick is keyed by its grant, not by its position (BOOK-INGEST-AUDIT F72)');
@@ -7668,6 +7672,61 @@ section('A race may yield its P.P.E. or money to an occupation (BOOK-INGEST-AUDI
     unkeyed.ppe_base === '3d6' && unkeyed.starting_money === '1d6x1000');
   check('and a named group whose occupation states no figure leaves the race\'s',
     combineClasses(race, doc('occ', 'occ_group: magic\nsdc_base: "30"\n').data).ppe_base === '3d6');
+}
+
+section('A race may name the few skills a pairing keeps (BOOK-INGEST-AUDIT F114)');
+{
+  // South America 2 printed 186: "in addition to the specific O.C.C. skills,
+  // all Larhold will have Riding: War Bison ... and W.P.: Archery and
+  // Targeting." The union F11 chose stays the default; this is the race-side
+  // opt-in for a book that keeps a few and drops the rest.
+  const doc = (cat, extra) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n` + extra + '---\n\n## Lore\n\nx\n');
+  const raceSkills = 'skills:\n  occ_skills:\n'
+    + '    - { name: "Riding: War Bison", base: 70, per_level: 4, note: "+20%" }\n'
+    + '    - { name: "W.P. Archery", base: 0, per_level: 0 }\n'
+    + '    - { name: "Detect Ambush", base: 40, per_level: 5 }\n'
+    + '    - { name: "Wilderness Survival", base: 45, per_level: 5 }\n'
+    + '    - { choose: 1, categories: ["Weapon Proficiencies"] }\n';
+  const key = 'pairing_skills: [{ name: "Riding: War Bison", base: 50, note: "Paired." }, { name: "w.p. archery" }]\n';
+  const ok = doc('rcc', key + raceSkills);
+  check('pairing_skills parses on an R.C.C. as a list of the race\'s own named skills',
+    ok.ok && ok.data.pairing_skills.length === 2 && ok.warnings.length === 0, ok.errors.concat(ok.warnings).join('; '));
+  check('and is an error on an occupation', !doc('occ', key + raceSkills).ok);
+  check('and refuses a name the race\'s own occ_skills does not hold',
+    !doc('rcc', 'pairing_skills: [{ name: "Horsemanship: General" }]\n' + raceSkills).ok);
+  check('and refuses an empty or bare list, a bare string, a name twice, a stray key or a non-number base',
+    !doc('rcc', 'pairing_skills: []\n' + raceSkills).ok
+    && !doc('rcc', 'pairing_skills: W.P. Archery\n' + raceSkills).ok
+    && !doc('rcc', 'pairing_skills: ["W.P. Archery"]\n' + raceSkills).ok
+    && !doc('rcc', 'pairing_skills: [{ name: "W.P. Archery" }, { name: "W.P. Archery" }]\n' + raceSkills).ok
+    && !doc('rcc', 'pairing_skills: [{ name: "W.P. Archery", per_level: 3 }]\n' + raceSkills).ok
+    && !doc('rcc', 'pairing_skills: [{ name: "W.P. Archery", base: "50" }]\n' + raceSkills).ok);
+
+  const occ = doc('occ', 'skills:\n  occ_skills:\n'
+    + '    - { name: "Wilderness Survival", base: 35, per_level: 5 }\n'
+    + '    - { name: "Lore: Demons & Monsters", base: 40, per_level: 5 }\n'
+    + '    - { choose: 1, from: ["Language: Other"] }\n').data;
+  const keyed = combineClasses(ok.data, occ).skills.occ_skills;
+  const named = (list) => list.filter((s) => s.name).map((s) => `${s.name}=${s.base}`).sort().join(', ');
+  check('paired, only the listed skills carry over, at the base the key gives',
+    named(keyed) === 'Lore: Demons & Monsters=40, Riding: War Bison=50, W.P. Archery=0, Wilderness Survival=35',
+    named(keyed));
+  check('and the race\'s choice groups do not; the occupation\'s still do',
+    keyed.filter((s) => !s.name).length === 1 && keyed.find((s) => !s.name).from?.[0] === 'Language: Other');
+  check('and the key\'s note replaces the race\'s, its per_level stays the race\'s',
+    keyed.find((s) => s.name === 'Riding: War Bison')?.note === 'Paired.'
+    && keyed.find((s) => s.name === 'Riding: War Bison')?.per_level === 4);
+  const plain = combineClasses(doc('rcc', raceSkills).data, occ).skills.occ_skills;
+  check('and a race without the key unions its whole list exactly as before (F11)',
+    named(plain) === 'Detect Ambush=40, Lore: Demons & Monsters=40, Riding: War Bison=70, W.P. Archery=0, Wilderness Survival=45'
+    && plain.filter((s) => !s.name).length === 2, named(plain));
+  const higher = doc('occ', 'skills:\n  occ_skills:\n    - { name: "Riding: War Bison", base: 60, per_level: 4 }\n').data;
+  check('and the higher base still wins when the occupation grants the same skill',
+    combineClasses(ok.data, higher).skills.occ_skills.find((s) => s.name === 'Riding: War Bison')?.base === 60);
+  check('and a superseding occupation still keeps none of them',
+    combineClasses(ok.data, doc('occ', 'supersedes_race: true\nsdc_base: "30"\n').data)
+      .skills.occ_skills.every((s) => s.name !== 'W.P. Archery'));
 }
 
 // The four Nightbane second-body sections used to be written out here. They
