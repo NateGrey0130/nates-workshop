@@ -436,6 +436,18 @@ is the R.C.C.'s own equipment line and an O.C.C. replaces that package (printed
 186). Regression pins the carriers by name, so a new one updates that list in
 `apps/character-creator/test/regression.mjs`.
 
+**`pairing_skills: [{ name, base?, note? }]` narrows the race's fixed skills in
+a pairing** (BOOK-INGEST-AUDIT.md F114). It goes on an R.C.C. - the parser
+refuses it on an O.C.C. - and lists which of the race's own named `occ_skills`
+survive when an occupation is taken; the rest, and the race's choice groups, are
+dropped. `base` and `note` replace the race's for that pairing, `per_level`
+stays the race's, and the higher base still wins a skill both halves grant. Use
+it only when the book prints the R.C.C. list as the kit of a member with no
+O.C.C. and names what carries over: `larhold-barbarian`, South America 2 printed
+186. **Not for a race whose skills are "in addition to" an O.C.C.'s**, which is
+nearly every race and what the union already does. Regression pins the carriers
+by name.
+
 **A race and an occupation that BOTH state psionics are MERGED, not chosen
 between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
 born with and an occupation says what training adds, so `powers` and

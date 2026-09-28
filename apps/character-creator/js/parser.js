@@ -1150,6 +1150,29 @@ export function bonusesFromSkills(rows, level = null, cls = null) {
   return out;
 }
 
+// The race's fixed skills a pairing carries: all of them, or, when the race
+// declares `pairing_skills` (BOOK-INGEST-AUDIT F114), only the named entries it
+// lists, in its order, with its `base` and `note` laid over the race's entry.
+// A listed name the race does not hold is dropped here and refused by
+// parseClassMarkdown, so it never reaches a pairing unnoticed.
+function racePairingSkills(rcc) {
+  const own = rcc.skills?.occ_skills || [];
+  if (!Array.isArray(rcc.pairing_skills)) return own;
+  const byName = new Map();
+  for (const e of own) if (e?.name) byName.set(String(e.name).toLowerCase(), e);
+  const kept = [];
+  for (const p of rcc.pairing_skills) {
+    const found = p?.name != null ? byName.get(String(p.name).toLowerCase()) : null;
+    if (!found) continue;
+    kept.push({
+      ...found,
+      ...(typeof p.base === 'number' ? { base: p.base } : {}),
+      ...(typeof p.note === 'string' ? { note: p.note } : {}),
+    });
+  }
+  return kept;
+}
+
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.
 export function combineClasses(rcc, occ) {
@@ -1344,9 +1367,19 @@ export function combineClasses(rcc, occ) {
   // reborn" is a replacement, and it was the loudest half of the defect: 37 of
   // the 57 races carried between 1 and 17 named skills through a
   // transformation that is supposed to erase them.
+  //
+  // A RACE MAY NAME THE FEW IT KEEPS (BOOK-INGEST-AUDIT F114). The union above
+  // is F11's default and stays one; `pairing_skills` is a race-side opt-in for
+  // a book whose R.C.C. list is the kit of a member who takes NO occupation and
+  // which names what carries over when one is taken - South America 2 printed
+  // 186, "in addition to the specific O.C.C. skills, all Larhold will have
+  // Riding: War Bison ... and W.P.: Archery and Targeting." Only the race's
+  // named entries it lists survive, each with its own `base` or `note` where
+  // given, and the race's choice groups do not; a race without the key
+  // composes exactly as above.
   const bySkill = new Map();
   const groups = [];
-  const pastLife = superseded ? [] : (rcc.skills?.occ_skills || []);
+  const pastLife = superseded ? [] : racePairingSkills(rcc);
   for (const entry of [...pastLife, ...(occ.skills?.occ_skills || [])]) {
     if (!entry?.name) { groups.push(entry); continue; }
     const key = String(entry.name).toLowerCase();
@@ -3103,6 +3136,36 @@ export function parseClassMarkdown(text) {
     if (data.category !== 'rcc') {
       errors.push('yields_to_occupation belongs on an R.C.C.; an occupation that takes a race\'s'
         + ' figure says so with overrides_race');
+    }
+  }
+  // F114. The race's named skills that survive a pairing, where its book keeps
+  // only a few. Closed on the race's own list: a name it does not hold would
+  // keep nothing and say nothing, which is the silent shape this refuses.
+  if (data.pairing_skills !== undefined) {
+    const list = data.pairing_skills;
+    if (!Array.isArray(list) || list.length === 0) {
+      errors.push('pairing_skills must be a non-empty list of { name, base?, note? }');
+    } else {
+      const own = new Set((data.skills?.occ_skills || [])
+        .filter((e) => e?.name).map((e) => String(e.name).toLowerCase()));
+      const seen = new Set();
+      for (const p of list) {
+        if (!p || typeof p !== 'object' || Array.isArray(p) || typeof p.name !== 'string' || !p.name.trim()) {
+          errors.push('pairing_skills entries must each be a map with a name');
+          continue;
+        }
+        const extra = Object.keys(p).filter((k) => !['name', 'base', 'note'].includes(k));
+        if (extra.length) errors.push(`pairing_skills.${p.name} may carry only name, base and note, got: ${extra.join(', ')}`);
+        if (p.base !== undefined && typeof p.base !== 'number') errors.push(`pairing_skills.${p.name} base must be a number`);
+        if (p.note !== undefined && typeof p.note !== 'string') errors.push(`pairing_skills.${p.name} note must be text`);
+        const key = p.name.toLowerCase();
+        if (!own.has(key)) errors.push(`pairing_skills names ${p.name}, which is not one of this race's named occ_skills`);
+        if (seen.has(key)) errors.push(`pairing_skills names ${p.name} twice`);
+        seen.add(key);
+      }
+    }
+    if (data.category !== 'rcc') {
+      errors.push('pairing_skills belongs on an R.C.C.; it says which of a race\'s skills an occupation leaves standing');
     }
   }
   // A class whose own attacks stand and whose Hand to Hand style adds none

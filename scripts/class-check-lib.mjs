@@ -67,6 +67,10 @@ export const KNOWN_KEYS = new Set([
   // ppe_base or starting_money yields to. Read by combineClasses.
   // BOOK-INGEST-AUDIT.md F111, the Larhold part.
   'yields_to_occupation',
+  // Which of a race's named occ_skills survive a pairing, where its book keeps
+  // only a few - the Larhold's War Bison riding and W.P. Archery. Read by
+  // combineClasses. BOOK-INGEST-AUDIT.md F114.
+  'pairing_skills',
   // A class whose own attacks stand and whose Hand to Hand style adds none -
   // the Pneuma-Biforms' "do not add the melee round attacks from the hand to
   // hand combat skill". Read by bonusesFromSkills, carried by combineClasses.
