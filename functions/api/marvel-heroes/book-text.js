@@ -32,7 +32,7 @@ function json(body, status = 200) {
   });
 }
 
-export function orderRows(rows) {
+function orderRows(rows) {
   const n = (k) => Number(k.split(':')[3] || 0);
   return [...rows].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part) || n(a.key) - n(b.key));
 }
