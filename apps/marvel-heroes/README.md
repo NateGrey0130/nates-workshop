@@ -247,6 +247,18 @@ And one that is not from any book at all:
   Power, choosing a Power is free, the GM's grants are excluded by a tick and
   ignore the cap, and going over warns rather than refuses. See *Point Buy*
   above; the rules are in `js/pointbuy.js`.
+- **R25** **Initiative is a house rule** (Nate, 2026-09-28): everyone rolls
+  d100 each round and the highest goes first. A tie goes, in order, to (1) an
+  initiative Talent **that applies this round**, (2) the higher Agility
+  **number**, not the rank's name, and (3) if still tied, **only the tied
+  combatants** roll d100 again, as often as it takes. The two Talents that give
+  "+1 initiative" - Weapons Specialist with its one chosen weapon (PB,
+  `talents.json` `weapons-specialist`) and Martial Arts E unarmed
+  (`martial-arts-e`) - are **read as a tie-breaker, not +1 on the roll**. Both
+  are conditional, so the GM ticks "Talent applies" per combatant per round,
+  an unticked box breaks nothing, and every tick clears when the round ends.
+  The GM page tags each row with what broke its tie. The rules are in
+  `js/initiative.js`.
 
 How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
 many body types it combines and the chance of keeping each trait (50%, 33%,
@@ -276,6 +288,9 @@ by roll, and they decide nothing here.
 |---|---|
 | `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM; one tab per tool |
 | `campaign/index.html`, `campaign/campaign.js` | Campaigns: create one, add or take out your own heroes, and - for its GM - read every linked hero's sheet, read-only. `?c=<id>` opens one |
+| `gm/index.html`, `gm/gm.js` | GM tools for one campaign you run: the roster (Health, Karma and Karma pool, each - and + by a chosen step, every press logged and undoable), initiative by R25, a FEAT roller, and the GM's notes. `?c=<id>` opens one |
+| `gm/room.html`, `gm/room.js` | the room view: the initiative order and whose turn it is, large, for the screen turned to the table. It makes no request - it reads the list the GM page keeps in the same browser and redraws on each change |
+| `js/initiative.js` | R25 as a pure function: a round's d100s, the order, and which tie-breaker - Talent, Agility or re-roll - placed each row; which Talents count is derived from `talents.json` |
 | `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |

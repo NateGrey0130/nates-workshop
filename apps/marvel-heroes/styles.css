@@ -516,3 +516,39 @@ table.gear th[scope="row"] { min-width: 10em; }
 .fields.one { grid-template-columns: 1fr; }
 .camp-hero { display: flex; gap: 8px; align-items: center; }
 .camp-hero .hero-item { flex: 1; }
+.gm-main { max-width: 1280px; }
+.gm-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .gm-grid { grid-template-columns: 1fr; } }
+.roster { display: grid; gap: 10px; }
+.roster-row { display: grid; grid-template-columns: minmax(120px, 1.2fr) repeat(3, minmax(0, 1fr)); gap: 10px; align-items: center;
+  padding: 10px; border: 2px solid var(--rule); border-radius: var(--radius); background: var(--panel-alt); }
+.roster-who { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.roster-num { display: flex; flex-direction: column; gap: 4px; }
+.roster-num output { min-width: 3ch; text-align: center; font-weight: 700; font-size: 18px; }
+@media (max-width: 620px) { .roster-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } .roster-who { grid-column: 1 / -1; } }
+.log-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.log-row.undone > span { text-decoration: line-through; }
+.init-list { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 8px; }
+.init-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 8px 12px; align-items: center;
+  padding: 8px 10px; border: 2px solid var(--rule); border-radius: var(--radius); background: var(--panel); }
+.init-row.on { background: var(--yellow); color: var(--on-yellow); box-shadow: var(--shadow); }
+.init-row.on .muted { color: var(--on-yellow); }
+.init-roll { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.init-notalent { font-size: 13px; }
+@media (max-width: 620px) { .init-row { grid-template-columns: 1fr auto; } }
+.init-add { border-top: 2px solid var(--rule); margin-top: 12px; padding-top: 8px; }
+.gm-bar .save-row { align-items: end; }
+
+/* -- the room view: the GM's screen turned to the table -- */
+body.room { background-image: none; }
+.room-main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
+.room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; }
+.room-head h1 { font-size: clamp(32px, 6vw, 64px); margin: 0; }
+.room-back { margin-left: auto; font-weight: 600; }
+.room-list { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 10px; }
+.room-list li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 18px; font-size: clamp(22px, 4vw, 44px);
+  border: 3px solid var(--rule); border-radius: var(--radius); background: var(--panel); }
+.room-list li.on { background: var(--yellow); color: var(--on-yellow); box-shadow: var(--shadow); font-weight: 800; }
+.room-list li.done { opacity: 0.6; }
+.room-name { overflow-wrap: anywhere; font-family: var(--font-display); }
+.room-roll { white-space: nowrap; }

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room view &mdash; Marvel Heroes</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<meta name="theme-color" content="#b81d24">
+<!-- The app's own stylesheet ONLY, one directory up. See the header of styles.css. -->
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body class="room">
+<main class="room-main">
+  <header class="room-head">
+    <span class="caption">Initiative</span>
+    <h1 id="room-round">Waiting for the GM</h1>
+    <a class="room-back" id="room-back" href="./">Back to GM tools</a>
+  </header>
+  <ol id="room-list" class="room-list" aria-live="polite"></ol>
+  <p id="room-empty" class="muted">Nothing rolled yet.</p>
+</main>
+<script type="module" src="room.js"></script>
+</body>
+</html>
