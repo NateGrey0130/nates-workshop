@@ -2366,6 +2366,112 @@ book, and none was looked for elsewhere.
 **Ongoing cost:** none recurring. One function gets one more rule, and the
 smoke test that pins `categoryBonus` gets a case.
 
+**Taken, 2026-09-27 (branch `pal/feat/book-ingest-audit-f109-f110`)**, in one
+PR with F110. Nate approved bundling the two on 2026-09-27, overriding one PR
+per finding for this batch.
+
+**Posture, said back:** *"a mechanism change to one function, with the data
+following it. It adds no check."* **It became two functions.** The premise
+audit (2026-09-27, at `1b0f850a`) ran the real parser and found
+`categoryAllows` first-hit too: with the `only` entry listed first, every
+other skill in the category was REFUSED, not only scored wrong. Both functions
+now read one ranking. No check was added. Smoke gained cases for the rule, and
+an existing pin that read `categoryAllows`'s body for the four keys now reads
+them in the helper they moved to.
+
+**What shipped.**
+
+- `apps/character-creator/js/parser.js`: `realCategoryEntry` ranks every entry
+  naming the skill's real category. An `only` / `only_prefix` entry that names
+  the skill comes first, then an `except` / `except_prefix` entry that does not
+  exclude it, then a plain entry. `categoryAllows` and `categoryBonus` both use
+  that ranking, so they cannot disagree about which line of the book applied.
+  When no entry admits the skill, the first same-named entry is returned, which
+  keeps a list naming a category once behaving exactly as it did. The per-entry
+  test moved unchanged into `entryAdmits`.
+- The four lines are now a second entry after the one each class already had
+  (`~038-f109-scoped-category-bonuses.sql`):
+  - `cs-nautical-specialist`: Pilot +10% to water vehicles, and Domestic +10%
+    to Fishing (printed 79).
+  - `cs-rpa-fly-boy-ace`: Pilot +15% on aircraft and modes of flying,
+    otherwise +10% (printed 85).
+  - `cs-rcsg-scientist`: Technical +20% to Literacy and Language (printed 83).
+  - `cs-special-forces`: Technical +15% to Literacy and Language (printed 87).
+
+  Each printed line was re-read from the `cwc` cache (`p080`, `p085`, `p084`
+  and `p088`; offset +1). The notes that sent the player to add the difference
+  by hand are rewritten in the same file.
+- **The order is load-bearing for the window before the merge.** The data is
+  applied first, while production still runs first-hit. Listed second, the new
+  entry changes nothing until the ranking deploys.
+- `functions/api/character-creator/_lib/skill-picks.js`: the comment on
+  `dedupeCategories` said a repeated entry was harmless because matching took
+  the first hit. It now says why the answer is unchanged under ranking.
+
+**Measured, 2026-09-27**, against a `--remote` snapshot of 525 live published
+classes and 402 skills, with a scratch script comparing `origin/main`'s parser
+to this branch's:
+
+- Every `categories` list in every class, 2,472 lists plus each class's merged
+  related list, against every skill: **0** lists name a category twice, and
+  **0** answers differ.
+- The four classes after the data: **0** admission changes. Bonus changes land
+  only on the scoped skills. The Nautical has 9 (Fishing 5 to 10, and eight
+  water rows 0 to 10), the Fly Boy 8 (10 to 15), and the RCSG and Special
+  Forces 32 each (10 to 20 and 10 to 15).
+- The window: the new rows under the OLD parser give **0** changes of any kind.
+
+**Judgement calls, recorded so they can be argued with:**
+
+- "Water vehicles" is the five `Boat:` rows (as `only_prefix`), plus Military:
+  Submersibles, Military: Warships & Patrol Boats and Water Scooters. Water
+  Skiing & Surfing and Advanced Deep Sea Diving are not vehicles.
+- "All aircraft and modes of flying" is Airplane, Helicopter, Hovercycles,
+  Skycycles & Rocket Bikes, Jet Aircraft, Jet Packs, Military: Combat
+  Helicopter, Military: Jet Fighters and Wingrider Flying Wing. Power armor,
+  robot combat and the `Space:` rows stay at +10%.
+- "Literacy and Language" is `only_prefix: ["Language", "Literacy"]` on
+  Technical, which also reaches `Language Dialects`.
+
+**One instruction in the brief was not followed, on purpose.** The brief said
+the Nautical split's `except` entry "must add the water vehicles"
+<!-- claim-ok: quoting the brief this note corrects -->. It does not need to:
+the ranking puts the `only` entry first for the skills it names. Adding them
+would also have refused every water vehicle during the pre-merge window, under
+the first-hit parser still live. The Pilot `except` entry is unchanged.
+
+**Residue:**
+
+- **Seven Literacy/Language rows are filed under Communications**, not
+  Technical. They are Literacy: Euro, Gypsy, Native Language, Other and Russian,
+  and Language: All (magical) and Dolphin/Whale (`--remote` snapshot,
+  2026-09-27). They take the Communications +10% in both classes, 10 and 5
+  points under the book. They were not moved, because re-filing a catalog row
+  reaches every class that grants either category.
+- **The same shape in other books is not taken here.** A regex sweep of the
+  same snapshot for "+N% to/on … only" and "but +N% to" hits about forty live
+  classes. How many of those are a related-category bonus stored as the whole
+  category was **not measured**, because the phrase also matches O.C.C.-skill
+  bonuses and cross-category lines that F9 already scores. The hits include:
+  cyber-knight, glitter-boy, techno-wizard, body-fixer, mercenary-fighter,
+  thief, assassin, diabolist, witch, mind-mage, psi-healer, psi-mystic,
+  psychic-sensitive, daitya, phaeton-juicer, dragon-ray, rurlel-eelman,
+  whale-singer, fq-deep-intel-agent, fq-gb-reloader, totem-warrior, pirate,
+  sailor, biomancer, psi-ghost, arkhon, arkhon-spectral-hunter, serpentoid,
+  condoroid, falconoid, duelist, african-priest, african-witch, grey-seer,
+  rifts-gosai-assassin, zenith-moon-warper and rogue-scientist. The first to
+  take is `ntset-protector`, from this same book (Medical +10% to Crime
+  Sciences and Pathology, printed 188). **Not filed as a finding.** This menu
+  holds code changes only, the mechanism now exists, and per its header each
+  of these is data that ships with its own book.
+- `node scripts/audit-citations.mjs --remote F109`, 2026-09-27: 0 of 525 live
+  classes cite it. A tree grep found `apps/character-creator/docs/surveys/cwc.md`
+  (*What remains*), corrected in this PR. A grep of the memory directory found
+  three files. `cwc-survey.md` called both findings open, and
+  `book-reprocess-sweep-plan.md` listed scoped bonuses as still impossible.
+  Both are corrected. `south-america-2-survey.md` cites the number only to
+  record a numbering collision, and needed nothing.
+
 ### F110 — low — Psi-Stalker and Dog Boy are O.C.C.s, so "humans or Psi-Stalkers only" cannot be stated
 
 **Opened 2026-09-25** by the `cwc` import (`apps/character-creator/docs/surveys/cwc.md`).
@@ -2418,6 +2524,122 @@ until someone reads the 13 mentions and sorts rules from mentions.
 occupation, forever. That is exactly the cost `ntset-psi-hound` already pays
 by copying, so the choice is about where that cost lives, not whether there
 is one.
+
+**Taken, 2026-09-27 (branch `pal/feat/book-ingest-audit-f109-f110`)**, in one
+PR with F109. Nate approved bundling the two on 2026-09-27, overriding one PR
+per finding for this batch.
+
+**Posture, said back:** *"a data-model decision first. No code until Nate
+chooses. It adds no check."* **Nate chose the split, race plus O.C.C., on
+2026-09-27.** The weighing the proposal asked for came out for it. The cost it
+warned of is characters built on the combined classes, and there were none. A
+`q.mjs --remote` query on 2026-09-27 found 0 of 7 `characters` and 0 of 2
+`character_drafts` rows on `psi-stalker`, `wild-psi-stalker`, `dog-boy` or
+`ntset-psi-hound`, whether as `class_id`, `occ_class_id` or in a draft's
+state. The premise audit found the same. No check was added. One named list in
+`regression.mjs` grew, and one wizard guard was added, explained below.
+
+**What shipped.**
+
+- **Two races.** `mutant-psi-stalker` (`add-mutant-psi-stalker-class.sql`)
+  carries the Psi-Stalker's attribute dice, P.P.E., psionics, psionic, magic
+  and physical bonuses, and natural abilities. RUE prints all of these as what
+  every Psi-Stalker has, "CS, civilized or wild" (printed 153, cache `p156`).
+  `mutant-dog` (`add-mutant-dog-class.sql`) carries the Dog Boy's dice, hit
+  points, S.D.C. 20, P.P.E., psionics, racial bonuses and senses. Neither race
+  has `occ_restrictions`: each occupation's own `race_restrictions` governs, as
+  for any race. The Dog Boy's Designer's Note says a Dog Boy could learn other
+  jobs.
+- **Four occupation halves** (`~039-f110-psi-stalker-and-dog-races.sql`). They
+  are `psi-stalker`, `wild-psi-stalker`, `dog-boy` and `ntset-psi-hound`, which
+  keep their ids and names and now take only their race. The Wild
+  Psi-Stalker's P.S. and P.P. of 3D6+2 are the race's 3D6 plus a +2 occupation
+  bonus. The Psi-Hound keeps only the bonuses its book adds to the dog's. The
+  copy of `dog-boy`'s package that the proposal called a second thing to keep
+  in step is gone.
+- **Every class whose book opens it to these races.** `coalition-grunt` (RUE
+  printed 233, cache `p236`), `ntset-protector` (printed 188) and `psi-slinger`
+  (New West printed 100) now read `only: ["none", "mutant-psi-stalker"]`.
+  `psi-net-agent` also takes `mutant-dog`, because its roster (printed 194) is
+  20% Psi-Stalkers and 50% Dog Pack among its Sensitives. The Psi-Slinger's
+  prose line citing BOOK-INGEST-AUDIT F51 is replaced by the block F51 could not
+  write, which closes the narrower of that finding's two gaps. F51 itself stays
+  closed undone, because its kind field is still unbuilt.
+- **`seljuk`'s note** named the old `only: ["none"]` block as what refuses a
+  seljuk Psi-Stalker. The rule still holds, and the note now names the block
+  that enforces it.
+
+**Measured before any of it was written.** A scratch script ran on 2026-09-27
+against production's own rows. It composed each race with each reworked
+occupation through `js/compose.js` `composeClass`, and compared the result to
+what the combined class composed to. The fields compared were attribute dice,
+all four pools, P.P.E., money, experience table, psionics, bonuses, skills,
+equipment, abilities and level progression. The result was **0 unexpected
+differences** across all four pairs. The one expected difference is the Wild
+Psi-Stalker's +2, which arrives as a bonus. The restriction prose moved to the
+race and is reworded, not lost. `raceAllowedForOcc` was run over the nine
+classes, for a human, each race, and each class. Every occupation half refuses
+a human and the other race, and every opened class admits exactly the races
+its book names.
+
+**Corrections to the finding.**
+
+- **"13 live classes" did not reproduce, and it counted mentions, as the
+  finding said.** Re-measured 2026-09-27 over the same `--remote` snapshot,
+  with `parseClassMarkdown` reading `race_restrictions.note` and every
+  `restrictions` line: **16** live classes name Psi-Stalkers, Dog Boys, Dog
+  Packs or a mutant dog. Sorted:
+  - 5 combined classes. These are the four split here, and `psycho-stalker`.
+  - 4 rules this change can now state: the Grunt, the NTSET Protector, the
+    Psi-Net Agent and the Psi-Slinger.
+  - 7 mentions that open nothing new. `coalition-juicer`'s book forbids the
+    augmentation of Psi-Stalkers and mutant animals. `iss-peacekeeper` prints
+    no racial line and stays human. `whale-singer` and `biomancer` carry no bar,
+    so they pair with either race already. `dakini` names Psi-Stalkers as its
+    enemies. `rifts-wolfen` and `rifts-coyle` are races that may join a Dog
+    Pack, and `dog-boy` stays the mutant dog's training.
+- **The scope included `psycho-stalker`**, which the finding does not name.
+  **It is deliberately left combined, and still human-only.** Juicer Uprising
+  prints its physical and saving-throw bonuses with the Psi-Stalker's already
+  counted in, as its own ability text records. `combineClasses` sums a race's
+  bonuses with an occupation's (`sumBonusGroups`, unconditional even for
+  `supersedes_race`). So pairing it with `mutant-psi-stalker` would count +5 vs
+  mind control, +6 vs horror factor, +1 attack and the pool bonuses twice. Its
+  note now says so. **Dropped rather than filed:** no key lets an occupation
+  replace a race's bonuses, and this one class stands correctly as it is.
+- The validator line numbers in the finding had moved: `validateRaceRestrictions`
+  is at `parser.js:2961` and `raceAllowedForOcc` at `:2896` on this branch.
+
+**One addition the finding did not ask for, because the split made it
+necessary.** The wizard's Race step lists O.C.C.s beside R.C.C.s, as a human
+character. Picked there, the Dog Boy used to be a whole mutant dog. After the
+split it would be a human with Dog Pack training and no warning. `app.js`
+`classBlock()` now refuses an O.C.C. whose own `race_restrictions` refuse the
+human case, and names the race to pick instead. The same guard covers the
+fifteen own-training O.C.C.s that already refused a human in
+`raceAllowedForOcc` and were never stopped on this step. The Nightbane packages
+are among them. The server still accepts a lone O.C.C., as it always has
+(`characters.js` checks a pairing only when both halves are present).
+**Dropped rather than filed:** the wizard is the path a player takes.
+
+**Residue:**
+
+- `shared/js/namegen-themes.js` keys name themes by class id, and the
+  occupation wins. A Dog Boy still gets Dog Boy names, and a Psi-Stalker
+  Coalition names. A mutant dog in any other occupation gets the game default.
+  That pairing could not exist before today, so nothing loses a theme. It is
+  left alone because a shared path goes in its own PR.
+- The City Creator lists `category: rcc` rows as a city's races, so both new
+  races become available there. A race without an occupation is rolled with
+  one, as for any race that needs one.
+- `node scripts/audit-citations.mjs --remote F110`, 2026-09-27: 0 of 525 live
+  classes cite it by number. The classes whose notes said the pairing could not
+  be built are rewritten above. The tree grep found
+  `apps/character-creator/docs/known-limitations.md`, whose table of the
+  founding race bars now records the change, and `docs/surveys/cwc.md`. The
+  memory grep found `cwc-survey.md`, which called the finding open and is
+  corrected, and `south-america-2-survey.md`, which cites the number only for a
+  numbering collision.
 
 ### F111 — medium — a non-superseding race keeps its own P.P.E. and starting money over a spell-casting or salaried occupation's
 

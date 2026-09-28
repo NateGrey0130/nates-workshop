@@ -1476,6 +1476,20 @@ function classBlock() {
   if ((S.rcc.variants || []).length && !S.variant) {
     return { why: `Choose which ${S.rcc.name} to continue.`, anchor: 'variant-picker' };
   }
+  // An O.C.C. picked here is a human character, and some occupations are one
+  // race's own training that a human cannot take: the Nightbane packages, and
+  // since BOOK-INGEST-AUDIT F110 the Dog Boy and the two Psi-Stalkers, whose
+  // racial package is now a race of its own. Picked alone, one of those would
+  // be a human with none of the race's body, so the page names the race to
+  // pick instead. The Occupation step already asks the same question of a
+  // pairing (raceAllowedForOcc); this is the one-class case of it.
+  if (S.rcc.category === 'occ' && !raceAllowedForOcc(S.rcc, null).allowed) {
+    const ids = S.rcc.race_restrictions?.only || [];
+    const races = ids.map((id) => S.classes.find((c) => c.id === id)?.name || id);
+    return { why: races.length
+      ? `${S.rcc.name} is an occupation for ${races.join(' or ')}: pick ${races.length === 1 ? 'that race' : 'one of those races'} here, then ${S.rcc.name} as its occupation.`
+      : raceAllowedForOcc(S.rcc, null).reason, anchor: null };
+  }
   // Every power the class asks for must be chosen before the rolls that depend
   // on them. Same reasoning as an unresolved gear choice: the book intends the
   // character to have them, so leaving one blank is an oversight rather than a

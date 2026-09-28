@@ -1526,6 +1526,91 @@ export function categoryLabel(entry) {
   return parts.length ? `${name} (${parts.join('; ')})` : (name ?? '');
 }
 
+// Does this ONE category entry, already known to match the skill's real
+// category, admit the skill? `name` is normName(skill.name).
+//
+// PREFIX FORMS, for a book that excludes a FAMILY rather than a list.
+// BOOK-INGEST-AUDIT.md F23(b): Triax printed 170 says "Technical: All, except
+// lore" and "Pilot: All, except pilot robots & power armor and robot combat".
+// Those are 14 `Lore...` rows and 13 `Robot Combat...` rows, and this book
+// alone added NINE of the latter - so an exact-name list would rot on contact
+// and under-grant silently, which is the direction nothing reports.
+//
+// SCOPED TO THIS ENTRY, never applied globally. Two `Lore:` rows are filed
+// under Cowboy rather than Technical, and a prefix reaching across categories
+// would exclude them from a Cowboy grant that never mentioned lore. Every
+// caller hands this an entry already matching the skill's real category, so
+// testing it here IS the scoping.
+function entryAdmits(entry, name) {
+  if (typeof entry === 'string') return true;
+  if (!entry || typeof entry !== 'object') return false;
+  const hasPrefix = (list) => Array.isArray(list)
+    && list.some((p) => normName(p) && name.startsWith(normName(p)));
+
+  if (entryNarrowsByOnly(entry)) {
+    return (entry.only || []).some((n) => normName(n) === name)
+      || hasPrefix(entry.only_prefix);
+  }
+  // `except` AND `except_prefix` TOGETHER ARE LEGAL, unlike `only` with
+  // `except`. Both point the same way - each REMOVES rows - so "these named
+  // ones, and everything starting with that" has exactly one reading, where
+  // "only these, except some of them" has none. The Pilot line needs precisely
+  // this combination and cannot be written without it: one exact name
+  // (`Robots & Power Armor`) and one family (`Robot Combat...`).
+  if (entryNarrowsByExcept(entry)) {
+    return !(entry.except || []).some((n) => normName(n) === name)
+      && !hasPrefix(entry.except_prefix);
+  }
+  return true;
+}
+
+const entryNarrowsByOnly = (entry) => !!entry && typeof entry === 'object'
+  && ((Array.isArray(entry.only) && entry.only.length > 0)
+    || (Array.isArray(entry.only_prefix) && entry.only_prefix.length > 0));
+const entryNarrowsByExcept = (entry) => !!entry && typeof entry === 'object'
+  && ((Array.isArray(entry.except) && entry.except.length > 0)
+    || (Array.isArray(entry.except_prefix) && entry.except_prefix.length > 0));
+
+// WHICH of the class's entries for the skill's real category speaks for it,
+// and whether that entry admits it (BOOK-INGEST-AUDIT.md F109).
+//
+// A book can print a bonus for PART of a category: Coalition War Campaign's
+// Nautical Specialist is "Pilot: Any, +10% to water vehicles only". That is
+// written as the category twice - `{ Pilot, only: [the water vehicles],
+// bonus: 10 }` and `{ Pilot, except: [the same names] }` - and both
+// categoryAllows and categoryBonus used to take the FIRST entry with a matching
+// name. With the `only` entry first every other Pilot skill was REFUSED; with
+// the `except` entry first none got the +10%.
+//
+// So the entries are ranked, most specific first:
+//   1. an `only` / `only_prefix` entry that names the skill;
+//   2. an `except` / `except_prefix` entry that does not exclude it;
+//   3. a plain entry, which admits everything in the category.
+// The first rank that holds wins, and it is BOTH the admission and the bonus,
+// so the two functions cannot disagree about which line of the book applied.
+//
+// When no entry admits the skill, the first same-named entry is returned with
+// `admits: false`. That keeps a list naming the category once - every class
+// before F109 - behaving exactly as the old first-hit lookup did, including
+// categoryBonus's fallback for a pick admitted cross-category.
+//
+// A MERGED list can hold two same-named entries too: dedupeCategories
+// (functions/api/character-creator/_lib/skill-picks.js) folds several related
+// grants' lists into one. Ranking reads that list as "a pick passes if any
+// grant admits it, and the most specific grant pays", where first-hit read it
+// as whichever grant happened to be listed first.
+function realCategoryEntry(categories, skill) {
+  const name = normName(skill?.name);
+  const cat = normName(skill?.category);
+  const same = categories.filter((c) => normName(categoryName(c)) === cat);
+  if (!same.length) return { entry: undefined, admits: false };
+  const admitting = same.filter((c) => entryAdmits(c, name));
+  const best = admitting.find(entryNarrowsByOnly)
+    ?? admitting.find(entryNarrowsByExcept)
+    ?? admitting[0];
+  return best !== undefined ? { entry: best, admits: true } : { entry: same[0], admits: false };
+}
+
 // The percentage this category list adds to a RELATED pick of `skill`, or 0.
 //
 // Keyed on the skill's REAL catalog category, with ONE exception: an entry that
@@ -1566,7 +1651,9 @@ export function categoryBonus(categories, skill) {
       return admitting.bonus;
     }
   }
-  const entry = categories.find((c) => normName(categoryName(c)) === real);
+  // Ranked, not first-hit: a category printed with a bonus for part of it is
+  // two entries, and the one naming the skill pays (F109, realCategoryEntry).
+  const { entry } = realCategoryEntry(categories, skill);
   if (!entry || typeof entry === 'string') return 0;
   return Number.isFinite(entry.bonus) ? entry.bonus : 0;
 }
@@ -1621,42 +1708,12 @@ export function categoryAllows(categories, skill) {
     return true;
   }
 
-  const cat = normName(skill?.category);
-  const entry = categories.find((c) => normName(categoryName(c)) === cat);
-  if (entry === undefined) return false;
-  if (typeof entry === 'string') return true;
-  // PREFIX FORMS, for a book that excludes a FAMILY rather than a list.
-  // BOOK-INGEST-AUDIT.md F23(b): Triax printed 170 says "Technical: All, except
-  // lore" and "Pilot: All, except pilot robots & power armor and robot combat".
-  // Those are 14 `Lore...` rows and 13 `Robot Combat...` rows, and this book
-  // alone added NINE of the latter - so an exact-name list would rot on contact
-  // and under-grant silently, which is the direction nothing reports.
-  //
-  // SCOPED TO THIS ENTRY, never applied globally. Two `Lore:` rows are filed
-  // under Cowboy rather than Technical, and a prefix reaching across categories
-  // would exclude them from a Cowboy grant that never mentioned lore. `entry`
-  // is already the one matching the skill's real category, so testing it here
-  // IS the scoping.
-  const hasPrefix = (list) => Array.isArray(list)
-    && list.some((p) => normName(p) && name.startsWith(normName(p)));
-
-  if ((Array.isArray(entry.only) && entry.only.length)
-      || (Array.isArray(entry.only_prefix) && entry.only_prefix.length)) {
-    return (entry.only || []).some((n) => normName(n) === name)
-      || hasPrefix(entry.only_prefix);
-  }
-  // `except` AND `except_prefix` TOGETHER ARE LEGAL, unlike `only` with
-  // `except`. Both point the same way - each REMOVES rows - so "these named
-  // ones, and everything starting with that" has exactly one reading, where
-  // "only these, except some of them" has none. The Pilot line needs precisely
-  // this combination and cannot be written without it: one exact name
-  // (`Robots & Power Armor`) and one family (`Robot Combat...`).
-  if ((Array.isArray(entry.except) && entry.except.length)
-      || (Array.isArray(entry.except_prefix) && entry.except_prefix.length)) {
-    return !(entry.except || []).some((n) => normName(n) === name)
-      && !hasPrefix(entry.except_prefix);
-  }
-  return true;
+  // Every entry naming the skill's real category is asked, not only the first:
+  // a category can be listed twice to scope a bonus to part of it (F109), and
+  // the `only` half must not refuse what the `except` half admits. The entry
+  // itself is judged by entryAdmits, which reads `only`, `except`,
+  // `only_prefix` and `except_prefix` off the ENTRY.
+  return realCategoryEntry(categories, skill).admits;
 }
 
 function validateCategories(where, categories, errors) {
