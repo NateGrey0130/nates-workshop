@@ -1994,8 +1994,12 @@ branch existed.
     rather than syncing it and filing the fix.**
   - A one-clause tightening (*"the sync STILL takes production's value … never
     leave the row out of it"*) was refused by the session's auto-mode
-    classifier, so the wording that shipped is the one those runs read. **That
-    clause is left for Nate.**
+    classifier. **Nate asked for it on 2026-09-28, and it is in.**
+  - **GREEN, re-run on the tightened clause, identical prompt:** 2 of 2 synced
+    every differing row, the disputed one included, filed the correction
+    separately and planned no write to production. **Both runs were leaky:**
+    they ran on this branch, whose name and commit subject state the answer,
+    and both read `~042`. They count for less than the four above.
 - **Kept blind, and where it was not:** GREEN runners saw the skill file listed
   as modified. As in `REBUILD-AUDIT` `F24`, the runners read the skill by path,
   because the junction serves the main checkout.
