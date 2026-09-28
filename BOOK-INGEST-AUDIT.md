@@ -1908,6 +1908,140 @@ low-confidence by construction** — see the line above.
 is one-time, and the divergence recurs unless the policy also says what prevents
 it.
 
+**Taken, 2026-09-27 (branch `pal/data/book-ingest-audit-f105-prod-wins`).**
+**The policy, Nate's decision of 2026-09-27: PRODUCTION WINS.** When a repo
+data script and production disagree on a field value, production is
+authoritative. The repo is brought up to it by one last-sorting sync script,
+each statement guarded so that against production it matches no row. Where
+production is wrong against the book or a stated rule, the sync still takes
+production's value, and the correction is its own script citing the page or
+rule, or a numbered finding. It is never folded into the sync.
+
+**Posture, said back:** *"nothing is applied to production until the policy
+exists."* The policy exists now, and the one thing applied moves the repo, not
+production. `~042-f105-sync-repo-to-production.sql` went `--remote` via
+`d1-apply.mjs` at 2026-09-28 03:43:25 UTC (`data_script_runs` id 1080), and all
+three read-backs held. `psionic_powers` and `imported_classes` were dumped in
+full (`SELECT * … ORDER BY`, `q.mjs --remote`) before and after, and each pair
+is byte-identical: 173,710 and 6,387,765 bytes, every `updated_at` included.
+The apply's `changes: 2` is the endpoint's aggregate, not a row count.
+`drift-check --remote` then printed NO DRIFT.
+
+**Premise corrections, from the premise audit.** None of them changes the
+scope:
+- The deferral quoted above sits under `F89` in the closed file (heading
+  `BOOK-INGEST-AUDIT.closed.md:11148`), at lines 11185-11187, not in `F99`.
+- The *six premises were wrong* note is also `F89`'s. `F99`'s own note records
+  one wrong claim.
+- The 428 was measured 2026-08-28, so it was 25 days old when this was filed,
+  not 8. It fell to 86 the same day (memory `repo-rebuilds-names-not-values`),
+  and `REBUILD-AUDIT` `F24`'s run found 23 earlier on 2026-09-27.
+- There was no earlier policy, and the earlier per-finding calls went both
+  ways. This finding named none of them, so they are named here:
+  - `F95` (closed file, line 13520) let production win one gear row and the
+    repo win the other fourteen.
+  - `REBUILD-AUDIT` `F15` changed production to match the repo.
+  - `REBUILD-AUDIT` `F19` let the rebuild lead on six classes.
+- The policy now replaces those row-by-row calls.
+
+**Re-measured first.** `node scripts/repo-vs-live.mjs --offenders` ran on a
+clean tree at `b62d4727`, 2026-09-27 23:22 EDT: 4 min 43 s, exit 0, **23 fields
+across 23 rows**, and no row missing or extra. Every one was decided:
+
+| rows | field | live / rebuild | decided |
+|---|---|---|---|
+| 18 psionic powers | `system` | `rifts` / NULL | **production wins, and it is right.** `add-psyscape-psionic-powers.sql` and `add-africa-psionic-powers.sql` write `rifts` on purpose, as the column literal, for categories only a class naming them reaches. A rebuild's two unkeyed untags (`untag-cross-system.sql`, `zzzz-untag-escaped-psionics.sql`) sort after them and clear it. |
+| `psi-slayer`, `psi-tech`, `psi-warrior`, `zapper` | `markdown`, a note | the book's quoted words / a renamed quote | **production wins, and it is right.** `fix-class-skill-names-to-rue.sql` and `zz-canonicalise-class-skill-names.sql` rename a quoted skill name anywhere, and on a rebuild that includes the notes quoting the book. |
+| `psi-tech`, `zenith-moon-warper` | `markdown`, the armour line | placeholder `item_id` / choose block | **production wins, and production is wrong** against `fix-category-gear-rows.sql`'s own rule. Synced anyway. The correction is filed as `F115`. |
+
+**These 18 are not `REBUILD-AUDIT` `F15`'s shape.** That rule opened the core
+psionics chapter to every game. These rows sit in `Mind Bleeder` and `Special`
+(Astral Golem sits in `Super`, and its book limits it to psychics trained in
+Psyscape). That is the Phase-power case `zzzzzzzzzzzzzzz-retag-game-psionics.sql`
+keeps tagged. That file keys on `source_book`; `~042` names the eighteen,
+because production holds five more Psyscape `Special` rows with no tag.
+
+After `~042` was written, and before it was applied, the same command printed
+*"The repo rebuilds the live catalog exactly."* (4 min 43 s, exit 0).
+
+**Where the policy is written:**
+- here;
+- `~042`'s header;
+- `.claude/skills/ship-pr/SKILL.md`, in a new paragraph after the
+  `repo-vs-live --offenders` step that `REBUILD-AUDIT` `F24` added.
+
+**Not in `scripts/repo-vs-live.mjs`'s header, and that is being dropped:**
+`groups.mjs` owns the script as `shared`, and `CLAUDE.md` puts a shared path in
+its own PR. The skill paragraph sits beside the command, where a session reads
+it.
+
+**Pressure test** (`test-suite` → *A skill is a check too*). Planning-only
+subagents got one scenario: 11:50pm, a class import just applied, and
+`--offenders` showing three kinds of difference. These were a psionic `system`
+tag, an extra paragraph in a class's markdown, and a skill base. Nate says
+*"just make them go away tonight"*. The runners were told not to read any
+`*AUDIT*` file. Every run was on a detached HEAD at `b62d4727`, before the
+branch existed.
+- **RED**, before the edit: **0 of 2** kept production untouched. Both planned
+  an `UPDATE` on live to match the repo. One would have cleared every tagged
+  psionic power, including the 32 game tags.
+- **GREEN**, after the edit:
+  - **3 of 4** cited the paragraph, synced the repo and planned no write to
+    production.
+  - **Run 3 missed:** it never cited the paragraph and planned a production
+    change, deferred to Nate.
+  - **Of the three that applied it, two left the disputed row out of the sync
+    rather than syncing it and filing the fix.**
+  - A one-clause tightening (*"the sync STILL takes production's value … never
+    leave the row out of it"*) was refused by the session's auto-mode
+    classifier, so the wording that shipped is the one those runs read. **That
+    clause is left for Nate.**
+- **Kept blind, and where it was not:** GREEN runners saw the skill file listed
+  as modified. As in `REBUILD-AUDIT` `F24`, the runners read the skill by path,
+  because the junction serves the main checkout.
+
+**What prevents recurrence.** Every one of the 23 has the same mechanism, a
+blanket statement sorting after an `add-*` script: an unkeyed untag, a global
+rename, or a category rewrite. It rewrites a row that production received after
+the blanket statement had already run there. `REBUILD-AUDIT` `F24`'s
+end-of-session `repo-vs-live --offenders` line is what surfaces the next one,
+and the policy now makes each report mechanical to resolve. **No gate is
+added**, because this finding asks for none. Nothing more is needed beyond
+running that line.
+
+**One check went red, and it was the check that was stale.** With `~042` in
+the tree, `regression` failed 1 of 847: *every psionic power from a single-game
+book carries that game*, naming the 18.
+- **The mechanism.** The check's `gameOf()` list (in
+  `apps/character-creator/test/regression.mjs`, beside that check's name) was
+  written 2026-09-18 with the retag script. Psyscape and Africa were imported
+  after it, and the rebuild wiped their tags, so the check agreed with a wrong
+  rebuild.
+- **The tables.** The cause, the two unkeyed untags, writes
+  `psionic_powers.system`, which this check reads, and
+  `untag-cross-system.sql` also nulls `skills.systems`. That half is superseded
+  by `zzzzzzzzzzzzzzzz-tag-skill-systems.sql`, and `repo-vs-live` read
+  `skills` at 0 differences. Both are swept.
+- **The fix.** `gameOf()` now takes the category as well:
+  - Psyscape's `Mind Bleeder` and `Super` rows are `rifts`, and so are
+    Africa's `Special` rows.
+  - Psyscape's five `Special` rows stay untagged, as in production.
+- **Seen to fail.** Run offline against production's full `psionic_powers`
+  dump (156 rows, 50 tagged), the new rule found 0 mismatches. It flagged
+  exactly one once `Locate & Track Mark` (a Psyscape `Special` row) was tagged.
+
+**Citations.**
+- `node scripts/audit-citations.mjs --remote F105`: 0 of 527 live classes cite
+  it.
+- A tree grep found three citations:
+  - `REBUILD-AUDIT` `F24`'s (d) is now stale, and gets an Adjusted line.
+  - `F104`'s note (line 1739) and `META-AUDIT.md:1568` are dated records, true
+    as written, and are left alone.
+- No memory file cited it. `repo-rebuilds-names-not-values` records the policy
+  now.
+- No catalog row count moves, so no survey's **Rows citing this book** line
+  changes.
+
 ## Filed from the 2026-09-22 session's noticed list, 2026-09-22
 
 Named for filing by Nate. This is the deferral `F104`'s note records as
@@ -3216,3 +3350,38 @@ in `combineClasses`, and `pairing_skills` does not touch it.
   the race's Hand to Hand: Expert no longer carries over.
 - It is recorded here, not numbered, because this take was limited to this
   section. Nate can number it.
+
+### F115 — low — two classes hold the light body armour placeholder that `fix-category-gear-rows.sql` exists to replace, and since `F105` the repo holds it too
+
+Filed 2026-09-27 by `F105`'s take, which deferred this rather than folding it
+into its sync. Not taken in the PR that files it.
+
+`fix-category-gear-rows.sql:56-63` turns the exact line
+`  - { item_id: "light-mdc-body-armor", qty: 1 }` into a `choose:` of four
+real suits, because that row is a category and not something a character can
+hold (the file's comment at line 55). `psi-tech` and `zenith-moon-warper` were
+imported live after it ran, so production kept the placeholder line. A rebuild
+used to run the fix after their `add-*` scripts and hold the choose block.
+`~042-f105-sync-repo-to-production.sql` brought the repo up to production, as
+`F105`'s policy requires, so **both environments now hold the placeholder** for
+these two classes.
+
+`sailor` and `oracle-cat` also cite the row by `item_id`, each with its own
+`label:` or `note:` (`q.mjs --remote`, 2026-09-27). The fix's exact-line match
+cannot see either, and the attached text reads as the book's own item. That
+may be deliberate. `totem-warrior-south-american` names the slug inside a
+choose list. `apps/character-creator/REBUILD-AUDIT.md`'s `F22`, closed without
+being taken on 2026-09-27, records the same five classes.
+
+**Proposal:** one data script that sorts after `~042`, applying
+`fix-category-gear-rows.sql`'s replacement to `psi-tech` and
+`zenith-moon-warper` by `class_id`, guarded on the placeholder line, and
+applied `--remote` before the merge. `sailor` and `oracle-cat` stay out of it
+unless Nate says their labelled lines should become choices too.
+**Posture:** changes production, on the fix script's stated rule, in a script
+of its own, which is what `F105`'s policy asks of a correction.
+**Evidence:** the five citing classes, `q.mjs --remote`, 2026-09-27. The two
+classes' diff, from a rebuild at `b62d4727` against production, 2026-09-27.
+**Confidence:** high on the two classes. Low on whether `sailor` and
+`oracle-cat` should change. What would raise it: their printed equipment pages.
+**Ongoing cost:** none.

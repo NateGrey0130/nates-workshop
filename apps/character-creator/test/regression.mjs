@@ -2258,6 +2258,14 @@ check('a hit on armour the character does not have is refused', noArmor.status =
 // repo-vs-live noticed. zzzzzzzzzzzzzzz-retag-game-psionics.sql restores them.
 // This holds the next import from those books to the same rule, and the untag
 // decision to everything else.
+//
+// Psyscape and Africa joined the list on 2026-09-27 (BOOK-INGEST-AUDIT F105).
+// Their add scripts tag `rifts` on purpose for categories only a class naming
+// them reaches - the Phase precedent - and the same untags cleared them on a
+// rebuild. This check could not see it, because it was written before those
+// imports and the rebuild agreed with it. ~042-f105-sync-repo-to-production.sql
+// restores production's tags. Keyed on the CATEGORY as well as the book: five
+// Psyscape rows in `Special` are untagged in production, and stay so.
 {
   const q = (sql) => {
     const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
@@ -2272,14 +2280,16 @@ check('a hit on armour the character does not have is refused', noArmor.status =
 
   let rows = [];
   let err = '';
-  try { rows = q('SELECT name, system, source_book FROM psionic_powers'); }
+  try { rows = q('SELECT name, system, source_book, category FROM psionic_powers'); }
   catch (e) { err = e.message; }
   check('psionic powers are readable for the game-tag check', rows.length > 0, err || 'no rows');
 
-  const gameOf = (book) => (/^(Powers Unlimited |Revised Heroes Unlimited)/.test(book || '') ? 'heroes-unlimited'
+  const gameOf = (book, category) => (/^(Powers Unlimited |Revised Heroes Unlimited)/.test(book || '') ? 'heroes-unlimited'
     : /^Nightbane RPG/.test(book || '') ? 'nightbane'
-      : /^Rifts Dimension Book 2: Phase World/.test(book || '') ? 'rifts' : null);
-  const wrong = rows.filter((r) => (r.system ?? null) !== gameOf(r.source_book));
+      : /^Rifts Dimension Book 2: Phase World/.test(book || '') ? 'rifts'
+        : /^Rifts World Book 12: Psyscape/.test(book || '') && ['Mind Bleeder', 'Super'].includes(category) ? 'rifts'
+          : /^Rifts World Book 4: Africa/.test(book || '') && category === 'Special' ? 'rifts' : null);
+  const wrong = rows.filter((r) => (r.system ?? null) !== gameOf(r.source_book, r.category));
   check('every psionic power from a single-game book carries that game, and every other one none',
     wrong.length === 0, wrong.map((r) => `${r.name}: ${r.system ?? 'NULL'}`).join(', '));
 }

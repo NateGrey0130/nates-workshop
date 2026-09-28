@@ -650,6 +650,10 @@ premise audit shaped the wording:
   by field value.
 - **(d)** It stays clear of `BOOK-INGEST-AUDIT` `F105`, held on which side
   wins. The line reports and says nothing about reconciling.
+  **Adjusted 2026-09-27 (branch `pal/data/book-ingest-audit-f105-prod-wins`):**
+  `F105` is taken. The policy is that production wins, and the ship-pr
+  paragraph after this one now says so. The 23 differences this run
+  reported are synced by `~042-f105-sync-repo-to-production.sql`.
 
 **The run.** `node scripts/repo-vs-live.mjs --offenders` ran on a clean tree at
 `ef6ead6f`, 2026-09-27 20:07-20:13 EDT: 5 min 15 s, exit 0. It reported **23
