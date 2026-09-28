@@ -276,7 +276,7 @@ What is deliberately left, with the reason:
 
 ### What remains
 
-Nothing from the extraction plan. What is left is the deliberate list under *Extraction plan*, plus what the classes record as prose rather than data: a few bonuses the schema cannot scope (the Nautical's water-only Pilot bonus, the Fly Boy's aircraft-only +15%).
+Nothing from the extraction plan. What is left is the deliberate list under *Extraction plan*, plus what the classes record as prose rather than data. The scoped category bonuses this line used to list (the Nautical's water-only Pilot bonus and Fishing, the Fly Boy's aircraft-only +15%, and the RCSG's and Special Forces' Literacy and Language figures) are stored since 2026-09-27 as a second entry for the category (BOOK-INGEST-AUDIT F109, `~038-f109-scoped-category-bonuses.sql`); the NTSET Protector's Medical +10% to Crime Sciences and Pathology (printed 188) is still prose. Since the same day the Psi-Stalker and the mutant dog are races (BOOK-INGEST-AUDIT F110), so the NTSET Protector takes a Psi-Stalker and the NTSET Psi-Hound pairs with `mutant-dog` instead of carrying a copy of its package.
 
 `node scripts/source-coverage.mjs --remote`, 2026-09-25, after the creatures applied:
 

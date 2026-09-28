@@ -49,6 +49,7 @@ import {
   parseSourcePages, resolveBookSlug, registryBookSlug, detectPageOffset,
   detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
+  LITERACY_PLACEHOLDER, grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc,
 } from './class-check-lib.mjs';
 import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { localD1Args } from './d1-query-lib.mjs';
@@ -239,6 +240,28 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
           : ''));
     }
   }
+}
+
+// Two shapes the suites refuse, found until 2026-09-27 only after the script
+// was emitted, applied locally and a full regression run came back red
+// (BOOK-INGEST-AUDIT F113). The predicates are the suites' own, imported from
+// class-check-lib.mjs, so the warning and the refusal cannot drift apart.
+//
+// WARNINGS, NOT ERRORS, and they move no exit code: the suites stay the
+// authority. A third shape F113 names - an equipment slug production holds and
+// the branch base does not - is deliberately not here: `--remote` is right that
+// the slug exists, and a slug newer than the base is a rebase question.
+if ((data?.skills?.occ_skills ?? []).some(grantsLiteracyPlaceholder)) {
+  warnings.push(`occ_skills grants "${LITERACY_PLACEHOLDER}" by name. It is a placeholder `
+    + 'row, picked FROM so the player names the script; granted outright, the character '
+    + `holds a skill called "${LITERACY_PLACEHOLDER}". Offer it as a choice group `
+    + `({ choose: 1, from: ["${LITERACY_PLACEHOLDER}"], ... }). regression refuses this: `
+    + '"no class GRANTS the placeholder row as a fixed skill".');
+}
+if (menOfArmsBesideOwnSdc(data?.sdc_base != null, data?.men_of_arms)) {
+  warnings.push('men_of_arms sits beside a stated sdc_base. The grouping only picks the '
+    + 'core S.D.C. roll for a class that prints no formula, so here it never applies; '
+    + 'remove it. smoke refuses this: "no S.D.C. grouping sits on a class that states its own".');
 }
 
 const list = (label, items) => {

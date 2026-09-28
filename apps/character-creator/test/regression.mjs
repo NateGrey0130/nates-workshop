@@ -32,6 +32,7 @@ import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseMosLi
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { bootstrapSql } from '../../../scripts/build-local-d1.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
+import { grantsLiteracyPlaceholder } from '../../../scripts/class-check-lib.mjs';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -4125,7 +4126,8 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   for (const c of classes) {
     for (const e of (c.skills?.occ_skills || [])) {
       if (!e) continue;
-      if (e.name === 'Literacy: Other') literacyFixed.push(c.id);
+      // Shared with class-check, which warns on it (BOOK-INGEST-AUDIT F113).
+      if (grantsLiteracyPlaceholder(e)) literacyFixed.push(c.id);
       if (e.name) continue;
       const about = /^Literate/i.test(e.note || '') || /^Literacy: Other,/.test(e.note || '')
         || (Array.isArray(e.from) && e.from.some((n) => /^Literacy/.test(n)));
@@ -5523,11 +5525,17 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // take its Hand to Hand: Skudasa), the Quillback Scavenger (105) and the
   // Quorian Oneiromancer (107). Each is that race's R.C.C., offered to no one
   // else, so each pairs only with its rifts- race.
+  // BOOK-INGEST-AUDIT F110 (2026-09-27) split four combined classes into a race
+  // and its occupation: the Civilized and Wild Psi-Stalker (RUE printed 152,
+  // 155, "mutant humans only") pair only with mutant-psi-stalker, and the Dog
+  // Boy (printed 142) and the NTSET Psi-Hound (Coalition War Campaign printed
+  // 187, "Race: Mutant Dog") only with mutant-dog. A human is none of them.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
-    'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer'];
+    'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
+    'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),

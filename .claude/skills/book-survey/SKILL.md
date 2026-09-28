@@ -304,7 +304,9 @@ authority; page position is not.** Also:
 ## 6. Ship it
 
 A data script, per `class-import` (production is behind Access, so the import
-UI cannot reach it). **Delete the rows and re-apply the script from scratch**:
+UI cannot reach it). Creatures and notable NPCs go from reconciled JSON to
+their script through `node scripts/bestiary-sql.mjs`, not a generator
+rebuilt in the scratchpad; its header gives the JSON shape. **Delete the rows and re-apply the script from scratch**:
 the script is what ships, not the review's leftovers. Then
 `node scripts/drift-check.mjs --remote`, and drive one real user path in the
 browser: a picker offering the new rows is the only proof they are reachable.
