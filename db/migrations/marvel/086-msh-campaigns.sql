@@ -1,57 +1,23 @@
--- ═══════════════════════════════════════════════════════════════════
--- The Marvel group's database (DB_MARVEL, nates-workshop-marvel): the
--- Marvel Heroes app's tables, and nothing else. groups.json says which group
--- owns what; db/schema.sql is Palladium's database and holds none of these.
+-- 086: Marvel Heroes campaigns - a GM's table, the heroes played at it, and
+-- what the GM keeps about it (apps/marvel-heroes/campaign, apps/marvel-heroes/gm).
 --
--- Built the same way as db/schema.sql: everything is CREATE ... IF NOT
--- EXISTS, so re-running it is safe, and each migration in db/migrations/marvel/
--- has a guarded seed line so a database built from this file records itself
--- as migrated. The two migrations keep the numbers they had when these tables
--- lived in the shared database (081, 082), because that is what both
--- databases' schema_migrations recorded.
--- ═══════════════════════════════════════════════════════════════════
-CREATE TABLE IF NOT EXISTS schema_migrations (
-  filename   TEXT PRIMARY KEY,
-  applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+-- Nine tables, all in DB_MARVEL, all msh_-prefixed. The Palladium suite has the
+-- same shapes under unprefixed names in its own database (db/schema.sql); these
+-- are Marvel's copies, not a share of those, because each group's server code
+-- reaches only its own binding (groups.json).
+--
+-- A HERO IS LINKED, NEVER COPIED. msh_campaign_heroes holds the pair and
+-- nothing else; Health and Karma stay on the hero's own row (msh_heroes.sheet),
+-- so the player's sheet and the GM's roster are one number (Nate, 2026-09-28).
+-- Every change the GM makes to that number is an msh_hero_events row, written
+-- in the same batch, and undo is a new row that reverses one.
+--
+-- ONE OPEN CAMPAIGN PER HERO is a unique index, not a check in the endpoint.
+-- An index cannot look at another table, so the link row carries a copy of
+-- its campaign's `open`, and the trigger below keeps the copy true when a
+-- campaign is closed or reopened. Reopening a campaign whose hero has since
+-- joined another open one fails on the index, which is the refusal wanted.
 
--- Marvel Heroes (apps/marvel-heroes): the full text of the Ultimate Powers
--- Book's power listings. Its rows are never in this repository - see migration
--- 081 - so a database built from here has it empty, which the app allows for.
-CREATE TABLE IF NOT EXISTS msh_power_text (
-  code TEXT PRIMARY KEY,                 -- the roll tables' code (D1, MCo3), or a class code for its introduction
-  name TEXT NOT NULL,
-  page INTEGER,                          -- the page printed on the book's page
-  body TEXT NOT NULL
-);
-
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '081-msh-power-text.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_power_text');
-
--- Marvel Heroes: the heroes people save, one row per hero, scoped to the
--- Access email that saved it (migration 082).
-CREATE TABLE IF NOT EXISTS msh_heroes (
-  id TEXT PRIMARY KEY,
-  owner_email TEXT NOT NULL,
-  name TEXT NOT NULL,
-  build TEXT NOT NULL,                   -- JSON: the generator's seeds and picks
-  snapshot TEXT NOT NULL,                -- JSON: what that built, resolved at save time
-  sheet TEXT NOT NULL DEFAULT '{}',      -- JSON: what the player wrote on the sheet
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS idx_msh_heroes_owner ON msh_heroes (owner_email, updated_at);
-
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '082-msh-heroes.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_heroes');
-
--- Marvel Heroes campaigns (migration 086): a GM's table, the heroes linked to
--- it, the GM's changes to their Health and Karma, the journal and its search,
--- the People and their statted sheets, and the GM's pages and pictures. The
--- migration's header says why a hero is linked rather than copied, and why the
--- link row carries a copy of its campaign's `open`.
 CREATE TABLE IF NOT EXISTS msh_campaigns (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -207,7 +173,4 @@ CREATE INDEX IF NOT EXISTS idx_msh_campaign_images_revealed
 CREATE INDEX IF NOT EXISTS idx_msh_campaign_images_entry
   ON msh_campaign_images (entry_id, sort);
 
-INSERT OR IGNORE INTO schema_migrations (filename)
-SELECT '086-msh-campaigns.sql'
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_campaign_images')
-  AND EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_msh_campaign_heroes_one_open');
+INSERT OR IGNORE INTO schema_migrations (filename) VALUES ('086-msh-campaigns.sql');

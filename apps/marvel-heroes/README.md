@@ -10,7 +10,8 @@ at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
 decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Six tabs,
 each linkable: `#feat`, `#powers`, `#gen`, `#pb` (Point Buy, below), `#heroes`
 (the heroes a person has saved) and `#gear` (the Players' Book weapons and
-vehicles). A seventh link on the tab bar opens the **Codex**, a page of its own.
+vehicles). Three more links on the tab bar open pages of their own: the
+**Codex**, **Campaigns** (`campaign/`) and **GM tools** (`gm/`).
 
 ## Codex
 
@@ -146,6 +147,58 @@ only, lengths, 48 KB per JSON column, 200 heroes each - are in
 `functions/api/marvel-heroes/_lib/heroes.js`, and the suite runs the endpoint
 against migration 082 itself in `node:sqlite`.
 
+## Campaigns: the `msh_campaign` tables
+
+A GM runs a campaign; players link their saved heroes to it. Migration `086`,
+nine tables in `DB_MARVEL`. They are Marvel's own copies of the Palladium
+suite's campaign shapes, not a share of them: each group's server code reaches
+only its own database (`groups.json`).
+
+| table | what |
+|---|---|
+| `msh_campaigns` | one per campaign: `name`, `gm_email`, `description`, `gm_notes` (the GM's alone, never sent to a player), and `open` - 1 while the campaign is running, 0 once the GM closes it |
+| `msh_campaign_heroes` | the link, and only the link: `campaign_id`, `hero_id`, who added it. **A hero is never copied into a campaign**, so the sheet a player opens and the roster the GM adjusts are one row (Nate, 2026-09-28). `campaign_open` is a copy of the campaign's `open`, kept true by a trigger, because the unique index that allows a hero into **one open campaign at a time** cannot look at another table |
+| `msh_hero_events` | every change the GM makes to a hero's `health`, `karma`, `karma_pool` or `advancement`: who, the `before` and `after`, the `delta`. Written in the same batch as the change. Undo is a new row whose `undoes` names the one it reverses; unique, so a change is undone once |
+| `msh_journal_entries`, `msh_journal_fts` | the campaign's notes, optionally about one hero, and their full-text index (external-content FTS5 kept current by triggers) |
+| `msh_npc_sheets` | a statted NPC in **the hero shape** - `build`, `snapshot` (`js/sheet.js`, `SNAPSHOT_VERSION`), `sheet` - so the sheet renderer draws it as it draws a hero. `hidden` is 1 until the GM shows it; the NPC roller writes these |
+| `msh_npcs`, `msh_npc_mentions` | People: one dossier per name per campaign, optionally backed by an `msh_npc_sheets` row, and which notes mention whom |
+| `msh_campaign_entries`, `msh_campaign_images` | the GM's own pages, never revealed, and the pictures that can be. **An R2 key must start `msh/`**, a `CHECK` rather than a convention, so nothing Marvel stores can land in another app's part of the bucket |
+
+The heroes endpoint stays owner-only. A GM reads the sheets of heroes linked to
+their campaign through the campaign's own endpoint, and changes only the four
+play numbers, through `PATCH /api/marvel-heroes/campaigns/:id/heroes/:heroId`.
+
+### Notes, People and handouts
+
+The Campaigns page's **Notes**, **People** and **Handouts** tabs, and the GM
+page's **Setting** panel and present mode, are the campaign views every game
+shares (`shared/js/campaign/`, PR #1507). They write markup and no styles:
+every class they emit starts `mc-`, `styles.css` styles each one in this
+app's look, and the suite fails on one it does not. The page hands them
+`/api/marvel-heroes` as their base, so they reach only this group's
+database, and the endpoints behind them are Marvel's own copies of the
+Palladium ones, written against the `msh_` tables:
+
+- **Members only.** A member is the GM or anyone with a hero in the
+  campaign. Anyone else signed in can see a campaign exists and join it, and
+  reads none of its notes, People or handouts.
+- **Notes**: anyone at the table writes one; only its author or the GM
+  changes or deletes it. `@Name` links the note to that person's dossier and
+  makes one on first mention. A possessive is the same person
+  (`@Kingpin's men` is the Kingpin), and an apostrophe inside a name stays.
+  Search is FTS5 and free.
+- **Ask** is the paid button beside the search box: Claude answers from the
+  notes and People and cites the notes it used, through the shared Claude
+  client, which logs the call. A hidden NPC sheet never goes into the
+  question.
+- **No People sweep** (Nate, 2026-09-28): it would need two more tables and a
+  second paid call. The shared view always draws the panel, so `styles.css`
+  hides it, and `npcs/sweep.js` answers 501.
+- **Handouts** are the pictures on the GM's pages that the GM has revealed:
+  each one's caption and nothing of the page behind it. A picture that is not
+  revealed answers a player exactly like one that does not exist. Every
+  stored picture and portrait is in R2 under `msh/`.
+
 ## Rulings
 
 **Where the books disagree, the Ultimate Powers Book wins**, because it was
@@ -242,6 +295,18 @@ And one that is not from any book at all:
   Power, choosing a Power is free, the GM's grants are excluded by a tick and
   ignore the cap, and going over warns rather than refuses. See *Point Buy*
   above; the rules are in `js/pointbuy.js`.
+- **R25** **Initiative is a house rule** (Nate, 2026-09-28): everyone rolls
+  d100 each round and the highest goes first. A tie goes, in order, to (1) an
+  initiative Talent **that applies this round**, (2) the higher Agility
+  **number**, not the rank's name, and (3) if still tied, **only the tied
+  combatants** roll d100 again, as often as it takes. The two Talents that give
+  "+1 initiative" - Weapons Specialist with its one chosen weapon (PB,
+  `talents.json` `weapons-specialist`) and Martial Arts E unarmed
+  (`martial-arts-e`) - are **read as a tie-breaker, not +1 on the roll**. Both
+  are conditional, so the GM ticks "Talent applies" per combatant per round,
+  an unticked box breaks nothing, and every tick clears when the round ends.
+  The GM page tags each row with what broke its tie. The rules are in
+  `js/initiative.js`.
 
 How a Compound and a Changeling are built (UPB pp.9-10): a Compound rolls how
 many body types it combines and the chance of keeping each trait (50%, 33%,
@@ -270,6 +335,14 @@ by roll, and they decide nothing here.
 | path | what |
 |---|---|
 | `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM; one tab per tool |
+| `campaign/index.html`, `campaign/campaign.js` | Campaigns: create one, add or take out your own heroes, and - for its GM - read every linked hero's sheet, read-only. `?c=<id>` opens one |
+| `gm/index.html`, `gm/gm.js` | GM tools for one campaign you run: the roster (Health, Karma and Karma pool, each - and + by a chosen step, every press logged and undoable), initiative by R25, a FEAT roller, and the GM's notes. `?c=<id>` opens one |
+| `gm/room.html`, `gm/room.js` | the room view: the initiative order and whose turn it is, large, for the screen turned to the table. It makes no request - it reads the list the GM page keeps in the same browser and redraws on each change |
+| `js/initiative.js` | R25 as a pure function: a round's d100s, the order, and which tie-breaker - Talent, Agility or re-roll - placed each row; which Talents count is derived from `talents.json` |
+| `js/npc.js` | the NPC roller: the generator run with a GM's body type, origin, exact number of Powers (rolled until one has it, extras bought as UPB p.14 allows, refused rather than padded) and highest rank, ending in a hero-shaped snapshot |
+| `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
+| `js/campaign-ui.js`, `js/undo.js` | the ui adapter the shared campaign views take - `esc`, an `escJs` that carries O'Brien through an inline handler, a yes/no question, the page's status line - and "Removed. Undo" in place of "Are you sure?", with the Palladium pages' contract |
+| `gm/present.html`, `gm/present.js` | present mode: one of the GM's pictures on black, for the screen turned to the table. The behaviour is `shared/js/campaign/present.js`; this is the skeleton of ids it fills, and where Escape goes. Showing is not revealing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
 | `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
@@ -294,8 +367,18 @@ by roll, and they decide nothing here.
 | `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
+| `/functions/api/marvel-heroes/campaigns.js`, `campaigns/[id].js`, `_lib/campaigns.js` | list and create campaigns; read, edit (GM) and delete (GM) one; who may do what, and the checks every write goes through |
+| `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |
+| `/functions/api/marvel-heroes/campaigns/[id]/heroes/[heroId].js` | GET a linked hero's sheet (its GM or owner); PATCH `{ field: delta }` for the four play numbers, GM only, written with its `msh_hero_events` row in one batch |
+| `/functions/api/marvel-heroes/campaigns/[id]/events.js` | the GM's last 50 changes, and `{ undo: id }`, which writes the reverse as a new event |
+| `/functions/api/marvel-heroes/campaigns/[id]/npcs/generate.js` | POST, GM only: roll an NPC on the server with `js/npc.js`, reading the data files through `env.ASSETS`; writes a hidden `msh_npc_sheets` row, and an `msh_npcs` dossier when asked |
+| `/functions/api/marvel-heroes/campaigns/[id]/npc-sheets.js` | the campaign's NPC sheets: all of them to the GM, only the shown ones to anyone else; show, hide, rename, delete (GM) |
+| `/functions/api/marvel-heroes/journal.js`, `journal/[entryId].js`, `_lib/notes.js` | a campaign's notes: list and write (members), change and delete (author or GM); @mentions, and the full-text query |
+| `/functions/api/marvel-heroes/campaigns/[id]/search.js`, `ask.js` | full-text search over the notes, and Ask, the paid answer from them |
+| `/functions/api/marvel-heroes/campaigns/[id]/npcs.js`, `npcs/[npcId].js`, `npcs/[npcId]/portrait.js`, `npcs/sweep.js` | People: the roster, one dossier and every note mentioning them, its portrait in R2; the sweep answers 501 |
+| `/functions/api/marvel-heroes/campaigns/[id]/entries.js`, `entries/[entryId].js`, `entries/[entryId]/images.js`, `images/[imageId].js`, `handouts.js` | the GM's pages and their pictures (GM only), revealing one, and the revealed ones as handouts |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
-| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database |
+| `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database - the campaign ones included: the GM's PATCH refuses every field but the four play numbers and every hero outside its campaign, a second open campaign for a hero is refused by the index itself, the NPC roller's ceiling and hiding, and R25's four tie cases; and for the shared views, members only, @mentions, who may change a note, the GM's pages and reveals, every picture under `msh/`, script order and API base, every `mc-` class styled, and escJs |
 
 The summaries in `powers.json` were written for the app by four subagents
 working from the extraction, each told to reuse no five-word run of the book's

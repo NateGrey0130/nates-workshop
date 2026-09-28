@@ -510,6 +510,7 @@ table.gear th[scope="row"] { min-width: 10em; }
 /* -- the codex (codex/) and the link to it from the tab bar -- */
 .tabbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 12px; max-width: 1080px; margin: 18px auto 0; padding: 0 16px; }
 .tabbar .tabs { margin: 0; padding: 0; max-width: none; }
+.tab-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .tab-link {
   display: inline-flex; align-items: center; min-height: 44px;
   font-family: var(--font-display); font-stretch: 75%; font-weight: 800;
@@ -535,3 +536,167 @@ table.gear th[scope="row"] { min-width: 10em; }
 .codex-stats dt { font-weight: 700; }
 .codex-stats dd { margin: 0; }
 .codex-intro { max-height: 45vh; overflow-y: auto; }
+
+/* -- Campaigns and GM tools (campaign/, gm/) -- */
+.mast-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; justify-content: flex-end; }
+.mast-links a { color: var(--on-red); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.mast-links a[aria-current="page"] { text-decoration-thickness: 4px; }
+.camp { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 18px; align-items: start; }
+@media (max-width: 760px) { .camp { grid-template-columns: 1fr; } }
+.fields.one { grid-template-columns: 1fr; }
+.camp-hero { display: flex; gap: 8px; align-items: center; }
+.camp-hero .hero-item { flex: 1; }
+.gm-main { max-width: 1280px; }
+.gm-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .gm-grid { grid-template-columns: 1fr; } }
+.roster { display: grid; gap: 10px; }
+.roster-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; align-items: center;
+  padding: 10px; border: 2px solid var(--rule); border-radius: var(--radius); background: var(--panel-alt); }
+.roster-who { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; min-width: 0; overflow-wrap: anywhere; }
+.roster-num { display: flex; flex-direction: column; gap: 4px; }
+.roster-num .stepper { flex-wrap: nowrap; gap: 4px; }
+.roster-num output { min-width: 3ch; text-align: center; font-weight: 700; font-size: 18px; }
+@media (max-width: 520px) { .roster-row { grid-template-columns: 1fr; } .roster-num { flex-direction: row; align-items: center; justify-content: space-between; } }
+.log-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.log-row.undone > span { text-decoration: line-through; }
+.init-list { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 8px; }
+.init-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 8px 12px; align-items: center;
+  padding: 8px 10px; border: 2px solid var(--rule); border-radius: var(--radius); background: var(--panel); }
+.init-row.on { background: var(--yellow); color: var(--on-yellow); box-shadow: var(--shadow); }
+.init-row.on .muted { color: var(--on-yellow); }
+.init-roll { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.init-notalent { font-size: 13px; }
+@media (max-width: 620px) { .init-row { grid-template-columns: 1fr auto; } }
+.init-add { border-top: 2px solid var(--rule); margin-top: 12px; padding-top: 8px; }
+.gm-bar .save-row { align-items: end; }
+
+/* -- the room view: the GM's screen turned to the table -- */
+body.room { background-image: none; }
+.room-main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
+.room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; }
+.room-head h1 { font-size: clamp(32px, 6vw, 64px); margin: 0; }
+.room-back { margin-left: auto; font-weight: 600; }
+.room-list { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 10px; }
+.room-list li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 18px; font-size: clamp(22px, 4vw, 44px);
+  border: 3px solid var(--rule); border-radius: var(--radius); background: var(--panel); }
+.room-list li.on { background: var(--yellow); color: var(--on-yellow); box-shadow: var(--shadow); font-weight: 800; }
+.room-list li.done { opacity: 0.6; }
+.room-name { overflow-wrap: anywhere; font-family: var(--font-display); }
+.room-roll { white-space: nowrap; }
+
+/* -- The shared campaign views (shared/js/campaign/: notes, people, handouts,
+   setting), in this app's look. Those modules write markup and no styles;
+   every class they emit starts mc-, and this block is where Marvel styles
+   each one. The suite holds every mc- class those four modules emit to a rule
+   here, so a class added there without one here fails rather than renders
+   unstyled. -- */
+.mc-panel { background: var(--panel); border: 3px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 20px; margin-bottom: 24px; }
+.mc-inset, .mc-editor { background: var(--panel-alt); border: 2px solid var(--rule); border-radius: var(--radius); padding: 10px 12px; margin: 10px 0; }
+.mc-panel h3, .mc-head, .mc-subhead, .mc-dossier-name, .mc-answer h4 { margin: 0 0 8px; }
+.mc-subhead { font-size: 15px; margin-top: 14px; }
+.mc-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin: 8px 0; }
+.mc-spread { justify-content: space-between; }
+.mc-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 8px; }
+.mc-muted { color: var(--ink-soft); }
+.mc-small { font-size: 14px; }
+.mc-err { color: var(--red); font-weight: 700; }
+.mc-tag { font-size: 12px; font-weight: 700; border: 2px solid var(--rule); padding: 0 4px; margin-left: 4px; }
+.mc-gm { background: var(--yellow); color: var(--on-yellow); }
+.mc-count { margin-left: auto; font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+.mc-btn { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 16px; padding: 7px 16px; min-height: 44px; border: 3px solid var(--rule); border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--rule); background: var(--blue); color: var(--on-blue); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.mc-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--rule); }
+.mc-btn[disabled] { opacity: 0.55; cursor: default; }
+.mc-btn-sm { font-size: 14px; padding: 5px 10px; box-shadow: 2px 2px 0 var(--rule); }
+.mc-btn-primary, .mc-btn-danger { background: var(--red); color: var(--on-red); }
+.mc-btn-ghost { background: var(--panel); color: var(--ink); }
+.mc-btn:focus-visible, .mc-item:focus-visible, .mc-mention:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.mc-input, .mc-mini, .mc-note-input, .mc-full, .mc-panel select, .mc-panel textarea, .mc-editor textarea {
+  font: inherit; padding: 7px 9px; min-height: 44px; border: 2px solid var(--rule); border-radius: var(--radius);
+  background: var(--panel); color: var(--ink); }
+.mc-input { flex: 1 1 180px; min-width: 0; }
+.mc-wide { flex: 1 1 240px; min-width: 0; }
+.mc-note-input, .mc-full, .mc-panel textarea, .mc-editor textarea { display: block; width: 100%; margin: 8px 0; }
+.mc-note, .mc-result { overflow-wrap: anywhere; }
+.mc-note-body, .mc-answer-text, .mc-body { white-space: pre-wrap; margin: 6px 0; }
+.mc-snippet mark { background: var(--yellow); color: var(--on-yellow); }
+.mc-result-count, .mc-no-match { margin: 10px 0 4px; }
+.mc-answer { border-left: 6px solid var(--blue); }
+.mc-mention { color: inherit; font-weight: 700; text-decoration-color: var(--red); }
+.mc-group-head { margin: 14px 0 6px; }
+.mc-item, .mc-person { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: 100%; min-height: 44px; margin: 6px 0;
+  padding: 8px 10px; font: inherit; text-align: left; color: var(--ink); background: var(--panel); border: 2px solid var(--rule);
+  border-radius: var(--radius); }
+.mc-person { cursor: pointer; }
+.mc-thumb { width: 40px; height: 40px; object-fit: cover; border: 2px solid var(--rule); }
+.mc-dossier-head { align-items: flex-start; gap: 16px; }
+.mc-dossier-id { flex: 1 1 220px; min-width: 0; }
+.mc-portrait { width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--rule); background: var(--panel-alt); }
+.mc-portrait-empty { display: flex; align-items: center; justify-content: center; text-align: center; }
+.mc-portrait-tools input[type="file"], .mc-upload input[type="file"] { max-width: 100%; font-size: 14px; }
+.mc-dossier-fields > * { flex: 1 1 160px; min-width: 0; }
+.mc-dossier-foot { margin-top: 12px; }
+.mc-journal-entry { border-top: 2px solid var(--rule); padding: 8px 0; }
+.mc-campaign { background: var(--panel-alt); }
+.mc-handouts, .mc-pics { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.mc-handout { margin: 0; min-width: 0; }
+.mc-handout-figure { margin: 0; border: 3px solid var(--rule); background: var(--panel-alt); }
+.mc-handout-figure img, .mc-pic img { display: block; width: 100%; height: auto; max-height: 320px; object-fit: contain; background: var(--paper); }
+.mc-handout-figure figcaption { padding: 6px 10px; font-weight: 600; border-top: 2px solid var(--rule); }
+.mc-pic { border: 2px solid var(--rule); background: var(--panel); }
+.mc-pic-meta { padding: 8px; }
+.mc-pages { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; }
+.mc-page { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 10px;
+  border: 2px solid var(--rule); background: var(--panel); }
+.mc-page.mc-on { background: var(--yellow); color: var(--on-yellow); }
+.mc-page.mc-on .mc-muted { color: var(--on-yellow); }
+.mc-page-what { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.mc-upload { cursor: pointer; }
+.mc-compose-bar .mc-muted { flex: 1 1 240px; }
+/* Marvel has no People sweep (Nate, 2026-09-28): the shared view always draws
+   the panel, so it is hidden here, by the button it carries. */
+.mc-panel:has(button[onclick^="mcCampaign.people.sweep"]) { display: none; }
+
+/* -- the Campaigns page's tabs, and the undo toast (js/undo.js) -- */
+.camp-tabs { margin: 0 0 16px; padding: 0; max-width: none; }
+.undo-toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 20; display: flex; gap: 12px; align-items: center;
+  max-width: calc(100vw - 32px); padding: 10px 14px; background: var(--ink); color: var(--paper); border: 3px solid var(--rule);
+  box-shadow: var(--shadow); }
+.undo-toast .btn { background: var(--yellow); color: var(--on-yellow); }
+.undo-toast .err { color: var(--paper); font-weight: 700; }
+
+/* -- present mode (gm/present.html): one picture on black for the screen
+   turned to the table, the same in both themes. The behaviour is
+   shared/js/campaign/present.js; it sets `idle` and `is-error` on <body>. -- */
+body.present { margin: 0; min-height: 100vh; background: #000; background-image: none; color: #fff; overflow: hidden; }
+.present-frame { position: fixed; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; }
+.present-frame img { max-width: 100vw; max-height: 100vh; object-fit: contain; }
+.present-state { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; margin: 0;
+  text-align: center; font-size: 18px; }
+.present-chrome { position: fixed; inset: 0; pointer-events: none; transition: opacity 0.35s ease; }
+.present-chrome > * { pointer-events: auto; }
+body.present.idle .present-chrome { opacity: 0; }
+body.present.idle .present-chrome > * { pointer-events: none; }
+body.present.idle { cursor: none; }
+@media (prefers-reduced-motion: reduce) { .present-chrome { transition: none; } }
+.present-top, .present-bottom { position: absolute; left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 18px; }
+.present-top { top: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent); }
+.present-bottom { bottom: 0; flex-direction: column; background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent); }
+.present-title { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; text-transform: uppercase; font-size: 20px; flex: 1 1 auto; min-width: 0; }
+.present-count { color: #d8d0c0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.present-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 56px; height: 56px; font-size: 34px; line-height: 1;
+  color: #fff; background: rgba(0, 0, 0, 0.55); border: 3px solid #fff; border-radius: var(--radius); cursor: pointer; }
+.present-arrow:disabled { opacity: 0.2; cursor: default; }
+.present-prev { left: 16px; }
+.present-next { right: 16px; }
+.present-caption { margin: 0; font-size: 18px; font-weight: 600; text-align: center; }
+.present-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+.present-shown, .present-msg { color: #d8d0c0; font-size: 14px; }
+/* present.js shows and hides these two by the hidden attribute, which the
+   display above would otherwise outrank. */
+.present-frame[hidden], .present-state[hidden] { display: none; }
+body.present.is-error .present-arrow, body.present.is-error .present-bottom { display: none; }
+@media (max-width: 560px) { .present-arrow { width: 48px; height: 48px; font-size: 28px; } .present-prev { left: 8px; } .present-next { right: 8px; } }

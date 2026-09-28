@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaigns &mdash; Marvel Heroes</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#b81d24">
+<!-- The app's own stylesheet ONLY, one directory up. See the header of styles.css. -->
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="title">Marvel Heroes</div>
+    <div class="tagline">Campaigns: a GM's table, and the heroes played at it</div>
+  </div>
+  <nav class="mast-links" aria-label="Marvel Heroes pages">
+    <a href="../">Heroes</a>
+    <a href="./" aria-current="page">Campaigns</a>
+    <a href="../gm/">GM tools</a>
+    <a href="/" class="home">&larr; workshop</a>
+  </nav>
+</header>
+
+<main id="app">
+  <p id="load-error" class="panel error" role="alert" hidden></p>
+  <div class="camp">
+    <div class="camp-side">
+      <section class="panel">
+        <span class="caption">Open to join, or yours</span>
+        <h1>Campaigns</h1>
+        <p id="camp-status" class="muted" aria-live="polite"></p>
+        <ol id="camp-list" class="hero-list"></ol>
+      </section>
+      <form id="camp-new" class="panel alt">
+        <h2>Run a campaign</h2>
+        <div class="fields one">
+          <label>Name <input name="name" type="text" maxlength="80" autocomplete="off" required placeholder="e.g. Tuesday Night Avengers"></label>
+          <label>Description <input name="description" type="text" maxlength="400" autocomplete="off" placeholder="Optional: where, when, what kind of game"></label>
+        </div>
+        <button type="submit" class="btn">Create it</button>
+        <p id="camp-new-status" class="muted" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <div id="camp-detail" hidden>
+      <section class="panel">
+        <span class="caption" id="cd-caption"></span>
+        <h2 id="cd-name"></h2>
+        <p id="cd-description"></p>
+        <p id="cd-gm" class="muted"></p>
+        <div class="row" id="cd-gm-tools" hidden>
+          <a class="btn" id="cd-gm-link" href="../gm/">Open GM tools</a>
+          <button type="button" class="btn secondary" id="cd-open">Close the campaign</button>
+          <button type="button" class="btn secondary" id="cd-delete">Delete</button>
+        </div>
+        <p id="cd-status" class="muted" aria-live="polite"></p>
+      </section>
+
+      <!-- Notes, People and Handouts are the shared campaign views
+           (shared/js/campaign/), drawn into #cd-view; members only. -->
+      <nav class="tabs camp-tabs" role="tablist" aria-label="This campaign" id="cd-tabs" hidden>
+        <button type="button" role="tab" id="cd-tab-heroes" data-view="heroes" aria-controls="cd-panel-heroes" aria-selected="true">Heroes</button>
+        <button type="button" role="tab" id="cd-tab-notes" data-view="notes" aria-controls="cd-view" aria-selected="false">Notes</button>
+        <button type="button" role="tab" id="cd-tab-people" data-view="people" aria-controls="cd-view" aria-selected="false">People</button>
+        <button type="button" role="tab" id="cd-tab-handouts" data-view="handouts" aria-controls="cd-view" aria-selected="false">Handouts</button>
+      </nav>
+      <div id="cd-view" role="tabpanel" hidden></div>
+
+      <div id="cd-panel-heroes">
+      <section class="panel alt">
+        <h2>Heroes in it</h2>
+        <ol id="cd-heroes" class="hero-list"></ol>
+        <form id="cd-join" class="save-row">
+          <label>Add one of your heroes <select id="cd-join-hero"></select></label>
+          <button type="submit" class="btn" id="cd-join-btn">Add</button>
+        </form>
+        <p class="muted" id="cd-join-help">A hero plays in one open campaign at a time. Build one on the <a href="../#gen">Generator</a> first.</p>
+      </section>
+
+      <div id="cd-sheet-wrap" hidden>
+        <div class="panel sheet-tools row">
+          <p id="cd-sheet-note" class="muted"></p>
+        </div>
+        <div id="cd-sheet" class="panel"></div>
+      </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- The shared campaign views are classic scripts that add themselves to
+     globalThis.mcCampaign; core.js first, downscale.js before people.js. -->
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/downscale.js"></script>
+<script src="/shared/js/campaign/notes.js"></script>
+<script src="/shared/js/campaign/people.js"></script>
+<script src="/shared/js/campaign/handouts.js"></script>
+<script type="module" src="campaign.js"></script>
+</body>
+</html>

@@ -578,6 +578,378 @@ section('Saved heroes: every read and write is the owner\'s own, against the rea
     kitHtml.includes('2nd form: Vegetable') && !kitHtml.includes('data-field="second_form"'));
 }
 
+// A D1 stand-in over node:sqlite for the campaign endpoints: built from the
+// migrations a database has by now (082, 086), with foreign keys on as D1 has
+// them, and a batch that is one transaction as D1's is. `media` is an R2
+// stand-in that remembers every key written, and `call` runs a route's
+// handler the way Pages would, with the caller's Access email.
+async function marvelStandIn() {
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('PRAGMA foreign_keys = ON');
+  sqlite.exec('CREATE TABLE schema_migrations (filename TEXT PRIMARY KEY, applied_at TEXT)');
+  for (const f of ['082-msh-heroes.sql', '086-msh-campaigns.sql']) {
+    sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', 'marvel', f), 'utf8'));
+  }
+  const statement = (sql, args) => {
+    const st = sqlite.prepare(sql);
+    const run = () => ({ meta: { changes: Number(st.run(...args).changes) } });
+    return { first: async () => st.get(...args) ?? null, all: async () => ({ results: st.all(...args) }), run: async () => run(), runNow: run };
+  };
+  const DB = {
+    prepare: (sql) => ({ bind: (...args) => statement(sql, args), ...statement(sql, []) }),
+    batch: async (list) => {
+      sqlite.exec('BEGIN');
+      try { const out = list.map((s) => s.runNow()); sqlite.exec('COMMIT'); return out; } catch (e) { sqlite.exec('ROLLBACK'); throw e; }
+    },
+  };
+  const objects = new Map();
+  const media = {
+    objects,
+    put: async (key, bytes, opts) => { objects.set(key, { bytes: new Uint8Array(bytes), contentType: opts?.httpMetadata?.contentType }); },
+    get: async (key) => (objects.has(key) ? { body: objects.get(key).bytes, httpMetadata: { contentType: objects.get(key).contentType } } : null),
+    delete: async (key) => { objects.delete(key); },
+  };
+  const env = { DB_MARVEL: DB, MEDIA: media,
+    ASSETS: { fetch: async (url) => new Response(readFileSync(join(repoRoot, new URL(url).pathname.slice(1)))) } };
+  const route = async (p) => import(new URL(`../../../functions/api/marvel-heroes/${p}`, import.meta.url));
+  const call = async (mod, method, { who = 'gm@x.org', params = {}, query = '', body, raw, type } = {}) => {
+    const headers = { 'Cf-Access-Authenticated-User-Email': who };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (type) headers['Content-Type'] = type;
+    const request = new Request(`https://example.com/api/marvel-heroes/x${query}`,
+      { method, headers, body: raw ?? (body === undefined ? undefined : JSON.stringify(body)) });
+    const handler = mod[`onRequest${method[0]}${method.slice(1).toLowerCase()}`] || mod.onRequest;
+    const res = await handler({ request, env, params });
+    const isJson = (res.headers.get('Content-Type') || '').includes('json');
+    return { status: res.status, body: isJson ? await res.json() : new Uint8Array(await res.arrayBuffer()) };
+  };
+  return { sqlite, DB, env, media, route, call };
+}
+
+section('Campaigns: the GM changes only the play numbers, and a hero plays in one open campaign');
+
+{
+  const { sqlite, env, route, call } = await marvelStandIn();
+  const R = {
+    list: await route('campaigns.js'),
+    one: await route('campaigns/[id].js'),
+    link: await route('campaigns/[id]/heroes.js'),
+    hero: await route('campaigns/[id]/heroes/[heroId].js'),
+    events: await route('campaigns/[id]/events.js'),
+    generate: await route('campaigns/[id]/npcs/generate.js'),
+    npcs: await route('campaigns/[id]/npc-sheets.js'),
+    heroes: await route('heroes.js'),
+  };
+  const { SNAPSHOT_VERSION: sheetModV } = await import(new URL('../js/sheet.js', import.meta.url));
+  const heroRow = (id) => sqlite.prepare('SELECT name, owner_email, build, snapshot, sheet FROM msh_heroes WHERE id = ?').get(id);
+  const addHero = (id, owner, snap) => sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot, sheet)
+    VALUES (?, ?, ?, '{"seeds":{}}', ?, '{"notes":"mine"}')`).run(id, owner, `Hero ${id}`, JSON.stringify(snap));
+  addHero('hero-ann-0001', 'ann@x.org', { health: 80, karma: 30 });
+  addHero('hero-bob-0002', 'bob@x.org', { health: 50, karma: 20 });
+
+  const one = (await call(R.list, 'POST', { body: { name: 'Tuesday' } })).body.campaign;
+  const two = (await call(R.list, 'POST', { who: 'gm2@x.org', body: { name: 'Friday' } })).body.campaign;
+  const p1 = { id: String(one.id) }, p2 = { id: String(two.id) };
+  check('a GM creates a campaign and is its GM', one?.gm_email === 'gm@x.org' && one.open === 1);
+  check('a player links their own hero to it',
+    (await call(R.link, 'POST', { who: 'ann@x.org', params: p1, body: { hero_id: 'hero-ann-0001' } })).status === 201);
+  check('but not someone else\'s', (await call(R.link, 'POST', { who: 'bob@x.org', params: p1, body: { hero_id: 'hero-ann-0001' } })).status === 404);
+
+  // One open campaign at a time: the index, not the endpoint, is what refuses.
+  const second = await call(R.link, 'POST', { who: 'ann@x.org', params: p2, body: { hero_id: 'hero-ann-0001' } });
+  check('a second open campaign for a hero is refused with a 409 that names the first',
+    second.status === 409 && /Tuesday/.test(second.body.error || ''), JSON.stringify(second));
+  let threw = false;
+  try { sqlite.prepare("INSERT INTO msh_campaign_heroes (campaign_id, hero_id, campaign_open, added_by) VALUES (?, 'hero-ann-0001', 1, 'x')").run(two.id); } catch { threw = true; }
+  check('and the database itself refuses it, whatever the endpoint does', threw);
+  check('closing the first frees the hero to join another',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: false } })).status === 200
+    && (await call(R.link, 'POST', { who: 'ann@x.org', params: p2, body: { hero_id: 'hero-ann-0001' } })).status === 201);
+  check('and reopening the first is then refused, because the hero is in an open one',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: true } })).status === 409);
+  await call(R.link, 'DELETE', { who: 'ann@x.org', params: p2, query: '?hero_id=hero-ann-0001' });
+  check('once the hero leaves the second, the first reopens',
+    (await call(R.one, 'PATCH', { params: p1, body: { open: true } })).status === 200);
+  await call(R.link, 'POST', { who: 'bob@x.org', params: p2, body: { hero_id: 'hero-bob-0002' } });
+
+  // The GM's PATCH: the four play numbers, on heroes in this campaign, and nothing else.
+  const before = heroRow('hero-ann-0001');
+  const hp = { id: p1.id, heroId: 'hero-ann-0001' };
+  for (const [label, body] of [
+    ['a name', { name: 'Renamed' }], ['a sheet field', { notes: 'the GM wrote this' }], ['the snapshot', { snapshot: {} }],
+    ['the owner', { owner_email: 'gm@x.org' }], ['an ability, though it is a whole number', { strength: 5 }],
+    ['a play number alongside another field', { health: -1, name: 'x' }],
+    ['a play number that is not a whole amount', { karma: 1.5 }], ['an empty change', {}],
+  ]) check(`the GM's PATCH refuses ${label} with a 400`, (await call(R.hero, 'PATCH', { params: hp, body })).status === 400);
+  check('and none of those wrote anything', JSON.stringify(heroRow('hero-ann-0001')) === JSON.stringify(before));
+  const outside = await call(R.hero, 'PATCH', { params: { id: p1.id, heroId: 'hero-bob-0002' }, body: { health: -5 } });
+  check('a hero outside the campaign is a 404, and is not written', outside.status === 404
+    && JSON.parse(heroRow('hero-bob-0002').sheet).health === undefined);
+  check('the other campaign\'s GM cannot reach this campaign\'s hero', (await call(R.hero, 'PATCH', { who: 'gm2@x.org', params: { id: p2.id, heroId: 'hero-ann-0001' }, body: { health: -5 } })).status === 404);
+  check('a player cannot use it, even on their own hero', (await call(R.hero, 'PATCH', { who: 'ann@x.org', params: hp, body: { health: 5 } })).status === 403);
+
+  const hit = await call(R.hero, 'PATCH', { params: hp, body: { health: -10, karma_pool: 7 } });
+  const after = JSON.parse(heroRow('hero-ann-0001').sheet);
+  check('the GM\'s change lands on the hero\'s own row, starting from the snapshot', hit.status === 200
+    && after.health === 70 && after.karma_pool === 7 && after.notes === 'mine', JSON.stringify(after));
+  const logged = sqlite.prepare('SELECT field, delta, before, after, actor_email FROM msh_hero_events ORDER BY id').all();
+  check('and each field is one msh_hero_events row with its before and after', logged.length === 2
+    && logged[0].field === 'health' && logged[0].before === 80 && logged[0].after === 70 && logged[1].after === 7
+    && logged.every((e) => e.actor_email === 'gm@x.org'), JSON.stringify(logged));
+  check('the numbers are stored as integers, as the owner\'s own save writes them',
+    sqlite.prepare("SELECT typeof(json_extract(sheet, '$.health')) AS t FROM msh_heroes WHERE id = 'hero-ann-0001'").get().t === 'integer');
+
+  const ev = (await call(R.events, 'GET', { params: p1 })).body.events;
+  const hpEvent = ev.find((e) => e.field === 'health');
+  const undone = await call(R.events, 'POST', { params: p1, body: { undo: hpEvent.id } });
+  check('undo writes the reverse as a new event and puts the number back',
+    undone.status === 200 && JSON.parse(heroRow('hero-ann-0001').sheet).health === 80 && undone.body.events[0].undoes === hpEvent.id);
+  check('and an event is undone once', (await call(R.events, 'POST', { params: p1, body: { undo: hpEvent.id } })).status === 409);
+  check('the change log is the GM\'s alone', (await call(R.events, 'GET', { who: 'ann@x.org', params: p1 })).status === 403);
+
+  // What each reader sees.
+  const gmView = (await call(R.one, 'GET', { params: p1 })).body;
+  const annView = (await call(R.one, 'GET', { who: 'ann@x.org', params: p1 })).body;
+  await call(R.one, 'PATCH', { params: p1, body: { gm_notes: 'The villain is her uncle' } });
+  check('the GM reads the linked hero\'s sheet through the campaign', gmView.is_gm && gmView.heroes[0].sheet?.karma_pool === 7);
+  check('a player never gets gm_notes', !('gm_notes' in (await call(R.one, 'GET', { who: 'ann@x.org', params: p1 })).body.campaign)
+    && (await call(R.one, 'GET', { params: p1 })).body.campaign.gm_notes === 'The villain is her uncle');
+  check('and heroes.js stays owner-only: the GM cannot open the hero there',
+    annView.heroes[0].sheet && (await call(R.heroes, 'GET', { query: '?id=hero-ann-0001' })).status === 404);
+
+  // The NPC roller: hidden until shown, and only the GM rolls.
+  const npc = await call(R.generate, 'POST', { params: p1, body: { name: 'Thug', powers: 3, ceiling: 'good', body: 'normal-human', dossier: true } });
+  const ns = npc.body.npc?.snapshot;
+  const LADDER = load('ranks.json').ranks.map((r) => r.id);
+  const above = (id) => LADDER.indexOf(id) > LADDER.indexOf('good');
+  check('the NPC roller writes a hero-shaped sheet with exactly the Powers asked for, none above the ceiling',
+    npc.status === 201 && ns.v === sheetModV && ns.powers.length === 3 && ns.body.id === 'normal-human'
+      && !ns.powers.some((p) => above(p.rank)) && !Object.values(ns.abilities).some((a) => above(a.rank)), JSON.stringify(npc.body).slice(0, 200));
+  // The endpoint rolls fresh seeds, so a low roll could pass the check above
+  // with no ceiling at all. With fixed seeds, the same NPC is built twice: the
+  // ceiling has to be what brought every rank down.
+  {
+    const { rollNpc } = await import(new URL('../js/npc.js', import.meta.url));
+    const { makeGenerator } = await import(new URL('../js/generator.js', import.meta.url));
+    const d = {};
+    for (const n of ['ranks', 'random-ranks', 'body-types', 'origins', 'weakness', 'counts', 'power-tables', 'powers', 'talents', 'contacts']) d[n] = load(`${n}.json`);
+    const g = makeGenerator(d);
+    const seedsFrom = () => { let i = 0; return () => { i += 1; return Object.fromEntries(['body', 'origin', 'abilities', 'weakness', 'counts', 'powers', 'talents'].map((s, k) => [s, 1000 * i + k])); }; };
+    const ranksOf = (s) => [...Object.values(s.abilities).map((x) => x.rank), ...s.powers.map((p) => p.rank)];
+    const free = rollNpc(d, g, { powers: 4 }, seedsFrom()).snapshot;
+    const capped = rollNpc(d, g, { powers: 4, ceiling: 'poor' }, seedsFrom()).snapshot;
+    const over = (id) => LADDER.indexOf(id) > LADDER.indexOf('poor');
+    check('the rank ceiling is what holds an NPC down: the same seeds with no ceiling go above Poor, with it nothing does',
+      ranksOf(free).some(over) && !ranksOf(capped).some(over) && capped.powers.length === 4, JSON.stringify(ranksOf(capped)));
+  }
+  check('its Health is the sum of the capped numbers', ns && ns.health === ['fighting', 'agility', 'strength', 'endurance'].reduce((s, k) => s + ns.abilities[k].number, 0));
+  check('and a People dossier backed by it, when asked', sqlite.prepare('SELECT sheet_id FROM msh_npcs WHERE id = ?').get(npc.body.dossier_id)?.sheet_id === npc.body.npc.id);
+  check('a rolled NPC is hidden from players until the GM shows it',
+    (await call(R.npcs, 'GET', { who: 'ann@x.org', params: p1 })).body.npcs.length === 0
+    && (await call(R.npcs, 'GET', { params: p1 })).body.npcs.length === 1);
+  check('a player cannot roll one', (await call(R.generate, 'POST', { who: 'ann@x.org', params: p1, body: { name: 'X' } })).status === 403);
+  check('a count past the table\'s highest maximum is refused', (await call(R.generate, 'POST', { params: p1, body: { name: 'X', powers: 19 } })).status === 400);
+  check('deleting the campaign leaves every hero where it was',
+    (await call(R.one, 'DELETE', { params: p1 })).status === 200 && sqlite.prepare('SELECT count(*) AS n FROM msh_heroes').get().n === 2
+      && sqlite.prepare('SELECT count(*) AS n FROM msh_hero_events').get().n === 0);
+}
+
+section('Notes, People and handouts: the shared views on Marvel\'s own tables, members only');
+
+{
+  const { sqlite, env, media, route, call } = await marvelStandIn();
+  const R = {
+    list: await route('campaigns.js'),
+    link: await route('campaigns/[id]/heroes.js'),
+    journal: await route('journal.js'),
+    entry: await route('journal/[entryId].js'),
+    search: await route('campaigns/[id]/search.js'),
+    ask: await route('campaigns/[id]/ask.js'),
+    people: await route('campaigns/[id]/npcs.js'),
+    person: await route('campaigns/[id]/npcs/[npcId].js'),
+    portrait: await route('campaigns/[id]/npcs/[npcId]/portrait.js'),
+    sweep: await route('campaigns/[id]/npcs/sweep.js'),
+    handouts: await route('campaigns/[id]/handouts.js'),
+    pages: await route('campaigns/[id]/entries.js'),
+    page: await route('campaigns/[id]/entries/[entryId].js'),
+    upload: await route('campaigns/[id]/entries/[entryId]/images.js'),
+    image: await route('campaigns/[id]/images/[imageId].js'),
+  };
+  // gm@ runs it; ann@ has a hero in it; eve@ is signed in and has none.
+  sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES ('hero-ann-0001', 'ann@x.org', 'Ann', '{}', '{}')`).run();
+  const c = (await call(R.list, 'POST', { body: { name: 'Tuesday' } })).body.campaign;
+  const p = { id: String(c.id) };
+  await call(R.link, 'POST', { who: 'ann@x.org', params: p, body: { hero_id: 'hero-ann-0001' } });
+
+  const outsider = await Promise.all([
+    call(R.journal, 'GET', { who: 'eve@x.org', query: `?campaign_id=${c.id}` }),
+    call(R.journal, 'POST', { who: 'eve@x.org', body: { campaign_id: c.id, body: 'hi' } }),
+    call(R.search, 'GET', { who: 'eve@x.org', params: p, query: '?q=x' }),
+    call(R.people, 'GET', { who: 'eve@x.org', params: p }),
+    call(R.handouts, 'GET', { who: 'eve@x.org', params: p }),
+    call(R.ask, 'POST', { who: 'eve@x.org', params: p, body: { question: 'who?' } }),
+  ]);
+  check('someone with no hero in the campaign reads and writes none of it (403 on all six)',
+    outsider.every((r) => r.status === 403), outsider.map((r) => r.status).join());
+
+  // @mentions: a dossier on first mention, a possessive resolving to the same
+  // person, an apostrophe inside a name kept.
+  const n1 = await call(R.journal, 'POST', { who: 'ann@x.org', body: { campaign_id: c.id, title: 'Docks', body: 'We cornered @Kingpin at the docks with @O\'Brien.' } });
+  const n2 = await call(R.journal, 'POST', { body: { campaign_id: c.id, body: '@Kingpin\'s men took the crate.' } });
+  const names = sqlite.prepare('SELECT name FROM msh_npcs ORDER BY name').all().map((r) => r.name);
+  check('a player\'s note is saved, and @Name makes a dossier on first mention',
+    n1.status === 201 && n2.status === 201 && names.join() === 'Kingpin,O\'Brien', names.join());
+  const king = sqlite.prepare("SELECT id FROM msh_npcs WHERE name = 'Kingpin'").get().id;
+  check('"@Kingpin\'s" is the Kingpin: both notes list under one dossier',
+    (await call(R.person, 'GET', { who: 'ann@x.org', params: { ...p, npcId: String(king) } })).body.mentions.length === 2);
+  await call(R.entry, 'PATCH', { who: 'ann@x.org', params: { entryId: String(n1.body.entry.id) }, body: { body: 'We cornered @O\'Brien alone.' } });
+  check('an edit that takes a name out stops listing the note under them',
+    (await call(R.person, 'GET', { params: { ...p, npcId: String(king) } })).body.mentions.length === 1);
+  check('a note is changed only by its author or the GM',
+    (await call(R.entry, 'DELETE', { who: 'ann@x.org', params: { entryId: String(n2.body.entry.id) } })).status === 403
+      && (await call(R.entry, 'DELETE', { params: { entryId: String(n2.body.entry.id) } })).status === 200);
+  const hit = await call(R.search, 'GET', { who: 'ann@x.org', params: p, query: '?q=' + encodeURIComponent('o\'bri') });
+  check('search takes an apostrophe as a word break, and marks the match with \\u0001 and \\u0002, never markup',
+    hit.status === 200 && hit.body.entries.length === 1 && hit.body.entries[0].snippet.includes('\u0001') && !hit.body.entries[0].snippet.includes('<mark>'),
+    JSON.stringify(hit.body).slice(0, 160));
+
+  // A dossier's link to a statted sheet is the GM's to set and to see.
+  sqlite.prepare("INSERT INTO msh_npc_sheets (campaign_id, name, build, snapshot, created_by) VALUES (?, 'Kingpin', '{}', '{}', 'gm@x.org')").run(c.id);
+  const kp = { ...p, npcId: String(king) };
+  check('only the GM links a dossier to a statted NPC sheet',
+    (await call(R.person, 'PATCH', { who: 'ann@x.org', params: kp, body: { sheet_id: 1 } })).status === 403
+      && (await call(R.person, 'PATCH', { params: kp, body: { sheet_id: 1 } })).status === 200);
+  check('and a player never sees which sheet stands behind a dossier',
+    !('sheet_id' in (await call(R.person, 'GET', { who: 'ann@x.org', params: kp })).body.npc)
+      && !(await call(R.people, 'GET', { who: 'ann@x.org', params: p })).body.npcs.some((n) => 'sheet_id' in n)
+      && (await call(R.person, 'GET', { params: kp })).body.npc.sheet_id === 1);
+
+  // Pictures: every key under msh/, a portrait read back through the Function.
+  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3]);
+  check('a portrait is stored under msh/ and read back through the Function',
+    (await call(R.portrait, 'POST', { who: 'ann@x.org', params: kp, type: 'image/png', raw: png })).status === 200
+      && [...media.objects.keys()].every((k) => k.startsWith(`msh/npc/${c.id}/${king}/`))
+      && (await call(R.portrait, 'GET', { who: 'ann@x.org', params: kp })).body.length === png.length);
+  check('a file that is not an image is refused', (await call(R.portrait, 'POST', { params: kp, type: 'text/html', raw: '<b>' })).status === 415);
+  let refused = false;
+  try { sqlite.prepare("UPDATE msh_npcs SET portrait_key = 'npc/1/x.png' WHERE id = ?").run(king); } catch { refused = true; }
+  check('and the table itself refuses a key outside msh/', refused);
+
+  // The GM's pages stay the GM's; a picture from one is a handout once revealed.
+  check('a player cannot list the GM\'s pages', (await call(R.pages, 'GET', { who: 'ann@x.org', params: p })).status === 403);
+  const pg = (await call(R.pages, 'POST', { params: p, body: { title: 'The docks', kind: 'place', body: 'GM only' } })).body.entry;
+  const img = (await call(R.upload, 'POST', { params: { ...p, entryId: String(pg.id) }, query: '?caption=Map', type: 'image/png', raw: png })).body.image;
+  const ip = { ...p, imageId: String(img.id) };
+  check('an unrevealed picture is not a handout, and a player asking for it gets a 404',
+    (await call(R.handouts, 'GET', { who: 'ann@x.org', params: p })).body.handouts.length === 0
+      && (await call(R.image, 'GET', { who: 'ann@x.org', params: ip })).status === 404
+      && (await call(R.image, 'GET', { params: ip })).status === 200);
+  check('only the GM reveals one', (await call(R.image, 'PATCH', { who: 'ann@x.org', params: ip, body: { revealed: true } })).status === 403
+    && (await call(R.image, 'PATCH', { params: ip, body: { revealed: true } })).status === 200);
+  const shown = (await call(R.handouts, 'GET', { who: 'ann@x.org', params: p })).body.handouts;
+  check('once revealed it is a handout: its id and caption, and nothing of the page behind it',
+    shown.length === 1 && shown[0].caption === 'Map' && !('entry_id' in shown[0]) && !('title' in shown[0])
+      && (await call(R.image, 'GET', { who: 'ann@x.org', params: ip })).status === 200, JSON.stringify(shown));
+  check('deleting the page deletes its pictures from R2', (await call(R.page, 'DELETE', { params: { ...p, entryId: String(pg.id) } })).status === 200
+    && ![...media.objects.keys()].some((k) => k.startsWith('msh/campaign/')));
+
+  // Nate, 2026-09-28: Ask yes, the sweep no.
+  check('the sweep answers 501 and says so', (await call(R.sweep, 'POST', { params: p })).status === 501);
+  check('Ask checks the question before anything that costs money',
+    (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: {} })).status === 400
+      && (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: { question: 'x'.repeat(1001) } })).status === 400);
+}
+
+section('The shared campaign views are loaded in order, reach only this app\'s API, and are styled here');
+
+{
+  const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
+  const MODULES = { 'campaign/index.html': ['notes', 'people', 'handouts'], 'gm/index.html': ['setting'], 'gm/present.html': ['present'] };
+  for (const [page, mods] of Object.entries(MODULES)) {
+    const html = readFileSync(join(appDir, page), 'utf8');
+    const srcs = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map((m) => m[1]);
+    const at = (name) => srcs.indexOf(`/shared/js/campaign/${name}.js`);
+    check(`${page} loads core.js, then ${mods.join(', ')}, before its own module`,
+      at('core') >= 0 && mods.every((m) => at(m) > at('core')) && srcs.findIndex((s) => !s.startsWith('/shared/')) > Math.max(...mods.map(at)),
+      srcs.join(' '));
+    check(`${page} loads no other app's script`, srcs.every((s) => s.startsWith('/shared/js/campaign/') || !s.startsWith('/')), srcs.join(' '));
+  }
+  const pageScripts = ['campaign/campaign.js', 'gm/gm.js', 'gm/present.js'].map((f) => readFileSync(join(appDir, f), 'utf8'));
+  // The page code names only this app's API (the suite itself is left out: it
+  // names the other one in these very lines), and no endpoint imports another
+  // group's code - a comment naming the Palladium file it mirrors is fine.
+  check('every page hands the shared views /api/marvel-heroes, no page names another group\'s API, and no endpoint imports its code',
+    pageScripts.every((s) => s.includes("base: '/api/marvel-heroes'"))
+      && !textFiles.filter((f) => f.startsWith(appDir) && !f.startsWith(join(appDir, 'test')))
+        .some((f) => readFileSync(f, 'utf8').includes('/api/character-creator'))
+      && !scripts.filter((f) => f.startsWith(fnDir))
+        .some((f) => /\bfrom\s+'[^']*character-creator/.test(readFileSync(f, 'utf8'))));
+
+  // Every mc- class the four views Marvel draws can emit has a rule here, so a
+  // class added there without one here fails instead of rendering unstyled.
+  const emitted = new Set();
+  for (const m of ['notes', 'people', 'handouts', 'setting']) {
+    const src = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', `${m}.js`), 'utf8');
+    for (const cls of src.matchAll(/class="([^"$]*)/g)) for (const c of cls[1].split(/\s+/)) if (/^mc-[a-z-]+$/.test(c)) emitted.add(c);
+    for (const lit of src.matchAll(/'(mc-[a-z-]+(?: mc-[a-z-]+)*)'/g)) for (const c of lit[1].split(' ')) emitted.add(c);
+  }
+  const unstyled = [...emitted].filter((c) => !new RegExp(`\\.${c}(?![a-z-])`).test(css));
+  check(`every one of the ${emitted.size} mc- classes those views emit is styled in styles.css`, emitted.size > 30 && unstyled.length === 0, unstyled.join(', '));
+  check('the People sweep panel is hidden, by the button it carries', /\.mc-panel:has\(button\[onclick\^="mcCampaign\.people\.sweep"\]\)\s*\{\s*display:\s*none/.test(css));
+
+  // Present mode writes no markup: the page must carry every id it fills.
+  const present = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'present.js'), 'utf8');
+  const ids = [...new Set([...present.matchAll(/\$\('([a-z]+)'\)/g)].map((m) => m[1]))];
+  const skeleton = readFileSync(join(appDir, 'gm', 'present.html'), 'utf8');
+  const lacking = ids.filter((id) => !skeleton.includes(`id="${id}"`));
+  check(`gm/present.html carries all ${ids.length} ids present.js fills`, ids.length >= 10 && lacking.length === 0, lacking.join(', '));
+  check('and a hidden frame or state stays hidden against its own display rule',
+    /\.present-frame\[hidden\],\s*\.present-state\[hidden\]\s*\{\s*display:\s*none/.test(css));
+
+  // escJs: the O'Brien bug - a name through the attribute decode and the JS parse, whole.
+  const { escJs } = await import(new URL('../js/campaign-ui.js', import.meta.url));
+  const name = 'O\'Brien "the" <b> \\ x';
+  const decoded = escJs(name).replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  let back = null;
+  try { back = new Function(`return '${decoded}';`)(); } catch { /* reported below */ }
+  check('escJs carries a name with an apostrophe, a quote, a tag and a backslash through an inline handler unchanged', back === name, String(back));
+}
+
+section('Initiative (R25): d100, then a Talent that applies, then Agility, then the tied re-roll');
+
+{
+  const { orderRolled, rollInitiative, initiativeTalents, TAGS } = await import(new URL('../js/initiative.js', import.meta.url));
+  const { rng } = await import(new URL('../js/dice.js', import.meta.url));
+  check('the Talents it reads are exactly the two that give +1 initiative (talents.json:155, :210)',
+    JSON.stringify(initiativeTalents(load('talents.json')).sort()) === '["martial-arts-e","weapons-specialist"]');
+  const who = (o) => o.map((r) => r.key).join('');
+  const c = (key, roll, agility, talent = false, applies = false) => ({ key, name: key, roll, agility, talent, applies });
+
+  const t = orderRolled([c('A', 50, 40), c('B', 50, 10, true, true), c('C', 90, 1)], rng(1));
+  check('a tie broken by a Talent that applies: the lower Agility goes first, tagged Talent',
+    who(t) === 'CBA' && t[1].tags.includes(TAGS.talent) && t[2].tags.includes(TAGS.talent) && t[0].tags.length === 0, JSON.stringify(t.map((r) => [r.key, r.tags])));
+  const a = orderRolled([c('A', 50, 20), c('B', 50, 22)], rng(1));
+  check('a tie broken by the Agility NUMBER: 22 beats 20, both Excellent, tagged Agility',
+    who(a) === 'BA' && a.every((r) => r.tags.join() === TAGS.agility && r.rerolls.length === 0));
+  const r = orderRolled([c('A', 50, 20), c('B', 50, 20), c('C', 10, 20)], rng(7));
+  const byKey = Object.fromEntries(r.map((x) => [x.key, x]));
+  check('a tie still standing is broken by a re-roll of the tied combatants only',
+    byKey.A.rerolls.length > 0 && byKey.B.rerolls.length > 0 && byKey.C.rerolls.length === 0
+      && byKey.A.tags.includes(TAGS.reroll) && r[2].key === 'C'
+      && byKey[r[0].key].rerolls.at(-1) > byKey[r[1].key].rerolls.at(-1), JSON.stringify(r));
+  const u = orderRolled([c('A', 50, 30), c('B', 50, 10, true, false)], rng(1));
+  check('an unticked Talent box breaks nothing: Agility decides, and no row is tagged Talent',
+    who(u) === 'AB' && !u.some((x) => x.tags.includes(TAGS.talent)));
+  const tickedNoTalent = orderRolled([c('A', 50, 30), c('B', 50, 10, false, true)], rng(1));
+  check('nor does a tick on someone with no initiative Talent', who(tickedNoTalent) === 'AB' && !tickedNoTalent.some((x) => x.tags.includes(TAGS.talent)));
+  const both = orderRolled([c('A', 50, 10, true, true), c('B', 50, 30, true, true)], rng(1));
+  check('two whose Talents both apply go on to Agility', who(both) === 'BA' && both.every((x) => x.tags.join() === TAGS.agility));
+  const round = rollInitiative([c('A', 0, 5), c('B', 0, 6), c('C', 0, 7), c('D', 0, 8)], rng(12345));
+  check('a rolled round is highest first, every roll a d100',
+    round.every((x, i) => x.roll >= 1 && x.roll <= 100 && (i === 0 || round[i - 1].roll >= x.roll)), JSON.stringify(round.map((x) => x.roll)));
+}
+
 section('No book text is in any tracked file (local only: needs the extraction)');
 
 {
@@ -754,6 +1126,19 @@ for (const dir of ['', 'codex']) {
   if (dir) continue;
   const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"/g)].map((m) => m[1]);
   check('every tab controls a panel that exists', tabs.length > 0 && tabs.every((p) => html.includes(`id="${p}"`)), tabs.join());
+  // The Campaigns page, the GM page and the room view, each against its own
+  // page. room.js looks ids up without the '#', by getElementById.
+  for (const [page, script, re] of [
+    ['campaign/index.html', 'campaign/campaign.js', /\$\('#([a-z0-9-]+)'\)/g],
+    ['gm/index.html', 'gm/gm.js', /\$\('#([a-z0-9-]+)'\)/g],
+    ['gm/room.html', 'gm/room.js', /\$\('([a-z0-9-]+)'\)/g],
+  ]) {
+    const pHtml = readFileSync(join(appDir, page), 'utf8');
+    const pIds = [...new Set([...readFileSync(join(appDir, script), 'utf8').matchAll(re)].map((m) => m[1]))];
+    const pMissing = pIds.filter((id) => !new RegExp(`id="${id}"`).test(pHtml));
+    check(`${script} looks up ${pIds.length} ids and ${page} has them all`, pIds.length > 0 && pMissing.length === 0, pMissing.join(', '));
+  }
+  check('the main page links the Campaigns and GM pages', /href="campaign\/"/.test(html) && /href="gm\/"/.test(html));
   check('the tab bar links to the codex', /<a\b[^>]*href="codex\/"/.test(html));
 }
 
