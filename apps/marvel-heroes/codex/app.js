@@ -70,7 +70,7 @@ function init(codex) {
   const relatedBlock = (s, r) => (s.related ? s.related(r) : []).map(([label, items]) => `<p><strong>${esc(label)}:</strong> ${
     items.map((x) => (x.code
       ? `<button type="button" class="linklike" data-goto="${esc(x.code)}"${x.section ? ` data-goto-section="${esc(x.section)}"` : ''}${
-        x.title ? ` title="${esc(x.title)}"` : ''}>${esc(x.name)} (${esc(x.code)})</button>`
+        x.title ? ` title="${esc(x.title)}"` : ''}>${esc(x.name)}${x.plain ? '' : ` (${esc(x.code)})`}</button>`
       : esc(x.name))).join(', ')}</p>`).join('');
 
   function card(s, r) {

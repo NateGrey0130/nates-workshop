@@ -3,14 +3,15 @@
 Marvel Super Heroes Advanced Set, Official Guidebook to Mutants, Kim Eastland,
 1986. Registry entry: `scripts/msh/books.json` -> `ma1`. Measured 2026-09-28.
 
-**Rows citing this book:** 967 `msh_book_text` rows over 212 entries in
+**Rows citing this book:** 975 `msh_book_text` rows over 220 entries in
 production (`DB_MARVEL`, read back 2026-09-28):
-- 894 over 181 character entries
+- 902 over 189 character entries
 - 73 over 20 items and 11 adventure sections
 
 Committed:
-- 172 characters in `apps/marvel-heroes/data/npcs.json`: 174 versions, 189
-  stat blocks, 7 cross-reference appearances and 434 powers, 105 of them
+- 180 characters in `apps/marvel-heroes/data/npcs.json`: 182 versions, 197
+  stat blocks (8 of them the Savage Land Mutates' members, built from their
+  team's block), 7 cross-reference appearances and 435 powers, 108 of them
   linked to the Ultimate Powers Book
 - 20 items in `data/items.json`
 - the *Dreamchild* adventure's 11 sections in `data/adventures.json`
@@ -309,7 +310,19 @@ Contents' page numbers. Both are corrected below from the pages themselves.*
    stats are its tier's block, with the prose changes applied by hand
    (Barbarus's "106 Health" and Amazing Strength), or as a name and text under
    the tier with no stats of its own? Applying the changes by hand is a
-   judgement per member, and the text says what to change.
+   judgement per member, and the text says what to change. **Taken for the
+   Savage Land Mutates on Nate's word, 2026-09-28**
+   (`scripts/msh/ma1-members.json`):
+   - Each member is the Average Mutate Abilities block with only the ranks its
+     own text states for an ability, which is less judgement than it looked.
+   - Barbarus (F Ex, S Am, E Rm) comes out at exactly the 106 Health the text
+     prints, and Gaza (S In, E In) at its printed 96. The builder refuses to
+     write if either stops agreeing.
+   - A rank the text gives for one power only is not applied to an ability:
+     Piper's Psyche is Remarkable "in this power".
+   - Lorelei's run-in is a cross-reference, so it links to her own card.
+   - The Gladiators, the Imperial Guard and the other Starjammers are still
+     names only.
 3. **Statted beings with no header** (S'ym, Mark II and Lang's Sentinels):
    separate Codex rows, or part of the entry they sit in?
 4. **Early versions given only as modifiers** (Magneto, Quicksilver, Scarlet

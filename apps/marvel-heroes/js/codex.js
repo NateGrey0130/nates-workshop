@@ -20,8 +20,10 @@
 //   bookText(r)      optional: [{ book, entry, label }], sourcebook entries whose
 //                    text (msh_book_text) is fetched when the card opens
 //   groupText(g)     optional: a power-text code for a filter group's introduction
-//   related items    { name, code?, section? }: a code links to that key, in
-//                    `section` when it is another section's (an NPC's Power)
+//   related items    { name, code?, section?, plain? }: a code links to that key,
+//                    in `section` when it is another section's (an NPC's
+//                    Power); `plain` leaves the code off the link's text (a
+//                    team member's card, whose key is only an id)
 //   search           optional: replaces the default word search
 //
 // It shares the Palladium codex's idea (apps/codex/codex.js) and none of its
@@ -227,7 +229,7 @@ export const SECTIONS = [
     // Phoenix's "Alien entity who had assumed the personality / of Jean Grey".
     summary: (r) => r.versions[0].identity
       .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
-      || `One of the ${r.team}`,
+      || `One of the ${r.member_of || r.team}`,
     tags: (r) => [
       r.versions.some((v) => v.blocks.length > 1) && 'forms',
       r.versions.some((v) => v.members.length) && 'team',
@@ -250,6 +252,14 @@ export const SECTIONS = [
           } else if (o && o.verdict === 'as_printed') {
             out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
           }
+          // A team member the book gives no block of its own: its team's tier,
+          // with the ranks its own text states (scripts/msh/<slug>-members.json).
+          const f = b.built_from;
+          if (f) {
+            const ch = Object.entries(f.changes).map(([l, c]) => `${FIELD[l]} ${c}`).join(', ');
+            out.push(['Built from', `${f.tier}, p.${f.page}${ch ? `, with ${ch} as its text states` : ', as printed'}${
+              f.printed_health ? `; the text's Health ${f.printed_health} agrees` : ''}`]);
+          }
         }
       }
       for (const a of r.appearances) out.push(['Also appears', `${a.team}, p.${a.page}`]);
@@ -260,11 +270,17 @@ export const SECTIONS = [
       for (const v of r.versions) {
         const prefix = r.versions.length > 1 ? `${versionName(v)}: ` : '';
         if (v.powers.length) {
+          const named = (p) => (p.rank ? `${p.name} (${p.rank})` : p.name);
           out.push([`${prefix}Powers`, v.powers.map((p) => (p.upb
-            ? { name: p.name, code: p.upb, section: 'powers', title: `UPB ${p.upb} ${this.upbName[p.upb]}` }
-            : { name: p.name }))]);
+            ? { name: named(p), code: p.upb, section: 'powers', title: `UPB ${p.upb} ${this.upbName[p.upb]}` }
+            : { name: named(p) }))]);
         }
-        if (v.members.length) out.push([`${prefix}Members`, v.members.map((m) => ({ name: `${m.name} (p.${m.page})` }))]);
+        if (v.members.length) {
+          out.push([`${prefix}Members`, v.members.map((m) => (m.id
+            ? { name: `${m.name} (p.${m.page})`, code: m.id, section: 'npcs', plain: true }
+            : { name: `${m.name} (p.${m.page})` }))]);
+        }
+        if (r.member_of) out.push(['Team', [{ name: r.member_of, code: slug(r.member_of), section: 'npcs', plain: true }]]);
       }
       return out;
     },
