@@ -331,6 +331,69 @@ F25) for these four, whose reason was that no cached book defined them.
 held**: the remaining rows need books this machine does not hold, or reading
 off pages not yet checked.
 
+**Taken further, 2026-09-27 (branch `pal/data/rebuild-audit-f16-f25-f26`), on
+Nate's word**, which also approved bundling this with `F25` and `F26` and
+taking held items. Three more rows now cite a page, by
+`~040-rifts-skill-list-recitations.sql`, applied `--remote` before the PR:
+
+| row | now cites | the page prints | stored |
+|---|---|---|---|
+| `Juicer Technology` | `Rifts World Book 10: Juicer Uprising p.65` | *Medical: Juicer Technology*, 40%+5% | Medical 40/5 |
+| `Radar/Sonar Operations` | `Rifts World Book 11: Coalition War Campaign p.66` | *Pilot Related: Radar/Sonar Operations (Read Sensor Equipment)*, 30%+5% | Pilot Related 30/5 |
+| `Falconry` | `Palladium Fantasy RPG Main Book p.54` | under *Military*, 30%+5% | Military 30/5 |
+
+The three readings held for each. Each page was read off a render as well as
+the cache, with its folio read at the foot of the page. The stored category,
+base and per-level match. A search of every page of all 28 caches for each of
+the 25 names found no other definition of these three. RUE prints no Juicer
+Technology entry (its list at printed 303 has Flight System Combat, Jump Bike
+Combat and Lore: Juicers). RUE printed 320 files *Radar/Sonar Operation* as a
+pointer to Sensory Equipment, not a definition. `rifts-skill-list` goes from
+25 rows to **22** (`source-coverage.mjs --remote` before and after, in the PR
+body). Posture held: a data PR on Nate's word, with the three-readings check.
+
+**Two corrections to this finding's own premises.** Both were found by the
+premise audit before scoping.
+
+- **The tag table's `US` and `PW` rows were not waiting on those books.** All
+  five `US` rows moved to Underseas in #798 (2026-09-07). Four of the five `PW`
+  rows moved to Phase World in #403, with four more names the table lists as
+  untagged or unmapped. The one left is `Space: Spacecraft Mechanics`. It
+  stores 20%+5% where Phase World printed 150 prints *Spaceship Mechanics* at
+  22%+5%, so it fails the second reading. The phase-world survey records
+  leaving it alone on purpose. **It stays held.**
+- **The tag table's `JU` row was wrong about Juicer Technology.** The
+  2026-08-28 note says Juicer Uprising has no entry for it. Printed 65 does,
+  and it is re-cited above. `Air Assault Armor`, the other `JU` row, is
+  still defined nowhere in the caches.
+
+**Still held, and why.** Twenty-two rows, each against the reading that failed:
+
+- **Defined in two cached books.** `Trap Construction` is defined at 20%+4%
+  by Coalition War Campaign printed 62 and New West printed 75, which fails
+  the third reading. CWC's own skill list (printed 59) marks it *(new)*, and
+  CWC is the earlier world book. Choosing between the two is a call for
+  Nate, not this check.
+- **The page disagrees with the row.**
+  - `Space: Spacecraft Mechanics`, above.
+  - `Locate Secret Compartments`: PF printed 57 prints 15%+5% against the
+    stored 20. The row's note already records the PF figure.
+- **Defined in no cached book.** The other nineteen:
+  - `Air Assault Armor`, `Antiquarian`, `Combat Pod`, `Cyberjacking`,
+    `Doctor of Veterinary Medicine` (RUE's *Veterinary Science* is 50%+4%,
+    a different skill)
+  - `Geology`, `Ice Skating`, `Language Dialects`, `Language: Mongolian`,
+    `Lore: Astral`
+  - `Navigation: Terrestrial`, `Physics`, `Snow Skiing`,
+    `Space: Antigrav Suit`, `Space: Defense Systems`
+  - `Space: Oxygen Conservation`, `Space: Radio: Deep Space`,
+    `Space: Satellite Systems`, `Wingrider Flying Wing`
+
+  Each hit the search found was prose, a class skill list, a psionic power or
+  a super ability. The workshop's `books` directory holds PDFs that are not
+  cached (Lemuria, Xiticix Invasion and others). They were not searched, and a
+  future cache is this finding's trigger again.
+
 - **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `REBUILD-AUDIT.closed.md` under its own `### F17` heading.
 
 - **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F18` heading.
@@ -644,6 +707,25 @@ effect is **inferred** from the statement, not run.
 **Confidence:** high.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-27 (branch `pal/data/rebuild-audit-f16-f25-f26`), as
+written.** Posture held: repo-only. Nothing was applied, and the guard changes
+no row in either environment. The statement, now lines 136-139, carries
+`AND instr(markdown, 'Since 2026-09-26 xp_table carries dog-boy') = 0`. The
+guard stops before the apostrophe the file writes as `''`, so it matches the
+stored text with no escaping. No other data script contains that string, so
+it cannot block a first apply. Premises re-checked by the premise audit before
+scoping: production holds one `can be.` and one copy of the sentence, and no
+other statement in `~011` has the self-containing shape.
+
+**The re-run effect, run rather than inferred.** production's `gargoylite`
+markdown was copied into an in-memory SQLite (`q.mjs --remote`, 2026-09-27),
+and the statement run twice. Copies of the sentence per run:
+
+| starting from | `origin/main` statement | guarded statement |
+|---|---|---|
+| production's markdown | 1, 2, 3 | 1, 1, 1 |
+| the same with the sentence removed (a first apply) | 0, 1, 2 | 0, 1, 1 |
+
 ### F26 — low — `add-hu-gear-h-acids-and-clothing.sql`'s read-back cannot run from this machine
 
 Found while taking `F23`, 2026-09-27. The file's trailing SELECTs escape to
@@ -666,6 +748,61 @@ glob was not run.
 **Confidence:** high on the failure. Low on whether it matters, until someone
 says they run the glob.
 **Ongoing cost:** none.
+
+**Taken, 2026-09-27 (branch `pal/data/rebuild-audit-f16-f25-f26`), on Nate's
+choice** over the decline path. Posture held: repo-only. A read-back is a
+SELECT, so nothing was applied. The file's trailing SELECTs now escape to
+**7,714** characters, under the 7,900 budget. Before, they were 10,389, with
+6,595 raw and 5,345 now, measured with `d1-apply.mjs`'s own `cmdLineLength()`
+over `trailingSelects()`. All 32 assertions are kept, with the same predicates.
+What changed:
+
+- The labels are terse, and the sentence each one carried is now a comment
+  above it.
+- Each SELECT is one line, with no optional space outside a string literal:
+  `count(*)AS got`, `name='Jet Pack'`. The escape charges four characters per
+  space.
+
+**Two shapes were measured and rejected.** Folding the 32 into compound
+SELECTs escaped *longer* (8,841 in four, and 9,174 in seven of at most five
+terms), because the cost is in the predicates, not the boilerplate. D1 also
+refuses more than five compound terms (memory
+`class-frontmatter-must-be-one-line`, measured 2026-08-26), which the local
+replay would not have caught.
+
+**Proved, 2026-09-27:**
+
+- **Same path, both sides.** Through `d1Batch --local`, the `origin/main`
+  copy fails with `The command line is too long` and the new block runs:
+  32 statements, 32 rows.
+- **The same things are asserted.** The old SELECTs, sent in chunks of eight,
+  and the new block return identical got and want at every position: 32 of 32
+  on `--local` and 32 of 32 on `--remote`, read-only.
+- **They hold where they are meant to.** `preflightReadbacks()`, the replay
+  pre-flight runs at the file's own position in sorted order, passes all 32.
+- **`F23`'s warning no longer names the file.** Each copy was paired with a
+  missing second file, so pre-flight died before any apply. The edited file
+  printed only the missing-file error. The `origin/main` copy printed the
+  warning at 10,389, then the same error.
+
+**Found while proving it: 17 of the 32 no longer hold on production, and did
+not before this change either.** Old and new give the same 17 failures on
+`--remote` and on `--local`. Each of the 17 matches on `name` alone, and
+Nightbane's reprint of the same gear list shares the names: `tape-recorder-nb`
+cites `Nightbane RPG p.229` (`q.mjs --remote`, 2026-09-27). Those rows come from
+`add-nb-sorcerer-class.sql` and
+`zzzzzzzzzzzzz-nb-gear-f-containers-equipment-clothing.sql`, which sort after
+this file, so at its own position every assertion holds. The file is one-shot
+and was not re-applied. The predicates are the file's own and were not
+narrowed, because narrowing them would stop asserting the same things.
+
+**Two line citations in this finding were wrong** (premise audit):
+
+- `d1-apply.mjs` line 7 is the `--remote` form of the glob. The header prints
+  no `--local` glob. The mechanism holds either way: the read-back's `die()`
+  runs inside the per-file loop after the apply.
+- `rebuild-local.mjs`'s header says it never spawns wrangler at line 26, not
+  13.
 
 ## The question the brief asked
 

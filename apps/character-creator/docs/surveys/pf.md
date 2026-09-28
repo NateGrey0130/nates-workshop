@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 7, skill_system_bases 1, spells 28, psionic_powers 2, creatures 36
+**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 28, psionic_powers 2, creatures 36
 
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
@@ -84,6 +84,7 @@ None. This book has no open import.
 | 2026-08-28 | — | this file, backfilled offline |
 | 2026-08-28 | [#376](https://github.com/NateGrey0130/nates-workshop/pull/376) | `zzzz-cite-pf-rows.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
 | 2026-09-18 | #1172 | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-palladium-fantasy.sql`, 36 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
+| 2026-09-27 | `pal/data/rebuild-audit-f16-f25-f26` | **`Falconry` cites this book**, by `~040-rifts-skill-list-recitations.sql` (REBUILD-AUDIT F16): it moves from the non-book `Rifts Skill List` to `Palladium Fantasy RPG Main Book p.54`, where it prints under Military at 30%+5%, as the row stores (its `systems` carries both `rifts` and `palladium-fantasy`). `Locate Secret Compartments` is **not** moved: printed 57 prints 15%+5% against the stored 20, and the row's note already says so. Skills citing this book 7 -> **8**. `--remote` is applied before the merge. |
 
 ### What remains
 
