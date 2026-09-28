@@ -3389,3 +3389,48 @@ classes' diff, from a rebuild at `b62d4727` against production, 2026-09-27.
 **Confidence:** high on the two classes. Low on whether `sailor` and
 `oracle-cat` should change. What would raise it: their printed equipment pages.
 **Ongoing cost:** none.
+
+**Taken, 2026-09-28 (branch `pal/data/book-ingest-audit-f115-armor-choice`),
+on Nate's word, after `F105` (#1500) merged.** Posture held. This changes
+production, on the fix script's stated rule, in a script of its own:
+`~043-f115-light-armor-choice.sql`. `sailor` and `oracle-cat` are left alone.
+
+**One premise was false, and the obvious implementation would have done
+nothing.** The proposal says to apply the fix's replacement "guarded on the
+placeholder line". The fix's own guard also requires all four options to be
+rows in `gear` (`fix-category-gear-rows.sql:63`), and today only two are:
+- `merge-rifts-armor-duplicates.sql:114-140` retired `plastic-man-body-armor`
+  and `urban-warrior-body-armor` into `catalog_redirects` (live since
+  2026-08-23).
+- So a copy of that guard is a silent no-op in both environments.
+- `~043` counts an option as present when it is a gear row or a redirect to
+  one.
+- It keeps the fix's option text, because 37 live classes carry the retired
+  slugs in their choice lists and they resolve through the redirects.
+- It does not re-insert the retired suits, which regression's *the duplicated
+  armour rows are gone* forbids.
+
+**A smaller error, in the finding above:** the fix's comment is at line 56, not
+55.
+
+**The book agrees.** Psyscape prints a generic light suit for both classes
+(OCR cache `psyscape/txt/p077.txt` and `p141.txt`, printed 77 and 141), which
+is the category-not-item case the fix exists for.
+
+**What moved in production.** `~043` was applied `--remote` via `d1-apply.mjs`
+on 2026-09-28. All three read-backs held: every option resolves (4), both
+classes hold the choice (2), and `sailor` and `oracle-cat` are untouched (2).
+`imported_classes` was dumped in full before and after:
+- 527 of 529 rows are identical.
+- `psi-tech` differs at markdown line 113 and `zenith-moon-warper` at line 90.
+  Each line is the placeholder turned into the choice, plus `updated_at`, and
+  nothing else.
+
+**Citations:**
+- `node scripts/audit-citations.mjs --remote F115`: no live class note cites
+  it.
+- A tree grep finds three citations:
+  - `F105`'s decision table and `~042`'s header. Both are records of the
+    sync, and both say the correction is filed here, which stays true.
+  - memory `repo-rebuilds-names-not-values` ("F115 was the first"), which is
+    also still true.
