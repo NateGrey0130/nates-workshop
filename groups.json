@@ -88,7 +88,8 @@
         "functions/api/marvel-heroes/",
         "db/migrations/marvel/",
         "db/schema-marvel.sql",
-        "scripts/msh-extract.py"
+        "scripts/msh-extract.py",
+        "scripts/msh/"
       ],
       "tables": [
         "msh_power_text", "msh_heroes",
