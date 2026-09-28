@@ -32,8 +32,8 @@ function drawList() {
   list.innerHTML = S.campaigns.map((c) => `<li><button type="button" class="hero-item${S.current === c.id ? ' on' : ''}" data-c="${c.id}"
       aria-current="${S.current === c.id ? 'true' : 'false'}">
       <strong>${esc(c.name)}</strong>
-      <span class="muted">${c.is_gm ? 'You run it' : `GM ${esc(c.gm_email)}`}; ${c.hero_count} hero${c.hero_count === 1 ? '' : 'es'}${c.open ? '' : '; closed'}
-      ${c.my_heroes.length ? `; yours: ${c.my_heroes.map((h) => esc(h.name)).join(', ')}` : ''}</span>
+      <span class="muted">${c.is_gm ? 'You run it' : `GM ${esc(c.gm_email)}`}; ${c.hero_count} hero${c.hero_count === 1 ? '' : 'es'}${c.open ? '' : '; closed'}${
+        c.my_heroes.length ? `; yours: ${c.my_heroes.map((h) => esc(h.name)).join(', ')}` : ''}</span>
     </button></li>`).join('');
 }
 

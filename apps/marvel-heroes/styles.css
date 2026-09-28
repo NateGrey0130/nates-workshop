@@ -520,12 +520,13 @@ table.gear th[scope="row"] { min-width: 10em; }
 .gm-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; align-items: start; }
 @media (max-width: 900px) { .gm-grid { grid-template-columns: 1fr; } }
 .roster { display: grid; gap: 10px; }
-.roster-row { display: grid; grid-template-columns: minmax(120px, 1.2fr) repeat(3, minmax(0, 1fr)); gap: 10px; align-items: center;
+.roster-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; align-items: center;
   padding: 10px; border: 2px solid var(--rule); border-radius: var(--radius); background: var(--panel-alt); }
-.roster-who { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.roster-who { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; min-width: 0; overflow-wrap: anywhere; }
 .roster-num { display: flex; flex-direction: column; gap: 4px; }
+.roster-num .stepper { flex-wrap: nowrap; gap: 4px; }
 .roster-num output { min-width: 3ch; text-align: center; font-weight: 700; font-size: 18px; }
-@media (max-width: 620px) { .roster-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } .roster-who { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .roster-row { grid-template-columns: 1fr; } .roster-num { flex-direction: row; align-items: center; justify-content: space-between; } }
 .log-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .log-row.undone > span { text-decoration: line-through; }
 .init-list { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 8px; }
