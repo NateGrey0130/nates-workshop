@@ -99,7 +99,7 @@
       "name": "Marvel Codex",
       "group": "marvel",
       "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 6.6C10.3 5.1 8.2 4.4 5.4 4.4v12.8c2.8 0 4.9.7 6.6 2.2 1.7-1.5 3.8-2.2 6.6-2.2V4.4c-2.8 0-4.9.7-6.6 2.2z'/><path d='M12 6.6v13'/></svg>",
-      "description": "Every Power, Talent, Contact, Weakness and piece of gear the Marvel app knows, searchable.",
+      "description": "Every Power, Talent, Contact, Weakness and piece of gear the Marvel app knows, and the sourcebooks' characters, items and adventures, searchable.",
       "status": "live"
     },
     {
