@@ -177,8 +177,8 @@ export async function requireMember(request, env, id, { gm = false } = {}) {
 
 // Pictures (People portraits, the GM's setting pages): the types allowed, the
 // cap, and the R2 key. Every key starts msh/, which the tables CHECK (086).
-export const IMAGE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
-export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const IMAGE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const imageKey = (parts, ext) => `msh/${parts.join('/')}/${crypto.randomUUID()}.${ext}`;
 
 // One upload body, checked: -> { bytes, contentType, ext } or { res }.
