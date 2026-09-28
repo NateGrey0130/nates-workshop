@@ -506,3 +506,13 @@ table.gear th[scope="row"] { min-width: 10em; }
   .pb-readout { display: none !important; }
   .sheet .sh-bottom.single { grid-template-columns: 1fr !important; }
 }
+
+/* -- Campaigns and GM tools (campaign/, gm/) -- */
+.mast-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; justify-content: flex-end; }
+.mast-links a { color: var(--on-red); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.mast-links a[aria-current="page"] { text-decoration-thickness: 4px; }
+.camp { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 18px; align-items: start; }
+@media (max-width: 760px) { .camp { grid-template-columns: 1fr; } }
+.fields.one { grid-template-columns: 1fr; }
+.camp-hero { display: flex; gap: 8px; align-items: center; }
+.camp-hero .hero-item { flex: 1; }

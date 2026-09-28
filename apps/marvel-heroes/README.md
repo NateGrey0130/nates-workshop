@@ -10,7 +10,8 @@ at `/apps/marvel-heroes/` behind Access with nothing linking to it (Nate's
 decision, 2026-09-23); `test/smoke.mjs` now requires its live tile. Six tabs,
 each linkable: `#feat`, `#powers`, `#gen`, `#pb` (Point Buy, below), `#heroes`
 (the heroes a person has saved) and `#gear` (the Players' Book weapons and
-vehicles).
+vehicles). The masthead links to two pages beside it: **Campaigns**
+(`campaign/`) and **GM tools** (`gm/`).
 
 ## Point Buy
 
@@ -274,6 +275,8 @@ by roll, and they decide nothing here.
 | path | what |
 |---|---|
 | `index.html`, `app.js` | the page and its entry module, the only code that touches the DOM; one tab per tool |
+| `campaign/index.html`, `campaign/campaign.js` | Campaigns: create one, add or take out your own heroes, and - for its GM - read every linked hero's sheet, read-only. `?c=<id>` opens one |
+| `js/api.js` | the fetch wrapper the Campaign and GM pages share; answers the server's own refusal rather than throwing |
 | `js/dice.js` | one seedable generator (Mulberry32) and the dice built on it, so any roll can be replayed; the suite pins seed 12345's opening rolls |
 | `js/browser.js` | the power browser's search: an exact code, else every word in the name or summary (name hits first), narrowed by class and by two-slot Powers; related Powers resolved to names |
 | `js/generator.js` | the seven steps as one pure function: a hero is `build({ seeds, picks })`, one seed per step, so rerolling a step is a new seed for it, locking a step keeps it, and changing the body type re-reads the SAME ability dice on the new column. The suite pins seeds 1-7 and runs 2,000 random heroes against the rules |
@@ -295,6 +298,10 @@ by roll, and they decide nothing here.
 | `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
+| `/functions/api/marvel-heroes/campaigns.js`, `campaigns/[id].js`, `_lib/campaigns.js` | list and create campaigns; read, edit (GM) and delete (GM) one; who may do what, and the checks every write goes through |
+| `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |
+| `/functions/api/marvel-heroes/campaigns/[id]/heroes/[heroId].js` | GET a linked hero's sheet (its GM or owner); PATCH `{ field: delta }` for the four play numbers, GM only, written with its `msh_hero_events` row in one batch |
+| `/functions/api/marvel-heroes/campaigns/[id]/events.js` | the GM's last 50 changes, and `{ undo: id }`, which writes the reverse as a new event |
 | `/scripts/msh-extract.py` | builds the full-text data script into `.cache/msh/` from the PDF |
 | `test/smoke.mjs` | file-wide checks (ASCII, LF, parse), the stylesheet boundary, contrast, and the data: every d100 table covers 01-00 once, the ladder is unbroken, every ruling is logged; the endpoints against a real database |
 

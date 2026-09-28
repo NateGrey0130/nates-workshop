@@ -80,8 +80,14 @@ for (const f of pages) {
   const html = readFileSync(f, 'utf8');
   const sheets = [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/gi)].map((m) => m[0]);
   check(`${rel(f)} links a stylesheet`, sheets.length > 0);
+  // The app's own styles.css, reached from the page's own directory: a page in
+  // campaign/ or gm/ links ../styles.css, which is still this app's one sheet.
+  const ownSheet = join(appDir, 'styles.css');
   check(`${rel(f)} links no shared or other app's stylesheet`,
-    sheets.every((s) => /href=["']styles\.css["']/.test(s)), sheets.join(' '));
+    sheets.every((s) => {
+      const href = s.match(/href=["']([^"']+)["']/)?.[1] ?? '';
+      return !href.startsWith('/') && !/^[a-z]+:/i.test(href) && join(dirname(f), href) === ownSheet;
+    }), sheets.join(' '));
   const external = [...html.matchAll(/\b(?:src|href)=["'](https?:)?\/\/[^"']+["']/gi)].map((m) => m[0]);
   check(`${rel(f)} makes no third-party request`, external.length === 0, external.join(' '));
   check(`${rel(f)} does not load the RPG app switcher`,
