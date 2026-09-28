@@ -59,7 +59,7 @@ The group must match `groups.mjs --affected`. Any `shared` path forces
 `F<n>`) are **claimed at merge**. Re-read `origin/main` for the highest number
 immediately before the merge, never earlier.
 
-## Fourteen skills, and they load from anywhere on this machine
+## Fifteen skills, and they load from anywhere on this machine
 
 Each one lives in `.claude/skills/` and is junction-linked into
 `~/.claude/skills` (`SETUP.md` → junction block). A new skill needs its link in
@@ -71,8 +71,9 @@ linked. An agent written mid-session cannot be spawned until the next turn.
 |---|---|
 | `audit-menu` | reading or writing an audit file, and whenever a numbered finding is taken |
 | `take` | `/take <MENU> <ID>` — subject grep, then premise auditor, then the branch |
-| `book-survey` | handed a sourcebook PDF, before extracting anything |
+| `book-survey` | handed a Palladium or Rifts sourcebook PDF, before extracting anything |
 | `class-import` | adding or correcting an O.C.C./R.C.C., or importing skills, spells, psionics or gear |
+| `marvel-book` | handed a Marvel Super Heroes sourcebook: its own pipeline in `scripts/msh/`, never the two above |
 | `schema-change` | any new D1 table or column: a column lands in five places, a table in nine |
 | `ship-pr` | branch to deployed, and **whenever a change touches D1** |
 | `claim-audit` | checking what docs, comments and class prose say against the code |

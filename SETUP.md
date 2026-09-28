@@ -323,7 +323,7 @@ session started outside the repo (the book work runs from
 admin rights and follow repo edits:
 
 ```powershell
-foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','media-vault','pick3cut5','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
+foreach ($s in 'app-suite','audit-menu','book-survey','claim-audit','class-import','marvel-book','media-vault','pick3cut5','schema-change','ship-pr','take','test-suite','verify-ui','windows-shell','worktree') {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$s" -Target "C:\Users\natha\Projects\nates-apps\.claude\skills\$s"
 }
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\agents" -Target "C:\Users\natha\Projects\nates-apps\.claude\agents"
