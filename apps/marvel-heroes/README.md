@@ -124,6 +124,31 @@ every tracked and untracked file under this app, its endpoint, the extractor
 and the migration against every run of ten words in the book's power text, and
 fails on any match. CI has no extraction and says the section skipped.
 
+### `msh_book_text`
+
+The prose of the sourcebooks' character entries, for the codex's Notable NPCs
+and the GM tools: MA1 *Children of the Atom* first
+(`apps/marvel-heroes/docs/surveys/ma1.md`). One row per piece of an entry, so
+a card fetches one entry's rows by `(book, entry)` in one query.
+
+| column | what |
+|---|---|
+| `key` | `<book>:<entry>:<part>[:<n>]`, unique - `ma1:nightcrawler:power:1` |
+| `book` | the registry slug, `scripts/msh/books.json` |
+| `entry` | the entry's slug, as the committed data names it |
+| `part` | `power`, `talents`, `contacts`, `running`, `background`, `notes`, `member` or `prose` |
+| `name` | the power's or member's printed name, when the part has one |
+| `page` | the printed page the piece starts on |
+| `body` | the text, folded to ASCII |
+
+Migration `087`, in `DB_MARVEL`. The same rule as `msh_power_text`: **its rows
+are never in the repo**, and a database built from the repo has it empty. The
+numbers, rank codes, power names and page citations of each entry are committed;
+the sentences are not. `scripts/msh/roster.py` parses the local OCR cache
+(`$WORKSHOP_MSH_CACHE/books/<slug>/`). The data script that fills this table is
+written beside it, and the leak check above is extended to it when the data
+lands.
+
 ## Saved heroes: `msh_heroes`
 
 The generator's **Save hero** writes the hero to D1, and **My heroes** lists

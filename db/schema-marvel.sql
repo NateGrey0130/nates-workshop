@@ -47,6 +47,26 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '082-msh-heroes.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_heroes');
 
+-- Marvel Heroes: the prose of the sourcebooks' character entries (MA1 first),
+-- one row per power, section or member of an entry. Like msh_power_text its
+-- rows are never in this repository - see migration 087 - so a database built
+-- from here has it empty, and the codex shows the committed facts without it.
+CREATE TABLE IF NOT EXISTS msh_book_text (
+  key TEXT PRIMARY KEY,                  -- '<book>:<entry>:<part>[:<n>]'
+  book TEXT NOT NULL,                    -- scripts/msh/books.json slug
+  entry TEXT NOT NULL,                   -- the entry's slug in the committed data
+  part TEXT NOT NULL,                    -- power, talents, contacts, running, background, notes, member, prose
+  name TEXT,                             -- a power's or member's printed name
+  page INTEGER,                          -- the printed page the piece starts on
+  body TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_msh_book_text_entry ON msh_book_text (book, entry);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '087-msh-book-text.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_book_text')
+  AND EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_msh_book_text_entry');
+
 -- Marvel Heroes campaigns (migration 086): a GM's table, the heroes linked to
 -- it, the GM's changes to their Health and Karma, the journal and its search,
 -- the People and their statted sheets, and the GM's pages and pictures. The
