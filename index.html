@@ -330,8 +330,11 @@ fetch('/apps/manifest.json')
         <h3>${esc(app.name)}</h3>
         <p>${esc(app.description)}</p>
         <span class="card-tag">${esc(app.status)}</span>`;
+      // A slug may be a page inside an app (`marvel-heroes/codex`), so each
+      // segment is encoded on its own and the slashes survive.
+      const href = app.slug && `/apps/${app.slug.split('/').map(encodeURIComponent).join('/')}/`;
       return app.status === 'live' && app.slug
-        ? `<a class="card" href="/apps/${encodeURIComponent(app.slug)}/">${inner}</a>`
+        ? `<a class="card" href="${href}">${inner}</a>`
         : `<div class="card card-soon">${inner}</div>`;
     };
     // The LAST group is the catch-all. An app whose `group` is missing or
