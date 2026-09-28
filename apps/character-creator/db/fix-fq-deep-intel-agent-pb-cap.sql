@@ -23,13 +23,17 @@
 
 -- 1. The key itself, inline so it stays on one line: the frontmatter parser is
 --    line-based, and a wrapped value is the failure that costs a whole class.
+--    The replacement contains its own search string, so the guard is what keeps
+--    a second run from adding the key again (REBUILD-AUDIT.md F21). The colon
+--    matters: step 3's note says "attribute_maximums." with a period.
 UPDATE imported_classes
    SET markdown = replace(markdown,
          'attribute_requirements:' || char(10) || '  IQ: 10' || char(10) || '  MA: 10',
          'attribute_requirements:' || char(10) || '  IQ: 10' || char(10) || '  MA: 10'
            || char(10) || 'attribute_maximums: { PB: 12 }'),
        updated_at = datetime('now')
- WHERE class_id = 'fq-deep-intel-agent';
+ WHERE class_id = 'fq-deep-intel-agent'
+   AND instr(markdown, 'attribute_maximums:') = 0;
 
 -- 2. The restriction keeps the book's sentence and loses the storage claim.
 UPDATE imported_classes

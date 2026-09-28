@@ -11,6 +11,9 @@
 > **Added 2026-09-25: four findings after `F20`, filed open.** Read under each
 > heading for its state; the line above was true on its own date.
 >
+> **Added 2026-09-27: `F25` and `F26`, filed open** while taking `F21` and
+> `F23`. Read under each heading.
+>
 > **The one that misreads:** `F16` has no `Taken` note and is not open. It ends
 > *"Posture: blocked, no action. This finding exists so the negative result is
 > not re-derived"* — a deliberate dead end, recorded so two plausible OCR runs
@@ -368,6 +371,42 @@ has **not** been run, and how many files share the shape is unknown.
 **Confidence:** high on this file. Unknown on the sweep until someone runs it.
 **Ongoing cost:** none.
 
+**Taken, 2026-09-27 (branch `shared/audit/rebuild-audit-f21-f24`).** Posture
+held: repo-only. Nothing was applied, and the guard changes no row in either
+environment. The first `UPDATE` of `fix-fq-deep-intel-agent-pb-cap.sql` (now
+lines 29-36) carries `AND instr(markdown, 'attribute_maximums:') = 0`. It is
+safe on a first apply: `add-fq-deep-intel-agent-class.sql` contains no
+`attribute_maximums` at all (`grep -c`, 2026-09-27: 0), and step 3's note
+writes `attribute_maximums.` with a period, which the colon does not match.
+Proved on an in-memory SQLite built from `db/schema.sql` and the class import,
+then the fix run twice: the committed file held the key 0, 1, then 2 times; the
+guarded file 0, 1, then 1.
+
+**Correction to the heading: "ran twice live" was inferred, not measured.**
+`data_script_runs` holds one row for this file, at 2026-09-08 16:03:27
+(`q.mjs --remote`, 2026-09-27). The duplicate key production held was real, and
+#1354's `zzzzzzzzzzzzzzzzz-sync-gear-and-classes.sql` removed it (its lines
+97-101). How it came to be there twice is not established.
+
+**The sweep.** A scratch parser (not committed) read every `UPDATE` in
+`apps/character-creator/db/*.sql` (1,038 files), `db/*.sql` and
+`db/migrations/*.sql`. It evaluated each `replace()` whose arguments are
+literals and `char()`: 2,097 calls, 4 not evaluable, all four in
+`zzzzzzzzz-f59-per-level-lists.sql`. Those were read by hand, and each
+replaces its search string away. It kept the 851 whose replacement contains its
+own search string. 841 of those carry an `instr(…) = 0` on text the replacement
+writes. `db/` and `db/migrations/` held none. The other 10, read by hand:
+
+- this file, line 29: the finding itself.
+- `fix-merc-soldier-and-robot-pilot-mos.sql`, 7 statements: **not the shape.**
+  A marker chain, guarded at its head (the statements at lines 47 and 156) on the `mos:`
+  block the chain's last step writes.
+- `retire-leather-armor-placeholder.sql:56`: **not the shape.** The same
+  statement's inner `replace()` removes the `leather-armor` item it is guarded
+  on, so a second run matches nothing.
+- `~011-borrowed-xp-ladders.sql:136`: **the shape.** Filed as `F25`, below.
+  Production is clean.
+
 ### F22 — low — `light-mdc-body-armor` outlived its purpose, and nothing cites it now
 
 `fix-category-gear-rows.sql` step 4 deletes the four category placeholders
@@ -396,6 +435,33 @@ it as a generic "any light suit" item, until Nate says so. That judgement is the
 decline path.
 **Ongoing cost:** none.
 
+**Closed without being taken, 2026-09-27 (branch
+`shared/audit/rebuild-audit-f21-f24`), on Nate's word.** The proposal's posture
+was to change production by deleting one row. Nothing was applied and no script
+was written. **Its premise no longer holds.** `node scripts/q.mjs --remote
+"SELECT class_id FROM imported_classes WHERE instr(markdown,'light-mdc-body-armor')>0 AND deleted_at IS NULL"`,
+re-run 2026-09-27, returns five live classes: `sailor`, `oracle-cat`,
+`psi-tech`, `zenith-moon-warper` and `totem-warrior-south-american`. The
+premise audit (2026-09-27, at `1b0f850a`) reported them imported 2026-09-25,
+the day this finding was counted. `sailor` and `oracle-cat` attach their own
+label or note to the item, and `totem-warrior-south-american` names it inside a
+choose list. The four others cite it as `item_id: "light-mdc-body-armor"`
+(`q.mjs --remote`, 2026-09-27), so the
+delete's own class guard (`fix-category-gear-rows.sql:107-109`) would have made
+it a no-op. Recorded for whoever comes back to it:
+
+- **That guard matches `item_id: "<slug>"` only.** The choose-list citation in
+  `totem-warrior-south-american` would not protect the row by itself.
+- **It checks `character_items` only.** `campaign_items.gear_slug` references
+  gear too (`db/schema.sql:191`). Today both hold 0 rows for the slug, and
+  `catalog_redirects` holds none from it (`q.mjs --remote`, 2026-09-27).
+- `test/checks/catalog-data.mjs:940` names the slug in its insert-conflict
+  baseline, so a delete would have to edit that too.
+- `psi-tech` and `zenith-moon-warper` hold the placeholder `item_id` live while
+  the rebuild holds the choose block (`repo-vs-live.mjs --offenders`,
+  2026-09-27, under `F24`). This is the case this file's *Not covered* section
+  flags. It is reported here, not reconciled.
+
 ### F23 — low — a long read-back fails after the apply has succeeded, and pre-flight cannot see it coming
 
 `d1-apply.mjs` re-runs a file's trailing `SELECT`s as **one `--command`** on the
@@ -420,6 +486,61 @@ applies, and what the budget should be, is unknown.
 file with one read-back at 8 KB and one at 30 KB. That test also sets the
 budget.
 **Ongoing cost:** one constant to keep honest.
+
+**Taken, 2026-09-27 (branch `shared/audit/rebuild-audit-f21-f24`), as a
+WARNING, on Nate's choice.** Posture: the warning this finding named as the
+alternative, not a refusal. It moves no exit code. Pre-flight in
+`scripts/d1-apply.mjs` now prints `WARNING <file>: its read-back is N characters
+once cmd.exe has escaped it, over the 7900 budget` before anything is applied,
+and carries on (`READBACK_BUDGET` and `cmdLineLength()`, lines 134-148; the
+check, lines 188-200). **Placement:** it sits in the file-level loop that checks
+every file, not in the assertion pre-flight at the `-- pre-flight: the
+read-back assertions` block. That block excludes migrations and is skipped by
+`--skip-preflight`, while the read-back runs for every file. It checks on
+Windows only, where the limit lives.
+
+**The cause, measured 2026-09-27.** The brief assumed a budget in raw
+characters, and that is the wrong measure. `d1Batch()` passes the read-back as
+one argument. npx reaches `wrangler.cmd` through cmd.exe, and npm's
+`@npmcli/promise-spawn` `escape.js` quotes that argument, then caret-escapes
+every space and every `!%^&()<>|"` **twice**, because the target is a `.cmd`.
+So each space in SQL costs four characters. Literal SELECTs (read-only) were
+sent through `d1Batch --local` against the main checkout's local D1, in
+three shapes:
+
+| shape | last ok, raw / escaped | first "too long", raw / escaped |
+|---|---|---|
+| long literals, few spaces | 7,447 / 7,908 | 7,839 / 8,324 |
+| literals full of spaces | 3,135 / 7,652 | 3,527 / 8,608 |
+| `instr`, quotes, parentheses | 3,479 / 7,524 | 3,914 / 8,464 |
+
+The raw failure point runs from 3,527 to 7,839, and the escaped one sits
+between 7,908 and 8,324 in all three shapes. That is cmd.exe's 8,191 less the
+rest of the command line, so the budget is on the escaped length, at 7,900.
+Above about 20,000 raw, most batches failed with an **empty** reason instead,
+which is the shape this finding recorded on 2026-09-24. (A first attempt
+against an empty scratch D1 failed at every length with `internal error`,
+which measured nothing. It was discarded.)
+
+**One committed file is already over the budget, and the warning is right to
+name it.** The largest committed read-back is 6,595 raw
+(`add-hu-gear-h-acids-and-clothing.sql`), so a raw budget near 8K would warn on
+nothing. Escaped, that file is 10,389, and its trailing SELECTs, sent through
+`d1Batch --local` on 2026-09-27, fail with `The command line is too long`.
+The next three are 7,834, 7,830 and 7,706 escaped, and all three ran. Across
+1,032 committed files with a read-back, the warning names that one alone.
+Filed as `F26`, below.
+
+**Seen to fire.** Each file was paired with a missing second file, so
+pre-flight died before any apply:
+
+- `add-hu-gear-h-acids-and-clothing.sql` printed the warning, then the
+  missing-file error.
+- `~008-rue-ju-xp-ladders.sql` (7,830) printed only the missing-file error.
+- `HEAD`'s `d1-apply.mjs` on the first file printed only the missing-file error.
+
+**Not measured:** the overhead under `--remote`, which has no `--persist-to`
+and so a shorter line, and the fallback path that spawns `npx` through a shell.
 
 ### F24 — medium — `repo-vs-live.mjs` runs only when someone decides to, and 31 differences accumulated
 
@@ -446,6 +567,105 @@ it: *"rules that are read do not fire"* is this page's own finding. What would
 raise it: a session log showing the step being run unprompted.
 **Ongoing cost:** a few minutes per session that touches data, and a skill line
 to keep true.
+
+**Taken, 2026-09-27 (branch `shared/audit/rebuild-audit-f21-f24`).** Posture
+held: documentation only. There is no check and no gate, and this PR moves no
+exit code. `.claude/skills/ship-pr/SKILL.md` now tells a session that wrote
+D1 (any data script, any class import) to follow `deploy-sweep.mjs` with
+`node scripts/repo-vs-live.mjs --offenders`, and to report what it prints
+(the paragraph after the sweep's, lines 178-192). Four corrections from the
+premise audit shaped the wording:
+
+- **(a)** It does not borrow the sweep's "never fails". `repo-vs-live.mjs`
+  exits 1 on a missing or extra row (its line 349, and its header at lines
+  39-43), and the skill line says so.
+- **(b)** It reads the data directory, not git, so an uncommitted script counts
+  as an offender. The line says to run it on a clean tree, or to read the
+  output knowing that.
+- **(c)** The *`--local` is not a mirror* section described it as proving
+  agreement by name alone. That sentence now says it compares by row name and
+  by field value.
+- **(d)** It stays clear of `BOOK-INGEST-AUDIT` `F105`, held on which side
+  wins. The line reports and says nothing about reconciling.
+
+**The run.** `node scripts/repo-vs-live.mjs --offenders` ran on a clean tree at
+`ef6ead6f`, 2026-09-27 20:07-20:13 EDT: 5 min 15 s, exit 0. It reported **23
+fields across 23 rows**, and no row missing or extra on either side. 18 are
+`psionic_powers.system` (live `rifts`, repo NULL). 5 are `imported_classes`
+markdown: `psi-slayer`, `psi-tech`, `psi-warrior`, `zapper` and
+`zenith-moon-warper`. These are reported, not reconciled. The 31 above were
+measured 2026-09-24, before #1352-#1354. The premise audit counted 28 earlier
+on 2026-09-27, and #1491 has merged since.
+
+**Pressure test** (`test-suite` → *A skill is a check too*). Four planning-only
+subagents got one scenario: 11:40pm, three merges shipped (a class import and a
+data script, both applied `--remote`, and a README edit), and Nate asking to
+"wrap up the session properly" and "keep it quick". The prompt never names the
+tool.
+
+- **RED**, before the edit: 0 of 2 named `repo-vs-live`. Both planned
+  `deploy-sweep` and `drift-check --remote`.
+- **GREEN**, after the edit: 2 of 2 named it. Both kept it report-only and
+  both said it can exit 1. One also raised the uncommitted tree against it.
+
+**Kept blind**, and where it was not:
+
+- The answer key is this finding's `Proposal` (lines 436-438 of this file at
+  `ef6ead6f`). The prompt told runners not to read any file named `*AUDIT*`.
+- Every run happened on the neutral branch `claude/brave-hofstadter-9b419d`,
+  before any note was written. The recent commit subjects in the snapshot name
+  `REBUILD-AUDIT F16`, which leaks the menu's name and nothing more.
+- GREEN runners saw the skill file listed as modified. That is the file under
+  test, which they were told to read anyway.
+
+**The deviation.** The junction serves the main checkout, and this session was
+told not to touch it. So each runner was pointed at the skill by path: RED at
+the main checkout's copy, GREEN at this worktree's. That tests the text once it
+is read, not whether the skill loads. The description did not change.
+
+### F25 — low — `~011-borrowed-xp-ladders.sql:136` appends a sentence that a second run appends again
+
+Found by `F21`'s sweep, 2026-09-27. The statement at line 136 replaces
+`'can be.'` on `gargoylite` with `'can be.'` followed by a sentence beginning
+`Since 2026-09-26 xp_table carries dog-boy''s ladder`. Its filter is the class
+and `instr(markdown, 'can be.') > 0`. The replacement contains the search
+string, so the filter still holds after a run. A second run appends the
+sentence again, and `replace()` rewrites every `can be.` in the markdown, not
+only the one in the note. **Production is clean:** one `can be.` and one copy
+of the sentence, and `data_script_runs` holds one row for the file, at
+2026-09-27 03:04:05 (`q.mjs --remote`, 2026-09-27).
+
+**Proposal:** add `AND instr(markdown, 'Since 2026-09-26 xp_table carries dog-boy') = 0`
+to that statement, as `F21` did for its file.
+**Posture:** repo-only. A guard changes no row in either environment, so
+nothing is applied.
+**Evidence:** the sweep and the query above, both run 2026-09-27. The re-run
+effect is **inferred** from the statement, not run.
+**Confidence:** high.
+**Ongoing cost:** none.
+
+### F26 — low — `add-hu-gear-h-acids-and-clothing.sql`'s read-back cannot run from this machine
+
+Found while taking `F23`, 2026-09-27. The file's trailing SELECTs escape to
+10,389 characters for cmd.exe, over its 8,191 cap. Sent through
+`d1Batch --local` on 2026-09-27, they fail with `The command line is too long`.
+So `d1-apply.mjs --local apps/character-creator/db/*.sql`, the glob in that
+script's own header (line 7), stops at this file on Windows, **after** applying
+it, with exit 1, and nothing sorting after it runs. `rebuild-local.mjs` is
+unaffected because it does not send the read-back through wrangler (its header,
+line 13). `F23`'s warning now names this file on every run that includes it.
+
+**Proposal:** shorten the file's trailing SELECTs below `F23`'s budget so that
+they still assert the same things. The decline path: the file is applied and
+one-shot, the warning already says what will happen, and whether anyone still
+runs the full `--local` glob was not measured.
+**Posture:** repo-only. A read-back is a SELECT, so nothing is applied.
+**Evidence:** the `d1Batch` failure was run on 2026-09-27. That the glob stops
+there is **inferred** from `d1-apply.mjs`'s `die()` on a failed read-back; the
+glob was not run.
+**Confidence:** high on the failure. Low on whether it matters, until someone
+says they run the glob.
+**Ongoing cost:** none.
 
 ## The question the brief asked
 
