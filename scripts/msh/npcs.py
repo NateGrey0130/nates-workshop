@@ -15,6 +15,12 @@ writes two things, split by what may be committed:
       cross-reference, applied with
           node scripts/d1-apply.mjs --remote --db marvel <that file>
 
+ONE FILE, EVERY BOOK. npcs.json holds every book's characters, each with its
+`book`; this replaces the named book's and keeps the rest. The registry's
+first book keeps plain ids, and every later book's end in -<slug>, so the same
+character in two books is two cards whose ids never collide or depend on
+build order. Append books to scripts/msh/books.json; never reorder them.
+
 HOW ENTRIES BECOME CHARACTERS. A character is one printed name; its versions
 are the printed entries under that name, each with its own stat blocks
 (scripts/msh/roster.py keeps an entry's forms and tiers - HUMAN FORM, BROOD
@@ -114,7 +120,20 @@ def section_at(book, page):
 
 
 def main(slug_arg):
-    book = json.load(io.open(REGISTRY, encoding='utf-8'))['books'][slug_arg]
+    registry = json.load(io.open(REGISTRY, encoding='utf-8'))['books']
+    book = registry[slug_arg]
+    # The registry's first book keeps plain ids; every later book's end in
+    # -<slug>, so two books' Magnetos are two cards (Nate, 2026-09-28) whose ids
+    # never collide and never depend on which book was built first.
+    sfx = '' if next(iter(registry)) == slug_arg else '-' + slug_arg
+
+    def ident(s):
+        return slug(s) + sfx
+
+    def team_of(page):
+        # a book laid out A-Z has no team sections: its characters file under it
+        return section_at(book, page) or book['title']
+
     roster = json.load(io.open(os.path.join(CACHE, 'books', slug_arg, 'roster.json'), encoding='utf-8'))
     powers = json.load(io.open(os.path.join(DATA, 'powers.json'), encoding='utf-8'))['powers']
     aliases = json.load(io.open(os.path.join(DATA, 'npc-power-aliases.json'), encoding='utf-8'))['aliases']
@@ -146,7 +165,7 @@ def main(slug_arg):
     for name_key, group in by_name.items():
         versions = []
         for e in group:
-            eslug = slug(roman(e['header']))
+            eslug = ident(roman(e['header']))
             blocks = []
             for n, b in enumerate(e['blocks']):
                 label = b['label']
@@ -194,12 +213,12 @@ def main(slug_arg):
                 members.append({'name': display(m['name']), 'page': m['page']})
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
-                'id': eslug, 'label': variant(e['header']), 'team': section_at(book, e['pages'][0]),
+                'id': eslug, 'label': variant(e['header']), 'team': team_of(e['pages'][0]),
                 'pages': e['pages'], 'identity': identity,
                 'blocks': blocks, 'powers': pw, 'members': members,
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
             })
-        cid = slug(base_name(group[0]['header']))
+        cid = ident(base_name(group[0]['header']))
         chars.append({'id': cid, 'name': display(group[0]['header']), 'team': versions[0]['team'],
                       'versions': versions, 'appearances': []})
 
@@ -207,12 +226,12 @@ def main(slug_arg):
     for e in entries:
         if e['blocks']:
             continue
-        c = by_id.get(slug(base_name(e['header'])))
+        c = by_id.get(ident(base_name(e['header'])))
         if not c:
             continue
         eslug = '%s-p%d' % (c['id'], e['pages'][0])
         text_row(eslug, 'appearance', None, None, e['pages'][0], ' '.join(e['identity']) + ' ' + e['prose'])
-        c['appearances'].append({'id': eslug, 'team': section_at(book, e['pages'][0]), 'page': e['pages'][0]})
+        c['appearances'].append({'id': eslug, 'team': team_of(e['pages'][0]), 'page': e['pages'][0]})
 
     # Team members the book gives no block of their own, given one
     # (scripts/msh/<slug>-members.json): the team's tier block, with the ranks
@@ -222,13 +241,13 @@ def main(slug_arg):
     std = {code: n for n, code in CODE_OF.items()}
     for m in (json.load(io.open(mpath, encoding='utf-8'))['members'] if os.path.exists(mpath) else []):
         team_entry = next((e for e in entries if (e['header'] or '').upper() == m['team'].upper()), None)
-        team = next((c for c in chars for v in c['versions'] if team_entry and v['id'] == slug(roman(team_entry['header']))), None)
+        team = next((c for c in chars for v in c['versions'] if team_entry and v['id'] == ident(roman(team_entry['header']))), None)
         member = team_entry and next((x for x in team_entry['members'] if x['name'].upper() == m['member'].upper()), None)
         if not team or not member:
             sys.exit('%s-members.json: no member %s under %s' % (slug_arg, m['member'], m['team']))
         if m.get('skip'):
             # a cross-reference: the member links to their own statted entry
-            own = by_id.get(slug(display(m['member'])))
+            own = by_id.get(ident(display(m['member'])))
             for x in team['versions'][0]['members']:
                 if own and x['name'].upper() == display(m['member']).upper():
                     x['id'] = own['id']
@@ -243,7 +262,7 @@ def main(slug_arg):
         if m.get('printed_health') not in (None, health):
             sys.exit('%s: the text prints Health %s and the build gives %d' % (m['member'], m['printed_health'], health))
         name = m.get('name') or display(m['member'])
-        cid = slug(name)
+        cid = ident(name)
         if cid in by_id:
             sys.exit('%s-members.json: %s collides with a character; give it a name' % (slug_arg, name))
         text_row(cid, 'prose', None, None, m['page'], member['text'])
@@ -261,27 +280,46 @@ def main(slug_arg):
         chars.append(c)
         by_id[cid] = c
 
+    for c in chars:
+        c['book'] = slug_arg
     chars.sort(key=lambda c: (min(v['pages'][0] for v in c['versions']), c['name']))
+
+    # EVERY book's characters live in this one file. Rebuilding one book
+    # replaces that book's characters and leaves the others as they are.
+    path_out = os.path.join(DATA, 'npcs.json')
+    old = json.load(io.open(path_out, encoding='utf-8')) if os.path.exists(path_out) else {'characters': []}
+    old_book = old.get('book')     # the single-book shape had one book for the whole file
+    others = [c for c in old['characters'] if c.get('book', old_book) != slug_arg]
+    for c in others:
+        c.setdefault('book', old_book)
+    order = list(registry)
+    chars = sorted(others + chars, key=lambda c: order.index(c['book']))
+    ids = [c['id'] for c in chars]
+    assert len(ids) == len(set(ids)), 'a character id is in two books'
+    present = [b for b in order if any(c['book'] == b for c in chars)]
     teams = []
     for c in chars:
         if c['team'] not in teams:
             teams.append(c['team'])
     out = {
         'about': [
-            'Notable NPCs from %s, built by scripts/msh/npcs.py from the parse of the book (scripts/msh/roster.py).' % book['title'],
-            'Facts only: numbers, rank codes, names and pages. The book\'s prose is in D1 (msh_book_text, migration 087), keyed ma1:<version id>:<part>, and never in this file.',
+            'Notable NPCs from the Marvel sourcebooks, built by scripts/msh/npcs.py from the parse of each book (scripts/msh/roster.py), one book at a time.',
+            'Facts only: numbers, rank codes, names and pages. The book\'s prose is in D1 (msh_book_text, migration 087), keyed <book>:<version id>:<part>, and never in this file.',
+            'Every character carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book\'s end in -<slug>, so the same character in two books is two cards.',
             'A character is one printed name; each version is one printed entry, with its stat blocks (forms and tiers are labelled blocks).',
             'abilities: [letter, number, rank code, [alternate number, code]?] - the alternate is the book\'s parenthesised altered value.',
-            'health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/%s-overrides.json).' % slug_arg,
+            'health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/<book>-overrides.json).',
             'powers[].upb: the Ultimate Powers Book code, where the name is a UPB power or in npc-power-aliases.json.',
         ],
-        'sources': [{'book': book['title'], 'code': book['code'], 'pages': '%d-%d' % tuple(book['character_pages'])}],
-        'book': slug_arg,
+        'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(registry[b]['character_pages'])}
+                    for b in present],
+        'books': [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'],
+                   'pages': list(registry[b]['character_pages'])} for b in present],
         'teams': teams,
         'characters': chars,
     }
     text = json.dumps(out, indent=1, ensure_ascii=True)
-    io.open(os.path.join(DATA, 'npcs.json'), 'w', encoding='utf-8', newline='\n').write(text + '\n')
+    io.open(path_out, 'w', encoding='utf-8', newline='\n').write(text + '\n')
 
     def q(v):
         if v is None:
@@ -293,18 +331,19 @@ def main(slug_arg):
            # The book's character rows only: its items' and its adventure's are
            # scripts/msh/extras.py's, so either script can be re-run alone.
            "DELETE FROM msh_book_text WHERE book = '%s' AND entry NOT LIKE 'item-%%'%s;" % (
-               slug_arg, " AND entry NOT LIKE '%s-%%'" % slug(book['adventure']['title']) if book.get('adventure') else '')]
+               slug_arg, " AND entry NOT LIKE '%s-%%'" % ident(book['adventure']['title']) if book.get('adventure') else '')]
     for r in rows:
         sql.append('INSERT INTO msh_book_text (key, book, entry, part, name, page, body) VALUES (%s);' % ', '.join(q(v) for v in r))
     path = os.path.join(CACHE, 'books', slug_arg, 'book-text.sql')
     io.open(path, 'w', encoding='utf-8', newline='\n').write('\n'.join(sql) + '\n')
     keys = [r[0] for r in rows]
     assert len(keys) == len(set(keys)), 'duplicate msh_book_text keys'
-    print('%s: %d characters, %d versions, %d blocks, %d appearances, %d powers (%d linked to the UPB)'
-          % (slug_arg, len(chars), sum(len(c['versions']) for c in chars),
-             sum(len(v['blocks']) for c in chars for v in c['versions']), sum(len(c['appearances']) for c in chars),
-             sum(len(v['powers']) for c in chars for v in c['versions']),
-             sum(1 for c in chars for v in c['versions'] for p in v['powers'] if 'upb' in p)))
+    mine = [c for c in chars if c['book'] == slug_arg]
+    print('%s: %d characters, %d versions, %d blocks, %d appearances, %d powers (%d linked to the UPB); %d from other books kept'
+          % (slug_arg, len(mine), sum(len(c['versions']) for c in mine),
+             sum(len(v['blocks']) for c in mine for v in c['versions']), sum(len(c['appearances']) for c in mine),
+             sum(len(v['powers']) for c in mine for v in c['versions']),
+             sum(1 for c in mine for v in c['versions'] for p in v['powers'] if 'upb' in p), len(others)))
     print('  wrote apps/marvel-heroes/data/npcs.json (%d bytes) and %s (%d rows)' % (len(text), path, len(rows)))
 
 

@@ -1346,7 +1346,7 @@ section('The codex: every section loads, searches, filters and keeps its address
       cards.every((x) => x.section === 'npcs' && npcs.byKey.has(x.code)), cards.filter((x) => !npcs.byKey.has(x.code)).map((x) => x.code).join());
     check('Notable NPCs: every card asks for its own entries\' text, one per version and cross-reference',
       npcs.rows.every((r) => npcs.bookText(r).length === r.versions.length + r.appearances.length
-        && npcs.bookText(r).every((b) => b.book === data.npcs.book)));
+        && npcs.bookText(r).every((b) => b.book === r.book)));
   }
 
   // A new section is one entry: a descriptor added to the list is a section,
@@ -1422,6 +1422,52 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
     links.filter((m) => !byId[m.id]).map((m) => m.id).join());
 }
 
+section('Every book in one file: each row names a book the registry has, and only the first book keeps plain ids');
+
+{
+  // scripts/msh/npcs.py and extras.py merge by book: rebuilding one replaces
+  // only its own rows. Books never collide, because every book after the
+  // registry's first ends its ids in -<slug> (two books' Magnetos are two
+  // cards, Nate 2026-09-28).
+  const order = Object.keys(JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'books.json'), 'utf8')).books);
+  const files = { npcs: load('npcs.json'), items: load('items.json'), adventures: load('adventures.json') };
+  const rows = { npcs: files.npcs.characters, items: files.items.items, adventures: files.adventures.adventures };
+  for (const [name, list] of Object.entries(rows)) {
+    const listed = files[name].books.map((b) => b.slug);
+    check(`${name}: every row names its book, and that book is listed in the file and in the registry`,
+      list.every((r) => listed.includes(r.book) && order.includes(r.book)) && listed.every((b) => order.includes(b)),
+      list.filter((r) => !listed.includes(r.book)).map((r) => r.id).join());
+    check(`${name}: the file lists its books in registry order, and only books it has rows for`,
+      listed.join() === order.filter((b) => list.some((r) => r.book === b)).join(), listed.join());
+    const bad = list.filter((r) => (r.book === order[0]) === r.id.endsWith(`-${r.book}`));
+    check(`${name}: only the registry's first book keeps plain ids; every later book's end in -<book>`,
+      bad.length === 0, bad.map((r) => r.id).join());
+  }
+
+  // What a second book does to the code that reads these files, before one
+  // exists: a copy of MA1's Nightcrawler as another book's.
+  const { makeCodex, dataFiles } = await import(new URL('../js/codex.js', import.meta.url));
+  const { makeBookNpc, bookChoices } = await import(new URL('../js/npc-book.js', import.meta.url));
+  const data = Object.fromEntries(dataFiles().map((n) => [n, load(`${n}.json`)]));
+  const two = structuredClone(data.npcs);
+  const nc = two.characters.find((c) => c.id === 'nightcrawler');
+  const copy = { ...structuredClone(nc), id: 'nightcrawler-zz1', book: 'zz1',
+    versions: nc.versions.map((v) => ({ ...structuredClone(v), id: `${v.id}-zz1` })) };
+  two.characters.push(copy);
+  two.books.push({ slug: 'zz1', short: 'ZZ1', title: 'ZZ1 A Second Book', pages: [1, 9] });
+  const codex = makeCodex({ ...data, npcs: two });
+  const sec = codex.byId.npcs;
+  const [a, b] = [sec.byKey.get('nightcrawler'), sec.byKey.get('nightcrawler-zz1')];
+  check('with two books, a name in both is two cards, each citing its own book',
+    a && b && sec.meta(a).includes('MA1') && sec.meta(b).includes('ZZ1') && sec.tags(b).includes('ZZ1')
+    && sec.bookText(b).every((x) => x.book === 'zz1') && sec.source.includes('ZZ1 A Second Book'), sec.meta(b));
+  const labels = bookChoices(two).filter((c) => c.label.startsWith('Nightcrawler')).map((c) => c.label);
+  check('and the GM\'s choices tell them apart by book', labels.length === 2 && new Set(labels).size === 2, labels.join(' | '));
+  const built = makeBookNpc({ npcs: two, ranks: load('ranks.json') })({ character: 'nightcrawler-zz1' });
+  check('and a sheet from the second book is that book\'s', built.snapshot?.book.slug === 'zz1'
+    && built.snapshot.book.source === 'ZZ1 A Second Book' && built.build.book === 'zz1', JSON.stringify(built.snapshot?.book));
+}
+
 section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'s order, and answers none with missing');
 
 {
@@ -1432,7 +1478,7 @@ section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'
   const npcs = load('npcs.json');
   const ids = npcs.characters.flatMap((c) => [...c.versions.map((v) => v.id), ...c.appearances.map((a) => a.id)]);
   check(`its patterns take every entry id npcs.json writes (${ids.length}) and its book`,
-    mod.BOOK.test(npcs.book) && ids.every((id) => mod.ENTRY.test(id)), ids.filter((id) => !mod.ENTRY.test(id)).join());
+    npcs.books.every((b) => mod.BOOK.test(b.slug)) && ids.every((id) => mod.ENTRY.test(id)), ids.filter((id) => !mod.ENTRY.test(id)).join());
   check('and refuse anything else', !['', 'MA1', "x' OR 1=1", 'a b', '-x', 'x-', '../x'].some((e) => mod.ENTRY.test(e) && mod.BOOK.test(e)));
   const stored = [
     { key: 'ma1:nightcrawler:running', part: 'running', name: null, page: 7, body: 'r' },
@@ -1492,7 +1538,7 @@ section('Items, locations and the adventure: facts only, one id each, every id o
   check(`there are items and adventure sections (${items.items.length}, ${ids.length - items.items.length})`,
     items.items.length > 0 && adv.adventures.every((a) => a.sections.length > 0));
   check('every id is unique and one the book-text endpoint takes', new Set(ids).size === ids.length
-    && ids.every((id) => ENTRY.test(id)) && BOOK.test(items.book) && items.book === adv.book, ids.filter((id) => !ENTRY.test(id)).join());
+    && ids.every((id) => ENTRY.test(id)) && [...items.books, ...adv.books].every((b) => BOOK.test(b.slug)), ids.filter((id) => !ENTRY.test(id)).join());
   check('an item\'s kind is item, vehicle or location, and only a vehicle has Control, Speed and Body',
     items.items.every((i) => ['item', 'vehicle', 'location'].includes(i.kind)
       && (i.kind === 'vehicle') === !!i.vehicle && (!i.vehicle || Object.keys(i.vehicle).join() === 'Control,Speed,Body')));

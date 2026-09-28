@@ -41,14 +41,20 @@ export function isForms(version) {
 // version, and per block where the blocks are tiers.
 export function bookChoices(npcs) {
   const out = [];
+  // Two books' same-named characters are two cards (and two choices); the
+  // label names the book when a name is in more than one.
+  const short = Object.fromEntries(npcs.books.map((b) => [b.slug, b.short]));
+  const books = new Map();
+  for (const c of npcs.characters) books.set(c.name, new Set([...(books.get(c.name) || []), c.book]));
   for (const c of npcs.characters) {
     for (const v of c.versions) {
       const vName = c.versions.length > 1 ? ` (${v.label || v.identity[0] || v.id})` : '';
       const blocks = isForms(v) ? [null] : v.blocks.map((b, i) => i);
       for (const i of blocks) {
         const bl = i === null || v.blocks.length === 1 ? '' : ` - ${v.blocks[i].label || `block ${i + 1}`}`;
+        const bk = books.get(c.name).size > 1 ? ` [${short[c.book]}]` : '';
         out.push({ character: c.id, version: v.id, block: i === null || v.blocks.length === 1 ? null : i,
-          label: `${c.name}${vName}${bl}`, team: c.team });
+          label: `${c.name}${vName}${bl}${bk}`, team: c.team });
       }
     }
   }
@@ -103,7 +109,7 @@ export function makeBookNpc(data) {
     const snapshot = {
       v: SNAPSHOT_VERSION,
       mode: 'book',
-      book: { slug: data.npcs.book, source: data.npcs.sources[0].book, character: c.id, version: v.id,
+      book: { slug: c.book, source: data.npcs.books.find((b) => b.slug === c.book).title, character: c.id, version: v.id,
         block: forms ? null : chosen, page: v.blocks[forms ? 0 : chosen].page, team: c.team },
       body: null, origin: null, weakness: null,
       abilities: first.abilities,
@@ -118,6 +124,6 @@ export function makeBookNpc(data) {
       }),
       talents: [], contacts: [],
     };
-    return { name, snapshot, build: { mode: 'book', book: data.npcs.book, character: c.id, version: v.id, block: forms ? null : chosen } };
+    return { name, snapshot, build: { mode: 'book', book: c.book, character: c.id, version: v.id, block: forms ? null : chosen } };
   };
 }

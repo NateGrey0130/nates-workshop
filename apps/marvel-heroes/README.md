@@ -54,6 +54,13 @@ them team members given their team's stats (below).
 - A Power whose name is an Ultimate Powers Book power, or is in
   `data/npc-power-aliases.json`, links to that Power's card.
 
+**Every book shares the three data files.** Each character, item and
+adventure carries its `book`. Rebuilding one book replaces only that book's
+rows. The first book in `scripts/msh/books.json` keeps plain ids; a later
+book's end in `-<slug>`. So the same character in two books is **two cards**,
+each citing its own book (a tag names the book once there is more than one),
+and a Codex link or saved GM sheet never changes when a book is added.
+
 `data/npcs.json` is **facts only**: names, the identity lines under a header,
 every grid's numbers and rank codes, Health, Karma, Resources and Popularity as
 printed, power and member names, and pages. Each misprint the book's own

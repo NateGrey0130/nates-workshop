@@ -1,10 +1,11 @@
 {
  "about": [
-  "Notable NPCs from MA1 Children of the Atom, built by scripts/msh/npcs.py from the parse of the book (scripts/msh/roster.py).",
-  "Facts only: numbers, rank codes, names and pages. The book's prose is in D1 (msh_book_text, migration 087), keyed ma1:<version id>:<part>, and never in this file.",
+  "Notable NPCs from the Marvel sourcebooks, built by scripts/msh/npcs.py from the parse of each book (scripts/msh/roster.py), one book at a time.",
+  "Facts only: numbers, rank codes, names and pages. The book's prose is in D1 (msh_book_text, migration 087), keyed <book>:<version id>:<part>, and never in this file.",
+  "Every character carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book's end in -<slug>, so the same character in two books is two cards.",
   "A character is one printed name; each version is one printed entry, with its stat blocks (forms and tiers are labelled blocks).",
   "abilities: [letter, number, rank code, [alternate number, code]?] - the alternate is the book's parenthesised altered value.",
-  "health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/ma1-overrides.json).",
+  "health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/<book>-overrides.json).",
   "powers[].upb: the Ultimate Powers Book code, where the name is a UPB power or in npc-power-aliases.json."
  ],
  "sources": [
@@ -14,7 +15,17 @@
    "pages": "4-81"
   }
  ],
- "book": "ma1",
+ "books": [
+  {
+   "slug": "ma1",
+   "short": "MA1",
+   "title": "MA1 Children of the Atom",
+   "pages": [
+    4,
+    81
+   ]
+  }
+ ],
  "teams": [
   "X-Men",
   "X-Factor",
@@ -124,7 +135,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "changeling",
@@ -206,7 +218,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "colossus",
@@ -300,7 +313,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "havok",
@@ -380,7 +394,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "magneto",
@@ -491,7 +506,8 @@
      "team": "Brotherhood of Evil Mutants",
      "page": 30
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "mimic",
@@ -569,7 +585,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "nightcrawler",
@@ -662,7 +679,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "phoenix",
@@ -835,7 +853,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "polaris",
@@ -926,7 +945,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "professor-x",
@@ -1023,7 +1043,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "rogue",
@@ -1114,7 +1135,8 @@
      "team": "Freedom Force",
      "page": 34
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "shadowcat",
@@ -1201,7 +1223,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "storm",
@@ -1303,7 +1326,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sunfire",
@@ -1391,7 +1415,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "thunderbird",
@@ -1549,7 +1574,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "wolverine",
@@ -1644,7 +1670,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "angel",
@@ -1727,7 +1754,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "beast",
@@ -1822,7 +1850,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cyclops",
@@ -1905,7 +1934,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "iceman",
@@ -1993,7 +2023,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "marvel-girl",
@@ -2087,7 +2118,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "collins-rusty",
@@ -2165,7 +2197,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "maddicks-arthur",
@@ -2249,7 +2282,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "skids",
@@ -2328,7 +2362,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cannonball",
@@ -2415,7 +2450,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cypher",
@@ -2495,7 +2531,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "karma",
@@ -2578,7 +2615,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "magik",
@@ -2733,7 +2771,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "magma",
@@ -2827,7 +2866,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mirage",
@@ -2915,7 +2955,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sunspot",
@@ -3005,7 +3046,8 @@
      "team": "Fallen Angels",
      "page": 38
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "warlock",
@@ -3099,7 +3141,8 @@
      "team": "Fallen Angels",
      "page": 38
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "wolf",
@@ -3216,7 +3259,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "wolfsbane",
@@ -3292,7 +3336,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "black-bishop",
@@ -3371,7 +3416,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "black-king",
@@ -3454,7 +3500,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "black-queen",
@@ -3572,7 +3619,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "black-rook",
@@ -3647,7 +3695,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "white-bishop",
@@ -3727,7 +3776,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "tessa",
@@ -3802,7 +3852,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "white-queen",
@@ -3891,7 +3942,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "white-rook",
@@ -3966,7 +4018,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "catseye",
@@ -4057,7 +4110,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "empath",
@@ -4139,7 +4193,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "jetstream",
@@ -4221,7 +4276,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "roulette",
@@ -4302,7 +4358,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "tarot",
@@ -4380,7 +4437,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "lorelei",
@@ -4458,7 +4516,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mastermind",
@@ -4538,7 +4597,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "toad",
@@ -4621,7 +4681,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "unus",
@@ -4701,7 +4762,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "avalanche",
@@ -4790,7 +4852,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "blob",
@@ -4885,7 +4948,8 @@
      "team": "Brotherhood of Evil Mutants",
      "page": 30
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "destiny",
@@ -4967,7 +5031,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mystique",
@@ -5056,7 +5121,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "pyro",
@@ -5143,7 +5209,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "spider-woman",
@@ -5224,7 +5291,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "spiral",
@@ -5315,7 +5383,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "ariel",
@@ -5398,7 +5467,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "chance",
@@ -5477,7 +5547,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "madrox",
@@ -5561,7 +5632,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "moon-boy-and-devil-dinosaur",
@@ -5684,7 +5756,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "siryn",
@@ -5772,7 +5845,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "time-bomb",
@@ -5851,7 +5925,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "vanisher",
@@ -5934,7 +6009,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "annalee",
@@ -6013,7 +6089,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "ape",
@@ -6092,7 +6169,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "beautiful-dreamer",
@@ -6170,7 +6248,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "caliban",
@@ -6258,7 +6337,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "callisto",
@@ -6337,7 +6417,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "erg",
@@ -6418,7 +6499,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "healer",
@@ -6496,7 +6578,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "leech",
@@ -6575,7 +6658,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "masque",
@@ -6654,7 +6738,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "piper",
@@ -6734,7 +6819,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "further-morlocks",
@@ -6805,7 +6891,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "plague",
@@ -6884,7 +6971,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sunder",
@@ -6964,7 +7052,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "tar-baby",
@@ -7040,7 +7129,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "darkstar",
@@ -7129,7 +7219,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "gremlin",
@@ -7204,7 +7295,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "ursa-major",
@@ -7329,7 +7421,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "vanguard",
@@ -7412,7 +7505,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "gladiators",
@@ -7550,7 +7644,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "alexander-flynn",
@@ -7629,7 +7724,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "link",
@@ -7709,7 +7805,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "poltergeist",
@@ -7800,7 +7897,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "apocalypse",
@@ -7879,7 +7977,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "frenzy",
@@ -7959,7 +8058,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "nowlan-michael",
@@ -8037,7 +8137,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "stinger",
@@ -8116,7 +8217,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "timeshadow",
@@ -8195,7 +8297,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "tower",
@@ -8282,7 +8385,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "burner",
@@ -8358,7 +8462,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "lifter",
@@ -8438,7 +8543,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "peeper",
@@ -8518,7 +8624,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "shocker",
@@ -8598,7 +8705,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "slither",
@@ -8677,7 +8785,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "aguila-el",
@@ -8756,7 +8865,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "aurora",
@@ -8848,7 +8958,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "black-tom",
@@ -8936,7 +9047,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "calhoun-joseph-licorice",
@@ -9017,7 +9129,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cheney-lila",
@@ -9098,7 +9211,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "dazzler",
@@ -9186,7 +9300,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "diamond-lil",
@@ -9266,7 +9381,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "evans-willie-jr",
@@ -9344,7 +9460,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "firestar",
@@ -9422,7 +9539,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "flashback",
@@ -9502,7 +9620,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "forge",
@@ -9591,7 +9710,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "gypsy-moth",
@@ -9678,7 +9798,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "legion",
@@ -9768,7 +9889,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mandrill",
@@ -9850,7 +9972,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mesmero",
@@ -9932,7 +10055,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "nekra",
@@ -10075,7 +10199,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "northstar",
@@ -10167,7 +10292,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "nuklo",
@@ -10252,7 +10378,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "proteus",
@@ -10336,7 +10463,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "quicksilver",
@@ -10429,7 +10557,8 @@
      "team": "Brotherhood of Evil Mutants",
      "page": 31
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "sabertooth",
@@ -10515,7 +10644,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "scarlet-witch",
@@ -10604,7 +10734,8 @@
      "team": "Brotherhood of Evil Mutants",
      "page": 31
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "silver-samurai",
@@ -10690,7 +10821,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "taskmaster",
@@ -10775,7 +10907,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "tattletale",
@@ -10856,7 +10989,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "trask-larry",
@@ -10938,7 +11072,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "whirlwind",
@@ -11030,7 +11165,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "arcade",
@@ -11110,7 +11246,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "fenris",
@@ -11238,7 +11375,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "juggernaut",
@@ -11319,7 +11457,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "miss-locke",
@@ -11397,7 +11536,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mr-chambers",
@@ -11476,7 +11616,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "lady-deathstrike",
@@ -11555,7 +11696,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "living-monolith",
@@ -11777,7 +11919,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "magus",
@@ -11873,7 +12016,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sauron",
@@ -11986,7 +12130,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "amphibus",
@@ -12067,7 +12212,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "barbarus",
@@ -12147,7 +12293,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "brainchild",
@@ -12225,7 +12372,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "equilibrius",
@@ -12302,7 +12450,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "gaza",
@@ -12381,7 +12530,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "lupo",
@@ -12456,7 +12606,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "piper-mutate",
@@ -12531,7 +12682,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "savage-land-mutates",
@@ -12650,7 +12802,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "vertigo",
@@ -12727,7 +12880,8 @@
       "prose"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   },
   {
    "id": "viper",
@@ -12808,7 +12962,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "commanders",
@@ -12879,7 +13034,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cybernetic-agents",
@@ -12976,7 +13132,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "operatives",
@@ -13047,7 +13204,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sub-commanders",
@@ -13118,7 +13276,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "cooper-dr-valerie",
@@ -13190,7 +13349,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "corbeau-peter",
@@ -13274,7 +13434,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "corsi-thomas",
@@ -13345,7 +13506,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "friedlander-sharon",
@@ -13416,7 +13578,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "gyrich-peter-henry",
@@ -13488,7 +13651,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "hodge-cameron",
@@ -13559,7 +13723,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "hunter-stevie",
@@ -13630,7 +13795,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "lockheed-the-dragon",
@@ -13701,7 +13867,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mactaggert-moira",
@@ -13773,7 +13940,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "rassendyll-judith",
@@ -13844,7 +14012,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "rossi-michael",
@@ -13916,7 +14085,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sefton-amanda",
@@ -13988,7 +14158,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "southern-candy",
@@ -14059,7 +14230,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "yashida-mariko",
@@ -14130,7 +14302,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "acanti",
@@ -14210,7 +14383,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "brood",
@@ -14414,7 +14588,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "deathbird",
@@ -14505,7 +14680,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "gladiator",
@@ -14601,7 +14777,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "imperial-guard-royal-elite",
@@ -14752,7 +14929,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "neramani-princess-majestrix-lilandra",
@@ -14833,7 +15011,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "sidri",
@@ -14923,7 +15102,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "binary",
@@ -15059,7 +15239,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "corsair",
@@ -15140,7 +15321,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "other-starjammers",
@@ -15227,7 +15409,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mark-i-sentinel",
@@ -15318,7 +15501,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mark-ii-sentinels",
@@ -15431,7 +15615,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mark-iii-sentinels",
@@ -15516,7 +15701,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "mark-iv-v-sentinels",
@@ -15725,7 +15911,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "x-sentinels",
@@ -15794,7 +15981,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "alpha-sentinel",
@@ -15889,7 +16077,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "nimrod",
@@ -16013,7 +16202,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   },
   {
    "id": "omega-sentinel",
@@ -16107,7 +16297,8 @@
      ]
     }
    ],
-   "appearances": []
+   "appearances": [],
+   "book": "ma1"
   }
  ]
 }

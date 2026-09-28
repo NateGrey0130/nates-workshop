@@ -41,6 +41,12 @@ const d100 = (r) => band(r.roll.map((n) => String(n).padStart(2, '0')).map((s) =
 // "SHIFT Z" is Shift Z, "EXCELLENT" is Excellent.
 const rankWords = (v) => String(v).toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
 
+// The sourcebook sections hold every book the pipeline has read
+// (scripts/msh/books.json); each row carries its book, and a card cites it by
+// the book's short name (MA1). A section's source line lists the books present.
+const shortOf = (books) => Object.fromEntries(books.map((b) => [b.slug, b.short]));
+const pagesLine = (b, pages = b.pages) => `${b.title}, pp.${pages[0]}-${pages[1]}`;
+
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
   R: 'Reason', I: 'Intuition', P: 'Psyche' };
@@ -210,7 +216,9 @@ export const SECTIONS = [
     // msh_book_text through bookText below.
     build(data) {
       const n = data.npcs;
-      this.book = n.book;
+      this.short = shortOf(n.books);
+      this.many = n.books.length > 1;
+      this.source = n.books.map((b) => pagesLine(b)).join('; ');
       this.upbName = Object.fromEntries(data.powers.powers.map((p) => [p.code, p.name]));
       return {
         rows: n.characters.map((c) => ({ ...c, group: slug(c.team) })),
@@ -222,7 +230,7 @@ export const SECTIONS = [
     badge: (r) => (r.versions.length > 1 ? `${r.versions.length} versions` : ''),
     meta(r) {
       const pages = [...new Set(r.versions.flatMap((v) => v.pages))].sort((a, b) => a - b);
-      return `${r.team}, MA1 ${pages.length > 1 ? 'pp.' : 'p.'}${band([pages[0], pages[pages.length - 1]])}`;
+      return `${r.team}, ${this.short[r.book]} ${pages.length > 1 ? 'pp.' : 'p.'}${band([pages[0], pages[pages.length - 1]])}`;
     },
     // The name and status lines printed under the header: "Kurt Wagner. Mutant
     // hero". A line that starts lower-case continues the one before it, as
@@ -230,11 +238,14 @@ export const SECTIONS = [
     summary: (r) => r.versions[0].identity
       .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
       || `One of the ${r.member_of || r.team}`,
-    tags: (r) => [
+    tags(r) {
+      return [
+      this.many && this.short[r.book],
       r.versions.some((v) => v.blocks.length > 1) && 'forms',
       r.versions.some((v) => v.members.length) && 'team',
       r.versions.some((v) => v.blocks.some((b) => b.override && b.override.verdict === 'misprint')) && 'misprint',
-    ],
+      ];
+    },
     stats(r) {
       const out = [];
       for (const v of r.versions) {
@@ -288,8 +299,8 @@ export const SECTIONS = [
       ...v.powers.map((p) => p.name), ...v.members.map((m) => m.name)])].filter(Boolean).join(' '),
     // Each version's entry, and each cross-reference, in the book's own text.
     bookText(r) {
-      return [...r.versions.map((v) => ({ book: this.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
-        ...r.appearances.map((a) => ({ book: this.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
+      return [...r.versions.map((v) => ({ book: r.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
+        ...r.appearances.map((a) => ({ book: r.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
     },
   },
   {
@@ -303,7 +314,8 @@ export const SECTIONS = [
     // card opens. A vehicle's Control, Speed and Body are printed ranks.
     build(data) {
       const n = data.items;
-      this.book = n.book;
+      this.short = shortOf(n.books);
+      this.source = n.books.map((b) => pagesLine(b)).join('; ');
       const kinds = [['item', 'Special items'], ['vehicle', 'Vehicles'], ['location', 'Locations']];
       this.kindName = Object.fromEntries(kinds);
       return {
@@ -313,18 +325,20 @@ export const SECTIONS = [
     },
     key: (r) => r.id,
     title: (r) => r.name,
-    meta(r) { return `${this.kindName[r.kind]}, MA1 p.${r.page}`; },
+    meta(r) { return `${this.kindName[r.kind]}, ${this.short[r.book]} p.${r.page}`; },
     summary(r) {
       if (r.vehicle) return Object.entries(r.vehicle).map(([k, v]) => `${k} ${rankWords(v)}`).join(', ');
       if (r.parts) return `Lists ${r.parts.join(', ')}`;
       return this.kindName[r.kind].replace(/s$/, '').replace('Special item', 'A special item');
     },
-    stats: (r) => [
-      ...(r.vehicle ? Object.entries(r.vehicle).map(([k, v]) => [k, rankWords(v)]) : []),
-      ['Page', `MA1 p.${r.page}`],
-    ],
+    stats(r) {
+      return [
+        ...(r.vehicle ? Object.entries(r.vehicle).map(([k, v]) => [k, rankWords(v)]) : []),
+        ['Page', `${this.short[r.book]} p.${r.page}`],
+      ];
+    },
     hay: (r) => [r.name, r.kind, ...(r.parts || [])].join(' '),
-    bookText(r) { return [{ book: this.book, entry: r.id, label: '' }]; },
+    bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
   },
   {
     id: 'adventures',
@@ -338,18 +352,20 @@ export const SECTIONS = [
     // from msh_book_text when a card opens.
     build(data) {
       const a = data.adventures;
-      this.book = a.book;
+      const byBook = Object.fromEntries(a.books.map((b) => [b.slug, b]));
+      this.short = shortOf(a.books);
+      this.source = a.adventures.map((adv) => `${pagesLine(byBook[adv.book], adv.pages)}: ${adv.title}`).join('; ');
       const rows = a.adventures.flatMap((adv) => adv.sections.map((s) => ({
-        ...s, adventure: adv.title, group: s.number ? 'encounter' : 'setting' })));
+        ...s, adventure: adv.title, book: adv.book, group: s.number ? 'encounter' : 'setting' })));
       return { rows, groups: [{ id: 'encounter', name: 'Encounters' }, { id: 'setting', name: 'Background and locales' }] };
     },
     key: (r) => r.id,
     title: (r) => r.title,
     badge: (r) => (r.number ? `E${r.number}` : ''),
-    meta: (r) => `${r.adventure}, MA1 p.${r.page}`,
+    meta(r) { return `${r.adventure}, ${this.short[r.book]} p.${r.page}`; },
     summary: (r) => (r.parts.length ? r.parts.join(', ') : 'Before the encounters'),
     hay: (r) => [r.title, r.adventure, ...r.parts].join(' '),
-    bookText(r) { return [{ book: this.book, entry: r.id, label: '' }]; },
+    bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
   },
 ];
 
