@@ -2577,6 +2577,9 @@ printed 186 grants only War Bison riding and W.P. Archery beside an O.C.C. That
 is the same page this money decision reads, and it is unchanged here - recorded
 in the class's note already, not taken up.
 
+**Filed as `F114`, 2026-09-27**, so the residue above has a number rather than
+living only in a class note.
+
 ### F112 — low — the creatures and notables SQL generator is rebuilt in a session scratchpad for every book
 
 **Opened 2026-09-25** by the `psyscape` import (`apps/character-creator/docs/surveys/psyscape.md`,
@@ -2683,3 +2686,97 @@ are importable functions or inline loops.
 changes, which is the drift this finding exists to shrink. If the predicates
 cannot be shared, the rule text is duplicated in two places, and the finding
 should say so and consider declining.
+
+### F114 — low — a paired Larhold keeps its whole R.C.C. skill list, where the book keeps two skills
+
+**Opened 2026-09-27**, from `F111`'s *Found while doing it* paragraph, per
+`audit-menu` → *A deferral is work*. Filed, not taken.
+
+**What the book prints.** South America 2 printed 186 (cache
+`south-america-2` `txt/p186.txt` lines 40-48, read 2026-09-27) gives a Larhold
+who takes an O.C.C. a narrow carry-over: *"In addition to the specific O.C.C.
+skills, all Larhold will have Riding: War Bison (same basic level as
+Horsemanship at +10%), and W.P.: Archery and Targeting."* The R.C.C. Skills
+list below it (lines 50-70) is the kit of a Larhold who takes no O.C.C. The
+stored class says the same: `larhold-barbarian`'s `extraction_notes` SKILLS
+paragraph ends *"in a pairing the race's whole R.C.C. skill list unions onto
+the O.C.C.'s, which grants more than that sentence names - recorded, not
+modelled"* (`node scripts/q.mjs --remote --json "SELECT class_id, status,
+markdown FROM imported_classes WHERE class_id LIKE '%larhold%'"`, 2026-09-27;
+all three Larhold classes are `published`, none deleted).
+
+**What the app does.** `combineClasses` unions the race's named `occ_skills`
+onto the occupation's, higher base winning, unless the occupation carries
+`supersedes_race` (`apps/character-creator/js/parser.js:1347-1359`, read
+2026-09-27; `pastLife` at line 1349). Choice groups are never merged, so both
+classes' groups survive side by side (line 1351). Measured by importing the
+real `parseClassMarkdown` and `combineClasses` and composing the production
+markdown of `larhold-barbarian` with `larhold-shaman` (session scratchpad
+`pair.mjs`, 2026-09-27): the race states 11 `occ_skills` entries, the Shaman
+11, and the pairing **16**. Against the book's two-skill carry-over, the paired
+Shaman gains Detect Ambush 40, Detect Concealment 35, a W.P. of choice, a
+**second** `Language: Other` pick, **both** `Hand to Hand: Expert` and
+`Hand to Hand: Basic` as named entries, and Wilderness Survival at the race's
+45 over the Shaman's 35. **Riding: War Bison composes to 70**, the R.C.C.'s +20%, over the
+Shaman's own 60, where the sentence above prints Horsemanship +10% for exactly
+this case. How the wizard resolves two named Hand to Hand entries was not
+measured.
+
+**Whether this is class data or a pairing rule: a pairing rule, with no class
+lever.** The union is `combineClasses` behaviour, not anything the Larhold row
+says. The only per-class switch is `supersedes_race` on the **occupation**
+(`.claude/skills/class-import/reference/frontmatter.md:390-406`, read
+2026-09-27), which would also hand the pools, money and `xp_table` to the
+occupation and drop the two skills the book keeps, so it is the wrong shape. A
+grep of `apps/character-creator/js/*.js` and `scripts/class-check-lib.mjs` on
+2026-09-27 for any race-side key naming skills kept or dropped in a pairing
+(`rcc_only`, `race_only`, `when_paired`, `in_pairing`, `paired_skills`,
+`keeps_in_pairing`, `standalone_only`) returned nothing, and the frontmatter
+reference's pairing rules (the same lines) name none. So the Larhold row cannot
+state this today.
+
+**A settled decision this does not reopen.** `F11` (now in
+`BOOK-INGEST-AUDIT.closed.md`, heading at line 1159) chose union as the
+default on purpose - *"a dragon that studies an O.C.C. is still a dragon"* is
+how `frontmatter.md:391-392` states it - and the books back that for most
+races: a grep of every cached book's `txt/p*.txt` on 2026-09-27 for *"in
+addition to ... O.C.C. skills"* matched eight pages across five books (`cb1`,
+`cwc`, `potm`, `south-america-2` p155, `spirit-west`), and every matched line
+reads as a race whose skills ADD to an occupation's. The Larhold prints the
+opposite, a race list that yields except for two skills. So the default stays;
+this is one more race-side opt-in beside `F111`'s `yields_to_occupation`.
+
+**Proposal:** add an R.C.C. key, e.g. `pairing_skills`, listing the race's
+`occ_skills` that survive a pairing, each optionally with its own base where
+the book prints a different figure for the paired case. `combineClasses` unions
+only those (and still nothing, under `supersedes_race`) when the race declares
+the key; a race without it composes as today. `parseClassMarkdown` refuses the
+key on an O.C.C. and refuses a name the race's own `occ_skills` does not hold.
+Set it on `larhold-barbarian` as Riding: War Bison at the Horsemanship +10%
+base, and W.P. Archery, and rewrite that class's SKILLS note to past tense
+citing this finding. Before setting it anywhere else, a taker searches every
+race's stored text and every cached book for the same conditional, the way
+`F111`'s taking found its four races.
+
+**Posture:** opt-in per race. No race that does not declare the key changes,
+no new gate, and the union default `F11` chose stays.
+
+**Evidence:** the book sentence, the stored note and the 11 + 11 → 16
+composition were read and run 2026-09-27 as cited above. **Not measured:** how
+many other races print a partial carry-over like this one; the eight-page grep
+matched only the additive wording, and a partial one phrased differently would
+not match it. Also not measured: how many published occupations pair with
+`larhold-barbarian` (its money half moved 154 pairings under `F111`, which
+bounds it from below for occupations stating money).
+
+**Confidence:** high that a paired Larhold holds more than the book grants,
+and that nothing in class data can say otherwise today. Low on whether a
+general key earns its place over a one-race answer, until a taker runs the
+search the proposal asks for; if the Larhold is alone, a narrower fix (or
+declining, and leaving the note as the record) should be weighed.
+
+**Ongoing cost:** one more race-side key for `parseClassMarkdown`,
+`class-check` and the frontmatter reference to know, and one more branch in
+the skills merge that `F11`'s smoke coverage of `pastLife` has to cover. If the
+search finds the Larhold alone, that cost is carried for one class, and this
+finding should say so and consider declining.

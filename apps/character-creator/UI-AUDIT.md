@@ -560,6 +560,24 @@ The memory store has `print-render-headless-chrome.md`, cited above, which
 records that the headless method **falsified `F17` outright** and says nothing
 about the ink remainder. Nothing to argue past.
 
+**Adjusted 2026-09-27: the `pre.snippet` leftover named above is done, and
+was done the same morning it was named.** Commit `e36b897d` (*"Delete two
+pieces of dead code found in this sweep"*, 2026-09-12 08:34 -0400) removed the
+ten-line rule from `apps/character-creator/styles.css`, and merged as PR #974
+(branch `cleanup-dead-code`, merged 2026-09-12 12:35 UTC), per
+`gh pr view 974` and `git merge-base --is-ancestor e36b897d origin/main`, both
+run 2026-09-27. `git log --oneline -S "pre.snippet" -- '*.css'` returns that
+commit and the one that added the rule (`90198846`), nothing later. A grep of
+every `.css`, `.html` and `.js` in the tree for `snippet` on 2026-09-27 finds
+only `apps/campaign/campaign.js` and
+`functions/api/character-creator/campaigns/[id]/search.js`, the search-result
+string this finding already set aside; no `pre.snippet` rule remains.
+**It was not stale when filed.** This finding was committed at 08:30 (`fbdbd3ed`)
+and merged at 08:32 (PR #973), four minutes before the deletion was committed,
+so the sentence was true when written. What was missing was a note here once
+PR #974 landed. Nothing else in `F56` changes: its outcome turned on
+reachability, not on this selector.
+
 ## Filed while shipping P4b, 2026-09-20
 
 Present mode (PR #1193) puts a campaign picture on a whole screen for the first
