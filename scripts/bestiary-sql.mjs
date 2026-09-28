@@ -59,25 +59,25 @@ import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-export const OWNER_KIND = { creatures: 'creature', notable_npcs: 'notable_npc' };
+const OWNER_KIND = { creatures: 'creature', notable_npcs: 'notable_npc' };
 
-export const PROSE_FIELDS = {
+const PROSE_FIELDS = {
   creatures: ['natural_abilities', 'occ_note', 'description'],
   notable_npcs: ['natural_abilities', 'disposition', 'description'],
 };
 
-export const SHINGLE = 8;
+const SHINGLE = 8;
 // A run with this many tokens carrying a digit is a number list, not prose.
-export const NUMERIC_SKIP = 3;
-export const BATCH_ROWS = 50;
+const NUMERIC_SKIP = 3;
+const BATCH_ROWS = 50;
 // D1 refuses a statement over 100 KB. A batch closes at whichever comes first.
-export const BATCH_BYTES = 90_000;
+const BATCH_BYTES = 90_000;
 
 // ── columns ────────────────────────────────────────────────────────────────
 
 // One column per line, which is how schema.sql and migrations 072-074 are
 // written. A table constraint (UNIQUE (...), PRIMARY KEY (...)) is skipped.
-export function createTableColumns(sql, table) {
+function createTableColumns(sql, table) {
   const m = new RegExp(`CREATE TABLE (?:IF NOT EXISTS )?${table}\\s*\\(([\\s\\S]*?)\\n\\);`).exec(sql);
   if (!m) return null;
   const cols = [];
@@ -105,7 +105,7 @@ function columnFrom(line) {
 
 // The same table rebuilt from the migrations: its CREATE, then every ADD COLUMN
 // after it, in filename order.
-export function migrationColumns(files, table) {
+function migrationColumns(files, table) {
   let cols = null;
   for (const { sql } of files) {
     const created = createTableColumns(sql, table);
@@ -117,7 +117,7 @@ export function migrationColumns(files, table) {
   return cols;
 }
 
-export function loadColumns(root = repoRoot) {
+function loadColumns(root = repoRoot) {
   const schema = readFileSync(path.join(root, 'db', 'schema.sql'), 'utf8');
   const dir = path.join(root, 'db', 'migrations');
   const files = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()
@@ -142,7 +142,7 @@ export function loadColumns(root = repoRoot) {
 
 const PRINTABLE = /^[\x20-\x7e]*$/;
 
-export function sqlLiteral(v) {
+function sqlLiteral(v) {
   if (v === null || v === undefined) return 'NULL';
   if (typeof v === 'number') return String(v);
   return `'${String(v).replace(/'/g, "''")}'`;
@@ -180,7 +180,7 @@ function columnValue(col, v, where, refusals) {
 
 // A word is what a reader counts as one: "M.D.C." and "Psyscape's" are one each,
 // so a dot or apostrophe between letters joins rather than splits.
-export function words(text) {
+function words(text) {
   return String(text).toLowerCase().replace(/(?<=[a-z0-9])[.'](?=[a-z0-9])/g, '').replace(/[^a-z0-9]+/g, ' ')
     .trim().split(' ').filter(Boolean);
 }
@@ -197,12 +197,12 @@ function shingles(ws, n = SHINGLE) {
   return out;
 }
 
-export function bookShingles(pageTexts, n = SHINGLE) {
+function bookShingles(pageTexts, n = SHINGLE) {
   return new Set(shingles(words(pageTexts.join(' ')), n));
 }
 
 // Every n-word run of `text` the book also has, merged into maximal passages.
-export function copiedRuns(text, book, n = SHINGLE) {
+function copiedRuns(text, book, n = SHINGLE) {
   const ws = words(text);
   const hits = [];
   for (let i = 0; i + n <= ws.length; i++) {
@@ -216,7 +216,7 @@ export function copiedRuns(text, book, n = SHINGLE) {
   return hits.map((h) => ws.slice(h.start, h.end).join(' '));
 }
 
-export function loadBookPages(slug) {
+function loadBookPages(slug) {
   const dir = path.join(ocrCacheDir(), slug, 'txt');
   if (!existsSync(dir)) return null;
   return readdirSync(dir).filter((f) => /^p\d+\.txt$/.test(f)).sort()
@@ -227,7 +227,7 @@ export function loadBookPages(slug) {
 
 // Rows and refusals from the parsed worker files: { creatures, notable_npcs,
 // attacks, refusals }. `book` is a shingle Set, or null to skip the copy check.
-export function buildRows(docs, columns, book) {
+function buildRows(docs, columns, book) {
   const refusals = [];
   const rows = { creatures: [], notable_npcs: [] };
   const attacks = [];
@@ -296,7 +296,7 @@ export function buildRows(docs, columns, book) {
 }
 
 // Multi-row INSERTs, closed at BATCH_ROWS rows or BATCH_BYTES bytes.
-export function batchedInserts(table, colNames, rows) {
+function batchedInserts(table, colNames, rows) {
   const out = [];
   const head = `INSERT INTO ${table} (${colNames.join(', ')}) VALUES\n`;
   let batch = [];
@@ -314,7 +314,7 @@ export function batchedInserts(table, colNames, rows) {
 
 const inList = (slugs) => `(${slugs.map(sqlLiteral).join(', ')})`;
 
-export function renderScript({ title, fileName, columns, creatures, notable_npcs, attacks, sourceFiles, notes }) {
+function renderScript({ title, fileName, columns, creatures, notable_npcs, attacks, sourceFiles, notes }) {
   const nonId = (t) => columns[t].filter((c) => !c.primary).map((c) => c.name);
   const cSlugs = creatures.map((r) => r.slug);
   const nSlugs = notable_npcs.map((r) => r.slug);
