@@ -12,7 +12,8 @@
     "  section_labels  the run-in headings that divide an entry, in the book's spelling",
     "  rank_aliases    rank codes as this book prints them -> apps/marvel-heroes/data/ranks.json ids, misprints included",
     "  sections        the printed Contents: [section, subsection or null, printed first page]",
-    "  contents_errata where the Contents and the pages disagree; the page wins",
+    "  contents_errata where the Contents and the pages disagree: {section, contents_page, page, note}; the page wins",
+    "  character_pages the printed range scripts/msh/roster.py reads for characters; the rest of the book is items and an adventure",
     "  index           the printed index: [name, [printed pages]], transcribed and checked against the page images",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
@@ -182,11 +183,58 @@
         ]
       ],
       "contents_errata": [
-        "The Mutant Menace: the Contents says 79; its banner is on the page with folio 77 (PDF 79), and the Sentinels the index puts at 77 are under it."
+        {
+          "section": "Hellfire Club",
+          "contents_page": 21,
+          "page": 23,
+          "note": "banner on printed 23 (PDF 25), read on the page image 2026-09-28"
+        },
+        {
+          "section": "Miscellaneous Mutants",
+          "contents_page": 51,
+          "page": 50,
+          "note": "banner on printed 50 (PDF 52), read on the page image 2026-09-28"
+        },
+        {
+          "section": "Supporting Characters",
+          "contents_page": 69,
+          "page": 68,
+          "note": "banner on printed 68 (PDF 70), read on the page image 2026-09-28"
+        },
+        {
+          "section": "Aliens",
+          "contents_page": 72,
+          "page": 71,
+          "note": "banner on printed 71 (PDF 73), read on the page image 2026-09-28"
+        },
+        {
+          "section": "The Mutant Menace",
+          "contents_page": 79,
+          "page": 77,
+          "note": "banner on printed 77 (PDF 79), read on the page image 2026-09-28"
+        },
+        {
+          "section": "Locations and Items",
+          "contents_page": 83,
+          "page": 82,
+          "note": "banner on printed 82 (PDF 84), read on the page image 2026-09-28"
+        },
+        {
+          "section": "Dreamchild",
+          "contents_page": 88,
+          "page": 87,
+          "note": "banner on printed 87 (PDF 89), read on the page image 2026-09-28"
+        }
       ],
-      "index_note": "Printed p.3, transcribed by eye from 150 dpi renders of its three columns: Tesseract reads the dot leaders as noise and dropped or garbled about a fifth of the lines. 'Nightrawler' is the book's own misprint of Nightcrawler (entry printed p.7) and is kept as printed; index_aliases maps it.",
+      "character_pages": [
+        4,
+        81
+      ],
+      "index_note": "Printed p.3, transcribed by eye from 150 dpi renders of its three columns: Tesseract reads the dot leaders as noise and dropped or garbled about a fifth of the lines. 'Nightrawler' is the book's own misprint of Nightcrawler (entry printed p.7) and is kept as printed; index_aliases maps it, and the two names the index spells differently from the entry's own header: Agents (printed VILLAINOUS AGENTS, p.67) and Neramani, Lilandra (printed NERAMANI, PRINCESS-MAJESTRIX LILANDRA, p.74).",
       "index_aliases": {
-        "Nightrawler": "Nightcrawler"
+        "Nightrawler": "Nightcrawler",
+        "Agents": "Villainous Agents",
+        "Neramani, Lilandra": "Neramani, Princess-Majestrix Lilandra"
       },
       "index": [
         ["Acanti", [71]],
@@ -372,7 +420,8 @@
         ["Wolfsbane", [22]],
         ["Wolverine", [12]],
         ["Yashida, Mariko", [70]]
-      ]
+      ],
+      "contents_errata_note": "Every other Contents entry through printed 82 was checked the same way and agrees: X-Men 4, X-Factor 13, New Mutants 17, Hellions 27, Brotherhood 30, Freedom Force 32, Fallen Angels 36, Morlocks 39, Soviet Super-Soldiers 43, Gladiators 45, Alliance of Evil 47, Mutant Force 49, Very Important People and Villains 62. Maps (96) is not checked."
     }
   }
 }
