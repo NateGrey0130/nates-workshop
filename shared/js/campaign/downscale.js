@@ -9,12 +9,13 @@
 // leave. (That row's worked example used to be NPC portraits; F59 below is why
 // it no longer is.)
 //
-// A CLASSIC SCRIPT with one global, like sticky.js and derive.js, because the
-// pages that need it are not modules - and because this file is loaded by two
-// apps that are not each other, by absolute path from `/apps/character-creator/js/`.
-// The second caller is the NPC portrait upload in apps/campaign/campaign.js,
-// UI-AUDIT F59, taken 2026-09-20; it passes its own `maxEdge` of 512, which is
-// what the second parameter exists for.
+// A CLASSIC SCRIPT with one global, like the rest of shared/js/campaign/,
+// because the pages that need it are not modules. It lives beside the two
+// callers it has, both in this directory and so shared by every game: the
+// setting pages' picture upload (setting.js) and the NPC portrait upload
+// (people.js, UI-AUDIT F59, taken 2026-09-20), which passes its own `maxEdge`
+// of 512 - what the second parameter exists for. It was
+// apps/character-creator/js/downscale.js until the campaign views moved here.
 //
 // EVERY REFUSAL RETURNS THE ORIGINAL FILE. Nothing here is allowed to stop an
 // upload: a canvas that will not decode, a browser without createImageBitmap,

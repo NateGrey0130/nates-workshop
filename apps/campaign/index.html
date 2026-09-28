@@ -44,8 +44,16 @@
 <script src="/apps/character-creator/js/name-panel.js"></script>
 <script src="/apps/character-creator/js/npc-sheets.js"></script>
 <script src="/apps/character-creator/js/picker.js"></script>
-<script src="/apps/character-creator/js/downscale.js"></script>
 <script src="/apps/character-creator/js/undo-toast.js"></script>
+<!-- The notes, people, handouts and ledger, shared with every game's campaign
+     page (/shared/js/campaign/core.js says what each takes). core.js first;
+     downscale.js before people.js, whose portrait upload shrinks the picture. -->
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/downscale.js"></script>
+<script src="/shared/js/campaign/notes.js"></script>
+<script src="/shared/js/campaign/people.js"></script>
+<script src="/shared/js/campaign/handouts.js"></script>
+<script src="/shared/js/campaign/ledger.js"></script>
 <script src="campaign.js"></script>
 </body>
 </html>

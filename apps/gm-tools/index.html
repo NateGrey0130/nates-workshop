@@ -44,10 +44,15 @@
 <script src="/apps/character-creator/js/name-panel.js"></script>
 <script src="/apps/character-creator/js/npc-sheets.js"></script>
 <script src="/apps/character-creator/js/derive.js"></script>
-<!-- Shrinks a picture before it is uploaded (UI-AUDIT F57). Before
-     dashboard.js, like every other classic script it depends on. -->
-<script src="/apps/character-creator/js/downscale.js"></script>
 <script src="/apps/character-creator/js/undo-toast.js"></script>
+<!-- The setting pages and the journal feed, shared with every game's GM page
+     (/shared/js/campaign/core.js says what each takes). core.js first;
+     downscale.js shrinks a picture before it is uploaded (UI-AUDIT F57), so it
+     loads before setting.js, like every other classic script it depends on. -->
+<script src="/shared/js/campaign/core.js"></script>
+<script src="/shared/js/campaign/downscale.js"></script>
+<script src="/shared/js/campaign/notes.js"></script>
+<script src="/shared/js/campaign/setting.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>
