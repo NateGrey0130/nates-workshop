@@ -878,6 +878,13 @@ scripts/
 │                           one file at a time so a failure names its file.
 │                           node:sqlite, not workerd - a DEVELOPMENT tool;
 │                           repo-vs-live.mjs stays the authority
+├── bestiary-sql.mjs        A book's reconciled creature / notable-NPC JSON to
+│                           ONE data script: columns from db/schema.sql checked
+│                           against the migrations, creatureFormulaGaps, ASCII,
+│                           an 8-word copy check of the prose fields against
+│                           the cached book, 50-row INSERTs, read-backs, the
+│                           data_script_runs footer. Opt-in; never overwrites
+│                           a script. --self-test plants a copied sentence
 ├── readback-lib.mjs        A data script's read-back assertions (`AS assertion`,
 │                           `AS got`, `AS want`) and the scratch replay that
 │                           evaluates them at the script's own position, which
