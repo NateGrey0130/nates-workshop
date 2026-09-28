@@ -17,18 +17,44 @@ vehicles). Three more links on the tab bar open pages of their own: the
 
 `/apps/marvel-heroes/codex/` is every list the app ships, one section at a
 time: **Powers** (with the full text when `msh_power_text` has it), **Talents**,
-**Contacts**, **Weaknesses** and **Gear and vehicles**. Each section searches by
-word, filters by its own grouping (a Power's class, a Talent's category, a
-gear table), and opens a card for the detail. The address carries the view -
+**Contacts**, **Weaknesses**, **Gear and vehicles** and **Notable NPCs**. Each
+section searches by word, filters by its own grouping (a Power's class, a
+Talent's category, a gear table, an NPC's team), and opens a card for the
+detail. The address carries the view -
 `?section=`, `q=`, `group=` and `entry=` for one open card - so a filtered
 list or one entry is a link; a value the page does not offer is dropped.
 
 It is separate from the Palladium codex (`apps/codex/`), which belongs to
 another group and reads another database. It borrows that page's idea, one
 descriptor per section, and none of its code: `SECTIONS` in `js/codex.js` is
-the whole list, so a later section (Notable NPCs) is one entry naming its data
-file and how a row reads. It is a page of this app, not an app of its own, so
-it has no hub tile and no `apps/manifest.json` entry.
+the whole list. It is a page of this app, reached from the hub through its own
+`apps/manifest.json` entry (`marvel-heroes/codex`).
+
+### Notable NPCs
+
+The characters of the Marvel sourcebooks, MA1 *Children of the Atom* first
+(`docs/surveys/ma1.md`): 172 names from the book's printed pp.4-81.
+- **One card per printed name.** Its **versions** are the book's entries under
+  that name: Phoenix original and current, Thunderbird original and current.
+  Each version's **blocks** are its stat grids, so forms and tiers are
+  labelled blocks: Ursa Major's Human Form and Bear Form, the Brood's three.
+- **A cross-reference** (Magneto on p.30, Rogue on p.34) is an *appearance*
+  on the character, with its text. No block is derived from an early-version
+  modifier.
+- **A team member the book gives no block of its own** (the Savage Land
+  Mutates, the Imperial Guard) is listed by name and page under its team.
+- A Power whose name is an Ultimate Powers Book power, or is in
+  `data/npc-power-aliases.json`, links to that Power's card.
+
+`data/npcs.json` is **facts only**: names, the identity lines under a header,
+every grid's numbers and rank codes, Health, Karma, Resources and Popularity as
+printed, power and member names, and pages. Each misprint the book's own
+arithmetic exposes keeps both values, the printed one and the corrected one
+(`override`). A rank code the OCR could not read, and so derived from its
+number, is listed under `derived`. The book's sentences are in
+`msh_book_text` only, and each card fetches its entries' text when it opens.
+Without that table the card shows the statistics and says the text is not
+loaded.
 
 ## Point Buy
 

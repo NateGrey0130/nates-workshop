@@ -8,6 +8,7 @@
 
 import { makeCodex, dataFiles, readState, writeState } from '../js/codex.js';
 import { makePowerText, missingNote, paragraphs } from '../js/power-text.js';
+import { makeBookText, bookMissingNote, renderParts } from '../js/book-text.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,6 +24,7 @@ async function loadData(names) {
 }
 
 const fullText = makePowerText();
+const bookText = makeBookText();
 
 function init(codex) {
   const tabsEl = $('#codex-tabs');
@@ -67,7 +69,8 @@ function init(codex) {
   };
   const relatedBlock = (s, r) => (s.related ? s.related(r) : []).map(([label, items]) => `<p><strong>${esc(label)}:</strong> ${
     items.map((x) => (x.code
-      ? `<button type="button" class="linklike" data-goto="${esc(x.code)}">${esc(x.name)} (${esc(x.code)})</button>`
+      ? `<button type="button" class="linklike" data-goto="${esc(x.code)}"${x.section ? ` data-goto-section="${esc(x.section)}"` : ''}${
+        x.title ? ` title="${esc(x.title)}"` : ''}>${esc(x.name)} (${esc(x.code)})</button>`
       : esc(x.name))).join(', ')}</p>`).join('');
 
   function card(s, r) {
@@ -84,7 +87,7 @@ function init(codex) {
       ${s.summary(r) ? `<p class="codex-sum">${esc(s.summary(r))}</p>` : ''}
       <div class="codex-body" id="${id}" ${on ? '' : 'hidden'}>
         ${statBlock(s, r)}${relatedBlock(s, r)}
-        ${s.fullText ? '<div class="codex-text pw-text"><p class="muted">Loading the full text...</p></div>' : ''}
+        ${s.fullText || s.bookText ? '<div class="codex-text pw-text"><p class="muted">Loading the full text...</p></div>' : ''}
         <p><button type="button" class="btn secondary small" data-link="${esc(key)}">Copy a link to this</button></p>
       </div>
     </article>`;
@@ -94,10 +97,25 @@ function init(codex) {
   // the meantime is simply not written to.
   async function fillText(s, r) {
     const key = String(s.key(r));
+    if (s.bookText) return fillBookText(s, r, key);
     const res = await fullText(s.fullText(r));
     const el = list.querySelector(`.codex-card[data-key="${CSS.escape(key)}"] .codex-text`);
     if (!el) return;
     el.innerHTML = res.ok ? `<h3>The book's text</h3>${paragraphs(res.body.body)}` : `<p class="muted">${esc(missingNote(res))}</p>`;
+  }
+
+  // A sourcebook entry's text: one fetch per version and cross-reference, each
+  // under its own heading when there is more than one. A version with no rows
+  // says so once; the statistics are already on the card.
+  async function fillBookText(s, r, key) {
+    const want = s.bookText(r);
+    const got = await Promise.all(want.map((w) => bookText(w.book, w.entry)));
+    const el = list.querySelector(`.codex-card[data-key="${CSS.escape(key)}"] .codex-text`);
+    if (!el) return;
+    if (!got.some((g) => g.ok)) { el.innerHTML = `<p class="muted">${esc(bookMissingNote(got[0]))}</p>`; return; }
+    el.innerHTML = `<h3>The book's text</h3>${want.map((w, i) => (got[i].ok
+      ? `${w.label ? `<h4>${esc(w.label)}</h4>` : ''}${renderParts(got[i].body.parts)}`
+      : '')).join('')}`;
   }
 
   async function drawIntro() {
@@ -118,7 +136,7 @@ function init(codex) {
     if (state.entry && !hits.some((r) => String(s.key(r)) === state.entry)) state.entry = '';
     count.textContent = `${hits.length} of ${s.rows.length}${state.q.trim() ? ` matching "${state.q.trim()}"` : ''}.`;
     list.innerHTML = hits.map((r) => card(s, r)).join('') || '<p class="panel muted">Nothing matches.</p>';
-    if (s.fullText) for (const r of hits) if (open.has(String(s.key(r)))) fillText(s, r);
+    if (s.fullText || s.bookText) for (const r of hits) if (open.has(String(s.key(r)))) fillText(s, r);
     drawIntro();
     sync();
   }
@@ -142,7 +160,7 @@ function init(codex) {
     $('[data-toggle]', el).setAttribute('aria-expanded', String(on));
     $('.codex-body', el).hidden = !on;
     state.entry = on ? key : (state.entry === key ? '' : state.entry);
-    if (on && s.fullText) fillText(s, r);
+    if (on && (s.fullText || s.bookText)) fillText(s, r);
     sync();
   }
 
@@ -172,7 +190,12 @@ function init(codex) {
     const t = e.target.closest('[data-toggle]');
     if (t) return toggle(t.dataset.toggle);
     const g = e.target.closest('[data-goto]');
-    if (g) return goTo(g.dataset.goto);
+    // A link into another section (an NPC's Power, to its UPB card) switches
+    // tab first; goTo then opens the card with nothing hiding it.
+    if (g) {
+      if (g.dataset.gotoSection && codex.byId[g.dataset.gotoSection]) showSection(g.dataset.gotoSection);
+      return goTo(g.dataset.goto);
+    }
     const l = e.target.closest('[data-link]');
     if (l) {
       const url = new URL(location.href);

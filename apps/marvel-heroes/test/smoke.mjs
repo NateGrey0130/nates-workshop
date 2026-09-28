@@ -979,8 +979,23 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     const pb = join(cacheDir, 'players-pages.json');
     check(`the Players' Book text is there to compare against too (${rel(pb) || pb})`, existsSync(pb));
     if (existsSync(pb)) for (const page of Object.values(JSON.parse(readFileSync(pb, 'utf8')))) addText(page);
+    // And every sourcebook the Notable NPCs come from: the prose that
+    // scripts/msh/roster.py parsed, which is msh_book_text's and never a file's
+    // here. data/npcs.json is the file most at risk, so it is named below.
+    const booksDir = join(cacheDir, 'books');
+    const rosters = existsSync(booksDir) ? readdirSync(booksDir).map((b) => join(booksDir, b, 'roster.json')).filter(existsSync) : [];
+    check(`the sourcebooks' parsed text is there to compare against too (${rosters.length} book${rosters.length === 1 ? '' : 's'})`,
+      rosters.length > 0);
+    for (const f of rosters) {
+      for (const e of JSON.parse(readFileSync(f, 'utf8')).entries) {
+        // Not the identity lines: a name and a status line are what npcs.json is
+        // meant to carry, and the Notable NPCs section holds them to two lines.
+        [...Object.values(e.sections), e.prose, ...e.powers.map((p) => p.text), ...e.members.map((m) => m.text)]
+          .forEach((t) => addText(t || ''));
+      }
+    }
     const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
-      'scripts/msh-extract.py', 'db/migrations/marvel/081-msh-power-text.sql'], { cwd: repoRoot, encoding: 'utf8' })
+      'scripts/msh-extract.py', 'scripts/msh', 'db/migrations/marvel'], { cwd: repoRoot, encoding: 'utf8' })
       .stdout.split('\0').filter(Boolean);
     // Files not yet committed count too: the check has to fire before the commit.
     const untracked = spawnSync('git', ['ls-files', '-z', '--others', '--exclude-standard', '--', 'apps/marvel-heroes',
@@ -1179,8 +1194,8 @@ section('The codex: every section loads, searches, filters and keeps its address
   const attempt = (fn) => { try { return fn(); } catch (e) { err = e.message; return null; } };
   const codex = attempt(() => makeCodex(data));
   check('the codex builds from the shipped data', !!codex, err);
-  const want = ['powers', 'talents', 'contacts', 'weaknesses', 'gear'];
-  check('its sections are Powers, Talents, Contacts, Weaknesses and Gear, in that order',
+  const want = ['powers', 'talents', 'contacts', 'weaknesses', 'gear', 'npcs'];
+  check('its sections are Powers, Talents, Contacts, Weaknesses, Gear and Notable NPCs, in that order',
     SECTIONS.map((s) => s.id).join() === want.join(), SECTIONS.map((s) => s.id).join());
   // Each count read from the data file that owns it, not typed here.
   const expected = {
@@ -1189,6 +1204,7 @@ section('The codex: every section loads, searches, filters and keeps its address
     contacts: data.contacts.contacts.length,
     weaknesses: ['stimulus', 'effect', 'duration'].reduce((n, k) => n + data.weakness[k].length, 0),
     gear: [...data.equipment.weapons, ...data.equipment.vehicles].reduce((n, t) => n + t.rows.length, 0),
+    npcs: data.npcs.characters.length,
   };
   for (const s of codex?.sections || []) {
     const all = codex.search(s.id);
@@ -1231,14 +1247,115 @@ section('The codex: every section loads, searches, filters and keeps its address
       && readState('?section=contacts&group=D', codex).group === '', JSON.stringify(junk));
   }
 
-  // "Notable NPCs is one entry": a descriptor added to the list is a section,
+  if (codex) {
+    const npcs = codex.byId.npcs;
+    const nc = npcs.byKey.get('nightcrawler');
+    check('Notable NPCs: Nightcrawler reads as the book prints him (p.7)',
+      nc && npcs.summary(nc) === 'Kurt Wagner. Mutant hero'
+      && npcs.stats(nc)[0][1] === 'F 20 Ex | A 50 Am | S 6 Ty | E 30 Rm | R 10 Gd | I 20 Ex | P 20 Ex'
+      && npcs.stats(nc)[1][1] === '106 / 50', nc ? JSON.stringify(npcs.stats(nc).slice(0, 2)) : 'no nightcrawler');
+    const links = npcs.rows.flatMap((r) => npcs.related(r)).flatMap(([, items]) => items).filter((x) => x.code);
+    check(`Notable NPCs: every linked Power (${links.length}) is a Powers card, in the Powers section`,
+      links.length > 0 && links.every((x) => x.section === 'powers' && codex.byId.powers.byKey.has(x.code)),
+      links.filter((x) => !codex.byId.powers.byKey.has(x.code)).map((x) => x.code).join());
+    check('Notable NPCs: every card asks for its own entries\' text, one per version and cross-reference',
+      npcs.rows.every((r) => npcs.bookText(r).length === r.versions.length + r.appearances.length
+        && npcs.bookText(r).every((b) => b.book === data.npcs.book)));
+  }
+
+  // A new section is one entry: a descriptor added to the list is a section,
   // with nothing else touched.
-  const extra = { id: 'npcs', label: 'Notable NPCs', source: 'test', files: [], groupLabel: 'Team',
+  const extra = { id: 'extra', label: 'Extra', source: 'test', files: [], groupLabel: 'Team',
     build: () => ({ rows: [{ id: 'a', name: 'Alpha', group: 't' }], groups: [{ id: 't', name: 'Team' }] }),
     key: (r) => r.id, title: (r) => r.name, meta: () => 'Team', summary: () => '', hay: (r) => r.name };
   const plus = attempt(() => makeCodex(data, [...SECTIONS, extra]));
   check('a new section is one descriptor: it builds and searches with nothing else changed',
-    plus?.search('npcs', { query: 'alpha' }).length === 1 && readState('?section=npcs', plus).section === 'npcs');
+    plus?.search('extra', { query: 'alpha' }).length === 1 && readState('?section=extra', plus).section === 'extra');
+}
+
+section('Notable NPCs: every block adds up or is a misprint read off the page, and the file carries no prose');
+
+{
+  const n = load('npcs.json');
+  const RANK = { Sh0: 0, Fe: 2, Fb: 2, Pr: 4, Po: 4, Ty: 6, Gd: 10, Go: 10, Ex: 20, Rm: 30, Re: 30, In: 40, Am: 50,
+    Mn: 75, Un: 100, ShX: 150, ShY: 200, ShZ: 500, 'C-1000': 1000, 'C-3000': 3000, 'C-5000': 5000 };
+  const blocks = n.characters.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ c, v, b }))));
+  check(`there are characters, versions and blocks (${n.characters.length}, ${blocks.length} blocks)`,
+    n.characters.length > 100 && blocks.length >= n.characters.length);
+  const shape = blocks.filter(({ b }) => b.abilities.map((a) => a[0]).join('') !== 'FASERIP'
+    || b.abilities.some((a) => !Number.isInteger(a[1]) || !(a[2] in RANK)));
+  check('every block is F, A, S, E, R, I, P in order, each a whole number and a rank code the ladder knows',
+    shape.length === 0, shape.slice(0, 3).map(({ c, b }) => `${c.id}: ${JSON.stringify(b.abilities)}`).join(' | '));
+  const known = (b, field) => b.kind === 'table' || (b.override && b.override.field === field);
+  const num = (s) => (/^-?\d+$/.test(String(s ?? '').trim()) ? Number(s) : null);
+  const sum = (b, from, to) => b.abilities.slice(from, to).reduce((t, a) => t + a[1], 0);
+  const health = blocks.filter(({ b }) => num(b.health) !== null && num(b.health) !== sum(b, 0, 4) && !known(b, 'health'));
+  check('Health = F+A+S+E on every block, or its override says the page misprints it',
+    health.length === 0, health.map(({ c, b }) => `${c.id} ${b.health}`).join(', '));
+  const karma = blocks.filter(({ b }) => num(b.karma) !== null && num(b.karma) !== sum(b, 4, 7) && !known(b, 'karma'));
+  check('Karma = R+I+P on every block, or its override records it as printed',
+    karma.length === 0, karma.map(({ c, b }) => `${c.id} ${b.karma}`).join(', '));
+  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i])));
+  check('every number agrees with its rank code, or its override names the misprint',
+    codes.length === 0, codes.map(({ c }) => c.id).join(', '));
+  const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
+  check('each misprint keeps both the printed value and the corrected one',
+    misprints.length > 0 && misprints.every(({ b }) => 'printed' in b.override && 'corrected' in b.override), String(misprints.length));
+  const ids = n.characters.flatMap((c) => [c.id, ...c.versions.map((v) => v.id), ...c.appearances.map((a) => a.id)]);
+  check('character, version and cross-reference ids are unique across the book, so each names one set of text rows',
+    new Set(n.characters.map((c) => c.id)).size === n.characters.length
+    && new Set(n.characters.flatMap((c) => [...c.versions.map((v) => v.id), ...c.appearances.map((a) => a.id)])).size
+      === ids.length - n.characters.length);
+  check('every team a character names is in the teams list its filter offers',
+    n.characters.every((c) => n.teams.includes(c.team)));
+  // An identity is a name and a status line. Three lines is a paragraph, and a
+  // paragraph is the book's prose, which belongs in msh_book_text only.
+  const long = n.characters.flatMap((c) => c.versions).filter((v) => v.identity.length > 2);
+  check('no identity is longer than two lines, so no paragraph of the book rides in on one',
+    long.length === 0, long.map((v) => v.id).join());
+}
+
+section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'s order, and answers none with missing');
+
+{
+  const mod = await import(new URL('../../../functions/api/marvel-heroes/book-text.js', import.meta.url));
+  const handlers = Object.keys(mod).filter((k) => k.startsWith('onRequest'));
+  check('its only handler is onRequestGet, so every other method is a 405',
+    handlers.join() === 'onRequestGet', handlers.join());
+  const npcs = load('npcs.json');
+  const ids = npcs.characters.flatMap((c) => [...c.versions.map((v) => v.id), ...c.appearances.map((a) => a.id)]);
+  check(`its patterns take every entry id npcs.json writes (${ids.length}) and its book`,
+    mod.BOOK.test(npcs.book) && ids.every((id) => mod.ENTRY.test(id)), ids.filter((id) => !mod.ENTRY.test(id)).join());
+  check('and refuse anything else', !['', 'MA1', "x' OR 1=1", 'a b', '-x', 'x-', '../x'].some((e) => mod.ENTRY.test(e) && mod.BOOK.test(e)));
+  const stored = [
+    { key: 'ma1:nightcrawler:running', part: 'running', name: null, page: 7, body: 'r' },
+    { key: 'ma1:nightcrawler:power:2', part: 'power', name: 'Prehensile Tail', page: 7, body: 'b' },
+    { key: 'ma1:nightcrawler:talents', part: 'talents', name: null, page: 7, body: 't' },
+    { key: 'ma1:nightcrawler:power:1', part: 'power', name: 'Teleportation', page: 7, body: 'a' },
+  ];
+  const env = { DB_MARVEL: { prepare: () => ({ bind: (book, entry) => ({
+    all: async () => ({ results: book === 'ma1' && entry === 'nightcrawler' ? stored : [] }) }) }) } };
+  const call = async (qs, headers = { 'Cf-Access-Authenticated-User-Email': 'a@b.c' }) => {
+    const res = await mod.onRequestGet({ request: new Request(`https://example.com/api/marvel-heroes/book-text?${qs}`, { headers }), env });
+    return { status: res.status, body: await res.json() };
+  };
+  const hit = await call('book=ma1&entry=nightcrawler');
+  check('an entry\'s rows come back in the book\'s order: powers as numbered, then talents, then the running notes',
+    hit.status === 200 && hit.body.parts.map((p) => p.key.split(':').slice(2).join(':')).join() === 'power:1,power:2,talents,running',
+    JSON.stringify(hit.body.parts?.map((p) => p.key)));
+  const miss = await call('book=ma1&entry=magneto');
+  check('an entry with no rows is a 404 that says missing', miss.status === 404 && miss.body.missing === true);
+  check('a bad book or entry is a 400', (await call('book=ma1&entry=a%20b')).status === 400 && (await call('entry=x')).status === 400);
+  check('and nobody signed in is a 401', (await call('book=ma1&entry=nightcrawler', {})).status === 401);
+
+  const { fetchBookText, bookMissingNote, renderParts } = await import(new URL('../js/book-text.js', import.meta.url));
+  const reply = (status, body) => async () => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+  const gone = await fetchBookText('ma1', 'x', reply(404, { missing: true }));
+  const down = await fetchBookText('ma1', 'x', async () => { throw new Error('offline'); });
+  check('the page reads a missing entry and a failed fetch apart, and never throws',
+    !gone.ok && gone.missing && !down.ok && !down.missing && bookMissingNote(gone) !== bookMissingNote(down));
+  check('a power keeps its printed name as a run-in head, escaped',
+    renderParts([{ part: 'power', name: 'A<b>', body: 'x & y' }]) === '<p><strong>A&lt;b&gt;:</strong> x &amp; y</p>');
 }
 
 section('A missing power text degrades to the summary, never an error');

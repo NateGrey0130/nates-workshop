@@ -202,12 +202,16 @@ name, falls under a kind below.
    each page:
    - **An early version, given as a modifier with no block.** Magneto (p.30)
      takes -1 CS on all Magnetic and Energy Control powers and has no Power
-     Stunts. Quicksilver and Scarlet Witch (p.31) are the same shape: "the
-     early version of Quicksilver should move at Incredible Land Speed, have
-     no Power Stunts...".
-   - **A cross-reference with no stats.** Blob (p.30, "can be found in that
-     section"), Rogue (p.34), Warlock (p.38), Lorelei (p.66, "See her
-     description in the Brotherhood of Evil Mutants section").
+     Stunts. Quicksilver and Scarlet Witch (p.31) are the same shape: each
+     early version is described by what it lacks against the current block
+     (a lower Land Speed, no Power Stunts).
+   - **A cross-reference with no stats.** Blob (p.30), Rogue (p.34), Warlock
+     (p.38) and Lorelei (p.66) each point to the section where the character
+     is statted.
+
+   *This paragraph quoted the book at more than ten words until the Notable
+   NPCs PR, whose leak check compares every file here with the parsed text;
+   it is now paraphrased.*
 
    So a version is either a printed block or a derived one: the character's
    block with the book's stated modifiers applied.
@@ -283,8 +287,9 @@ cross-reference (kind 2).
    Witch). Derive a version block by applying the stated modifiers, or show
    the modifier text on the main character's card with no second block? The
    plan chose "one character with versions", which fits either. Deriving one
-   is a judgement where the text is loose ("often attributed her powers to
-   magic").
+   is a judgement where the text is loose (the Scarlet Witch's early version
+   is described by attitude, not numbers). **Taken without a derived block**
+   in the Notable NPCs PR: the p.30-31 text is an appearance on the card.
 5. **Cross-references** (Blob p.30, Rogue p.34, Warlock p.38, Lorelei p.66):
    these carry no data, only a second team membership. The recommendation is
    to record them as a team listing on the character, not as a version.
