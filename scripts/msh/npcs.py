@@ -46,8 +46,8 @@ CACHE = os.environ.get('WORKSHOP_MSH_CACHE') or os.path.join(ROOT, '.cache', 'ms
 DATA = os.path.join(ROOT, 'apps', 'marvel-heroes', 'data')
 REGISTRY = os.path.join(ROOT, 'scripts', 'msh', 'books.json')
 
-FOLD = {'‘': "'", '’': "'", '“': '"', '”': '"', '–': '-', '—': ' - ',
-        '…': '...', ' ': ' ', '�': "'", '­': ''}
+FOLD = {'\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"', '\u2013': '-', '\u2014': ' - ',
+        '\u2026': '...', '\u00a0': ' ', '\ufffd': "'", '\u00ad': ''}
 
 
 def ascii_fold(s):
