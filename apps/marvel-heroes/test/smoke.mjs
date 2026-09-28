@@ -80,8 +80,13 @@ for (const f of pages) {
   const html = readFileSync(f, 'utf8');
   const sheets = [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/gi)].map((m) => m[0]);
   check(`${rel(f)} links a stylesheet`, sheets.length > 0);
-  check(`${rel(f)} links no shared or other app's stylesheet`,
-    sheets.every((s) => /href=["']styles\.css["']/.test(s)), sheets.join(' '));
+  // codex/ links it as ../styles.css; what matters is that every href lands on
+  // THIS app's one stylesheet, resolved from the page that links it.
+  const own = sheets.every((s) => {
+    const href = s.match(/href=["']([^"']+)["']/)?.[1] || '';
+    return !href.startsWith('/') && !/^[a-z]+:/i.test(href) && join(dirname(f), href) === join(appDir, 'styles.css');
+  });
+  check(`${rel(f)} links no shared or other app's stylesheet`, own, sheets.join(' '));
   const external = [...html.matchAll(/\b(?:src|href)=["'](https?:)?\/\/[^"']+["']/gi)].map((m) => m[0]);
   check(`${rel(f)} makes no third-party request`, external.length === 0, external.join(' '));
   check(`${rel(f)} does not load the RPG app switcher`,
@@ -738,14 +743,18 @@ section('A FEAT reads the Universal Table the way the book prints it');
 
 section('Every element the page script looks up is on the page');
 
-{
-  const html = readFileSync(join(appDir, 'index.html'), 'utf8');
-  const js = readFileSync(join(appDir, 'app.js'), 'utf8');
+for (const dir of ['', 'codex']) {
+  const html = readFileSync(join(appDir, dir, 'index.html'), 'utf8');
+  const js = readFileSync(join(appDir, dir, 'app.js'), 'utf8');
+  const at = dir ? `${dir}/` : '';
   const ids = [...new Set([...js.matchAll(/\$\('#([a-z0-9-]+)'\)/g)].map((m) => m[1]))];
   const missing = ids.filter((id) => !new RegExp(`id="${id}"`).test(html));
-  check(`app.js looks up ${ids.length} ids and index.html has them all`, ids.length > 0 && missing.length === 0, missing.join(', '));
+  check(`${at}app.js looks up ${ids.length} ids and ${at}index.html has them all`, ids.length > 0 && missing.length === 0, missing.join(', '));
+  // The codex draws its tabs from SECTIONS, so its page carries none to read.
+  if (dir) continue;
   const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"/g)].map((m) => m[1]);
   check('every tab controls a panel that exists', tabs.length > 0 && tabs.every((p) => html.includes(`id="${p}"`)), tabs.join());
+  check('the tab bar links to the codex', /<a\b[^>]*href="codex\/"/.test(html));
 }
 
 section('The power browser finds Powers by code, name, word and class');
@@ -770,6 +779,109 @@ section('The power browser finds Powers by code, name, word and class');
   const named = load('powers.json').powers.find((p) => (p.optional || []).some((x) => typeof x === 'object'));
   check('and keep a name that is not a Power as a name', !!named
     && b.related(named, 'optional').some((x) => x.code === null && x.name));
+}
+
+section('The codex: every section loads, searches, filters and keeps its address');
+
+{
+  const { SECTIONS, makeCodex, dataFiles, readState, writeState } = await import(new URL('../js/codex.js', import.meta.url));
+  const names = dataFiles();
+  check('every data file the codex asks for exists',
+    names.length > 0 && names.every((n) => existsSync(join(dataDir, `${n}.json`))), names.join());
+  const data = Object.fromEntries(names.map((n) => [n, load(`${n}.json`)]));
+  // A throw is reported as the check's detail rather than ending the suite.
+  let err = '';
+  const attempt = (fn) => { try { return fn(); } catch (e) { err = e.message; return null; } };
+  const codex = attempt(() => makeCodex(data));
+  check('the codex builds from the shipped data', !!codex, err);
+  const want = ['powers', 'talents', 'contacts', 'weaknesses', 'gear'];
+  check('its sections are Powers, Talents, Contacts, Weaknesses and Gear, in that order',
+    SECTIONS.map((s) => s.id).join() === want.join(), SECTIONS.map((s) => s.id).join());
+  // Each count read from the data file that owns it, not typed here.
+  const expected = {
+    powers: data.powers.powers.length,
+    talents: data.talents.talents.length,
+    contacts: data.contacts.contacts.length,
+    weaknesses: ['stimulus', 'effect', 'duration'].reduce((n, k) => n + data.weakness[k].length, 0),
+    gear: [...data.equipment.weapons, ...data.equipment.vehicles].reduce((n, t) => n + t.rows.length, 0),
+  };
+  for (const s of codex?.sections || []) {
+    const all = codex.search(s.id);
+    check(`${s.id}: every row is listed (${expected[s.id]})`, s.rows.length === expected[s.id] && all.length === s.rows.length,
+      `${s.rows.length} rows, ${all.length} listed`);
+    check(`${s.id}: every key is unique, so ?entry= names one card`, s.byKey.size === s.rows.length,
+      `${s.byKey.size} keys for ${s.rows.length} rows`);
+    const bad = s.rows.filter((r) => !s.title(r) || !s.meta(r) || !s.summary(r) || !s.groups.some((g) => g.id === r.group));
+    check(`${s.id}: every row has a title, a meta line, a summary and a group its filter offers`, bad.length === 0,
+      bad.slice(0, 3).map((r) => JSON.stringify(r).slice(0, 80)).join(' | '));
+    const statsOk = s.rows.every((r) => !s.stats || s.stats(r).every((x) => !x || (Array.isArray(x) && typeof x[0] === 'string')));
+    check(`${s.id}: every stat line is a [label, value] pair`, statsOk);
+    const g = s.groups[0].id;
+    const inG = codex.search(s.id, { group: g });
+    check(`${s.id}: a group narrows to that group`, inG.length > 0 && inG.length < s.rows.length && inG.every((r) => r.group === g),
+      `${inG.length} of ${s.rows.length}`);
+    // A word from the first row's title finds that row, and no row lacking it.
+    const word = String(s.title(s.rows[0])).toLowerCase().split(/[^a-z0-9]+/).find((w) => w.length > 3) || '';
+    const hits = codex.search(s.id, { query: word });
+    check(`${s.id}: a search for "${word}" finds its row`, word && hits.includes(s.rows[0]), `${hits.length} hits`);
+    check(`${s.id}: and a search nothing contains finds nothing`, codex.search(s.id, { query: 'zzqxv' }).length === 0);
+  }
+  if (codex) {
+    check('the Powers section finds by exact code, as the Powers tab does',
+      codex.search('powers', { query: 'mg10' }).map((r) => r.code).join() === 'MG10');
+    check('and every Power card fetches its own code\'s text',
+      codex.byId.powers.rows.every((r) => codex.byId.powers.fullText(r) === r.code));
+    const gear = codex.byId.gear;
+    const ranked = gear.rows.flatMap((r) => gear.stats(r)).filter(([, v]) => /\(.+\)$/.test(v || ''));
+    check('gear rank cells read back onto the ladder by name', ranked.length > 0, String(ranked.length));
+
+    const st = readState('?section=talents&q=guns&group=weapon&entry=guns', codex);
+    check('the address reads back a section, search, group and open entry',
+      st.section === 'talents' && st.q === 'guns' && st.group === 'weapon' && st.entry === 'guns', JSON.stringify(st));
+    check('and writes the same view back out', readState(writeState(st), codex).entry === 'guns'
+      && writeState(st) === '?section=talents&q=guns&group=weapon&entry=guns', writeState(st));
+    const junk = readState('?section=nope&group=D&entry=<b>', codex);
+    check('a section, group or entry the page does not offer is dropped, not trusted',
+      junk.section === 'powers' && junk.group === 'D' && junk.entry === ''
+      && readState('?section=contacts&group=D', codex).group === '', JSON.stringify(junk));
+  }
+
+  // "Notable NPCs is one entry": a descriptor added to the list is a section,
+  // with nothing else touched.
+  const extra = { id: 'npcs', label: 'Notable NPCs', source: 'test', files: [], groupLabel: 'Team',
+    build: () => ({ rows: [{ id: 'a', name: 'Alpha', group: 't' }], groups: [{ id: 't', name: 'Team' }] }),
+    key: (r) => r.id, title: (r) => r.name, meta: () => 'Team', summary: () => '', hay: (r) => r.name };
+  const plus = attempt(() => makeCodex(data, [...SECTIONS, extra]));
+  check('a new section is one descriptor: it builds and searches with nothing else changed',
+    plus?.search('npcs', { query: 'alpha' }).length === 1 && readState('?section=npcs', plus).section === 'npcs');
+}
+
+section('A missing power text degrades to the summary, never an error');
+
+{
+  const { fetchPowerText, makePowerText, missingNote } = await import(new URL('../js/power-text.js', import.meta.url));
+  const reply = (status, body) => async () => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+  const hit = await fetchPowerText('MG10', reply(200, { code: 'MG10', name: 'Reality Alteration', page: 47, body: 'text' }));
+  check('a stored text comes back as ok with its body', hit.ok && hit.body.body === 'text', JSON.stringify(hit));
+  const miss = await fetchPowerText('D1', reply(404, { code: 'D1', missing: true }));
+  check('the endpoint\'s 404 missing:true is read as missing, not thrown',
+    miss.ok === false && miss.missing === true && miss.status === 404, JSON.stringify(miss));
+  check('and says the summary is what ships', /summary above is what the app ships/.test(missingNote(miss)));
+  const down = await fetchPowerText('D1', async () => { throw new TypeError('network'); });
+  check('a network failure is an answer too, not an exception', down.ok === false && down.missing === false && down.status === 0);
+  check('and says it could not be fetched, not that it is missing', /could not be fetched/.test(missingNote(down)));
+  const junk = await fetchPowerText('D1', async () => new Response('<html>Access</html>', { status: 302 }));
+  check('a body that is not JSON (the Access wall) is not missing either', junk.ok === false && junk.missing === false);
+  let calls = 0;
+  const cached = makePowerText(async () => { calls += 1; return new Response('{"missing":true}', { status: 404 }); });
+  await cached('D1'); await cached('D1');
+  check('each page asks for one code once', calls === 1, String(calls));
+  // Against the real endpoint, with the empty table a repo-built database has.
+  const mod = await import(new URL('../../../functions/api/marvel-heroes/power-text.js', import.meta.url));
+  const env = { DB_MARVEL: { prepare: () => ({ bind: () => ({ first: async () => null }) }) } };
+  const real = await fetchPowerText('D1', (url) => mod.onRequestGet({
+    request: new Request(`https://example.com${url}`, { headers: { 'Cf-Access-Authenticated-User-Email': 'a@b.c' } }), env }));
+  check('the real endpoint on an empty table degrades the same way', real.ok === false && real.missing === true, JSON.stringify(real));
 }
 
 section('The generator builds a legal hero, and the same seeds always build the same one');

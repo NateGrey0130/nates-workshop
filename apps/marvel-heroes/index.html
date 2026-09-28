@@ -23,6 +23,7 @@
   <a href="/" class="home">&larr; workshop</a>
 </header>
 
+<div class="tabbar">
 <nav class="tabs" role="tablist" aria-label="Marvel Heroes">
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
@@ -31,6 +32,10 @@
   <button type="button" role="tab" id="tab-heroes" data-tab="heroes" aria-controls="panel-heroes" aria-selected="false">My heroes</button>
   <button type="button" role="tab" id="tab-gear" data-tab="gear" aria-controls="panel-gear" aria-selected="false">Gear</button>
 </nav>
+<!-- A page of its own rather than a tab: the codex is every list at once, and a link
+     keeps its address (?section=, ?q=) shareable. -->
+<a class="tab-link" href="codex/">Codex</a>
+</div>
 
 <main id="app">
   <p id="load-error" class="panel error" role="alert" hidden></p>
