@@ -15,8 +15,8 @@ import { getAccessEmail } from '../../_lib/access.js';
 import { SHEET_NUMBERS, ID as HERO_ID } from './heroes.js';
 
 export { HERO_ID };
-export const CAMPAIGN_ID = /^[1-9]\d{0,11}$/;
-export const PLAY_FIELDS = SHEET_NUMBERS;          // health, karma, karma_pool, advancement
+const CAMPAIGN_ID = /^[1-9]\d{0,11}$/;
+const PLAY_FIELDS = SHEET_NUMBERS;          // health, karma, karma_pool, advancement
 export const NUMBER_MAX = 1000000;                 // the same bound the owner's own save keeps
 const NAME_MAX = 80;
 const TEXT_MAX = 8000;
@@ -117,7 +117,7 @@ export function playStatements(db, { campaignId, heroId, email, field, delta, un
   ];
 }
 
-export async function loadCampaign(db, id) {
+async function loadCampaign(db, id) {
   if (!CAMPAIGN_ID.test(String(id))) return null;
   return db.prepare('SELECT * FROM msh_campaigns WHERE id = ?').bind(Number(id)).first();
 }

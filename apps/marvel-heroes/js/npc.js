@@ -18,7 +18,7 @@
 import { newSeeds, PRIMARY } from './generator.js';
 import { snapshot } from './sheet.js';
 
-export const MAX_POWERS = 18;     // the counts table's highest maximum
+const MAX_POWERS = 18;     // the counts table's highest maximum
 const TRIES = 600;
 
 // -> { options } or { error }, checked against the data so a body type, origin
@@ -46,7 +46,7 @@ export function parseNpcOptions(body, data) {
 // A built hero with every rank above `ceiling` lowered to it. Health and Karma
 // are sums of ability numbers (UPB p.11), so they are summed again; a body
 // type's Health multiplier is kept.
-export function applyCeiling(h, gen, ceiling) {
+function applyCeiling(h, gen, ceiling) {
   if (!ceiling) return h;
   const idx = Object.fromEntries(gen.ladder.map((r, i) => [r.id, i]));
   const cap = (id) => (idx[id] > idx[ceiling] ? ceiling : id);
