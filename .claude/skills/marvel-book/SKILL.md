@@ -24,24 +24,30 @@ catalog, Rows lines per table) are not this pipeline's. `groups.json` gives
 The first book done this way is MA1, and its survey is the worked example:
 `apps/marvel-heroes/docs/surveys/ma1.md`. Read it before starting a second.
 
-## A SECOND book needs the scripts made multi-book FIRST
+## Many books in one set of files
 
-As of MA1 the chain is single-book, and running it for another book **destroys
-the first**:
+Since 2026-09-28 the chain is multi-book. What that means for a new one:
 
-- `npcs.py` writes `data/npcs.json` whole from one book's parse, and
-  `extras.py` writes `data/items.json` and `data/adventures.json` the same
-  way. A second book would replace MA1's 180 characters, not add to them.
-- A character's `team` is the Contents section its page falls in. A book
-  laid out A-Z (a handbook) has no team sections.
-- `roster.py` was tuned on MA1's three columns and header sizes. Expect
-  `--failures` to show where another layout differs; generalise, then re-run
-  MA1 and confirm its output is byte-identical before trusting the change.
+- **`npcs.py` and `extras.py` merge by book.** Every character, item and
+  adventure carries its `book`, and rebuilding one book replaces only that
+  book's rows in `data/npcs.json`, `data/items.json` and
+  `data/adventures.json`. The D1 rows were already keyed by book.
+- **The registry's ORDER is part of the data.** The first book in
+  `scripts/msh/books.json` keeps plain ids (`magneto`); every later book's ids
+  end in `-<slug>` (`magneto-mhsp1`). **Append a new book; never reorder**, or
+  every id, Codex link and saved GM sheet of the moved books changes.
+- **The same character in two books is two cards** (Nate, 2026-09-28), each
+  citing its own book. The GM's list tells them apart by book.
+- A book needs a `short` (the code a card cites it by, e.g. MA1).
+- A book with no team sections (laid out A-Z) files its characters under
+  the book's own title.
+- `roster.py` was still tuned on MA1's three columns and header sizes. Expect
+  `--failures` to show where another layout differs. After changing it,
+  re-run MA1 and confirm its `book-text.sql` is byte-identical before trusting
+  the change: live data depends on it.
 
-So the first PR of a second book is the survey (registry entry + survey doc,
-no data). The second makes the scripts merge by book, and decides with Nate
-what a character in two books becomes (another version of one card, or two
-cards). Only then does the new book's data land.
+So a new book's first PR is still the survey (registry entry and survey doc,
+no data), then its data.
 
 ## The chain
 

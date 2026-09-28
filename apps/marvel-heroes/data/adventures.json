@@ -1,7 +1,8 @@
 {
  "about": [
-  "The adventure from MA1 Children of the Atom, built by scripts/msh/extras.py from the OCR of the book.",
-  "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. The book's prose is in D1 (msh_book_text, migration 087), keyed ma1:<id>:<part>:<n>, and never in this file."
+  "The adventures from the Marvel sourcebooks, built by scripts/msh/extras.py from the OCR of each book, one book at a time.",
+  "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. The book's prose is in D1 (msh_book_text, migration 087), keyed <book>:<id>:<part>:<n>, and never in this file.",
+  "Every row carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book's end in -<slug>."
  ],
  "sources": [
   {
@@ -10,7 +11,17 @@
    "pages": "87-95"
   }
  ],
- "book": "ma1",
+ "books": [
+  {
+   "slug": "ma1",
+   "short": "MA1",
+   "title": "MA1 Children of the Atom",
+   "pages": [
+    87,
+    95
+   ]
+  }
+ ],
  "adventures": [
   {
    "id": "dreamchild",
@@ -145,7 +156,8 @@
       "Karma"
      ]
     }
-   ]
+   ],
+   "book": "ma1"
   }
  ]
 }

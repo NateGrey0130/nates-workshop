@@ -2,6 +2,8 @@
   "about": [
     "The Marvel Super Heroes sourcebooks this repo reads, one entry per book, keyed by slug.",
     "Marvel's own registry: scripts/books.json is the Palladium books' and is not read or written by anything in scripts/msh/.",
+    "  title, short    the book's name, and the code a card cites it by (MA1)",
+    "  ORDER MATTERS: the first book here keeps plain ids (magneto); every later one's ids end in -<slug> (magneto-mhsp1), so no two books collide and no id depends on build order",
     "  source_pdf, source_pdf_dir  where scripts/msh/ocr-book.py reads the scan from",
     "  sha256          of that PDF, so a different scan of the same book is noticed",
     "  pdf_pages       the PDF's page count; the OCR cache names pages p001..pNNN by PDF page",
@@ -23,6 +25,7 @@
   "books": {
     "ma1": {
       "title": "MA1 Children of the Atom",
+      "short": "MA1",
       "code": "TSR6872",
       "game": "Marvel Super Heroes Advanced Set",
       "source_pdf": "TSR6872 MA1 Children of the Atom Reduced.pdf",

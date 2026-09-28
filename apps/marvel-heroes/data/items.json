@@ -1,7 +1,8 @@
 {
  "about": [
-  "Items and locations from MA1 Children of the Atom, built by scripts/msh/extras.py from the OCR of the book.",
-  "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. The book's prose is in D1 (msh_book_text, migration 087), keyed ma1:<id>:<part>:<n>, and never in this file."
+  "Items and locations from the Marvel sourcebooks, built by scripts/msh/extras.py from the OCR of each book, one book at a time.",
+  "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. The book's prose is in D1 (msh_book_text, migration 087), keyed <book>:<id>:<part>:<n>, and never in this file.",
+  "Every row carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book's end in -<slug>."
  ],
  "sources": [
   {
@@ -10,13 +11,24 @@
    "pages": "82-86"
   }
  ],
- "book": "ma1",
+ "books": [
+  {
+   "slug": "ma1",
+   "short": "MA1",
+   "title": "MA1 Children of the Atom",
+   "pages": [
+    82,
+    86
+   ]
+  }
+ ],
  "items": [
   {
    "id": "item-acid-bomb",
    "name": "Acid Bomb",
    "kind": "item",
-   "page": 82
+   "page": 82,
+   "book": "ma1"
   },
   {
    "id": "item-blackbird",
@@ -27,91 +39,106 @@
     "Control": "EXCELLENT",
     "Speed": "SHIFT Z",
     "Body": "EXCELLENT"
-   }
+   },
+   "book": "ma1"
   },
   {
    "id": "item-cerebro",
    "name": "Cerebro",
    "kind": "item",
-   "page": 82
+   "page": 82,
+   "book": "ma1"
   },
   {
    "id": "item-electronic-mass-converter",
    "name": "Electronic Mass Converter",
    "kind": "item",
-   "page": 82
+   "page": 82,
+   "book": "ma1"
   },
   {
    "id": "item-image-inducer",
    "name": "Image Inducer",
    "kind": "item",
-   "page": 82
+   "page": 82,
+   "book": "ma1"
   },
   {
    "id": "item-knights-of-hellfire-armor",
    "name": "Knights of Hellfire Armor",
    "kind": "item",
-   "page": 82
+   "page": 82,
+   "book": "ma1"
   },
   {
    "id": "item-mind-probe",
    "name": "Mind-Probe",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-mindtap-mechanism",
    "name": "Mindtap Mechanism",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-mutant-power-intensifier",
    "name": "Mutant Power Intensifier",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-neutronic-tangler-glove",
    "name": "Neutronic Tangler Glove",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-persona-exchange-module",
    "name": "Persona Exchange Module",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-psi-id-weapon",
    "name": "Psi-Id Weapon",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-psi-scream-device",
    "name": "Psi-Scream Device",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-psionic-headband",
    "name": "Psionic Headband",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-restraints",
    "name": "Restraints",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-tangle-web",
    "name": "Tangle Web",
    "kind": "item",
-   "page": 83
+   "page": 83,
+   "book": "ma1"
   },
   {
    "id": "item-x-factor-plane",
@@ -122,19 +149,22 @@
     "Control": "REMARKABLE",
     "Speed": "SHIFT Y",
     "Body": "EXCELLENT"
-   }
+   },
+   "book": "ma1"
   },
   {
    "id": "item-body-shop",
    "name": "Body Shop",
    "kind": "location",
-   "page": 84
+   "page": 84,
+   "book": "ma1"
   },
   {
    "id": "item-x-men-mansion",
    "name": "X-Men Mansion",
    "kind": "location",
-   "page": 84
+   "page": 84,
+   "book": "ma1"
   },
   {
    "id": "item-the-x-men-mansion-danger-room",
@@ -148,7 +178,8 @@
     "Obstacles",
     "Robotics",
     "Traps"
-   ]
+   ],
+   "book": "ma1"
   }
  ]
 }

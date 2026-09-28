@@ -19,6 +19,11 @@ same two halves scripts/msh/npcs.py does:
       087) under entry ids item-<id> and <adventure>-<section>, applied with
           node scripts/d1-apply.mjs --remote --db marvel <that .sql>
 
+Both data files hold every book's rows, each with its `book`; this replaces
+the named book's and keeps the rest, with ids made as scripts/msh/npcs.py makes
+them (the registry's first book plain, a later one's ending in -<slug>). A
+book with no item_pages or adventure in the registry has none of either.
+
 HOW THE BOOK SETS THEM. Items and locations are run-in entries - "ACID BOMB:
 This Brood weapon..." - under a heading (Special Items, Locations); a vehicle
 follows its run-in with Control:, Speed: and Body: lines. An adventure's
@@ -144,10 +149,26 @@ def adventure(book, slug):
     return {'title': title, 'pages': book['adventure']['pages'], 'sections': sections}
 
 
+def merged(path, key, slug, mine, order):
+    """A data file's list with this book's rows replaced and every other
+    book's kept, in registry order. The single-book shape had one `book` for
+    the whole file; its rows are that book's."""
+    old = json.load(io.open(path, encoding='utf-8')) if os.path.exists(path) else {key: []}
+    others = [dict(r, book=r.get('book', old.get('book'))) for r in old.get(key, []) if r.get('book', old.get('book')) != slug]
+    rows = sorted(others + mine, key=lambda r: order.index(r['book']))
+    ids = [r['id'] for r in rows]
+    assert len(ids) == len(set(ids)), '%s: an id is in two books' % key
+    return rows
+
+
 def main(slug):
-    book = json.load(io.open(roster.REGISTRY, encoding='utf-8'))['books'][slug]
-    its = items(book, slug)
-    adv = adventure(book, slug)
+    registry = json.load(io.open(roster.REGISTRY, encoding='utf-8'))['books']
+    book = registry[slug]
+    order = list(registry)
+    # as npcs.py: the registry's first book keeps plain ids, a later one's end in -<slug>
+    sfx = '' if order[0] == slug else '-' + slug
+    its = items(book, slug) if book.get('item_pages') else []
+    adv = adventure(book, slug) if book.get('adventure') else None
     rows = []
 
     def text_rows(entry, pieces, page):
@@ -162,48 +183,62 @@ def main(slug):
 
     item_out = []
     for it in its:
-        iid = 'item-' + npcs.slug(it['name'])
+        iid = 'item-' + npcs.slug(it['name']) + sfx
         text_rows(iid, it['text'], it['page'])
         item_out.append({'id': iid, 'name': small_caps_title(it['name']), 'kind': it['kind'], 'page': it['page'],
                          **({'vehicle': it['vehicle']} if it['vehicle'] else {}),
-                         **({'parts': it['parts']} if it['parts'] else {})})
-    aid = npcs.slug(adv['title'])
-    sec_out = []
-    for s in adv['sections']:
-        sid = '%s-%s' % (aid, npcs.slug(s['title'].split(':')[0] if s.get('number') else s['title']))
-        text_rows(sid, s['text'], s['page'])
-        sec_out.append({'id': sid, 'title': npcs.ascii_fold(s['title']), 'page': s['page'],
-                        **({'number': s['number']} if s.get('number') else {}), 'parts': s['parts']})
-    ids = [r[0] for r in rows]
-    assert len(ids) == len(set(ids)), 'duplicate keys'
-    assert len({i['id'] for i in item_out}) == len(item_out) and len({s['id'] for s in sec_out}) == len(sec_out), 'duplicate ids'
+                         **({'parts': it['parts']} if it['parts'] else {}), 'book': slug})
+    adv_out = []
+    if adv:
+        aid = npcs.slug(adv['title']) + sfx
+        sec_out = []
+        for s in adv['sections']:
+            sid = '%s-%s' % (aid, npcs.slug(s['title'].split(':')[0] if s.get('number') else s['title']))
+            text_rows(sid, s['text'], s['page'])
+            sec_out.append({'id': sid, 'title': npcs.ascii_fold(s['title']), 'page': s['page'],
+                            **({'number': s['number']} if s.get('number') else {}), 'parts': s['parts']})
+        assert len({x['id'] for x in sec_out}) == len(sec_out), 'duplicate section ids'
+        adv_out = [{'id': aid, 'title': adv['title'], 'pages': adv['pages'], 'sections': sec_out, 'book': slug}]
+    keys = [r[0] for r in rows]
+    assert len(keys) == len(set(keys)), 'duplicate keys'
 
+    all_items = merged(os.path.join(DATA, 'items.json'), 'items', slug, item_out, order)
+    all_advs = merged(os.path.join(DATA, 'adventures.json'), 'adventures', slug, adv_out, order)
     about = lambda what: [
-        '%s from %s, built by scripts/msh/extras.py from the OCR of the book.' % (what, book['title']),
+        '%s from the Marvel sourcebooks, built by scripts/msh/extras.py from the OCR of each book, one book at a time.' % what,
         "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. "
-        "The book's prose is in D1 (msh_book_text, migration 087), keyed %s:<id>:<part>:<n>, and never in this file." % slug,
+        "The book's prose is in D1 (msh_book_text, migration 087), keyed <book>:<id>:<part>:<n>, and never in this file.",
+        'Every row carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book\'s end in -<slug>.',
     ]
-    src = [{'book': book['title'], 'code': book['code']}]
+
+    def listing(rows_, pages_of):
+        present = [b for b in order if any(r['book'] == b for r in rows_)]
+        return ([{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(pages_of(b))} for b in present],
+                [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'], 'pages': list(pages_of(b))} for b in present])
+    src, books = listing(all_items, lambda b: registry[b]['item_pages'])
     io.open(os.path.join(DATA, 'items.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
-        {'about': about('Items and locations'), 'sources': [dict(src[0], pages='%d-%d' % tuple(book['item_pages']))],
-         'book': slug, 'items': item_out}, indent=1, ensure_ascii=True) + '\n')
+        {'about': about('Items and locations'), 'sources': src, 'books': books, 'items': all_items},
+        indent=1, ensure_ascii=True) + '\n')
+    src, books = listing(all_advs, lambda b: registry[b]['adventure']['pages'])
     io.open(os.path.join(DATA, 'adventures.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
-        {'about': about('The adventure'), 'sources': [dict(src[0], pages='%d-%d' % tuple(adv['pages']))], 'book': slug,
-         'adventures': [{'id': aid, 'title': adv['title'], 'pages': adv['pages'], 'sections': sec_out}]},
+        {'about': about('The adventures'), 'sources': src, 'books': books, 'adventures': all_advs},
         indent=1, ensure_ascii=True) + '\n')
     cache = os.path.join(roster.CACHE, 'books', slug)
     io.open(os.path.join(cache, 'extras.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
-        {'items': its, 'adventure': adv}, indent=1, ensure_ascii=False) + '\n')
+        {'items': its, 'adventure': adv or {'title': None, 'pages': None, 'sections': []}}, indent=1, ensure_ascii=False) + '\n')
 
     def q(v):
         return 'NULL' if v is None else str(v) if isinstance(v, int) else "'" + v.replace("'", "''") + "'"
+    mine = ["entry LIKE 'item-%'"] + (["entry LIKE '%s-%%'" % adv_out[0]['id']] if adv_out else [])
     sql = ["-- msh_book_text: %s's items, locations and adventure, written by scripts/msh/extras.py. NEVER COMMIT: the book's text." % slug,
-           "DELETE FROM msh_book_text WHERE book = '%s' AND (entry LIKE 'item-%%' OR entry LIKE '%s-%%');" % (slug, aid)]
+           "DELETE FROM msh_book_text WHERE book = '%s' AND (%s);" % (slug, ' OR '.join(mine))]
     sql += ['INSERT INTO msh_book_text (key, book, entry, part, name, page, body) VALUES (%s);' % ', '.join(q(v) for v in r) for r in rows]
     io.open(os.path.join(cache, 'extras-text.sql'), 'w', encoding='utf-8', newline='\n').write('\n'.join(sql) + '\n')
-    print('%s: %d items (%d vehicles, %d locations), adventure "%s" in %d sections (%d numbered encounters); %d text rows'
+    print('%s: %d items (%d vehicles, %d locations), %s; %d text rows'
           % (slug, len(item_out), sum(1 for i in item_out if i['kind'] == 'vehicle'), sum(1 for i in item_out if i['kind'] == 'location'),
-             adv['title'], len(sec_out), sum(1 for s in sec_out if 'number' in s), len(rows)))
+             'adventure "%s" in %d sections (%d numbered encounters)' % (adv['title'], len(adv_out[0]['sections']),
+                                                                      sum(1 for s in adv_out[0]['sections'] if 'number' in s)) if adv else 'no adventure',
+             len(rows)))
 
 
 if __name__ == '__main__':
