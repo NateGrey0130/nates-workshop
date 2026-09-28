@@ -113,7 +113,7 @@ body.is-city .present-city { margin-top: 52px; max-height: calc(100dvh - 52px); 
 
 @media print {
   /* The G.M.'s printed copy: the city, not the controls for keeping it. */
-  .city-settings, .city-tools, .city-keep, .city-reveal, .city-flesh button, .appnav { display: none; }
+  .city-settings, .city-tools, .city-keep, .city-reveal, .city-flesh button, .city-npc-form, .appnav { display: none; }
   .city-public:placeholder-shown { display: none; }
   .city-public { border: 0; padding: 0; font-style: italic; }
   .city-entry details { display: block; }
