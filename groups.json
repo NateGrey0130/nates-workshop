@@ -92,7 +92,7 @@
         "scripts/msh/"
       ],
       "tables": [
-        "msh_power_text", "msh_heroes",
+        "msh_power_text", "msh_heroes", "msh_book_text",
         "msh_campaigns", "msh_campaign_heroes", "msh_hero_events", "msh_journal_entries", "msh_journal_fts",
         "msh_npc_sheets", "msh_npcs", "msh_npc_mentions", "msh_campaign_entries", "msh_campaign_images"
       ]
