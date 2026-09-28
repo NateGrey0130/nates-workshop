@@ -468,7 +468,7 @@ a step the player passes through once, whose renderer is contiguous and which
 nothing outside it calls. Naming today's cleanest one here is how the last
 recommendation rotted, so it is deliberately not named.
 
-### Two traps outside the app itself
+### A trap outside the app itself
 
 **Passing SQL files to `wrangler d1 execute` on Windows can mangle non-ASCII.**
 Importing 80 skills wrote `Chemistry — Analytical` into production as
@@ -478,7 +478,3 @@ statement must carry a non-ASCII character, build it with `char(8212)` and
 friends rather than embedding the literal, and **compare name sets between
 environments afterwards** rather than trusting row counts, which matched
 perfectly while two names were wrong.
-
-**FilamentForge pins `claude-sonnet-4-20250514`**, which returned
-`404 not_found_error` on the API key used locally. Unrelated to this app, but it
-shares the proxy — worth confirming the production key can reach that model.
