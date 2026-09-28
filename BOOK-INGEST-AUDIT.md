@@ -2630,6 +2630,89 @@ generator's output shape against `add-south-america-creatures.sql`.
 either table gains a column. Migration 074's shape has not changed since it
 landed.
 
+**Taken, 2026-09-27 (branch `pal/feat/book-ingest-audit-f112-f113`), with F113
+in one PR on Nate's word of 2026-09-27, which overrides one-PR-per-finding for
+this pair.** Posture said back: **a new tool, opt-in. No check fails a PR that
+does not use it, and no existing data script is regenerated. Extraction and
+reconcile stay agent work.** `scripts/bestiary-sql.mjs` is the JSON-to-SQL step
+only. It refuses rather than repairs, and it refuses to overwrite a file that
+exists. Its copy-check proof is `--self-test`, run by hand, and no suite calls it.
+
+What it does, as proposed:
+- It reads columns from `db/schema.sql` (the `CREATE TABLE`s at lines 1207,
+  1253 and 1274) and rebuilds the same three tables from `db/migrations`
+  (072-074 plus any later `ALTER TABLE ... ADD COLUMN`). It refuses to run if
+  the two disagree. On 2026-09-27 they agreed: 31, 37 and 9 columns.
+- It refuses a row that fails `creatureFormulaGaps`, a key that is no column,
+  a value outside a `CHECK (... IN ...)` list, and non-ASCII per value.
+- It refuses an 8-word run shared with the cached text layer, in the prose
+  fields only.
+- It writes 50-row (and at most 90 KB) INSERTs, read-backs by slug, and the
+  `data_script_runs` footer.
+
+It is cited from `book-survey` §6 (`.claude/skills/book-survey/SKILL.md:304-312`
+after this edit; 304-310 before it).
+**Correction:** no skill has an "NPC-and-bestiary part" (premise audit,
+2026-09-27, at `1b0f850a`), so §6 is the only place it is cited. It is also in
+the README's `## The scripts at the repo root` map, which
+`documented-counts.mjs:266-274` requires of every `scripts/` file (smoke). The
+proposal missed that requirement.
+
+**The premise is stronger than written.** The premise audit found that 18 of
+the 25 creature and NPC scripts in `apps/character-creator/db/` came from
+generators rebuilt in scratchpads. It also found a fourth pair,
+`normalize-notables.mjs` / `gen-notables.mjs`, in the memory file
+`npc-bestiary-plan.md`. **Correction to the confidence line:**
+`add-south-america-creatures.sql`'s header (lines 16-24) says nothing about
+storing fields differently, and its shape matches Psyscape's.
+
+**Proved by regenerating, 2026-09-27; nothing regenerated was committed.**
+- Each shipped script was replayed into node:sqlite and its rows read back as
+  worker JSON. Each was then regenerated and diffed statement by statement.
+- **`add-psyscape-creatures.sql`:** 5 of 10 statements byte-identical, which
+  is every INSERT (creatures, notables, two 50-row `stat_attacks` batches)
+  and the footer. The 5 read-backs differ because Psyscape's filter on
+  `source_book LIKE` and the generator's filter on the script's own slugs.
+- **`add-south-america-creatures.sql`:** 8 of 10 byte-identical. The only
+  differences are two assertion labels, which name the book.
+- Both regenerated scripts replay with every assertion holding.
+- **Psyscape's last read-back counts `owner_kind = 'notable'`**, a kind no
+  endpoint reads; `from-notable.js:43` and `codex.js:310` read
+  `'notable_npc'`. It asserts 0 either way, so the shipped script is right by
+  accident. Applied scripts are never edited here, so it is left alone.
+
+**What the regeneration changed in the tool: the prose-field list is narrower
+than a reading of "prose" gives.** A first cut read `pools_note`,
+`bonuses_note` and `habitat` as prose. On the shipped Psyscape rows (which its
+own generator passed) that cut raised 38 refusals: printed rule wording (*needs
+a 12 or higher to save vs psionics*) and place lists. Those are facts a row
+repeats, the same class as the 40 stat-list hits this finding records. The
+fields checked are now `natural_abilities`, `occ_note` and `description` for
+creatures, and `natural_abilities`, `disposition` and `description` for
+notables. A run with 3 or more digit-bearing tokens is skipped. Words join
+across `M.D.C.` and `Psyscape's`. Under that rule both shipped books pass.
+**This is fitted to two books that passed their own checks, so read it as the
+floor of what those generators checked, not as a measurement of it.** The
+scratchpad generators are gone and cannot say. `--self-test` plants a copied
+sentence in `description` and watches it refused. With `description` dropped
+from the list, and every lookup forced to miss, that case goes red.
+
+**The `book-survey` edit was pressure-tested** (`test-suite` → *A skill is a
+check too*):
+- Two RED and two GREEN runs used one blind prompt: plan the JSON-to-SQL step
+  for a rehearsed book at 11pm, with the three prior books having done it
+  three ways.
+- The runs were on a neutral branch and WIP commits, with the prompt pointing
+  each runner at this tree's copy of the skill, because the junction serves
+  the main checkout.
+- **RED 2 of 2 found and used the tool anyway**, through a grep of `scripts/`,
+  the README entry and this finding's text. **GREEN 2 of 2 used it too,
+  citing §6**, and opened fewer files on the way.
+- So on this scenario the citation adds a shorter path, not a different
+  outcome. It shipped as one sentence, as the finding asks. Two earlier RED
+  runs were discarded, because the tool showed in their git snapshot as
+  untracked and the scenario book had no creatures to import.
+
 ### F113 — low — `class-check` passes three class shapes that smoke and regression refuse
 
 **Opened 2026-09-25** by the `psyscape` class imports (#1401, #1404, #1405). Filed
@@ -2683,3 +2766,51 @@ are importable functions or inline loops.
 changes, which is the drift this finding exists to shrink. If the predicates
 cannot be shared, the rule text is duplicated in two places, and the finding
 should say so and consider declining.
+
+**Taken, 2026-09-27 (branch `pal/feat/book-ingest-audit-f112-f113`), with F112
+in one PR on Nate's word of 2026-09-27, which overrides one-PR-per-finding for
+this pair.** Posture said back: **warnings only. The exit code does not move,
+and the suites stay the authority.** The third shape is left alone, as written.
+
+**Line drift, found by the premise audit (2026-09-27, `1b0f850a`):**
+- The placeholder check is now `regression.mjs:4149`, with its collection loop
+  at 4123-4134.
+- The gear-slug check is at 5845, and stays out of scope.
+- `catalog-data.mjs:91-93` holds.
+- Both predicates were **inline**, not exported.
+
+**Route taken: moved, not copied.** `scripts/class-check-lib.mjs` now exports
+`LITERACY_PLACEHOLDER`, `grantsLiteracyPlaceholder(entry)` and
+`menOfArmsBesideOwnSdc(statesSdcBase, menOfArms)`. `regression.mjs`'s
+collection loop and `catalog-data.mjs`'s `stale` filter call them, and
+`class-check.mjs` warns with them. The precedent is `catalog-data.mjs:23`, which
+already imported `KNOWN_SKILL_KEYS` from that lib. This is the route the
+Ongoing-cost line prefers: the rule has one text, so the drift this finding
+names cannot happen between the warning and the refusal. The inputs still
+differ, and each consumer builds its own:
+- regression hands it a class the worker parsed;
+- smoke hands it what a data script's text states;
+- `class-check` hands it the draft it just parsed.
+
+**Proved, 2026-09-27:**
+- **The two reproductions, re-run as the finding ran them.** A copy of
+  `add-grey-seer-class.sql`'s draft was given a fixed `Literacy: Other`, and a
+  copy of `add-amorph-class.sql`'s had `men_of_arms: false` added beside its
+  `sdc_base: 0`.
+  - Before the change, `class-check --remote` said `ready`. The literacy draft
+    carried 1 warning, the Grey Seer's own F11 note, and the other carried 0.
+    Neither warned about its shape.
+  - After the change, the literacy draft is `ready — 0 errors, 2 warnings`,
+    adding *occ_skills grants "Literacy: Other" by name*. The other is
+    `ready — 0 errors, 1 warning`, *men_of_arms sits beside a stated sdc_base*.
+  - Both exit 0. The unedited originals stay at 1 and 0 warnings.
+- **`test/checks/class-check-tool.mjs` gains seven checks.** Four pin the two
+  predicates, and three run the real CLI (`--no-catalog`): one draft in each
+  shape, plus a draft in the accepted shapes that must warn on neither.
+  - With both warnings disabled in `class-check.mjs`, the two CLI checks went
+    red. With `menOfArmsBesideOwnSdc` loosened in the lib, smoke's *no S.D.C.
+    grouping sits on a class that states its own* went red on thirty-odd
+    classes. So smoke reads the shared predicate.
+- `class-import`'s `reference/frontmatter.md` table (148-161) covers
+  `occ_group` and `xp_table`, not these two shapes. It is left unedited, and
+  it carries no claim this change falsifies.
