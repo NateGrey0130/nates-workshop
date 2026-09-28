@@ -69,8 +69,11 @@ export function remainingGrants(grants, spent) {
 //
 // A plain `new Set(...)` dedupes strings but not objects: two grants naming the
 // same `{ name: "Espionage", only: [...] }` are distinct references and both
-// survive. Harmless for matching — categoryAllows() takes the first hit — but
-// it makes the list grow every level, so key on the serialised entry.
+// survive. Harmless for matching — categoryAllows() and categoryBonus() rank
+// every same-named entry rather than taking the first (BOOK-INGEST-AUDIT F109),
+// so a repeat changes no answer — but it makes the list grow every level, so
+// key on the serialised entry. DIFFERENT entries for one category are kept on
+// purpose: that is how a bonus scoped to part of a category is written.
 export function dedupeCategories(entries) {
   const seen = new Map();
   for (const e of entries) {

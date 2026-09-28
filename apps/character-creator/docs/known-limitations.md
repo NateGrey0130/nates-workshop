@@ -138,6 +138,17 @@ which is the part that cannot drift. The founding seven:
 | Coalition SAMAS Pilot, Technical Officer | *"Racial Restrictions: Human."* (p.233, 237) |
 | Dog Boy | a CS-made mutant canine — the Dog Boy **is** the race (p.142) |
 
+**Four rows of that table changed shape on 2026-09-27** (BOOK-INGEST-AUDIT F110),
+and each still carries a bar. The Psi-Stalker and the Dog Boy each became a race
+plus an occupation: `mutant-psi-stalker` and `mutant-dog` are R.C.C.s carrying
+the racial package, and the Civilized and Wild Psi-Stalker, the Dog Boy and the
+NTSET Psi-Hound are the occupations, each taking only its race and never the
+human case. With a race to name, the Grunt's bar reads
+`only: ["none", "mutant-psi-stalker"]`, as do the NTSET Protector's and the
+Psi-Slinger's, and the Psi-Net Agent's adds `mutant-dog`. The Psycho-Stalker
+stays a class that carries its own package, because its printed numbers already
+include the Psi-Stalker's bonuses and a pairing would add them twice.
+
 Six of the seven already recorded the rule in prose. **The Coalition Grunt did
 not** — its markdown says a great deal about Coalition doctrine toward
 non-humans and never states the restriction the book prints. That one was found

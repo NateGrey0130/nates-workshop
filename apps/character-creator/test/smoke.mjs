@@ -4887,12 +4887,20 @@ section('Group-level skill restrictions');
   // THE PIN. A validator outlives the behaviour it protects unless something
   // says the behaviour is still there. If `categoryAllows` ever started reading
   // the group, this refusal would become WRONG rather than merely redundant.
+  // Since BOOK-INGEST-AUDIT F109 categoryAllows ranks every same-named entry
+  // through realCategoryEntry, and the per-entry reading lives in entryAdmits,
+  // so the pin follows it there and also asks that categoryAllows still routes
+  // through it.
   check('categoryAllows still reads the four keys off the category ENTRY', (() => {
     const src = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-    const fn = src.slice(src.indexOf('function categoryAllows'));
-    const body = fn.slice(0, fn.indexOf('\n}\n'));
+    const bodyOf = (fnName) => {
+      const fn = src.slice(src.indexOf(`function ${fnName}(`));
+      return fn.slice(0, fn.indexOf('\n}\n'));
+    };
     return ['only', 'except', 'only_prefix', 'except_prefix']
-      .every((k) => new RegExp(`entry\\.${k}\\b`).test(body));
+      .every((k) => new RegExp(`entry\\.${k}\\b`).test(bodyOf('entryAdmits')))
+      && /realCategoryEntry\(/.test(bodyOf('categoryAllows'))
+      && /entryAdmits\(/.test(bodyOf('realCategoryEntry'));
   })());
 
   // ── and the entry the refusal insists on is itself validated (F88) ──
@@ -5256,6 +5264,57 @@ section('Category skill bonuses');
     check('an unadmitted cross-category pick scores nothing',
       categoryBonus(unbounded, { name: 'Prowl', category: 'Physical' }) === 0
       && categoryAllows(unbounded, { name: 'Prowl', category: 'Physical' }) === false);
+  }
+
+  // ── a bonus scoped to PART of a category (BOOK-INGEST-AUDIT F109) ───────
+  // "Pilot: Any, +10% to water vehicles only" is the category twice: an `only`
+  // entry carrying the bonus and an `except` entry for the rest. Both functions
+  // used to take the FIRST same-named entry, so with the `only` half first every
+  // other Pilot skill was REFUSED, and with the `except` half first the water
+  // skills got nothing. Both orders are checked, because the bug was the order.
+  {
+    const water = ['Boat: Motor', 'Boat: Sail'];
+    const onlyFirst = [{ name: 'Pilot', only: water, bonus: 10 }, { name: 'Pilot', except: water }];
+    const exceptFirst = [...onlyFirst].reverse();
+    for (const [label, cats] of [['only entry first', onlyFirst], ['except entry first', exceptFirst]]) {
+      check(`scoped bonus, ${label}: the named skill is admitted and pays`,
+        categoryAllows(cats, { name: 'Boat: Sail', category: 'Pilot' })
+        && categoryBonus(cats, { name: 'Boat: Sail', category: 'Pilot' }) === 10);
+      check(`scoped bonus, ${label}: the rest of the category is admitted at the other figure`,
+        categoryAllows(cats, { name: 'Airplane', category: 'Pilot' })
+        && categoryBonus(cats, { name: 'Airplane', category: 'Pilot' }) === 0);
+    }
+
+    // The Fly Boy: +15% to aircraft, "otherwise +10%" - the other figure rides
+    // on the `except` entry.
+    const flyBoy = [{ name: 'Pilot', except: ['Airplane'], bonus: 10 },
+      { name: 'Pilot', only: ['Airplane'], bonus: 15 }];
+    check('scoped bonus: the except entry pays its own figure outside the named skills',
+      categoryBonus(flyBoy, { name: 'Airplane', category: 'Pilot' }) === 15
+      && categoryBonus(flyBoy, { name: 'Hovercraft', category: 'Pilot' }) === 10);
+
+    // A plain entry plus an `only` entry: "Domestic: +5%, and +10% to Fishing".
+    // The `only` entry outranks the plain one for the skill it names, and the
+    // plain one still speaks for everything else.
+    const domestic = [{ name: 'Domestic', bonus: 5 }, { name: 'Domestic', only: ['Fishing'], bonus: 10 }];
+    check('scoped bonus: an only entry outranks a plain entry for the skill it names',
+      categoryBonus(domestic, { name: 'Fishing', category: 'Domestic' }) === 10
+      && categoryBonus(domestic, { name: 'Cook', category: 'Domestic' }) === 5
+      && categoryAllows(domestic, { name: 'Cook', category: 'Domestic' }));
+
+    // The prefix forms rank with their exact-name siblings.
+    const tech = [{ name: 'Technical', bonus: 10 }, { name: 'Technical', only_prefix: ['Language:'], bonus: 20 }];
+    check('scoped bonus: an only_prefix entry ranks as an only entry',
+      categoryBonus(tech, { name: 'Language: Other', category: 'Technical' }) === 20
+      && categoryBonus(tech, { name: 'Computer Operation', category: 'Technical' }) === 10);
+
+    // What ranking must NOT do: admit a skill that no entry admits. Two entries
+    // that both exclude it still refuse it, and the bonus falls back to the
+    // first entry exactly as the single-entry lookup always did.
+    const neither = [{ name: 'Pilot', only: ['Boat: Sail'], bonus: 10 },
+      { name: 'Pilot', except: ['Airplane'] }];
+    check('scoped bonus: a skill neither entry admits is still refused',
+      !categoryAllows(neither, { name: 'Airplane', category: 'Pilot' }));
   }
 
   // ── a save the sixteen fields do not name (F7) ────────────────────────────

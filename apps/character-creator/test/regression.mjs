@@ -5525,11 +5525,17 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // take its Hand to Hand: Skudasa), the Quillback Scavenger (105) and the
   // Quorian Oneiromancer (107). Each is that race's R.C.C., offered to no one
   // else, so each pairs only with its rifts- race.
+  // BOOK-INGEST-AUDIT F110 (2026-09-27) split four combined classes into a race
+  // and its occupation: the Civilized and Wild Psi-Stalker (RUE printed 152,
+  // 155, "mutant humans only") pair only with mutant-psi-stalker, and the Dog
+  // Boy (printed 142) and the NTSET Psi-Hound (Coalition War Campaign printed
+  // 187, "Race: Mutant Dog") only with mutant-dog. A human is none of them.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
-    'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer'];
+    'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
+    'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
