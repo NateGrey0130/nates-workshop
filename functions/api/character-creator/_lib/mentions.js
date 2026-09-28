@@ -18,13 +18,15 @@ import { selectInChunks } from './sql-chunk.js';
 // allowed, because "@Lord Coake" is one person and stopping at the space would
 // link to a Lord nobody has met; three are not, because at that point the
 // pattern starts swallowing sentences. Trailing punctuation is trimmed, so
-// "@Kevik," and "@Kevik." are the same person as "@Kevik".
+// "@Kevik," and "@Kevik." are the same person as "@Kevik". So is "@Kevik's
+// men": a possessive 's comes off before that trim, or the apostrophe the class
+// allows for @O'Brien would open a second dossier called "Kevik's".
 const MENTION = /@([\p{Lu}][\p{L}'’-]*(?:\s+[\p{Lu}][\p{L}'’-]*)?)/gu;
 
 export function parseMentions(body) {
   const names = new Map(); // lower-cased key → the spelling as typed
   for (const m of String(body || '').matchAll(MENTION)) {
-    const name = m[1].replace(/['’-]+$/, '').trim();
+    const name = m[1].replace(/['’]s$/i, '').replace(/['’-]+$/, '').trim();
     if (!name || name.length > 60) continue;
     const key = name.toLowerCase();
     if (!names.has(key)) names.set(key, name);
