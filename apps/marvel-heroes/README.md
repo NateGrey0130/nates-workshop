@@ -129,6 +129,27 @@ only, lengths, 48 KB per JSON column, 200 heroes each - are in
 `functions/api/marvel-heroes/_lib/heroes.js`, and the suite runs the endpoint
 against migration 082 itself in `node:sqlite`.
 
+## Campaigns: the `msh_campaign` tables
+
+A GM runs a campaign; players link their saved heroes to it. Migration `086`,
+nine tables in `DB_MARVEL`. They are Marvel's own copies of the Palladium
+suite's campaign shapes, not a share of them: each group's server code reaches
+only its own database (`groups.json`).
+
+| table | what |
+|---|---|
+| `msh_campaigns` | one per campaign: `name`, `gm_email`, `description`, `gm_notes` (the GM's alone, never sent to a player), and `open` - 1 while the campaign is running, 0 once the GM closes it |
+| `msh_campaign_heroes` | the link, and only the link: `campaign_id`, `hero_id`, who added it. **A hero is never copied into a campaign**, so the sheet a player opens and the roster the GM adjusts are one row (Nate, 2026-09-28). `campaign_open` is a copy of the campaign's `open`, kept true by a trigger, because the unique index that allows a hero into **one open campaign at a time** cannot look at another table |
+| `msh_hero_events` | every change the GM makes to a hero's `health`, `karma`, `karma_pool` or `advancement`: who, the `before` and `after`, the `delta`. Written in the same batch as the change. Undo is a new row whose `undoes` names the one it reverses; unique, so a change is undone once |
+| `msh_journal_entries`, `msh_journal_fts` | the campaign's notes, optionally about one hero, and their full-text index (external-content FTS5 kept current by triggers) |
+| `msh_npc_sheets` | a statted NPC in **the hero shape** - `build`, `snapshot` (`js/sheet.js`, `SNAPSHOT_VERSION`), `sheet` - so the sheet renderer draws it as it draws a hero. `hidden` is 1 until the GM shows it; the NPC roller writes these |
+| `msh_npcs`, `msh_npc_mentions` | People: one dossier per name per campaign, optionally backed by an `msh_npc_sheets` row, and which notes mention whom |
+| `msh_campaign_entries`, `msh_campaign_images` | the GM's own pages, never revealed, and the pictures that can be. **An R2 key must start `msh/`**, a `CHECK` rather than a convention, so nothing Marvel stores can land in another app's part of the bucket |
+
+The heroes endpoint stays owner-only. A GM reads the sheets of heroes linked to
+their campaign through the campaign's own endpoint, and changes only the four
+play numbers, through `PATCH /api/marvel-heroes/campaigns/:id/heroes/:heroId`.
+
 ## Rulings
 
 **Where the books disagree, the Ultimate Powers Book wins**, because it was
