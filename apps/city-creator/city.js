@@ -13,6 +13,7 @@
 
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman,
   suggestions, sizeFor, newSeed, poolPrompt, parsePool, exportJson, SUPPORTED_SYSTEMS, rollRequest, rollBlocker, linkSheet,
+  linkDossier, npcLevel, npcOcc, wantsOcc, levelRange, npcDossier, npcNotes,
   stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh, tablesFor,
   THEME_PARTS, THEME_INTENSITY, THEME_TABLES, THEME_MIN_LINES, themePrompt, parseThemePart, assembleThemePack,
   validateSavedTheme, themeParts, editThemeTable, adaptPrompt }
@@ -64,6 +65,10 @@ const S = {
   gear: null, stockMsg: '',
   // "Flesh out" per entry (Phase 4d): a call in flight or its error, by entry id.
   flesh: {},
+  // Flesh out on a named NPC: the form open on one of them - its level, O.C.C.
+  // and campaign, the step running, and a dossier name that clashed - and
+  // this game's O.C.C.s for the picker, loaded the first time it opens.
+  npcForm: null, occs: null,
 };
 
 // ── storage: a convenience, never the record ──
@@ -472,7 +477,8 @@ function statsTools(n) {
   if (blocked) return `<div class="rowline city-stats"><span class="small muted">${esc(blocked)}.</span></div>`;
   const r = S.rolls[n.id];
   const link = n.sheet_id
-    ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.sheet_id}">📜 open sheet</a>`
+    ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.sheet_id}">📜 open sheet</a>${n.dossier_id
+      ? ` <a class="btn btn-sm btn-ghost" href="/apps/campaign/?campaign_id=${S.saved.campaign_id}">👤 dossier in People</a>` : ''}`
     : `<button type="button" class="btn btn-sm btn-ghost" onclick="City.rollStats('${escJs(n.id)}')" ${r?.busy ? 'disabled' : ''}>
         ${r?.busy ? 'Rolling…' : '🎲 Roll stats'}</button>`;
   return `<div class="rowline city-stats" style="flex-wrap:wrap">${link}
@@ -484,12 +490,104 @@ function statsTools(n) {
 // the entry. Pressed again, it writes a new one over the old.
 function fleshHtml(x) {
   const f = S.flesh[x.id];
+  // A named NPC opens a form first: Flesh out on one makes the whole person.
+  const npc = /^npc-/.test(x.id) && !!x.name;
+  const open = npc && S.npcForm?.id === x.id;
   return `<div class="city-flesh">
     ${x.flesh ? `<div class="city-flesh-text small">${x.flesh.split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>` : ''}
-    <button type="button" class="btn btn-sm btn-ghost" onclick="City.flesh('${escJs(x.id)}')" ${f?.busy ? 'disabled' : ''}>
-      ${f?.busy ? 'Writing…' : x.flesh ? '✨ Flesh out again' : '✨ Flesh out'}</button>
+    ${open ? '' : `<button type="button" class="btn btn-sm btn-ghost" onclick="City.${npc ? 'fleshForm' : 'flesh'}('${escJs(x.id)}')"
+      ${f?.busy ? 'disabled' : ''}>${f?.busy ? 'Writing…' : x.flesh ? '✨ Flesh out again' : '✨ Flesh out'}</button>`}
     ${f?.err ? `<span class="small err">${esc(f.err)}</span>` : ''}
+    ${open ? npcFormHtml(x) : ''}
   </div>`;
+}
+
+// ── Flesh out on a named NPC ──
+// One press makes a whole person in the campaign: the prose (as for any
+// entry), a statted sheet from the roller at the level and O.C.C. chosen
+// here, the NPC's role, want, secret and prose in that sheet's notes, and a
+// People dossier linked to the sheet. A dossier is read by every player in
+// the campaign, so it carries only how they look and carry themselves
+// (npcDossier in the engine); everything else is on the sheet, which only the
+// G.M. can open. An unsaved city is saved into the chosen campaign first. A
+// step already done - a sheet, a dossier - is not done twice.
+const campName = (id) => (S.camps || []).find((x) => x.id === id)?.name || `campaign ${id}`;
+function npcFormHtml(n) {
+  const f = S.npcForm;
+  const c = S.city;
+  const has = !!n.sheet_id;
+  const [lo, hi] = levelRange(c, n.role);
+  const occs = [...(S.occs || [])];
+  if (f.occ && !occs.some((o) => o.id === f.occ)) occs.unshift({ id: f.occ, name: f.occ.replace(/-/g, ' ') });
+  const own = (S.camps || []).filter((x) => x.system === c.settings.system);
+  const noCamp = !S.saved && !own.length;
+  return `<form class="city-npc-form" aria-label="Flesh out ${esc(n.name)}" onsubmit="City.fleshNpc('${escJs(n.id)}'); return false;">
+    <div class="rowline" style="flex-wrap:wrap">
+      ${has ? '<span class="small muted">Has a sheet already: this writes the prose again, and makes the dossier if it is missing.</span>'
+        : `<label class="small">Level <input type="number" min="1" max="15" value="${f.level}" style="width:4.5em"
+          onchange="City.npcField('level', this.value)"></label>
+        <span class="small muted">${lo === hi ? `role: ${lo}` : `role: ${lo}-${hi}`}</span>
+        ${wantsOcc(c, n.id) ? `<label class="small">O.C.C. <select onchange="City.npcField('occ', this.value)">
+          <option value="">— choose —</option>
+          ${occs.map((o) => `<option value="${esc(o.id)}"${o.id === f.occ ? ' selected' : ''}>${esc(o.name)}</option>`).join('')}
+        </select></label>` : '<span class="small muted">rolls as their R.C.C. alone</span>'}`}
+      ${S.saved ? `<span class="small">into <b>${esc(campName(S.saved.campaign_id))}</b></span>`
+        : `<label class="small">Campaign <select onchange="City.npcField('campaign', this.value)">
+          ${own.length ? own.map((x) => `<option value="${x.id}"${String(x.id) === String(f.campaign) ? ' selected' : ''}>${esc(x.name)}</option>`).join('')
+            : `<option value="">— none of yours is ${esc(SETTING_LABEL[c.settings.system] || c.settings.system)} —</option>`}
+        </select></label>`}
+    </div>
+    <div class="rowline" style="flex-wrap:wrap;margin-top:6px">
+      <button type="submit" class="btn btn-sm btn-primary" ${f.busy || noCamp ? 'disabled' : ''}>${f.busy ? 'Working…' : '✨ Flesh out'}</button>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="City.closeNpcForm()" ${f.busy ? 'disabled' : ''}>Cancel</button>
+      ${S.saved ? '' : '<span class="small muted">The city is saved into this campaign first.</span>'}
+    </div>
+    ${f.msg ? `<p class="small${f.err ? ' err' : ' muted'}" role="status">${esc(f.msg)}</p>` : ''}
+    ${f.clash ? `<div class="rowline small city-npc-clash" style="flex-wrap:wrap">
+      <span>${esc(n.name)} already has a dossier in this campaign${f.clash.linkedTo && f.clash.linkedTo !== n.sheet_id
+        ? ' - linked to another sheet, which linking replaces' : ''}.</span>
+      <button type="button" class="btn btn-sm" onclick="City.linkExisting('${escJs(n.id)}')" ${f.busy ? 'disabled' : ''}>🔗 Link that dossier</button>
+    </div>` : ''}
+  </form>`;
+}
+async function loadOccs() {
+  if (S.occs) return;
+  try {
+    const res = await api(`classes?system=${encodeURIComponent(S.settings.system)}&category=occ`);
+    S.occs = (res.classes || []).filter((c) => c.category === 'occ').map((c) => ({ id: c.id, name: c.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch { S.occs = []; }
+}
+// The kept city written back: what a sheet or dossier link is saved with.
+async function saveCity() {
+  const { reveal: _r, public: _p, ...summary } = await post(`cities/${S.saved.id}`, 'PATCH', { city: S.city });
+  S.saved = { ...S.saved, ...summary };
+  save();
+}
+// One sheet from the roller, linked from the entry and saved with the city.
+// The roller's refusal is thrown as it comes.
+async function rollSheet(id, overrides) {
+  const body = rollRequest(S.city, id, overrides);
+  const res = await post(`campaigns/${S.saved.campaign_id}/npcs/generate`, 'POST', body);
+  const made = res.npcs?.[0];
+  if (!made) throw new Error(res.refused?.error || 'The roller made nobody');
+  S.city = linkSheet(S.city, id, made.id, made.level ?? body.level);
+  await saveCity();
+  return { body, made };
+}
+// What the roller made, in words. A Rifts human's job is their class_id.
+const rolledAs = (id, body, made) => {
+  const banked = (made.powers_banked || 0) + (made.picks_pending || 0);
+  const job = body.occ_class_id || (body.class_id !== S.city.npcs.find((n) => n.id === id)?.raceId ? body.class_id : null);
+  return `Rolled as ${job ? 'a ' + job.replace(/-/g, ' ') : 'their race alone'} at level ${made.level ?? body.level}${
+    banked ? `; ${banked} pick${banked === 1 ? '' : 's'} banked on the sheet` : ''}`;
+};
+// The dossier linked to the entry's sheet, and the link kept with the city.
+async function joinDossier(id, dossierId) {
+  const n = S.city.npcs.find((x) => x.id === id);
+  await post(`campaigns/${S.saved.campaign_id}/npcs/${dossierId}`, 'PATCH', { character_id: n.sheet_id });
+  S.city = linkDossier(S.city, id, dossierId);
+  await saveCity();
 }
 
 // ── shop inventories (Phase 4b) ──
@@ -569,7 +667,7 @@ function cityHtml() {
   </div>
 
   <div class="panel"><h3 style="margin-top:0">Named NPCs <span class="muted small">— ${c.npcs.length}</span></h3>
-    ${c.npcs.map((n) => card(n.id, `<p><b>${esc(n.name || '(unnamed)')}</b> <span class="muted small">${esc(n.race)}, ${esc(n.role)}</span></p>
+    ${c.npcs.map((n) => card(n.id, `<p><b>${esc(n.name || '(unnamed)')}</b> <span class="muted small">${esc(n.race)}, ${esc(n.role)}, level ${npcLevel(c, n.id)}</span></p>
       <p class="small">${esc(n.look)}; ${esc(n.quirk)}. Wants ${esc(n.want)}.
       <span class="gm-secret">Secret: ${esc(n.secret)}.</span></p>
       ${fleshHtml(n)}
@@ -603,6 +701,15 @@ async function loadCamps() {
 const post = (path, method, body) => api(path, { method, headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body) });
 function keepFail(err) { S.keepMsg = err.message; S.keepErr = true; render(); }
+// A city not yet kept, saved into one of the G.M.'s campaigns: by Save, and
+// by Flesh out on an NPC, whose sheet and dossier need a campaign to be in.
+async function keepInto(campaignId) {
+  if (!campaignId) throw new Error('Choose a campaign to keep the city in');
+  const res = await post(`campaigns/${campaignId}/cities`, 'POST', { city: S.city });
+  S.saved = res.city; S.dirty = false;
+  S.keepMsg = `Kept ${res.city.name}. Nothing is shown to the players until you say so.`; S.keepErr = false;
+  save();
+}
 // A reroll or an edit to a saved city marks it changed; Save puts it back.
 function changed() { if (S.saved) S.dirty = true; }
 
@@ -657,7 +764,7 @@ window.City = {
     else if (key === 'npcCount') s.npcCount = num(value, 0, 200);
     else if (key === 'everyRace') s.everyRace = !!value;
     else if (key === 'system') {
-      s.system = value; S.rccs = null;
+      s.system = value; S.rccs = null; S.occs = null; S.npcForm = null;
       // A saved theme belongs to one game, so the list is the new game's.
       S.library = null; loadLibrary().then(render);
       // Races are the setting's own: a row the new setting has no class for
@@ -816,10 +923,7 @@ window.City = {
         S.saved = { ...S.saved, ...summary };
         S.keepMsg = 'Saved.';
       } else {
-        const campaignId = Number($('keep-camp')?.value);
-        const res = await post(`campaigns/${campaignId}/cities`, 'POST', { city: S.city });
-        S.saved = res.city;
-        S.keepMsg = `Kept ${res.city.name}. Nothing is shown to the players until you say so.`;
+        await keepInto(Number($('keep-camp')?.value));
       }
       S.dirty = false;
       save(); render();
@@ -891,22 +995,14 @@ window.City = {
     } catch (err) { S.stockMsg = 'Could not stock the shops: ' + err.message; }
     render();
   },
+  // At the NPC's own level (npcLevel), the one Flesh out's form starts from.
+  // The link is part of the kept city: saved at once, like a reveal.
   async rollStats(id) {
     S.rolls[id] = { busy: true };
     render();
     try {
-      const body = rollRequest(S.city, id);
-      const res = await post(`campaigns/${S.saved.campaign_id}/npcs/generate`, 'POST', body);
-      const made = res.npcs?.[0];
-      if (!made) throw new Error(res.refused?.error || 'The roller made nobody');
-      S.city = linkSheet(S.city, id, made.id);
-      // The link is part of the kept city: saved at once, like a reveal.
-      const { reveal: _r, public: _p, ...summary } = await post(`cities/${S.saved.id}`, 'PATCH', { city: S.city });
-      S.saved = { ...S.saved, ...summary };
-      const banked = (made.powers_banked || 0) + (made.picks_pending || 0);
-      S.rolls[id] = { msg: `Rolled as ${body.occ_class_id ? 'a ' + body.occ_class_id.replace(/-/g, ' ') : 'their race alone'}${
-        banked ? `; ${banked} pick${banked === 1 ? '' : 's'} banked on the sheet` : ''}.` };
-      save();
+      const { body, made } = await rollSheet(id);
+      S.rolls[id] = { msg: rolledAs(id, body, made) + '.' };
     } catch (err) {
       // The roller's own words - a race that bars the job, a class it cannot build.
       S.rolls[id] = { msg: err.message, err: true };
@@ -915,11 +1011,11 @@ window.City = {
   },
   // One call for one entry. A kept city saves the answer at once, like a
   // rolled sheet: it cost a call, and "Save changes" is easy to forget.
-  async flesh(id) {
+  async flesh(id, opts) {
     S.flesh[id] = { busy: true };
     render();
     try {
-      const { system, prompt } = fleshPrompt(S.city, id);
+      const { system, prompt } = fleshPrompt(S.city, id, opts);
       const res = await claudeRequest({ model: MODEL, max_tokens: 4000, system,
         messages: [{ role: 'user', content: prompt }] });
       if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off before it finished - try again');
@@ -933,6 +1029,84 @@ window.City = {
     } catch (err) {
       S.flesh[id] = { err: err.message };
     }
+    render();
+    return !S.flesh[id].err;
+  },
+  async fleshForm(id) {
+    const c = S.city;
+    const own = (S.camps || []).filter((x) => x.system === c.settings.system);
+    S.npcForm = { id, level: npcLevel(c, id), occ: wantsOcc(c, id) ? npcOcc(c, id) || '' : '',
+      campaign: S.saved?.campaign_id ?? own[0]?.id ?? '', msg: '', err: false };
+    render();
+    await loadOccs();
+    render();
+  },
+  npcField(key, value) {
+    if (!S.npcForm) return;
+    S.npcForm[key] = key === 'level' ? Math.max(1, Math.min(15, Math.trunc(Number(value)) || 1)) : value;
+  },
+  closeNpcForm() { S.npcForm = null; render(); },
+  // In order: the city saved if it is not, the prose, the sheet, its notes,
+  // the dossier and its link. A failure stops there and says so; what was
+  // done before it stays done, so pressing again finishes the rest.
+  async fleshNpc(id) {
+    const f = S.npcForm;
+    if (!f || f.id !== id || f.busy) return;
+    const step = (msg) => { f.msg = msg; f.err = false; render(); };
+    f.busy = true; f.clash = null;
+    try {
+      if (!S.saved) {
+        step('Saving the city into the campaign…');
+        await keepInto(Number(f.campaign));
+      }
+      step('Writing the prose…');
+      const opts = S.city.npcs.find((n) => n.id === id).sheet_id ? {} : { level: f.level, occ: f.occ };
+      if (!(await City.flesh(id, opts))) throw new Error('The prose was not written, so nothing else was made');
+      let n = S.city.npcs.find((x) => x.id === id);
+      let rolled = '';
+      if (!n.sheet_id) {
+        step('Rolling the sheet…');
+        try {
+          const { body, made } = await rollSheet(id, { level: f.level, occ: f.occ });
+          rolled = rolledAs(id, body, made);
+        } catch (err) {
+          throw new Error(`The prose is kept. No sheet: ${err.message}`);
+        }
+        // Only the G.M. can open an NPC sheet, so the secret goes here.
+        await post(`characters/${S.city.npcs.find((x) => x.id === id).sheet_id}`, 'PATCH', { notes: npcNotes(S.city, id) });
+      }
+      n = S.city.npcs.find((x) => x.id === id);
+      if (!n.dossier_id) {
+        step('Making the dossier…');
+        try {
+          const res = await post(`campaigns/${S.saved.campaign_id}/npcs`, 'POST', npcDossier(S.city, id));
+          await joinDossier(id, res.npc.id);
+        } catch (err) {
+          if (err.status !== 409 || !err.detail?.npc_id) throw err;
+          // Names are unique per campaign: offer the one that is there.
+          const there = await api(`campaigns/${S.saved.campaign_id}/npcs/${err.detail.npc_id}`).catch(() => null);
+          f.clash = { npc_id: err.detail.npc_id, linkedTo: there?.npc?.character_id ?? null };
+          f.busy = false; f.msg = rolled ? rolled + '.' : ''; f.err = false;
+          return render();
+        }
+      }
+      S.npcForm = null;
+      S.rolls[id] = { msg: `${rolled ? rolled + ', and' : 'Written, and'} in People as a dossier linked to the sheet.` };
+      render();
+    } catch (err) {
+      if (S.npcForm === f) { f.busy = false; f.msg = err.message; f.err = true; }
+      render();
+    }
+  },
+  async linkExisting(id) {
+    const f = S.npcForm;
+    if (!f?.clash || f.busy) return;
+    f.busy = true; render();
+    try {
+      await joinDossier(id, f.clash.npc_id);
+      S.npcForm = null;
+      S.rolls[id] = { msg: 'Linked to the dossier already in People.' };
+    } catch (err) { f.busy = false; f.msg = err.message; f.err = true; }
     render();
   },
   forget() { S.saved = null; S.dirty = false; S.keepMsg = ''; save(); render(); },
