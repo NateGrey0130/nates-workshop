@@ -370,7 +370,7 @@ ol.powers li { padding: 5px 0; }
   body { background: #fff; color: #000; }
   /* Whichever tab is open prints: the hero card from the generator, the sheet
      from My heroes. The controls around each never do. */
-  .masthead, .tabs, .step, .gen-bar, .hero-list-panel, .sheet-tools { display: none !important; }
+  .masthead, .tabbar, .tabs, .step, .gen-bar, .hero-list-panel, .sheet-tools { display: none !important; }
   .heroes { display: block !important; }
   .sheet input, .sheet textarea { border: 0; border-bottom: 1px solid #000; background: #fff; min-height: 0; }
   .sheet input::placeholder { color: transparent; }
@@ -506,6 +506,36 @@ table.gear th[scope="row"] { min-width: 10em; }
   .pb-readout { display: none !important; }
   .sheet .sh-bottom.single { grid-template-columns: 1fr !important; }
 }
+
+/* -- the codex (codex/) and the link to it from the tab bar -- */
+.tabbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 12px; max-width: 1080px; margin: 18px auto 0; padding: 0 16px; }
+.tabbar .tabs { margin: 0; padding: 0; max-width: none; }
+.tab-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab-link {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font-family: var(--font-display); font-stretch: 75%; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em; font-size: 16px;
+  padding: 8px 16px; border: 3px solid var(--rule); border-radius: var(--radius);
+  background: var(--red); color: var(--on-red); text-decoration: none; box-shadow: 3px 3px 0 var(--rule);
+}
+.codex-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+.codex-list > .panel { margin: 0; }
+.codex-card.open { grid-column: 1 / -1; }
+.codex-head { margin: 0; font-size: 20px; }
+.codex-head button {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; width: 100%; min-height: 44px;
+  padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 700; text-align: left; cursor: pointer;
+}
+.codex-head button::after { content: '+'; margin-left: auto; font-family: var(--font-display); font-weight: 900; font-size: 22px; }
+.codex-head button[aria-expanded="true"]::after { content: '\2212'; }
+.codex-head .tag { font-size: 12px; font-family: var(--font-body); }
+.codex-meta { margin: 2px 0 6px; font-size: 14px; }
+.codex-sum { margin: 0; }
+.codex-body { border-top: 3px solid var(--rule); margin-top: 12px; padding-top: 10px; }
+.codex-stats { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 10px; }
+.codex-stats dt { font-weight: 700; }
+.codex-stats dd { margin: 0; }
+.codex-intro { max-height: 45vh; overflow-y: auto; }
 
 /* -- Campaigns and GM tools (campaign/, gm/) -- */
 .mast-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; justify-content: flex-end; }

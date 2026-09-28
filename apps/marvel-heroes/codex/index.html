@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvel Codex &mdash; Nate's Workshop</title>
+<!-- Home-screen and tab icon, as every standalone app carries them.
+     apps/pick3cut5 deliberately has NO icon links; see apps/_template. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#b81d24">
+<!-- The Marvel app's own stylesheet ONLY, one directory up. No /shared/styles.css:
+     see the header of that file. -->
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="title">Marvel Codex</div>
+    <div class="tagline">Every Power, Talent, Contact, Weakness and piece of gear the app knows</div>
+  </div>
+  <a href="../" class="home">&larr; Marvel Heroes</a>
+</header>
+
+<nav class="tabs" id="codex-tabs" role="tablist" aria-label="Codex sections"></nav>
+
+<main id="app">
+  <p id="load-error" class="panel error" role="alert" hidden></p>
+
+  <section id="codex-panel" role="tabpanel">
+    <div class="panel">
+      <span class="caption" id="codex-source"></span>
+      <h1 id="codex-heading">Codex</h1>
+      <div class="fields">
+        <label>Search a name or a word
+          <input id="codex-query" type="search" autocomplete="off">
+        </label>
+        <label><span id="codex-group-label">Group</span>
+          <select id="codex-group"></select>
+        </label>
+      </div>
+      <p id="codex-count" class="muted" aria-live="polite"></p>
+    </div>
+    <section id="codex-intro" class="panel alt codex-intro" hidden></section>
+    <div id="codex-list" class="codex-list"></div>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

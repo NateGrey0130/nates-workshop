@@ -20,13 +20,10 @@
     <div class="title">Marvel Heroes</div>
     <div class="tagline">FEATs, Powers and heroes, from the Ultimate Powers Book</div>
   </div>
-  <nav class="mast-links" aria-label="Marvel Heroes pages">
-    <a href="campaign/">Campaigns</a>
-    <a href="gm/">GM tools</a>
-    <a href="/" class="home">&larr; workshop</a>
-  </nav>
+  <a href="/" class="home">&larr; workshop</a>
 </header>
 
+<div class="tabbar">
 <nav class="tabs" role="tablist" aria-label="Marvel Heroes">
   <button type="button" role="tab" id="tab-feat" data-tab="feat" aria-controls="panel-feat" aria-selected="true">FEAT roller</button>
   <button type="button" role="tab" id="tab-powers" data-tab="powers" aria-controls="panel-powers" aria-selected="false">Powers</button>
@@ -35,6 +32,16 @@
   <button type="button" role="tab" id="tab-heroes" data-tab="heroes" aria-controls="panel-heroes" aria-selected="false">My heroes</button>
   <button type="button" role="tab" id="tab-gear" data-tab="gear" aria-controls="panel-gear" aria-selected="false">Gear</button>
 </nav>
+<!-- A page of its own rather than a tab: the codex is every list at once, and a link
+     keeps its address (?section=, ?q=) shareable. -->
+<!-- Campaigns and GM tools are pages of their own for the same reason: each
+     keeps its campaign in its address (?c=). -->
+<div class="tab-links">
+  <a class="tab-link" href="codex/">Codex</a>
+  <a class="tab-link" href="campaign/">Campaigns</a>
+  <a class="tab-link" href="gm/">GM tools</a>
+</div>
+</div>
 
 <main id="app">
   <p id="load-error" class="panel error" role="alert" hidden></p>
