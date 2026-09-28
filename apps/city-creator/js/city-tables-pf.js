@@ -897,6 +897,24 @@ export const ROLE_OCC = {
 };
 // A shop owner ("owner of The Golden Anvil") keeps shop: a merchant.
 export const OWNER_OCC = 'merchant';
+
+// The level range each role rolls in, [lowest, highest]: a commoner 1-2, a
+// tradesman or a guard 2-4, a sergeant or an officer above that, a judge or a
+// noble with the city's weight 6-9. The city's seed picks the level inside it
+// (levelRange/rollLevel in city-engine.js), so a kept city keeps its levels.
+// Every role in NPC_ROLES is here; the test suite fails on one that is not.
+export const ROLE_LEVEL = {
+  innkeeper: [2, 4], blacksmith: [2, 4], 'guard sergeant': [3, 5], priest: [3, 6], merchant: [2, 4],
+  fisher: [1, 2], farmer: [1, 2], thief: [2, 4], scholar: [2, 5], healer: [2, 5], soldier: [2, 4], noble: [4, 7],
+  beggar: [1, 2], minstrel: [1, 3], moneylender: [2, 4], carpenter: [1, 2], 'stable-hand': [1, 2],
+  herbalist: [1, 3], ferryman: [1, 2], 'tax collector': [2, 4], gravedigger: [1, 2], miller: [1, 2],
+  hunter: [2, 4], tailor: [1, 2], sailor: [1, 3], 'guild clerk': [2, 4], 'fortune-teller': [2, 4],
+  'retired adventurer': [5, 8], 'city watchman': [2, 4], smuggler: [2, 4], baker: [1, 2], brewer: [1, 2],
+  mason: [1, 2], courtesan: [1, 3], judge: [6, 9], 'hedge wizard': [2, 5], pilgrim: [1, 2], cook: [1, 2],
+  'rat-catcher': [1, 2], lamplighter: [1, 2],
+};
+// A shop owner is a shopkeeper.
+export const OWNER_LEVEL = [2, 4];
 export const PLACES_THEME = 'pf-places';
 
 // Shop inventories (Phase 4b): what each kind of shop sells, as rules over the

@@ -24,9 +24,10 @@ as an app**. Five pages link its stylesheet and pull modules out of its `js/`:
 the Creator, the Sheet, the Codex, Campaign and GM Tools.
 `apps/character-creator/js/api.js` is loaded by all five;
 `apps/character-creator/js/derive.js`,
-`apps/character-creator/js/picker.js`,
-`apps/character-creator/js/downscale.js` and
+`apps/character-creator/js/picker.js` and
 `apps/character-creator/js/campaign-list.js` by two or three each.
+Campaign and GM Tools also load `shared/js/campaign/`, the campaign views
+every game shares, which the Palladium sheet styles through their `mc-` classes.
 
 So *"I changed the sheet and the sheet looks right"* is no longer the check it
 used to be. **Ask which pages load the file before deciding what to look at:**

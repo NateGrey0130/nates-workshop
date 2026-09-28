@@ -185,9 +185,22 @@ On a kept city, each named NPC has **🎲 Roll stats**. It sends them to the
 ordinary NPC roller (`campaigns/:id/npcs/generate`, `js/npc-generate.js`) in
 the city's campaign as their race's R.C.C. with the job their role maps to
 (`ROLE_OCC` in the tables: commoners are Vagabonds/Peasants, a guard is a
-Soldier, a shop owner a Merchant), under their own name. The sheet it makes is a
+Soldier, a shop owner a Merchant), under their own name, **at their own level**.
+The sheet it makes is a
 statted NPC in that campaign like any other, and the entry keeps a **📜 open
 sheet** link to it; rerolling the entry makes a new person and drops the link.
+
+**An NPC's level scales with their role.** Every role in the tables has a range
+beside its job (`ROLE_LEVEL`; `OWNER_LEVEL` for a shop owner): a commoner 1-2,
+a tradesman, shopkeeper or guard 2-4, a sergeant 3-5, a retired adventurer 5-8,
+a judge or a town elder 6-9. A theme's roles may carry their own range
+(`roleLevel`, asked for beside each role's class), and a role nobody gave a
+range is level 1. The level inside the range is drawn from the city's seed,
+the entry and its role - never from a section's generator, so no other draw
+moved - and is stored on the NPC, so a lock keeps it through a reroll of the
+city and the card shows it. A city kept before levels draws the same one from
+its seed (`npcLevel`). The test suite fails if a role in either table file
+has no range.
 A themed city's NPC rolls as the class the theme gave their role; a role the
 theme gave none shows that in place of the button, since there is no job to
 send (`rollBlocker` in the engine) - except a Rifts race that is its R.C.C.
@@ -226,6 +239,42 @@ revealed place to prove it.
 
 Quirks and rumours have no button: each is one line, and a paragraph about a
 rumour would decide what the G.M. has not.
+
+### Flesh out on a named NPC makes the whole person
+
+On a named NPC, **✨ Flesh out** opens a small form first: the **level**
+(filled in from their role, with the role's range beside it), the **O.C.C.**
+(filled in from their role, and any of the game's O.C.C.s instead - a Rifts
+race that is its R.C.C. alone shows none), and the **campaign**. On an unsaved
+city the campaign is a choice, and the city is saved into it first; on a kept
+one it is the city's own. Then, in order, one press:
+
+1. writes the prose, as above, told the level and O.C.C. chosen;
+2. rolls the sheet (`campaigns/:id/npcs/generate`) at that level and O.C.C.,
+   and links it from the entry, as Roll stats does;
+3. writes the NPC's role, look, want, **secret** and the prose into that
+   sheet's notes;
+4. makes their People dossier (`POST campaigns/:id/npcs`) and links it to the
+   sheet (`PATCH …/npcs/:npcId { character_id }`). The entry keeps both ids,
+   `sheet_id` and `dossier_id`, and shows a link to each.
+
+**The secret never goes in the dossier.** A dossier is read by every player in
+the campaign, so its description is only how the NPC looks and carries
+themselves (`npcDossier` in the engine), and its status is *never met*. The
+secret, what they want, their job and the prose are on the sheet, which a
+player cannot open (`isHiddenNpc`).
+
+A dossier name is unique in a campaign, whatever its case. When the NPC's name
+is taken, the form says so and offers **🔗 Link that dossier** - saying when it
+is already linked to another sheet, which linking replaces - rather than
+making a second one.
+
+A step that fails stops the rest and says why; what was done before it stays
+done, and pressing again does only what is missing. **When the roller refuses**
+- a race that bars the job, a theme's role with no class and no O.C.C. chosen -
+the prose is kept and the form shows the roller's reason. On an NPC that
+already has a sheet, the form only writes the prose again and makes the
+dossier if there is none.
 
 ## Rifts
 

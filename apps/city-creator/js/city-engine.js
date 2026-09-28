@@ -221,8 +221,20 @@ function checkPeople(pack, T) {
     if (!rollable.has(occ)) throw new Error(`The theme's "${role}" rolls as "${occ}", which the setting cannot roll`);
     roleOcc[role] = occ;
   }
-  return { tables, roleOcc };
+  // A theme's role may carry its own level range; one without rolls at 1.
+  const roleLevel = {};
+  for (const [role, range] of Object.entries(pack.roleLevel || {})) {
+    if (!tables.NPC_ROLES.includes(role)) throw new Error(`The theme gives "${role}" a level, but it is not one of its roles`);
+    if (!validRange(range)) {
+      throw new Error(`The theme's "${role}" levels ${JSON.stringify(range)} are not a range from 1 to ${MAX_NPC_LEVEL}`);
+    }
+    roleLevel[role] = [range[0], range[1]];
+  }
+  return { tables, roleOcc, ...(Object.keys(roleLevel).length ? { roleLevel } : {}) };
 }
+const MAX_NPC_LEVEL = 15;
+const validRange = (r) => Array.isArray(r) && r.length === 2 && r.every((x) => Number.isInteger(x) && x >= 1 && x <= MAX_NPC_LEVEL)
+  && r[0] <= r[1];
 function checkBuildings(pack, T, settings, prompt) {
   const tables = partTables(pack, THEME_PARTS.buildings);
   const taken = new Set(settingShopLabels(T).map((l) => l.toLowerCase()));
@@ -287,6 +299,7 @@ export function validateThemePack(pack, settings) {
   return { v: 1, system: settings.system, title: overview.title || prompt.slice(0, 80), prompt,
     tables: Object.fromEntries(THEME_TABLES.map((k) => [k, all[k]])),
     shopTypes: buildings.shopTypes, roleOcc: people.roleOcc, mapStyle: buildings.mapStyle,
+    ...(people.roleLevel ? { roleLevel: people.roleLevel } : {}),
     overviewExtras: overview.overviewExtras,
     ...(buildings.raceLines ? { raceLines: buildings.raceLines } : {}),
     ...(pack.names ? { names: checkPool(pack.names, []) } : {}) };
@@ -330,7 +343,8 @@ The city's peoples: ${(settings.races || []).map((x) => x.name).join(', ')}.
   }
   if (part === 'people') {
     return { system: THEME_SYSTEM, schema: S_OBJ({ tables: S_TABLES(THEME_PARTS.people),
-      roleOcc: { type: 'array', items: S_OBJ({ role: S_STR, occ: { type: 'string', enum: rollableOccs(T) } }) } }),
+      roleOcc: { type: 'array', items: S_OBJ({ role: S_STR, occ: { type: 'string', enum: rollableOccs(T) },
+        minLevel: { type: 'integer' }, maxLevel: { type: 'integer' } }) } }),
     prompt: `${intro}
 Write, in "tables":
 - NPC_ROLES: 40 jobs or roles a townsperson has, lower case, one to three words, ${ex(T, 'NPC_ROLES')}
@@ -338,8 +352,10 @@ Write, in "tables":
 - PERSONALITIES: 40 habits or manners, lower case, ${ex(T, 'PERSONALITIES')}
 - WANTS: 40 things a person wants, lower case, starting "to", ${ex(T, 'WANTS')}
 - SECRETS: 40 secrets, lower case, ${ex(T, 'SECRETS')}
-And in "roleOcc", for as many of your NPC_ROLES as fit, the role exactly as written there and the class a person in `
-      + `that job would be as a game character.` };
+And in "roleOcc", for as many of your NPC_ROLES as fit, the role exactly as written there, the class a person in `
+      + `that job would be as a game character, and the level range they would be ("minLevel" to "maxLevel", 1 to `
+      + `${MAX_NPC_LEVEL}): a commoner 1-2, a shopkeeper or a guard 2-4, a captain 5-7, a guildmaster or a high priest 6-9, `
+      + `a ruler 8-12.` };
   }
   if (part === 'buildings') {
     const named = namedRaces(settings, text);
@@ -408,7 +424,11 @@ export function parseThemePart(part, text, settings, prompt) {
     // A pair for a role the answer did not list could never be drawn: dropped.
     const roles = new Set(Array.isArray(pack.tables.NPC_ROLES) ? pack.tables.NPC_ROLES.map((x) => String(x).trim()) : []);
     const pairs = (Array.isArray(v.roleOcc) ? v.roleOcc : []).filter((x) => roles.has(String(x?.role).trim()));
-    return checkPeople({ ...pack, roleOcc: Object.fromEntries(pairs.map((x) => [String(x.role).trim(), x.occ])) }, T);
+    // A pair's level range is kept only when it is one; a bad range loses
+    // its level (the role rolls at 1), not the whole part.
+    const ranged = pairs.filter((x) => validRange([x.minLevel, x.maxLevel]));
+    return checkPeople({ ...pack, roleOcc: Object.fromEntries(pairs.map((x) => [String(x.role).trim(), x.occ])),
+      roleLevel: Object.fromEntries(ranged.map((x) => [String(x.role).trim(), [x.minLevel, x.maxLevel]])) }, T);
   }
   if (part === 'buildings') return checkBuildings(pack, T, settings, prompt);
   if (part === 'overview') return checkOverview(pack);
@@ -421,7 +441,7 @@ export function assembleThemePack(prompt, parts, settings) {
   const { people, buildings, overview, streets, names } = parts;
   return validateThemePack({ prompt, title: overview.title,
     tables: { ...people.tables, ...buildings.tables, ...overview.tables, ...streets.tables },
-    roleOcc: people.roleOcc, shopTypes: buildings.shopTypes, mapStyle: buildings.mapStyle,
+    roleOcc: people.roleOcc, roleLevel: people.roleLevel, shopTypes: buildings.shopTypes, mapStyle: buildings.mapStyle,
     raceLines: buildings.raceLines, overviewExtras: overview.overviewExtras, names }, settings);
 }
 
@@ -445,7 +465,7 @@ export function validateSavedTheme(pack) {
 export function themeParts(pack) {
   const pick = (part) => Object.fromEntries(THEME_PARTS[part].map((k) => [k, pack.tables[k]]));
   return {
-    people: { tables: pick('people'), roleOcc: { ...pack.roleOcc } },
+    people: { tables: pick('people'), roleOcc: { ...pack.roleOcc }, ...(pack.roleLevel ? { roleLevel: { ...pack.roleLevel } } : {}) },
     buildings: { tables: pick('buildings'), shopTypes: pack.shopTypes, mapStyle: pack.mapStyle,
       ...(pack.raceLines ? { raceLines: pack.raceLines } : {}) },
     overview: { tables: pick('overview'), overviewExtras: pack.overviewExtras, title: pack.title },
@@ -465,7 +485,8 @@ export function editThemeTable(parts, key, lines, settings, prompt) {
   if (part === 'people') {
     const roles = new Set((Array.isArray(value.tables.NPC_ROLES) ? value.tables.NPC_ROLES : []).map((x) => String(x).trim()));
     const roleOcc = Object.fromEntries(Object.entries(value.roleOcc || {}).filter(([r]) => roles.has(r)));
-    return [part, checkPeople({ ...value, roleOcc }, T)];
+    const roleLevel = Object.fromEntries(Object.entries(value.roleLevel || {}).filter(([r]) => roles.has(r)));
+    return [part, checkPeople({ ...value, roleOcc, roleLevel }, T)];
   }
   if (part === 'buildings') return [part, checkBuildings(value, T, settings, prompt)];
   if (part === 'overview') return [part, checkOverview(value)];
@@ -756,6 +777,32 @@ function context(settings, pool, used = [], theme = null) {
 }
 const sectionRng = (seed, section, n = 0) => rng(hash(seed, section, n));
 
+// ── NPC levels ──
+//
+// A named NPC's level scales with their role: ROLE_LEVEL in the setting's
+// tables, a theme's own `roleLevel` for its roles, OWNER_LEVEL for a shop
+// owner, and 1 for a role none of them names. The level inside that range is
+// drawn from its own generator - the city seed, the entry, its role and its
+// reroll count - never from a section's, so adding it moved no other draw.
+// It is stored on the NPC once the role is final (assignOwners renames
+// owners), so a lock keeps it through a reroll of the city, whose seed is new.
+export function levelRange(city, role) {
+  const T = TABLES[city.settings.system];
+  if (/^owner of /.test(role)) return T.OWNER_LEVEL;
+  return city.theme?.pack.roleLevel?.[role] || T.ROLE_LEVEL[role] || [1, 1];
+}
+const rollLevel = (city, n) => between(rng(hash(city.seed, 'level', n.id, n.role, city.rolls?.[n.id] || 0)),
+  levelRange(city, n.role));
+function withLevels(city, skip = new Set()) {
+  for (const n of city.npcs) if (!skip.has(n.id)) n.level = rollLevel(city, n);
+}
+// A city kept before levels has none stored: its NPCs roll theirs the same way.
+export function npcLevel(city, npcId) {
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  return Number.isInteger(n.level) ? n.level : rollLevel(city, n);
+}
+
 /**
  * A new city.
  *   settings  { system, population, npcCount, races: [{ id, name, pct }], everyRace }
@@ -790,6 +837,7 @@ export function generateCity(settings, seed, pool = null, theme = null) {
   const rn = sectionRng(seed, 'npcs');
   city.npcs = npcRaces(ctx, rn).map((race, i) => makeNpc(ctx, rn, i, race));
   assignOwners(city, sectionRng(seed, 'owners'));
+  withLevels(city);
   city.quirks = makeQuirks(ctx, sectionRng(seed, 'quirks'), city);
   city.rumours = makeRumours(ctx, sectionRng(seed, 'rumours'), city);
   city.warnings = [...ctx.warnings];
@@ -822,6 +870,7 @@ export function rerollCity(city, seed) {
   // Names on a kept entry may now appear on a fresh one too: rename those.
   dedupeNames(out, locked);
   assignOwners(out, sectionRng(seed, 'owners'));
+  withLevels(out, locked);
   out.rumours.forEach((x, i) => { x.roll = i + 1; });
   return out;
 }
@@ -886,6 +935,7 @@ export function rerollEntry(city, id) {
     const fresh = makeNpc(ctx, r, i, race);
     out.npcs[i] = { ...fresh, id };
     for (const s of out.shops) if (s.owner === id && !/owner/.test(fresh.role)) out.npcs[i].role = `owner of ${s.name || 'a shop'}`;
+    out.npcs[i].level = rollLevel(out, out.npcs[i]);
   } else if (id.startsWith('quirk-')) {
     const i = at(out.quirks);
     const got = drawFree(ctx, r, 'CITY_QUIRKS', new Set(out.quirks.map((q) => q.text)));
@@ -991,37 +1041,60 @@ export function rollBlocker(city, npcId) {
   return `The theme gave "${n.role}" no class to roll as, so there is nothing to roll`;
 }
 
-export function rollRequest(city, npcId) {
+// The job O.C.C. an NPC's role maps to, or null for none. A theme's role
+// rolls as the class the theme mapped it to (checked against the setting's own
+// list when the theme was made); a role it did not map, as the setting's own
+// role does.
+export function npcOcc(city, npcId) {
   const T = TABLES[city.settings.system];
   const n = city.npcs.find((x) => x.id === npcId);
   if (!n) throw new Error(`No NPC ${npcId}`);
-  const blocked = rollBlocker(city, npcId);
+  return /^owner of /.test(n.role) ? T.OWNER_OCC : city.theme?.pack.roleOcc?.[n.role] || T.ROLE_OCC[n.role] || null;
+}
+// Whether the roller takes a job O.C.C. for this NPC at all. Rifts: a human is
+// their job's O.C.C. alone, and another race their R.C.C. alone unless that
+// R.C.C. takes an occupation - the race row's `takesOcc`, which the page
+// copies from the roller's own rule (needsOccupation in js/parser.js) when the
+// race is chosen. Every Palladium Fantasy race takes one.
+export function wantsOcc(city, npcId) {
+  const T = TABLES[city.settings.system];
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  if (T.RACE_TAKES_OCC !== false || n.raceId === T.HUMAN.id) return true;
+  return !!(city.settings.races || []).find((x) => x.id === n.raceId)?.takesOcc;
+}
+
+// The roller's request. `level` and `occ` are the G.M.'s overrides from the
+// Flesh out form; without them, the NPC's own level (npcLevel) and their
+// role's O.C.C. An O.C.C. the G.M. chose lifts the theme's block, since the
+// block is only that no class was named.
+export function rollRequest(city, npcId, { level, occ: chosen } = {}) {
+  const T = TABLES[city.settings.system];
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  const picked = typeof chosen === 'string' && chosen.trim() ? chosen.trim() : null;
+  const blocked = !picked && rollBlocker(city, npcId);
   if (blocked) throw new Error(blocked);
-  // A theme's role rolls as the class the theme mapped it to (checked against
-  // the setting's own list when the theme was made); a role it did not map, as
-  // the setting's own role does - or, above, not at all.
-  const occ = /^owner of /.test(n.role) ? T.OWNER_OCC
-    : city.theme?.pack.roleOcc?.[n.role] || T.ROLE_OCC[n.role] || null;
-  const named = n.name ? { name: n.name } : {};
-  // Rifts: a human is their job's O.C.C. alone. Another race is their R.C.C.
-  // alone, unless that R.C.C. takes an occupation - the race row's `takesOcc`,
-  // which the page copies from the roller's own rule (needsOccupation in
-  // js/parser.js) when the race is chosen.
-  if (T.RACE_TAKES_OCC === false) {
-    if (n.raceId === T.HUMAN.id) return { class_id: occ, level: 1, count: 1, ...named };
-    const race = (city.settings.races || []).find((x) => x.id === n.raceId);
-    return race?.takesOcc
-      ? { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...named }
-      : { class_id: n.raceId, level: 1, count: 1, ...named };
-  }
-  return { class_id: n.raceId, occ_class_id: occ, level: 1, count: 1, ...named };
+  const occ = picked || npcOcc(city, npcId);
+  const lv = Number.isInteger(level) && level >= 1 ? Math.min(level, MAX_NPC_LEVEL) : npcLevel(city, npcId);
+  const common = { level: lv, count: 1, ...(n.name ? { name: n.name } : {}) };
+  if (T.RACE_TAKES_OCC === false && n.raceId === T.HUMAN.id) return { class_id: occ, ...common };
+  return wantsOcc(city, npcId) ? { class_id: n.raceId, occ_class_id: occ, ...common } : { class_id: n.raceId, ...common };
 }
 
 // The link from the city's entry to the sheet the roller made: the sheet's id
 // on the entry. A reroll of the entry makes a new person and drops the link;
 // the sheet stays in the campaign, as any statted NPC does.
-export function linkSheet(city, npcId, sheetId) {
-  return { ...city, npcs: city.npcs.map((n) => (n.id === npcId ? { ...n, sheet_id: sheetId } : n)) };
+// `level`, when given, is the level the sheet was rolled at: a G.M.'s choice on
+// the Flesh out form replaces the role's, so the card and the sheet agree.
+export function linkSheet(city, npcId, sheetId, level) {
+  return { ...city, npcs: city.npcs.map((n) => (n.id === npcId
+    ? { ...n, sheet_id: sheetId, ...(Number.isInteger(level) ? { level } : {}) } : n)) };
+}
+// The People dossier Flesh out made or linked for the entry, the same way: a
+// reroll of the entry drops it, and the dossier stays in the campaign.
+export function linkDossier(city, npcId, dossierId) {
+  return { ...city, npcs: city.npcs.map((n) => (n.id === npcId ? { ...n, dossier_id: dossierId } : n)) };
 }
 export const tablesFor = (system) => TABLES[system] || null;
 
@@ -1092,7 +1165,9 @@ function fleshEntry(city, id) {
   return { kind, entry };
 }
 
-export function fleshPrompt(city, id) {
+// `opts` carries what the Flesh out form chose for an NPC - { level, occ } -
+// so the prose and the sheet rolled beside it describe the same person.
+export function fleshPrompt(city, id, opts = {}) {
   const { kind, entry: e } = fleshEntry(city, id);
   const o = city.overview;
   const npcName = (nid) => city.npcs.find((n) => n.id === nid)?.name || null;
@@ -1102,7 +1177,7 @@ export function fleshPrompt(city, id) {
     shop: () => `the ${e.type.toLowerCase()} "${e.name || 'with no name yet'}"${e.district ? `, in the ${e.district} district` : ''}. `
       + `Known for ${e.specialty}; prices ${e.price}; ${e.quirk}. Owner: ${npcName(e.owner) || 'not yet named'}.`,
     npc: () => `the ${e.race} ${e.role} ${e.name || '(no name yet)'}: ${e.look}; ${e.quirk}. Wants ${e.want}. `
-      + `Secret: ${e.secret}.`,
+      + `Secret: ${e.secret}.${npcStanding(opts)}`,
   }[kind]();
   return {
     system: 'You help a game master prepare a tabletop role-playing game city. Write original material only - never '
@@ -1120,6 +1195,9 @@ Write two or three short paragraphs, 150 words at most, for the game master's ey
   };
 }
 
+const npcStanding = ({ level, occ } = {}) => (Number.isInteger(level)
+  ? ` As a game character: level ${level}${occ ? `, ${String(occ).replace(/-/g, ' ')}` : ''}.` : '');
+
 export function parseFlesh(text) {
   const s = String(text || '').trim()
     .replace(/^```[a-z]*\s*|\s*```$/gi, '')
@@ -1133,4 +1211,27 @@ export function withFlesh(city, id, text) {
   const { kind } = fleshEntry(city, id);
   const key = { district: 'districts', place: 'places', shop: 'shops', npc: 'npcs' }[kind];
   return { ...city, [key]: city[key].map((x) => (x.id === id ? { ...x, flesh: text } : x)) };
+}
+
+// ── the NPC's dossier and sheet notes (Flesh out on an NPC) ──
+//
+// Flesh out on a named NPC also makes them a person in the campaign: a sheet
+// from the roller and a People dossier linked to it. **A dossier is read by
+// every player in the campaign** (campaigns/:id/npcs GET is members-only, not
+// G.M.-only), so it carries only what anyone meeting them would see - how
+// they look and how they carry themselves. Their job, what they want, their
+// secret and the G.M.'s prose go in the sheet's notes: a kind = 'npc' sheet is
+// hidden from everyone but the G.M. (isHiddenNpc in _lib/auth.js).
+export function npcDossier(city, npcId) {
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  if (!n.name) throw new Error('An NPC with no name cannot have a dossier');
+  const cap = (x) => String(x || '').replace(/^./, (c) => c.toUpperCase());
+  return { name: n.name, status: 'never-met', description: `${cap(n.look)}; ${n.quirk}.` };
+}
+export function npcNotes(city, npcId) {
+  const n = city.npcs.find((x) => x.id === npcId);
+  if (!n) throw new Error(`No NPC ${npcId}`);
+  return [`From ${city.overview.name}: ${n.race}, ${n.role}. ${n.look}; ${n.quirk}. Wants ${n.want}.`,
+    `Secret: ${n.secret}.`, ...(n.flesh ? [n.flesh] : [])].join('\n\n');
 }

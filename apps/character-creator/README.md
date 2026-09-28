@@ -91,19 +91,25 @@ apps/codex/                   CODEX
 ├── catalog.html / catalog.js Admin-only catalog editor, generated from the
 │                             field config. catalog.js is an ES module.
 apps/campaign/                CAMPAIGN
-├── index.html / campaign.js  The log with search and Ask, the party stash and
-│                             the currency ledger
+├── index.html / campaign.js  The tabs, the party stash and its gear catalog,
+│                             and the G.M.'s statted NPCs, name generator and
+│                             city maps. The log with search and Ask, the
+│                             people, the handouts and the currency ledger are
+│                             /shared/js/campaign/, shared with every game
 apps/gm-tools/                GM TOOLS
 ├── index.html / dashboard.js Roster (with the G.M.'s pool, damage, undo and
-│                             party-XP controls), GM notes, campaign journal,
-│                             and the Setting — the GM's own pages and the
-│                             pictures hanging off them (migration 078)
+│                             party-XP controls), GM notes and rest rates. The
+│                             campaign journal and the Setting — the GM's own
+│                             pages and the pictures hanging off them
+│                             (migration 078) — are /shared/js/campaign/
 ├── present.html / present.js Present mode: the screen turned round at the
 │                             table. Black, no shared header, one picture
 │                             fitted to it, arrow keys through that page.
 │                             SHOWING IS NOT REVEALING — it reads the GM's own
 │                             pictures and writes nothing until the reveal
-│                             button on it is pressed
+│                             button on it is pressed. The room view is
+│                             /shared/js/campaign/present.js; this file adds
+│                             the City Creator's maps and the way back
 │
 apps/character-creator/js/    THE ENGINE, shared by all five and by the API
 ├── js/parser.js              RCC/OCC markdown parser (ES module — also used by the API)

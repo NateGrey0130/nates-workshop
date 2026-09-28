@@ -1,37 +1,44 @@
-// Campaign notes — the note feed, the search box, the party stash and the
-// currency ledger. escHtml() comes from /shared/js/ui.js.
+// Campaign notes — the note feed, the search box, the people, the handouts,
+// the party stash and the currency ledger. escHtml() comes from
+// /shared/js/ui.js.
 //
 // The campaign's own page, which did not exist: the journal was reachable only
 // from a character sheet, and nothing showed what the party held collectively.
+//
+// THE NOTES, PEOPLE, HANDOUTS AND LEDGER ARE SHARED with every game's campaign
+// page: /shared/js/campaign/ holds their markup and behaviour, and this app's
+// stylesheet styles their `mc-` classes. What stays here is this game's: the
+// tabs, the party stash and its gear catalog, the statted NPCs, the name
+// generator, and the City Creator's maps.
 'use strict';
 
 const campaignId = new URLSearchParams(location.search).get('campaign_id');
 const $ = (i) => document.getElementById(i);
 const esc = escHtml;
+const C = mcCampaign;
 
 const D = {
   campaign: null, isGm: false, isMember: false,
-  entries: [], entriesTotal: 0,
-  items: [], balances: [], ledger: [],
-  // The pictures the GM has revealed (migration 078). Captions only: the page
-  // behind a handout is the GM's and never comes over the wire.
-  handouts: [],
+  items: [],
   roster: [], gear: [],
-  // The NPC roster, the dossier currently open, and the sweep's proposals.
-  // Proposals live in state rather than being written down: a proposal is not
-  // a dossier until somebody says so, and a page reload correctly loses them.
-  npcs: [], npc: null, proposals: null, sweeping: false, sweepMsg: '',
-  // Search is a separate view over the same feed rather than a filter of it:
-  // results are ranked and snippetted, and pretending that is the same list
-  // would mean the feed sometimes silently reorders itself.
-  query: '', results: null, searching: false,
-  // The answer to the last question asked, and whether one is in flight. Kept
-  // beside the search box because that is where the question was typed.
-  answer: null, asking: false,
   tab: 'notes',
-  composer: { title: '', body: '', session_date: '' },
   // The statted-NPC forms keep their own state in js/npc-sheets.js.
 };
+
+// The shared views reach this page through one adapter, so none of them
+// imports ui.js or knows how this app asks a question or reports a failure.
+// alert() and confirm() are what this page has always used for both.
+C.init({
+  base: '/api/character-creator', campaignId,
+  ui: {
+    esc: escHtml, escJs, undoable,
+    modal: (text) => Promise.resolve(confirm(text)),
+    toast: (text) => alert(text),
+  },
+  render: () => render(),
+  reload: () => load(),
+  showPeople: () => { D.tab = 'people'; },
+});
 
 async function load() {
   if (!campaignId) {
@@ -52,24 +59,20 @@ async function load() {
     if (D.isGm) namePanel.init({ campaignId, system: D.campaign.system });
 
     // A non-member gets the campaign's name and nothing else. Everything below
-    // this line is member-gated server-side too — this only avoids four
+    // this line is member-gated server-side too — this only avoids the
     // requests that would each come back 403.
     if (!D.isMember) return render();
 
-    const [entries, items, currency, roster, npcs, handouts] = await Promise.all([
-      api(`journal?campaign_id=${campaignId}`),
+    const [, items, , roster] = await Promise.all([
+      C.notes.load(),
       api(`campaigns/${campaignId}/items`),
-      api(`campaigns/${campaignId}/currency`),
+      C.ledger.load(),
       api(`characters?campaign_id=${campaignId}`),
-      api(`campaigns/${campaignId}/npcs`),
-      api(`campaigns/${campaignId}/handouts`),
+      C.people.load(),
+      C.handouts.load(),
     ]);
-    D.entries = entries.entries; D.entriesTotal = entries.total ?? entries.entries.length;
     D.items = items.items;
-    D.balances = currency.balances; D.ledger = currency.ledger;
     D.roster = roster.characters;
-    D.npcs = npcs.npcs;
-    D.handouts = handouts.handouts || [];
     // The City Creator's shown maps (Phase 4c), beside the handouts. A failure
     // costs only the list; the rest of the page does not wait on it.
     try { D.cities = (await api(`campaigns/${campaignId}/cities`)).cities || []; } catch { D.cities = []; }
@@ -96,23 +99,22 @@ function render() {
     </div>`;
     return;
   }
-  // Four panels behind a control shaped like a two-state toggle, while the sheet
-  // next door switches six with a real tab bar. This is the sheet's `.tabbar`,
-  // reused rather than re-styled: 44px targets, its `.tab-n` count pill, and the
-  // tablist/tab/aria-selected roles the toggle never had. It sits OUTSIDE the
-  // panel, as the sheet's does, because `.tabbar` is sticky and paints itself in
-  // --bg-primary — inside a card it would smear the wrong colour on scroll.
+  // Five panels behind the sheet's own `.tabbar`, reused rather than
+  // re-styled: 44px targets, its `.tab-n` count pill, and the
+  // tablist/tab/aria-selected roles. It sits OUTSIDE the panel, as the sheet's
+  // does, because `.tabbar` is sticky and paints itself in --bg-primary —
+  // inside a card it would smear the wrong colour on scroll.
   //
   // `campaign-tabs` keeps it VISIBLE ON A DESKTOP. The sheet's bar is hidden
   // above 820px, where the sheet shows every panel at once (styles.css, since
-  // 2026-09-01); these four panels are never all shown, so without the class a
-  // desktop saw Notes and no way to reach People, the stash or the ledger. The
-  // codex hit the same rule and has `codex-tabs` for the same reason.
-  const tabs = [['notes', 'Notes', D.entriesTotal],
-                ['people', 'People', D.npcs.length],
+  // 2026-09-01); these panels are never all shown, so without the class a
+  // desktop saw Notes and no way to reach the rest. The codex hit the same
+  // rule and has `codex-tabs` for the same reason.
+  const tabs = [['notes', 'Notes', C.notes.state.total],
+                ['people', 'People', C.people.state.npcs.length],
                 ['stash', 'Party stash', D.items.filter((i) => !i.removed_at).length],
                 ['money', 'Currency', 0],
-                ['handouts', 'Handouts', D.handouts.length + (D.cities?.length || 0)]];
+                ['handouts', 'Handouts', C.handouts.state.handouts.length + (D.cities?.length || 0)]];
   $('app').innerHTML = `
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
@@ -121,22 +123,15 @@ function render() {
       `<button class="tab${D.tab === k ? ' on' : ''}" role="tab" aria-selected="${D.tab === k}"
          onclick="setTab('${k}')">${esc(label)}${
          n ? ` <span class="tab-n">${n}</span>` : ''}</button>`).join('')}</nav>
-    ${D.tab === 'notes' ? notesView()
+    ${D.tab === 'notes' ? C.notes.html()
       : D.tab === 'people' ? peopleView()
       : D.tab === 'stash' ? stashView()
-      : D.tab === 'handouts' ? handoutsView() : moneyView()}`;
-  wireSearch();
+      : D.tab === 'handouts' ? C.handouts.html({ extra: cityMapsHtml() }) : C.ledger.html()}`;
+  C.notes.afterRender();
 }
 
-function setTab(t) { D.tab = t; D.npc = null; render(); }
+function setTab(t) { D.tab = t; C.people.state.npc = null; render(); }
 
-// ---------- handouts ----------
-//
-// What the GM has shown the party: a picture and its caption, newest first.
-// There is no title and no body here because there is none to have - an entry
-// is the GM's notebook and only the IMAGE is ever revealed (migration 078).
-// A player who has seen nothing gets a sentence saying so rather than an empty
-// panel, because "nothing yet" and "this is broken" look identical otherwise.
 // The City Creator's maps the GM has shown (Phase 4c): a link each to the
 // players' view in present mode. The list request sends a player only the
 // cities whose map is shown, and only their names.
@@ -149,283 +144,22 @@ function cityMapsHtml() {
   </div>`;
 }
 
-function handoutsView() {
-  if (!D.handouts.length && D.cities?.length) return cityMapsHtml();
-  if (!D.handouts.length) {
-    return `<div class="panel">
-      <h3 style="margin-top:0">Handouts</h3>
-      <p class="muted">Nothing yet. What the GM shows the party — a map, a portrait, a page
-        from a book — turns up here.</p>
-    </div>`;
-  }
-  return `<div class="panel">
-    <h3 style="margin-top:0">Handouts <span class="muted small">(newest first)</span></h3>
-    <ul class="handouts">
-      ${D.handouts.map((h) => `<li class="handout">
-        <figure style="margin:0">
-          <img src="/api/character-creator/campaigns/${campaignId}/images/${h.id}"
-               alt="${esc(h.caption || 'A handout from the GM')}" loading="lazy">
-          ${h.caption ? `<figcaption>${esc(h.caption)}</figcaption>` : ''}
-        </figure>
-      </li>`).join('')}
-    </ul>
-  </div>${cityMapsHtml()}`;
-}
-
-// ---------- notes ----------
-function notesView() {
-  return `
-  <div class="panel">
-    <h3>Search</h3>
-    <p class="muted small">Typing searches the notes and costs nothing. <b>Ask</b> sends the best
-      matches to Claude for a written answer, and cites the entries it used.</p>
-    <div class="rowline">
-      <input type="text" id="note-search" class="picker-input" value="${esc(D.query)}"
-        placeholder="Search notes — a name, a place, a thing…" autocomplete="off">
-      <button class="btn btn-sm" onclick="ask()" ${D.asking || !D.query.trim() ? 'disabled' : ''}>
-        ${D.asking ? 'Asking…' : '✨ Ask'}</button>
-      ${D.query || D.results ? `<button class="btn btn-sm btn-ghost" onclick="clearSearch()">clear</button>` : ''}
-    </div>
-    ${answerBlock()}
-    ${resultsBlock()}
-  </div>
-  ${composerBlock()}
-  <div class="panel">
-    <h3>${D.results ? 'All notes' : 'Notes'} <span class="muted small">newest first</span></h3>
-    ${D.entries.length ? D.entries.map(entryCard).join('') : '<p class="muted">No notes yet.</p>'}
-  </div>`;
-}
-
-// The note form promises that typing @Name links someone to their dossier, and
-// the dossier half was true from the start — the half on screen was not. The
-// mentions rendered as plain text, so the reader saw a promise the page did not
-// keep.
-//
-// Linked against D.npcs — the dossiers this campaign actually has — rather than
-// by re-running the server's @-pattern here. A second copy of that rule would
-// drift from `_lib/mentions.js`, and the failure would be a link to a dossier
-// that does not exist. No dossier, no link, by construction.
-//
-// ONE pass over an alternation sorted longest-first, never one pass per name:
-// with an "Osric" and a "Brother Osric" on the roster, a second pass would
-// match inside the anchor the first pass just wrote and nest a link in a link.
-// The names are HTML-escaped before they are regex-escaped, because the body
-// they are matched against has already been through esc().
-const reEsc = (v) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-function linkifyMentions(body) {
-  const html = esc(body);
-  const named = D.npcs.filter((n) => n.name).sort((a, b) => b.name.length - a.name.length);
-  if (!named.length) return html;
-  const byName = new Map(named.map((n) => [esc(n.name).toLowerCase(), n.id]));
-  const re = new RegExp('@(' + named.map((n) => reEsc(esc(n.name))).join('|') + ')(?![\\p{L}])', 'giu');
-  return html.replace(re, (m, name) => {
-    const id = byName.get(name.toLowerCase());
-    return id === undefined ? m
-      : `<a href="#" class="mention" onclick="openNpc(${id}); return false">${m}</a>`;
-  });
-}
-
-function entryCard(e) {
-  return `<div class="panel-inset" style="margin-top:10px">
-    <div class="rowline" style="justify-content:space-between">
-      <b>${esc(e.title || '(untitled)')}</b>
-      <span class="muted small">${esc(e.author_email)} · ${esc(when(e))}${
-        e.character_id ? ' · character note' : ''}</span>
-    </div>
-    <p class="small" style="white-space:pre-wrap; margin-top:6px">${linkifyMentions(e.body)}</p>
-    <div class="rowline">
-      <button class="btn btn-sm btn-ghost" onclick="removeEntry(${e.id})">delete</button>
-    </div>
-  </div>`;
-}
-
-const when = (e) => e.session_date || (e.created_at || '').replace('T', ' ').replace('Z', '');
-
-function composerBlock() {
-  const c = D.composer;
-  return `<div class="panel">
-    <h3>Add a note</h3>
-    <div class="rowline">
-      <input type="text" class="picker-input" placeholder="Title (optional)" value="${esc(c.title)}"
-        onchange="D.composer.title = this.value">
-      <input type="text" class="picker-input" placeholder="Session date (optional)" value="${esc(c.session_date)}"
-        onchange="D.composer.session_date = this.value">
-    </div>
-    <textarea id="note-body" rows="5" placeholder="What happened? Who did you talk to? What did they want?"
-      style="width:100%; margin-top:8px" onchange="D.composer.body = this.value">${esc(c.body)}</textarea>
-    <div class="nav" style="margin-top:8px">
-      <span class="muted small">Everyone in the campaign can read and add notes.
-        Type <b>@Name</b> to link someone to their dossier — a new name gets one.</span>
-      <button class="btn btn-primary" onclick="postNote()">Post note</button>
-    </div>
-    <p id="note-msg" class="small"></p>
-  </div>`;
-}
-
-function resultsBlock() {
-  if (!D.results) return '';
-  if (!D.results.length) return `<p class="muted" style="margin-top:10px">Nothing matched “${esc(D.query)}”.</p>`;
-  return `<p class="small" style="margin-top:12px"><b>${D.results.length}</b> matching
-    ${D.results.length === 1 ? 'note' : 'notes'}</p>` +
-    D.results.map((r) => `<div class="panel-inset" style="margin-top:8px">
-      <div class="rowline" style="justify-content:space-between">
-        <b>${esc(r.title || '(untitled)')}</b>
-        <span class="muted small">${esc(r.author_email)} · ${esc(when(r))}</span>
-      </div>
-      <p class="small" style="margin-top:4px">${highlight(r.snippet)}</p>
-    </div>`).join('');
-}
-
-// A search snippet, escaped and then re-marked.
-//
-// The ORDER is the whole point: escape the note text first, so nothing in it
-// can become markup, and only then turn the two control characters the server
-// used into <mark> tags. Doing it the other way round - marking first, escaping
-// after - escapes the tags and shows them as text; skipping the escape puts a
-// note's contents into the page as HTML.
-const HIGHLIGHT_START = '';
-const HIGHLIGHT_END = '';
-function highlight(snippet) {
-  return esc(String(snippet || ''))
-    .split(HIGHLIGHT_START).join('<mark>')
-    .split(HIGHLIGHT_END).join('</mark>');
-}
-
-function answerBlock() {
-  if (!D.answer) return '';
-  const a = D.answer;
-  return `<div class="panel-inset" style="margin-top:12px">
-    <h4>${esc(a.question)}</h4>
-    <p class="small" style="white-space:pre-wrap">${esc(a.answer)}</p>
-    ${a.cited?.length ? `<p class="muted small">From: ${a.cited.map((c) =>
-      `#${c.id} ${esc(c.title || '(untitled)')}`).join(' · ')}</p>` : ''}
-    <p class="muted small">Read ${a.entries_considered} ${a.entries_considered === 1 ? 'note' : 'notes'}.
-      Answers come from the notes only — if they do not say, it says so.</p>
-  </div>`;
-}
-
-// The search input is re-created by every render, so its listener is re-bound
-// here rather than delegated: the caret has to survive a re-render mid-word,
-// which a delegated listener could not manage.
-let searchTimer = null;
-function wireSearch() {
-  const el = $('note-search');
-  if (!el) return;
-  el.addEventListener('input', () => {
-    D.query = el.value;
-    clearTimeout(searchTimer);
-    // Debounced, not per-keystroke: FTS5 is fast but a request per character is
-    // still a request per character.
-    searchTimer = setTimeout(runSearch, 250);
-  });
-  if (document.activeElement !== el && D.query) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
-}
-
-async function runSearch() {
-  const q = D.query.trim();
-  if (!q) { D.results = null; return render(); }
-  try {
-    const res = await api(`campaigns/${campaignId}/search?q=${encodeURIComponent(q)}`);
-    // A slower earlier request must not overwrite a newer one's results.
-    if (D.query.trim() !== q) return;
-    D.results = res.entries;
-    render();
-  } catch (err) {
-    D.results = [];
-    render();
-  }
-}
-
-function clearSearch() { D.query = ''; D.results = null; D.answer = null; render(); }
-
-async function ask() {
-  const question = D.query.trim();
-  if (!question || D.asking) return;
-  D.asking = true; render();
-  try {
-    const res = await api(`campaigns/${campaignId}/ask`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
-    });
-    D.answer = { question, ...res };
-  } catch (err) {
-    D.answer = { question, answer: 'That failed: ' + err.message, cited: [], entries_considered: 0 };
-  } finally {
-    D.asking = false; render();
-  }
-}
-
-async function postNote() {
-  const body = ($('note-body')?.value || D.composer.body || '').trim();
-  if (!body) { $('note-msg').textContent = 'A note needs something in it.'; return; }
-  $('note-msg').textContent = 'Posting…';
-  try {
-    await api('journal', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        campaign_id: Number(campaignId), body,
-        title: D.composer.title || null,
-        session_date: D.composer.session_date || null,
-      }),
-    });
-    D.composer = { title: '', body: '', session_date: '' };
-    await load();
-  } catch (err) {
-    $('note-msg').textContent = 'Failed: ' + err.message;
-  }
-}
-
-// A note is not recoverable once deleted, which is the argument FOR an undo
-// window rather than a confirm: the mistake is seen after the click, not
-// before it. Nothing is sent until the window closes (js/undo-toast.js).
-function removeEntry(id) {
-  const at = D.entries.findIndex((e) => e.id === id);
-  if (at < 0) return;
-  const e = D.entries[at];
-  undoable({
-    label: e.title ? `“${e.title}”` : 'the note',
-    hide: () => { D.entries = D.entries.filter((x) => x.id !== id); D.entriesTotal -= 1; render(); },
-    restore: () => { D.entries.splice(Math.min(at, D.entries.length), 0, e); D.entriesTotal += 1; render(); },
-    commit: async (keepalive) => {
-      await api('journal/' + id, { method: 'DELETE', keepalive });
-      if (!keepalive) await load();
-    },
-  });
-}
-
 // ---------- people ----------
 //
-// Two ways in, and the roster shows both. `@Kevik` in a note creates and links
-// a dossier for free; the sweep proposes the people nobody tagged. A proposal
-// is NOT a dossier — accepting one is a second, explicit click.
+// The roster and the dossiers are the shared view's. This game adds three
+// things to it, all the G.M.'s: the 🎲 name generator beside the Name box, the
+// statted-NPC panel under the roster, and a dossier's link to its statted
+// sheet.
 function peopleView() {
-  if (D.npc) return dossierView();
-  const byStatus = { alive: [], unknown: [], dead: [], 'never-met': [] };
-  for (const n of D.npcs) (byStatus[n.status] || byStatus.unknown).push(n);
-
-  return `
-  <div class="panel">
-    <h3>People <span class="muted small">— everyone the campaign has met</span></h3>
-    ${D.npcs.length ? Object.entries(byStatus).filter(([, list]) => list.length).map(([status, list]) =>
-      `<p class="small" style="margin-top:12px"><b>${esc(statusLabel(status))}</b>
-        <span class="muted">${list.length}</span></p>` +
-      list.map(npcRow).join('')).join('')
-      : `<p class="muted">Nobody yet. Type <b>@Name</b> in a note, or sweep the notes below.</p>`}
-    <h4 style="margin-top:16px">Add someone by hand</h4>
-    <div class="rowline">
-      <input type="text" id="npc-name" class="picker-input" placeholder="Name">
-      ${D.isGm ? namePanel.button('npc-name', { kinds: 'all' }) : ''}
-      <button class="btn btn-sm" onclick="addNpc()">Add</button>
-    </div>
-    ${/* The 🎲 is the G.M.'s: names come from a G.M.-only request, because the
-         list leaves out the campaign's statted NPCs, which only the G.M. may
-         know exist. A dossier can be a place or a gang, so every kind is offered. */ ''}
-    ${D.isGm ? namePanel.slot('npc-name') : ''}
-    <p id="npc-msg" class="small"></p>
-  </div>
-  ${D.isGm ? npcSheetsMount() : ''}
-  ${sweepPanel()}`;
+  return C.people.html({
+    // The 🎲 is the G.M.'s: names come from a G.M.-only request, because the
+    // list leaves out the campaign's statted NPCs, which only the G.M. may
+    // know exist. A dossier can be a place or a gang, so every kind is offered.
+    nameButton: D.isGm ? namePanel.button('npc-name', { kinds: 'all' }) : '',
+    nameSlot: D.isGm ? namePanel.slot('npc-name') : '',
+    after: D.isGm ? npcSheetsMount() : '',
+    dossierExtra: D.isGm ? dossierSheetHtml : null,
+  });
 }
 
 // ---------- statted NPCs (G.M. only) ----------
@@ -433,128 +167,20 @@ function peopleView() {
 // The panel - the list, and rolling from a class, placing a notable NPC and
 // rolling creatures - is js/npc-sheets.js, shared with GM Tools so there is one
 // copy of it. This page mounts it on the People tab and keeps D.roster and
-// D.npcs in step with what it changes.
+// the dossier list in step with what it changes.
 function npcSheetsMount() {
   return npcSheets.mount({
     campaignId, system: D.campaign.system, containerId: 'npc-sheets', classNames: D.classNames,
-    roster: D.roster, dossiers: D.npcs,
+    roster: D.roster, dossiers: C.people.state.npcs,
     onRoster: (list) => { D.roster = list; },
-    onDossiers: (list) => { D.npcs = list; },
+    onDossiers: (list) => { C.people.state.npcs = list; },
   });
 }
 
-async function linkSheet(npcId, value) {
-  try {
-    const res = await api(`campaigns/${campaignId}/npcs/${npcId}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ character_id: value ? Number(value) : null }),
-    });
-    D.npc.npc = res.npc;
-    D.npcs = D.npcs.map((x) => (x.id === res.npc.id ? { ...x, character_id: res.npc.character_id } : x));
-    render();
-  } catch (err) { alert('Failed: ' + err.message); }
-}
-
-const statusLabel = (s) => ({ alive: 'Alive', dead: 'Dead', unknown: 'Status unknown',
-                              'never-met': 'Not met yet' })[s] || s;
-
-// The portrait URL is STABLE (…/npcs/12/portrait) while the object behind it is
-// not, and the response carries an immutable cache header — so without a
-// changing query the browser would keep showing the portrait it first fetched
-// forever, including after a replacement.
-//
-// The buster is the object KEY, which is a uuid and changes on every upload.
-// `updated_at` was the obvious choice and is wrong twice: it contains a space,
-// which does not belong in a URL unencoded, and it also changes when somebody
-// edits the faction field, which re-fetches an image that did not change.
-function portraitSrc(n) {
-  return `/api/character-creator/campaigns/${campaignId}/npcs/${n.id}/portrait`
-    + `?v=${encodeURIComponent(n.portrait_key || '')}`;
-}
-
-function npcRow(n) {
-  return `<button type="button" class="chkrow" style="cursor:pointer" onclick="openNpc(${n.id})">
-    ${n.portrait_key ? `<img src="${portraitSrc(n)}"
-      alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover">` : ''}
-    <span><b>${esc(n.name)}</b>
-      ${n.faction ? `<span class="tag">${esc(n.faction)}</span>` : ''}
-      ${n.disposition ? `<span class="muted small"> — ${esc(n.disposition)}</span>` : ''}</span>
-    <span class="pct">${n.mention_count} ${n.mention_count === 1 ? 'mention' : 'mentions'}</span>
-  </button>`;
-}
-
-function sweepPanel() {
-  return `<div class="panel">
-    <h3>Find people nobody tagged</h3>
-    <p class="muted small">Reads the notes that have not been swept and proposes the named people in
-      them. A proposal is not a dossier — accept the ones that are real, dismiss the ones that are
-      not, and a dismissed name is not offered again.</p>
-    <div class="rowline">
-      <button class="btn btn-sm" onclick="sweep()" ${D.sweeping ? 'disabled' : ''}>
-        ${D.sweeping ? 'Reading…' : '✨ Sweep the notes'}</button>
-      <span class="muted small">${esc(D.sweepMsg)}</span>
-    </div>
-    ${D.proposals ? (D.proposals.length
-      ? D.proposals.map((p) => `<div class="chkrow">
-          <span><b>${esc(p.name)}</b>
-            ${p.description ? `<span class="muted small"> — ${esc(p.description)}</span>` : ''}
-            <span class="muted small"> (${p.entry_ids.length}
-              ${p.entry_ids.length === 1 ? 'note' : 'notes'})</span></span>
-          <span class="rowline">
-            <button class="btn btn-sm" onclick="acceptProposal('${escAttr(p.name)}')">accept</button>
-            <button class="btn btn-sm btn-ghost" onclick="dismissProposal('${escAttr(p.name)}')">not a person</button>
-          </span>
-        </div>`).join('')
-      : '<p class="muted small">Nobody new in those notes.</p>') : ''}
-  </div>`;
-}
-
-// A name goes into an inline onclick, so it needs escaping for the attribute
-// AND for the JS string inside it. This was `esc(v).replace(/'/g, '&#39;')`,
-// which reads right and is not: the attribute is entity-decoded before the JS
-// is parsed, so an NPC called O'Brien produced a SyntaxError rather than a
-// dismiss button. escJs in /shared/js/ui.js does both layers.
-const escAttr = escJs;
-
-function dossierView() {
-  const n = D.npc.npc;
-  const mentions = D.npc.mentions;
-  return `
-  <div class="panel">
-    <div class="rowline"><button class="btn btn-sm btn-ghost" onclick="closeNpc()">← everyone</button></div>
-    <div class="rowline" style="align-items:flex-start; gap:14px; margin-top:10px">
-      ${n.portrait_key
-        ? `<img src="${portraitSrc(n)}"
-             alt="${esc(n.name)}" style="width:120px;height:120px;border-radius:8px;object-fit:cover">`
-        : `<div style="width:120px;height:120px;border-radius:8px;background:var(--bg-secondary);
-             display:flex;align-items:center;justify-content:center" class="muted small">no portrait</div>`}
-      <div style="flex:1;min-width:220px">
-        <h2 style="margin:0">${esc(n.name)}</h2>
-        ${n.aliases?.length ? `<p class="muted small">also known as ${esc(n.aliases.join(', '))}</p>` : ''}
-        <div class="rowline" style="margin-top:8px">
-          <input type="file" id="npc-portrait" accept="image/png,image/jpeg,image/webp,image/gif">
-          <button class="btn btn-sm btn-ghost" onclick="uploadPortrait(${n.id})">upload portrait</button>
-          ${n.portrait_key ? `<button class="btn btn-sm btn-ghost" onclick="removePortrait(${n.id})">remove</button>` : ''}
-        </div>
-        <p id="portrait-msg" class="small"></p>
-      </div>
-    </div>
-
-    <div class="rowline" style="margin-top:14px">
-      <select onchange="editNpc(${n.id}, 'status', this.value)">
-        ${['alive', 'dead', 'unknown', 'never-met'].map((s) =>
-          `<option value="${s}"${n.status === s ? ' selected' : ''}>${esc(statusLabel(s))}</option>`).join('')}
-      </select>
-      <input type="text" class="picker-input" placeholder="Faction" value="${esc(n.faction || '')}"
-        onchange="editNpc(${n.id}, 'faction', this.value)">
-      <input type="text" class="picker-input" placeholder="Disposition to the party"
-        value="${esc(n.disposition || '')}" onchange="editNpc(${n.id}, 'disposition', this.value)">
-    </div>
-    <input type="text" class="picker-input" style="width:100%;margin-top:8px" placeholder="Also known as (comma separated)"
-      value="${esc((n.aliases || []).join(', '))}" onchange="editNpc(${n.id}, 'aliases', this.value)">
-    <textarea rows="3" style="width:100%;margin-top:8px" placeholder="What do we know?"
-      onchange="editNpc(${n.id}, 'description', this.value)">${esc(n.description || '')}</textarea>
-    ${D.isGm ? `<div class="rowline" style="margin-top:8px">
+// A dossier's statted sheet: only the G.M. sees which NPC sheet stands behind
+// a person, or that there is one.
+function dossierSheetHtml(n) {
+  return `<div class="rowline" style="margin-top:8px">
       <label class="small">Statted sheet <span class="muted">(only you see this)</span>
         <select onchange="linkSheet(${n.id}, this.value)">
           <option value="">— none —</option>
@@ -562,170 +188,18 @@ function dossierView() {
             esc(c.name)} (level ${c.level})</option>`).join('')}
         </select></label>
       ${n.character_id ? `<a class="btn btn-sm btn-ghost" href="/apps/character-sheet/?id=${n.character_id}">open sheet</a>` : ''}
-    </div>` : ''}
-    <div class="rowline" style="margin-top:8px">
-      <button class="btn btn-sm btn-ghost" onclick="deleteNpc(${n.id})">delete dossier</button>
-      <span class="muted small">Deleting the dossier leaves the notes alone — the @ in the text is just text.</span>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h3>Every mention <span class="muted small">— oldest first, which is the story</span></h3>
-    ${mentions.length ? mentions.map((m) => `<div class="panel-inset" style="margin-top:8px">
-      <div class="rowline" style="justify-content:space-between">
-        <b>${esc(m.title || '(untitled)')}</b>
-        <span class="muted small">${esc(m.author_email)} · ${esc(when(m))}${
-          m.source === 'ai' ? ' · <span class="tag">found by sweep</span>' : ''}</span>
-      </div>
-      <p class="small" style="white-space:pre-wrap; margin-top:6px">${linkifyMentions(m.body)}</p>
-    </div>`).join('') : '<p class="muted">No notes mention them yet.</p>'}
-  </div>`;
+    </div>`;
 }
 
-async function openNpc(id) {
+async function linkSheet(npcId, value) {
+  const P = C.people.state;
   try {
-    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
-    // Reachable from a mention inside a note now, not just from the People tab,
-    // and render() picks the view from D.tab — without this the dossier loads
-    // and nothing on screen changes.
-    D.tab = 'people';
-    render();
-  } catch (err) { alert('Failed: ' + err.message); }
-}
-function closeNpc() { D.npc = null; render(); }
-
-async function addNpc() {
-  const name = ($('npc-name')?.value || '').trim();
-  if (!name) { $('npc-msg').textContent = 'Give them a name.'; return; }
-  try {
-    await api(`campaigns/${campaignId}/npcs`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    await load();
-  } catch (err) { $('npc-msg').textContent = 'Failed: ' + err.message; }
-}
-
-async function editNpc(id, field, value) {
-  try {
-    await api(`campaigns/${campaignId}/npcs/${id}`, {
+    const res = await api(`campaigns/${campaignId}/npcs/${npcId}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: value }),
+      body: JSON.stringify({ character_id: value ? Number(value) : null }),
     });
-    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
-    const list = await api(`campaigns/${campaignId}/npcs`);
-    D.npcs = list.npcs;
-    render();
-  } catch (err) { alert('Failed: ' + err.message); }
-}
-
-// Undo rather than confirm (js/undo-toast.js). Undo reopens the dossier it
-// was deleted from, since that is where the person was standing.
-function deleteNpc(id) {
-  const at = D.npcs.findIndex((n) => n.id === id);
-  const n = at >= 0 ? D.npcs[at] : null;
-  const open = D.npc;
-  undoable({
-    label: n?.name || open?.name || 'the dossier',
-    hide: () => { D.npc = null; D.npcs = D.npcs.filter((x) => x.id !== id); render(); },
-    restore: () => {
-      if (n) D.npcs.splice(Math.min(at, D.npcs.length), 0, n);
-      D.npc = open;
-      render();
-    },
-    commit: async (keepalive) => {
-      await api(`campaigns/${campaignId}/npcs/${id}`, { method: 'DELETE', keepalive });
-      if (!keepalive) await load();
-    },
-  });
-}
-
-// A PORTRAIT IS THE SMALLEST PICTURE IN THIS WHOLE REPO, so it gets its own
-// cap rather than the 2048 `downscale.js` defaults to (UI-AUDIT F59). There
-// are exactly two views of one - the 34px roster thumbnail in `npcRow` and the
-// 120px square in the dossier, both `object-fit: cover` - and no full-screen
-// view exists the way present mode does for a campaign picture. 512 covers the
-// 120px square at a device pixel ratio of 4, and leaves room for a dossier
-// portrait that doubles in size before anyone has to think about this again.
-// Larger than that is detail no view in this app can render, which is the
-// argument `downscale.js` makes for 2048 one app over.
-//
-// THIS IS DESTRUCTIVE IN THE ONE WAY THAT MATTERS: the object in R2 is the
-// downscaled one, so a cap chosen too small cannot be undone by changing a
-// stylesheet later. That is the reason it is 512 and not 256.
-const PORTRAIT_MAX_EDGE = 512;
-
-// The raw file as the body, with its own Content-Type. Not multipart: there is
-// exactly one file and no fields beside it, so a FormData boundary would be
-// packaging for nothing.
-async function uploadPortrait(id) {
-  const file = $('npc-portrait')?.files?.[0];
-  if (!file) { $('portrait-msg').textContent = 'Choose an image first.'; return; }
-  $('portrait-msg').textContent = 'Uploading…';
-  try {
-    // UI-AUDIT F59: shrink it here, because nothing downstream can - this
-    // platform has no image resizing on Pages. THE HEADER COMES FROM WHAT IS
-    // SENT, not from the File: the server reads this one header to pick the R2
-    // key's extension, the stored content_type and the Content-Type it serves
-    // back later, so describing a re-encoded blob with the original file's
-    // type would be wrong in three places. `toUpload` hands the original back
-    // untouched whenever it cannot do better - a gif, a picture already under
-    // the cap, a canvas that will not decode - so this is the same request it
-    // always was in every one of those cases.
-    const body = await downscale.toUpload(file, PORTRAIT_MAX_EDGE);
-    await api(`campaigns/${campaignId}/npcs/${id}/portrait`, {
-      method: 'POST', headers: { 'Content-Type': body.type }, body,
-    });
-    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
-    const list = await api(`campaigns/${campaignId}/npcs`);
-    D.npcs = list.npcs;
-    render();
-  } catch (err) { $('portrait-msg').textContent = 'Failed: ' + err.message; }
-}
-
-async function removePortrait(id) {
-  try {
-    await api(`campaigns/${campaignId}/npcs/${id}/portrait`, { method: 'DELETE' });
-    D.npc = await api(`campaigns/${campaignId}/npcs/${id}`);
-    await load();
-  } catch (err) { alert('Failed: ' + err.message); }
-}
-
-async function sweep() {
-  if (D.sweeping) return;
-  D.sweeping = true; D.sweepMsg = ''; render();
-  try {
-    const res = await api(`campaigns/${campaignId}/npcs/sweep`, { method: 'POST' });
-    D.proposals = res.proposals;
-    D.sweepMsg = res.message || `Read ${res.swept} ${res.swept === 1 ? 'note' : 'notes'}${
-      res.remaining ? `, ${res.remaining} still to read` : ''}.`;
-  } catch (err) {
-    D.sweepMsg = 'Failed: ' + err.message;
-  } finally {
-    D.sweeping = false; render();
-  }
-}
-
-async function acceptProposal(name) {
-  const p = D.proposals?.find((x) => x.name === name);
-  if (!p) return;
-  try {
-    await api(`campaigns/${campaignId}/npcs/sweep?accept=1`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(p),
-    });
-    D.proposals = D.proposals.filter((x) => x.name !== name);
-    await load();
-  } catch (err) { alert('Failed: ' + err.message); }
-}
-
-async function dismissProposal(name) {
-  try {
-    await api(`campaigns/${campaignId}/npcs/sweep?dismiss=1`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    D.proposals = D.proposals.filter((x) => x.name !== name);
+    P.npc.npc = res.npc;
+    P.npcs = P.npcs.map((x) => (x.id === res.npc.id ? { ...x, character_id: res.npc.character_id } : x));
     render();
   } catch (err) { alert('Failed: ' + err.message); }
 }
@@ -879,53 +353,6 @@ function dropItem(itemId) {
       if (!keepalive) await load();
     },
   });
-}
-
-// ---------- currency ----------
-function moneyView() {
-  return `
-  <div class="panel">
-    <h3>Party currency <span class="muted small">— the balance is the sum of the ledger</span></h3>
-    ${D.balances.length
-      ? D.balances.map((b) => `<div class="stat-row"><span>${esc(b.currency)}</span>
-          <b>${Number(b.balance).toLocaleString()}</b></div>`).join('')
-      : '<p class="muted">Nothing tracked yet.</p>'}
-    <h4 style="margin-top:16px">Record income or spending</h4>
-    <div class="rowline">
-      <input type="text" id="cur-name" class="picker-input" placeholder="credits"
-        value="${esc(D.balances[0]?.currency || '')}" style="max-width:140px">
-      <input type="number" id="cur-delta" placeholder="+ or −" style="width:120px">
-      <input type="text" id="cur-reason" class="picker-input" placeholder="What for?">
-      <button class="btn btn-sm" onclick="addMoney()">Record</button>
-    </div>
-    <p class="muted small">Negative to spend. Entries are never edited — a mistake is corrected by
-      an opposing entry that says so.</p>
-    <p id="cur-msg" class="small"></p>
-  </div>
-  <div class="panel">
-    <h3>Ledger</h3>
-    ${D.ledger.length ? D.ledger.map((l) => `<div class="chkrow">
-      <span><b class="${l.delta < 0 ? 'err' : 'ok'}">${l.delta > 0 ? '+' : ''}${Number(l.delta).toLocaleString()}</b>
-        <span class="muted">${esc(l.currency)}</span> ${esc(l.reason || '')}</span>
-      <span class="muted small">${esc(l.created_by)} · ${esc((l.created_at || '').slice(0, 16))}</span>
-    </div>`).join('') : '<p class="muted">Nothing recorded yet.</p>'}
-  </div>`;
-}
-
-async function addMoney() {
-  const currency = ($('cur-name')?.value || '').trim();
-  const delta = parseInt($('cur-delta')?.value, 10);
-  if (!currency || !Number.isFinite(delta) || delta === 0) {
-    $('cur-msg').textContent = 'Needs a currency and a non-zero amount.';
-    return;
-  }
-  try {
-    await api(`campaigns/${campaignId}/currency`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currency, delta, reason: ($('cur-reason')?.value || '').trim() || null }),
-    });
-    await load();
-  } catch (err) { $('cur-msg').textContent = 'Failed: ' + err.message; }
 }
 
 load();

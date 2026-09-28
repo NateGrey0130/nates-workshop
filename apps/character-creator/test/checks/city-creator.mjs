@@ -48,6 +48,12 @@
 // Adapting (PR 6), the same way: the adapt prompt built with the OLD game's
 // rules, the old theme's lines left out of it, the old game's stock rules
 // carried into it, and the page saving an adaptation without adapted_from.
+// NPC levels and Flesh out on an NPC, the same way, 2026-09-28: a role's
+// range deleted from ROLE_LEVEL (Palladium Fantasy's "judge", then Rifts'
+// "schoolteacher" - each alone), the level drawn from Math.random, the level
+// left off the roller's request, a lock that re-rolled the level, the secret
+// put in the dossier's description, and the page making the dossier before
+// the sheet.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -55,7 +61,8 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 import { generateCity, rerollCity, rerollEntry, toggleLock, settingsProblems, restAreHuman, sizeFor,
   parsePool, tablesFor, exportJson, rollRequest, linkSheet, stockShop, restockShop, fleshPrompt, parseFlesh, withFlesh,
   FLESH_KINDS, validateThemePack, raceNamed, THEME_TABLES, THEME_MIN_LINES, THEME_INTENSITY, MAP_STYLES, RUMOUR_SLOTS,
-  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker, validateSavedTheme, themeParts, editThemeTable, adaptPrompt }
+  THEME_PARTS, themePrompt, parseThemePart, assembleThemePack, rollBlocker, validateSavedTheme, themeParts, editThemeTable, adaptPrompt,
+  levelRange, npcLevel, npcOcc, wantsOcc, linkDossier, npcDossier, npcNotes }
   from '../../../city-creator/js/city-engine.js';
 import { W, westPack } from '../fixtures/city-theme-pack.mjs';
 import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
@@ -63,7 +70,7 @@ import { layoutMap, inside, area } from '../../../city-creator/js/city-map.js';
 const SECTIONS = ['City Creator engine', 'City Creator map', 'City Creator roll stats', 'City Creator shop stock',
   'City Creator flesh out', 'City Creator Rifts', 'City Creator shop names', 'City Creator themes',
   'City Creator theme writing', 'City Creator themed rolls', 'City Creator map styles',
-  'City Creator saved themes', 'City Creator adapting'];
+  'City Creator saved themes', 'City Creator adapting', 'City Creator NPC levels', 'City Creator NPC flesh out'];
 
 const base = () => ({
   system: 'palladium-fantasy', population: 12000, npcCount: 14, everyRace: true,
@@ -236,7 +243,7 @@ export function run() {
       && partCalls.length === 2 && inFn(partCalls[0], 'async function writeTheme(', '// ── saved themes')
       && inFn(partCalls[1], 'async adaptTheme(', 'applyEdit() {')
       && inFn(aiAt[1], 'async function generate()', 'function hashSeed(')
-      && inFn(aiAt[2], 'async flesh(id)', 'forget() {'));
+      && inFn(aiAt[2], 'async flesh(id, opts)', 'async fleshForm(id)'));
 
   // ── the map (Phase 2) ──
   // Geometry the eye cannot audit across two hundred cities: every district
@@ -338,11 +345,14 @@ export function run() {
     !rerollEntry(linked, owner.id).npcs.find((n) => n.id === owner.id).sheet_id);
   // The roller REFUSES rather than guesses, and the page shows that refusal
   // as it comes: the error is the roller's, and nothing is rolled in its place.
-  const roll = page.slice(page.indexOf('async rollStats(id)'), page.indexOf('forget() {'));
+  // One call site for the roller, rollSheet(), shared by Roll stats and Flesh out.
+  const roll = page.slice(page.indexOf('async rollStats(id)'), page.indexOf('async flesh(id, opts)'));
+  const sheet = page.slice(page.indexOf('async function rollSheet('), page.indexOf('const rolledAs'));
   check('the page sends the roller exactly that request, and shows its refusal as it comes',
-    /const body = rollRequest\(S\.city, id\);/.test(roll) && /npcs\/generate`, 'POST', body\)/.test(roll)
+    /const body = rollRequest\(S\.city, id, overrides\);/.test(sheet) && /npcs\/generate`, 'POST', body\)/.test(sheet)
+      && /const \{ body, made \} = await rollSheet\(id\);/.test(roll)
       && /S\.rolls\[id\] = \{ msg: err\.message, err: true \};/.test(roll)
-      && (roll.match(/npcs\/generate/g) || []).length === 1);
+      && (page.match(/npcs\/generate/g) || []).length === 1);
   check('and only for a kept city, whose campaign the sheet can belong to',
     /function statsTools\(n\) \{\s*if \(!S\.saved\) return '';/.test(page));
 
@@ -423,9 +433,9 @@ export function run() {
   check('a reroll of the entry makes a new one, and drops its flesh', !rerollEntry(fleshed, npcId).npcs[0].flesh);
   check('a lock keeps it through a reroll of the city, and an unlocked entry loses it',
     rerollCity(toggleLock(fleshed, npcId), 99).npcs[0].flesh === 'A NOTE' && !rerollCity(fleshed, 99).npcs[0].flesh);
-  const fl = page.slice(page.indexOf('async flesh(id)'), page.indexOf('forget() {'));
+  const fl = page.slice(page.indexOf('async flesh(id, opts)'), page.indexOf('async fleshForm(id)'));
   check('the page asks once through /api/claude, keeps the answer in the entry, and saves a kept city at once',
-    (fl.match(/claudeRequest\(/g) || []).length === 1 && /S\.city = withFlesh\(S\.city, id, parseFlesh\(/.test(fl)
+    fl.length > 0 && (fl.match(/claudeRequest\(/g) || []).length === 1 && /S\.city = withFlesh\(S\.city, id, parseFlesh\(/.test(fl)
       && /if \(S\.saved\) \{\s*const \{ reveal: _r, public: _p, \.\.\.summary \} = await post\(`cities\/\$\{S\.saved\.id\}`, 'PATCH', \{ city: S\.city \}\);/.test(fl));
   check('every district, place, shop and NPC card has the button',
     ['fleshHtml(d)', 'fleshHtml(p)', 'fleshHtml(s)', 'fleshHtml(n)'].every((x) => page.includes(x)));
@@ -890,6 +900,129 @@ export function run() {
   check('the page adapts through askForPart and saves a NEW theme that says which it came from',
     /askForPart\(adaptPrompt\(part, settings, source\)\)/.test(page)
       && /post\('city-themes', 'POST', \{ pack, name: `\$\{theme\.name\} \(\$\{label\}\)`, adapted_from: id \}\)/.test(page));
+
+  section('City Creator NPC levels');
+
+  // A named NPC's level scales with their role. The range is the tables'
+  // (ROLE_LEVEL, OWNER_LEVEL), or a theme's own; the level in it comes from
+  // the city seed, so a city rebuilt from its seed has the same people.
+  const validLevels = (r) => Array.isArray(r) && r.length === 2 && r.every((x) => Number.isInteger(x) && x >= 1) && r[0] <= r[1];
+  for (const [label, TT] of [['Palladium Fantasy', T], ['Rifts', tablesFor('rifts')]]) {
+    const missing = TT.NPC_ROLES.filter((role) => !validLevels(TT.ROLE_LEVEL?.[role]));
+    const stray = Object.keys(TT.ROLE_LEVEL || {}).filter((role) => !TT.NPC_ROLES.includes(role));
+    check(`every ${label} role has a level range, and every range is a role's`,
+      TT.NPC_ROLES.length > 0 && missing.length === 0 && stray.length === 0 && validLevels(TT.OWNER_LEVEL),
+      `missing or bad: ${missing.join(', ')}; not a role: ${stray.join(', ')}`);
+  }
+  const lv = generateCity(base(), 4242);
+  const outOfRange = lv.npcs.filter((n) => { const [lo, hi] = levelRange(lv, n.role); return !(n.level >= lo && n.level <= hi); });
+  check('every NPC is built with a level inside their role\'s range',
+    lv.npcs.length > 0 && outOfRange.length === 0, outOfRange.map((n) => `${n.role}: ${n.level}`).join(', '));
+  const levelsOf = (c) => c.npcs.map((n) => n.level).join();
+  check('the same seed gives the same levels, and they are not all the same',
+    levelsOf(lv) === levelsOf(generateCity(base(), 4242))
+      && Array.from({ length: 20 }, (_, i) => generateCity(base(), 9000 + i)).some((c) => new Set(c.npcs.map((n) => n.level)).size > 1));
+  check('a shop owner rolls in the owner\'s range, and a role nobody gave a range rolls at 1',
+    JSON.stringify(levelRange(lv, 'owner of The Golden Anvil')) === JSON.stringify(T.OWNER_LEVEL)
+      && JSON.stringify(levelRange(lv, 'a role nobody wrote')) === '[1,1]');
+  // A city kept before levels: the same NPCs with no level stored.
+  const unlevelled = { ...lv, npcs: lv.npcs.map(({ level: _l, ...n }) => n) };
+  check('a city kept before levels draws, from its seed, exactly the levels it would have been built with',
+    lv.npcs.every((n) => npcLevel(unlevelled, n.id) === n.level));
+  check('Roll stats asks the roller for the NPC\'s own level',
+    lv.npcs.every((n) => rollRequest(lv, n.id).level === n.level));
+  const lvNpc = lv.npcs[0].id;
+  // Every NPC locked, over five new seeds: one NPC once can draw the same
+  // level by chance, which is how the first version of this check passed a
+  // reroll that re-rolled every locked level. A copy, and the levels read
+  // first: a locked entry is the same object in both cities, so a reroll that
+  // wrote to it moved the "before" too and the second version passed as well.
+  const allLocked = structuredClone(lv.npcs.reduce((c, n) => toggleLock(c, n.id), lv));
+  const lockedBefore = levelsOf(allLocked);
+  check('a lock keeps a level through a reroll of the city, whose seed is new',
+    [1, 2, 3, 4, 5].every((seed) => levelsOf(rerollCity(allLocked, seed)) === lockedBefore));
+  check('a sheet rolled at a level the G.M. chose puts that level on the card',
+    linkSheet(lv, lvNpc, 5, 9).npcs[0].level === 9 && linkSheet(lv, lvNpc, 5).npcs[0].level === lv.npcs[0].level);
+  const relevel = rerollEntry(lv, lvNpc).npcs[0];
+  check('an entry reroll rolls the new person\'s level in their own range',
+    relevel.level >= levelRange(lv, relevel.role)[0] && relevel.level <= levelRange(lv, relevel.role)[1]);
+  // The G.M.'s choices on the Flesh out form reach the roller as chosen.
+  const chosen = rollRequest(lv, lvNpc, { level: 7, occ: 'wizard' });
+  check('the form\'s level and O.C.C. override the role\'s',
+    chosen.level === 7 && chosen.occ_class_id === 'wizard' && chosen.class_id === lv.npcs[0].raceId);
+  const noClassCity = asRole(rollCity, '[W] npc_roles 7');
+  check('an O.C.C. the G.M. chose lifts the theme\'s "no class" block; an empty one does not',
+    rollRequest(noClassCity, 'npc-0', { occ: 'thief' }).occ_class_id === 'thief'
+      && refused(() => rollRequest(noClassCity, 'npc-0', { occ: '' })));
+  check('npcOcc is the role\'s job, and a Rifts race that is its R.C.C. alone takes none',
+    npcOcc(lv, lvNpc) === rollRequest(lv, lvNpc).occ_class_id
+      && !wantsOcc(asRole(riftsThemed, '[W] npc_roles 7', 'dog-boy'), 'npc-0')
+      && wantsOcc(asRole(riftsThemed, '[W] npc_roles 7', 'human'), 'npc-0'));
+  // A theme's roles may carry their own ranges; the AI is asked for them
+  // with each role's class, and a bad one costs that role its range only.
+  const ranged = validateThemePack({ ...westPack(), roleLevel: { '[W] npc_roles 1': [5, 7] } }, base());
+  const rangedCity = generateCity(base(), 3, null, { intensity: 'total', pack: ranged });
+  check('a theme\'s own range is used for its role, and one it gave none rolls at 1',
+    JSON.stringify(levelRange(rangedCity, '[W] npc_roles 1')) === '[5,7]'
+      && JSON.stringify(levelRange(rangedCity, '[W] npc_roles 7')) === '[1,1]');
+  check('a theme range for a role it does not have, or that is not a range, is refused',
+    refused(() => validateThemePack({ ...westPack(), roleLevel: { 'nobody': [1, 2] } }, base()))
+      && refused(() => validateThemePack({ ...westPack(), roleLevel: { '[W] npc_roles 1': [4, 2] } }, base()))
+      && refused(() => validateThemePack({ ...westPack(), roleLevel: { '[W] npc_roles 1': [0, 2] } }, base())));
+  const peopleAnswer = { tables: tablesOfPack(ranged, 'people'), roleOcc: [
+    { role: '[W] npc_roles 1', occ: 'soldier', minLevel: 5, maxLevel: 7 },
+    { role: '[W] npc_roles 2', occ: 'merchant', minLevel: 9, maxLevel: 3 }] };
+  const parsedPeople = parseThemePart('people', JSON.stringify(peopleAnswer), base(), westPack().prompt);
+  check('the people part asks for each role\'s range, keeps a good one and drops a bad one alone',
+    'minLevel' in themePrompt('people', base(), 'x').schema.properties.roleOcc.items.properties
+      && JSON.stringify(parsedPeople.roleLevel) === '{"[W] npc_roles 1":[5,7]}' && parsedPeople.roleOcc['[W] npc_roles 2'] === 'merchant');
+  check('a range survives saving the theme, and editing its role away takes the range with it',
+    JSON.stringify(themeParts(ranged).people.roleLevel) === '{"[W] npc_roles 1":[5,7]}'
+      && !editThemeTable(themeParts(ranged), 'NPC_ROLES', W('npc_roles').slice(1), base(), ranged.prompt)[1].roleLevel);
+  check('the NPC card shows the level, and Roll stats and the form both start from npcLevel',
+    /level \$\{npcLevel\(c, n\.id\)\}/.test(page) && /level: npcLevel\(c, id\)/.test(page));
+
+  section('City Creator NPC flesh out');
+
+  // Flesh out on a named NPC makes the whole person: the prose, a sheet at
+  // the form's level, and a People dossier linked to it. The dossier is read
+  // by every player in the campaign, so it carries none of the G.M.'s:
+  // the secret, the want, the job and the prose go in the sheet's notes.
+  const fnCity = withFlesh(lv, lvNpc, 'THE PROSE');
+  const fn = fnCity.npcs[0];
+  const dossier = npcDossier(fnCity, lvNpc);
+  const inDossier = JSON.stringify(dossier);
+  check('the dossier is the NPC\'s name and how they look, and holds no secret, want, job or prose',
+    dossier.name === fn.name && inDossier.includes(fn.quirk) && !inDossier.includes(fn.secret)
+      && !inDossier.includes(fn.want) && !inDossier.includes('THE PROSE') && !inDossier.includes(fn.role),
+    inDossier);
+  const notes = npcNotes(fnCity, lvNpc);
+  check('the sheet\'s notes carry the secret, the want, the job and the prose',
+    [fn.secret, fn.want, fn.role, 'THE PROSE'].every((x) => notes.includes(x)));
+  check('the prose is asked for at the form\'s level and O.C.C., so the two describe one person',
+    /level 6, priest of light/.test(fleshPrompt(lv, lvNpc, { level: 6, occ: 'priest-of-light' }).prompt)
+      && !/As a game character/.test(fleshPrompt(lv, lvNpc).prompt));
+  const joined = linkDossier(lv, lvNpc, 77);
+  check('the dossier is linked from that entry and no other, and an entry reroll drops the link',
+    joined.npcs[0].dossier_id === 77 && joined.npcs.filter((n) => n.dossier_id).length === 1
+      && !rerollEntry(joined, lvNpc).npcs[0].dossier_id);
+  // The order is the contract: a sheet before its notes, a sheet before the
+  // dossier that links to it, and the prose kept when the roller refuses.
+  const fnp = page.slice(page.indexOf('async fleshNpc(id)'), page.indexOf('async linkExisting(id)'));
+  const at = (re) => fnp.search(re);
+  const order = [/await keepInto\(Number\(f\.campaign\)\)/, /await City\.flesh\(id, opts\)/, /await rollSheet\(id, \{ level: f\.level, occ: f\.occ \}\)/,
+    /\{ notes: npcNotes\(S\.city, id\) \}/, /npcs`, 'POST', npcDossier\(S\.city, id\)\)/, /await joinDossier\(id, res\.npc\.id\)/].map(at);
+  check('the page saves an unsaved city, then writes the prose, rolls the sheet, writes its notes, makes the dossier and links it',
+    fnp.length > 0 && order.every((x, i) => x > 0 && (i === 0 || x > order[i - 1])), order.join());
+  check('a roller refusal keeps the prose and says why',
+    /throw new Error\(`The prose is kept\. No sheet: \$\{err\.message\}`\)/.test(fnp));
+  check('a dossier name already in the campaign is offered for linking, not refused or duplicated',
+    /err\.status !== 409 \|\| !err\.detail\?\.npc_id/.test(fnp) && /f\.clash = \{ npc_id: err\.detail\.npc_id/.test(fnp)
+      && /await joinDossier\(id, f\.clash\.npc_id\)/.test(page));
+  check('the dossier link sends the sheet\'s id to the dossier, and keeps both on the entry',
+    /npcs\/\$\{dossierId\}`, 'PATCH', \{ character_id: n\.sheet_id \}\)/.test(page) && /S\.city = linkDossier\(S\.city, id, dossierId\)/.test(page));
+  check('every named NPC\'s Flesh out opens the form, and every other entry\'s writes at once',
+    /onclick="City\.\$\{npc \? 'fleshForm' : 'flesh'\}/.test(page) && /const npc = \/\^npc-\/\.test\(x\.id\) && !!x\.name;/.test(page));
 }
 
 // A saved pack's tables for one part, as the answer to that part carries them.

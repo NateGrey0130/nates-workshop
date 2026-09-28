@@ -1034,6 +1034,23 @@ export const ROLE_OCC = {
 // A shop owner keeps shop; Rifts has no merchant O.C.C., and the Vagabond is
 // its catch-all.
 export const OWNER_OCC = 'vagabond';
+
+// The level range each role rolls in, [lowest, highest], on the same scale as
+// Palladium Fantasy's: a commoner 1-2, a tradesman or a guard 2-4, a fighter
+// by trade 3-6, a judge or a town elder 6-9. Every role in NPC_ROLES is here.
+export const ROLE_LEVEL = {
+  bartender: [2, 4], gunsmith: [2, 4], 'militia sergeant': [3, 5], preacher: [2, 5], merchant: [2, 4],
+  salvager: [1, 3], farmer: [1, 2], thief: [2, 4], scholar: [2, 5], medic: [2, 5], mercenary: [3, 6],
+  'town elder': [6, 9], beggar: [1, 2], musician: [1, 3], moneylender: [2, 4], mechanic: [2, 4],
+  'stable-hand': [1, 2], herbalist: [1, 3], 'ferry pilot': [1, 3], 'tax collector': [2, 4], gravedigger: [1, 2],
+  'water engineer': [2, 4], 'bounty hunter': [3, 6], tailor: [1, 2], 'river trader': [2, 4],
+  'radio operator': [1, 3], 'fortune-teller': [2, 4], 'retired adventurer': [5, 8], 'gate guard': [2, 4],
+  smuggler: [2, 4], cook: [1, 2], brewer: [1, 2], builder: [1, 2], 'arena fighter': [3, 6], judge: [6, 9],
+  'hedge mage': [2, 5], pilgrim: [1, 2], 'rat-catcher': [1, 2], 'street-lamp keeper': [1, 2],
+  'junk dealer': [1, 3], 'caravan scout': [2, 4], schoolteacher: [1, 3],
+};
+// A shop owner is a shopkeeper.
+export const OWNER_LEVEL = [2, 4];
 export const PLACES_THEME = 'rifts-places';
 
 // Shop inventories: rules over the Codex's Rifts gear rows, as for Palladium

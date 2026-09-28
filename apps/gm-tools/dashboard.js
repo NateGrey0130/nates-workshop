@@ -1,5 +1,11 @@
 // Campaign dashboard — party roster, GM notes, campaign journal feed.
 // escHtml() comes from /shared/js/ui.js.
+//
+// The setting pages and the journal feed are SHARED with every game's GM page:
+// /shared/js/campaign/setting.js and notes.js hold their markup and behaviour,
+// and this app's stylesheet styles their `mc-` classes. What stays here is this
+// game's: the pools and their steppers, the XP award, rest rates, the GM's own
+// notes, and the statted NPCs.
 'use strict';
 
 const campaignId = new URLSearchParams(location.search).get('campaign_id');
@@ -8,9 +14,7 @@ const campaignId = new URLSearchParams(location.search).get('campaign_id');
 // lands on that page rather than at the top of the roster (P4b).
 const openEntryId = new URLSearchParams(location.search).get('entry_id');
 const POOLS = [['hp', 'H.P.'], ['sdc', 'S.D.C.'], ['mdc', 'M.D.C.'], ['ppe', 'P.P.E.'], ['isp', 'I.S.P.']];
-const D = { campaign: null, isGm: false, roster: [], journal: [], classNames: {}, amt: 5,
-            // The GM's own pages (migration 078) and the one open in the editor.
-            entries: [], entry: null, entryImages: [],
+const D = { campaign: null, isGm: false, roster: [], classNames: {}, amt: 5,
             // Party members UNTICKED for the next XP award. The unticked set
             // rather than the ticked one, so a character who joins mid-session
             // arrives ticked like everyone else, and a roster refresh cannot
@@ -20,12 +24,27 @@ const $ = (i) => document.getElementById(i);
 
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 
+// The shared views reach this page through one adapter, so none of them
+// imports ui.js or knows how this app asks a question or reports a failure.
+// confirm() and alert() are what this page has always used for both.
+const C = mcCampaign;
+C.init({
+  base: '/api/character-creator', campaignId,
+  ui: {
+    esc: escHtml, escJs, undoable,
+    modal: (text) => Promise.resolve(confirm(text)),
+    toast: (text) => alert(text),
+  },
+  render: () => render(),
+  reload: () => load(),
+});
+
 async function load() {
   try {
-    const [campRes, rosterRes, journalRes, classesRes] = await Promise.all([
+    const [campRes, rosterRes, , classesRes] = await Promise.all([
       api('campaigns/' + campaignId),
       api('characters?campaign_id=' + campaignId),
-      api('journal?campaign_id=' + campaignId),
+      C.notes.load(),
       // The names projection: this page only ever turns a class_id into a
       // label, and the full list is ~750KB of parsed markdown. Retired classes
       // are included by the projection itself, so a character on one keeps
@@ -37,12 +56,11 @@ async function load() {
     // The 🎲 beside the Statted NPCs panel's Name boxes (js/name-panel.js).
     if (D.isGm) namePanel.init({ campaignId, system: D.campaign.system });
     D.roster = partyFirst(rosterRes.characters);
-    D.journal = journalRes.entries;
-    D.journalTotal = journalRes.total ?? journalRes.entries.length;
     D.classNames = Object.fromEntries(classesRes.classes.map((c) => [c.id, c.name]));
-    // After the campaign, because it is GM-only and isGm is what decides
-    // whether to ask at all - a player's dashboard makes no request for it.
-    await loadEntries();
+    // The GM's setting pages. After the campaign, because they are GM-only
+    // and isGm is what decides whether to ask at all - a player's dashboard
+    // makes no request for them.
+    if (D.isGm) await C.setting.load();
     // The dossiers, for the Statted NPCs panel's link control. G.M.-only for
     // the same reason the entries are: a player's page never asks.
     if (D.isGm) {
@@ -52,9 +70,9 @@ async function load() {
     render();
     // After that first render, so a page that will not open has somewhere to
     // say so: setMsg writes into markup that does not exist until now. Gated
-    // on isGm for the same reason loadEntries is - a player handed this URL
-    // makes no request for a page they could not be shown anyway.
-    if (D.isGm && openEntryId) await openEntry(openEntryId);
+    // on isGm for the same reason the setting pages are - a player handed this
+    // URL makes no request for a page they could not be shown anyway.
+    if (D.isGm && openEntryId) await C.setting.open(openEntryId);
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p></div>`;
   }
@@ -301,23 +319,6 @@ function render() {
 
   const rosterRows = D.roster.map(rosterRowHtml).join('');
 
-  const journalHtml = D.journal.slice(0, 20).map((e) => {
-    const isCampaign = e.character_id == null;
-    const who = isCampaign ? 'campaign' : (charName[e.character_id] || 'character #' + e.character_id);
-    return `<div class="entry ${isCampaign ? 'campaign' : ''}">
-      <span class="tag ${isCampaign ? 'gm' : ''}">${escHtml(who)}</span>
-      <b>${escHtml(e.title || 'Untitled')}</b>
-      <span class="muted small"> — ${escHtml(e.author_email)}${e.session_date ? ' · session ' + escHtml(e.session_date) : ''} · ${escHtml(e.created_at)}</span>
-      <div class="body">${escHtml(e.body)}</div>
-    </div>`;
-  }).join('') || '<p class="muted small">No journal entries yet.</p>';
-
-  // The dashboard already showed only the newest 20; now that the fetch itself
-  // is bounded, say what the 20 is out of.
-  const journalMore = D.journalTotal > Math.min(D.journal.length, 20)
-    ? `<p class="muted small">Showing the 20 most recent of ${D.journalTotal} entries.</p>`
-    : '';
-
   // The roster and the GM notes share a row; the journal runs full width
   // under them. The grid class is only set when there is something to put in
   // the rail - the notes panel is GM-only, and a player should get the whole
@@ -345,113 +346,15 @@ function render() {
   </div>` : ''}
   </div>
 
-  ${D.isGm ? settingHtml() : ''}
+  ${D.isGm ? C.setting.html({ presentHref: 'present.html' }) : ''}
 
   ${D.isGm ? npcSheetsHtml() : ''}
 
-  <div class="panel">
-    <h3 style="margin-top:0">Campaign journal <span class="muted small">(newest first)</span></h3>
-    ${journalHtml}
-    ${journalMore}
-    <p class="small"><a href="/apps/campaign/?campaign_id=${campaignId}">🗒 Open campaign notes</a>
-      <span class="muted">— search the log, ask a question of it, and track what the party holds</span></p>
-  </div>`;
-}
-
-// ─── the setting: the GM's own pages, and the pictures shown from them ───
-//
-// An ENTRY is the GM's notebook and is never revealed. An IMAGE is revealed one
-// at a time, and its CAPTION is the only text a player reads (migration 078).
-// So the editor below puts the reveal switch on the picture, never on the page,
-// and the caption field sits beside it rather than under the body.
-//
-// PRESENT MODE (P4b) IS A PAGE OF ITS OWN - present.html, black and
-// chromeless, one picture fitted to the screen. It is a LINK rather than a
-// button so a GM with a second screen can open it there. Presenting a picture
-// does NOT reveal it: the switch below is still the only thing that does, and
-// present.html carries its own copy of that switch for the same reason the
-// caption field sits beside the picture here.
-const KINDS = ['place', 'faction', 'lore', 'handout', 'prep'];
-const KIND_LABEL = { place: 'Place', faction: 'Faction', lore: 'Lore', handout: 'Handout', prep: 'Session prep' };
-
-const presentUrl = (imageId) =>
-  `present.html?campaign_id=${encodeURIComponent(campaignId)}&entry_id=${D.entry.id}`
-  + (imageId ? `&image_id=${imageId}` : '');
-
-function settingHtml() {
-  const rows = D.entries.map((e) => `<li class="home-row${D.entry?.id === e.id ? ' on' : ''}">
-      <span class="home-what">
-        <a href="#" onclick="openEntry(${e.id}); return false;"><b>${escHtml(e.title)}</b></a>
-        <span class="muted small">${escHtml(KIND_LABEL[e.kind] || e.kind)}
-          ${e.image_count ? ` · ${e.image_count} picture${e.image_count === 1 ? '' : 's'}` : ''}
-          ${e.revealed_count ? ` · ${e.revealed_count} shown` : ''}</span>
-      </span>
-    </li>`).join('');
-
-  return `<div class="panel">
-    <h3 style="margin-top:0">Setting <span class="muted small">(your pages — players never see these, only pictures you reveal)</span></h3>
-    <div class="rowline">
-      <input id="entry-title" class="mini-in wide" placeholder="A place, a faction, next session…" maxlength="200">
-      <select id="entry-kind" class="mini-in">
-        ${KINDS.map((k) => `<option value="${k}">${escHtml(KIND_LABEL[k])}</option>`).join('')}
-      </select>
-      <button class="btn btn-primary" onclick="newEntry()">+ New page</button>
-      <span id="entry-msg" class="muted small"></span>
-    </div>
-    ${rows ? `<ul class="home-list">${rows}</ul>`
-      : '<p class="muted small">No pages yet. A page holds your notes and the pictures you show from them.</p>'}
-    ${D.entry ? entryEditorHtml() : ''}
-  </div>`;
-}
-
-function entryEditorHtml() {
-  const e = D.entry;
-  const pics = D.entryImages.map((i) => `<li class="setting-pic">
-      <img src="/api/character-creator/campaigns/${campaignId}/images/${i.id}" alt="${escHtml(i.caption || 'Picture')}" loading="lazy">
-      <div class="setting-pic-meta">
-        <input class="mini-in wide" value="${escHtml(i.caption || '')}" placeholder="Caption — the one thing players read"
-               onchange="saveCaption(${i.id}, this.value)">
-        <div class="rowline">
-          <a class="btn btn-sm" href="${presentUrl(i.id)}" title="Show this on a screen at the table. It does not reveal it.">▶ Present</a>
-          <button class="btn btn-sm ${i.revealed_at ? '' : 'btn-primary'}" onclick="toggleReveal(${i.id}, ${i.revealed_at ? 'false' : 'true'})">
-            ${i.revealed_at ? '🙈 Hide from players' : '👁 Reveal to players'}</button>
-          <span class="muted small">${i.revealed_at ? 'shown ' + escHtml(i.revealed_at) : 'only you can see this'}</span>
-          <button class="btn btn-sm btn-danger" onclick="deletePicture(${i.id})">Delete</button>
-        </div>
-      </div>
-    </li>`).join('');
-
-  return `<div class="setting-editor">
-    <div class="rowline">
-      <input id="edit-title" class="mini-in wide" value="${escHtml(e.title)}" maxlength="200">
-      <select id="edit-kind" class="mini-in">
-        ${KINDS.map((k) => `<option value="${k}" ${k === e.kind ? 'selected' : ''}>${escHtml(KIND_LABEL[k])}</option>`).join('')}
-      </select>
-      <button class="btn btn-primary" onclick="saveEntry()">💾 Save</button>
-      ${D.entryImages.length ? `<a class="btn" href="${presentUrl()}">▶ Present page</a>` : ''}
-      <button class="btn btn-sm" onclick="closeEntry()">Close</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteEntry()">Delete page</button>
-      <span id="edit-msg" class="muted small"></span>
-    </div>
-    <textarea id="edit-body" placeholder="Your notes. Never revealed.">${escHtml(e.body || '')}</textarea>
-    <div class="rowline">
-      <label class="btn btn-sm">📷 Add a picture
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none"
-               onchange="uploadPicture(this)"></label>
-      ${/* This used to lead with the server's byte cap, which stopped being the
-            thing a GM runs into: a big photo is shrunk to 2048px on its longest
-            edge before it is sent (UI-AUDIT F57), so that cap is now reached by
-            very few pictures rather than by every phone photo. An animated gif
-            is sent as it is, because re-encoding one flattens it. */''}
-      <span class="muted small">jpg/png/webp/gif. Big pictures are shrunk to
-        ${downscale.MAX_EDGE}px before they upload; a gif is sent as it is.
-        A picture arrives hidden.
-        <b>Present</b> shows it on a screen at the table and changes nothing;
-        <b>Reveal</b> puts it in the players' Handouts to keep.</span>
-      <span id="upload-msg" class="muted small"></span>
-    </div>
-    ${pics ? `<ul class="setting-pics">${pics}</ul>` : ''}
-  </div>`;
+  ${C.notes.feedHtml({
+    names: charName,
+    footer: `<p class="small"><a href="/apps/campaign/?campaign_id=${campaignId}">🗒 Open campaign notes</a>
+      <span class="muted">— search the log, ask a question of it, and track what the party holds</span></p>`,
+  })}`;
 }
 
 // ─── statted NPCs ───
@@ -473,124 +376,6 @@ function npcSheetsHtml() {
       else if ($('roster-area')) $('roster-area').innerHTML = rosterAreaHtml();
     },
     onDossiers: (list) => { D.dossiers = list; },
-  });
-}
-
-async function loadEntries() {
-  if (!D.isGm) return;
-  try {
-    D.entries = (await api(`campaigns/${campaignId}/entries`)).entries || [];
-  } catch { D.entries = []; }
-}
-
-async function newEntry() {
-  const title = $('entry-title').value.trim();
-  if (!title) { setMsg('entry-msg', 'A page needs a title.', true); return; }
-  try {
-    const res = await api(`campaigns/${campaignId}/entries`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, kind: $('entry-kind').value }),
-    });
-    await loadEntries();
-    await openEntry(res.entry.id);
-  } catch (err) { setMsg('entry-msg', err.message, true); }
-}
-
-async function openEntry(id) {
-  try {
-    const res = await api(`campaigns/${campaignId}/entries/${id}`);
-    D.entry = res.entry; D.entryImages = res.images || [];
-    render();
-  } catch (err) { setMsg('entry-msg', err.message, true); }
-}
-
-function closeEntry() { D.entry = null; D.entryImages = []; render(); }
-
-async function saveEntry() {
-  try {
-    const res = await api(`campaigns/${campaignId}/entries/${D.entry.id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: $('edit-title').value.trim(), kind: $('edit-kind').value, body: $('edit-body').value }),
-    });
-    D.entry = res.entry;
-    await loadEntries();
-    render();
-    setMsg('edit-msg', 'Saved.');
-  } catch (err) { setMsg('edit-msg', err.message, true); }
-}
-
-// The confirmation says what goes with it, as the character delete does: the
-// pictures are deleted from storage too, and that cannot be undone.
-async function deleteEntry() {
-  const n = D.entryImages.length;
-  if (!confirm(`Delete "${D.entry.title}"?\n\n${n ? `Its ${n} picture${n === 1 ? '' : 's'} ` : 'Nothing else '}`
-    + `goes with it, including any the party has already been shown. This cannot be undone.`)) return;
-  try {
-    await api(`campaigns/${campaignId}/entries/${D.entry.id}`, { method: 'DELETE' });
-    D.entry = null; D.entryImages = [];
-    await loadEntries();
-    render();
-  } catch (err) { setMsg('edit-msg', err.message, true); }
-}
-
-// The upload is the raw file as the body, which is what the endpoint takes -
-// no multipart, no form. The Content-Type IS the type check on the server.
-async function uploadPicture(input) {
-  const file = input.files?.[0];
-  if (!file) return;
-  input.value = '';
-  setMsg('upload-msg', `Uploading ${file.name}…`);
-  try {
-    // UI-AUDIT F57 option A: shrink it here, because nothing downstream can.
-    // THE HEADER COMES FROM WHAT IS SENT, not from the File - the server reads
-    // this one header to pick the R2 key's extension, the stored content_type
-    // AND the Content-Type it serves back later, so describing a re-encoded
-    // blob with the original file's type would be wrong in three places.
-    // `toUpload` hands the original back untouched whenever it cannot do
-    // better, so this is the same request it always was in that case.
-    const body = await downscale.toUpload(file);
-    const res = await api(`campaigns/${campaignId}/entries/${D.entry.id}/images`, {
-      method: 'POST', headers: { 'Content-Type': body.type }, body,
-    });
-    D.entryImages.push(res.image);
-    await loadEntries();
-    render();
-    setMsg('upload-msg', 'Added, hidden from players.');
-  } catch (err) { setMsg('upload-msg', err.message, true); }
-}
-
-async function patchImage(id, body, msgId) {
-  try {
-    const res = await api(`campaigns/${campaignId}/images/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const at = D.entryImages.findIndex((i) => i.id === id);
-    if (at >= 0) D.entryImages[at] = res.image;
-    await loadEntries();
-    render();
-  } catch (err) { setMsg(msgId, err.message, true); }
-}
-
-const toggleReveal = (id, on) => patchImage(id, { revealed: on }, 'edit-msg');
-const saveCaption = (id, caption) => patchImage(id, { caption }, 'edit-msg');
-
-// One picture goes with an Undo (js/undo-toast.js): nothing is removed from
-// storage until the window closes, so Undo loses nothing. Deleting a whole
-// PAGE keeps its confirm() - it takes every picture on it at once, and that
-// is a decision to read about first, not a slip to catch afterwards.
-function deletePicture(id) {
-  const at = D.entryImages.findIndex((i) => i.id === id);
-  if (at < 0) return;
-  const img = D.entryImages[at];
-  undoable({
-    label: img.caption ? `“${img.caption}”` : 'the picture',
-    hide: () => { D.entryImages = D.entryImages.filter((i) => i.id !== id); render(); },
-    restore: () => { D.entryImages.splice(Math.min(at, D.entryImages.length), 0, img); render(); },
-    commit: async (keepalive) => {
-      await api(`campaigns/${campaignId}/images/${id}`, { method: 'DELETE', keepalive });
-      if (!keepalive) { await loadEntries(); render(); }
-    },
   });
 }
 
