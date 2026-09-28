@@ -3,8 +3,11 @@
 Marvel Super Heroes Advanced Set, Official Guidebook to Mutants, Kim Eastland,
 1986. Registry entry: `scripts/msh/books.json` -> `ma1`. Measured 2026-09-28.
 
-**Rows citing this book:** none yet. The first rows land with the Notable NPCs
-section (phase 4 of the plan below).
+**Rows citing this book:** 894 `msh_book_text` rows over 181 entries in
+production (`DB_MARVEL`, applied and read back 2026-09-28), and 172 characters
+in `apps/marvel-heroes/data/npcs.json`: 174 versions, 189 stat blocks, 7
+cross-reference appearances and 434 powers, 105 of them linked to the Ultimate
+Powers Book.
 
 This is the first Marvel book surveyed, and nothing here touches the Palladium
 book pipeline: the cache, the registry, the scripts and this file are all

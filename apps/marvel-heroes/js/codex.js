@@ -35,6 +35,14 @@ const slug = (s) => norm(s).replace(/ /g, '-');
 const band = ([lo, hi]) => (lo === hi ? String(lo) : `${lo}-${hi}`);
 const d100 = (r) => band(r.roll.map((n) => String(n).padStart(2, '0')).map((s) => (s === '100' ? '00' : s)));
 
+// An override's field, as a card names it.
+const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
+  R: 'Reason', I: 'Intuition', P: 'Psyche' };
+
+// A version's name on a card: the book's parenthetical, capitalised the one
+// way (MA1 prints both "(original)" and "(Current)"), or its first identity line.
+const versionName = (v) => (v.label ? v.label.charAt(0).toUpperCase() + v.label.slice(1) : v.identity[0] || '');
+
 // The Gear tab's column names, and the ones the tables abbreviate.
 const HEAD = { special_damage: 'Special damage' };
 const head = (c) => HEAD[c] || c.charAt(0).toUpperCase() + c.slice(1);
@@ -210,8 +218,12 @@ export const SECTIONS = [
       const pages = [...new Set(r.versions.flatMap((v) => v.pages))].sort((a, b) => a - b);
       return `${r.team}, MA1 ${pages.length > 1 ? 'pp.' : 'p.'}${band([pages[0], pages[pages.length - 1]])}`;
     },
-    // The name and status lines printed under the header: "Kurt Wagner. Mutant hero."
-    summary: (r) => (r.versions[0].identity.join('. ').replace(/\.\./g, '.') || `One of the ${r.team}`),
+    // The name and status lines printed under the header: "Kurt Wagner. Mutant
+    // hero". A line that starts lower-case continues the one before it, as
+    // Phoenix's "Alien entity who had assumed the personality / of Jean Grey".
+    summary: (r) => r.versions[0].identity
+      .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
+      || `One of the ${r.team}`,
     tags: (r) => [
       r.versions.some((v) => v.blocks.length > 1) && 'forms',
       r.versions.some((v) => v.members.length) && 'team',
@@ -221,17 +233,18 @@ export const SECTIONS = [
       const out = [];
       for (const v of r.versions) {
         for (const b of v.blocks) {
-          const head = [r.versions.length > 1 && (v.label || v.identity[0]), b.label].filter(Boolean).join(', ');
+          const head = [r.versions.length > 1 && versionName(v), b.label].filter(Boolean).join(', ');
           const grid = b.abilities.map(([l, n, c, alt]) => `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`).join(' | ');
           out.push([head || 'Abilities', grid]);
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
           out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
           const o = b.override;
+          const field = o && (FIELD[o.field] || o.field);
           if (o && o.verdict === 'misprint') {
             const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
-            out.push(['Misprint', `${o.field} is printed ${show(o.printed)}; the book's own ranks give ${show(o.corrected)}`]);
+            out.push(['Misprint', `${field} is printed ${show(o.printed)}; the book's own ranks give ${show(o.corrected)}`]);
           } else if (o && o.verdict === 'as_printed') {
-            out.push(['As printed', `${o.field} ${o.printed}, which R+I+P does not give`]);
+            out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
           }
         }
       }
@@ -241,7 +254,7 @@ export const SECTIONS = [
     related(r) {
       const out = [];
       for (const v of r.versions) {
-        const prefix = r.versions.length > 1 ? `${v.label || v.identity[0]}: ` : '';
+        const prefix = r.versions.length > 1 ? `${versionName(v)}: ` : '';
         if (v.powers.length) {
           out.push([`${prefix}Powers`, v.powers.map((p) => (p.upb
             ? { name: p.name, code: p.upb, section: 'powers', title: `UPB ${p.upb} ${this.upbName[p.upb]}` }
@@ -255,7 +268,7 @@ export const SECTIONS = [
       ...v.powers.map((p) => p.name), ...v.members.map((m) => m.name)])].filter(Boolean).join(' '),
     // Each version's entry, and each cross-reference, in the book's own text.
     bookText(r) {
-      return [...r.versions.map((v) => ({ book: this.book, entry: v.id, label: r.versions.length > 1 ? (v.label || v.identity[0]) : '' })),
+      return [...r.versions.map((v) => ({ book: this.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
         ...r.appearances.map((a) => ({ book: this.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
     },
   },

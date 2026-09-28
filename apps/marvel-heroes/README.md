@@ -146,9 +146,12 @@ tables. In a worktree, set `WORKSHOP_MSH_CACHE` to the main checkout's
 `.cache/msh` so both the extractor and the suite's leak check find it.
 
 **The leak check.** When the extraction is present, the smoke suite compares
-every tracked and untracked file under this app, its endpoint, the extractor
-and the migration against every run of ten words in the book's power text, and
-fails on any match. CI has no extraction and says the section skipped.
+every tracked and untracked file under this app, its endpoints, `scripts/msh/`,
+the extractor and the Marvel migrations against every run of ten words in the
+book's power text and in each parsed sourcebook's prose (`msh_book_text`'s
+source), and fails on any match. CI has no extraction and says the section
+skipped. It caught its first leak the day the sourcebooks were added: the MA1
+survey had quoted the book.
 
 ### `msh_book_text`
 
@@ -162,7 +165,7 @@ a card fetches one entry's rows by `(book, entry)` in one query.
 | `key` | `<book>:<entry>:<part>[:<n>]`, unique - `ma1:nightcrawler:power:1` |
 | `book` | the registry slug, `scripts/msh/books.json` |
 | `entry` | the entry's slug, as the committed data names it |
-| `part` | `power`, `talents`, `contacts`, `running`, `background`, `notes`, `member` or `prose` |
+| `part` | `power`, `powers-intro`, `talents`, `contacts`, `running`, `background`, `notes`, `member`, `appearance` (a cross-reference's text) or `prose` |
 | `name` | the power's or member's printed name, when the part has one |
 | `page` | the printed page the piece starts on |
 | `body` | the text, folded to ASCII |
@@ -171,9 +174,20 @@ Migration `087`, in `DB_MARVEL`. The same rule as `msh_power_text`: **its rows
 are never in the repo**, and a database built from the repo has it empty. The
 numbers, rank codes, power names and page citations of each entry are committed;
 the sentences are not. `scripts/msh/roster.py` parses the local OCR cache
-(`$WORKSHOP_MSH_CACHE/books/<slug>/`). The data script that fills this table is
-written beside it, and the leak check above is extended to it when the data
-lands.
+(`$WORKSHOP_MSH_CACHE/books/<slug>/`), and `scripts/msh/npcs.py` writes both
+halves: `data/npcs.json` here, and this table's data script beside the cache.
+`/api/marvel-heroes/book-text?book=ma1&entry=<id>` serves one entry's rows in
+the book's order, and answers 404 `missing: true` when there are none.
+
+**Loading it.** On the machine with the cache:
+
+```bash
+python scripts/msh/roster.py ma1
+python scripts/msh/npcs.py ma1
+node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/book-text.sql
+```
+
+The script deletes the book's rows first, so re-running it replaces them.
 
 ## Saved heroes: `msh_heroes`
 
@@ -410,13 +424,17 @@ by roll, and they decide nothing here.
 | `data/talents.json`, `data/contacts.json` | the PB's Talent categories and Appendix B; its Contact types and Appendix C |
 | `data/equipment.json` | the PB weapon, ammunition, missile, grenade and vehicle tables and the vehicle damage list, as printed apart from R20-R23, with column keys written for the app |
 | `data/powers.json` | the 263 Powers: page, range column, one-line summary, and the bonus, optional and nemesis Powers each names - by code where the name is a Power, by name where it is a category or a description |
+| `data/npcs.json` | the Notable NPCs, built by `scripts/msh/npcs.py`: every character, version, stat block, power and member name, and page, with each misprint's printed and corrected value; facts only, never the book's prose |
+| `data/npc-power-aliases.json` | sourcebook power names that are a UPB Power under another name, for the Notable NPCs' links; clear equivalents only |
 | `codex/index.html`, `codex/app.js` | the Codex page and its entry module; it links `../styles.css`, this app's one stylesheet |
 | `js/codex.js` | the Codex's sections as descriptors, its search, and reading and writing its address; pure |
 | `js/power-text.js` | fetching a Power's full text, shared by the Powers tab and the Codex; a missing row or a failed fetch is an answer, never a throw |
+| `js/book-text.js` | fetching a sourcebook entry's text for a Notable NPC's card, on the same terms, and laying its parts out |
 | `js/gear.js` | the Gear tab's search, and reading a printed rank abbreviation back onto the ladder |
 | `js/sheet.js` | a built hero to its saved snapshot, and the snapshot to the sheet's HTML; pure, so the suite runs it |
 | `js/pointbuy.js` | Point Buy (R24): the ledger of what each line costs, the cap, the rank steps, the most a line can afford, a build to its snapshot, and what a rolled hero would cost |
 | `/functions/api/marvel-heroes/power-text.js` | GET one Power's full text from `msh_power_text`; signed-in users only |
+| `/functions/api/marvel-heroes/book-text.js` | GET one sourcebook entry's text from `msh_book_text`, in the book's order; signed-in users only |
 | `/functions/api/marvel-heroes/heroes.js`, `_lib/heroes.js` | save, list, open and delete the caller's own heroes, and the checks every write goes through |
 | `/functions/api/marvel-heroes/campaigns.js`, `campaigns/[id].js`, `_lib/campaigns.js` | list and create campaigns; read, edit (GM) and delete (GM) one; who may do what, and the checks every write goes through |
 | `/functions/api/marvel-heroes/campaigns/[id]/heroes.js` | link one of your own heroes to an open campaign, or take one out (its owner or the GM) |
