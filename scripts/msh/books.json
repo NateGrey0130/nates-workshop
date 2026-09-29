@@ -21,7 +21,12 @@
     "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text",
     "  index           the printed index: [name, [printed pages]], transcribed and checked against the page images",
     "  parts           a boxed module of several booklets, each numbered from 1: {name, cite (the booklet as a card cites it), pdf: [first, last], offset or null}; replaces offset, which assumes one numbering",
-    "  layout          how the character pages are set: absent for MA1's (scripts/msh/roster.py); roster-booklet for MHSP1's (scripts/msh/booklet.py)",
+    "  layout          how the character pages are set: absent for MA1's (scripts/msh/roster.py); roster-booklet for MHSP1's (scripts/msh/booklet.py); grid-booklets for ME1's, MA1's grids in a boxed module (scripts/msh/gridbooks.py)",
+    "  character_ranges  a grid-booklets book: [{part, pages: [first, last] printed}] that scripts/msh/gridbooks.py reads for characters",
+    "  opponents       a grid-booklets book: adventure pages that stat a character inside their prose, {part, page, names}; an entry there ends where the prose resumes",
+    "  roster_sections Contents sections whose sub-entries are characters, a checklist every name of which must be found",
+    "  tiers           statted generic types the Contents does not list by that name (Typical Skrull Warrior), a checklist too",
+    "  teams           [part, first printed page, team]: the team of an entry is the last one at or before its first page",
     "  character_part  with parts: the booklet character_pages counts in",
     "  item_part       with parts: the booklet item_pages counts in",
     "  locations       a roster-booklet book's locations: {name, section (the adventure section that describes it), parts, part_aliases, items (run-ins inside it that are items), rooms (its room table: columns, and rows of [sector, d100 range, a room per column], transcribed by eye)}",
@@ -32,7 +37,7 @@
     "  running         a booklet of running notes, one per character: {part, pages, aliases: {name as the note prints it: entry header}}",
     "  reference_summary a chart of every character's ranks, Health and Karma: {pdf, heroes, villains}, rows [name, \"F A S E R I P\" as printed, Health, Karma, [powers]], transcribed by eye",
     "  sections (with parts) a fourth field names the booklet whose Contents lists the entry, since each booklet numbers from 1 (ME1)",
-    "  reference_summary rows may give the seven ranks as a list of the printed values, number and code, where the chart prints both (ME1)",
+    "  reference_summary rows may give the seven ranks as a list of the printed values, number and code, where the chart prints both (ME1); a grid-booklets book's chart names its part and the team its chart-only heroes join",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -738,8 +743,34 @@
         ["Elders", "Trader", 16, "Resource Book"]
       ],
       "contents_note": "Both booklets print a Contents on their printed page 1 (PDF 3 and PDF 35); each is stored in sections with its booklet as the fourth field. Every entry was read on its page image 2026-09-29 and agrees, Chapter 10's banner included (set mid-page on printed 20). The Adventure Book's Contents also names the Flowchart (inside front cover), the Pregenerated Heroes Summary (inside back cover) and two map sheets.",
+      "layout": "grid-booklets",
+      "columns": 3,
+      "character_ranges": [
+        {"part": "Adventure Book", "pages": [3, 7]},
+        {"part": "Resource Book", "pages": [2, 16]}
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 11, "names": ["Typical Oolafat"]},
+        {"part": "Adventure Book", "page": 12, "names": ["Ghoul Captain"]},
+        {"part": "Adventure Book", "page": 15, "names": ["Superkree"]},
+        {"part": "Adventure Book", "page": 18, "names": ["Common Inhuman"]},
+        {"part": "Adventure Book", "page": 27, "names": ["Garnet Cato", "Claud Victor"]},
+        {"part": "Adventure Book", "page": 28, "names": ["Sentry 9168"]}
+      ],
+      "roster_sections": ["Non-pregenerated Heroes", "Inhumans", "Elders"],
+      "tiers": ["Typical Skrull Warrior", "Typical Kree Warrior"],
+      "teams": [
+        ["Adventure Book", 3, "Cosmos Cubed Heroes"],
+        ["Adventure Book", 8, "ME1 Cosmos Cubed"],
+        ["Resource Book", 2, "Skrulls"],
+        ["Resource Book", 3, "Kree"],
+        ["Resource Book", 4, "Inhumans"],
+        ["Resource Book", 8, "Elders of the Universe"]
+      ],
       "reference_summary": {
         "pdf": 51,
+        "part": "Pregenerated Heroes Summary",
+        "team": "Cosmos Cubed Heroes",
         "note": "The Pregenerated Heroes Summary, printed sideways on the inside back cover. Transcribed by eye 2026-09-29 from a render turned 90 degrees; Tesseract reads the page sideways. Each row gives the seven ranks as printed, number and code. Power names are the chart's, with its abbreviations spelled out (Invulner., Environ. Independ., Psychic Reflect.) and each power's own rank where it prints one; a power the chart qualifies at length keeps its name only.",
         "heroes": [
           ["Mantis", ["40 In", "40 In", "6 Ty", "30 Rm", "6 Ty", "20 Ex", "50 Am"], 116, 76, ["Empathy-Am", "Healing-Un", "Life Support-Shift Z", "Plant Control-Un", "Recovery-Am", "Resistances-Am", "Teleport-In"]],

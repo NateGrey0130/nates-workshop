@@ -51,7 +51,7 @@ RANK_NUMBER = {'Sh0': 0, 'Fe': 2, 'Fb': 2, 'Pr': 4, 'Po': 4, 'Ty': 6, 'Gd': 10, 
                'Ex': 20, 'Rm': 30, 'Re': 30, 'In': 40, 'Am': 50, 'Mn': 75, 'Un': 100,
                'ShX': 150, 'ShY': 200, 'ShZ': 500, 'C-1000': 1000, 'C-3000': 3000, 'C-5000': 5000}
 ABILITIES = ['F', 'A', 'S', 'E', 'R', 'I', 'P']
-CODE = r'(?:C-?\d{3,4}|Shift\s?[XYZ0]|Sh[XYZ0]|[A-Za-z]{1,2})'
+CODE = r'(?:C-?\d{3,4}|C[lI1]\s?\d{4}|Shift\s?[XYZ0]|Sh[XYZ0]|[A-Za-z]{1,2})'
 # <row letter, up to 3 chars of OCR noise> <number> <code> [(<alt number> <alt code>)] <rest>
 # The alternate is the book's own convention (printed p.2): a changed value
 # is set in parentheses after the usual one, as in Magma's S 10 Gd(30Rm) or
@@ -63,6 +63,8 @@ ROW = re.compile(r'^\s*(\S{1,3})\s+([0-9OolI]{1,4})[\u00b0\'\u2019:.,]?\s*[^\w\s
 CANON = {k.lower(): k for k in RANK_NUMBER}
 CANON.update({'shift0': 'Sh0', 'shiftx': 'ShX', 'shifty': 'ShY', 'shiftz': 'ShZ',
               'c1000': 'C-1000', 'c3000': 'C-3000', 'c5000': 'C-5000'})
+# ME1 prints a Class rank as "Cl 1000", which OCR reads as CI or C1 too
+CANON.update({p + n: 'C-' + n for p in ('cl', 'ci', 'c1') for n in ('1000', '3000', '5000')})
 
 
 def canon(code):
@@ -71,7 +73,7 @@ LABELS = ('Health', 'Karma', 'Resources', 'Popularity')
 # The printed '=' OCRs as ':', a quote or a dash often enough to matter:
 # Binary's "Health " 110" hid both her blocks from the first survey count.
 EQ = r'\s*[=:"\u201c\u201d-]'
-LABEL_RX = {k: re.compile(k + EQ + r'\s*(.+?)\s*(?=(?:Health|Karma|Resources|Popularity)' + EQ + r'|$)') for k in LABELS}
+LABEL_RX = {k: re.compile(('Heal?th' if k == 'Health' else k) + EQ +r'\s*(.+?)\s*(?=(?:Health|Karma|Resources|Popularity)' + EQ + r'|$)') for k in LABELS}
 RUN_IN = re.compile(r"^([A-Z][A-Z0-9 .,'&()/-]{1,60}?):\s*(.*)$")
 SECTION = {'KNOWN POWERS': 'powers', 'POWERS': 'powers', 'TALENTS': 'talents', 'TALENT': 'talents',
            'CONTACTS': 'contacts', 'CONTACT': 'contacts', 'BACKGROUND': 'background'}
@@ -254,13 +256,25 @@ def fix_digits(s):
     return int(s.replace('O', '0').replace('o', '0').replace('l', '1').replace('I', '1'))
 
 
-ANCHOR = re.compile(r'Health' + EQ + r'?\s*\d')
+ANCHOR = re.compile(r'Heal?th' + EQ + r'?\s*\d')      # "Heath: 80", ME1 printed 18
 
 
 def rows_from(texts):
     """The grid's rows from its lines. A line that is not a row is the tail of
     a value that wrapped ('Resources: Ex' then '(20)'), so it joins the row
-    above rather than breaking the run."""
+    above rather than breaking the run.
+
+    Three ways ME1's crops read, mended first: a Shift rank set on two lines
+    ("I 500 Shift" / "Z"), a row letter set against its number ("R150 Shift X",
+    "A2 Fe"), and Incredible set against its number ("40In"), whose I the
+    number would otherwise take as a 1."""
+    texts = list(texts)
+    for n in range(len(texts) - 1, 0, -1):
+        nxt = re.match(r'^\s*([XYZ0])\b\s*(.*)$', texts[n])
+        if nxt and re.search(r'\bShift\s*$', texts[n - 1]):
+            texts[n - 1] = texts[n - 1].rstrip() + ' ' + nxt.group(1) + ' ' + nxt.group(2)
+            del texts[n]
+    texts = [re.sub(r'(?<=\d)In(?![a-z])', ' In', re.sub(r'^(\s*[FASERIP|$])(?=\d)', r'\1 ', t)) for t in texts]
     rows = []
     for t in texts:
         m = ROW.match(t)
@@ -347,11 +361,24 @@ def secondary(rows, stream, end):
     for k in LABELS:
         m = LABEL_RX[k].search(text)
         # OCR hangs an underscore or a stray mark off the column's edge
-        v = re.sub(r'^[\s:=]+|[\s_|~:=.,]+$', '', m.group(1)).strip() if m else None
+        v = re.sub(r'^[\s:=]+|[\s_|~:=.,\\]+$', '', m.group(1)).strip() if m else None
         # the printed minus sign comes back as U+FFFD ('-\ufffd20', '\ufffd10')
         out[k.lower()] = re.sub('-?\ufffd(?=\\s*\\d)', '-', v) if v else v
+        # an illustration beside the grid reads as a letter or two after a
+        # Health, Karma or Popularity ('330 k', '100 Sc': ME1's Beta Ray Bill,
+        # printed 6; '0 or': the Grandmaster, Resource p.9)
+        if v and k in ('Health', 'Karma', 'Popularity'):
+            out[k.lower()] = re.sub(r'(?<=\d)(?:\s+[A-Za-z]{1,2})+$', '', out[k.lower()])
     if end < len(stream) and stream[end]['text'].startswith('(') and out.get('popularity'):
         out['popularity'] += ' ' + stream[end]['text']
+        end += 1
+    if end < len(stream) and out.get('popularity') and out['popularity'].count('(') > out['popularity'].count(')') \
+            and ')' in stream[end]['text'] and stream[end]['col'] == stream[end - 1]['col']:
+        # the parenthesis wraps to the line after the grid: '15 (95 among Inhu-'
+        # then 'mans)', '0 (And' then 'dropping)' (ME1, Resource p.4, Adventure p.15)
+        tail = stream[end]['text'].strip()
+        p = out['popularity']
+        out['popularity'] = p[:-1] + tail if p.endswith('-') and tail[:1].islower() else p + ' ' + tail
         end += 1
     return out, end
 
@@ -387,8 +414,25 @@ def parse(slug):
         import booklet
         stream, entries = booklet.parse(book, slug)
         return book, stream, entries
+    if book.get('layout') == 'grid-booklets':
+        # MA1's grids in a boxed module's booklets (ME1): scripts/msh/gridbooks.py
+        # builds the streams and runs read_entries() below over each
+        import gridbooks
+        stream, entries = gridbooks.parse(book, slug)
+        return book, stream, entries
     stream = page_stream(book, slug)
-    reader = GridReader(book, slug)
+    entries = read_entries(stream, GridReader(book, slug))
+    finish(entries)
+    return book, stream, entries
+
+
+def read_entries(stream, reader, opponent=False):
+    """The book's entries from one stream. With opponent set, the stream is an
+    adventure's page with a character statted in its prose (ME1's chapters): an
+    entry is read from its header through its grid and powers, and ends where
+    the adventure's own text resumes - an indented paragraph, or a run-in that
+    is not one of the entry's sections - after which lines are dropped until
+    the next header."""
     entries, cur = [], None
 
     def start(kind, name, line):
@@ -460,9 +504,19 @@ def parse(slug):
         if cur is None:
             i += 1
             continue
-        add_page(line)
         text = line['text']
         m = RUN_IN.match(text)
+        if opponent and cur['blocks']:
+            prev_text = stream[i - 1]['text'].rstrip() if i else ''
+            # the chapter's run-ins print a curly apostrophe ("CLAUD VICTOR'S:")
+            r = RUN_IN.match(text.replace('\u2019', "'"))
+            resumes = (r and line['x0'] - line['left'] < 40 and not section_of(r.group(1).strip())) or (
+                line['x0'] - line['left'] >= 25 and prev_text.endswith(('.', '!', '?', '"', '\u201d')))
+            if resumes:
+                cur = None
+                i += 1
+                continue
+        add_page(line)
         if m and line['x0'] - line['left'] < 40:
             label = m.group(1).strip()
             key = section_of(label)
@@ -503,7 +557,10 @@ def parse(slug):
         else:
             cur['prose'].append(text)
         i += 1
+    return entries
 
+
+def finish(entries):
     # An entry with nothing in it is a caption the header test let through
     # ("Scarlet" over the Scarlet Witch's picture, p.59): drop it, and count it.
     empty = [e for e in entries if not (e['identity'] or e['blocks'] or e['prose'] or e['sections']
@@ -517,7 +574,6 @@ def parse(slug):
             m['text'] = join_text(m['text'])
         e['sections'] = {k: join_text(v) for k, v in e['sections'].items()}
         e['prose'] = join_text(e['prose'])
-    return book, stream, entries
 
 
 def apply_overrides(slug, entries):
@@ -545,6 +601,14 @@ def apply_overrides(slug, entries):
         e, b = hits[0]
         if o['verdict'] == 'label':
             b['label'] = o['label']
+        elif o['verdict'] == 'rows':
+            # a grid that prints fewer than seven rows (ME1's Oolafat: F, A, S
+            # and E, then one line for R, I and P): its rows as the page gives
+            # them, a row it does not print as null
+            b['abilities'] = [{'letter': l, 'number': n, 'code': c, 'printed_code': c} for l, n, c in o['abilities']]
+            b.update({k: o[k] for k in ('health', 'karma', 'resources', 'popularity')})
+            b['override'] = {k: o[k] for k in ('verdict', 'field', 'printed', 'corrected') if k in o}
+            b['check'] = dict(check(b), known=o['verdict'], ok=True)
         elif o['verdict'] == 'table':
             t = o['block']
             block = {'label': t['label'], 'page': m['page'], 'kind': 'table',
@@ -650,6 +714,13 @@ def main():
         lines, missed = booklet.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
         print('\n'.join(lines))
         missing = missing or (['the Reference Summary'] if missed else [])
+    elif book.get('layout') == 'grid-booklets':
+        # no printed index: the Contents, the opponents and the Summary are the checklists
+        import gridbooks
+        path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % a.slug)
+        lines, missed = gridbooks.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
+        print('\n'.join(lines))
+        missing = ['a checklist'] if missed else []
     else:
         print('  printed index: %d names in printed %d-%d, %d found as an entry, member or sub-block%s'
               % (len(in_range), first, last, len(in_range) - len(missing),

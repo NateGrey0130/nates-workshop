@@ -177,6 +177,100 @@ by its rows, and 15 of 26 read cleanly. The failures, measured:
 3. **Two numberings.** The same as MHSP1, and `parts` already solves it for
    `booklet.py`; `roster.py`'s MA1 path reads one `offset`.
 
+*The dry run above is kept as it was measured. The parser PR's own section
+follows.*
+
+## The parser
+
+`python scripts/msh/roster.py me1` reads this book through
+`scripts/msh/gridbooks.py`, because its registry entry says
+`"layout": "grid-booklets"`. The lines, the grid crop and the entry loop are
+`roster.py`'s own. The loop was lifted into `read_entries()` so both paths run
+it, and it has one addition, switched off for MA1. `gridbooks.py` does only
+what differs:
+
+- **Pages.** Two `character_ranges` (Adventure printed 3-7, Resource 2-16)
+  and six `opponents` pages (Adventure 11, 12, 15, 18, 27 and 28), each line
+  with its booklet. Beta Ray Bill's powers run onto printed 7, so the
+  Adventure range ends there, and his entry ends at Cosmic Indifference.
+- **Headers are found from the grid, not the height.** Measured on the TSV,
+  headers box at 1.16-1.26 times the body height. Tesseract boxes body lines
+  with tall capitals and descenders at up to 1.29. So no ratio separates
+  them, and the per-book header ratio recommended in Decision 5 would not
+  have worked. Every character has a grid, so the header is the line above
+  it: the nearest line in capitals within three lines, with only an identity
+  line or two below it (`BLACK BOLT` / `Blackagar Boltagon`). Otherwise it
+  is the short name line right above (`Ghoul Captain`).
+- **Where an entry ends:**
+  - at the next header
+  - at a Contents title that is not a character (`Kree`, `Cosmic
+    Indifference`)
+  - at each top-level section's first page (Inhumans 4, Elders 8)
+  - on an opponent's page, where the chapter resumes: an indented paragraph,
+    or a run-in that is not one of the entry's sections (`CLAUD VICTOR'S:`,
+    whose curly apostrophe had let Garnet Cato's Phasing run on into the
+    chapter)
+- **Run-in headings inside an entry** (Black Bolt's and Triton's WEAKNESS,
+  Crystal's LIMITATION, Gladiator's ITEMS) go to the entry's notes, not its
+  members. This book prints no team of blockless members.
+- **The checklists.** Every name must be found:
+  - the Contents' 24 character lines (`roster_sections`)
+  - the 7 opponents
+  - the 2 tiers
+  - the Summary's 8 rows
+
+  Every statted entry must be on one of them, and every Health and Karma
+  must read as a number. `roster.check()` lets a value it cannot read
+  through, so this last check was added: it caught Beta Ray Bill's `330 k`
+  and the Oolafat's welded rows.
+
+**Fixes to shared code, each measured on MA1 and MHSP1.** `rows_from()`
+mends three ways ME1's crops read:
+- a Shift rank set on two lines (`500 Shift` / `Z`)
+- a row letter set against its number (`R150`, `A2 Fe`)
+- `40In`, whose I the number took as a 1
+
+Class ranks may read `Cl 1000`, `CI 1000` or `C1 1000`. `Health` may read
+`Heath` (Common Inhuman, printed 18). `secondary()` does three more things:
+- drops an art fragment after a Health, Karma or Popularity number (`330 k`,
+  `100 Sc`, `0 or`) and a trailing backslash
+- joins a Popularity parenthesis that wraps to the next line: the Inhumans'
+  `(95 among Inhu-` / `mans)`, the Superkree's `(And` / `dropping)`
+
+Rebuilt with these scripts, MHSP1's `roster.json`, `book-text.sql`,
+`extras.json`, `extras-text.sql` and `npcs.json` rows are byte-identical to
+`main`'s. So are MA1's `book-text.sql`, `extras.json` and `extras-text.sql`.
+**MA1's `roster.json` and `npcs.json` differ in one value, and it is a
+correction:** Nekra (MA1 p.56) prints `S 10 Gd (40 In)`, read on the page
+image, and `main` stored the alternate as `401` with no code, because of the
+same `40In` misread. This PR carries MA1's rebuilt `npcs.json` with that one
+change. No D1 text moves.
+
+Measured 2026-09-29:
+
+| measure | count |
+|---|---|
+| entries | 43: 37 with a block, 6 headings (the book's prose between characters) |
+| stat blocks | 37: 33 grids and the 4 chart-only heroes |
+| pass rank, Health and Karma checks | 34 |
+| explained by an override read off the page | 3: the Oolafat's missing rows, the Ghoul Captain's `50 Mn`, the Superkree's in-range 275 |
+| failing | 0 |
+| Summary rows placed | 8 of 8; 1 chart misprint recorded (Firelord's Karma) |
+| powers named | 154, across 34 entries |
+
+`scripts/msh/me1-overrides.json` holds the four overrides. **One override
+covers one block**, and an override marks the whole block as explained. So
+the Ghoul Captain's second fault, Karma 0 against R+I+P = 300, is kept as
+printed and recorded in that override's note rather than checked. The
+Collector's mislabelled `R` row needs nothing: rows are read by position.
+
+**Known gaps, kept rather than guessed:**
+- **Gorgon's one power is not split out.** Its name, `Mutated legs and feet:`,
+  is in lower case, and MA1's power-head rule wants capitals. The text is
+  kept whole under the entry's powers.
+- **The Common Inhuman's powers are a paragraph of odds,** not named powers,
+  and are kept that way.
+
 ## Entry kinds
 
 1. **Character with a full block.** 33, including the generic tiers below.
@@ -217,6 +311,11 @@ by its rows, and 15 of 26 read cleanly. The failures, measured:
 
 ## Decisions this survey leaves open
 
+*Nate took 1-5 and 7 as recommended on 2026-09-29, and skipped 6: he means
+to remove adventures from the app, so this book's adventure, the Kree Cosmic
+Cube and the Saucer-Ship are not imported. Decision 5's header ratio did not
+survive measurement; see [The parser](#the-parser).*
+
 1. **Page citations.** Recommendation: MHSP1's shape, the part's cite plus the
    printed page: `ME1 Adventure p.5`, `ME1 Resource p.10`, and
    `ME1 Pregenerated Heroes Summary` with no page.
@@ -246,14 +345,16 @@ by its rows, and 15 of 26 read cleanly. The failures, measured:
 
 ## The next PRs
 
-1. **Parser (`msh/feat/me1-parser`):** `roster.py` reads `parts` and a
-   per-book header ratio; the grid crop reads two-line Shift ranks and Class
-   ranks; the Resource Book's Contents and the Summary are the checklists.
-   Expected: 33 blocks plus 8 Summary rows, every one passing or explained by
-   an override, and MA1 and MHSP1 byte-identical.
-2. **Data (`msh/data/me1-cosmos-cubed`):** the characters, the adventure's 17
-   sections, the Cube and the Saucer-Ship, applied to production before the
-   merge, and the Rows line above filled in.
+1. **Parser (`msh/feat/me1-parser`), done; see [The parser](#the-parser).**
+2. **Data (`msh/data/me1-cosmos-cubed`):** the characters only (Decision 6
+   skipped). `npcs.py` has to learn this layout:
+   - a book with parts but no sides
+   - the Oolafat's R, I and P played as Shift 0 (an override `field` of
+     several letters)
+   - a source line for two booklets
+
+   The data is applied to production before the merge, and the Rows line
+   above is filled in.
 
 ## How to reproduce
 
