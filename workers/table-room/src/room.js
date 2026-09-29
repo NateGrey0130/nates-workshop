@@ -20,9 +20,24 @@
 //   { type: 'seat', characterId }                         a player picks who they are
 //   { type: 'roll', kind: 'dice', expr, label?, visibility? }
 //   { type: 'roll', kind: 'feat', rank, cs?, label?, visibility? }   Marvel
+//   Initiative (phase 3; initiative.js has the state and the rule):
+//   { type: 'init.roll' }                     a seated player, Palladium: d20 + their bonus
+//   { type: 'init.roll', id | all: true }     GM. Palladium: one row, or every NPC
+//                                             not yet rolled. Marvel: all = Roll the round
+//   { type: 'init.add' }                      a seated player: their own character
+//   { type: 'init.add', kind, ref?, name, hidden?, bonus?, attacks?, agility?, talents? }  GM
+//   { type: 'init.remove', id | all: true }   GM any row; a player only their own
+//   { type: 'init.move', id, to }             GM: drag a rolled row to position `to`
+//   { type: 'init.set', id, hidden?, applies? }   GM: hide an NPC; Marvel's Talent tick
+//   { type: 'init.next' }                     GM: start the round, or the next turn
+//   { type: 'init.newRound', reroll? }        GM: a new melee (Palladium keeps the
+//                                             order unless reroll) or round (Marvel)
 //
 // Room -> client:
-//   { type: 'state', you, room, people, feed, shown }   on hello, and after a seat
+//   { type: 'state', you, room, people, feed, shown, init }   on hello, and after a seat
+//   { type: 'init', init }                       the order changed; masked per screen
+//   { type: 'up', round, pass }                  this phone's character is up (it vibrates)
+//   { type: 'deck' }                             this phone's character acts next
 //   { type: 'roll', roll }                       a new roll this screen may see
 //   { type: 'show', shown }                      the GM put a picture on the table
 //   { type: 'clear' }                            the GM took it down
@@ -54,6 +69,21 @@
 //                and never nears the per-value size limit
 //   shown        the picture on the table, or absent. Not saved with the
 //                feed and dropped on close: showing leaves no trace.
+//   init         the initiative order and whose turn it is (initiative.js).
+//                Not saved with the feed either; the initiative ROLLS are
+//                rolls, and go into the feed like any other.
+//
+// ── INITIATIVE ─────────────────────────────────────────────────────────────
+//
+// One order and one current turn per room; how a round is rolled and how it
+// runs out is the game's (palladium.js, marvel.js). A player's own numbers -
+// Palladium's initiative bonus and attacks per melee, Marvel's Agility and
+// Talents - come in on the join, from D1 through the game's adapter, and ride
+// on the seat; a player's message carries no number the room believes. The
+// GM's are believed: the GM adds NPCs with their numbers, and could drag any
+// row anywhere anyway. Every screen gets the order through initView(), which
+// shows a hidden NPC to nobody but the GM. "You're up" goes to the phones
+// seated as that character and to no other.
 // Who is connected lives on each socket's attachment, which survives
 // hibernation with the socket.
 //
@@ -69,7 +99,42 @@
 import { canSee, visibilityFor, rollView } from './visibility.js';
 import { imageRef, mayView, mayFetch } from './showing.js';
 import { parseExpression, rollExpression, rollFeat } from './dice.js';
-import { feat } from './marvel.js';
+import { feat, hasInitTalent, rollRound, orderMarvel } from './marvel.js';
+import * as P from './palladium.js';
+import {
+  emptyInit, addEntry, rollEntry, rollAll, next as nextTurn, newRound, removeEntry,
+  moveEntry, setEntry, initView, onDeck, characterOf,
+} from './initiative.js';
+
+// How each game rolls an order and runs a round out (initiative.js).
+export const RULES = {
+  palladium: {
+    perMelee: true,
+    rollOne: (e, random) => P.rollOne(e.bonus, random),
+    order: P.orderRolled,
+  },
+  marvel: {
+    perMelee: false,
+    rollOne: (e, random) => { const roll = 1 + Math.floor(random() * 100); return { roll, total: roll }; },
+    order: orderMarvel,
+    rollRound,
+  },
+};
+
+const int = (v, lo, hi, dflt) => {
+  const n = Math.trunc(Number(v));
+  return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
+};
+
+// A combatant's own numbers, cleaned: from a seat (D1, through the join) or
+// from the GM's init.add.
+export function initStats(game, s = {}) {
+  if (game === 'marvel') {
+    const talents = (Array.isArray(s.talents) ? s.talents : []).slice(0, 20).map((t) => String(t).slice(0, 40));
+    return { agility: int(s.agility, 0, 5000, 0), talents };
+  }
+  return { bonus: int(s.bonus, -50, 50, 0), attacks: int(s.attacks, 0, 30, P.DEFAULT_ATTACKS) };
+}
 
 export const IDLE_CLOSE_MS = 12 * 60 * 60 * 1000;
 export const FEED_MAX = 4000;          // about 1.2 MB saved: inside one D1 row
@@ -219,7 +284,13 @@ export class TableRoom {
       characters = JSON.parse(decodeURIComponent(headers.get('X-Table-Characters') || '[]'));
     } catch { characters = []; }
     if (!Array.isArray(characters)) characters = [];
-    characters = characters.map((c) => ({ id: String(c.id), name: clean(c.name, 80) }));
+    // `init` is the character's own initiative numbers, from D1 (the join
+    // route's adapter). A join from a Pages build older than phase 3 sends
+    // none, and the seat gets none: that player rolls on defaults.
+    characters = characters.map((c) => ({
+      id: String(c.id), name: clean(c.name, 80),
+      ...(c.init && typeof c.init === 'object' ? { init: c.init } : {}),
+    }));
     let name = '';
     try { name = decodeURIComponent(headers.get('X-Table-Name') || ''); } catch { name = ''; }
     return { role, email, name: clean(name, 80), characters: role === 'player' ? characters : [] };
@@ -255,7 +326,9 @@ export class TableRoom {
         case 'hello': await this.sendState(ws, conn, meta); break;
         case 'seat':  await this.onSeat(ws, conn, msg, meta); break;
         case 'roll':  await this.onRoll(ws, conn, msg); break;
-        default:      this.sendError(ws, `Unknown message: ${String(msg.type).slice(0, 20)}`);
+        default:
+          if (String(msg.type).startsWith('init.')) await this.onInit(ws, conn, msg, meta);
+          else this.sendError(ws, `Unknown message: ${String(msg.type).slice(0, 20)}`);
       }
     } catch (err) {
       this.sendError(ws, err.message || 'Something went wrong');
@@ -344,6 +417,131 @@ export class TableRoom {
     return { seated: true, id: roll?.id ?? null };
   }
 
+  // ─── Initiative ─────────────────────────────────────────────────────────
+
+  async init() {
+    return (await this.ctx.storage.get('init')) ?? emptyInit();
+  }
+
+  // Every init.* message. Refusals answer only the sender; a change is saved,
+  // then every screen is sent the order as it may see it.
+  async onInit(ws, conn, msg, meta) {
+    const rules = RULES[meta.game];
+    const init = await this.init();
+    const gm = conn.role === 'gm';
+    const player = conn.role === 'player' && !!conn.seat;
+    if (!gm && !player) {
+      return this.sendError(ws, conn.role === 'display' ? 'The display cannot run initiative' : 'Pick your character first');
+    }
+    const turnBefore = init.turn;
+    const passBefore = init.pass;
+    const mine = player
+      ? init.entries.find((e) => e.kind === 'pc' && String(e.ref) === String(conn.seat.id)) ?? null
+      : null;
+    const rolls = [];
+    let r = {};
+
+    switch (msg.type) {
+      case 'init.add': {
+        if (gm) r = addEntry(init, this.gmEntry(meta.game, msg), this.newId());
+        else r = mine ? { error: `${conn.seat.name} is already in the order` } : addEntry(init, this.seatEntry(meta.game, conn.seat), this.newId());
+        break;
+      }
+      case 'init.roll': {
+        if (meta.game === 'marvel') {
+          if (!gm) { r = { error: 'The GM rolls the round' }; break; }
+          r = msg.all ? rollAll(init, rules, () => this.random()) : rollEntry(init, String(msg.id), rules, () => this.random());
+          break;
+        }
+        if (gm) {
+          const ids = msg.all
+            ? init.entries.filter((e) => !e.rolled && e.kind !== 'pc').map((e) => e.id)
+            : [String(msg.id)];
+          if (!ids.length) { r = { error: 'Every NPC has rolled' }; break; }
+          for (const id of ids) {
+            r = rollEntry(init, id, rules, () => this.random());
+            if (r.error) break;
+            rolls.push(r.entry);
+          }
+          break;
+        }
+        let entry = mine;
+        if (!entry) {
+          const added = addEntry(init, this.seatEntry(meta.game, conn.seat), this.newId());
+          if (added.error) { r = added; break; }
+          entry = added.entry;
+        }
+        if (entry.rolled) { r = { error: 'You have rolled for this melee' }; break; }
+        r = rollEntry(init, entry.id, rules, () => this.random());
+        if (!r.error) rolls.push(r.entry);
+        break;
+      }
+      case 'init.remove': {
+        if (gm && msg.all) { Object.assign(init, emptyInit(), { round: init.round }); break; }
+        if (!gm && (!mine || mine.id !== String(msg.id))) { r = { error: 'You can only take your own character out' }; break; }
+        r = removeEntry(init, String(msg.id), rules);
+        break;
+      }
+      case 'init.move':    r = gm ? moveEntry(init, String(msg.id), msg.to) : { error: 'Only the GM moves the order' }; break;
+      case 'init.set':     r = gm ? setEntry(init, String(msg.id), msg) : { error: 'Only the GM changes a row' }; break;
+      case 'init.next':    r = gm ? nextTurn(init, rules) : { error: 'Only the GM moves the turn on' }; break;
+      case 'init.newRound': r = gm ? newRound(init, rules, { reroll: msg.reroll === true }) : { error: 'Only the GM starts a round' }; break;
+      default: r = { error: `Unknown message: ${String(msg.type).slice(0, 20)}` };
+    }
+    if (r.error && !rolls.length) return this.sendError(ws, r.error);
+
+    await this.ctx.storage.put('init', init);
+    // An initiative roll is a roll: into the feed, under the rule every roll
+    // follows. A hidden NPC's goes to the GM alone, so its name reaches no one.
+    for (const e of rolls) {
+      const text = `Initiative${e.kind === 'pc' && player ? '' : ` for ${e.name}`}: d20 ${e.roll} ${e.bonus < 0 ? '-' : '+'}${Math.abs(e.bonus)} = ${e.total}`;
+      await this.append({
+        by: this.rollerOf(conn), source: 'initiative',
+        visibility: e.hidden ? 'secret' : 'all', text, detail: { roll: e.roll, bonus: e.bonus, total: e.total },
+      });
+    }
+    this.broadcastInit(init, rules, init.turn !== turnBefore || init.pass !== passBefore || msg.type === 'init.next');
+    if (r.error) this.sendError(ws, r.error);
+  }
+
+  // The GM's own row: a statted NPC or PC from the roster, or a name alone.
+  gmEntry(game, msg) {
+    const kind = ['pc', 'npc', 'name'].includes(msg.kind) ? msg.kind : 'name';
+    const name = clean(msg.name, LABEL_MAX) || 'Someone';
+    const stats = initStats(game, msg);
+    const e = { kind, ref: kind === 'name' || msg.ref == null ? null : String(msg.ref).slice(0, 40), name, hidden: kind !== 'pc' && msg.hidden === true };
+    // Marvel: the Talent from a roster row's Talent ids, or the GM's own tick
+    // for someone added by name.
+    const talent = msg.talent === true || hasInitTalent(stats.talents);
+    return game === 'marvel' ? { ...e, agility: stats.agility, talent } : { ...e, ...stats };
+  }
+
+  // A seated player's own character, with the numbers the join brought from D1.
+  seatEntry(game, seat) {
+    const stats = initStats(game, seat.init);
+    const e = { kind: 'pc', ref: String(seat.id), name: seat.name, hidden: false };
+    return game === 'marvel' ? { ...e, agility: stats.agility, talent: hasInitTalent(stats.talents) } : { ...e, ...stats };
+  }
+
+  newId() {
+    return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+  }
+
+  // The order to every screen, masked for each. When the turn moved, "You're
+  // up" to the phones seated as that character and "On deck" to the next.
+  broadcastInit(init, rules, turned) {
+    const up = turned ? characterOf(init, init.turn) : null;
+    const deckId = turned ? onDeck(init, rules) : null;
+    const deck = deckId && deckId !== init.turn ? characterOf(init, deckId) : null;
+    for (const s of this.liveSockets()) {
+      const c = s.deserializeAttachment() ?? {};
+      this.send(s, { type: 'init', init: initView(init, c, rules) });
+      if (c.role !== 'player' || !c.seat) continue;
+      if (up && String(c.seat.id) === up) this.send(s, { type: 'up', round: init.round, pass: init.pass });
+      else if (deck && String(c.seat.id) === deck) this.send(s, { type: 'deck' });
+    }
+  }
+
   rollerOf(conn) {
     if (conn.role === 'gm') return { email: conn.email, name: 'GM', role: 'gm', characterId: null };
     return { email: conn.email, name: conn.seat?.name || conn.name || 'Player', role: 'player', characterId: conn.seat?.id ?? null };
@@ -394,6 +592,7 @@ export class TableRoom {
       people: this.people(),
       feed,
       shown: mayView(conn) ? await this.shown() : null,
+      init: initView(await this.init(), conn, RULES[meta.game]),
     });
   }
 
@@ -413,6 +612,7 @@ export class TableRoom {
     meta.closedReason = reason;
     await this.ctx.storage.put('meta', meta);
     await this.ctx.storage.delete('shown');
+    await this.ctx.storage.delete('init');
     await this.ctx.storage.deleteAlarm();
     for (const s of this.liveSockets()) {
       this.send(s, { type: 'closed', reason });

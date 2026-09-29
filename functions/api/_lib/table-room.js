@@ -27,6 +27,16 @@
 //   sessions(env, campaignId, limit)    closed sessions, newest first, feed as JSON text
 //   describe(env, campaignId, ref)      { caption } for a picture the GM may show, or null
 //   image(env, campaignId, ref)         { body, contentType } | { error, status } | null
+//   seatStats(env, campaignId, chars)   chars, each with `init`: its initiative numbers
+//   roster(env, campaignId)             [{ kind: 'pc'|'npc', ref, name, init }] the GM may add
+//
+// INITIATIVE (phase 3). A player's initiative numbers - Palladium's bonus and
+// attacks per melee, Marvel's Agility and Talents - are read from D1 by the
+// adapter's seatStats at join, and go to the room on the seat with the rest of
+// who that player is. The page never sends one. The GM's roster route hands
+// the same numbers for the campaign's characters and statted NPCs to the GM's
+// page, which adds them with init.add; the GM is believed about the GM's own
+// table. The order itself lives in the room (workers/table-room/src/initiative.js).
 //
 // PICTURES (phase 2). A `ref` is { kind, id } (showing.js). The GM shows one
 // from Present mode through `show`; every screen at the table is told; and a
@@ -230,7 +240,8 @@ export function tableRoutes(adapter) {
       headers.set('X-Table-Role', role);
       headers.set('X-Table-Email', r.email);
       headers.set('X-Table-Name', encodeURIComponent(role === 'gm' ? 'GM' : role === 'display' ? 'Display' : ''));
-      headers.set('X-Table-Characters', encodeURIComponent(JSON.stringify(role === 'player' ? r.characters : [])));
+      const seats = role === 'player' ? await adapter.seatStats(env, r.camp.id, r.characters) : [];
+      headers.set('X-Table-Characters', encodeURIComponent(JSON.stringify(seats)));
       return stub(env, r.code).fetch(new Request('https://table/ws', { method: 'GET', headers }));
     },
 
@@ -314,6 +325,18 @@ export function tableRoutes(adapter) {
           'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
         },
       });
+    },
+
+    // GET ?campaign_id= -> { combatants }. GM only. Who the GM may add to
+    // initiative, with each one's numbers from D1: the campaign's characters
+    // and its statted NPCs.
+    async roster({ request, env }) {
+      const email = adapter.email(request);
+      if (!email) return json({ error: 'Not signed in' }, 401);
+      const camp = await adapter.campaign(env, new URL(request.url).searchParams.get('campaign_id'));
+      if (!camp) return json({ error: 'Campaign not found' }, 404);
+      if (email !== camp.gmEmail) return json({ error: 'Only the GM adds to initiative from the roster' }, 403);
+      return json({ combatants: await adapter.roster(env, camp.id) });
     },
 
     // GET ?campaign_id= -> the campaign's saved table sessions, each feed

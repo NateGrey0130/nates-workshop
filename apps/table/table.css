@@ -120,6 +120,60 @@ body.table-tv .wrap { max-width: none; padding: 3vh 4vw; }
 .tv-empty { font-size: clamp(22px, 3vw, 48px); }
 .tv-status { color: var(--tv-accent); font-size: clamp(14px, 1.4vw, 24px); margin-top: 4vh; }
 
+/* ---- initiative (phase 3) ----
+   Whose turn it is: the lit row carries an edge, a weight and the word "up",
+   never colour alone. Out of attacks: struck through AND dimmed. */
+.table-up {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  font-size: 24px;
+  font-weight: 700;
+  border: 2px solid var(--accent);
+  background: var(--accent-glow);
+}
+.table-up.deck { font-size: 18px; border-width: 1px; background: transparent; }
+.init-list { list-style: none; margin: 0 0 10px; padding: 0; }
+.init-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 0 8px 8px;
+  border-top: 1px solid var(--border);
+  border-left: 3px solid transparent;
+}
+.init-row:first-child { border-top: 0; }
+.init-row.on { border-left-color: var(--accent); background: var(--accent-glow); font-weight: 600; }
+.init-row.out .init-who { text-decoration: line-through; color: var(--text-secondary); }
+.init-row.hidden-npc .init-who { font-style: italic; }
+.init-row[draggable="true"] { cursor: grab; }
+.init-who { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.init-roll { display: inline-flex; gap: 8px; align-items: baseline; }
+.init-total { font-family: var(--font-mono); font-size: 18px; font-weight: 700; min-width: 2.2ch; text-align: right; }
+.init-ctl { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.init-ctl .btn { min-height: 36px; min-width: 36px; justify-content: center; }
+.init-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+.init-bar .btn { min-height: 44px; }
+.table-init p .btn { min-height: 44px; }
+.init-add { border-top: 1px solid var(--border); padding-top: 10px; }
+.init-add summary { cursor: pointer; min-height: 32px; font-weight: 600; }
+.init-add form { margin-top: 10px; }
+.init-add .check { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+
+/* On the TV: the name that is up, large; the order along one line under it. */
+.tv-init { margin-bottom: 3vh; }
+.tv-init[hidden] { display: none; }
+.tv-init-now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1vh 2vw; }
+.tv-init-label { color: var(--tv-dim); font-size: clamp(16px, 1.6vw, 28px); text-transform: uppercase; letter-spacing: 1px; }
+.tv-init-name { color: var(--tv-accent); font-weight: 700; font-size: clamp(36px, 6vw, 110px); line-height: 1.05; overflow-wrap: anywhere; }
+.tv-init-list { list-style: none; margin: 1.2vh 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.8vh 2.4vw; font-size: clamp(16px, 1.8vw, 32px); color: var(--tv-dim); }
+.tv-init-list li { display: inline-flex; gap: 0.8vw; align-items: baseline; border-bottom: 3px solid transparent; }
+.tv-init-list li.on { color: var(--tv-ink); font-weight: 700; border-bottom-color: var(--tv-accent); }
+.tv-init-list li.out span:first-child { text-decoration: line-through; }
+.tv-init-left { font-size: 0.6em; }
+body.tv-showing .tv-init-name { font-size: clamp(24px, 3vw, 54px); }
+body.tv-showing .tv-init-list { font-size: clamp(14px, 1.3vw, 24px); }
+
 /* ---- the picture on the table (phase 2) ----
    On a phone: under the roll feed, fitted, and a tap opens it full screen. */
 .table-picture-open {
@@ -175,9 +229,17 @@ body.table-tv.tv-showing { background: #000; }
 body.table-tv.tv-showing .wrap {
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  /* Named rows, so the initiative strip's row collapses to nothing when there
+     is no fight, rather than shifting the picture into a row sized `auto`. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "head" "init" "pic" "feed" "status";
   padding: 1.5vh 2vw;
 }
+body.tv-showing .tv-head { grid-area: head; }
+body.tv-showing .tv-init { grid-area: init; margin-bottom: 1.5vh; }
+body.tv-showing .tv-picture { grid-area: pic; }
+body.tv-showing .tv-feed { grid-area: feed; }
+body.tv-showing .tv-status { grid-area: status; }
 body.tv-showing .tv-head { margin-bottom: 1.5vh; }
 body.tv-showing .tv-campaign { font-size: clamp(18px, 2vw, 32px); }
 body.tv-showing .tv-join { font-size: clamp(14px, 1.2vw, 22px); }

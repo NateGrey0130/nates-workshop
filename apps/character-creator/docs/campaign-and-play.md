@@ -741,8 +741,19 @@ table's feed reads what `endSession` counts. The sheet still writes its own
 GM is marked `private` in `play_events` and hidden from everyone but its
 owner and the G.M.
 
-Deliberately out of scope at any phase: party-wide initiative (the
-dashboard's altitude) and automated combat resolution (the hand-to-hand
-tables are not modelled, and the README already says so).
+**Party-wide initiative is The Table's** (phase 3, 2026-09-29), reversing
+what this page used to rule out of scope. Each player taps **Roll initiative**
+on their phone: d20 plus the sheet's initiative bonus, which the join route
+derives on the server the way the sheet derives it
+(`functions/api/character-creator/_lib/combat-numbers.js`), so the phone
+sends no number. The GM adds statted NPCs or a name, rolls for them, and
+presses **Next**. A melee runs pass by pass: each combatant acts once per
+pass, spending one attack, and passes repeat until every character's # of
+Attacks is spent; a character out of attacks is skipped. A tie goes to the
+higher bonus, then a re-roll among the tied. The sheet's own melee counter
+(Next attack, New round) is unchanged and stays the character's own.
+
+Still out of scope at any phase: automated combat resolution (the
+hand-to-hand tables are not modelled, and the README already says so).
 
 ---

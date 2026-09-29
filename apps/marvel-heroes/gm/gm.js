@@ -6,9 +6,13 @@
 //     (migration 086); Recent changes lists the log and undoes one;
 //   - INITIATIVE, by house rule R25 (js/initiative.js): heroes, NPCs and quick
 //     entries, a "Talent applies" tick per combatant per round, the roll and the
-//     tie-breaker that placed each row, next turn and re-roll all. It lives in
-//     this browser (localStorage, one list per campaign) and the room view
-//     reads it from there, so the screen turned to the table follows along;
+//     tie-breaker that placed each row, next turn and re-roll all. WHILE THE
+//     TABLE IS OPEN it lives in the table's room instead, where every phone and
+//     the TV follow it, and is run from the table page (apps/table/, the same
+//     R25 module, called by the room): this panel then says so and links there,
+//     and the room view opens the table's TV view. With no table open it lives
+//     in this browser (localStorage, one list per campaign) as it always has,
+//     and the room view reads it from there;
 //   - a FEAT roller on the Universal Table (js/feat.js, data/universal.json);
 //   - the GM's own notes (msh_campaigns.gm_notes);
 //   - the setting: the GM's own pages and their pictures, the shared view
@@ -221,6 +225,21 @@ function wireInit() {
   });
 }
 
+// While The Table is open for this campaign, initiative is the room's: the
+// local list is set aside (not deleted) and this panel points at the table.
+// A deployment without the room answers 503 here, and the local list stays.
+async function tableInit(campaignId) {
+  const r = await api(`table/status?campaign_id=${campaignId}`);
+  const live = r.ok && r.data.open && r.data.room === 'open';
+  $('#init-local').hidden = live;
+  $('#init-table').hidden = !live;
+  $('#gm-room-link').href = live ? `/apps/table/?code=${encodeURIComponent(r.data.code)}&as=display` : `room.html?c=${campaignId}`;
+  if (!live) return;
+  const code = esc(r.data.code);
+  $('#init-table').innerHTML = `The table is open (code <strong>${code}</strong>), so initiative runs there, where every phone and the TV follow it.
+    <a href="/apps/table/?code=${encodeURIComponent(r.data.code)}">Run it from the table</a>.`;
+}
+
 // ---------------------------------------------------------------- NPCs
 
 // NPC sheets the GM has rolled for this campaign (msh_npc_sheets): listed under
@@ -377,6 +396,7 @@ async function open(id) {
   drawRoster();
   loadInit();
   drawInit();
+  await tableInit(id);
   initSetting(id);
   await Promise.all([loadLog(), loadNpcs(), loadSetting()]);
 }

@@ -19,6 +19,10 @@ import { canSee, visibilityFor, rollView, filterFeed } from '../src/visibility.j
 import { imageRef, mayView, mayFetch, sameImage } from '../src/showing.js';
 import { parseExpression, rollExpression, rollFeat } from '../src/dice.js';
 import { feat } from '../src/marvel.js';
+import { initView, emptyInit, HIDDEN_NAME } from '../src/initiative.js';
+import { orderRolled as orderPalladium } from '../src/palladium.js';
+import { rollInitiative as marvelR25 } from '../../../apps/marvel-heroes/js/initiative.js';
+import { rng } from '../../../apps/marvel-heroes/js/dice.js';
 import { validCode, ALPHABET } from '../../../functions/api/_lib/table-room.js';
 
 // ── Stand-ins ────────────────────────────────────────────────────────────────
@@ -399,7 +403,9 @@ async function standIn() {
   const pal = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
   sqlite.exec(createOf(pal, 'campaigns'));
   sqlite.exec(createOf(pal, 'characters'));
-  for (const t of ['campaign_entries', 'campaign_images', 'cities']) sqlite.exec(createOf(pal, t));
+  // imported_classes, because a player's initiative numbers are derived
+  // through the class, as the sheet derives them (combat-numbers.js).
+  for (const t of ['campaign_entries', 'campaign_images', 'cities', 'imported_classes']) sqlite.exec(createOf(pal, t));
   sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', '088-table-sessions.sql'), 'utf8'));
   for (const f of ['082-msh-heroes.sql', '086-msh-campaigns.sql', '089-msh-table-sessions.sql']) {
     sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', 'marvel', f), 'utf8'));
@@ -826,9 +832,315 @@ section('the table clients: the campaign page panel');
   const client = readFileSync(join(repoRoot, 'apps', 'table', 'table.js'), 'utf8');
   check('the table page asks for a role and never filters rolls itself',
     /table\/join\?code=/.test(client) && !/canSee|visibility === 'secret'/.test(client));
+  check('a phone\'s Roll initiative sends no number: the room adds the bonus from D1',
+    /case 'mine-roll': return send\(\{ type: 'init\.roll' \}\);/.test(client));
+  check('the page never masks a hidden NPC itself: it draws what the room sent',
+    !/HIDDEN_NAME|'\?\?\?'/.test(client));
   const camps = ['apps/campaign/index.html', 'apps/marvel-heroes/campaign/index.html']
     .map((f) => readFileSync(join(repoRoot, f), 'utf8'));
   check('both games\' campaign pages load the table panel', camps.every((h) => h.includes('/shared/js/campaign/table.js')));
+}
+
+// ── Initiative (phase 3) ─────────────────────────────────────────────────────
+//
+// The design's "done when": a four-character Palladium melee with mixed attack
+// counts runs to its end with the right people skipped, and a Marvel round
+// matches R25 on a fixed seed. Plus its two leaks that must not happen: a
+// hidden NPC's name reaching a player or the TV, and "You're up" reaching the
+// wrong phone.
+
+// A room of one game with the GM, the TV and a phone per character, each
+// character seated with its initiative numbers as the join would bring them.
+async function initTable(game, cast) {
+  const t = makeRoom();
+  await post(t.room, '/init', { code: 'INIT', game, campaignId: 3, campaignName: 'The Fight', gmEmail: GM });
+  t.gm = new FakeSocket('gm');
+  t.tv = new FakeSocket('tv');
+  await t.room.connect(t.gm, { role: 'gm', email: GM, name: 'GM', characters: [] });
+  await t.room.connect(t.tv, { role: 'display', email: GM, name: 'Display', characters: [] });
+  t.phones = {};
+  for (const c of cast) {
+    const ws = new FakeSocket(c.name);
+    await t.room.connect(ws, { role: 'player', email: c.email, name: '', characters: [{ id: c.id, name: c.name, init: c.init }] });
+    t.phones[c.name] = ws;
+  }
+  t.all = [t.gm, t.tv, ...Object.values(t.phones)];
+  for (const s of t.all) await say(t.room, s, { type: 'hello' });
+  // A queue of dice: each value is what random() returns next.
+  t.dice = (...q) => { t.room.random = () => (q.length ? q.shift() : 0.5); };
+  return t;
+}
+
+const lastInit = (ws) => ws.messages.filter((m) => m.type === 'init').at(-1)?.init
+  ?? ws.messages.find((m) => m.type === 'state')?.init;
+const nameOf = (init, id) => init?.entries.find((e) => e.id === id)?.name ?? null;
+const errorsOn = (ws) => ws.messages.filter((m) => m.type === 'error').map((m) => m.message);
+
+section('initiative: a Palladium melee runs out by attacks, once per pass');
+{
+  // d20 from random r is 1 + floor(r * 20): 0.7 -> 15, 0.65 -> 14, 0.55 -> 12, 0.3 -> 7.
+  const cast = [
+    { name: 'Vex', id: '11', email: ANN, init: { bonus: 3, attacks: 4 } },
+    { name: 'Rusty', id: '21', email: BEN, init: { bonus: 1, attacks: 2 } },
+    { name: 'Mox', id: '31', email: 'cal@example.com', init: { bonus: 0, attacks: 3 } },
+    { name: 'Lark', id: '41', email: 'dee@example.com', init: { bonus: 2, attacks: 1 } },
+  ];
+  const t = await initTable('palladium', cast);
+  const P = t.phones;
+  check('a new table has an empty order in its state', lastInit(t.gm)?.entries.length === 0 && lastInit(P.Vex)?.turn === null);
+
+  // Rolled in a scrambled order; each is slotted by its total as it arrives.
+  t.dice(0.3); await say(t.room, P.Lark, { type: 'init.roll' });
+  t.dice(0.65); await say(t.room, P.Rusty, { type: 'init.roll', bonus: 99, total: 99 });
+  t.dice(0.7); await say(t.room, P.Vex, { type: 'init.roll' });
+  t.dice(0.55); await say(t.room, P.Mox, { type: 'init.roll' });
+  const order = lastInit(t.tv).entries;
+  check('each player rolls d20 plus their own bonus, and the order is highest first',
+    order.map((e) => `${e.name} ${e.total}`).join(', ') === 'Vex 18, Rusty 15, Mox 12, Lark 9', JSON.stringify(order));
+  check('a bonus or total the phone sends is ignored', order.find((e) => e.name === 'Rusty').total === 15);
+  const feedTexts = rollsOn(t.tv).map((r) => r.text);
+  check('each initiative roll lands in the feed, for everyone', feedTexts.includes('Initiative: d20 15 +3 = 18') && feedTexts.length === 4, feedTexts.join(' | '));
+  t.dice(0.99); await say(t.room, P.Vex, { type: 'init.roll' });
+  check('a player rolls once a melee', errorsOn(P.Vex).at(-1) === 'You have rolled for this melee' && lastInit(t.gm).entries[0].total === 18);
+  await say(t.room, P.Vex, { type: 'init.next' });
+  check('a player cannot move the turn on', errorsOn(P.Vex).at(-1) === 'Only the GM moves the turn on' && lastInit(t.gm).turn === null);
+
+  // Next, until the melee runs out. Record who is lit, and who got "You're up".
+  const seen = [];
+  let upRight = true;
+  let deckRight = true;
+  for (let press = 0; press < 11; press++) {
+    for (const s of t.all) s.clear();
+    await say(t.room, t.gm, { type: 'init.next' });
+    const init = lastInit(t.tv);
+    const now = nameOf(init, init.turn);
+    seen.push(now ? `${now}@${init.pass}` : 'over');
+    const upOn = Object.entries(P).filter(([, s]) => s.messages.some((m) => m.type === 'up')).map(([n]) => n);
+    if (JSON.stringify(upOn) !== JSON.stringify(now ? [now] : [])) upRight = false;
+    const deckOn = Object.entries(P).filter(([, s]) => s.messages.some((m) => m.type === 'deck')).map(([n]) => n);
+    const deckName = nameOf(init, init.onDeck);
+    if (JSON.stringify(deckOn) !== JSON.stringify(deckName && deckName !== now ? [deckName] : [])) deckRight = false;
+    if (t.gm.messages.some((m) => m.type === 'up') || t.tv.messages.some((m) => m.type === 'up')) upRight = false;
+  }
+  check('the melee runs pass by pass, skipping whoever is out of attacks, to its end',
+    seen.join(' ') === 'Vex@1 Rusty@1 Mox@1 Lark@1 Vex@2 Rusty@2 Mox@2 Vex@3 Mox@3 Vex@4 over', seen.join(' '));
+  const spent = lastInit(t.gm).entries.map((e) => `${e.name} ${e.spent}/${e.attacks}`).join(', ');
+  check('and every attack is spent, none twice', spent === 'Vex 4/4, Rusty 2/2, Mox 3/3, Lark 1/1', spent);
+  check('"You\'re up" reached the phone of whoever was lit, and no other screen, every turn', upRight);
+  check('"On deck" reached the next one\'s phone only', deckRight);
+  check('the TV shows the melee is over', lastInit(t.tv).over === true && lastInit(t.tv).turn === null);
+  await say(t.room, t.gm, { type: 'init.next' });
+  check('a Next after the end says so', errorsOn(t.gm).at(-1) === 'The melee is over. Start a new one.');
+
+  // A new melee keeps the order; a latecomer is slotted in by the roll.
+  await say(t.room, t.gm, { type: 'init.newRound' });
+  const m2 = lastInit(t.gm);
+  check('New melee keeps the order and gives every attack back',
+    m2.round === 2 && m2.entries.every((e) => e.rolled && e.spent === 0) && m2.entries[0].name === 'Vex');
+  await say(t.room, t.gm, { type: 'init.add', kind: 'name', name: 'Ogre', bonus: 0, attacks: 2 });
+  t.dice(0.8); await say(t.room, t.gm, { type: 'init.roll', all: true });
+  await say(t.room, t.gm, { type: 'init.add', kind: 'name', name: 'Brute', bonus: 5, attacks: 1 });
+  t.dice(0.45); await say(t.room, t.gm, { type: 'init.roll', all: true });
+  const late = lastInit(t.gm).entries.map((e) => `${e.name} ${e.total}`).join(', ');
+  check('a latecomer is slotted by their roll, and a tie goes to the higher bonus',
+    late === 'Vex 18, Ogre 17, Brute 15, Rusty 15, Mox 12, Lark 9', late);
+  check('the tie is tagged with what broke it, on both rows',
+    ['Brute', 'Rusty'].every((n) => lastInit(t.gm).entries.find((e) => e.name === n).tags.includes('bonus')));
+
+  // Mid-fight: a drag, a removal of whoever is up.
+  const ids = Object.fromEntries(lastInit(t.gm).entries.map((e) => [e.name, e.id]));
+  await say(t.room, t.gm, { type: 'init.move', id: ids.Lark, to: 0 });
+  check('the GM drags a row', lastInit(t.tv).entries[0].name === 'Lark');
+  await say(t.room, P.Rusty, { type: 'init.move', id: ids.Rusty, to: 0 });
+  check('a player cannot', errorsOn(P.Rusty).at(-1) === 'Only the GM moves the order' && lastInit(t.tv).entries[0].name === 'Lark');
+  await say(t.room, t.gm, { type: 'init.next' });
+  for (const s of t.all) s.clear();
+  await say(t.room, t.gm, { type: 'init.remove', id: ids.Lark });
+  check('removing whoever is up passes the turn on', nameOf(lastInit(t.tv), lastInit(t.tv).turn) === 'Vex'
+    && P.Vex.messages.some((m) => m.type === 'up'));
+  await say(t.room, P.Vex, { type: 'init.remove', id: ids.Rusty });
+  check('a player can take out only their own character', errorsOn(P.Vex).at(-1) === 'You can only take your own character out');
+  await say(t.room, P.Rusty, { type: 'init.remove', id: ids.Rusty });
+  check('and can take out their own', !lastInit(t.gm).entries.some((e) => e.name === 'Rusty'));
+  await say(t.room, t.gm, { type: 'init.newRound', reroll: true });
+  check('New melee, roll again, clears every roll', lastInit(t.gm).entries.every((e) => !e.rolled));
+  await say(t.room, t.tv, { type: 'init.next' });
+  check('the TV cannot run initiative', errorsOn(t.tv).at(-1) === 'The display cannot run initiative');
+}
+
+section('initiative: a Palladium tie goes to the bonus, then a re-roll among the tied');
+{
+  const q = [0.1, 0.9];
+  const rows = [
+    { id: 'a', total: 15, bonus: 2 }, { id: 'b', total: 15, bonus: 4 },
+    { id: 'c', total: 15, bonus: 4 }, { id: 'd', total: 20, bonus: 0 },
+  ];
+  const out = orderPalladium(rows, () => q.shift());
+  check('highest total, then higher bonus, then the tied roll again',
+    out.map((r) => r.id).join('') === 'dcba', out.map((r) => `${r.id}:${r.rerolls}`).join(' '));
+  check('only the still-tied re-roll', out.find((r) => r.id === 'a').rerolls.length === 0
+    && out.find((r) => r.id === 'b').rerolls.join() === '3' && out.find((r) => r.id === 'c').rerolls.join() === '19');
+  check('each row says what placed it', out.find((r) => r.id === 'c').tags.join() === 'bonus,re-roll'
+    && out.find((r) => r.id === 'a').tags.join() === 'bonus' && out.find((r) => r.id === 'd').tags.length === 0);
+}
+
+section('initiative: a Marvel round is R25, from the Marvel app\'s own module');
+{
+  const t = await initTable('marvel', [{ name: 'Nightfox', id: 'h1', email: BEN, init: { agility: 30, talents: ['martial-arts-e'] } }]);
+  await say(t.room, t.phones.Nightfox, { type: 'init.add' });
+  const adds = [
+    { kind: 'npc', ref: '4', name: 'Doom', agility: 40, talents: [] },
+    { kind: 'name', name: 'Guard', agility: 30, talents: [] },
+    { kind: 'name', name: 'Thug', agility: 10, talents: ['weapons-specialist'] },
+  ];
+  for (const a of adds) await say(t.room, t.gm, { type: 'init.add', ...a });
+  const talentOf = Object.fromEntries(lastInit(t.gm).entries.map((e) => [e.name, e.talent]));
+  check('a hero\'s own Talents, from the join, count; the room reads which ones from the app',
+    talentOf.Nightfox === true && talentOf.Thug === true && talentOf.Doom === false, JSON.stringify(talentOf));
+  const nf = lastInit(t.gm).entries.find((e) => e.name === 'Nightfox');
+  await say(t.room, t.gm, { type: 'init.set', id: nf.id, applies: true });
+  await say(t.room, t.phones.Nightfox, { type: 'init.roll', all: true });
+  check('a player cannot roll the round', errorsOn(t.phones.Nightfox).at(-1) === 'The GM rolls the round');
+
+  // The same combatants the room holds, handed straight to initiative.js.
+  const combatants = () => lastInit(t.gm).entries.map((e) => ({ key: e.name, name: e.name, agility: e.agility, talent: e.talent, applies: e.applies }));
+  const direct = (seed) => marvelR25(combatants(), rng(seed)).map((r) => `${r.key} ${r.roll}${r.rerolls.length ? `/${r.rerolls}` : ''} [${r.tags}]`).join(', ');
+  const inRoom = () => lastInit(t.gm).entries.map((e) => `${e.name} ${e.roll}${e.rerolls.length ? `/${e.rerolls}` : ''} [${e.tags}]`).join(', ');
+  let same = true;
+  let last = '';
+  for (const seed of [1, 42, 2026, 99991]) {
+    const want = direct(seed);
+    t.room.random = rng(seed);
+    await say(t.room, t.gm, { type: 'init.roll', all: true });
+    if (inRoom() !== want) { same = false; last = `seed ${seed}: room ${inRoom()} / R25 ${want}`; }
+  }
+  check('Roll the round orders exactly as initiative.js does on the same seed, four seeds', same, last);
+
+  // Everyone rolls 51: the tie is R25's to break.
+  t.dice(0.5, 0.5, 0.5, 0.5);
+  await say(t.room, t.gm, { type: 'init.roll', all: true });
+  check('a four-way tie: the applying Talent, then Agility number',
+    inRoom() === 'Nightfox 51 [Talent], Doom 51 [Talent,Agility], Guard 51 [Talent,Agility], Thug 51 [Talent,Agility]', inRoom());
+  check('the unticked Talent broke nothing', lastInit(t.gm).entries.find((e) => e.name === 'Thug').applies === false);
+
+  const played = [];
+  for (let i = 0; i < 4; i++) {
+    await say(t.room, t.gm, { type: 'init.next' });
+    played.push(nameOf(lastInit(t.gm), lastInit(t.gm).turn));
+  }
+  check('one pass through the order', played.join(' ') === 'Nightfox Doom Guard Thug', played.join(' '));
+  check('"You\'re up" reached the hero\'s phone on the hero\'s turn', t.phones.Nightfox.messages.some((m) => m.type === 'up'));
+  await say(t.room, t.gm, { type: 'init.next' });
+  const r2 = lastInit(t.gm);
+  check('then the round ends: round 2, nobody rolled, every Talent tick cleared',
+    r2.round === 2 && r2.turn === null && r2.entries.every((e) => !e.rolled && !e.applies));
+}
+
+section('initiative: a hidden NPC\'s name reaches the GM alone');
+{
+  const t = await initTable('palladium', [
+    { name: 'Vex', id: '11', email: ANN, init: { bonus: 3, attacks: 2 } },
+    { name: 'Rusty', id: '21', email: BEN, init: { bonus: 1, attacks: 2 } },
+  ]);
+  const P = t.phones;
+  await say(t.room, t.gm, { type: 'init.add', kind: 'npc', ref: '90', name: 'SECRET-OGRE', hidden: true, bonus: 2, attacks: 3 });
+  await say(t.room, t.gm, { type: 'init.add', kind: 'npc', ref: '91', name: 'Open Goblin', bonus: 1, attacks: 2 });
+  t.dice(0.9, 0.2); await say(t.room, t.gm, { type: 'init.roll', all: true });
+  t.dice(0.5); await say(t.room, P.Vex, { type: 'init.roll' });
+  const ogre = lastInit(t.gm).entries.find((e) => e.name === 'SECRET-OGRE');
+  await say(t.room, t.gm, { type: 'init.move', id: ogre.id, to: 1 });
+  await say(t.room, t.gm, { type: 'init.set', id: ogre.id, applies: true });
+  for (let i = 0; i < 4; i++) await say(t.room, t.gm, { type: 'init.next' });
+  // A phone that reconnects gets the whole order in `state`.
+  const again = new FakeSocket('again');
+  await t.room.connect(again, { role: 'player', email: BEN, name: '', characters: [{ id: '21', name: 'Rusty' }] });
+  await say(t.room, again, { type: 'hello' });
+  const tv2 = new FakeSocket('tv2');
+  await t.room.connect(tv2, { role: 'display', email: GM, name: 'Display', characters: [] });
+  await say(t.room, tv2, { type: 'hello' });
+
+  const leak = [t.tv, P.Vex, P.Rusty, again, tv2].filter((s) => /SECRET-OGRE|"ref":"90"/.test(everything(s)));
+  check('in no message, state included, does a player or the TV receive its name or sheet',
+    !leak.length, leak.map((s) => s.label).join(', '));
+  check('they see it as ??? in its place in the order',
+    lastInit(P.Vex).entries[1]?.name === HIDDEN_NAME && lastInit(tv2).entries.some((e) => e.name === HIDDEN_NAME));
+  check('with nothing but its place: no roll, no bonus, no attacks',
+    JSON.stringify(Object.keys(lastInit(again).entries.find((e) => e.hidden)).sort()) === '["hidden","id","kind","name","rolled"]');
+  check('its initiative roll went to the GM alone', rollsOn(t.gm).some((r) => /SECRET-OGRE/.test(r.text))
+    && rollsOn(P.Vex).every((r) => !/SECRET-OGRE/.test(r.text)));
+  check('its turn lights ??? for the others and the GM sees who', lastInit(t.gm).entries.some((e) => e.name === 'SECRET-OGRE' && e.spent > 0));
+  check('a visible NPC is visible to all', /Open Goblin/.test(everything(P.Vex)) && /Open Goblin/.test(everything(t.tv)));
+  check('the view masks by role, not by page', initView({ ...emptyInit(), entries: [{ id: 'x', kind: 'npc', ref: '9', name: 'Z', hidden: true, rolled: true, total: 12 }] }, { role: 'display' }).entries[0].name === HIDDEN_NAME);
+  await say(t.room, P.Vex, { type: 'init.set', id: ogre.id, hidden: false });
+  check('a player cannot unhide it', errorsOn(P.Vex).at(-1) === 'Only the GM changes a row' && !/SECRET-OGRE/.test(everything(P.Vex)));
+  await say(t.room, t.gm, { type: 'init.set', id: ogre.id, hidden: false });
+  check('when the GM unhides it, everyone sees it (so the check above can see a name)', /SECRET-OGRE/.test(everything(P.Vex)) && /SECRET-OGRE/.test(everything(t.tv)));
+  await say(t.room, t.gm, { type: 'init.set', id: lastInit(t.gm).entries.find((e) => e.name === 'Vex').id, hidden: true });
+  check('a player\'s character cannot be hidden', errorsOn(t.gm).at(-1) === 'A player\'s character cannot be hidden');
+  await post(t.room, '/close', { reason: 'gm' });
+  check('closing the table drops the order', !t.storage.map.has('init'));
+}
+
+section('initiative routes: a player\'s numbers come from D1, never the page');
+{
+  const S = await standIn();
+  S.sqlite.exec(`INSERT INTO campaigns (id, name, system, gm_email) VALUES (1, 'Chi-Town', 'rifts', '${GM}')`);
+  const pc = (id, email, name, kind, combat) => S.sqlite.prepare(
+    `INSERT INTO characters (id, campaign_id, player_email, name, class_id, kind, combat) VALUES (?, 1, ?, ?, 'x', ?, ?)`)
+    .run(id, email, name, kind, JSON.stringify(combat));
+  pc(11, ANN, 'Vex', 'pc', { initiative: 3, attacks: 4 });
+  pc(21, BEN, 'Dog Boy Rusty', 'pc', {});
+  pc(90, GM, 'The Villain', 'npc', { initiative: 5, attacks: 3 });
+  const T = {};
+  for (const a of ['open', 'join', 'roster']) T[a] = await S.route(`character-creator/table/${a}.js`);
+  const up = { Upgrade: 'websocket' };
+  const code = (await S.call(T.open, 'POST', { who: GM, body: { campaign_id: 1 } })).body.code;
+  await S.call(T.join, 'GET', { who: ANN, query: `?code=${code}`, headers: { ...up, 'X-Table-Characters': encodeURIComponent('[{"id":"11","name":"Vex","init":{"bonus":40,"attacks":9}}]') } });
+  const ann = S.socketOf(code);
+  check('a seat carries the sheet\'s initiative bonus and attacks, derived on the server',
+    JSON.stringify(ann.deserializeAttachment().seat.init) === '{"bonus":3,"attacks":4}', JSON.stringify(ann.deserializeAttachment().seat));
+  await S.call(T.join, 'GET', { who: BEN, query: `?code=${code}`, headers: up });
+  const ben = S.socketOf(code);
+  check('a character with nothing typed over the sheet gets the base: +0 and two attacks',
+    JSON.stringify(ben.deserializeAttachment().seat.init) === '{"bonus":0,"attacks":2}');
+  const room = S.rooms.get(code).room;
+  room.random = () => 0.5;
+  await say(room, ann, { type: 'init.roll', bonus: 40, total: 60 });
+  check('so a roll from the phone is d20 plus that bonus, whatever the phone sent',
+    lastInit(ann).entries[0]?.total === 14 && lastInit(ann).entries[0]?.bonus === 3, JSON.stringify(lastInit(ann)));
+  const roster = await S.call(T.roster, 'GET', { who: GM, query: '?campaign_id=1' });
+  const villain = roster.body?.combatants?.find((c) => c.name === 'The Villain');
+  check('the GM\'s roster lists the characters and the statted NPCs, with their numbers',
+    roster.status === 200 && villain?.kind === 'npc' && villain.init.bonus === 5 && villain.init.attacks === 3
+    && roster.body.combatants.filter((c) => c.kind === 'pc').length === 2, JSON.stringify(roster.body));
+  check('and nobody else gets it', (await S.call(T.roster, 'GET', { who: ANN, query: '?campaign_id=1' })).status === 403);
+
+  S.sqlite.exec(`INSERT INTO msh_campaigns (id, name, gm_email) VALUES (5, 'Avengers', '${GM}')`);
+  const snap = JSON.stringify({ abilities: { agility: { number: 30 } }, talents: [{ id: 'martial-arts-e' }] });
+  S.sqlite.prepare(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES ('h1', ?, 'Nightfox', '{}', ?)`).run(BEN, snap);
+  S.sqlite.exec(`INSERT INTO msh_campaign_heroes (campaign_id, hero_id, campaign_open, added_by) VALUES (5, 'h1', 1, '${BEN}')`);
+  S.sqlite.prepare(`INSERT INTO msh_npc_sheets (campaign_id, name, build, snapshot, created_by) VALUES (5, 'Doom', '{}', ?, ?)`)
+    .run(JSON.stringify({ abilities: { agility: { number: 40 } }, talents: [] }), GM);
+  const M = {};
+  for (const a of ['open', 'join', 'roster']) M[a] = await S.route(`marvel-heroes/table/${a}.js`);
+  const mcode = (await S.call(M.open, 'POST', { who: GM, body: { campaign_id: 5 } })).body.code;
+  await S.call(M.join, 'GET', { who: BEN, query: `?code=${mcode}`, headers: up });
+  check('a Marvel seat carries the hero\'s Agility number and Talents from its sheet',
+    JSON.stringify(S.socketOf(mcode).deserializeAttachment().seat.init) === '{"agility":30,"talents":["martial-arts-e"]}');
+  const mr = (await S.call(M.roster, 'GET', { who: GM, query: '?campaign_id=5' })).body?.combatants ?? [];
+  check('Marvel\'s roster lists the heroes and the GM\'s NPC sheets',
+    mr.map((c) => `${c.kind}:${c.name}:${c.init.agility}`).join(',') === 'pc:Nightfox:30,npc:Doom:40', JSON.stringify(mr));
+}
+
+section('initiative: the server derives combat numbers the way the sheet does');
+{
+  const sheet = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+  const lib = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'combat-numbers.js'), 'utf8').replace(/\r\n/g, '\n');
+  const bonusCall = /derive\.classBonuses\(cls(?: \|\| \{\})?, c\.level, \{\n\s*attributes: c\.attribute_bonuses \|\| \{\},\n\s*combat: c\.rolled_bonuses\?\.combat \|\| \{\},\n\s*saves: c\.rolled_bonuses\?\.saves \|\| \{\},\n\s*\}\)/;
+  check('the sheet builds its bonuses with classBonuses on those arguments', bonusCall.test(sheet));
+  check('and so does the server', bonusCall.test(lib));
+  check('the sheet\'s first-form combat block is derive.combat(attrs, c.combat, bonuses)', /: derive\.combat\(attrs, c\.combat, bonuses\);/.test(sheet));
+  check('and the server\'s', /derive\.combat\(c\.attributes \|\| \{\}, c\.combat, bonuses\)/.test(lib));
 }
 
 // summary() returns the exit code; ignoring it made this suite pass CI on a failure.
