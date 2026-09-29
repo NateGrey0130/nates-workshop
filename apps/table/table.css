@@ -1,0 +1,121 @@
+/* The Table. Board & Tissue from the two stylesheets this page links first
+   (DESIGN.md); this file adds only the table's own pieces. No box-shadow, no
+   radius, state carried by a word as well as a mark - the suite's rules. */
+
+.table-code-chip {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-tertiary);
+  vertical-align: middle;
+}
+
+/* ---- joining ---- */
+.table-code-form { display: grid; gap: 6px; max-width: 320px; margin-top: 12px; }
+.table-code-form input {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  min-height: 48px;
+}
+.table-code-form .btn { justify-self: start; min-height: 44px; margin-top: 6px; }
+
+.table-roles { display: grid; gap: 10px; margin-top: 12px; }
+.table-role {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  text-align: left;
+  min-height: 56px;
+  padding: 10px 14px;
+  white-space: normal;
+}
+.table-seats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.table-seats .btn { min-height: 44px; }
+
+/* ---- the dice box ---- */
+.table-vis { border: 0; padding: 0; margin: 4px 0 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.table-vis legend { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; padding: 0; }
+.table-vis-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-control);
+  cursor: pointer;
+}
+.table-vis-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-glow); font-weight: 600; }
+.table-vis-opt input { accent-color: var(--accent); width: 18px; height: 18px; margin: 0; }
+
+.table-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.table-quick-btn { min-height: 44px; min-width: 64px; justify-content: center; font-family: var(--font-mono); }
+
+.table-dice-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-bottom: 10px; }
+.table-field { display: grid; gap: 4px; flex: 1 1 140px; }
+.table-field label { font-size: 13px; color: var(--text-secondary); }
+.table-field input, .table-field select { min-height: 44px; font-size: 16px; padding: 6px 10px; }
+.table-dice-form .btn { min-height: 44px; }
+.table-help { flex-basis: 100%; }
+
+/* ---- the feed ---- */
+.table-feed { list-style: none; margin: 0; padding: 0; }
+.table-roll {
+  display: grid;
+  grid-template-columns: minmax(90px, max-content) 1fr;
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.table-roll:first-child { border-top: 0; }
+.table-roll-who { font-weight: 600; }
+.table-roll-text { font-family: var(--font-mono); font-size: 14px; overflow-wrap: anywhere; }
+.table-roll-meta { grid-column: 2; }
+.table-roll.mine .table-roll-who::after { content: ' (you)'; font-weight: 400; color: var(--text-secondary); }
+/* A player's roll to the GM, on the GM's screen: marked by an edge AND the
+   "rolled to you" words, never by colour alone. */
+.table-roll.to-gm { border-left: 3px solid var(--accent); padding-left: 8px; }
+.table-roll.fresh { background: var(--accent-glow); }
+@media (prefers-reduced-motion: no-preference) {
+  .table-roll.fresh { animation: table-fade 2.4s ease-out forwards; }
+  @keyframes table-fade { to { background: transparent; } }
+}
+
+.table-people { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.table-close { display: grid; gap: 6px; justify-items: start; border-top: 1px solid var(--border); padding-top: 12px; }
+.table-close .btn { min-height: 44px; }
+
+@media (max-width: 520px) {
+  .table-roll { grid-template-columns: 1fr; }
+  .table-roll-meta { grid-column: 1; }
+}
+
+/* ---- the TV ----
+   Read from three metres, so it is its own dark view with nothing to press.
+   Contrast: #F4EFE8 on #12100E is 17:1, #F0A070 on #12100E 9:1. */
+body.table-tv {
+  --tv-bg: #12100E;
+  --tv-ink: #F4EFE8;
+  --tv-dim: #B9B0A6;
+  --tv-accent: #F0A070;
+  background: var(--tv-bg);
+  color: var(--tv-ink);
+}
+body.table-tv .header { display: none; }
+body.table-tv .wrap { max-width: none; padding: 3vh 4vw; }
+.tv-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 1vh 4vw; margin-bottom: 4vh; }
+.tv-campaign { font-size: clamp(28px, 4vw, 64px); font-weight: 700; letter-spacing: -0.5px; }
+.tv-join { font-size: clamp(16px, 1.8vw, 30px); color: var(--tv-dim); }
+.tv-code { font-family: var(--font-mono); color: var(--tv-accent); letter-spacing: 6px; font-size: 1.8em; vertical-align: middle; }
+.tv-feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.4vh; }
+.tv-roll { display: grid; gap: 0.4vh; color: var(--tv-dim); font-size: clamp(18px, 2.2vw, 38px); }
+.tv-roll.newest { color: var(--tv-ink); font-size: clamp(28px, 4.2vw, 76px); }
+.tv-roll.newest .tv-who { color: var(--tv-accent); }
+.tv-who { font-weight: 700; font-size: 0.6em; text-transform: uppercase; letter-spacing: 1px; }
+.tv-text { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.tv-empty { font-size: clamp(22px, 3vw, 48px); }
+.tv-status { color: var(--tv-accent); font-size: clamp(14px, 1.4vw, 24px); margin-top: 4vh; }

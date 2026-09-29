@@ -732,6 +732,15 @@ in its row — the roster endpoint folds them for a `campaign_id` list — and t
 row's −/+, Damage and ↶ act on that form, through the same `derive` helpers the
 sheet uses.
 
+**The Table** ([apps/table/](../../table/README.md)) is the one place a sheet's
+rolls leave the sheet. While a character is seated at an open table, every roll
+the sheet logs is also sent there as the SAME note `rollNote()` wrote, so the
+table's feed reads what `endSession` counts. The sheet still writes its own
+`play_events` row; the table route writes none, and the room's feed is saved to
+`table_sessions` as the table's record, not a second log. A roll sent To the
+GM is marked `private` in `play_events` and hidden from everyone but its
+owner and the G.M.
+
 Deliberately out of scope at any phase: party-wide initiative (the
 dashboard's altitude) and automated combat resolution (the hand-to-hand
 tables are not modelled, and the README already says so).

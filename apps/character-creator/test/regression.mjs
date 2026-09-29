@@ -2298,6 +2298,25 @@ const events = await api('GET', `/characters/${charId}/events`);
 check('the event log still holds the undone event',
   events.status === 200 && events.body.events.some((e) => e.undone_at), events.body.events?.length);
 
+// THE TABLE (apps/table/): a roll the player sends To the GM is private in the
+// session log too. Its owner and the G.M. read it; to anyone else it is not in
+// the log at all - filtered in the SQL, so a page of events is still a page.
+// Only a literal `true` on a roll marks one.
+const privRoll = await api('POST', `/characters/${charId}/events`, { kind: 'roll', note: 'Perception: d20 12 = 12 (table-private)', private: true });
+const notPriv = await api('POST', `/characters/${charId}/events`, { kind: 'roll', note: 'Climb: d20 9 = 9 (table-loose)', private: 'yes' });
+check('a roll can be logged as private', privRoll.status === 200 && notPriv.status === 200, [privRoll.body, notPriv.body]);
+const ownerLog = (await api('GET', `/characters/${charId}/events`)).body.events || [];
+const strangerLog = (await apiAs('nobody-table@example.com', 'GET', `/characters/${charId}/events`)).body.events;
+const noteOf = (e) => e.payload?.note || '';
+check('the owner reads their private roll, marked private',
+  ownerLog.some((e) => noteOf(e).includes('(table-private)') && e.payload.private === true));
+check('someone else reads the log without it',
+  Array.isArray(strangerLog) && strangerLog.length > 0 && !strangerLog.some((e) => noteOf(e).includes('(table-private)')),
+  strangerLog?.map(noteOf));
+check('and a private flag that is not true marks nothing',
+  ownerLog.some((e) => noteOf(e).includes('(table-loose)') && e.payload.private === undefined)
+    && strangerLog?.some((e) => noteOf(e).includes('(table-loose)')));
+
 // ── journal, draft, lists, admin ────────────────────────────────────────────
 console.log('\n[6/7] Journal, drafts, lists, admin');
 const entry = await api('POST', '/journal', { character_id: charId, title: 'Session 1', body: 'It happened.' });

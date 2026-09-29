@@ -70,6 +70,9 @@ async function load() {
       api(`characters?campaign_id=${campaignId}`),
       C.people.load(),
       C.handouts.load(),
+      // The Table: whether one is open, and the sessions it saved. It also
+      // saves a table that closed itself, when the G.M. is the one here.
+      C.table.load(),
     ]);
     D.items = items.items;
     D.roster = roster.characters;
@@ -119,6 +122,7 @@ function render() {
     <div class="panel">
       <h2>${esc(D.campaign.name)} <span class="muted small">(${esc(D.campaign.system)})</span></h2>
     </div>
+    ${C.table.html()}
     <nav class="tabbar campaign-tabs" role="tablist">${tabs.map(([k, label, n]) =>
       `<button class="tab${D.tab === k ? ' on' : ''}" role="tab" aria-selected="${D.tab === k}"
          onclick="setTab('${k}')">${esc(label)}${

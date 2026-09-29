@@ -289,6 +289,7 @@ section('the table: the dice box');
   check('a FEAT rolls d100 on the Marvel app\'s own Universal Table', f.d100 === 67 && f.colour === direct.colour, JSON.stringify(f));
   const shifted = rollFeat(feat, { rank: 'remarkable', cs: 1 }, () => 0.66);
   check('a column shift moves the column', shifted.column === 'incredible' && /\+1 CS to Incredible/.test(shifted.text), shifted.text);
+  check('a FEAT names its colour as a capitalised word', /— (White|Green|Yellow|Red)$/.test(f.text), f.text);
   check('an unknown rank is refused', !!rollFeat(feat, { rank: 'legendary' }, () => 0.5).error);
   check('a wild column shift is refused', !!rollFeat(feat, { rank: 'good', cs: 40 }, () => 0.5).error);
 }
@@ -528,6 +529,104 @@ section('the table routes: the schema files agree with the migrations');
     cols(createOf(msh, 'msh_table_sessions')) === cols(createOf(mmig, 'msh_table_sessions')));
   check('each schema file creates the one-open-table index',
     pal.includes('idx_table_sessions_one_open') && msh.includes('idx_msh_table_sessions_one_open'));
+}
+
+// ── The two clients: the character sheet and the campaign page ───────────────
+
+section('the table clients: the sheet sends the log\'s own note, unchanged');
+{
+  const sheet = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+  const body = (name) => {
+    const at = sheet.indexOf(`function ${name}(`);
+    return at < 0 ? '' : sheet.slice(at, sheet.indexOf('\n}\n', at));
+  };
+  // endSession counts "— pass" and "— fail" out of the logged notes, so the
+  // table must carry that same string, and the log must go on getting it.
+  check('a logged roll is persisted as rollNote() wrote it', /persistRoll\(rollNote\(r\)\)/.test(body('recordRoll')));
+  check('and persistRoll hands that same note to the table and to the log',
+    /sendToTable\(note\)/.test(body('persistRoll')) && /postEvent\('roll', note,/.test(body('persistRoll')));
+  check('sendToTable posts the note as given, and nothing else writes it',
+    /\{ character_id: Number\(id\), note, visibility: C\.tableVis \}/.test(body('sendToTable')));
+  check('a roll To the GM at the table is private in the log',
+    /C\.table\?\.seated && C\.tableVis === 'gm'/.test(body('persistRoll')));
+  check('rollNote still writes the verdict endSession counts', /— \$\{r\.ok \? 'pass' : 'fail'\}/.test(body('rollNote')));
+}
+
+section('the table clients: the campaign page panel');
+{
+  const calls = [];
+  const replies = {};
+  const makePage = (reply) => {
+    for (const k of Object.keys(replies)) delete replies[k];
+    Object.assign(replies, reply);
+    calls.length = 0;
+    const g = {
+      ctx: {
+        campaignId: 7,
+        api: async (path, opts) => {
+          calls.push(`${opts?.method || 'GET'} ${path}`);
+          const key = Object.keys(replies).find((k) => path.startsWith(k));
+          const r = replies[key];
+          if (r instanceof Error) throw r;
+          return typeof r === 'function' ? r() : r;
+        },
+        ui: { esc: (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`), toast: () => {}, modal: async () => true },
+        reload: async () => {},
+      },
+      json: (method, body) => ({ method, body: JSON.stringify(body) }),
+    };
+    globalThis.mcCampaign = g;
+    return g;
+  };
+  const src = readFileSync(join(repoRoot, 'shared', 'js', 'campaign', 'table.js'), 'utf8');
+  const loadModule = () => new Function(src)();
+  const feed = [{ id: 1, visibility: 'secret', text: '<img src=x onerror=alert(1)>', by: { name: 'GM' } }];
+
+  let M = makePage({ 'table/status': { open: false, is_gm: true }, 'table/sessions': { sessions: [{ id: 1, opened_at: '2026-09-29 20:00', closed_reason: 'gm', feed }] } });
+  loadModule();
+  await M.table.load();
+  const gmHtml = M.table.html();
+  check('the GM is offered Open the table', gmHtml.includes('mcCampaign.table.open()'));
+  check('a saved roll is escaped, and tagged by who could see it', gmHtml.includes('&#60;img') && !gmHtml.includes('<img') && gmHtml.includes('GM only'));
+
+  M = makePage({ 'table/status': { open: false, is_gm: false }, 'table/sessions': { sessions: [] } });
+  loadModule();
+  await M.table.load();
+  check('a player is not offered Open the table', !M.table.html().includes('table.open()'));
+
+  M = makePage({ 'table/status': { open: true, code: 'QK4T', room: 'open', is_gm: false }, 'table/sessions': { sessions: [] } });
+  loadModule();
+  await M.table.load();
+  const live = M.table.html();
+  check('an open table shows its code and the way in, and a player cannot close it',
+    live.includes('QK4T') && live.includes('/apps/table/?code=QK4T') && !live.includes('table.close()'));
+
+  M = makePage({ 'table/status': { open: true, code: 'QK4T', room: 'closed', is_gm: true }, 'table/close': { saved: true, roll_count: 4, reason: 'idle' }, 'table/sessions': { sessions: [] } });
+  loadModule();
+  await M.table.load();
+  check('a table that closed itself is saved on the GM\'s visit', calls.includes('POST table/close') && /4 rolls are saved/.test(M.table.html()), calls.join(' | '));
+
+  M = makePage({ 'table/status': { open: true, code: 'QK4T', room: 'closed', is_gm: false }, 'table/close': { saved: true }, 'table/sessions': { sessions: [] } });
+  loadModule();
+  await M.table.load();
+  check('and never on a player\'s', !calls.some((c) => c.includes('table/close')));
+
+  const off = new Error('not wired'); off.status = 503;
+  M = makePage({ 'table/status': off, 'table/sessions': { sessions: [] } });
+  loadModule();
+  await M.table.load();
+  check('a deployment without the room shows no panel at all', M.table.html() === '');
+  delete globalThis.mcCampaign;
+
+  const html = readFileSync(join(repoRoot, 'apps', 'table', 'index.html'), 'utf8');
+  check('the table page links the RPG suite\'s two stylesheets in order',
+    html.indexOf('/shared/styles.css') > -1 && html.indexOf('/shared/styles.css') < html.indexOf('/apps/character-creator/styles.css'));
+  const client = readFileSync(join(repoRoot, 'apps', 'table', 'table.js'), 'utf8');
+  check('the table page asks for a role and never filters rolls itself',
+    /table\/join\?code=/.test(client) && !/canSee|visibility === 'secret'/.test(client));
+  const camps = ['apps/campaign/index.html', 'apps/marvel-heroes/campaign/index.html']
+    .map((f) => readFileSync(join(repoRoot, f), 'utf8'));
+  check('both games\' campaign pages load the table panel', camps.every((h) => h.includes('/shared/js/campaign/table.js')));
 }
 
 summary();

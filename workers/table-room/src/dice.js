@@ -87,6 +87,8 @@ export function rollFeat(feat, { rank, cs = 0 }, random) {
   const cols = shift ? ` ${shift > 0 ? '+' : ''}${shift} CS to ${used.name}` : '';
   return {
     d100, colour: r.colour, column: r.column,
-    text: `FEAT on ${known.name}${cols}: ${d100} — ${r.colour}`,
+    // The colour as a word, capitalised as the Marvel app writes it: a FEAT
+    // result is "Yellow", never a colour alone (DESIGN.md, Newsprint).
+    text: `FEAT on ${known.name}${cols}: ${d100} — ${r.colour[0].toUpperCase()}${r.colour.slice(1)}`,
   };
 }
