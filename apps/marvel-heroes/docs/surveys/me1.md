@@ -3,8 +3,13 @@
 Official Advanced Game Adventure for Marvel Super Heroes, Troy Denning, 1988. Registry
 entry: `scripts/msh/books.json` -> `me1`. Measured 2026-09-29.
 
-**Rows citing this book:** none yet. This is the survey PR: a registry entry
-and this file, no characters, items or D1 rows.
+**Rows citing this book:** 198 `msh_book_text` rows over 33 character entries
+in production (`DB_MARVEL`, read back 2026-09-29). The four chart-only heroes
+have no text.
+
+Committed: 37 characters in `apps/marvel-heroes/data/npcs.json`, with 37
+blocks and 154 powers, 45 of them linked to the Ultimate Powers Book. No items
+and no adventure: Decision 6 was skipped.
 
 This is the third Marvel book. It went through `scripts/msh/` only. The two
 worked examples are [ma1.md](ma1.md) and [mhsp1.md](mhsp1.md), and **this book
@@ -270,6 +275,41 @@ Collector's mislabelled `R` row needs nothing: rows are read by position.
   kept whole under the entry's powers.
 - **The Common Inhuman's powers are a paragraph of odds,** not named powers,
   and are kept that way.
+
+## The data
+
+`npcs.py me1` built the committed facts and the data script, which was applied
+to production before the merge. What the chain learned for this layout:
+
+- **A book with parts and no sides.** Each card cites its booklet
+  (`ME1 Adventure p.12`, `ME1 Resource p.4`), and a chart-only hero cites the
+  chart alone. Teams are the registry's, as written. A header's parenthesis
+  is the version's label (`Update`, `Blue or Pink`). Characters sort by
+  booklet, then page.
+- **The source line** lists both booklets:
+  `ME1 Cosmos Cubed, Adventure pp.3-7, 11-28, Resource pp.2-16` (`ranges`).
+- **The Oolafat's R, I and P** play as Shift 0, because an override's `field`
+  may now name several rows (`RIP`).
+- **The Ghoul Captain's Karma 0** is an `also` on its override, so the Marvel
+  smoke suite's Karma check reads it as recorded, and the card shows it.
+- **A chart power printed with its rank** (`Healing-Un`, `Flight-Cl 3000`) is
+  split into name and rank where the suffix is one of the book's rank
+  spellings. That links ten more powers to the UPB and gives the GM their
+  ranks. `Invulnerability-Un/Shift Z` and the like keep their name whole.
+- **A minus printed as a dash** (`-5`, `-20`) stays a minus, because the ASCII
+  fold would have spelled it ` - `.
+- **Two fixes the app needed, not only this book:**
+  - The GM ladder found no rank for a number at or past Class 5000, whose
+    `max` is open (Ego's Endurance 5000).
+  - A card whose version has no text rows no longer claims "the book's text
+    is not loaded". It asks for none. That was already true of MHSP1's four
+    Wrecking Crew members.
+
+Driven on a local server (port 8791, with ME1's rows applied to the local D1):
+- The Codex cards for the Ghoul Captain, the Oolafat, the Superkree, Mantis
+  and Nova, at tablet and desktop widths.
+- "Add an NPC from the book" in the GM tools, for the Ghoul Captain. Its sheet
+  plays Agility as Amazing, Health 400 and Karma 0.
 
 ## Entry kinds
 
