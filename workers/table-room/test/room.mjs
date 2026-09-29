@@ -836,6 +836,16 @@ section('the table clients: the campaign page panel');
     /case 'mine-roll': return send\(\{ type: 'init\.roll' \}\);/.test(client));
   check('the page never masks a hidden NPC itself: it draws what the room sent',
     !/HIDDEN_NAME|'\?\?\?'/.test(client));
+  // The GM's picture picker on the table page. Drawn for the GM alone, so a
+  // player's page never asks the GM-only picture lists; and it shows through
+  // the table/show ROUTE, which checks the picture is this campaign's, never by
+  // a socket message the room would have to take on trust.
+  check('the table page\'s picture picker is the GM\'s alone',
+    /\$\{gm \? picsHtml\(\) : ''\}/.test(client) && /if \(gm\) wirePics\(\);/.test(client)
+    && (client.match(/picsHtml\(\)/g) || []).length === 2);
+  check('and it shows and clears through the table routes, never a socket message',
+    /picPost\('show'/.test(client) && /picPost\('clear'/.test(client)
+    && /\/table\/\$\{route\}/.test(client) && !/type: '(show|clear)'/.test(client));
   const camps = ['apps/campaign/index.html', 'apps/marvel-heroes/campaign/index.html']
     .map((f) => readFileSync(join(repoRoot, f), 'utf8'));
   check('both games\' campaign pages load the table panel', camps.every((h) => h.includes('/shared/js/campaign/table.js')));
