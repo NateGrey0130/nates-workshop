@@ -620,6 +620,21 @@ export function run() {
       tagAt('/shared/js/campaign/downscale.js') > 0
       && tagAt('/shared/js/campaign/downscale.js') < tagAt('/shared/js/campaign/setting.js'),
       'downscale.js is missing or loads after setting.js');
+    // THE TABLE'S PANEL IS ON THE PAGE A CAMPAIGN CLICK LANDS ON. It shipped on
+    // the Campaign page alone, and the campaign list sends a click on the
+    // campaign's name to GM Tools (the Campaign page is the small Notes button
+    // beside it), so on production the GM never saw Open the table. The
+    // landing page is read off the list's own first link, so a list that moves
+    // the click moves this check with it.
+    const listSrc = readFileSync(join(repoRoot, 'apps', 'character-creator', 'js', 'campaign-list.js'), 'utf8');
+    const landing = (listSrc.match(/href="\/apps\/([a-z-]+)\/\?campaign_id=/) || [])[1];
+    const landHtml = landing ? readFileSync(join(repoRoot, 'apps', landing, 'index.html'), 'utf8') : '';
+    const landJs = [...landHtml.matchAll(/<script src="([^/"][^"]*)"/g)]
+      .map((m) => readFileSync(join(repoRoot, 'apps', landing, m[1]), 'utf8')).join('\n');
+    check(`the page a campaign click lands on (${landing || 'none found'}) shows The Table's panel`,
+      !!landing && landHtml.includes('<script src="/shared/js/campaign/table.js"')
+      && /\.table\.load\(\)/.test(landJs) && /\.table\.html\(\)/.test(landJs),
+      'table.js is not loaded there, or the page never loads or draws the panel');
     // THE HEADER COMES FROM THE BLOB. The server reads that one header for the
     // R2 key's extension, the stored content_type AND the Content-Type it
     // serves later, so a re-encoded blob described by the original file's type
