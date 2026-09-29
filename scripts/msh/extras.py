@@ -227,6 +227,8 @@ def main(slug):
         'Every row carries its book. The first book in scripts/msh/books.json keeps plain ids; a later book\'s end in -<slug>.',
     ]
 
+    npcs.unpaired(rows, slug)
+
     def listing(rows_, pages_of):
         present = [b for b in order if any(r['book'] == b for r in rows_)]
         return ([{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(pages_of(b))} for b in present],

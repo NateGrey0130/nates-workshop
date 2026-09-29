@@ -197,6 +197,31 @@ Class ranks (`C-1000`, `C-3000`) and Shift Y (`200 ShiftY`, Acanti).
 `see Corsair`, `N/A`. Parsing them into a rank and a number is the data
 phase's job, and no rule for it is guessed here.
 
+## Quote marks
+
+Tesseract reads MA1's curly double quotes four wrong ways, each checked on
+the page image: as a single mark (printed 20, "greatest fear"), as two single
+marks (printed 66, "the Creator,"), as a double with a thin single beside it
+(printed 21, "lifeglow", the commonest), and a speck or a
+trademark sign as a mark of its own (printed 24 and 41, and the Time Bomb
+caption on 36). `npcs.pair_quotes()` decides each mark by where it sits
+before the text is folded to ASCII, and `npcs.unpaired()` stops `npcs.py`
+and `extras.py` before they write anything if a row still has an odd number
+of double quotes. It changed 13 rows of `msh_book_text` and two identity
+lines in `npcs.json`; MHSP1's output is byte-identical.
+
+**MA1 also prints single quotes** ('seventh sense', 'ping', 'space tank'), so
+a single-quoted phrase is not an error in itself and is left alone. Five
+single marks are still wrong, and only the page image tells them apart:
+
+| row | printed | the text has |
+|---|---|---|
+| `wolverine:running`, p.12 | 'family,' | no closing mark |
+| `beast:power:6`, p.14 | 'banked shot,' | no closing mark |
+| `proteus-alias-mutant-x:running`, p.58 | 'feed.' | no closing mark |
+| `wolf:prose`, p.22 | collar | a speck read as an opening mark |
+| `southern-candy:prose`, p.70 | "Aerie." | single marks for double |
+
 ## Entry kinds
 
 Reconciling the 184 blocks against the 183 index names sorts the book into six
