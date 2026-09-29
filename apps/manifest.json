@@ -119,14 +119,6 @@
       "status": "live"
     },
     {
-      "slug": "the-button",
-      "name": "The Button",
-      "group": "other",
-      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><ellipse cx='12' cy='16.4' rx='8.6' ry='3.4'/><path d='M3.4 16.4v1.2c0 1.9 3.9 3.4 8.6 3.4s8.6-1.5 8.6-3.4v-1.2'/><path d='M6.4 15.2V11c0-1.6 2.5-2.8 5.6-2.8s5.6 1.2 5.6 2.8v4.2'/><ellipse cx='12' cy='11' rx='5.6' ry='2.2'/></svg>",
-      "description": "A big red button. Press it and find out.",
-      "status": "live"
-    },
-    {
       "slug": null,
       "name": "More Coming Soon",
       "group": "other",
