@@ -1,8 +1,9 @@
 // Campaign dashboard — party roster, GM notes, campaign journal feed.
 // escHtml() comes from /shared/js/ui.js.
 //
-// The setting pages and the journal feed are SHARED with every game's GM page:
-// /shared/js/campaign/setting.js and notes.js hold their markup and behaviour,
+// The setting pages, the journal feed and The Table's panel are SHARED with
+// every game's GM page: /shared/js/campaign/setting.js, notes.js and table.js
+// hold their markup and behaviour,
 // and this app's stylesheet styles their `mc-` classes. What stays here is this
 // game's: the pools and their steppers, the XP award, rest rates, the GM's own
 // notes, and the statted NPCs.
@@ -50,6 +51,11 @@ async function load() {
       // are included by the projection itself, so a character on one keeps
       // its label.
       api('classes?names=1'),
+      // The Table's panel: open, the code, close, saved sessions. Here as
+      // well as on the Campaign page because a campaign clicked in the list
+      // lands HERE (campaign-list.js), so a panel only on the Campaign page
+      // was one nobody found. load() also saves a table that closed itself.
+      C.table.load(),
     ]);
     D.campaign = campRes.campaign; D.isGm = campRes.is_gm;
     window.appnav?.setContext({ campaignId, campaignName: D.campaign?.name });
@@ -345,6 +351,8 @@ function render() {
     <div class="rowline"><button class="btn btn-sm btn-danger" onclick="deleteCampaign()">Delete campaign</button><span id="delete-msg" class="muted small"></span></div>
   </div>` : ''}
   </div>
+
+  ${C.table.html()}
 
   ${D.isGm ? C.setting.html({ presentHref: 'present.html' }) : ''}
 
