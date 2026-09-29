@@ -17,6 +17,10 @@
 // the table and this person is at it, so the address is worth nothing before
 // Show or after Clear. The TV fits it to the screen on black; a phone shows it
 // under the roll feed, and a tap opens it full screen to pinch and pan.
+// The GM can also show one from HERE, without leaving for Present mode: the
+// Show a picture panel lists the campaign's pictures from the routes the
+// Setting pages already use (GM-only: a player's page never asks), and a
+// click calls the same table/show and table/clear routes Present mode calls.
 //
 // INITIATIVE (phase 3). The room keeps the order and whose turn it is, and
 // sends each screen `init` as that screen may see it: a hidden NPC arrives
@@ -48,7 +52,7 @@ const S = {
   code: '', game: null, access: null, role: null,
   ws: null, you: null, room: null, people: [], feed: [], shown: null,
   closed: false, retry: 0, vis: 'all', ranks: null, rank: 'typical', wake: null,
-  init: null, roster: null, upAt: 0,
+  init: null, roster: null, upAt: 0, pics: null,
 };
 
 async function getJson(url, opts) {
@@ -274,6 +278,7 @@ function render() {
       <p class="muted small" id="picture-cap"></p>
       <p class="muted small">Tap the picture to see it full screen and pinch to zoom.</p>
     </div>
+    ${gm ? picsHtml() : ''}
     <div class="panel">
       <h3>At the table</h3>
       <ul id="people" class="table-people"></ul>
@@ -290,6 +295,7 @@ function render() {
   if (gm || seat) wireDice();
   if (gm) $('close-table').addEventListener('click', closeTable);
   if (gm) wireInitGm();
+  if (gm) wirePics();
   wireInit();
   $('picture-open').addEventListener('click', openZoom);
   paintInit();
@@ -705,6 +711,7 @@ function pictureSrc(s) {
 }
 
 function paintPicture() {
+  paintPics();
   const box = $('picture');
   if (!box) return;
   const s = S.shown;
@@ -728,6 +735,114 @@ function paintPicture() {
   $('picture-cap').textContent = s.caption || '';
   if (tv) paintTvRolls();
   else if ($('zoom-img') && !$('zoom').hidden) $('zoom-img').src = src;
+}
+
+// ---------- the GM's picture picker ----------
+//
+// Every picture the campaign has: each Setting page's pictures under its
+// title, and on Palladium the City Creator's city maps. The lists come from
+// the routes the Setting pages and City Creator already use, which are GM-only
+// (a player's page never draws this panel, so never asks). A thumbnail is the
+// campaign image route, which the GM may always load; the table's own image
+// route is for what is ON the table, and says nothing before Show.
+
+const campaignBase = () => `${GAMES[S.game].base}/campaigns/${encodeURIComponent(S.access.campaign.id)}`;
+const isShown = (kind, id) => !!S.shown && S.shown.kind === kind && String(S.shown.id) === String(id);
+
+function picsHtml() {
+  return `<div class="panel table-pics">
+    <h3>Show a picture</h3>
+    <p class="muted small">Pick one to put it on every screen. Showing is not revealing: nothing lands in the players' Handouts.</p>
+    <p class="table-pics-now"><span id="pics-now" class="muted">Nothing is on the table.</span>
+      <button type="button" class="btn btn-sm" id="pics-clear" disabled>Clear the table</button></p>
+    <div id="pics-body"><p class="muted">Loading the campaign's pictures…</p></div>
+  </div>`;
+}
+
+async function loadPics() {
+  const base = campaignBase();
+  try {
+    const [entries, cities] = await Promise.all([
+      getJson(`${base}/entries?limit=500`),
+      palladium() ? getJson(`${base}/cities`) : Promise.resolve({ cities: [] }),
+    ]);
+    const pages = (entries.entries || []).filter((e) => e.image_count > 0);
+    const full = await Promise.all(pages.map((e) => getJson(`${base}/entries/${encodeURIComponent(e.id)}`)
+      .then((r) => ({ title: e.title, images: r.images || [] }))
+      .catch(() => ({ title: e.title, images: [], failed: true }))));
+    S.pics = { pages: full, cities: cities.cities || [] };
+  } catch (err) {
+    S.pics = { error: err.message };
+  }
+  drawPics();
+}
+
+function drawPics() {
+  const body = $('pics-body');
+  if (!body || !S.pics) return;
+  const P = S.pics;
+  if (P.error) {
+    body.innerHTML = `<p class="err">Could not load the campaign's pictures: ${esc(P.error)}</p>`;
+    return;
+  }
+  const base = campaignBase();
+  const pageHtml = (p) => `<h4 class="table-pics-page">${esc(p.title)}</h4>
+    ${p.failed ? '<p class="err small">This page\'s pictures could not be loaded.</p>' : ''}
+    <div class="table-pics-grid">
+      ${p.images.map((i) => `<button type="button" class="table-pic" data-kind="image" data-id="${esc(i.id)}"
+          title="${esc(i.caption || 'Untitled picture')}">
+          <img src="${esc(`${base}/images/${encodeURIComponent(i.id)}`)}" alt="${esc(i.caption || '')}" loading="lazy">
+          <span class="table-pic-cap">${esc(i.caption || 'Untitled')}</span>
+        </button>`).join('')}
+    </div>`;
+  const cityHtml = P.cities.length ? `<h4 class="table-pics-page">City maps</h4>
+    <div class="table-pics-cities">
+      ${P.cities.map((c) => `<button type="button" class="btn table-pic table-pic-city" data-kind="city" data-id="${esc(c.id)}">🗺 ${esc(c.name)}</button>`).join('')}
+    </div>` : '';
+  body.innerHTML = P.pages.length || P.cities.length
+    ? P.pages.map(pageHtml).join('') + cityHtml
+    : '<p class="muted">This campaign has no pictures yet. Add them on a Setting page in GM Tools.</p>';
+  paintPics();
+}
+
+// Which picture is on the table, marked in the picker. Called whenever the
+// room says something was shown or cleared, so a Show from Present mode on
+// another screen marks it here too.
+function paintPics() {
+  const now = $('pics-now');
+  if (!now) return;
+  const s = S.shown;
+  now.textContent = s ? `On the table: ${s.caption || 'a picture'}` : 'Nothing is on the table.';
+  now.classList.toggle('muted', !s);
+  $('pics-clear').disabled = !s;
+  for (const b of document.querySelectorAll('.table-pic')) {
+    const on = isShown(b.dataset.kind, b.dataset.id);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+
+async function picPost(route, body) {
+  try {
+    await getJson(`${GAMES[S.game].base}/table/${route}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaign_id: Number(S.access.campaign.id), ...body }),
+    });
+  } catch (err) {
+    say(`Could not ${route === 'show' ? 'show that picture' : 'clear the table'}: ${err.message}`, true);
+  }
+}
+
+function wirePics() {
+  // A reconnect redraws the page; the list it already has is still right.
+  if (S.pics && !S.pics.error) drawPics(); else loadPics();
+  $('pics-body').addEventListener('click', (e) => {
+    const b = e.target.closest('.table-pic');
+    if (!b || isShown(b.dataset.kind, b.dataset.id)) return;
+    picPost('show', { kind: b.dataset.kind, id: Number(b.dataset.id) });
+  });
+  $('pics-clear').addEventListener('click', () => picPost('clear', {}));
 }
 
 // ---------- full screen, pinch and pan (phones) ----------

@@ -45,6 +45,13 @@ mode already shows: a setting page's pictures, and on the Palladium side a City
 Creator city's map, drawn for the table from the players' view only
 (`functions/api/character-creator/_lib/city-svg.js`).
 
+The GM can also show one **from the table page**, without leaving it: its
+**Show a picture** panel lists every Setting page's pictures as thumbnails,
+and on Palladium the campaign's city maps. A click shows it and **Clear the
+table** takes it down, through the same `table/show` and `table/clear` routes
+Present mode calls. The lists come from the GM-only routes the Setting pages
+already use, and only the GM's page draws the panel.
+
 **Show is not Reveal.** Showing is for the moment: it writes nothing to the
 campaign, is not saved with the feed, and ends at Clear or when the table
 closes. Reveal is still the separate button that puts a picture in the

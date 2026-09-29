@@ -188,6 +188,28 @@ body.tv-showing .tv-init-list { font-size: clamp(14px, 1.3vw, 24px); }
 .table-picture-open:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 2px; }
 .table-picture p { margin: 6px 0 0; }
 
+/* ---- the GM's picture picker ----
+   Thumbnails by Setting page; the one on the table carries the accent edge,
+   as the initiative row that is up does. */
+.table-pics-now { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.table-pics-page { margin: 16px 0 8px; }
+.table-pics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.table-pic {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  text-align: left;
+}
+.table-pic img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #000; }
+.table-pic-cap { padding: 4px 6px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-pic.on { border: 2px solid var(--accent); background: var(--accent-glow); font-weight: 600; }
+.table-pic:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 2px; }
+.table-pics-cities { display: flex; flex-wrap: wrap; gap: 8px; }
+.table-pic-city { flex-direction: row; padding: 8px 12px; }
+
 /* Full screen: the picture on black, moved by pointer events (table.js), so
    the browser's own pan and zoom are switched off inside it. */
 .table-zoom {
