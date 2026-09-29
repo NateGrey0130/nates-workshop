@@ -199,6 +199,7 @@ def main(slug):
                          **({'part': cite[it['part']]} if it.get('part') else {}),
                          **({'vehicle': it['vehicle']} if it['vehicle'] else {}),
                          **({'parts': it['parts']} if it['parts'] else {}),
+                         **({'rooms': it['rooms']} if it.get('rooms') else {}),
                          # a vehicle stated inside an adventure section reads that section's text
                          **({'section': section_id({'title': it['section']})} if it.get('section') else {}), 'book': slug})
     adv_out = []

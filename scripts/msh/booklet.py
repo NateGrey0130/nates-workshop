@@ -153,10 +153,33 @@ def sure_text(line, book, slug):
             vocab.update(w['t'].strip(PUNCT).lower() for w in roster.read_words(os.path.join(tsv, f))[0] if w['c'] >= 75)
     keep = lambda w: w['c'] >= 75 or (w['c'] >= 50 and len(w['t'].strip(PUNCT)) > 1
                                        and w['t'].strip(PUNCT).lower() in vocab)
-    return ' '.join(w['t'] for w in sorted(line['words'], key=lambda w: w['x']) if keep(w))
+    words = sorted(line['words'], key=lambda w: w['x'])
+    sure = [w['t'] for w in words if keep(w)]
+    if len(sure) == len(words):
+        return ' '.join(sure)
+    # A word was dropped, and some dropped words are real ("created", "First",
+    # read below 50 in the page's layout pass). The line alone, cropped from the
+    # page image and read as one line of text (--psm 7), usually reads them;
+    # its words are kept where the book has them elsewhere at 75 or better, so
+    # the art beside the line still cannot come in. The better reading wins.
+    reader = sure_text.readers.get(slug) or sure_text.readers.setdefault(slug, roster.GridReader(book, slug))
+    crop = reader.read(line['pdf'], (line['x0'] - 8, line['y0'] - 8, line['x1'] + 8, line['y1'] + 8), psm='7')
+    def real(t):
+        s = t.strip(PUNCT + '|-')
+        if not any(c.isalnum() for c in s):
+            return False                      # a pipe, a dash, a dot leader
+        if len(s) == 1 and s.isalpha():
+            return s in ('A', 'a', 'I')       # the words a lone letter can be
+        return s.lower() in vocab or s.replace(',', '').lstrip('-+').isdigit()
+    # a table's dot leaders come off the number they lead to (".......-20")
+    # and a capital I read as a bar comes back ("|ron")
+    tokens = [re.sub(r'^\|(?=[a-z])', 'I', re.sub(r'^\.+', '', t)) for t in ' '.join(crop).split()]
+    again = [t for t in tokens if real(t)]
+    return ' '.join(again if len(again) > len(sure) else sure)
 
 
 sure_text.vocab = {}
+sure_text.readers = {}
 
 
 def is_header(line):
@@ -646,7 +669,8 @@ def extras(book, slug):
     # The bases' room table (printed 5): 26 rows of a d100 range and four
     # bases' rooms, across two columns, which the column cut splits into
     # pieces inside the Storage and Auxiliary Bridge notes. It is left out of
-    # the text: the location lists its room types, and the page has the table.
+    # the text, and carried as data instead: the registry's transcription
+    # (locations[].rooms) goes on the location.
     dice = re.compile(r'^\d{2}-\d{2}\b')
     for pdf in {l['pdf'] for l in stream}:
         rows = [l for l in stream if l['pdf'] == pdf and dice.match(l['text'])]
@@ -722,7 +746,10 @@ def extras(book, slug):
         alias = {roster.norm(k): v for k, v in loc.get('part_aliases', {}).items()}
         names = {roster.norm(n): n for n in loc['parts'] + loc.get('items', [])}
         place = {'name': loc['name'], 'kind': 'location', 'page': sec['page'], 'part': a['part'], 'vehicle': {},
-                 'parts': [], 'text': [['prose', None, []]]}
+                 'parts': [], 'text': [['prose', None, []]],
+                 # its room table is facts, transcribed into the registry: the
+                 # column cut cannot read it as text (see the room table above)
+                 **({'rooms': loc['rooms']} if loc.get('rooms') else {})}
         items.append(place)
         target = place
         for l in sec['lines']:
