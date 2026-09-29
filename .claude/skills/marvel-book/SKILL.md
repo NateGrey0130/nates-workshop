@@ -120,7 +120,10 @@ its rank code.** A failure is a page to look at:
 - a **misprint** in the book -> `scripts/msh/<slug>-overrides.json`, read off
   the page image, keeping `printed` AND `corrected` (the Codex shows the page,
   the GM tools play the corrected value);
-- printed that way on purpose -> `as_printed`, with the reason.
+- printed that way on purpose -> `as_printed`, with the reason;
+- a mark in the prose only the page image settles -> a `text` verdict (the
+  row key, a few words as read and as printed); `npcs.py` stops if the
+  fragment is not found exactly once in its row.
 
 **A book that prints ranks and no numbers checks itself the same way**, on
 each rank's standard number (`apps/marvel-heroes/data/ranks.json`). That every
@@ -169,6 +172,13 @@ so either can be re-run alone. Keep it that way.
   page image (`--psm 7`). Never drop by a threshold alone.
 - **Tesseract can miss a title entirely** (MHSP1's "Going Home"). Find the
   section by its first words, recorded in the registry, and say so there.
+- **Quote marks are handled in the chain** (`npcs.pair_quotes`,
+  `booklet.quotes`, and `npcs.unpaired`, which stops the build on an odd
+  count). What a new book needs is one fact, read off the page images:
+  **does it print single quotes of its own?** MHSP1 prints none, so every
+  single mark is a misread; MA1 does, so a lost closing single is a `text`
+  override, never a rule. `ma1.md` *Quote marks* is the worked example.
+  A trademark sign after a name folds to nothing (NFKD would spell it TM).
 - **Read the page before naming where something is.** The MHSP1 survey put a
   vehicle in the wrong event, because a paragraph at the top of a column
   continues the section above it.
@@ -176,6 +186,7 @@ so either can be re-run alone. Keep it that way.
 ## Done means
 
 - `roster.py` exits 0; every misprint has an override read off the page
+- `npcs.py` and `extras.py` exit 0, so no row has an unpaired double quote
 - the Marvel suite passes **with the cache present** (leak check ran)
 - the `.sql` applied to production before the merge and read back by count
 - the survey's `**Rows citing this book:**` line updated in the same PR
