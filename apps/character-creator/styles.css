@@ -258,6 +258,9 @@ a:hover { text-decoration: underline; }
 .req { color: var(--warning); font-weight: 700; }
 
 /* ─── TAGS ─── */
+/* The Table's code on the campaign page (shared/js/campaign/table.js): read
+   aloud across a room, so it is the figures face at a size a player can copy. */
+.mc-table-code { font-family: var(--font-mono); font-size: 20px; letter-spacing: 4px; padding: 0 8px; border: 1px solid var(--border-strong); background: var(--bg-tertiary); }
 .tag, .mc-tag {
   display: inline-block;
   font-family: var(--font-display); font-stretch: 75%;

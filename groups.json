@@ -76,7 +76,7 @@
         "skill_system_bases", "spells", "psionic_powers", "psionic_system_costs",
         "super_abilities", "talents", "morphus_characteristics", "notable_npcs",
         "stat_attacks", "creatures", "catalog_redirects", "play_events", "data_script_runs",
-        "catalog_pair_dismissals", "character_drafts"
+        "catalog_pair_dismissals", "character_drafts", "table_sessions"
       ]
     },
     "marvel": {
@@ -94,7 +94,8 @@
       "tables": [
         "msh_power_text", "msh_heroes", "msh_book_text",
         "msh_campaigns", "msh_campaign_heroes", "msh_hero_events", "msh_journal_entries", "msh_journal_fts",
-        "msh_npc_sheets", "msh_npcs", "msh_npc_mentions", "msh_campaign_entries", "msh_campaign_images"
+        "msh_npc_sheets", "msh_npcs", "msh_npc_mentions", "msh_campaign_entries", "msh_campaign_images",
+        "msh_table_sessions"
       ]
     },
     "tools": {
@@ -129,22 +130,29 @@
     },
     "shared": {
       "title": "Shared by every group",
+      "//": "manifest_group: an app both games use (The Table) has its own hub section, since it belongs under neither.",
+      "manifest_group": "table",
       "paths": [
         "*",
         ".github/",
         ".impeccable/",
         "apps/_template/",
+        "apps/table/",
         "apps/manifest.json",
         "functions/api/_lib/",
         "functions/api/_middleware.js",
         "functions/api/claude.js",
+        "functions/api/table/",
         "shared/",
+        "workers/table-room/",
         "scripts/agent-usage.mjs",
         "scripts/build-local-d1.mjs",
         "scripts/d1-apply.mjs",
         "scripts/d1-backup.mjs",
         "scripts/d1-query-lib.mjs",
         "scripts/deploy-sweep.mjs",
+        "scripts/deploy-table-room.mjs",
+        "scripts/deploy-worker-lib.mjs",
         "scripts/drift-check.mjs",
         "scripts/group-worktree.mjs",
         "scripts/groups.mjs",

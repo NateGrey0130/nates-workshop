@@ -231,3 +231,24 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '086-msh-campaigns.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msh_campaign_images')
   AND EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_msh_campaign_heroes_one_open');
+
+-- The Table's game sessions for a Marvel campaign (migration 089): Marvel's own
+-- copy of Palladium's table_sessions (088), which describes the columns.
+CREATE TABLE IF NOT EXISTS msh_table_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES msh_campaigns(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  opened_by TEXT NOT NULL,
+  opened_at TEXT NOT NULL DEFAULT (datetime('now')),
+  closed_at TEXT,                        -- NULL = the table is open under `code`
+  closed_reason TEXT CHECK (closed_reason IN ('gm', 'idle', 'lost')),
+  feed TEXT,                             -- JSON: every roll, with its visibility
+  roll_count INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_msh_table_sessions_one_open
+  ON msh_table_sessions (campaign_id) WHERE closed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_msh_table_sessions_campaign ON msh_table_sessions (campaign_id, id);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '089-msh-table-sessions.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_msh_table_sessions_one_open');

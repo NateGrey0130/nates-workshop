@@ -25,6 +25,8 @@ const MC = globalThis.mcCampaign;
 // ---------------------------------------------------------------- the shared views
 
 function drawView() {
+  // The Table's panel is not a tab: it sits above them for every member.
+  $('#cd-table').innerHTML = S.member ? MC.table.html() : '';
   const tabs = [...document.querySelectorAll('#cd-tabs [role="tab"]')];
   for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.view === S.view));
   $('#cd-panel-heroes').hidden = S.view !== 'heroes';
@@ -38,7 +40,7 @@ function drawView() {
 
 async function loadViews() {
   try {
-    await Promise.all([MC.notes.load(), MC.people.load(), MC.handouts.load()]);
+    await Promise.all([MC.notes.load(), MC.people.load(), MC.handouts.load(), MC.table.load()]);
   } catch (e) { $('#cd-status').textContent = e.message; }
   drawView();
 }

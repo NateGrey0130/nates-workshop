@@ -300,7 +300,7 @@ against migration 082 itself in `node:sqlite`.
 ## Campaigns: the `msh_campaign` tables
 
 A GM runs a campaign; players link their saved heroes to it. Migration `086`,
-nine tables in `DB_MARVEL`. They are Marvel's own copies of the Palladium
+nine tables in `DB_MARVEL`, and a tenth from `089` for The Table. They are Marvel's own copies of the Palladium
 suite's campaign shapes, not a share of them: each group's server code reaches
 only its own database (`groups.json`).
 
@@ -313,6 +313,7 @@ only its own database (`groups.json`).
 | `msh_npc_sheets` | a statted NPC in **the hero shape** - `build`, `snapshot` (`js/sheet.js`, `SNAPSHOT_VERSION`), `sheet` - so the sheet renderer draws it as it draws a hero. `hidden` is 1 until the GM shows it; the NPC roller writes these, and so does **Add an NPC from the book**, whose snapshot has `mode: 'book'` (below) |
 | `msh_npcs`, `msh_npc_mentions` | People: one dossier per name per campaign, optionally backed by an `msh_npc_sheets` row, and which notes mention whom |
 | `msh_campaign_entries`, `msh_campaign_images` | the GM's own pages, never revealed, and the pictures that can be. **An R2 key must start `msh/`**, a `CHECK` rather than a convention, so nothing Marvel stores can land in another app's part of the bucket |
+| `msh_table_sessions` | The Table (migration `089`): one row per live table the GM opened for the campaign, open while `closed_at` is NULL under its four-letter `code`, and its whole roll feed as JSON once it closed - GM-only rolls included, filtered for each reader by the room's own rule. Marvel's copy of Palladium's `table_sessions` (088), which describes the columns; the room itself is a Durable Object (`workers/table-room/`) and never touches D1 |
 
 The heroes endpoint stays owner-only. A GM reads the sheets of heroes linked to
 their campaign through the campaign's own endpoint, and changes only the four
