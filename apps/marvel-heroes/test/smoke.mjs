@@ -812,6 +812,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const gal = bookNpc({ character: 'galactus-mhsp1' });
     check('MHSP1: a printed "2,150 (Varies)" is Health 2150, and a rank word is a Resources rank (CLASS 1000)',
       gal.snapshot?.health === 2150 && gal.snapshot.abilities.resources.rank === 'class-1000', `${gal.snapshot?.health} ${JSON.stringify(gal.snapshot?.abilities.resources)}`);
+    // The bases' room table, transcribed by eye (books.json locations[].rooms):
+    // sectors A-Z whose d100 ranges tile 01-00 with no gap and no overlap, and
+    // a room for every base in every row, so a typo in a range cannot pass.
+    const bases = load('items.json').items.find((i) => i.id === 'item-the-battleplanet-bases-mhsp1');
+    const rooms = bases?.rooms;
+    const tiled = rooms && rooms.rows.map(([, r]) => r.split('-').map((n) => (n === '00' ? 100 : Number(n))))
+      .every(([lo, hi], i, all) => lo === (i ? all[i - 1][1] + 1 : 1) && hi >= lo && (i < all.length - 1 || hi === 100));
+    check('MHSP1: the bases\' room table is 26 sectors, A to Z, whose d100 ranges tile 01-00, a room for each of 4 bases',
+      rooms?.columns.length === 4 && rooms.rows.length === 26 && rooms.rows.map((r) => r[0]).join('') === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      && tiled && rooms.rows.every((r) => r.length === 6 && r.slice(2).every(Boolean)), JSON.stringify(rooms?.rows?.slice(0, 2)));
     check('MHSP1: the sheet cites the booklet with the page, and a Summary-only character the booklet alone',
       tagline(bookNpc({ character: 'colossus-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Roster p.2;')
       && tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Reference Summary;'),

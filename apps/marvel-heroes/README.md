@@ -132,7 +132,8 @@ MHSP1's Adventure Book is a campaign, not a chain of encounters:
 - **The items** are the four bases as one location, with 16 room types as its
   parts; the Ultimate Nullifier; and two vehicles the events state in passing.
   A vehicle's card reads its event's text (`section`). The bases' room table
-  is left to the page.
+  is on the location as data (`rooms`): 26 sectors, each with its d100 range
+  and a room for each base, transcribed by eye.
 
 ## Point Buy
 

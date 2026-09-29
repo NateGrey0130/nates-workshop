@@ -355,9 +355,13 @@ export const SECTIONS = [
       return [
         ...(r.vehicle ? Object.entries(r.vehicle).map(([k, v]) => [k, rankWords(v)]) : []),
         ['Page', cite(this.short[r.book], r.part, [r.page])],
+        // a location's room table (MHSP1's bases): one line per sector, the
+        // d100 range to place a character, and each base's room there
+        ...(r.rooms ? [['Sector (d100)', r.rooms.columns.join(' / ')],
+          ...r.rooms.rows.map(([sec, roll, ...rooms]) => [`${sec} (${roll})`, rooms.join(' / ')])] : []),
       ];
     },
-    hay: (r) => [r.name, r.kind, ...(r.parts || [])].join(' '),
+    hay: (r) => [r.name, r.kind, ...(r.parts || []), ...(r.rooms ? r.rooms.rows.flatMap((x) => x.slice(2)) : [])].join(' '),
     // A vehicle an adventure section states in passing (MHSP1's gunnery
     // platform, in First Blood) has no text of its own: its card reads that
     // section's.

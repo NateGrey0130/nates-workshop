@@ -395,8 +395,18 @@ not already do, and where it differs from the plan above:
   its title at all (the registry records them).
 - **Word confidence.** Text lines keep a word Tesseract read at 50-75 only when
   the book has that word elsewhere at 75 or better. That keeps "Cat" in the
-  bases' notes, and drops fragments of the art. A few real words below 50 are still
-  lost ("First" from one mention of First Blood, a quoted "A").
+  bases' notes, and drops fragments of the art. *The follow-up PR re-reads the
+  rest:* a prose line that still lost a word is read again alone, from a crop
+  of the page image as one line of text (`--psm 7`), and the crop's words are
+  kept where the book has them confidently elsewhere. That brought back 46
+  runs of words across the adventure and the running notes, among them
+  "First" in "First Blood", "It is", "Iron", "Mr." and "not tell", with no
+  art fragments. A word the book never prints confidently anywhere can
+  still be lost.
+- **The bases' room table** (printed 5) is carried as data in the follow-up
+  PR: 26 sectors, A-Z, each with its d100 range and a room for each of the four
+  bases, transcribed by eye into the registry (`locations[].rooms`) and shown on
+  the location's card. The Marvel smoke suite holds the ranges to tiling 01-00.
 - **The GM tools** read a rank word as a Resources rank ("POOR", "CLASS
   1000"), a printed "2,150" as 2150, and a block flagged `form` as a form.
   The Marvel smoke suite pins each, and each check failed with its fix removed.

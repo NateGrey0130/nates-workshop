@@ -220,6 +220,225 @@
     "Vehicle Storage and Docks",
     "Security Vaults"
    ],
+   "rooms": {
+    "page": 5,
+    "columns": [
+     "Herobase",
+     "Doombase",
+     "Magneto's Fortress",
+     "Taa II"
+    ],
+    "rows": [
+     [
+      "A",
+      "01-04",
+      "Monitor Room",
+      "Generators",
+      "Meeting Room",
+      "Security Vault"
+     ],
+     [
+      "B",
+      "05-08",
+      "Meeting Room",
+      "Gun Turret",
+      "Generators",
+      "Shuttle Entrance"
+     ],
+     [
+      "C",
+      "09-12",
+      "Fire Control",
+      "Living Quarters",
+      "Art Gallery",
+      "Machinery"
+     ],
+     [
+      "D",
+      "13-16",
+      "Living Quarters",
+      "Storage",
+      "Living Quarters",
+      "Computer Input"
+     ],
+     [
+      "E",
+      "17-20",
+      "Lounge",
+      "Vehicle Dock",
+      "Living Quarters",
+      "Planetarium"
+     ],
+     [
+      "F",
+      "21-24",
+      "Living Quarters",
+      "Vehicle Repair",
+      "Genetics Lab",
+      "Geology Lab"
+     ],
+     [
+      "G",
+      "25-28",
+      "Monitor Machinery",
+      "Generator Machinery",
+      "Surgery",
+      "Geology Storage"
+     ],
+     [
+      "H",
+      "29-32",
+      "Auto-Kitchen",
+      "Living Quarters",
+      "Animal Holding",
+      "Robot Storage"
+     ],
+     [
+      "I",
+      "33-36",
+      "Storage",
+      "Prisoner Holding",
+      "Cryogenics Lab",
+      "Storage"
+     ],
+     [
+      "J",
+      "37-40",
+      "Auto-Doc",
+      "Torture Devices",
+      "Lounge",
+      "Storage"
+     ],
+     [
+      "K",
+      "41-44",
+      "Biology Lab",
+      "Security Vault",
+      "Prisoner Cells",
+      "Radioactivity Lab"
+     ],
+     [
+      "L",
+      "45-48",
+      "Generator",
+      "Auto-Doc",
+      "Chemical Storage",
+      "Machinery"
+     ],
+     [
+      "M",
+      "49-52",
+      "Storage",
+      "Living Quarters",
+      "Machinery",
+      "Machinery"
+     ],
+     [
+      "N",
+      "53-56",
+      "Generators",
+      "Monitor Room",
+      "Research Lab",
+      "Auxiliary Bridge"
+     ],
+     [
+      "O",
+      "57-60",
+      "Physics Lab",
+      "Living Quarters",
+      "Living Quarters",
+      "Back-up Monitors"
+     ],
+     [
+      "P",
+      "61-64",
+      "Psycho-Stasis",
+      "Genetics Lab",
+      "Auto-Doc",
+      "Meditation Room"
+     ],
+     [
+      "Q",
+      "65-68",
+      "Lounge",
+      "Meeting Room",
+      "Greenhouse",
+      "Animal Storage"
+     ],
+     [
+      "R",
+      "69-72",
+      "Meeting Room",
+      "Storage",
+      "Meditation Room",
+      "Sonics Lab"
+     ],
+     [
+      "S",
+      "73-76",
+      "Storage",
+      "Storage",
+      "Weapons Storage",
+      "Cryogenics"
+     ],
+     [
+      "T",
+      "77-80",
+      "Repair Center",
+      "Physics Lab",
+      "Computer Back-up",
+      "Taxidermy Lab"
+     ],
+     [
+      "U",
+      "81-84",
+      "Vehicle Storage",
+      "Weapons Storage",
+      "Machinery",
+      "Biology Lab"
+     ],
+     [
+      "V",
+      "85-88",
+      "Vehicle Dock",
+      "Vehicle Dock",
+      "Monitor Room",
+      "Zoological Display"
+     ],
+     [
+      "W",
+      "89-92",
+      "Meeting Room",
+      "Living Quarters",
+      "Meeting Room",
+      "Life Support Machinery"
+     ],
+     [
+      "X",
+      "93-94",
+      "Lounge",
+      "Machinery",
+      "Auto-Kitchen",
+      "Telescope"
+     ],
+     [
+      "Y",
+      "95-96",
+      "Machinery",
+      "Mechanics Lab",
+      "Wine Fabricator",
+      "Computer Banks"
+     ],
+     [
+      "Z",
+      "97-00",
+      "Observation",
+      "Gun Turret",
+      "Lounge",
+      "Viewing Room"
+     ]
+    ]
+   },
    "book": "mhsp1"
   },
   {
