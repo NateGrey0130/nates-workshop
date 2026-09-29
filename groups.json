@@ -130,11 +130,14 @@
     },
     "shared": {
       "title": "Shared by every group",
+      "//": "manifest_group: an app both games use (The Table) has its own hub section, since it belongs under neither.",
+      "manifest_group": "table",
       "paths": [
         "*",
         ".github/",
         ".impeccable/",
         "apps/_template/",
+        "apps/table/",
         "apps/manifest.json",
         "functions/api/_lib/",
         "functions/api/_middleware.js",

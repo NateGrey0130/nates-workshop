@@ -14,6 +14,9 @@
 //      server-side); what the event adds is atomicity and the undo trail. A
 //      roll has no changes and is a pure record.
 //
+//      A roll may carry `private: true`: one the player sent To the GM at The
+//      Table (apps/table/). GET shows it to the owner and the G.M. only.
+//
 //      And {second_form: {sdc_current: {from, to}, hp_current: {from, to}}}:
 //      the ACTIVE second form's own pools (Nightbane follow-up 5, 2026-09-17),
 //      applied by the same rules as `character` - as given, unclamped, guarded
@@ -45,9 +48,15 @@ export async function onRequestGet({ request, env, params }) {
   const url = new URL(request.url);
   const since = parseInt(url.searchParams.get('since') || '0', 10) || 0;
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '100', 10) || 100, 300);
+  // A roll made To the GM at The Table is private (see POST): its owner and
+  // the G.M. read it, and to anyone else it is not in the log at all. In the
+  // SQL, not after it, so the LIMIT still counts rows the reader can see.
+  const hidePrivate = !guard.access.canWrite;
   const { results } = await env.DB.prepare(
     `SELECT id, actor_email, kind, payload, undone_at, created_at FROM play_events
-     WHERE character_id = ? AND id > ? ORDER BY id DESC LIMIT ?`
+     WHERE character_id = ? AND id > ?
+       ${hidePrivate ? "AND json_extract(payload, '$.private') IS NOT 1" : ''}
+     ORDER BY id DESC LIMIT ?`
   ).bind(params.id, since, limit).all();
   results.reverse();
   for (const r of results) { try { r.payload = JSON.parse(r.payload); } catch { r.payload = {}; } }
@@ -271,7 +280,11 @@ export async function onRequestPost({ request, env, params }) {
   let note = typeof b.note === 'string' ? b.note.slice(0, 300) : undefined;
   const form = formView?.name || undefined;
   if (form) note = `${note || b.kind} (${form})`;
-  const payload = JSON.stringify({ note, form, changes });
+  // `private` marks a roll the player sent To the GM at The Table
+  // (apps/table/): the GET above shows it to the owner and the G.M. only. A
+  // roll is the one kind it means anything on; on any other it is ignored.
+  const priv = b.kind === 'roll' && b.private === true;
+  const payload = JSON.stringify({ note, form, changes, ...(priv ? { private: true } : {}) });
   statements.push(env.DB.prepare(
     'INSERT INTO play_events (character_id, actor_email, kind, payload) VALUES (?, ?, ?, ?)'
   ).bind(params.id, email, b.kind, payload));

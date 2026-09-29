@@ -251,6 +251,7 @@ async function load() {
     C.journalTotal = journal.total ?? journal.entries.length;
     if (held) carryHeldEdits(held);
     render();
+    checkTable();
   } catch (err) {
     $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${escHtml(err.message)}</p>
       <p><a href="/apps/character-sheet/">Your characters</a></p></div>`;
@@ -1136,8 +1137,8 @@ function setPlayAmt(n, fromField) {
 // and the end-of-session journal recap. Optimism is unchanged: the DOM
 // updates first and reverts if the POST fails.
 
-async function postEvent(kind, note, changes) {
-  return api(`characters/${id}/events`, jsonReq('POST', { kind, note, changes }));
+async function postEvent(kind, note, changes, priv = false) {
+  return api(`characters/${id}/events`, jsonReq('POST', { kind, note, changes, ...(priv ? { private: true } : {}) }));
 }
 
 // Rolls are pure records: fire-and-forget, never blocking the table on a
@@ -1157,7 +1158,11 @@ async function postEvent(kind, note, changes) {
 // hide exactly the loss it is there to report.
 function persistRoll(note) {
   if (!C.canWrite) return;
-  postEvent('roll', note).catch((e) => {
+  // A roll To the GM at the table is marked private in the log as well, so the
+  // log shows it to this character's owner and the G.M. and nobody else.
+  const priv = !!C.table?.seated && C.tableVis === 'gm';
+  sendToTable(note);
+  postEvent('roll', note, undefined, priv).catch((e) => {
     C.rollsNotLogged = (C.rollsNotLogged || 0) + 1;
     console.warn('roll not logged:', e.message);
     renderQueueState();
@@ -1181,6 +1186,57 @@ function rollNote(r) {
   // same notes it always did.
   const nat = r.roll === 20 || r.roll === 1 ? ` · natural ${r.roll}` : '';
   return `${r.name}: d20 ${r.roll}${r.bonus ? (r.bonus > 0 ? '+' + r.bonus : r.bonus) : ''} = ${r.total}${vs}${nat}`;
+}
+
+// ---------- The Table ----------
+//
+// While this character is seated at an open table (apps/table/), every roll
+// the sheet logs is ALSO sent there, as the SAME note rollNote() wrote -
+// unchanged, because endSession counts "— pass" and "— fail" out of these
+// notes and the table's feed should read what the log reads. The sheet goes on
+// saving to the session log itself; the table route saves nothing, so the
+// roll is never logged twice. Seated means a socket from this character's
+// owner, on the table page, with this character chosen - the room decides.
+C.table = null;          // { open, code, seated } once asked
+C.tableVis = 'all';      // 'all' | 'gm' - who at the table sees this sheet's rolls
+
+function checkTable() {
+  if (!C.canWrite) return;
+  // A G.M. reading a player's sheet gets a 404 here: only the owner is seated.
+  api(`table/seat?character_id=${id}`).then(setTable).catch(() => setTable(null));
+}
+
+function sendToTable(note) {
+  if (!C.table?.open) return;
+  api('table/roll', jsonReq('POST', { character_id: Number(id), note, visibility: C.tableVis }))
+    .then(setTable)
+    .catch(() => { /* the log has it; a missed table roll is not a lost roll */ });
+}
+
+function setTable(t) {
+  C.table = t && t.open ? { open: true, code: t.code, seated: !!t.seated } : null;
+  const line = $('table-line');
+  if (line) line.innerHTML = tableLineHtml();
+  sticky.sizeSticky();
+}
+
+function toggleTableVis() {
+  C.tableVis = C.tableVis === 'gm' ? 'all' : 'gm';
+  setTable(C.table);
+}
+
+function tableLineHtml() {
+  const t = C.table;
+  if (!t) return '';
+  const code = escHtml(t.code);
+  if (!t.seated) {
+    return `<span class="muted small">Table <strong>${code}</strong> is open ·
+      <a href="/apps/table/?code=${code}" target="_blank" rel="noopener">sit down there</a> to send these rolls to it</span>`;
+  }
+  const who = C.tableVis === 'gm' ? 'the GM only' : 'everyone';
+  return `<span class="small">At table <strong>${code}</strong> · rolls go to
+    <button type="button" class="btn btn-sm" onclick="toggleTableVis()"
+      aria-label="Rolls go to ${who} at the table. Change it.">${who}</button></span>`;
 }
 
 async function undoLast() {
@@ -2781,6 +2837,7 @@ function render() {
         pressing Damage does not rebuild the button that was pressed. */''}
   <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">
     <div id="roll-line">${rollBarHtml()}</div>
+    <div id="table-line">${tableLineHtml()}</div>
     ${playActionsHtml(w)}
   </div>`;
 
@@ -4298,6 +4355,7 @@ document.addEventListener('change', (ev) => {
 // A phone switching apps is the common way a tab goes away mid-edit.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveNow();
+  else checkTable();
 });
 window.addEventListener('beforeunload', (ev) => {
   if (!AS.dirty.size && !AS.busy) return;
