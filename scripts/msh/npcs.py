@@ -53,7 +53,8 @@ DATA = os.path.join(ROOT, 'apps', 'marvel-heroes', 'data')
 REGISTRY = os.path.join(ROOT, 'scripts', 'msh', 'books.json')
 
 FOLD = {'\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"', '\u2013': '-', '\u2014': ' - ',
-        '\u2026': '...', '\u00a0': ' ', '\ufffd': "'", '\u00ad': ''}
+        '\u2026': '...', '\u00a0': ' ', '\ufffd': "'", '\u00ad': '',
+        '\u2122': ''}  # a trademark sign after a name: NFKD would spell it TM
 
 
 LQ, RQ, LS, RS = chr(0x201c), chr(0x201d), chr(0x2018), chr(0x2019)
