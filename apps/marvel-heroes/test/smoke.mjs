@@ -822,6 +822,16 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     check('MHSP1: the bases\' room table is 26 sectors, A to Z, whose d100 ranges tile 01-00, a room for each of 4 bases',
       rooms?.columns.length === 4 && rooms.rows.length === 26 && rooms.rows.map((r) => r[0]).join('') === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       && tiled && rooms.rows.every((r) => r.length === 6 && r.slice(2).every(Boolean)), JSON.stringify(rooms?.rows?.slice(0, 2)));
+    // The Hunt's table (books.json adventure_tables), transcribed by eye: a d10
+    // roll 1-10, a villain the book stats, and a hero it stats as the target.
+    const hunt = load('adventures.json').adventures.flatMap((a) => a.sections).find((s) => s.id === 'secret-wars-mhsp1-the-hunt');
+    const named = (side) => new Set(data.npcs.characters.filter((c) => c.book === 'mhsp1' && c.side === side).map((c) => c.name));
+    const [villains, heroes] = [named('Secret Wars Villains'), named('Secret Wars Heroes')];
+    const alias = { 'Doc Octopus': 'Doctor Octopus', 'Mr. Fantastic': 'Mister Fantastic' };
+    const who = (n) => alias[n.replace(/\*$/, '')] || n.replace(/\*$/, '');
+    check('MHSP1: The Hunt carries its table: rolls 1-10, each a villain against a hero the book stats',
+      hunt?.table?.rows.length === 10 && hunt.table.rows.every(([roll, v, t], i) => roll === i + 1 && villains.has(who(v)) && heroes.has(who(t)))
+      && hunt.table.rows.filter((r) => r[2].endsWith('*')).length === 2, JSON.stringify(hunt?.table?.rows?.slice(0, 3)));
     check('MHSP1: the sheet cites the booklet with the page, and a Summary-only character the booklet alone',
       tagline(bookNpc({ character: 'colossus-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Roster p.2;')
       && tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Reference Summary;'),

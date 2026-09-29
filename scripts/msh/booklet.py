@@ -121,6 +121,7 @@ def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_un
             for c in range(3):
                 col = [w for w in bw if edges[c] <= w['x'] + w['w'] / 2 < edges[c + 1]]
                 lines = roster.lines_of(col)
+                kept = []
                 for n, l in enumerate(lines):
                     # a mark from the art ("A", "JB") is not a line of text
                     if sum(ch.isalnum() for ch in l['text']) < 3:
@@ -132,50 +133,207 @@ def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_un
                     l.update(pdf=pdf, printed=printed, part=part, band=band, col=c + 1, body_h=body_h,
                              col_x0=edges[c], col_x1=edges[c + 1],
                              words=[w for w in col if l['y0'] <= w['y'] + w['h'] / 2 <= l['y1']])
-                    out.append(l)
+                    kept.append(l)
+                out.extend(mend_fused(book, slug, kept))
     return out
+
+
+def fused_runs(lines):
+    """Runs of lines Tesseract's page pass fused: each overlaps the next by more
+    than half a line of text. On MHSP1's Adventure p.2 the layout pass read the
+    Beyonder paragraph twice, as a top half and a bottom half of each printed
+    line ("The B der i lien bei" over "le Peyonder Is an alien being"), and
+    boxed some words across two printed lines. So a line is damaged when it
+    overlaps a neighbour that way, is boxed half again as tall as the text, or
+    is a sliver (a top half, 4 px tall). Damaged lines with at most one clean
+    line between them are one stretch, re-read as one: a stretch cut in two
+    puts a crop edge through a printed line. Three lines, or two where one is
+    tall, make a run. A stat line is never in one: the stat block has its own
+    crop."""
+    def over(a, b):
+        return b['y0'] < a['y1'] - 0.5 * a['body_h']
+
+    def tall(l):                        # a box two printed lines deep
+        return l['y1'] - l['y0'] > 1.7 * l['body_h']
+    bad = []
+    for n, l in enumerate(lines):
+        if STAT_LINE.match(l['text']):
+            bad.append(False)
+            continue
+        prev = lines[n - 1] if n else None
+        nxt = lines[n + 1] if n + 1 < len(lines) else None
+        bad.append(tall(l) or l['y1'] - l['y0'] < 0.5 * l['body_h']
+                   or bool(prev and over(prev, l)) or bool(nxt and over(l, nxt)))
+    runs, cur, gap = [], [], []
+    for l, b in zip(lines, bad):
+        if b:
+            cur += gap + [l] if cur else [l]
+            gap = []
+        elif cur and not gap:
+            gap = [l]                   # one clean line may sit inside a stretch
+        else:
+            runs.append(cur)
+            cur, gap = [], []
+    runs.append(cur)
+    return [r for r in runs if len(r) >= 3 or (len(r) == 2 and any(tall(x) for x in r))]
+
+
+def mend_fused(book, slug, lines):
+    """A column's lines with every fused run replaced by a re-read of the run
+    as a block (--psm 6), from a crop of the page image bounded by the clean
+    lines above and below. The print is clean on these pages; only the page
+    pass went wrong, and a block read comes back line by line. Line-by-line
+    re-reads cannot mend it: a fused line's box spans two or three printed
+    lines, so its crop does too."""
+    runs = fused_runs(lines)
+    if not runs:
+        return lines
+    reader = sure_text.readers.get(slug) or sure_text.readers.setdefault(slug, roster.GridReader(book, slug))
+    # The crop is as wide as the column's clean text, not as the damaged lines:
+    # those take in art beside the column ("begun. Vi bp (T MAKES THAT").
+    damaged = {id(x) for run in runs for x in run}
+    clean = [l for l in lines if id(l) not in damaged]
+    lefts, rights = sorted(l['x0'] for l in clean), sorted(l['x1'] for l in clean)
+    out, i = [], 0
+    for run in runs:
+        start = lines.index(run[0])
+        out += lines[i:start]
+        end = start + len(run)
+        above = lines[start - 1] if start else None
+        below = lines[end] if end < len(lines) else None
+        y0 = max(min(x['y0'] for x in run) - 6, above['y1'] + 2 if above else 0)
+        y1 = min(max(x['y1'] for x in run) + 6, below['y0'] - 2 if below else 10 ** 6)
+        if len(clean) >= 5:
+            x0, x1 = lefts[len(lefts) // 10] - 10, rights[len(rights) * 9 // 10] + 10
+        else:
+            x0, x1 = min(x['x0'] for x in run) - 10, max(x['x1'] for x in run) + 10
+        # prose is never mostly capitals; balloon lettering caught in the crop is
+        texts = [t for t in reader.read(run[0]['pdf'], (x0, y0, x1, y1)) if sum(ch.isalnum() for ch in t) >= 3
+                 and sum(c.islower() for c in t) >= 0.35 * sum(c.isalpha() for c in t)]
+        step = (y1 - y0) / max(1, len(texts))
+        for k, t in enumerate(texts):
+            ly0 = int(y0 + k * step)
+            out.append(dict(run[0], text=t, x0=x0, x1=x1, y0=ly0, y1=int(ly0 + step), h=run[0]['body_h'], conf=100,
+                            reread=True, words=[{'t': tok, 'c': 100, 'x': x0 + n, 'y': ly0, 'w': 1, 'h': run[0]['body_h']}
+                                                for n, tok in enumerate(t.split())]))
+        i = end
+    return out + lines[i:]
 
 
 PUNCT = '.,;:!?()"*' + ''.join(map(chr, (0x201c, 0x201d, 0x2018, 0x2019)))
 
 
-def sure_text(line, book, slug):
-    """A line of prose without the words Tesseract was unsure of. Prose reads at
-    92 or better; balloon lettering and art that share a line read lower ("vex",
-    61). A word read at 50-75 is kept when the book has it elsewhere at 75 or
-    better ("Cat", "Iron", "II"), so a real word read unsurely once survives
-    and a fragment of the art ("fom", "dto") does not."""
+def book_vocab(slug):
+    """Every word the book prints at confidence 75 or better, lower case."""
     vocab = sure_text.vocab.get(slug)
     if vocab is None:
         vocab = sure_text.vocab[slug] = set()
         tsv = os.path.join(roster.CACHE, 'books', slug, 'tsv')
         for f in os.listdir(tsv):
             vocab.update(w['t'].strip(PUNCT).lower() for w in roster.read_words(os.path.join(tsv, f))[0] if w['c'] >= 75)
+    return vocab
+
+
+def wordy(text, slug, line):
+    """Whether a line reads as the book's words: at least half its tokens of two
+    letters or more are words the book prints confidently, here or elsewhere.
+    Balloon lettering and art that pass the lower-case test do not ("YH =e a!
+    Vi bp", under the Players' Briefing); a line of rare words read cleanly
+    ("ascribed to men - emotions, morals, phys-") does."""
+    # words split at anything not a letter: "men - emotions" is two, joined by a dash
+    toks = [t for t in re.findall(r'[a-z]+', text.lower()) if len(t) >= 2 and not leader(t)]
+    if line.get('reread'):
+        # a block re-read has no confidence of its own: a long line of it is
+        # the column's prose, and a short one is judged by the book's words
+        # alone ("YH =e a!", "se Nall 64": art caught at a crop's edge)
+        # (of three letters or more: art also reads as "My y f", "a a a ag al")
+        long = [t for t in toks if len(t) >= 3]
+        return len(toks) >= 5 or (bool(long) and sum(t in book_vocab(slug) for t in long) >= 0.5 * len(long))
+    # read confidently on this line counts too, from three letters: art reads as
+    # confident two-letter fragments (") v My y f a a a ag * al)", printed 5)
+    sure = {w['t'].strip(PUNCT + '|-').lower() for w in line['words'] if w['c'] >= 75}
+    return not toks or sum(t in book_vocab(slug) or (t in sure and len(t) >= 3) for t in toks) >= 0.5 * len(toks)
+
+
+def sure_text(line, book, slug, prev=None):
+    """A line of prose without the words Tesseract was unsure of. Prose reads at
+    92 or better; balloon lettering and art that share a line read lower ("vex",
+    61). A word read at 50-75 is kept when the book has it elsewhere at 75 or
+    better ("Cat", "Iron", "II"), so a real word read unsurely once survives
+    and a fragment of the art ("fom", "dto") does not. The first word of a line
+    is kept down to 30 when it ends a word the line above broke ("con-" /
+    "tinues", 49): `prev` is that line's text."""
+    vocab = book_vocab(slug)
+    lead = re.search(r'([A-Za-z]+)-$', prev.strip()) if prev else None
+    first = min(line['words'], key=lambda w: w['x']) if line['words'] else None
     keep = lambda w: w['c'] >= 75 or (w['c'] >= 50 and len(w['t'].strip(PUNCT)) > 1
-                                       and w['t'].strip(PUNCT).lower() in vocab)
+                                       and w['t'].strip(PUNCT).lower() in vocab) or (
+        w is first and lead and w['c'] >= 30 and (lead.group(1) + w['t'].strip(PUNCT)).lower() in vocab)
     words = sorted(line['words'], key=lambda w: w['x'])
     sure = [w['t'] for w in words if keep(w)]
     if len(sure) == len(words):
-        return ' '.join(sure)
+        return quotes(' '.join(sure))
+    # A line whose box is taller than a line of text spans more than one printed
+    # line ("To answer these questions" over "together the strongest", 69 px
+    # against 28), and so would its one-line crop: that reading must not compete.
+    # A line beside art boxes a little tall ("slabs came from...", 54); a fused
+    # one is two lines deep.
+    if line['y1'] - line['y0'] > 2.0 * line['body_h']:
+        return quotes(' '.join(sure))
+    # the words the page pass read but was unsure of: where the crop reads the
+    # same word, two readings agree, and it is kept ("great wave", read at 0)
+    doubted = {w['t'].strip(PUNCT + '|-').lower() for w in words if not keep(w)}
     # A word was dropped, and some dropped words are real ("created", "First",
     # read below 50 in the page's layout pass). The line alone, cropped from the
     # page image and read as one line of text (--psm 7), usually reads them;
     # its words are kept where the book has them elsewhere at 75 or better, so
     # the art beside the line still cannot come in. The better reading wins.
     reader = sure_text.readers.get(slug) or sure_text.readers.setdefault(slug, roster.GridReader(book, slug))
-    crop = reader.read(line['pdf'], (line['x0'] - 8, line['y0'] - 8, line['x1'] + 8, line['y1'] + 8), psm='7')
+    # cropped where the line's words sit, not to its box: one tall word stretches
+    # the box into the lines above and below, and a one-line read of that
+    # returns nothing ("slabs came from the Denver area", printed 2)
+    # (a box of normal height is cropped as it is: "Do nottell" reads "not tell")
+    if line['y1'] - line['y0'] > 1.4 * line['body_h']:
+        top = statistics.median(w['y'] for w in words) - 10
+        bottom = statistics.median(w['y'] + w['h'] for w in words) + 10
+    else:
+        top, bottom = line['y0'] - 8, line['y1'] + 8
+    crop = reader.read(line['pdf'], (line['x0'] - 8, top, line['x1'] + 8, bottom), psm='7')
     def real(t):
         s = t.strip(PUNCT + '|-')
-        if not any(c.isalnum() for c in s):
+        if not any(c.isalnum() for c in s) or leader(s):
             return False                      # a pipe, a dash, a dot leader
         if len(s) == 1 and s.isalpha():
             return s in ('A', 'a', 'I')       # the words a lone letter can be
-        return s.lower() in vocab or s.replace(',', '').lstrip('-+').isdigit()
+        return s.lower() in vocab or s.lower() in doubted or s.replace(',', '').lstrip('-+').isdigit()
     # a table's dot leaders come off the number they lead to (".......-20")
     # and a capital I read as a bar comes back ("|ron")
-    tokens = [re.sub(r'^\|(?=[a-z])', 'I', re.sub(r'^\.+', '', t)) for t in ' '.join(crop).split()]
+    # and quotes a crop reads as two apostrophes are one (''Cat")
+    tokens = [re.sub(r'^\|(?=[a-z])', 'I', re.sub(r'^\.+', '', t)).replace("''", '"') for t in ' '.join(crop).split()]
+    # and a capital read twice in two cases is the one capital ("PROFESSOR xX:")
+    tokens = [re.sub(r'^([a-z])([A-Z])(?=\W*$)', lambda m: m.group(2) if m.group(1).upper() == m.group(2) else m.group(0), t)
+              for t in tokens]
     again = [t for t in tokens if real(t)]
-    return ' '.join(again if len(again) > len(sure) else sure)
+    # Two ways to use the crop. A word the page pass dropped comes back where
+    # the crop reads the same word ("pieces", 36), each in its place; or the
+    # crop's whole reading, where it found more (the page pass read "Galant"
+    # for "Galactus"). The longer wins.
+    seen = {t.strip(PUNCT + '|-').lower() for t in again}
+    restored = [w['t'] for w in words if keep(w) or w['t'].strip(PUNCT + '|-').lower() in seen]
+    best = max((restored, again, sure), key=len)
+    return quotes(' '.join(best))
+
+
+def quotes(t):
+    """The book's double quotes as the page pass and the crops read them: two
+    single quotes, curly or straight (''Cat"), are one double quote."""
+    lq, rq = chr(0x2018), chr(0x2019)
+    return t.replace(lq + lq, chr(0x201c)).replace(rq + rq, chr(0x201d)).replace("''", '"')
+
+
+def leader(s):
+    """A dot leader Tesseract read as letters: one letter repeated ("eee")."""
+    return len(s) >= 3 and len(set(s.lower())) == 1 and s.isalpha()
 
 
 sure_text.vocab = {}
@@ -539,11 +697,11 @@ def running(book, slug, entries, ranks):
         # Prose reads at 92 or better here; a balloon word that shares a line
         # with it reads lower ("vex", 61, printed 14). A run-in name is read
         # from every word, because a bold name can read low too.
-        sure = sure_text(line, book, slug)
+        sure = sure_text(line, book, slug, cur['text'][-1] if cur and cur['text'] else None)
         if m:
             cur = {'name': m.group(2).strip(), 'page': line['printed'], 'part': line['part'], 'text': [m.group(3)], 'blocks': []}
             notes.append(cur)
-        elif cur and sum(c.islower() for c in sure) >= 0.5 * sum(c.isalpha() for c in sure) > 0:
+        elif cur and sum(c.islower() for c in sure) >= 0.5 * sum(c.isalpha() for c in sure) > 0 and wordy(sure, slug, line):
             # balloon lettering in the comic panels is capitals ("THAT GUY--
             # YOu"); a line of prose is mostly lower case
             cur['text'].append(sure)
@@ -678,6 +836,15 @@ def extras(book, slug):
             y0, y1 = min(l['y0'] for l in rows) - 130, max(l['y1'] for l in rows) + 25
             x0 = min(l['x0'] for l in rows) - 20
             stream = [l for l in stream if not (l['pdf'] == pdf and l['y0'] >= y0 and l['y1'] <= y1 and l['x0'] >= x0)]
+    # Tables the registry names (adventure_tables) are cut out of the text by
+    # their box: the column cut reads their columns as prose ("Doc Octopus
+    # Lizard Titania ..."), and one sits at the head of the section after its
+    # own (The Hunt's, under Hearts and Minds). Their facts are data.
+    def in_table(l):
+        cx, cy = (l['x0'] + l['x1']) / 2, (l['y0'] + l['y1']) / 2
+        return any(t['pdf'] == l['pdf'] and t['box'][0] <= cx <= t['box'][2] and t['box'][1] <= cy <= t['box'][3]
+                   for t in book.get('adventure_tables', []))
+    stream = [l for l in stream if not in_table(l)]
     running_head = re.compile(r"^((?:[A-Z][a-z]+ ){0,2})([A-Z][A-Z .'-]*[A-Z.])\s*(?:[" + TM + r"]|TM)\.?\s")
     marks = a['sections']
 
@@ -729,13 +896,24 @@ def extras(book, slug):
                 i += 1
                 continue
         if cur and cur['kind'] != 'skip':
-            sure = sure_text(line, book, slug)
+            before = cur['lines'][-1]['text'] if cur['lines'] and isinstance(cur['lines'][-1], dict) else None
+            sure = sure_text(line, book, slug, before)
             # comic balloons are capitals; headings the registry already names are not text
             # (a line of text may name the game in capitals, "MARVEL SUPER HEROES
-            # Campaign", 28% lower case; balloon lettering is about 10%)
-            if sure and sure not in HEADINGS and sum(c.islower() for c in sure) >= 0.2 * sum(c.isalpha() for c in sure):
+            # Campaign", 28% lower case; balloon lettering is about 10%), and art
+            # that passes that is not the book's words (wordy)
+            if sure and sure not in HEADINGS and sum(c.islower() for c in sure) >= 0.2 * sum(c.isalpha() for c in sure) \
+                    and wordy(sure, slug, line):
                 cur['lines'].append(dict(line, text=sure))
         i += 1
+    # A line two printed lines deep that reached the text is a fused run
+    # mend_fused did not mend: the next book with one stops here, loudly, rather
+    # than putting its garble in the Codex.
+    fused = [l for s in sections for l in s['lines'] if isinstance(l, dict) and not l.get('reread')
+             and l['y1'] - l['y0'] > 2.0 * l['body_h']]
+    if fused:
+        raise SystemExit('%s: %d line(s) two printed lines deep reached the text, e.g. printed %d column %d: %r'
+                         % (slug, len(fused), fused[0]['printed'], fused[0]['col'], fused[0]['text'][:60]))
     missing = [m[1] for m in marks[k:]]
     if missing:
         raise SystemExit('%s: the adventure sections after %s were not found: %s' % (slug, marks[k - 1][1] if k else 'the start', ', '.join(missing)))
@@ -785,8 +963,10 @@ def extras(book, slug):
         if s['kind'] in ('skip', 'location'):
             continue
         texts = [l['text'] if isinstance(l, dict) else l for l in s['lines']]
+        table = next((t for t in book.get('adventure_tables', []) if t['section'] == s['title'] and t.get('rows')), None)
         out.append({'title': s['title'], 'kind': s['kind'], 'page': s['page'], 'part': a['part'], 'parts': [],
                     **({'when': s['when']} if 'when' in s else {}),
                     **({'roll': s['roll'], 'once': s['once']} if 'roll' in s else {}),
+                    **({'table': {k: table[k] for k in ('columns', 'rows', 'footnote') if k in table}} if table else {}),
                     'text': [['prose', None, texts]]})
     return items, {'title': a['title'], 'pages': a['pages'], 'part': a['part'], 'sections': out}

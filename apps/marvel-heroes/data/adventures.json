@@ -348,6 +348,66 @@
      "kind": "random",
      "roll": 2,
      "once": false,
+     "table": {
+      "columns": [
+       "Roll",
+       "Villain",
+       "Target"
+      ],
+      "rows": [
+       [
+        1,
+        "Doc Octopus",
+        "Spider-Man"
+       ],
+       [
+        2,
+        "Lizard",
+        "Spider-Man"
+       ],
+       [
+        3,
+        "Titania",
+        "Thor"
+       ],
+       [
+        4,
+        "Ultron",
+        "Wasp*"
+       ],
+       [
+        5,
+        "Enchantress",
+        "She-Hulk"
+       ],
+       [
+        6,
+        "Kang",
+        "Captain America"
+       ],
+       [
+        7,
+        "Thunderball",
+        "Spider-Man"
+       ],
+       [
+        8,
+        "Wrecker",
+        "Iron Man"
+       ],
+       [
+        9,
+        "Absorbing Man",
+        "Hulk"
+       ],
+       [
+        10,
+        "Molecule Man",
+        "Mr. Fantastic*"
+       ]
+      ],
+      "footnote": "* only after the Betrayal Random Event"
+     },
      "part": "Adventure",
      "parts": []
     },

@@ -26,6 +26,7 @@
     "  item_part       with parts: the booklet item_pages counts in",
     "  locations       a roster-booklet book's locations: {name, section (the adventure section that describes it), parts, part_aliases, items (run-ins inside it that are items), rooms (its room table: columns, and rows of [sector, d100 range, a room per column], transcribed by eye)}",
     "  vehicles        vehicles a roster-booklet book states inside an adventure section: {name, section}; control, speed and body are read from that section",
+    "  adventure_tables  tables inside adventure sections that the column cut cannot read as prose: {section, pdf, box (TSV pixels) cut out of the text, columns and rows when the table is carried as data (transcribed by eye), footnote}",
     "  adventure.sections  a roster-booklet book's adventure, in page order: [kind, title, how its first line reads, extra]; kind setting, planned (the third field is its day and shift, and a fourth its first words where OCR lost its title), random (extra: its roll, and \"once\"), location, or skip (running notes, which are on the characters)",
     "  one_line_tiers  one-line blocks that are beings of their own, not a form of the character (Klaw's sound creatures)",
     "  running         a booklet of running notes, one per character: {part, pages, aliases: {name as the note prints it: entry header}}",
@@ -514,6 +515,11 @@
                      ]},
                      "parts": ["Living Quarters", "Monitor Rooms", "Storage", "Galactus' Robotic Storage", "Lounge and Meeting Rooms", "Auxiliary Bridge and Computer", "Machinery", "Sonic Labs", "Labs", "Auto-Docs", "Auto-Kitchen", "Psycho-Stasis and Prisoner Holding", "Gun Turrets", "Fire Control", "Vehicle Storage and Docks", "Security Vaults"]}],
       "vehicles": [{"name": "Tripedal gunnery platform", "section": "First Blood"}, {"name": "Alien hovercraft", "section": "Patrol"}],
+      "adventure_tables": [
+        {"section": "Events", "pdf": 8, "box": [130, 2230, 770, 2690], "note": "the Random Event table: its rolls and titles are the adventure's random sections"},
+        {"section": "The Hunt", "pdf": 12, "box": [1300, 140, 2030, 540], "columns": ["Roll", "Villain", "Target"], "rows": [[1, "Doc Octopus", "Spider-Man"], [2, "Lizard", "Spider-Man"], [3, "Titania", "Thor"], [4, "Ultron", "Wasp*"], [5, "Enchantress", "She-Hulk"], [6, "Kang", "Captain America"], [7, "Thunderball", "Spider-Man"], [8, "Wrecker", "Iron Man"], [9, "Absorbing Man", "Hulk"], [10, "Molecule Man", "Mr. Fantastic*"]], "footnote": "* only after the Betrayal Random Event"},
+        {"section": "The Hunt", "pdf": 12, "box": [900, 540, 2460, 590], "note": "the table's footnote, across two columns"}
+      ],
       "adventure": {"title": "Secret Wars", "part": "Adventure Book", "pages": [1, 16], "sections": [
         ["setting", "Introduction", "SECTION 1"],
         ["setting", "Players' Briefing", "Players Briefing"],
