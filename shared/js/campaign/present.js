@@ -25,6 +25,15 @@
 // The reveal button's classes are set here: `mc-btn`, plus `mc-btn-primary`
 // while the picture is still the GM's alone.
 //
+// SHOW TO TABLE (The Table, phase 2). While the campaign has a table open,
+// two more controls: `table-show` puts the picture on screen now on the TV
+// and every seated phone, `table-clear` takes it down, and `table-on` says
+// what the table is looking at. Their wrapper is `table` (starts hidden).
+// Showing is NOT revealing either: it writes nothing to the campaign, it ends
+// at Clear or when the table closes, and a player cannot fetch the picture
+// before or after (workers/table-room/src/showing.js). Paging here previews
+// for the GM alone; the table sees nothing new until Show is pressed again.
+//
 // mcPresent.start({ base, campaignId, entryId, imageId, leave, load })
 //   leave() - where Escape and ✕ go
 //   load()  - optional: what to show INSTEAD of a setting page, for a page
@@ -80,6 +89,7 @@
     $('frame').hidden = false;
     show();
     keepAwake();
+    tableStatus();
   }
 
   function src(image) {
@@ -100,6 +110,8 @@
     $('prev').disabled = P.at === 0;
     $('next').disabled = P.at === P.images.length - 1;
     paintReveal(image);
+    T.current = { kind: 'image', id: String(image.id) };
+    paintTable();
     $('msg').textContent = '';
 
     // The address bar names the picture on screen, so a reload stays put and
@@ -152,6 +164,77 @@
     }
   }
 
+  // ---------- the table ----------
+  //
+  // T.current is the picture on this screen, T.shown the one on the table.
+  // They differ as soon as the GM pages on, and that is the point: paging only
+  // repaints the line that says so. showToTable and clearTable each run from
+  // their own button and nothing else - no key, no arrow, no load.
+  const T = { on: false, current: null, shown: null };
+  const same = (a, b) => !!a && !!b && a.kind === b.kind && String(a.id) === String(b.id);
+
+  // Is a table open that this person runs? Anything else - no table, a
+  // player, a deployment without the room - and the controls stay hidden.
+  async function tableStatus() {
+    if (!$('table') || !campaignId) return;
+    try {
+      const r = await api(`table/status?campaign_id=${encodeURIComponent(campaignId)}`);
+      T.on = !!(r.open && r.room === 'open' && r.is_gm);
+      T.shown = r.shown ?? null;
+    } catch {
+      T.on = false;
+    }
+    paintTable();
+  }
+
+  function paintTable() {
+    const box = $('table');
+    if (!box) return;
+    box.hidden = !(T.on && T.current);
+    if (box.hidden) return;
+    const here = same(T.shown, T.current);
+    const show = $('table-show');
+    show.textContent = here ? '📺 On the table' : '📺 Show to table';
+    show.className = here ? 'mc-btn' : 'mc-btn mc-btn-primary';
+    show.disabled = here;
+    $('table-clear').className = 'mc-btn';
+    $('table-clear').disabled = !T.shown;
+    $('table-on').textContent = !T.shown ? 'the table sees nothing'
+      : here ? 'the table sees this now' : 'the table sees another picture';
+  }
+
+  async function tableWrite(path, body) {
+    try {
+      const res = await api(path, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaign_id: campaignId, ...body }),
+      });
+      T.shown = res.shown ?? null;
+      $('msg').textContent = '';
+    } catch (err) {
+      // The table closed under us: the controls go, and say why.
+      if (err.status === 404 || err.status === 410) T.on = false;
+      $('msg').textContent = err.message;
+    }
+    paintTable();
+  }
+
+  function showToTable() {
+    if (T.current) tableWrite('table/show', T.current);
+  }
+
+  function clearTable() {
+    tableWrite('table/clear', {});
+  }
+
+  // A page presenting something other than a setting page - the Palladium
+  // page's city maps - names it here, with the campaign it belongs to.
+  function offer(ref, forCampaign) {
+    T.current = ref;
+    if (forCampaign != null) campaignId = String(forCampaign);
+    tableStatus();
+  }
+
   // ---------- the chrome, and when it is not there ----------
   //
   // Everything that is not the picture fades after a few seconds of nothing
@@ -190,6 +273,10 @@
     $('close').addEventListener('click', leave);
     $('fullscreen').addEventListener('click', fullscreen);
     $('reveal').addEventListener('click', toggleReveal);
+    if ($('table')) {
+      $('table-show').addEventListener('click', showToTable);
+      $('table-clear').addEventListener('click', clearTable);
+    }
     document.addEventListener('fullscreenchange', () => {
       $('fullscreen').textContent = document.fullscreenElement ? '⛶ Leave fullscreen' : '⛶ Fullscreen';
     });
@@ -212,8 +299,11 @@
     }
     // The lock is dropped whenever the tab is hidden and is not handed back, so
     // it has to be asked for again when the page comes forward.
+    // Coming back is also when a table opened in another tab shows up here.
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !P.lock && P.images.length) keepAwake();
+      if (document.visibilityState !== 'visible') return;
+      if (!P.lock && P.images.length) keepAwake();
+      if (T.current) tableStatus();
     });
   }
 
@@ -227,5 +317,5 @@
     return (opts.load || load)();
   }
 
-  global.mcPresent = { start, fail, keepAwake, wake, state: P };
+  global.mcPresent = { start, fail, keepAwake, wake, offer, state: P };
 })(globalThis);

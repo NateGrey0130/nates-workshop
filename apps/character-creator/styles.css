@@ -3190,6 +3190,10 @@ body.present.idle { cursor: none; }
 }
 
 .present-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+/* The Table's Show and Clear: one group, so it wraps as one and hides as one.
+   `hidden` is restated because the group is given a display. */
+.present-table { display: inline-flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.present-table[hidden] { display: none; }
 .present-shown,
 .present-msg { color: var(--text-muted); font-size: 13px; }
 

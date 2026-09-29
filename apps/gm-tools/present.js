@@ -144,6 +144,9 @@ async function loadCity() {
   $('state').hidden = true;
   $('city').hidden = false;
   mcPresent.keepAwake();
+  // The Table: a city can go on the TV too. The shared half decides whether
+  // to offer it (a table open, and this person its GM) and sends the show.
+  mcPresent.offer({ kind: 'city', id: cityId }, c.campaign_id);
 }
 
 mcPresent.start({

@@ -2376,6 +2376,34 @@ export function run() {
     const goTo = functionBody(presentJs, 'function goTo(at)');
     check('nor does stepping to a picture', !!goTo && !/toggleReveal/.test(goTo));
 
+    // ── Show to table (The Table, phase 2) ──
+    // A second button that reaches past the GM's screen - to the TV and every
+    // seated phone - and so the same rule as Reveal: one control each, never
+    // a key, never a page turn. Paging previews for the GM alone; show() may
+    // repaint what the table is looking at, and sends nothing. And Show is not
+    // Reveal: it posts to the table, never PATCHes the picture.
+    const toTable = functionBody(presentJs, 'function showToTable()');
+    const clearT = functionBody(presentJs, 'function clearTable()');
+    const tableWrite = functionBody(presentJs, 'async function tableWrite(path, body)');
+    check('present.js has Show to table and Clear to read', !!toTable && !!clearT && !!tableWrite);
+    check('Show posts to the table route and nowhere else',
+      !!toTable && /tableWrite\('table\/show', T\.current\)/.test(toTable) && !/toggleReveal|PATCH/.test(toTable)
+        && !!clearT && /tableWrite\('table\/clear', \{\}\)/.test(clearT));
+    check('and the only POST in the file is the table\'s',
+      (presentJs.match(/method: 'POST'/g) || []).length === 1 && !!tableWrite && /method: 'POST'/.test(tableWrite));
+    const wiredTo = (fn) => [...presentJs.matchAll(new RegExp(`\\$\\('([\\w-]+)'\\)\\.addEventListener\\('\\w+', ${fn}\\)`, 'g'))].map((m) => m[1]);
+    check('each is wired to its own button and nothing else',
+      wiredTo('showToTable').join() === 'table-show' && wiredTo('clearTable').join() === 'table-clear',
+      `${wiredTo('showToTable')} / ${wiredTo('clearTable')}`);
+    check('paging does not show a picture to the table',
+      !!show && !/showToTable|tableWrite/.test(show) && !!goTo && !/showToTable|tableWrite/.test(goTo));
+    const presentPages = [presentHtml, readFileSync(join(repoRoot, 'apps', 'marvel-heroes', 'gm', 'present.html'), 'utf8')];
+    check('both games\' Present pages have the table controls, hidden until a table is open',
+      presentPages.every((h) => /<span class="present-table" id="table" hidden>/.test(h)
+        && h.includes('id="table-show"') && h.includes('id="table-clear"') && h.includes('id="table-on"')));
+    check('a city can be shown too, through the shared half',
+      /mcPresent\.offer\(\{ kind: 'city', id: cityId \}, c\.campaign_id\)/.test(pageJs));
+
     // The keys: arrows, and the two a presenter's clicker sends. NOT the space
     // bar - space activates whatever button has focus, and the button most
     // likely to have it on this page is the one that reveals.
@@ -2390,6 +2418,7 @@ export function run() {
       && /mcPresent\.start\(\{[\s\S]{0,200}\bleave,/.test(pageJs));
     check('and no key press reveals anything',
       !/toggleReveal/.test(keyBlock) && !/' '/.test(keyBlock) && !/Spacebar|'Space'/.test(keyBlock));
+    check('nor puts one on the table, or clears it', !/showToTable|clearTable|tableWrite/.test(keyBlock));
 
     // ── no chrome, and the omissions are the feature ──
     // Every other page of the five mounts the shared header. This one must
@@ -2427,7 +2456,9 @@ export function run() {
     const calls = (s) => (s.match(/\bapi\(`/g) || []).length;
     check('a city is shown from the players\' view, and only from it',
       /api\(`cities\/\$\{cityId\}\/view`\)/.test(cityPart) && !/api\(`cities\/\$\{cityId\}`\)/.test(pageJs)
-        && calls(pageJs) === 1 && calls(presentJs) === 2, `${calls(pageJs)} + ${calls(presentJs)} api() calls`);
+        // present.js's three: the entry, Reveal's PATCH, and the table's status
+        // (The Table, phase 2). Show and Clear go through tableWrite(path).
+        && calls(pageJs) === 1 && calls(presentJs) === 3, `${calls(pageJs)} + ${calls(presentJs)} api() calls`);
 
     // ── the way in, and the way back ──
     check('the setting view offers Present on a picture and on a page',

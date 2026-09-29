@@ -60,3 +60,32 @@ export async function sessions(env, campaignId, limit) {
   ).bind(campaignId, limit).all();
   return results;
 }
+
+// ---------- pictures on the table (phase 2) ----------
+//
+// A setting page's picture, looked up INSIDE the table's campaign, so a ref
+// naming another campaign's picture is not found. Marvel has no city maps.
+// Whether the caller may have it at all is the room's question, asked by the
+// shared route before this is called.
+
+async function imageRow(env, campaignId, ref) {
+  if (ref.kind !== 'image') return null;
+  return env.DB_MARVEL.prepare('SELECT id, r2_key, content_type, caption FROM msh_campaign_images WHERE id = ? AND campaign_id = ?')
+    .bind(Number(ref.id), campaignId).first();
+}
+
+// A picture's own caption and nothing else: the page it sits on is titled for
+// the GM, and its title may give a plot away.
+export async function describe(env, campaignId, ref) {
+  const row = await imageRow(env, campaignId, ref);
+  return row ? { caption: row.caption || '' } : null;
+}
+
+export async function image(env, campaignId, ref) {
+  const row = await imageRow(env, campaignId, ref);
+  if (!row) return null;
+  if (!env.MEDIA) return { error: 'Image storage is not configured on this environment', status: 501 };
+  const object = await env.MEDIA.get(row.r2_key);
+  if (!object) return { error: 'Image is recorded but missing from storage', status: 502 };
+  return { body: object.body, contentType: object.httpMetadata?.contentType || row.content_type };
+}
