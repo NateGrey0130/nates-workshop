@@ -530,8 +530,8 @@ def apply_overrides(slug, entries):
     unmatched = []
     for o in json.load(io.open(path, encoding='utf-8'))['overrides']:
         m = o['match']
-        if 'summary' in m:
-            continue                    # a Reference Summary misprint: booklet.coverage() reads these
+        if 'summary' in m or 'row' in m:
+            continue                    # a Reference Summary misprint (booklet.coverage) or a text fix (npcs.text_fixes)
         hits = [(e, b) for e in entries for b in e['blocks']
                 if b['page'] == m['page'] and (e['header'] or '').upper().startswith(m['header'].upper())
                 and ('label' not in m or (b['label'] or '').upper() == m['label'].upper())

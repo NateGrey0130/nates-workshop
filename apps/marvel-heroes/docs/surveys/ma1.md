@@ -212,9 +212,12 @@ lines in `npcs.json`; MHSP1's output is byte-identical.
 
 **MA1 also prints single quotes** ('seventh sense', 'ping', 'space tank'), so
 a single-quoted phrase is not an error in itself and is left alone. Five
-single marks are still wrong, and only the page image tells them apart:
+single marks were wrong in a way only the page image tells apart, and each is
+a `text` verdict in `scripts/msh/ma1-overrides.json`: the row, the fragment as
+read and as printed. `npcs.text_fixes()` applies them after the pairing, and
+stops the build if a fragment is not found exactly once in its row.
 
-| row | printed | the text has |
+| row | printed | the OCR gave |
 |---|---|---|
 | `wolverine:running`, p.12 | 'family,' | no closing mark |
 | `beast:power:6`, p.14 | 'banked shot,' | no closing mark |

@@ -1,12 +1,13 @@
 {
   "about": [
-    "Hand decisions about MA1 stat blocks that scripts/msh/roster.py applies after parsing. Every one was read off the page image; none is a guess from OCR.",
-    "Facts only - numbers, rank codes and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "Hand decisions about MA1 stat blocks that scripts/msh/roster.py applies after parsing, and about quote marks in its text that scripts/msh/npcs.py applies. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - numbers, rank codes and labels, never the book's prose beyond a text fix's fragment of a few words - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header, label}: the printed page, the start of the entry's header, and the sub-block label when the entry has several",
     "  verdict   misprint   the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
     "            as_printed the page is unambiguous and the check still fails; kept as printed, nothing corrected, and the note says why",
     "            table      not a character grid: a generation table; 'block' is its average row, transcribed",
     "            label      the OCR mangled a sub-block's label; 'label' is the printed one",
+    "            text       match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops. Only for what the page image alone settles: MA1 prints real single quotes, so a lost single closing mark cannot be told from a correct one.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -43,6 +44,16 @@
      "note": "The Further Morlocks generation table: the AVERAGE column, with columns for rolling each ability below, above or way above it. (V) is the book's 'variable'. F+A+S+E is 38 against the printed 40; the table gives Health as variable, so it is not treated as a misprint."},
     {"match": {"page": 75, "header": "BINARY", "label": "INARY FORM"}, "verdict": "label",
      "label": "BINARY FORM", "checked": "2026-09-28",
-     "note": "The B is lost at the column edge in the OCR."}
+     "note": "The B is lost at the column edge in the OCR."},
+    {"match": {"row": "ma1:wolverine:running"}, "verdict": "text", "checked": "2026-09-29",
+     "read": "'family,", "printed": "'family,'", "note": "Printed 12. The closing single mark is lost."},
+    {"match": {"row": "ma1:beast:power:6"}, "verdict": "text", "checked": "2026-09-29",
+     "read": "'banked shot,", "printed": "'banked shot,'", "note": "Printed 14. The closing single mark is lost."},
+    {"match": {"row": "ma1:wolf:prose"}, "verdict": "text", "checked": "2026-09-29",
+     "read": "'collar when", "printed": "collar when", "note": "Printed 22. No mark is printed: a speck at the line's start was read as one."},
+    {"match": {"row": "ma1:proteus-alias-mutant-x:running"}, "verdict": "text", "checked": "2026-09-29",
+     "read": "'feed.", "printed": "'feed.'", "note": "Printed 58. The closing single mark is lost."},
+    {"match": {"row": "ma1:southern-candy:prose"}, "verdict": "text", "checked": "2026-09-29",
+     "read": "'Aerie.'", "printed": "\"Aerie.\"", "note": "Printed 70. Printed as double quotes, read as single ones."}
   ]
 }
