@@ -17,6 +17,15 @@
 // the table and this person is at it, so the address is worth nothing before
 // Show or after Clear. The TV fits it to the screen on black; a phone shows it
 // under the roll feed, and a tap opens it full screen to pinch and pan.
+//
+// INITIATIVE (phase 3). The room keeps the order and whose turn it is, and
+// sends each screen `init` as that screen may see it: a hidden NPC arrives
+// here as "???" and nothing else, so this page has nothing to hide. A phone
+// is sent `up` when its character's turn starts (a banner and a vibration)
+// and `deck` when it is next. A player's Roll initiative carries no number:
+// the room adds the sheet's bonus, which the join route read from D1. The GM
+// adds from the campaign's roster (table/roster) or by name, rolls for NPCs,
+// drags rows and presses Next; nothing moves on its own.
 'use strict';
 
 const $ = (id) => document.getElementById(id);
@@ -39,6 +48,7 @@ const S = {
   code: '', game: null, access: null, role: null,
   ws: null, you: null, room: null, people: [], feed: [], shown: null,
   closed: false, retry: 0, vis: 'all', ranks: null, rank: 'typical', wake: null,
+  init: null, roster: null, upAt: 0,
 };
 
 async function getJson(url, opts) {
@@ -183,7 +193,17 @@ function onMessage(msg) {
     S.people = msg.people;
     S.feed = msg.feed;
     S.shown = msg.shown ?? null;
+    S.init = msg.init ?? null;
     render();
+  } else if (msg.type === 'init') {
+    S.init = msg.init;
+    paintInit();
+  } else if (msg.type === 'up') {
+    S.upAt = Date.now();
+    try { navigator.vibrate?.([250, 120, 250]); } catch { /* no vibration here */ }
+    paintInit();
+  } else if (msg.type === 'deck') {
+    try { navigator.vibrate?.(80); } catch { /* no vibration here */ }
   } else if (msg.type === 'show') {
     S.shown = msg.shown;
     paintPicture();
@@ -235,6 +255,12 @@ function render() {
       <p id="status" class="muted" role="status" aria-live="polite"></p>
     </div>
     ${!gm && !seat ? seatHtml() : ''}
+    <div class="panel table-init">
+      <h3>Initiative <span class="muted small" id="init-round"></span></h3>
+      <p class="table-up" id="init-up" role="status" aria-live="assertive" hidden></p>
+      <div id="init-body"></div>
+      ${gm ? initGmHtml() : ''}
+    </div>
     ${gm || seat ? diceHtml(gm) : ''}
     <div class="panel">
       <h3>Rolls</h3>
@@ -263,7 +289,10 @@ function render() {
   }
   if (gm || seat) wireDice();
   if (gm) $('close-table').addEventListener('click', closeTable);
+  if (gm) wireInitGm();
+  wireInit();
   $('picture-open').addEventListener('click', openZoom);
+  paintInit();
   renderFeed();
   renderPeople();
   paintPicture();
@@ -401,14 +430,260 @@ function renderDisplay() {
       <div class="tv-campaign">${esc(S.room.campaignName)}</div>
       <div class="tv-join">Join at <strong>${esc(location.host)}/apps/table/</strong> with code <strong class="tv-code">${esc(S.room.code)}</strong></div>
     </div>
+    <section class="tv-init" id="tv-init" aria-label="Initiative" hidden></section>
     <figure class="tv-picture" id="picture" hidden>
       <img id="picture-img" alt="">
       <figcaption id="picture-cap"></figcaption>
     </figure>
     <ol class="tv-feed" id="tv-feed" reversed></ol>
     <p id="status" class="tv-status" role="status" aria-live="polite"></p>`;
+  paintTvInit();
   paintTvRolls();
   paintPicture();
+}
+
+// The TV's initiative strip: the current name large enough to read across
+// the room, the order beside it with the current one lit. Painted alone, so a
+// turn never touches the picture.
+function paintTvInit() {
+  const box = $('tv-init');
+  if (!box) return;
+  const I = S.init;
+  const rows = (I?.entries || []).filter((e) => e.rolled);
+  box.hidden = !rows.length;
+  document.body.classList.toggle('tv-fighting', !!rows.length);
+  if (!rows.length) { box.innerHTML = ''; return; }
+  const now = rows.find((e) => e.id === I.turn);
+  const head = now ? esc(now.name) : I.over ? 'Melee over' : 'Initiative';
+  box.innerHTML = `
+    <div class="tv-init-now"><span class="tv-init-label">${esc(roundText(I))}</span><span class="tv-init-name">${head}</span></div>
+    <ol class="tv-init-list">${rows.map((e) => `<li class="${initClass(e, I, 'tv-init-row')}"${e.id === I.turn ? ' aria-current="true"' : ''}>
+      <span>${esc(e.name)}</span>${S.room.game === 'palladium' && e.attacks !== undefined ? `<span class="tv-init-left">${attacksLeft(e)}</span>` : ''}</li>`).join('')}</ol>`;
+}
+
+// ---------- initiative ----------
+
+const palladium = () => S.room?.game === 'palladium';
+const mineEntry = () => {
+  const seat = S.you?.seat;
+  return seat ? (S.init?.entries || []).find((e) => e.kind === 'pc' && String(e.characterId) === String(seat.id)) ?? null : null;
+};
+const attacksLeft = (e) => {
+  const left = Math.max(0, (Number(e.attacks) || 0) - (Number(e.spent) || 0));
+  return `${left} of ${Number(e.attacks) || 0} left`;
+};
+function roundText(I) {
+  if (!I) return '';
+  if (palladium()) return `Melee ${I.round}${I.started && !I.over ? `, pass ${I.pass}` : ''}`;
+  return `Round ${I.round}`;
+}
+function initClass(e, I, base = 'init-row') {
+  const out = [base];
+  if (e.id === I.turn) out.push('on');
+  if (!e.rolled) out.push('unrolled');
+  else if (palladium() && e.attacks !== undefined && (Number(e.spent) || 0) >= (Number(e.attacks) || 0)) out.push('out');
+  if (e.hidden) out.push('hidden-npc');
+  return out.join(' ');
+}
+
+function rollText(e) {
+  if (!e.rolled || e.total == null) return '';
+  const tags = (e.tags || []).length ? ` <span class="muted small">(${esc(e.tags.join(', '))})</span>` : '';
+  if (palladium()) {
+    const b = Number(e.bonus) || 0;
+    return `<span class="init-total" title="d20 ${e.roll} ${b < 0 ? '-' : '+'}${Math.abs(b)}">${e.total}</span>${tags}`;
+  }
+  return `<span class="init-total">${String(e.roll).padStart(2, '0')}</span>${tags}`;
+}
+
+function initRowHtml(e, i, I, gm) {
+  const rolledCount = I.entries.filter((x) => x.rolled).length;
+  const detail = palladium() && e.rolled && e.attacks !== undefined ? `<span class="muted small">${attacksLeft(e)}</span>` : '';
+  const who = gm && e.hidden ? `${esc(e.name)} <span class="tag">hidden</span>` : esc(e.name);
+  const controls = !gm ? '' : `<span class="init-ctl">
+      ${!e.rolled ? `<button type="button" class="btn small" data-init="roll" data-id="${esc(e.id)}">Roll</button>` : ''}
+      ${!palladium() && e.talent ? `<label class="check small"><input type="checkbox" data-init="applies" data-id="${esc(e.id)}"${e.applies ? ' checked' : ''}> Talent applies</label>` : ''}
+      ${e.kind !== 'pc' ? `<button type="button" class="btn small" data-init="hide" data-id="${esc(e.id)}" data-hidden="${e.hidden ? '1' : ''}">${e.hidden ? 'Show name' : 'Hide'}</button>` : ''}
+      ${e.rolled && i > 0 ? `<button type="button" class="btn small" data-init="up" data-id="${esc(e.id)}" aria-label="Move ${esc(e.name)} up">↑</button>` : ''}
+      ${e.rolled && i < rolledCount - 1 ? `<button type="button" class="btn small" data-init="down" data-id="${esc(e.id)}" aria-label="Move ${esc(e.name)} down">↓</button>` : ''}
+      <button type="button" class="btn small" data-init="remove" data-id="${esc(e.id)}" aria-label="Take ${esc(e.name)} out of initiative">✕</button>
+    </span>`;
+  return `<li class="${initClass(e, I)}" data-id="${esc(e.id)}"${gm && e.rolled ? ' draggable="true"' : ''}${e.id === I.turn ? ' aria-current="true"' : ''}>
+    <span class="init-who">${who}${e.id === I.turn ? ' <span class="tag">up</span>' : e.id === I.onDeck ? ' <span class="muted small">on deck</span>' : ''}</span>
+    <span class="init-roll">${rollText(e)} ${detail}</span>
+    ${controls}
+  </li>`;
+}
+
+// The order and the buttons that change with it. The add forms are drawn once
+// by render() and never repainted, so a half-typed name survives a turn.
+function paintInit() {
+  if (S.you?.role === 'display') return paintTvInit();
+  const body = $('init-body');
+  if (!body) return;
+  const I = S.init || { round: 1, pass: 1, entries: [], turn: null };
+  const gm = S.you.role === 'gm';
+  $('init-round').textContent = I.entries.length ? `· ${roundText(I)}` : '';
+  const mine = mineEntry();
+  const up = $('init-up');
+  const isUp = !!mine && I.turn === mine.id;
+  const onDeck = !!mine && I.onDeck === mine.id && !isUp;
+  up.hidden = !isUp && !onDeck;
+  up.textContent = isUp ? 'You\'re up!' : onDeck ? 'On deck' : '';
+  up.classList.toggle('deck', onDeck);
+
+  const rolled = I.entries.filter((e) => e.rolled);
+  const waiting = I.entries.filter((e) => !e.rolled);
+  let mineBtn = '';
+  if (S.you.seat) {
+    if (palladium() && (!mine || !mine.rolled)) mineBtn = '<button type="button" class="btn btn-primary" data-init="mine-roll">Roll initiative</button>';
+    else if (!palladium() && !mine) mineBtn = '<button type="button" class="btn" data-init="mine-add">Add me to initiative</button>';
+  }
+  const bar = gm ? initBarHtml(I) : '';
+  body.innerHTML = `
+    ${mineBtn ? `<p>${mineBtn}${palladium() ? ' <span class="muted small">d20 plus your sheet\'s initiative bonus</span>' : ''}</p>` : ''}
+    ${rolled.length ? `<ol class="init-list">${rolled.map((e, i) => initRowHtml(e, i, I, gm)).join('')}</ol>`
+      : `<p class="muted">${I.entries.length ? 'Nobody has rolled yet.' : (gm ? 'Add combatants below.' : 'The GM has not started a fight.')}</p>`}
+    ${waiting.length ? `<p class="muted small">Not rolled yet</p><ul class="init-list waiting">${waiting.map((e, i) => initRowHtml(e, rolled.length + i, I, gm)).join('')}</ul>` : ''}
+    ${I.over ? '<p class="muted">Every attack is spent: the melee is over.</p>' : ''}
+    ${bar}`;
+}
+
+function initBarHtml(I) {
+  const any = I.entries.length > 0;
+  const rolledAny = I.entries.some((e) => e.rolled);
+  const b = (act, label, primary = false, disabled = false) =>
+    `<button type="button" class="btn${primary ? ' btn-primary' : ''}" data-init="${act}"${disabled ? ' disabled' : ''}>${label}</button>`;
+  const nextLabel = !I.started ? (palladium() ? 'Start the melee' : 'Start the round') : 'Next';
+  const buttons = palladium()
+    ? [b('npcs', 'Roll for NPCs', false, !I.entries.some((e) => !e.rolled && e.kind !== 'pc')),
+      b('next', nextLabel, true, !rolledAny || I.over),
+      b('round', 'New melee', false, !any), b('reroll', 'New melee, roll again', false, !any)]
+    : [b('all', rolledAny ? 'Re-roll all' : 'Roll the round', !rolledAny, !any),
+      b('next', nextLabel, rolledAny, !rolledAny)];
+  return `<div class="init-bar">${buttons.join('')}${b('clear', 'Clear', false, !any)}</div>`;
+}
+
+function initGmHtml() {
+  const pal = palladium();
+  return `<details class="init-add" id="init-add-box">
+    <summary>Add to initiative</summary>
+    <form id="init-roster" class="table-dice-form">
+      <div class="table-field">
+        <label for="init-pick">From the campaign</label>
+        <select id="init-pick"><option value="">Loading…</option></select>
+      </div>
+      <label class="check small"><input type="checkbox" id="init-roster-hidden"> Hidden: players see ???</label>
+      <button type="submit" class="btn">Add</button>
+      <button type="button" class="btn" id="init-add-all">Add every character</button>
+    </form>
+    <form id="init-name" class="table-dice-form">
+      <div class="table-field"><label for="init-n">Name</label><input id="init-n" maxlength="60" required autocomplete="off"></div>
+      ${pal ? `<div class="table-field"><label for="init-bonus">Initiative bonus</label><input id="init-bonus" type="number" value="0" min="-50" max="50" inputmode="numeric"></div>
+      <div class="table-field"><label for="init-attacks">Attacks per melee</label><input id="init-attacks" type="number" value="2" min="0" max="30" inputmode="numeric"></div>`
+        : `<div class="table-field"><label for="init-agility">Agility number</label><input id="init-agility" type="number" value="10" min="0" max="5000" inputmode="numeric"></div>
+      <label class="check small"><input type="checkbox" id="init-talent"> Has an initiative Talent</label>`}
+      <label class="check small"><input type="checkbox" id="init-name-hidden"> Hidden: players see ???</label>
+      <button type="submit" class="btn">Add by name</button>
+    </form>
+  </details>`;
+}
+
+async function loadRoster() {
+  try {
+    const r = await getJson(`${GAMES[S.game].base}/table/roster?campaign_id=${encodeURIComponent(S.access.campaign.id)}`);
+    S.roster = r.combatants || [];
+  } catch (err) {
+    S.roster = [];
+    say(`Could not load the campaign's roster: ${err.message}`, true);
+  }
+  const sel = $('init-pick');
+  if (!sel) return;
+  const group = (kind, label) => {
+    const rows = S.roster.map((c, i) => [c, i]).filter(([c]) => c.kind === kind);
+    return rows.length ? `<optgroup label="${label}">${rows.map(([c, i]) => `<option value="${i}">${esc(c.name)}</option>`).join('')}</optgroup>` : '';
+  };
+  sel.innerHTML = S.roster.length
+    ? `${group('pc', palladium() ? 'Characters' : 'Heroes')}${group('npc', palladium() ? 'Statted NPCs' : 'NPC sheets')}`
+    : '<option value="">Nobody in the campaign yet</option>';
+}
+
+const fromRoster = (c, hidden) => ({ type: 'init.add', kind: c.kind, ref: c.ref, name: c.name, hidden: c.kind !== 'pc' && hidden, ...c.init });
+
+function wireInitGm() {
+  loadRoster();
+  $('init-roster').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const c = S.roster?.[Number($('init-pick').value)];
+    if (c) send(fromRoster(c, $('init-roster-hidden').checked));
+  });
+  $('init-add-all').addEventListener('click', () => {
+    const inList = new Set((S.init?.entries || []).filter((x) => x.kind === 'pc').map((x) => String(x.characterId)));
+    for (const c of (S.roster || []).filter((x) => x.kind === 'pc' && !inList.has(String(x.ref)))) send(fromRoster(c, false));
+  });
+  $('init-name').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = $('init-n').value.trim();
+    if (!name) return;
+    const hidden = $('init-name-hidden').checked;
+    send(palladium()
+      ? { type: 'init.add', kind: 'name', name, hidden, bonus: Number($('init-bonus').value) || 0, attacks: Number($('init-attacks').value) || 0 }
+      : { type: 'init.add', kind: 'name', name, hidden, agility: Number($('init-agility').value) || 0, talent: $('init-talent').checked });
+    $('init-n').value = '';
+  });
+}
+
+// One listener for every button the order repaints, so a repaint re-wires nothing.
+function wireInit() {
+  const body = $('init-body');
+  if (!body) return;
+  body.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-init]');
+    if (!b) return;
+    const id = b.dataset.id;
+    const at = (S.init?.entries || []).findIndex((x) => x.id === id);
+    switch (b.dataset.init) {
+      case 'mine-roll': return send({ type: 'init.roll' });
+      case 'mine-add': return send({ type: 'init.add' });
+      case 'roll': return send({ type: 'init.roll', id });
+      case 'npcs': return send({ type: 'init.roll', all: true });
+      case 'all': return send({ type: 'init.roll', all: true });
+      case 'next': return send({ type: 'init.next' });
+      case 'round': return send({ type: 'init.newRound' });
+      case 'reroll': return send({ type: 'init.newRound', reroll: true });
+      case 'hide': return send({ type: 'init.set', id, hidden: !b.dataset.hidden });
+      case 'up': return send({ type: 'init.move', id, to: at - 1 });
+      case 'down': return send({ type: 'init.move', id, to: at + 1 });
+      case 'remove': return send({ type: 'init.remove', id });
+      case 'clear':
+        if (confirm('Clear the initiative order?')) send({ type: 'init.remove', all: true });
+        return undefined;
+      default: return undefined;
+    }
+  });
+  body.addEventListener('change', (e) => {
+    const box = e.target.closest('input[data-init="applies"]');
+    if (box) send({ type: 'init.set', id: box.dataset.id, applies: box.checked });
+  });
+  // The GM's laptop drags a row; the arrows do the same from a keyboard.
+  let dragging = null;
+  body.addEventListener('dragstart', (e) => {
+    const li = e.target.closest('li[draggable="true"]');
+    if (!li) return;
+    dragging = li.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragging);
+  });
+  body.addEventListener('dragover', (e) => { if (dragging && e.target.closest('li[draggable="true"]')) e.preventDefault(); });
+  body.addEventListener('drop', (e) => {
+    const li = e.target.closest('li[draggable="true"]');
+    if (!dragging || !li) return;
+    e.preventDefault();
+    const to = (S.init?.entries || []).findIndex((x) => x.id === li.dataset.id);
+    if (li.dataset.id !== dragging && to >= 0) send({ type: 'init.move', id: dragging, to });
+    dragging = null;
+  });
+  body.addEventListener('dragend', () => { dragging = null; });
 }
 
 function paintTvRolls() {
@@ -572,7 +847,7 @@ async function closeTable() {
 }
 
 function renderClosed(saved = null) {
-  document.body.classList.remove('table-tv', 'tv-showing');
+  document.body.classList.remove('table-tv', 'tv-showing', 'tv-fighting');
   S.closed = true;
   S.shown = null;
   closeZoom();

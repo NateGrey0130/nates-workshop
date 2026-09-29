@@ -61,6 +61,48 @@ export async function sessions(env, campaignId, limit) {
   return results;
 }
 
+// ---------- initiative (phase 3) ----------
+//
+// R25 reads a combatant's Agility NUMBER and whether it holds one of the two
+// initiative Talents. Both come off the sheet's snapshot here; which Talent
+// ids count is the room's to decide (workers/table-room/src/marvel.js reads
+// the app's talents.json), so this passes the ids as they are.
+
+const numbers = (snapshotText) => {
+  let s = null;
+  try { s = JSON.parse(snapshotText || 'null'); } catch { s = null; }
+  return {
+    agility: Number(s?.abilities?.agility?.number) || 0,
+    talents: (s?.talents || []).map((t) => (typeof t === 'string' ? t : t?.id)).filter(Boolean),
+  };
+};
+
+// The heroes a player may seat, each with `init`.
+export async function seatStats(env, campaignId, chars) {
+  if (!chars.length) return chars;
+  const { results } = await env.DB_MARVEL.prepare(
+    `SELECT id, snapshot FROM msh_heroes WHERE id IN (${chars.map(() => '?').join(', ')})`
+  ).bind(...chars.map((c) => String(c.id))).all();
+  const by = new Map(results.map((r) => [String(r.id), numbers(r.snapshot)]));
+  return chars.map((c) => ({ ...c, init: by.get(String(c.id)) ?? { agility: 0, talents: [] } }));
+}
+
+// Everyone the GM may add to initiative: the campaign's heroes and the NPC
+// sheets the GM has rolled for it (the list GM Tools offers today).
+export async function roster(env, campaignId) {
+  const heroes = (await env.DB_MARVEL.prepare(
+    `SELECT h.id, h.name, h.snapshot FROM msh_campaign_heroes ch JOIN msh_heroes h ON h.id = ch.hero_id
+     WHERE ch.campaign_id = ? ORDER BY h.name`
+  ).bind(campaignId).all()).results;
+  const npcs = (await env.DB_MARVEL.prepare(
+    'SELECT id, name, snapshot FROM msh_npc_sheets WHERE campaign_id = ? ORDER BY name'
+  ).bind(campaignId).all()).results;
+  return [
+    ...heroes.map((h) => ({ kind: 'pc', ref: String(h.id), name: h.name, init: numbers(h.snapshot) })),
+    ...npcs.map((n) => ({ kind: 'npc', ref: String(n.id), name: n.name, init: numbers(n.snapshot) })),
+  ];
+}
+
 // ---------- pictures on the table (phase 2) ----------
 //
 // A setting page's picture, looked up INSIDE the table's campaign, so a ref

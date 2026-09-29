@@ -7,15 +7,15 @@ exactly the screens allowed to see it. On Discord nights the GM screen-shares
 the Display.
 
 Design: [The Table — live game room design](https://claude.ai/code/artifact/127a98a9-7907-41a6-be73-a7f1de4a1787).
-Phase 1 is the room and the roll feed; phase 2 is showing pictures. Initiative
-(phase 3) is not built yet.
+Phase 1 is the room and the roll feed; phase 2 is showing pictures; phase 3
+is initiative.
 
 ## Three screens, one page
 
 | | Display (the TV) | A player's phone | The GM |
 |---|---|---|---|
-| sees | public rolls, in large type; the picture on the table, fitted to the screen on black | public rolls, and their own To-GM rolls; the picture, under the feed, tap for full screen and pinch-zoom | every roll, GM-only ones included; the picture |
-| does | nothing | rolls from the dice box, Everyone or To GM | rolls Everyone or GM only; closes the table. Shows and clears pictures from Present mode |
+| sees | public rolls, in large type; the picture on the table, fitted to the screen on black; the initiative strip, with the name that is up large | public rolls, and their own To-GM rolls; the picture, under the feed, tap for full screen and pinch-zoom; the initiative order, "You're up" (and a vibration) and "On deck" | every roll, GM-only ones included; the picture; the whole order, hidden NPCs by name |
+| does | nothing | rolls from the dice box, Everyone or To GM; rolls their own initiative (Palladium) | rolls Everyone or GM only; runs initiative; closes the table. Shows and clears pictures from Present mode |
 
 **The page never decides what it is shown.** It asks for a role; the game's
 join route decides from D1 whether the person may take it, and the room sends
@@ -59,6 +59,45 @@ after Clear, another picture, someone not at the table. It is served
 `no-store`, so a browser's copy does not outlive Clear. The campaign's own
 image routes are untouched: an unrevealed picture is still not found there.
 
+## Initiative
+
+The room keeps one order and one current turn; each game supplies how the
+order is rolled and how a round runs out. **The GM always drives**: a turn
+moves only on Next, a round only on New melee or Roll the round.
+
+| | Palladium / Rifts | Marvel |
+|---|---|---|
+| who rolls | each player taps **Roll initiative** on their phone: d20 plus the sheet's bonus. The GM rolls for NPCs | the GM presses **Roll the round** |
+| the rule | highest total first; a tie goes to the higher bonus, then only the tied re-roll (`workers/table-room/src/palladium.js`) | house rule R25, the Marvel app's own `apps/marvel-heroes/js/initiative.js`, called by the room |
+| a round | one melee: each combatant acts once per pass, spending one attack; passes repeat until every # of Attacks is spent, and anyone out of attacks is skipped. **New melee** keeps the order; **New melee, roll again** clears it | one pass through the order; past the last, the round ends and the Talent ticks clear |
+
+**A player's numbers come from D1, never the page.** When a player joins, the
+game's adapter reads their character: Palladium's initiative bonus and attacks
+per melee derived as the sheet derives them
+(`functions/api/character-creator/_lib/combat-numbers.js`), Marvel's Agility
+number and Talents from the hero's sheet. The room keeps them on the seat, and
+a phone's Roll initiative carries nothing. The GM adds from the campaign's
+roster (`table/roster`: its characters and statted NPCs, with their numbers)
+or by name, and is believed about the GM's own table.
+
+**Hidden NPCs.** An NPC is visible to everyone by default. The GM can hide
+one, and then every other screen gets it as `???` in its place and nothing
+else: no name, no roll, no numbers (`initView()` in
+`workers/table-room/src/initiative.js`, the one way the order leaves the
+room). Its initiative roll goes into the feed as GM only.
+
+**"You're up"** goes only to the phones seated as that character, and "On
+deck" only to the next one's. On reconnect the page reads the same from the
+order in `state`.
+
+**Mid-fight** the GM drags a row (or uses its arrows), takes anyone out
+(removing whoever is up passes the turn on without spending their attack), or
+adds a latecomer, who is slotted in by their roll.
+
+On Marvel, GM Tools' own initiative panel still works while no table is open,
+in that browser as before; while one is open it points here, and its room view
+opens the table's TV view.
+
 ## Where it is saved
 
 Closing the table writes every roll to the campaign (`table_sessions`, or
@@ -78,6 +117,8 @@ rolls, and the campaign page saves them on the GM's next visit.
 | `functions/api/character-creator/table/`, `functions/api/marvel-heroes/table/` | each game's routes, reaching only its own D1 |
 | `functions/api/table/lookup.js` | which game a code belongs to |
 | `workers/table-room/src/showing.js` | who may look at, and fetch, the picture on the table |
+| `workers/table-room/src/initiative.js` | the order, the turn, and what each screen may see of it |
+| `workers/table-room/src/palladium.js` | Palladium's roll, tie-break and melee |
 | `workers/table-room/test/room.mjs` | the suite: the room, the routes against `node:sqlite`, and these clients |
 
 Locally: start `table-room` then `nates-apps+table` from `.claude/launch.json`

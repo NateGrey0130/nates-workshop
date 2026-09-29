@@ -9,6 +9,7 @@
 import { getUserEmail } from './auth.js';
 import { playerView } from './city-view.js';
 import { citySvg } from './city-svg.js';
+import { initiativeNumbers } from './combat-numbers.js';
 
 export const game = 'palladium';
 export const email = getUserEmail;
@@ -65,6 +66,37 @@ export async function sessions(env, campaignId, limit) {
      FROM table_sessions WHERE campaign_id = ? AND closed_at IS NOT NULL ORDER BY id DESC LIMIT ?`
   ).bind(campaignId, limit).all();
   return results;
+}
+
+// ---------- initiative (phase 3) ----------
+//
+// A character's initiative bonus and attacks per melee, derived as the sheet
+// derives them (combat-numbers.js). The room keeps them on the player's seat,
+// so a phone's Roll initiative is d20 plus the SHEET's bonus, not the page's.
+
+const withNumbers = async (env, rows) => {
+  const nums = await initiativeNumbers(env, rows);
+  return (id) => nums.get(String(id)) ?? { bonus: 0, attacks: 2 };
+};
+
+// The characters a player may seat, each with `init`.
+export async function seatStats(env, campaignId, chars) {
+  if (!chars.length) return chars;
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM characters WHERE campaign_id = ? AND kind = 'pc' AND id IN (${chars.map(() => '?').join(', ')})`
+  ).bind(campaignId, ...chars.map((c) => Number(c.id))).all();
+  const of = await withNumbers(env, results);
+  return chars.map((c) => ({ ...c, init: of(c.id) }));
+}
+
+// Everyone the GM may add to initiative: the campaign's player characters and
+// its statted NPCs (migration 070's kind = 'npc' rows, the ones GM Tools lists).
+export async function roster(env, campaignId) {
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM characters WHERE campaign_id = ? AND kind IN ('pc', 'npc') ORDER BY kind DESC, name`
+  ).bind(campaignId).all();
+  const of = await withNumbers(env, results);
+  return results.map((r) => ({ kind: r.kind, ref: String(r.id), name: r.name, init: of(r.id) }));
 }
 
 // ---------- pictures on the table (phase 2) ----------

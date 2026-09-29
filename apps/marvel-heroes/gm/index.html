@@ -54,6 +54,9 @@
         <span class="caption">House rule R25</span>
         <h2 id="init-h">Initiative <span class="muted" id="init-round"></span></h2>
         <p class="muted">Everyone rolls d100, highest first. A tie goes to an initiative Talent that applies this round, then to the higher Agility number; still tied, only those re-roll. Tick "Talent applies" each round before rolling; the ticks clear when the round ends.</p>
+        <!-- While The Table is open, initiative lives in its room (gm.js). -->
+        <p id="init-table" class="note" hidden></p>
+        <div id="init-local">
         <div class="row">
           <button type="button" class="btn roll" id="init-roll">Roll the round</button>
           <button type="button" class="btn" id="init-next">Next turn</button>
@@ -77,6 +80,7 @@
             <button type="submit" class="btn secondary">Add</button>
           </div>
         </form>
+        </div>
       </section>
     </div>
 

@@ -64,7 +64,7 @@ nates-workshop/
     ├── table/            lookup: which game a table code belongs to (behind the wall)
     ├── filament-forge/   catalog (OFD snapshot) + per-user data
     ├── marvel-heroes/    saved heroes, campaigns, The Table's Marvel routes
-    └── character-creator/  72 endpoints + _lib; see the app README
+    └── character-creator/  73 endpoints + _lib; see the app README
 ```
 
 `.claude/` is repo-local until a machine links it (*Setting up a machine*).

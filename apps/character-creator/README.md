@@ -679,6 +679,7 @@ writes are gated (see [Permissions](#permissions)).
 | `table/seat` | GET | `?character_id=` - owner only: is this character seated at an open table, and under which code |
 | `table/show` | POST | `{ campaign_id, kind: 'image'\|'city', id }` - **G.M. only**, from Present mode. Puts one of the campaign's pictures (or a kept city's map) on the table; the caption is the picture's own, from D1. **Not Reveal**: writes nothing to the campaign |
 | `table/clear` | POST | `{ campaign_id }` - **G.M. only**. Takes the picture down |
+| `table/roster` | GET | `?campaign_id=` - **G.M. only**. Who the G.M. may add to initiative at The Table: the campaign's player characters and its statted NPCs, each with its initiative bonus and attacks per melee, derived as the sheet derives them |
 | `table/image` | GET | `?code=&kind=&id=` - the picture on the table, `no-store`, to someone connected there as the G.M., the display or a seated player (`workers/table-room/src/showing.js`). **Every refusal is a 404**: before Show, after Clear, another picture, anyone not at the table. A city is an SVG drawn from the players' view only |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
