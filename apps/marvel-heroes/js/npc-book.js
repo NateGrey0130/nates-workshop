@@ -66,7 +66,10 @@ export function bookChoices(npcs) {
 
 export function makeBookNpc(data) {
   const ladder = data.ranks.ranks;
-  const rankOf = (n) => (n === null || n < 0 ? null : ladder.find((r) => n >= r.min && n <= r.max) || null);
+  // Class 5000 has no upper bound (max null), so a number above it is Class 5000
+  // too (ME1's Ego, Endurance 5000); Beyond has no range and is never found.
+  const rankOf = (n) => (n === null || n < 0 ? null
+    : ladder.find((r) => r.min !== null && n >= r.min && (r.max === null || n <= r.max)) || null);
   const ability = (n) => {
     const r = rankOf(n);
     return { rank: r ? r.id : null, name: r ? r.name : String(n), number: n };

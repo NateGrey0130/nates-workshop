@@ -18,6 +18,11 @@
    "book": "MHSP1 Secret Wars",
    "code": "TSR6860",
    "pages": "2-16"
+  },
+  {
+   "book": "ME1 Cosmos Cubed",
+   "code": "TSR6879",
+   "pages": "Adventure 3-7, 11-28; Resource 2-16"
   }
  ],
  "books": [
@@ -39,6 +44,39 @@
     16
    ],
    "part": "Roster"
+  },
+  {
+   "slug": "me1",
+   "short": "ME1",
+   "title": "ME1 Cosmos Cubed",
+   "pages": [
+    3,
+    7
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       3,
+       7
+      ],
+      [
+       11,
+       28
+      ]
+     ]
+    },
+    {
+     "part": "Resource",
+     "pages": [
+      [
+       2,
+       16
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -62,7 +100,13 @@
   "The Mutant Menace",
   "Secret Wars Heroes",
   "Secret Wars Villains",
-  "Wrecking Crew"
+  "Wrecking Crew",
+  "Cosmos Cubed Heroes",
+  "ME1 Cosmos Cubed",
+  "Skrulls",
+  "Kree",
+  "Inhumans",
+  "Elders of the Universe"
  ],
  "characters": [
   {
@@ -20158,6 +20202,3335 @@
    ],
    "appearances": [],
    "book": "mhsp1"
+  },
+  {
+   "id": "mantis-me1",
+   "name": "Mantis",
+   "team": "Cosmos Cubed Heroes",
+   "versions": [
+    {
+     "id": "mantis-me1",
+     "label": "Update",
+     "team": "Cosmos Cubed Heroes",
+     "part": "Adventure",
+     "pages": [
+      3,
+      4
+     ],
+     "identity": [
+      "Real Name Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "116",
+       "karma": "76",
+       "resources": "Fe (2)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Plant Control",
+       "upb": "L14"
+      },
+      {
+       "name": "Recovery"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "gladiator-me1",
+   "name": "Gladiator",
+   "team": "Cosmos Cubed Heroes",
+   "versions": [
+    {
+     "id": "gladiator-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Adventure",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Shi'ar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         500,
+         "ShZ"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "725",
+       "karma": "675",
+       "resources": "Mn (175)",
+       "popularity": "15 (100 in the Empire)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Psychic Reflection"
+      },
+      {
+       "name": "Heat Beams"
+      },
+      {
+       "name": "Heightened Vision"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "firelord-me1",
+   "name": "Firelord",
+   "team": "Cosmos Cubed Heroes",
+   "versions": [
+    {
+     "id": "firelord-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Adventure",
+     "pages": [
+      5,
+      6
+     ],
+     "identity": [
+      "Pyreus Kril"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "325",
+       "karma": "110",
+       "resources": "Pr (4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Stellar Flame"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Staff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "beta-ray-bill-me1",
+   "name": "Beta Ray Bill",
+   "team": "Cosmos Cubed Heroes",
+   "versions": [
+    {
+     "id": "beta-ray-bill-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Adventure",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [
+      "(English Translation of Name)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "330",
+       "karma": "100",
+       "resources": "Gd (10)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Resistance"
+      },
+      {
+       "name": "Storm Breaker"
+      },
+      {
+       "name": "Sensor Implant"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "typical-oolafat-me1",
+   "name": "Typical Oolafat",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "typical-oolafat-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "50",
+       "karma": "0",
+       "resources": "Feeble 2",
+       "popularity": "0",
+       "override": {
+        "verdict": "rows",
+        "field": "RIP",
+        "printed": "Linked to Ego",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Link to Ego"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "ghoul-captain-me1",
+   "name": "Ghoul Captain",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "ghoul-captain-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         150,
+         "ShX"
+        ],
+        [
+         "A",
+         50,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "400",
+       "karma": "0",
+       "resources": "Gd (10)",
+       "popularity": "-50",
+       "override": {
+        "verdict": "misprint",
+        "field": "A",
+        "printed": {
+         "number": 50,
+         "code": "Mn"
+        },
+        "corrected": {
+         "number": 50,
+         "code": "Am"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": 0
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mental Blast"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "superkree-me1",
+   "name": "Superkree",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "superkree-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         275,
+         "ShY"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "575",
+       "karma": "300",
+       "resources": "Ty (6)",
+       "popularity": "0 (And dropping)",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 275,
+         "code": "ShY"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Limitations"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "common-inhuman-me1",
+   "name": "Common Inhuman",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "common-inhuman-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "80",
+       "karma": "30",
+       "resources": "Gd (10)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "claud-victor-me1",
+   "name": "Claud Victor",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "claud-victor-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "275",
+       "karma": "14",
+       "resources": "Gd (10)",
+       "popularity": "-2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "garnet-cato-me1",
+   "name": "Garnet Cato",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "garnet-cato-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "28",
+       "karma": "275",
+       "resources": "Fe (2)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "sentry-9168-me1",
+   "name": "Sentry 9168",
+   "team": "ME1 Cosmos Cubed",
+   "versions": [
+    {
+     "id": "sentry-9168-me1",
+     "label": null,
+     "team": "ME1 Cosmos Cubed",
+     "part": "Adventure",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "215",
+       "karma": "14",
+       "resources": "N.A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Communications"
+      },
+      {
+       "name": "Blast-ray"
+      },
+      {
+       "name": "Healing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "typical-skrull-warrior-me1",
+   "name": "Typical Skrull Warrior",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "typical-skrull-warrior-me1",
+     "label": null,
+     "team": "Skrulls",
+     "part": "Resource",
+     "pages": [
+      2
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "28",
+       "karma": "22",
+       "resources": "Ty (6)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape Change"
+      },
+      {
+       "name": "Equipment"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "typical-kree-warrior-me1",
+   "name": "Typical Kree Warrior",
+   "team": "Kree",
+   "versions": [
+    {
+     "id": "typical-kree-warrior-me1",
+     "label": "Blue or Pink",
+     "team": "Kree",
+     "part": "Resource",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "56",
+       "karma": "26",
+       "resources": "Ty (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Equipment"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "black-bolt-me1",
+   "name": "Black Bolt",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "black-bolt-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Blackagar Boltagon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "130",
+       "karma": "60",
+       "resources": "Mn (75)",
+       "popularity": "15 (95 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Hyper-Strength"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      },
+      {
+       "name": "Vibration",
+       "upb": "EE14"
+      },
+      {
+       "name": "Force Field Generation"
+      },
+      {
+       "name": "Magnetism",
+       "upb": "EE9"
+      },
+      {
+       "name": "Energy Solidification",
+       "upb": "EC7"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Detection",
+       "upb": "DT3"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "medusa-me1",
+   "name": "Medusa",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "medusa-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Medusalith Amaquelin"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "110",
+       "karma": "70",
+       "resources": "Ex (20)",
+       "popularity": "15 (90 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Manipulative Hair"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "crystal-me1",
+   "name": "Crystal",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "crystal-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Crystalia Amaquelin Maximoff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "26",
+       "resources": "Ex (20)",
+       "popularity": "15 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elemental Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "gorgon-me1",
+   "name": "Gorgon",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "gorgon-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "120",
+       "karma": "26",
+       "resources": "Ex (20)",
+       "popularity": "6 (80 among Inhumans)"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "karnak-me1",
+   "name": "Karnak",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "karnak-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "130",
+       "karma": "60",
+       "resources": "Ex (20)",
+       "popularity": "9 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Control"
+      },
+      {
+       "name": "Detect Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "lockjaw-me1",
+   "name": "Lockjaw",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "lockjaw-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "132",
+       "karma": "32",
+       "resources": "Ex (20)",
+       "popularity": "10 (70 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleport",
+       "upb": "T16"
+      },
+      {
+       "name": "Telelocation",
+       "upb": "M31"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "triton-me1",
+   "name": "Triton",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "triton-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "110",
+       "karma": "40",
+       "resources": "Ex (20)",
+       "popularity": "6 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "Resistance to Cold"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Water-Breathing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "alpha-primitives-me1",
+   "name": "Alpha Primitives",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "alpha-primitives-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "72",
+       "karma": "6",
+       "resources": "Fe (2)",
+       "popularity": "1"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "maximus-me1",
+   "name": "Maximus",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "maximus-me1",
+     "label": null,
+     "team": "Inhumans",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "70",
+       "karma": "80",
+       "resources": "In (40)",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mental Domination"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "collector-me1",
+   "name": "Collector",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "collector-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      8,
+      9
+     ],
+     "identity": [
+      "Taneleer Tivan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "100",
+       "karma": "130",
+       "resources": "Un (100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Precognition",
+       "upb": "M24"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Sidearms"
+      },
+      {
+       "name": "Starship"
+      },
+      {
+       "name": "Technology Collection"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Temporal Assimilator"
+      },
+      {
+       "name": "Zoo"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "grandmaster-me1",
+   "name": "Grandmaster",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "grandmaster-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [
+      "En Dwi Gast"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "80",
+       "karma": "190",
+       "resources": "Un (100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "ego-me1",
+   "name": "Ego",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "ego-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "The Living Planet"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         500,
+         "ShZ"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         150,
+         "ShX"
+        ],
+        [
+         "I",
+         150,
+         "ShX"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "6502",
+       "karma": "800",
+       "resources": "N.A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Sidereal Propulsion Unit"
+      },
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Shape Change"
+      },
+      {
+       "name": "Clairvoyance",
+       "upb": "M2"
+      },
+      {
+       "name": "Gravity Control"
+      },
+      {
+       "name": "Kinetic Blast"
+      },
+      {
+       "name": "Mind Blast",
+       "upb": "M21"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "champion-me1",
+   "name": "Champion",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "champion-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [
+      "Tryco Slatterus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "375",
+       "karma": "50",
+       "resources": "Un (100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Spacecraft"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "gardener-me1",
+   "name": "Gardener",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "gardener-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      12,
+      13
+     ],
+     "identity": [
+      "Ord Zyonyz"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "166",
+       "karma": "140",
+       "resources": "Gd (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Soul Gem"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "runner-me1",
+   "name": "Runner",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "runner-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "325",
+       "karma": "145",
+       "resources": "Fe (2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "contemplator-me1",
+   "name": "Contemplator",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "contemplator-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [
+      "Tath Ki"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         500,
+         "ShZ"
+        ],
+        [
+         "P",
+         150,
+         "ShX"
+        ]
+       ],
+       "health": "162",
+       "karma": "750",
+       "resources": "Fe (2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "possessor-me1",
+   "name": "Possessor",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "possessor-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      14,
+      15
+     ],
+     "identity": [
+      "Kamo Tharnn"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         500,
+         "ShZ"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "270",
+       "karma": "675",
+       "resources": "Un (100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Runestaff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "obliterator-me1",
+   "name": "Obliterator",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "obliterator-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Maht Pacle"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "230",
+       "karma": "60",
+       "resources": "Am (50)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Power Primordial"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "astronomer-me1",
+   "name": "Astronomer",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "astronomer-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         200,
+         "ShY"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "140",
+       "karma": "400",
+       "resources": "Am (50)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      },
+      {
+       "name": "Life Support"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "trader-me1",
+   "name": "Trader",
+   "team": "Elders of the Universe",
+   "versions": [
+    {
+     "id": "trader-me1",
+     "label": null,
+     "team": "Elders of the Universe",
+     "part": "Resource",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "110",
+       "karma": "250",
+       "resources": "Cl1000 (1000)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Power Primordial"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "doc-strange-me1",
+   "name": "Doc Strange",
+   "team": "Cosmos Cubed Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "doc-strange-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "66",
+       "karma": "185",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magic"
+      },
+      {
+       "name": "Alter Appearance",
+       "rank": "Am"
+      },
+      {
+       "name": "Astral Projection",
+       "rank": "Un",
+       "upb": "T1"
+      },
+      {
+       "name": "Levitation",
+       "rank": "In",
+       "upb": "T12"
+      },
+      {
+       "name": "Shield",
+       "rank": "Am"
+      },
+      {
+       "name": "Telepathy",
+       "rank": "Un",
+       "upb": "M32"
+      },
+      {
+       "name": "Conjure",
+       "rank": "Am"
+      },
+      {
+       "name": "Forcebeam",
+       "rank": "Am"
+      },
+      {
+       "name": "Dimension Open",
+       "rank": "Mn"
+      },
+      {
+       "name": "Sleep Gas",
+       "rank": "Mn"
+      },
+      {
+       "name": "Cloak of Lev"
+      },
+      {
+       "name": "Eye"
+      },
+      {
+       "name": "Orb"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "nova-me1",
+   "name": "Nova",
+   "team": "Cosmos Cubed Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "nova-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation and Control",
+       "rank": "ShZ"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Un",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Wrapped in Fire",
+       "rank": "Am"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL3000",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "silver-surfer-me1",
+   "name": "Silver Surfer",
+   "team": "Cosmos Cubed Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "silver-surfer-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Cosmic"
+      },
+      {
+       "name": "Healing",
+       "rank": "Un"
+      },
+      {
+       "name": "Reconstruct Matter",
+       "rank": "Un"
+      },
+      {
+       "name": "Perceive Energy"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL5000",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Mn",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
+  },
+  {
+   "id": "thor-me1",
+   "name": "Thor",
+   "team": "Cosmos Cubed Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "thor-me1",
+     "label": null,
+     "team": "Cosmos Cubed Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "320",
+       "karma": "76",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor-Ex/Ty"
+      },
+      {
+       "name": "Mjolnir"
+      },
+      {
+       "name": "Flight",
+       "rank": "ShX",
+       "upb": "T21"
+      },
+      {
+       "name": "Shield",
+       "rank": "Rm"
+      },
+      {
+       "name": "Weather Control",
+       "rank": "Un",
+       "upb": "MC12"
+      },
+      {
+       "name": "Dimension Travel",
+       "rank": "Un",
+       "upb": "T3"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me1"
   }
  ]
 }

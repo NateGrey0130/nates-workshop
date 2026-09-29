@@ -112,6 +112,9 @@ function init(codex) {
     const got = await Promise.all(want.map((w) => bookText(w.book, w.entry)));
     const el = list.querySelector(`.codex-card[data-key="${CSS.escape(key)}"] .codex-text`);
     if (!el) return;
+    // nothing to fetch: the book prints no text for it (a chart-only hero, or a
+    // Wrecking Crew member whose text is on the team's card)
+    if (!want.length) { el.remove(); return; }
     if (!got.some((g) => g.ok)) { el.innerHTML = `<p class="muted">${esc(bookMissingNote(got[0]))}</p>`; return; }
     el.innerHTML = `<h3>The book's text</h3>${want.map((w, i) => (got[i].ok
       ? `${w.label ? `<h4>${esc(w.label)}</h4>` : ''}${renderParts(got[i].body.parts)}`

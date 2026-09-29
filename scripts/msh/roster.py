@@ -621,7 +621,9 @@ def apply_overrides(slug, entries):
             if target is not e:
                 entries.remove(e)
         else:
-            b['override'] = {k: o[k] for k in ('verdict', 'field', 'printed', 'corrected') if k in o}
+            # 'also': a second value of the same block kept as printed (ME1's
+            # Ghoul Captain: a misprinted Agility and a Karma 0)
+            b['override'] = {k: o[k] for k in ('verdict', 'field', 'printed', 'corrected', 'also') if k in o}
             b['check']['known'] = o['verdict']
             b['check']['ok'] = True
     return unmatched

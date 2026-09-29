@@ -838,6 +838,37 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot));
   }
 
+  // ME1 prints MA1's numbered grids in two booklets numbered alike, with a
+  // chart of its pregenerated heroes (scripts/msh/gridbooks.py, me1-overrides.json).
+  if (data.npcs.characters.some((c) => c.book === 'me1')) {
+    const me1 = data.npcs.characters.filter((c) => c.book === 'me1');
+    check('ME1: 37 characters, 4 of them on the Pregenerated Heroes Summary alone',
+      me1.length === 37 && me1.filter((c) => c.summary_only).map((c) => c.name).sort().join() === 'Doc Strange,Nova,Silver Surfer,Thor',
+      `${me1.length} ${me1.filter((c) => c.summary_only).map((c) => c.name)}`);
+    const oo = bookNpc({ character: 'typical-oolafat-me1' }).snapshot;
+    check('ME1: the Oolafat\'s Reason, Intuition and Psyche, printed as one line linking them to Ego, play as Shift 0, as its Karma 0 counts them',
+      ['reason', 'intuition', 'psyche'].every((k) => oo?.abilities[k].rank === 'shift-0' && oo.abilities[k].number === 0) && oo.health === 50 && oo.karma === 0,
+      JSON.stringify(oo?.abilities.reason));
+    const sk = bookNpc({ character: 'superkree-me1' }).snapshot;
+    check('ME1: the Superkree\'s Fighting 275 is Shift Y by its range, and his Health 575 counts the 275',
+      sk?.abilities.fighting.rank === 'shift-y' && sk.abilities.fighting.number === 275 && sk.health === 575, JSON.stringify(sk?.abilities.fighting));
+    const gc = bookNpc({ character: 'ghoul-captain-me1' }).snapshot;
+    check('ME1: the Ghoul Captain\'s misprinted "50 Mn" Agility plays as Amazing', gc?.abilities.agility.rank === 'amazing', JSON.stringify(gc?.abilities.agility));
+    const ego = bookNpc({ character: 'ego-me1' }).snapshot;
+    check('ME1: Ego\'s Class ranks read as Class ranks, and his Health 6502 is theirs',
+      ego?.abilities.fighting.rank === 'class-1000' && ego.abilities.endurance.rank === 'class-5000' && ego.health === 6502,
+      `${ego?.abilities.fighting.rank} ${ego?.abilities.endurance.rank} ${ego?.health}`);
+    const novaFlight = bookNpc({ character: 'nova-me1' }).snapshot?.powers.find((p) => p.name === 'Flight');
+    check('ME1: a chart power printed with its rank ("Flight-Cl 3000") is the UPB\'s Flight at Class 3000',
+      novaFlight?.code === 'T21' && novaFlight.rank === 'class-3000', JSON.stringify(novaFlight));
+    check('ME1: a Popularity printed with a minus is a number below zero (Maximus, -20)',
+      bookNpc({ character: 'maximus-me1' }).snapshot?.abilities.popularity.number === -20);
+    check('ME1: the sheet cites the booklet with the page, and a chart-only hero the chart alone',
+      tagline(bookNpc({ character: 'mantis-me1' }).snapshot).startsWith('ME1 Cosmos Cubed, Adventure p.3;')
+      && tagline(bookNpc({ character: 'nova-me1' }).snapshot).startsWith('ME1 Cosmos Cubed, Pregenerated Heroes Summary;'),
+      tagline(bookNpc({ character: 'nova-me1' }).snapshot));
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
@@ -1435,8 +1466,9 @@ section('The codex: every section loads, searches, filters and keeps its address
     const cards = linked.filter((x) => x.section !== 'powers');
     check(`Notable NPCs: every other link (${cards.length}, team to member and back) opens a Notable NPCs card`,
       cards.every((x) => x.section === 'npcs' && npcs.byKey.has(x.code)), cards.filter((x) => !npcs.byKey.has(x.code)).map((x) => x.code).join());
-    check('Notable NPCs: every card asks for its own entries\' text, one per version and cross-reference',
-      npcs.rows.every((r) => npcs.bookText(r).length === r.versions.length + r.appearances.length
+    // a version with no text rows (a chart-only hero) asks for none
+    check('Notable NPCs: every card asks for its own entries\' text, one per version that has any and per cross-reference',
+      npcs.rows.every((r) => npcs.bookText(r).length === r.versions.filter((v) => v.text.length).length + r.appearances.length
         && npcs.bookText(r).every((b) => b.book === r.book)));
   }
 
@@ -1463,7 +1495,8 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
     || b.abilities.some((a) => !Number.isInteger(a[1]) || !(a[2] in RANK)));
   check('every block is F, A, S, E, R, I, P in order, each a whole number and a rank code the ladder knows',
     shape.length === 0, shape.slice(0, 3).map(({ c, b }) => `${c.id}: ${JSON.stringify(b.abilities)}`).join(' | '));
-  const known = (b, field) => b.kind === 'table' || (b.override && b.override.field === field);
+  const known = (b, field) => b.kind === 'table' || (b.override && (b.override.field === field
+    || (b.override.also || []).some((x) => x.field === field)));
   const num = (s) => (/^-?\d+$/.test(String(s ?? '').trim()) ? Number(s) : null);
   const sum = (b, from, to) => b.abilities.slice(from, to).reduce((t, a) => t + a[1], 0);
   const health = blocks.filter(({ b }) => num(b.health) !== null && num(b.health) !== sum(b, 0, 4) && !known(b, 'health'));

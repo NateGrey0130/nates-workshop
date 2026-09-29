@@ -45,7 +45,11 @@ const rankWords = (v) => String(v).toLowerCase().replace(/\b[a-z]/g, (c) => c.to
 // (scripts/msh/books.json); each row carries its book, and a card cites it by
 // the book's short name (MA1). A section's source line lists the books present.
 const shortOf = (books) => Object.fromEntries(books.map((b) => [b.slug, b.short]));
-const pagesLine = (b, pages = b.pages) => `${b.title}, ${b.part ? `${b.part} ` : ''}pp.${pages[0]}-${pages[1]}`;
+// A book read from several booklets (ME1) lists each with its spans:
+// "ME1 Cosmos Cubed, Adventure pp.3-7, 11-28, Resource pp.2-16".
+const pagesLine = (b, pages = b.pages) => (b.ranges && pages === b.pages
+  ? `${b.title}, ${b.ranges.map((r) => `${r.part} pp.${r.pages.map(([x, y]) => `${x}-${y}`).join(', ')}`).join(', ')}`
+  : `${b.title}, ${b.part ? `${b.part} ` : ''}pp.${pages[0]}-${pages[1]}`);
 
 // A page as a card cites it. A boxed module numbers each booklet from 1
 // (MHSP1's Adventure Book and Roster Booklet), so its rows carry the booklet
@@ -59,7 +63,7 @@ const cite = (short, part, pages) => {
 
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
-  R: 'Reason', I: 'Intuition', P: 'Psyche' };
+  R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche' };
 
 // A version's name on a card: the book's parenthetical, capitalised the one
 // way (MA1 prints both "(original)" and "(Current)"), or its first identity line.
@@ -248,7 +252,10 @@ export const SECTIONS = [
     // A character only MHSP1's Reference Summary gives has no such lines.
     summary: (r) => r.versions[0].identity
       .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
-      || (r.summary_only ? 'In the Reference Summary only; the boxed rules have the full entry' : `One of the ${r.member_of || r.team}`),
+      || (r.summary_only ? `In the ${r.versions[0].part || 'Reference Summary'} only; the boxed rules have the full entry`
+        // a character filed under its book's title (ME1's chapter opponents) has no team to be one of
+        : r.team.startsWith(`${r.book.toUpperCase()} `) ? `Statted in ${r.team}`
+          : `One of the ${r.member_of || r.team}`),
     tags(r) {
       return [
       this.many && this.short[r.book],
@@ -279,9 +286,16 @@ export const SECTIONS = [
           } else if (o && o.verdict === 'as_printed' && o.corrected) {
             // printed as no rank at all (Lockheed's "?" Reason), played as Karma counts it
             out.push(['As printed', `${field} is printed ${o.printed}; played as ${show(o.corrected)}, as the printed Karma counts it`]);
+          } else if (o && o.verdict === 'rows') {
+            // a grid that prints one line for several rows (ME1's Oolafat)
+            out.push(['As printed', `${field} are printed as "${o.printed}"; played as ${show(o.corrected)}, as the printed Karma counts them`]);
+          } else if (o && o.verdict === 'as_printed' && typeof o.printed === 'object') {
+            // a rank's number inside its range, not its standard one (ME1's Superkree)
+            out.push(['As printed', `${field} is printed ${show(o.printed)}, inside the rank's range`]);
           } else if (o && o.verdict === 'as_printed') {
             out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
           }
+          for (const x of (o && o.also) || []) out.push(['As printed', `${FIELD[x.field] || x.field} ${x.printed}, which R+I+P does not give`]);
           // A team member the book gives no block of its own: its team's tier,
           // with the ranks its own text states (scripts/msh/<slug>-members.json).
           const f = b.built_from;
@@ -318,8 +332,10 @@ export const SECTIONS = [
     hay: (r) => [r.name, r.team, ...r.versions.flatMap((v) => [v.label, ...v.identity,
       ...v.powers.map((p) => p.name), ...v.members.map((m) => m.name)])].filter(Boolean).join(' '),
     // Each version's entry, and each cross-reference, in the book's own text.
+    // A version with no text rows (ME1's chart-only heroes) asks for none, so
+    // the card does not say the text is missing when the book prints none.
     bookText(r) {
-      return [...r.versions.map((v) => ({ book: r.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
+      return [...r.versions.filter((v) => v.text.length).map((v) => ({ book: r.book, entry: v.id, label: r.versions.length > 1 ? versionName(v) : '' })),
         ...r.appearances.map((a) => ({ book: r.book, entry: a.id, label: `${a.team}, p.${a.page}` }))];
     },
   },

@@ -106,6 +106,12 @@ def pair_quotes(s):
     return re.sub(' {2,}', ' ', out)
 
 
+def minus(s):
+    """A stat value's minus sign as ME1's OCR gives it, an en or em dash
+    ('-5' read as a long dash then 5), is a minus; ascii_fold would spell it ' - '."""
+    return re.sub('^[%s%s]\\s*(?=\\d)' % (chr(0x2013), chr(0x2014)), '-', s) if s else s
+
+
 def ascii_fold(s):
     s = ''.join(FOLD.get(ch, ch) for ch in pair_quotes(s or ''))
     return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
@@ -115,7 +121,9 @@ def unpaired(rows, slug):
     """Stop before writing if a row's name or body has an odd number of
     double quotes: pair_quotes() placed every mark it could, so an odd count
     is one it could not, and it stops here rather than in the Codex."""
-    odd = [t for r in rows for t in r[4:] if isinstance(t, str) and t.count('"') % 2]
+    # a mark after a digit is a measure, not a quote (5'7", ME1's Alpha
+    # Primitives), and pair_quotes() leaves it alone too
+    odd = [t for r in rows for t in r[4:] if isinstance(t, str) and re.sub(r'(?<=\d)"', '', t).count('"') % 2]
     if odd:
         t = odd[0]
         raise SystemExit('%s: %d row(s) with an unpaired double quote, e.g. ...%s...'
@@ -207,6 +215,21 @@ def part_cite(book, name):
     return next(p['cite'] for p in book['parts'] if p['name'] == name)
 
 
+def ranges(book):
+    """A grid-booklets book's character pages, per booklet in the order they
+    are read: [{part (its cite), pages: [[first, last], ...]}]. The opponents'
+    chapter pages count as one span, first to last."""
+    out = {}
+    for r in book['character_ranges']:
+        out.setdefault(r['part'], []).append(list(r['pages']))
+    opp = {}
+    for o in book.get('opponents', []):
+        opp.setdefault(o['part'], []).append(o['page'])
+    for part, pages in opp.items():
+        out.setdefault(part, []).append([min(pages), max(pages)])
+    return [{'part': part_cite(book, p), 'pages': sorted(spans)} for p, spans in out.items()]
+
+
 def main(slug_arg):
     registry = json.load(io.open(REGISTRY, encoding='utf-8'))['books']
     book = registry[slug_arg]
@@ -233,19 +256,27 @@ def main(slug_arg):
     #   - the seven characters only the Summary gives are `summary_only`
     #   - its numbers are the ranks' standard values (`rank_only`)
     #   - an alter ego's one-line block is a form of the character
-    booklet = book.get('layout') == 'roster-booklet'
+    #
+    # A grid-booklets book (ME1, scripts/msh/gridbooks.py) is read the same
+    # way, with three differences: it has no sides, its entries carry their
+    # team (the registry's `teams`), and a header's parenthesis is kept as the
+    # version's label ("Update", "Blue or Pink").
+    grid = book.get('layout') == 'grid-booklets'
+    booklet = book.get('layout') == 'roster-booklet' or grid
     cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     SIDE = {'heroes': '%s Heroes' % book['title'].split(' ', 1)[-1], 'villains': '%s Villains' % book['title'].split(' ', 1)[-1]}
     tiers = set(book.get('one_line_tiers', []))
 
     def team_of_entry(e):
-        return title_case(e['team']) if e.get('team') else SIDE[e['side']]
+        # a header's capitals (WRECKING CREW) are cased; a registry team is as written
+        return (title_case(e['team']) if e['team'].isupper() else e['team']) if e.get('team') else SIDE[e['side']]
 
     def name_of(e):
         return e.get('name') or title_case(base_name(e['header']))
 
     roster = json.load(io.open(os.path.join(CACHE, 'books', slug_arg, 'roster.json'), encoding='utf-8'))
     powers = json.load(io.open(os.path.join(DATA, 'powers.json'), encoding='utf-8'))['powers']
+    rank_abbr = {r['id']: r['abbr'] for r in json.load(io.open(os.path.join(DATA, 'ranks.json'), encoding='utf-8'))['ranks']}
     aliases = json.load(io.open(os.path.join(DATA, 'npc-power-aliases.json'), encoding='utf-8'))['aliases']
     upb = {norm(p['name']): p['code'] for p in powers}
     upb.update({norm(k): v for k, v in aliases.items()})
@@ -293,8 +324,9 @@ def main(slug_arg):
                 for i, a in enumerate(b['abilities']):
                     code, number = a['code'], a['number']
                     o = b.get('override') or {}
-                    if number is None and o.get('field') == 'FASERIP'[i] and isinstance(o.get('corrected'), dict):
-                        # printed as no rank at all (Lockheed's "?" Reason): played as the override says
+                    if number is None and 'FASERIP'[i] in (o.get('field') or '') and isinstance(o.get('corrected'), dict):
+                        # printed as no rank at all (Lockheed's "?" Reason; ME1's Oolafat's
+                        # R, I and P, field "RIP"): played as the override says
                         number, code = o['corrected']['number'], o['corrected']['code']
                     if code is None and number in CODE_OF:
                         code = CODE_OF[number]
@@ -312,7 +344,7 @@ def main(slug_arg):
                     # a value the book does not print is null, not an empty
                     # string, in a roster booklet (the Summary gives no
                     # Resources or Popularity); MA1's file is kept as it was
-                    **{k: (None if booklet and b[k] is None else ascii_fold(b[k]))
+                    **{k: (None if booklet and b[k] is None else ascii_fold(minus(b[k]) if grid else b[k]))
                        for k in ('health', 'karma', 'resources', 'popularity')},
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': b['kind']} if b.get('kind') else {}),
@@ -321,9 +353,16 @@ def main(slug_arg):
             # a Summary-only character has no page; its running note has its own
             page0 = e['pages'][0] if e['pages'] else None
             for n, p in enumerate(e['powers'], 1):
-                code = upb.get(norm(p['name']))
-                pw.append({'name': ascii_fold(p['name']), **({'upb': code} if code else {})})
-                text_row(eslug, 'power', n, p['name'], page0, p['text'])
+                pname, prank = p['name'], None
+                # ME1's chart prints a power with its rank ("Healing-Un",
+                # "Flight-Cl 3000"): the name links to the UPB and the rank is the
+                # power's, where the suffix is one of the book's rank spellings
+                m = re.match(r'^(.+)-([A-Za-z0-9 ]+)$', pname) if grid and e['kind'] == 'summary' else None
+                if m and m.group(2) in book['rank_aliases']:
+                    pname, prank = m.group(1), rank_abbr[book['rank_aliases'][m.group(2)]]
+                code = upb.get(norm(pname))
+                pw.append({'name': ascii_fold(pname), **({'rank': prank} if prank else {}), **({'upb': code} if code else {})})
+                text_row(eslug, 'power', n, pname, page0, p['text'])
             for part in ('talents', 'contacts', 'running', 'background', 'notes'):
                 text_row(eslug, part, None, None, e['running']['page'] if part == 'running' and e.get('running') else page0,
                          e['sections'].get(part, ''))
@@ -344,9 +383,10 @@ def main(slug_arg):
                 members.append({'name': display(m['name']), 'page': m['page']})
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
-                'id': eslug, 'label': None if booklet else variant(e['header']),
+                'id': eslug, 'label': variant(e['header']) if grid or not booklet else None,
                 'team': team_of_entry(e) if booklet else team_of(e['pages'][0]),
-                **({'side': SIDE[e['side']], 'part': cite[e['part']]} if booklet else {}),
+                **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
+                **({'part': cite[e['part']]} if booklet else {}),
                 'pages': e['pages'], 'identity': identity,
                 'blocks': blocks, 'powers': pw, 'members': members,
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
@@ -354,7 +394,7 @@ def main(slug_arg):
         cid = ident(name_of(group[0])) if booklet else ident(base_name(group[0]['header']))
         chars.append({'id': cid, 'name': name_of(group[0]) if booklet else display(group[0]['header']),
                       'team': versions[0]['team'],
-                      **({'side': versions[0]['side']} if booklet else {}),
+                      **({'side': versions[0]['side']} if booklet and versions[0].get('side') else {}),
                       **({'summary_only': True} if booklet and group[0]['kind'] == 'summary' else {}),
                       'versions': versions, 'appearances': []})
 
@@ -446,7 +486,11 @@ def main(slug_arg):
     for c in chars:
         c['book'] = slug_arg
     # a Summary-only character has no page, and comes after the book's pages
-    chars.sort(key=lambda c: (min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
+    # a grid-booklets book reads its booklets in order, so they sort that way:
+    # the Adventure Book's p.3 before the Resource Book's p.2
+    booklet_rank = {p['cite']: n for n, p in enumerate(book.get('parts', []))} if grid else {}
+    chars.sort(key=lambda c: (booklet_rank.get(c['versions'][0].get('part'), 0),
+                              min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
     text_fixes(rows, slug_arg)
     unpaired(rows, slug_arg)
@@ -477,11 +521,14 @@ def main(slug_arg):
             'health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/<book>-overrides.json).',
             'powers[].upb: the Ultimate Powers Book code, where the name is a UPB power or in npc-power-aliases.json.',
         ],
-        'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(registry[b]['character_pages'])}
+        'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'],
+                     'pages': '; '.join('%s %s' % (r['part'], ', '.join('%d-%d' % tuple(p) for p in r['pages'])) for r in ranges(registry[b]))
+                     if registry[b].get('character_ranges') else '%d-%d' % tuple(registry[b]['character_pages'])}
                     for b in present],
         'books': [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'],
-                   'pages': list(registry[b]['character_pages']),
-                   **({'part': part_cite(registry[b], registry[b]['character_part'])} if registry[b].get('character_part') else {})}
+                   **({'pages': ranges(registry[b])[0]['pages'][0], 'ranges': ranges(registry[b])} if registry[b].get('character_ranges') else
+                      {'pages': list(registry[b]['character_pages']),
+                       **({'part': part_cite(registry[b], registry[b]['character_part'])} if registry[b].get('character_part') else {})})}
                   for b in present],
         'teams': teams,
         'characters': chars,
