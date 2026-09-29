@@ -56,9 +56,69 @@ FOLD = {'\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"', '\u2013': '-
         '\u2026': '...', '\u00a0': ' ', '\ufffd': "'", '\u00ad': ''}
 
 
+LQ, RQ, LS, RS = chr(0x201c), chr(0x201d), chr(0x2018), chr(0x2019)
+
+
+def pair_quotes(s):
+    """Tesseract reads a printed double quote as a single one (MA1 printed 20
+    "greatest fear" as a curly double open and a single close), as two single
+    ones (printed 66 "the Creator,"), as a double with a thin single beside it
+    (printed 25 "lifeglow"), or reads a speck or a trademark sign as one
+    (printed 41, 36). A single mark beside a double joins it, then each mark is
+    decided by where it sits: a single quote becomes double when it is the
+    other end of a double quote, and a double quote that closes nothing or
+    stands alone is dropped. A mark inside a word or after a digit (6'2") is
+    an apostrophe or a measure and is left alone."""
+    sing = LS + RS + "'"
+    s = re.sub('[%s]+(?=[%s%s"])' % (sing, LQ, RQ), '', s)
+    s = re.sub('(?<=[%s%s"])[%s](?!s(?![a-z]))' % (LQ, RQ, sing), '', s)
+    s = re.sub('(?<=[a-z])[%s]{2,}(?=[a-z])' % sing, "'", s)
+    s = s.replace(LS * 2, LQ).replace(RS * 2, RQ)
+    marks = []
+    for m in re.finditer('[%s%s%s%s"]' % (LQ, RQ, LS, RS), s):
+        i, ch = m.start(), m.group()
+        before = s[i - 1] if i else ' '
+        after = s[i + 1] if i + 1 < len(s) else ' '
+        left, right = before.isspace() or before in '([', after.isspace() or after in ')]'
+        if before.isdigit() or not (left or right or after in '.,;:!?'):
+            continue
+        role = 'alone' if left and right else 'open' if left else 'close'
+        marks.append((i, ch in (LQ, RQ, '"'), role))
+    fix, inside = {}, False
+    for k, (i, double, role) in enumerate(marks):
+        later = next((r for _, d, r in marks[k + 1:] if d and r != 'alone'), None)
+        if double and role == 'alone':
+            fix[i] = ''
+        elif double and role == 'open':
+            inside = True
+        elif double:
+            if not inside:
+                fix[i] = ''
+            inside = False
+        elif role == 'open' and not inside and later == 'close':
+            fix[i], inside = LQ, True
+        elif role == 'close' and inside and later != 'close':
+            fix[i], inside = RQ, False
+    if not fix:
+        return s
+    out = ''.join(fix.get(i, ch) for i, ch in enumerate(s))
+    return re.sub(' {2,}', ' ', out)
+
+
 def ascii_fold(s):
-    s = ''.join(FOLD.get(ch, ch) for ch in s or '')
+    s = ''.join(FOLD.get(ch, ch) for ch in pair_quotes(s or ''))
     return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
+
+
+def unpaired(rows, slug):
+    """Stop before writing if a row's name or body has an odd number of
+    double quotes: pair_quotes() placed every mark it could, so an odd count
+    is one it could not, and it stops here rather than in the Codex."""
+    odd = [t for r in rows for t in r[4:] if isinstance(t, str) and t.count('"') % 2]
+    if odd:
+        t = odd[0]
+        raise SystemExit('%s: %d row(s) with an unpaired double quote, e.g. ...%s...'
+                         % (slug, len(odd), t[max(0, t.find('"') - 30):t.find('"') + 30]))
 
 
 def norm(s):
@@ -365,6 +425,7 @@ def main(slug_arg):
     # a Summary-only character has no page, and comes after the book's pages
     chars.sort(key=lambda c: (min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
+    unpaired(rows, slug_arg)
     # EVERY book's characters live in this one file. Rebuilding one book
     # replaces that book's characters and leaves the others as they are.
     path_out = os.path.join(DATA, 'npcs.json')
