@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="bg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#22305A"/><stop offset="1" stop-color="#090D1C"/></radialGradient>
+<clipPath id="front"><rect x="-100" y="256" width="712" height="400" transform="rotate(-16 256 256)"/></clipPath></defs>
+<rect width="512" height="512" fill="url(#bg)"/>
+<path d="M70 64 Q70 80 86 80 Q70 80 70 96 Q70 80 54 80 Q70 80 70 64Z" fill="#E8F4FF"/><path d="M440 59 Q440 70 451 70 Q440 70 440 81 Q440 70 429 70 Q440 70 440 59Z" fill="#E8F4FF"/><path d="M455 406 Q455 420 469 420 Q455 420 455 434 Q455 420 441 420 Q455 420 455 406Z" fill="#E8F4FF"/><path d="M60 431 Q60 440 69 440 Q60 440 60 449 Q60 440 51 440 Q60 440 60 431Z" fill="#E8F4FF"/><path d="M120 144 Q120 150 126 150 Q120 150 120 156 Q120 150 114 150 Q120 150 120 144Z" fill="#E8F4FF"/><path d="M400 125 Q400 130 405 130 Q400 130 400 135 Q400 130 395 130 Q400 130 400 125Z" fill="#E8F4FF"/>
+<g transform="rotate(-16 256 256)"><ellipse cx="256" cy="270" rx="236" ry="64" fill="none" stroke="#35A0AE" stroke-width="20"/></g>
+
+  <polygon points="256,158 171,306 341,306" fill="#E0413C"/>
+  <polygon points="256,86 109,171 256,158" fill="#EE6A55"/>
+  <polygon points="256,86 403,171 256,158" fill="#C92F32"/>
+  <polygon points="109,171 256,158 171,306" fill="#D63A38"/>
+  <polygon points="403,171 256,158 341,306" fill="#AE232B"/>
+  <polygon points="109,171 109,341 171,306" fill="#BC2A30"/>
+  <polygon points="403,171 403,341 341,306" fill="#8C1A23"/>
+  <polygon points="109,341 256,426 171,306" fill="#9E1F27"/>
+  <polygon points="403,341 256,426 341,306" fill="#72131C"/>
+  <polygon points="171,306 341,306 256,426" fill="#861922"/>
+<g fill="none" stroke="#3A0D12" stroke-width="5" stroke-linejoin="round">
+  <polygon points="256,86 403,171 403,341 256,426 109,341 109,171" stroke-width="8"/>
+  <polygon points="256,158 171,306 341,306"/>
+  <path d="M256,86 L256,158 M109,171 L256,158 L403,171 M109,171 L171,306 L109,341 M403,171 L341,306 L403,341 M171,306 L256,426 L341,306"/></g>
+<path d="M270 196 L224 266 L251 266 L240 312 L288 240 L261 240 L274 196 Z" fill="#FFD23F" stroke="#3A1208" stroke-width="6" stroke-linejoin="round"/>
+<g clip-path="url(#front)"><g transform="rotate(-16 256 256)"><ellipse cx="256" cy="270" rx="236" ry="64" fill="none" stroke="#0A0F1E" stroke-width="30"/><ellipse cx="256" cy="270" rx="236" ry="64" fill="none" stroke="#4FD0DC" stroke-width="20"/></g></g>
+</svg>
