@@ -139,6 +139,20 @@ body {
   padding: 22px 26px 20px;
   text-align: left;
   margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+/* The site icon, at the band's own height. Square like everything else in this
+   scheme, and flat: its navy is the depth, and a shadow under it is the thing
+   this page does not do. alt="" because the h1 beside it already names the
+   site. The file is the same SVG every favicon and home-screen PNG is rendered
+   from, so there is one logo, not a second drawing of it. */
+.hero-logo {
+  width: 84px;
+  height: 84px;
+  flex: none;
+  display: block;
 }
 .hero h1 {
   font-family: 'Archivo', system-ui, sans-serif;
@@ -165,6 +179,13 @@ body {
   color: #FFEDE6;
   font-size: 16px;
   font-weight: 400;
+}
+/* On a phone the 42px wordmark beside an 84px mark wraps to two lines. After
+   the .hero rules on purpose: same specificity, so only order lets it win. */
+@media (max-width: 480px) {
+  .hero { gap: 16px; padding: 18px 18px 16px; }
+  .hero-logo { width: 60px; height: 60px; }
+  .hero h1 { font-size: 30px; letter-spacing: -0.5px; }
 }
 /* One section per manifest group, in the manifest's order. The heading is the
    card title's face one size up and in capitals, over a rule in --text: the
@@ -300,8 +321,11 @@ footer {
 <body>
 
 <div class="hero">
-  <h1>Nate's Workshop</h1>
-  <p>Tools, toys, and experiments — built with Claude.</p>
+  <img class="hero-logo" src="/shared/icons/logo.svg" alt="" width="84" height="84">
+  <div>
+    <h1>Nate's Workshop</h1>
+    <p>Tools, toys, and experiments — built with Claude.</p>
+  </div>
 </div>
 
 <main id="appSections"></main>
