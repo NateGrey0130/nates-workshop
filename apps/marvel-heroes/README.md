@@ -133,7 +133,8 @@ MHSP1's Adventure Book is a campaign, not a chain of encounters:
   parts; the Ultimate Nullifier; and two vehicles the events state in passing.
   A vehicle's card reads its event's text (`section`). The bases' room table
   is on the location as data (`rooms`): 26 sectors, each with its d100 range
-  and a room for each base, transcribed by eye.
+  and a room for each base, transcribed by eye. The Hunt carries its table the
+  same way (`table`): a d10 roll, a villain and the hero it goes after.
 
 ## Point Buy
 

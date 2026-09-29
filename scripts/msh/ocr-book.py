@@ -29,8 +29,11 @@ Those rules have no business near a FASERIP block, and changing that script to
 take a Marvel mode would put this work inside the Palladium pipeline. So this
 borrows its settings, not its code:
 
-  --psm 3, so Tesseract does its own layout analysis and puts each of the
-  book's three columns in its own block rather than welding them into lines.
+  --psm 3, so Tesseract does its own layout analysis and usually puts each of
+  the book's three columns in its own block rather than welding them into
+  lines. Not always: on MHSP1's Adventure p.2 it fused a column's lines and
+  read them twice, so scripts/msh/booklet.py finds such runs and re-reads
+  them as a block from the page image (mend_fused).
   TSV alongside the text, in one invocation, because the stat grid and the
   column spans are read from word geometry, not from reading order.
   300 dpi. ocr-book.py measured that raising it does not help a clean scan.

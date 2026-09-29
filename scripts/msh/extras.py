@@ -210,7 +210,7 @@ def main(slug):
             text_rows(sid, s['text'], s['page'])
             sec_out.append({'id': sid, 'title': npcs.ascii_fold(s['title']), 'page': s['page'],
                             **({'number': s['number']} if s.get('number') else {}),
-                            **{k: s[k] for k in ('kind', 'when', 'roll', 'once') if k in s},
+                            **{k: s[k] for k in ('kind', 'when', 'roll', 'once', 'table') if k in s},
                             **({'part': cite[s['part']]} if s.get('part') else {}), 'parts': s['parts']})
         assert len({x['id'] for x in sec_out}) == len(sec_out), 'duplicate section ids'
         adv_out = [{'id': aid, 'title': adv['title'], 'pages': adv['pages'],

@@ -398,7 +398,11 @@ export const SECTIONS = [
       : r.when ? r.when
         : r.roll ? `Random event${r.once ? ', once only' : ''}`
           : r.kind ? 'Background' : 'Before the encounters'),
-    hay: (r) => [r.title, r.adventure, r.when, ...r.parts].filter(Boolean).join(' '),
+    // a table a section carries as data (MHSP1's The Hunt: a d10 roll, a villain
+    // and a target), one line per row
+    stats: (r) => (r.table ? [[r.table.columns.join(' / '), r.table.footnote || ''],
+      ...r.table.rows.map(([roll, ...rest]) => [String(roll), rest.join(' vs. ')])] : []),
+    hay: (r) => [r.title, r.adventure, r.when, ...r.parts, ...(r.table ? r.table.rows.flat().map(String) : [])].filter(Boolean).join(' '),
     bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
   },
 ];

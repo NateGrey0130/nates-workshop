@@ -407,6 +407,31 @@ not already do, and where it differs from the plan above:
   PR: 26 sectors, A-Z, each with its d100 range and a room for each of the four
   bases, transcribed by eye into the registry (`locations[].rooms`) and shown on
   the location's card. The Marvel smoke suite holds the ranges to tiling 01-00.
+- **Fused lines** (found by the marvel-book pressure test, fixed in a third
+  follow-up). On Adventure p.2, Tesseract's page pass fused the lines of two
+  columns and read the Beyonder paragraph twice. The print is clean. The
+  one-line re-read then cropped two or three printed lines at once, and
+  "more words wins" picked the garble. So the Players' and Judge's Briefings
+  opened with junk and repeated themselves, and a pair of lines in Cyclops's
+  background (Roster p.2) came out mixed. Now:
+  - `booklet.py` finds each fused stretch in a column (lines overlapping by half
+    a line, boxed two lines deep, or 4 px slivers) and re-reads it as a block
+    from a crop as wide as the column's clean text (`mend_fused`).
+  - A one-line re-read never runs on a box two lines deep, crops to where a
+    line's words sit when one word stretches its box, and restores a dropped
+    word where the crop reads the same word, rather than letting the longer
+    reading win.
+  - The second half of a hyphenated word ("con-" / "tinues") is kept against
+    the line above; dot leaders read as "eee", doubled quotes and "xX:" are
+    folded; and art that passes the lower-case test is dropped unless it reads
+    as the book's words.
+  - `extras.py` now stops if a line two printed lines deep reaches the text.
+    With the mend switched off it stops on 25.
+  - Both tables in the adventure text, the Random Event table and The Hunt's,
+    are cut out of the prose by their box (`adventure_tables`). The Hunt's is
+    carried as data, transcribed by eye: ten d10 rolls, each a villain against
+    a hero, two only after Betrayal. The smoke suite holds it to the book's
+    characters.
 - **The GM tools** read a rank word as a Resources rank ("POOR", "CLASS
   1000"), a printed "2,150" as 2150, and a block flagged `form` as a form.
   The Marvel smoke suite pins each, and each check failed with its fix removed.
