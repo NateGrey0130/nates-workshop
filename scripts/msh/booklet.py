@@ -272,14 +272,14 @@ def sure_text(line, book, slug, prev=None):
     words = sorted(line['words'], key=lambda w: w['x'])
     sure = [w['t'] for w in words if keep(w)]
     if len(sure) == len(words):
-        return quotes(' '.join(sure))
+        return ' '.join(sure)
     # A line whose box is taller than a line of text spans more than one printed
     # line ("To answer these questions" over "together the strongest", 69 px
     # against 28), and so would its one-line crop: that reading must not compete.
     # A line beside art boxes a little tall ("slabs came from...", 54); a fused
     # one is two lines deep.
     if line['y1'] - line['y0'] > 2.0 * line['body_h']:
-        return quotes(' '.join(sure))
+        return ' '.join(sure)
     # the words the page pass read but was unsure of: where the crop reads the
     # same word, two readings agree, and it is kept ("great wave", read at 0)
     doubted = {w['t'].strip(PUNCT + '|-').lower() for w in words if not keep(w)}
@@ -321,14 +321,45 @@ def sure_text(line, book, slug, prev=None):
     seen = {t.strip(PUNCT + '|-').lower() for t in again}
     restored = [w['t'] for w in words if keep(w) or w['t'].strip(PUNCT + '|-').lower() in seen]
     best = max((restored, again, sure), key=len)
-    return quotes(' '.join(best))
+    return ' '.join(best)
 
 
 def quotes(t):
-    """The book's double quotes as the page pass and the crops read them: two
-    single quotes, curly or straight (''Cat"), are one double quote."""
-    lq, rq = chr(0x2018), chr(0x2019)
-    return t.replace(lq + lq, chr(0x201c)).replace(rq + rq, chr(0x201d)).replace("''", '"')
+    """A piece of MHSP1's text with its quotation marks as the book prints them.
+    The book quotes only with double quotes, and its apostrophes sit inside a
+    word (Doom's) or after a plural (heroes'). OCR reads the double quotes as
+    single ones, pairs, mixes and asterisks ('First, ''nerd"', '"'kit-bashed",
+    Blood,' and "*...And"). So any other quote mark is a double quote. Run on a
+    whole joined piece, so a quote opened on one line closes on the next."""
+    t = t.translate({0x2018: "'", 0x2019: "'", 0x201c: '"', 0x201d: '"'})
+    t = re.sub(r'''["']{2,}''', '"', t)                              # ''nerd"  "'shifts  "worms"'
+    t = re.sub(r'''(^|[\s(\[])'(?=[\w*.])''', r'\1"', t)             # 'First  ('Hulk
+    t = re.sub(r'''(?<=[,.!?;:])'(?=[\s)\],.;:!?]|$)''', '"', t)     # Blood,'  Galactus!')
+    t = re.sub(r'"\*(?=\.)', '"', t)                                 # "*...And
+    out, inside = [], False
+    for tok in t.split(' '):
+        if tok == "'":
+            tok = '"'                                                # a quote read on its own
+        after = inside != (tok.count('"') % 2 == 1)
+        # a single quote after a word closes an open double quote: 'Cat' -> "Cat"
+        m = re.search(r"(?<=\w)'(?=[)\].,;:!?]*$)", tok)
+        if after and m:
+            tok = tok[:m.start()] + '"' + tok[m.end():]
+            after = False
+        out.append(tok)
+        inside = after
+    return ' '.join(out)
+
+
+def unpaired(pieces, slug):
+    """Stop if a piece of text has an odd number of double quotes: quotes()
+    pairs every one the book prints, so an odd count is a mark it could not
+    place, and the next book with one stops here rather than in the Codex."""
+    odd = [t for t in pieces if t and t.count('"') % 2]
+    if odd:
+        t = odd[0]
+        raise SystemExit('%s: %d piece(s) of text with an unpaired double quote, e.g. ...%s...'
+                         % (slug, len(odd), t[max(0, t.find('"') - 30):t.find('"') + 30]))
 
 
 def leader(s):
@@ -616,9 +647,10 @@ def parse(book, slug):
         e.pop('_sec', None)
         e.pop('_pdf', None)
         for p in e['powers']:
-            p['text'] = roster.join_text(p['text'])
-        e['sections'] = {k: roster.join_text(v) if isinstance(v, list) else v for k, v in e['sections'].items()}
-        e['prose'] = roster.join_text(e['prose'])
+            p['text'] = quotes(roster.join_text(p['text']))
+        e['sections'] = {k: quotes(roster.join_text(v)) if isinstance(v, list) else v for k, v in e['sections'].items()}
+        e['prose'] = quotes(roster.join_text(e['prose']))
+    unpaired([t for e in entries for t in list(e['sections'].values()) + [p['text'] for p in e['powers']] + [e['prose']]], slug)
     return stream, entries
 
 
@@ -714,7 +746,7 @@ def running(book, slug, entries, ranks):
 
 
 def attach_note(e, note):
-    e['sections']['running'] = roster.join_text(note['text'])
+    e['sections']['running'] = quotes(roster.join_text(note['text']))
     e['running'] = {'part': note['part'], 'page': note['page']}
     e['blocks'] += note['blocks']
 
@@ -868,7 +900,9 @@ def extras(book, slug):
             return '' if len(n) >= 6 and want.startswith(n) else None
         if n == want or n.startswith(want + ' '):
             m = re.search('[' + QUOTES[1] + QUOTES[3] + '"]', t[1:])
-            return t[m.end() + 1:].strip() if m else ''
+            # a title's close can read as two marks ("Betrayal." then two
+            # apostrophes): the rest of the line starts after all of them
+            return t[m.end() + 1:].lstrip(QUOTES).strip() if m else ''
         return None
 
     sections, cur, k, i = [], None, 0, 0
@@ -958,6 +992,9 @@ def extras(book, slug):
                       'vehicle': {'Control': m.group(1), 'Speed': m.group(2), 'Body': re.sub(r'-\s*', '', m.group(3))},
                       'parts': [], 'text': []})
 
+    for it in items:                    # each piece joined once, its quote marks as printed
+        for piece in it['text']:
+            piece[2] = [quotes(roster.join_text(piece[2]))]
     out = []
     for s in sections:
         if s['kind'] in ('skip', 'location'):
@@ -968,5 +1005,6 @@ def extras(book, slug):
                     **({'when': s['when']} if 'when' in s else {}),
                     **({'roll': s['roll'], 'once': s['once']} if 'roll' in s else {}),
                     **({'table': {k: table[k] for k in ('columns', 'rows', 'footnote') if k in table}} if table else {}),
-                    'text': [['prose', None, texts]]})
+                    'text': [['prose', None, [quotes(roster.join_text(texts))]]]})
+    unpaired([p[2][0] for it in items for p in it['text']] + [s['text'][0][2][0] for s in out], slug)
     return items, {'title': a['title'], 'pages': a['pages'], 'part': a['part'], 'sections': out}
