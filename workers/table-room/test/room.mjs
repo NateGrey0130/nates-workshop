@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { section, check, summary, repoRoot } from '../../../shared/test/harness.mjs';
 import { TableRoom, IDLE_CLOSE_MS, FEED_ON_CONNECT } from '../src/room.js';
 import { canSee, visibilityFor, rollView, filterFeed } from '../src/visibility.js';
+import { imageRef, mayView, mayFetch, sameImage } from '../src/showing.js';
 import { parseExpression, rollExpression, rollFeat } from '../src/dice.js';
 import { feat } from '../src/marvel.js';
 import { validCode, ALPHABET } from '../../../functions/api/_lib/table-room.js';
@@ -212,6 +213,69 @@ section('the table: a GM-only roll never reaches a player or the TV');
   check('forget empties the room', t.storage.map.size === 0 && !(await (await get(t.room, '/info')).json()).exists);
 }
 
+// ── Pictures: who may look, and who may fetch ────────────────────────────────
+
+section('the table: who may look at the picture on the table');
+{
+  const pic = imageRef('image', '42');
+  const gm = { role: 'gm', email: GM };
+  const tv = { role: 'display', email: GM };
+  const seated = { role: 'player', email: ANN, seat: { id: '11', name: 'Vex' } };
+  const choosing = { role: 'player', email: BEN, seat: null };
+  check('a ref is a known kind and a row id, or nothing',
+    JSON.stringify(pic) === '{"kind":"image","id":"42"}' && imageRef('city', 7)?.id === '7'
+    && !imageRef('portrait', 1) && !imageRef('image', '0') && !imageRef('image', '1 OR 1=1') && !imageRef('image', ''));
+  check('the GM, the TV and a seated player are shown it; a player still choosing is not',
+    mayView(gm) && mayView(tv) && mayView(seated) && !mayView(choosing) && !mayView(null));
+  check('a seated player may fetch the picture that is on the table', mayFetch([seated], pic, ANN, pic));
+  check('not before anything is shown', !mayFetch([seated], null, ANN, pic));
+  check('not a different picture', !mayFetch([seated], pic, ANN, imageRef('image', '43')) && !mayFetch([seated], pic, ANN, imageRef('city', '42')));
+  check('not someone who is not at this table', !mayFetch([seated, gm], pic, BEN, pic));
+  check('not a player who has not sat down', !mayFetch([choosing], pic, BEN, pic));
+  check('and not with no email at all', !mayFetch([{ ...seated, email: undefined }], pic, undefined, pic));
+  check('two refs name one picture when kind and id agree', sameImage({ kind: 'image', id: 42 }, pic) && !sameImage(pic, null));
+}
+
+section('the table: Show and Clear in the room');
+{
+  const t = await openTable();
+  for (const s of [t.gm, t.tv, t.ann, t.ben]) s.clear();
+  const bad = await post(t.room, '/show', { kind: 'portrait', id: 1 });
+  check('the room refuses a ref it does not know', bad.status === 400 && [t.gm, t.tv, t.ann, t.ben].every((s) => !s.raw.length));
+  const shown = await (await post(t.room, '/show', { kind: 'image', id: 42, caption: 'The bridge at dusk' })).json();
+  check('a show is kept', shown.shown?.kind === 'image' && shown.shown?.id === '42' && t.storage.map.get('shown')?.caption === 'The bridge at dusk');
+  const shows = (s) => s.messages.filter((m) => m.type === 'show');
+  check('it reaches the GM, the TV and a seated player',
+    [t.gm, t.tv, t.ben].every((s) => shows(s).length === 1 && shows(s)[0].shown.caption === 'The bridge at dusk'));
+  check('and not a player still choosing a character', t.ann.raw.length === 0, everything(t.ann));
+  const may = async (email, kind, id) => (await (await get(t.room, `/may-fetch?email=${encodeURIComponent(email)}&kind=${kind}&id=${id}`)).json()).allowed;
+  check('the room lets a seated player fetch it', await may(BEN, 'image', 42));
+  check('and not the player still choosing, or another picture', !(await may(ANN, 'image', 42)) && !(await may(BEN, 'image', 41)));
+  await say(t.room, t.ann, { type: 'seat', characterId: '11' });
+  check('sitting down brings the picture with the state', t.ann.messages.filter((m) => m.type === 'state').at(-1)?.shown?.id === '42' && await may(ANN, 'image', 42));
+  check('the shown picture comes back on /shown', (await (await get(t.room, '/shown')).json()).shown?.id === '42');
+
+  const ann2 = new FakeSocket('ann2');
+  await t.room.connect(ann2, { role: 'player', email: ANN, name: '', characters: [{ id: '11', name: 'Vex' }] });
+  await say(t.room, ann2, { type: 'hello' });
+  check('a phone that reconnects is told what is on the table', ann2.messages.find((m) => m.type === 'state')?.shown?.id === '42');
+
+  for (const s of [t.gm, t.tv, t.ann, t.ben]) s.clear();
+  await post(t.room, '/clear');
+  check('Clear reaches every screen that was shown it', [t.gm, t.tv, t.ann, t.ben].every((s) => s.messages.some((m) => m.type === 'clear')));
+  check('and after it nobody may fetch the picture', !(await may(BEN, 'image', 42)) && !(await may(GM, 'image', 42)));
+  check('and nothing is kept', !t.storage.map.has('shown') && (await (await get(t.room, '/shown')).json()).shown === null);
+
+  await post(t.room, '/show', { kind: 'city', id: 3, caption: 'Tolkeen' });
+  t.ben.close(); await t.room.webSocketClose(t.ben);
+  check('a player who leaves the table can no longer fetch it', !(await may(BEN, 'city', 3)) && await may(ANN, 'city', 3));
+  await post(t.room, '/close', { reason: 'gm' });
+  check('closing the table drops the picture', !t.storage.map.has('shown') && !(await may(ANN, 'city', 3)));
+  check('and a closed table shows nothing more', (await post(t.room, '/show', { kind: 'image', id: 1 })).status === 410);
+  const closedFeed = await (await get(t.room, '/feed')).json();
+  check('showing left nothing in the feed the campaign saves', !JSON.stringify(closedFeed).includes('Tolkeen'));
+}
+
 // ── The saved record reads back through the same rule ────────────────────────
 
 section('the table: a saved session is filtered the way the room filters');
@@ -335,6 +399,7 @@ async function standIn() {
   const pal = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
   sqlite.exec(createOf(pal, 'campaigns'));
   sqlite.exec(createOf(pal, 'characters'));
+  for (const t of ['campaign_entries', 'campaign_images', 'cities']) sqlite.exec(createOf(pal, t));
   sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', '088-table-sessions.sql'), 'utf8'));
   for (const f of ['082-msh-heroes.sql', '086-msh-campaigns.sql', '089-msh-table-sessions.sql']) {
     sqlite.exec(readFileSync(join(repoRoot, 'db', 'migrations', 'marvel', f), 'utf8'));
@@ -373,19 +438,26 @@ async function standIn() {
       };
     },
   };
-  const env = { DB: D1, DB_MARVEL: D1, TABLE_ROOM };
+  // R2, as far as the image routes use it: get(key) -> { body, httpMetadata }.
+  const objects = new Map();
+  const MEDIA = {
+    objects,
+    get: async (key) => (objects.has(key)
+      ? { body: objects.get(key).body, httpMetadata: { contentType: objects.get(key).type } } : null),
+  };
+  const env = { DB: D1, DB_MARVEL: D1, TABLE_ROOM, MEDIA };
   const route = (p) => import(new URL(`../../../functions/api/${p}`, import.meta.url));
-  const call = async (mod, method, { who, query = '', body, headers = {} } = {}) => {
+  const call = async (mod, method, { who, query = '', body, headers = {}, params = {} } = {}) => {
     const h = { 'Cf-Access-Authenticated-User-Email': who, ...headers };
     if (body !== undefined) h['Content-Type'] = 'application/json';
     const request = new Request(`https://nates-workshop.pages.dev/api/x${query}`,
       { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) });
     const handler = mod[`onRequest${method[0]}${method.slice(1).toLowerCase()}`];
-    const res = await handler({ request, env, params: {} });
+    const res = await handler({ request, env, params });
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch { json = null; }
-    return { status: res.status, body: json };
+    return { status: res.status, body: json, text, headers: res.headers };
   };
   const socketOf = (code) => rooms.get(code)?.sockets.at(-1);
   return { sqlite, env, rooms, route, call, socketOf };
@@ -516,6 +588,136 @@ section('the table routes: the role at the table comes from D1');
     && S.sqlite.prepare('SELECT count(*) AS n FROM msh_table_sessions WHERE closed_at IS NOT NULL').get().n === 1);
 }
 
+// ── Pictures through the routes: the design's "done when" ────────────────────
+//
+// A map is previewed, shown, paged past and cleared, and a player's phone
+// cannot load it before Show or after Clear. Previewing and paging happen in
+// Present mode and send nothing (rendered-ui.mjs holds that); what this runs
+// is every request a phone or the TV can make, at each step.
+
+section('the table routes: a picture is fetched only while it is on the table');
+{
+  const S = await standIn();
+  const DAN = 'dan@example.com';
+  const CARL = 'carl@example.com';
+  S.sqlite.exec(`INSERT INTO campaigns (id, name, system, gm_email) VALUES (1, 'Chi-Town', 'rifts', '${GM}'), (2, 'Elsewhere', 'rifts', '${GM}')`);
+  const pc = (id, email, name, camp = 1) => S.sqlite.exec(
+    `INSERT INTO characters (id, campaign_id, player_email, name, class_id, kind) VALUES (${id}, ${camp}, '${email}', '${name}', 'x', 'pc')`);
+  pc(11, ANN, 'Vex'); pc(21, BEN, 'Dog Boy Rusty'); pc(31, DAN, 'Absent Friend');
+  const img = (id, camp, caption) => {
+    S.sqlite.exec(`INSERT INTO campaign_images (id, campaign_id, r2_key, content_type, caption, created_by)
+      VALUES (${id}, ${camp}, 'campaigns/${camp}/${id}.png', 'image/png', ${caption ? `'${caption}'` : 'NULL'}, '${GM}')`);
+    S.env.MEDIA.objects.set(`campaigns/${camp}/${id}.png`, { body: `PNG-BYTES-${id}`, type: 'image/png' });
+  };
+  img(1, 1, 'The Coalition map'); img(2, 1, 'The next map'); img(9, 2, 'Another campaign');
+  const city = {
+    overview: { name: 'Tolkeen' },
+    map: {
+      size: 1000, outline: [[0, 0], [1000, 0], [1000, 1000], [0, 1000]], roads: [], gates: [],
+      districts: [{ id: 'd1', name: 'Old Town', polygon: [[0, 0], [500, 0], [500, 500]], label: [200, 200] }],
+      pins: [{ id: 'p1', label: 'Wizard Tower', kind: 'place', district: 'd1', at: [100, 100] },
+        { id: 'p2', label: 'SECRET-LAIR', kind: 'place', district: 'd1', at: [300, 300] }],
+    },
+    reveal: { p1: true },
+    public: { p1: 'Tall & <crooked>.', d1: 'Cobbled.' },
+    npcs: [{ name: 'SECRET-VILLAIN' }],
+  };
+  S.sqlite.prepare(`INSERT INTO cities (id, campaign_id, name, system, data, show_map, created_by) VALUES (3, 1, 'Tolkeen', 'rifts', ?, 0, ?)`)
+    .run(JSON.stringify(city), GM);
+
+  const T = {};
+  for (const a of ['open', 'join', 'close', 'status', 'show', 'clear', 'image']) T[a] = await S.route(`character-creator/table/${a}.js`);
+  const campaignImage = await S.route('character-creator/campaigns/[id]/images/[imageId].js');
+  const up = { Upgrade: 'websocket' };
+  const code = (await S.call(T.open, 'POST', { who: GM, body: { campaign_id: 1 } })).body.code;
+  for (const [who, as] of [[ANN, 'player'], [BEN, 'player'], [GM, 'gm'], [GM, 'display'], [CARL, 'player']]) {
+    await S.call(T.join, 'GET', { who, query: `?code=${code}&as=${as}`, headers: up });
+  }
+  const fetchAs = (who, kind, id, c = code) => S.call(T.image, 'GET', { who, query: `?code=${c}&kind=${kind}&id=${id}` });
+  const show = (who, kind, id) => S.call(T.show, 'POST', { who, body: { campaign_id: 1, kind, id } });
+  const socks = S.rooms.get(code).sockets;
+
+  // Before Show.
+  check('before Show, a seated player\'s fetch is not found', (await fetchAs(ANN, 'image', 1)).status === 404);
+  check('and the TV\'s', (await fetchAs(GM, 'image', 1)).status === 404);
+  check('a player cannot show a picture', (await show(ANN, 'image', 1)).status === 403);
+  check('the GM cannot show another campaign\'s picture', (await show(GM, 'image', 9)).status === 404);
+  check('or one that does not exist', (await show(GM, 'image', 99)).status === 404 && (await show(GM, 'portrait', 1)).status === 404);
+  check('and nothing was put on the table by any of that', (await S.call(T.status, 'GET', { who: GM, query: '?campaign_id=1' })).body.shown === null);
+
+  // Show.
+  const shown = await show(GM, 'image', 1);
+  check('the GM shows a picture, captioned from D1', shown.status === 200 && shown.body.shown?.caption === 'The Coalition map', JSON.stringify(shown.body));
+  check('every screen at the table is told', socks.every((s) => s.messages.some((m) => m.type === 'show' && m.shown.id === '1')));
+  const got = await fetchAs(ANN, 'image', 1);
+  check('a seated player\'s phone loads it', got.status === 200 && got.text === 'PNG-BYTES-1' && got.headers.get('Content-Type') === 'image/png');
+  check('and is told not to keep it', got.headers.get('Cache-Control') === 'no-store');
+  check('the TV loads it', (await fetchAs(GM, 'image', 1)).status === 200);
+  check('a different picture is not found', (await fetchAs(ANN, 'image', 2)).status === 404);
+  check('another campaign\'s picture is not found, even by the same id route', (await fetchAs(ANN, 'image', 9)).status === 404);
+  check('a player of the campaign who is not at the table cannot load it', (await fetchAs(DAN, 'image', 1)).status === 404);
+  check('nor can someone outside the campaign, and they are told not found, not forbidden',
+    (await fetchAs(CARL, 'image', 1)).status === 404);
+  check('nor through a code that is not this table', (await fetchAs(ANN, 'image', 1, 'ZZZZ')).status === 404);
+  check('showing does not reveal: the campaign\'s own image route still hides it from a player',
+    (await S.call(campaignImage, 'GET', { who: ANN, params: { id: '1', imageId: '1' } })).status === 404
+    && S.sqlite.prepare('SELECT revealed_at FROM campaign_images WHERE id = 1').get().revealed_at === null);
+  check('the GM\'s status says what is on the table', (await S.call(T.status, 'GET', { who: GM, query: '?campaign_id=1' })).body.shown?.id === '1');
+  check('a player\'s status does not', !('shown' in (await S.call(T.status, 'GET', { who: ANN, query: '?campaign_id=1' })).body));
+
+  // Paged past: the GM shows the next one; the first is gone from the table.
+  await show(GM, 'image', 2);
+  check('after the next picture is shown, the first is not found', (await fetchAs(ANN, 'image', 1)).status === 404);
+  check('and the next one loads', (await fetchAs(ANN, 'image', 2)).status === 200);
+
+  // Clear.
+  const cleared = await S.call(T.clear, 'POST', { who: GM, body: { campaign_id: 1 } });
+  check('the GM clears the table', cleared.status === 200 && cleared.body.shown === null);
+  check('a player cannot', (await S.call(T.clear, 'POST', { who: ANN, body: { campaign_id: 1 } })).status === 403);
+  check('after Clear the phone\'s fetch is not found', (await fetchAs(ANN, 'image', 2)).status === 404);
+  check('nor the TV\'s', (await fetchAs(GM, 'image', 2)).status === 404);
+
+  // A city, drawn from the players' view only.
+  await show(GM, 'city', 3);
+  const map = await fetchAs(BEN, 'city', 3);
+  check('a city map loads as an SVG', map.status === 200 && /^image\/svg\+xml/.test(map.headers.get('Content-Type')) && map.text.includes('<svg'));
+  check('with its revealed pin and the players\' lines, escaped',
+    map.text.includes('Wizard Tower') && map.text.includes('Tall &#38; &#60;crooked&#62;.') && map.text.includes('Cobbled.'));
+  check('and nothing the players\' view leaves out', !map.text.includes('SECRET-LAIR') && !map.text.includes('SECRET-VILLAIN'));
+  check('a city\'s map is served as an image that may run nothing',
+    /default-src 'none'/.test(map.headers.get('Content-Security-Policy')) && map.headers.get('X-Content-Type-Options') === 'nosniff');
+  check('even though the city\'s map is not shown to players in the campaign', S.sqlite.prepare('SELECT show_map FROM cities WHERE id = 3').get().show_map === 0);
+
+  // Close.
+  await S.call(T.close, 'POST', { who: GM, body: { campaign_id: 1 } });
+  check('after the table closes the map is not found', (await fetchAs(BEN, 'city', 3)).status === 404);
+  check('and there is nothing to clear', (await S.call(T.clear, 'POST', { who: GM, body: { campaign_id: 1 } })).status === 404);
+  const saved = S.sqlite.prepare('SELECT feed FROM table_sessions').get().feed;
+  check('showing left no trace in the saved session', !saved.includes('Tolkeen') && !saved.includes('Coalition'));
+
+  // Marvel: its own pictures, and no cities.
+  S.sqlite.exec(`INSERT INTO msh_campaigns (id, name, gm_email) VALUES (5, 'Avengers', '${GM}')`);
+  S.sqlite.exec(`INSERT INTO msh_heroes (id, owner_email, name, build, snapshot) VALUES ('h1', '${BEN}', 'Nightfox', '{}', '{}')`);
+  S.sqlite.exec(`INSERT INTO msh_campaign_heroes (campaign_id, hero_id, campaign_open, added_by) VALUES (5, 'h1', 1, '${BEN}')`);
+  S.sqlite.exec(`INSERT INTO msh_campaign_images (id, campaign_id, r2_key, content_type, caption, created_by)
+    VALUES (7, 5, 'msh/campaigns/5/7.png', 'image/png', 'Avengers Mansion', '${GM}')`);
+  S.env.MEDIA.objects.set('msh/campaigns/5/7.png', { body: 'MSH-PNG', type: 'image/png' });
+  const M = {};
+  for (const a of ['open', 'join', 'show', 'clear', 'image']) M[a] = await S.route(`marvel-heroes/table/${a}.js`);
+  const mcode = (await S.call(M.open, 'POST', { who: GM, body: { campaign_id: 5 } })).body.code;
+  await S.call(M.join, 'GET', { who: BEN, query: `?code=${mcode}`, headers: up });
+  const mfetch = () => S.call(M.image, 'GET', { who: BEN, query: `?code=${mcode}&kind=image&id=7` });
+  check('a Marvel hero\'s owner cannot load a picture before Show', (await mfetch()).status === 404);
+  check('a Marvel table shows no city', (await S.call(M.show, 'POST', { who: GM, body: { campaign_id: 5, kind: 'city', id: 3 } })).status === 404);
+  await S.call(M.show, 'POST', { who: GM, body: { campaign_id: 5, kind: 'image', id: 7 } });
+  const mgot = await mfetch();
+  check('and loads it once shown, from Marvel\'s own table', mgot.status === 200 && mgot.text === 'MSH-PNG');
+  check('Palladium\'s image route does not answer for a Marvel table',
+    (await S.call(T.image, 'GET', { who: BEN, query: `?code=${mcode}&kind=image&id=7` })).status === 404);
+  await S.call(M.clear, 'POST', { who: GM, body: { campaign_id: 5 } });
+  check('and not after Clear', (await mfetch()).status === 404);
+}
+
 section('the table routes: the schema files agree with the migrations');
 {
   const pal = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
@@ -629,4 +831,5 @@ section('the table clients: the campaign page panel');
   check('both games\' campaign pages load the table panel', camps.every((h) => h.includes('/shared/js/campaign/table.js')));
 }
 
-summary();
+// summary() returns the exit code; ignoring it made this suite pass CI on a failure.
+process.exit(summary() === 0 ? 0 : 1);

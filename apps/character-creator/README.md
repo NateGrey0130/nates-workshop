@@ -106,8 +106,11 @@ apps/gm-tools/                GM TOOLS
 │                             table. Black, no shared header, one picture
 │                             fitted to it, arrow keys through that page.
 │                             SHOWING IS NOT REVEALING — it reads the GM's own
-│                             pictures and writes nothing until the reveal
-│                             button on it is pressed. The room view is
+│                             pictures and writes nothing to the campaign until
+│                             the reveal button on it is pressed. While a table
+│                             is open, Show to table puts the picture on The
+│                             Table's screens for the moment (apps/table/). The
+│                             room view is
 │                             /shared/js/campaign/present.js; this file adds
 │                             the City Creator's maps and the way back
 │
@@ -670,10 +673,13 @@ writes are gated (see [Permissions](#permissions)).
 | `table/access` | GET | `?code=` - what the caller may be at that table: `gm`, `player` (with which of their `kind = 'pc'` characters) and `display`. 404 for a code this game has no open table under, 403 to someone with no character in the campaign |
 | `table/join` | GET | The WebSocket, `?code=&as=gm\|player\|display`. **The role comes from D1, never from the page**: this route decides it and hands it to the room Worker (`workers/table-room/`) on the upgrade, stripping any `X-Table-*` header the browser sent |
 | `table/close` | POST | `{ campaign_id }` - **G.M. only**. Closes the room, writes its whole feed to `table_sessions`, and only then tells the room to forget it, so a failed write leaves the feed in the room for the next try |
-| `table/status` | GET | `?campaign_id=` - the G.M. and the campaign's players: is a table open, under which code, and whether its room has closed itself (`room: closed`, which the G.M.'s page answers with `table/close`) |
+| `table/status` | GET | `?campaign_id=` - the G.M. and the campaign's players: is a table open, under which code, and whether its room has closed itself (`room: closed`, which the G.M.'s page answers with `table/close`). The G.M. alone also gets `shown`, the picture on the table, for Present mode |
 | `table/sessions` | GET | `?campaign_id=` - the campaign's saved table sessions, newest first, each feed **filtered for the reader by the rule the room used live**: GM-only rolls to the G.M. alone, a To-GM roll to the G.M. and its roller |
 | `table/roll` | POST | `{ character_id, note, visibility }` - a sheet roll, carried to the table while that character is seated there. **Owner only.** Writes nothing: the sheet has already saved the roll to `play_events` |
 | `table/seat` | GET | `?character_id=` - owner only: is this character seated at an open table, and under which code |
+| `table/show` | POST | `{ campaign_id, kind: 'image'\|'city', id }` - **G.M. only**, from Present mode. Puts one of the campaign's pictures (or a kept city's map) on the table; the caption is the picture's own, from D1. **Not Reveal**: writes nothing to the campaign |
+| `table/clear` | POST | `{ campaign_id }` - **G.M. only**. Takes the picture down |
+| `table/image` | GET | `?code=&kind=&id=` - the picture on the table, `no-store`, to someone connected there as the G.M., the display or a seated player (`workers/table-room/src/showing.js`). **Every refusal is a 404**: before Show, after Clear, another picture, anyone not at the table. A city is an SVG drawn from the players' view only |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |

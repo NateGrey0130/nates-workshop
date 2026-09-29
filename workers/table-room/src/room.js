@@ -22,11 +22,19 @@
 //   { type: 'roll', kind: 'feat', rank, cs?, label?, visibility? }   Marvel
 //
 // Room -> client:
-//   { type: 'state', you, room, people, feed }   on hello, and after a seat
+//   { type: 'state', you, room, people, feed, shown }   on hello, and after a seat
 //   { type: 'roll', roll }                       a new roll this screen may see
+//   { type: 'show', shown }                      the GM put a picture on the table
+//   { type: 'clear' }                            the GM took it down
 //   { type: 'people', people }                   someone came, went or sat down
 //   { type: 'closed', reason }                   the table is over
 //   { type: 'error', message }
+//
+// `shown` is { kind, id, caption, at } or null. It names the picture; the
+// bytes come from the game's table/image route, which asks this room, through
+// /may-fetch, whether the person asking may have them NOW (showing.js). The
+// GM shows and clears from Present mode, through the show and clear routes,
+// not over a socket: Present mode is its own page and holds none.
 //
 // ── WHAT A SCREEN RECEIVES ─────────────────────────────────────────────────
 //
@@ -44,6 +52,8 @@
 //   meta         code, game, campaign, GM, status, and the next roll id
 //   roll:NNNNNN  one key per roll, so a long session never rewrites its feed
 //                and never nears the per-value size limit
+//   shown        the picture on the table, or absent. Not saved with the
+//                feed and dropped on close: showing leaves no trace.
 // Who is connected lives on each socket's attachment, which survives
 // hibernation with the socket.
 //
@@ -57,6 +67,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { canSee, visibilityFor, rollView } from './visibility.js';
+import { imageRef, mayView, mayFetch } from './showing.js';
 import { parseExpression, rollExpression, rollFeat } from './dice.js';
 import { feat } from './marvel.js';
 
@@ -66,6 +77,7 @@ export const FEED_ON_CONNECT = 200;    // what a screen gets on (re)connect
 export const GAMES = ['palladium', 'marvel'];
 const TEXT_MAX = 300;
 const LABEL_MAX = 60;
+const CAPTION_MAX = 200;
 const MESSAGE_MAX = 2000;
 const OPEN = 1;                        // WebSocket.OPEN
 
@@ -143,6 +155,37 @@ export class TableRoom {
         open: meta.status === 'open',
         seated: meta.status === 'open' && !!this.seatedSocket(email, characterId),
       });
+    }
+
+    if (path === '/shown') {
+      return Response.json({ shown: meta.status === 'open' ? await this.shown() : null });
+    }
+
+    // The image route's question. Answered from the sockets connected NOW, so
+    // a phone that has left, or a player who never sat down, is refused.
+    if (path === '/may-fetch') {
+      const ref = imageRef(url.searchParams.get('kind'), url.searchParams.get('id'));
+      const shown = meta.status === 'open' ? await this.shown() : null;
+      const conns = this.liveSockets().map((s) => s.deserializeAttachment());
+      return Response.json({ allowed: !!ref && mayFetch(conns, shown, url.searchParams.get('email'), ref) });
+    }
+
+    if (path === '/show' && request.method === 'POST') {
+      if (meta.status !== 'open') return Response.json({ error: 'This table has closed' }, { status: 410 });
+      const b = await request.json().catch(() => ({}));
+      const ref = imageRef(b.kind, b.id);
+      if (!ref) return Response.json({ error: 'kind and id name the picture to show' }, { status: 400 });
+      const shown = { ...ref, caption: clean(b.caption, CAPTION_MAX), at: Date.now() };
+      await this.ctx.storage.put('shown', shown);
+      this.broadcast({ type: 'show', shown });
+      return Response.json({ shown });
+    }
+
+    if (path === '/clear' && request.method === 'POST') {
+      if (meta.status !== 'open') return Response.json({ error: 'This table has closed' }, { status: 410 });
+      await this.ctx.storage.delete('shown');
+      this.broadcast({ type: 'clear' });
+      return Response.json({ shown: null });
     }
 
     if (path === '/feed') return Response.json({ meta, feed: await this.feed() });
@@ -337,6 +380,10 @@ export class TableRoom {
     return [...rows.values()];
   }
 
+  async shown() {
+    return (await this.ctx.storage.get('shown')) ?? null;
+  }
+
   async sendState(ws, conn, meta) {
     const all = await this.feed();
     const feed = all.filter((r) => canSee(conn, r)).slice(-FEED_ON_CONNECT).map((r) => rollView(r, conn));
@@ -346,7 +393,16 @@ export class TableRoom {
       room: { code: meta.code, game: meta.game, campaignName: meta.campaignName, status: meta.status },
       people: this.people(),
       feed,
+      shown: mayView(conn) ? await this.shown() : null,
     });
+  }
+
+  // A show or a clear, to the screens that may look (showing.js). A player
+  // still choosing a character gets the picture with their state when they sit.
+  broadcast(msg) {
+    for (const s of this.liveSockets()) {
+      if (mayView(s.deserializeAttachment())) this.send(s, msg);
+    }
   }
 
   async close(reason) {
@@ -356,6 +412,7 @@ export class TableRoom {
     meta.closedAt = Date.now();
     meta.closedReason = reason;
     await this.ctx.storage.put('meta', meta);
+    await this.ctx.storage.delete('shown');
     await this.ctx.storage.deleteAlarm();
     for (const s of this.liveSockets()) {
       this.send(s, { type: 'closed', reason });

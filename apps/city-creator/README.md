@@ -162,6 +162,13 @@ sent. It is a 404 to a player until the map is shown, and the G.M. can open it
 beforehand as a preview. Players reach it from the campaign's **Handouts**
 tab, which lists every shown city.
 
+While the campaign has [The Table](../table/README.md) open, present mode also
+offers **Show to table**, which puts the map on the TV and the seated players'
+phones for the moment, whether or not it is shown in Handouts. The table's copy
+is an SVG drawn from the same players' view (`functions/api/character-creator/_lib/city-svg.js`),
+so it carries nothing that view leaves out, and after **Clear** a player's
+phone cannot load it again.
+
 Printing leaves the keeping controls off the page and prints only the players'
 lines that were written.
 

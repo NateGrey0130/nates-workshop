@@ -119,3 +119,72 @@ body.table-tv .wrap { max-width: none; padding: 3vh 4vw; }
 .tv-text { font-family: var(--font-mono); overflow-wrap: anywhere; }
 .tv-empty { font-size: clamp(22px, 3vw, 48px); }
 .tv-status { color: var(--tv-accent); font-size: clamp(14px, 1.4vw, 24px); margin-top: 4vh; }
+
+/* ---- the picture on the table (phase 2) ----
+   On a phone: under the roll feed, fitted, and a tap opens it full screen. */
+.table-picture-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: #000;
+  cursor: zoom-in;
+}
+.table-picture-open img { display: block; width: 100%; max-height: 60vh; object-fit: contain; }
+.table-picture-open:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 2px; }
+.table-picture p { margin: 6px 0 0; }
+
+/* Full screen: the picture on black, moved by pointer events (table.js), so
+   the browser's own pan and zoom are switched off inside it. */
+.table-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+}
+.table-zoom[hidden] { display: none; }
+body:has(.table-zoom:not([hidden])) { overflow: hidden; }
+.table-zoom img {
+  width: 100vw;
+  height: 100dvh;
+  object-fit: contain;
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.table-zoom-close {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  min-height: 44px;
+  background: #000;
+  color: #F4EFE8;
+  border-color: #F4EFE8;
+}
+
+/* On the TV: the picture fits the screen on black, with the code and the
+   newest roll kept to a line above and below it. */
+.tv-picture { margin: 0; }
+.tv-picture[hidden] { display: none; }
+body.table-tv.tv-showing { background: #000; }
+body.table-tv.tv-showing .wrap {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  padding: 1.5vh 2vw;
+}
+body.tv-showing .tv-head { margin-bottom: 1.5vh; }
+body.tv-showing .tv-campaign { font-size: clamp(18px, 2vw, 32px); }
+body.tv-showing .tv-join { font-size: clamp(14px, 1.2vw, 22px); }
+body.tv-showing .tv-picture { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; }
+body.tv-showing .tv-picture img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+body.tv-showing .tv-picture figcaption { color: var(--tv-dim); text-align: center; font-size: clamp(16px, 1.6vw, 28px); padding-top: 1vh; }
+body.tv-showing .tv-picture figcaption:empty { display: none; }
+body.tv-showing .tv-feed { margin-top: 1.5vh; }
+body.tv-showing .tv-roll.newest { font-size: clamp(18px, 2vw, 34px); grid-template-columns: max-content 1fr; gap: 1.5vw; align-items: baseline; }
+body.tv-showing .tv-status { margin-top: 0; }

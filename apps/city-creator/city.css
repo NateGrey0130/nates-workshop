@@ -84,10 +84,14 @@ a:focus-visible .map-pin circle, a:focus-visible .map-pin rect { stroke: var(--b
 .present-city .city-map { max-width: none; max-height: calc(100dvh - 72px); }
 /* Present mode's picture controls have no job on a city: its stylesheet gives
    the arrows and the reveal row a display that beats `hidden`, so they are
-   taken out here. The card starts below the top bar so the bar never covers
-   the key. */
-body.is-city .present-arrow, body.is-city .present-actions { display: none; }
+   taken out here - all but The Table's Show and Clear, which a city has too.
+   The card starts below the top bar so the bar never covers the key. */
+body.is-city .present-arrow,
+body.is-city .present-actions > :not(.present-table):not(.present-msg) { display: none; }
 body.is-city .present-city { margin-top: 52px; max-height: calc(100dvh - 52px); }
+/* The card has a display, so `hidden` needs restating: without this every
+   picture in Present mode sat above an empty white city card (seen 2026-09-29). */
+.present-city[hidden] { display: none; }
 .present-city .present-citykey, .present-city .present-citynotes { grid-column: 2; margin: 0; }
 .present-city .present-citynotes { grid-row: 2; }
 @media (max-width: 760px) {

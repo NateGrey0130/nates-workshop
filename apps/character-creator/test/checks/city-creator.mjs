@@ -804,12 +804,26 @@ export function run() {
 
   // Drawn on the G.M.'s page and in present mode, and passed to the players.
   const presentJs = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'present.js'), 'utf8');
-  const viewJs = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'cities', '[id]', 'view.js'), 'utf8');
+  // playerView moved to _lib/city-view.js (The Table, phase 2) so the table's
+  // city map could draw from it too; the route and the table both import it.
+  const viewJs = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'city-view.js'), 'utf8');
+  const routeJs = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'cities', '[id]', 'view.js'), 'utf8');
+  const tableSvg = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'city-svg.js'), 'utf8');
+  const tableAdapter = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', '_lib', 'table.js'), 'utf8');
   const mapCss = readFileSync(join(repoRoot, 'apps', 'city-creator', 'city.css'), 'utf8');
   const shapes = ['canal', 'core', 'street', 'rail', 'station'];
   check('the G.M.\'s page and present mode both draw every street-plan shape, and the stylesheet styles each',
     shapes.every((k) => page.includes(`class="map-${k}"`) && presentJs.includes(`class: 'map-${k}'`)
       && new RegExp(`\\.map-${k} \\{`).test(mapCss)));
+  // The third drawing: the table's, an SVG file for the TV and the phones.
+  check('the table\'s city map draws every street-plan shape too, and styles each itself',
+    shapes.every((k) => tableSvg.includes(`class="map-${k}"`) && new RegExp(`\\.map-${k} \\{`).test(tableSvg)));
+  check('and draws the river, the canals and the core over the districts',
+    ['map-river', 'map-canal', 'map-core'].every((k) => tableSvg.indexOf(`class="${k}"`) > tableSvg.indexOf('class="map-cell ')));
+  check('the players\' view route and the table both draw from the one playerView',
+    /import \{ playerView \} from '\.\.\/\.\.\/_lib\/city-view\.js'/.test(routeJs) && !/function playerView/.test(routeJs)
+      && /import \{ playerView \} from '\.\/city-view\.js'/.test(tableAdapter)
+      && /citySvg\(playerView\(row, city\)\)/.test(tableAdapter));
   // District fills are opaque: a shape drawn before them is hidden inside the
   // city, which is how the first draw of the canals showed only their ends -
   // and how every city's river had shown only its ends since Phase 2.

@@ -10,6 +10,13 @@
 //
 // escHtml() is from /shared/js/ui.js. Every string from the server is escaped
 // on the way into markup; a roll's text is a player's label and a sheet note.
+//
+// PICTURES (phase 2). When the GM presses Show to table in Present mode, the
+// room sends `show` with the picture's kind and id, and this page loads it from
+// the game's table/image route - which answers only while that picture is on
+// the table and this person is at it, so the address is worth nothing before
+// Show or after Clear. The TV fits it to the screen on black; a phone shows it
+// under the roll feed, and a tap opens it full screen to pinch and pan.
 'use strict';
 
 const $ = (id) => document.getElementById(id);
@@ -30,7 +37,7 @@ const TV_ROLLS = 6;
 
 const S = {
   code: '', game: null, access: null, role: null,
-  ws: null, you: null, room: null, people: [], feed: [],
+  ws: null, you: null, room: null, people: [], feed: [], shown: null,
   closed: false, retry: 0, vis: 'all', ranks: null, rank: 'typical', wake: null,
 };
 
@@ -175,7 +182,14 @@ function onMessage(msg) {
     S.room = msg.room;
     S.people = msg.people;
     S.feed = msg.feed;
+    S.shown = msg.shown ?? null;
     render();
+  } else if (msg.type === 'show') {
+    S.shown = msg.shown;
+    paintPicture();
+  } else if (msg.type === 'clear') {
+    S.shown = null;
+    paintPicture();
   } else if (msg.type === 'roll') {
     S.feed.push(msg.roll);
     if (S.feed.length > FEED_KEEP) S.feed.shift();
@@ -226,6 +240,14 @@ function render() {
       <h3>Rolls</h3>
       <ol id="feed" class="table-feed" reversed></ol>
     </div>
+    <div class="panel table-picture" id="picture" hidden>
+      <h3>On the table</h3>
+      <button type="button" class="table-picture-open" id="picture-open" aria-label="Open the picture full screen">
+        <img id="picture-img" alt="">
+      </button>
+      <p class="muted small" id="picture-cap"></p>
+      <p class="muted small">Tap the picture to see it full screen and pinch to zoom.</p>
+    </div>
     <div class="panel">
       <h3>At the table</h3>
       <ul id="people" class="table-people"></ul>
@@ -241,8 +263,10 @@ function render() {
   }
   if (gm || seat) wireDice();
   if (gm) $('close-table').addEventListener('click', closeTable);
+  $('picture-open').addEventListener('click', openZoom);
   renderFeed();
   renderPeople();
+  paintPicture();
 }
 
 function seatHtml() {
@@ -349,7 +373,7 @@ function rollHtml(r) {
 }
 
 function renderFeed(freshId = null) {
-  if (S.you?.role === 'display') return renderDisplay();
+  if (S.you?.role === 'display') return paintTvRolls();
   const list = $('feed');
   if (!list) return;
   const rolls = S.feed.slice().reverse();
@@ -367,21 +391,167 @@ function renderPeople() {
   list.innerHTML = S.people.map((p) => `<li>${esc(p.name)}</li>`).join('') || '<li class="muted">Nobody yet.</li>';
 }
 
+// The TV. Drawn once, then painted in parts: a roll repaints the feed and
+// never the picture, which is fetched again every time its <img> is rebuilt
+// (the image route is no-store, so a copy cannot outlive Clear).
 function renderDisplay() {
   document.body.classList.add('table-tv');
-  const rolls = S.feed.filter((r) => r.visibility === 'all').slice(-TV_ROLLS).reverse();
   $('app').innerHTML = `
     <div class="tv-head">
       <div class="tv-campaign">${esc(S.room.campaignName)}</div>
       <div class="tv-join">Join at <strong>${esc(location.host)}/apps/table/</strong> with code <strong class="tv-code">${esc(S.room.code)}</strong></div>
     </div>
-    <ol class="tv-feed" reversed>
-      ${rolls.map((r, i) => `<li class="tv-roll${i === 0 ? ' newest' : ''}">
-        <span class="tv-who">${esc(r.by.name)}</span>
-        <span class="tv-text">${esc(r.text)}</span>
-      </li>`).join('') || '<li class="tv-roll tv-empty">Waiting for the first roll…</li>'}
-    </ol>
+    <figure class="tv-picture" id="picture" hidden>
+      <img id="picture-img" alt="">
+      <figcaption id="picture-cap"></figcaption>
+    </figure>
+    <ol class="tv-feed" id="tv-feed" reversed></ol>
     <p id="status" class="tv-status" role="status" aria-live="polite"></p>`;
+  paintTvRolls();
+  paintPicture();
+}
+
+function paintTvRolls() {
+  const list = $('tv-feed');
+  if (!list) return renderDisplay();
+  // With a picture up, the rolls keep to one line under it.
+  const rolls = S.feed.filter((r) => r.visibility === 'all').slice(S.shown ? -1 : -TV_ROLLS).reverse();
+  list.innerHTML = rolls.map((r, i) => `<li class="tv-roll${i === 0 ? ' newest' : ''}">
+      <span class="tv-who">${esc(r.by.name)}</span>
+      <span class="tv-text">${esc(r.text)}</span>
+    </li>`).join('') || (S.shown ? '' : '<li class="tv-roll tv-empty">Waiting for the first roll…</li>');
+}
+
+// ---------- the picture on the table ----------
+
+function pictureSrc(s) {
+  const q = new URLSearchParams({ code: S.code, kind: s.kind, id: String(s.id), at: String(s.at ?? '') });
+  return `${GAMES[S.game].base}/table/image?${q}`;
+}
+
+function paintPicture() {
+  const box = $('picture');
+  if (!box) return;
+  const s = S.shown;
+  const tv = S.you?.role === 'display';
+  document.body.classList.toggle('tv-showing', tv && !!s);
+  box.hidden = !s;
+  const img = $('picture-img');
+  if (!s) {
+    img.removeAttribute('src');
+    closeZoom();
+    if (tv) paintTvRolls();
+    return;
+  }
+  const src = pictureSrc(s);
+  // Only a new picture is fetched: the same one stays put.
+  if (img.getAttribute('src') !== src) {
+    img.onerror = () => { $('picture-cap').textContent = 'The picture could not be loaded.'; };
+    img.src = src;
+  }
+  img.alt = s.caption || 'The picture on the table';
+  $('picture-cap').textContent = s.caption || '';
+  if (tv) paintTvRolls();
+  else if ($('zoom-img') && !$('zoom').hidden) $('zoom-img').src = src;
+}
+
+// ---------- full screen, pinch and pan (phones) ----------
+//
+// Pointer events rather than the browser's own page zoom: the page is not
+// zoomed, only the picture, and one finger pans it once it is bigger than the
+// screen. A double tap flips between fitted and 2.5x; ✕ or Escape closes.
+
+const Z = { s: 1, x: 0, y: 0, pts: new Map(), from: null, lastTap: 0 };
+
+function zoomEl() {
+  let el = $('zoom');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'zoom';
+  el.className = 'table-zoom';
+  el.hidden = true;
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-label', 'The picture on the table');
+  el.innerHTML = '<img id="zoom-img" alt="" draggable="false"><button type="button" class="btn table-zoom-close" id="zoom-close">✕ Close</button>';
+  document.body.append(el);
+  $('zoom-close').addEventListener('click', closeZoom);
+  const img = $('zoom-img');
+  img.addEventListener('pointerdown', (e) => {
+    img.setPointerCapture(e.pointerId);
+    Z.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    Z.from = null;
+    const now = Date.now();
+    if (Z.pts.size === 1 && now - Z.lastTap < 300) zoomTo(Z.s > 1 ? 1 : 2.5, e.clientX, e.clientY);
+    Z.lastTap = now;
+  });
+  img.addEventListener('pointermove', (e) => {
+    const was = Z.pts.get(e.pointerId);
+    if (!was) return;
+    const now = { x: e.clientX, y: e.clientY };
+    Z.pts.set(e.pointerId, now);
+    if (Z.pts.size >= 2) {
+      const [a, b] = [...Z.pts.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      if (!Z.from) Z.from = { s: Z.s, x: Z.x, y: Z.y, d, m };
+      pinch(Z.from, Z.from.s * (d / Z.from.d), m);
+    } else if (Z.s > 1) {
+      Z.x += now.x - was.x;
+      Z.y += now.y - was.y;
+      paintZoom();
+    }
+  });
+  const up = (e) => { Z.pts.delete(e.pointerId); Z.from = null; };
+  img.addEventListener('pointerup', up);
+  img.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomTo(Z.s * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY);
+  }, { passive: false });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.hidden) closeZoom(); });
+  return el;
+}
+
+// Scale about a point on screen, so what is under the fingers stays there.
+function pinch(from, s, m) {
+  const next = Math.min(6, Math.max(1, s));
+  const cx = innerWidth / 2;
+  const cy = innerHeight / 2;
+  const px = (from.m.x - cx - from.x) / from.s;
+  const py = (from.m.y - cy - from.y) / from.s;
+  Z.s = next;
+  Z.x = next === 1 ? 0 : m.x - cx - px * next;
+  Z.y = next === 1 ? 0 : m.y - cy - py * next;
+  paintZoom();
+}
+
+function zoomTo(s, x, y) {
+  pinch({ s: Z.s, x: Z.x, y: Z.y, m: { x, y } }, s, { x, y });
+}
+
+function paintZoom() {
+  $('zoom-img').style.transform = `translate(${Z.x}px, ${Z.y}px) scale(${Z.s})`;
+}
+
+function openZoom() {
+  if (!S.shown) return;
+  const el = zoomEl();
+  Object.assign(Z, { s: 1, x: 0, y: 0, from: null });
+  Z.pts.clear();
+  $('zoom-img').src = pictureSrc(S.shown);
+  $('zoom-img').alt = S.shown.caption || 'The picture on the table';
+  paintZoom();
+  el.hidden = false;
+  $('zoom-close').focus();
+}
+
+function closeZoom() {
+  const el = $('zoom');
+  if (!el || el.hidden) return;
+  el.hidden = true;
+  $('zoom-img').removeAttribute('src');
+  $('picture-open')?.focus();
 }
 
 async function closeTable() {
@@ -402,8 +572,10 @@ async function closeTable() {
 }
 
 function renderClosed(saved = null) {
-  document.body.classList.remove('table-tv');
+  document.body.classList.remove('table-tv', 'tv-showing');
   S.closed = true;
+  S.shown = null;
+  closeZoom();
   try { S.ws?.close(); } catch { /* already closed */ }
   S.wake?.release().catch(() => {});
   const back = S.access && S.game ? GAMES[S.game].campaign(S.access.campaign.id) : null;

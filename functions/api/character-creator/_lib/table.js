@@ -7,6 +7,8 @@
 // so a GM's statted NPC (migration 070) never seats anyone.
 
 import { getUserEmail } from './auth.js';
+import { playerView } from './city-view.js';
+import { citySvg } from './city-svg.js';
 
 export const game = 'palladium';
 export const email = getUserEmail;
@@ -63,4 +65,56 @@ export async function sessions(env, campaignId, limit) {
      FROM table_sessions WHERE campaign_id = ? AND closed_at IS NOT NULL ORDER BY id DESC LIMIT ?`
   ).bind(campaignId, limit).all();
   return results;
+}
+
+// ---------- pictures on the table (phase 2) ----------
+//
+// Two kinds on this side: a setting page's picture, and a City Creator city's
+// map. Each is looked up INSIDE the campaign the table is for, so a ref naming
+// another campaign's picture is not found. Whether the caller may have it at
+// all is the room's question, asked by the shared route before this is called.
+
+async function imageRow(env, campaignId, ref) {
+  return env.DB.prepare('SELECT id, r2_key, content_type, caption FROM campaign_images WHERE id = ? AND campaign_id = ?')
+    .bind(Number(ref.id), campaignId).first();
+}
+
+async function cityRow(env, campaignId, ref) {
+  return env.DB.prepare('SELECT id, campaign_id, name, data FROM cities WHERE id = ? AND campaign_id = ?')
+    .bind(Number(ref.id), campaignId).first();
+}
+
+// The caption the table shows. A picture's own caption and nothing else - the
+// page it sits on is titled for the GM, and its title may give a plot away. A
+// city by the name its players' view carries.
+export async function describe(env, campaignId, ref) {
+  if (ref.kind === 'image') {
+    const row = await imageRow(env, campaignId, ref);
+    return row ? { caption: row.caption || '' } : null;
+  }
+  if (ref.kind === 'city') {
+    const row = await cityRow(env, campaignId, ref);
+    if (!row) return null;
+    try { return { caption: playerView(row, JSON.parse(row.data)).name }; } catch { return null; }
+  }
+  return null;
+}
+
+export async function image(env, campaignId, ref) {
+  if (ref.kind === 'image') {
+    const row = await imageRow(env, campaignId, ref);
+    if (!row) return null;
+    if (!env.MEDIA) return { error: 'Image storage is not configured on this environment', status: 501 };
+    const object = await env.MEDIA.get(row.r2_key);
+    if (!object) return { error: 'Image is recorded but missing from storage', status: 502 };
+    return { body: object.body, contentType: object.httpMetadata?.contentType || row.content_type };
+  }
+  if (ref.kind === 'city') {
+    const row = await cityRow(env, campaignId, ref);
+    if (!row) return null;
+    let city;
+    try { city = JSON.parse(row.data); } catch { return { error: 'This city cannot be read', status: 500 }; }
+    return { body: citySvg(playerView(row, city)), contentType: 'image/svg+xml; charset=utf-8' };
+  }
+  return null;
 }

@@ -34,6 +34,14 @@
       <div class="present-actions">
         <button type="button" class="mc-btn mc-btn-primary" id="reveal"></button>
         <span class="present-shown" id="shown"></span>
+        <!-- The Table (phase 2): shown only while this campaign has a table open
+             and you run it. Show to table is NOT Reveal - it is for the moment,
+             writes nothing to the campaign, and ends at Clear. No key reaches it. -->
+        <span class="present-table" id="table" hidden>
+          <button type="button" class="mc-btn" id="table-show"></button>
+          <button type="button" class="mc-btn" id="table-clear">Clear the table</button>
+          <span class="present-shown" id="table-on"></span>
+        </span>
         <span class="present-msg" id="msg"></span>
       </div>
     </div>

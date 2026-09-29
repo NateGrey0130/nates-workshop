@@ -25,8 +25,21 @@
 //   startSession(env, campaignId, code, email)   throws if one is already open
 //   saveSession(env, id, { feed, reason })       writes the feed, closes the row
 //   sessions(env, campaignId, limit)    closed sessions, newest first, feed as JSON text
+//   describe(env, campaignId, ref)      { caption } for a picture the GM may show, or null
+//   image(env, campaignId, ref)         { body, contentType } | { error, status } | null
+//
+// PICTURES (phase 2). A `ref` is { kind, id } (showing.js). The GM shows one
+// from Present mode through `show`; every screen at the table is told; and a
+// phone or the TV loads it through `image`, which serves it ONLY while the room
+// says it is on the table and the caller is at the table (showing.js mayFetch).
+// Every refusal is a 404, whatever the reason - no table, no seat, another
+// picture, before Show, after Clear - because "you may not see this" tells a
+// player the GM is holding something back. The campaign's own image routes are
+// untouched: an unrevealed picture is still not found there, and Reveal is
+// still the only thing that changes that.
 
 import { filterFeed } from '../../../workers/table-room/src/visibility.js';
+import { imageRef } from '../../../workers/table-room/src/showing.js';
 
 // No O, 0, I or 1 - read aloud across a room, those are the ones misheard.
 // The same alphabet as Pick 3 Cut 5's codes.
@@ -50,6 +63,7 @@ export function json(body, status = 200) {
 }
 
 const notWired = () => json({ error: 'The Table is not wired up on this deployment.' }, 503);
+const notFound = () => json({ error: 'Image not found' }, 404);
 const stub = (env, code) => env.TABLE_ROOM.get(env.TABLE_ROOM.idFromName(code));
 
 async function call(env, code, path, body) {
@@ -121,6 +135,26 @@ async function campaignReader(request, env, adapter, campaignId) {
     return { res: json({ error: 'Only the GM and the campaign\'s players can see its table' }, 403) };
   }
   return { email, camp, isGm };
+}
+
+// The GM, and the campaign's open table, for show and clear.
+async function gmTable(request, env, adapter) {
+  const email = adapter.email(request);
+  if (!email) return { res: json({ error: 'Not signed in' }, 401) };
+  const b = await readBody(request);
+  const camp = b && await adapter.campaign(env, b.campaign_id);
+  if (!camp) return { res: json({ error: 'Campaign not found' }, 404) };
+  if (email !== camp.gmEmail) return { res: json({ error: 'Only the GM can show pictures to the table' }, 403) };
+  const row = await adapter.openSession(env, camp.id);
+  if (!row) return { res: json({ error: 'No table is open for this campaign' }, 404) };
+  return { b, camp, row };
+}
+
+// What the room answered, as this route's answer: a closed room is a 410.
+function relay(r) {
+  if (r.status === 410) return json({ error: 'That table has closed.' }, 410);
+  if (r.status !== 200) return json({ error: r.body.error || 'The table did not answer' }, 502);
+  return json({ shown: r.body.shown ?? null });
 }
 
 export function tableRoutes(adapter) {
@@ -225,7 +259,61 @@ export function tableRoutes(adapter) {
       const row = await adapter.openSession(env, r.camp.id);
       if (!row) return json({ open: false, is_gm: r.isGm });
       const info = await roomInfo(env, row.code);
-      return json({ open: true, code: row.code, room: info.exists ? info.status : 'missing', is_gm: r.isGm });
+      const out = { open: true, code: row.code, room: info.exists ? info.status : 'missing', is_gm: r.isGm };
+      // What is on the table, for Present mode's "on the table now". The GM's
+      // alone: a player learns what is shown by being at the table.
+      if (r.isGm && info.exists) out.shown = (await call(env, row.code, '/shown')).body.shown ?? null;
+      return json(out);
+    },
+
+    // POST { campaign_id, kind, id } -> { shown }. GM only. Puts one of this
+    // campaign's pictures on the table. The caption is the server's, from D1,
+    // and a picture the campaign does not have is not found.
+    async show({ request, env }) {
+      if (!env.TABLE_ROOM) return notWired();
+      const g = await gmTable(request, env, adapter);
+      if (g.res) return g.res;
+      const ref = imageRef(g.b.kind, g.b.id);
+      const about = ref && await adapter.describe(env, g.camp.id, ref);
+      if (!about) return notFound();
+      return relay(await call(env, g.row.code, '/show', { ...ref, caption: about.caption }));
+    },
+
+    // POST { campaign_id } -> { shown: null }. GM only. Takes it down, and from
+    // then on the image route answers not found to every player again.
+    async clear({ request, env }) {
+      if (!env.TABLE_ROOM) return notWired();
+      const g = await gmTable(request, env, adapter);
+      if (g.res) return g.res;
+      return relay(await call(env, g.row.code, '/clear', {}));
+    },
+
+    // GET ?code=&kind=&id= -> the picture's bytes, while it is on the table
+    // and the caller is at it. no-store, unlike the campaign image route's
+    // year-long cache: a copy kept by the browser would outlive Clear.
+    async image({ request, env }) {
+      if (!env.TABLE_ROOM) return notWired();
+      const r = await resolve(request, env, adapter);
+      if (r.res) return r.res.status === 401 ? r.res : notFound();
+      const url = new URL(request.url);
+      const ref = imageRef(url.searchParams.get('kind'), url.searchParams.get('id'));
+      if (!ref) return notFound();
+      const q = `/may-fetch?email=${encodeURIComponent(r.email)}&kind=${ref.kind}&id=${ref.id}`;
+      if (!(await call(env, r.code, q)).body.allowed) return notFound();
+      const pic = await adapter.image(env, r.camp.id, ref);
+      if (!pic) return notFound();
+      if (pic.error) return json({ error: pic.error }, pic.status || 502);
+      return new Response(pic.body, {
+        headers: {
+          'Content-Type': pic.contentType || 'application/octet-stream',
+          'Cache-Control': 'no-store',
+          'Content-Disposition': 'inline',
+          'X-Content-Type-Options': 'nosniff',
+          // A city map is SVG. Opened as a page rather than an <img>, it may
+          // style itself and nothing else.
+          'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
+        },
+      });
     },
 
     // GET ?campaign_id= -> the campaign's saved table sessions, each feed
