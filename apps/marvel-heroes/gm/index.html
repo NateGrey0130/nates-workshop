@@ -40,6 +40,11 @@
 
   <div id="gm-body" class="gm-grid" hidden>
     <div class="gm-col">
+      <!-- The Table: open it, its code, close it, the sessions it saved - the
+           shared panel (shared/js/campaign/table.js), as on the Campaigns page.
+           Here too because this is where the GM runs a session from. -->
+      <div id="gm-table"></div>
+
       <section class="panel" aria-labelledby="roster-h">
         <span class="caption">Written to each hero's own sheet</span>
         <h2 id="roster-h">Roster</h2>
@@ -176,6 +181,7 @@
 <script src="/shared/js/campaign/core.js"></script>
 <script src="/shared/js/campaign/downscale.js"></script>
 <script src="/shared/js/campaign/setting.js"></script>
+<script src="/shared/js/campaign/table.js"></script>
 <script type="module" src="gm.js"></script>
 </body>
 </html>

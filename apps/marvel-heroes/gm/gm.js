@@ -337,13 +337,19 @@ function initBookForm() {
 const MC = globalThis.mcCampaign;
 const drawSetting = () => { $('#gm-setting').innerHTML = MC.setting.html({ presentHref: 'present.html' }); };
 async function loadSetting() { await MC.setting.load(); drawSetting(); }
+// The Table's panel (shared/js/campaign/table.js): open, the code, close, saved
+// sessions. load() also saves a table that closed itself while idle.
+const drawTable = () => { $('#gm-table').innerHTML = MC.table.html(); };
+async function loadTable() { await MC.table.load(); drawTable(); }
 
 function initSetting(campaignId) {
   MC.init({
     base: '/api/marvel-heroes', campaignId,
     ui: campaignUi(status),
     render: drawSetting,
-    reload: loadSetting,
+    // Close the table reloads through here, so the panel redraws and the
+    // initiative panel takes its local list back.
+    reload: () => Promise.all([loadSetting(), loadTable(), tableInit(campaignId)]),
   });
   MC.setting.state.entry = null;
   MC.setting.state.entryImages = [];
@@ -398,7 +404,7 @@ async function open(id) {
   drawInit();
   await tableInit(id);
   initSetting(id);
-  await Promise.all([loadLog(), loadNpcs(), loadSetting()]);
+  await Promise.all([loadLog(), loadNpcs(), loadSetting(), loadTable()]);
 }
 
 function wire() {

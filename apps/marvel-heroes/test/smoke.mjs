@@ -978,7 +978,7 @@ section('The shared campaign views are loaded in order, reach only this app\'s A
 
 {
   const css = readFileSync(join(appDir, 'styles.css'), 'utf8');
-  const MODULES = { 'campaign/index.html': ['notes', 'people', 'handouts'], 'gm/index.html': ['setting'], 'gm/present.html': ['present'] };
+  const MODULES = { 'campaign/index.html': ['notes', 'people', 'handouts'], 'gm/index.html': ['setting', 'table'], 'gm/present.html': ['present'] };
   for (const [page, mods] of Object.entries(MODULES)) {
     const html = readFileSync(join(appDir, page), 'utf8');
     const srcs = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map((m) => m[1]);
@@ -989,6 +989,10 @@ section('The shared campaign views are loaded in order, reach only this app\'s A
     check(`${page} loads no other app's script`, srcs.every((s) => s.startsWith('/shared/js/campaign/') || !s.startsWith('/')), srcs.join(' '));
   }
   const pageScripts = ['campaign/campaign.js', 'gm/gm.js', 'gm/present.js'].map((f) => readFileSync(join(appDir, f), 'utf8'));
+  // GM tools is where a Marvel GM runs a session, so The Table's panel is drawn
+  // there as well as on the Campaigns page, not merely loaded.
+  check('GM tools loads and draws The Table\'s panel',
+    /MC\.table\.load\(\)/.test(pageScripts[1]) && /MC\.table\.html\(\)/.test(pageScripts[1]));
   // The page code names only this app's API (the suite itself is left out: it
   // names the other one in these very lines), and no endpoint imports another
   // group's code - a comment naming the Palladium file it mirrors is fine.
