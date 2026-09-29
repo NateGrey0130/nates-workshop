@@ -345,9 +345,16 @@ if (!bad.length) {
 //
 // The whole directory, not src/: wrangler.jsonc carries the bindings, the vars
 // and the rate-limit numbers, so a config-only change is deploy-relevant too.
-const WORKER_DIR = 'workers/pick3cut5-room';
+//
+// TWO WORKERS since The Table (workers/table-room). Each is checked the same
+// way and names its own deploy script, because a merge deploys neither.
+const WORKERS = [
+  { dir: 'workers/pick3cut5-room', script: 'pick3cut5-room', deploy: 'scripts/deploy-room.mjs' },
+  { dir: 'workers/table-room', script: 'table-room', deploy: 'scripts/deploy-table-room.mjs' },
+];
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+for (const { dir: WORKER_DIR, script: SCRIPT_NAME, deploy: DEPLOY } of WORKERS) {
 console.log(`  ${WORKER_DIR} - deployed by hand, so no check-run exists for it\n`);
 
 try {
@@ -416,7 +423,7 @@ try {
           shaNote = 'CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN not set';
         } else {
           const res = await fetch(
-            `https://api.cloudflare.com/client/v4/accounts/${acct}/workers/scripts/pick3cut5-room/settings`,
+            `https://api.cloudflare.com/client/v4/accounts/${acct}/workers/scripts/${SCRIPT_NAME}/settings`,
             { headers: { Authorization: `Bearer ${token}` } },
           );
           if (!res.ok) {
@@ -453,7 +460,7 @@ try {
           if (lines.length > 5) console.log(`      ... and ${lines.length - 5} more`);
           console.log('');
           console.log('    This one is exact - it is not a timestamp guess. Deploy it:');
-          console.log(`      node scripts/deploy-room.mjs\n`);
+          console.log(`      node ${DEPLOY}\n`);
         }
       } else if (commitAt > deployAt) {
         console.log(`    (no deployed sha to compare - ${shaNote}; falling back to timestamps)`);
@@ -464,11 +471,11 @@ try {
         console.log('    A timestamp cannot say whether that change mattered. Read the diff,');
         console.log('    then either deploy it or decide it does not need deploying:');
         console.log(`      git log --oneline ${sha} -1 -- ${WORKER_DIR}`);
-        console.log(`      node scripts/deploy-room.mjs\n`);
+        console.log(`      node ${DEPLOY}\n`);
       } else {
         console.log(`    up to date - ${version.slice(0, 8)} deployed ${deployAt.toISOString()}`);
         console.log(`    newest commit ${sha} ${commitAt.toISOString()}`);
-        console.log(`    (by timestamp only - ${shaNote}; deploy with scripts/deploy-room.mjs to make this exact)\n`);
+        console.log(`    (by timestamp only - ${shaNote}; deploy with ${DEPLOY} to make this exact)\n`);
       }
     }
   }
@@ -478,4 +485,5 @@ try {
   console.log(`    COULD NOT CHECK: ${String(err.message).split('\n')[0].slice(0, 130)}`);
   console.log('    The Worker half of this sweep answered nothing. Do not read the');
   console.log('    Pages result above as covering it.\n');
+}
 }

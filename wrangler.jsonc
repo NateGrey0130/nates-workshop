@@ -94,12 +94,24 @@
   // service binding carries plain HTTP (room creation, solo generation) to the
   // Worker's fetch handler, where the rate limit binding that Pages cannot use
   // is waiting.
+  //
+  // TABLE_ROOM is The Table's live game room, the standalone Worker in
+  // workers/table-room/, for the same reason and with the same deploy order:
+  // `node scripts/deploy-table-room.mjs` BEFORE the merge that first binds it,
+  // or every /table/ route answers 503. Unlike Pick 3 Cut 5 it sits behind
+  // Access: its routes are under each game's own /api/ directory and on no
+  // bypass list.
   "durable_objects": {
     "bindings": [
       {
         "name": "P3C5_ROOM",
         "class_name": "Room",
         "script_name": "pick3cut5-room"
+      },
+      {
+        "name": "TABLE_ROOM",
+        "class_name": "TableRoom",
+        "script_name": "table-room"
       }
     ]
   },

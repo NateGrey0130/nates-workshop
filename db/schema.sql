@@ -302,6 +302,29 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '078-campaign-entries.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'campaign_images');
 
+-- The Table's game sessions (migration 088): one row per table a G.M. opened,
+-- open while closed_at is NULL, and its roll feed once it closed. The live room
+-- is a Durable Object that never reads D1; the migration's header says how the
+-- feed is filtered per reader. Seed line directly after the table.
+CREATE TABLE IF NOT EXISTS table_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  opened_by TEXT NOT NULL,
+  opened_at TEXT NOT NULL DEFAULT (datetime('now')),
+  closed_at TEXT,                        -- NULL = the table is open under `code`
+  closed_reason TEXT CHECK (closed_reason IN ('gm', 'idle', 'lost')),
+  feed TEXT,                             -- JSON: every roll, with its visibility
+  roll_count INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_table_sessions_one_open
+  ON table_sessions (campaign_id) WHERE closed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_table_sessions_campaign ON table_sessions (campaign_id, id);
+
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '088-table-sessions.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_table_sessions_one_open');
+
 -- A G.M.'s own statted NPCs, belonging to no campaign (migration 079). A
 -- statted NPC is a characters row, and characters.campaign_id is NOT NULL and
 -- cascades - so the library is its own table rather than a nullable column,

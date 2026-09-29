@@ -1,0 +1,32 @@
+{
+  // Published URL, not 'node_modules/wrangler/config-schema.json': this repo has
+  // no package.json and no node_modules, so the path every wrangler init writes
+  // resolves to nothing here. Editors validate this file against the URL instead.
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "table-room",
+  "main": "src/index.js",
+  "compatibility_date": "2026-04-19",
+
+  // Off on purpose. The room trusts the identity the Pages join route puts on
+  // each socket, and that is safe only because the Pages binding is the one
+  // way in. A workers.dev hostname would be a second way in with nothing -
+  // not Access, not the D1 check - in front of it.
+  "workers_dev": false,
+
+  "observability": { "enabled": true },
+
+  // No D1, no KV, no R2. The room keeps its state in its own Durable Object
+  // storage and never touches a database: the Pages routes read and write each
+  // game's D1, and a room reaches none of them.
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOM", "class_name": "TableRoom" }
+    ]
+  },
+
+  // The room code is the object's name, so this namespace is the whole lookup
+  // table. SQLite-backed, the class Cloudflare recommends for new objects.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["TableRoom"] }
+  ]
+}
