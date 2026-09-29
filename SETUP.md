@@ -53,16 +53,18 @@ nates-workshop/
 ├── .claude/              settings.json, hooks/, launch.json, skills/, agents/
 ├── scripts/              d1-apply, q, drift-check, deploy-sweep, groups, the book tools
 ├── workers/
-│   └── pick3cut5-room/   Durable Object server. NOT deployed by a merge
+│   ├── pick3cut5-room/   Durable Object server. NOT deployed by a merge
+│   └── table-room/       The Table's live game room. NOT deployed by a merge either
 └── functions/api/
     ├── _middleware.js    Access JWT verification on /api/*; PUBLIC_PATHS exemptions
     ├── _lib/             access.js (the ONE identity read), access-jwt.js, claude-client.js
     ├── claude.js         /api/claude proxy: model allowlist + token cap
     ├── media-vault/      per-item CRUD, lookup proxy (TMDB key server-side), sharing
     ├── pick3cut5/        room + solo; outside the wall; thin proxies to the Worker
+    ├── table/            lookup: which game a table code belongs to (behind the wall)
     ├── filament-forge/   catalog (OFD snapshot) + per-user data
-    ├── marvel-heroes/    saved heroes
-    └── character-creator/  61 endpoints + _lib; see the app README
+    ├── marvel-heroes/    saved heroes, campaigns, The Table's Marvel routes
+    └── character-creator/  69 endpoints + _lib; see the app README
 ```
 
 `.claude/` is repo-local until a machine links it (*Setting up a machine*).
@@ -90,7 +92,8 @@ node scripts/d1-apply.mjs --remote db/migrations/NNN-whatever.sql
 
 `apps/character-creator/docs/operations.md` has the migration convention and
 the per-migration table. Two things are outside *merge = deploy*: the
-`workers/pick3cut5-room` Worker (next section), and a deploy that fails.
+`workers/pick3cut5-room` and `workers/table-room` Workers (next section), and a
+deploy that fails.
 
 After a merge, `ship-pr` steps 8–10 confirm it: the merge commit's `Cloudflare
 Pages` check-run, then a string the change added. `node scripts/deploy-sweep.mjs`
@@ -187,6 +190,22 @@ Model ids are plain vars in the Worker's `wrangler.jsonc`. The Worker binds
 `DB` only to write `claude_usage` rows (`pick3cut5-party`, `pick3cut5-solo`,
 null email, fail-open). No game state touches D1, because rooms live in Durable
 Object memory.
+
+### The Table's room, the same way
+
+`workers/table-room/` is The Table's live game room, bound as `TABLE_ROOM` and
+deployed exactly like Pick 3 Cut 5's, with the same order: **before** the Pages
+deploy that binds it, or every `table/` route answers 503.
+
+```bash
+node scripts/deploy-table-room.mjs
+```
+
+It stamps `GIT_SHA` and refuses a dirty tree (`scripts/deploy-worker-lib.mjs`),
+and `deploy-sweep.mjs` checks it beside the other Worker. It has no secret and
+binds no database: rooms keep their feeds in Durable Object storage, and the
+Pages routes save a feed to the campaign's own D1 when the table closes. Unlike
+Pick 3 Cut 5 it sits **behind** Access - its routes are on no bypass list.
 
 ### It cannot be played on a preview
 

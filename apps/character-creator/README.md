@@ -258,7 +258,7 @@ touches MediaVault and FilamentForge too — they use its `openModal` /
 
 ## Data model
 
-Forty-five tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
+Forty-six tables in one shared D1 database (`nates-workshop-media`, bound as `DB`),
 and one R2 bucket (`MEDIA`, same name) for the only binary this app stores.
 **Shared by this app and the five split from it, and by no other app since
 2026-09-25**, when each group of apps got a database of its own
@@ -291,6 +291,7 @@ database bookkeeping shared by all; the rest are this app.
 | `npcs` | One dossier per person per campaign — `UNIQUE (campaign_id, name COLLATE NOCASE)` is what makes `@Kevik` resolve to a person rather than three rows. `portrait_key` is an R2 object key. `character_id` (migration 071) is the statted `kind = 'npc'` sheet behind the dossier, when there is one; `ON DELETE SET NULL`. |
 | `campaign_entries` | The GM's own pages (migration 078): `kind` is place / faction / lore / handout / prep, plus a title and a body. **GM-only for as long as it exists** - `entries` refuses a non-GM outright rather than returning a trimmed row, because nothing here is ever revealed. The pictures hang off it, or off nothing at all. |
 | `campaign_images` | The pictures (migration 078), each an R2 object like `npcs.portrait_key`. `revealed_at` NULL is the GM's alone and a timestamp is shown-to-the-party; `caption` is **the only text a player ever reads from this feature**. `entry_id` is nullable for a handout with no page behind it. The bytes are served by `campaigns/[id]/images/[imageId]`, which refuses an unrevealed image to a player with a 404 - not a 403, which would tell them it exists. |
+| `table_sessions` | The Table (migration 088): one row per live table a G.M. opened for a campaign. `closed_at` NULL means the table is open under `code` - at most one per campaign, a partial unique index. The live room is a Durable Object (`workers/table-room/`) that never reads D1; on close its whole feed lands in `feed` as JSON, **GM-only rolls included**, each carrying its `visibility`, and `table/sessions` filters it per reader by the room's own rule (`workers/table-room/src/visibility.js`). `closed_reason` is `gm`, `idle` (closed itself after twelve hours with nobody connected; the campaign page saves it on the G.M.'s next visit) or `lost`. Sheet rolls are in `play_events` too, written by the sheet - this is the table's record, not a second session log. |
 | `npc_library` | A G.M.'s own statted NPCs, belonging to no campaign (migration 079). `owner_email` owns it and nobody else reads it - a 404, not a 403, to anyone else. `sheet` is a JSON snapshot of the character row and its open picks, grants, items and vehicles; `source` is how it arrived (`notable`, `creature`, `generated`, `campaign`); `notes` is the G.M.'s note on the entry. `npc-library/[id]/pull` writes an independent `kind = 'npc'` copy into a campaign the caller runs, refusing a different game with a 409 until the request says `force`. |
 | `cities` | The City Creator's saved cities (migration 080), each in a campaign. `data` is the whole city as generated - overview, districts, places, shops, NPCs, quirks, rumours, map, AI name pool and theme - with a `reveal` flag per pin and a `public` text per entry. No owner column: its G.M. is always its campaign's G.M. `show_map` lets the players see the map. To anyone but the G.M. a whole city is a 404; the list shows them only shown cities, as summaries. |
 | `city_themes` | A G.M.'s saved City Creator themes (migration 084), for reuse. `pack` is the whole theme - its title, tables, overview lines, shop kinds, role classes, street plan, a named race's own lines and its name pool - checked by the engine's `validateSavedTheme` on every write. **Owner only**, a 404 to anyone else. One game per theme (`system`); `adapted_from` points at the theme it was adapted from for another game. A city made from one keeps its own copy. |
@@ -665,6 +666,14 @@ writes are gated (see [Permissions](#permissions)).
 | `characters/[id]/grants/[grantId]` | DELETE | Take a grant back. Owner or G.M., and logged to `play_events`. The row goes for good — a grant is current state, not a ledger |
 | `characters/[id]/events` | GET / POST | Play events. GET lists recent (`?since=`, `?limit=`); POST applies a play action and records it in one batch — `{kind, note, changes}` with absolute from/to values. Rolls carry no changes and are pure records. Opt into `guard: true` and each pool's `from` becomes a condition on the UPDATE, so a replayed change refuses with a 409 carrying both sides rather than overwriting someone — see [A change that could not be sent waits in a queue](docs/campaign-and-play.md#a-change-that-could-not-be-sent-waits-in-a-queue) |
 | `characters/[id]/events/undo` | POST | Owner/GM. Reverses the **latest** not-undone event that carries changes and stamps `undone_at` — "take back the last thing", never a history editor |
+| `table/open` | POST | `{ campaign_id }` - open The Table for a campaign, **G.M. only**. Hands back a four-letter code, or the code of the table already open; a table that closed itself while idle is saved first and a new one opened |
+| `table/access` | GET | `?code=` - what the caller may be at that table: `gm`, `player` (with which of their `kind = 'pc'` characters) and `display`. 404 for a code this game has no open table under, 403 to someone with no character in the campaign |
+| `table/join` | GET | The WebSocket, `?code=&as=gm\|player\|display`. **The role comes from D1, never from the page**: this route decides it and hands it to the room Worker (`workers/table-room/`) on the upgrade, stripping any `X-Table-*` header the browser sent |
+| `table/close` | POST | `{ campaign_id }` - **G.M. only**. Closes the room, writes its whole feed to `table_sessions`, and only then tells the room to forget it, so a failed write leaves the feed in the room for the next try |
+| `table/status` | GET | `?campaign_id=` - the G.M. and the campaign's players: is a table open, under which code, and whether its room has closed itself (`room: closed`, which the G.M.'s page answers with `table/close`) |
+| `table/sessions` | GET | `?campaign_id=` - the campaign's saved table sessions, newest first, each feed **filtered for the reader by the rule the room used live**: GM-only rolls to the G.M. alone, a To-GM roll to the G.M. and its roller |
+| `table/roll` | POST | `{ character_id, note, visibility }` - a sheet roll, carried to the table while that character is seated there. **Owner only.** Writes nothing: the sheet has already saved the roll to `play_events` |
+| `table/seat` | GET | `?character_id=` - owner only: is this character seated at an open table, and under which code |
 | `admin/audit` | GET | Admin, read-only. Which existing characters break their class rules |
 | `journal` | GET / POST | By campaign; `?character_id=`, `?include_campaign=1`, `?limit=`, `?offset=` |
 | `import/extract` | POST | Admin. PDF → class markdown; autosaves a draft |
@@ -677,8 +686,11 @@ writes are gated (see [Permissions](#permissions)).
 | `import/skills/extract` | POST | Admin. PDF → many skills, each classified against the catalog |
 | `import/skills/confirm` | POST | Admin. Apply per-skill insert/update/ignore decisions |
 
-Also at the site level: `/api/claude` (Anthropic proxy, allowlisted models) and
-`/api/media-vault/*` (MediaVault).
+Also at the site level: `/api/claude` (Anthropic proxy, allowlisted models),
+`/api/media-vault/*` (MediaVault), and `/api/table/lookup` (which game a
+table code belongs to; Marvel's own `table/*` routes are under
+`/api/marvel-heroes/`, over the same shared handlers in
+`functions/api/_lib/table-room.js`).
 
 ---
 
@@ -833,9 +845,9 @@ scripts/
 │                           merge commits on origin/main, naming any whose
 │                           check-run is not success or that has none at all -
 │                           65 consecutive merges once failed with a perfectly
-│                           clear signal nobody read. Then pick3cut5-room, which
-│                           a merge does NOT deploy and which therefore has no
-│                           check-run to read. It reads the GIT_SHA binding off
+│                           clear signal nobody read. Then the two Workers,
+│                           pick3cut5-room and table-room, which a merge does
+│                           NOT deploy and which therefore have no check-run. It reads the GIT_SHA binding off
 │                           the live Worker and answers with git log, falling back
 │                           to a timestamp compare only when that binding is absent
 │                           - and saying which. Report only, no exit code
@@ -844,6 +856,11 @@ scripts/
 │                           and the 2026-09-02 hand deploy dropped it anyway, and
 │                           refuses a dirty tree, because a sha that names a commit
 │                           whose content did not ship is worse than none
+├── deploy-table-room.mjs   The ONE way to deploy table-room, The Table's live
+│                           room. The same stamp and the same refusal
+├── deploy-worker-lib.mjs   The body both deploy scripts share. One script per
+│                           Worker, never a --worker flag: a forgotten flag would
+│                           deploy the OTHER Worker, successfully
 ├── menu-check.mjs          Does a new claim about ANOTHER file say where it was
 │                           read? Every false premise on SHIP-PR-AUDIT was that
 │                           one shape, and audit-menu already carried five rules

@@ -141,6 +141,14 @@ jobs:
         if: steps.groups.outputs.marvel == 'true'
         run: node apps/marvel-heroes/test/smoke.mjs
 
+      # The Table's room Worker and its routes (workers/table-room/). Both games
+      # use it and each has its own routes over it, so a change to either group
+      # runs it - and a shared change, which turns both on, does too. It seats a
+      # player and asserts a GM-only roll never reaches that socket.
+      - name: table room
+        if: steps.groups.outputs.palladium == 'true' || steps.groups.outputs.marvel == 'true'
+        run: node workers/table-room/test/room.mjs
+
   # DOES EVERY NEW CLAIM ABOUT ANOTHER FILE SAY WHERE IT WAS READ?
   #
   # Its own job rather than a step in `smoke`, for two reasons: it needs the

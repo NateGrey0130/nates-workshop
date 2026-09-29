@@ -39,6 +39,25 @@
       "port": 8799
     },
     {
+      "//": "The Table needs the table-room Worker running too - start",
+      "//2": "'table-room' first, then this. Without it TABLE_ROOM resolves to",
+      "//3": "nothing and every table route answers 503. Its own port, 8792, so",
+      "//4": "it can run beside another worktree's 8788. See SETUP.md.",
+      "name": "nates-apps+table",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler", "pages", "dev", "--port", "8792",
+        "--do", "TABLE_ROOM=TableRoom@table-room"
+      ],
+      "port": 8792
+    },
+    {
+      "name": "table-room",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--config", "workers/table-room/wrangler.jsonc", "--port", "8798"],
+      "port": 8798
+    },
+    {
       "//": "ESCAPE HATCH. Use when 8788 is already listening - which means",
       "//2": "another worktree, not a stale process. UI-AUDIT.md was served from",
       "//3": "this one and says so in its header. A page on your own port cannot",
