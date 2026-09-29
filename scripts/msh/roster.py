@@ -53,9 +53,9 @@ RANK_NUMBER = {'Sh0': 0, 'Fe': 2, 'Fb': 2, 'Pr': 4, 'Po': 4, 'Ty': 6, 'Gd': 10, 
 ABILITIES = ['F', 'A', 'S', 'E', 'R', 'I', 'P']
 CODE = r'(?:C-?\d{3,4}|Shift\s?[XYZ0]|Sh[XYZ0]|[A-Za-z]{1,2})'
 # <row letter, up to 3 chars of OCR noise> <number> <code> [(<alt number> <alt code>)] <rest>
-# The alternate is the book's own convention (printed p.2): "any altered
-# statistics usually appear in parentheses after the normal ones", as in
-# Magma's S 10 Gd(30Rm) or an armoured form. Codes are read loosely and made
+# The alternate is the book's own convention (printed p.2): a changed value
+# is set in parentheses after the usual one, as in Magma's S 10 Gd(30Rm) or
+# an armoured form. Codes are read loosely and made
 # canonical by canon(); a code OCR mangled past recognition ("20 x") is kept
 # as unread and the number stands.
 ROW = re.compile(r'^\s*(\S{1,3})\s+([0-9OolI]{1,4})[\u00b0\'\u2019:.,]?\s*[^\w\s(]{0,2}(' + CODE + r')(?![a-z])_?\s*'
@@ -288,9 +288,9 @@ class GridReader:
         self.pdf_path = os.path.join(book['source_pdf_dir'], book['source_pdf'])
         self.doc = None
 
-    def read(self, pdf, box):
+    def read(self, pdf, box, psm='6'):
         x0, y0, x1, y1 = (int(v) for v in box)
-        path = os.path.join(self.dir, 'p%03d-%d-%d-%d-%d.txt' % (pdf, x0, y0, x1, y1))
+        path = os.path.join(self.dir, 'p%03d-%d-%d-%d-%d%s.txt' % (pdf, x0, y0, x1, y1, '' if psm == '6' else '-psm' + psm))
         if not os.path.exists(path):
             import pymupdf, subprocess, shutil
             if self.doc is None:
@@ -299,7 +299,7 @@ class GridReader:
             s = 72 / 300
             png = path[:-4] + '.png'
             self.doc[pdf - 1].get_pixmap(dpi=300, clip=pymupdf.Rect(x0 * s, y0 * s, x1 * s, y1 * s)).save(png)
-            r = subprocess.run([tess, png, 'stdout', '--psm', '6'], capture_output=True)
+            r = subprocess.run([tess, png, 'stdout', '--psm', psm], capture_output=True)
             os.remove(png)
             io.open(path, 'w', encoding='utf-8', newline='\n').write(r.stdout.decode('utf-8', 'replace'))
         return [l for l in io.open(path, encoding='utf-8').read().splitlines() if l.strip()]
@@ -381,6 +381,12 @@ def check(block):
 
 def parse(slug):
     book = load_book(slug)
+    if book.get('layout') == 'roster-booklet':
+        # a boxed module's Roster Booklet (MHSP1): scripts/msh/booklet.py reads
+        # it into the same entries; nothing below runs for it
+        import booklet
+        stream, entries = booklet.parse(book, slug)
+        return book, stream, entries
     stream = page_stream(book, slug)
     reader = GridReader(book, slug)
     entries, cur = [], None
@@ -524,9 +530,12 @@ def apply_overrides(slug, entries):
     unmatched = []
     for o in json.load(io.open(path, encoding='utf-8'))['overrides']:
         m = o['match']
+        if 'summary' in m:
+            continue                    # a Reference Summary misprint: booklet.coverage() reads these
         hits = [(e, b) for e in entries for b in e['blocks']
                 if b['page'] == m['page'] and (e['header'] or '').upper().startswith(m['header'].upper())
-                and ('label' not in m or (b['label'] or '').upper() == m['label'].upper())]
+                and ('label' not in m or (b['label'] or '').upper() == m['label'].upper())
+                and ('kind' not in m or b.get('kind') == m['kind'])]
         if o['verdict'] == 'table':
             hits = [(e, None) for e in entries
                     if m['page'] in e['pages'] and (e['header'] or '').upper().startswith(m['header'].upper())]
@@ -634,9 +643,17 @@ def main():
     missing = index_misses(book, entries)
     first, last = book.get('character_pages', [-10 ** 6, 10 ** 6])
     in_range = [n for n, pages in book.get('index', []) if any(first <= p <= last for p in pages)]
-    print('  printed index: %d names in printed %d-%d, %d found as an entry, member or sub-block%s'
-          % (len(in_range), first, last, len(in_range) - len(missing),
-             '' if not missing else '; NOT FOUND: ' + ', '.join(missing)))
+    if book.get('layout') == 'roster-booklet':
+        # no printed index: the Reference Summary chart is the checklist
+        import booklet
+        path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % a.slug)
+        lines, missed = booklet.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
+        print('\n'.join(lines))
+        missing = missing or (['the Reference Summary'] if missed else [])
+    else:
+        print('  printed index: %d names in printed %d-%d, %d found as an entry, member or sub-block%s'
+              % (len(in_range), first, last, len(in_range) - len(missing),
+                 '' if not missing else '; NOT FOUND: ' + ', '.join(missing)))
     print('  wrote %s' % out)
     if bad or unmatched or missing:
         sys.exit(1)
