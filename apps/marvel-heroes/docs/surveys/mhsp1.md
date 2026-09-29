@@ -432,6 +432,13 @@ not already do, and where it differs from the plan above:
     carried as data, transcribed by eye: ten d10 rolls, each a villain against
     a hero, two only after Betrayal. The smoke suite holds it to the book's
     characters.
+- **Quote marks.** The book quotes only with double quotes, and OCR read them
+  as single quotes, pairs, mixes and asterisks (`'First`, `''nerd"`,
+  `'"'kit-bashed"`). Every piece of MHSP1's text is now normalized once it is
+  joined (`booklet.quotes`): any quote mark that is not an apostrophe inside a
+  word or after a plural becomes a double quote. The build stops if a piece is
+  left with an unpaired one. Of the 237 text rows, none changed in anything
+  but quote marks, asterisks and spaces, and every row's quotes pair.
 - **The GM tools** read a rank word as a Resources rank ("POOR", "CLASS
   1000"), a printed "2,150" as 2150, and a block flagged `form` as a form.
   The Marvel smoke suite pins each, and each check failed with its fix removed.
