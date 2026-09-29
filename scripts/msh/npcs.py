@@ -121,6 +121,28 @@ def unpaired(rows, slug):
                          % (slug, len(odd), t[max(0, t.find('"') - 30):t.find('"') + 30]))
 
 
+def text_fixes(rows, slug):
+    """Apply the 'text' verdicts of scripts/msh/<slug>-overrides.json: a mark
+    only the page image can settle (MA1 prints real single quotes, so a lost
+    closing mark looks like any other). Each names its row and a fragment of
+    a few words; it must be found exactly once, or the build stops, because a
+    fix that no longer finds its text must not pass quietly."""
+    path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % slug)
+    fixes = [o for o in (json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
+             if o['verdict'] == 'text']
+    at = {r[0]: i for i, r in enumerate(rows)}
+    missed = []
+    for o in fixes:
+        i = at.get(o['match']['row'])
+        if i is None or rows[i][6].count(o['read']) != 1:
+            missed.append(o['match']['row'])
+            continue
+        r = rows[i]
+        rows[i] = r[:6] + (r[6].replace(o['read'], o['printed']),)
+    if missed:
+        raise SystemExit('%s: %d text override(s) found no single match: %s' % (slug, len(missed), ', '.join(missed)))
+
+
 def norm(s):
     return re.sub(r'[^a-z0-9]+', ' ', (s or '').lower()).strip()
 
@@ -425,6 +447,7 @@ def main(slug_arg):
     # a Summary-only character has no page, and comes after the book's pages
     chars.sort(key=lambda c: (min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
+    text_fixes(rows, slug_arg)
     unpaired(rows, slug_arg)
     # EVERY book's characters live in this one file. Rebuilding one book
     # replaces that book's characters and leaves the others as they are.
