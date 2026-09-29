@@ -21,8 +21,13 @@ by its tests. Do not read them for method either - their rules (cite to a
 catalog, Rows lines per table) are not this pipeline's. `groups.json` gives
 `scripts/msh/` to the marvel group; a Marvel book PR is `msh/...`.
 
-The first book done this way is MA1, and its survey is the worked example:
-`apps/marvel-heroes/docs/surveys/ma1.md`. Read it before starting a second.
+Two books are done, and each survey is a worked example. Read both before
+starting a third:
+- `apps/marvel-heroes/docs/surveys/ma1.md`: a sourcebook of numbered grids,
+  a printed Contents and index, read by `scripts/msh/roster.py`
+- `apps/marvel-heroes/docs/surveys/mhsp1.md`: a boxed module (three booklets,
+  each numbered from 1) whose blocks print rank words and no numbers, with no
+  index, read by `scripts/msh/booklet.py`
 
 ## Many books in one set of files
 
@@ -41,13 +46,24 @@ Since 2026-09-28 the chain is multi-book. What that means for a new one:
 - A book needs a `short` (the code a card cites it by, e.g. MA1).
 - A book with no team sections (laid out A-Z) files its characters under
   the book's own title.
-- `roster.py` was still tuned on MA1's three columns and header sizes. Expect
-  `--failures` to show where another layout differs. After changing it,
-  re-run MA1 and confirm its `book-text.sql` is byte-identical before trusting
-  the change: live data depends on it.
+- **A book laid out differently gets a reader of its own**, chosen by the
+  registry's `layout`: absent is MA1's (`roster.py`), `roster-booklet` is
+  MHSP1's (`booklet.py`). The reader returns the same `roster.json` entries,
+  and `npcs.py` and `extras.py` gate what is new behind the same field. Do not
+  bend MA1's path to fit another book: its header height, column cut and
+  number grid are tuned to MA1 and live data depends on them.
+- **Prove the first book did not move.** Before a PR that touches
+  `scripts/msh/` merges, build MA1 with `origin/main`'s scripts (a
+  `git archive origin/main scripts/msh apps/marvel-heroes/data` into the
+  scratchpad) and with the branch's, and `cmp` its `roster.json`,
+  `book-text.sql`, `extras.json`, `extras-text.sql` and its rows of
+  `npcs.json`. Byte-identical, or say why not.
+- **A team name is a filter group shared by every book.** MHSP1's sides are
+  "Secret Wars Heroes" and "Secret Wars Villains" because MA1 already has a
+  team called Villains.
 
-So a new book's first PR is still the survey (registry entry and survey doc,
-no data), then its data.
+So a new book's first PR is the survey (registry entry and survey doc, no
+data). If its layout is new, the reader is the second, and the data is last.
 
 ## The chain
 
@@ -86,6 +102,14 @@ Every field is read off the book, never assumed from the last book.
   early-version modifier, not a second stat block - read each page.
 - `character_pages`, `item_pages`, `item_parts`, `adventure`: the ranges each
   script reads.
+- **A boxed module** replaces `offset` with `parts`: each booklet's PDF range,
+  offset and `cite` (how a card names it, "Roster"). Then `character_part`,
+  `item_part` and `adventure.part` say which booklet a range counts in, and
+  every card, block, item and section carries its `part`. MHSP1's entry also
+  shows `reference_summary` (a chart as the index), `running` (notes in another
+  booklet), `adventure.sections` (a campaign of events, found by how each
+  first line reads), `locations` (with a room table transcribed as data) and
+  `vehicles`. The registry's `about` list documents every field.
 
 ## The book checks itself
 
@@ -97,6 +121,13 @@ its rank code.** A failure is a page to look at:
   the page image, keeping `printed` AND `corrected` (the Codex shows the page,
   the GM tools play the corrected value);
 - printed that way on purpose -> `as_printed`, with the reason.
+
+**A book that prints ranks and no numbers checks itself the same way**, on
+each rank's standard number (`apps/marvel-heroes/data/ranks.json`). That every
+MHSP1 block adds up that way is the evidence the numbers are right to derive;
+its blocks say `rank_only` so the Codex never shows a derived number as
+printed. A chart that repeats the blocks (MHSP1's Reference Summary) is held
+to them too, and its own misprints are overrides.
 
 Where the text prints a Health for something without a block of its own, it
 is a free check on any stats you build (`scripts/msh/<slug>-members.json`:
@@ -110,13 +141,15 @@ names, short identity lines and pages; never a sentence of the book.** The
 prose goes to `msh_book_text` (migration 087) through the generated `.sql`,
 which is never committed. The Marvel smoke suite's leak check compares every
 file under the app, its endpoints, `scripts/msh/` and the Marvel migrations
-with the cached prose, ten words at a time. It caught the first survey
-quoting the book. Run the suite with the cache present, or it skips.
+with the cached prose, ten words at a time: the parsed text, and the raw OCR
+of every page no parser covers yet. So a book is covered from the day it is
+cached. It caught the first survey quoting the book. Run the suite with the
+cache present, or it skips.
 
 `npcs.py` and `extras.py` each delete only their own rows before inserting,
 so either can be re-run alone. Keep it that way.
 
-## Traps the first book hit
+## Traps the first two books hit
 
 - **Stat grids:** `--psm 3` reads some grids' letter and number columns
   sideways. `roster.py` re-reads every grid from a `--psm 6` crop; trust that,
@@ -129,6 +162,16 @@ so either can be re-run alone. Keep it that way.
   file here must stay ASCII. Check the bytes after editing.
 - **Worktrees:** the local D1 may predate the Marvel tables; apply
   `db/migrations/marvel/*` locally before driving the GM page.
+- **Low confidence is not junk.** A title, a header or a real word can read at
+  confidence 0 and still be right (MHSP1's "Galactus's 'Cat'" header), and art
+  beside a column can read at 60. Filter prose by what the book reads
+  confidently elsewhere, and re-read a line that lost a word from a crop of the
+  page image (`--psm 7`). Never drop by a threshold alone.
+- **Tesseract can miss a title entirely** (MHSP1's "Going Home"). Find the
+  section by its first words, recorded in the registry, and say so there.
+- **Read the page before naming where something is.** The MHSP1 survey put a
+  vehicle in the wrong event, because a paragraph at the top of a column
+  continues the section above it.
 
 ## Done means
 
