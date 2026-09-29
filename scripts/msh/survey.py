@@ -86,7 +86,18 @@ def survey(slug):
     txt_dir = os.path.join(CACHE, 'books', slug, 'txt')
     if not os.path.isdir(txt_dir):
         sys.exit('no cache at %s - run scripts/msh/ocr-book.py %s first' % (txt_dir, slug))
-    off = book['offset']
+    # A boxed module numbers each booklet from 1 (registry `parts`, MHSP1):
+    # a page's printed number is its own part's, and a page in no numbered
+    # part (a cover, a map) has none. The votes below are per offset, so a
+    # module's parts show as one run of votes each.
+    parts = [p for p in book.get('parts', []) if p['offset'] is not None]
+    off = book.get('offset')
+
+    def printed_of(pdf):
+        if off is not None:
+            return pdf - off
+        part = next((p for p in parts if p['pdf'][0] <= pdf <= p['pdf'][1]), None)
+        return pdf - part['offset'] if part else None
     folios, blocks = [], []
     for pdf in range(1, book['pdf_pages'] + 1):
         path = os.path.join(txt_dir, 'p%03d.txt' % pdf)
@@ -124,7 +135,7 @@ def survey(slug):
                 rank_ok = all(RANK_NUMBER.get(code) in (None, n) for n, code in rows)
                 check = {'health': h_ok, 'karma': k_ok if num(karma or '') is not None else None, 'ranks': rank_ok}
             blocks.append({
-                'pdf': pdf, 'printed': pdf - off, 'line': i + 1,
+                'pdf': pdf, 'printed': printed_of(pdf), 'line': i + 1,
                 'header': header[1] if header else None,
                 'header_distance': (i - header[0]) if header else None,
                 'rows_read': len(rows), 'health': m.group(1), 'karma': karma, 'check': check,
@@ -133,7 +144,7 @@ def survey(slug):
     for pdf, printed in folios:
         votes.setdefault(pdf - printed, []).append(pdf)
 
-    idx = book['index']
+    idx = book.get('index', [])
     alias = book.get('index_aliases', {})
     found = {}
     for b in blocks:

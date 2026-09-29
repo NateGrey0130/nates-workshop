@@ -3,8 +3,8 @@
 Marvel Super Heroes special module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mhsp1`. Measured 2026-09-28.
 
-**Rows citing this book:** 0. This is the survey PR: a registry entry and this
-file, with no characters, items or `msh_book_text` rows yet.
+**Rows citing this book:** 0. The survey (#1521) and the parser PR put no
+characters, items or `msh_book_text` rows in yet; the data PR does.
 
 This is the second Marvel book, and the first since the scripts became
 multi-book (#1520). It went through `scripts/msh/` only. The worked example is
@@ -50,9 +50,11 @@ Every Roster Booklet folio 2-16 was also read on its page image.
 anything keyed by printed page alone: `sections`, `character_pages`,
 `index` and a card's page citation all assume one numbering. "p.4" is Bases
 in one booklet and Iron Man in the other. So this entry carries `parts` and no
-`offset`, and the scripts that read `offset` (`survey.py`, `roster.py`) were
-run from a scratch copy of the registry with `offset` set per part. See
-[The parser](#the-parser-dry-run).
+`offset`. For the survey, the scripts that read `offset` (`survey.py`,
+`roster.py`) were run from a scratch copy of the registry with `offset` set per
+part. The parser PR taught both to read `parts` (see
+[The parser](#the-parser)), and each part carries the `cite` a card shows:
+`Roster`, `Adventure` and `Reference Summary`.
 
 ## The book's own authority lists
 
@@ -198,6 +200,77 @@ It fails for four separate reasons, measured on the TSV:
 4. **Two numberings.** `offset` is one integer, and it is used for every page
    and page citation.
 
+*The dry run above is kept as it was measured. The parser PR's own section
+follows.*
+
+## The parser
+
+`python scripts/msh/roster.py mhsp1` reads this book through
+`scripts/msh/booklet.py`, because its registry entry says
+`"layout": "roster-booklet"`. It writes the same `roster.json` entries that
+MA1's path does, so `npcs.py` and `extras.py` take either. MA1's path through
+`roster.py` is unchanged. Rebuilt on this branch, MA1's `roster.json`,
+`book-text.sql` (902 rows), `extras.json`, `extras-text.sql` and `npcs.json`
+are byte-identical to `main`'s, and so is `survey.py ma1 --json`.
+
+How the reader works:
+- **Pages are cut at the heavy rule**, found on the page image as a row that is
+  dark across more than 60% of its width. There is one on every roster page.
+  Each half is cut into three columns by MA1's `gutters()` and read top to
+  bottom, left to right. This is what fixed the dry run's welded columns.
+- **A header** is capitals ending in the trademark sign, or capitals set at
+  least 1.1 times the body height. Galactus's "Cat" reads at confidence 0 and
+  is still found, because a low-confidence line is kept when a stat block
+  follows it.
+- **A full block is re-read from a crop of the page image** at `--psm 6`, as
+  MA1's GridReader does. The labels box taller than their values on some pages
+  (46-66 px against 26 on Cyclops's), so the TSV misplaces them. The crop ends
+  at the block's own text: Lockheed's illustration read as words. A value
+  neither reading gets is read from that one line at `--psm 7`: Storm's
+  Popularity is a lone "4" that both read as a mark.
+- **Ranks become numbers through the registry.** `rank_aliases` gives the rank,
+  and `ranks.json` gives its standard number, so every block is `rank_only`.
+  The number is derived, never read.
+- **One-line grids** are read code by code, under the letters by x. There are
+  five, including Ben Grimm's in the Thing's running note.
+- **Running notes** (registry `running`) are found by the capitals-plus-
+  trademark run-in. Balloon lettering from the comic panels is dropped
+  because it is capitals, and a word below 75 confidence is dropped from a
+  prose line (prose reads 92 or better).
+- **The Reference Summary is the index.** Every row must be an entry, and every
+  roster block must agree with its row, or the difference must be recorded in
+  `scripts/msh/mhsp1-overrides.json`. Otherwise `roster.py` exits 1.
+
+Measured 2026-09-28:
+
+| measure | count |
+|---|---|
+| entries | 41: 33 characters, 7 from the Summary alone, and the Wrecking Crew |
+| stat blocks | 45: 33 full, 5 one-line, 7 from the Summary |
+| pass Health and Karma on derived numbers | 44 |
+| explained by an override | 1: Lockheed's printed `?` Reason (Karma 40 = I + P) |
+| failing | 0 |
+| Summary rows placed | 40 of 40; 4 chart disagreements recorded (the 3 misprints and Lockheed's dash) |
+| running notes | 35: 22 heroes, 12 villains and the Wrecking Crew's shared one |
+| powers named | 112, across 37 entries |
+
+Three one-line grids have no name above them, so the overrides name them from
+the entry's own identity lines: Klaw's sound creatures, Curtis Connors and
+Marsha Rosenberg. Jennifer Walters and Ben Grimm are named in print.
+
+**The leak check now covers a book before it is parsed.** The Marvel smoke
+suite also shingles the OCR of every cached page that no parser covers
+(`character_pages`, `item_pages`, `adventure` and `running`, per the
+registry). That takes in MA1's contents page and introduction, and all of
+MHSP1's Adventure Book outside its running notes. It found one real 10-word
+quote of MA1 that the old check had missed: a `roster.py` comment quoting
+printed 2, now paraphrased. It also found one false match, the team names in
+`npcs.json` in Contents order, so the check no longer counts the registry's
+own names, or the Summary's four-letter rank abbreviations, as prose words.
+A first version shingled whole pages, character pages included, and so also
+flagged the identity lines `npcs.json` is meant to carry. That is why a page
+a parser covers is left to the parsed text.
+
 ## Entry kinds
 
 Reconciling the 33 blocks, the 5 one-line grids and the 40 Summary rows sorts
@@ -250,6 +323,10 @@ All of it is in the Adventure Book:
 
 ## Decisions this survey leaves open
 
+*Nate took 1, 2, 5 and 6 as recommended on 2026-09-28. 3 and 4 were taken as
+recommended in the parser PR, where they first mattered, and 7 was already
+settled by #1520.*
+
 1. **Page citations across two booklets.** Printed pages repeat (1-16 twice).
    Should a card cite `Roster p.4` and `Adventure p.13`, or should `parts` stay
    internal and cards cite the PDF page? The recommendation is the part's short
@@ -287,9 +364,8 @@ All of it is in the Adventure Book:
 
 ## The next PRs
 
-1. **Parser (`msh/feat/...`):** make `scripts/msh/` read this layout without
-   changing MA1's output. Before merging it, confirm that MA1's `book-text.sql`
-   and `roster.json` are byte-identical to what they are now.
+1. **Parser (`msh/feat/mhsp1-parser`), done; see [The parser](#the-parser).**
+   What it was asked to do, as the survey set it out:
    - Per-part offsets from `parts`, in place of `offset`, wherever `survey.py`,
      `roster.py`, `npcs.py` and `extras.py` turn PDF pages into printed pages.
      A page citation carries the part.
@@ -306,9 +382,25 @@ All of it is in the Adventure Book:
      and as the stat source for the seven Summary-only rows.
    - Expected: 33 blocks plus 5 one-line grids, every one passing, and 40 of 40
      Summary names placed.
-2. **Data (`msh/data/mhsp1-...`):** `npcs.py mhsp1`, then `extras.py mhsp1` if
-   Decision 6 says so, the `.sql` applied to production before the merge, and
-   this file's Rows line updated.
+2. **Data (`msh/data/mhsp1-...`):** `npcs.py` and `extras.py` taught what
+   this book adds, then run, the `.sql` applied to production before the merge,
+   and this file's Rows line updated:
+   - a `part` on every page a card cites. The Codex shows
+     `MHSP1 Roster p.4`, and cites a Summary-only card as `MHSP1 Reference
+     Summary` with no page. MA1's cards read as they do now.
+   - `team` is the side (Heroes, Villains), and the Wrecking Crew's four
+     members are its team, with the side kept.
+   - the Wrecking Crew's shared Powers, Talents, Background and running note
+     go on the team entry once, not four times.
+   - each running note goes to D1 with its own part and page, not the
+     character's.
+   - the 7 Summary-only cards are marked as such.
+   - Lockheed's `?` Reason is played as Shift 0 (0), since his printed Karma
+     counts it as 0; the Codex shows the `?`.
+   - `extras.py` learns the Adventure Book: the 12 Planned and 10 Random Events
+     as the adventure's sections; the four bases as a location with the room
+     types as parts; the Ultimate Nullifier as an item; the gunnery
+     platform as a vehicle.
 
 ## How to reproduce
 
@@ -316,8 +408,13 @@ All of it is in the Adventure Book:
 python scripts/msh/ocr-book.py mhsp1
 ```
 
-`survey.py` and `roster.py` need an `offset`, which this entry deliberately
-does not have. Until the parser PR, run them from a copy of the registry
-with `offset` set to 1 (the Adventure Book) or 17 (the Roster Booklet).
+```bash
+python scripts/msh/survey.py mhsp1
+```
+
+```bash
+python scripts/msh/roster.py mhsp1
+```
+
 Set `WORKSHOP_MSH_CACHE` to the main checkout's `.cache/msh` when running from a
 worktree.

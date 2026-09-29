@@ -1,0 +1,36 @@
+{
+  "about": [
+    "Hand decisions about MHSP1 stat blocks and its Reference Summary, applied by scripts/msh/roster.py and scripts/msh/booklet.py after parsing. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, kind?, label?}: a Roster Booklet block, as in ma1-overrides.json; kind 'line' is a one-line F A S E R I P grid",
+    "            {summary}: a Reference Summary row (PDF 34), by the name the chart prints",
+    "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            label             the block has no printed name above it; 'label' names it from its entry's own text",
+    "            summary_misprint  the chart prints a value its own ranks contradict and the Roster Booklet's block does not; 'printed' is the chart's, 'corrected' the block's",
+    "            summary_blank     the chart prints a dash where the Roster Booklet prints a value",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 9, "header": "LOCKHEED"}, "verdict": "as_printed", "field": "R",
+     "printed": "?", "checked": "2026-09-28",
+     "note": "Reason is printed as a question mark. Karma 40 = Intuition 20 + Psyche 20, so the book counts it as 0."},
+    {"match": {"page": 13, "header": "KLAW", "kind": "line"}, "verdict": "label", "label": "Sound creatures",
+     "checked": "2026-09-28", "note": "The creatures Klaw makes with his sound powers; Health 72, no Karma printed."},
+    {"match": {"page": 13, "header": "LIZARD", "kind": "line"}, "verdict": "label", "label": "Curtis Connors",
+     "checked": "2026-09-28", "note": "The human form, named as the entry's identity line names him."},
+    {"match": {"page": 15, "header": "VOLCANA", "kind": "line"}, "verdict": "label", "label": "Marsha Rosenberg",
+     "checked": "2026-09-28", "note": "The human form, named as the entry's identity line names her."},
+    {"match": {"summary": "Galactus"}, "verdict": "summary_misprint", "field": "health",
+     "printed": 2100, "corrected": 2150, "checked": "2026-09-28",
+     "note": "F 75 + A 75 + S 1000 + E 1000 = 2150, as the Roster Booklet prints (p.12)."},
+    {"match": {"summary": "Lizard"}, "verdict": "summary_misprint", "field": "karma",
+     "printed": 54, "corrected": 44, "checked": "2026-09-28",
+     "note": "R 4 + I 10 + P 30 = 44, as the Roster Booklet prints (p.13)."},
+    {"match": {"summary": "Molecule Man"}, "verdict": "summary_misprint", "field": "karma",
+     "printed": 104, "corrected": 89, "checked": "2026-09-28",
+     "note": "R 10 + I 4 + P 75 = 89, as the Roster Booklet prints (p.14)."},
+    {"match": {"summary": "Lockheed"}, "verdict": "summary_blank", "field": "karma",
+     "printed": null, "corrected": 40, "checked": "2026-09-28",
+     "note": "The chart prints a dash; the Roster Booklet prints 40 (p.9)."}
+  ]
+}

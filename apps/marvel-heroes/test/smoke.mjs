@@ -1039,8 +1039,19 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     const shingles = new Set();
     // A run counts only if it reads as prose: six or more real words in it. The
     // tables' own runs - "10 11 15 16 ...", "fe pr ty gd ex ..." - are mechanics,
-    // which the app is meant to carry, and would otherwise match.
-    const prose = (run) => run.filter((x) => /^[a-z]{3,}$/.test(x)).length >= 6;
+    // which the app is meant to carry, and would otherwise match. MHSP1's
+    // Reference Summary abbreviates ranks to four letters ("mons amaz typi"),
+    // which look like words to the test and are not.
+    const RANK_ABBR = new Set(['feeb', 'typi', 'exce', 'rema', 'incr', 'amaz', 'mons', 'unea']);
+    // Nor are the books' own names: a run of section, team and character names
+    // in the Contents' order ("X-Factor, New Mutants, Hellfire Club ...", the
+    // teams list npcs.json carries) is a list, not prose.
+    const registry = JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'books.json'), 'utf8')).books;
+    const NAMES = new Set(Object.values(registry).flatMap((b) => [
+      ...(b.sections || []).flatMap(([s, sub]) => [s, sub || '']), ...(b.index || []).map(([n]) => n),
+      ...['heroes', 'villains'].flatMap((k) => ((b.reference_summary || {})[k] || []).map(([n]) => n)),
+    ]).flatMap(words));
+    const prose = (run) => run.filter((x) => /^[a-z]{3,}$/.test(x) && !RANK_ABBR.has(x) && !NAMES.has(x)).length >= 6;
     const addText = (text) => {
       const w = words(text);
       for (let i = 0; i + N <= w.length; i++) if (prose(w.slice(i, i + N))) shingles.add(w.slice(i, i + N).join(' '));
@@ -1073,7 +1084,38 @@ section('No book text is in any tracked file (local only: needs the extraction)'
       const x = JSON.parse(readFileSync(f, 'utf8'));
       for (const piece of [...x.items, ...x.adventure.sections].flatMap((i) => i.text)) addText(piece[2].join(' '));
     }
-    check(`and each parsed book's items and adventure too (${extras.length})`, extras.length === rosters.length);
+    const withExtras = rosters.filter((f) => Object.entries(registry)
+      .some(([slug, b]) => f.startsWith(join(booksDir, slug)) && (b.item_pages || b.adventure)));
+    check(`and each parsed book's items and adventure too (${extras.length})`, extras.length === withExtras.length);
+    // And every page no parser covers, as Tesseract read it
+    // (scripts/msh/ocr-book.py): a contents page, an introduction, a booklet no
+    // parser reads yet, a whole book still being surveyed. The parsed text
+    // above covers only what a parser has taken apart, so these were compared
+    // with nothing (the MHSP1 survey was checked by hand for that reason). A
+    // page a parser does cover is left to the parsed text, which leaves out
+    // the identity lines npcs.json is meant to carry.
+    const covered = (b) => {
+      const pdf = (part, printed) => printed + (part ? b.parts.find((p) => p.name === part).offset : b.offset);
+      const out = new Set();
+      const add = (part, [first, last]) => { for (let p = first; p <= last; p++) out.add(pdf(part, p)); };
+      if (b.character_pages) add(b.character_part, b.character_pages);
+      if (b.item_pages) add(b.item_part, b.item_pages);
+      if (b.adventure) add(b.adventure.part, b.adventure.pages);
+      if (b.running) add(b.running.part, b.running.pages);
+      return out;
+    };
+    const unparsed = [];
+    for (const [slug, b] of Object.entries(registry)) {
+      const dir = join(booksDir, slug, 'txt');
+      if (!existsSync(dir)) continue;
+      const skip = existsSync(join(booksDir, slug, 'roster.json')) ? covered(b) : new Set();
+      for (const f of readdirSync(dir)) {
+        if (skip.has(Number(f.slice(1, 4)))) continue;
+        unparsed.push(`${slug} ${f.slice(0, 4)}`);
+        addText(readFileSync(join(dir, f), 'utf8').replace(/-\r?\n/g, ''));
+      }
+    }
+    check(`and every page no parser covers, from its OCR (${unparsed.length} pages)`, unparsed.length > 0);
     const tracked = spawnSync('git', ['ls-files', '-z', '--', 'apps/marvel-heroes', 'functions/api/marvel-heroes',
       'scripts/msh-extract.py', 'scripts/msh', 'db/migrations/marvel'], { cwd: repoRoot, encoding: 'utf8' })
       .stdout.split('\0').filter(Boolean);
