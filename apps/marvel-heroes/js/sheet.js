@@ -64,7 +64,8 @@ export function snapshot(h, gen, data, contactPicks = []) {
 // A one-line description for a list of heroes.
 export function tagline(s) {
   if (s.mode === 'book') {
-    return `${s.book.source}, p.${s.book.page}; ${s.powers.length} Power${s.powers.length === 1 ? '' : 's'}`;
+    // a boxed module's booklet goes with the page: "MHSP1 Secret Wars, Roster p.4"
+    return `${s.book.source}, ${s.book.cite || `p.${s.book.page}`}; ${s.powers.length} Power${s.powers.length === 1 ? '' : 's'}`;
   }
   if (s.mode === 'pointbuy') {
     const p = s.pointbuy || {};

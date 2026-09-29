@@ -45,7 +45,17 @@ const rankWords = (v) => String(v).toLowerCase().replace(/\b[a-z]/g, (c) => c.to
 // (scripts/msh/books.json); each row carries its book, and a card cites it by
 // the book's short name (MA1). A section's source line lists the books present.
 const shortOf = (books) => Object.fromEntries(books.map((b) => [b.slug, b.short]));
-const pagesLine = (b, pages = b.pages) => `${b.title}, pp.${pages[0]}-${pages[1]}`;
+const pagesLine = (b, pages = b.pages) => `${b.title}, ${b.part ? `${b.part} ` : ''}pp.${pages[0]}-${pages[1]}`;
+
+// A page as a card cites it. A boxed module numbers each booklet from 1
+// (MHSP1's Adventure Book and Roster Booklet), so its rows carry the booklet
+// (`part`): "MHSP1 Roster p.4". The Reference Summary has no page of its own.
+// A book of one numbering reads as before: "MA1 p.7".
+const cite = (short, part, pages) => {
+  const p = pages.filter((n) => n !== null && n !== undefined);
+  const at = p.length ? `${p.length > 1 && p[0] !== p[p.length - 1] ? 'pp.' : 'p.'}${band([p[0], p[p.length - 1]])}` : '';
+  return [short, part, at].filter(Boolean).join(' ');
+};
 
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
@@ -230,36 +240,45 @@ export const SECTIONS = [
     badge: (r) => (r.versions.length > 1 ? `${r.versions.length} versions` : ''),
     meta(r) {
       const pages = [...new Set(r.versions.flatMap((v) => v.pages))].sort((a, b) => a - b);
-      return `${r.team}, ${this.short[r.book]} ${pages.length > 1 ? 'pp.' : 'p.'}${band([pages[0], pages[pages.length - 1]])}`;
+      return `${r.team}, ${cite(this.short[r.book], r.versions[0].part, pages)}`;
     },
     // The name and status lines printed under the header: "Kurt Wagner. Mutant
     // hero". A line that starts lower-case continues the one before it, as
     // Phoenix's "Alien entity who had assumed the personality / of Jean Grey".
+    // A character only MHSP1's Reference Summary gives has no such lines.
     summary: (r) => r.versions[0].identity
       .reduce((s, l) => (!s ? l : /^[a-z(]/.test(l) && !/^\(real/i.test(l) ? `${s} ${l}` : `${s.replace(/\.$/, '')}. ${l}`), '')
-      || `One of the ${r.member_of || r.team}`,
+      || (r.summary_only ? 'In the Reference Summary only; the boxed rules have the full entry' : `One of the ${r.member_of || r.team}`),
     tags(r) {
       return [
       this.many && this.short[r.book],
       r.versions.some((v) => v.blocks.length > 1) && 'forms',
       r.versions.some((v) => v.members.length) && 'team',
       r.versions.some((v) => v.blocks.some((b) => b.override && b.override.verdict === 'misprint')) && 'misprint',
+      r.summary_only && 'summary only',
       ];
     },
     stats(r) {
       const out = [];
       for (const v of r.versions) {
         for (const b of v.blocks) {
-          const head = [r.versions.length > 1 && versionName(v), b.label].filter(Boolean).join(', ');
+          // a block printed in another booklet than its character (Ben Grimm,
+          // in the Adventure Book's note on the Thing) says where
+          const where = b.part ? `${b.part} p.${b.page}` : '';
+          const head = [r.versions.length > 1 && versionName(v), b.label, where].filter(Boolean).join(', ');
           const grid = b.abilities.map(([l, n, c, alt]) => `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`).join(' | ');
           out.push([head || 'Abilities', grid]);
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
           out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
+          if (b.rank_only) out.push(['Numbers', 'The book prints ranks only; each number is its rank\'s standard number']);
           const o = b.override;
           const field = o && (FIELD[o.field] || o.field);
+          const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
           if (o && o.verdict === 'misprint') {
-            const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
             out.push(['Misprint', `${field} is printed ${show(o.printed)}; the book's own ranks give ${show(o.corrected)}`]);
+          } else if (o && o.verdict === 'as_printed' && o.corrected) {
+            // printed as no rank at all (Lockheed's "?" Reason), played as Karma counts it
+            out.push(['As printed', `${field} is printed ${o.printed}; played as ${show(o.corrected)}, as the printed Karma counts it`]);
           } else if (o && o.verdict === 'as_printed') {
             out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
           }
@@ -291,7 +310,8 @@ export const SECTIONS = [
             ? { name: `${m.name} (p.${m.page})`, code: m.id, section: 'npcs', plain: true }
             : { name: `${m.name} (p.${m.page})` }))]);
         }
-        if (r.member_of) out.push(['Team', [{ name: r.member_of, code: slug(r.member_of), section: 'npcs', plain: true }]]);
+        // a later book's team card has an id of its own (wrecking-crew-mhsp1)
+        if (r.member_of) out.push(['Team', [{ name: r.member_of, code: r.member_of_id || slug(r.member_of), section: 'npcs', plain: true }]]);
       }
       return out;
     },
@@ -325,7 +345,7 @@ export const SECTIONS = [
     },
     key: (r) => r.id,
     title: (r) => r.name,
-    meta(r) { return `${this.kindName[r.kind]}, ${this.short[r.book]} p.${r.page}`; },
+    meta(r) { return `${this.kindName[r.kind]}, ${cite(this.short[r.book], r.part, [r.page])}`; },
     summary(r) {
       if (r.vehicle) return Object.entries(r.vehicle).map(([k, v]) => `${k} ${rankWords(v)}`).join(', ');
       if (r.parts) return `Lists ${r.parts.join(', ')}`;
@@ -334,11 +354,14 @@ export const SECTIONS = [
     stats(r) {
       return [
         ...(r.vehicle ? Object.entries(r.vehicle).map(([k, v]) => [k, rankWords(v)]) : []),
-        ['Page', `${this.short[r.book]} p.${r.page}`],
+        ['Page', cite(this.short[r.book], r.part, [r.page])],
       ];
     },
     hay: (r) => [r.name, r.kind, ...(r.parts || [])].join(' '),
-    bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
+    // A vehicle an adventure section states in passing (MHSP1's gunnery
+    // platform, in First Blood) has no text of its own: its card reads that
+    // section's.
+    bookText: (r) => [{ book: r.book, entry: r.section || r.id, label: '' }],
   },
   {
     id: 'adventures',
@@ -355,16 +378,23 @@ export const SECTIONS = [
       const byBook = Object.fromEntries(a.books.map((b) => [b.slug, b]));
       this.short = shortOf(a.books);
       this.source = a.adventures.map((adv) => `${pagesLine(byBook[adv.book], adv.pages)}: ${adv.title}`).join('; ');
+      // MA1's adventure is encounters; MHSP1's is a campaign of Planned Events,
+      // each on a day and shift, and Random Events rolled on a d10 (`kind`).
       const rows = a.adventures.flatMap((adv) => adv.sections.map((s) => ({
-        ...s, adventure: adv.title, book: adv.book, group: s.number ? 'encounter' : 'setting' })));
-      return { rows, groups: [{ id: 'encounter', name: 'Encounters' }, { id: 'setting', name: 'Background and locales' }] };
+        ...s, adventure: adv.title, book: adv.book, group: s.kind || (s.number ? 'encounter' : 'setting') })));
+      const names = [['encounter', 'Encounters'], ['planned', 'Planned events'], ['random', 'Random events'],
+        ['setting', 'Background and locales']];
+      return { rows, groups: names.filter(([id]) => rows.some((r) => r.group === id)).map(([id, name]) => ({ id, name })) };
     },
     key: (r) => r.id,
     title: (r) => r.title,
-    badge: (r) => (r.number ? `E${r.number}` : ''),
-    meta(r) { return `${r.adventure}, ${this.short[r.book]} p.${r.page}`; },
-    summary: (r) => (r.parts.length ? r.parts.join(', ') : 'Before the encounters'),
-    hay: (r) => [r.title, r.adventure, ...r.parts].join(' '),
+    badge: (r) => (r.number ? `E${r.number}` : r.roll ? `d10: ${r.roll}` : ''),
+    meta(r) { return `${r.adventure}, ${cite(this.short[r.book], r.part, [r.page])}`; },
+    summary: (r) => (r.parts.length ? r.parts.join(', ')
+      : r.when ? r.when
+        : r.roll ? `Random event${r.once ? ', once only' : ''}`
+          : r.kind ? 'Background' : 'Before the encounters'),
+    hay: (r) => [r.title, r.adventure, r.when, ...r.parts].filter(Boolean).join(' '),
     bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
   },
 ];

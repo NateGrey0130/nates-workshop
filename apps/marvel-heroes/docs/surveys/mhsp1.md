@@ -3,8 +3,17 @@
 Marvel Super Heroes special module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mhsp1`. Measured 2026-09-28.
 
-**Rows citing this book:** 0. The survey (#1521) and the parser PR put no
-characters, items or `msh_book_text` rows in yet; the data PR does.
+**Rows citing this book:** 237 `msh_book_text` rows over 69 entries in
+production (`DB_MARVEL`, read back 2026-09-29):
+- 189 over 37 character entries (the Wrecking Crew's four members have their
+  text on the team's card)
+- 48 over 2 items and 30 adventure sections
+
+Committed:
+- 41 characters in `apps/marvel-heroes/data/npcs.json`: 45 blocks and 112
+  powers, 38 of them linked to the Ultimate Powers Book
+- 4 items in `data/items.json`
+- the Secret Wars adventure's 30 sections in `data/adventures.json`
 
 This is the second Marvel book, and the first since the scripts became
 multi-book (#1520). It went through `scripts/msh/` only. The worked example is
@@ -362,6 +371,36 @@ settled by #1520.*
    By the rule #1520 pinned, each is a second card with a `-mhsp1` id. This is
    listed only so that nobody is surprised by ten pairs of same-named cards.
 
+## The data
+
+`npcs.py mhsp1` and `extras.py mhsp1` built the committed facts and the two
+data scripts, applied to production before the merge. What MA1's pipeline did
+not already do, and where it differs from the plan above:
+- **Page citations.** Every MHSP1 version, block, item and section carries
+  `part` (the registry's `cite`), and the Codex, the GM's sheet tagline and
+  the source lines show it: "MHSP1 Roster p.4", "MHSP1 Adventure p.13",
+  "MHSP1 Reference Summary". `msh_book_text.page` stays a bare number, because
+  a text row's booklet is its entry's (a running note is always in the
+  Adventure Book), so D1 needed no new column.
+- **Teams** are "Secret Wars Heroes" and "Secret Wars Villains", not bare
+  "Heroes" and "Villains". MA1 already has a team called Villains (its VIP
+  chapter), and the Codex filter would have merged the two books' villains.
+  Every card keeps the side as `side`.
+- **Names** are the Reference Summary's spelling: Hulk, not THE HULK;
+  Lockheed, not LOCKHEED THE DRAGON.
+- **Two vehicles.** The alien hovercraft is in the Random Event "Patrol"
+  (printed 11), not "The Trap", as the plan had it: the paragraph opens column
+  3, which continues Patrol.
+- **"Going Home"** is found by its first words, because Tesseract did not read
+  its title at all (the registry records them).
+- **Word confidence.** Text lines keep a word Tesseract read at 50-75 only when
+  the book has that word elsewhere at 75 or better. That keeps "Cat" in the
+  bases' notes, and drops fragments of the art. A few real words below 50 are still
+  lost ("First" from one mention of First Blood, a quoted "A").
+- **The GM tools** read a rank word as a Resources rank ("POOR", "CLASS
+  1000"), a printed "2,150" as 2150, and a block flagged `form` as a form.
+  The Marvel smoke suite pins each, and each check failed with its fix removed.
+
 ## The next PRs
 
 1. **Parser (`msh/feat/mhsp1-parser`), done; see [The parser](#the-parser).**
@@ -382,9 +421,8 @@ settled by #1520.*
      and as the stat source for the seven Summary-only rows.
    - Expected: 33 blocks plus 5 one-line grids, every one passing, and 40 of 40
      Summary names placed.
-2. **Data (`msh/data/mhsp1-...`):** `npcs.py` and `extras.py` taught what
-   this book adds, then run, the `.sql` applied to production before the merge,
-   and this file's Rows line updated:
+2. **Data (`msh/data/mhsp1-secret-wars`), done; see [The data](#the-data).**
+   What it was asked to do, as the survey set it out:
    - a `part` on every page a card cites. The Codex shows
      `MHSP1 Roster p.4`, and cites a Summary-only card as `MHSP1 Reference
      Summary` with no page. MA1's cards read as they do now.

@@ -94,7 +94,7 @@ def rules(book, pdf, height):
     return [y * height / pm.height for y in out]
 
 
-def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0):
+def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0, keep_unsure=False):
     """The part's pages first..last (printed) as one stream of lines: per page,
     each band between rules, each band's three columns left to right, each
     column top to bottom. Lines are roster.py's (lines_of), with where they are."""
@@ -127,13 +127,36 @@ def stream_of(book, slug, part, first, last, split_at_rules, min_conf=0):
                         continue
                     # an unsure line is the illustration read as text, unless a
                     # stat block follows it: then it is that block's name
-                    if l['conf'] < 45 and not any(re.match(r'^\W{0,2}Fighting', x['text']) for x in lines[n + 1:n + 4]):
+                    if l['conf'] < 45 and not keep_unsure and not any(re.match(r'^\W{0,2}Fighting', x['text']) for x in lines[n + 1:n + 4]):
                         continue
                     l.update(pdf=pdf, printed=printed, part=part, band=band, col=c + 1, body_h=body_h,
                              col_x0=edges[c], col_x1=edges[c + 1],
                              words=[w for w in col if l['y0'] <= w['y'] + w['h'] / 2 <= l['y1']])
                     out.append(l)
     return out
+
+
+PUNCT = '.,;:!?()"*' + ''.join(map(chr, (0x201c, 0x201d, 0x2018, 0x2019)))
+
+
+def sure_text(line, book, slug):
+    """A line of prose without the words Tesseract was unsure of. Prose reads at
+    92 or better; balloon lettering and art that share a line read lower ("vex",
+    61). A word read at 50-75 is kept when the book has it elsewhere at 75 or
+    better ("Cat", "Iron", "II"), so a real word read unsurely once survives
+    and a fragment of the art ("fom", "dto") does not."""
+    vocab = sure_text.vocab.get(slug)
+    if vocab is None:
+        vocab = sure_text.vocab[slug] = set()
+        tsv = os.path.join(roster.CACHE, 'books', slug, 'tsv')
+        for f in os.listdir(tsv):
+            vocab.update(w['t'].strip(PUNCT).lower() for w in roster.read_words(os.path.join(tsv, f))[0] if w['c'] >= 75)
+    keep = lambda w: w['c'] >= 75 or (w['c'] >= 50 and len(w['t'].strip(PUNCT)) > 1
+                                       and w['t'].strip(PUNCT).lower() in vocab)
+    return ' '.join(w['t'] for w in sorted(line['words'], key=lambda w: w['x']) if keep(w))
+
+
+sure_text.vocab = {}
 
 
 def is_header(line):
@@ -493,7 +516,7 @@ def running(book, slug, entries, ranks):
         # Prose reads at 92 or better here; a balloon word that shares a line
         # with it reads lower ("vex", 61, printed 14). A run-in name is read
         # from every word, because a bold name can read low too.
-        sure = ' '.join(w['t'] for w in sorted(line['words'], key=lambda w: w['x']) if w['c'] >= 75)
+        sure = sure_text(line, book, slug)
         if m:
             cur = {'name': m.group(2).strip(), 'page': line['printed'], 'part': line['part'], 'text': [m.group(3)], 'blocks': []}
             notes.append(cur)
@@ -527,7 +550,9 @@ def summary_entries(book, entries, ranks):
         for name, faserip, health, karma, powers in s[side]:
             e = match_name(name.split(': ')[-1], entries, {})
             if e:
-                e['side'] = side
+                # the chart's spelling is the card's name: Hulk, not THE HULK;
+                # Lockheed, as MA1 and the chart both have him
+                e['side'], e['name'] = side, name.split(': ')[-1]
                 continue
             abilities = []
             for n, tok in enumerate(re.findall(r'C1 1000|\S+', faserip)):
@@ -592,3 +617,149 @@ def coverage(book, entries, overrides):
                  % (len(rows), len(rows) - sum(1 for l in lines if 'NO ENTRY' in l),
                     sum(1 for e in entries if e['kind'] == 'summary'), len(used), notes))
     return lines, bad
+
+
+# ------------------------------------------------------------ the Adventure Book
+
+# the quotes a title is set in, straight or curly, and the asterisk OCR makes of one
+QUOTES = ''.join(map(chr, (0x201c, 0x201d, 0x2018, 0x2019))) + '"\'*'
+VEHICLE_STATS = re.compile(r'control\s+(\w+);\s*speed\s+(\w+);\s*body\s+(\w+)', re.I)
+HEADINGS = {'Planned Events', 'Random Events', 'Further Notes'}
+
+
+def extras(book, slug):
+    """The Adventure Book as extras.py's two shapes: (items, adventure).
+
+    It has no chapters. Its sections are read in page order off the registry's
+    adventure.sections, each found by how its first line reads: a section
+    banner ("SECTION 3"), a Planned Event's title in quotes on a line of its
+    own, a Random Event's title in quotes as a run-in ("Lesser Tempest." This
+    is...). A section runs to the next one. Bases is a location, not a section:
+    its run-in room types are its parts, and the Ultimate Nullifier among them
+    is an item. The running notes in sections 6 and 7 are on the characters
+    (roster.json), so they are skipped here. A vehicle stated inside a section
+    (control, speed and body) is an item whose text is that section's."""
+    a = book['adventure']
+    # every line, however unsure: an event's title can read low ("Going Home",
+    # printed 10); a line of text is filtered word by word below
+    stream = stream_of(book, slug, a['part'], a['pages'][0], a['pages'][1], split_at_rules=False, keep_unsure=True)
+    # The bases' room table (printed 5): 26 rows of a d100 range and four
+    # bases' rooms, across two columns, which the column cut splits into
+    # pieces inside the Storage and Auxiliary Bridge notes. It is left out of
+    # the text: the location lists its room types, and the page has the table.
+    dice = re.compile(r'^\d{2}-\d{2}\b')
+    for pdf in {l['pdf'] for l in stream}:
+        rows = [l for l in stream if l['pdf'] == pdf and dice.match(l['text'])]
+        if len(rows) >= 5:
+            y0, y1 = min(l['y0'] for l in rows) - 130, max(l['y1'] for l in rows) + 25
+            x0 = min(l['x0'] for l in rows) - 20
+            stream = [l for l in stream if not (l['pdf'] == pdf and l['y0'] >= y0 and l['y1'] <= y1 and l['x0'] >= x0)]
+    running_head = re.compile(r"^((?:[A-Z][a-z]+ ){0,2})([A-Z][A-Z .'-]*[A-Z.])\s*(?:[" + TM + r"]|TM)\.?\s")
+    marks = a['sections']
+
+    def starts(kind, title, match, line, first=None):
+        """None, or the rest of the line after the section's opening."""
+        t = line['text'].strip()
+        if first:
+            # Tesseract did not read this title at all ("Going Home", printed
+            # 10), so the section starts at its first words, which are text
+            return t if roster.norm(t).startswith(roster.norm(first)) else None
+        if kind == 'skip':
+            return '' if running_head.match(t + ' ') else None
+        if kind in ('setting', 'location'):
+            if match.startswith('SECTION'):
+                return '' if t.startswith(match + ':') or t == match else None
+            return '' if roster.norm(t).startswith(roster.norm(match)) else None
+        if not t or t[0] not in QUOTES:
+            return None
+        n, want = roster.norm(t), roster.norm(title)
+        if kind == 'planned':
+            return '' if len(n) >= 6 and want.startswith(n) else None
+        if n == want or n.startswith(want + ' '):
+            m = re.search('[' + QUOTES[1] + QUOTES[3] + '"]', t[1:])
+            return t[m.end() + 1:].strip() if m else ''
+        return None
+
+    sections, cur, k, i = [], None, 0, 0
+    while i < len(stream):
+        line = stream[i]
+        if k < len(marks):
+            first = marks[k][3] if marks[k][0] == 'planned' and len(marks[k]) > 3 else None
+            rest = starts(marks[k][0], marks[k][1], marks[k][2], line, first)
+            if rest is not None:
+                kind, title = marks[k][0], marks[k][1]
+                cur = {'kind': kind, 'title': title, 'page': line['printed'], 'lines': [rest] if rest else []}
+                if kind == 'planned':
+                    cur['when'] = marks[k][2]
+                if kind == 'planned' and not first:
+                    # a title set on two lines ("The Beyonder's" / "Judgment")
+                    got = roster.norm(line['text'])
+                    while got != roster.norm(title) and roster.norm(title).startswith(got) and i + 1 < len(stream):
+                        i += 1
+                        got = (got + ' ' + roster.norm(stream[i]['text'])).strip()
+                if kind == 'random':
+                    cur['roll'] = marks[k][2]
+                    cur['once'] = 'once' in marks[k][3:]
+                sections.append(cur)
+                k += 1
+                i += 1
+                continue
+        if cur and cur['kind'] != 'skip':
+            sure = sure_text(line, book, slug)
+            # comic balloons are capitals; headings the registry already names are not text
+            # (a line of text may name the game in capitals, "MARVEL SUPER HEROES
+            # Campaign", 28% lower case; balloon lettering is about 10%)
+            if sure and sure not in HEADINGS and sum(c.islower() for c in sure) >= 0.2 * sum(c.isalpha() for c in sure):
+                cur['lines'].append(dict(line, text=sure))
+        i += 1
+    missing = [m[1] for m in marks[k:]]
+    if missing:
+        raise SystemExit('%s: the adventure sections after %s were not found: %s' % (slug, marks[k - 1][1] if k else 'the start', ', '.join(missing)))
+
+    items = []
+    for loc in book.get('locations', []):
+        sec = next(s for s in sections if s['title'] == loc['section'])
+        alias = {roster.norm(k): v for k, v in loc.get('part_aliases', {}).items()}
+        names = {roster.norm(n): n for n in loc['parts'] + loc.get('items', [])}
+        place = {'name': loc['name'], 'kind': 'location', 'page': sec['page'], 'part': a['part'], 'vehicle': {},
+                 'parts': [], 'text': [['prose', None, []]]}
+        items.append(place)
+        target = place
+        for l in sec['lines']:
+            t = l['text'] if isinstance(l, dict) else l
+            m = re.match(r'^(.{3,45}?)\.(?:\s+(.*))?$', t)
+            key = m and (alias.get(roster.norm(m.group(1))) or names.get(roster.norm(m.group(1))))
+            key = names.get(roster.norm(key)) if key else None
+            if key in loc.get('items', []):
+                target = {'name': key, 'kind': 'item', 'page': l['printed'], 'part': a['part'], 'vehicle': {},
+                          'parts': [], 'text': [['prose', None, [m.group(2) or '']]]}
+                items.append(target)
+                continue
+            if key:
+                target = place
+                place['parts'].append(key)
+                place['text'].append(['part', key, [m.group(2) or '']])
+                continue
+            target['text'][-1][2].append(t)
+    for v in book.get('vehicles', []):
+        sec = next(s for s in sections if s['title'] == v['section'])
+        texts = [l['text'] if isinstance(l, dict) else l for l in sec['lines']]
+        joined = roster.join_text(texts)
+        m = VEHICLE_STATS.search(joined)
+        if not m:
+            raise SystemExit('%s: no control, speed and body in %s for %s' % (slug, v['section'], v['name']))
+        at = next((l['printed'] for l in sec['lines'] if isinstance(l, dict) and 'control' in l['text'].lower()), sec['page'])
+        items.append({'name': v['name'], 'kind': 'vehicle', 'page': at, 'part': a['part'], 'section': v['section'],
+                      'vehicle': {'Control': m.group(1), 'Speed': m.group(2), 'Body': re.sub(r'-\s*', '', m.group(3))},
+                      'parts': [], 'text': []})
+
+    out = []
+    for s in sections:
+        if s['kind'] in ('skip', 'location'):
+            continue
+        texts = [l['text'] if isinstance(l, dict) else l for l in s['lines']]
+        out.append({'title': s['title'], 'kind': s['kind'], 'page': s['page'], 'part': a['part'], 'parts': [],
+                    **({'when': s['when']} if 'when' in s else {}),
+                    **({'roll': s['roll'], 'once': s['once']} if 'roll' in s else {}),
+                    'text': [['prose', None, texts]]})
+    return items, {'title': a['title'], 'pages': a['pages'], 'part': a['part'], 'sections': out}

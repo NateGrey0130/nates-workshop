@@ -26,15 +26,18 @@ const LETTERS = ['F', 'A', 'S', 'E', 'R', 'I', 'P'];
 const KEYS = ['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche'];
 const FORMS = /\b(form|phase)\b/i;
 
+// A printed number; "2,150 (Varies)" is 2150 (Galactus, MHSP1).
 const int = (s) => {
-  const m = String(s ?? '').replace(/\u2013|\u2014/g, '-').match(/^\s*([-+]?\d+)\b/);
+  const m = String(s ?? '').replace(/\u2013|\u2014/g, '-').replace(/(\d),(\d{3})\b/g, '$1$2').match(/^\s*([-+]?\d+)\b/);
   return m ? Number(m[1]) : null;
 };
 
 // A version's blocks, as the GM chooses among them: every block is its own
-// choice unless they are all forms of one being.
+// choice unless they are all forms of one being - by their labels (Human
+// Form, Phase II), or because the data says so (`form`: She-Hulk and Jennifer
+// Walters, MHSP1).
 export function isForms(version) {
-  return version.blocks.length > 1 && version.blocks.every((b) => FORMS.test(b.label || ''));
+  return version.blocks.length > 1 && version.blocks.every((b) => b.form || FORMS.test(b.label || ''));
 }
 
 // Every NPC the book offers, for the GM's picker: one line per character, per
@@ -77,8 +80,10 @@ export function makeBookNpc(data) {
       abilities[KEYS[i]] = ability(corrected);
     });
     // Resources prints as a rank and a number, "Pr (4)"; the number is the
-    // measure. "None" and a dash are kept as printed, with no number.
-    const resN = int((String(b.resources ?? '').match(/\((\d+)\)/) || [])[1]);
+    // measure. MHSP1 prints the rank alone ("POOR", "CLASS 1000"): its standard
+    // number. "None" and a dash are kept as printed, with no number.
+    const named = ladder.find((r) => r.name.toLowerCase() === String(b.resources ?? '').trim().toLowerCase());
+    const resN = named ? named.standard : int((String(b.resources ?? '').match(/\((\d+)\)/) || [])[1]);
     const resR = rankOf(resN);
     abilities.resources = { rank: resR ? resR.id : null, name: resR ? resR.name : (b.resources || 'None'), number: resN };
     const popN = int(b.popularity);
@@ -106,11 +111,17 @@ export function makeBookNpc(data) {
     const vLabel = v.label ? v.label.charAt(0).toUpperCase() + v.label.slice(1) : '';
     const bLabel = !forms && v.blocks.length > 1 ? v.blocks[chosen].label : '';
     const name = [c.name, vLabel && `(${vLabel})`, bLabel && `- ${bLabel}`].filter(Boolean).join(' ');
+    // Where the block is printed. A boxed module's booklets are each numbered
+    // from 1, so the booklet goes with the page ("Roster p.4"); a Summary-only
+    // character has the booklet alone.
+    const at = v.blocks[forms ? 0 : chosen];
+    const part = at.part || v.part;
     const snapshot = {
       v: SNAPSHOT_VERSION,
       mode: 'book',
       book: { slug: c.book, source: data.npcs.books.find((b) => b.slug === c.book).title, character: c.id, version: v.id,
-        block: forms ? null : chosen, page: v.blocks[forms ? 0 : chosen].page, team: c.team },
+        block: forms ? null : chosen, page: at.page, team: c.team,
+        ...(part ? { cite: [part, at.page !== null && at.page !== undefined && `p.${at.page}`].filter(Boolean).join(' ') } : {}) },
       body: null, origin: null, weakness: null,
       abilities: first.abilities,
       health: first.health, karma: first.karma,
