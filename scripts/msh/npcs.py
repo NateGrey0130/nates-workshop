@@ -119,6 +119,11 @@ def section_at(book, page):
     return best[1] if best else None
 
 
+def part_cite(book, name):
+    """How a card names one of a module's booklets (registry parts[].cite)."""
+    return next(p['cite'] for p in book['parts'] if p['name'] == name)
+
+
 def main(slug_arg):
     registry = json.load(io.open(REGISTRY, encoding='utf-8'))['books']
     book = registry[slug_arg]
@@ -134,13 +139,35 @@ def main(slug_arg):
         # a book laid out A-Z has no team sections: its characters file under it
         return section_at(book, page) or book['title']
 
+    # A boxed module's Roster Booklet (MHSP1, scripts/msh/booklet.py) has no
+    # team sections and two numberings, so what MA1 reads off the page it
+    # reads off the entry (Nate, 2026-09-28):
+    #   - a character's team is its side in the Reference Summary, named for
+    #     the book so it does not share a filter with MA1's Villains; the
+    #     Wrecking Crew's four are that team, and keep the side as `side`
+    #   - every version and block carries the booklet it is printed in (`part`,
+    #     the registry's cite), because p.4 is in both booklets
+    #   - the seven characters only the Summary gives are `summary_only`
+    #   - its numbers are the ranks' standard values (`rank_only`)
+    #   - an alter ego's one-line block is a form of the character
+    booklet = book.get('layout') == 'roster-booklet'
+    cite = {p['name']: p['cite'] for p in book.get('parts', [])}
+    SIDE = {'heroes': '%s Heroes' % book['title'].split(' ', 1)[-1], 'villains': '%s Villains' % book['title'].split(' ', 1)[-1]}
+    tiers = set(book.get('one_line_tiers', []))
+
+    def team_of_entry(e):
+        return title_case(e['team']) if e.get('team') else SIDE[e['side']]
+
+    def name_of(e):
+        return e.get('name') or title_case(base_name(e['header']))
+
     roster = json.load(io.open(os.path.join(CACHE, 'books', slug_arg, 'roster.json'), encoding='utf-8'))
     powers = json.load(io.open(os.path.join(DATA, 'powers.json'), encoding='utf-8'))['powers']
     aliases = json.load(io.open(os.path.join(DATA, 'npc-power-aliases.json'), encoding='utf-8'))['aliases']
     upb = {norm(p['name']): p['code'] for p in powers}
     upb.update({norm(k): v for k, v in aliases.items()})
     index_case = {}
-    for name, _p in book['index']:
+    for name, _p in book.get('index', []):
         index_case[norm(name)] = name
 
     def display(header):
@@ -151,7 +178,7 @@ def main(slug_arg):
     statted = [e for e in entries if e['blocks']]
     by_name = {}
     for e in statted:
-        by_name.setdefault(norm(base_name(e['header'])), []).append(e)
+        by_name.setdefault(norm(name_of(e) if booklet else base_name(e['header'])), []).append(e)
 
     chars, rows = [], []
 
@@ -165,39 +192,60 @@ def main(slug_arg):
     for name_key, group in by_name.items():
         versions = []
         for e in group:
-            eslug = ident(roman(e['header']))
+            eslug = ident(name_of(e)) if booklet else ident(roman(e['header']))
+            # an alter ego's one-line block makes every block of the entry a
+            # form (She-Hulk and Jennifer Walters); Klaw's sound creatures are
+            # beings of their own, a tier (registry one_line_tiers)
+            forms = booklet and any(b.get('kind') == 'line' and b['label'] not in tiers for b in e['blocks'])
             blocks = []
             for n, b in enumerate(e['blocks']):
                 label = b['label']
+                # the main block of an entry with more than one is named for
+                # the character, so the GM picks "Klaw", not "Klaw - block 1"
+                if booklet and not label and len(e['blocks']) > 1 and n == 0:
+                    label = name_of(e)
                 if not label and n:
                     label = 'Additional statistics, p.%d' % b['page']
                 abilities, derived = [], []
                 for i, a in enumerate(b['abilities']):
-                    code = a['code']
-                    if code is None and a['number'] in CODE_OF:
-                        code = CODE_OF[a['number']]
+                    code, number = a['code'], a['number']
+                    o = b.get('override') or {}
+                    if number is None and o.get('field') == 'FASERIP'[i] and isinstance(o.get('corrected'), dict):
+                        # printed as no rank at all (Lockheed's "?" Reason): played as the override says
+                        number, code = o['corrected']['number'], o['corrected']['code']
+                    if code is None and number in CODE_OF:
+                        code = CODE_OF[number]
                         derived.append('FASERIP'[i])
-                    abilities.append(['FASERIP'[i], a['number'], code]
+                    abilities.append(['FASERIP'[i], number, code]
                                      + ([[a['alt']['number'], a['alt']['code']]] if a.get('alt') else []))
                 blocks.append({
-                    'label': title_case(roman(label)) if label else None,
+                    'label': (title_case(roman(label)) if not booklet else label) if label else None,
                     'page': b['page'],
+                    **({'part': cite[b['part']]} if booklet and b.get('part') != e['part'] else {}),
                     'abilities': abilities,
                     **({'derived': derived} if derived else {}),
-                    'health': ascii_fold(b['health']), 'karma': ascii_fold(b['karma']),
-                    'resources': ascii_fold(b['resources']), 'popularity': ascii_fold(b['popularity']),
+                    **({'rank_only': True} if b.get('rank_only') else {}),
+                    **({'form': True} if forms else {}),
+                    # a value the book does not print is null, not an empty
+                    # string, in a roster booklet (the Summary gives no
+                    # Resources or Popularity); MA1's file is kept as it was
+                    **{k: (None if booklet and b[k] is None else ascii_fold(b[k]))
+                       for k in ('health', 'karma', 'resources', 'popularity')},
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': b['kind']} if b.get('kind') else {}),
                 })
             pw = []
+            # a Summary-only character has no page; its running note has its own
+            page0 = e['pages'][0] if e['pages'] else None
             for n, p in enumerate(e['powers'], 1):
                 code = upb.get(norm(p['name']))
                 pw.append({'name': ascii_fold(p['name']), **({'upb': code} if code else {})})
-                text_row(eslug, 'power', n, p['name'], e['pages'][0], p['text'])
+                text_row(eslug, 'power', n, p['name'], page0, p['text'])
             for part in ('talents', 'contacts', 'running', 'background', 'notes'):
-                text_row(eslug, part, None, None, e['pages'][0], e['sections'].get(part, ''))
+                text_row(eslug, part, None, None, e['running']['page'] if part == 'running' and e.get('running') else page0,
+                         e['sections'].get(part, ''))
             if e['sections'].get('powers'):
-                text_row(eslug, 'powers-intro', None, None, e['pages'][0], e['sections']['powers'])
+                text_row(eslug, 'powers-intro', None, None, page0, e['sections']['powers'])
             # A header's identity is its name and status lines: one or two short
             # lines. Three is the parser's cap, reached when a team's opening
             # paragraph follows its header ("The Gladiators was an organization
@@ -207,25 +255,57 @@ def main(slug_arg):
             if len(identity) >= 3:
                 prose = ' '.join(e['identity']) + ' ' + prose
                 identity = []
-            text_row(eslug, 'prose', None, None, e['pages'][0], prose)
+            text_row(eslug, 'prose', None, None, page0, prose)
             members = []
             for n, m in enumerate(e['members'], 1):
                 members.append({'name': display(m['name']), 'page': m['page']})
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
-                'id': eslug, 'label': variant(e['header']), 'team': team_of(e['pages'][0]),
+                'id': eslug, 'label': None if booklet else variant(e['header']),
+                'team': team_of_entry(e) if booklet else team_of(e['pages'][0]),
+                **({'side': SIDE[e['side']], 'part': cite[e['part']]} if booklet else {}),
                 'pages': e['pages'], 'identity': identity,
                 'blocks': blocks, 'powers': pw, 'members': members,
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
             })
-        cid = ident(base_name(group[0]['header']))
-        chars.append({'id': cid, 'name': display(group[0]['header']), 'team': versions[0]['team'],
+        cid = ident(name_of(group[0])) if booklet else ident(base_name(group[0]['header']))
+        chars.append({'id': cid, 'name': name_of(group[0]) if booklet else display(group[0]['header']),
+                      'team': versions[0]['team'],
+                      **({'side': versions[0]['side']} if booklet else {}),
+                      **({'summary_only': True} if booklet and group[0]['kind'] == 'summary' else {}),
                       'versions': versions, 'appearances': []})
+
+    # A team the Roster Booklet prints over its members' blocks (the Wrecking
+    # Crew): a card with no block of its own, its members linked, and its
+    # shared Powers, Talents, Background and running note once, on it.
+    for e in (entries if booklet else []):
+        if e['kind'] != 'team':
+            continue
+        tslug = ident(name_of(e))
+        mine = [c for c in chars if c['team'] == name_of(e)]
+        page0 = e['pages'][0]
+        pw = []
+        for n, p in enumerate(e['powers'], 1):
+            code = upb.get(norm(p['name']))
+            pw.append({'name': ascii_fold(p['name']), **({'upb': code} if code else {})})
+            text_row(tslug, 'power', n, p['name'], page0, p['text'])
+        for part in ('talents', 'running', 'background'):
+            text_row(tslug, part, None, None, e['running']['page'] if part == 'running' and e.get('running') else page0,
+                     e['sections'].get(part, ''))
+        text_row(tslug, 'prose', None, None, page0, e['prose'])
+        for c in mine:
+            c['member_of'], c['member_of_id'] = name_of(e), tslug
+        chars.append({'id': tslug, 'name': name_of(e), 'team': name_of(e), 'side': mine[0]['side'], 'versions': [{
+            'id': tslug, 'label': None, 'team': name_of(e), 'side': mine[0]['side'], 'part': cite[e['part']],
+            'pages': e['pages'], 'identity': [', '.join(c['name'] for c in mine[:-1]) + ' and ' + mine[-1]['name']],
+            'blocks': [], 'powers': pw,
+            'members': [{'name': c['name'], 'page': c['versions'][0]['pages'][0], 'id': c['id']} for c in mine],
+            'text': sorted({r[3] for r in rows if r[2] == tslug})}], 'appearances': []})
 
     by_id = {c['id']: c for c in chars}
     for e in entries:
-        if e['blocks']:
-            continue
+        if e['blocks'] or booklet:
+            continue                    # a roster booklet has no cross-references; its team is a card above
         c = by_id.get(ident(base_name(e['header'])))
         if not c:
             continue
@@ -282,7 +362,8 @@ def main(slug_arg):
 
     for c in chars:
         c['book'] = slug_arg
-    chars.sort(key=lambda c: (min(v['pages'][0] for v in c['versions']), c['name']))
+    # a Summary-only character has no page, and comes after the book's pages
+    chars.sort(key=lambda c: (min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
     # EVERY book's characters live in this one file. Rebuilding one book
     # replaces that book's characters and leaves the others as they are.
@@ -314,7 +395,9 @@ def main(slug_arg):
         'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(registry[b]['character_pages'])}
                     for b in present],
         'books': [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'],
-                   'pages': list(registry[b]['character_pages'])} for b in present],
+                   'pages': list(registry[b]['character_pages']),
+                   **({'part': part_cite(registry[b], registry[b]['character_part'])} if registry[b].get('character_part') else {})}
+                  for b in present],
         'teams': teams,
         'characters': chars,
     }

@@ -13,6 +13,11 @@
    "book": "MA1 Children of the Atom",
    "code": "TSR6872",
    "pages": "4-81"
+  },
+  {
+   "book": "MHSP1 Secret Wars",
+   "code": "TSR6860",
+   "pages": "2-16"
   }
  ],
  "books": [
@@ -24,6 +29,16 @@
     4,
     81
    ]
+  },
+  {
+   "slug": "mhsp1",
+   "short": "MHSP1",
+   "title": "MHSP1 Secret Wars",
+   "pages": [
+    2,
+    16
+   ],
+   "part": "Roster"
   }
  ],
  "teams": [
@@ -44,7 +59,10 @@
   "Villains",
   "Supporting Characters",
   "Aliens",
-  "The Mutant Menace"
+  "The Mutant Menace",
+  "Secret Wars Heroes",
+  "Secret Wars Villains",
+  "Wrecking Crew"
  ],
  "characters": [
   {
@@ -16299,6 +16317,3847 @@
    ],
    "appearances": [],
    "book": "ma1"
+  },
+  {
+   "id": "colossus-mhsp1",
+   "name": "Colossus",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "colossus-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      2
+     ],
+     "identity": [
+      "Peter Rasputin, student"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "E",
+         20,
+         "Ex",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60 [145]",
+       "karma": "32",
+       "resources": "POOR",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armored Form"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "cyclops-mhsp1",
+   "name": "Cyclops",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "cyclops-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      2
+     ],
+     "identity": [
+      "Scott Summers, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": "80",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Optic Blasts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "hawkeye-mhsp1",
+   "name": "Hawkeye",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "hawkeye-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      3
+     ],
+     "identity": [
+      "Clint Barton, Avenger"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "45"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extraordinary Vision"
+      },
+      {
+       "name": "Impaired Hearing"
+      },
+      {
+       "name": "Bow Skill"
+      },
+      {
+       "name": "Arrows"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "hulk-mhsp1",
+   "name": "Hulk",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "hulk-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      3
+     ],
+     "identity": [
+      "Robert Bruce Banner, physicist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "215",
+       "karma": "46",
+       "resources": "FEEBLE",
+       "popularity": "1"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Extraordinary Sense"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Adrenaline Surge"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "iron-man-mhsp1",
+   "name": "Iron Man",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "iron-man-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "James Rhodes, mercenary"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "E",
+         6,
+         "Ty",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "52 [155]",
+       "karma": "36",
+       "resources": "GOOD",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Repulsors"
+      },
+      {
+       "name": "Chest Lamp"
+      },
+      {
+       "name": "Air Supply"
+      },
+      {
+       "name": "Fire Extinguisher"
+      },
+      {
+       "name": "Energy Absorption"
+      },
+      {
+       "name": "Override"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "magneto-mhsp1",
+   "name": "Magneto",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "magneto-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Magnus, mutant leader"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "125",
+       "karma": "100",
+       "resources": "AMAZING",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magnetic Control",
+       "upb": "EC15"
+      },
+      {
+       "name": "Energy Control"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Astral Projection",
+       "upb": "T1"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "nightcrawler-mhsp1",
+   "name": "Nightcrawler",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "nightcrawler-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Kurt Wagner, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "50",
+       "resources": "POOR",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Prehensile Tail"
+      },
+      {
+       "name": "Indigo Fur"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "professor-x-mhsp1",
+   "name": "Professor X",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "professor-x-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Charles Xavier, geneticist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "48",
+       "karma": "165",
+       "resources": "REMARKABLE",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Mental Bolts",
+       "upb": "M21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Astral Form",
+       "upb": "T1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "rogue-mhsp1",
+   "name": "Rogue",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "rogue-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "(Real name unrevealed), adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "18",
+       "resources": "POOR",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Absorption"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Conflicting Personalities"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "she-hulk-mhsp1",
+   "name": "She-Hulk",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "she-hulk-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Jennifer Walters, lawyer"
+     ],
+     "blocks": [
+      {
+       "label": "She-Hulk",
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "150",
+       "karma": "36",
+       "resources": "EXCELLENT",
+       "popularity": "30"
+      },
+      {
+       "label": "Jennifer Walters",
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "26",
+       "karma": "26",
+       "resources": "Excellent",
+       "popularity": "10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "spider-woman-mhsp1",
+   "name": "Spider-Woman",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "spider-woman-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "(Real name unrevealed)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "46",
+       "resources": "GOOD",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Psychic Web"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "storm-mhsp1",
+   "name": "Storm",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "storm-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Ororo Munroe, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "36",
+       "resources": "POOR",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Weather Control",
+       "upb": "MC12"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "thor-mhsp1",
+   "name": "Thor",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "thor-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Thor, Prince of Asgard, God of Thunder"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "320",
+       "karma": "76",
+       "resources": "EXCELLENT",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Unique Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "wasp-mhsp1",
+   "name": "Wasp",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "wasp-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Janet Van Dyne; heiress"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "50",
+       "resources": "EXCELLENT",
+       "popularity": "65"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wasp's Stings"
+      },
+      {
+       "name": "Insect Communication"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "galactus-s-cat-mhsp1",
+   "name": "Galactus's \"Cat\"",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "galactus-s-cat-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Guard robot"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "250",
+       "karma": "16",
+       "resources": "none",
+       "popularity": "none"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Paralyzing Foam"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "lockheed-mhsp1",
+   "name": "Lockheed",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "lockheed-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Alien creature"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "48",
+       "karma": "40",
+       "resources": "none",
+       "popularity": "4",
+       "override": {
+        "verdict": "as_printed",
+        "field": "R",
+        "printed": "?",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Flame Breath"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "zsaji-mhsp1",
+   "name": "Zsaji",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "versions": [
+    {
+     "id": "zsaji-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Alien healer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "101",
+       "karma": "101",
+       "resources": "none",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Healing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "absorbing-man-mhsp1",
+   "name": "Absorbing Man",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "absorbing-man-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Carl \"Crusher\" Creel, criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "14",
+       "resources": "POOR",
+       "popularity": "1"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "doctor-doom-mhsp1",
+   "name": "Doctor Doom",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "doctor-doom-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Victor Von Doom, monarch of Latveria"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "140",
+       "resources": "AMAZING",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Force Beams"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Air Supply"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "doctor-octopus-mhsp1",
+   "name": "Doctor Octopus",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "doctor-octopus-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Otto Octavius, criminal mastermind"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "64",
+       "karma": "46",
+       "resources": "GOOD",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Tentacles"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "enchantress-mhsp1",
+   "name": "Enchantress",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "enchantress-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Amora, sorceress of Asgard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "100",
+       "resources": "REMARKABLE",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Magic"
+      },
+      {
+       "name": "Allure"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "galactus-mhsp1",
+   "name": "Galactus",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "galactus-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Galactus, eater of worlds"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "2,150 (Varies)",
+       "karma": "1,200 (Varies)",
+       "resources": "CLASS 1000",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Energy Control"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Galactic Hunger"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "kang-mhsp1",
+   "name": "Kang",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "kang-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "True name unknown, conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "86",
+       "karma": "90",
+       "resources": "MONSTROUS",
+       "popularity": "8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Environmental Independence"
+      },
+      {
+       "name": "Gauntlets"
+      },
+      {
+       "name": "Devices"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "klaw-mhsp1",
+   "name": "Klaw",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "klaw-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Ulysses Klaw, criminal"
+     ],
+     "blocks": [
+      {
+       "label": "Klaw",
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "111",
+       "karma": "14",
+       "resources": "TYPICAL",
+       "popularity": "3"
+      },
+      {
+       "label": "Sound creatures",
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "72",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Transformation",
+       "upb": "S8"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Sound Converter"
+      },
+      {
+       "name": "Sound Objects"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "lizard-mhsp1",
+   "name": "Lizard",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "lizard-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Curtis Connors, biologist"
+     ],
+     "blocks": [
+      {
+       "label": "Lizard",
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "140",
+       "karma": "44",
+       "resources": "GOOD",
+       "popularity": "3"
+      },
+      {
+       "label": "Curtis Connors",
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "28",
+       "karma": "46",
+       "resources": "Good",
+       "popularity": "10",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Tough Hide"
+      },
+      {
+       "name": "Tail"
+      },
+      {
+       "name": "Wall-Crawling"
+      },
+      {
+       "name": "Speed"
+      },
+      {
+       "name": "Reptile Control"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "molecule-man-mhsp1",
+   "name": "Molecule Man",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "molecule-man-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Owen Reece, criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "20",
+       "karma": "89",
+       "resources": "EXCELLENT",
+       "popularity": "1"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Molecular Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "titania-mhsp1",
+   "name": "Titania",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "titania-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Mary \"Skeeter\" MacPherran"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "235",
+       "karma": "30",
+       "resources": "GOOD",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "ultron-mhsp1",
+   "name": "Ultron",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "ultron-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Ultron, insane robot"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": "54",
+       "resources": "REMARKABLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Blasters"
+      },
+      {
+       "name": "Tractor Beams"
+      },
+      {
+       "name": "Encephalo Beam"
+      },
+      {
+       "name": "Power Absorber"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "volcana-mhsp1",
+   "name": "Volcana",
+   "team": "Secret Wars Villains",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "volcana-mhsp1",
+     "label": null,
+     "team": "Secret Wars Villains",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Marsha Rosenberg"
+     ],
+     "blocks": [
+      {
+       "label": "Volcana",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "110",
+       "karma": "30",
+       "resources": "GOOD",
+       "popularity": "5"
+      },
+      {
+       "label": "Marsha Rosenberg",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "42",
+       "karma": "30",
+       "resources": "Good",
+       "popularity": "5",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fiery Body"
+      },
+      {
+       "name": "Thermal Energy Blasts"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "bulldozer-mhsp1",
+   "name": "Bulldozer",
+   "team": "Wrecking Crew",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "bulldozer-mhsp1",
+     "label": null,
+     "team": "Wrecking Crew",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Sgt. Henry Camp, U.S. Army"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "16",
+       "resources": "POOR",
+       "popularity": "3"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "member_of": "Wrecking Crew",
+   "member_of_id": "wrecking-crew-mhsp1",
+   "book": "mhsp1"
+  },
+  {
+   "id": "piledriver-mhsp1",
+   "name": "Piledriver",
+   "team": "Wrecking Crew",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "piledriver-mhsp1",
+     "label": null,
+     "team": "Wrecking Crew",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Brian Calusky, farmhand"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "14",
+       "resources": "POOR",
+       "popularity": "3"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "member_of": "Wrecking Crew",
+   "member_of_id": "wrecking-crew-mhsp1",
+   "book": "mhsp1"
+  },
+  {
+   "id": "thunderball-mhsp1",
+   "name": "Thunderball",
+   "team": "Wrecking Crew",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "thunderball-mhsp1",
+     "label": null,
+     "team": "Wrecking Crew",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Dr. Elliot Franklin, physicist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "member_of": "Wrecking Crew",
+   "member_of_id": "wrecking-crew-mhsp1",
+   "book": "mhsp1"
+  },
+  {
+   "id": "wrecker-mhsp1",
+   "name": "Wrecker",
+   "team": "Wrecking Crew",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "wrecker-mhsp1",
+     "label": null,
+     "team": "Wrecking Crew",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Dirk Garthwaite, criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "10"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "member_of": "Wrecking Crew",
+   "member_of_id": "wrecking-crew-mhsp1",
+   "book": "mhsp1"
+  },
+  {
+   "id": "wrecking-crew-mhsp1",
+   "name": "Wrecking Crew",
+   "team": "Wrecking Crew",
+   "side": "Secret Wars Villains",
+   "versions": [
+    {
+     "id": "wrecking-crew-mhsp1",
+     "label": null,
+     "team": "Wrecking Crew",
+     "side": "Secret Wars Villains",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Wrecker, Thunderball, Piledriver and Bulldozer"
+     ],
+     "blocks": [],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Weapons"
+      }
+     ],
+     "members": [
+      {
+       "name": "Wrecker",
+       "page": 16,
+       "id": "wrecker-mhsp1"
+      },
+      {
+       "name": "Thunderball",
+       "page": 16,
+       "id": "thunderball-mhsp1"
+      },
+      {
+       "name": "Piledriver",
+       "page": 16,
+       "id": "piledriver-mhsp1"
+      },
+      {
+       "name": "Bulldozer",
+       "page": 16,
+       "id": "bulldozer-mhsp1"
+      }
+     ],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "captain-america-mhsp1",
+   "name": "Captain America",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "captain-america-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Unique Weapon-Shield"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "captain-marvel-mhsp1",
+   "name": "Captain Marvel",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "captain-marvel-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Forms"
+      },
+      {
+       "name": "Energy Bolts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "human-torch-mhsp1",
+   "name": "Human Torch",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "human-torch-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "mister-fantastic-mhsp1",
+   "name": "Mister Fantastic",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "mister-fantastic-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": "100",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elastic Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "spider-man-mhsp1",
+   "name": "Spider-Man",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "spider-man-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "160",
+       "karma": "110",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Spider Sense"
+      },
+      {
+       "name": "Web Shooters"
+      },
+      {
+       "name": "Wall Crawling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "thing-mhsp1",
+   "name": "Thing",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "thing-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Thing",
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "200",
+       "karma": "50",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      },
+      {
+       "label": "Ben Grimm",
+       "page": 13,
+       "part": "Adventure",
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "50",
+       "karma": "50",
+       "resources": "Remarkable",
+       "popularity": "80",
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
+  },
+  {
+   "id": "wolverine-mhsp1",
+   "name": "Wolverine",
+   "team": "Secret Wars Heroes",
+   "side": "Secret Wars Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "wolverine-mhsp1",
+     "label": null,
+     "team": "Secret Wars Heroes",
+     "side": "Secret Wars Heroes",
+     "part": "Reference Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "121",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Senses"
+      }
+     ],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp1"
   }
  ]
 }

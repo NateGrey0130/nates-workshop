@@ -12,8 +12,8 @@
   ],
   "overrides": [
     {"match": {"page": 9, "header": "LOCKHEED"}, "verdict": "as_printed", "field": "R",
-     "printed": "?", "checked": "2026-09-28",
-     "note": "Reason is printed as a question mark. Karma 40 = Intuition 20 + Psyche 20, so the book counts it as 0."},
+     "printed": "?", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-09-28",
+     "note": "Reason is printed as a question mark. Karma 40 = Intuition 20 + Psyche 20, so the book counts it as 0; played as Shift 0 (Nate, 2026-09-28)."},
     {"match": {"page": 13, "header": "KLAW", "kind": "line"}, "verdict": "label", "label": "Sound creatures",
      "checked": "2026-09-28", "note": "The creatures Klaw makes with his sound powers; Health 72, no Karma printed."},
     {"match": {"page": 13, "header": "LIZARD", "kind": "line"}, "verdict": "label", "label": "Curtis Connors",

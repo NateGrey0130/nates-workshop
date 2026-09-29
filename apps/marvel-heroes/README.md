@@ -54,6 +54,27 @@ them team members given their team's stats (below).
 - A Power whose name is an Ultimate Powers Book power, or is in
   `data/npc-power-aliases.json`, links to that Power's card.
 
+MHSP1 *Secret Wars* (`docs/surveys/mhsp1.md`) is the second book: 41 cards,
+read by `scripts/msh/booklet.py` because the box is a different kind of book.
+- **Two booklets, both numbered from 1**, so every MHSP1 card, block, item and
+  adventure section carries its booklet (`part`), and cites it:
+  "MHSP1 Roster p.4", "MHSP1 Adventure p.13".
+- **Ranks only.** The Roster Booklet prints no numbers. Each ability's number is
+  its rank's standard number, and every block says so (`rank_only`). All 33 of
+  its blocks add up that way.
+- **Teams are sides**: Secret Wars Heroes and Secret Wars Villains, named for
+  the book so they do not share a filter with MA1's Villains. The Wrecking
+  Crew is a team card of its own, holding its shared Powers and text once,
+  with its four members linked to it.
+- **Seven characters are the Reference Summary's alone**, among them
+  Spider-Man, Captain America and Wolverine (`summary_only`): ranks, Health,
+  Karma, Power names and a running note, with no page.
+- **An alter ego's one-line block is a form** (`form`): She-Hulk and Jennifer
+  Walters, the Lizard and Curtis Connors, Volcana and Marsha Rosenberg, the
+  Thing and Ben Grimm. Klaw's sound creatures are a block of their own.
+- Lockheed's Reason is printed "?"; his printed Karma counts it as 0, and it is
+  played as Shift 0 (`scripts/msh/mhsp1-overrides.json`).
+
 **Every book shares the three data files.** Each character, item and
 adventure carries its `book`. Rebuilding one book replaces only that book's
 rows. The first book in `scripts/msh/books.json` keeps plain ids; a later
@@ -102,6 +123,16 @@ on the same terms as the Notable NPCs: **facts committed, prose in
 
 The adventure has no stat blocks of its own; its opponents are the book's
 Notable NPCs.
+
+MHSP1's Adventure Book is a campaign, not a chain of encounters:
+- **The adventure** is 12 Planned Events, each with its day and shift; 10
+  Random Events, each with its d10 roll and whether it happens only once; and
+  the background around them (`kind`, `when`, `roll`, `once`). The Codex
+  filters them as Planned events, Random events and Background.
+- **The items** are the four bases as one location, with 16 room types as its
+  parts; the Ultimate Nullifier; and two vehicles the events state in passing.
+  A vehicle's card reads its event's text (`section`). The bases' room table
+  is left to the page.
 
 ## Point Buy
 
@@ -235,6 +266,8 @@ python scripts/msh/extras.py ma1
 node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/book-text.sql
 node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/extras-text.sql
 ```
+
+MHSP1 is the same, with `mhsp1` for `ma1`.
 
 Each script deletes its own rows first - the characters', or the items' and
 the adventure's - so either can be re-run alone and replaces only its own.

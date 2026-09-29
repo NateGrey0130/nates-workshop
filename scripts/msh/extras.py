@@ -167,8 +167,15 @@ def main(slug):
     order = list(registry)
     # as npcs.py: the registry's first book keeps plain ids, a later one's end in -<slug>
     sfx = '' if order[0] == slug else '-' + slug
-    its = items(book, slug) if book.get('item_pages') else []
-    adv = adventure(book, slug) if book.get('adventure') else None
+    if book.get('layout') == 'roster-booklet':
+        # a boxed module's Adventure Book (MHSP1): scripts/msh/booklet.py reads
+        # it into the same two shapes, each row with the booklet it is in
+        import booklet
+        its, adv = booklet.extras(book, slug)
+    else:
+        its = items(book, slug) if book.get('item_pages') else []
+        adv = adventure(book, slug) if book.get('adventure') else None
+    cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     rows = []
 
     def text_rows(entry, pieces, page):
@@ -181,24 +188,32 @@ def main(slug):
             rows.append(('%s:%s:%s:%d' % (slug, entry, part, n), slug, entry, part,
                          npcs.ascii_fold(name) if name else None, page, body))
 
+    aid = npcs.slug(adv['title']) + sfx if adv else None
+    section_id = lambda s: '%s-%s' % (aid, npcs.slug(s['title'].split(':')[0] if s.get('number') else s['title']))
     item_out = []
     for it in its:
         iid = 'item-' + npcs.slug(it['name']) + sfx
         text_rows(iid, it['text'], it['page'])
-        item_out.append({'id': iid, 'name': small_caps_title(it['name']), 'kind': it['kind'], 'page': it['page'],
+        item_out.append({'id': iid, 'name': small_caps_title(it['name']) if not it.get('part') else npcs.ascii_fold(it['name']),
+                         'kind': it['kind'], 'page': it['page'],
+                         **({'part': cite[it['part']]} if it.get('part') else {}),
                          **({'vehicle': it['vehicle']} if it['vehicle'] else {}),
-                         **({'parts': it['parts']} if it['parts'] else {}), 'book': slug})
+                         **({'parts': it['parts']} if it['parts'] else {}),
+                         # a vehicle stated inside an adventure section reads that section's text
+                         **({'section': section_id({'title': it['section']})} if it.get('section') else {}), 'book': slug})
     adv_out = []
     if adv:
-        aid = npcs.slug(adv['title']) + sfx
         sec_out = []
         for s in adv['sections']:
-            sid = '%s-%s' % (aid, npcs.slug(s['title'].split(':')[0] if s.get('number') else s['title']))
+            sid = section_id(s)
             text_rows(sid, s['text'], s['page'])
             sec_out.append({'id': sid, 'title': npcs.ascii_fold(s['title']), 'page': s['page'],
-                            **({'number': s['number']} if s.get('number') else {}), 'parts': s['parts']})
+                            **({'number': s['number']} if s.get('number') else {}),
+                            **{k: s[k] for k in ('kind', 'when', 'roll', 'once') if k in s},
+                            **({'part': cite[s['part']]} if s.get('part') else {}), 'parts': s['parts']})
         assert len({x['id'] for x in sec_out}) == len(sec_out), 'duplicate section ids'
-        adv_out = [{'id': aid, 'title': adv['title'], 'pages': adv['pages'], 'sections': sec_out, 'book': slug}]
+        adv_out = [{'id': aid, 'title': adv['title'], 'pages': adv['pages'],
+                    **({'part': cite[adv['part']]} if adv.get('part') else {}), 'sections': sec_out, 'book': slug}]
     keys = [r[0] for r in rows]
     assert len(keys) == len(set(keys)), 'duplicate keys'
 
@@ -214,11 +229,14 @@ def main(slug):
     def listing(rows_, pages_of):
         present = [b for b in order if any(r['book'] == b for r in rows_)]
         return ([{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': '%d-%d' % tuple(pages_of(b))} for b in present],
-                [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'], 'pages': list(pages_of(b))} for b in present])
+                [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'], 'pages': list(pages_of(b)),
+                  **({'part': part_of(b)} if part_of(b) else {})} for b in present])
+    part_of = lambda b: npcs.part_cite(registry[b], registry[b]['item_part']) if registry[b].get('item_part') else None
     src, books = listing(all_items, lambda b: registry[b]['item_pages'])
     io.open(os.path.join(DATA, 'items.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'about': about('Items and locations'), 'sources': src, 'books': books, 'items': all_items},
         indent=1, ensure_ascii=True) + '\n')
+    part_of = lambda b: npcs.part_cite(registry[b], registry[b]['adventure']['part']) if registry[b]['adventure'].get('part') else None
     src, books = listing(all_advs, lambda b: registry[b]['adventure']['pages'])
     io.open(os.path.join(DATA, 'adventures.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'about': about('The adventures'), 'sources': src, 'books': books, 'adventures': all_advs},

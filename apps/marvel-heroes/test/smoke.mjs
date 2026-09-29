@@ -797,6 +797,27 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     && !/undefined|\(null\)|NaN/.test(html) && !html.includes('sh-side'), tagline(nc.snapshot));
   check('the forms render as forms', renderSheet({ name: 'U', snapshot: ursa.snapshot }).includes('2nd form: Bear Form'));
 
+  // MHSP1 prints ranks only, cites two booklets numbered alike, and has a
+  // character with a "?" rank (scripts/msh/booklet.py, mhsp1-overrides.json).
+  if (data.npcs.characters.some((c) => c.book === 'mhsp1')) {
+    const lh = bookNpc({ character: 'lockheed-mhsp1' });
+    check('MHSP1: Lockheed\'s printed "?" Reason plays as Shift 0, as his printed Karma 40 counts it',
+      lh.snapshot?.abilities.reason.rank === 'shift-0' && lh.snapshot.abilities.reason.number === 0 && lh.snapshot.karma === 40,
+      JSON.stringify(lh.snapshot?.abilities.reason));
+    const sh = bookNpc({ character: 'she-hulk-mhsp1' });
+    check('MHSP1: an alter ego\'s one-line block is a form, so She-Hulk is one NPC with forms',
+      sh.snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'She-Hulk 150,Jennifer Walters 26', JSON.stringify(sh.snapshot?.forms));
+    check('MHSP1: Klaw\'s sound creatures are a block of their own to choose, not a form',
+      /stat blocks/.test(bookNpc({ character: 'klaw-mhsp1' }).error || '') && bookNpc({ character: 'klaw-mhsp1', block: 1 }).snapshot?.health === 72);
+    const gal = bookNpc({ character: 'galactus-mhsp1' });
+    check('MHSP1: a printed "2,150 (Varies)" is Health 2150, and a rank word is a Resources rank (CLASS 1000)',
+      gal.snapshot?.health === 2150 && gal.snapshot.abilities.resources.rank === 'class-1000', `${gal.snapshot?.health} ${JSON.stringify(gal.snapshot?.abilities.resources)}`);
+    check('MHSP1: the sheet cites the booklet with the page, and a Summary-only character the booklet alone',
+      tagline(bookNpc({ character: 'colossus-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Roster p.2;')
+      && tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot).startsWith('MHSP1 Secret Wars, Reference Summary;'),
+      tagline(bookNpc({ character: 'spider-man-mhsp1' }).snapshot));
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
@@ -1504,7 +1525,11 @@ section('Every book in one file: each row names a book the registry has, and onl
     a && b && sec.meta(a).includes('MA1') && sec.meta(b).includes('ZZ1') && sec.tags(b).includes('ZZ1')
     && sec.bookText(b).every((x) => x.book === 'zz1') && sec.source.includes('ZZ1 A Second Book'), sec.meta(b));
   const labels = bookChoices(two).filter((c) => c.label.startsWith('Nightcrawler')).map((c) => c.label);
-  check('and the GM\'s choices tell them apart by book', labels.length === 2 && new Set(labels).size === 2, labels.join(' | '));
+  // one choice per book that has him: MA1, MHSP1 since it was imported, and the copy
+  const nightcrawlers = two.characters.filter((c) => c.name === 'Nightcrawler').length;
+  check(`and the GM's choices tell them apart by book (${nightcrawlers})`,
+    nightcrawlers >= 2 && labels.length === nightcrawlers && new Set(labels).size === nightcrawlers
+    && labels.every((l) => / \[[A-Z0-9]+\]$/.test(l)), labels.join(' | '));
   const built = makeBookNpc({ npcs: two, ranks: load('ranks.json') })({ character: 'nightcrawler-zz1' });
   check('and a sheet from the second book is that book\'s', built.snapshot?.book.slug === 'zz1'
     && built.snapshot.book.source === 'ZZ1 A Second Book' && built.build.book === 'zz1', JSON.stringify(built.snapshot?.book));

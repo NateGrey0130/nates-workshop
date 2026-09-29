@@ -9,6 +9,11 @@
    "book": "MA1 Children of the Atom",
    "code": "TSR6872",
    "pages": "87-95"
+  },
+  {
+   "book": "MHSP1 Secret Wars",
+   "code": "TSR6860",
+   "pages": "1-16"
   }
  ],
  "books": [
@@ -20,6 +25,16 @@
     87,
     95
    ]
+  },
+  {
+   "slug": "mhsp1",
+   "short": "MHSP1",
+   "title": "MHSP1 Secret Wars",
+   "pages": [
+    1,
+    16
+   ],
+   "part": "Adventure"
   }
  ],
  "adventures": [
@@ -158,6 +173,290 @@
     }
    ],
    "book": "ma1"
+  },
+  {
+   "id": "secret-wars-mhsp1",
+   "title": "Secret Wars",
+   "pages": [
+    1,
+    16
+   ],
+   "part": "Adventure",
+   "sections": [
+    {
+     "id": "secret-wars-mhsp1-introduction",
+     "title": "Introduction",
+     "page": 1,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-players-briefing",
+     "title": "Players' Briefing",
+     "page": 2,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-judge-s-briefing",
+     "title": "Judge's Briefing",
+     "page": 2,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-battleplanet",
+     "title": "The Battleplanet",
+     "page": 4,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-events",
+     "title": "Events",
+     "page": 7,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-a-matter-of-magneto",
+     "title": "A Matter of Magneto",
+     "page": 7,
+     "kind": "planned",
+     "when": "Day 1, Morning",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-first-blood",
+     "title": "First Blood",
+     "page": 7,
+     "kind": "planned",
+     "when": "Day 1, Afternoon",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-doom-takes-charge",
+     "title": "Doom Takes Charge",
+     "page": 8,
+     "kind": "planned",
+     "when": "Day 1, Evening",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-call-of-galactus",
+     "title": "Call of Galactus",
+     "page": 8,
+     "kind": "planned",
+     "when": "Day 1, Night",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-tempest",
+     "title": "The Tempest",
+     "page": 8,
+     "kind": "planned",
+     "when": "Day 2, Morning to Night",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-sneak-attack",
+     "title": "Sneak Attack",
+     "page": 8,
+     "kind": "planned",
+     "when": "Day 3, Morning",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-worldship",
+     "title": "The Worldship",
+     "page": 9,
+     "kind": "planned",
+     "when": "Day 4, Afternoon",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-when-a-spider-calls",
+     "title": "When a Spider Calls",
+     "page": 9,
+     "kind": "planned",
+     "when": "Day 6, Morning",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-and-now-galactus",
+     "title": "And Now...Galactus!",
+     "page": 9,
+     "kind": "planned",
+     "when": "Day 7, Afternoon",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-and-doom-against-all",
+     "title": "And Doom Against All",
+     "page": 9,
+     "kind": "planned",
+     "when": "Day 8, Morning",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-beyonder-s-judgment",
+     "title": "The Beyonder's Judgment",
+     "page": 10,
+     "kind": "planned",
+     "when": "Day 9, Evening",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-going-home",
+     "title": "Going Home",
+     "page": 10,
+     "kind": "planned",
+     "when": "Day 10, Morning",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-lesser-tempest",
+     "title": "Lesser Tempest",
+     "page": 10,
+     "kind": "random",
+     "roll": 1,
+     "once": true,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-hunt",
+     "title": "The Hunt",
+     "page": 11,
+     "kind": "random",
+     "roll": 2,
+     "once": false,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-betrayal",
+     "title": "Betrayal",
+     "page": 11,
+     "kind": "random",
+     "roll": 3,
+     "once": true,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-magneto-calls",
+     "title": "Magneto Calls",
+     "page": 11,
+     "kind": "random",
+     "roll": 4,
+     "once": true,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-hearts-and-minds",
+     "title": "Hearts and Minds",
+     "page": 11,
+     "kind": "random",
+     "roll": 5,
+     "once": false,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-a-thunder-god-missing",
+     "title": "A Thunder God Missing",
+     "page": 11,
+     "kind": "random",
+     "roll": 6,
+     "once": false,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-refugees",
+     "title": "Refugees",
+     "page": 11,
+     "kind": "random",
+     "roll": 7,
+     "once": false,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-the-trap",
+     "title": "The Trap",
+     "page": 11,
+     "kind": "random",
+     "roll": 8,
+     "once": true,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-patrol",
+     "title": "Patrol",
+     "page": 11,
+     "kind": "random",
+     "roll": 9,
+     "once": false,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-my-dinner-with-galactus",
+     "title": "My Dinner with Galactus",
+     "page": 11,
+     "kind": "random",
+     "roll": 10,
+     "once": true,
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-running-heroes",
+     "title": "Running Heroes",
+     "page": 12,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-running-the-villains",
+     "title": "Running the Villains",
+     "page": 14,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    },
+    {
+     "id": "secret-wars-mhsp1-karma-awards",
+     "title": "Karma Awards",
+     "page": 16,
+     "kind": "setting",
+     "part": "Adventure",
+     "parts": []
+    }
+   ],
+   "book": "mhsp1"
   }
  ]
 }

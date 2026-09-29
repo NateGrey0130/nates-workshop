@@ -9,6 +9,11 @@
    "book": "MA1 Children of the Atom",
    "code": "TSR6872",
    "pages": "82-86"
+  },
+  {
+   "book": "MHSP1 Secret Wars",
+   "code": "TSR6860",
+   "pages": "5-11"
   }
  ],
  "books": [
@@ -20,6 +25,16 @@
     82,
     86
    ]
+  },
+  {
+   "slug": "mhsp1",
+   "short": "MHSP1",
+   "title": "MHSP1 Secret Wars",
+   "pages": [
+    5,
+    11
+   ],
+   "part": "Adventure"
   }
  ],
  "items": [
@@ -180,6 +195,68 @@
     "Traps"
    ],
    "book": "ma1"
+  },
+  {
+   "id": "item-the-battleplanet-bases-mhsp1",
+   "name": "The Battleplanet bases",
+   "kind": "location",
+   "page": 5,
+   "part": "Adventure",
+   "parts": [
+    "Living Quarters",
+    "Monitor Rooms",
+    "Storage",
+    "Galactus' Robotic Storage",
+    "Lounge and Meeting Rooms",
+    "Auxiliary Bridge and Computer",
+    "Machinery",
+    "Sonic Labs",
+    "Labs",
+    "Auto-Docs",
+    "Auto-Kitchen",
+    "Psycho-Stasis and Prisoner Holding",
+    "Gun Turrets",
+    "Fire Control",
+    "Vehicle Storage and Docks",
+    "Security Vaults"
+   ],
+   "book": "mhsp1"
+  },
+  {
+   "id": "item-the-ultimate-nullifier-mhsp1",
+   "name": "The Ultimate Nullifier",
+   "kind": "item",
+   "page": 6,
+   "part": "Adventure",
+   "book": "mhsp1"
+  },
+  {
+   "id": "item-tripedal-gunnery-platform-mhsp1",
+   "name": "Tripedal gunnery platform",
+   "kind": "vehicle",
+   "page": 8,
+   "part": "Adventure",
+   "vehicle": {
+    "Control": "Excellent",
+    "Speed": "Good",
+    "Body": "Remarkable"
+   },
+   "section": "secret-wars-mhsp1-first-blood",
+   "book": "mhsp1"
+  },
+  {
+   "id": "item-alien-hovercraft-mhsp1",
+   "name": "Alien hovercraft",
+   "kind": "vehicle",
+   "page": 11,
+   "part": "Adventure",
+   "vehicle": {
+    "Control": "Excellent",
+    "Speed": "Monstrous",
+    "Body": "Good"
+   },
+   "section": "secret-wars-mhsp1-patrol",
+   "book": "mhsp1"
   }
  ]
 }
