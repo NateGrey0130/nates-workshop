@@ -1144,6 +1144,10 @@ section('No book text is in any tracked file (local only: needs the extraction)'
       const out = new Set();
       const add = (part, [first, last]) => { for (let p = first; p <= last; p++) out.add(pdf(part, p)); };
       if (b.character_pages) add(b.character_part, b.character_pages);
+      // a grid-booklets book (ME1): its character ranges. Not its opponents'
+      // chapter pages: they are mostly the adventure's prose, which stays
+      // compared whole, and an opponent has no identity line to excuse.
+      for (const r of b.character_ranges || []) add(r.part, r.pages);
       if (b.item_pages) add(b.item_part, b.item_pages);
       if (b.adventure) add(b.adventure.part, b.adventure.pages);
       if (b.running) add(b.running.part, b.running.pages);

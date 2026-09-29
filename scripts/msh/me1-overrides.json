@@ -1,0 +1,29 @@
+{
+  "about": [
+    "Hand decisions about ME1 stat blocks that scripts/msh/roster.py applies after parsing (scripts/msh/gridbooks.py reads this book). Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - numbers, rank codes and a few words of a label - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: the printed page in the entry's own booklet, and the start of the entry's header",
+    "            {summary}: a Pregenerated Heroes Summary row (PDF 51), by the name the chart prints",
+    "  verdict   misprint          the book prints a value its own arithmetic contradicts; 'printed' keeps what the page says, 'corrected' what the rules give",
+    "            as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            rows              the grid prints fewer than seven rows; 'abilities' are its rows as the page gives them, a row it does not print as null, and 'corrected' is how that row is played; health, karma, resources and popularity as printed, because a grid the parser cannot read leaves them welded to its rows",
+    "            summary_misprint  the chart prints a value its own ranks contradict and the character's block does not; 'printed' is the chart's, 'corrected' the block's",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 11, "header": "Typical Oolafat"}, "verdict": "rows", "field": "RIP",
+     "abilities": [["F", 10, "Gd"], ["A", 10, "Gd"], ["S", 10, "Gd"], ["E", 20, "Ex"], ["R", null, null], ["I", null, null], ["P", null, null]],
+     "health": "50", "karma": "0", "resources": "Feeble 2", "popularity": "0",
+     "printed": "Linked to Ego", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-09-29",
+     "note": "One line stands for Reason, Intuition and Psyche: an Oolafat's mind is Ego's. Health 50 = 10 + 10 + 10 + 20; Karma is printed 0, so the three are played as Shift 0, as MHSP1's Lockheed's printed ? Reason is."},
+    {"match": {"page": 12, "header": "Ghoul Captain"}, "verdict": "misprint", "field": "A",
+     "printed": {"number": 50, "code": "Mn"}, "corrected": {"number": 50, "code": "Am"}, "checked": "2026-09-29",
+     "note": "50 is Amazing. Health 400 = 150 + 50 + 100 + 100 agrees with the number. The block also prints Karma 0 against R 100 + I 100 + P 100 = 300; that is kept as printed, as MA1's Miss Locke and Mr. Chambers are, because one override covers one block."},
+    {"match": {"page": 15, "header": "Superkree"}, "verdict": "as_printed", "field": "F",
+     "printed": {"number": 275, "code": "ShY"}, "checked": "2026-09-29",
+     "note": "275 is inside Shift Y's range (176-350, ranks.json), not its standard 200. Health 575 = 275 + 100 + 100 + 100 uses the 275."},
+    {"match": {"summary": "Firelord"}, "verdict": "summary_misprint", "field": "karma",
+     "printed": 90, "corrected": 110, "checked": "2026-09-29",
+     "note": "The chart's own row gives R 30 + I 50 + P 30 = 110, and Firelord's block (Adventure p.5) prints 110."}
+  ]
+}
