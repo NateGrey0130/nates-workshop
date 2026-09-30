@@ -3,10 +3,11 @@
 Marvel Super Heroes Advanced Set, Official Guidebook to Mutants, Kim Eastland,
 1986. Registry entry: `scripts/msh/books.json` -> `ma1`. Measured 2026-09-28.
 
-**Rows citing this book:** 975 `msh_book_text` rows over 220 entries in
-production (`DB_MARVEL`, read back 2026-09-28):
+**Rows citing this book:** 929 `msh_book_text` rows over 209 entries in
+production (`DB_MARVEL`, read back 2026-09-29):
 - 902 over 189 character entries
-- 73 over 20 items and 11 adventure sections
+- 27 over 20 items (the adventure's 46 rows were deleted 2026-09-29, when
+  adventures left the app)
 
 Committed:
 - 180 characters in `apps/marvel-heroes/data/npcs.json`: 182 versions, 197
@@ -14,7 +15,9 @@ Committed:
   team's block), 7 cross-reference appearances and 435 powers, 108 of them
   linked to the Ultimate Powers Book
 - 20 items in `data/items.json`
-- the *Dreamchild* adventure's 11 sections in `data/adventures.json`
+- the *Dreamchild* adventure's 11 sections were in `data/adventures.json`
+  until 2026-09-29, when adventures left the app; the registry still names
+  its pages
 
 This is the first Marvel book surveyed, and nothing here touches the Palladium
 book pipeline: the cache, the registry, the scripts and this file are all

@@ -17,8 +17,8 @@ vehicles). Three more links on the tab bar open pages of their own: the
 
 `/apps/marvel-heroes/codex/` is every list the app ships, one section at a
 time: **Powers** (with the full text when `msh_power_text` has it), **Talents**,
-**Contacts**, **Weaknesses**, **Gear and vehicles**, **Notable NPCs**, **Items
-and locations** and **Adventures**. Each section searches by word, filters by
+**Contacts**, **Weaknesses**, **Gear and vehicles**, **Notable NPCs** and **Items
+and locations**. Each section searches by word, filters by
 its own grouping (a Power's class, a Talent's category, a gear table, an NPC's
 team, an item's kind), and opens a card for the detail. The address carries the view -
 `?section=`, `q=`, `group=` and `entry=` for one open card - so a filtered
@@ -56,8 +56,8 @@ them team members given their team's stats (below).
 
 MHSP1 *Secret Wars* (`docs/surveys/mhsp1.md`) is the second book: 41 cards,
 read by `scripts/msh/booklet.py` because the box is a different kind of book.
-- **Two booklets, both numbered from 1**, so every MHSP1 card, block, item and
-  adventure section carries its booklet (`part`), and cites it:
+- **Two booklets, both numbered from 1**, so every MHSP1 card, block and item
+  carries its booklet (`part`), and cites it:
   "MHSP1 Roster p.4", "MHSP1 Adventure p.13".
 - **Ranks only.** The Roster Booklet prints no numbers. Each ability's number is
   its rank's standard number, and every block says so (`rank_only`). All 33 of
@@ -75,8 +75,8 @@ read by `scripts/msh/booklet.py` because the box is a different kind of book.
 - Lockheed's Reason is printed "?"; his printed Karma counts it as 0, and it is
   played as Shift 0 (`scripts/msh/mhsp1-overrides.json`).
 
-**Every book shares the three data files.** Each character, item and
-adventure carries its `book`. Rebuilding one book replaces only that book's
+**Every book shares the two data files.** Each character and item carries
+its `book`. Rebuilding one book replaces only that book's
 rows. The first book in `scripts/msh/books.json` keeps plain ids; a later
 book's end in `-<slug>`. So the same character in two books is **two cards**,
 each citing its own book (a tag names the book once there is more than one),
@@ -107,7 +107,7 @@ untouched. What makes it different:
   because the book gives a Power's rank in prose. The sheet links to the
   Codex card for that, and for its Talents and Contacts.
 
-### Items and locations, and Adventures
+### Items and locations
 
 The rest of a sourcebook after its characters, from `scripts/msh/extras.py`,
 on the same terms as the Notable NPCs: **facts committed, prose in
@@ -116,25 +116,18 @@ on the same terms as the Notable NPCs: **facts committed, prose in
   its name, kind and page. A vehicle carries its printed Control, Speed and
   Body; a location carries the names of the parts it lists (the Danger Room's
   six kinds of event).
-- `data/adventures.json`: *Dreamchild* (pp.87-95), one row per section. Its
-  seven numbered encounters are titled as printed, and the introduction,
-  background and locales are the rest. Each section lists the run-ins it
-  prints (Summary, Starting, Encounter, Aftermath, Karma).
-
-The adventure has no stat blocks of its own; its opponents are the book's
-Notable NPCs.
-
-MHSP1's Adventure Book is a campaign, not a chain of encounters:
-- **The adventure** is 12 Planned Events, each with its day and shift; 10
-  Random Events, each with its d10 roll and whether it happens only once; and
-  the background around them (`kind`, `when`, `roll`, `once`). The Codex
-  filters them as Planned events, Random events and Background.
-- **The items** are the four bases as one location, with 16 room types as its
-  parts; the Ultimate Nullifier; and two vehicles the events state in passing.
-  A vehicle's card reads its event's text (`section`). The bases' room table
-  is on the location as data (`rooms`): 26 sectors, each with its d100 range
-  and a room for each base, transcribed by eye. The Hunt carries its table the
-  same way (`table`): a d10 roll, a villain and the hero it goes after.
+**Adventures are not in the app** (Nate, 2026-09-29). MA1's *Dreamchild* and
+MHSP1's *Secret Wars* were a Codex section and `data/adventures.json` until
+then; both, and their `msh_book_text` rows, were removed, and a new book
+imports no adventure. The registry still names each adventure's pages,
+because `extras.py` still parses them for one reason: MHSP1 finds its items
+inside the Adventure Book.
+- **MHSP1's items** are the four bases as one location, with 16 room types as
+  its parts; the Ultimate Nullifier; and two vehicles the events state in
+  passing. A vehicle's card reads its event's text (`section`), the only
+  adventure text still in `msh_book_text`. The bases' room table is on the
+  location as data (`rooms`): 26 sectors, each with its d100 range and a room
+  for each base, transcribed by eye.
 
 ## Point Buy
 
@@ -271,8 +264,9 @@ node scripts/d1-apply.mjs --remote --db marvel .cache/msh/books/ma1/extras-text.
 
 MHSP1 is the same, with `mhsp1` for `ma1`.
 
-Each script deletes its own rows first - the characters', or the items' and
-the adventure's - so either can be re-run alone and replaces only its own.
+Each script deletes its own rows first - the characters', or the items' (and
+every adventure row, keeping only a section a vehicle reads) - so either can
+be re-run alone and replaces only its own.
 
 ## Saved heroes: `msh_heroes`
 

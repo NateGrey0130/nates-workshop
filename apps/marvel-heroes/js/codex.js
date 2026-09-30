@@ -380,46 +380,9 @@ export const SECTIONS = [
     hay: (r) => [r.name, r.kind, ...(r.parts || []), ...(r.rooms ? r.rooms.rows.flatMap((x) => x.slice(2)) : [])].join(' '),
     // A vehicle an adventure section states in passing (MHSP1's gunnery
     // platform, in First Blood) has no text of its own: its card reads that
-    // section's.
+    // section's, the only adventure text msh_book_text keeps now that the
+    // adventures are gone from the app (scripts/msh/extras.py).
     bookText: (r) => [{ book: r.book, entry: r.section || r.id, label: '' }],
-  },
-  {
-    id: 'adventures',
-    label: 'Adventures',
-    source: 'MA1 Children of the Atom, pp.87-95: Dreamchild',
-    files: ['adventures'],
-    groupLabel: 'Part',
-    // One row per section of a book's adventure: its numbered encounters, and
-    // the introduction, background and locales around them. The adventure
-    // runs on the book's own characters (Notable NPCs); its text is fetched
-    // from msh_book_text when a card opens.
-    build(data) {
-      const a = data.adventures;
-      const byBook = Object.fromEntries(a.books.map((b) => [b.slug, b]));
-      this.short = shortOf(a.books);
-      this.source = a.adventures.map((adv) => `${pagesLine(byBook[adv.book], adv.pages)}: ${adv.title}`).join('; ');
-      // MA1's adventure is encounters; MHSP1's is a campaign of Planned Events,
-      // each on a day and shift, and Random Events rolled on a d10 (`kind`).
-      const rows = a.adventures.flatMap((adv) => adv.sections.map((s) => ({
-        ...s, adventure: adv.title, book: adv.book, group: s.kind || (s.number ? 'encounter' : 'setting') })));
-      const names = [['encounter', 'Encounters'], ['planned', 'Planned events'], ['random', 'Random events'],
-        ['setting', 'Background and locales']];
-      return { rows, groups: names.filter(([id]) => rows.some((r) => r.group === id)).map(([id, name]) => ({ id, name })) };
-    },
-    key: (r) => r.id,
-    title: (r) => r.title,
-    badge: (r) => (r.number ? `E${r.number}` : r.roll ? `d10: ${r.roll}` : ''),
-    meta(r) { return `${r.adventure}, ${cite(this.short[r.book], r.part, [r.page])}`; },
-    summary: (r) => (r.parts.length ? r.parts.join(', ')
-      : r.when ? r.when
-        : r.roll ? `Random event${r.once ? ', once only' : ''}`
-          : r.kind ? 'Background' : 'Before the encounters'),
-    // a table a section carries as data (MHSP1's The Hunt: a d10 roll, a villain
-    // and a target), one line per row
-    stats: (r) => (r.table ? [[r.table.columns.join(' / '), r.table.footnote || ''],
-      ...r.table.rows.map(([roll, ...rest]) => [String(roll), rest.join(' vs. ')])] : []),
-    hay: (r) => [r.title, r.adventure, r.when, ...r.parts, ...(r.table ? r.table.rows.flat().map(String) : [])].filter(Boolean).join(' '),
-    bookText: (r) => [{ book: r.book, entry: r.id, label: '' }],
   },
 ];
 
