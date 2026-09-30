@@ -11,15 +11,24 @@ const STATUS = {
   backfilled: 'Backfilled: its rows arrived before surveys existed, and were given their pages later',
 };
 
-function card(b) {
-  const added = b.added.map(([what, count]) => `<li><span class="sb-count">${n(count)}</span> ${esc(what)}</li>`).join('');
-  return `<article class="sb-book">
-    <h2 class="sb-title">${esc(b.title)}</h2>
-    <p class="sb-meta"><span class="sb-code">${esc(b.code)}</span>
+// One row per book: the summary line is the title, its status and its total,
+// and a click opens the book to show what it added. <details> does the
+// opening, so the list works from the keyboard with no script of its own.
+function card(b, unit) {
+  const added = b.added.map(([what, count]) => `<tr><th scope="row">${esc(what)}</th><td class="sb-count">${n(count)}</td></tr>`).join('');
+  return `<details class="sb-book">
+    <summary class="sb-row">
+      <span class="sb-title">${esc(b.title)}</span>
       <span class="sb-status sb-${esc(b.status)}" title="${esc(STATUS[b.status] || b.status)}">${esc(b.status)}</span>
-      ${b.date ? `<span class="sb-date">status recorded ${esc(b.date)}</span>` : ''}</p>
-    ${added ? `<ul class="sb-added" aria-label="What it added">${added}</ul>` : '<p class="sb-none">Nothing counted yet.</p>'}
-  </article>`;
+      <span class="sb-total"><span class="sb-count">${n(b.total)}</span> ${esc(unit)}</span>
+    </summary>
+    <div class="sb-body">
+      <p class="sb-meta"><span class="sb-code">${esc(b.code)}</span>
+        ${b.date ? `<span class="sb-date">status recorded ${esc(b.date)}</span>` : ''}</p>
+      <p class="sb-status-note">${esc(STATUS[b.status] || b.status)}</p>
+      ${added ? `<table class="sb-added"><caption>What it added</caption><tbody>${added}</tbody></table>` : '<p class="sb-none">Nothing counted yet.</p>'}
+    </div>
+  </details>`;
 }
 
 async function main() {
@@ -31,7 +40,7 @@ async function main() {
     const total = list.books.reduce((s, b) => s + b.total, 0);
     root.innerHTML = `<p class="sb-summary">${esc(list.about)}</p>
       <p class="sb-count-line"><strong>${list.books.length}</strong> books, <strong>${n(total)}</strong> ${esc(list.unit)} in all.</p>
-      <div class="sb-list">${list.books.map(card).join('')}</div>`;
+      <div class="sb-list">${list.books.map((b) => card(b, list.unit)).join('')}</div>`;
   } catch (e) {
     root.innerHTML = `<p class="sb-error" role="alert">The list could not load: ${esc(e.message)}</p>`;
   }
