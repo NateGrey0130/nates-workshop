@@ -257,9 +257,14 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-09-30: `japan` is cached
-(218 pages) and **no production row cites it**, so there is nothing to trace
-yet. Its `BACKLOG` block, unchanged by this PR:
+`node scripts/source-coverage.mjs --remote`, 2026-09-30, after step 8 was applied:
+
+```
+  japan              315 / 0
+```
+
+Every row citing this book traces to a cached page. Its `BACKLOG` block is the
+same as before the import started, so no step left a stub behind:
 
 ```
   gear stubs            14   description still says STUB — created by class import
@@ -269,3 +274,8 @@ yet. Its `BACKLOG` block, unchanged by this PR:
   spell text missing     0   nothing for the codex to show
   psionic text missing   0   nothing for the codex to show
 ```
+
+`node scripts/drift-check.mjs --remote` reports NO DRIFT the same day.
+
+**Open finding from this book:** BOOK-INGEST-AUDIT F116 (level-gated mystic
+martial arts picks, stored as prose in four classes).
