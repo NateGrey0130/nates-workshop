@@ -119,9 +119,9 @@ on the same terms as the Notable NPCs: **facts committed, prose in
 **Adventures are not in the app** (Nate, 2026-09-29). MA1's *Dreamchild* and
 MHSP1's *Secret Wars* were a Codex section and `data/adventures.json` until
 then; both, and their `msh_book_text` rows, were removed, and a new book
-imports no adventure. The registry still names each adventure's pages,
-because `extras.py` still parses them for one reason: MHSP1 finds its items
-inside the Adventure Book.
+imports no adventure. The registry names MHSP1's alone, because `extras.py`
+still parses it for one reason: MHSP1 finds its items inside the Adventure
+Book.
 - **MHSP1's items** are the four bases as one location, with 16 room types as
   its parts; the Ultimate Nullifier; and two vehicles the events state in
   passing. A vehicle's card reads its event's text (`section`), the only

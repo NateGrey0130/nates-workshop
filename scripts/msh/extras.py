@@ -17,9 +17,9 @@ same two halves scripts/msh/npcs.py does:
           node scripts/d1-apply.mjs --remote --db marvel <that .sql>
 
 ADVENTURES ARE NOT IN THE APP (Nate, 2026-09-29): data/adventures.json and the
-Codex's Adventures section were removed. A registry `adventure` is still
-parsed, because a roster-booklet book (MHSP1) finds its locations and vehicles
-inside the adventure's sections, and a vehicle stated in passing has no text
+Codex's Adventures section were removed, and MHSP1 is the only registry book
+with an `adventure` left. It is still parsed, because a roster-booklet book
+finds its locations and vehicles inside the adventure's sections, and a vehicle stated in passing has no text
 but its section's. So the one adventure text written is a section an item
 names (`section`), under entry id <adventure>-<section>; the .sql deletes the
 book's other adventure rows. extras.json keeps the whole parse, so smoke's
@@ -32,12 +32,10 @@ book with no item_pages in the registry has none.
 
 HOW THE BOOK SETS THEM. Items and locations are run-in entries - "ACID BOMB:
 This Brood weapon..." - under a heading (Special Items, Locations); a vehicle
-follows its run-in with Control:, Speed: and Body: lines. An adventure's
-sections are headers ("Encounter 3" over "Fe Fi Fo Fum", "The Federal
-Building"), and each divides into run-ins (SUMMARY:, STARTING:, ENCOUNTER:,
-AFTERMATH:, KARMA:). A run-in inside a location that names one of its parts
-(the Danger Room's ENERGY WEAPONS, MISSILES...) is listed in the registry's
-item_parts, because nothing in the type tells it from a new item.
+follows its run-in with Control:, Speed: and Body: lines. A run-in inside a
+location that names one of its parts (the Danger Room's ENERGY WEAPONS,
+MISSILES...) is listed in the registry's item_parts, because nothing in the
+type tells it from a new item.
 """
 import importlib.util, io, json, os, re, sys
 
@@ -110,51 +108,6 @@ def items(book, slug):
     return out
 
 
-def adventure(book, slug):
-    """{title, pages, sections: [{title, number?, page, parts: [...], text: [...]}]}"""
-    title = book['adventure']['title']
-    sections, cur, pending_number = [], None, None
-    for line in stream_for(book, slug, book['adventure']['pages']):
-        if line.get('synthetic'):
-            continue
-        if line.get('big'):
-            t = line['text'].strip().rstrip(':\\').strip()
-            num = re.match(r'^Encounter\s+(\d+)$', t)
-            if num:
-                pending_number = int(num.group(1))
-                cur = {'title': 'Encounter %d' % pending_number, 'number': pending_number, 'page': line['printed'],
-                       'parts': [], 'text': [['prose', None, []]]}
-                sections.append(cur)
-                continue
-            if pending_number is not None and cur and cur.get('number') == pending_number and cur['title'].startswith('Encounter'):
-                cur['title'] = 'Encounter %d: %s' % (pending_number, t)
-                pending_number = None
-                continue
-            pending_number = None
-            cur = {'title': t, 'page': line['printed'], 'parts': [], 'text': [['prose', None, []]]}
-            sections.append(cur)
-            continue
-        if cur is None:
-            continue
-        # An encounter's title set a size up from the text but read as prose by
-        # the header test, because its apostrophe OCRs as U+FFFD ("It\ufffds All
-        # Done With Mirrors") and splits a word: the line straight after
-        # "Encounter N", set tall, is that title.
-        if pending_number is not None and line['h'] >= 1.3 * line['body_h']:
-            cur['title'] = 'Encounter %d: %s' % (pending_number, line['text'].strip().replace('\ufffd', "'"))
-            pending_number = None
-            continue
-        pending_number = None
-        m = run_in(line)
-        if m:
-            label = small_caps_title(m.group(1).strip())
-            cur['parts'].append(label)
-            cur['text'].append(['section', label, [m.group(2)]])
-            continue
-        cur['text'][-1][2].append(line['text'])
-    return {'title': title, 'pages': book['adventure']['pages'], 'sections': sections}
-
-
 def merged(path, key, slug, mine, order):
     """A data file's list with this book's rows replaced and every other
     book's kept, in registry order. The single-book shape had one `book` for
@@ -179,8 +132,10 @@ def main(slug):
         import booklet
         its, adv = booklet.extras(book, slug)
     else:
+        # a book set like MA1: items only. Its adventure's parser went with
+        # MA1's registry entry (2026-09-30); a new book imports no adventure.
         its = items(book, slug) if book.get('item_pages') else []
-        adv = adventure(book, slug) if book.get('adventure') else None
+        adv = None
     cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     rows = []
 
