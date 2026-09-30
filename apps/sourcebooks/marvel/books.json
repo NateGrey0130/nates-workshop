@@ -1,7 +1,7 @@
 {
  "system": "marvel",
  "title": "Marvel Super Heroes sourcebooks",
- "about": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items, its adventure, and the rows of its own text the cards show.",
+ "about": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items and locations, and the rows of its own text the cards show.",
  "unit": "characters",
  "books": [
   {
@@ -18,10 +18,6 @@
     [
      "Items and locations",
      20
-    ],
-    [
-     "Adventure sections",
-     11
     ],
     [
      "Rows of the book's text",
@@ -44,10 +40,6 @@
     [
      "Items and locations",
      4
-    ],
-    [
-     "Adventure sections",
-     30
     ],
     [
      "Rows of the book's text",

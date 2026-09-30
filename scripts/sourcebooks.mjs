@@ -77,7 +77,6 @@ export function buildMarvel(root = repoRoot) {
   const data = (f, key) => json(root, `apps/marvel-heroes/data/${f}`)[key];
   const chars = data('npcs.json', 'characters');
   const items = data('items.json', 'items');
-  const adventures = data('adventures.json', 'adventures');
   const books = [];
   for (const [slug, b] of Object.entries(registry)) {
     const mine = chars.filter((c) => c.book === slug);
@@ -85,11 +84,9 @@ export function buildMarvel(root = repoRoot) {
     const survey = join(root, `apps/marvel-heroes/docs/surveys/${slug}.md`);
     const text = existsSync(survey) ? readFileSync(survey, 'utf8') : '';
     const m = /^\*\*Rows citing this book:\*\* (\d[\d,]*) `msh_book_text` rows[\s\S]*?read back (\d{4}-\d{2}-\d{2})/m.exec(text);
-    const sections = adventures.filter((a) => a.book === slug).reduce((s, a) => s + a.sections.length, 0);
     const added = [
       ['Characters', mine.length],
       ['Items and locations', items.filter((i) => i.book === slug).length],
-      ['Adventure sections', sections],
       ['Rows of the book\'s text', m ? Number(m[1].replace(/,/g, '')) : 0],
     ].filter(([, n]) => n);
     books.push({
@@ -99,7 +96,7 @@ export function buildMarvel(root = repoRoot) {
   }
   return {
     system: 'marvel', title: 'Marvel Super Heroes sourcebooks',
-    about: 'Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items, its adventure, and the rows of its own text the cards show.',
+    about: 'Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items and locations, and the rows of its own text the cards show.',
     unit: 'characters',
     books,
   };
