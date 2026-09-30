@@ -23,6 +23,11 @@
    "book": "ME1 Cosmos Cubed",
    "code": "TSR6879",
    "pages": "Adventure 3-7, 11-28; Resource 2-16"
+  },
+  {
+   "book": "MA4 The Fantastic Four Compendium",
+   "code": "TSR6889",
+   "pages": "3-75"
   }
  ],
  "books": [
@@ -77,6 +82,15 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "ma4",
+   "short": "MA4",
+   "title": "MA4 The Fantastic Four Compendium",
+   "pages": [
+    3,
+    75
+   ]
   }
  ],
  "teams": [
@@ -106,7 +120,20 @@
   "Skrulls",
   "Kree",
   "Inhumans",
-  "Elders of the Universe"
+  "Elders of the Universe",
+  "Fantastic Four",
+  "Friends of the FF",
+  "Races and Organizations",
+  "Atlanteans",
+  "Fiends and Foes",
+  "Frightful Four",
+  "Super-Apes",
+  "Salem's Seven",
+  "Central City",
+  "King's Crossing",
+  "Subterranea",
+  "Wundagore Mountain",
+  "Xandar"
  ],
  "characters": [
   {
@@ -23531,6 +23558,11775 @@
    ],
    "appearances": [],
    "book": "me1"
+  },
+  {
+   "id": "mister-fantastic-ma4",
+   "name": "Mister Fantastic",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "mister-fantastic-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      3,
+      4
+     ],
+     "identity": [
+      "Reed Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "42",
+       "karma": "100",
+       "resources": "RM(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elongation",
+       "upb": "S12"
+      },
+      {
+       "name": "Plasticity",
+       "upb": "S25"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Hyper-intelligence",
+       "upb": "M13"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "invisible-woman-ma4",
+   "name": "Invisible Woman",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "invisible-woman-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      4,
+      5
+     ],
+     "identity": [
+      "Susan Storm Richards a.k.a. 'Invisible",
+      "Girl"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "46",
+       "karma": "40",
+       "resources": "RM(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "the-thing-ma4",
+   "name": "The Thing",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "the-thing-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      5,
+      6
+     ],
+     "identity": [
+      "Benjamin Jacob Grimm"
+     ],
+     "blocks": [
+      {
+       "label": "The Thing",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "200",
+       "karma": "50",
+       "resources": "RM",
+       "popularity": "80"
+      },
+      {
+       "label": "Human Form",
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "form": true,
+       "health": "50",
+       "karma": "50",
+       "resources": "RM",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Super-breath"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "prose",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "human-torch-ma4",
+   "name": "Human Torch",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "human-torch-ii-ma4",
+     "label": "II",
+     "team": "Fantastic Four",
+     "pages": [
+      6,
+      7
+     ],
+     "identity": [
+      "Johnny Lowell Storm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "26",
+       "resources": "Rm(30)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Energy Sheath",
+       "upb": "S14"
+      },
+      {
+       "name": "Flame Control"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "crystal-ma4",
+   "name": "Crystal",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "crystal-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Crystal Amaquelin Maximoff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "26",
+       "resources": "EX(20)",
+       "popularity": "15 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elemental Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "medusa-ma4",
+   "name": "Medusa",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "medusa-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      8,
+      9
+     ],
+     "identity": [
+      "Medusalith Amaquelin",
+      "Queen of Attilan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "110",
+       "karma": "70",
+       "resources": "EX(20)",
+       "popularity": "15 (90 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Prehensile Hair",
+       "upb": "S26"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "power-man-ma4",
+   "name": "Power Man",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "power-man-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      9,
+      10
+     ],
+     "identity": [
+      "Luke Cage"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "130",
+       "karma": "36",
+       "resources": "PR(4)",
+       "popularity": "18"
+      }
+     ],
+     "powers": [
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "ms-marvel-ii-ma4",
+   "name": "Ms. Marvel II",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "ms-marvel-ii-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Sharon Ventura"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "140",
+       "karma": "18",
+       "resources": "TY(6)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "she-hulk-ma4",
+   "name": "She-Hulk",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "she-hulk-ma4",
+     "label": null,
+     "team": "Fantastic Four",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Jennifer Walters"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "175",
+       "karma": "36",
+       "resources": "Ex(20)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Hyper-Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Alter Ego (lost)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "frankie-raye-ma4",
+   "name": "Frankie Raye",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "frankie-raye-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      11,
+      12
+     ],
+     "identity": [
+      "(pre-Nova)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "56",
+       "karma": "20",
+       "resources": "TY(6)",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Energy Sheath (Fire)"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "tattletale-ma4",
+   "name": "Tattletale",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "tattletale-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      12,
+      13
+     ],
+     "identity": [
+      "Franklin Benjamin Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "16",
+       "karma": "91",
+       "resources": "FE(2)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Precognition",
+       "upb": "M24"
+      },
+      {
+       "name": "Se/f-Duplication (Illusory)"
+      },
+      {
+       "name": "Telelocation",
+       "upb": "M31"
+      },
+      {
+       "name": "Biophysical Control (Disruption)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "wyatt-wingfoot-ma4",
+   "name": "Wyatt Wingfoot",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "wyatt-wingfoot-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "40",
+       "karma": "26",
+       "resources": "GD(10)",
+       "popularity": "35"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "alicia-reiss-masters-storm-ma4",
+   "name": "Alicia Reiss Masters Storm",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "alicia-reiss-masters-storm-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "18",
+       "karma": "40",
+       "resources": "TY(6)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "agatha-harkness-ma4",
+   "name": "Agatha Harkness",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "agatha-harkness-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "20",
+       "karma": "115",
+       "resources": "GD(10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ritual Magic"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "luna-ma4",
+   "name": "Luna",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "luna-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      14,
+      15
+     ],
+     "identity": [
+      "Luna Maximoff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "12",
+       "karma": "6",
+       "resources": "Shift 0",
+       "popularity": "20"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "h-e-r-b-i-e-ma4",
+   "name": "H.E.R.B.I.E.",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "h-e-r-b-i-e-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      15,
+      16
+     ],
+     "identity": [
+      "Humanoid Experimental Robot, B-Type,",
+      "Integrated Electronics"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "115",
+       "karma": "42",
+       "resources": "Shift 0",
+       "popularity": "6"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robot Body"
+      },
+      {
+       "name": "Communication with Cybernetics"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "maya-ma4",
+   "name": "Maya",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "maya-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "26",
+       "resources": "GD(10)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Micro-Environment",
+       "upb": "MC10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "dorrie-evans-ma4",
+   "name": "Dorrie Evans",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "dorrie-evans-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "22",
+       "karma": "18",
+       "resources": "TY(6)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "dr-jacob-grimm-ma4",
+   "name": "Dr. Jacob Grimm",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "dr-jacob-grimm-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "20",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "25"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "dr-petunia-penny-grimm-ma4",
+   "name": "Dr. Petunia \"Penny\" Grimm",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "dr-petunia-penny-grimm-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "30",
+       "resources": "GD(10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "julie-angel-ma4",
+   "name": "Julie Angel",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "julie-angel-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      16,
+      17
+     ],
+     "identity": [
+      "Juliette D'Angelo"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "22",
+       "resources": "TY(6)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "lorrie-melton-ma4",
+   "name": "Lorrie Melton",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "lorrie-melton-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "32",
+       "karma": "26",
+       "resources": "GD(10)",
+       "popularity": "7"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "impossible-man-ma4",
+   "name": "Impossible Man",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "impossible-man-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      17,
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "170",
+       "karma": "42",
+       "resources": "N/A",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Mass Mind"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "phineas-horton-ma4",
+   "name": "Phineas Horton",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "phineas-horton-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      17
+     ],
+     "identity": [
+      "aka Thomas Raye"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "32",
+       "karma": "54",
+       "resources": "EX (20)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "sharon-selleck-ma4",
+   "name": "Sharon Selleck",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "sharon-selleck-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      17
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "26",
+       "resources": "Pr(4)",
+       "popularity": "6"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "tarianna-ma4",
+   "name": "Tarianna",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "tarianna-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      17
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "120",
+       "karma": "50",
+       "resources": "PR(4)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "stingray-ma4",
+   "name": "Stingray",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "stingray-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      18
+     ],
+     "identity": [
+      "Dr. Walter Newell"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Re"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "130",
+       "karma": "40",
+       "resources": "RM(30)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Exoskeleton"
+      },
+      {
+       "name": "Self Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Gliding",
+       "upb": "T7"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "crusader-ma4",
+   "name": "Crusader",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "crusader-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      19
+     ],
+     "identity": [
+      "Robert Grayson a.k.a. Marvel Boy"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "120",
+       "karma": "18",
+       "resources": "PR(4)   - ",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Source (Wristbands)"
+      },
+      {
+       "name": "Gravity Manipulation",
+       "upb": "EC11"
+      },
+      {
+       "name": "Light Control",
+       "upb": "EC14"
+      },
+      {
+       "name": "Light Emission",
+       "upb": "EE8"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "quasar-ma4",
+   "name": "Quasar",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "quasar-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      19
+     ],
+     "identity": [
+      "Wendell Vaughn"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "50",
+       "karma": "22",
+       "resources": "GD(10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Source (Wristbands)"
+      },
+      {
+       "name": "Energy Solidification",
+       "upb": "EC7"
+      },
+      {
+       "name": "Light Generation"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "guardsman-ma4",
+   "name": "Guardsman",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "guardsman-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      20
+     ],
+     "identity": [
+      "Michael O'Brien"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "90",
+       "karma": "30",
+       "resources": "GD(10)",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 90,
+        "corrected": 130
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Exoskeleton"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Fire Generation (feet)"
+      },
+      {
+       "name": "Plasma Generation (Repulsors)"
+      },
+      {
+       "name": "Self Sustenance",
+       "upb": "P11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "thundra-ma4",
+   "name": "Thundra",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "thundra-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      20
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "140",
+       "karma": "22",
+       "resources": "EX(20)",
+       "popularity": "8(75)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Hyper-running",
+       "upb": "T10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "aquarian-ma4",
+   "name": "Aquarian",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "aquarian-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      21
+     ],
+     "identity": [
+      "Wundarr"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "94",
+       "karma": "76",
+       "resources": "PR(4)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Attributes"
+      },
+      {
+       "name": "Body Resistance",
+       "upb": "P2"
+      },
+      {
+       "name": "Animal Empathy"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "watcher-ma4",
+   "name": "Watcher",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "watcher-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      21,
+      22
+     ],
+     "identity": [
+      "Uatu"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "250",
+       "karma": "300",
+       "resources": "UN(100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Clairaudience",
+       "upb": "M1"
+      },
+      {
+       "name": "Clairvoyance",
+       "upb": "M2"
+      },
+      {
+       "name": "Communicate With Animals",
+       "upb": "M3"
+      },
+      {
+       "name": "Communicate with Cybernetics",
+       "upb": "M4"
+      },
+      {
+       "name": "Communicate with Plants",
+       "upb": "M6"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      },
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Force Field Generation"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Linguistics",
+       "upb": "M17"
+      },
+      {
+       "name": "Mental Invisibility",
+       "upb": "M19"
+      },
+      {
+       "name": "Mind Probe"
+      },
+      {
+       "name": "Remote Sensing",
+       "upb": "M26"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Telelocation",
+       "upb": "M31"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Total Memory",
+       "upb": "M33"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "True Invuinerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "high-evolutionary-ma4",
+   "name": "High Evolutionary",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "high-evolutionary-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      22,
+      23
+     ],
+     "identity": [
+      "Herbert Edgar Wyndham"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         3000,
+         "C-3000"
+        ]
+       ],
+       "health": "3080",
+       "karma": "5000",
+       "resources": "C1000",
+       "popularity": "0 (100 from his creations)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg Exoskeleton"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Clairaudience",
+       "upb": "M1"
+      },
+      {
+       "name": "Clairvoyance",
+       "upb": "M2"
+      },
+      {
+       "name": "Communicate with Animals",
+       "upb": "M3"
+      },
+      {
+       "name": "Communicate with Cybernetics",
+       "upb": "M4"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      },
+      {
+       "name": "Danger Sense",
+       "upb": "M8"
+      },
+      {
+       "name": "Induced Evolution"
+      },
+      {
+       "name": "Free Spirit",
+       "upb": "M11"
+      },
+      {
+       "name": "Growth (Atomic Growth)"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Linguistics",
+       "upb": "M17"
+      },
+      {
+       "name": "Mental Probe",
+       "upb": "M20"
+      },
+      {
+       "name": "Mind Blast",
+       "upb": "M21"
+      },
+      {
+       "name": "Matter Creation"
+      },
+      {
+       "name": "Reality Alteration (Future)"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Seif-Sustenance"
+      },
+      {
+       "name": "Speechthrowing",
+       "upb": "M29"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Total Memory",
+       "upb": "M33"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "adam-warlock-ma4",
+   "name": "Adam Warlock",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "adam-warlock-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      23,
+      24
+     ],
+     "identity": [
+      "Him"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "160",
+       "karma": "60",
+       "resources": "FB(2)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Light Generation"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Self Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "True Invuinerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "her-ma4",
+   "name": "Her",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "her-ma4",
+     "label": null,
+     "team": "Friends of the FF",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Paragon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "210",
+       "karma": "50",
+       "resources": "FB(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Se/f Sustenance"
+      },
+      {
+       "name": "True Invuinerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "quon-ma4",
+   "name": "Quon",
+   "team": "Races and Organizations",
+   "versions": [
+    {
+     "id": "quon-ma4",
+     "label": null,
+     "team": "Races and Organizations",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "70",
+       "karma": "30",
+       "resources": "FE(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "Water-Breathing"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Communicate With Animals (Sea Life)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "spinnerette-ma4",
+   "name": "Spinnerette",
+   "team": "Races and Organizations",
+   "versions": [
+    {
+     "id": "spinnerette-ma4",
+     "label": null,
+     "team": "Races and Organizations",
+     "pages": [
+      25
+     ],
+     "identity": [
+      "Solon Stabilizer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "42",
+       "karma": "22",
+       "resources": "none",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Biophysical Control (Conirol Vertigo)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "the-chosen-ma4",
+   "name": "The Chosen",
+   "team": "Races and Organizations",
+   "versions": [
+    {
+     "id": "the-chosen-ma4",
+     "label": null,
+     "team": "Races and Organizations",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "50",
+       "karma": "30",
+       "resources": "EX(20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "inhuman-ma4",
+   "name": "Inhuman",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "inhuman-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      26,
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "80",
+       "karma": "30",
+       "resources": "varies",
+       "popularity": "varies"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "contacts",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "black-bolt-ma4",
+   "name": "Black Bolt",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "black-bolt-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      27,
+      28
+     ],
+     "identity": [
+      "Blackagar Boltagon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "130",
+       "karma": "60",
+       "resources": "MN(75)",
+       "popularity": "15 (95 among the Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Hyper-Strength"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      },
+      {
+       "name": "Vibration",
+       "upb": "EE14"
+      },
+      {
+       "name": "Force Field Generation"
+      },
+      {
+       "name": "Magnetism",
+       "upb": "EE9"
+      },
+      {
+       "name": "Energy Solidification",
+       "upb": "EC7"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Detection",
+       "upb": "DT3"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "maximus-ma4",
+   "name": "Maximus",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "maximus-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "70",
+       "karma": "80",
+       "resources": "IN(40)",
+       "popularity": "-30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "gorgon-ma4",
+   "name": "Gorgon",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "gorgon-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      29
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "120",
+       "karma": "26",
+       "resources": "EX (20)",
+       "popularity": "6 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Vibration",
+       "upb": "EE14"
+      },
+      {
+       "name": "Modified Human (Muscular/ Skeletal)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "triton-ma4",
+   "name": "Triton",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "triton-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      29,
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "110",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "6 (80 among Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Water-Breathing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "karnak-ma4",
+   "name": "Karnak",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "karnak-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "130",
+       "karma": "60",
+       "resources": "EX (20)",
+       "popularity": "9 (80 among Inhumans)",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 60,
+        "corrected": 80
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Martial Arts Supremacy"
+      },
+      {
+       "name": "Weakness Detection",
+       "upb": "DT22"
+      },
+      {
+       "name": "Iron Will",
+       "upb": "M16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "lockjaw-ma4",
+   "name": "Lockjaw",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "lockjaw-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      30
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "132",
+       "karma": "32",
+       "resources": "EX(20)",
+       "popularity": "10 (70 among the Inhumans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "Telelocation",
+       "upb": "M31"
+      },
+      {
+       "name": "Animal Body"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "alpha-primitives-ma4",
+   "name": "Alpha Primitives",
+   "team": "Inhumans",
+   "versions": [
+    {
+     "id": "alpha-primitives-ma4",
+     "label": null,
+     "team": "Inhumans",
+     "pages": [
+      31
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "66",
+       "karma": "6",
+       "resources": "FE(2)",
+       "popularity": "1",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 66,
+        "corrected": 72
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "atlanteans-ma4",
+   "name": "Atlanteans",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "atlanteans-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      33
+     ],
+     "identity": [
+      "Homo Mermanus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 33,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "100",
+       "karma": "40",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Humanoid Race"
+      },
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "Water-Breathing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "giganto-ma4",
+   "name": "Giganto",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "giganto-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      34
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 34,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         200,
+         "ShY"
+        ],
+        [
+         "E",
+         200,
+         "ShY"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "408",
+       "karma": "50",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "sub-mariner-ma4",
+   "name": "Sub-Mariner",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "sub-mariner-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      34,
+      35
+     ],
+     "identity": [
+      "Namor of Atlantis"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 34,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "185",
+       "karma": "76",
+       "resources": "MN(75)",
+       "popularity": "5 (80 to Atlanteans)"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "prose",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "turtle-transports-ma4",
+   "name": "Turtle Transports",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "turtle-transports-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      34
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 34,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "health": "102",
+       "karma": "2",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "lady-dorma-ma4",
+   "name": "Lady Dorma",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "lady-dorma-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      36
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "76",
+       "karma": "30",
+       "resources": "GD(10)",
+       "popularity": "8"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "namorita-ma4",
+   "name": "Namorita",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "namorita-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      36
+     ],
+     "identity": [
+      "Namorita Prentiss"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 36,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "110",
+       "karma": "46",
+       "resources": "GD(10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Humanoid Race"
+      },
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Water-Breathing"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Winged Flight"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "attuma-ma4",
+   "name": "Attuma",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "attuma-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      37
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 37,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "175",
+       "karma": "32",
+       "resources": "EX(20)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Humanoid Race"
+      },
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Water-Breathing"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "warlord-krang-ma4",
+   "name": "Warlord Krang",
+   "team": "Atlanteans",
+   "versions": [
+    {
+     "id": "warlord-krang-ma4",
+     "label": null,
+     "team": "Atlanteans",
+     "pages": [
+      37
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 37,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "130",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Humanoid Race"
+      },
+      {
+       "name": "Hyper-Swimming",
+       "upb": "T11"
+      },
+      {
+       "name": "Water Freedom",
+       "upb": "P17"
+      },
+      {
+       "name": "Water-Breathing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "doctor-doom-ma4",
+   "name": "Doctor Doom",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "doctor-doom-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      38,
+      39
+     ],
+     "identity": [
+      "Victor von Doom"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 38,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "120",
+       "karma": "140",
+       "resources": "AM(50)",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Mind Transferral",
+       "upb": "L11"
+      },
+      {
+       "name": "Ritual Magic"
+      },
+      {
+       "name": "Cyborg (Exoskeleton)"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Electricity"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Se/f-Sustenance"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "doomsman-ma4",
+   "name": "Doomsman",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "doomsman-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      39
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "120",
+       "karma": "32",
+       "resources": "AM(50)",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Body"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "guardian-robots-ma4",
+   "name": "Guardian Robots",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "guardian-robots-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      39,
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 39,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "80",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "guardbots-ma4",
+   "name": "Guardbots",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "guardbots-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "70",
+       "karma": "6",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Hyper-Running",
+       "upb": "T10"
+      },
+      {
+       "name": "Explosive"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "killer-robots-ma4",
+   "name": "Killer Robots",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "killer-robots-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      40
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "165",
+       "karma": "6",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "victor-von-doom-ii-ma4",
+   "name": "Victor von Doom II",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "victor-von-doom-ii-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      40,
+      41
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 40,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "36",
+       "karma": "140",
+       "resources": "AM(50)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Elongation",
+       "upb": "S12"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Invisibility (Physics-type)"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "doctor-doom-ii-ma4",
+   "name": "Doctor Doom II",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "doctor-doom-ii-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      41
+     ],
+     "identity": [
+      "Kristoff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 41,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "120",
+       "karma": "140",
+       "resources": "AM(50)",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Body Armor (Tech)"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "zorba-ma4",
+   "name": "Zorba",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "zorba-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      41
+     ],
+     "identity": [
+      "Prince Zorba of Latveria"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 41,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "70",
+       "karma": "60",
+       "resources": "EX(20)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg/Extra Parts"
+      },
+      {
+       "name": "Nega-Beam"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "galactus-ma4",
+   "name": "Galactus",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "galactus-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      42,
+      43
+     ],
+     "identity": [
+      "Galan of Taa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 42,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "health": "4150",
+       "karma": "3000",
+       "resources": "CL3000",
+       "popularity": "-1000"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Spirit Vampirism",
+       "upb": "MG11"
+      },
+      {
+       "name": "Bio-Vampirism",
+       "upb": "L2"
+      },
+      {
+       "name": "Psionic Vampirism",
+       "upb": "M25"
+      },
+      {
+       "name": "Energy Vampirism",
+       "upb": "EC9"
+      },
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Elemental Conversion",
+       "upb": "MCo4"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Elemental Creation",
+       "upb": "MCr2"
+      },
+      {
+       "name": "Molecular Creation",
+       "upb": "MCr6"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      },
+      {
+       "name": "Power Creation"
+      },
+      {
+       "name": "Serial Immortality",
+       "upb": "M28"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "galactus-cat-ma4",
+   "name": "Galactus' Cat",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "galactus-cat-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      44
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 44,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "250",
+       "karma": "16",
+       "resources": "N/A",
+       "popularity": "N/A"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robot Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Paralyzing Spray"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "punisher-i-ma4",
+   "name": "Punisher I",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "punisher-i-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      44
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 44,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         150,
+         "ShX"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "450",
+       "karma": "6",
+       "resources": "none",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robot Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "silver-surfer-ma4",
+   "name": "Silver Surfer",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "silver-surfer-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      44,
+      45
+     ],
+     "identity": [
+      "Norrin Radd of Zenn-La"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 44,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": "PR(4)",
+       "popularity": "17"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Conversion"
+      },
+      {
+       "name": "Body Coating",
+       "upb": "S9"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "air-walker-ma4",
+   "name": "Air-Walker",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "air-walker-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      45,
+      46
+     ],
+     "identity": [
+      "Gabriel Lan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 45,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "275",
+       "karma": "155",
+       "resources": "PR(4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Energy Sheath",
+       "upb": "S14"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "air-walker-automaton-ma4",
+   "name": "Air-Walker Automaton",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "air-walker-automaton-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      46
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 46,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "320",
+       "karma": "32",
+       "resources": "FE(2)",
+       "popularity": "8"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Body"
+      },
+      {
+       "name": "Self-Revival",
+       "upb": "P10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "firelord-ma4",
+   "name": "Firelord",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "firelord-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      46,
+      47
+     ],
+     "identity": [
+      "Pyreus Kril of Xandar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 46,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "325",
+       "karma": "110",
+       "resources": "N/A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Conversion",
+       "upb": "EC6"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Staff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "destroyer-ma4",
+   "name": "Destroyer",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "destroyer-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      47,
+      48
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 47,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "3275",
+       "karma": "100",
+       "resources": "N/A",
+       "popularity": "-100",
+       "override": {
+        "verdict": "rows",
+        "field": "RI",
+        "printed": "N/A",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Body"
+      },
+      {
+       "name": "Mind Transferral",
+       "upb": "L11"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Magnetic Generation"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Molding",
+       "upb": "MC11"
+      },
+      {
+       "name": "Disintegration",
+       "upb": "MCo3"
+      },
+      {
+       "name": "Suspended Animation",
+       "upb": "P13"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "terrax-ma4",
+   "name": "Terrax",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "terrax-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      48,
+      49
+     ],
+     "identity": [
+      "Tyros of Lanlak"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 48,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "300",
+       "karma": "135",
+       "resources": "PR(4)",
+       "popularity": "-20 (50 Birj)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Earth Animation"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Floating Disc",
+       "upb": "T5"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Axe"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "nova-ii-ma4",
+   "name": "Nova II",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "nova-ii-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      49
+     ],
+     "identity": [
+      "Frankie Raye"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 49,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "300",
+       "karma": "110",
+       "resources": "UN(100)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Energy Sheath (Fire)"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "Self Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Immortality"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "skrull-ma4",
+   "name": "Skrull",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "skrull-ma4",
+     "label": null,
+     "team": "Skrulls",
+     "pages": [
+      51
+     ],
+     "identity": [
+      "(Typical Warrior)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 51,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "28",
+       "karma": "22",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Aging Ray"
+      }
+     ],
+     "members": [
+      {
+       "name": "Anelle",
+       "page": 50
+      },
+      {
+       "name": "Dorrek",
+       "page": 50
+      },
+      {
+       "name": "Drexxon",
+       "page": 50
+      },
+      {
+       "name": "Hagar",
+       "page": 50
+      },
+      {
+       "name": "Jaketch",
+       "page": 51
+      },
+      {
+       "name": "Raksorr",
+       "page": 51
+      },
+      {
+       "name": "Skragg",
+       "page": 51
+      },
+      {
+       "name": "Skrull-X",
+       "page": 51,
+       "id": "skrull-x-ma4"
+      },
+      {
+       "name": "Super-Skrull",
+       "page": 51,
+       "id": "super-skrull-ma4"
+      },
+      {
+       "name": "Warlord Morrat",
+       "page": 51
+      },
+      {
+       "name": "Xalxor",
+       "page": 51
+      },
+      {
+       "name": "Zendrao",
+       "page": 51
+      }
+     ],
+     "text": [
+      "contacts",
+      "member",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "super-skrull-ma4",
+   "name": "Super-Skrull",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "super-skrull-ma4",
+     "label": null,
+     "team": "Skrulls",
+     "pages": [
+      51,
+      52
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 51,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "150",
+       "karma": "22",
+       "resources": "FE(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Elongation",
+       "upb": "S12"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Rocket Flight"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Force Field Generation"
+      },
+      {
+       "name": "Power Selection"
+      },
+      {
+       "name": "Power Source"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "skrull-x-ma4",
+   "name": "Skrull-X",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "skrull-x-ma4",
+     "label": null,
+     "team": "Skrulls",
+     "pages": [
+      52,
+      53
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 52,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "165",
+       "karma": "14",
+       "resources": "none",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 165,
+        "corrected": 195
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Robotic Body"
+      },
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Energy Sheath",
+       "upb": "S14"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "wingless-wizard-ma4",
+   "name": "Wingless Wizard",
+   "team": "Frightful Four",
+   "versions": [
+    {
+     "id": "wingless-wizard-ma4",
+     "label": null,
+     "team": "Frightful Four",
+     "pages": [
+      53,
+      54
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 53,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "40",
+       "karma": "52",
+       "resources": "EX(20)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Anti-gravity Disks"
+      },
+      {
+       "name": "Power Gloves"
+      },
+      {
+       "name": "Electricity"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Hyper-Strength"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "trapster-ma4",
+   "name": "Trapster",
+   "team": "Frightful Four",
+   "versions": [
+    {
+     "id": "trapster-ma4",
+     "label": null,
+     "team": "Frightful Four",
+     "pages": [
+      54,
+      55
+     ],
+     "identity": [
+      "Peter Petruski a.k.a. Paste Pot Pete"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 54,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "28",
+       "karma": "40",
+       "resources": "GD(10)",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Paste Gun"
+      },
+      {
+       "name": "Traps"
+      },
+      {
+       "name": "Wall-walking Boots"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "sandman-ma4",
+   "name": "Sandman",
+   "team": "Frightful Four",
+   "versions": [
+    {
+     "id": "sandman-ma4",
+     "label": null,
+     "team": "Frightful Four",
+     "pages": [
+      55
+     ],
+     "identity": [
+      "William Baker a.k.a \"Flint Marko\""
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 55,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "175",
+       "karma": "46",
+       "resources": "TY(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mineral Life"
+      },
+      {
+       "name": "Topology"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Sandblast"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Healing"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "annihilus-ma4",
+   "name": "Annihilus",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "annihilus-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      56
+     ],
+     "identity": [
+      "Annihilus of Anthros"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "205",
+       "karma": "70",
+       "resources": "MN(75)",
+       "popularity": "-30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Winged Flight"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Cosmic Control Rod"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "basilisk-ma4",
+   "name": "Basilisk",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "basilisk-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      56,
+      57
+     ],
+     "identity": [
+      "Basil Elks"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 56,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "82",
+       "karma": "32",
+       "resources": "PR(4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Radiowave Generation (Microwaves)"
+      },
+      {
+       "name": "Cold Generation",
+       "upb": "EE1"
+      },
+      {
+       "name": "Geoforce",
+       "upb": "MC7"
+      },
+      {
+       "name": "Heat Generation"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Whirlwind",
+       "upb": "T23"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "blastaar-ma4",
+   "name": "Blastaar",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "blastaar-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      57
+     ],
+     "identity": [
+      "Blastaar of Balur"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "180",
+       "karma": "40",
+       "resources": "EX(20)",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Blasts"
+      },
+      {
+       "name": "Rocket",
+       "upb": "T13"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "elspeth-cromwell-ma4",
+   "name": "Elspeth Cromwell",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "elspeth-cromwell-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      57
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 57,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "16",
+       "karma": "80",
+       "resources": "EX(20)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magic (Summoning)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "darkoth-the-death-destroyer-ma4",
+   "name": "Darkoth the Death Destroyer",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "darkoth-the-death-destroyer-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      58
+     ],
+     "identity": [
+      "Maj. Desmond Pitt"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "150",
+       "karma": "12",
+       "resources": "none",
+       "popularity": "-20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg Body"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Heat Emission"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      },
+      {
+       "name": "Winged Flight"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "diablo-ma4",
+   "name": "Diablo",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "diablo-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      58,
+      59
+     ],
+     "identity": [
+      "Esteban Diablo a.k.a. \"Mr. Olbaid\""
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 58,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "32",
+       "karma": "66",
+       "resources": "GD(10)",
+       "popularity": "-10",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 66,
+        "corrected": 56
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Alchemical Magic"
+      },
+      {
+       "name": "Neural Manipulation (Paralysis)"
+      },
+      {
+       "name": "Body Transformation (Protoplasm)"
+      },
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "Explosives"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Imitation"
+      },
+      {
+       "name": "Iron Will",
+       "upb": "M16"
+      },
+      {
+       "name": "Lifeform Creation",
+       "upb": "MCr3"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Molding",
+       "upb": "MC11"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Sleep (Induced)",
+       "upb": "L18"
+      },
+      {
+       "name": "Suspended Animation",
+       "upb": "P13"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "air-elemental-ma4",
+   "name": "Air Elemental",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "air-elemental-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      59
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "100",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Air Animation"
+      },
+      {
+       "name": "Whirlwind",
+       "upb": "T23"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "earth-elemental-ma4",
+   "name": "Earth Elemental",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "earth-elemental-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      59,
+      60
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "145",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Earth Animation"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "water-elemental-ma4",
+   "name": "Water Elemental",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "water-elemental-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      59
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 59,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "100",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Animation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "doctor-sun-ma4",
+   "name": "Doctor Sun",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "doctor-sun-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      60
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "100",
+       "karma": "135",
+       "resources": "EX(20)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg (Mechanical Body)"
+      },
+      {
+       "name": "Bio-Vampirism",
+       "upb": "L2"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mind Transferal"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Linguistics",
+       "upb": "M17"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "dragonman-ma4",
+   "name": "Dragonman",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "dragonman-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      60,
+      61
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "145",
+       "karma": "8",
+       "resources": "none",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Android"
+      },
+      {
+       "name": "Extra Body Parts (Tail)"
+      },
+      {
+       "name": "Fire Emission"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "fire-elemental-ma4",
+   "name": "Fire Elemental",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "fire-elemental-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      60
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "100",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Body (Flame)"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "transmutant-ma4",
+   "name": "Transmutant",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "transmutant-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      60
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 60,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "100",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "ego-the-living-planet-ma4",
+   "name": "Ego, the Living Planet",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "ego-the-living-planet-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      61,
+      62
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         2,
+         "Fe"
+        ],
+        [
+         "S",
+         500,
+         "ShZ"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         150,
+         "ShX"
+        ],
+        [
+         "I",
+         150,
+         "ShX"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "6502",
+       "karma": "800",
+       "resources": "N.A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Sidereal Propulsion Unit"
+      },
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Shape Change"
+      },
+      {
+       "name": "Clairvoyance",
+       "upb": "M2"
+      },
+      {
+       "name": "Gravity Control"
+      },
+      {
+       "name": "Kinetic Blast"
+      },
+      {
+       "name": "Mind Blast",
+       "upb": "M21"
+      },
+      {
+       "name": "Power Transferal"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "eliminator-ma4",
+   "name": "Eliminator",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "eliminator-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      61
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 61,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "90",
+       "karma": "12",
+       "resources": "N/A",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Magnetism",
+       "upb": "EE9"
+      },
+      {
+       "name": "Hyper-breath"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Vehicle"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "gormuu-ma4",
+   "name": "Gormuu",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "gormuu-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      62
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 62,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "290",
+       "karma": "30",
+       "resources": "N/A",
+       "popularity": "-50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Growth (Atomic Dispersal)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "hate-monger-ma4",
+   "name": "Hate Monger",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "hate-monger-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      63,
+      64
+     ],
+     "identity": [
+      "Adoiph Hitler"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 63,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "50",
+       "karma": "60",
+       "resources": "EX(20)",
+       "popularity": "-30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Serial Immortality (Premade)"
+      },
+      {
+       "name": "Emotion Control (Hatred)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "hate-monger-iii-ma4",
+   "name": "Hate-Monger III",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "hate-monger-iii-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      64
+     ],
+     "identity": [
+      "H. M. Unger"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 64,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "18",
+       "karma": "95",
+       "resources": "EX (20)",
+       "popularity": "Special",
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 18,
+        "corrected": 28
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Android Body"
+      },
+      {
+       "name": "Imitation"
+      },
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "Pamphlets"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "mephisto-ma4",
+   "name": "Mephisto",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "mephisto-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      64,
+      65
+     ],
+     "identity": [
+      "a.k.a. Satan, Mephistopheles, Lucifer,",
+      "Beelzebub, and \"The Devil\""
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 64,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "3225",
+       "karma": "250",
+       "resources": "CL3000",
+       "popularity": "-1000"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Demonic Form"
+      },
+      {
+       "name": "Power Source"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Diminution (Atomic Shrinkage)"
+      },
+      {
+       "name": "Enchantment",
+       "upb": "MG1"
+      },
+      {
+       "name": "Enlargement (Atomic Growth)"
+      },
+      {
+       "name": "Forced Reincarnation",
+       "upb": "L7"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Magic Control",
+       "upb": "MG4"
+      },
+      {
+       "name": "Neural Manipulation",
+       "upb": "L12"
+      },
+      {
+       "name": "Power Control"
+      },
+      {
+       "name": "Shapechange Others",
+       "upb": "L17"
+      },
+      {
+       "name": "Shrinking (Atomic Shrinkage)"
+      },
+      {
+       "name": "Sleep (Induced)",
+       "upb": "L18"
+      },
+      {
+       "name": "Spirit Storage",
+       "upb": "L19"
+      },
+      {
+       "name": "Summoning",
+       "upb": "L20"
+      },
+      {
+       "name": "Gateway",
+       "upb": "T6"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Undead Control",
+       "upb": "L21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "miracle-man-ma4",
+   "name": "Miracle Man",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "miracle-man-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      65,
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 65,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "26",
+       "karma": "160",
+       "resources": "PR (4)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hypnotic Control",
+       "upb": "L9"
+      },
+      {
+       "name": "Hyper-Strength"
+      },
+      {
+       "name": "Kinetic Bolt",
+       "upb": "EE7"
+      },
+      {
+       "name": "Lifeform Creation (Androids)"
+      },
+      {
+       "name": "Power Transferral",
+       "upb": "PC10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "mole-man-ma4",
+   "name": "Mole Man",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "mole-man-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      66
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "54",
+       "karma": "70",
+       "resources": "IN (40)",
+       "popularity": "0 (100 to Moloid Subterraneans)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Abnormal Sensitivity",
+       "upb": "DT1"
+      },
+      {
+       "name": "Hyper-Hearing",
+       "upb": "DT6"
+      },
+      {
+       "name": "Hyper-Touch",
+       "upb": "DT8"
+      },
+      {
+       "name": "Weapon Staves"
+      },
+      {
+       "name": "Radar"
+      },
+      {
+       "name": "Electrical Generation",
+       "upb": "EE2"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Light Emission (Laser)"
+      },
+      {
+       "name": "Vibration",
+       "upb": "EE14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "molecule-man-ma4",
+   "name": "Molecule Man",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "molecule-man-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      66,
+      67
+     ],
+     "identity": [
+      "Owen Reece"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 66,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "20",
+       "karma": "89",
+       "resources": "EX (20)",
+       "popularity": "1",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 89,
+        "corrected": 87
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elemental Conversion",
+       "upb": "MCo4"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Matter Animation",
+       "upb": "MC8"
+      },
+      {
+       "name": "Molding",
+       "upb": "MC11"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "psycho-man-ma4",
+   "name": "Psycho-Man",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "psycho-man-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      67,
+      68
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 67,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "34",
+       "karma": "80",
+       "resources": "MN(75)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Battlesuit"
+      },
+      {
+       "name": "Human-size"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "igor-ma4",
+   "name": "Igor",
+   "team": "Super-Apes",
+   "versions": [
+    {
+     "id": "igor-ma4",
+     "label": null,
+     "team": "Super-Apes",
+     "pages": [
+      68
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 68,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "60",
+       "karma": "18",
+       "resources": "N/A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "mikhlo-ma4",
+   "name": "Mikhlo",
+   "team": "Super-Apes",
+   "versions": [
+    {
+     "id": "mikhlo-ma4",
+     "label": null,
+     "team": "Super-Apes",
+     "pages": [
+      68
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 68,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "110",
+       "karma": "18",
+       "resources": "N/A",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "red-ghost-ma4",
+   "name": "Red Ghost",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "red-ghost-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      68
+     ],
+     "identity": [
+      "Ivan Kragoff"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 68,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "90",
+       "karma": "46",
+       "resources": "RM (30)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "peotor-ma4",
+   "name": "Peotor",
+   "team": "Super-Apes",
+   "versions": [
+    {
+     "id": "peotor-ma4",
+     "label": null,
+     "team": "Super-Apes",
+     "pages": [
+      69
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 69,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "76",
+       "karma": "18",
+       "resources": "N/A",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magnetism",
+       "upb": "EE9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "puppet-master-ma4",
+   "name": "Puppet Master",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "puppet-master-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      69,
+      70
+     ],
+     "identity": [
+      "Philip Masters"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 69,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "16",
+       "karma": "115",
+       "resources": "GD (10)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Sympathetic Magic",
+       "upb": "MG12"
+      },
+      {
+       "name": "Mind Transferral",
+       "upb": "L11"
+      },
+      {
+       "name": "Mineral Body"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "nicholas-scratch-ma4",
+   "name": "Nicholas Scratch",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "nicholas-scratch-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      70
+     ],
+     "identity": [
+      "Nicholas Harkness"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 70,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "60",
+       "karma": "80",
+       "resources": "EX (20)",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ritual Magic"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "brutacus-ma4",
+   "name": "Brutacus",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "brutacus-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      71
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 71,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "185",
+       "karma": "32",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Natural Weaponry",
+       "upb": "F3"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "gazelle-ma4",
+   "name": "Gazelle",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "gazelle-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      71
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 71,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "80",
+       "karma": "40",
+       "resources": "TY (6)",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Hyper-running",
+       "upb": "T10"
+      },
+      {
+       "name": "Hyper-Leaping",
+       "upb": "T9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "hydron-ma4",
+   "name": "Hydron",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "hydron-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      71,
+      72
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 71,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "50",
+       "karma": "36",
+       "resources": "TY (6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Demihuman Body/Liquid Life"
+      },
+      {
+       "name": "Water Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "reptilla-ma4",
+   "name": "Reptilla",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "reptilla-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      72
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 72,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "100",
+       "karma": "32",
+       "resources": "TY (6)",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Lamian Body"
+      },
+      {
+       "name": "Poison Bite"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "terminus-ma4",
+   "name": "Terminus",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "terminus-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      72,
+      73
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 72,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "4200",
+       "karma": "250",
+       "resources": "CL3000",
+       "popularity": "-500"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg Exoskeleton"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Telescopic Vision",
+       "upb": "DT17"
+      },
+      {
+       "name": "Linguistics",
+       "upb": "M17"
+      },
+      {
+       "name": "Energy Lance"
+      },
+      {
+       "name": "Plasma Generation",
+       "upb": "EE10"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "thornn-ma4",
+   "name": "Thornn",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "thornn-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      72
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 72,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "60",
+       "karma": "32",
+       "resources": "TY (6)",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Missile Creation",
+       "upb": "MCr5"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "vakume-ma4",
+   "name": "Vakume",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "vakume-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      72
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 72,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "50",
+       "karma": "50",
+       "resources": "GD (10)",
+       "popularity": "1"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      },
+      {
+       "name": "Air Animation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "vertigo-ma4",
+   "name": "Vertigo",
+   "team": "Salem's Seven",
+   "versions": [
+    {
+     "id": "vertigo-ma4",
+     "label": null,
+     "team": "Salem's Seven",
+     "pages": [
+      72
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 72,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "48",
+       "karma": "40",
+       "resources": "TY (6)",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Biophysical Control (Disruption)"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "prose",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "mad-thinker-ma4",
+   "name": "Mad Thinker",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "mad-thinker-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      73,
+      74
+     ],
+     "identity": [
+      "aka \"Dr. Jose Santini\""
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 73,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "24",
+       "karma": "62",
+       "resources": "RM (30)",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Total Memory",
+       "upb": "M33"
+      },
+      {
+       "name": "Mind Transferral",
+       "upb": "L11"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "human-torch-i-ma4",
+   "name": "Human Torch I",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "human-torch-i-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      74,
+      75
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 74,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "100",
+       "karma": "22",
+       "resources": "none",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Android Body"
+      },
+      {
+       "name": "Energy Sheath (Fire)"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Specific Resistance"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "mad-thinker-s-awesome-android-ma4",
+   "name": "Mad Thinker's Awesome Android",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "mad-thinker-s-awesome-android-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      74
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 74,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "100",
+       "karma": "6",
+       "resources": "none",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Compound Body"
+      },
+      {
+       "name": "Armor Skin",
+       "upb": "P1"
+      },
+      {
+       "name": "Enlargement",
+       "upb": "MC6"
+      },
+      {
+       "name": "Ice Sheath"
+      },
+      {
+       "name": "Natural Weaponry",
+       "upb": "F3"
+      },
+      {
+       "name": "Steel Sheath"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "wendy-s-friends-ma4",
+   "name": "Wendy's Friends",
+   "team": "Fiends and Foes",
+   "versions": [
+    {
+     "id": "wendy-s-friends-ma4",
+     "label": null,
+     "team": "Fiends and Foes",
+     "pages": [
+      75
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 75,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "140",
+       "karma": "146",
+       "resources": "none",
+       "popularity": "-40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Shapechange"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "burners-ma4",
+   "name": "Burners",
+   "team": "Central City",
+   "versions": [
+    {
+     "id": "burners-ma4",
+     "label": null,
+     "team": "Central City",
+     "pages": [
+      82
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 82,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "24",
+       "karma": "22",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption Power",
+       "upb": "EC1"
+      },
+      {
+       "name": "Energy Body (Flame)"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "clobbers-ma4",
+   "name": "Clobbers",
+   "team": "Central City",
+   "versions": [
+    {
+     "id": "clobbers-ma4",
+     "label": null,
+     "team": "Central City",
+     "pages": [
+      82
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 82,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "116",
+       "karma": "6",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "head-brothers-ma4",
+   "name": "Head-Brothers",
+   "team": "Central City",
+   "versions": [
+    {
+     "id": "head-brothers-ma4",
+     "label": null,
+     "team": "Central City",
+     "pages": [
+      82
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 82,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "16",
+       "karma": "52",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Force Field Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "winged-flyers-ma4",
+   "name": "Winged Flyers",
+   "team": "Central City",
+   "versions": [
+    {
+     "id": "winged-flyers-ma4",
+     "label": null,
+     "team": "Central City",
+     "pages": [
+      82
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 82,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "46",
+       "karma": "18",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Winged Flight"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "pseudo-skrulls-ma4",
+   "name": "Pseudo-Skrulls",
+   "team": "King's Crossing",
+   "versions": [
+    {
+     "id": "pseudo-skrulls-ma4",
+     "label": null,
+     "team": "King's Crossing",
+     "pages": [
+      85
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 85,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "28",
+       "karma": "18",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "lava-men-ma4",
+   "name": "Lava Men",
+   "team": "Subterranea",
+   "versions": [
+    {
+     "id": "lava-men-ma4",
+     "label": null,
+     "team": "Subterranea",
+     "pages": [
+      89
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 89,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "56",
+       "karma": "18",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Resistance to Heat"
+      },
+      {
+       "name": "Heat Emission"
+      },
+      {
+       "name": "Molecular Conversion",
+       "upb": "MCo6"
+      },
+      {
+       "name": "Spray",
+       "upb": "MCr7"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "moloids-and-tyrranoids-ma4",
+   "name": "Moloids and Tyrranoids",
+   "team": "Subterranea",
+   "versions": [
+    {
+     "id": "moloids-and-tyrranoids-ma4",
+     "label": null,
+     "team": "Subterranea",
+     "pages": [
+      89
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 89,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "health": "32",
+       "karma": "10",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Abnormal Sensitivity",
+       "upb": "DT1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "new-men-ma4",
+   "name": "New Men",
+   "team": "Wundagore Mountain",
+   "versions": [
+    {
+     "id": "new-men-ma4",
+     "label": null,
+     "team": "Wundagore Mountain",
+     "pages": [
+      90
+     ],
+     "identity": [
+      "Knights of Wundagore"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 90,
+       "abilities": [
+        [
+         "F",
+         null,
+         null
+        ],
+        [
+         "A",
+         null,
+         null
+        ],
+        [
+         "S",
+         null,
+         null
+        ],
+        [
+         "E",
+         null,
+         null
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": null,
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "FASE",
+        "printed": "Physical ranks Vary",
+        "corrected": null
+       },
+       "kind": "partial"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Demihuman Form"
+      },
+      {
+       "name": "Natural Weaponry",
+       "upb": "F3"
+      },
+      {
+       "name": "Body Armor (Tech)"
+      },
+      {
+       "name": "Atomic Steeds"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
+  },
+  {
+   "id": "living-computers-of-xandar-ma4",
+   "name": "Living Computers of Xandar",
+   "team": "Xandar",
+   "versions": [
+    {
+     "id": "living-computers-of-xandar-ma4",
+     "label": null,
+     "team": "Xandar",
+     "pages": [
+      91
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 91,
+       "abilities": [
+        [
+         "F",
+         0,
+         "Sh0"
+        ],
+        [
+         "A",
+         0,
+         "Sh0"
+        ],
+        [
+         "S",
+         0,
+         "Sh0"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         3000,
+         "C-3000"
+        ]
+       ],
+       "health": "3000",
+       "karma": "5000",
+       "resources": "CL1000",
+       "popularity": "100",
+       "override": {
+        "verdict": "rows",
+        "field": "FAS",
+        "printed": "N/A",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Cyborg Body"
+      },
+      {
+       "name": "Computer Body"
+      },
+      {
+       "name": "Power Creation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "ma4"
   }
  ]
 }

@@ -276,8 +276,16 @@ def main(slug_arg):
     # way, with three differences: it has no sides, its entries carry their
     # team (the registry's `teams`), and a header's parenthesis is kept as the
     # version's label ("Update", "Blue or Pink").
+    #
+    # A code-grids book (MA4, scripts/msh/codegrids.py) is read as MA1 is, with
+    # three differences: its entries carry their team (the registry's `teams`:
+    # the book's own groupings, not its Contents sections), a value the page
+    # does not print is null (the New Men print no Health), and a member
+    # without a block who has a card of their own links to it (the Notable
+    # Skrulls' SUPER-SKRULL).
     grid = book.get('layout') == 'grid-booklets'
     booklet = book.get('layout') == 'roster-booklet' or grid
+    coded = book.get('layout') == 'code-grids'
     cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     SIDE = {'heroes': '%s Heroes' % book['title'].split(' ', 1)[-1], 'villains': '%s Villains' % book['title'].split(' ', 1)[-1]}
     tiers = set(book.get('one_line_tiers', []))
@@ -301,7 +309,14 @@ def main(slug_arg):
 
     def display(header):
         b = base_name(header)
-        return index_case.get(norm(b)) or title_case(b)
+        name = index_case.get(norm(b)) or title_case(b)
+        if coded:
+            # a Roman numeral stays one (VICTOR VON DOOM II, not "Ii"), and a
+            # small word inside a name is small (Living Computers of Xandar).
+            # MA1's names are left as they are: its file is live data.
+            name = re.sub(r'\b[IV][iv]+\b', lambda m: m.group(0).upper(), name)
+            name = re.sub(r'(?<=\s)(Of|The|And|In|Von)\b', lambda m: m.group(0).lower(), name)
+        return name
 
     entries = roster['entries']
     statted = [e for e in entries if e['blocks']]
@@ -326,13 +341,16 @@ def main(slug_arg):
             # form (She-Hulk and Jennifer Walters); Klaw's sound creatures are
             # beings of their own, a tier (registry one_line_tiers)
             forms = booklet and any(b.get('kind') == 'line' and b['label'] not in tiers for b in e['blocks'])
+            # MA4's The Thing prints his human form as a second grid: the
+            # entry's blocks are forms of one being, the first named for him
+            forms = forms or (coded and len(e['blocks']) > 1 and any('form' in (b['label'] or '').lower() for b in e['blocks']))
             blocks = []
             for n, b in enumerate(e['blocks']):
                 label = b['label']
                 # the main block of an entry with more than one is named for
                 # the character, so the GM picks "Klaw", not "Klaw - block 1"
-                if booklet and not label and len(e['blocks']) > 1 and n == 0:
-                    label = name_of(e)
+                if (booklet or forms) and not label and len(e['blocks']) > 1 and n == 0:
+                    label = name_of(e) if booklet else display(e['header'])
                 if not label and n:
                     label = 'Additional statistics, p.%d' % b['page']
                 abilities, derived = [], []
@@ -359,7 +377,7 @@ def main(slug_arg):
                     # a value the book does not print is null, not an empty
                     # string, in a roster booklet (the Summary gives no
                     # Resources or Popularity); MA1's file is kept as it was
-                    **{k: (None if booklet and b[k] is None else ascii_fold(minus(b[k]) if grid else b[k]))
+                    **{k: (None if (booklet or coded) and b[k] is None else ascii_fold(minus(b[k]) if grid or coded else b[k]))
                        for k in ('health', 'karma', 'resources', 'popularity')},
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': b['kind']} if b.get('kind') else {}),
@@ -399,7 +417,7 @@ def main(slug_arg):
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
                 'id': eslug, 'label': variant(e['header']) if grid or not booklet else None,
-                'team': team_of_entry(e) if booklet else team_of(e['pages'][0]),
+                'team': team_of_entry(e) if booklet else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
                 **({'part': cite[e['part']]} if booklet else {}),
                 'pages': e['pages'], 'identity': identity,
@@ -441,6 +459,12 @@ def main(slug_arg):
             'text': sorted({r[3] for r in rows if r[2] == tslug})}], 'appearances': []})
 
     by_id = {c['id']: c for c in chars}
+    for c in (chars if coded else []):
+        for v in c['versions']:
+            for m in v['members']:
+                own = by_id.get(ident(m['name']))
+                if own and own is not c:
+                    m['id'] = own['id']
     for e in entries:
         if e['blocks'] or booklet:
             continue                    # a roster booklet has no cross-references; its team is a card above

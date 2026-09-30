@@ -131,6 +131,22 @@ def main(slug):
         # it into the same two shapes, each row with the booklet it is in
         import booklet
         its, adv = booklet.extras(book, slug)
+    elif book.get('layout') == 'code-grids':
+        # MA4: each place and vehicle under a header the registry names
+        # (item_headers), read by scripts/msh/codegrids.py
+        import codegrids
+        its, adv = codegrids.items(book, slug), None
+
+        def cased(s):
+            # a two-letter capital word is an acronym here (FF HEADQUARTERS,
+            # KING'S CROSSING, NY), unless it is a small word
+            keep = {w for w in re.findall(r"\b[A-Z]{2}\b", s) if w.lower() not in SMALL}
+            return re.sub(r'\b[A-Z][a-z]\b', lambda m: m.group(0).upper() if m.group(0).upper() in keep else m.group(0), small_caps_title(s))
+        for it in its:
+            it['display'] = cased(it['name'])
+            it['parts'] = [cased(p) for p in it['parts']]
+            for piece in it['text']:
+                piece[1] = cased(piece[1]) if piece[1] else None
     else:
         # a book set like MA1: items only. Its adventure's parser went with
         # MA1's registry entry (2026-09-30); a new book imports no adventure.
@@ -155,7 +171,7 @@ def main(slug):
     for it in its:
         iid = 'item-' + npcs.slug(it['name']) + sfx
         text_rows(iid, it['text'], it['page'])
-        item_out.append({'id': iid, 'name': small_caps_title(it['name']) if not it.get('part') else npcs.ascii_fold(it['name']),
+        item_out.append({'id': iid, 'name': it.get('display') or (small_caps_title(it['name']) if not it.get('part') else npcs.ascii_fold(it['name'])),
                          'kind': it['kind'], 'page': it['page'],
                          **({'part': cite[it['part']]} if it.get('part') else {}),
                          **({'vehicle': it['vehicle']} if it['vehicle'] else {}),
