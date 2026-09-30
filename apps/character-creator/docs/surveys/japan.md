@@ -1,8 +1,8 @@
 # Rifts World Book 8: Japan — survey
 
-**Status:** `importing` — skills shipped (step 1 of 8); magic gear next. (2026-09-30)
+**Status:** `importing` — skills and magic gear shipped (steps 1-2 of 8); traditional gear next. (2026-09-30)
 
-**Rows citing this book:** skills 19
+**Rows citing this book:** gear 63, skills 19
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
@@ -63,8 +63,8 @@ cached pages.
 | section | printed | what is there |
 |---|---|---|
 | Setting: New Empire, Takamatsu, Ichto, Otomo Shogunate, surrounding lands | 8-27 | lore and maps. No stat blocks |
-| Millennium Tree and its powers | 28-33 | the tree's own powers (printed 32-33) are an NPC's, not a character's. Lore |
-| Millennium Tree wands and staves | 33-37 | **8 wands, 8 staves**, plus corrupted wands and staves (one entry) |
+| Millennium Tree and its powers | 28-33 | the tree's own powers (printed 32-33) are an NPC's, not a character's. But printed 32-33 also prices **4 gifts a character owns** - bark body armor, bark shield (3 sizes), leaf body armor, leaf blanket of healing - which the first inventory missed and step 2 imported |
+| Millennium Tree wands and staves | 33-37 | **8 wands, 8 staves**, plus corrupted wands and staves (one entry) and 2 weapons of wood (printed 35: javelin, throwing stick) |
 | Enchanted items | 37-40 | **9**: Elemental Shuriken, TW Power Shuriken, TW Fire-Breathing Arquebus, Magic Powder Grenades, Singing Arrows, Tanto of Hellish Poison, Ten Thousand Strength Nunchakus, Whirlwind Naginata, Zen Master's Bows; plus **3 rune swords** (Daisho of the Relentless Warrior, Daisho of the Storm, Ghostly Katana of Soul Slaying) |
 | Magical items | 40-43 | **10**: Bottomless Purse, Fan of the Forest Wind, Hat of Invisibility, Heavenly Speaking Flute, Holy Incense Burner, Lantern of Protection, Living Kani Statues, Mirror of True-Seeing, Powder of the Heavenly Winds, Tattoos of Strength |
 | New Empire & traditional O.C.C.s | 43-69 | **8 classes** (True Samurai, Ronin, Mystic Ninja, Bishamon Fighting Monk, Sohei Warrior Monk, Yamabushi Mountain Priest, Demon Queller, Tengu R.C.C.); the Living Samurai Sword (44); **3 hand-to-hand styles** (Zanji Shinjinken-Ryo 47, Ninjitsu/Tai-Jutsu 53, Teng-jutsu 69); ninja equipment and gimmick clothing (54, **~12 items**) |
@@ -216,7 +216,8 @@ classes, no stubs):
 What is deliberately left, with the reason for each:
 
 - **Setting lore** (8-32, 70-77) — no rows.
-- **The Millennium Tree's own powers** (32-33) — the tree's, not a character's.
+- **The Millennium Tree's own powers** (32-33) — the tree's, not a character's: camouflage, ley line and weather control, teleportation, healing, purification, resurrection, sixth sense, visions. The four gifts on the same pages are items and are in step 2.
+- **Holy Incense Burner powder packages and an Elemental Shuriken set** (printed 37, 41-42) — priced, but only as refills and a bundle; both prices are in the parent rows' `cost_note`.
 - **Oni creation tables** (200-202) — random appearance tables; cosmetic.
 - **Goblin, Glitter Boy** — reprints already held (above).
 - **Other O.C.C.s** (95) — a list of core classes, not new ones.
@@ -246,6 +247,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 |---|---|---|
 | 2026-09-30 | `pal/data/japan-survey` | cache built (218 pp, text layer), offset +1 verified at five folios, `japan` registered in `books.json`, this survey. No rows. |
 | 2026-09-30 | `pal/data/japan-skills` | step 1: 19 skills (`add-a-japan-skills.sql`, tagged by `~044-japan-skill-systems.sql`): Bonsai, Floral Arrangement (Ikebana), Go, Poetry (Haiku), Japanese Mythology, 6 W.P.s and 8 Hand to Hand styles with their level tables and attribute bonuses. Two extraction workers and one reconcile pass; reconcile caught the Zanji and Ninjitsu attribute lines the extraction had dropped. Applied `--remote` before the PR. |
+| 2026-09-30 | `pal/data/japan-magic-gear` | step 2: 63 gear rows (`add-a-japan-magic-gear.sql`), printed 32-43: the Millennium Tree's ownable gifts (bark and leaf armor, the bark shield in three sizes, the leaf blanket of healing), 8 wands, 8 staves, the corrupted wand or staff, 2 weapons of wood, the enchanted weapons one row per priced variant, the 3 Greater Daisho, and the magical items (purse in 3 kinds, kami statue in 4 sizes). Reconcile confirmed every number and corrected 11 descriptions. Applied `--remote` before the PR. |
 
 ### What remains
 
