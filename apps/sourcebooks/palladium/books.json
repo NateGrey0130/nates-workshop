@@ -1,0 +1,894 @@
+{
+ "system": "palladium",
+ "title": "Palladium / Rifts sourcebooks",
+ "about": "Every Palladium and Rifts book whose data is in the app: imported from a full survey of the book, or backfilled from rows that arrived before surveys existed and were given their pages later. Each count is the rows in the app that cite that book.",
+ "unit": "rows",
+ "books": [
+  {
+   "slug": "nightbane-core",
+   "title": "Nightbane RPG",
+   "code": "nightbane-core",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     19
+    ],
+    [
+     "Creatures",
+     15
+    ],
+    [
+     "Gear",
+     663
+    ],
+    [
+     "Morphus characteristics",
+     173
+    ],
+    [
+     "Psionic powers",
+     4
+    ],
+    [
+     "Skill system bases",
+     3
+    ],
+    [
+     "Skills",
+     10
+    ],
+    [
+     "Spells",
+     39
+    ],
+    [
+     "Talents",
+     25
+    ],
+    [
+     "Vehicles",
+     35
+    ]
+   ],
+   "total": 986
+  },
+  {
+   "slug": "dag",
+   "title": "Palladium Fantasy Dragons and Gods",
+   "code": "dag",
+   "status": "backfilled",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     10
+    ],
+    [
+     "Creatures",
+     38
+    ],
+    [
+     "Gear",
+     23
+    ],
+    [
+     "Notable NPCs",
+     73
+    ]
+   ],
+   "total": 144
+  },
+  {
+   "slug": "pf",
+   "title": "Palladium Fantasy RPG Main Book",
+   "code": "pf",
+   "status": "backfilled",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     39
+    ],
+    [
+     "Creatures",
+     36
+    ],
+    [
+     "Enchantments",
+     62
+    ],
+    [
+     "Gear",
+     511
+    ],
+    [
+     "Psionic powers",
+     2
+    ],
+    [
+     "Skill system bases",
+     1
+    ],
+    [
+     "Skills",
+     8
+    ],
+    [
+     "Spells",
+     28
+    ]
+   ],
+   "total": 687
+  },
+  {
+   "slug": "powers-unlimited-1",
+   "title": "Powers Unlimited One",
+   "code": "powers-unlimited-1",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Psionic powers",
+     9
+    ],
+    [
+     "Super abilities",
+     170
+    ]
+   ],
+   "total": 179
+  },
+  {
+   "slug": "powers-unlimited-3",
+   "title": "Powers Unlimited Three",
+   "code": "powers-unlimited-3",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Super abilities",
+     125
+    ]
+   ],
+   "total": 125
+  },
+  {
+   "slug": "heroes-unlimited-core",
+   "title": "Revised Heroes Unlimited",
+   "code": "heroes-unlimited-core",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     30
+    ],
+    [
+     "Gear",
+     708
+    ],
+    [
+     "Notable NPCs",
+     5
+    ],
+    [
+     "Psionic powers",
+     4
+    ],
+    [
+     "Psionic system costs",
+     1
+    ],
+    [
+     "Skill system bases",
+     94
+    ],
+    [
+     "Skills",
+     10
+    ],
+    [
+     "Spells",
+     16
+    ],
+    [
+     "Super abilities",
+     69
+    ],
+    [
+     "Vehicles",
+     49
+    ]
+   ],
+   "total": 986
+  },
+  {
+   "slug": "bom",
+   "title": "Rifts Book of Magic",
+   "code": "bom",
+   "status": "backfilled",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     1
+    ],
+    [
+     "Spells",
+     427
+    ]
+   ],
+   "total": 428
+  },
+  {
+   "slug": "cb1",
+   "title": "Rifts Conversion Book One",
+   "code": "cb1",
+   "status": "imported",
+   "date": "2026-09-27",
+   "added": [
+    [
+     "Classes",
+     37
+    ],
+    [
+     "Creatures",
+     77
+    ],
+    [
+     "Skills",
+     1
+    ],
+    [
+     "Spells",
+     1
+    ]
+   ],
+   "total": 116
+  },
+  {
+   "slug": "potm",
+   "title": "Rifts Conversion Book Two: Pantheons of the Megaverse",
+   "code": "potm",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     14
+    ],
+    [
+     "Notable NPCs",
+     140
+    ],
+    [
+     "Skills",
+     4
+    ]
+   ],
+   "total": 158
+  },
+  {
+   "slug": "ww",
+   "title": "Rifts Dimension Book 1: Wormwood",
+   "code": "ww",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     17
+    ],
+    [
+     "Creatures",
+     15
+    ],
+    [
+     "Gear",
+     73
+    ],
+    [
+     "Notable NPCs",
+     8
+    ],
+    [
+     "Skills",
+     3
+    ],
+    [
+     "Spells",
+     37
+    ],
+    [
+     "Vehicles",
+     2
+    ]
+   ],
+   "total": 155
+  },
+  {
+   "slug": "phase-world",
+   "title": "Rifts Dimension Book 2: Phase World",
+   "code": "phase-world",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     34
+    ],
+    [
+     "Creatures",
+     12
+    ],
+    [
+     "Gear",
+     50
+    ],
+    [
+     "Notable NPCs",
+     11
+    ],
+    [
+     "Psionic powers",
+     15
+    ],
+    [
+     "Skills",
+     17
+    ],
+    [
+     "Vehicles",
+     24
+    ]
+   ],
+   "total": 163
+  },
+  {
+   "slug": "rue",
+   "title": "Rifts Ultimate Edition",
+   "code": "rue",
+   "status": "backfilled",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     40
+    ],
+    [
+     "Gear",
+     208
+    ],
+    [
+     "Psionic powers",
+     89
+    ],
+    [
+     "Skills",
+     216
+    ],
+    [
+     "Spells",
+     115
+    ],
+    [
+     "Vehicles",
+     6
+    ]
+   ],
+   "total": 674
+  },
+  {
+   "slug": "atlantis",
+   "title": "Rifts World Book 2: Atlantis",
+   "code": "atlantis",
+   "status": "imported",
+   "date": "2026-09-26",
+   "added": [
+    [
+     "Classes",
+     22
+    ],
+    [
+     "Creatures",
+     35
+    ],
+    [
+     "Gear",
+     100
+    ],
+    [
+     "Notable NPCs",
+     7
+    ],
+    [
+     "Spells",
+     32
+    ],
+    [
+     "Vehicles",
+     20
+    ]
+   ],
+   "total": 216
+  },
+  {
+   "slug": "africa",
+   "title": "Rifts World Book 4: Africa",
+   "code": "africa",
+   "status": "imported",
+   "date": "2026-09-26",
+   "added": [
+    [
+     "Classes",
+     13
+    ],
+    [
+     "Creatures",
+     24
+    ],
+    [
+     "Gear",
+     15
+    ],
+    [
+     "Notable NPCs",
+     29
+    ],
+    [
+     "Psionic powers",
+     2
+    ],
+    [
+     "Spells",
+     53
+    ],
+    [
+     "Vehicles",
+     4
+    ]
+   ],
+   "total": 140
+  },
+  {
+   "slug": "triax",
+   "title": "Rifts World Book 5: Triax and the NGR",
+   "code": "triax",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     21
+    ],
+    [
+     "Creatures",
+     1
+    ],
+    [
+     "Gear",
+     119
+    ],
+    [
+     "Skills",
+     17
+    ],
+    [
+     "Vehicles",
+     55
+    ]
+   ],
+   "total": 213
+  },
+  {
+   "slug": "south-america",
+   "title": "Rifts World Book 6: South America",
+   "code": "south-america",
+   "status": "imported",
+   "date": "2026-09-25",
+   "added": [
+    [
+     "Classes",
+     24
+    ],
+    [
+     "Creatures",
+     26
+    ],
+    [
+     "Gear",
+     36
+    ],
+    [
+     "Notable NPCs",
+     16
+    ],
+    [
+     "Skills",
+     1
+    ],
+    [
+     "Spells",
+     24
+    ],
+    [
+     "Vehicles",
+     19
+    ]
+   ],
+   "total": 146
+  },
+  {
+   "slug": "underseas",
+   "title": "Rifts World Book 7: Underseas",
+   "code": "underseas",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     25
+    ],
+    [
+     "Creatures",
+     30
+    ],
+    [
+     "Gear",
+     87
+    ],
+    [
+     "Notable NPCs",
+     2
+    ],
+    [
+     "Skills",
+     15
+    ],
+    [
+     "Spells",
+     74
+    ],
+    [
+     "Vehicles",
+     50
+    ]
+   ],
+   "total": 283
+  },
+  {
+   "slug": "south-america-2",
+   "title": "Rifts World Book 9: South America 2",
+   "code": "south-america-2",
+   "status": "imported",
+   "date": "2026-09-25",
+   "added": [
+    [
+     "Classes",
+     35
+    ],
+    [
+     "Creatures",
+     2
+    ],
+    [
+     "Gear",
+     60
+    ],
+    [
+     "Notable NPCs",
+     6
+    ],
+    [
+     "Skills",
+     8
+    ],
+    [
+     "Spells",
+     35
+    ],
+    [
+     "Vehicles",
+     23
+    ]
+   ],
+   "total": 169
+  },
+  {
+   "slug": "ju",
+   "title": "Rifts World Book 10: Juicer Uprising",
+   "code": "ju",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     14
+    ],
+    [
+     "Creatures",
+     4
+    ],
+    [
+     "Gear",
+     42
+    ],
+    [
+     "Notable NPCs",
+     9
+    ],
+    [
+     "Skills",
+     5
+    ],
+    [
+     "Vehicles",
+     7
+    ]
+   ],
+   "total": 81
+  },
+  {
+   "slug": "cwc",
+   "title": "Rifts World Book 11: Coalition War Campaign",
+   "code": "cwc",
+   "status": "imported",
+   "date": "2026-09-25",
+   "added": [
+    [
+     "Classes",
+     21
+    ],
+    [
+     "Creatures",
+     9
+    ],
+    [
+     "Gear",
+     25
+    ],
+    [
+     "Notable NPCs",
+     7
+    ],
+    [
+     "Skills",
+     3
+    ],
+    [
+     "Vehicles",
+     33
+    ]
+   ],
+   "total": 98
+  },
+  {
+   "slug": "psyscape",
+   "title": "Rifts World Book 12: Psyscape",
+   "code": "psyscape",
+   "status": "imported",
+   "date": "2026-09-25",
+   "added": [
+    [
+     "Classes",
+     18
+    ],
+    [
+     "Creatures",
+     22
+    ],
+    [
+     "Gear",
+     22
+    ],
+    [
+     "Notable NPCs",
+     2
+    ],
+    [
+     "Psionic powers",
+     21
+    ]
+   ],
+   "total": 85
+  },
+  {
+   "slug": "new-west",
+   "title": "Rifts World Book 14: New West",
+   "code": "new-west",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     25
+    ],
+    [
+     "Creatures",
+     28
+    ],
+    [
+     "Gear",
+     100
+    ],
+    [
+     "Notable NPCs",
+     7
+    ],
+    [
+     "Skills",
+     5
+    ],
+    [
+     "Spells",
+     58
+    ],
+    [
+     "Vehicles",
+     17
+    ]
+   ],
+   "total": 240
+  },
+  {
+   "slug": "spirit-west",
+   "title": "Rifts World Book 15: Spirit West",
+   "code": "spirit-west",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     15
+    ],
+    [
+     "Creatures",
+     28
+    ],
+    [
+     "Gear",
+     59
+    ],
+    [
+     "Notable NPCs",
+     16
+    ],
+    [
+     "Skills",
+     1
+    ],
+    [
+     "Spells",
+     34
+    ],
+    [
+     "Totems",
+     40
+    ],
+    [
+     "Vehicles",
+     6
+    ]
+   ],
+   "total": 199
+  },
+  {
+   "slug": "fom",
+   "title": "Rifts World Book 16: Federation of Magic",
+   "code": "fom",
+   "status": "imported",
+   "date": "2026-09-27",
+   "added": [
+    [
+     "Classes",
+     8
+    ],
+    [
+     "Gear",
+     25
+    ],
+    [
+     "Notable NPCs",
+     13
+    ],
+    [
+     "Vehicles",
+     12
+    ]
+   ],
+   "total": 58
+  },
+  {
+   "slug": "mystic-russia",
+   "title": "Rifts World Book 18: Mystic Russia",
+   "code": "mystic-russia",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     23
+    ],
+    [
+     "Creatures",
+     26
+    ],
+    [
+     "Gear",
+     53
+    ],
+    [
+     "Notable NPCs",
+     1
+    ],
+    [
+     "Skills",
+     7
+    ],
+    [
+     "Spells",
+     146
+    ],
+    [
+     "Vehicles",
+     7
+    ]
+   ],
+   "total": 263
+  },
+  {
+   "slug": "free-quebec",
+   "title": "Rifts World Book 22: Free Quebec",
+   "code": "free-quebec",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     10
+    ],
+    [
+     "Gear",
+     19
+    ],
+    [
+     "Notable NPCs",
+     8
+    ],
+    [
+     "Vehicles",
+     22
+    ]
+   ],
+   "total": 59
+  },
+  {
+   "slug": "madhaven",
+   "title": "Rifts World Book 29: Madhaven",
+   "code": "madhaven",
+   "status": "imported",
+   "date": "2026-09-24",
+   "added": [
+    [
+     "Classes",
+     12
+    ],
+    [
+     "Creatures",
+     25
+    ],
+    [
+     "Gear",
+     40
+    ],
+    [
+     "Notable NPCs",
+     2
+    ]
+   ],
+   "total": 79
+  }
+ ]
+}

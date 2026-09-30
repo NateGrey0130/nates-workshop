@@ -1,0 +1,78 @@
+{
+ "system": "marvel",
+ "title": "Marvel Super Heroes sourcebooks",
+ "about": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items, its adventure, and the rows of its own text the cards show.",
+ "unit": "characters",
+ "books": [
+  {
+   "slug": "ma1",
+   "title": "MA1 Children of the Atom",
+   "code": "TSR6872",
+   "status": "imported",
+   "date": "2026-09-28",
+   "added": [
+    [
+     "Characters",
+     180
+    ],
+    [
+     "Items and locations",
+     20
+    ],
+    [
+     "Adventure sections",
+     11
+    ],
+    [
+     "Rows of the book's text",
+     975
+    ]
+   ],
+   "total": 180
+  },
+  {
+   "slug": "mhsp1",
+   "title": "MHSP1 Secret Wars",
+   "code": "TSR6860",
+   "status": "imported",
+   "date": "2026-09-29",
+   "added": [
+    [
+     "Characters",
+     41
+    ],
+    [
+     "Items and locations",
+     4
+    ],
+    [
+     "Adventure sections",
+     30
+    ],
+    [
+     "Rows of the book's text",
+     237
+    ]
+   ],
+   "total": 41
+  },
+  {
+   "slug": "me1",
+   "title": "ME1 Cosmos Cubed",
+   "code": "TSR6879",
+   "status": "imported",
+   "date": "2026-09-29",
+   "added": [
+    [
+     "Characters",
+     37
+    ],
+    [
+     "Rows of the book's text",
+     198
+    ]
+   ],
+   "total": 37
+  }
+ ]
+}
