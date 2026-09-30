@@ -21,8 +21,8 @@ import { getAccessEmail } from '../_lib/access.js';
 export const BOOK = /^[a-z][a-z0-9]{0,15}$/;
 export const ENTRY = /^[a-z0-9]+(?:-[a-z0-9]+){0,12}$/;
 
-// The book's order within an entry. An item's, a location's and an
-// adventure section's rows are every one numbered in print order
+// The book's order within an entry. An item's, a location's and the adventure
+// section a vehicle reads have rows every one numbered in print order
 // (scripts/msh/extras.py), so the number is the order. A character's are not:
 // its powers as printed, then the sections in the order they follow the
 // powers, then members and cross-references.

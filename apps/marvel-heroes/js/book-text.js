@@ -37,8 +37,8 @@ export function bookMissingNote(r) {
 const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // How each part reads on the card. A named part - a power, a member, a
-// location's part (the Danger Room's Missiles), an adventure's run-in
-// (Summary, Karma) - keeps its printed name as a run-in head, as the book sets it.
+// location's part (the Danger Room's Missiles), a section's run-in - keeps its
+// printed name as a run-in head, as the book sets it.
 const PART_HEAD = { talents: 'Talents', contacts: 'Contacts', background: 'Background', notes: 'Notes', running: 'Running the character' };
 const NAMED = new Set(['power', 'member', 'part', 'section']);
 

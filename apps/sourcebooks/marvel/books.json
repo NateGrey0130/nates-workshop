@@ -1,7 +1,7 @@
 {
  "system": "marvel",
  "title": "Marvel Super Heroes sourcebooks",
- "about": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items, its adventure, and the rows of its own text the cards show.",
+ "about": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, with what else it brought: its items and locations, and the rows of its own text the cards show.",
  "unit": "characters",
  "books": [
   {
@@ -9,7 +9,7 @@
    "title": "MA1 Children of the Atom",
    "code": "TSR6872",
    "status": "imported",
-   "date": "2026-09-28",
+   "date": "2026-09-29",
    "added": [
     [
      "Characters",
@@ -20,12 +20,8 @@
      20
     ],
     [
-     "Adventure sections",
-     11
-    ],
-    [
      "Rows of the book's text",
-     975
+     929
     ]
    ],
    "total": 180
@@ -46,12 +42,8 @@
      4
     ],
     [
-     "Adventure sections",
-     30
-    ],
-    [
      "Rows of the book's text",
-     237
+     209
     ]
    ],
    "total": 41

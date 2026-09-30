@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Build a sourcebook's items, locations and adventure for the Marvel codex.
+"""Build a sourcebook's items and locations for the Marvel codex.
 
     python scripts/msh/extras.py ma1
 
@@ -11,18 +11,24 @@ same two halves scripts/msh/npcs.py does:
   apps/marvel-heroes/data/items.json        FACTS: each item's and location's
       name, kind and page, a vehicle's Control, Speed and Body as printed, and
       the names of the parts a location lists (the Danger Room's event kinds).
-  apps/marvel-heroes/data/adventures.json   FACTS: each adventure's sections -
-      its introduction, numbered encounters and locales - by title and page,
-      with the names of the parts each prints (Summary, Starting, Aftermath...).
   $WORKSHOP_MSH_CACHE/books/<slug>/extras.json and extras-text.sql
       THE PROSE, never committed: the parse, and msh_book_text rows (migration
-      087) under entry ids item-<id> and <adventure>-<section>, applied with
+      087) under entry ids item-<id>, applied with
           node scripts/d1-apply.mjs --remote --db marvel <that .sql>
 
-Both data files hold every book's rows, each with its `book`; this replaces
-the named book's and keeps the rest, with ids made as scripts/msh/npcs.py makes
+ADVENTURES ARE NOT IN THE APP (Nate, 2026-09-29): data/adventures.json and the
+Codex's Adventures section were removed. A registry `adventure` is still
+parsed, because a roster-booklet book (MHSP1) finds its locations and vehicles
+inside the adventure's sections, and a vehicle stated in passing has no text
+but its section's. So the one adventure text written is a section an item
+names (`section`), under entry id <adventure>-<section>; the .sql deletes the
+book's other adventure rows. extras.json keeps the whole parse, so smoke's
+prose-leak check still compares against all of it.
+
+items.json holds every book's rows, each with its `book`; this replaces the
+named book's and keeps the rest, with ids made as scripts/msh/npcs.py makes
 them (the registry's first book plain, a later one's ending in -<slug>). A
-book with no item_pages or adventure in the registry has none of either.
+book with no item_pages in the registry has none.
 
 HOW THE BOOK SETS THEM. Items and locations are run-in entries - "ACID BOMB:
 This Brood weapon..." - under a heading (Special Items, Locations); a vehicle
@@ -202,24 +208,21 @@ def main(slug):
                          **({'rooms': it['rooms']} if it.get('rooms') else {}),
                          # a vehicle stated inside an adventure section reads that section's text
                          **({'section': section_id({'title': it['section']})} if it.get('section') else {}), 'book': slug})
-    adv_out = []
+    # The adventure is not in the app; only the sections an item reads keep their text.
+    wanted = {i['section'] for i in item_out if i.get('section')}
+    kept = []
     if adv:
-        sec_out = []
-        for s in adv['sections']:
-            sid = section_id(s)
-            text_rows(sid, s['text'], s['page'])
-            sec_out.append({'id': sid, 'title': npcs.ascii_fold(s['title']), 'page': s['page'],
-                            **({'number': s['number']} if s.get('number') else {}),
-                            **{k: s[k] for k in ('kind', 'when', 'roll', 'once', 'table') if k in s},
-                            **({'part': cite[s['part']]} if s.get('part') else {}), 'parts': s['parts']})
-        assert len({x['id'] for x in sec_out}) == len(sec_out), 'duplicate section ids'
-        adv_out = [{'id': aid, 'title': adv['title'], 'pages': adv['pages'],
-                    **({'part': cite[adv['part']]} if adv.get('part') else {}), 'sections': sec_out, 'book': slug}]
+        sids = [section_id(s) for s in adv['sections']]
+        assert len(set(sids)) == len(sids), 'duplicate section ids'
+        for s, sid in zip(adv['sections'], sids):
+            if sid in wanted:
+                text_rows(sid, s['text'], s['page'])
+                kept.append(sid)
+    assert set(kept) == wanted, 'an item names a section the adventure does not have: %s' % sorted(wanted - set(kept))
     keys = [r[0] for r in rows]
     assert len(keys) == len(set(keys)), 'duplicate keys'
 
     all_items = merged(os.path.join(DATA, 'items.json'), 'items', slug, item_out, order)
-    all_advs = merged(os.path.join(DATA, 'adventures.json'), 'adventures', slug, adv_out, order)
     about = lambda what: [
         '%s from the Marvel sourcebooks, built by scripts/msh/extras.py from the OCR of each book, one book at a time.' % what,
         "Facts only: names, kinds, pages, a vehicle's printed Control, Speed and Body, and the names of the parts each prints. "
@@ -239,26 +242,22 @@ def main(slug):
     io.open(os.path.join(DATA, 'items.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'about': about('Items and locations'), 'sources': src, 'books': books, 'items': all_items},
         indent=1, ensure_ascii=True) + '\n')
-    part_of = lambda b: npcs.part_cite(registry[b], registry[b]['adventure']['part']) if registry[b]['adventure'].get('part') else None
-    src, books = listing(all_advs, lambda b: registry[b]['adventure']['pages'])
-    io.open(os.path.join(DATA, 'adventures.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
-        {'about': about('The adventures'), 'sources': src, 'books': books, 'adventures': all_advs},
-        indent=1, ensure_ascii=True) + '\n')
     cache = os.path.join(roster.CACHE, 'books', slug)
     io.open(os.path.join(cache, 'extras.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(
         {'items': its, 'adventure': adv or {'title': None, 'pages': None, 'sections': []}}, indent=1, ensure_ascii=False) + '\n')
 
     def q(v):
         return 'NULL' if v is None else str(v) if isinstance(v, int) else "'" + v.replace("'", "''") + "'"
-    mine = ["entry LIKE 'item-%'"] + (["entry LIKE '%s-%%'" % adv_out[0]['id']] if adv_out else [])
-    sql = ["-- msh_book_text: %s's items, locations and adventure, written by scripts/msh/extras.py. NEVER COMMIT: the book's text." % slug,
+    # every adventure row of the book goes, so a section no item reads any more does not linger
+    mine = ["entry LIKE 'item-%'"] + (["entry LIKE '%s-%%'" % aid] if aid else [])
+    sql = ["-- msh_book_text: %s's items and locations, written by scripts/msh/extras.py. NEVER COMMIT: the book's text." % slug,
            "DELETE FROM msh_book_text WHERE book = '%s' AND (%s);" % (slug, ' OR '.join(mine))]
     sql += ['INSERT INTO msh_book_text (key, book, entry, part, name, page, body) VALUES (%s);' % ', '.join(q(v) for v in r) for r in rows]
     io.open(os.path.join(cache, 'extras-text.sql'), 'w', encoding='utf-8', newline='\n').write('\n'.join(sql) + '\n')
     print('%s: %d items (%d vehicles, %d locations), %s; %d text rows'
           % (slug, len(item_out), sum(1 for i in item_out if i['kind'] == 'vehicle'), sum(1 for i in item_out if i['kind'] == 'location'),
-             'adventure "%s" in %d sections (%d numbered encounters)' % (adv['title'], len(adv_out[0]['sections']),
-                                                                      sum(1 for s in adv_out[0]['sections'] if 'number' in s)) if adv else 'no adventure',
+             'adventure "%s" parsed, %d of its %d sections kept for the items that read them' % (adv['title'], len(kept), len(adv['sections']))
+             if adv else 'no adventure',
              len(rows)))
 
 
