@@ -61,6 +61,11 @@ second pair of eyes on a run you already did.
      its `**Status:**` line if it moved. `test/regression.mjs` prints the line to
      paste. Rows citing no surveyed book are the one shared count, in
      `docs/operations.md`. Never quote a current value from memory; run the test.
+   - **moved a survey's Status or Rows line, or a Marvel book's data:** then run
+     `node scripts/sourcebooks.mjs` and commit the list it changes
+     (`apps/sourcebooks/palladium/books.json` or `.../marvel/books.json`), in
+     the same PR. The hub's Sourcebooks pages read those files, not the surveys,
+     and each group's smoke suite fails on a stale one.
    - **touched documentation, class prose or a `note`, or lifted a limitation
      one describes:** sweep the sentences describing the old limit, in the same
      change, and hand them to `claim-capability-verifier` (*the app cannot do
