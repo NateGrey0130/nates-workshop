@@ -183,22 +183,77 @@ it on more pages before `pair_quotes` relies on it.
   speeds and ranks are in the prose.
 - **There is no adventure**, so nothing here needs `adventure`.
 
-## Decisions this survey leaves open
+## The parser
+
+`python scripts/msh/roster.py ma4` hands the book to
+`scripts/msh/codegrids.py` (registry `"layout": "code-grids"`). Its docstring
+gives the method. In short, it uses `roster.py`'s stream, grid crop, entry
+loop and secondary values, and adds its own:
+- a row reader for `CODE (N)`, taken in F-A-S-E-R-I-P order
+- grid-anchored headers
+- the Travel Guide's statted pages, read one at a time as ME1's opponents are
+
+`roster.read_entries()` gained one parameter, `grid`, defaulting to MA1's
+`grid_at`. MA1, MHSP1 and ME1 were rebuilt with `origin/main`'s scripts and
+with this branch's, and every `roster.json`, `book-text.sql`, `extras.json`,
+`extras-text.sql`, `npcs.json` and `items.json` is byte-identical.
+
+Measured 2026-09-30:
+
+| measure | count |
+|---|---|
+| entries | 150: 128 characters and 22 headings, one of which (Atlantean Equipment) holds the Turtle Transports' grid |
+| stat blocks | 130: 121 in printed 3-75, 8 in the Travel Guide, and the New Men's partial grid |
+| pass rank, Health and Karma checks | 120 |
+| explained by an override read off the page | 10: the 7 misprints, and 3 `rows` for grids with N/A or missing rows (Destroyer, the Living Computers of Xandar, the New Men) |
+| failing | 0 |
+| Health and Karma read as a number | every block but the New Men, which print no Health |
+| rows whose number was the code's own, misread (`read_as`) | 37: `(80)` for 30 26 times and for 50 6 times, `(380)` for 30 4 times, `($0)` for 50 once |
+| powers named | 506, across 110 entries |
+| index names in printed 3-75 found | 132 of 132 |
+| Travel Guide names found (`statted_pages`) | 9 of 9 |
+
+**Where the page beat the OCR, the registry says so**, and every claim must
+match exactly once or the parse stops:
+- `grid_headers`: H.E.R.B.I.E., Thundra and Gorgon (headers set beside art,
+  never read) and Burners (a run-in, `Burners:`)
+- `block_labels`: The Thing's Human Form, and the Turtle Transports inside
+  Atlantean Equipment
+- `headings`: 20 titles that are not characters, from INHUMANS to SALEM'S
+  SEVEN. Before these were marked, the Notable Skrulls were read as part of
+  Nova II's entry and the Atlantean items as part of the Atlanteans'.
+
+**A check that cannot read a value passes it** (the skill's ME1 trap). Alpha
+Primitives' Health read as `66` plus art marks, so `roster.check()` passed a
+block the book misprints. `codegrids.coverage()` now holds every Health and
+Karma to a number, and roster.py exits 1 if one is not.
+
+The survey's scratch count of 24 misread digits (*The scan*, above) was over
+106 grids. The parser's 37 is over all 130.
+
+## Decisions
+
+Taken on Nate's word, 2026-09-30 ("take your recommendations"):
 
 1. **The reader.** A new `layout` for code-first grids, reusing
    `roster.read_entries()` as `gridbooks.py` does, with its own row pattern
    (`CODE (N)`), the colon labels and grid-anchored headers. **Recommended**
    over teaching MA1's `ROW` a second order, since MA1's live data depends on
    that pattern. Either way, MA1, MHSP1 and ME1 are proved byte-identical
-   before it merges.
+   before it merges. **Taken:** `scripts/msh/codegrids.py`, above.
 2. **The misprints.** MA1's override shape, printed and corrected, for the
-   seven above.
+   seven above. **Taken:** `scripts/msh/ma4-overrides.json`.
 3. **Teams.** The Contents has no team sections, so the teams are the book's
    own groupings: Fantastic Four, Friends of the FF, Inhumans, Atlanteans,
    Skrulls, Frightful Four, Super-Apes, Salem's Seven, and Fiends and Foes
    for the rest. **Inhumans and Skrulls are ME1's team names already**, and a
    team name is a filter group shared by every book. Recommended: share them,
-   because they are the same peoples.
+   because they are the same peoples. **Taken:** the registry's `teams`, which
+   the parser writes on each entry. The three races on p.25 (the Chosen, the
+   Quon, the Spinnerette) file under the Contents section, Races and
+   Organizations. Each Travel Guide being takes its place (Central City,
+   Manhattan, Subterranea, Wundagore Mountain, Xandar). `npcs.py` reads the
+   team from the entry in the data PR.
 4. **Characters already carded by another book** (`data/npcs.json`,
    2026-09-30) become second cards with `-ma4` ids, as agreed 2026-09-28:
    - MHSP1: Galactus, Galactus's Cat, Doctor Doom, Mister Fantastic, the
@@ -210,18 +265,26 @@ it on more pages before `pair_quotes` relies on it.
    ME1's Nova is not MA4's Nova II (Frankie Raye), so that is a new card.
 5. **The Travel Guide and Vehicles.** Import the locations and vehicles as
    items, as MA1's were, or characters only, as for ME1? They are the larger
-   part of this book that is not characters (printed 76-95).
+   part of this book that is not characters (printed 76-95). **Taken:** the
+   beings statted there are characters, read by this parser. The locations
+   and vehicles are items, as MA1's were, and are the data PR's
+   `extras.py` work.
 6. **Members without a block** (the Notable Skrulls, the Prominent
    Atlanteans): names under their tier, as MA1's Gladiators are, unless the
    text gives ranks to build from. Dorma has a grid of her own (Lady Dorma,
-   p.36), so her Prominent Atlanteans line is a cross-reference.
+   p.36), so her Prominent Atlanteans line is a cross-reference. **As
+   parsed:** both lists are the text of a heading entry (NOTABLE SKRULLS,
+   PROMINENT ATLANTEANS). `read_entries` records members only under an
+   entry with a block, so they are not split into names yet; the data PR
+   does that.
 
-## The next PRs
+## The next PR
 
-1. **Parser** (`msh/feat/ma4-parser`): the reader, and `character_pages`,
-   `teams` and `index_aliases` in the registry.
-2. **Data** (`msh/data/ma4-fantastic-four`): `npcs.py` and `extras.py`, the
-   overrides, the D1 load before the merge, and this file's Rows line.
+**Data** (`msh/data/ma4-fantastic-four`):
+- `npcs.py` teaches the `code-grids` layout and reads each entry's team
+- `extras.py` reads the Travel Guide's locations and the vehicles
+- the D1 load before the merge
+- this file's Rows line
 
 ## How to reproduce
 
@@ -231,6 +294,10 @@ python scripts/msh/ocr-book.py ma4
 
 ```bash
 python scripts/msh/survey.py ma4
+```
+
+```bash
+python scripts/msh/roster.py ma4
 ```
 
 Set `WORKSHOP_MSH_CACHE` to the main checkout's `.cache/msh` when running from a

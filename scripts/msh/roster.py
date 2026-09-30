@@ -420,19 +420,28 @@ def parse(slug):
         import gridbooks
         stream, entries = gridbooks.parse(book, slug)
         return book, stream, entries
+    if book.get('layout') == 'code-grids':
+        # one numbering like MA1, but each row prints its code before its
+        # number (MA4: "F GD (10)"): scripts/msh/codegrids.py reads the grids
+        # and finds the headers, and runs read_entries() below
+        import codegrids
+        stream, entries = codegrids.parse(book, slug)
+        return book, stream, entries
     stream = page_stream(book, slug)
     entries = read_entries(stream, GridReader(book, slug))
     finish(entries)
     return book, stream, entries
 
 
-def read_entries(stream, reader, opponent=False):
+def read_entries(stream, reader, opponent=False, grid=None):
     """The book's entries from one stream. With opponent set, the stream is an
     adventure's page with a character statted in its prose (ME1's chapters): an
     entry is read from its header through its grid and powers, and ends where
     the adventure's own text resumes - an indented paragraph, or a run-in that
     is not one of the entry's sections - after which lines are dropped until
-    the next header."""
+    the next header. `grid` reads a grid at a Health line, as grid_at does; a
+    book that sets its rows another way passes its own (MA4: codegrids.py)."""
+    grid = grid or grid_at
     entries, cur = [], None
 
     def start(kind, name, line):
@@ -449,7 +458,7 @@ def read_entries(stream, reader, opponent=False):
     while i < len(stream):
         line = stream[i]
         anchored = bool(ANCHOR.search(line['text']))
-        rows, nxt = grid_at(stream, i, reader) if anchored else (None, i)
+        rows, nxt = grid(stream, i, reader) if anchored else (None, i)
         if anchored and nxt > i:
             if rows is None:
                 # a grid is here and could not be read: keep it, so the count
@@ -467,7 +476,7 @@ def read_entries(stream, reader, opponent=False):
                 label = prev['text'].strip()
             sec, end = secondary(rows, stream, nxt)
             block = {'label': label, 'page': line['printed'], 'pdf': line['pdf'], 'col': line['col'],
-                     'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code', 'alt') if k in r}
+                     'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code', 'alt', 'read_as') if k in r}
                                    for r in rows]}
             block.update(sec)
             block['check'] = check(block)
@@ -724,6 +733,11 @@ def main():
         print('\n'.join(lines))
         missing = ['a checklist'] if missed else []
     else:
+        if book.get('layout') == 'code-grids':
+            import codegrids
+            lines, missed = codegrids.coverage(book, entries)
+            print('\n'.join(lines))
+            missing = missing + (['a Health or Karma'] if missed else [])
         print('  printed index: %d names in printed %d-%d, %d found as an entry, member or sub-block%s'
               % (len(in_range), first, last, len(in_range) - len(missing),
                  '' if not missing else '; NOT FOUND: ' + ', '.join(missing)))
