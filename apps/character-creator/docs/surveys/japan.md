@@ -1,8 +1,8 @@
 # Rifts World Book 8: Japan — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-09-30)
+**Status:** `importing` — skills shipped (step 1 of 8); magic gear next. (2026-09-30)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 19
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
@@ -245,6 +245,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | date | branch | what went in |
 |---|---|---|
 | 2026-09-30 | `pal/data/japan-survey` | cache built (218 pp, text layer), offset +1 verified at five folios, `japan` registered in `books.json`, this survey. No rows. |
+| 2026-09-30 | `pal/data/japan-skills` | step 1: 19 skills (`add-a-japan-skills.sql`, tagged by `~044-japan-skill-systems.sql`): Bonsai, Floral Arrangement (Ikebana), Go, Poetry (Haiku), Japanese Mythology, 6 W.P.s and 8 Hand to Hand styles with their level tables and attribute bonuses. Two extraction workers and one reconcile pass; reconcile caught the Zanji and Ninjitsu attribute lines the extraction had dropped. Applied `--remote` before the PR. |
 
 ### What remains
 
