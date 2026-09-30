@@ -1,6 +1,6 @@
 ---
 name: marvel-book
-description: Import a Marvel Super Heroes (TSR, FASERIP) sourcebook into the Marvel app - its characters into the Marvel Codex's Notable NPCs and the GM tools, its items, locations and adventure into their Codex sections. Use when handed a Marvel/MSH sourcebook PDF or asked to add a Marvel book's characters, to correct one, or to give a team's members stats. NOT book-survey, class-import or scripts/ocr-book.py - those are the Palladium/Rifts pipeline and must not be used or changed for a Marvel book. Covers the scripts/msh/ chain, the registry fields a new book needs and how each is measured, the book's own arithmetic as the check, facts in the repo and prose in D1, and the traps that bit the first book.
+description: Import a Marvel Super Heroes (TSR, FASERIP) sourcebook into the Marvel app - its characters into the Marvel Codex's Notable NPCs and the GM tools, its items and locations into the Codex's Items and locations. A book's adventure is not imported. Use when handed a Marvel/MSH sourcebook PDF or asked to add a Marvel book's characters, to correct one, or to give a team's members stats. NOT book-survey, class-import or scripts/ocr-book.py - those are the Palladium/Rifts pipeline and must not be used or changed for a Marvel book. Covers the scripts/msh/ chain, the registry fields a new book needs and how each is measured, the book's own arithmetic as the check, facts in the repo and prose in D1, and the traps that bit the first book.
 ---
 
 # A Marvel sourcebook
@@ -37,10 +37,16 @@ layout is nearest before starting another:
 
 Since 2026-09-28 the chain is multi-book. What that means for a new one:
 
-- **`npcs.py` and `extras.py` merge by book.** Every character, item and
-  adventure carries its `book`, and rebuilding one book replaces only that
-  book's rows in `data/npcs.json`, `data/items.json` and
-  `data/adventures.json`. The D1 rows were already keyed by book.
+- **`npcs.py` and `extras.py` merge by book.** Every character and item
+  carries its `book`, and rebuilding one book replaces only that book's rows
+  in `data/npcs.json` and `data/items.json`. The D1 rows were already keyed by
+  book.
+- **Adventures are not in the app** (Nate, 2026-09-29, #1550). There is no
+  `data/adventures.json` and no Adventures section. Do not set a new book's
+  registry `adventure` or import its adventure's sections, and ask before
+  importing items that live only inside one. `extras.py` still parses MA1's
+  and MHSP1's, but writes text only for a section an item names (`section`:
+  MHSP1's two vehicles read First Blood and Patrol).
 - **The registry's ORDER is part of the data.** The first book in
   `scripts/msh/books.json` keeps plain ids (`magneto`); every later book's ids
   end in `-<slug>` (`magneto-mhsp1`). **Append a new book; never reorder**, or
@@ -85,7 +91,7 @@ data). If its layout is new, the reader is the second, and the data is last.
 | measure | `python scripts/msh/survey.py <slug>` | nothing; feeds the survey doc |
 | parse | `python scripts/msh/roster.py <slug>` | `.../roster.json` (prose, local only) |
 | characters | `python scripts/msh/npcs.py <slug>` | `apps/marvel-heroes/data/npcs.json` + `.../book-text.sql` |
-| the rest | `python scripts/msh/extras.py <slug>` | `data/items.json`, `data/adventures.json` + `.../extras-text.sql` |
+| items | `python scripts/msh/extras.py <slug>` | `data/items.json` + `.../extras-text.sql` |
 | load | `node scripts/d1-apply.mjs --remote --db marvel <each .sql>` | `msh_book_text` in `DB_MARVEL`, BEFORE the merge (`ship-pr`) |
 
 `WORKSHOP_MSH_CACHE` defaults to `.cache/msh` under the checkout. **From a
@@ -111,16 +117,16 @@ Every field is read off the book, never assumed from the last book.
   defeat Tesseract. It is the coverage checklist: `roster.py` must place
   every name. A name with two pages is usually a cross-reference or an
   early-version modifier, not a second stat block - read each page.
-- `character_pages`, `item_pages`, `item_parts`, `adventure`: the ranges each
-  script reads.
+- `character_pages`, `item_pages`, `item_parts`: the ranges each script reads.
+  `adventure` is MA1's and MHSP1's only; a new book leaves it out.
 - **A boxed module** replaces `offset` with `parts`: each booklet's PDF range,
   offset and `cite` (how a card names it, "Roster"). Then `character_part`,
   `item_part` and `adventure.part` say which booklet a range counts in, and
   every card, block, item and section carries its `part`. MHSP1's entry also
   shows `reference_summary` (a chart as the index), `running` (notes in another
-  booklet), `adventure.sections` (a campaign of events, found by how each
-  first line reads), `locations` (with a room table transcribed as data) and
-  `vehicles`. The registry's `about` list documents every field.
+  booklet), `adventure.sections` (parsed only because its locations and
+  vehicles are found inside them), `locations` (with a room table transcribed
+  as data) and `vehicles`. The registry's `about` list documents every field.
 
 ## The book checks itself
 
