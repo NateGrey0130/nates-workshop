@@ -44,9 +44,10 @@ Since 2026-09-28 the chain is multi-book. What that means for a new one:
 - **Adventures are not in the app** (Nate, 2026-09-29, #1550). There is no
   `data/adventures.json` and no Adventures section. Do not set a new book's
   registry `adventure` or import its adventure's sections, and ask before
-  importing items that live only inside one. `extras.py` still parses MA1's
-  and MHSP1's, but writes text only for a section an item names (`section`:
-  MHSP1's two vehicles read First Blood and Patrol).
+  importing items that live only inside one. `extras.py` still parses
+  MHSP1's, the only registry `adventure` left, because its items are found
+  inside it, and writes text only for a section an item names (`section`:
+  its two vehicles read First Blood and Patrol).
 - **The registry's ORDER is part of the data.** The first book in
   `scripts/msh/books.json` keeps plain ids (`magneto`); every later book's ids
   end in `-<slug>` (`magneto-mhsp1`). **Append a new book; never reorder**, or
@@ -118,7 +119,7 @@ Every field is read off the book, never assumed from the last book.
   every name. A name with two pages is usually a cross-reference or an
   early-version modifier, not a second stat block - read each page.
 - `character_pages`, `item_pages`, `item_parts`: the ranges each script reads.
-  `adventure` is MA1's and MHSP1's only; a new book leaves it out.
+  `adventure` is MHSP1's only; a new book leaves it out.
 - **A boxed module** replaces `offset` with `parts`: each booklet's PDF range,
   offset and `cite` (how a card names it, "Roster"). Then `character_part`,
   `item_part` and `adventure.part` say which booklet a range counts in, and
