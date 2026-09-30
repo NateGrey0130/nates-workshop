@@ -165,6 +165,16 @@
       "note": "NOT Heroes Unlimited 2nd Edition. This is the 1987 REVISED first edition, 9th printing January 1993, and the three Powers Unlimited books registered below are all written for 2nd Edition - see their notes. A SEPARATE GAME from Rifts and Palladium Fantasy: no O.C.C., no R.C.C. A character is a Power Category (ten of them, printed 12 and 162) crossed with an Educational Level (eleven rows, printed 27), and six of the ten categories carry sub-types. Cached 2026-09-12 from a SCAN - --probe medians 0 chars/page across all twenty samples, OCR medians 4,593. THE CLEANEST OFFSET MEASUREMENT IN THE REGISTRY: 160 pages carry a folio, ALL 160 agree at +0, none disagree, one region p010-p237 with no split. So printed N is cache pNNN and read-columns.py N. Corroborated four more ways by section ranges landing exactly where the printed Contents says they do - magic 96-105, psionics 128-134, super abilities 164-191, equipment 213-221. ocr-book.py measured printed_pages 248 and that is WRONG: cache p239 is a comic panel whose sound effect OCR'd as a folio. The registry outranks the manifest, as it does for bom. printed_pages is 238, which the printed Contents gives for the character sheets; the last folio that actually surfaces is 237, and p238-p239 carry comic art rather than the sheets the Contents names. p240 is the back cover. No production row cited this book as of 2026-09-12, and that is no longer the state: measured --remote on 2026-09-22 production holds 950 catalog rows - 708 gear, 88 skill system bases, 69 super abilities, 49 vehicles, 16 spells, 10 skills, 5 notable NPCs, 4 psionic powers and 1 psionic system cost - plus 30 published classes. The dated sentence was correct on its date and is kept for that reason (BOOK-INGEST-AUDIT F45); what follows it is BOOK-INGEST-AUDIT F104."
     },
 
+    "japan": {
+      "title": "Rifts World Book 8: Japan",
+      "aliases": ["Rifts Japan", "Rifts World Book Eight: Japan"],
+      "source_pdf": "rifts-world-book-8-japan_compress.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 215,
+      "page_offset": 1,
+      "note": "Cached 2026-09-30 from its TEXT LAYER, --probe median 3,986 chars/page and 34.4% stop words. Offset verified by folio at five points - cache p050 reads 49, p100 reads 99, p150 reads 149, p200 reads 199, p216 reads 215 - one region, no split. printed_pages is 215, the last numbered folio at cache p216; cache p217 is the unnumbered Experience Point Tables page and p218 the back cover. welded_pages 4 (71, 110, 142, 200), corrupt_pages 4 pages (p9, p17, p81, p196), substituted_digits 88 pages. See apps/character-creator/docs/surveys/japan.md."
+    },
+
     "ju": {
       "title": "Rifts World Book 10: Juicer Uprising",
       "aliases": [],
