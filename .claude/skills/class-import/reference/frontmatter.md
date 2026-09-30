@@ -63,6 +63,42 @@ ppe_base: "1d6x10+20, +2d6 per additional level starting at level two"
 starting_money: "2d4x1000"                 # coin only, never gear
 ```
 
+## Tags — what the wizard's picker filters on
+
+```yaml
+tags: [stealth, tech]             # one line, straight after category; at most 4
+```
+
+**Every new class gets a `tags:` line.** The Race and Occupation steps filter
+on tags, and the *Help me choose* quiz scores on them, so a class without one is
+missing from every chip a player might press to find it. `class-check` warns
+`no tags line` and prints what the fields suggest. **The suggestion is a guess
+from names and skill lists, not a reading of the book.**
+
+Two kinds, both in `CLASS_TAGS` in `apps/character-creator/js/parser.js`:
+
+- **Derived: never write these.** `magic`, `psionics`, `mega-damage` and
+  `horror-factor` are computed from the `magic:`, `psionics:`, `mdc_base` and
+  `horror_factor` blocks. Writing one is an **ERROR**.
+- **Authored: pick up to four** that say what the class is FOR, as its page
+  describes it.
+  - Role: `combat`, `ranged`, `stealth`, `scholar`, `tech`, `pilot`, `healer`,
+    `wilderness`, `leader`, `hunter`.
+  - Nature: `augmented`, `supernatural`, `shapeshifter`, `flyer`, `aquatic`,
+    `divine`.
+  - Guidance: `beginner`, `high-power`, `evil`.
+
+`evil` is for a class the book restricts to evil alignments. `high-power` is for
+one it treats as needing the GM's approval. `beginner` is a judgement about how
+simply the class plays, so use it sparingly.
+
+**An unknown tag is an ERROR, and an error hides the class.** The classes
+endpoint drops any class that fails to parse, so a typo in a tag removes the
+class from production's picker. `class-check` catches it; run it.
+
+A class that already shipped gets its tags from a `scripts/class-tags.mjs`
+review, one system at a time, never an edit to its `add-` script.
+
 ## Grouping and levelling — the two keys nothing warns you about
 
 Both are optional to the parser and **required by `regression.mjs`**. A class

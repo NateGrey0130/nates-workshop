@@ -123,6 +123,10 @@ export const KNOWN_KEYS = new Set([
   // `characters.second_form` (migration 069), levelled by js/leveling.js and
   // drawn by sheet.js behind its form toggle.
   'second_form',
+  // Authored class tags - `tags: [stealth, wilderness]` - that the wizard's
+  // Race and Occupation steps filter on and the guided quiz scores. The
+  // vocabulary and its validation are CLASS_TAGS in js/parser.js.
+  'tags',
   // Produced by the parser from the body, never written by hand.
   'lore', 'gm_notes', 'sections',
 ]);

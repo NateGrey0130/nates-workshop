@@ -25,7 +25,8 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
-         bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList } from './js/parser.js';
+         bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
+         CLASS_TAGS, classTags, classTagInfo, suggestClassTags } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
@@ -185,6 +186,9 @@ const S = {
   superFilter: '',
   talentFilter: '',
   classFilter: '',
+  // Tag chips pressed on the Race and Occupation steps. Same posture as the
+  // filter text: view state, never persisted.
+  classTagFilter: [], occTagFilter: [],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -429,32 +433,42 @@ function computePools(force = false) {
 }
 
 // ---------- guided quiz ----------
+// Scored against class TAGS (js/parser.js, CLASS_TAGS). It used to guess traits
+// with regexes over skill names - "has a W.P. Sword" for melee, "has a Radio
+// skill" for high-tech - which a tag now states outright. The answer values
+// ARE tag ids, so a question cannot ask about something no class can carry.
 const QUIZ = [
   { q: 'What are you playing?', opts: [['occ', 'A trained human-scale hero'], ['rcc', 'Something inhuman or monstrous'], ['any', 'No preference']] },
-  { q: 'How do you want to solve problems?', opts: [['melee', 'Up close — blades and fists'], ['ranged', 'At range — bows or guns'], ['mystic', 'Magic and psychic powers']] },
-  { q: 'What flavor of gear and setting?', opts: [['hightech', 'High-tech'], ['lowtech', 'Simple and traditional'], ['arcane', 'Arcane and otherworldly']] },
+  { q: 'How do you want to solve problems?', opts: [['combat', 'Up close — blades and fists'], ['ranged', 'At range — bows or guns'], ['magic', 'Magic'], ['psionics', 'Psychic powers'], ['stealth', 'Quietly — unseen and unheard']] },
+  { q: 'What else do you bring?', opts: [['scholar', 'Knowledge and lore'], ['tech', 'Machines and computers'], ['pilot', 'Driving and piloting'], ['healer', 'Healing'], ['wilderness', 'Surviving the wild'], ['leader', 'Leading and talking']] },
 ];
-function classTraits(c) {
-  const names = (c.skills?.occ_skills || []).map((s) => String(s.name).toLowerCase());
-  const techy = names.some((n) => /radio|pilot|computer|laser|sensor/.test(n));
-  return {
-    cat: c.category,
-    melee: names.some((n) => /w\.p\..*(sword|knife|blunt|shield|paired)/.test(n)),
-    ranged: names.some((n) => /w\.p\..*(archery|energy|rifle|pistol|gun)/.test(n)),
-    mystic: !!(c.magic || c.psionics),
-    flavor: c.magic ? 'arcane' : techy ? 'hightech' : 'lowtech',
-  };
+// A class nobody has tagged yet is scored on the SUGGESTED tags, the same
+// guesses scripts/class-tags.mjs offers for review. Without this the quiz
+// would find nothing in a system until its backfill landed. Once a class has a
+// tags line, its own tags are the whole answer.
+function quizTags(c) {
+  const have = new Set(classTags(c));
+  if (!Array.isArray(c.tags)) for (const t of suggestClassTags(c)) have.add(t);
+  return have;
 }
 function quizScore(c) {
-  const t = classTraits(c);
+  const tags = quizTags(c);
   let score = 0;
   const [q1, q2, q3] = S.quiz;
-  if (q1 && q1 !== 'any' && t.cat === q1) score += 2;
-  if (q2 === 'melee' && t.melee) score += 2;
-  if (q2 === 'ranged' && t.ranged) score += 2;
-  if (q2 === 'mystic' && t.mystic) score += 2;
-  if (q3 && t.flavor === q3) score += 2;
+  if (q1 && q1 !== 'any' && c.category === q1) score += 2;
+  if (q2 && tags.has(q2)) score += 2;
+  if (q3 && tags.has(q3)) score += 2;
   return score;
+}
+// A draft keeps its quiz answers, and a draft saved before the quiz was scored
+// on tags holds answers no question offers any more ('melee', 'hightech'). One
+// of those would count as answered and match nothing, so it is cleared and the
+// question asked again.
+function validQuiz(answers) {
+  return QUIZ.map((q, i) => {
+    const a = Array.isArray(answers) ? answers[i] : null;
+    return q.opts.some(([val]) => val === a) ? a : null;
+  });
 }
 
 // ---------- draft persistence ----------
@@ -608,6 +622,7 @@ function resumeDraft() {
   // holds no character with an MOS at all - and normalising here means every
   // site after it can assume the list without testing for the string.
   S.mos = mosList(S.mos);
+  S.quiz = validQuiz(S.quiz);
   // `S.system` arrived through Object.assign rather than through pickSystem,
   // which is the only other place it is set - so the game's own skill
   // percentages have to be derived here too (BOOK-INGEST-AUDIT.md F83). A
@@ -1080,7 +1095,10 @@ function renderSystem() {
   // gets a line of its own, for the reason these rows first did - UI-AUDIT F9.
 }
 function pickSystem(sys) {
-  if (S.system !== sys) { S.rcc = null; S.quiz = [null, null, null]; resetBuild(); }
+  if (S.system !== sys) {
+    S.rcc = null; S.quiz = [null, null, null]; S.classTagFilter = []; S.occTagFilter = [];
+    resetBuild();
+  }
   S.system = sys;
   // This game's own skill percentages, if it prints any (F83).
   applySkillSystem();
@@ -1129,9 +1147,13 @@ function renderRace() {
     // name/category/source-book matching as the Skills step — a class here is a
     // catalog row like any other. The selected card can be filtered out of the
     // grid; classDetail() below still renders it, so the choice is never hidden.
-    const matches = Picker.filter(list, S.classFilter);
+    // Tag chips narrow it further, every pressed chip at once (AND), the way
+    // extra words narrow the text filter.
+    const texted = Picker.filter(list, S.classFilter);
+    const matches = texted.filter((c) => hasAllTags(c, S.classTagFilter));
     inner = Picker.inputHtml({ id: 'class-filter', value: S.classFilter,
       placeholder: 'Filter classes…', shown: matches.length, total: list.length });
+    inner += tagChips(texted, S.classTagFilter, 'class');
     inner += matches.length
       ? classGroups(matches).map(([label, note, rows]) =>
         `<div class="pick-group over-grid">${esc(label)} <span class="muted small">&mdash; ${esc(note)}</span><span class="pick-group-n">${rows.length}</span></div>
@@ -1366,6 +1388,46 @@ function classGroups(list) {
       return [known ? known[1] : k, known ? known[2] : 'other classes', rows];
     });
 }
+// ---------- class tags ----------
+// The vocabulary and the derived/authored split live in js/parser.js
+// (CLASS_TAGS). Here: the chip row that filters, and the readout on a card.
+function hasAllTags(c, wanted) {
+  if (!wanted?.length) return true;
+  const have = classTags(c);
+  return wanted.every((t) => have.includes(t));
+}
+// One chip per tag some class in `rows` carries, with how many would remain if
+// it were pressed. A chip that would leave nothing is not drawn - pressing it
+// could only empty the list - unless it is already pressed, so it can always
+// be released. `scope` names the state it writes: 'class' or 'occ'.
+function tagChips(rows, selected, scope) {
+  const base = rows.filter((c) => hasAllTags(c, selected));
+  const chips = CLASS_TAGS.map((t) => {
+    const on = selected.includes(t.id);
+    const n = on ? base.length : base.filter((c) => classTags(c).includes(t.id)).length;
+    if (!on && !n) return '';
+    return `<button type="button" class="tag-chip${on ? ' on' : ''}${t.kind === 'derived' ? ' derived' : ''}"
+      aria-pressed="${on}" title="${esc(t.hint)}" onclick="toggleClassTag('${scope}','${t.id}')">${
+      esc(t.label)}<span class="n">${n}</span></button>`;
+  }).join('');
+  if (!chips) return '';
+  const clear = selected.length
+    ? `<button type="button" class="tag-clear" onclick="toggleClassTag('${scope}',null)">clear</button>` : '';
+  return `<div class="tag-chips" role="group" aria-label="Filter by tag">${chips}${clear}</div>`;
+}
+function toggleClassTag(scope, id) {
+  const key = scope === 'occ' ? 'occTagFilter' : 'classTagFilter';
+  const cur = S[key] || [];
+  S[key] = id == null ? [] : cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id];
+  render();
+}
+function tagReadout(c) {
+  return classTags(c).map((id) => {
+    const t = classTagInfo(id);
+    return `<span class="tag${t.kind === 'derived' ? ' derived' : ''}" title="${esc(t.hint)}">${esc(t.label)}</span>`;
+  }).join('');
+}
+
 function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
@@ -1373,6 +1435,7 @@ function classCard(c, score) {
     <h3>${esc(c.name)}</h3>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
+    ${classTags(c).length ? `<div>${tagReadout(c)}</div>` : ''}
     <p class="muted small">${esc(blurb(c.lore, 110))}</p>
   </button>`;
 }
@@ -1387,6 +1450,7 @@ function classDetail(c) {
   const sk = c.skills || {};
   return `<div id="class-detail" style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px">
     <h3>${esc(c.name)}</h3>
+    ${classTags(c).length ? `<div style="margin:4px 0">${tagReadout(c)}</div>` : ''}
     <p class="muted small">Requirements: ${esc(reqs)} &nbsp;·&nbsp; Class skills: ${(sk.occ_skills || []).length}
       &nbsp;·&nbsp; Related picks: ${sk.occ_related_skills?.count ?? 0} &nbsp;·&nbsp; Secondary picks: ${sk.secondary_skills?.count ?? 0}
       ${c.psionics ? ' · Psionics: ' + esc(c.psionics.type) : ''}${c.magic ? ' · Magic: ' + esc(c.magic.type) : ''}</p>
@@ -1632,8 +1696,12 @@ function occPicker() {
     const a = occAllowedForRace(S.rcc, c);
     return a.allowed ? raceAllowedForOcc(c, S.rcc) : a;
   };
-  const options = all.filter((c) => pairs(c).allowed);
-  const barred = all.filter((c) => !pairs(c).allowed);
+  // Tag chips narrow the list; the chosen occupation stays in it regardless, or
+  // the <select> would show a value it has no option for.
+  const tagged = (c) => c.id === S.occ || hasAllTags(c, S.occTagFilter);
+  const options = all.filter((c) => pairs(c).allowed && tagged(c));
+  const barred = all.filter((c) => !pairs(c).allowed && tagged(c));
+  const openCount = all.filter((c) => pairs(c).allowed).length;
   const chosen = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
   // The usual structure is a race and then an occupation. Presented as the
   // expected next step rather than an optional extra, because that is what it
@@ -1649,6 +1717,9 @@ function occPicker() {
          characters are a race <em>and</em> an occupation, and taking one adds its skills to this.`}</p>
     ${needs && !S.occ ? `<p class="warn">No occupation chosen. You can continue, and this character
       will have no related or secondary skills at all.</p>` : ''}
+    ${tagChips(all.filter((c) => pairs(c).allowed), S.occTagFilter, 'occ')}
+    ${S.occTagFilter.length ? `<p class="muted small pick-count">${
+      options.filter((c) => c.id === S.occ ? hasAllTags(c, S.occTagFilter) : true).length} of ${openCount} open occupations match</p>` : ''}
     <div class="rowline">
       <select onchange="pickOcc(this.value)">
         <option value="">— none (this race stands alone) —</option>
@@ -1672,7 +1743,8 @@ function occPicker() {
       // three (not six)" - so a preview reading `chosen` directly shows the
       // parent's six beside a dropdown that has just selected the three. F31.
       const shown = applyVariant(chosen, S.occVariant) || chosen;
-      return `<p class="small">Related skills: <b>${shown.skills?.occ_related_skills?.count ?? 0}</b>
+      return `${classTags(chosen).length ? `<div>${tagReadout(chosen)}</div>` : ''}
+      <p class="small">Related skills: <b>${shown.skills?.occ_related_skills?.count ?? 0}</b>
       · Secondary: <b>${shown.skills?.secondary_skills?.count ?? 0}</b></p>`;
     })() : ''}
   </div>`;
@@ -5184,6 +5256,9 @@ async function boot(first = true) {
       api('me').catch(() => ({})),
     ]);
     S.classes = classesRes.classes;
+    // What the class filter box matches a class's tags on: the labels its card
+    // shows, derived ones included (js/picker.js, FIELDS).
+    for (const c of S.classes) c._tag_text = classTags(c).map((id) => classTagInfo(id).label).join(' ');
     // THE RAW CATALOG IS KEPT SEPARATELY. One game may print a different
     // percentage for a skill than another (BOOK-INGEST-AUDIT.md F83), and this
     // endpoint is called ONCE at boot - before the player has picked a system -
@@ -5291,6 +5366,7 @@ Object.assign(window, {
   // so `goStep(ST.SKILLS)` is evaluated in the global scope and a module-scoped
   // ST would be a ReferenceError on every Back button.
   S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
+  toggleClassTag,
   confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
   setStartingLevel, rerollAdvancement, setLevelPick, pickMos, pickTotem,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,

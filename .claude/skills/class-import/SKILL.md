@@ -27,6 +27,9 @@ rather than the reference, which is not the whole key list.
    scan needs OCR. Transcribe, never guess: a wrong percentage is worse than a
    missing one, because nothing flags it.
 2. **Write the markdown to a scratch `.md` file**, not straight into SQL.
+   **Give it a `tags:` line** after `category`: up to four authored tags for
+   what the class is for (`reference/frontmatter.md` → *Tags*). The wizard's
+   class filters and its quiz read nothing else.
 3. **Check it against production**, and iterate until it reads `ready`:
    ```bash
    node scripts/class-check.mjs draft.md --remote

@@ -846,6 +846,7 @@ import { run as documentedCountsChecks } from './checks/documented-counts.mjs';
 import { run as bookRegistryChecks } from './checks/book-registry.mjs';
 import { run as renderedUiChecks } from './checks/rendered-ui.mjs';
 import { run as classCheckToolChecks } from './checks/class-check-tool.mjs';
+import { run as classTagChecks } from './checks/class-tag-vocabulary.mjs';
 import { run as catalogMatchingChecks } from './checks/catalog-matching.mjs';
 import { run as instructionPathChecks } from './checks/instruction-paths.mjs';
 import { run as machineInstructionChecks } from './checks/machine-instructions.mjs';
@@ -9215,6 +9216,7 @@ check('a non-numeric limit falls back to the default', pageOf('?limit=abc').limi
 check('a negative offset floors at zero', pageOf('?offset=-5').offset === 0);
 
 classCheckToolChecks();
+classTagChecks();
 
 bookRegistryChecks();
 

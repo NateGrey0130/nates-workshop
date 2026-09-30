@@ -2871,6 +2871,152 @@ function parseBodySections(body) {
 // magic classes we happen to hold today would silently stop covering the fifth.
 export const OCC_GROUPS = ['clergy', 'men-of-arms', 'optional', 'magic', 'psychic'];
 
+// ── class tags ──
+// Labels that help a player choose a class: the Race and Occupation steps
+// filter on them, and the guided quiz scores against them. They are a picking
+// aid and nothing else; no rule reads one.
+//
+// TWO KINDS, and the split is the point. A DERIVED tag restates a block the
+// class already has (`magic:` means it casts), so it is computed and never
+// written: a hand-written `magic` would go on claiming magic after the block
+// was removed. An AUTHORED tag is a judgement no field records - "plays
+// quietly", "good first character" - and lives in the class's own frontmatter
+// as `tags: [stealth, wilderness]`, at most MAX_AUTHORED_TAGS of them.
+//
+// Order is display order: derived first, then role, nature and guidance.
+export const CLASS_TAGS = [
+  { id: 'magic', label: 'Magic', kind: 'derived', hint: 'Casts spells or works magic' },
+  { id: 'psionics', label: 'Psionics', kind: 'derived', hint: 'Has psychic powers' },
+  { id: 'mega-damage', label: 'Mega-Damage', kind: 'derived', hint: 'A natural M.D.C. being' },
+  { id: 'horror-factor', label: 'Frightening', kind: 'derived', hint: 'Projects a Horror Factor' },
+  { id: 'combat', label: 'Combat', kind: 'authored', group: 'role', hint: 'A front-line fighter' },
+  { id: 'ranged', label: 'Ranged', kind: 'authored', group: 'role', hint: 'Fights at range: marksman, archer, gunslinger' },
+  { id: 'stealth', label: 'Stealth', kind: 'authored', group: 'role', hint: 'Thief, spy or assassin' },
+  { id: 'scholar', label: 'Scholar', kind: 'authored', group: 'role', hint: 'Knowledge, lore or science' },
+  { id: 'tech', label: 'Tech', kind: 'authored', group: 'role', hint: 'Operator, hacker or cyber-doc' },
+  { id: 'pilot', label: 'Pilot', kind: 'authored', group: 'role', hint: 'Vehicles, robots or power armor' },
+  { id: 'healer', label: 'Healer', kind: 'authored', group: 'role', hint: 'Medical or magical healing' },
+  { id: 'wilderness', label: 'Wilderness', kind: 'authored', group: 'role', hint: 'Ranger, scout or survivalist' },
+  { id: 'leader', label: 'Leader', kind: 'authored', group: 'role', hint: 'Face, diplomat or noble' },
+  { id: 'hunter', label: 'Hunter', kind: 'authored', group: 'role', hint: 'Hunts monsters, vampires or demons' },
+  { id: 'augmented', label: 'Augmented', kind: 'authored', group: 'nature', hint: 'Bionics, cybernetics or chemical augmentation' },
+  { id: 'supernatural', label: 'Supernatural', kind: 'authored', group: 'nature', hint: 'A dragon, demon or creature of magic' },
+  { id: 'shapeshifter', label: 'Shapeshifter', kind: 'authored', group: 'nature', hint: 'Changes shape' },
+  { id: 'flyer', label: 'Flyer', kind: 'authored', group: 'nature', hint: 'Flies without equipment' },
+  { id: 'aquatic', label: 'Aquatic', kind: 'authored', group: 'nature', hint: 'At home underwater' },
+  { id: 'divine', label: 'Divine', kind: 'authored', group: 'nature', hint: 'Priest, cleric or servant of a god' },
+  { id: 'beginner', label: 'Beginner', kind: 'authored', group: 'guidance', hint: 'Few choices; plays simply' },
+  { id: 'high-power', label: 'High power', kind: 'authored', group: 'guidance', hint: 'Usually needs the GM\'s approval' },
+  { id: 'evil', label: 'Evil only', kind: 'authored', group: 'guidance', hint: 'Restricted to evil alignments' },
+];
+export const MAX_AUTHORED_TAGS = 4;
+const TAG_BY_ID = new Map(CLASS_TAGS.map((t) => [t.id, t]));
+
+export function classTagInfo(id) {
+  return TAG_BY_ID.get(id) || null;
+}
+
+// The four derived tags, from the blocks they restate. Kept beside the
+// vocabulary so a new derived tag cannot be declared without its rule.
+function derivedTags(c) {
+  const out = [];
+  if (c?.magic && c.magic.type !== 'none') out.push('magic');
+  if (c?.psionics && c.psionics.type && c.psionics.type !== 'none') out.push('psionics');
+  if (c?.mdc_base != null || c?.mdc_from_hp_sdc) out.push('mega-damage');
+  if (c?.horror_factor != null) out.push('horror-factor');
+  return out;
+}
+
+/**
+ * Every tag a class carries - derived, then authored - in vocabulary order.
+ * An authored id the vocabulary does not hold is dropped rather than shown:
+ * the validator refuses one, so this only matters for a row that skipped it.
+ */
+export function classTags(c) {
+  const have = new Set(derivedTags(c));
+  for (const t of Array.isArray(c?.tags) ? c.tags : []) {
+    if (TAG_BY_ID.get(t)?.kind === 'authored') have.add(t);
+  }
+  return CLASS_TAGS.filter((t) => have.has(t.id)).map((t) => t.id);
+}
+
+/**
+ * Authored tags a class probably deserves, guessed from what it already says:
+ * its occ_group, its skill names, its name, its natural abilities and its
+ * restrictions. A STARTING POINT FOR A PERSON, never a value that ships
+ * unread - scripts/class-tags.mjs prints these for review, and the guided quiz
+ * falls back on them for a class nobody has tagged yet. `beginner` is never
+ * guessed: it is exactly the judgement no field records.
+ */
+export function suggestClassTags(c) {
+  if (!c) return [];
+  const name = String(c.name || '').toLowerCase();
+  const skills = [
+    ...(c.skills?.occ_skills || []).map((s) => s?.name || (s?.from || []).join(' ')),
+  ].map((s) => String(s || '').toLowerCase());
+  const hasSkill = (re) => skills.some((s) => re.test(s));
+  const countSkills = (re) => skills.filter((s) => re.test(s)).length;
+  const text = (v) => (v == null ? '' : JSON.stringify(v).toLowerCase());
+  const natural = text(c.natural_abilities) + text(c.special_abilities);
+  const rules = text(c.restrictions) + text(c.alignment) + text(c.side_effects);
+  const out = new Set();
+
+  if (c.occ_group === 'men-of-arms'
+    || /warrior|soldier|knight|mercenary|gladiator|fighter|juicer|crazy|grunt|samurai|headhunter|borg|berserker|champion|commando/.test(name)) out.add('combat');
+  if (hasSkill(/sharpshoot|sniper/) || /gunslinger|gunfighter|sniper|archer|bowman|marksman/.test(name)) out.add('ranged');
+  if ((hasSkill(/^prowl/) && hasSkill(/palming|pick locks|concealment|pick pockets/))
+    || /thief|spy|assassin|ninja|rogue|smuggler|burglar|infiltrat/.test(name)) out.add('stealth');
+  if (countSkills(/^lore|^science|^mathematics|^research|^anthropolog|^archaeolog|^history/) >= 3
+    || /scholar|scientist|sage|professor|scribe/.test(name)) out.add('scholar');
+  if (countSkills(/computer|electronic|mechanical engineer|robot mechanics|weapons engineer|field armorer/) >= 2
+    || /operator|hacker|techno|engineer|cyber-doc|mechanic/.test(name)) out.add('tech');
+  if (hasSkill(/pilot: (robot|power armor|jet|helicopter|tank)|robot combat/)
+    || /pilot|glitter boy|sam\b|rpa/.test(name)) out.add('pilot');
+  if (hasSkill(/medical doctor|paramedic|holistic medicine|cybernetic medicine/)
+    || /healer|doctor|medic\b|cyber-doc|body fixer/.test(name)) out.add('healer');
+  if (countSkills(/wilderness survival|track|land navigation|hunting|identify plants|skin & prepare/) >= 3
+    || /ranger|scout|trapper|wilderness|woodsman|nomad|tracker/.test(name)) out.add('wilderness');
+  if (/noble|diplomat|lord|king|queen|chieftain|captain|commander|emissary/.test(name)) out.add('leader');
+  if (/hunter|slayer|monster|demon quest|vampire/.test(name) && c.category === 'occ') out.add('hunter');
+  if (/juicer|crazy|cyborg|borg\b|bionic|m\.o\.m|headhunter|cyber-knight/.test(name)) out.add('augmented');
+  if (c.category === 'rcc' && (c.horror_factor != null
+    || /dragon|demon|deevil|vampire|spirit|entity|godling|demigod|elemental/.test(name))) out.add('supernatural');
+  if (/shape-?chang|metamorph|shapeshift|change (its|their) (shape|form)/.test(natural + text(c.lore))
+    || /changeling/.test(name)) out.add('shapeshifter');
+  if (/\bfl(y|ies|ight|ying)\b|wings/.test(natural)) out.add('flyer');
+  if (/underwater|aquatic|gills|amphibi|breathe water/.test(natural + name)) out.add('aquatic');
+  if (c.occ_group === 'clergy' || /priest|shaman|cleric|monk|druid|paladin/.test(name)) out.add('divine');
+  if (/dragon|godling|demigod|cosmo-knight|god\b/.test(name)) out.add('high-power');
+  if (/(only|must be)( be)? (of )?(an )?evil|evil alignments? only|miscreant or diabolic|diabolic or miscreant/.test(rules)) out.add('evil');
+
+  return CLASS_TAGS.filter((t) => out.has(t.id)).map((t) => t.id);
+}
+
+// The validator's half: refuses what the picker would otherwise quietly drop.
+function validateTags(tags, errors, warnings) {
+  if (!Array.isArray(tags)) {
+    errors.push('tags must be a one-line list, e.g. tags: [stealth, wilderness]');
+    return;
+  }
+  const seen = new Set();
+  for (const t of tags) {
+    const info = TAG_BY_ID.get(t);
+    if (!info) {
+      errors.push(`tags names "${t}", which is not a class tag. Known: `
+        + CLASS_TAGS.filter((x) => x.kind === 'authored').map((x) => x.id).join(', '));
+    } else if (info.kind === 'derived') {
+      errors.push(`tags names "${t}", which is derived from the class's own blocks and is `
+        + 'never written by hand; remove it');
+    }
+    if (seen.has(t)) warnings.push(`tags names "${t}" twice`);
+    seen.add(t);
+  }
+  if (tags.length > MAX_AUTHORED_TAGS) {
+    warnings.push(`tags names ${tags.length}; keep it to ${MAX_AUTHORED_TAGS} or fewer, `
+      + 'or the filter stops telling classes apart');
+  }
+}
+
 const GROUP_TOKEN = /^group:(.+)$/;
 
 // "No R.C.C. at all", which in Rifts is what being human looks like.
@@ -3059,6 +3205,7 @@ export function parseClassMarkdown(text) {
   if (data.occ_group !== undefined && data.category !== 'occ') {
     warnings.push('occ_group is set on something that is not an O.C.C. and will do nothing');
   }
+  if (data.tags !== undefined) validateTags(data.tags, errors, warnings);
   // F11. A class whose book says the character stops being what it was.
   // OPT-IN AND FALSE BY DEFAULT: every class in the catalog today wants the
   // race-primary policy - a dragon that studies an O.C.C. is still a dragon -
