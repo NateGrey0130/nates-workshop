@@ -3434,3 +3434,51 @@ classes hold the choice (2), and `sailor` and `oracle-cat` are untouched (2).
     sync, and both say the correction is filed here, which stays true.
   - memory `repo-rebuilds-names-not-values` ("F115 was the first"), which is
     also still true.
+
+
+## Filed from the Rifts Japan import, 2026-09-30
+
+### F116 - low - a class cannot pick one ability from a named list at set levels, so three Rifts Japan classes carry their later mystic martial arts picks as prose
+
+Rifts World Book 8: Japan prints 19 mystic martial arts powers (printed
+195-198: six Arts of Invisibility, seven Body Hardening Exercises, six
+Zenjoriki powers), and three of its classes pick from them on a schedule:
+
+| class | picks, as its page prints them |
+|---|---|
+| `mystic-ninja` (printed 53) | one art of invisibility at levels 1, 3, 6, 9, 12 and 15 |
+| `bishamon-fighting-monk` (printed 56) | an art of invisibility at 3, a body hardening exercise at 4 and 10, a zenjoriki power at 14 |
+| `sohei-warrior-monk` (printed 59) | a body hardening exercise at 1, 5 and 9, a zenjoriki power at 14 |
+
+What the import stored (branch `pal/data/japan-traditional-classes`, decided
+with Nate on 2026-09-30, survey *Agreed with Nate* item 3): a level-1 pick is a
+`special_abilities` entry with `choose: 1` over the powers, each carrying its
+unconditional bonuses; every later pick is a `level_progression` line and a
+body section paraphrasing the powers. `demon-queller`, `yamabushi-mountain-priest`
+and `tengu` are granted their powers outright and are not affected.
+
+**Evidence.** Measured 2026-09-30: `grep -n "abilities_schedule" apps/character-creator/js/parser.js`
+returns one hit, `parser.js:3316`, and it is the super-ability block's
+refusal of a per-level grant (there is nowhere to bank one). No schedule key
+exists for `special_abilities`. The three drafting agents each looked for one
+independently and reported the same.
+
+**Proposal:** give `special_abilities` a level schedule the way skills and
+spells have one - a `choose` group that fires at named levels and banks a
+pick the level-up step spends, drawing from the same named options as the
+level-1 group - and move these three classes' later picks onto it. The
+banking is the work: `pending_power_picks` has no column for an ability
+option list (the same reason `parser.js:3309-3315` gives for refusing it on
+super abilities), so it needs one, per `schema-change`. **Posture:** a
+capability, opt-in per class; nothing that exists changes until a class
+states the new key. **Evidence for the proposal:** inferred from the parser
+and the super-ability note; the level-up path was not traced.
+
+**Confidence:** medium - high on the gap (measured), medium on the cost,
+until someone traces how a banked pick reaches the level-up step
+(`js/leveling.js`) and what the sheet shows for an ability picked at level 5.
+
+**Ongoing cost:** one more schedule shape for the parser, the level-up step
+and the sheet to keep in step with the skill and spell ones. Three classes
+use it today. If no other book needs it, prose may be the cheaper answer
+forever; say so if taking it.

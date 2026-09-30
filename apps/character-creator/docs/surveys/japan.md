@@ -1,8 +1,8 @@
 # Rifts World Book 8: Japan — survey
 
-**Status:** `importing` — skills, magic gear and traditional gear shipped (steps 1-4 of 8); the traditional classes next. (2026-09-30)
+**Status:** `importing` — skills, magic gear and traditional gear shipped (steps 1-5 of 8); the Republic classes next. (2026-09-30)
 
-**Rows citing this book:** gear 227, skills 19
+**Rows citing this book:** classes 8, gear 229, skills 19
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
@@ -30,7 +30,7 @@ Checked by reading the folio on five pages rather than trusting the vote:
 | `p216` | 215 | +1 |
 
 One region, no `page_offset_exceptions`. **`printed_pages` is 215.** Cache
-`p217` is the unnumbered Experience Point Tables page (it belongs to the book
+`p217` is the Experience Point Tables page (its folio prints 216) (it belongs to the book
 and matters: see *Authority*); `p218` is the back cover. Cache `p001`-`p004`
 are cover, credits and front matter; `p005`-`p008` are the Contents and the
 Quick Find.
@@ -98,8 +98,8 @@ cached pages.
 | True Samurai O.C.C. | 43-49 | Ronin, True Samurai |
 | Ronin O.C.C. | 49-51 | Ronin, True Samurai |
 | Mystic Ninja O.C.C. | 51-55 | Tech-Ninja, Mystic Ninja |
-| Bishamon Fighting Monk O.C.C. | 55-58 | own |
-| Sohei Warrior Monk O.C.C. | 58-60 | own |
+| Bishamon Fighting Monk O.C.C. | 55-57 | Bishamon, Sohei |
+| Sohei Warrior Monk O.C.C. | 58-60 | Bishamon, Sohei |
 | Yamabushi Mountain Priest O.C.C. | 60-64 | Yamabushi, Demon Queller |
 | Demon Queller O.C.C. | 64-66 | Yamabushi, Demon Queller |
 | Tengu R.C.C. | 66-69 | Oni Master, Tengu |
@@ -250,6 +250,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | 2026-09-30 | `pal/data/japan-magic-gear` | step 2: 63 gear rows (`add-a-japan-magic-gear.sql`), printed 32-43: the Millennium Tree's ownable gifts (bark and leaf armor, the bark shield in three sizes, the leaf blanket of healing), 8 wands, 8 staves, the corrupted wand or staff, 2 weapons of wood, the enchanted weapons one row per priced variant, the 3 Greater Daisho, and the magical items (purse in 3 kinds, kami statue in 4 sizes). Reconcile confirmed every number and corrected 11 descriptions. Applied `--remote` before the PR. |
 | 2026-09-30 | `pal/data/japan-traditional-gear` | step 3: 49 gear rows (`add-a-japan-traditional-gear.sql`): the Mystic Ninja's equipment and gimmick clothing (printed 54-55), six bows, two gas arrowheads and magic arrows (118), and the traditional S.D.C. weapons (118-120). Heroes Unlimited and Palladium Fantasy hold most of these under the plain slug, so the Rifts copies are suffixed `-rifts`. Eight arrowheads, the crossbow pistol and the modern crossbow were already in the catalog from Triax and Spirit West at this book's prices, and are not duplicated. Reconcile corrected two restrictions. `shikomi-zue-rifts` carries both damage (1D8) and its own S.D.C. 50, so it joins regression's named `SELF_SDC` exceptions (BOOK-INGEST-AUDIT F54). Applied `--remote` before the PR. |
 | 2026-09-30 | `pal/data/japan-tech-gear` | step 4: 115 gear rows (`add-a-japan-tech-gear.sql`): 31 cybernetics and bionics (printed 109-113), 71 high-tech weapons, vibro-blades, packs, E-clips, explosives and mines (114-131), and 13 body armors and packs (181-186). Ten items were already in the catalog from Triax and Underseas at this book's figures and are not duplicated (the Underseas mini torpedo's damage disagrees with this book's; Underseas stands). M.D.C. is stored only where an item prints one. `at-d52-bullet-anti-personnel-mine` joins regression's `SELF_SDC` exceptions. Three extraction workers, two reconcile passes; reconcile removed invented payloads, defaulted M.D.C. and knock-off damage, and wrong penalty text. Applied `--remote` before the PR. |
+| 2026-09-30 | `pal/data/japan-traditional-classes` | step 5: 8 classes - `true-samurai` (male/female variants), `ronin`, `mystic-ninja`, `bishamon-fighting-monk`, `sohei-warrior-monk` (monk/nun variants), `yamabushi-mountain-priest`, `demon-queller`, `tengu` - and 2 gear rows the samurai and ronin carry (`samurai-armor`, `silver-tipped-arrows`, `add-a-japan-samurai-gear.sql`; the book prints no price, and no damage for the arrows). One drafting agent per class from a shared brief; every class reads `ready` against production with 0 stubs. Level-gated mystic martial arts picks after level 1 are prose (agreed 2026-09-30); the finding is filed in BOOK-INGEST-AUDIT.md. Temple skills store each class's printed base. Applied `--remote` before the PR. |
 
 ### What remains
 
