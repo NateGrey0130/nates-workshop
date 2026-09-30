@@ -4527,6 +4527,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // check below is what found that, on the first run after this list was
     // written.
     'wilk-s-beehive-laser-grenade',
+    // Rifts Japan printed 119: the shikomi-zue's hidden blade does 1D8, and
+    // the staff around it doubles as a fragile bo staff the book gives S.D.C.
+    // 50. Durability of the object, printed as such.
+    'shikomi-zue-rifts',
   ]);
   const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || '')
     && !SELF_SDC.has(r.slug));

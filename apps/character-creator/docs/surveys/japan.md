@@ -1,8 +1,8 @@
 # Rifts World Book 8: Japan — survey
 
-**Status:** `importing` — skills and magic gear shipped (steps 1-2 of 8); traditional gear next. (2026-09-30)
+**Status:** `importing` — skills, magic gear and traditional gear shipped (steps 1-3 of 8); tech gear next. (2026-09-30)
 
-**Rows citing this book:** gear 63, skills 19
+**Rows citing this book:** gear 112, skills 19
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
@@ -248,6 +248,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | 2026-09-30 | `pal/data/japan-survey` | cache built (218 pp, text layer), offset +1 verified at five folios, `japan` registered in `books.json`, this survey. No rows. |
 | 2026-09-30 | `pal/data/japan-skills` | step 1: 19 skills (`add-a-japan-skills.sql`, tagged by `~044-japan-skill-systems.sql`): Bonsai, Floral Arrangement (Ikebana), Go, Poetry (Haiku), Japanese Mythology, 6 W.P.s and 8 Hand to Hand styles with their level tables and attribute bonuses. Two extraction workers and one reconcile pass; reconcile caught the Zanji and Ninjitsu attribute lines the extraction had dropped. Applied `--remote` before the PR. |
 | 2026-09-30 | `pal/data/japan-magic-gear` | step 2: 63 gear rows (`add-a-japan-magic-gear.sql`), printed 32-43: the Millennium Tree's ownable gifts (bark and leaf armor, the bark shield in three sizes, the leaf blanket of healing), 8 wands, 8 staves, the corrupted wand or staff, 2 weapons of wood, the enchanted weapons one row per priced variant, the 3 Greater Daisho, and the magical items (purse in 3 kinds, kami statue in 4 sizes). Reconcile confirmed every number and corrected 11 descriptions. Applied `--remote` before the PR. |
+| 2026-09-30 | `pal/data/japan-traditional-gear` | step 3: 49 gear rows (`add-a-japan-traditional-gear.sql`): the Mystic Ninja's equipment and gimmick clothing (printed 54-55), six bows, two gas arrowheads and magic arrows (118), and the traditional S.D.C. weapons (118-120). Heroes Unlimited and Palladium Fantasy hold most of these under the plain slug, so the Rifts copies are suffixed `-rifts`. Eight arrowheads, the crossbow pistol and the modern crossbow were already in the catalog from Triax and Spirit West at this book's prices, and are not duplicated. Reconcile corrected two restrictions. `shikomi-zue-rifts` carries both damage (1D8) and its own S.D.C. 50, so it joins regression's named `SELF_SDC` exceptions (BOOK-INGEST-AUDIT F54). Applied `--remote` before the PR. |
 
 ### What remains
 
