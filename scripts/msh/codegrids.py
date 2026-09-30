@@ -146,6 +146,23 @@ def printed(text):
     return re.sub(r'(?<=\.)1(?=\.)', 'I', t)
 
 
+def map_label(line):
+    """A map's or an illustration's lettering: capitals set smaller than the
+    body (18-22 px against 25-28), which the OCR reads as lines of text - the
+    maps of Attilan (p.27), Atlantis (p.32) and Castle Doom (p.39), the Baxter
+    Building's floor plans, a comic panel's balloons (p.82). A marked header is
+    never one, though Salem's Seven's are set as small (p.71): so this is asked
+    only after the headers are found. A map's degrees and marks ('60 S',
+    '; lh FACTORY') are lettering too: a small line with no lowercase word, or
+    one read at under 65. A paragraph's last line boxes small as well
+    ('scars.', no ascenders), and it has a lowercase word."""
+    t = line['text']
+    small = line['h'] < 0.85 * line['body_h'] and (roster.is_caps(t) or not re.search(r'[a-z]{2}', t) or line['conf'] < 65)
+    # at the body's size, only marks read with little confidence ('"AR', p.39)
+    marks = line['conf'] < 65 and not re.search(r'[a-z]{3}', t)
+    return not line.get('big') and (small or marks) and not roster.ANCHOR.search(t) and not ROW.match(t)
+
+
 def same_column(a, b):
     return a['pdf'] == b['pdf'] and a['col'] == b['col']
 
@@ -200,8 +217,12 @@ def mark_headings(book, stream):
     """The registry's `headings`: printed titles that are not characters (a
     race, a place, a group, a list of items). Each opens a heading entry, so
     the text under it is not taken into the character above; each must be
-    found exactly once on its page. A title set on two lines names both."""
-    for page, title in book.get('headings', []):
+    found exactly once on its page. A title set on two lines names both. A
+    heading with a third field lists members without a block (NOTABLE
+    SKRULLS: run-ins ANELLE:, DORREK: ...): it is read as an entry, so
+    read_entries records them, and parse() hands them to the entry the field
+    names (the SKRULL tier)."""
+    for page, title, *to in book.get('headings', []):
         lines = title.split(' / ')
         hits = [i for i, l in enumerate(stream) if l.get('printed') == page
                 and roster.norm(printed(l['text'])) == roster.norm(lines[0])]
@@ -213,7 +234,7 @@ def mark_headings(book, stream):
                 raise SystemExit('heading %r: line %d reads %r' % (title, k + 1, stream[i + k]['text']))
         stream[i]['text'] = ' '.join(lines)
         # synthetic: read_entries opens a heading entry here, as at a section
-        stream[i].update(big=True, heading=True, synthetic=True)
+        stream[i].update(big=True, heading=True, synthetic=not to)
         del stream[i + 1:i + len(lines)]
 
 
@@ -263,16 +284,27 @@ def parse(book, slug):
     for line in stream:
         if line['big']:
             line['text'] = printed(line['text'])
+    stream[:] = [l for l in stream if l.get('synthetic') or not map_label(l)]
     entries = roster.read_entries(stream, roster.GridReader(book, slug), grid=grid_at)
     # finish() drops an entry with nothing in it, which is right for a caption
     # the header test let through and wrong for a registry heading that only
     # opens a run of characters (THE SUPER-APES, over Igor's grid)
-    titles = {' '.join(t.split(' / ')) for _p, t in book.get('headings', [])}
+    titles = {' '.join(t.split(' / ')) for _p, t, *_to in book.get('headings', [])}
     for e in entries:
         if e['kind'] == 'heading' and e['header'] in titles and not e['prose']:
             e['prose'] = ['']
     roster.finish(entries)
     by_grid = {(p, str(h)): lab for p, h, lab in book.get('block_labels', [])}
+    for page, title, *to in book.get('headings', []):
+        if not to:
+            continue
+        src = [e for e in entries if e['header'] == ' '.join(title.split(' / ')) and e['pages'][0] == page]
+        dst = [e for e in entries if roster.norm(e['header']) == roster.norm(to[0]) and e['blocks']]
+        if len(src) != 1 or len(dst) != 1 or not src[0]['members']:
+            raise SystemExit('heading %r: its members cannot go to %r' % (title, to[0]))
+        src[0]['kind'] = 'heading'
+        dst[0]['members'] += [dict(m, listed=True) for m in src[0]['members']]
+        src[0]['members'] = []
     for e in entries:
         for b in e['blocks']:
             # art beside the grid reads as marks after a Health ('66  ~-',
@@ -290,11 +322,13 @@ def parse(book, slug):
                 b['label'] = lab
         # A run-in capital heading inside a character's entry is part of its
         # text (WEAKNESS, EQUIPMENT, SOUL GEM, THE SURFBOARD), as on ME1. Under
-        # a heading (NOTABLE SKRULLS) the run-ins are its members.
-        if e['kind'] == 'entry' and e['members']:
-            notes = ['%s: %s' % (m['name'].capitalize(), m['text']) for m in e['members']]
+        # a heading (NOTABLE SKRULLS) the run-ins are members, handed above to
+        # the tier the registry names.
+        own = [m for m in e['members'] if not m.get('listed')]
+        if e['kind'] == 'entry' and own:
+            notes = ['%s: %s' % (m['name'].capitalize(), m['text']) for m in own]
             e['sections']['notes'] = ' '.join(filter(None, [e['sections'].get('notes')] + notes))
-            e['members'] = []
+        e['members'] = [dict((k, v) for k, v in m.items() if k != 'listed') for m in e['members'] if m.get('listed')]
     team_of(book, entries)
     for s, got in statted(book, slug):
         stream += s
@@ -336,7 +370,8 @@ def statted(book, slug):
         for line in s:
             if line['big']:
                 line['text'] = printed(line['text'])
-        got = roster.read_entries(s, roster.GridReader(book, slug), opponent=True, grid=grid_at)
+        s[:] = [l for l in s if not map_label(l)]
+        got =roster.read_entries(s, roster.GridReader(book, slug), opponent=True, grid=grid_at)
         roster.finish(got)
         for e in got:
             e['team'] = p['team']
@@ -355,6 +390,77 @@ def statted(book, slug):
         if missing:
             raise SystemExit('statted page %d: no entry for %s' % (p['page'], missing))
         out.append((s, got))
+    return out
+
+
+SUBHEAD = re.compile(r"^[A-Z][A-Z' &-]+$")
+
+
+def items(book, slug):
+    """The Travel Guide's places and the Vehicles, for scripts/msh/extras.py:
+    [{name, kind, page, vehicle, parts, text: [[part, name, lines]]}], the
+    shape extras.items() gives for MA1.
+
+    A place or vehicle starts at its header, which the registry's
+    `item_headers` names ([page, TITLE, kind]; ' / ' joins a title set on two
+    lines); each must be found once on its page. A map's title set far larger
+    than any header ('MANHATTAN' over the map of the island, p.85) is not one.
+    Inside it:
+      - a sub-heading in capitals (FF HEADQUARTERS, NOTABLE XANDARIANS) or a
+        run-in (ARTHROS:) starts a named part, as the Danger Room's do in MA1
+      - map lettering is dropped (map_label), and so is any other line in
+        capitals: a comic panel's balloons (p.87)
+      - a being statted there (`statted_pages`) is on a card of its own, so its
+        text is cut from its name to the next header
+    MA4 prints no Control, Speed or Body line; a vehicle's are in its text."""
+    first, last = book['item_pages']
+    stream = roster.page_stream(dict(book, character_pages=[first, last], sections=[]), slug)
+    heads = {}
+    for page, title, kind in book['item_headers']:
+        lines = title.split(' / ')
+        hits = [i for i, l in enumerate(stream) if l['printed'] == page and l['h'] <= 2 * l['body_h']
+                and roster.is_caps(l['text']) and roster.norm(printed(l['text'])) == roster.norm(lines[0])]
+        if len(hits) != 1:
+            raise SystemExit('item %r: %d lines on printed %d, not 1' % (title, len(hits), page))
+        i = hits[0]
+        for k, part in enumerate(lines[1:], 1):
+            if roster.norm(printed(stream[i + k]['text'])) != roster.norm(part):
+                raise SystemExit('item %r: line %d reads %r' % (title, k + 1, stream[i + k]['text']))
+            stream[i + k]['joined'] = True
+        heads[i] = (' '.join(lines), kind)
+    cuts = set()
+    for p in book.get('statted_pages', []):
+        for name in p['names']:
+            hits = [i for i, l in enumerate(stream) if l['printed'] == p['page'] and len(roster.norm(l['text'])) >= 4
+                    and roster.norm(name).startswith(roster.norm(l['text']))]
+            if not hits:
+                raise SystemExit('statted %r: not found on printed %d' % (name, p['page']))
+            cuts.add(hits[0])
+    out, cur, cutting = [], None, False
+    for i, line in enumerate(stream):
+        if i in heads:
+            name, kind = heads[i]
+            cur = {'name': name, 'kind': kind, 'page': line['printed'], 'vehicle': {}, 'parts': [], 'text': [['prose', None, []]]}
+            out.append(cur)
+            cutting = False
+            continue
+        if i in cuts:
+            cutting = True
+        if cur is None or cutting or line.get('joined') or map_label(dict(line, big=False)):
+            continue
+        t = line['text'].strip()
+        m = roster.RUN_IN.match(t)
+        nxt = stream[i + 1]['text'] if i + 1 < len(stream) else ''
+        if m and line['x0'] - line['left'] < 40:
+            label = m.group(1).strip()
+            cur['parts'].append(label)
+            cur['text'].append(['part', label, [m.group(2)]])
+        elif SUBHEAD.match(t) and len(t.split()) <= 5 and sum(c.isalpha() for c in t) >= 4 \
+                and line['h'] <= 2 * line['body_h'] and not roster.is_caps(nxt):
+            cur['parts'].append(t)
+            cur['text'].append(['part', t, []])
+        elif not roster.is_caps(t):
+            cur['text'][-1][2].append(t)
     return out
 
 

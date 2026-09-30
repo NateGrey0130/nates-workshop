@@ -14,6 +14,11 @@
    "book": "MHSP1 Secret Wars",
    "code": "TSR6860",
    "pages": "5-11"
+  },
+  {
+   "book": "MA4 The Fantastic Four Compendium",
+   "code": "TSR6889",
+   "pages": "76-95"
   }
  ],
  "books": [
@@ -35,6 +40,15 @@
     11
    ],
    "part": "Adventure"
+  },
+  {
+   "slug": "ma4",
+   "short": "MA4",
+   "title": "MA4 The Fantastic Four Compendium",
+   "pages": [
+    76,
+    95
+   ]
   }
  ],
  "items": [
@@ -476,6 +490,239 @@
    },
    "section": "secret-wars-mhsp1-patrol",
    "book": "mhsp1"
+  },
+  {
+   "id": "item-the-baxter-building-ma4",
+   "name": "The Baxter Building",
+   "kind": "location",
+   "page": 76,
+   "parts": [
+    "Lobby and Elevator",
+    "Fourth Level",
+    "Second Level",
+    "Third Level",
+    "First Level",
+    "FF Headquarters",
+    "Building and Security Systems"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-four-freedoms-plaza-ma4",
+   "name": "Four Freedoms Plaza",
+   "kind": "location",
+   "page": 79,
+   "parts": [
+    "Basement",
+    "Building Features"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-belle-porte-connecticut-ma4",
+   "name": "Belle Porte, Connecticut",
+   "kind": "location",
+   "page": 81,
+   "book": "ma4"
+  },
+  {
+   "id": "item-the-blue-area-of-the-moon-ma4",
+   "name": "The Blue Area of the Moon",
+   "kind": "location",
+   "page": 81,
+   "book": "ma4"
+  },
+  {
+   "id": "item-central-city-california-ma4",
+   "name": "Central City, California",
+   "kind": "location",
+   "page": 82,
+   "parts": [
+    "Field Generator"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-counter-earth-ma4",
+   "name": "Counter-Earth",
+   "kind": "location",
+   "page": 83,
+   "parts": [
+    "Houses"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-hydro-base-ma4",
+   "name": "Hydro-Base",
+   "kind": "location",
+   "page": 83,
+   "book": "ma4"
+  },
+  {
+   "id": "item-latveria-ma4",
+   "name": "Latveria",
+   "kind": "location",
+   "page": 84,
+   "book": "ma4"
+  },
+  {
+   "id": "item-liddleville-ma4",
+   "name": "Liddleville",
+   "kind": "location",
+   "page": 84,
+   "book": "ma4"
+  },
+  {
+   "id": "item-king-s-crossing-ny-ma4",
+   "name": "King's Crossing, NY",
+   "kind": "location",
+   "page": 84,
+   "book": "ma4"
+  },
+  {
+   "id": "item-manhattan-ma4",
+   "name": "Manhattan",
+   "kind": "location",
+   "page": 85,
+   "book": "ma4"
+  },
+  {
+   "id": "item-microverse-ma4",
+   "name": "Microverse",
+   "kind": "location",
+   "page": 86,
+   "book": "ma4"
+  },
+  {
+   "id": "item-microversal-worlds-ma4",
+   "name": "Microversal Worlds",
+   "kind": "location",
+   "page": 86,
+   "book": "ma4"
+  },
+  {
+   "id": "item-nathaniel-richards-world-ma4",
+   "name": "Nathaniel Richards' World",
+   "kind": "location",
+   "page": 86,
+   "book": "ma4"
+  },
+  {
+   "id": "item-negative-zone-ma4",
+   "name": "Negative Zone",
+   "kind": "location",
+   "page": 86,
+   "parts": [
+    "Worlds of the Negative Zone",
+    "Arthros",
+    "Baluur",
+    "Weakness",
+    "Mantracora",
+    "Tyanna"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-project-pegasus-ma4",
+   "name": "Project Pegasus",
+   "kind": "location",
+   "page": 88,
+   "book": "ma4"
+  },
+  {
+   "id": "item-savage-land-and-pangea-ma4",
+   "name": "Savage Land and Pangea",
+   "kind": "location",
+   "page": 88,
+   "book": "ma4"
+  },
+  {
+   "id": "item-subterranea-ma4",
+   "name": "Subterranea",
+   "kind": "location",
+   "page": 89,
+   "book": "ma4"
+  },
+  {
+   "id": "item-wakanda-ma4",
+   "name": "Wakanda",
+   "kind": "location",
+   "page": 90,
+   "book": "ma4"
+  },
+  {
+   "id": "item-wundagore-mountain-ma4",
+   "name": "Wundagore Mountain",
+   "kind": "location",
+   "page": 90,
+   "book": "ma4"
+  },
+  {
+   "id": "item-xandar-ma4",
+   "name": "Xandar",
+   "kind": "location",
+   "page": 91,
+   "parts": [
+    "Notable Xandarians"
+   ],
+   "book": "ma4"
+  },
+  {
+   "id": "item-fantasticar-ma4",
+   "name": "Fantasticar",
+   "kind": "vehicle",
+   "page": 93,
+   "book": "ma4"
+  },
+  {
+   "id": "item-fantasticopter-ma4",
+   "name": "Fantasticopter",
+   "kind": "vehicle",
+   "page": 93,
+   "book": "ma4"
+  },
+  {
+   "id": "item-intercontinental-passenger-missile-ma4",
+   "name": "Intercontinental Passenger Missile",
+   "kind": "vehicle",
+   "page": 93,
+   "book": "ma4"
+  },
+  {
+   "id": "item-negative-zone-explorer-model-i-ma4",
+   "name": "Negative Zone Explorer, Model I",
+   "kind": "vehicle",
+   "page": 94,
+   "book": "ma4"
+  },
+  {
+   "id": "item-pogo-plane-ma4",
+   "name": "Pogo-Plane",
+   "kind": "vehicle",
+   "page": 94,
+   "book": "ma4"
+  },
+  {
+   "id": "item-reducta-craft-ma4",
+   "name": "Reducta-Craft",
+   "kind": "vehicle",
+   "page": 94,
+   "book": "ma4"
+  },
+  {
+   "id": "item-skrull-starship-ma4",
+   "name": "Skrull Starship",
+   "kind": "vehicle",
+   "page": 95,
+   "book": "ma4"
+  },
+  {
+   "id": "item-sky-cycles-ma4",
+   "name": "Sky-Cycles",
+   "kind": "vehicle",
+   "page": 95,
+   "book": "ma4"
   }
  ]
 }

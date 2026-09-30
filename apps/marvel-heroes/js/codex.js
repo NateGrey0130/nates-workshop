@@ -63,7 +63,8 @@ const cite = (short, part, pages) => {
 
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
-  R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche' };
+  R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche',
+  RI: 'Reason and Intuition', FAS: 'Fighting, Agility and Strength', FASE: 'Fighting, Agility, Strength and Endurance' };
 
 // A version's name on a card: the book's parenthetical, capitalised the one
 // way (MA1 prints both "(original)" and "(Current)"), or its first identity line.
@@ -273,7 +274,9 @@ export const SECTIONS = [
           // in the Adventure Book's note on the Thing) says where
           const where = b.part ? `${b.part} p.${b.page}` : '';
           const head = [r.versions.length > 1 && versionName(v), b.label, where].filter(Boolean).join(', ');
-          const grid = b.abilities.map(([l, n, c, alt]) => `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`).join(' | ');
+          // a rank the page does not print at all is a dash (MA4's New Men)
+          const grid = b.abilities.map(([l, n, c, alt]) => (n === null ? `${l} -`
+            : `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`)).join(' | ');
           out.push([head || 'Abilities', grid]);
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
           out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
@@ -286,6 +289,9 @@ export const SECTIONS = [
           } else if (o && o.verdict === 'as_printed' && o.corrected) {
             // printed as no rank at all (Lockheed's "?" Reason), played as Karma counts it
             out.push(['As printed', `${field} is printed ${o.printed}; played as ${show(o.corrected)}, as the printed Karma counts it`]);
+          } else if (o && o.verdict === 'rows' && !o.corrected) {
+            // rows the book leaves to the GM (MA4's New Men: the animal's)
+            out.push(['As printed', `${field} are printed as "${o.printed}"; the book leaves them to the GM`]);
           } else if (o && o.verdict === 'rows') {
             // a grid that prints one line for several rows (ME1's Oolafat)
             out.push(['As printed', `${field} are printed as "${o.printed}"; played as ${show(o.corrected)}, as the printed Karma counts them`]);
