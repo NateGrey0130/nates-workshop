@@ -4531,6 +4531,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // the staff around it doubles as a fragile bo staff the book gives S.D.C.
     // 50. Durability of the object, printed as such.
     'shikomi-zue-rifts',
+    // Rifts Japan printed 131: the AT-D52 bullet mine fires a 4D6 M.D. round,
+    // and the plastic tube holding it has 20 S.D.C. of its own.
+    'at-d52-bullet-anti-personnel-mine',
   ]);
   const damageAsSdc = rows.filter((r) => r.sdc != null && /\dD\d/.test(r.damage || '')
     && !SELF_SDC.has(r.slug));
