@@ -151,7 +151,7 @@ Oni, Kappa, Queller, Yamabushi and Ronin in `imported_classes` found none of
 this book's classes. `gear` holds four generic Japanese weapons (Daisho,
 Katana, Naginata/Yari, Shuriken, each twice) from other books.
 
-### skills: 36 entries, 23 reported missing, 8 of them false gaps
+### skills: 36 entries, 23 reported missing, 4 of them false gaps
 
 `node scripts/catalog-diff.mjs --remote --table skills --entries <36 entries> --compare base,per_level`
 returns **matched 11, disagree 2, missing 23** (402 catalog rows), plus
@@ -165,14 +165,15 @@ Hand-checked false gaps (the catalog holds them under RUE's names):
 | Nuclear, Biological, & Chemical Warfare | NBC Warfare | none |
 | Find Contraband, Weapons & Cybernetics | Find Contraband | none |
 | Imitate Voices/Impersonation | Imitate Voices & Sounds, Impersonation (RUE split it) | none |
-| W.P. Bow | W.P. Archery | decide at import: alias, or its own row for the Palladium-style bow |
-| W.P. Cross Bow | (none) | as W.P. Bow |
+| W.P. Bow | W.P. Archery | **new row** (agreed 2026-09-30) |
+| W.P. Cross Bow | (none) | **new row** (agreed 2026-09-30) |
 | Japanese Mythology | Mythology (general) | **new row** — a separate, Japan-specific skill |
 | Hand to Hand: Basic Martial Arts/Judo | Hand to Hand: Martial Arts | **new row** — a different style |
 
-**Genuinely new: 17 skills.** Bonsai, Floral Arrangement (Ikebana), Go,
-Poetry (Haiku), Japanese Mythology, W.P. Mouth Weapons, W.P. Slingshot,
-W.P. Small Thrown Weapons, W.P. Grenade Launcher, and **8 hand-to-hand
+**Genuinely new: 19 skills.** Bonsai, Floral Arrangement (Ikebana), Go,
+Poetry (Haiku), Japanese Mythology, W.P. Bow, W.P. Cross Bow, W.P. Mouth
+Weapons, W.P. Slingshot, W.P. Small Thrown Weapons, W.P. Grenade Launcher,
+and **8 hand-to-hand
 styles** (Aikido, Basic Martial Arts/Judo, Jujitsu, Karate, Kendo, Ninjitsu,
 Teng-jutsu, Zanji Shinjinken-Ryo). A style is a `skills` row with
 `level_bonuses`, as `Hand to Hand: Skudasa` is — no code needed.
@@ -193,7 +194,7 @@ Phase 4 costs money; everything above was free. Shipped in this order,
 because classes name the book's gear (the Madhaven lesson: gear before
 classes, no stubs):
 
-1. **Skills** — 17 new rows from printed 187-194, the 8 hand-to-hand styles
+1. **Skills** — 19 new rows from printed 187-194, the 8 hand-to-hand styles
    with their per-level tables. One PR.
 2. **Magic gear** — 16 wands and staves, 9 enchanted items and 3 rune swords,
    10 magical items, printed 33-43. One PR.
@@ -226,6 +227,18 @@ arts powers at set levels (for example one body hardening exercise at levels
 choice from a named list may not be expressible as a class ability. Check at
 step 5; if it cannot be stated, import the level-1 pick, put the later ones
 in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
+
+### Agreed with Nate, 2026-09-30
+
+1. **Monsters as proposed.** Oni of the One Hundred, Sura-Kappa and Japanese
+   Imp are R.C.C.s. The three dragons are hatchling classes, like
+   `dragon-hatchling-*`. Oni Master, Oni Mystic, Goblin Spider and Hannya are
+   creatures only.
+2. **W.P. Bow and W.P. Cross Bow are new rows**, citing this book, not
+   aliases of `W.P. Archery`. Step 1 is therefore **19 skills**, not 17.
+3. **Martial-arts powers as proposed.** Import what the class format can
+   state. Put a level-gated pick it cannot state in prose, and file it as a
+   finding. Do not build it.
 
 ## Ledger
 
