@@ -111,7 +111,8 @@ All six now carry a filter box with a live count (`12 of 128`), backed by
 The control varies because the task does — "add one item" and "pick 6 of these"
 want different things. What is shared is the matching and the input.
 
-- **Matching is name, category and source book**, all terms required, order
+- **Matching is name, category and source book** (and, for a class, the tag
+  labels its card shows), all terms required, order
   irrelevant: `wilderness rifts` narrows, it does not widen. Fields the row does
   **not** display are deliberately not searched — a hit whose reason is
   invisible reads as a bug.
@@ -121,6 +122,34 @@ want different things. What is shared is the matching and the input.
   or narrowing the list would look like it had un-picked something.
 - **`picker.js` is a classic script**, like `js/derive.js`, because the wizard is
   a module and the sheet is a plain script and both need it.
+
+### Class tags
+
+The Race step's class list and the Occupation step's `<select>` also carry a
+row of **tag chips** — Magic, Psionics, Stealth, Wilderness and so on — each
+with how many classes it would leave. Pressed chips all apply at once (AND),
+the way extra words narrow the text filter, and a chip that would empty the
+list is not drawn. The same labels print on each class card, so typing
+`psionics` in the filter box finds the same classes the chip does.
+
+A tag is one of two kinds, both declared in `CLASS_TAGS` in
+[`js/parser.js`](../js/parser.js):
+
+- **Derived** — `magic`, `psionics`, `mega-damage` and `horror-factor`
+  (shown as *Frightening*) — are computed from the class's own blocks and never
+  written. They are dashed on the card, because they restate the stat block.
+- **Authored** — role, nature and guidance tags such as `stealth`, `flyer` or
+  `beginner` — are a `tags: [...]` line in the class's frontmatter, at most
+  four. The parser refuses an unknown tag or a hand-written derived one, and a
+  class that fails to parse drops out of the picker, so a tag is checked before
+  it ships. `scripts/class-tags.mjs` backfills a whole system from a reviewed
+  table.
+
+**Help me choose** scores against the same tags: its answers are tag ids. A
+class with no `tags` line yet is scored on the suggested tags the backfill
+script would offer, so the quiz is useful before a system has been tagged. A
+draft saved when the quiz asked about melee and high-tech has those answers
+cleared on resume, and the question is asked again.
 
 `Picker.wire()` restores the caret after re-render. Both pages rebuild by
 replacing `innerHTML`, so an input loses focus and drops the caret to the end

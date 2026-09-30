@@ -21,7 +21,11 @@
   // Fields worth searching. Deliberately not every column: matching on a field
   // the row does not display produces hits whose reason is invisible, which
   // reads as a bug rather than a feature.
-  const FIELDS = ['name', 'category', 'source_book'];
+  //
+  // `_tag_text` is a class's tag labels, which its card shows; the wizard
+  // writes it onto each class at boot (app.js), since the derived half of a
+  // class's tags exists on no field.
+  const FIELDS = ['name', 'category', 'source_book', '_tag_text'];
 
   const norm = (s) => String(s ?? '').toLowerCase();
 

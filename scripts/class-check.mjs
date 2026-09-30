@@ -40,7 +40,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS } from '../apps/character-creator/js/parser.js';
 import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
@@ -262,6 +262,16 @@ if (menOfArmsBesideOwnSdc(data?.sdc_base != null, data?.men_of_arms)) {
   warnings.push('men_of_arms sits beside a stated sdc_base. The grouping only picks the '
     + 'core S.D.C. roll for a class that prints no formula, so here it never applies; '
     + 'remove it. smoke refuses this: "no S.D.C. grouping sits on a class that states its own".');
+}
+
+// A new class with no authored tags is missing from every tag filter a player
+// might reach it by. A WARNING and no exit code: an untagged class still works,
+// and `beginner` or `evil` are calls only a person reading the book can make.
+if (data && !Array.isArray(data.tags)) {
+  const guess = suggestClassTags(data);
+  warnings.push('no tags line, so the wizard\'s tag filters never offer this class. Add '
+    + `one after category, at most ${MAX_AUTHORED_TAGS}, from the vocabulary in js/parser.js `
+    + `(CLASS_TAGS)${guess.length ? `; the fields suggest: tags: [${guess.join(', ')}]` : ''}.`);
 }
 
 const list = (label, items) => {

@@ -18,6 +18,7 @@
 // outright (the smoke test renders this prompt), and esbuild -- which is what
 // actually bundles this for Pages -- accepts the attribute either way.
 import BOOKS from './books.json' with { type: 'json' };
+import { CLASS_TAGS, MAX_AUTHORED_TAGS } from '../apps/character-creator/js/parser.js';
 
 // The allowed `source_book` titles come from the one registry the CLI scripts
 // read (scripts/books.json). The field is free text in every table that holds
@@ -30,6 +31,8 @@ import BOOKS from './books.json' with { type: 'json' };
 // page window from it, and the prompt that fills the field had never mentioned
 // it - so it was hand-added afterwards, or not at all.
 const BOOK_TITLES = Object.values(BOOKS.books).map((b) => b.title);
+// The vocabulary itself, so the prompt cannot offer a tag the parser refuses.
+const AUTHORED_TAG_IDS = CLASS_TAGS.filter((t) => t.kind === 'authored').map((t) => t.id).join(', ');
 
 // Three things this says that a prompt written for a page IMAGE would not: the
 // columns are ALREADY resolved so it must not try again, OCR noise is a real
@@ -88,6 +91,11 @@ ${BOOK_TITLES.map((t) => `      ${t}`).join('\n')}
 - category: \`occ\` or \`rcc\`
 
 Optional — include only what the page actually states:
+- tags: one line, at most ${MAX_AUTHORED_TAGS}, chosen from: ${AUTHORED_TAG_IDS}.
+    They help a player pick a class, so tag what the class is FOR as the page
+    describes it — \`tags: [stealth, wilderness]\`. Never write magic, psionics,
+    mega-damage or horror-factor: those are computed from the class's own blocks.
+    Leave out \`beginner\` and \`high-power\` unless the page itself says so.
 - attribute_requirements: map of attribute → minimum (e.g. \`ME: 12\`)
 - attribute_maximums: map of attribute → MAXIMUM, for the other half of the same
     printed line — "I.Q. 10 and M.A. 10 or higher, and a P.B. of 12 or lower"

@@ -979,6 +979,11 @@ scripts/
 │                           the same book's description pages
 ├── class-check.mjs         One class file, against the parser the app uses
 ├── class-check-lib.mjs     Its pure half, so the smoke test can call it
+├── class-tags.mjs          Backfills authored class tags one system at a
+│                           time: --suggest writes a review table of guesses
+│                           from production, a person edits it, --emit turns
+│                           it into a guarded ~NNN- data script
+├── class-tags-lib.mjs      Its pure half: the review table and the script
 ├── new-class.mjs           A commented starting point for writing a class BY
 │                           HAND, occ or rcc. The template it prints is the one
 │                           the retired importer carried; this is its front

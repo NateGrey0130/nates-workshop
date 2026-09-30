@@ -1944,6 +1944,23 @@ input.class-boosted { border-bottom-width: 2px; }
 .pick-filter .pick-count { flex: 0 0 auto; white-space: nowrap; }
 @media print { .pick-filter { display: none; } }
 
+/* Class tag filters on the Race and Occupation steps. Chips are CONTROLS, so a
+   pressed one takes --accent; a class card's tags are readouts and use .tag.
+   A derived tag (magic, psionics, mega-damage, frightening) is dashed on the
+   card: it restates the stat block rather than someone's judgement. */
+.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.tag-chip {
+  font-size: 12px; padding: 4px 10px; min-height: 30px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-tertiary); color: var(--text-secondary);
+}
+.tag-chip .n { color: var(--text-muted); margin-left: 4px; font-size: 11px; }
+.tag-chip.on { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+.tag-chip.derived:not(.on) { border-style: dashed; }
+.tag-chips .tag-clear { font-size: 12px; background: transparent; border: 0; color: var(--text-muted); text-decoration: underline; }
+.tag.derived { border-style: dashed; }
+@media print { .tag-chips { display: none; } }
+
 /* Character audit. Sits above the catalog tabs because it is not catalog-scoped:
    it reports characters against the classes they were built from, and nothing on
    it changes when you switch tabs. Shares .dupe-panel's shell below. */
