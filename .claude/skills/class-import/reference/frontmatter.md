@@ -77,9 +77,12 @@ from names and skill lists, not a reading of the book.**
 
 Two kinds, both in `CLASS_TAGS` in `apps/character-creator/js/parser.js`:
 
-- **Derived: never write these.** `magic`, `psionics`, `mega-damage` and
+- **Derived: don't write these.** `magic`, `psionics`, `mega-damage` and
   `horror-factor` are computed from the `magic:`, `psionics:`, `mdc_base` and
-  `horror_factor` blocks. Writing one is an **ERROR**.
+  `horror_factor` blocks, on the class or any variant. Writing one the blocks
+  already compute is an **ERROR**. On a class whose book grants it without the
+  block, such as Heroes Unlimited's Magic power category (magic through
+  special abilities), it may be written, and the parser warns.
 - **Authored: pick up to four** that say what the class is FOR, as its page
   describes it.
   - Role: `combat`, `ranged`, `stealth`, `scholar`, `tech`, `pilot`, `healer`,

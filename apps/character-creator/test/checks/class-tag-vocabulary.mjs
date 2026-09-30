@@ -40,8 +40,13 @@ export function run() {
   check('a class with none of those derives no tag', classTags({ name: 'Vagabond' }).length === 0);
   check('classTags returns vocabulary order and drops ids it does not know',
     classTags({ tags: ['stealth', 'nonsense', 'combat'], magic: { type: 'spell' } }).join(',') === 'magic,combat,stealth');
-  check('classTags ignores a derived id written by hand',
-    !classTags({ tags: ['magic'] }).includes('magic'));
+  check('a derived id written on a class with no block for it counts',
+    classTags({ tags: ['magic'] }).includes('magic'));
+  // A block on a variant is one the class can have: the dragons state their
+  // horror factor per age stage, and nothing at the top.
+  check('a variant\'s block derives the tag',
+    classTags({ variants: [{ id: 'hatchling' }, { id: 'adult', horror_factor: 14 }] }).includes('horror-factor')
+      && classTags({ variants: [{ id: 'full', mdc_base: '300' }] }).includes('mega-damage'));
 
   // ── the validator ──
   // A refusal here is a class MISSING from production's picker (class-store.js
@@ -50,7 +55,12 @@ export function run() {
   check('tags: a valid list parses clean', v('tags: [stealth, wilderness]\n').errors.length === 0
     && v('tags: [stealth, wilderness]\n').data.tags.join(',') === 'stealth,wilderness');
   check('tags: an unknown tag is refused', v('tags: [stealthy]\n').errors.some((e) => e.includes('stealthy')));
-  check('tags: a derived tag written by hand is refused', v('tags: [magic]\n').errors.some((e) => e.includes('derived')));
+  check('tags: a derived tag its own block already derives is refused',
+    v('tags: [magic]\nmagic: { type: "spell" }\n').errors.some((e) => e.includes('already derive')));
+  check('tags: a derived tag a variant already derives is refused',
+    v('tags: [horror-factor]\nvariants:\n  - { id: adult, name: Adult, horror_factor: 12 }\n').errors.some((e) => e.includes('already derive')));
+  check('tags: a derived tag on a class with no block for it warns and parses',
+    v('tags: [magic]\n').ok && v('tags: [magic]\n').warnings.some((w) => w.includes('no block')));
   check('tags: a scalar is refused', v('tags: stealth\n').errors.some((e) => e.includes('one-line list')));
   check(`tags: more than ${MAX_AUTHORED_TAGS} warns and still parses`,
     v('tags: [combat, ranged, stealth, scholar, tech]\n').ok
@@ -75,8 +85,10 @@ export function run() {
   check('a review table shows a class\'s own tags over a guess',
     back.rows.find((r) => r.class_id === 'bbb')?.tags.join(',') === 'flyer');
   check('the derived column carries the derived tags', /\| bbb \|.*\| mega-damage \| flyer \|/.test(table));
-  const edited = table.replace(/\| flyer \|$/m, '| flyer, magic |');
-  check('a review table naming a derived tag is refused', parseReview(edited).errors.some((e) => e.includes('magic')));
+  check('a review table naming a tag its derived column holds is refused',
+    parseReview(table.replace(/\| flyer \|$/m, '| flyer, mega-damage |')).errors.some((e) => e.includes('mega-damage')));
+  check('a review table may name a derived tag its derived column lacks',
+    parseReview(table.replace(/\| flyer \|$/m, '| flyer, magic |')).errors.length === 0);
   check('a review table over the limit is refused',
     parseReview(table.replace(/\| flyer \|$/m, '| flyer, combat, ranged, stealth, scholar |')).errors.length > 0);
   let threw = false;

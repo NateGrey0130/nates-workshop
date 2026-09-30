@@ -10,6 +10,7 @@
 import { CLASS_TAGS, MAX_AUTHORED_TAGS, classTags, suggestClassTags } from '../apps/character-creator/js/parser.js';
 
 const AUTHORED = new Set(CLASS_TAGS.filter((t) => t.kind === 'authored').map((t) => t.id));
+const DERIVED = new Set(CLASS_TAGS.filter((t) => t.kind === 'derived').map((t) => t.id));
 const COLUMNS = ['class_id', 'name', 'category', 'source_book', 'derived', 'tags'];
 
 const cell = (v) => String(v ?? '').replace(/\|/g, '/').replace(/\s+/g, ' ').trim();
@@ -29,7 +30,8 @@ export function reviewTable(classes, { system } = {}) {
     'Edit the **tags** column only: comma-separated, at most '
       + `${MAX_AUTHORED_TAGS}, from: ${[...AUTHORED].join(', ')}.`,
     'Empty the cell to leave a class untagged. **derived** is computed and is shown only',
-    'so you do not repeat it.',
+    'so you do not repeat it. A derived tag the column lacks may be written for a class',
+    'whose book grants it without the block (Heroes Unlimited Magic).',
     '',
     `| ${COLUMNS.join(' | ')} |`,
     `|${COLUMNS.map(() => '---').join('|')}|`,
@@ -64,8 +66,13 @@ export function parseReview(text) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(r.class_id || '')) { errors.push(`${where}: no class_id`); continue; }
     if (!['occ', 'rcc'].includes(r.category)) { errors.push(`${where}: category must be occ or rcc`); continue; }
     const tags = String(r.tags || '').split(',').map((s) => s.trim()).filter(Boolean);
-    const bad = tags.filter((t) => !AUTHORED.has(t));
-    if (bad.length) errors.push(`${where}: not an authored tag: ${bad.join(', ')}`);
+    // A derived tag is refused only where the derived column already has it:
+    // the parser draws the same line, and refuses it there (CLASS_TAGS).
+    const derivedHere = String(r.derived || '').split(',').map((x) => x.trim());
+    const bad = tags.filter((t) => !AUTHORED.has(t) && !DERIVED.has(t));
+    if (bad.length) errors.push(`${where}: not a class tag: ${bad.join(', ')}`);
+    const repeated = tags.filter((t) => DERIVED.has(t) && derivedHere.includes(t));
+    if (repeated.length) errors.push(`${where}: already derived, never written: ${repeated.join(', ')}`);
     if (new Set(tags).size !== tags.length) errors.push(`${where}: a tag is repeated`);
     if (tags.length > MAX_AUTHORED_TAGS) errors.push(`${where}: ${tags.length} tags, at most ${MAX_AUTHORED_TAGS}`);
     if (tags.length) rows.push({ class_id: r.class_id, category: r.category, tags });

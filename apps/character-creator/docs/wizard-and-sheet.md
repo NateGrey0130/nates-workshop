@@ -136,11 +136,16 @@ A tag is one of two kinds, both declared in `CLASS_TAGS` in
 [`js/parser.js`](../js/parser.js):
 
 - **Derived** — `magic`, `psionics`, `mega-damage` and `horror-factor`
-  (shown as *Frightening*) — are computed from the class's own blocks and never
-  written. They are dashed on the card, because they restate the stat block.
+  (shown as *Frightening*) — are computed from the class's own blocks, or any
+  of its variants' (the dragons state their Horror Factor per age stage). They
+  are dashed on the card, because they restate the stat block. One may be
+  written only on a class that has no block for it: Heroes Unlimited's Magic
+  power category works its magic through special abilities, so it carries
+  `tags: [magic]` by hand, and the parser warns so the book is checked.
 - **Authored** — role, nature and guidance tags such as `stealth`, `flyer` or
   `beginner` — are a `tags: [...]` line in the class's frontmatter, at most
-  four. The parser refuses an unknown tag or a hand-written derived one, and a
+  four. The parser refuses an unknown tag, or a derived one the class's own
+  blocks already compute, and a
   class that fails to parse drops out of the picker, so a tag is checked before
   it ships. `scripts/class-tags.mjs` backfills a whole system from a reviewed
   table.
