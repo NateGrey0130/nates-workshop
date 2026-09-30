@@ -102,11 +102,15 @@ class from production's picker. `class-check` catches it; run it.
 A class that already shipped gets its tags from a `scripts/class-tags.mjs`
 review, one system at a time, never an edit to its `add-` script.
 
-## Grouping and levelling — the two keys nothing warns you about
+## Grouping and levelling — two keys the parser never asks for
 
-Both are optional to the parser and **required by `regression.mjs`**. A class
-missing either one parses clean, passes `class-check`, passes the smoke suite,
-and fails the regression run — so read this section rather than discovering it.
+Both are optional to the parser. **`regression.mjs` requires `occ_group` on
+every O.C.C.**, but it requires `xp_table` only on a **Palladium Fantasy
+O.C.C.** and a **Heroes Unlimited power category**. Anywhere else a missing
+ladder passes every check, and the character levels on the house rule. A class
+missing a required one parses clean, passes `class-check`, passes the smoke
+suite, and fails the regression run — so read this section rather than
+discovering it.
 
 ```yaml
 occ_group: men-of-arms            # occ ONLY — one of five, listed below
