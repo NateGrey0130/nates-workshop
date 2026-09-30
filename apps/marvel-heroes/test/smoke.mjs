@@ -790,6 +790,17 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
   check(`every choice the GM is offered builds, with every ability on the ladder (${choices.length})`,
     choices.length > data.npcs.characters.length && broken.length === 0, broken.slice(0, 3).map((c) => c.label).join(' | '));
   check('and the forms test reads only labels that say so', data.npcs.characters.flatMap((c) => c.versions).filter(isForms).length > 0);
+  // MA4 (scripts/msh/codegrids.py): a second grid for a human form, a partial
+  // grid, and N/A ranks, each as the book prints them (survey: ma4.md)
+  const thing = bookNpc({ character: 'the-thing-ma4' });
+  check('MA4\'s The Thing is one NPC with forms: his rocky grid and his Human Form (p.5)',
+    thing.snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'The Thing 200,Human Form 50', JSON.stringify(thing.snapshot?.forms));
+  check('MA4\'s Guardsman plays his corrected Health, 130 (printed 90, p.20)', bookNpc({ character: 'guardsman-ma4' }).snapshot?.health === 130);
+  const destroyer = bookNpc({ character: 'destroyer-ma4' }).snapshot;
+  check('MA4\'s Destroyer plays its N/A Reason and Intuition as Shift 0, which its printed Karma 100 agrees with (p.47)',
+    destroyer?.karma === 100 && destroyer.abilities.reason.number === 0 && destroyer.abilities.intuition.number === 0);
+  check('MA4\'s New Men are a card but not a GM choice: they print no physical ranks (p.90)',
+    data.npcs.characters.some((c) => c.id === 'new-men-ma4') && !choices.some((c) => c.character === 'new-men-ma4'));
 
   const html = renderSheet({ name: nc.name, snapshot: nc.snapshot, sheet: {} });
   check('the sheet draws a book NPC: its tagline, its Powers without a rank, and a link to its Codex card',
@@ -1480,8 +1491,13 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const blocks = n.characters.flatMap((c) => c.versions.flatMap((v) => v.blocks.map((b) => ({ c, v, b }))));
   check(`there are characters, versions and blocks (${n.characters.length}, ${blocks.length} blocks)`,
     n.characters.length > 100 && blocks.length >= n.characters.length);
+  // A partial grid prints no rank at all for the rows its override names
+  // (MA4's New Men: their physical ranks are the animal's, p.90). Those rows
+  // are null, and no other row anywhere may be.
+  const unprinted = (b, a) => b.kind === 'partial' && a[1] === null && a[2] === null
+    && b.override?.verdict === 'rows' && (b.override.field || '').includes(a[0]);
   const shape = blocks.filter(({ b }) => b.abilities.map((a) => a[0]).join('') !== 'FASERIP'
-    || b.abilities.some((a) => !Number.isInteger(a[1]) || !(a[2] in RANK)));
+    || b.abilities.some((a) => !unprinted(b, a) && (!Number.isInteger(a[1]) || !(a[2] in RANK))));
   check('every block is F, A, S, E, R, I, P in order, each a whole number and a rank code the ladder knows',
     shape.length === 0, shape.slice(0, 3).map(({ c, b }) => `${c.id}: ${JSON.stringify(b.abilities)}`).join(' | '));
   const known = (b, field) => b.kind === 'table' || (b.override && (b.override.field === field
@@ -1494,7 +1510,7 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const karma = blocks.filter(({ b }) => num(b.karma) !== null && num(b.karma) !== sum(b, 4, 7) && !known(b, 'karma'));
   check('Karma = R+I+P on every block, or its override records it as printed',
     karma.length === 0, karma.map(({ c, b }) => `${c.id} ${b.karma}`).join(', '));
-  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i])));
+  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i]) && !unprinted(b, a)));
   check('every number agrees with its rank code, or its override names the misprint',
     codes.length === 0, codes.map(({ c }) => c.id).join(', '));
   const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
@@ -1661,9 +1677,13 @@ section('Items and locations: facts only, one id each, every id one the endpoint
     [...ids, ...sections].filter((id) => !ENTRY.test(id)).join());
   check('the app ships no adventures: the data file is gone and no codex section reads one',
     !existsSync(join(dataDir, 'adventures.json')) && !dataFiles().includes('adventures'));
+  // MA4 prints no Control, Speed or Body line: its vehicles' speeds are in
+  // their text (survey: ma4.md), so there a vehicle has none
+  const NO_VEHICLE_LINES = new Set(['ma4']);
   check('an item\'s kind is item, vehicle or location, and only a vehicle has Control, Speed and Body',
     items.items.every((i) => ['item', 'vehicle', 'location'].includes(i.kind)
-      && (i.kind === 'vehicle') === !!i.vehicle && (!i.vehicle || Object.keys(i.vehicle).join() === 'Control,Speed,Body')));
+      && (i.vehicle ? i.kind === 'vehicle' : i.kind !== 'vehicle' || NO_VEHICLE_LINES.has(i.book))
+      && (!i.vehicle || Object.keys(i.vehicle).join() === 'Control,Speed,Body')));
 }
 
 section('A missing power text degrades to the summary, never an error');

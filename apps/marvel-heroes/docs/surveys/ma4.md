@@ -3,8 +3,17 @@
 Marvel Super Heroes Advanced Set accessory, David E. Martin, 1987. Registry
 entry: `scripts/msh/books.json` -> `ma4`. Measured 2026-09-30.
 
-**Rows citing this book:** none yet. This is the survey PR: a registry entry
-and this file, no characters, items or D1 rows.
+**Rows citing this book:** 1026 `msh_book_text` rows over 157 entries in
+production (`DB_MARVEL`, read back 2026-09-30):
+- 980 over 128 character entries. The Turtle Transports (p.34) have none:
+  their text is a run-in in Atlantean Equipment's heading, which is not
+  imported, so their card is the grid alone
+- 46 over 29 items: 21 places and 8 vehicles
+
+Committed:
+- 129 characters in `apps/marvel-heroes/data/npcs.json`, with 130 blocks and
+  507 powers, 329 of them linked to the Ultimate Powers Book
+- 29 items in `data/items.json`
 
 This is the fourth Marvel book. It went through `scripts/msh/` only. **It is
 MA1's kind of book** (one sourcebook, one numbering, a printed Contents and
@@ -137,6 +146,16 @@ U+FFFD. No single-quoted phrase was found, so this book looks like MHSP1
 (every single mark a misread) rather than MA1. The data PR should confirm
 it on more pages before `pair_quotes` relies on it.
 
+*The data PR's build stopped on 4 rows with an unpaired double quote.* One
+was a map's lettering, now dropped (below). The other three were read on the
+page image, and each is a `text` verdict in `scripts/msh/ma4-overrides.json`:
+- a speck read as a quote before Black Bolt's "Strength" (p.27)
+- the close of Diablo's "Elements", set in a face whose close looks like an
+  open, read as two (p.58)
+- the closing quote after Diablo's "natural elements.", lost (p.58)
+
+None of the three is a single-quoted phrase.
+
 ## Entry kinds
 
 1. **Character.** One grid for one being: most of the book.
@@ -198,30 +217,47 @@ loop and secondary values, and adds its own:
 with this branch's, and every `roster.json`, `book-text.sql`, `extras.json`,
 `extras-text.sql`, `npcs.json` and `items.json` is byte-identical.
 
-Measured 2026-09-30:
+Measured 2026-09-30, with the data PR's changes:
 
 | measure | count |
 |---|---|
-| entries | 150: 128 characters and 22 headings, one of which (Atlantean Equipment) holds the Turtle Transports' grid |
+| entries | 151: 129 characters and 22 headings |
 | stat blocks | 130: 121 in printed 3-75, 8 in the Travel Guide, and the New Men's partial grid |
 | pass rank, Health and Karma checks | 120 |
 | explained by an override read off the page | 10: the 7 misprints, and 3 `rows` for grids with N/A or missing rows (Destroyer, the Living Computers of Xandar, the New Men) |
 | failing | 0 |
 | Health and Karma read as a number | every block but the New Men, which print no Health |
 | rows whose number was the code's own, misread (`read_as`) | 37: `(80)` for 30 26 times and for 50 6 times, `(380)` for 30 4 times, `($0)` for 50 once |
-| powers named | 506, across 110 entries |
+| powers named | 507, across 110 entries |
+| members without a block | 12, the Notable Skrulls, under the SKRULL tier |
 | index names in printed 3-75 found | 132 of 132 |
 | Travel Guide names found (`statted_pages`) | 9 of 9 |
 
 **Where the page beat the OCR, the registry says so**, and every claim must
 match exactly once or the parse stops:
 - `grid_headers`: H.E.R.B.I.E., Thundra and Gorgon (headers set beside art,
-  never read) and Burners (a run-in, `Burners:`)
-- `block_labels`: The Thing's Human Form, and the Turtle Transports inside
-  Atlantean Equipment
+  never read), Burners (a run-in, `Burners:`) and the Turtle Transports (a
+  grid under Atlantean Equipment's run-in; as a label there, the card was
+  called "Atlantean Equipment")
+- `block_labels`: The Thing's Human Form
 - `headings`: 20 titles that are not characters, from INHUMANS to SALEM'S
   SEVEN. Before these were marked, the Notable Skrulls were read as part of
   Nova II's entry and the Atlantean items as part of the Atlanteans'.
+  NOTABLE SKRULLS names the SKRULL tier as a third field, and its run-ins are
+  that tier's members.
+
+**Map lettering is not text** (`codegrids.map_label`). Attilan's, Atlantis's
+and Castle Doom's maps (pp. 27, 32, 39), the Baxter Building's floor plans and
+a comic panel's balloons read as lines. Before this, Castle Doom's map was
+the Guardian Robots' background. A line is dropped when it is not a header
+and either:
+- it is set smaller than 0.85 of the body, in capitals or with no lowercase
+  word; or
+- it reads under 65% confidence with no lowercase word of three letters.
+
+The last line of a paragraph boxes small too ("scars."), and it keeps its
+lowercase word. Salem's Seven's headers are set small as well, so the rule
+runs only after headers are marked.
 
 **A check that cannot read a value passes it** (the skill's ME1 trap). Alpha
 Primitives' Health read as `66` plus art marks, so `roster.check()` passed a
@@ -252,8 +288,10 @@ Taken on Nate's word, 2026-09-30 ("take your recommendations"):
    the parser writes on each entry. The three races on p.25 (the Chosen, the
    Quon, the Spinnerette) file under the Contents section, Races and
    Organizations. Each Travel Guide being takes its place (Central City,
-   Manhattan, Subterranea, Wundagore Mountain, Xandar). `npcs.py` reads the
-   team from the entry in the data PR.
+   King's Crossing, Subterranea, Wundagore Mountain, Xandar). The
+   Pseudo-Skrulls' grid ends King's Crossing's text on p.85, before
+   MANHATTAN's header, so they are King's Crossing's; the parser PR said
+   Manhattan. `npcs.py` reads the team from the entry.
 4. **Characters already carded by another book** (`data/npcs.json`,
    2026-09-30) become second cards with `-ma4` ids, as agreed 2026-09-28:
    - MHSP1: Galactus, Galactus's Cat, Doctor Doom, Mister Fantastic, the
@@ -267,24 +305,44 @@ Taken on Nate's word, 2026-09-30 ("take your recommendations"):
    items, as MA1's were, or characters only, as for ME1? They are the larger
    part of this book that is not characters (printed 76-95). **Taken:** the
    beings statted there are characters, read by this parser. The locations
-   and vehicles are items, as MA1's were, and are the data PR's
-   `extras.py` work.
+   and vehicles are items, as MA1's were: `codegrids.items()`, from the
+   registry's `item_headers`, 29 of them (21 places, 8 vehicles), each matched
+   once. A capitals sub-heading or a run-in inside one is a named part
+   (FF Headquarters, Arthros). A being statted there is cut from the place's
+   text, since it has a card. **MA4 prints no Control, Speed or Body**, so its
+   vehicles have none; their speeds are in their text. The items inside the
+   character pages are not imported: Atlantean Equipment, Galactus' Ships,
+   the Skrull weapons.
 6. **Members without a block** (the Notable Skrulls, the Prominent
    Atlanteans): names under their tier, as MA1's Gladiators are, unless the
    text gives ranks to build from. Dorma has a grid of her own (Lady Dorma,
-   p.36), so her Prominent Atlanteans line is a cross-reference. **As
-   parsed:** both lists are the text of a heading entry (NOTABLE SKRULLS,
-   PROMINENT ATLANTEANS). `read_entries` records members only under an
-   entry with a block, so they are not split into names yet; the data PR
-   does that.
+   p.36), so her Prominent Atlanteans line is a cross-reference. **Taken
+   for the Notable Skrulls:** their 12 run-ins are members of the SKRULL
+   tier's card, and Super-Skrull and Skrull-X link to their own cards. **Not
+   for the Prominent Atlanteans:** they are set as a capital name and an
+   identity line, not as run-ins, so nothing tells a name from its line.
+   They stay the text of their heading, which is not imported.
 
-## The next PR
+## The data
 
-**Data** (`msh/data/ma4-fantastic-four`):
-- `npcs.py` teaches the `code-grids` layout and reads each entry's team
-- `extras.py` reads the Travel Guide's locations and the vehicles
-- the D1 load before the merge
-- this file's Rows line
+`npcs.py` and `extras.py` read the `code-grids` layout. For MA4 only:
+- each entry's team comes from the registry
+- a value the page does not print is null
+- a Roman numeral stays one (Victor von Doom II), and a small word in a name
+  is lower case (Living Computers of Xandar)
+
+MA1's labels have the same Roman-numeral flaw ("Phase Ii Living Monolith").
+Its file is live data, so that fix is a PR of its own.
+
+**Two things the app had not met, handled in the app:**
+- **The Thing's Human Form** makes his entry one NPC with forms, the first
+  named for him, as MA1's Ursa Major is.
+- **The New Men's partial grid** is on their Codex card, with its unprinted
+  rows shown as dashes. It is not offered to the GM (`npc-book.js`
+  `bookChoices`), because there is no NPC to build without physical ranks.
+
+The Marvel smoke suite pins both, with Guardsman's corrected Health and the
+Destroyer's Shift 0 rows.
 
 ## How to reproduce
 

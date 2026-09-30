@@ -52,7 +52,10 @@ export function bookChoices(npcs) {
   for (const c of npcs.characters) {
     for (const v of c.versions) {
       const vName = c.versions.length > 1 ? ` (${v.label || v.identity[0] || v.id})` : '';
-      const blocks = isForms(v) ? [null] : v.blocks.map((b, i) => i);
+      // A partial grid (MA4's New Men print only Reason, Intuition and Psyche:
+      // the physical ranks are the animal's) is on the Codex card, but there
+      // is no NPC to build from it, so the GM is not offered it.
+      const blocks = isForms(v) ? [null] : v.blocks.map((b, i) => i).filter((i) => v.blocks[i].kind !== 'partial');
       for (const i of blocks) {
         const bl = i === null || v.blocks.length === 1 ? '' : ` - ${v.blocks[i].label || `block ${i + 1}`}`;
         const bk = books.get(c.name).size > 1 ? ` [${short[c.book]}]` : '';

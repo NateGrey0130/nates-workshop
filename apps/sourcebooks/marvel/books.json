@@ -65,6 +65,28 @@
     ]
    ],
    "total": 37
+  },
+  {
+   "slug": "ma4",
+   "title": "MA4 The Fantastic Four Compendium",
+   "code": "TSR6889",
+   "status": "imported",
+   "date": "2026-09-30",
+   "added": [
+    [
+     "Characters",
+     129
+    ],
+    [
+     "Items and locations",
+     29
+    ],
+    [
+     "Rows of the book's text",
+     1026
+    ]
+   ],
+   "total": 129
   }
  ]
 }
