@@ -18,7 +18,7 @@
     "  character_pages the printed range scripts/msh/roster.py reads for characters; the rest of the book is items and an adventure",
     "  item_pages      the printed range scripts/msh/extras.py reads for items and locations",
     "  item_parts      run-in names that are PARTS of an item or location, not new ones (the Danger Room's event kinds)",
-    "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text",
+    "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text. Adventures are not in the app (2026-09-29): extras.py parses one only for the items found inside it, and a new book leaves this out",
     "  index           the printed index: [name, [printed pages]], transcribed and checked against the page images",
     "  parts           a boxed module of several booklets, each numbered from 1: {name, cite (the booklet as a card cites it), pdf: [first, last], offset or null}; replaces offset, which assumes one numbering",
     "  layout          how the character pages are set: absent for MA1's (scripts/msh/roster.py); roster-booklet for MHSP1's (scripts/msh/booklet.py); grid-booklets for ME1's, MA1's grids in a boxed module (scripts/msh/gridbooks.py)",

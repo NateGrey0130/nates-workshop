@@ -3,17 +3,21 @@
 Marvel Super Heroes special module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mhsp1`. Measured 2026-09-28.
 
-**Rows citing this book:** 237 `msh_book_text` rows over 69 entries in
+**Rows citing this book:** 209 `msh_book_text` rows over 41 entries in
 production (`DB_MARVEL`, read back 2026-09-29):
 - 189 over 37 character entries (the Wrecking Crew's four members have their
   text on the team's card)
-- 48 over 2 items and 30 adventure sections
+- 20 over 2 items and the 2 adventure sections its two vehicles read (First
+  Blood, Patrol); the other 28 sections' rows were deleted 2026-09-29, when
+  adventures left the app
 
 Committed:
 - 41 characters in `apps/marvel-heroes/data/npcs.json`: 45 blocks and 112
   powers, 38 of them linked to the Ultimate Powers Book
 - 4 items in `data/items.json`
-- the Secret Wars adventure's 30 sections in `data/adventures.json`
+- the Secret Wars adventure's 30 sections were in `data/adventures.json`
+  until 2026-09-29, when adventures left the app; the registry still names
+  them, because the locations and vehicles are found inside them
 
 This is the second Marvel book, and the first since the scripts became
 multi-book (#1520). It went through `scripts/msh/` only. The worked example is

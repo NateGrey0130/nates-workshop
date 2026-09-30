@@ -9,7 +9,7 @@
    "title": "MA1 Children of the Atom",
    "code": "TSR6872",
    "status": "imported",
-   "date": "2026-09-28",
+   "date": "2026-09-29",
    "added": [
     [
      "Characters",
@@ -21,7 +21,7 @@
     ],
     [
      "Rows of the book's text",
-     975
+     929
     ]
    ],
    "total": 180
@@ -43,7 +43,7 @@
     ],
     [
      "Rows of the book's text",
-     237
+     209
     ]
    ],
    "total": 41
