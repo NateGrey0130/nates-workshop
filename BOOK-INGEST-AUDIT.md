@@ -3482,3 +3482,10 @@ until someone traces how a banked pick reaches the level-up step
 and the sheet to keep in step with the skill and spell ones. Three classes
 use it today. If no other book needs it, prose may be the cheaper answer
 forever; say so if taking it.
+
+**Adjusted 2026-09-30 (branch `pal/data/japan-monsters`):** a fourth class
+has the same shape. `dragon-hatchling-asama-tatsu` (printed 215) takes a
+zenjoriki power at levels 2, 7, 12 and 20, with no level-1 pick, so all four
+are prose, and its notes cite this finding. `dragon-hatchling-kumo-mi`
+(printed 214) takes one art and one zenjoriki power with no level named; it
+stores both as level-1 picks and is not affected.
