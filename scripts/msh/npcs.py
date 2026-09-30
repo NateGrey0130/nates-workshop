@@ -176,20 +176,35 @@ def variant(header):
     return m.group(1).strip() if m else None
 
 
+# II to XXXIX, and V, X: a lone I is left to the word rule, which keeps it I
+ROMAN = re.compile(r'(?=[IVX]{2}|[VX]$)X{0,3}(IX|IV|V?I{0,3})')
+TITLE_SMALL = {'of', 'the', 'and', 'a', 'an', 'in', 'on', 'to', 'with', 'for'}
+
+
 def title_case(s):
     """MARVEL GIRL -> Marvel Girl, SHI'AR -> Shi'ar, X-FACTOR -> X-Factor, keeping
-    Mr./Dr. and any parenthetical as printed."""
-    def word(w):
+    Mr./Dr. and any parenthetical as printed. A Roman numeral stays one (MARK IV
+    SENTINEL -> Mark IV Sentinel), and a small word after the first is small
+    (MOON-BOY AND DEVIL DINOSAUR -> Moon-Boy and Devil Dinosaur)."""
+    def word(w, first):
         if not any(c.isalpha() for c in w) or not w.isupper():
             return w
+        if ROMAN.fullmatch(w):
+            return w
+        if not first and w.lower() in TITLE_SMALL:
+            return w.lower()
         return '-'.join(p[:1] + p[1:].lower() for p in w.split('-'))
-    out, depth = [], 0
+    out, depth, first = [], 0, True
     for tok in re.split(r'(\s+|\(|\))', s):
         if tok == '(':
             depth += 1
         elif tok == ')':
             depth -= 1
-        out.append(tok if depth or tok in ('(', ')') else word(tok))
+        if depth or tok in ('(', ')') or not tok.strip():
+            out.append(tok)
+        else:
+            out.append(word(tok, first))
+            first = False
     return ''.join(out)
 
 
