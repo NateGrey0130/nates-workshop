@@ -1000,11 +1000,9 @@ def extras(book, slug):
         if s['kind'] in ('skip', 'location'):
             continue
         texts = [l['text'] if isinstance(l, dict) else l for l in s['lines']]
-        table = next((t for t in book.get('adventure_tables', []) if t['section'] == s['title'] and t.get('rows')), None)
         out.append({'title': s['title'], 'kind': s['kind'], 'page': s['page'], 'part': a['part'], 'parts': [],
                     **({'when': s['when']} if 'when' in s else {}),
                     **({'roll': s['roll'], 'once': s['once']} if 'roll' in s else {}),
-                    **({'table': {k: table[k] for k in ('columns', 'rows', 'footnote') if k in table}} if table else {}),
                     'text': [['prose', None, [quotes(roster.join_text(texts))]]]})
     unpaired([p[2][0] for it in items for p in it['text']] + [s['text'][0][2][0] for s in out], slug)
     return items, {'title': a['title'], 'pages': a['pages'], 'part': a['part'], 'sections': out}

@@ -18,7 +18,7 @@
     "  character_pages the printed range scripts/msh/roster.py reads for characters; the rest of the book is items and an adventure",
     "  item_pages      the printed range scripts/msh/extras.py reads for items and locations",
     "  item_parts      run-in names that are PARTS of an item or location, not new ones (the Danger Room's event kinds)",
-    "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text. Adventures are not in the app (2026-09-29): extras.py parses one only for the items found inside it, and a new book leaves this out",
+    "  adventure       the book's adventure: its title and printed range, for scripts/msh/extras.py; the maps after it are not text. Adventures are not in the app (2026-09-29): extras.py parses one only for the items found inside it, so only MHSP1 has one, and a new book leaves this out",
     "  index           the printed index: [name, [printed pages]], transcribed and checked against the page images",
     "  parts           a boxed module of several booklets, each numbered from 1: {name, cite (the booklet as a card cites it), pdf: [first, last], offset or null}; replaces offset, which assumes one numbering",
     "  layout          how the character pages are set: absent for MA1's (scripts/msh/roster.py); roster-booklet for MHSP1's (scripts/msh/booklet.py); grid-booklets for ME1's, MA1's grids in a boxed module (scripts/msh/gridbooks.py)",
@@ -31,7 +31,7 @@
     "  item_part       with parts: the booklet item_pages counts in",
     "  locations       a roster-booklet book's locations: {name, section (the adventure section that describes it), parts, part_aliases, items (run-ins inside it that are items), rooms (its room table: columns, and rows of [sector, d100 range, a room per column], transcribed by eye)}",
     "  vehicles        vehicles a roster-booklet book states inside an adventure section: {name, section}; control, speed and body are read from that section",
-    "  adventure_tables  tables inside adventure sections that the column cut cannot read as prose: {section, pdf, box (TSV pixels) cut out of the text, columns and rows when the table is carried as data (transcribed by eye), footnote}",
+    "  adventure_tables  tables inside adventure sections that the column cut cannot read as prose: {section, pdf, box (TSV pixels) cut out of the text, note}. Only the box is read: the adventure is not in the app, so no table is carried as data",
     "  adventure.sections  a roster-booklet book's adventure, in page order: [kind, title, how its first line reads, extra]; kind setting, planned (the third field is its day and shift, and a fourth its first words where OCR lost its title), random (extra: its roll, and \"once\"), location, or skip (running notes, which are on the characters)",
     "  one_line_tiers  one-line blocks that are beings of their own, not a form of the character (Klaw's sound creatures)",
     "  running         a booklet of running notes, one per character: {part, pages, aliases: {name as the note prints it: entry header}}",
@@ -266,13 +266,6 @@
           "OBSTACLES",
           "ROBOTICS",
           "TRAPS"
-        ]
-      },
-      "adventure": {
-        "title": "Dreamchild",
-        "pages": [
-          87,
-          95
         ]
       },
       "index_note": "Printed p.3, transcribed by eye from 150 dpi renders of its three columns: Tesseract reads the dot leaders as noise and dropped or garbled about a fifth of the lines. 'Nightrawler' is the book's own misprint of Nightcrawler (entry printed p.7) and is kept as printed; index_aliases maps it, and the two names the index spells differently from the entry's own header: Agents (printed VILLAINOUS AGENTS, p.67) and Neramani, Lilandra (printed NERAMANI, PRINCESS-MAJESTRIX LILANDRA, p.74).",
@@ -524,7 +517,7 @@
       "vehicles": [{"name": "Tripedal gunnery platform", "section": "First Blood"}, {"name": "Alien hovercraft", "section": "Patrol"}],
       "adventure_tables": [
         {"section": "Events", "pdf": 8, "box": [130, 2230, 770, 2690], "note": "the Random Event table: its rolls and titles are the adventure's random sections"},
-        {"section": "The Hunt", "pdf": 12, "box": [1300, 140, 2030, 540], "columns": ["Roll", "Villain", "Target"], "rows": [[1, "Doc Octopus", "Spider-Man"], [2, "Lizard", "Spider-Man"], [3, "Titania", "Thor"], [4, "Ultron", "Wasp*"], [5, "Enchantress", "She-Hulk"], [6, "Kang", "Captain America"], [7, "Thunderball", "Spider-Man"], [8, "Wrecker", "Iron Man"], [9, "Absorbing Man", "Hulk"], [10, "Molecule Man", "Mr. Fantastic*"]], "footnote": "* only after the Betrayal Random Event"},
+        {"section": "The Hunt", "pdf": 12, "box": [1300, 140, 2030, 540], "note": "the Hunt's villain-and-target table"},
         {"section": "The Hunt", "pdf": 12, "box": [900, 540, 2460, 590], "note": "the table's footnote, across two columns"}
       ],
       "adventure": {"title": "Secret Wars", "part": "Adventure Book", "pages": [1, 16], "sections": [

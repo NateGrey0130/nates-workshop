@@ -16,8 +16,8 @@ Committed:
   linked to the Ultimate Powers Book
 - 20 items in `data/items.json`
 - the *Dreamchild* adventure's 11 sections were in `data/adventures.json`
-  until 2026-09-29, when adventures left the app; the registry still names
-  its pages
+  until 2026-09-29, when adventures left the app; its registry entry went
+  the next day, since no MA1 item reads it
 
 This is the first Marvel book surveyed, and nothing here touches the Palladium
 book pipeline: the cache, the registry, the scripts and this file are all
