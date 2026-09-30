@@ -89,6 +89,14 @@ category: occ
 tags: [combat]                  # picker tags, at most 4, from CLASS_TAGS in js/parser.js; magic, psionics, mega-damage and horror-factor are derived, never written
 attribute_requirements:           # minimums enforced at creation; omit if none
   IQ: 10
+# Nothing warns you about the next three keys, and regression fails without them.
+# occ_group: men-of-arms          # EVERY O.C.C.: clergy | men-of-arms | optional | magic | psychic,
+#                                 # the book section it is printed under; a race's group:<name> matches it
+# men_of_arms: true               # INSTEAD of sdc_base below, when the book prints no S.D.C. formula:
+#                                 # true rolls the core 3D6, false the core 1D6. Never both (smoke refuses it)
+# xp_table: [0, 2100, 4200, 8400, 16800, 25000, 35000, 50000, 70000, 95000, 125000, 175000, 225000, 275000, 325000]
+#                                 # whenever the book prints a ladder or names one to use (required on a
+#                                 # Palladium Fantasy O.C.C.); 15 LOWER bounds, from 0, strictly rising
 hit_points_base: "P.E. + 1d6 per level"
 sdc_base: 20
 ppe_base: "2d6"
@@ -125,6 +133,10 @@ attribute_dice:                   # a race ROLLS its attributes from these
 mdc_base: "1d4x100"               # M.D.C. beings use this instead of hp/sdc
 # mdc_from_hp_sdc: true           # or: S.D.C. + hit points become ONE M.D.C. total, permanently
 #                                 # (on a chosen ability instead when only some choices convert)
+# men_of_arms: false              # an S.D.C. race (no mdc_base, no sdc_base) needs this line; a race is always false
+# xp_table: [0, 2100, 4200, 8400, 16800, 25000, 35000, 50000, 70000, 95000, 125000, 175000, 225000, 275000, 325000]
+#                                 # ONLY when the book prints a ladder for the race itself or names one to use;
+#                                 # none otherwise. An occupation's ladder still wins a pairing.
 ppe_base: "2d6"
 starting_money: "2d6x10"          # gold (Palladium) or credits (Rifts); coin only
 # Stages of the same creature — a hatchling and an adult. Each overrides only
