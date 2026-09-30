@@ -2877,9 +2877,13 @@ export const OCC_GROUPS = ['clergy', 'men-of-arms', 'optional', 'magic', 'psychi
 // aid and nothing else; no rule reads one.
 //
 // TWO KINDS, and the split is the point. A DERIVED tag restates a block the
-// class already has (`magic:` means it casts), so it is computed and never
-// written: a hand-written `magic` would go on claiming magic after the block
-// was removed. An AUTHORED tag is a judgement no field records - "plays
+// class already has (`magic:` means it casts), so it is computed, and writing
+// it beside the block is refused: a hand-written `magic` would go on claiming
+// magic after the block was removed. It MAY be written on a class that has no
+// such block, because some books grant the thing without one - Heroes
+// Unlimited's Magic power category works its magic through special abilities
+// and would otherwise never reach the Magic chip. The validator warns so the
+// writer checks the book says so. An AUTHORED tag is a judgement no field records - "plays
 // quietly", "good first character" - and lives in the class's own frontmatter
 // as `tags: [stealth, wilderness]`, at most MAX_AUTHORED_TAGS of them.
 //
@@ -2918,24 +2922,33 @@ export function classTagInfo(id) {
 
 // The four derived tags, from the blocks they restate. Kept beside the
 // vocabulary so a new derived tag cannot be declared without its rule.
+//
+// The class OR ANY OF ITS VARIANTS: a block a variant carries is one the class
+// can have. The Palladium Fantasy dragons state horror_factor per age stage
+// and none at the top, and the Mining Borg its M.D.C. per conversion; read
+// from the top alone, none of them reached the chip.
 function derivedTags(c) {
+  const forms = [c, ...(Array.isArray(c?.variants) ? c.variants : [])].filter(Boolean);
+  const any = (test) => forms.some(test);
   const out = [];
-  if (c?.magic && c.magic.type !== 'none') out.push('magic');
-  if (c?.psionics && c.psionics.type && c.psionics.type !== 'none') out.push('psionics');
-  if (c?.mdc_base != null || c?.mdc_from_hp_sdc) out.push('mega-damage');
-  if (c?.horror_factor != null) out.push('horror-factor');
+  if (any((f) => f.magic && f.magic.type !== 'none')) out.push('magic');
+  if (any((f) => f.psionics && f.psionics.type && f.psionics.type !== 'none')) out.push('psionics');
+  if (any((f) => f.mdc_base != null || f.mdc_from_hp_sdc)) out.push('mega-damage');
+  if (any((f) => f.horror_factor != null)) out.push('horror-factor');
   return out;
 }
 
 /**
- * Every tag a class carries - derived, then authored - in vocabulary order.
- * An authored id the vocabulary does not hold is dropped rather than shown:
- * the validator refuses one, so this only matters for a row that skipped it.
+ * Every tag a class carries - derived, then written - in vocabulary order.
+ * A written id the vocabulary does not hold is dropped rather than shown: the
+ * validator refuses one, so this only matters for a row that skipped it. A
+ * written derived id counts, which is how a class with no block for it gets
+ * the tag (see CLASS_TAGS).
  */
 export function classTags(c) {
   const have = new Set(derivedTags(c));
   for (const t of Array.isArray(c?.tags) ? c.tags : []) {
-    if (TAG_BY_ID.get(t)?.kind === 'authored') have.add(t);
+    if (TAG_BY_ID.has(t)) have.add(t);
   }
   return CLASS_TAGS.filter((t) => have.has(t.id)).map((t) => t.id);
 }
@@ -2978,7 +2991,7 @@ export function suggestClassTags(c) {
     || /ranger|scout|trapper|wilderness|woodsman|nomad|tracker/.test(name)) out.add('wilderness');
   if (/noble|diplomat|lord|king|queen|chieftain|captain|commander|emissary/.test(name)) out.add('leader');
   if (/hunter|slayer|monster|demon quest|vampire/.test(name) && c.category === 'occ') out.add('hunter');
-  if (/juicer|crazy|cyborg|borg\b|bionic|m\.o\.m|headhunter|cyber-knight/.test(name)) out.add('augmented');
+  if (/juicer|crazy|cyborg|borg\b|bionic|m\.o\.m|headhunter|cyber-knight/.test(name)) out.add('augmented');
   if (c.category === 'rcc' && (c.horror_factor != null
     || /dragon|demon|deevil|vampire|spirit|entity|godling|demigod|elemental/.test(name))) out.add('supernatural');
   if (/shape-?chang|metamorph|shapeshift|change (its|their) (shape|form)/.test(natural + text(c.lore))
@@ -2993,7 +3006,8 @@ export function suggestClassTags(c) {
 }
 
 // The validator's half: refuses what the picker would otherwise quietly drop.
-function validateTags(tags, errors, warnings) {
+function validateTags(tags, errors, warnings, data) {
+  const derived = derivedTags(data);
   if (!Array.isArray(tags)) {
     errors.push('tags must be a one-line list, e.g. tags: [stealth, wilderness]');
     return;
@@ -3004,9 +3018,13 @@ function validateTags(tags, errors, warnings) {
     if (!info) {
       errors.push(`tags names "${t}", which is not a class tag. Known: `
         + CLASS_TAGS.filter((x) => x.kind === 'authored').map((x) => x.id).join(', '));
+    } else if (info.kind === 'derived' && derived.includes(t)) {
+      errors.push(`tags names "${t}", which this class's own blocks already derive; `
+        + 'remove it, or it outlives the block');
     } else if (info.kind === 'derived') {
-      errors.push(`tags names "${t}", which is derived from the class's own blocks and is `
-        + 'never written by hand; remove it');
+      warnings.push(`tags names "${t}" on a class with no block that derives it. Keep it `
+        + 'only if the book grants it some other way (Heroes Unlimited Magic works through '
+        + 'special abilities)');
     }
     if (seen.has(t)) warnings.push(`tags names "${t}" twice`);
     seen.add(t);
@@ -3205,7 +3223,7 @@ export function parseClassMarkdown(text) {
   if (data.occ_group !== undefined && data.category !== 'occ') {
     warnings.push('occ_group is set on something that is not an O.C.C. and will do nothing');
   }
-  if (data.tags !== undefined) validateTags(data.tags, errors, warnings);
+  if (data.tags !== undefined) validateTags(data.tags, errors, warnings, data);
   // F11. A class whose book says the character stops being what it was.
   // OPT-IN AND FALSE BY DEFAULT: every class in the catalog today wants the
   // race-primary policy - a dragon that studies an O.C.C. is still a dragon -

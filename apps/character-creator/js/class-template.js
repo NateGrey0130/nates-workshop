@@ -86,7 +86,7 @@ Anything the GM should know and the player should not. Hidden from players.
     return `---
 ${shared(o)}
 category: occ
-tags: [combat]                  # picker tags, at most 4, from CLASS_TAGS in js/parser.js; magic, psionics, mega-damage and horror-factor are derived, never written
+tags: [combat]                  # picker tags, at most 4, from CLASS_TAGS in js/parser.js; magic, psionics, mega-damage and horror-factor are derived from the blocks, not written
 attribute_requirements:           # minimums enforced at creation; omit if none
   IQ: 10
 hit_points_base: "P.E. + 1d6 per level"
@@ -112,7 +112,7 @@ ${body(o.name)}`;
     return `---
 ${shared(o)}
 category: rcc
-tags: [supernatural]            # picker tags, at most 4, from CLASS_TAGS in js/parser.js; magic, psionics, mega-damage and horror-factor are derived, never written
+tags: [supernatural]            # picker tags, at most 4, from CLASS_TAGS in js/parser.js; magic, psionics, mega-damage and horror-factor are derived from the blocks, not written
 attribute_dice:                   # a race ROLLS its attributes from these
   IQ: "3d6"
   ME: "3d6"
