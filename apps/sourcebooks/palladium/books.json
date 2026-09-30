@@ -559,6 +559,36 @@
    "total": 283
   },
   {
+   "slug": "japan",
+   "title": "Rifts World Book 8: Japan",
+   "code": "japan",
+   "status": "imported",
+   "date": "2026-09-30",
+   "added": [
+    [
+     "Classes",
+     30
+    ],
+    [
+     "Creatures",
+     8
+    ],
+    [
+     "Gear",
+     237
+    ],
+    [
+     "Skills",
+     19
+    ],
+    [
+     "Vehicles",
+     21
+    ]
+   ],
+   "total": 315
+  },
+  {
    "slug": "south-america-2",
    "title": "Rifts World Book 9: South America 2",
    "code": "south-america-2",

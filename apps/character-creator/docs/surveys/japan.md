@@ -1,8 +1,8 @@
 # Rifts World Book 8: Japan — survey
 
-**Status:** `importing` — skills, magic gear and traditional gear shipped (steps 1-7 of 8); the power armor and robots next. (2026-09-30)
+**Status:** `imported` — all eight steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-09-30)
 
-**Rows citing this book:** classes 30, creatures 8, gear 237, skills 19
+**Rows citing this book:** classes 30, creatures 8, gear 237, skills 19, vehicles 21
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
@@ -253,12 +253,18 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | 2026-09-30 | `pal/data/japan-traditional-classes` | step 5: 8 classes - `true-samurai` (male/female variants), `ronin`, `mystic-ninja`, `bishamon-fighting-monk`, `sohei-warrior-monk` (monk/nun variants), `yamabushi-mountain-priest`, `demon-queller`, `tengu` - and 2 gear rows the samurai and ronin carry (`samurai-armor`, `silver-tipped-arrows`, `add-a-japan-samurai-gear.sql`; the book prints no price, and no damage for the arrows). One drafting agent per class from a shared brief; every class reads `ready` against production with 0 stubs. Level-gated mystic martial arts picks after level 1 are prose (agreed 2026-09-30); the finding is filed in BOOK-INGEST-AUDIT.md. Temple skills store each class's printed base. Applied `--remote` before the PR. |
 | 2026-09-30 | `pal/data/japan-republic-classes` | step 6: 17 classes - `cyberoid`, `cyber-samurai`, `tech-ninja`, `ninja-juicer`, `ninja-crazy`, `ninja-borg`, `ninja-techno-wizard`, `samas-samurai-pilot`, `republic-infantryman`, `robot-pilot-japan` (`robot-pilot` is another book's), `glitter-force-trooper`, `police-officer-japan`, `republic-cyborg-soldier` and the four Dragon 'Borg bodies (`dragon-borg-wing-blade`, `-tsunami`, `-imperial-combat`, `-flame-cloud`, one class per body as the Free Quebec cyborgs are) - and 8 gear rows the classes carry (`add-a-japan-republic-class-gear.sql`: micro-film camera, small crowbar, universal headjack, cyber-samurai armor, and the four cyborg body armor plates of printed 97; none is priced). The five cyborg classes restate one skill list and were harmonised to it. Every class reads `ready` against production with 0 stubs. Issued power armor and robots are prose in the classes; the machines are step 8. Applied `--remote` before the PR. |
 | 2026-09-30 | `pal/data/japan-monsters` | step 7: 5 race classes - `oni-of-the-one-hundred` (NPC by default, player at the G.M.'s discretion per its tag line), `sura-kappa` (no tag line; playable by its XP ladder) and three hatchlings in the `dragon-hatchling-*` shape (`-shikome-kido-mi`, `-kumo-mi`, `-asama-tatsu`) - and 8 creatures through `bestiary-sql.mjs` (`add-japan-creatures.sql`: Oni Master, Oni Mystic, Goblin Spider, Japanese Imp, Hannya Demon and the three dragons as adults). The Japanese Imp's tag line (printed 209) makes it NPC-only, so it is a creature, not the class this survey first planned. Creatures reconciled row by row; the Imp's printed dodge reads 44 and is stored +4 with a note. Applied `--remote` before the PR. |
+| 2026-09-30 | `pal/data/japan-vehicles` | step 8: 21 vehicles (`add-japan-vehicles.sql`) with 221 M.D.C. locations and 126 weapon entries: 11 power armors (Samurai-class SAMAS, Point and Hawkeye Glitter Boys, ATPA-85, Ninjabot, six Ichto IPAs) and 10 robots (nine, plus the IR-2050 Apocalypse's drone as its own row). Four extraction workers, two reconcile passes; reconcile moved the ATPA-85's three missing weapons and hand to hand back from the Ninjabot, split out the drone, and corrected four descriptions. The core Glitter Boy (printed 136-137) is already `glitter-boy-power-armor`. The classes that are issued these machines describe them in prose; there is no gear row pointing at a vehicle, as Atlantis's weren't either. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-09-30: `japan` is cached
-(218 pages) and **no production row cites it**, so there is nothing to trace
-yet. Its `BACKLOG` block, unchanged by this PR:
+`node scripts/source-coverage.mjs --remote`, 2026-09-30, after step 8 was applied:
+
+```
+  japan              315 / 0
+```
+
+Every row citing this book traces to a cached page. Its `BACKLOG` block is the
+same as before the import started, so no step left a stub behind:
 
 ```
   gear stubs            14   description still says STUB — created by class import
@@ -268,3 +274,8 @@ yet. Its `BACKLOG` block, unchanged by this PR:
   spell text missing     0   nothing for the codex to show
   psionic text missing   0   nothing for the codex to show
 ```
+
+`node scripts/drift-check.mjs --remote` reports NO DRIFT the same day.
+
+**Open finding from this book:** BOOK-INGEST-AUDIT F116 (level-gated mystic
+martial arts picks, stored as prose in four classes).
