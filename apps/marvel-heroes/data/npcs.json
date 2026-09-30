@@ -5699,7 +5699,7 @@
   },
   {
    "id": "moon-boy-and-devil-dinosaur",
-   "name": "Moon-Boy And Devil Dinosaur",
+   "name": "Moon-Boy and Devil Dinosaur",
    "team": "Fallen Angels",
    "versions": [
     {
@@ -11873,7 +11873,7 @@
        "popularity": "0"
       },
       {
-       "label": "Phase Ii Living Monolith",
+       "label": "Phase II Living Monolith",
        "page": 64,
        "abilities": [
         [
@@ -11918,7 +11918,7 @@
        "popularity": "0"
       },
       {
-       "label": "Phase Iii Living Monolith",
+       "label": "Phase III Living Monolith",
        "page": 64,
        "abilities": [
         [
@@ -15568,7 +15568,7 @@
   },
   {
    "id": "mark-ii-sentinels",
-   "name": "Mark Ii Sentinels",
+   "name": "Mark II Sentinels",
    "team": "The Mutant Menace",
    "versions": [
     {
@@ -15682,7 +15682,7 @@
   },
   {
    "id": "mark-iii-sentinels",
-   "name": "Mark Iii Sentinels",
+   "name": "Mark III Sentinels",
    "team": "The Mutant Menace",
    "versions": [
     {
@@ -15768,7 +15768,7 @@
   },
   {
    "id": "mark-iv-v-sentinels",
-   "name": "Mark Iv & V Sentinels",
+   "name": "Mark IV & V Sentinels",
    "team": "The Mutant Menace",
    "versions": [
     {
@@ -15781,7 +15781,7 @@
      "identity": [],
      "blocks": [
       {
-       "label": "Mark Iv Sentinel",
+       "label": "Mark IV Sentinel",
        "page": 80,
        "abilities": [
         [
@@ -15871,7 +15871,7 @@
        "popularity": " - "
       },
       {
-       "label": "Mark Vi Prototype Sentinel",
+       "label": "Mark VI Prototype Sentinel",
        "page": 80,
        "abilities": [
         [
