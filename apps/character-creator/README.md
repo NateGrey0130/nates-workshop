@@ -868,6 +868,10 @@ scripts/
 ├── deploy-worker-lib.mjs   The body both deploy scripts share. One script per
 │                           Worker, never a --worker flag: a forgotten flag would
 │                           deploy the OTHER Worker, successfully
+├── sourcebooks.mjs         The hub's Sourcebooks pages: every book whose data is
+│                           in the app, per system, built from the surveys and
+│                           registries. Run it after a book PR; each group's
+│                           smoke suite fails on a stale list (--check)
 ├── menu-check.mjs          Does a new claim about ANOTHER file say where it was
 │                           read? Every false premise on SHIP-PR-AUDIT was that
 │                           one shape, and audit-menu already carried five rules

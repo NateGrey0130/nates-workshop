@@ -35,11 +35,12 @@ And five that stand alone:
 | [`apps/the-button/`](apps/the-button/) | One big red button on a black screen |
 | [`apps/marvel-heroes/`](apps/marvel-heroes/) | MARVEL SUPER HEROES: a hero generator, a power browser and a FEAT roller from the Ultimate Powers Book, and a sheet for each hero you save - [its README](apps/marvel-heroes/README.md) holds the rulings where the books disagree |
 
-And one both games use:
+And two both games use:
 
 | | |
 |---|---|
 | [`apps/table/`](apps/table/) | The Table: one live room per game session - phones, the GM and the TV join by code, and every roll lands on exactly the screens allowed to see it. Its room is a Worker of its own, `workers/table-room/`, deployed by hand - [its README](apps/table/README.md) |
+| [`apps/sourcebooks/`](apps/sourcebooks/) | Sourcebooks: every book whose data is in the app, one page per system (a tile in each game's section), with what each book added. The lists are built by `scripts/sourcebooks.mjs`; rebuild after a book PR, or its group's smoke suite fails |
 
 **What each app *is* lives in [`apps/manifest.json`](apps/manifest.json)**, which
 the landing page reads at runtime. That file is the source; these tables are only

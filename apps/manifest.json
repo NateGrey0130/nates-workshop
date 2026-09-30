@@ -83,6 +83,14 @@
       "status": "live"
     },
     {
+      "slug": "sourcebooks/palladium",
+      "name": "Sourcebooks",
+      "group": "palladium",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M4 4.5h4.2v15H4z'/><path d='M8.2 6h4.2v13.5H8.2z'/><path d='m13.4 6.6 3.9-1.2 3.7 12.8-3.9 1.2z'/><path d='M4 8h4.2M8.2 9h4.2M4 16h4.2M8.2 16h4.2'/></svg>",
+      "description": "Every Palladium and Rifts book whose data is in the app, and what each one added.",
+      "status": "live"
+    },
+    {
       "slug": "pick3cut5",
       "name": "Pick 3 Cut 5",
       "group": "other",
@@ -120,6 +128,14 @@
       "group": "marvel",
       "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M3.2 7.2 8 5.2v13.6l-4.8 1.6z'/><path d='M8 5.2h8v13.6H8z'/><path d='M16 5.2l4.8 2v11.2L16 18.8z'/></svg>",
       "description": "Run the table: the roster, initiative, the Universal Table and NPCs rolled on the spot.",
+      "status": "live"
+    },
+    {
+      "slug": "sourcebooks/marvel",
+      "name": "Sourcebooks",
+      "group": "marvel",
+      "icon": "<svg viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M4 4.5h4.2v15H4z'/><path d='M8.2 6h4.2v13.5H8.2z'/><path d='m13.4 6.6 3.9-1.2 3.7 12.8-3.9 1.2z'/><path d='M4 8h4.2M8.2 9h4.2M4 16h4.2M8.2 16h4.2'/></svg>",
+      "description": "Every Marvel Super Heroes book whose characters are in the Codex and the GM tools, and what each one added.",
       "status": "live"
     },
     {

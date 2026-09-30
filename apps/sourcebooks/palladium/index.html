@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palladium / Rifts sourcebooks &mdash; Nate's Workshop</title>
+<!-- Home-screen and tab icon, as every standalone app carries them.
+     apps/pick3cut5 deliberately has NO icon links; see apps/_template. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/shared/icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/shared/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0F1412">
+<!-- Board & Tissue, as the Palladium apps are: the shared tokens, then the
+     character creator's, which redeclare every one. Then the list's own. -->
+<link rel="stylesheet" href="/shared/styles.css">
+<link rel="stylesheet" href="/apps/character-creator/styles.css">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div>
+      <h1 class="logo">Sourcebooks</h1>
+      <div class="logo-sub">every Palladium and Rifts book whose data is in the app</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <a href="/" class="btn btn-sm btn-ghost">&larr; Nate's Workshop</a>
+  </div>
+</header>
+
+<main class="wrap wrap-wide" data-sourcebooks>
+  <p class="muted">Loading&hellip;</p>
+</main>
+
+<script type="module" src="../app.js"></script>
+</body>
+</html>

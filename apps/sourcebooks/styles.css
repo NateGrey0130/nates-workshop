@@ -1,0 +1,41 @@
+/* The Sourcebooks pages. Each page links its own system's stylesheet first -
+   Board & Tissue for Palladium (apps/character-creator/styles.css), the Marvel
+   app's for Marvel (apps/marvel-heroes/styles.css) - and the two name their
+   tokens differently, so every colour here falls back from one set to the
+   other: the first name is Board & Tissue's, the second Marvel's. */
+
+.sb-summary { max-width: 70ch; color: var(--text-secondary, var(--ink-soft)); }
+.sb-count-line { margin: 0.5rem 0 1.25rem; }
+
+.sb-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 0.9rem;
+}
+
+.sb-book {
+  background: var(--bg-card, var(--panel));
+  border: 1px solid var(--border, var(--rule));
+  border-radius: var(--radius, 4px);
+  padding: 0.9rem 1rem;
+  min-width: 0;
+}
+
+.sb-title { font-size: 1.05rem; margin: 0 0 0.35rem; overflow-wrap: anywhere; }
+
+.sb-meta {
+  display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: baseline;
+  margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--text-muted, var(--ink-soft));
+}
+.sb-code { font-family: var(--font-mono, monospace); }
+.sb-status {
+  text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.75rem;
+  padding: 0.05rem 0.4rem; border: 1px solid currentColor; border-radius: var(--radius-sm, 3px);
+}
+.sb-imported { color: var(--success, var(--feat-green)); }
+.sb-backfilled { color: var(--warning, var(--blue)); }
+
+.sb-added { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; font-size: 0.9rem; }
+.sb-count { font-weight: 700; font-variant-numeric: tabular-nums; }
+.sb-none, .sb-error { color: var(--text-muted, var(--ink-soft)); }
+.sb-error { color: var(--danger, var(--red)); }

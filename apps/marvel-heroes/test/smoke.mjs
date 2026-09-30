@@ -1980,4 +1980,25 @@ check('the README lists at least one ruling as "- **Rn**"', inReadme.size > 0);
 for (const id of inData) check(`${id}, cited in the data, is in the README`, inReadme.has(id));
 for (const id of inReadme) check(`${id}, in the README, is cited by the data`, inData.has(id));
 
+section('Sourcebooks: the Marvel list is the data\'s own');
+
+{
+  // The Marvel Sourcebooks page reads apps/sourcebooks/marvel/books.json, which
+  // scripts/sourcebooks.mjs builds from the registry, data/*.json and each
+  // survey's Rows line. A book PR that forgets to rebuild it fails here.
+  const { buildMarvel, stale } = await import(new URL('../../../scripts/sourcebooks.mjs', import.meta.url));
+  const list = buildMarvel();
+  const npcs = load('npcs.json');
+  const withChars = [...new Set(npcs.characters.map((c) => c.book))];
+  check('the list is every book with characters in the Codex, each counting its own',
+    list.books.map((b) => b.slug).join() === withChars.join()
+      && list.books.every((b) => b.total === npcs.characters.filter((c) => c.book === b.slug).length && b.code && b.date),
+    list.books.map((b) => `${b.slug} ${b.total} ${b.date}`).join('; '));
+  const why = stale('marvel');
+  check('apps/sourcebooks/marvel/books.json is a fresh build (run node scripts/sourcebooks.mjs after a book PR)', why === null, why || '');
+  const tile = JSON.parse(readFileSync(join(repoRoot, 'apps', 'manifest.json'), 'utf8')).apps.find((a) => a.slug === 'sourcebooks/marvel');
+  check('the hub has a live Sourcebooks tile in the Marvel section',
+    tile?.status === 'live' && tile.group === 'marvel' && /^<svg /.test(tile.icon || ''), JSON.stringify(tile?.group));
+}
+
 process.exit(summary() === 0 ? 0 : 1);
