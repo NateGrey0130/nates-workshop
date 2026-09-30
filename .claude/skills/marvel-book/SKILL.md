@@ -21,13 +21,17 @@ by its tests. Do not read them for method either - their rules (cite to a
 catalog, Rows lines per table) are not this pipeline's. `groups.json` gives
 `scripts/msh/` to the marvel group; a Marvel book PR is `msh/...`.
 
-Two books are done, and each survey is a worked example. Read both before
-starting a third:
+Three books are done, and each survey is a worked example. Read the one whose
+layout is nearest before starting another:
 - `apps/marvel-heroes/docs/surveys/ma1.md`: a sourcebook of numbered grids,
   a printed Contents and index, read by `scripts/msh/roster.py`
 - `apps/marvel-heroes/docs/surveys/mhsp1.md`: a boxed module (three booklets,
   each numbered from 1) whose blocks print rank words and no numbers, with no
   index, read by `scripts/msh/booklet.py`
+- `apps/marvel-heroes/docs/surveys/me1.md`: a boxed module of two booklets
+  whose blocks are MA1's numbered grids, with characters statted inside an
+  adventure's chapters too, read by `scripts/msh/gridbooks.py` through
+  `roster.py`'s own entry loop
 
 ## Many books in one set of files
 
@@ -48,16 +52,23 @@ Since 2026-09-28 the chain is multi-book. What that means for a new one:
   the book's own title.
 - **A book laid out differently gets a reader of its own**, chosen by the
   registry's `layout`: absent is MA1's (`roster.py`), `roster-booklet` is
-  MHSP1's (`booklet.py`). The reader returns the same `roster.json` entries,
-  and `npcs.py` and `extras.py` gate what is new behind the same field. Do not
-  bend MA1's path to fit another book: its header height, column cut and
-  number grid are tuned to MA1 and live data depends on them.
-- **Prove the first book did not move.** Before a PR that touches
-  `scripts/msh/` merges, build MA1 with `origin/main`'s scripts (a
+  MHSP1's (`booklet.py`), `grid-booklets` is ME1's (`gridbooks.py`). The
+  reader returns the same `roster.json` entries, and `npcs.py` and
+  `extras.py` gate what is new behind the same field. Do not bend MA1's path
+  to fit another book: its header height, column cut and number grid are
+  tuned to MA1 and live data depends on them. Reusing its pieces is fine:
+  `gridbooks.py` builds its own streams and headers and hands them to
+  `roster.read_entries()`.
+- **Prove every earlier book did not move.** Before a PR that touches
+  `scripts/msh/` merges, build each book already in the registry with
+  `origin/main`'s scripts (a
   `git archive origin/main scripts/msh apps/marvel-heroes/data` into the
-  scratchpad) and with the branch's, and `cmp` its `roster.json`,
-  `book-text.sql`, `extras.json`, `extras-text.sql` and its rows of
-  `npcs.json`. Byte-identical, or say why not.
+  scratchpad, with a copy of the cache under its own `WORKSHOP_MSH_CACHE`)
+  and with the branch's, and `cmp` its `roster.json`, `book-text.sql`,
+  `extras.json`, `extras-text.sql` and its rows of `npcs.json`.
+  Byte-identical, or say why not: ME1's parser fixed a real MA1 misread
+  (Nekra's `40In` alternate, stored as 401), and a difference like that is
+  read on the page image before it ships.
 - **A team name is a filter group shared by every book.** MHSP1's sides are
   "Secret Wars Heroes" and "Secret Wars Villains" because MA1 already has a
   team called Villains.
@@ -152,7 +163,7 @@ cache present, or it skips.
 `npcs.py` and `extras.py` each delete only their own rows before inserting,
 so either can be re-run alone. Keep it that way.
 
-## Traps the first two books hit
+## Traps the books hit
 
 - **Stat grids:** `--psm 3` reads some grids' letter and number columns
   sideways. `roster.py` re-reads every grid from a `--psm 6` crop; trust that,
@@ -161,8 +172,26 @@ so either can be re-run alone. Keep it that way.
   is capitals or short title case. A header with a U+FFFD apostrophe fails the
   test - handle it locally, and do not loosen the parser's rule without
   re-running every book: live data depends on it.
-- **The Edit and Write tools turn `\uXXXX` into the literal character.** Every
-  file here must stay ASCII. Check the bytes after editing.
+- **Height can fail outright.** ME1's headers box at 1.16-1.26 times the body
+  and its body lines reach 1.29, so no ratio separates them. Measure it on the
+  TSV before choosing a rule. Where every character has a grid, find the header
+  from the grid (`gridbooks.mark_headers`) and not from its size.
+- **A check that cannot read a value passes it.** `roster.check()` skips a
+  Health or Karma that is not a number, which is right for MA1's robots
+  (`Karma = -`) and hid ME1's `330 k` (art beside the grid) and an unread grid's
+  welded rows. A book that prints a number for every one should assert it
+  (`gridbooks.coverage`).
+- **One override matches one block, and marks all of it explained.** A second
+  fault in the same block goes in its `also`, or the Marvel smoke suite's
+  Health/Karma check finds it unrecorded, as it did ME1's Ghoul Captain.
+- **Characters statted inside an adventure's prose** (ME1's chapter
+  opponents) are read in `read_entries(opponent=True)`: an entry ends where
+  the chapter resumes, at an indented paragraph or a run-in that is not a
+  section. A run-in's curly apostrophe (`CLAUD VICTOR'S:`) defeats `RUN_IN`
+  unless it is folded first.
+- **The Edit and Write tools turn `\uXXXX` into the literal character**, and
+  the Bash tool's heredocs lose one backslash of `\\u` (build it with
+  `chr(92)`). Every file here must stay ASCII. Check the bytes after editing.
 - **Worktrees:** the local D1 may predate the Marvel tables; apply
   `db/migrations/marvel/*` locally before driving the GM page.
 - **Low confidence is not junk.** A title, a header or a real word can read at
