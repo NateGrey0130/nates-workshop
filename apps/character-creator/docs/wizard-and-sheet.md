@@ -150,11 +150,20 @@ A tag is one of two kinds, both declared in `CLASS_TAGS` in
   it ships. `scripts/class-tags.mjs` backfills a whole system from a reviewed
   table.
 
-**Help me choose** scores against the same tags: its answers are tag ids. A
-class with no `tags` line yet is scored on the suggested tags the backfill
-script would offer, so the quiz is useful before a system has been tagged. A
-draft saved when the quiz asked about melee and high-tech has those answers
-cleared on resume, and the question is asked again.
+**Help me choose** scores against the same tags, and only those: its answers
+are tag ids, and a class is scored on the tags it carries. A draft saved when
+the quiz asked about melee and high-tech has those answers cleared on resume,
+and the question is asked again.
+
+**A class with nothing to say still says so.** `tags: []` means the class was
+looked at and nothing in the vocabulary fits — a plain race, or a class its
+derived tags already describe. `class-check` warns only when the line is
+missing altogether, which is a class nobody has looked at.
+
+**`evil` is shown as *Evil*, not "Evil only".** It marks a class its book
+restricts to evil alignments, or to anarchist or evil, or whose every listed
+alignment is evil. A class that may be unprincipled or good is not tagged,
+however villainous it usually is.
 
 `Picker.wire()` restores the caret after re-render. Both pages rebuild by
 replacing `innerHTML`, so an input loses focus and drops the caret to the end

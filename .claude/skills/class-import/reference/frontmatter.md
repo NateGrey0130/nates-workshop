@@ -91,9 +91,27 @@ Two kinds, both in `CLASS_TAGS` in `apps/character-creator/js/parser.js`:
     `divine`.
   - Guidance: `beginner`, `high-power`, `evil`.
 
-`evil` is for a class the book restricts to evil alignments. `high-power` is for
-one it treats as needing the GM's approval. `beginner` is a judgement about how
-simply the class plays, so use it sparingly.
+**Read the alignment line before deciding `evil`.** Tag it when the book
+restricts the class to evil alignments, **or to anarchist or evil**, or when
+every alignment it lists is evil. Do not tag it when unprincipled or a good
+alignment is allowed: "selfish or evil" allows unprincipled, so it does not
+qualify, and "typically evil" is not a restriction.
+
+Four more rulings, each of which the obvious reading gets wrong:
+
+- **`flyer` is flight without a power or equipment.** Wings count. A spell, a
+  psionic power, a jet pack and bionic wings do not.
+- **`supernatural` is a supernatural or magical being**: a dragon, a demon, a
+  creature of magic. An ordinary D-Bee or an engineered mutant is not one.
+- **`high-power`** is a class the book treats as needing the GM's approval, or
+  one far above a normal character: dragons, godlings, demigods.
+- **`beginner`** is a judgement about how simply the class plays. Use it
+  sparingly.
+
+**A class no tag fits still gets a line: `tags: []`.** A plain race is not a
+role, and a pure mage or psychic is already described by its derived tags.
+The empty list says the class was looked at. A missing line says nobody has,
+and `class-check` warns on it.
 
 **An unknown tag is an ERROR, and an error hides the class.** The classes
 endpoint drops any class that fails to parse, so a typo in a tag removes the

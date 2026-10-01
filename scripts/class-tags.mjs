@@ -3,6 +3,7 @@
 //
 //   node scripts/class-tags.mjs --suggest --system rifts --out <review.md> [--local]
 //   node scripts/class-tags.mjs --emit <review.md> --out apps/character-creator/db/~NNN-class-tags-rifts.sql
+//   node scripts/class-tags.mjs --mark-untagged --out apps/character-creator/db/~NNN-class-tags-untagged.sql
 //
 // --suggest reads the published classes of one system - from PRODUCTION unless
 // --local is passed, because production wins on a value (F105) - and writes a
@@ -62,6 +63,29 @@ if (argv.includes('--suggest')) {
   }
   console.log(`${rows.length} classes in ${parts.length} script(s). Apply with d1-apply.mjs, --local first; `
     + 'each tilde number is claimed at merge.');
+} else if (argv.includes('--mark-untagged')) {
+  // Every published class with no tags line, in every system, gets an explicit
+  // `tags: []`. Run it AFTER a system's review has shipped: it turns "nobody
+  // tagged this" into "this was looked at and nothing fits", which is what
+  // stops class-check warning on a plain race for ever.
+  const target = targetFromArgv(process.argv);
+  const found = d1Query(
+    "SELECT class_id, markdown FROM imported_classes WHERE status = 'published' AND deleted_at IS NULL ORDER BY system, class_id",
+    { target });
+  const rows = [];
+  for (const r of found) {
+    const p = parseClassMarkdown(r.markdown);
+    if (!p.ok) { console.error(`  skipped ${r.class_id}: ${p.errors[0]}`); continue; }
+    if (!Array.isArray(p.data.tags)) rows.push({ class_id: r.class_id, category: p.data.category, tags: [] });
+  }
+  if (!rows.length) die(`every published class on ${target} already has a tags line`);
+  const parts = splitScripts(rows, basename(out));
+  for (const p of parts) {
+    const path = join(dirname(out), p.filename);
+    writeFileSync(path, emitSql(p.rows, { filename: p.filename, system: 'all-systems' }));
+    console.log(`${p.rows.length} classes -> ${path}`);
+  }
+  console.log(`${rows.length} untagged classes on ${target} in ${parts.length} script(s).`);
 } else {
-  die('pass --suggest or --emit');
+  die('pass --suggest, --emit or --mark-untagged');
 }

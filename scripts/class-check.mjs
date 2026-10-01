@@ -269,9 +269,11 @@ if (menOfArmsBesideOwnSdc(data?.sdc_base != null, data?.men_of_arms)) {
 // and `beginner` or `evil` are calls only a person reading the book can make.
 if (data && !Array.isArray(data.tags)) {
   const guess = suggestClassTags(data);
-  warnings.push('no tags line, so the wizard\'s tag filters never offer this class. Add '
-    + `one after category, at most ${MAX_AUTHORED_TAGS}, from the vocabulary in js/parser.js `
-    + `(CLASS_TAGS)${guess.length ? `; the fields suggest: tags: [${guess.join(', ')}]` : ''}.`);
+  warnings.push('no tags line, so nobody has said what this class is for. Add one after '
+    + `category, at most ${MAX_AUTHORED_TAGS}, from the vocabulary in js/parser.js (CLASS_TAGS)`
+    + `${guess.length ? `; the fields suggest: tags: [${guess.join(', ')}]` : ''}. If none fits `
+    + '(a plain race, or a class its derived tags already describe), write tags: [] to say '
+    + 'it was looked at.');
 }
 
 const list = (label, items) => {

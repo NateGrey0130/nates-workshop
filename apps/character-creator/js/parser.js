@@ -2911,7 +2911,12 @@ export const CLASS_TAGS = [
   { id: 'divine', label: 'Divine', kind: 'authored', group: 'nature', hint: 'Priest, cleric or servant of a god' },
   { id: 'beginner', label: 'Beginner', kind: 'authored', group: 'guidance', hint: 'Few choices; plays simply' },
   { id: 'high-power', label: 'High power', kind: 'authored', group: 'guidance', hint: 'Usually needs the GM\'s approval' },
-  { id: 'evil', label: 'Evil only', kind: 'authored', group: 'guidance', hint: 'Restricted to evil alignments' },
+  // The book restricts the class to evil alignments, OR to anarchist-or-evil, OR
+  // every alignment it lists is evil. Not when a good or unprincipled one is
+  // allowed ("selfish or evil" does not qualify). Nate's ruling, set on the
+  // Palladium Fantasy Assassin; the label said "Evil only" until it covered
+  // anarchist too.
+  { id: 'evil', label: 'Evil', kind: 'authored', group: 'guidance', hint: 'Restricted to evil, or to anarchist or evil, alignments' },
 ];
 export const MAX_AUTHORED_TAGS = 4;
 const TAG_BY_ID = new Map(CLASS_TAGS.map((t) => [t.id, t]));
@@ -2957,8 +2962,8 @@ export function classTags(c) {
  * Authored tags a class probably deserves, guessed from what it already says:
  * its occ_group, its skill names, its name, its natural abilities and its
  * restrictions. A STARTING POINT FOR A PERSON, never a value that ships
- * unread - scripts/class-tags.mjs prints these for review, and the guided quiz
- * falls back on them for a class nobody has tagged yet. `beginner` is never
+ * unread - scripts/class-tags.mjs prints these for review, and class-check
+ * offers them on a class with no tags line. `beginner` is never
  * guessed: it is exactly the judgement no field records.
  */
 export function suggestClassTags(c) {
