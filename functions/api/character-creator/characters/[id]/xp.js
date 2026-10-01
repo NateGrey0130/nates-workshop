@@ -16,14 +16,18 @@ export async function onRequestPost({ request, env, params }) {
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
   const character = await loadCharacter(env, params.id);
-  let newXp;
-  if ('total' in b) newXp = parseInt(b.total, 10);
-  else if ('delta' in b) newXp = character.xp + parseInt(b.delta, 10);
-  if (!Number.isFinite(newXp)) return json({ error: 'Body needs a numeric delta or total' }, 400);
-  newXp = Math.max(0, newXp);
+  const isTotal = 'total' in b;
+  const n = parseInt(isTotal ? b.total : b.delta, 10);
+  if (!Number.isFinite(n)) return json({ error: 'Body needs a numeric delta or total' }, 400);
 
-  await env.DB.prepare("UPDATE characters SET xp = ?, updated_at = datetime('now') WHERE id = ?")
-    .bind(newXp, params.id).run();
+  // A delta is added IN the statement, not to the value read above: the G.M.
+  // and a player awarding at the same moment would each add to the same
+  // starting number and one award would be lost.
+  const row = await env.DB.prepare(
+    `UPDATE characters SET xp = max(0, ${isTotal ? '?' : 'xp + ?'}), updated_at = datetime('now')
+     WHERE id = ? RETURNING xp`
+  ).bind(n, params.id).first();
+  const newXp = row ? row.xp : Math.max(0, isTotal ? n : character.xp + n);
 
   const cls = await loadCharacterClass(env, request.url, character);
   if (!cls) {

@@ -1,6 +1,6 @@
 // GET /api/character-creator/items — shared item catalog (optionally ?system=)
 
-import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { getUserEmail, unauthorized } from './_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   if (!getUserEmail(request)) return unauthorized();
@@ -30,8 +30,19 @@ export async function onRequestGet({ request, env }) {
      WHERE r.catalog = 'gear'`
   ).all();
 
-  return json({
+  // Revalidated by content hash, as catalogs.js does and for its reason: the
+  // wizard and every sheet load ask for this, and it changes only when a data
+  // script runs.
+  const body = JSON.stringify({
     items: results,
     redirects: Object.fromEntries(redirects.map((r) => [String(r.from_key).toLowerCase(), r.to_slug])),
   });
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+  const hex = [...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const etag = `W/"items-${hex}"`;
+  const headers = { ETag: etag, 'Cache-Control': 'private, no-cache' };
+  if (request.headers.get('If-None-Match') === etag) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(body, { headers: { 'Content-Type': 'application/json', ...headers } });
 }

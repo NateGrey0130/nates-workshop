@@ -367,6 +367,15 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
   // character, whose wizard spent its own.
   if (bankPowers.length) statements.push(...insertPowerGrantStatements(env, row.id, bankPowers));
 
-  if (statements.length) await env.DB.batch(statements);
+  // The row above and this batch are two writes. If the batch fails the
+  // character would exist with no gear and no banked picks, and a retry would
+  // make a second one - so take the row back out and let the failure show.
+  if (statements.length) {
+    try { await env.DB.batch(statements); }
+    catch (err) {
+      await env.DB.prepare('DELETE FROM characters WHERE id = ?').bind(row.id).run().catch(() => {});
+      throw err;
+    }
+  }
   return out({ id: row.id, level, xp, picks_pending: pending }, 201);
 }

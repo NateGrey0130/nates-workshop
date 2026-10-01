@@ -35,13 +35,19 @@ export async function listPending(env, characterId) {
   }));
 }
 
-export function insertGrantStatements(env, characterId, grants) {
+//
+// `ifLevel` makes each insert conditional on the character still being AT that
+// level, for a level-up: two confirms of one level-up would otherwise both bank
+// its grants (see level-confirm.js, which orders these before its own UPDATE).
+export const LEVEL_GUARD = ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+export function insertGrantStatements(env, characterId, grants, { ifLevel = null } = {}) {
   return grants.map((g) => env.DB.prepare(
     `INSERT INTO pending_skill_picks (character_id, granted_at_level, count, categories, kind)
-     VALUES (?, ?, ?, ?, ?)`
+     SELECT ?, ?, ?, ?, ?${ifLevel == null ? '' : LEVEL_GUARD}`
   ).bind(characterId, g.level, g.count,
     g.categories ? JSON.stringify(g.categories) : null,
-    g.kind === 'secondary' ? 'secondary' : null));
+    g.kind === 'secondary' ? 'secondary' : null,
+    ...(ifLevel == null ? [] : [characterId, ifLevel])));
 }
 
 // What is left of a set of grants after `spent` picks have been taken.

@@ -1331,10 +1331,33 @@ check('the character GET says a level is owed once XP pays for one',
 
 if (xp.body.proposal) {
   const target = xp.body.proposal.to_level ?? xp.body.level + 1;
-  const confirmed = await api('POST', `/characters/${charId}/level-confirm`, {
+  // Sent TWICE at once: a double tap, or the G.M. and the player together. One
+  // lands; the other must change nothing, whichever side of the first's write
+  // its own read fell on (409 after it read the old level, 400 after the new).
+  const pair = await Promise.all([1, 2].map(() => api('POST', `/characters/${charId}/level-confirm`, {
     to_level: target, picks: [],
-  });
+  })));
+  const confirmed = pair.find((r) => r.status === 200) || pair[0];
   check('a level-up can be confirmed', confirmed.status === 200, JSON.stringify(confirmed.body).slice(0, 250));
+  check('and confirmed only once when two confirms arrive together',
+    pair.filter((r) => r.status === 200).length === 1 && pair.some((r) => r.status === 409 || r.status === 400),
+    JSON.stringify(pair.map((r) => r.status)));
+  const history = await api('GET', `/characters/${charId}`);
+  const banked = (await api('GET', `/characters/${charId}/picks`)).body;
+  const twice = await api('POST', `/characters/${charId}/level-confirm`, { to_level: target, picks: [] });
+  check('a repeat of a level-up already taken is refused', twice.status === 400, twice.status);
+  check('and banks nothing more',
+    JSON.stringify((await api('GET', `/characters/${charId}/picks`)).body) === JSON.stringify(banked)
+      && history.status === 200, 'pending picks moved');
+
+  // Two awards at once are both kept: the delta is added in the statement.
+  const before = (await api('GET', `/characters/${charId}`)).body.character.xp;
+  await Promise.all([7, 11].map((delta) => api('POST', `/characters/${charId}/xp`, { delta })));
+  const after = (await api('GET', `/characters/${charId}`)).body.character.xp;
+  check('two XP awards arriving together are both kept', after === before + 18, `${before} -> ${after}`);
+  const floor = await api('POST', `/characters/${charId}/xp`, { delta: -99999999 });
+  check('XP does not go below zero', floor.body.xp === 0, floor.body.xp);
+  await api('POST', `/characters/${charId}/xp`, { total: before });
   const levelled = await api('GET', `/characters/${charId}`);
   check('and the character is actually at the new level',
     levelled.body.character.level === target,

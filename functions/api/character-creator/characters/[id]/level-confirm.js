@@ -19,7 +19,7 @@ import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor, secondFormHitPointDice,
          rollSecondFormHitPoints } from '../../_lib/leveling.js';
 import { diceBounds } from '../../../../../apps/character-creator/js/dice.js';
-import { insertGrantStatements, remainingGrants, resolvePicks, mergePicked, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, LEVEL_GUARD, remainingGrants, resolvePicks, mergePicked, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
          powerPickErrors } from '../../_lib/power-picks.js';
@@ -227,12 +227,19 @@ export async function onRequestPost({ request, env, params }) {
   // One batch. A level-up that raised the level but lost its picks, or banked
   // grants against a level-up that did not land, would both be worse than a
   // clean failure.
+  //
+  // And only ONCE. Everything above was computed from a read, so a second
+  // confirm of the same level-up (a double tap, the G.M. and the player at
+  // once) would pass every check too. Each statement is therefore conditional
+  // on the character still being at the level that was read: the inserts by
+  // LEVEL_GUARD, and the UPDATE - which is what moves the level, so it goes
+  // LAST - by its own WHERE. The loser changes nothing and is told so.
+  const ifLevel = character.level;
   const statements = [
-    env.DB.prepare(`UPDATE characters SET ${sets.join(', ')} WHERE id = ?`).bind(...binds, params.id),
     env.DB.prepare(
       `INSERT INTO level_history (character_id, from_level, to_level, xp_at_levelup, changes)
-       VALUES (?, ?, ?, ?, ?)`
-    ).bind(params.id, character.level, toLevel, character.xp, JSON.stringify(changes)),
+       SELECT ?, ?, ?, ?, ?${LEVEL_GUARD}`
+    ).bind(params.id, character.level, toLevel, character.xp, JSON.stringify(changes), params.id, ifLevel),
   ];
 
   // Bank only what was not spent in this same request. The consume-from-the-
@@ -242,7 +249,7 @@ export async function onRequestPost({ request, env, params }) {
   const unspent = allowance - picked.spent;
   if (unspent > 0) {
     statements.push(...insertGrantStatements(env, params.id,
-      remainingGrants(grants, picked.spent)));
+      remainingGrants(grants, picked.spent), { ifLevel }));
   }
 
   // The same for powers, counted PER GRANT rather than as one total: a spell
@@ -255,10 +262,16 @@ export async function onRequestPost({ request, env, params }) {
   const spentByKey = new Map(pickedSpent);
   const powerRemaining = remainingPowerGrants(powerGrants, spentByKey);
   if (powerRemaining.length) {
-    statements.push(...insertPowerGrantStatements(env, params.id, powerRemaining));
+    statements.push(...insertPowerGrantStatements(env, params.id, powerRemaining, { ifLevel }));
   }
+  statements.push(env.DB.prepare(
+    `UPDATE characters SET ${sets.join(', ')} WHERE id = ? AND level = ?`
+  ).bind(...binds, params.id, ifLevel));
 
-  await env.DB.batch(statements);
+  const results = await env.DB.batch(statements);
+  if (!results[results.length - 1]?.meta?.changes) {
+    return json({ error: 'This level-up was already applied. Reload the sheet.', conflict: true }, 409);
+  }
 
   return json({
     ok: true,
