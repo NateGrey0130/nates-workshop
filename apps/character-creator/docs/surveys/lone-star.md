@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear shipped; vehicles, classes, the Dog Boy material, creatures and NPCs to come. (2026-10-01)
+**Status:** `importing` — gear and vehicles shipped; classes, the Dog Boy material, creatures and NPCs to come. (2026-10-01)
 
-**Rows citing this book:** gear 12
+**Rows citing this book:** gear 12, vehicles 7
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -170,7 +170,7 @@ Rifts Ultimate Edition is the later printing:
 
 | the book prints | the catalog holds | verdict |
 |---|---|---|
-| NG-300 Speedster | Speedster Hovercycle (Rifts Ultimate Edition p.266) | same vehicle; leave the held row |
+| NG-300 Speedster | Speedster Hovercycle (Rifts Ultimate Edition p.266) | same vehicle; the held row is left. It carries main body 85 where printed 55 here gives 75 |
 | NG-230 Prowler | VX-635 Prowler (Triax) | different vehicles |
 
 **Seven rows are new**: MI-3000 Firefly, MI-1010 Desert Fox, NG-220 Rocket,
@@ -192,8 +192,8 @@ Gear ships before classes, because the classes name this book's items
 (the Madhaven lesson).
 
 1. **Gear** — 12 rows from printed 48-53. **Shipped.**
-2. **Vehicles** — 7 rows from printed 54-64 with their location blocks.
-   Printed 60 is a corrupt page: both hovercycles on it come off a render.
+2. **Vehicles** — 7 rows from printed 55-64 with 57 location rows and 33
+   weapon rows. **Shipped.**
 3. **Dog Pack classes** — Sea Dog, K-9 Sniffer, Kill Hound (printed 40-45).
 4. **GED mutant classes** — Ursa-Warrior, Battle Cat, Kill Cat, Monkey Boy
    Soldier, Monkey Boy Tech, Mutant Rat, Mutant Bat, Mini Monkey Spy
@@ -217,8 +217,6 @@ What is deliberately left, with the reason for each:
   (printed 97) — the first is written for NPC mutants; the second is not Dog
   Boy material. Not asked for; raise again if wanted.
 - **Ostrosaurus quick stats** (printed 163) — held from New West in full.
-- **Weapon options priced inside each hovercycle** — recorded in the vehicle
-  row's description; nothing reads the vehicle weapon table for a sheet.
 - **Weapons reprinted in the gear chapter** (C-14, C-18, CP-40, grenades,
   vibro-blades, Neural Mace, Dog Pack Spikes) — held, citing the books that
   print them in full.
@@ -260,6 +258,7 @@ they ship after the breed group exists.
 |---|---|---|
 | 2026-10-01 | `pal/data/lone-star-survey` | cache built (178 pp), `lone-star` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-01 | `pal/data/lone-star-gear` | 12 gear rows (`add-lone-star-gear.sql`), reconciled 12 of 12 against 170 dpi renders by `book-reconcile`. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-vehicles` | 7 vehicles, 57 M.D.C. locations, 33 weapon entries (`add-lone-star-vehicles.sql`): six hovercycles and the CS Death Wing. Extracted off 170 dpi renders by `book-extract-worker`; `book-reconcile` checked 7 of 7 and its one disagreement (a word in the Death Wing's description) was corrected. Three figures are stored as printed and say so in their rows. Applied `--remote` before the PR. |
 
 ### What remains
 
