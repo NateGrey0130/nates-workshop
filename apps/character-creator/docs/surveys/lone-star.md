@@ -1,6 +1,6 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear and vehicles shipped; classes, the Dog Boy material, creatures and NPCs to come. (2026-10-01)
+**Status:** `importing` — gear, vehicles and the Dog Boy tables shipped; classes, creatures and NPCs to come. (2026-10-01)
 
 **Rows citing this book:** gear 12, vehicles 7
 
@@ -233,24 +233,43 @@ The catalog already splits the Dog Boy into the `mutant-dog` race and the
 `dog-boy` occupation (`BOOK-INGEST-AUDIT` F110). Most of this lands on the
 race, where every Dog Pack occupation inherits it.
 
-| printed | material | where it goes | needs code? |
-|---|---|---|---|
-| 37 | Type/Breed of Dog, 20 bands | a pick-one `special_abilities` group on `mutant-dog`, one ability per band, each carrying its attribute, S.D.C. and initiative bonuses; swim percentages, track-by-smell changes and bite damage in the ability's text | no. Checked 2026-10-01: an R.C.C. carries pick-one ability groups today, and an ability grants `bonuses` and `psionics` |
-| 38 | Mutation Abnormality, 13 bands | a second pick-one group on `mutant-dog`, with a "none" option because the table is optional. The three psionic bands carry a `psionics` block | no, if one class may hold two pick-one groups; confirm at the premise audit |
-| 37 | Dog Boy's Height, 7 bands | not a mechanic; named in the race's description | no |
-| 38-39 | Feral Dog Boy (a runaway) | the `dog-boy` occupation with the adventurer's equipment and money in place of the soldier's | to decide: a variant can replace money, not equipment |
-| 39 | Free Born | `mutant-dog` paired with an ordinary occupation. The book's own list of typical occupations and its secondary-skill count for such a pairing go on the race | to check: which occupations refuse the race today, and whether a race can state a pairing's secondary-skill count |
-| 32-36 | the Dog Boy entry itself | compared field by field against the held Rifts Ultimate Edition rows; differences recorded here, the later book wins | no |
-| 40 | Sea Dog's Newfoundland requirement | a breed the table on printed 37 does not list; added to the breed group, citing printed 40 | no |
-| — | rolling the two tables instead of picking | a roll button on a pick-one group whose options carry percentile bands | **yes**, a wizard change. Useful beyond this book: the Gypsy Gifted and Africa's percentile splits are the same shape |
+**What shipped** (`pal/data/lone-star-dog-breeds`), with no code change:
 
-Two things an ability cannot do today, both recorded in the text of the
-ability rather than applied: grant or re-base a skill (the breed table's
-swimming percentages), and change a natural ability's percentage (track by
-smell).
+| material | where it went |
+|---|---|
+| Type/Breed of Dog, 20 bands | a pick-one `special_abilities` group on `mutant-dog`, plus an "other or mixed" option. Band 66-70 prints two breeds with different S.D.C. and is two options |
+| Mutation Abnormality, 15 bands | a second pick-one group on `mutant-dog`, plus a "none" option. The two "more psionics" bands raise the race's one Sensitive pick to two and four; band 96-00 is text only |
+| Dog Boy's Height, 7 bands | in the text of the breed group's last option |
+| Feral Dog Boy (printed 38-39) | a line on the `dog-boy` occupation's restrictions: same class, and what an adventurer's kit replaces the soldier's with. Not applied automatically |
+| Free Born (printed 39) | a line on `mutant-dog`'s restrictions: the typical occupations, the book's secondary-skill count for the pairing, its money and equipment. The race already pairs with any occupation that does not restrict race, so a Free Born is `mutant-dog` plus that occupation. Not applied automatically |
 
-The Dog Pack occupations of step 3 take `mutant-dog` as their only race, so
-they ship after the breed group exists.
+**Which printing.** Rifts Ultimate Edition printed 148-149 reprints both tables,
+and it is the later book and the one the Dog Boy cites. It adds a Perception
+bonus to 17 breeds and one abnormality, gives the Coonhound +5% to track by
+smell where printed 37 here gives +2%, the Wolf a 5D6 full bite where this book
+gives 4D6, and band 86-90 a +2 save vs possession. **RUE's figures are stored.**
+`book-reconcile` read both printings off 170 dpi renders and found no
+disagreement with either, so the differences above are the books', not a
+misreading.
+
+**Applied as numbers:** attribute dice, S.D.C., hit points, I.S.P.,
+initiative, Perception, strike, attacks and saves. **In the option's text:**
+swim percentages, track-by-smell changes, bite damage, size, skill bonuses,
+the Greyhound's dice-valued initiative bonus and the Bulldog's Spd penalty.
+
+**The Dog Boy entry itself** (printed 32-36) against the held rows, which cite
+Rifts Ultimate Edition and are left as they are: this book gives Dragonese at
+90% beside American, Weapon Systems +10%, Hand to Hand: Martial Arts, one W.P.
+of choice, eight secondary skills (two more at levels 2, 4, 8 and 12), Pilot
+Related: Any, and heavy riot armor at 50 M.D.C. as the standard issue.
+
+**Still open, and not done:** a roll button on a pick-one group whose options
+carry percentile bands. It is a wizard change, it would also serve the Gypsy
+Gifted and Africa's percentile splits, and nothing above needs it. The three
+Dog Pack specialists of step 3 (Sea Dog, K-9 Sniffer, Kill Hound) print their
+own complete stat blocks and are self-contained classes, so they do not take
+the breed group; the Sea Dog and K-9 Sniffer entries say the size and breed
+tables are not rolled for them.
 
 ## Ledger
 
@@ -259,6 +278,7 @@ they ship after the breed group exists.
 | 2026-10-01 | `pal/data/lone-star-survey` | cache built (178 pp), `lone-star` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-01 | `pal/data/lone-star-gear` | 12 gear rows (`add-lone-star-gear.sql`), reconciled 12 of 12 against 170 dpi renders by `book-reconcile`. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-vehicles` | 7 vehicles, 57 M.D.C. locations, 33 weapon entries (`add-lone-star-vehicles.sql`): six hovercycles and the CS Death Wing. Extracted off 170 dpi renders by `book-extract-worker`; `book-reconcile` checked 7 of 7 and its one disagreement (a word in the Death Wing's description) was corrected. Three figures are stored as printed and say so in their rows. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-dog-breeds` | `~055-dog-boy-breeds-and-mutations.sql`: the Type/Breed and Mutation Abnormality tables as two pick-one groups on `mutant-dog` (RUE's printing), a Free Born line on the race and a Feral Dog Boy line on `dog-boy`. Edits two held classes; adds no row citing this book. Applied `--remote` before the PR. |
 
 ### What remains
 
