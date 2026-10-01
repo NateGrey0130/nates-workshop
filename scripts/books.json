@@ -184,6 +184,16 @@
       "page_offset": 1
     },
 
+    "lone-star": {
+      "title": "Rifts World Book 13: Lone Star",
+      "aliases": ["Rifts Lone Star"],
+      "source_pdf": "Rifts-WorldBook13-LoneStar.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 174,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from its TEXT LAYER, --probe median 6,460 chars/page and 34.5% stop words. Offset verified by folio at four points - cache p100 reads 99, p150 reads 149, p174 reads 173, p175 reads 174 - one region, no split. printed_pages is 174, the last numbered folio at cache p175; cache p176 is the unnumbered second page of the Experience Tables, p177 an advertisement and p178 blank. welded_pages 3 (101, 127, 177), corrupt_pages 3 pages (p15, p61, p125), substituted_digits 35 pages. See apps/character-creator/docs/surveys/lone-star.md."
+    },
+
     "madhaven": {
       "title": "Rifts World Book 29: Madhaven",
       "aliases": ["Madhaven", "Rifts World Book Twenty-Nine: Madhaven"],
