@@ -569,7 +569,16 @@ function queueDraftSave() {
   draftTimer = setTimeout(saveDraft, 1500);
 }
 
+// The strip's one line about the draft. Written straight into the node rather
+// than through render(), which queues another save and would loop.
+function draftStatus(text, failed = false) {
+  S.draftNote = { text, failed };
+  const el = document.getElementById('draft-status');
+  if (el) { el.textContent = text; el.classList.toggle('warn', failed); }
+}
+
 async function saveDraft() {
+  clearTimeout(draftTimer); draftTimer = null;
   if (!draftWorthSaving() || S.draftConflict) return;
   try {
     const res = await api('draft', {
@@ -580,7 +589,11 @@ async function saveDraft() {
     // Carry the new version forward, or the next save claims a stale one and
     // is refused on a build nobody else touched.
     if (res && res.updated_at) S.draftVersion = res.updated_at;
+    draftStatus(`Draft saved ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
   } catch (err) {
+    // Said, not thrown: the build on screen is still whole, and the next change
+    // tries again.
+    if (!(err && err.status === 409)) draftStatus('Draft not saved — it will retry on your next change', true);
     // A draft is a convenience, and a failed save must never interrupt the
     // build it is trying to protect — with ONE exception. A 409 means another
     // tab, or something driving the wizard, now owns the draft. Retrying would
@@ -697,12 +710,15 @@ function renderHome() {
     : '';
   let card = '';
   if (d) {
-    const when = d.updated_at ? d.updated_at.replace('T', ' ').replace('Z', '') : 'earlier';
+    // D1 stores UTC as "YYYY-MM-DD HH:MM:SS"; shown in the reader's own time.
+    const at = d.updated_at ? new Date(/[TZ]/.test(d.updated_at) ? d.updated_at : d.updated_at.replace(' ', 'T') + 'Z') : null;
+    const when = at && !Number.isNaN(at.getTime())
+      ? at.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'earlier';
     card = `<div class="panel home-draft">
       <h2>Unfinished character</h2>
       <p>${esc(d.char_name || 'Unnamed')} — <b>${esc(d.class_name || d.class_id || 'unknown class')}</b>,
          stopped at step ${d.step + 1} of ${STEPS.length} (${esc(STEPS[d.step] || '?')}).</p>
-      <p class="muted small">Last saved ${esc(when)} UTC.</p>
+      <p class="muted small">Last saved ${esc(when)}.</p>
       <div class="nav">
         <button class="btn btn-primary" onclick="resumeDraft()">Resume this build</button>
         <button class="btn btn-ghost" onclick="dismissDraft()">Discard it</button>
@@ -866,6 +882,12 @@ function renderStepper() {
     // The rest stay spans: a focusable control that does nothing when you press
     // it is worse than plain text, and the stepper is a summary, not a menu.
     if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${stepNum(i)}${name}</button>`;
+    // A step already visited is a button too, so going back to fix one thing
+    // is not a walk forward through every Next. Only while the CURRENT step
+    // would let you leave it: its Next button's own reason gates this.
+    if (i > S.step && i <= (S.maxStep ?? 0) && !stepBlocker(S.step)) {
+      return `<button type="button" class="st seen" onclick="goStep(${i})">${stepNum(i)}${name}</button>`;
+    }
     // Which step you are on is otherwise carried in colour alone — ten pills
     // that read identically to anything not looking at them.
     const cur = i === S.step ? ' aria-current="step"' : '';
@@ -879,7 +901,7 @@ function renderStepper() {
   // settled, and it survives the labels disappearing on a phone.
   const na = STEPS.map((name, i) => [i, name]).filter(([i]) => !stepApplies(i));
   const phrase = (xs) => (xs.length < 2 ? xs[0] : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
-  const naNote = !na.length ? '' : `<p class="ws-note">
+  const naNote = !na.length || !S.rcc ? '' : `<p class="ws-note">
     ${na.length === 1 ? 'Step' : 'Steps'} ${phrase(na.map(([i, name]) => `${i + 1} (${name})`))}
     ${na.length === 1 ? 'does' : 'do'} not apply to this character.</p>`;
   // Rendered here because it is the one element every step draws, and a
@@ -892,7 +914,12 @@ function renderStepper() {
       c !== true && c.class_name ? ` (now ${esc(c.class_name)}, step ${c.step + 1})` : ''}.
     Your work here is safe on screen — finish and save, or reload to take theirs.
   </p>`;
-  const summary = summaryItems().join('') + naNote + notice;
+  // Whether the build has reached the server, in the one place drawn on every
+  // step. Empty until the first save, so it never claims one that did not happen.
+  const saved = S.draftNote && draftWorthSaving()
+    ? `<span class="ws ws-draft${S.draftNote.failed ? ' warn' : ''}" id="draft-status" role="status">${esc(S.draftNote.text)}</span>`
+    : (draftWorthSaving() ? '<span class="ws ws-draft" id="draft-status" role="status"></span>' : '');
+  const summary = summaryItems().join('') + saved + naNote + notice;
   $('stepper').innerHTML = `<div class="step-rail">${steps}</div>`
     + (summary ? `<div class="wiz-summary">${summary}</div>` : '');
   // The rail sticks under .header, so it needs the header's measured height.
@@ -910,6 +937,7 @@ function render() {
   // Reached by any path that does not go through goStep — a resumed draft, or
   // an ability dropped on a step that made the next one moot.
   if (!stepApplies(S.step)) S.step = seekStep(S.step, 1);
+  S.maxStep = Math.max(S.maxStep ?? 0, S.step);
   renderStepper();
   [renderSystem, renderRace, renderAttributes, renderOccupation, renderMorphus, renderSkills,
    renderEquipment, renderPowers, renderAdvancement, renderDetails, renderReview][S.step]();
@@ -973,7 +1001,29 @@ function groupUi(gi, key, val) {
   render();
 }
 
-function goStep(i) { if (stepApplies(i)) { S.step = i; render(); } }
+function goStep(i) {
+  if (!stepApplies(i)) return;
+  const moved = i !== S.step;
+  S.step = i; render();
+  // A new step starts at its top; the last one may have been left mid-list.
+  if (moved && typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+}
+
+// Why the step's own Next button is disabled, or ''. The same sentences those
+// buttons print, so a forward jump on the rail cannot pass a step its button
+// would not.
+function stepBlocker(i) {
+  if (i === ST.SYSTEM) return S.system ? '' : 'Choose a game system.';
+  if (i === ST.RACE) return S.rcc ? classBlocker() : 'Pick a class.';
+  if (i === ST.ATTRIBUTES) {
+    if (ATTRS.some((a) => !attrAbsent(a) && typeof S.attrs?.[a] !== 'number')) return 'Attributes still to roll.';
+    const reqs = S.cls?.requirements?.attributes || {};
+    return Object.entries(reqs).some(([k, v]) => typeof S.attrs?.[k] === 'number' && S.attrs[k] < v)
+      ? 'Class minimum not met.' : '';
+  }
+  if (i === ST.EQUIPMENT) return gearChoicesOutstanding().length ? 'Gear still to choose.' : '';
+  return '';
+}
 
 // Not every step applies to every character. The Occupation step is the first
 // one that does not: an O.C.C. taken as the primary class IS the occupation,
@@ -1089,8 +1139,19 @@ function renderSystem() {
   // (UI-AUDIT F39), where they no longer disappear behind a draft. Each still
   // gets a line of its own, for the reason these rows first did - UI-AUDIT F9.
 }
+// True once something that cannot be reproduced has been rolled or chosen.
+function buildHasWork() {
+  return Object.values(S.attrs || {}).some((v) => typeof v === 'number')
+    || (S.related || []).length > 0 || (S.secondary || []).length > 0;
+}
+function confirmReset(what) {
+  return !buildHasWork()
+    || confirm(`Changing the ${what} clears the attributes, skills and gear chosen so far. Change it?`);
+}
+
 function pickSystem(sys) {
   if (S.system !== sys) {
+    if (!confirmReset('game system')) return;
     S.rcc = null; S.quiz = [null, null, null]; S.classTagFilter = []; S.occTagFilter = [];
     resetBuild();
   }
@@ -1100,6 +1161,7 @@ function pickSystem(sys) {
   S.step = ST.RACE; render();
 }
 function resetBuild() {
+  S.maxStep = 0;
   S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = []; S.totem = null;
   // Group indices belong to one class's occ_skills, so their folds do too.
   S.groupUi = {};
@@ -1490,7 +1552,10 @@ function quizPick(i, val) { S.quiz[i] = val; render(); }
 // one scroll away, and what to do next is now the thing you are looking at.
 function pickClass(id) {
   const c = S.classes.find((x) => x.id === id);
-  if (S.rcc?.id !== id) resetBuild();
+  if (S.rcc?.id !== id) {
+    if (S.rcc && !confirmReset('class')) return;
+    resetBuild();
+  }
   S.rcc = c;
   render();
   revealClassDetail();
@@ -2817,7 +2882,7 @@ function renderAttributes() {
       control = `<button class="btn btn-sm btn-ghost" onclick="pbAdj('${a}',-1)">−</button> <b>${v ?? PB_BASE}</b>
                  <button class="btn btn-sm btn-ghost" onclick="pbAdj('${a}',1)">+</button>`;
     } else {
-      control = `<input type="number" min="1" max="40" value="${v ?? ''}" onchange="manualSet('${a}', this.value)">`;
+      control = `<input type="number" min="1" max="40" value="${v ?? ''}" aria-label="${a} value" onchange="manualSet('${a}', this.value)">`;
     }
     const req = reqs[a] ? `<span class="attr-note ${v != null && v < reqs[a] ? 'err' : 'ok'}">need ${reqs[a]}+</span>` : '';
     // A cap is ADVISORY here and the row says so, because the step does not
@@ -2852,7 +2917,7 @@ function renderAttributes() {
     const floorNote = raised
       ? ` <span class="attr-note ok">minimum ${floor} for ${esc(S.cls.name)}</span>` : '';
     return `<tr><td><b>${a}</b></td>
-      <td><select onchange="setMethod('${a}', this.value)">
+      <td><select aria-label="${a} method" onchange="setMethod('${a}', this.value)">
         <option value="roll" ${m === 'roll' ? 'selected' : ''}>Random roll</option>
         <option value="point" ${m === 'point' ? 'selected' : ''}>Point-buy</option>
         <option value="manual" ${m === 'manual' ? 'selected' : ''}>Manual entry</option>
@@ -2910,7 +2975,13 @@ function setMethod(a, m) { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a
 // would leave it holding a value from a method it has no row for.
 function setAllMethod(m) { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = m; if (m !== 'roll') S.attrRolls[a] = null; if (m === 'point') S.attrs[a] = S.attrs[a] ?? PB_BASE; }); attrsChanged(); render(); }
 function doRoll(a) { setRoll(a); render(); }
-function rollAll() { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
+function rollAll() {
+  // Rolls already on the table are not thrown away by one stray click.
+  if (ATTRS.some((a) => typeof S.attrs?.[a] === 'number')
+    && !confirm('Roll every attribute again? The values already here are replaced.')) return;
+  rollAllNow();
+}
+function rollAllNow() { ATTRS.filter((a) => !attrAbsent(a)).forEach((a) => { S.attrMethods[a] = 'roll'; setRoll(a); }); render(); }
 function manualSet(a, v) { const n = parseInt(v, 10); S.attrs[a] = Number.isFinite(n) && n > 0 ? n : null; S.attrRolls[a] = null; attrsChanged(); render(); }
 function pbAdj(a, delta) {
   const cur = S.attrs[a] ?? PB_BASE;
@@ -3852,7 +3923,12 @@ function renderEquipment() {
   // every book imported, and picking one item out of a native dropdown that
   // long means scrolling past everything you did not want.
   const gearMatches = Picker.filter(S.items, S.gearFilter);
-  const catalogOpts = gearMatches.map((it) => `<option value="${it.id}">${esc(it.name)}</option>`).join('');
+  const nameCount = new Map();
+  for (const it of gearMatches) nameCount.set(it.name, (nameCount.get(it.name) || 0) + 1);
+  const catalogOpts = gearMatches.map((it) => {
+    const tag = nameCount.get(it.name) > 1 ? [it.source_book || it.system, it.cost != null ? it.cost : null].filter((x) => x != null && x !== '').join(', ') : '';
+    return `<option value="${it.id}">${esc(it.name)}${tag ? ` (${esc(String(tag))})` : ''}</option>`;
+  }).join('');
 
   // "One energy pistol of choice" — the book leaves it open, so the player
   // closes it here. Same shape as the skill choice-groups on step 3.
@@ -3891,6 +3967,8 @@ function renderEquipment() {
   <div class="panel">
     <h2>Equipment <span class="muted small">— ${esc(S.cls.name)}</span></h2>
     <table>${rows || '<tr><td class="muted">Nothing yet.</td></tr>'}</table>
+    ${S.removedEquip ? `<p class="small" role="status">Removed ${esc(S.removedEquip.item.name || S.removedEquip.item.custom_name || 'item')}.
+      <button type="button" class="btn btn-sm btn-ghost" onclick="undoRmEquip()">Undo</button></p>` : ''}
     ${choiceBlocks ? `<h3>Choose your starting gear</h3>
       <p class="muted small">Your class leaves these open.</p>${choiceBlocks}` : ''}
     <h3>Add from item catalog</h3>
@@ -3899,15 +3977,15 @@ function renderEquipment() {
         placeholder: 'Filter gear by name, category or book…',
         shown: gearMatches.length, total: S.items.length })}
       <div class="rowline">
-        <select id="cat-item" size="1">${catalogOpts || '<option value="">— no match —</option>'}</select>
-        <input type="number" id="cat-qty" value="1" min="1">
+        <select id="cat-item" size="1" aria-label="Catalog item">${catalogOpts || '<option value="">— no match —</option>'}</select>
+        <input type="number" id="cat-qty" value="1" min="1" aria-label="Quantity">
         <button class="btn btn-sm" ${gearMatches.length ? '' : 'disabled'} onclick="addCatalog()">Add</button>
       </div>` : '<p class="muted small">Catalog is empty for this system.</p>'}
     <h3>Add custom item</h3>
     <div class="rowline">
-      <input type="text" id="cust-name" placeholder="Name">
-      <input type="text" id="cust-notes" placeholder="Notes (optional)" style="width:190px">
-      <input type="number" id="cust-qty" value="1" min="1">
+      <input type="text" id="cust-name" placeholder="Name" aria-label="Custom item name">
+      <input type="text" id="cust-notes" placeholder="Notes (optional)" aria-label="Custom item notes" style="width:190px">
+      <input type="number" id="cust-qty" value="1" min="1" aria-label="Custom item quantity">
       <button class="btn btn-sm" onclick="addCustom()">Add</button>
     </div>
   </div>
@@ -3915,7 +3993,20 @@ function renderEquipment() {
   ${gearWhy ? `<span class="nav-why">${esc(gearWhy)}</span>` : ''}
   <button class="btn btn-primary" ${outstanding ? 'disabled' : ''} onclick="goStep(ST.POWERS)">Powers &rarr;</button></div>`;
 }
-function rmEquip(i) { S.equipment.splice(i, 1); render(); }
+// The last row removed, kept so one Undo can put it back where it was. A
+// class-granted item has no other way to return short of re-picking the class.
+function rmEquip(i) {
+  const [item] = S.equipment.splice(i, 1);
+  S.removedEquip = item ? { item, at: i } : null;
+  render();
+}
+function undoRmEquip() {
+  const r = S.removedEquip;
+  if (!r) return;
+  S.equipment.splice(Math.min(r.at, S.equipment.length), 0, r.item);
+  S.removedEquip = null;
+  render();
+}
 function addCatalog() {
   const item = S.items.find((it) => it.id === +$('cat-item').value);
   if (item) S.equipment.push({ item_id: item.id, name: item.name, qty: Math.max(1, +$('cat-qty').value || 1), source: 'catalog' });
@@ -5007,8 +5098,8 @@ function renderReview() {
       <input type="text" id="char-name" value="${esc(S.charName)}" placeholder="e.g. Sir Roderick" onchange="S.charName=this.value.trim()">
       ${namePanel.button('char-name', { classes: nameClasses })}</div>
     ${namePanel.slot('char-name')}
-    <div class="rowline"><label class="small">Campaign:</label>
-      <select id="campaign-sel" onchange="S.campaignId=+this.value||null">
+    <div class="rowline"><label class="small" for="${campaigns.length ? 'campaign-sel' : 'new-campaign'}">Campaign:</label>
+      <select id="campaign-sel" ${campaigns.length ? '' : 'hidden'} onchange="S.campaignId=+this.value||null">
         <option value="">— pick —</option>
         ${campaigns.map((c) => {
           // Disabled rather than hidden, the barred-occupation pattern: a
@@ -5018,7 +5109,7 @@ function renderReview() {
           return `<option value="${c.id}" ${S.campaignId === c.id ? 'selected' : ''}${joinable ? '' : ' disabled'}>${esc(c.name)} (GM: ${esc(c.gm_email)})${joinable ? '' : ' — closed to new characters'}</option>`;
         }).join('')}
       </select>
-      <span class="muted small">or new:</span>
+      <span class="muted small">${campaigns.length ? 'or new:' : 'none yet for this game — name one:'}</span>
       <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="S.newCampaign=this.value.trim()">
     </div>
 
@@ -5030,7 +5121,28 @@ function renderReview() {
       are chosen — the rest are banked and wait on the sheet.</p>` : ''}
     <p class="small">Alignment: ${S.bio.alignment
       ? `<b>${esc(S.bio.alignment)}</b>${rules.alignmentGroup(S.bio.alignment) ? ` <span class="muted">(${rules.alignmentGroup(S.bio.alignment)})</span>` : ''}`
-      : '<span class="warn">not chosen — required, see Details</span>'}</p>
+      : `<span class="warn">not chosen — required.</span>
+         <button type="button" class="btn btn-sm btn-ghost" onclick="goStep(ST.DETAILS)">Go to Details</button>`}</p>
+    ${(() => {
+      // ADVISORY, like the choice groups below: related and secondary picks
+      // left unspent at level 1 are simply not taken, and until now nothing on
+      // the way here said any were left.
+      const sk = psiClass().skills || {};
+      const relWant = sk.occ_related_skills?.count || 0;
+      const secWant = sk.secondary_skills?.count || 0;
+      // Picks SPENT, not rows: a Hand to Hand style costs more than one, by
+      // the same sum the Skills step's own counter uses.
+      const relHave = (S.related || []).length + handToHandSurcharge(psiClass(),
+        (S.related || []).map((name) => ({ name, type: 'related' })));
+      const secHave = (S.secondary || []).length;
+      const left = [
+        relHave < relWant ? `${relWant - relHave} of ${relWant} related skills` : '',
+        secHave < secWant ? `${secWant - secHave} of ${secWant} secondary skills` : '',
+      ].filter(Boolean);
+      return left.length ? `<p class="small attr-note"><b>Not chosen yet:</b> ${left.join(' and ')}.
+        You can save without them.
+        <button type="button" class="btn btn-sm btn-ghost" onclick="goStep(ST.SKILLS)">Go to Skills</button></p>` : '';
+    })()}
     ${(() => {
       // A per-category floor the picks no longer reach (F6). The server refuses
       // this set, so saying so here turns an opaque failure at the last button
@@ -5059,7 +5171,16 @@ function renderReview() {
     <div class="review-stats">
       <div class="stat-col">
         <h4>Attributes</h4>
-        ${ATTRS.map((a) => `<div class="stat-row"><span>${a}</span><b>${S.attrs[a] ?? '—'}</b></div>`).join('')}
+        ${(() => {
+          // The number the sheet will show: what was rolled plus what the class
+          // and the skills taken add, as the Attributes step already printed it.
+          const add = derive.classBonuses(skillBonusClass(), 1, rolledAll()).attributes || {};
+          return ATTRS.map((a) => {
+            const v = S.attrs[a];
+            const plus = typeof v === 'number' && add[a] ? ` <span class="muted small">${add[a] > 0 ? '+' : ''}${add[a]} = </span>${v + add[a]}` : '';
+            return `<div class="stat-row"><span>${a}</span><b>${v ?? '—'}${plus}</b></div>`;
+          }).join('');
+        })()}
       </div>
       <div class="stat-col">
         <h4>Pools <button class="btn btn-sm btn-ghost" onclick="computePools(true); render()">↻ reroll</button></h4>
@@ -5090,22 +5211,37 @@ function renderReview() {
         return `${esc(row?.name || r.key)} <span class="muted">${esc(row?.table_name || '')}${
           r.sub_choice ? ` · ${esc(r.sub_choice)}` : ''}</span>`;
       })) : ''}
-    <p class="warn" id="save-msg"></p>
+    <p class="warn" id="save-msg" role="alert"></p>
   </div>
   <div class="nav"><button class="btn btn-ghost" onclick="goStep(ST.DETAILS)">&larr; Back</button>
-  <button class="btn btn-primary" ${S.saving ? 'disabled' : ''} onclick="save()">💾 Save character</button></div>`;
+  <button class="btn btn-primary" id="save-btn" ${S.saving ? 'disabled' : ''} onclick="save()">💾 Save character</button></div>`;
 }
 async function save() {
+  // A second press while the first is in flight would create a second
+  // character, and a second campaign when a new one is named.
+  if (S.saving) return;
   S.charName = $('char-name').value.trim();
   S.newCampaign = $('new-campaign').value.trim();
   const msg = $('save-msg');
-  if (!S.charName) { msg.textContent = 'Give your character a name.'; return; }
-  if (!S.campaignId && !S.newCampaign) { msg.textContent = 'Pick a campaign or name a new one.'; return; }
+  // The message sits under a review that runs past the fold, so it is brought
+  // to the reader rather than left where the button is not.
+  const say = (html) => {
+    msg.innerHTML = html;
+    if (typeof msg.scrollIntoView === 'function') msg.scrollIntoView({ block: 'center' });
+  };
+  // Every problem in one pass, not one per press.
+  const problems = [];
+  if (!S.charName) problems.push('Give your character a name.');
+  if (!S.campaignId && !S.newCampaign) problems.push('Pick a campaign or name a new one.');
   // "ALL players must choose an alignment for their character" (p.23). Caught
   // here rather than server-side so it cannot retroactively lock the editing of
   // characters created before the field existed.
   if (!S.bio.alignment) {
-    msg.textContent = 'Choose an alignment on the Details step — the book requires one, and there is no neutral.';
+    problems.push('Choose an alignment on the Details step — the book requires one, and there is no neutral.');
+  }
+  if (problems.length) {
+    say(problems.length === 1 ? esc(problems[0])
+      : `Before this can be saved:<ul class="err-list">${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>`);
     return;
   }
   // A Morphus is replayed from its decisions against the tables, so a build
@@ -5116,6 +5252,8 @@ async function save() {
     if (why) { msg.textContent = `${morphusForm().name || 'Morphus'}: ${why} - go back to that step.`; return; }
   }
   S.saving = true; msg.textContent = 'Saving…';
+  const saveBtn = document.getElementById('save-btn');
+  if (saveBtn) saveBtn.disabled = true;
   try {
     let campaignId = S.campaignId;
     if (!campaignId) {
@@ -5164,12 +5302,14 @@ async function save() {
     // Say WHICH rule broke. The class rules are enforced server-side, so this
     // is the only place a player finds out what to change.
     const details = errorDetails(err);
-    msg.innerHTML = details.length
+    say(details.length
       ? `Save failed: ${esc(err.message)}<ul class="err-list">`
         + details.map((d) => `<li>${esc(d)}</li>`).join('') + '</ul>'
-      : `Save failed: ${esc(err.message)}`;
+      : `Save failed: ${esc(err.message)}`);
   } finally {
     S.saving = false;
+    const btn = document.getElementById('save-btn');
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -5316,7 +5456,8 @@ async function boot(first = true) {
     // it is showing has to catch up when they land.
     if (first || S.home) render();
   } catch (err) {
-    $('app').innerHTML = `<div class="panel"><p class="err">Failed to load app data: ${esc(err.message)}</p></div>`;
+    $('app').innerHTML = `<div class="panel"><p class="err" role="alert">Failed to load app data: ${esc(err.message)}</p>
+      <button type="button" class="btn" onclick="location.reload()">Try again</button></div>`;
   }
 }
 
@@ -5342,6 +5483,12 @@ $('app').addEventListener('change', (ev) => {
 // reached the server yet. Warn only once attributes are rolled: a roll is the
 // first thing that cannot be reproduced, and before that the "loss" is picking
 // a system and a class again.
+// A phone rarely fires beforeunload: the tab is hidden and later discarded.
+// A save still waiting on its debounce is sent the moment the page goes away.
+const flushDraft = () => { if (draftTimer) saveDraft(); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushDraft(); });
+window.addEventListener('pagehide', flushDraft);
+
 window.addEventListener('beforeunload', (ev) => {
   if (S.savedId || !S.rcc || S.draftOffer) return;
   if (!Object.keys(S.attrs || {}).length) return;
@@ -5362,7 +5509,7 @@ Object.assign(window, {
   // ST would be a ReferenceError on every Back button.
   S, ST, render, computePools, goStep, nextStep, prevStep, pickSystem, classMode, quizPick, pickClass,
   toggleClassTag,
-  confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj,
+  confirmRace, rerollForMinimum, setMethod, setAllMethod, doRoll, rollAll, manualSet, pbAdj, undoRmEquip,
   setStartingLevel, rerollAdvancement, setLevelPick, pickMos, pickTotem,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
