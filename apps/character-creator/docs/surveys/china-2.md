@@ -1,6 +1,6 @@
 # Rifts World Book 25: China 2 — survey
 
-**Status:** `surveyed` — inventory, authority tables and catalog diff done; nothing imported, plan awaiting agreement. (2026-10-01)
+**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
 
 **Rows citing this book:** none
 
@@ -176,7 +176,7 @@ class plus additions. Production holds the base for most of them:
 | Lightning Warrior (related skills) | the core Crazy | `crazy` |
 | Metal Warrior | CS RPA Pilot / Elite RPA Pilot | `cs-rpa-fly-boy-ace`; confirm it is the class meant |
 | Demon-Eater Geo-Borg, Assault Geo-Borg | CS Heavy Cyborg, CS Light Cyborg | `cs-cyborg-strike-trooper` only; **confirm which printed class each means** |
-| Geofront Military Specialist | CS Military Specialist | **not found** by name |
+| Geofront Military Specialist | CS Military Specialist | **not in production.** Coalition War Campaign (cache `p068`) points to the core book for it, and the core book defines it (`rue` cache `p238`). It was never imported |
 
 A class here is written out in full from its base (see `declared-copy-pairs`
 in memory: a same-as class ships a full copy), so a missing base is a class
@@ -209,8 +209,8 @@ Hand-checked:
 | Chinese Antiquarianism | `Antiquarian` exists | new row; a China-specific skill |
 | W.P. Bamboo Staff, W.P. Chiang Zhu Spear | `W.P. Staff`, `W.P. Spear` exist | new rows; the book makes them separate proficiencies |
 
-**Genuinely new: 36 skills, plus Literacy: Chinese to decide.** That is 41
-less Go and the three RUE reprints. Seven of them are hand-to-hand styles,
+**Genuinely new: 37 skills**, Literacy: Chinese among them (agreed
+2026-10-01). That is 41 less Go and the three RUE reprints. Seven of them are hand-to-hand styles,
 stored as `skills` rows with `level_bonuses` as Japan's eight are.
 
 ### psionic_powers: 29 Chi-Gung powers, 29 missing, 0 false gaps
@@ -222,7 +222,8 @@ unrelated (`Exorcism`, `Psychic Purification`); none is the same power.
 The table's categories today are Healing, Physical, Sensitive, Super, Phase,
 Mind Bleeder and Special. `phase-world` set the precedent of a book-specific
 category for a class's own I.S.P. powers; a `Chi-Gung` category would follow
-it.
+it. **Agreed 2026-10-01: they go in `Special` instead**, and no category is
+added.
 
 ### gear, vehicles, classes
 
@@ -235,17 +236,18 @@ overlap. **Re-run `catalog-diff --remote` per batch before each data script**
 Phase 4 costs money; everything above was free. Proposed order, gear before
 the classes that carry it:
 
-1. **Skills** — 36 new rows (37 with Literacy: Chinese), printed 13-25. The
+1. **Skills** — 37 new rows, Literacy: Chinese among them, printed 13-25. The
    7 hand-to-hand styles with their level tables, read off renders. One PR.
-2. **Chi-Gung powers** — 29 `psionic_powers` rows, printed 56-62, in a
-   `Chi-Gung` category. One PR.
+2. **Chi-Gung powers** — 29 `psionic_powers` rows, printed 56-62, in the
+   existing `Special` category. One PR.
 3. **Green Scarf magic items** — about 44 gear rows, printed 101-114, plus
    the three fans of printed 23 and the Soothsayer's tools of 65-66. One PR.
 4. **Geofront gear** — 7 guns, ammunition, 4 Chi weapons, 5 armors, printed
    142-150. One PR.
 5. **Geofront machines** — 3 power armor and robot rows and 3 vehicles,
    printed 150-159, in the `vehicles` tables. One PR.
-6. **Celestial Court classes** — 12 classes, printed 43-101. Two PRs.
+6. **Celestial Court classes** — 12 classes, printed 43-101, the Enlightened
+   Demon among them. Two PRs.
 7. **Geofront classes** — 13 classes, printed 121-141, once every Coalition
    base is confirmed. One or two PRs.
 
@@ -257,34 +259,32 @@ What is deliberately left, with the reason for each:
 - **The Mystic Consultant** (127) — a role any outside class fills.
 - **Divination guidance for Game Masters** (62-63) — advice.
 
-### Open questions for Nate
+### Agreed with Nate, 2026-10-01
 
-1. **The 11 Mystic Martial Art Powers.** Each is a 15-level table of named
-   abilities that a class picks whole and then advances in. Japan's smaller
-   mystic powers went into class abilities, with level-gated picks left as
-   prose and a finding filed. These are far larger and are **shared by many
-   classes**, so writing each into every class that can pick it means many
-   copies. The choices: (a) prose inside each class, as Japan did;
-   (b) `skills` rows with `level_bonuses`, as the hand-to-hand styles are,
-   which states them once; (c) file the gap and import the classes with the
-   level-1 abilities only. This decides how much of steps 6 and 7 is
-   expressible.
-2. **The 11 body hardening exercises** (92-94) — the same question, smaller.
-3. **Enlightened Demon R.C.C.** — the book marks it optional, and its demon
-   form comes from China 1, which is not cached. Import it as a class now with
-   the demon form in prose, or hold it until book one is in?
-4. **Literacy: Chinese** — a new skill row, or the catalog's existing
-   literacy skill?
-5. **A `Chi-Gung` psionic category** — agreed, or fold into `Special`?
-6. **CS Military Specialist, and the Heavy and Light Cyborg bases** — not
-   found by name in production. Which printed classes are meant, and are they
-   in a book already imported?
+1. **Mystic Martial Art Powers: file the gap, import level 1.** A class
+   that takes one of the 11 powers states that power's level-1 abilities.
+   The later levels are not built and not written out per class. The gap is
+   filed in `BOOK-INGEST-AUDIT.md` when the first class batch meets it, and
+   each row or class says what was dropped (`book-survey` §8).
+2. **Body hardening exercises: the same.** Level-1 picks in, the rest filed.
+3. **Enlightened Demon R.C.C. goes in now**, with its demon form in prose,
+   not held for China 1.
+4. **Literacy: Chinese is a new skill row**, not `Language: Chinese` and not
+   the general literacy skill.
+5. **Chi-Gung powers go in the `Special` psionic category.** No new category.
+6. **The Coalition bases are assumed to be in a book already held**, most
+   likely a Coalition one. Checked the same day: the Military Specialist is
+   the core book's (`rue` cache `p238`) and is not in production. The Heavy
+   and Light Cyborg bases are still to be located; look in `rue` and `cwc`
+   before step 7. A base that is printed but was never imported is imported
+   first, as its own class.
 
 ## Ledger
 
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/china-2-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified at eight folios, `china-2` registered in `books.json`, this survey. No rows. Written in its own worktree while three other book sessions were live. |
+| 2026-10-01 | `pal/docs/china-2-decisions` | the six decisions Nate settled, recorded under *Agreed with Nate*; the plan's steps 1, 2 and 6 and the status line follow them. No rows. |
 
 ### What remains
 
