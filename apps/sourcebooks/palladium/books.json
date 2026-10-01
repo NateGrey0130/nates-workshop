@@ -725,6 +725,36 @@
    "total": 85
   },
   {
+   "slug": "lone-star",
+   "title": "Rifts World Book 13: Lone Star",
+   "code": "lone-star",
+   "status": "imported",
+   "date": "2026-10-01",
+   "added": [
+    [
+     "Classes",
+     15
+    ],
+    [
+     "Creatures",
+     1
+    ],
+    [
+     "Gear",
+     14
+    ],
+    [
+     "Notable NPCs",
+     28
+    ],
+    [
+     "Vehicles",
+     7
+    ]
+   ],
+   "total": 65
+  },
+  {
    "slug": "new-west",
    "title": "Rifts World Book 14: New West",
    "code": "new-west",
