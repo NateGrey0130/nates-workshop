@@ -92,7 +92,8 @@ const MEASURE = `(async () => {
   const overflowX = doc.scrollWidth - doc.clientWidth;
   const boxes = [...document.querySelectorAll('.box-body, .panel, table')]
     .filter((e) => e.offsetParent && e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX !== 'visible')
-    .map((e) => (e.className || e.tagName).toString().slice(0, 30) + ' ' + e.scrollWidth + '>' + e.clientWidth);
+    .map((e) => { const h = e.closest('.box, .panel')?.querySelector('h2, h3, h4, .box-head, .box-title');
+      return '"' + ((h?.innerText || e.className || e.tagName) + '').trim().slice(0, 30) + '" ' + e.scrollWidth + '>' + e.clientWidth; });
   window.scrollTo(0, 400); await w(250);
   let chrome = 0;
   for (const e of document.querySelectorAll('body *')) {
