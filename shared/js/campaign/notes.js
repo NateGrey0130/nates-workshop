@@ -27,7 +27,11 @@
     // The answer to the last question asked, and whether one is in flight. Kept
     // beside the search box because that is where the question was typed.
     answer: null, asking: false,
+    // Stored as it is typed (oninput), so a re-render never rebuilds a field
+    // from an older value than the one on screen.
     composer: { title: '', body: '', session_date: '' },
+    // The note being edited in place, or null: { id, title, body }.
+    editing: null,
   };
 
   async function load() {
@@ -64,6 +68,7 @@
   }
 
   function entryCard(e) {
+    if (S.editing && S.editing.id === e.id) return editCard(e);
     return `<div class="mc-inset mc-note">
     <div class="mc-row mc-spread">
       <b>${esc(e.title || '(untitled)')}</b>
@@ -72,9 +77,52 @@
     </div>
     <p class="mc-small mc-note-body">${body(e.body)}</p>
     <div class="mc-row">
+      <button class="mc-btn mc-btn-sm mc-btn-ghost" onclick="mcCampaign.notes.editEntry(${e.id})">edit</button>
       <button class="mc-btn mc-btn-sm mc-btn-ghost" onclick="mcCampaign.notes.removeEntry(${e.id})">delete</button>
     </div>
   </div>`;
+  }
+
+  // A note in place of its card, for fixing a typo or adding what was
+  // forgotten. The route has taken PATCH all along (the author their own, the
+  // G.M. any, and it refuses the rest); the page only ever offered delete.
+  function editCard(e) {
+    const d = S.editing;
+    return `<div class="mc-inset mc-note">
+    <input type="text" class="mc-input" aria-label="Title" placeholder="Title (optional)" value="${esc(d.title)}"
+      oninput="mcCampaign.notes.state.editing.title = this.value">
+    <textarea id="note-edit-body" class="mc-note-input" rows="5" aria-label="Note"
+      oninput="mcCampaign.notes.state.editing.body = this.value">${esc(d.body)}</textarea>
+    <div class="mc-row">
+      <button class="mc-btn mc-btn-sm mc-btn-primary" onclick="mcCampaign.notes.saveEntry()">Save</button>
+      <button class="mc-btn mc-btn-sm mc-btn-ghost" onclick="mcCampaign.notes.cancelEdit()">Cancel</button>
+      <span id="note-edit-msg" class="mc-small"></span>
+    </div>
+  </div>`;
+  }
+
+  function editEntry(id) {
+    const e = S.entries.find((x) => x.id === id);
+    if (!e) return;
+    S.editing = { id, title: e.title || '', body: e.body || '' };
+    render();
+    $('note-edit-body')?.focus();
+  }
+  function cancelEdit() { S.editing = null; render(); }
+  async function saveEntry() {
+    const d = S.editing;
+    if (!d) return;
+    const msg = $('note-edit-msg');
+    if (!d.body.trim()) { if (msg) msg.textContent = 'A note needs something in it.'; return; }
+    if (msg) msg.textContent = 'Saving…';
+    try {
+      await api('journal/' + d.id, M.json('PATCH', { title: d.title.trim() || null, body: d.body }));
+      S.editing = null;
+      await M.ctx.reload();
+    } catch (err) {
+      const m = $('note-edit-msg');
+      if (m) m.textContent = 'Failed: ' + err.message;
+    }
   }
 
   function composerBlock() {
@@ -83,12 +131,12 @@
     <h3>Add a note</h3>
     <div class="mc-row">
       <input type="text" class="mc-input" placeholder="Title (optional)" value="${esc(c.title)}"
-        onchange="mcCampaign.notes.state.composer.title = this.value">
+        oninput="mcCampaign.notes.state.composer.title = this.value">
       <input type="text" class="mc-input" placeholder="Session date (optional)" value="${esc(c.session_date)}"
-        onchange="mcCampaign.notes.state.composer.session_date = this.value">
+        oninput="mcCampaign.notes.state.composer.session_date = this.value">
     </div>
     <textarea id="note-body" class="mc-note-input" rows="5" placeholder="What happened? Who did you talk to? What did they want?"
-      onchange="mcCampaign.notes.state.composer.body = this.value">${esc(c.body)}</textarea>
+      oninput="mcCampaign.notes.state.composer.body = this.value">${esc(c.body)}</textarea>
     <div class="mc-bar mc-compose-bar">
       <span class="mc-muted mc-small">Everyone in the campaign can read and add notes.
         Type <b>@Name</b> to link someone to their dossier — a new name gets one.</span>
@@ -154,7 +202,10 @@
       // still a request per character.
       searchTimer = setTimeout(runSearch, 250);
     });
-    if (document.activeElement !== el && S.query) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    // Only when nothing else is being typed in: this used to take the caret
+    // out of the note composer whenever a search or an answer re-rendered.
+    const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (!busy && S.query) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
   }
 
   async function runSearch() {
@@ -253,5 +304,5 @@
   </div>`;
   }
 
-  M.notes = { state: S, load, html, afterRender, feedHtml, ask, clearSearch, postNote, removeEntry };
+  M.notes = { state: S, load, html, afterRender, feedHtml, ask, clearSearch, postNote, removeEntry, editEntry, cancelEdit, saveEntry };
 })(globalThis);
