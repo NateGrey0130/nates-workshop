@@ -24,6 +24,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
+         abilityRollBands, abilityRollMatches,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
@@ -1860,6 +1861,17 @@ function abilityPicker() {
     // Option above", which is a gating condition the player could not see.
     // Skill, MOS, totem and program groups have always rendered theirs.
     const note = g.note ? `<p class="attr-note">${esc(g.note)}</p>` : '';
+    // A group whose options are named for percentile bands is a table the book
+    // rolls on, so it gets the dice as well as the buttons. The last roll stays
+    // on screen: a pick that appeared with no number beside it would look chosen.
+    const rolled = abilityRolls[abilityRollKey(gi)];
+    const roller = abilityRollBands(g)
+      ? `<p class="small"><button class="btn btn-sm" onclick="rollAbilityGroup(${gi})">🎲 Roll d100</button>
+          ${rolled ? ` Rolled <b>${rolled.roll}</b>: ${rolled.names.length === 1
+            ? esc(rolled.names[0])
+            : `the book prints ${rolled.names.length} results for this band &mdash; choose between ${rolled.names.map(esc).join(' and ')}`}`
+            : ' <span class="muted">or choose below.</span>'}</p>`
+      : '';
     // The standing sentence is worth saying once rather than four times.
     const why = gi === 0
       ? `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
@@ -1870,9 +1882,37 @@ function abilityPicker() {
       ${why}
       ${note}
       <p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>
+      ${roller}
       ${opts}
     </div>`;
   }).join('');
+}
+
+// The last percentile roll per group, for display only. Not part of the draft:
+// what the character holds is `S.abilities`, and a reloaded wizard showing a
+// pick without its roll loses nothing the save needs.
+const abilityRolls = {};
+const abilityRollKey = (gi) => `${S.rcc?.id || ''}:${gi}`;
+
+// Roll the group's table and take what the dice land on, in place of whatever
+// the group held. Where the book prints two results for one band the roll
+// narrows the choice to those and the player makes it; taking either for them
+// would be a ruling the book does not make.
+function rollAbilityGroup(gi) {
+  const group = abilityGroups(S.rcc)[gi];
+  const bands = abilityRollBands(group);
+  if (!bands) return;
+  const roll = evalDice('1d100');
+  const names = abilityRollMatches(bands, roll);
+  abilityRolls[abilityRollKey(gi)] = { roll, names };
+  for (const held of S.abilities.filter((n) => abilityGroupIndexFor(S.rcc, n) === gi)) {
+    removeAbility(held);
+  }
+  if (names.length === 1) {
+    S.abilities.push(names[0]);
+    poolsMayHaveChanged(names[0]);
+  }
+  render();
 }
 
 // The definition behind a pick, keyed the way abilityPicker and applyAbilities
@@ -1921,6 +1961,13 @@ function takeAbility(name) {
 }
 
 function dropAbility(name) {
+  removeAbility(name);
+  render();
+}
+
+// dropAbility without the render, so a roll can clear a group and take its
+// result in one pass.
+function removeAbility(name) {
   const i = S.abilities.lastIndexOf(name);
   if (i >= 0) S.abilities.splice(i, 1);
   // If the dropped ability was the one claiming the occupation slot and no
@@ -1934,7 +1981,6 @@ function dropAbility(name) {
     }
   }
   poolsMayHaveChanged(name);
-  render();
 }
 
 function pickOcc(id) {
@@ -5514,7 +5560,7 @@ Object.assign(window, {
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
   rmEquip, addCatalog, addCustom, setBio, save, startOver,
-  resumeDraft, dismissDraft, pickVariant, pickOccVariant, pickOcc, takeAbility, dropAbility,
+  resumeDraft, dismissDraft, pickVariant, pickOccVariant, pickOcc, takeAbility, dropAbility, rollAbilityGroup,
   // The codex's ?class= link, when a draft was waiting.
   startOfferedClass, keepDraftOverClass,
   // The skill-program checkboxes are inline onchange handlers, so this is what

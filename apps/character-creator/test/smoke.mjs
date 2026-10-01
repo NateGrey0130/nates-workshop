@@ -830,7 +830,7 @@ import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/charact
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
-         abilityGroupIndexFor, abilityOccOptions, applyAbilities, applyVariant,
+         abilityGroupIndexFor, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
          combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml,
          relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
@@ -3422,6 +3422,29 @@ section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
     && String(abilityGroupCounts(cls, ['Gamma', 'Delta'])) === '0,2');
   check('an unoffered pick is counted against no group, so it cannot fill one',
     String(abilityGroupCounts(cls, ['Assigned By The G.M.'])) === '0,0');
+
+  // THE ROLL BUTTON. A pick-one group whose option names carry percentile bands
+  // is a table the book rolls on, and the wizard offers the dice for it. The
+  // bands are read from the names, so these pin what counts as a table.
+  const table = { choose: 1, from: ['Kind (01-50): A', 'Kind (51-70): B', 'Kind (51-70): C',
+    'Kind (71-00): D', 'Kind: none (table not used)'] };
+  const bands = abilityRollBands(table);
+  check('a pick-one group named for bands that cover 1-100 is rollable, and 00 closes at 100',
+    Array.isArray(bands) && bands.length === 4 && bands[3].lo === 71 && bands[3].hi === 100);
+  check('a roll lands on the option whose band holds it',
+    String(abilityRollMatches(bands, 1)) === 'Kind (01-50): A'
+    && String(abilityRollMatches(bands, 50)) === 'Kind (01-50): A'
+    && String(abilityRollMatches(bands, 100)) === 'Kind (71-00): D');
+  check('and on BOTH options where the book prints two for one band, so the player chooses',
+    abilityRollMatches(bands, 60).length === 2);
+  check('an option with no band is never what a roll lands on',
+    [1, 50, 60, 100].every((n) => !abilityRollMatches(bands, n).includes('Kind: none (table not used)')));
+  check('a table with a hole in it is not rollable, rather than rollable-sometimes',
+    abilityRollBands({ choose: 1, from: ['K (01-50): A', 'K (61-00): B'] }) === null);
+  check('nor is a group with no bands, a choose-2 group, or a named ability',
+    abilityRollBands(cls.special_abilities[0]) === null
+    && abilityRollBands({ choose: 2, from: ['K (01-50): A', 'K (51-00): B'] }) === null
+    && abilityRollBands({ name: 'K (01-50): A' }) === null);
 
   // THE REGRESSION ITSELF, stated as the disagreement rather than as an
   // outcome: with one pick held, the TOTAL has reached group 0's limit while

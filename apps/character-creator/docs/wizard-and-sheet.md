@@ -293,6 +293,30 @@ absent rather than partially restored.
 
 ---
 
+## A table the book rolls on gets the dice
+
+Some pick-one ability groups are a percentile table in the book: the Dog Boy's
+breed and mutation, the Gypsy Gifted's gift. Their options are named for their
+band - `Breed (06-10): Wolfhound` - and the Race step shows a **Roll d100**
+button on such a group beside the usual `+` and `-`.
+
+- **The bands are read from the option names**, by `abilityRollBands` in
+  [`js/parser.js`](../js/parser.js). No class states them a second time, so a
+  name and its band cannot disagree. `00` closes a band at 100.
+- **A group is rollable only when it is pick-one and its banded options cover
+  every number from 1 to 100.** A table with a hole would sometimes land on
+  nothing. An option with no band, such as "table not used", is never what a
+  roll lands on, and is still there to choose.
+- **A roll replaces whatever the group held** and shows its number beside the
+  button. Rolling again is allowed; so is choosing by hand afterwards.
+- **Where the book prints two results for one band** (the Dog Boy's 66-70) the
+  roll clears the group and names both, and the player chooses between them.
+- The last roll is shown for the session only. It is not part of the draft:
+  what the character holds is its list of abilities.
+
+Nothing new is stored and nothing is enforced server-side: a rolled pick and a
+chosen pick are the same pick.
+
 ## Starting gear the class leaves open
 
 Books routinely say *"one energy pistol of choice"*. `equipment_starting` only
