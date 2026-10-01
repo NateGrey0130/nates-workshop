@@ -2487,6 +2487,48 @@ export function abilityGroupCounts(cls, chosenNames) {
   return counts;
 }
 
+// The percentile bands a pick-one group's options carry in their NAMES, or null
+// when the group is not a table a player can roll on.
+//
+// A book that rolls a character's branch - the Dog Boy's breed, the Gypsy
+// Gifted's gift - is stored as a `{ choose: 1 }` group whose options are named
+// for their band: "Breed (06-10): Wolfhound". The band is already there for the
+// player to read, so the wizard's roll button reads the same text rather than
+// asking every class for a second field that could disagree with its name.
+//
+// `00` closes a band at 100, as the books print it. An option with no band (the
+// "table not used" choice) is simply not something a roll can land on.
+//
+// Null unless the banded options cover every number from 1 to 100: a roll on a
+// table with a hole in it would sometimes land on nothing, and a button that
+// sometimes does nothing reads as broken. Two options MAY share a band - the
+// Dog Boy's 66-70 prints two breeds - and `abilityRollMatches` returns both.
+const ABILITY_BAND = /\((\d{2})\s*-\s*(\d{2})\)/;
+export function abilityRollBands(group) {
+  if (!isAbilityChoice(group) || (+group.choose || 0) !== 1) return null;
+  const bands = [];
+  for (const opt of group.from || []) {
+    const name = typeof opt === 'string' ? opt : opt?.name;
+    const m = ABILITY_BAND.exec(String(name || ''));
+    if (!m) continue;
+    const lo = +m[1];
+    const hi = m[2] === '00' ? 100 : +m[2];
+    if (lo < 1 || hi < lo) return null;
+    bands.push({ name, lo, hi });
+  }
+  if (bands.length < 2) return null;
+  for (let n = 1; n <= 100; n++) {
+    if (!bands.some((b) => n >= b.lo && n <= b.hi)) return null;
+  }
+  return bands;
+}
+
+// The option names a percentile roll lands on: one, or several where the book
+// prints more than one result for a band.
+export function abilityRollMatches(bands, roll) {
+  return (bands || []).filter((b) => roll >= b.lo && roll <= b.hi).map((b) => b.name);
+}
+
 // Whether taking or dropping this ability changes a pool the wizard has ALREADY
 // ROLLED. Pools are rolled once and the later steps roll again only when there
 // are none, so an ability swapped after the roll otherwise leaves the old
