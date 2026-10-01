@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear, vehicles, the Dog Boy tables and all fifteen classes shipped; the Xiticix Killer and the notable NPCs to come. (2026-10-01)
+**Status:** `imported` — all seven steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-10-01)
 
-**Rows citing this book:** classes 15, gear 14, vehicles 7
+**Rows citing this book:** classes 15, creatures 1, gear 14, notable_npcs 28, vehicles 7
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -203,10 +203,13 @@ Gear ships before classes, because the classes name this book's items
    rows for the Mini Monkey Spy's custom armor (printed 83).
 5. **Pecos classes** — Tokanii, Simvan Monster Rider, Brodkil (printed
    154-164). **Shipped.**
-6. **Creatures and notable NPCs** — the Xiticix Killer, the 18 named
-   characters, and the seven Quiet Hunters of printed 119 as rows of their
-   own (Nate, 2026-10-01), through `scripts/bestiary-sql.mjs`. Printed 124
-   from a render.
+6. **Creatures and notable NPCs** — the Xiticix Killer (printed 91-93) and
+   28 notable NPCs with 54 attack lines, through `scripts/bestiary-sql.mjs`.
+   **Shipped.** The 28 are the 9 Coalition and 9 Pecos characters of the
+   plan plus the Quiet Hunters, who are **ten**, not seven: the first plan
+   counted the alignment lines on printed 119. Five are pictured, three more
+   are named as elite members, and two mutant rats are attached to the team
+   for observation; each is a row (Nate, 2026-10-01).
 7. **The Dog Boy material** — see *The Dog Boy, in full* below.
 
 What is deliberately left, with the reason for each:
@@ -285,8 +288,30 @@ tables are not rolled for them.
 | 2026-10-01 | `pal/data/lone-star-dog-pack-classes` | 3 classes: `sea-dog`, `k-9-sniffer`, `kill-hound`. Drafted one agent per class from a shared brief, numbers read off 170 dpi renders; `book-reconcile` checked all three against printed 32-36 and 40-45 and the Experience Tables, and its six equipment-row findings were harmonised. No gear stubs. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-pecos-classes` | 3 classes: `tokanii`, `simvan-monster-rider`, `brodkil`. `book-reconcile` read all three against renders of printed 154-156 and 162-164 and the Experience Tables: no disagreements. No gear stubs. The Simvan's two sexes differ in P.P.E., psionics and skills and are two variants plus a matching pick-one psionics ability; the Brodkil's five attacks are stored as printed, and the page does not say whether they include its listed hand to hand. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-mutant-classes` | 9 classes: `ursa-warrior`, `battle-cat`, `kill-cat`, `mini-monkey-spy`, `monkey-boy-soldier`, `monkey-boy-tech`, `mutant-rat`, `mutant-bat`, `psi-x-alien`; 2 gear rows (`add-lone-star-mini-monkey-armor.sql`). Three `book-reconcile` passes against renders; their findings (the Kill Cat's S.D.C. field, money and I.S.P. wording, one page range, one citation, one garbled sentence) were applied by one harmoniser. Species are variants on the bear, the Battle Cat and the Monkey Boy Soldier, and a pick-one ability on the Kill Cat. No gear stubs; a printed comb is not stored. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-creatures-and-npcs` | `add-lone-star-creatures-and-npcs.sql`: 1 creature (the Xiticix Killer), 28 notable NPCs, 54 attack lines. Four extraction agents, three `book-reconcile` passes against renders: no wrong figure in any row; the fixes were one convention (Sabre Lasar stores his true, dragon figures and notes the guise), two sentences sourced from printed 137 and one ambiguous vehicle line. Status moved to `imported`. Applied `--remote` before the PR. |
 
 ### What remains
 
-Nothing has shipped, so `source-coverage.mjs` has no line for this book yet.
-Paste its output here with the first data PR.
+`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the last apply:
+
+```
+  lone-star           65 / 0
+```
+
+All 65 rows citing this book trace to a cached page.
+
+```
+BACKLOG       rows an importer created and nobody finished
+  gear stubs            14   description still says STUB - created by class import
+  skill stubs            5   created by an import and never given a base %, a bonus or a note
+  spell stubs           19   level 0 and 0 P.P.E.
+  psionic stubs          1   0 I.S.P.
+  spell text missing     0   nothing for the codex to show
+  psionic text missing   0   nothing for the codex to show
+```
+
+None of these is this book's: no class script here emitted a stub, and the
+book adds no skill, spell or psionic power.
+
+**Not done, and waiting on a decision:** a roll button for a pick-one group
+whose options carry percentile bands (see *The Dog Boy, in full*).
