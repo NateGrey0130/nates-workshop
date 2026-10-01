@@ -1147,6 +1147,12 @@ body.play-mode .vital.conflict .val > input,
 
 /* Attribute stack — the sheet's I.Q./M.E./M.A./… column. */
 .attr-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+/* "9 +5 = 14" at the size of a bare "9" ran 334px into a 281px box, and the
+   box scrolled sideways with the totals cut off (measured at 1280, 2026-10-01).
+   The working is smaller than the answer, and never wraps mid-sum. */
+.attr-stack .field > .val { white-space: nowrap; }
+.attr-stack .field > .val .attr-work { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.attr-stack .field > .val .attr-work .attr-bonus { font-size: 13px; }
 /* Every number on the sheet used to land within two points of every other
    one: current H.P. at 17px and I.Q. - set once at creation - at 15. The
    number you touch forty times a session and the number you touch once were
@@ -1307,6 +1313,41 @@ body.play-mode .vital .steppers button {
   color: var(--text-primary); cursor: pointer;
 }
 body.play-mode .vital .steppers button:active { background: var(--accent-glow); }
+.vital .steppers .amt { font-size: 13px; font-family: var(--font-mono); margin-left: 1px; }
+#roll-mod.on { border-color: var(--accent); color: var(--accent); font-weight: 800; }
+
+/* PLAY MODE ON A PHONE. The strip above the tabs sticks, and at 375 wide four
+   stacked pool cards plus a two-row tab bar made it 504px of an 812px screen:
+   with the header and the action bar, 59px were left for the sheet itself
+   (measured 2026-10-01). Each card becomes one line - the number on the left,
+   its steppers beside it - two to a row, and the tabs become one scrolling row. */
+@media (max-width: 620px) {
+  body.play-mode .vitals-strip { grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 6px; }
+  body.play-mode .vital {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "lbl step" "val step" "bar bar";
+    align-items: center; text-align: left; padding: 4px 6px; column-gap: 4px;
+  }
+  body.play-mode .vital .lbl { grid-area: lbl; }
+  /* The maximum sits UNDER the number: beside it, "20 / 20" ran under the
+     steppers and read "20 / 2". */
+  body.play-mode .vital .val {
+    grid-area: val; margin-top: 0; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0;
+  }
+  body.play-mode .vitals-save > span.muted.small:last-child { display: none; }
+  /* Sized on the CARD, as the rule this narrows is, so print still outranks it. */
+  body.play-mode .vital { --val-size: 24px; }
+  body.play-mode .vital[data-digits="4"] { --val-size: 19px; }
+  body.play-mode .vital[data-digits="5"] { --val-size: 16px; }
+  body.play-mode .vital .max { font-size: 11px; }
+  body.play-mode .vital .bar { grid-area: bar; }
+  body.play-mode .vital .steppers { grid-area: step; margin-top: 0; gap: 4px; }
+  body.play-mode .vital .steppers button { flex: 0 0 40px; min-height: 44px; font-size: 17px; padding: 0; }
+  body.play-mode .vitals-save { margin-top: 2px; }
+  body.play-mode .tabbar { flex-wrap: nowrap; margin-top: 4px; padding: 4px 0; }
+  body.play-mode .tabbar .tab { flex: 0 0 auto; padding: 8px 12px; }
+}
 
 /* The skills tab used to break out of .wrap on its own - width + margin-left:
    50% + translate: -50%, capped at the viewport - because .wrap was 900px and
