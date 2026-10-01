@@ -7,6 +7,10 @@
 //   node scripts/d1-apply.mjs --remote apps/character-creator/db/*.sql
 //   node scripts/d1-apply.mjs --check --remote db/migrations/021-x.sql   (applies nothing)
 //
+// - Under --remote (and --check) a file whose migration or ~NNN number another
+//   branch on origin already uses under a different name is REFUSED before
+//   anything is applied. --allow-number overrides.
+//
 // - Globs are expanded by this script, sorted, because PowerShell does not
 //   expand them for native commands and the same command should work in both
 //   shells. A file whose first-column comment says `-- local-only` is SKIPPED
@@ -60,7 +64,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH } from './sql-statements.mjs';
+import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH, sequenceCollisions } from './sql-statements.mjs';
 import { assertionMismatches, preflightReadbacks } from './readback-lib.mjs';
 import { d1Batch, d1Query, dbFromArgv, localD1Args, repoRoot } from './d1-query-lib.mjs';
 
@@ -75,6 +79,9 @@ const skipPreflight = args.includes('--skip-preflight');
 // Nothing is applied. A target is still required, because the plan says which
 // of the files that target has already recorded.
 const checkOnly = args.includes('--check');
+// --allow-number: apply a file whose sequence number another branch also
+// carries. For the day the other branch is the one that will be renumbered.
+const allowNumber = args.includes('--allow-number');
 // Globs are expanded HERE, not by the shell. PowerShell does not expand them
 // for native commands at all, so `db/*.sql` reaches this script as a literal
 // and dies as 'no such file'. Doing it here means one documented command
@@ -231,6 +238,44 @@ if (skipPreflight) {
       + 'file, so a new file that sorts before scripts production already has is asserting against an older catalog than '
       + 'production holds - name it to sort LAST (operations.md, the z-tier table). --skip-preflight bypasses this check '
       + 'and is the wrong answer unless the replay itself is at fault.');
+  }
+}
+
+// ── a number another branch already carries ──
+//
+// "Claimed at merge" and "applied before merge" disagree: the number is in the
+// filename production records, and it is recorded here, before any merge. So
+// this is where two sessions holding the same number has to surface. Every
+// branch on origin is read, main included, for a DIFFERENT file with the same
+// migration or ~NNN number as one about to be applied.
+//
+// --remote and --check only: a --local apply records nothing anyone else
+// reads. Soft where git cannot answer (no network, no remote): it says so and
+// goes on, because refusing to apply for want of a fetch would be a worse day.
+if ((remote || checkOnly) && !allowNumber) {
+  const git = (a) => spawnSync('git', a, { cwd: repoRoot, encoding: 'utf8' });
+  const fetched = git(['fetch', '--quiet', 'origin']);
+  const refs = git(['for-each-ref', '--format=%(refname:short)', 'refs/remotes/origin']);
+  if (fetched.status !== 0 || refs.status !== 0) {
+    console.log('\nsequence numbers: could not read origin - NOT checked against other branches.');
+  } else {
+    const dirs = ['db/migrations', 'apps/character-creator/db'];
+    const seen = new Map();
+    for (const ref of refs.stdout.split('\n').map((s) => s.trim()).filter((r) => r && r !== 'origin/HEAD' && r !== 'origin')) {
+      const tree = git(['ls-tree', '-r', '--name-only', ref, '--', ...dirs]);
+      if (tree.status !== 0) continue;
+      for (const p of tree.stdout.split('\n').filter(Boolean)) if (!seen.has(p)) seen.set(p, ref);
+    }
+    const clashes = sequenceCollisions(files, [...seen.keys()]);
+    if (clashes.length) {
+      for (const c of clashes) {
+        console.error(`  NUMBER TAKEN ${c.file}: ${c.seq} ${c.n} is also ${c.other} on ${seen.get(c.other)}`);
+      }
+      die(`${clashes.length} file(s) carry a sequence number another branch already uses - NOTHING was applied. `
+        + 'Renumber to the next free one (the filename, the header and any ledger INSERT that names the file), '
+        + 'or pass --allow-number if the other branch is the one that will move.');
+    }
+    console.log(`\nsequence numbers: no other branch on origin carries these (${seen.size} files read).`);
   }
 }
 

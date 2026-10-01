@@ -20,6 +20,7 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
+import { sequenceClaim, sequenceCollisions } from '../../../../scripts/sql-statements.mjs';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['Sequence numbers are used once'];
@@ -68,6 +69,26 @@ export function run() {
     const late = collisions(['~007-a.sql', '~7-b.sql', '~008-c.sql', 'z-d.sql'], LATE_TIER_NUMBER);
     check('the ~NNN parser compares numbers, not spellings',
       JSON.stringify(late) === JSON.stringify(['7: ~007-a.sql, ~7-b.sql']), JSON.stringify(late));
+  }
+
+  // What d1-apply asks before a --remote apply: is this file's number already
+  // another branch's? The same name is the file itself and is not a clash; a
+  // migration number is one sequence across the group folders; a data script
+  // and a migration never clash with each other.
+  {
+    const others = ['db/migrations/086-a.sql', 'db/migrations/marvel/087-b.sql',
+      'apps/character-creator/db/~055-c.sql', 'apps/character-creator/db/fix-d.sql'];
+    const got = sequenceCollisions(['db/migrations/tools/087-x.sql', 'db/migrations/086-a.sql',
+      'apps/character-creator/db/~55-y.sql', 'apps/character-creator/db/~056-z.sql', 'db\\migrations\\086-w.sql'], others)
+      .map((c) => `${c.file}>${c.other}`);
+    check('a number another branch carries under a different name is a collision, and its own name is not',
+      JSON.stringify(got) === JSON.stringify([
+        'db/migrations/tools/087-x.sql>db/migrations/marvel/087-b.sql',
+        'apps/character-creator/db/~55-y.sql>apps/character-creator/db/~055-c.sql',
+        'db\\migrations\\086-w.sql>db/migrations/086-a.sql']), JSON.stringify(got));
+    check('a file with no number claims none',
+      sequenceClaim('apps/character-creator/db/fix-d.sql') === null
+        && sequenceClaim('apps/character-creator/db/086-not-a-migration.sql') === null);
   }
 
   const migrations = migrationFiles().filter((f) => MIGRATION_NUMBER.test(f.split('/').pop()));
