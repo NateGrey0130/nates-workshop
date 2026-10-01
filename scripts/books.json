@@ -115,6 +115,16 @@
       "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number. The last folio is 192 (file p193, the Zavor), read off a render on 2026-09-18; this said 172 until then. Its one reader, cacheCoverage, passes either way (all 200 pages are cached), but a reader scoping the book by it stopped twenty pages short, in the middle of the monsters. The cache manifest records 172 as well; the text layer prints the late folios with an interior space ('1 91', '1 92')."
     },
 
+    "china-2": {
+      "title": "Rifts World Book 25: China 2",
+      "aliases": ["China 2", "China Two", "Rifts China 2", "Rifts China Two", "Rifts World Book 25: China 2 - Heroes of the Celestial Court", "Heroes of the Celestial Court"],
+      "source_pdf": "Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3; the page images are 150 dpi natively. Not World Book 24 (China 1, The Yama Kings), which is not registered. Offset +1 read off renders at printed 3, 4, 5, 13 and 160 (cache p004, p005, p006, p014, p161) and off the OCR folio at 15, 25, 102 and 152 - one region, no split. printed_pages is 160, the Experience Tables at cache p161; the manifest says 158 because the OCR lost the last folios. Cache p162 is the back cover. Nine cache pages are empty or near-empty and every one is a full-page art plate (p007, p043, p050, p079, p088, p116, p123, p134, p153), checked on a contact sheet. See apps/character-creator/docs/surveys/china-2.md."
+    },
+
     "cwc": {
       "title": "Rifts World Book 11: Coalition War Campaign",
       "aliases": ["Coalition War Campaign", "Rifts World Book Eleven: Coalition War Campaign", "Rifts Coalition War Campaign"],
