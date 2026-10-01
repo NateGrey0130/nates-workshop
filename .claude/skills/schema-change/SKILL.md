@@ -145,7 +145,7 @@ node scripts/d1-apply.mjs --remote db/migrations/NNN-thing.sql
 Then ask the database, rather than reading the exit code:
 
 ```bash
-npx wrangler d1 execute DB --remote --command "SELECT filename FROM schema_migrations ORDER BY filename;"
+node scripts/q.mjs --remote "SELECT filename FROM schema_migrations ORDER BY filename"
 ```
 
 `sqlite_master` and `schema_migrations` are authoritative. `pragma_table_info`
