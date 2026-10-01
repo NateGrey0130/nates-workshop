@@ -235,7 +235,7 @@ the string.
 Exit codes from `wrangler d1 execute` are advisory: query the thing back.
 
 ```bash
-npx wrangler d1 execute DB --remote --command "SELECT count(*) FROM schema_migrations;"
+node scripts/q.mjs --remote "SELECT count(*) FROM schema_migrations"
 ```
 
 **Three ways that query comes back wrong without failing** (`\"` in PowerShell,
