@@ -3,7 +3,7 @@
 // DELETE /api/character-creator/characters/:id/items/:itemId — soft-remove: sets
 //        removed_at so inventory history survives (never hard-deletes).
 
-import { getUserEmail, unauthorized, json, readJson, forbidden, characterAccess } from '../../../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, forbidden, characterAccess, tooLong, TEXT_MAX } from '../../../_lib/auth.js';
 
 async function guard(env, params, email) {
   const access = await characterAccess(env, params.id, email);
@@ -95,7 +95,11 @@ export async function onRequestPatch({ request, env, params }) {
     sets.push('qty = ?'); binds.push(qty);
   }
   if ('equipped' in b) { sets.push('equipped = ?'); binds.push(b.equipped ? 1 : 0); }
-  if ('notes' in b) { sets.push('notes = ?'); binds.push(b.notes ?? null); }
+  if ('notes' in b) {
+    const over = tooLong([['The item note', b.notes, TEXT_MAX.line]]);
+    if (over) return over;
+    sets.push('notes = ?'); binds.push(b.notes ?? null);
+  }
   if ('enchantments' in b) {
     const checked = await validateEnchantments(env, row, b.enchantments);
     if (checked.error) return json({ error: checked.error }, 400);

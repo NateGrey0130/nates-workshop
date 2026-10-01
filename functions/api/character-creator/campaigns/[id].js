@@ -12,7 +12,7 @@
 //       only while no one else has a character in it. Everything else the
 //       campaign owns goes with it by ON DELETE CASCADE.
 
-import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson, requireCampaign } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson, requireCampaign, tooLong, TEXT_MAX } from '../_lib/auth.js';
 
 const REST_POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 
@@ -38,6 +38,8 @@ export async function onRequestPatch({ request, env, params }) {
 
   const body = await readJson(request);
   if (!body) return json({ error: 'Invalid JSON body' }, 400);
+  const over = tooLong([['The G.M. notes', body.gm_notes, TEXT_MAX.section]]);
+  if (over) return over;
   const sets = [], binds = [];
   if ('gm_notes' in body) { sets.push('gm_notes = ?'); binds.push(body.gm_notes ?? null); }
   if ('open' in body) { sets.push('open = ?'); binds.push(body.open ? 1 : 0); }

@@ -4,7 +4,7 @@
 //       the client whether to show edit controls (server enforces regardless).
 // PATCH /api/character-creator/characters/:id — owner/GM only; current stats + notes.
 
-import { getUserEmail, unauthorized, json, readJson, requireCharacter, isHiddenNpc } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, requireCharacter, isHiddenNpc, tooLong, TEXT_MAX } from '../_lib/auth.js';
 import { listPending } from '../_lib/skill-picks.js';
 import { listPendingPowers, loadPowerDescriptions } from '../_lib/power-picks.js';
 import { listGrants } from '../_lib/grants.js';
@@ -344,6 +344,10 @@ export async function onRequestPatch({ request, env, params }) {
     sets.push(`${field} = ?`);
     binds.push(v);
   }
+
+  const over = tooLong([['The notes', body.notes, TEXT_MAX.section],
+    ...Object.keys(JSON_SECTIONS).map((s) => [`The ${s} section`, body[s], TEXT_MAX.section])]);
+  if (over) return over;
 
   for (const [section, kind] of Object.entries(JSON_SECTIONS)) {
     if (!(section in body)) continue;

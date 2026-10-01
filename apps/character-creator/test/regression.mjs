@@ -2344,6 +2344,16 @@ check('and a private flag that is not true marks nothing',
 console.log('\n[6/7] Journal, drafts, lists, admin');
 const entry = await api('POST', '/journal', { character_id: charId, title: 'Session 1', body: 'It happened.' });
 check('a journal entry is written', entry.status === 201 || entry.status === 200, entry.body);
+// Free text is bounded (auth.js TEXT_MAX): far above anything typed, and a
+// 413 that says the size rather than a row the page then chokes on.
+const huge = await api('POST', '/journal', { character_id: charId, body: 'x'.repeat(50001) });
+check('a note past the limit is refused with 413 and its size',
+  huge.status === 413 && /50,001/.test(huge.body?.error || ''), JSON.stringify(huge.body).slice(0, 160));
+const atLimit = await api('POST', '/journal', { character_id: charId, body: 'x'.repeat(50000) });
+check('and one at the limit is kept', atLimit.status === 201 || atLimit.status === 200, atLimit.status);
+if (atLimit.body?.entry?.id) await api('DELETE', `/journal/${atLimit.body.entry.id}`);
+const bigSection = await api('PATCH', `/characters/${charId}`, { bio: { story: 'x'.repeat(200001) } });
+check('a character section past its limit is refused the same way', bigSection.status === 413, bigSection.status);
 const journal = await api('GET', `/journal?campaign_id=${campaignId}`);
 check('and read back', journal.status === 200 && journal.body.entries.length > 0, journal.body);
 check('journal paging reports its shape',
