@@ -1,6 +1,6 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `surveyed` — survey written, plan proposed and not yet agreed; nothing imported. (2026-10-01)
+**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
 
 **Rows citing this book:** none
 
@@ -221,17 +221,20 @@ both before deciding, and do not merge on the spelling. `Loup Garou` against
 
 ## Extraction plan
 
-**Proposed, not agreed.** Phase 4 has not started. In the order the earlier
-books went:
+**Agreed 2026-10-01**, with the four decisions below. Phase 4 has not
+started. In the order the earlier books went:
 
 1. **Skills** (36-37): cite the two held skills to this book and its page;
-   add the specialisations in whichever shape is decided.
+   add each specialisation as a row of its own (decision 3).
 2. **Gear and vehicles** (107, 125-129, 185-192): about 45 gear rows and
    4 vehicles. The three corrupt pages (129, 175, 187) are read off renders.
-3. **Creatures** (130-180): about 35, through `scripts/bestiary-sql.mjs`,
-   after the two same-name and two near-name checks above.
+3. **Creatures** (130-180): about 35, plus the typical-dinosaur template
+   (decision 4), through `scripts/bestiary-sql.mjs`, after the two same-name
+   and two near-name checks above.
 4. **Classes** (84-185): 13 new, in book order, the four Tundra Ranger
-   classes first because the gear they start with ships in step 2.
+   classes first because the gear they start with ships in step 2; then the
+   ten optional-PC races as playable R.C.C.s (decision 1); then the
+   `Headhunter Techno-Warrior` comparison (decision 2).
 
 What is deliberately left, with the reason for each:
 
@@ -246,16 +249,21 @@ What is deliberately left, with the reason for each:
 - **Tundra Ranger energy weapons (187)** — a pointer to the core book's
   early Coalition weapons, not new items.
 
-### Decisions this plan needs from Nate
+### Decisions, settled by Nate on 2026-10-01
 
-1. **The optional-PC races**: the ten in the table above. Import as
-   `creatures` only, or as playable R.C.C.s as well? The ladder page gives
-   only two of this book's races a ladder (Centaur and True Sasquatch).
-2. **`Headhunter Techno-Warrior`**: if production's row differs from printed
-   110-113, which printing wins?
-3. **The skating and skiing specialisations**: rows of their own, or prose on
-   the base skill?
-4. **The typical-dinosaur template (168)**: a creature row, or left?
+1. **The ten optional-PC races are playable.** Each is imported as a
+   playable R.C.C. as well as a `creatures` row. The Spirit Sasquatch stays
+   NPC-only, by the book's own rule.
+2. **`Headhunter Techno-Warrior`: the printing with the highest World Book
+   number wins.** Production's row (id 23) cites *Rifts Ultimate Edition*
+   p.74-77, which is not a World Book, so this book (World Book 20) is the
+   only numbered printing and printed 110-113 wins wherever the two differ.
+   It is a correction to the existing row, never a second row. The two
+   ladders already agree: the row's `xp_table` is the HH Techno-Warrior
+   ladder on printed 192.
+3. **The skating and skiing specialisations are rows of their own**, not
+   prose on the base skill.
+4. **The typical-dinosaur template (168) is a creature row.**
 
 ## Ledger
 
@@ -267,3 +275,4 @@ What is deliberately left, with the reason for each:
 
 Everything: nothing from this book has shipped. `source-coverage.mjs` has no
 line for a book no row cites, so there is nothing to paste yet.
+| 2026-10-01 | `pal/docs/canada-decisions` | the four decisions Nate settled; plan agreed. No D1 change. |
