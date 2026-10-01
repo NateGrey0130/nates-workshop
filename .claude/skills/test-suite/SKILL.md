@@ -34,6 +34,7 @@ the parser's output, not the parser.
 | `scripts/menu-check.mjs` | every new claim about another file says where it was read | **`menus`** |
 | `apps/character-creator/test/regression.mjs` | real HTTP against real endpoints, on a D1 built from nothing | **`regression`** |
 | `apps/character-creator/test/play-flow.mjs` | the play loop in a browser | reporting only |
+| `apps/character-creator/test/ui-shots.mjs` | that seven pages load in a real headless Chrome at desktop and phone size without a console error, a sideways scroll or sticky chrome over half the screen; keeps a PNG of each | not run by CI; a report, exit 0 unless `--strict` |
 
 The three bold names are required status checks on `main`. **`.github/workflows/tests.yml` runs
 the first five under one job, so a job id is a check-run name: renaming a job
