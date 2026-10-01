@@ -551,6 +551,19 @@ th {
    paragraphs under the stepper. Full width so they read as sentences rather
    than as another summary item. */
 .wiz-summary .ws-note { flex: 1 0 100%; color: var(--text-secondary); font-size: 13px; }
+.wiz-summary .ws-draft { margin-left: auto; color: var(--text-secondary); font-size: 12px; }
+.wiz-summary .ws-draft:empty { display: none; }
+.stepper .step-rail button.st.seen { cursor: pointer; }
+/* The rail sits in a .wrap for its width, and inherited the page's own top and
+   bottom padding with it: 84px of empty band stuck to the top of every step. */
+.wizard-sticky > .wrap { padding-top: 0; padding-bottom: 0; }
+/* On a phone the sticky block is the rail and nothing else: the summary under
+   it took a quarter of the screen on every step. The settled values are on
+   Review; a stopped-autosave notice (.err) still rides along. */
+@media (max-width: 600px) {
+  .wiz-summary .ws:not(.ws-draft), .wiz-summary .ws-note:not(.err) { display: none; }
+  .wizard-sticky { margin-bottom: 10px; }
+}
 
 /* Ten labels do not fit a phone at any weight, so below 900px the rail stops
    being labels and becomes ten bars - position without words. The step you
