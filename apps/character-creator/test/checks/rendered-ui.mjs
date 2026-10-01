@@ -711,7 +711,7 @@ export function run() {
     // fixed strip - the only band a thumb can always reach - held a read-only
     // roll result and NOTHING pressable.
     check('the combat controls live in the fixed bar',
-      /<div id="play-roll-bar"[\s\S]{0,200}<div id="roll-line">/.test(src)
+      /<div id="play-roll-bar"[\s\S]{0,200}<div id="roll-line"[^>]*>/.test(src)
       && /\$\{playActionsHtml\(w\)\}/.test(src),
       'the bar is a text strip again and Damage scrolls away');
     // MOVED, NOT COPIED. Two amount strips would be two places to keep in
