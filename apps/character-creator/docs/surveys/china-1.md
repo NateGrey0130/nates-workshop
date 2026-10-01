@@ -1,6 +1,6 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `surveyed` — inventory, authority tables and catalog diff done; nothing imported, plan awaiting agreement. (2026-10-01)
+**Status:** `surveyed` — inventory, authority tables and catalog diff done; nothing imported, plan agreed 2026-10-01 (D1-D5). (2026-10-01)
 
 **Rows citing this book:** none
 
@@ -218,24 +218,48 @@ than distance 3, and none is the same person.
 
 ### curses
 
-There is no table for curses. See the open questions.
+There is no table for curses. D1 below puts them in `spells`.
 
 ## Extraction plan
 
-Phase 4 costs money; everything above was free. Proposed order:
+Phase 4 costs money; everything above was free. **Agreed by Nate on
+2026-10-01**, with the decisions D1-D5 below folded in:
 
-1. **Ghosts and goblins** — 11 `creatures` rows, printed 60-84, through
+1. **Demonic curses** — 24 `spells` rows in a new `Demonic Curse` tradition,
+   printed 54-60 (D1). First, because every later row names them. One PR.
+2. **Ghosts and goblins** — 11 `creatures` rows, printed 60-84, through
    `scripts/bestiary-sql.mjs`. One PR.
-2. **Lesser demons** — 11 rows plus the Dead & the Damned, printed 84-105.
+3. **Lesser demons** — 11 rows plus the Dead & the Damned, printed 84-105.
    One PR.
-3. **Greater demons and Demon Lords** — 13 rows (10 greater, the Mara Asuras,
+4. **Greater demons and Demon Lords** — 13 rows (10 greater, the Mara Asuras,
    2 lords), plus the Naga-Spawn, Water Goblin and Water Devil, printed
    106-140. One PR.
-4. **Terra-Cotta Warriors and the minor province creatures** — 2 rows certain,
-   up to 8 more after render reads, printed 13-53. One PR.
-5. **Named NPCs** — 14 `notable_npcs` rows, printed 12-51, with the Living
-   Statues folded into Qin Kuai's and Lady Wang's rows or made rows of their
-   own. One PR.
+5. **Terra-Cotta Warriors** — 2 `creatures` rows, printed 51-53. Rides with
+   step 4 or 6. The minor province creatures get no rows (D3).
+6. **Named NPCs** — 14 `notable_npcs` rows, printed 12-51, plus **4 rows for
+   the Living Statues** (D4). Each ruler's minor creatures go in that ruler's
+   `allies` text (D3). One or two PRs.
+7. **Naga-Spawn and Were-Beast as classes** (D2) — after their `creatures`
+   rows. The Were-Beast is an R.C.C.; the Naga-Spawn is a template over a
+   human O.C.C., so run the class through `audit-premise-auditor` before
+   scoping and file a finding if the class schema cannot express it.
+
+### Decisions (Nate, 2026-10-01)
+
+- **D1 — curses are `spells` rows in a new tradition.** Named
+  `Demonic Curse: <name>` by the tradition-namespace convention. No P.P.E.
+  cost is printed per curse (casting one spends half the creature's pool,
+  printed 54), so the cost column takes the catalog's no-cost form; check
+  what `spell stubs` in the backlog counts before choosing level and cost, so
+  24 rows do not land as stubs.
+- **D2 — Naga-Spawn and Were-Beasts become classes too**, as well as
+  `creatures` rows.
+- **D3 — the minor province creatures stay in their ruler's text.** No rows
+  for the Ice Spider, Book Demons, Black Bees, Never-Dying Servant, Demon
+  Boars, Jackal Wolves, Crimson Moth, White Lead Leopards or the iron
+  servants. That takes the `creatures` plan from 49 entries to **41**.
+- **D4 — the four Living Statues are `notable_npcs` rows**, 18 in all.
+- **D5 — this book's bestiary ships before `china-2`'s classes.**
 
 Slices for `book-extract-worker`, if fanned out, follow those five page
 ranges with one page of overlap at each slice edge.
@@ -248,28 +272,6 @@ What is deliberately left, with the reason for each:
   that NPC's `weapons_and_equipment`, not in `gear`.
 - **The optional demon tables** (144-149) — Game Master customisation tables.
 - **Life in Rifts China** (150-157) and the maps — lore.
-
-### Open questions for Nate
-
-1. **The 24 demonic curses.** Many creatures and every Yama King list curses
-   by name, and the schema has no home for them. The choices: (a) leave them
-   as names inside each creature's `magic` or `natural_abilities` text and
-   file the gap in `BOOK-INGEST-AUDIT.md`; (b) store them as `spells` rows in
-   a `Demonic Curse` tradition with no P.P.E. cost, which would be a first.
-   Under the batch rule (a) is the default.
-2. **Naga-Spawn and Were-Beasts as playable.** Import them as `creatures` rows
-   only, tagged playable, or also as R.C.C. classes? The Naga-Spawn is a
-   template over a human O.C.C., which the class schema may not express.
-   `china-2`'s Enlightened Demon R.C.C. asks the same question from the other
-   side: its demon types and base statistics are this book's lesser demons.
-3. **The minor province creatures** — rows where the book prints enough
-   numbers, or all left in their ruler's `allies` text?
-4. **The four Living Statues** — `creatures` rows, `notable_npcs` rows, or
-   text inside Qin Kuai's row?
-5. **Order against `china-2`.** That book's survey is merged and its import
-   has not started. Its Demon Queller classes and Enlightened Demon refer to
-   creatures that only exist once this book's bestiary is in, so this book's
-   steps 1-3 should ship first.
 
 ## Ledger
 
