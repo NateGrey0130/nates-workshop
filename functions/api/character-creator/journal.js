@@ -13,7 +13,7 @@
 //
 // PATCH and DELETE for a single entry live in journal/[entryId].js.
 
-import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson } from './_lib/auth.js';
+import { getUserEmail, unauthorized, json, forbidden, characterAccess, campaignAccess, readJson, tooLong, TEXT_MAX } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { parseMentions, resolveMentions } from './_lib/mentions.js';
 
@@ -68,6 +68,9 @@ export async function onRequestPost({ request, env }) {
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
   if (!b.body || typeof b.body !== 'string') return json({ error: 'body is required' }, 400);
+  const over = tooLong([['The note', b.body, TEXT_MAX.note], ['The title', b.title, TEXT_MAX.title],
+    ['The session date', b.session_date, TEXT_MAX.title]]);
+  if (over) return over;
 
   let campaignId;
   if (b.character_id) {

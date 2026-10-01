@@ -51,6 +51,24 @@ export async function readJson(request) {
   }
 }
 
+// A bound on free text, as one place. Every limit here is far above anything a
+// person types - a long session note is a few thousand characters - so reaching
+// one means a paste gone wrong or a caller doing something else, and either way
+// it should not reach the database. `checks` is [name, value, max] rows; the
+// first one over its limit is the 413, and null means all are fine. A JSON
+// section is measured as the text it is stored as.
+export const TEXT_MAX = { title: 300, line: 2000, note: 50000, section: 200000 };
+export function tooLong(checks) {
+  for (const [name, value, max] of checks) {
+    const text = typeof value === 'string' ? value
+      : (value && typeof value === 'object' ? JSON.stringify(value) : '');
+    if (text.length > max) {
+      return json({ error: `${name} is too long: ${text.length.toLocaleString('en-US')} characters, and the limit is ${max.toLocaleString('en-US')}.` }, 413);
+    }
+  }
+  return null;
+}
+
 export function forbidden() {
   return json({ error: 'Not allowed — only the character owner or campaign GM can do that' }, 403);
 }

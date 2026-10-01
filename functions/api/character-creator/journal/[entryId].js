@@ -10,7 +10,7 @@
 // ON DELETE SET NULL, so an item keeps its place in the stash and simply stops
 // pointing at an explanation that no longer exists.
 
-import { getUserEmail, unauthorized, json, readJson, campaignAccess } from '../_lib/auth.js';
+import { getUserEmail, unauthorized, json, readJson, campaignAccess, tooLong, TEXT_MAX } from '../_lib/auth.js';
 import { parseMentions, resolveMentions, reconcileStatements, existingMentions } from '../_lib/mentions.js';
 
 export async function onRequestPatch({ request, env, params }) {
@@ -19,6 +19,9 @@ export async function onRequestPatch({ request, env, params }) {
 
   const b = await readJson(request);
   if (!b) return json({ error: 'Invalid JSON body' }, 400);
+  const over = tooLong([['The note', b.body, TEXT_MAX.note], ['The title', b.title, TEXT_MAX.title],
+    ['The session date', b.session_date, TEXT_MAX.title]]);
+  if (over) return over;
   const sets = [], binds = [];
   if ('title' in b) { sets.push('title = ?'); binds.push(b.title ?? null); }
   if ('session_date' in b) { sets.push('session_date = ?'); binds.push(b.session_date ?? null); }
