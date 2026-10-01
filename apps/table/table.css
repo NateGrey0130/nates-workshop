@@ -13,6 +13,16 @@
 }
 
 /* ---- joining ---- */
+/* The connection bar: fixed, over everything, only while the socket is down. */
+#table-offline {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;
+  padding: 8px 12px; background: var(--danger, #9c2b1f); color: #fff; font-size: 14px;
+}
+#table-offline .btn { min-height: 36px; background: #fff; color: #1a1613; border-color: #fff; }
+/* Dice that would send nothing look like it. */
+body.table-is-offline .table-dice-form button { opacity: 0.45; }
+
 .table-code-form { display: grid; gap: 6px; max-width: 320px; margin-top: 12px; }
 .table-code-form input {
   font-family: var(--font-mono);
