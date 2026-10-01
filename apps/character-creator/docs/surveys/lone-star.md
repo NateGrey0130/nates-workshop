@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear, vehicles and the Dog Boy tables shipped; classes, creatures and NPCs to come. (2026-10-01)
+**Status:** `importing` — gear, vehicles, the Dog Boy tables and the three Dog Pack classes shipped; twelve classes, creatures and NPCs to come. (2026-10-01)
 
-**Rows citing this book:** gear 12, vehicles 7
+**Rows citing this book:** classes 3, gear 12, vehicles 7
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -195,6 +195,8 @@ Gear ships before classes, because the classes name this book's items
 2. **Vehicles** — 7 rows from printed 55-64 with 57 location rows and 33
    weapon rows. **Shipped.**
 3. **Dog Pack classes** — Sea Dog, K-9 Sniffer, Kill Hound (printed 40-45).
+   **Shipped**, each a self-contained R.C.C. restating what its entry takes
+   from the Dog Boy's.
 4. **GED mutant classes** — Ursa-Warrior, Battle Cat, Kill Cat, Monkey Boy
    Soldier, Monkey Boy Tech, Mutant Rat, Mutant Bat, Mini Monkey Spy
    (printed 72-90), and the Psi-X Alien (98-100; printed 100 from a render).
@@ -279,6 +281,7 @@ tables are not rolled for them.
 | 2026-10-01 | `pal/data/lone-star-gear` | 12 gear rows (`add-lone-star-gear.sql`), reconciled 12 of 12 against 170 dpi renders by `book-reconcile`. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-vehicles` | 7 vehicles, 57 M.D.C. locations, 33 weapon entries (`add-lone-star-vehicles.sql`): six hovercycles and the CS Death Wing. Extracted off 170 dpi renders by `book-extract-worker`; `book-reconcile` checked 7 of 7 and its one disagreement (a word in the Death Wing's description) was corrected. Three figures are stored as printed and say so in their rows. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-dog-breeds` | `~055-dog-boy-breeds-and-mutations.sql`: the Type/Breed and Mutation Abnormality tables as two pick-one groups on `mutant-dog` (RUE's printing), a Free Born line on the race and a Feral Dog Boy line on `dog-boy`. Edits two held classes; adds no row citing this book. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-dog-pack-classes` | 3 classes: `sea-dog`, `k-9-sniffer`, `kill-hound`. Drafted one agent per class from a shared brief, numbers read off 170 dpi renders; `book-reconcile` checked all three against printed 32-36 and 40-45 and the Experience Tables, and its six equipment-row findings were harmonised. No gear stubs. Applied `--remote` before the PR. |
 
 ### What remains
 
