@@ -102,7 +102,16 @@ function poolsCell(c) {
   const p = pools(c);
   const parts = POOLS
     .filter(([k]) => p[k + '_max'] != null || p[k + '_current'] != null)
-    .map(([k, label]) => `${label} ${p[k + '_current'] ?? '—'}/${p[k + '_max'] ?? '—'}`);
+    .map(([k, label]) => {
+      const cur = p[k + '_current'], max = p[k + '_max'];
+      const text = `${label} ${cur ?? '—'}/${max ?? '—'}`;
+      // The body pools only: a spent I.S.P. pool is not an emergency. Down at
+      // zero or below, low at a quarter - the sheet's own threshold - so the
+      // G.M. sees who is in trouble without reading every number.
+      if (!['hp', 'sdc', 'mdc'].includes(k) || typeof cur !== 'number' || !(max > 0)) return text;
+      if (cur <= 0) return `<b class="err" title="Down">${text}</b>`;
+      return cur / max <= 0.25 ? `<b class="warn" title="Low">${text}</b>` : text;
+    });
   return formTag(c) + (parts.join(' · ') || '—');
 }
 
@@ -306,6 +315,10 @@ async function refreshRoster() {
   } catch { /* keep what is on screen */ }
 }
 document.addEventListener('visibilitychange', refreshRoster);
+// And while it is in view: a G.M. watching the roster through a fight never
+// leaves the tab, so coming back to it was a refresh that never fired.
+// refreshRoster() repaints rows only and skips a hidden tab.
+setInterval(refreshRoster, 20000);
 window.addEventListener('focus', refreshRoster);
 
 // The roster table, or the line that says there is none. Its own function so
@@ -487,6 +500,9 @@ if (!campaignId) {
   // error (UI-AUDIT F39). A player had no other road to this page.
   campaignList.load()
     .then((list) => {
+      // One campaign is not a choice: go to it. replace(), so Back does not
+      // land on a list that immediately forwards again.
+      if (list.length === 1) { location.replace(`?campaign_id=${list[0].id}`); return; }
       $('app').innerHTML = `<div class="panel"><h2>Your campaigns</h2>${campaignList.html(list)}</div>`;
     })
     .catch((err) => {

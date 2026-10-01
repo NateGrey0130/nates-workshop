@@ -880,8 +880,14 @@ document.addEventListener('click', (e) => {
   }
 });
 
+let filterTimer = null;
 document.addEventListener('input', (e) => {
-  if (e.target.id === 'codex-filter') { S.filter = e.target.value; S.filterFocused = true; S.missing = null; syncQuery(); render(); }
+  if (e.target.id !== 'codex-filter') return;
+  S.filter = e.target.value; S.filterFocused = true; S.missing = null;
+  // The list is rebuilt whole on a render - 3,121 rows on the Gear tab - so it
+  // waits for a pause in the typing rather than running on every key.
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => { syncQuery(); render(); }, 140);
 });
 
 document.addEventListener('change', (e) => {
