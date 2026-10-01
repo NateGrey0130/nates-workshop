@@ -5986,9 +5986,14 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     // `except` lists the keys that legitimately differ, rather than an
     // allowlist of what to compare, so a block added to one row later and not
     // the other fails by DEFAULT. An allowlist would silently not cover it.
+    // `tags` is a picker label - what a player looks for the class under - and
+    // a copy is often a different thing to pick than its source: the Sky Knight
+    // is a knight where the Lyn-Srial is a race, the Quorian Oneiromancer a
+    // village priest where the Mystic is not. Like the name, it is the copy's
+    // own, not a block the book makes it share.
     const NEVER_COMPARED = new Set([
       'id', 'name', 'source_book', 'extraction_notes', 'copy_of',
-      'lore', 'gm_notes', 'sections',
+      'lore', 'gm_notes', 'sections', 'tags',
     ]);
     const parsedById = new Map();
     for (const c of sweepClasses) {

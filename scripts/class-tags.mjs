@@ -14,10 +14,10 @@
 // point: a table emitted unread ships the heuristics as if they were the book.
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
 import { d1Query, targetFromArgv } from './d1-query-lib.mjs';
-import { reviewTable, parseReview, emitSql } from './class-tags-lib.mjs';
+import { reviewTable, parseReview, emitSql, splitScripts } from './class-tags-lib.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (name) => {
@@ -52,8 +52,16 @@ if (argv.includes('--suggest')) {
   if (errors.length) die(`the review table has ${errors.length} problem(s):\n  ${errors.join('\n  ')}`);
   if (!rows.length) die('no row carries a tag; nothing to emit');
   const system = arg('--system') || (basename(out).match(/class-tags-([a-z-]+)\.sql$/) || [])[1];
-  writeFileSync(out, emitSql(rows, { filename: basename(out), system }));
-  console.log(`${rows.length} classes -> ${out}. Apply with d1-apply.mjs, --local first.`);
+  // More than MAX_ROWS_PER_SCRIPT rows go out as several scripts on
+  // consecutive tilde numbers, each with a read-back short enough to replay.
+  const parts = splitScripts(rows, basename(out));
+  for (const p of parts) {
+    const path = join(dirname(out), p.filename);
+    writeFileSync(path, emitSql(p.rows, { filename: p.filename, system }));
+    console.log(`${p.rows.length} classes -> ${path}`);
+  }
+  console.log(`${rows.length} classes in ${parts.length} script(s). Apply with d1-apply.mjs, --local first; `
+    + 'each tilde number is claimed at merge.');
 } else {
   die('pass --suggest or --emit');
 }

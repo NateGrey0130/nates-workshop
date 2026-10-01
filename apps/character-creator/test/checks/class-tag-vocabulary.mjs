@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { appDir, check, section, wantSection } from '../harness.mjs';
 import { CLASS_TAGS, MAX_AUTHORED_TAGS, classTags, suggestClassTags, parseClassMarkdown } from '../../js/parser.js';
-import { reviewTable, parseReview, emitSql } from '../../../../scripts/class-tags-lib.mjs';
+import { reviewTable, parseReview, emitSql, splitScripts, MAX_ROWS_PER_SCRIPT } from '../../../../scripts/class-tags-lib.mjs';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['Class tags'];
@@ -114,6 +114,22 @@ export function run() {
     parseClassMarkdown(after).data?.tags?.join(',') === 'combat' && parseClassMarkdown(after).errors.length === 0);
   const rb = readback();
   check('the emitted script\'s read-back holds', String(rb?.got) === String(rb?.want), JSON.stringify(rb));
+  // A large system: d1-apply replays a file's read-back as ONE --command, which
+  // cmd.exe caps, so a script naming 373 classes had its assertions skipped.
+  // The length is measured the way d1-apply measures it (cmdLineLength there:
+  // quoted, and every space and shell metacharacter costed as four).
+  const cmdLen = (s) => { const q = '"' + s.replace(/"/g, '\\"') + '"'; return q.length + 3 * (q.match(/[ !%^&()<>|"]/g) || []).length; };
+  const many = Array.from({ length: 373 }, (_, i) => ({ class_id: `some-long-rifts-class-id-${i}`, category: 'occ', tags: ['combat'] }));
+  let refused = false;
+  try { emitSql(many, { filename: '~999-class-tags-rifts.sql' }); } catch { refused = true; }
+  check(`one script refuses more than ${MAX_ROWS_PER_SCRIPT} classes`, refused);
+  const parts = splitScripts(many, '~048-class-tags-rifts.sql');
+  const longest = Math.max(...parts.map((p) => cmdLen(emitSql(p.rows, { filename: p.filename })
+    .split('\n').filter((l) => l.startsWith('SELECT')).join(' '))));
+  check('a large system splits across consecutive tilde scripts whose read-backs fit the command line',
+    parts.map((p) => p.filename).join(',') === '~048-class-tags-rifts-1.sql,~049-class-tags-rifts-2.sql,~050-class-tags-rifts-3.sql,~051-class-tags-rifts-4.sql'
+      && parts.reduce((n, p) => n + p.rows.length, 0) === 373 && longest < 7900,
+    `${parts.map((p) => p.filename)} longest read-back ${longest}`);
   db.exec(sql.replace(/INSERT INTO data_script_runs[^;]*;/, ''));
   const twice = db.prepare("SELECT markdown FROM imported_classes WHERE class_id = 'aaa'").get().markdown;
   check('the emitted script is a no-op on a second run', twice === after);
