@@ -238,7 +238,12 @@
       S.npc = await api(`campaigns/${cid()}/npcs/${id}`);
       const list = await api(`campaigns/${cid()}/npcs`);
       S.npcs = list.npcs;
-      render();
+      // A field saves on blur, and the blur is usually a Tab INTO the next
+      // field. Re-rendering then replaced the field being typed in. The state
+      // above is current either way; the redraw waits for the next one.
+      const typing = document.activeElement
+        && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (!typing) render();
     } catch (err) { toast('Failed: ' + err.message); }
   }
 
