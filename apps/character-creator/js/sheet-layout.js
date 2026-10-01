@@ -59,13 +59,16 @@
     const pct = fraction(cur, max);
     const low = max > 0 && cur != null && pct <= POOL_LOW;
     const digits = digitsOf(cur);
+    // The amount a press applies, read where the sheet keeps it; 1 anywhere
+    // that has no play state (the dashboard draws these cards too).
+    const amt = (typeof C !== 'undefined' && C && C.playAmt) || 1;
     return `<div class="vital${low ? ' low' : ''}"${digits >= 4 ? ` data-digits="${Math.min(digits, 5)}"` : ''} style="--tone: var(${POOL_TONES[key]})">
     <div class="lbl">${label}</div>
     <div class="val">${w ? `<input type="number" id="stat-${key}" value="${cur ?? ''}">` : ''}<b id="play-cur-${key}">${cur ?? '—'}</b> <span class="max">/ ${max ?? '—'}</span></div>
     <div class="bar"><i style="width:${Math.round(pct * 100)}%"></i></div>
     ${stepper && w ? `<div class="steppers">
-      <button type="button" aria-label="${label} down" onclick="adjustPool('${key}', -C.playAmt)">−</button>
-      <button type="button" aria-label="${label} up" onclick="adjustPool('${key}', C.playAmt)">+</button>
+      <button type="button" aria-label="${label} down" onclick="adjustPool('${key}', -C.playAmt)">−<span class="amt">${amt}</span></button>
+      <button type="button" aria-label="${label} up" onclick="adjustPool('${key}', C.playAmt)">+<span class="amt">${amt}</span></button>
     </div>` : ''}
   </div>`;
   }

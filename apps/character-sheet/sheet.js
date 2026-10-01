@@ -526,8 +526,24 @@ const advisory = (label, value) => {
 // switching is CSS - which means it no longer rebuilds every input on the
 // sheet, and no longer eats a half-typed note. Same reason pickTab toggles
 // classes rather than re-rendering.
+// Play mode keeps the screen awake: a phone that sleeps between turns costs an
+// unlock per roll. Released on leaving play mode; the browser drops it itself
+// when the tab is hidden, so it is asked for again when the tab comes back.
+let wakeLock = null;
+async function syncWakeLock() {
+  try {
+    if (C.playMode && document.visibilityState === 'visible') {
+      if (!wakeLock) {
+        wakeLock = await navigator.wakeLock?.request('screen') || null;
+        wakeLock?.addEventListener?.('release', () => { wakeLock = null; });
+      }
+    } else if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { wakeLock = null; /* refused or unsupported: the sheet works the same */ }
+}
+
 function togglePlay() {
   C.playMode = !C.playMode;
+  syncWakeLock();
   const url = new URL(location.href);
   if (C.playMode) url.searchParams.set('play', '1'); else url.searchParams.delete('play');
   history.replaceState(null, '', url);
@@ -610,7 +626,35 @@ function rollLineHtml(r) {
 // d100 roll-under against a percentage.
 function rollSkill(name, pct) {
   const roll = 1 + Math.floor(Math.random() * 100);
-  recordRoll('skill', name, { die: 100, roll, target: pct, ok: roll <= pct });
+  const mod = takeRollMod();
+  const target = pct + mod;
+  recordRoll('skill', mod ? `${name} (${mod > 0 ? '+' : ''}${mod}%)` : name,
+    { die: 100, roll, target, ok: roll <= target });
+}
+
+// THE G.M.'S "-20%" OR "+2 TO DODGE". Set once, spent by the next skill or d20
+// roll, then gone - a modifier that outlived its roll would be a wrong verdict
+// nobody asked for. Named in the roll's own line, so the log says why 41 failed
+// against a 60% skill.
+function setRollMod() {
+  const v = prompt('Modifier for the next roll — e.g. -20 for a skill, +2 for a d20. Blank clears it.',
+    C.rollMod ? String(C.rollMod) : '');
+  if (v === null) return;
+  const n = parseInt(v, 10);
+  C.rollMod = Number.isFinite(n) ? n : 0;
+  paintRollMod();
+}
+function takeRollMod() {
+  const m = Number(C.rollMod) || 0;
+  if (m) { C.rollMod = 0; paintRollMod(); }
+  return m;
+}
+function paintRollMod() {
+  const b = $('roll-mod');
+  if (!b) return;
+  const m = Number(C.rollMod) || 0;
+  b.textContent = m ? `${m > 0 ? '+' : ''}${m}` : '±';
+  b.classList.toggle('on', !!m);
 }
 
 // A BARE PERCENTILE — the roll a G.M. asks for by name, several times a
@@ -635,7 +679,9 @@ function rollPercentile() {
 // bonus-only where the book leaves the target to the G.M.
 function rollD20(kind, name, bonus, target) {
   const roll = 1 + Math.floor(Math.random() * 20);
-  const b = Number(bonus) || 0;
+  const mod = takeRollMod();
+  const b = (Number(bonus) || 0) + mod;
+  if (mod) name = `${name} (${mod > 0 ? '+' : ''}${mod})`;
   recordRoll(kind, name, { die: 20, roll, bonus: b, total: roll + b,
     target: target || null, ok: target ? roll + b >= target : null });
 }
@@ -680,15 +726,28 @@ function syncPowerBtns() {
 // ON THE ACTIVE FORM. A Morphus showing takes the press on its own S.D.C. and
 // hit points, by this same rule and through this same events route - so it
 // undoes, queues and reaches the log like the Facade's (Nightbane follow-up 5).
-async function adjustPool(key, delta) {
+async function adjustPool(key, delta, retried = false) {
   const cur = poolData()[key + '_current'];
   if (cur == null) return;
   const changes = derive.playChanges(C.data, C.secondForm, { [key + '_current']: cur + delta });
   const note = `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`;
   applyChanges(changes, 'to');
+  // GUARDED when it is the first form's own pool. The number on screen may be
+  // minutes old - the G.M. applied damage while this phone slept - and an
+  // unguarded write of "what I showed, plus one" would erase that. A press
+  // means "one more than there is", so on a conflict it is re-made on the
+  // server's number, once.
+  const guard = !changes.second_form && !!changes.character;
   try {
-    await postEvent('pool', note, changes);
+    await api(`characters/${id}/events`, jsonReq('POST', { kind: 'pool', note, changes, ...(guard ? { guard: true } : {}) }));
   } catch (err) {
+    const theirs = err.status === 409 ? err.detail?.fields?.[key + '_current']?.theirs : undefined;
+    if (!retried && typeof theirs === 'number') {
+      applyChanges(changes, 'from');
+      applyChanges({ character: { [key + '_current']: { to: theirs } } }, 'to');
+      flash(`${key.toUpperCase()} was changed elsewhere to ${theirs}; applied to that.`);
+      return adjustPool(key, delta, true);
+    }
     // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS. err.status means the
     // server answered and said no - a bad field, a gone character - and the
     // change was never valid, so it rolls back the way it always did. No
@@ -1128,6 +1187,9 @@ function setPlayAmt(n, fromField) {
     b.classList.toggle('on', Number(b.dataset.amt) === n);
   });
   if (!fromField) { const f = $('play-amt-custom'); if (f) f.value = ''; }
+  // The amount lives in the bar at the bottom and is applied by the steppers at
+  // the top, so each stepper carries it.
+  document.querySelectorAll('.vital .steppers .amt').forEach((s) => { s.textContent = n; });
 }
 
 // ── Play mode phase 3: the event log ──
@@ -1290,7 +1352,10 @@ async function undoLast() {
 let logLoaded = false;
 async function loadLog() {
   const d = $('log-details'), body = $('log-body');
-  if (!d || !d.open || logLoaded || !body) return;
+  // Closing it forgets the load, so the next opening shows what has happened
+  // since rather than the first fetch of the session.
+  if (d && !d.open) { logLoaded = false; return; }
+  if (!d || logLoaded || !body) return;
   logLoaded = true;
   body.innerHTML = '<p class="muted small">Loading…</p>';
   let events;
@@ -1308,7 +1373,11 @@ async function loadLog() {
   }
   // Newest first, like the journal beside it.
   body.innerHTML = [...events].reverse().map((e) => {
-    const when = String(e.created_at || '').replace('T', ' ').replace('Z', '');
+    // D1 stores UTC as "YYYY-MM-DD HH:MM:SS"; shown in the reader's own time.
+    const raw = String(e.created_at || '');
+    const at = new Date(/[TZ]/.test(raw) ? raw : raw.replace(' ', 'T') + 'Z');
+    const when = Number.isNaN(at.getTime()) ? raw
+      : at.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     const note = e.payload?.note || e.kind;
     return `<div class="log-row${e.undone_at ? ' undone' : ''}">
       <span class="tag">${escHtml(e.kind)}</span>
@@ -1767,6 +1836,9 @@ function playActionsHtml(w) {
     : '';
   return `<div id="play-actions">
     <div class="play-amt">${damage}
+      <button type="button" id="roll-mod" class="${C.rollMod ? 'on' : ''}" onclick="setRollMod()"
+        aria-label="Set a modifier for the next roll" title="Modifier for the next roll">${
+        C.rollMod ? `${C.rollMod > 0 ? '+' : ''}${C.rollMod}` : '±'}</button>
       <button type="button" class="pct" onclick="rollPercentile()" aria-label="Roll a bare percentile, d100"
         title="Percentile (d100)">🎲 d100</button>
     </div>
@@ -2596,7 +2668,7 @@ function render() {
         // The stored attribute is what was rolled; the class bonus rides
         // alongside it so both stay legible, and effAttrs is what the tables read.
         return field(a, attrs[a] == null ? '—'
-          : add ? `${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${src}`)}">${add > 0 ? '+' : ''}${add}</span> = ${effAttrs[a]}`
+          : add ? `<span class="attr-work">${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${src}`)}">${add > 0 ? '+' : ''}${add}</span> =</span> ${effAttrs[a]}`
           : attrs[a]);
       }).join('')}
     </div>`)}
@@ -2836,7 +2908,7 @@ function render() {
         live here at all: a roll rewrites #roll-line, never the whole bar, so
         pressing Damage does not rebuild the button that was pressed. */''}
   <div id="play-roll-bar" class="noprint ${C.lastRoll ? '' : 'empty'}">
-    <div id="roll-line">${rollBarHtml()}</div>
+    <div id="roll-line" role="status" aria-live="polite">${rollBarHtml()}</div>
     <div id="table-line">${tableLineHtml()}</div>
     ${playActionsHtml(w)}
   </div>`;
@@ -4355,8 +4427,33 @@ document.addEventListener('change', (ev) => {
 // A phone switching apps is the common way a tab goes away mid-edit.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveNow();
-  else checkTable();
+  else { checkTable(); refreshPools(); syncWakeLock(); }
 });
+window.addEventListener('focus', () => refreshPools());
+
+// POOLS READ AGAIN when the tab returns. Only the pools, painted in place: a
+// G.M. moves them from the dashboard while a phone is asleep, and play mode
+// never re-renders. Skipped while anything of this device's is unsent - the
+// queue and the autosave each have their own conflict handling, and refreshing
+// under them would hide the very difference they exist to show.
+let poolsRefreshedAt = 0;
+async function refreshPools() {
+  if (!C.data || Date.now() - poolsRefreshedAt < 5000) return;
+  if (AS.dirty.size || AS.busy) return;
+  try {
+    if (window.playQueue && await playQueue.available() && await playQueue.count(Number(id))) return;
+  } catch { return; }
+  poolsRefreshedAt = Date.now();
+  let fresh;
+  try { fresh = (await api(`characters/${id}`)).character; } catch { return; }
+  if (!fresh || AS.dirty.size || AS.busy) return;
+  const moved = {};
+  for (const k of ['hp', 'sdc', 'mdc', 'ppe', 'isp']) {
+    const f = k + '_current';
+    if (typeof fresh[f] === 'number' && fresh[f] !== C.data[f]) moved[f] = { to: fresh[f] };
+  }
+  if (Object.keys(moved).length) applyChanges({ character: moved }, 'to');
+}
 window.addEventListener('beforeunload', (ev) => {
   if (!AS.dirty.size && !AS.busy) return;
   saveNow();
