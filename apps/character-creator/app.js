@@ -26,7 +26,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
-         CLASS_TAGS, classTags, classTagInfo, suggestClassTags } from './js/parser.js';
+         CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
@@ -442,17 +442,12 @@ const QUIZ = [
   { q: 'How do you want to solve problems?', opts: [['combat', 'Up close — blades and fists'], ['ranged', 'At range — bows or guns'], ['magic', 'Magic'], ['psionics', 'Psychic powers'], ['stealth', 'Quietly — unseen and unheard']] },
   { q: 'What else do you bring?', opts: [['scholar', 'Knowledge and lore'], ['tech', 'Machines and computers'], ['pilot', 'Driving and piloting'], ['healer', 'Healing'], ['wilderness', 'Surviving the wild'], ['leader', 'Leading and talking']] },
 ];
-// A class nobody has tagged yet is scored on the SUGGESTED tags, the same
-// guesses scripts/class-tags.mjs offers for review. Without this the quiz
-// would find nothing in a system until its backfill landed. Once a class has a
-// tags line, its own tags are the whole answer.
-function quizTags(c) {
-  const have = new Set(classTags(c));
-  if (!Array.isArray(c.tags)) for (const t of suggestClassTags(c)) have.add(t);
-  return have;
-}
+// A class's own tags are the whole answer. Until every system was tagged, a
+// class with no tags line was scored on scripts/class-tags.mjs's guesses; that
+// kept scoring the classes left untagged ON PURPOSE - plain races, pure
+// psychics - on guesses nobody reviewed, so it went once the backfill was done.
 function quizScore(c) {
-  const tags = quizTags(c);
+  const tags = new Set(classTags(c));
   let score = 0;
   const [q1, q2, q3] = S.quiz;
   if (q1 && q1 !== 'any' && c.category === q1) score += 2;

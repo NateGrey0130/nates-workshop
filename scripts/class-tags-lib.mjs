@@ -119,10 +119,20 @@ export function emitSql(rows, { filename, system }) {
       + 'read-back passes the Windows command line d1-apply replays it over (splitScripts)');
   }
   const nl = "char(10)";
+  // A script of classes with no tags at all states `tags: []` on each: the
+  // class was looked at and nothing in the vocabulary fits, which is not the
+  // same as a class nobody has looked at (class-check warns on that).
+  const untagged = rows.every((r) => !r.tags.length);
   const out = [
-    `-- Authored class tags for ${system || 'these'} classes, one line each, from a reviewed`,
-    '-- scripts/class-tags.mjs table. Derived tags (magic, psionics, mega-damage,',
-    '-- horror-factor) are computed from the class and never written.',
+    ...(untagged ? [
+      `-- An explicit empty tags line, \`tags: []\`, on ${system || 'these'} classes that were reviewed and`,
+      '-- left untagged on purpose: plain races, and classes whose derived tags (magic,',
+      '-- psionics, mega-damage, horror-factor) already say what they are.',
+    ] : [
+      `-- Authored class tags for ${system || 'these'} classes, one line each, from a reviewed`,
+      '-- scripts/class-tags.mjs table. Derived tags (magic, psionics, mega-damage,',
+      '-- horror-factor) are computed from the class and never written.',
+    ]),
     '--',
     '-- One-off data script, run once per environment. NOT a migration.',
     '--',

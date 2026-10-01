@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { appDir, check, section, wantSection } from '../harness.mjs';
+import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { CLASS_TAGS, MAX_AUTHORED_TAGS, classTags, suggestClassTags, parseClassMarkdown } from '../../js/parser.js';
 import { reviewTable, parseReview, emitSql, splitScripts, MAX_ROWS_PER_SCRIPT } from '../../../../scripts/class-tags-lib.mjs';
 
@@ -143,6 +143,38 @@ export function run() {
   check('every guided-quiz tag answer is a class tag id', answers.every((a) => ids.includes(a)),
     answers.filter((a) => !ids.includes(a)).join(', '));
   check('a resumed draft\'s quiz answers are validated', /S\.quiz = validQuiz\(S\.quiz\);/.test(app));
+  // The quiz scores a class on its OWN tags. It scored an untagged class on
+  // suggestClassTags() until every system was tagged, which kept guessing for
+  // the classes left untagged on purpose.
+  check('the guided quiz scores on a class\'s own tags and never on the guesses',
+    /function quizScore\(c\) \{\s*const tags = new Set\(classTags\(c\)\);/.test(app) && !app.includes('suggestClassTags'));
+
+  // ── an explicit empty line ──
+  // `tags: []` says the class was looked at and nothing fits. It parses clean,
+  // carries no tag, and is what a script of untagged classes writes.
+  const empty = parseClassMarkdown(md('tags: []\n'));
+  check('tags: [] parses clean and carries no authored tag',
+    empty.ok && empty.warnings.length === 0 && Array.isArray(empty.data.tags) && classTags(empty.data).length === 0,
+    JSON.stringify(empty.warnings));
+  const marked = emitSql([{ class_id: 'aaa', category: 'occ', tags: [] }], { filename: '~999-class-tags-untagged.sql' });
+  check('a script of untagged classes writes tags: [] and says so in its header',
+    marked.includes("|| 'tags: []' ||") && marked.includes('left untagged on purpose'));
+  const dbu = new DatabaseSync(':memory:');
+  dbu.exec('CREATE TABLE imported_classes (class_id TEXT, markdown TEXT, updated_at TEXT); CREATE TABLE data_script_runs (filename TEXT);');
+  dbu.prepare('INSERT INTO imported_classes (class_id, markdown) VALUES (?, ?)').run('aaa', md('').replace('id: x', 'id: aaa'));
+  dbu.exec(marked);
+  const markedMd = dbu.prepare("SELECT markdown FROM imported_classes WHERE class_id = 'aaa'").get().markdown;
+  check('the untagged script lands tags: [] after category, and the class re-parses',
+    markedMd.includes('\ncategory: occ\ntags: []\n') && parseClassMarkdown(markedMd).ok);
+  const classCheck = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
+  check('class-check warns only on a missing tags line, and names tags: [] as the answer',
+    /if \(data && !Array\.isArray\(data\.tags\)\)/.test(classCheck) && classCheck.includes('write tags: [] to say'));
+
+  // ── the evil tag's wording ──
+  // It covers anarchist-or-evil classes by Nate's ruling, so "Evil only" lied.
+  const evil = CLASS_TAGS.find((t) => t.id === 'evil');
+  check('the evil tag is labelled Evil and its hint names anarchist',
+    evil.label === 'Evil' && /anarchist/.test(evil.hint), `${evil.label} / ${evil.hint}`);
   const picker = readFileSync(join(appDir, 'js', 'picker.js'), 'utf8');
   check('the filter box searches _tag_text, and the wizard writes it',
     /FIELDS = \[[^\]]*'_tag_text'/.test(picker) && app.includes('c._tag_text = classTags(c)'));

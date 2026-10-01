@@ -96,6 +96,9 @@ Optional — include only what the page actually states:
     describes it — \`tags: [stealth, wilderness]\`. Never write magic, psionics,
     mega-damage or horror-factor: those are computed from the class's own blocks.
     Leave out \`beginner\` and \`high-power\` unless the page itself says so.
+    Write \`evil\` only when the page restricts alignment to evil, or to anarchist
+    or evil; not when unprincipled or a good alignment is allowed. If no tag
+    fits, write \`tags: []\`.
 - attribute_requirements: map of attribute → minimum (e.g. \`ME: 12\`)
 - attribute_maximums: map of attribute → MAXIMUM, for the other half of the same
     printed line — "I.Q. 10 and M.A. 10 or higher, and a P.B. of 12 or lower"
