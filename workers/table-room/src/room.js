@@ -29,7 +29,9 @@
 //   { type: 'init.remove', id | all: true }   GM any row; a player only their own
 //   { type: 'init.move', id, to }             GM: drag a rolled row to position `to`
 //   { type: 'init.set', id, hidden?, applies? }   GM: hide an NPC; Marvel's Talent tick
+//   { type: 'init.set', id, total?, bonus?, attacks?, spent? }   GM: correct a row's numbers
 //   { type: 'init.next' }                     GM: start the round, or the next turn
+//   { type: 'init.back' }                     GM: undo the last Next, once
 //   { type: 'init.newRound', reroll? }        GM: a new melee (Palladium keeps the
 //                                             order unless reroll) or round (Marvel)
 //
@@ -103,7 +105,7 @@ import { feat, hasInitTalent, rollRound, orderMarvel } from './marvel.js';
 import * as P from './palladium.js';
 import {
   emptyInit, addEntry, rollEntry, rollAll, next as nextTurn, newRound, removeEntry,
-  moveEntry, setEntry, initView, onDeck, characterOf,
+  moveEntry, setEntry, initView, onDeck, characterOf, back, forgetUndo,
 } from './initiative.js';
 
 // How each game rolls an order and runs a round out (initiative.js).
@@ -485,10 +487,14 @@ export class TableRoom {
       case 'init.move':    r = gm ? moveEntry(init, String(msg.id), msg.to) : { error: 'Only the GM moves the order' }; break;
       case 'init.set':     r = gm ? setEntry(init, String(msg.id), msg) : { error: 'Only the GM changes a row' }; break;
       case 'init.next':    r = gm ? nextTurn(init, rules) : { error: 'Only the GM moves the turn on' }; break;
+      case 'init.back':    r = gm ? back(init) : { error: 'Only the GM moves the turn back' }; break;
       case 'init.newRound': r = gm ? newRound(init, rules, { reroll: msg.reroll === true }) : { error: 'Only the GM starts a round' }; break;
       default: r = { error: `Unknown message: ${String(msg.type).slice(0, 20)}` };
     }
     if (r.error && !rolls.length) return this.sendError(ws, r.error);
+    // Back undoes the last Next and nothing else: any other change to the
+    // order makes that snapshot a picture of a different fight.
+    if (msg.type !== 'init.next' && msg.type !== 'init.back') forgetUndo(init);
 
     await this.ctx.storage.put('init', init);
     // An initiative roll is a roll: into the feed, under the rule every roll
