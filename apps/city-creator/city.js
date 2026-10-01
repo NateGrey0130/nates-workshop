@@ -621,6 +621,7 @@ function cityHtml() {
     <div class="rowline" style="flex-wrap:wrap;justify-content:space-between">
       <h2 style="margin:0">${esc(o.name)}</h2>
       <span class="rowline">
+        ${S.before ? '<button type="button" class="btn btn-sm btn-ghost" onclick="City.undoReroll()">↶ Undo reroll</button>' : ''}
         <button type="button" class="btn btn-sm" onclick="City.rerollAll()">🎲 Reroll everything unlocked</button>
         <button type="button" class="btn btn-sm" onclick="City.exportJson()">⬇ Export JSON</button>
       </span>
@@ -1110,8 +1111,11 @@ window.City = {
     render();
   },
   forget() { S.saved = null; S.dirty = false; S.keepMsg = ''; save(); render(); },
-  reroll(id) { S.city = withMap(rerollEntry(S.city, id)); changed(); save(); render(); },
-  rerollAll() { S.city = withMap(rerollCity(S.city, newSeed())); changed(); save(); render(); },
+  // The city a reroll replaced, kept for ONE undo. A reroll is one press and
+  // the result is random: the shop you liked and forgot to lock is otherwise gone.
+  reroll(id) { S.before = S.city; S.city = withMap(rerollEntry(S.city, id)); changed(); save(); render(); },
+  rerollAll() { S.before = S.city; S.city = withMap(rerollCity(S.city, newSeed())); changed(); save(); render(); },
+  undoReroll() { if (!S.before) return; S.city = S.before; S.before = null; changed(); save(); render(); },
   // A pin names an entry: bring it into view and mark it for a moment.
   goto(id) {
     const el = document.getElementById('e-' + id);

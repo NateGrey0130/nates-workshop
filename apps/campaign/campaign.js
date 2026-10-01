@@ -21,7 +21,9 @@ const D = {
   campaign: null, isGm: false, isMember: false,
   items: [],
   roster: [], gear: [],
-  tab: 'notes',
+  // The open tab rides in the address (#stash), so a reload, Back, or coming
+  // back from the Codex lands where the reader was rather than on Notes.
+  tab: ['notes', 'people', 'stash', 'money', 'handouts'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'notes',
   // The statted-NPC forms keep their own state in js/npc-sheets.js.
 };
 
@@ -45,6 +47,9 @@ async function load() {
     // The caller's campaigns rather than an error (UI-AUDIT F39).
     try {
       const list = await campaignList.load();
+      // One campaign is not a choice: go to it. replace(), so Back does not
+      // land on a list that immediately forwards again.
+      if (list.length === 1) { location.replace(`?campaign_id=${list[0].id}${location.hash}`); return; }
       $('app').innerHTML = `<div class="panel"><h2>Your campaigns</h2>${campaignList.html(list)}</div>`;
     } catch (err) {
       $('app').innerHTML = `<div class="panel"><p class="err">Failed to load: ${esc(err.message)}</p></div>`;
@@ -134,7 +139,16 @@ function render() {
   C.notes.afterRender();
 }
 
-function setTab(t) { D.tab = t; C.people.state.npc = null; render(); }
+function setTab(t) {
+  D.tab = t; C.people.state.npc = null;
+  history.replaceState(null, '', location.pathname + location.search + (t === 'notes' ? '' : '#' + t));
+  render();
+}
+// A link to another tab of the page already open changes only the hash.
+window.addEventListener('hashchange', () => {
+  const t = location.hash.slice(1) || 'notes';
+  if (t !== D.tab && ['notes', 'people', 'stash', 'money', 'handouts'].includes(t) && D.campaign) setTab(t);
+});
 
 // The City Creator's maps the GM has shown (Phase 4c): a link each to the
 // players' view in present mode. The list request sends a player only the
