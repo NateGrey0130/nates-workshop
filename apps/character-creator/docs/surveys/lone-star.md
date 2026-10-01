@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear, vehicles, the Dog Boy tables and the three Dog Pack classes shipped; twelve classes, creatures and NPCs to come. (2026-10-01)
+**Status:** `importing` — gear, vehicles, the Dog Boy tables, the Dog Pack classes and the Pecos classes shipped; nine classes, creatures and NPCs to come. (2026-10-01)
 
-**Rows citing this book:** classes 3, gear 12, vehicles 7
+**Rows citing this book:** classes 6, gear 12, vehicles 7
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -201,7 +201,7 @@ Gear ships before classes, because the classes name this book's items
    Soldier, Monkey Boy Tech, Mutant Rat, Mutant Bat, Mini Monkey Spy
    (printed 72-90), and the Psi-X Alien (98-100; printed 100 from a render).
 5. **Pecos classes** — Tokanii, Simvan Monster Rider, Brodkil (printed
-   154-164).
+   154-164). **Shipped.**
 6. **Creatures and notable NPCs** — the Xiticix Killer, the 18 named
    characters, and the seven Quiet Hunters of printed 119 as rows of their
    own (Nate, 2026-10-01), through `scripts/bestiary-sql.mjs`. Printed 124
@@ -282,6 +282,7 @@ tables are not rolled for them.
 | 2026-10-01 | `pal/data/lone-star-vehicles` | 7 vehicles, 57 M.D.C. locations, 33 weapon entries (`add-lone-star-vehicles.sql`): six hovercycles and the CS Death Wing. Extracted off 170 dpi renders by `book-extract-worker`; `book-reconcile` checked 7 of 7 and its one disagreement (a word in the Death Wing's description) was corrected. Three figures are stored as printed and say so in their rows. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-dog-breeds` | `~055-dog-boy-breeds-and-mutations.sql`: the Type/Breed and Mutation Abnormality tables as two pick-one groups on `mutant-dog` (RUE's printing), a Free Born line on the race and a Feral Dog Boy line on `dog-boy`. Edits two held classes; adds no row citing this book. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-dog-pack-classes` | 3 classes: `sea-dog`, `k-9-sniffer`, `kill-hound`. Drafted one agent per class from a shared brief, numbers read off 170 dpi renders; `book-reconcile` checked all three against printed 32-36 and 40-45 and the Experience Tables, and its six equipment-row findings were harmonised. No gear stubs. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-pecos-classes` | 3 classes: `tokanii`, `simvan-monster-rider`, `brodkil`. `book-reconcile` read all three against renders of printed 154-156 and 162-164 and the Experience Tables: no disagreements. No gear stubs. The Simvan's two sexes differ in P.P.E., psionics and skills and are two variants plus a matching pick-one psionics ability; the Brodkil's five attacks are stored as printed, and the page does not say whether they include its listed hand to hand. Applied `--remote` before the PR. |
 
 ### What remains
 
