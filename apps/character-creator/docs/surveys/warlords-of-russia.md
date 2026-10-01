@@ -1,6 +1,6 @@
 # Rifts World Book 17: Warlords of Russia — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-01)
+**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
 
 **Rows citing this book:** none
 
@@ -292,15 +292,16 @@ it.
 
 ## Extraction plan
 
-**Proposed, not agreed.** Everything above was free. Roughly 185 rows:
+**Agreed with Nate 2026-10-01**, with the four decisions below. Everything above
+was free. Roughly 190 rows:
 
 | # | batch | size | notes |
 |---|---|---|---|
 | 1 | skills | 5 new rows, 10 comparisons | first, because the classes cite them |
-| 2 | weapons, armor, equipment | ~75 rows | by section; the rail-gun pages carry the digit cipher |
+| 2 | weapons, armor, equipment | ~78 rows | by section; the rail-gun pages carry the digit cipher. Includes the two bionic horses and the barding (D3) |
 | 3 | bionics | ~40 new rows | category `cybernetics`; the Shocktroopers and the cyborg O.C.C.s cite them |
-| 4 | the 17 non-cyborg O.C.C.s | 17 classes | `class-import`, two or three per PR |
-| 5 | Light Machine, Heavy Machine, Shocktrooper and the ten body styles | 3 classes + 10 | on the Free Quebec precedent; printed 140 from a render |
+| 4 | the 17 non-cyborg O.C.C.s and the two Sovietski classes (D1) | 19 classes | `class-import`, two or three per PR |
+| 5 | Light Machine, Heavy Machine, Shocktrooper, the ten body styles, and the five Sovietski cyborg bodies (D2) | 3 classes + 15 | on the Free Quebec precedent; printed 140 from a render |
 | 6 | vehicles and power armor | ~18 | same shape as the Mystic Russia vessels |
 | 7 | Mega-Steeds | 5 creatures | through `bestiary-sql.mjs` |
 | 8 | notable NPCs | 8 | through `bestiary-sql.mjs`; printed 37 from a render |
@@ -308,23 +309,23 @@ it.
 Gear before classes, for the reason spells went before classes in
 `mystic-russia`: a class citing a row the catalog does not hold fails its check.
 
-**Open, for Nate:**
+**Settled with Nate, 2026-10-01. Agreed, not proposed; do not re-litigate.**
 
-- **The Sovietski classes** — Police Officer and Soldier are full blocks with
-  attribute requirements; the Priest is headed NPC and discouraged by its own
-  entry. Proposed: import the first two, leave the Priest.
-- **The Sovietski cyborgs** — five more bodies. Proposed: with batch 5.
-- **Bionic horses and barding** — vehicle rows, gear rows, or left.
-- **The two price lists at printed 141–142** — generic vehicle prices with no
-  stat blocks. Proposed: left.
+- **D1 — the Sovietski classes:** import the Typical Soviet Police Officer and
+  the Typical Soviet Soldier; leave the Catholic Priest, which its own entry
+  discourages as a player character. The Soldier's ladder is still unnamed by
+  the Experience Tables and is read at import.
+- **D2 — the Sovietski cyborgs:** the five bodies go in with batch 5.
+- **D3 — bionic horses and barding:** `gear` rows, not vehicles.
+- **D4 — the two price lists at printed 141–142:** left out.
 
 Deliberately left, with the reason for each:
 
 - setting, history, geography and the Warlords' camp descriptions (printed
   8–56 outside the stat blocks) — prose, nothing the catalog models
 - the O.C.C.s from other books listed at printed 57 — pointers
-- the Catholic Priest — the entry's own recommendation, pending the decision
-  above
+- the Catholic Priest — the entry's own recommendation, and D1
+- the two generic vehicle price lists at printed 141–142 — D4
 
 ## Ledger
 
