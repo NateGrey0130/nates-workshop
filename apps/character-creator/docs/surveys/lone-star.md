@@ -269,9 +269,11 @@ Rifts Ultimate Edition and are left as they are: this book gives Dragonese at
 of choice, eight secondary skills (two more at levels 2, 4, 8 and 12), Pilot
 Related: Any, and heavy riot armor at 50 M.D.C. as the standard issue.
 
-**Still open, and not done:** a roll button on a pick-one group whose options
-carry percentile bands. It is a wizard change, it would also serve the Gypsy
-Gifted and Africa's percentile splits, and nothing above needs it. The three
+**The roll button** Nate asked for on 2026-10-01 shipped on
+`pal/feat/ability-roll-button`: a pick-one group whose option names carry
+percentile bands covering 1-100 gets a Roll d100 button on the Race step
+(`docs/wizard-and-sheet.md`). It reads the bands from the names, so both
+groups above are rollable as stored. The three
 Dog Pack specialists of step 3 (Sea Dog, K-9 Sniffer, Kill Hound) print their
 own complete stat blocks and are self-contained classes, so they do not take
 the breed group; the Sea Dog and K-9 Sniffer entries say the size and breed
@@ -290,6 +292,7 @@ tables are not rolled for them.
 | 2026-10-01 | `pal/data/lone-star-mutant-classes` | 9 classes: `ursa-warrior`, `battle-cat`, `kill-cat`, `mini-monkey-spy`, `monkey-boy-soldier`, `monkey-boy-tech`, `mutant-rat`, `mutant-bat`, `psi-x-alien`; 2 gear rows (`add-lone-star-mini-monkey-armor.sql`). Three `book-reconcile` passes against renders; their findings (the Kill Cat's S.D.C. field, money and I.S.P. wording, one page range, one citation, one garbled sentence) were applied by one harmoniser. Species are variants on the bear, the Battle Cat and the Monkey Boy Soldier, and a pick-one ability on the Kill Cat. No gear stubs; a printed comb is not stored. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-creatures-and-npcs` | `add-lone-star-creatures-and-npcs.sql`: 1 creature (the Xiticix Killer), 28 notable NPCs, 54 attack lines. Four extraction agents, three `book-reconcile` passes against renders: no wrong figure in any row; the fixes were one convention (Sabre Lasar stores his true, dragon figures and notes the guise), two sentences sourced from printed 137 and one ambiguous vehicle line. Status moved to `imported`. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/fix/lone-star-c-12-rebuild` | `~056-c-12-laser-rifle-rebuilds-filled.sql`. The end-of-session `repo-vs-live.mjs --offenders` found one row the repo no longer rebuilt as production holds it: three of this book's classes name `c-12-laser-rifle`, which keeps an old stub alive past the script that used to retire it, so the filled insert after it was ignored. The script writes production's values over the stub; against production it changes nothing (the row and a table checksum were read before and after the apply and are identical). |
+| 2026-10-01 | `pal/feat/ability-roll-button` | Code, not data: a Roll d100 button on pick-one ability groups named for percentile bands (`abilityRollBands` in `js/parser.js`, the picker in `app.js`, six smoke checks, `docs/wizard-and-sheet.md`). No D1 change. |
 
 ### What remains
 
@@ -314,5 +317,4 @@ BACKLOG       rows an importer created and nobody finished
 None of these is this book's: no class script here emitted a stub, and the
 book adds no skill, spell or psionic power.
 
-**Not done, and waiting on a decision:** a roll button for a pick-one group
-whose options carry percentile bands (see *The Dog Boy, in full*).
+**The roll button** has since shipped (see *The Dog Boy, in full*).
