@@ -1,8 +1,8 @@
 # Rifts World Book 23: Xiticix Invasion — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-01)
+**Status:** `importing` — gear shipped; creatures next, then NPCs and the Psi-Stalker tribes. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 15
 
 Slug `xiticix-invasion`. Cached 2026-10-01 from
 `Rifts- World Book 23 Xiticix Invasion.pdf`, 162 PDF pages, **text layer**
@@ -221,6 +221,7 @@ Gear ships before creatures and NPCs, because their stat blocks name this
 book's weapons (the Madhaven lesson).
 
 1. **Gear** — 15 rows from printed 77-82. Printed 81-82 from a render.
+   **Shipped.**
 2. **Creatures** — 11 rows from printed 43-76, through
    `scripts/bestiary-sql.mjs`. Each adult block leans on the shared abilities
    of printed 36-43; a row restates what it takes from there so it stands
@@ -266,7 +267,8 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/xiticix-invasion-survey` | cache built (162 pp), `xiticix-invasion` registered in `books.json`, this survey written, offset +1 verified, the missing printed 136 recorded. No data. |
+| 2026-10-01 | `pal/data/xiticix-invasion-gear` | 15 gear rows (`add-xiticix-invasion-gear.sql`): nine resin melee weapons, the Resin Claws and Shoulder Spikes, and four ranged weapons. Every name carries a Xiticix prefix; a printed range is stored by its low end with the whole range in the note. Checked 15 of 15 by `book-reconcile`. Applied `--remote` before the PR. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+Steps 2 to 4 of the plan: creatures, notable NPCs, the Psi-Stalker tribes.
