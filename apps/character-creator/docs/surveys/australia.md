@@ -263,20 +263,22 @@ What is deliberately left, with the reason for each:
   that book.
 - **Maps, glossary, adventure ideas, sports descriptions** — prose.
 
-### Open questions for Nate before phase 4
+### Decisions, confirmed by Nate 2026-10-01
 
-1. **NPC-flagged classes.** Administrator is headed as an NPC and villain;
-   City Trader, Roadganger, Mokoloi, Kwarla Demon Hunter and Shadow People are
-   printed as both NPC and optional player class. The plan imports all 29 as
-   playable, tagged `evil` where the book calls the class a villain. Say so if
-   Administrator should be left out.
-2. **Mutant tables.** Outback Mutie and Phreaker Military Grunt roll on the
-   deformity and mutant-power tables (41 rows). If the class schema cannot
-   hold a percentile table as an ability group, the tables go in class prose
-   and a finding goes in `BOOK-INGEST-AUDIT.md`.
-3. **Homespun armor.** 21 price-list rows with ranges for A.R., S.D.C. or
-   M.D.C. and cost. Import as gear rows with the range in `cost_note`, or
-   leave as a rule.
+1. **NPC-flagged classes: import all 29 as playable.** Administrator is not
+   left out. City Trader, Roadganger, Mokoloi, Kwarla Demon Hunter and Shadow
+   People go in as player classes too, tagged `evil` where the book calls the
+   class a villain.
+2. **Mutant tables: the class schema is expanded to hold them.** Outback Mutie
+   and Phreaker Military Grunt roll on the deformity and mutant-power tables
+   (41 rows, printed 128-130). Nate asked for the schema to carry a percentile
+   table rather than for the tables to go in class prose, so this is tier 2
+   under `book-survey` section 8: in scope because he asked. It is its own PR,
+   scoped through `audit-premise-auditor` first, and it lands before batch 7
+   (the R.C.C.s). The other batches do not wait for it.
+3. **Homespun armor: gear rows.** The 21 price-list rows (printed 206-207) are
+   imported as gear, with the printed range in `cost_note` and the range of
+   A.R., S.D.C. or M.D.C. in the description where a column holds one number.
 
 ## Ledger
 
