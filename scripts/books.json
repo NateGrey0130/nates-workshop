@@ -105,6 +105,16 @@
       "note": "Re-cached 2026-08-28 from its TEXT LAYER, all 360 pages (INGESTION-AUDIT F24). The layer is not sparse - --probe medians 5,411 chars/page, comparable to pf - and the earlier six-page OCR cache (p090-p095) was the mistake this note used to describe as a decision. printed_pages stays 352 and NOT the 347 ocr-book.py measured: printed 348-352 is the Index of Rifts Magic, the authority table giving every spell a name, cost and page, and its folios do not surface the same way. This is the case the _doc's 'the registry outranks the manifest' rule was written for."
     },
 
+    "canada": {
+      "title": "Rifts World Book 20: Canada",
+      "aliases": ["Rifts Canada", "Rifts World Book 20: Rifts Canada"],
+      "source_pdf": "Rifts - World Book 20 - Canada.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 192,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from its TEXT LAYER, --probe median 4,457 chars/page and 36.3% stop words. Offset verified by folio at six points - cache p012 reads 11, p050 reads 49, p100 reads 99, p150 reads 149, p192 reads 191, p193 reads 192 - one region, no split. printed_pages is 192 and NOT the 191 ocr-book.py measured: printed 192 is the Experience Tables, the class authority, and its folio sits mid-file between the table columns instead of as the last line. Cache p194 is blank. welded_pages 2 (23, 141; 23 is the Rifts Canada map), corrupt_pages 5 pages (p58, p67, p130, p176, p188; p67 is the Perez map), substituted_digits 50 pages. See apps/character-creator/docs/surveys/canada.md."
+    },
+
     "cb1": {
       "title": "Rifts Conversion Book One",
       "aliases": [],
@@ -113,6 +123,16 @@
       "printed_pages": 192,
       "page_offset": 1,
       "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number. The last folio is 192 (file p193, the Zavor), read off a render on 2026-09-18; this said 172 until then. Its one reader, cacheCoverage, passes either way (all 200 pages are cached), but a reader scoping the book by it stopped twenty pages short, in the middle of the monsters. The cache manifest records 172 as well; the text layer prints the late folios with an interior space ('1 91', '1 92')."
+    },
+
+    "china-2": {
+      "title": "Rifts World Book 25: China 2",
+      "aliases": ["China 2", "China Two", "Rifts China 2", "Rifts China Two", "Rifts World Book 25: China 2 - Heroes of the Celestial Court", "Heroes of the Celestial Court"],
+      "source_pdf": "Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3; the page images are 150 dpi natively. Not World Book 24 (China 1, The Yama Kings), which is not registered. Offset +1 read off renders at printed 3, 4, 5, 13 and 160 (cache p004, p005, p006, p014, p161) and off the OCR folio at 15, 25, 102 and 152 - one region, no split. printed_pages is 160, the Experience Tables at cache p161; the manifest says 158 because the OCR lost the last folios. Cache p162 is the back cover. Nine cache pages are empty or near-empty and every one is a full-page art plate (p007, p043, p050, p079, p088, p116, p123, p134, p153), checked on a contact sheet. See apps/character-creator/docs/surveys/china-2.md."
     },
 
     "cwc": {
