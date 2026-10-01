@@ -1,8 +1,8 @@
 # Rifts World Book 17: Warlords of Russia — survey
 
-**Status:** `importing` — batch 1 (skills) shipped; gear next. (2026-10-01)
+**Status:** `importing` — batches 1 (skills) and 2 (weapons, armor, equipment) shipped; bionics next. (2026-10-01)
 
-**Rows citing this book:** skills 7
+**Rows citing this book:** gear 59, skills 7
 
 Slug `warlords-of-russia`. Cached 2026-10-01 from
 `Rifts - World Book 17 - Warlords of Russia.pdf`, 226 PDF pages, **text layer**
@@ -275,7 +275,9 @@ in `gear` under category `cybernetics` (132 rows there today).
 
 **The name list is survey-grade, not extraction-grade.** It was read off entry
 headings; the price lists at printed 141–142 and the bows are not itemised in
-it.
+it. **Batch 2 proved the point**: sixteen of the names it called missing are in
+the catalog under a differently ordered name (see the ledger). For the bionics
+batch, build the entry list from the catalog's own naming before diffing.
 
 ### vehicles, creatures, notable NPCs: all missing
 
@@ -335,6 +337,7 @@ Deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-01 | `pal/data/warlords-of-russia-survey` | cache built (226 pp, text layer), `warlords-of-russia` registered in `books.json`, survey written, offset +1 verified at seven folios. No data. |
 | 2026-10-01 | `pal/data/warlords-of-russia-skills` | **Batch 1, skills.** `~057-warlords-of-russia-skills.sql`: five new rows (`Lore: History of Russia`, `Lore: General Law`, `W.P. Net`, `W.P. Siege Weapons`, `W.P. Trick Shooting`), production skills 421 -> 426. Two rows that cited the Rifts Skill List now cite the page that defines them: `Wingrider Flying Wing` (printed 196) and `Language: Mongolian` (printed 198); no other cache defines either. The ten false gaps were left at the catalog's spelling and figures. `Trap Construction` also cites the Skill List and is printed here, but Coalition War Campaign prints it first; left alone. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-gear` | **Batch 2, gear: 59 rows**, production gear 3,428 -> 3,487. `add-warlords-of-russia-weapons.sql` (35: clips, shields, the Servo-Harness Rig, six AR rail guns, four AR-M launchers, four cannons, eight rifles and pistols, three Vibro-Blades, three Sovietski weapons), `add-warlords-of-russia-armor.sql` (13: seven armors in ten rows, horse barding, the two bionic horses as `gear` rows per D3) and `add-warlords-of-russia-equipment.sql` (11). **Printed 175, 180, 183 and 184 were read off renders**: the stat blocks sit beside the art and the cache returns them under the wrong headings. Every row was checked by `book-reconcile` against the page before the apply. **The survey's gear count was wrong by 16**: the arrowheads, the Portable Field Unit, two communicators and the Communication Helmet are held from Triax, Spirit West, Japan and RUE under names the survey's heading-derived list did not use (`Arrowhead: Light Explosive`, not `Light Explosive Arrowhead`), and the equipment script's own pre-flight refused the first draft. Left out: those sixteen, the large communicator (ambiguous against RUE's medium row), the bows, and the three bare price lists at printed 187-189. The Vibro-Scythe Polearm ships with the Avenging Angel in batch 5; the MM-61 Exoframe with the vehicles. Applied `--remote` before the merge. |
 
 ### What remains
 
