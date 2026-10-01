@@ -10,6 +10,29 @@
 import { CLASS_TAGS, MAX_AUTHORED_TAGS, classTags, suggestClassTags } from '../apps/character-creator/js/parser.js';
 
 const AUTHORED = new Set(CLASS_TAGS.filter((t) => t.kind === 'authored').map((t) => t.id));
+// The most classes one script may tag. d1-apply replays a file's trailing
+// SELECTs as ONE --command, and on Windows that line is capped at 8,191
+// characters once cmd.exe has escaped it (READBACK_BUDGET there, 7,900). A
+// read-back naming all 373 tagged Rifts classes passed it, so the assertions
+// went unevaluated after the apply had landed. A hundred ids is about 4,000.
+export const MAX_ROWS_PER_SCRIPT = 100;
+
+/**
+ * A large system's rows as several scripts on consecutive tilde numbers:
+ * `~048-class-tags-rifts.sql` with 373 rows becomes `~048-class-tags-rifts-1`
+ * through `~051-class-tags-rifts-4`. Returns [{ filename, rows }].
+ */
+export function splitScripts(rows, filename) {
+  const m = filename.match(/^~(\d{3})-(.+)\.sql$/);
+  if (!m) throw new Error(`${filename}: a class-tags script is a ~NNN-<slug>.sql script`);
+  if (rows.length <= MAX_ROWS_PER_SCRIPT) return [{ filename, rows }];
+  const parts = Math.ceil(rows.length / MAX_ROWS_PER_SCRIPT);
+  const size = Math.ceil(rows.length / parts);
+  return Array.from({ length: parts }, (_, i) => ({
+    filename: `~${String(Number(m[1]) + i).padStart(3, '0')}-${m[2]}-${i + 1}.sql`,
+    rows: rows.slice(i * size, (i + 1) * size),
+  }));
+}
 const DERIVED = new Set(CLASS_TAGS.filter((t) => t.kind === 'derived').map((t) => t.id));
 const COLUMNS = ['class_id', 'name', 'category', 'source_book', 'derived', 'tags'];
 
@@ -91,6 +114,10 @@ export function parseReview(text) {
  */
 export function emitSql(rows, { filename, system }) {
   if (!/^~\d{3}-/.test(filename)) throw new Error(`${filename}: a class-tags script is a ~NNN- script`);
+  if (rows.length > MAX_ROWS_PER_SCRIPT) {
+    throw new Error(`${rows.length} classes in one script; at most ${MAX_ROWS_PER_SCRIPT}, or its `
+      + 'read-back passes the Windows command line d1-apply replays it over (splitScripts)');
+  }
   const nl = "char(10)";
   const out = [
     `-- Authored class tags for ${system || 'these'} classes, one line each, from a reviewed`,
