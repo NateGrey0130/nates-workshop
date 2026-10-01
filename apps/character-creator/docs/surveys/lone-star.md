@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-01)
+**Status:** `importing` — gear shipped; vehicles, classes, the Dog Boy material, creatures and NPCs to come. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 12
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -150,13 +150,21 @@ returns **matched 12, missing 17** (one match by alias: Dog Pack Spikes).
 | Hand-held Flare | Handheld Flare | false gap |
 | CS Hand Grenades | Fragmentation, Explosive and Smoke Grenade rows citing Coalition War Campaign p.98 | false gap: a heading over rows already held |
 | Dog Pack DPM Light Riot Armor | Dog Pack DPM Riot Armor (Rifts Ultimate Edition) | same armor; compare the M.D.C. at extraction and keep the later book's row |
-| C-27 Light Plasma Cannon | C-27 Heavy Plasma Cannon (Coalition War Campaign p.93) | **open**: read both pages before deciding |
+| C-27 Light Plasma Cannon | C-27 Heavy Plasma Cannon (Coalition War Campaign p.93) | false gap: printed 47 says the same weapon was moved from the heavy class to the light one |
 
-**Thirteen rows are new**: five Vibro-Blade Vambrace variants (printed 48-49),
+**Twelve rows are new**: five Vibro-Blade Vambrace variants (printed 48-49),
 ES-10 Electro-Stun Hand Prod and ES-20 Electro-Stun Spear (49-50), Rope Pole
-(50-51), CN-1 Net Gun (51), Mutant Animal Restraining Harness (51-52), the
-DPM D1 and D2 modified Dead Boy armors (52-53), and the C-27 if it proves
-distinct. Psyscape's *Electro-Stunner* (p.69) is a different item.
+(50-51), CN-1 Net Gun (51), Mutant Animal Restraining Harness (51-52), and the
+DPM D1 and D2 modified Dead Boy armors (52-53). Psyscape's *Electro-Stunner*
+(p.69) is a different item.
+
+Two held rows disagree with this book and were left as they are, because
+Rifts Ultimate Edition is the later printing:
+
+- **Dog Pack DPM Riot Armor** — held at main body 30 M.D.C. and 8 lbs; printed
+  52 here gives the light riot armor 50 M.D.C. and 10 lbs.
+- **Neural Mace** — held with no price; printed 49 here prices it at 8,000
+  credits and gives it 100 M.D.C. and a payload of 100 stun attacks.
 
 ### vehicles: 8 entries, 0 matched, 1 false gap
 
@@ -183,8 +191,7 @@ the book prints only quick stats for it. Brodkil is held (Triax).
 Gear ships before classes, because the classes name this book's items
 (the Madhaven lesson).
 
-1. **Gear** — 13 rows from printed 46-53, numbers read off a render for the
-   vambrace prices (digit cipher) and the armor blocks.
+1. **Gear** — 12 rows from printed 48-53. **Shipped.**
 2. **Vehicles** — 7 rows from printed 54-64 with their location blocks.
    Printed 60 is a corrupt page: both hovercycles on it come off a render.
 3. **Dog Pack classes** — Sea Dog, K-9 Sniffer, Kill Hound (printed 40-45).
@@ -252,6 +259,7 @@ they ship after the breed group exists.
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/lone-star-survey` | cache built (178 pp), `lone-star` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-01 | `pal/data/lone-star-gear` | 12 gear rows (`add-lone-star-gear.sql`), reconciled 12 of 12 against 170 dpi renders by `book-reconcile`. Applied `--remote` before the PR. |
 
 ### What remains
 
