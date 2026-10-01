@@ -112,15 +112,15 @@ class's own ability block. Every skill the classes name is an existing one.
 | Mutant Rat R.C.C. | 85-88 | player character, with a note | Mutant Bat, Mutant Rat | missing |
 | Mutant Bat R.C.C. | 88-90 | player character, with a note | Mutant Bat, Mutant Rat | missing |
 | Psi-X Alien R.C.C. | 98-100 | optional player character | Psi-X Alien, Xiticix Killer | missing |
-| Pecos Raider O.C.C. | 153-154 | player character, with a note | Pecos Raider a.k.a. Bandit | **to check**: `bandit` is New West's (p.83-85), a different entry |
+| Pecos Raider O.C.C. | 153-154 | player character, with a note | Pecos Raider a.k.a. Bandit | **held**: Nate ruled on 2026-10-01 that it is New West's `bandit` (p.83-85) under another name |
 | Tokanii R.C.C. | 154-156 | optional player character | Tokanii | missing |
 | Psi-Stalker, CS and Civilized | 156-159 | reprinted in part from the main book, with new material | Wild or Civilized Psi-Stalker | **held**: `psi-stalker` and the `mutant-psi-stalker` race, citing Rifts Ultimate Edition |
 | Psi-Stalker, Wild | 160-161 | same | same | **held**: `wild-psi-stalker` |
 | Simvan Monster Rider R.C.C. | 162-163 | optional player character | Monkey Boy Tech, Simvan | missing |
 | Brodkil R.C.C. | 164 | NPC villain and optional player character | Brodkil (sub-demon) | no class; a `creatures` row cites Triax p.220-221 |
 
-**Fifteen classes are missing** and one (Pecos Raider) needs its page read
-against New West's Bandit before it is called new.
+**Fifteen classes are missing.** The Pecos Raider is not one of them (see
+its row).
 
 ### Listed, and not a class
 
@@ -191,22 +191,24 @@ Gear ships before classes, because the classes name this book's items
 4. **GED mutant classes** — Ursa-Warrior, Battle Cat, Kill Cat, Monkey Boy
    Soldier, Monkey Boy Tech, Mutant Rat, Mutant Bat, Mini Monkey Spy
    (printed 72-90), and the Psi-X Alien (98-100; printed 100 from a render).
-5. **Pecos classes** — Tokanii, Simvan Monster Rider, Brodkil, and the Pecos
-   Raider if it is not New West's Bandit (printed 153-164).
-6. **Creatures and notable NPCs** — the Xiticix Killer, and the 18 named
-   characters, through `scripts/bestiary-sql.mjs`. Printed 124 from a render.
+5. **Pecos classes** — Tokanii, Simvan Monster Rider, Brodkil (printed
+   154-164).
+6. **Creatures and notable NPCs** — the Xiticix Killer, the 18 named
+   characters, and the seven Quiet Hunters of printed 119 as rows of their
+   own (Nate, 2026-10-01), through `scripts/bestiary-sql.mjs`. Printed 124
+   from a render.
+7. **The Dog Boy material** — see *The Dog Boy, in full* below.
 
 What is deliberately left, with the reason for each:
 
-- **Dog Boy and the two Psi-Stalkers** — held from Rifts Ultimate Edition, the
-  later printing. The Psi-Stalker entry says of itself that it is a partial
-  reprint.
-- **Wolf Division and Feral Dog Boy** — not classes; see above.
-- **The four random tables** (optional Dog Boy height and breed, printed 37;
-  Dog Boy abnormality, 38; Mutations Gone Wrong, 71; Human Special Abilities,
-  97) — the catalog has no table for a roll-once character quirk.
-- **The Quiet Hunters squad** (printed 119) — seven one-paragraph blocks;
-  decide at step 6 whether they are rows or a note on Major Claval's.
+- **The two Psi-Stalkers** — held from Rifts Ultimate Edition, the later
+  printing. The entry says of itself that it is a partial reprint.
+- **The Pecos Raider** — held as New West's `bandit`.
+- **Wolf Division** — a unit description, not a class. Its members are
+  reachable as the Wolf breed (step 7).
+- **Mutations Gone Wrong** (printed 71) and **Human Special Abilities**
+  (printed 97) — the first is written for NPC mutants; the second is not Dog
+  Boy material. Not asked for; raise again if wanted.
 - **Ostrosaurus quick stats** (printed 163) — held from New West in full.
 - **Weapon options priced inside each hovercycle** — recorded in the vehicle
   row's description; nothing reads the vehicle weapon table for a sheet.
@@ -214,6 +216,36 @@ What is deliberately left, with the reason for each:
   vibro-blades, Neural Mace, Dog Pack Spikes) — held, citing the books that
   print them in full.
 - **Lore, maps, settlements and bandit organizations.**
+
+## The Dog Boy, in full
+
+Nate asked on 2026-10-01 for the Dog Boy material the first plan left out,
+and said changes to the creator are in scope for it (`book-survey` §8,
+tier 2). Each proposal below goes through `audit-premise-auditor` before
+it is scoped.
+
+The catalog already splits the Dog Boy into the `mutant-dog` race and the
+`dog-boy` occupation (`BOOK-INGEST-AUDIT` F110). Most of this lands on the
+race, where every Dog Pack occupation inherits it.
+
+| printed | material | where it goes | needs code? |
+|---|---|---|---|
+| 37 | Type/Breed of Dog, 20 bands | a pick-one `special_abilities` group on `mutant-dog`, one ability per band, each carrying its attribute, S.D.C. and initiative bonuses; swim percentages, track-by-smell changes and bite damage in the ability's text | no. Checked 2026-10-01: an R.C.C. carries pick-one ability groups today, and an ability grants `bonuses` and `psionics` |
+| 38 | Mutation Abnormality, 13 bands | a second pick-one group on `mutant-dog`, with a "none" option because the table is optional. The three psionic bands carry a `psionics` block | no, if one class may hold two pick-one groups; confirm at the premise audit |
+| 37 | Dog Boy's Height, 7 bands | not a mechanic; named in the race's description | no |
+| 38-39 | Feral Dog Boy (a runaway) | the `dog-boy` occupation with the adventurer's equipment and money in place of the soldier's | to decide: a variant can replace money, not equipment |
+| 39 | Free Born | `mutant-dog` paired with an ordinary occupation. The book's own list of typical occupations and its secondary-skill count for such a pairing go on the race | to check: which occupations refuse the race today, and whether a race can state a pairing's secondary-skill count |
+| 32-36 | the Dog Boy entry itself | compared field by field against the held Rifts Ultimate Edition rows; differences recorded here, the later book wins | no |
+| 40 | Sea Dog's Newfoundland requirement | a breed the table on printed 37 does not list; added to the breed group, citing printed 40 | no |
+| — | rolling the two tables instead of picking | a roll button on a pick-one group whose options carry percentile bands | **yes**, a wizard change. Useful beyond this book: the Gypsy Gifted and Africa's percentile splits are the same shape |
+
+Two things an ability cannot do today, both recorded in the text of the
+ability rather than applied: grant or re-base a skill (the breed table's
+swimming percentages), and change a natural ability's percentage (track by
+smell).
+
+The Dog Pack occupations of step 3 take `mutant-dog` as their only race, so
+they ship after the breed group exists.
 
 ## Ledger
 
