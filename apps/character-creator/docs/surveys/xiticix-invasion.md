@@ -225,35 +225,36 @@ book's weapons (the Madhaven lesson).
    `scripts/bestiary-sql.mjs`. Each adult block leans on the shared abilities
    of printed 36-43; a row restates what it takes from there so it stands
    alone.
-3. **Notable NPCs** — 20 named rows from printed 105-108, 133-135, 144-146
-   and 153-160. Printed 107 and 108 from renders. Copeland's row carries what
-   printed 135 gives and says that the rest is on a page this PDF lacks.
+3. **Notable NPCs** — 21 rows from printed 105-108, 133-135, 137, 144-146
+   and 153-160: 19 named characters and the two typical-soldier blocks.
+   Printed 107 and 108 from renders.
+4. **The Psi-Stalker tribes** — the three tribe blocks of printed 103-105 as
+   a pick-one ability group on `wild-psi-stalker`, the way Lone Star's breed
+   table landed on `mutant-dog`. It edits a held class, so the proposal goes
+   through `audit-premise-auditor` before it is scoped (`book-survey` §8).
+   The Deathbringer exoskeleton armor (printed 105) travels with it.
 
 Each batch is extracted off renders by `book-extract-worker` where a page is
 flagged above, and checked by `book-reconcile` before its script is written.
 
-**For Nate to decide** before the batch they belong to:
+**Decided by Nate on 2026-10-01:**
 
-- **Printed 136.** Lieutenant Thomas Kent cannot be imported from this PDF,
-  and Copeland only in part. A scan of that one page would settle both;
-  without one Kent is left out and the gap is recorded here.
-- **The two typical-soldier blocks** (printed 137). They are generic, not
-  named characters. Import as two `notable_npcs` rows, or leave.
-- **The three tribe blocks** (printed 103-105). They could become a pick-one
-  ability group on `wild-psi-stalker`, the way Lone Star's breed table landed
-  on `mutant-dog`. That edits a held class and was not asked for; it waits for
-  a yes.
+- **Printed 136: skip Kent and Copeland for now.** Neither is imported from
+  this PDF. Both wait for a scan of that page.
+- **The two typical-soldier blocks** (printed 137) are `notable_npcs` rows.
+- **The three tribe blocks** are in scope (step 4; tier 2 of `book-survey`
+  §8).
 
 What is deliberately left, with the reason for each:
+
+- **Lieutenant Thomas Kent and Copeland** — printed 136 is missing from the
+  PDF (see the top of this file). Raise again when a scan exists.
 
 - **The Xiticix Killer** (printed 90-91) — held from Lone Star in full.
 - **The two Psi-Stalkers** (printed 108-113) — held from Rifts Ultimate
   Edition, the later printing; the entry says it is a reprint.
 - **The four Coalition units** (printed 138-140) — held from Coalition War
   Campaign in full; these are quick stats.
-- **The Deathbringer exoskeleton armor** (printed 105) — one line inside the
-  tribe block with a rolled M.D.C. and no price or weight. It travels with
-  the tribe-block decision.
 - **Hive towers, tunnels, forts and their keys** (printed 12-16, 25-35,
   147-152) — places, not catalog rows.
 - **The tunnel-contents tables** (printed 31, 33), the troop breakdowns and
