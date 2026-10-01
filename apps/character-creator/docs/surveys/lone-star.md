@@ -1,8 +1,8 @@
 # Rifts World Book 13: Lone Star — survey
 
-**Status:** `importing` — gear, vehicles, the Dog Boy tables, the Dog Pack classes and the Pecos classes shipped; nine classes, creatures and NPCs to come. (2026-10-01)
+**Status:** `importing` — gear, vehicles, the Dog Boy tables and all fifteen classes shipped; the Xiticix Killer and the notable NPCs to come. (2026-10-01)
 
-**Rows citing this book:** classes 6, gear 12, vehicles 7
+**Rows citing this book:** classes 15, gear 14, vehicles 7
 
 Slug `lone-star`. Cached 2026-10-01 from `Rifts-WorldBook13-LoneStar.pdf`,
 178 PDF pages, **text layer** (no OCR). `--probe` median 6,460 chars/page,
@@ -199,7 +199,8 @@ Gear ships before classes, because the classes name this book's items
    from the Dog Boy's.
 4. **GED mutant classes** — Ursa-Warrior, Battle Cat, Kill Cat, Monkey Boy
    Soldier, Monkey Boy Tech, Mutant Rat, Mutant Bat, Mini Monkey Spy
-   (printed 72-90), and the Psi-X Alien (98-100; printed 100 from a render).
+   (printed 72-89), and the Psi-X Alien (98-100). **Shipped**, with two gear
+   rows for the Mini Monkey Spy's custom armor (printed 83).
 5. **Pecos classes** — Tokanii, Simvan Monster Rider, Brodkil (printed
    154-164). **Shipped.**
 6. **Creatures and notable NPCs** — the Xiticix Killer, the 18 named
@@ -283,6 +284,7 @@ tables are not rolled for them.
 | 2026-10-01 | `pal/data/lone-star-dog-breeds` | `~055-dog-boy-breeds-and-mutations.sql`: the Type/Breed and Mutation Abnormality tables as two pick-one groups on `mutant-dog` (RUE's printing), a Free Born line on the race and a Feral Dog Boy line on `dog-boy`. Edits two held classes; adds no row citing this book. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-dog-pack-classes` | 3 classes: `sea-dog`, `k-9-sniffer`, `kill-hound`. Drafted one agent per class from a shared brief, numbers read off 170 dpi renders; `book-reconcile` checked all three against printed 32-36 and 40-45 and the Experience Tables, and its six equipment-row findings were harmonised. No gear stubs. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/lone-star-pecos-classes` | 3 classes: `tokanii`, `simvan-monster-rider`, `brodkil`. `book-reconcile` read all three against renders of printed 154-156 and 162-164 and the Experience Tables: no disagreements. No gear stubs. The Simvan's two sexes differ in P.P.E., psionics and skills and are two variants plus a matching pick-one psionics ability; the Brodkil's five attacks are stored as printed, and the page does not say whether they include its listed hand to hand. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/lone-star-mutant-classes` | 9 classes: `ursa-warrior`, `battle-cat`, `kill-cat`, `mini-monkey-spy`, `monkey-boy-soldier`, `monkey-boy-tech`, `mutant-rat`, `mutant-bat`, `psi-x-alien`; 2 gear rows (`add-lone-star-mini-monkey-armor.sql`). Three `book-reconcile` passes against renders; their findings (the Kill Cat's S.D.C. field, money and I.S.P. wording, one page range, one citation, one garbled sentence) were applied by one harmoniser. Species are variants on the bear, the Battle Cat and the Monkey Boy Soldier, and a pick-one ability on the Kill Cat. No gear stubs; a printed comb is not stored. Applied `--remote` before the PR. |
 
 ### What remains
 
