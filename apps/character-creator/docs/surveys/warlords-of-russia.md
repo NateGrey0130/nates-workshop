@@ -1,8 +1,8 @@
 # Rifts World Book 17: Warlords of Russia — survey
 
-**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
+**Status:** `importing` — batch 1 (skills) shipped; gear next. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 7
 
 Slug `warlords-of-russia`. Cached 2026-10-01 from
 `Rifts - World Book 17 - Warlords of Russia.pdf`, 226 PDF pages, **text layer**
@@ -244,7 +244,9 @@ The 15 hand-checked:
 
 `Horsemanship: Cossack`, `Trick Riding`, `Wingrider Flying Wing`,
 `Language: Russian`, `Chinese` and `Mongolian` are already in the catalog,
-arrived with other books. **22 skills in production cite `rifts-skill-list`,
+arrived with other books. **The Asian/Westerner split at printed 198 belongs to
+`Language: Chinese`**: it is the tail of that entry and sits directly above the
+Mongolian heading, where it reads as Mongolian's. **22 skills in production cite `rifts-skill-list`,
 which is not a book**: several of this book's skills are among them, and this
 book is a real source for them. Re-run that search now the book is cached.
 
@@ -332,6 +334,7 @@ Deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/warlords-of-russia-survey` | cache built (226 pp, text layer), `warlords-of-russia` registered in `books.json`, survey written, offset +1 verified at seven folios. No data. |
+| 2026-10-01 | `pal/data/warlords-of-russia-skills` | **Batch 1, skills.** `~057-warlords-of-russia-skills.sql`: five new rows (`Lore: History of Russia`, `Lore: General Law`, `W.P. Net`, `W.P. Siege Weapons`, `W.P. Trick Shooting`), production skills 421 -> 426. Two rows that cited the Rifts Skill List now cite the page that defines them: `Wingrider Flying Wing` (printed 196) and `Language: Mongolian` (printed 198); no other cache defines either. The ten false gaps were left at the catalog's spelling and figures. `Trap Construction` also cites the Skill List and is printed here, but Coalition War Campaign prints it first; left alone. Applied `--remote` before the merge. |
 
 ### What remains
 
