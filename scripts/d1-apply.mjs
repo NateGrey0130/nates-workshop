@@ -5,6 +5,7 @@
 //   node scripts/d1-apply.mjs --remote db/migrations/021-x.sql apps/character-creator/db/backfill-y.sql
 //   node scripts/d1-apply.mjs --local  apps/character-creator/db/add-z.sql
 //   node scripts/d1-apply.mjs --remote apps/character-creator/db/*.sql
+//   node scripts/d1-apply.mjs --check --remote db/migrations/021-x.sql   (applies nothing)
 //
 // - Globs are expanded by this script, sorted, because PowerShell does not
 //   expand them for native commands and the same command should work in both
@@ -61,7 +62,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { trailingSelects, stripComments, statements, expressionDepth, D1_MAX_EXPR_DEPTH } from './sql-statements.mjs';
 import { assertionMismatches, preflightReadbacks } from './readback-lib.mjs';
-import { d1Batch, dbFromArgv, localD1Args, repoRoot } from './d1-query-lib.mjs';
+import { d1Batch, d1Query, dbFromArgv, localD1Args, repoRoot } from './d1-query-lib.mjs';
 
 // --db <palladium|marvel|tools>, default palladium: which group's database the
 // files go to (d1-query-lib.mjs). Removed from args here, so the group's name
@@ -70,6 +71,10 @@ const { group, binding, rest: args } = dbFromArgv(process.argv.slice(2));
 const remote = args.includes('--remote');
 const local = args.includes('--local');
 const skipPreflight = args.includes('--skip-preflight');
+// --check: every guard and the pre-flight replay, then the plan, then stop.
+// Nothing is applied. A target is still required, because the plan says which
+// of the files that target has already recorded.
+const checkOnly = args.includes('--check');
 // Globs are expanded HERE, not by the shell. PowerShell does not expand them
 // for native commands at all, so `db/*.sql` reaches this script as a literal
 // and dies as 'no such file'. Doing it here means one documented command
@@ -227,6 +232,30 @@ if (skipPreflight) {
       + 'production holds - name it to sort LAST (operations.md, the z-tier table). --skip-preflight bypasses this check '
       + 'and is the wrong answer unless the replay itself is at fault.');
   }
+}
+
+// ── --check: say what would happen, and stop ──
+//
+// The preview used to be a --local apply, against a database that is not a
+// mirror of production. This runs the same guards and the same replay, then
+// asks the TARGET which of these files it has already recorded: a second
+// apply of a recorded data script is the mistake this shows before it is made.
+if (checkOnly) {
+  const target = remote ? '--remote' : '--local';
+  let recorded = null;
+  for (const sql of ['SELECT filename FROM schema_migrations UNION SELECT filename FROM data_script_runs',
+    'SELECT filename FROM schema_migrations']) {
+    try { recorded = new Set(d1Query(sql, { target, db: binding }).map((x) => x.filename)); break; }
+    catch { /* a group's database without data_script_runs, or no ledger at all */ }
+  }
+  console.log(`\n--check: ${files.length} file(s) would be applied to ${target} (${group}: ${binding}), in this order:`);
+  for (const f of files) {
+    const seen = recorded?.has(path.basename(f));
+    console.log(`  ${f}${seen ? '   <- ALREADY RECORDED on this target' : ''}`);
+  }
+  if (!recorded) console.log('  (could not read which files this target has recorded)');
+  console.log('\nNothing was applied.');
+  process.exit(0);
 }
 
 // Call npm's own npx-cli.js with this Node, so the child spawns WITHOUT a shell.
