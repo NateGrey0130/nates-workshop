@@ -111,10 +111,13 @@ git fetch -q && git status -sb  # must not be behind origin/main
 Then, named for the menu and the finding, per `ship-pr` step 1:
 
 ```bash
-git checkout -b <menu-stem-lowercase>-<id-lowercase>-<three-word-slug>
+git checkout -b proc/audit/<menu-stem-lowercase>-<id-lowercase>-<three-word-slug>
 ```
 
-`book-ingest-audit-f76-talent-picks`, never `f76-talent-picks`.
+`proc/audit/book-ingest-audit-f76-talent-picks`, never `f76-talent-picks`. The
+`proc/audit/` prefix is `CLAUDE.md` → *Naming*; a finding whose change lands in
+a group's own paths takes that group's prefix instead (`pal/fix/…`), with the
+same menu-and-finding slug.
 
 ## 5. Hand back, then stop
 
