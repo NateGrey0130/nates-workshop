@@ -69,9 +69,12 @@ export function check(label, cond, detail) {
   } else {
     failures++;
     if (current) current.failures++;
-    console.error('  FAIL ' + label + (detail ? ' \u2014 ' + detail : ''));
+    const line = 'FAIL ' + label + (detail ? ' \u2014 ' + detail : '');
+    failed.push((current ? current.name + ': ' : '') + line);
+    console.error('  ' + line);
   }
 }
+const failed = [];
 
 // Named so a failure can say WHICH group it was in, which a flat list of 768
 // results cannot.
@@ -81,6 +84,11 @@ export function summary() {
     return 1;
   }
   if (failures) {
+    // Every failure again, together, at the end. A run prints one line per
+    // check, thousands of them, and a FAIL in the middle is otherwise found by
+    // searching. Section first, so each line reads on its own.
+    console.error('\nfailed checks:');
+    for (const f of failed) console.error('  ' + f);
     console.error('\nfailing sections:');
     for (const s of sections.filter((x) => x.failures)) {
       console.error('  ' + s.name + ' \u2014 ' + s.failures + ' of ' + s.checks);
