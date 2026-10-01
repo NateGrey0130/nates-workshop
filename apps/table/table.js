@@ -73,6 +73,30 @@ function say(text, bad = false) {
   el.classList.toggle('err', !!bad);
 }
 
+// THE CONNECTION, SAID WHERE IT IS SEEN. #status sits in the top panel, and a
+// player rolling dice has scrolled past it: a lost connection used to be a
+// line nobody was looking at, over buttons that sent nothing. This is a bar
+// fixed to the top of the screen, there for exactly as long as the socket is
+// not open. Empty text takes it away.
+function offline(text) {
+  let el = $('table-offline');
+  if (!text) { el?.remove(); document.body.classList.remove('table-is-offline'); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'table-offline';
+    el.setAttribute('role', 'alert');
+    document.body.prepend(el);
+  }
+  el.innerHTML = `<span>${esc(text)}</span> <button type="button" class="btn btn-sm">Rejoin now</button>`;
+  el.querySelector('button').addEventListener('click', rejoinNow);
+  document.body.classList.add('table-is-offline');
+}
+
+// What this person was at this table, kept for the tab's life so a reload or a
+// rejoin does not ask again. sessionStorage, because it is about this sitting.
+const remember = (k, v) => { try { sessionStorage.setItem(`table-${k}-${S.code}`, v); } catch { /* private window */ } };
+const recall = (k) => { try { return sessionStorage.getItem(`table-${k}-${S.code}`); } catch { return null; } };
+
 // ---------- entry: the code ----------
 
 function renderEntry(error = '') {
@@ -112,7 +136,7 @@ async function start(raw) {
   history.replaceState(null, '', url);
   $('sub').textContent = S.access.campaign.name;
 
-  const asked = new URLSearchParams(location.search).get('as');
+  const asked = new URLSearchParams(location.search).get('as') || recall('role');
   if (asked && S.access.roles.includes(asked)) return connect(asked);
   renderChoose();
 }
@@ -141,6 +165,8 @@ function renderChoose() {
 function connect(role) {
   S.role = role;
   S.closed = false;
+  remember('role', role);
+  clearTimeout(S.retryTimer);
   if (role === 'display') {
     // A TV bookmark rejoins as the TV without asking again.
     const url = new URL(location.href);
@@ -153,6 +179,7 @@ function connect(role) {
   S.ws = ws;
   ws.addEventListener('open', () => {
     S.retry = 0;
+    offline('');
     ws.send(JSON.stringify({ type: 'hello' }));
     keepAwake();
   });
@@ -165,10 +192,7 @@ function connect(role) {
     if (S.ws !== ws || S.closed) return;
     // A phone that slept, a flaky connection, a Worker redeploy: rejoin with
     // the same code, and the room resends everything on hello.
-    S.retry += 1;
-    const wait = Math.min(15000, 1000 * 2 ** Math.min(S.retry - 1, 4));
-    say(`Connection lost. Rejoining in ${Math.round(wait / 1000)}s…`, true);
-    setTimeout(() => { if (!S.closed && S.ws === ws) reconnect(); }, wait);
+    scheduleRejoin('Connection lost.');
   });
   if (!$('status')) $('app').innerHTML = '<p id="status" class="muted" role="status" aria-live="polite">Joining…</p>';
 }
@@ -179,15 +203,44 @@ async function reconnect() {
   try {
     S.access = await getJson(`${GAMES[S.game].base}/table/access?code=${encodeURIComponent(S.code)}`);
   } catch (err) {
-    if (err.status === 404 || err.status === 410) return renderClosed();
-    return say(`Still offline: ${err.message}`, true);
+    if (err.status === 404 || err.status === 410) { offline(''); return renderClosed(); }
+    // Still offline is not the end of trying. This used to print one line and
+    // stop: no socket means no further `close` event, so nothing ever tried
+    // again and the page was dead until someone reloaded it.
+    return scheduleRejoin('Still offline.');
   }
   connect(S.role);
 }
 
+// One timer, backing off to fifteen seconds, for both ways a rejoin fails.
+function scheduleRejoin(why) {
+  if (S.closed) return;
+  S.retry = (S.retry || 0) + 1;
+  const wait = Math.min(15000, 1000 * 2 ** Math.min(S.retry - 1, 4));
+  offline(`${why} Rolls are not being sent. Rejoining in ${Math.round(wait / 1000)}s…`);
+  clearTimeout(S.retryTimer);
+  S.retryTimer = setTimeout(() => { if (!S.closed) reconnect(); }, wait);
+}
+
+// Without waiting for the timer: the button on the bar, the network coming
+// back, the phone being picked up again.
+function rejoinNow() {
+  if (S.closed || !S.code || !S.role || !S.game) return;
+  if (S.ws?.readyState === WebSocket.OPEN || S.ws?.readyState === WebSocket.CONNECTING) return;
+  clearTimeout(S.retryTimer);
+  offline('Rejoining…');
+  reconnect();
+}
+window.addEventListener('online', rejoinNow);
+
 function send(msg) {
   if (S.ws?.readyState === WebSocket.OPEN) S.ws.send(JSON.stringify(msg));
-  else say('Not connected yet. Try again in a moment.', true);
+  else {
+    // Said on the bar, not in a panel that may be off screen: the press did
+    // nothing, and the person who made it has to know.
+    offline('Not connected — that was not sent.');
+    rejoinNow();
+  }
 }
 
 function onMessage(msg) {
@@ -198,6 +251,13 @@ function onMessage(msg) {
     S.feed = msg.feed;
     S.shown = msg.shown ?? null;
     S.init = msg.init ?? null;
+    // A new connection starts unseated when there is more than one character
+    // to choose from. The choice made earlier in this sitting is sent again.
+    const mine = recall('seat');
+    if (S.you?.role === 'player' && !S.you.seat && mine
+        && (S.you.characters || []).some((c) => String(c.id) === mine)) {
+      send({ type: 'seat', characterId: mine });
+    }
     render();
   } else if (msg.type === 'init') {
     S.init = msg.init;
@@ -241,7 +301,7 @@ async function keepAwake() {
   } catch { S.wake = null; }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && S.ws && !S.closed) keepAwake();
+  if (document.visibilityState === 'visible' && S.ws && !S.closed) { keepAwake(); rejoinNow(); }
 });
 
 // ---------- rendering ----------
@@ -289,7 +349,7 @@ function render() {
     </div>`;
   if (!gm && !seat) {
     for (const b of document.querySelectorAll('.table-seat')) {
-      b.addEventListener('click', () => send({ type: 'seat', characterId: b.dataset.id }));
+      b.addEventListener('click', () => { remember('seat', b.dataset.id); send({ type: 'seat', characterId: b.dataset.id }); });
     }
   }
   if (gm || seat) wireDice();
@@ -660,7 +720,10 @@ function wireInit() {
       case 'hide': return send({ type: 'init.set', id, hidden: !b.dataset.hidden });
       case 'up': return send({ type: 'init.move', id, to: at - 1 });
       case 'down': return send({ type: 'init.move', id, to: at + 1 });
-      case 'remove': return send({ type: 'init.remove', id });
+      // One tap beside the move arrows, and there is no undo in the room.
+      case 'remove':
+        if (confirm('Remove this one from the initiative order?')) send({ type: 'init.remove', id });
+        return undefined;
       case 'clear':
         if (confirm('Clear the initiative order?')) send({ type: 'init.remove', all: true });
         return undefined;
