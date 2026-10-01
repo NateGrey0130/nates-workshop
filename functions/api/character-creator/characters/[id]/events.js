@@ -245,10 +245,13 @@ export async function onRequestPost({ request, env, params }) {
     let armor;
     try { armor = JSON.parse(row?.armor || '[]'); } catch { armor = []; }
     if (!Array.isArray(armor) || !armor[index]) return json({ error: 'No such armour on this character' }, 404);
-    armor[index] = { ...armor[index], mdc_current: String(Math.trunc(m.to)) };
+    // One field of one entry, the way second_form is written above: rewriting
+    // the whole column from this read would erase an armour edit that landed
+    // between the read and the batch.
     statements.push(env.DB.prepare(
-      "UPDATE characters SET armor = ?, updated_at = datetime('now') WHERE id = ?"
-    ).bind(JSON.stringify(armor), params.id));
+      `UPDATE characters SET armor = json_set(armor, '$[${index}].mdc_current', ?),
+         updated_at = datetime('now') WHERE id = ?`
+    ).bind(String(Math.trunc(m.to)), params.id));
   }
   if (changes.vehicle) {
     const { id: vid, location, mdc: m } = changes.vehicle;
@@ -285,13 +288,46 @@ export async function onRequestPost({ request, env, params }) {
   // roll is the one kind it means anything on; on any other it is ignored.
   const priv = b.kind === 'roll' && b.private === true;
   const payload = JSON.stringify({ note, form, changes, ...(priv ? { private: true } : {}) });
+  // RETURNING, not a read of "the newest event" afterwards: with two people
+  // playing one character that read can return the OTHER request's row, and
+  // undo would then target it.
+  //
+  // A guarded event is logged only if its pool write landed. The check above
+  // runs before the batch, so a write arriving in between makes the guarded
+  // UPDATE match nothing - and the log must not then say it happened. After a
+  // write that landed, every guarded field holds its `to`.
+  const landed = [], landedBinds = [];
+  if (b.guard && sets.length) {
+    for (const [field, fv] of Object.entries(charFields)) { landed.push(`${field} IS ?`); landedBinds.push(fv.to); }
+    for (const [field, fv] of Object.entries(formFields)) {
+      landed.push(`json_extract(second_form, '$.${field}') IS ?`); landedBinds.push(Math.trunc(fv.to));
+    }
+  }
   statements.push(env.DB.prepare(
-    'INSERT INTO play_events (character_id, actor_email, kind, payload) VALUES (?, ?, ?, ?)'
-  ).bind(params.id, email, b.kind, payload));
+    'INSERT INTO play_events (character_id, actor_email, kind, payload) SELECT ?, ?, ?, ?'
+    + (landed.length ? ` WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND ${landed.join(' AND ')})` : '')
+    + ' RETURNING id, created_at'
+  ).bind(params.id, email, b.kind, payload, ...(landed.length ? [params.id, ...landedBinds] : [])));
 
-  await env.DB.batch(statements);
-  const row = await env.DB.prepare(
-    'SELECT id, created_at FROM play_events WHERE character_id = ? ORDER BY id DESC LIMIT 1'
-  ).bind(params.id).first();
+  const results = await env.DB.batch(statements);
+  const row = results[results.length - 1]?.results?.[0];
+  if (!row) {
+    // The same answer the check above gives, read again: the sheet's queue
+    // drops a conflict that names no pool.
+    const cols = Object.keys(charFields);
+    const current = cols.length ? await env.DB.prepare(
+      `SELECT ${cols.join(', ')} FROM characters WHERE id = ?`
+    ).bind(params.id).first() : {};
+    return json({
+      error: 'These pools changed somewhere else since this was queued',
+      conflict: true,
+      fields: Object.fromEntries(cols.map((f) => [f, {
+        mine: charFields[f].to, theirs: current?.[f], base: charFields[f].from,
+      }])),
+      form_fields: Object.fromEntries(Object.keys(formFields).map((f) => [f, {
+        mine: formFields[f].to, theirs: formView?.[f], base: formFields[f].from,
+      }])),
+    }, 409);
+  }
   return json({ ok: true, event_id: row.id, created_at: row.created_at });
 }

@@ -50,17 +50,20 @@ export async function listPendingPowers(env, characterId) {
   }));
 }
 
-export function insertPowerGrantStatements(env, characterId, grants) {
+export function insertPowerGrantStatements(env, characterId, grants, { ifLevel = null } = {}) {
+  // `ifLevel`: see insertGrantStatements in skill-picks.js.
+  const guard = ifLevel == null ? '' : ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
   return grants.map((g) => env.DB.prepare(
     `INSERT INTO pending_power_picks
        (character_id, granted_at_level, slot, count, kind, spell_levels, spell_traditions, categories, from_names, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?${guard}`
   ).bind(characterId, g.level, g.slot ?? 0, g.count, g.kind,
     g.spell_levels ? JSON.stringify(g.spell_levels) : null,
     g.kind === 'spell' && Array.isArray(g.traditions) ? JSON.stringify(g.traditions) : null,
     g.categories ? JSON.stringify(g.categories) : null,
     g.from ? JSON.stringify(g.from) : null,
-    g.note ?? null));
+    g.note ?? null,
+    ...(ifLevel == null ? [] : [characterId, ifLevel])));
 }
 
 // What a span of levels earns, in the shape this file banks and spends.
