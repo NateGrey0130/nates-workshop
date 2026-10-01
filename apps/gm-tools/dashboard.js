@@ -138,7 +138,7 @@ function rosterRowHtml(c) {
   // which awardXp() leaves out whatever is ticked.
   const xpBox = D.isGm && c.kind !== 'npc'
     ? `<input type="checkbox" class="gm-xp-pick noprint" ${D.xpSkip.has(c.id) ? '' : 'checked'}
-        aria-label="Award XP to ${escHtml(c.name)}" title="Include in the next XP award"
+        aria-label="Award XP to ${escHtml(c.name)}" title="Include in the next XP award, Damage ticked and Rest ticked"
         onchange="gmXpPick(${c.id}, this.checked)"> ` : '';
   return `<tr id="roster-${c.id}">
       <td>${xpBox}<a href="/apps/character-sheet/?id=${c.id}">${escHtml(c.name)}</a>${
@@ -178,6 +178,14 @@ function gmToolbarHtml() {
       <span class="gm-xp">
         <input type="number" id="gm-xp" placeholder="XP" aria-label="XP to award each ticked character">
         <button type="button" class="btn btn-sm" id="gm-xp-btn" onclick="awardPartyXp()">${xpButtonLabel()}</button>
+      </span>
+      <span class="gm-bulk">
+        <button type="button" class="btn btn-sm" onclick="gmDamageTicked()"
+          title="Apply the amount as damage to every ticked character">💥 Damage ticked</button>
+        <input type="number" id="gm-rest-hours" min="1" placeholder="hrs" style="width:62px"
+          aria-label="Hours of rest for the ticked characters">
+        <button type="button" class="btn btn-sm" onclick="gmRestTicked()"
+          title="Recover each ticked character's pools at the campaign's rest rates">Rest ticked</button>
       </span>
       <span id="gm-msg" class="muted small" role="status" aria-live="polite"></span>
     </div>`;
@@ -238,6 +246,72 @@ async function gmDamage(id) {
     repaintRow(c);
     gmMsg(`${c.name}${formLabel(c)} took ${D.amt}.`);
   } catch (err) { gmMsg(`${c.name}: ${err.message}`, true); }
+}
+
+// ---------- the whole party at once ----------
+//
+// The ticks beside each name already say who the next XP award reaches; the
+// same ticks say who a fireball or a night's sleep reaches. Each character is
+// still its OWN event on its OWN route, exactly as a press on its row would
+// be, so every one lands in that character's log and is undone by that row's
+// ↶. NPCs are never ticked and are never included, as with XP.
+async function gmDamageTicked() {
+  const party = xpTargets();
+  if (!party.length) return gmMsg('Nobody is ticked.', true);
+  if (!confirm(`Apply ${D.amt} damage to ${party.map((c) => c.name).join(', ')}?`)) return;
+  const failed = [];
+  for (const c of party) {
+    const patch = derive.damageCascade(pools(c), D.amt);
+    if (!Object.keys(patch).length) continue;
+    const changes = derive.playChanges(c, c.second_form, patch);
+    try {
+      await postJson(`characters/${c.id}/events`, { kind: 'damage', note: `G.M.: took ${D.amt}`, changes });
+      derive.applyPlayChanges(c, c.second_form, changes);
+      repaintRow(c);
+    } catch (err) { failed.push(`${c.name} (${err.message})`); }
+  }
+  gmMsg(`${party.length - failed.length} of ${party.length} took ${D.amt}.`
+    + (failed.length ? ` Failed: ${failed.join('; ')}.` : ''), failed.length > 0);
+}
+
+// The campaign's own rest rates (set further down this page), for the hours
+// given, by the sheet's own sum (derive.restGain): never past the maximum, and
+// for P.P.E. never past what is left of a base that Talents were bought from.
+async function gmRestTicked() {
+  const hours = Math.max(0, Number($('gm-rest-hours')?.value) || 0);
+  if (!hours) return gmMsg('Say how many hours.', true);
+  let rates = {};
+  try { rates = D.campaign?.rest_rates ? JSON.parse(D.campaign.rest_rates) : {}; } catch { rates = {}; }
+  if (!Object.values(rates).some((r) => Number(r) > 0)) {
+    return gmMsg('This campaign has no rest rates yet - set them below.', true);
+  }
+  const party = xpTargets();
+  if (!party.length) return gmMsg('Nobody is ticked.', true);
+  const failed = [];
+  let rested = 0;
+  for (const c of party) {
+    const pd = pools(c);
+    const patch = {}, said = [];
+    for (const [k, label] of POOLS) {
+      const max = pd[k + '_max'];
+      if (max == null) continue;
+      const cap = k === 'ppe' ? max - (Number(c.ppe_base_spent) || 0) : max;
+      const cur = pd[k + '_current'] ?? 0;
+      const gain = derive.restGain(cur, cap, Math.max(0, Number(rates[k]) || 0), hours);
+      if (gain > 0) { patch[k + '_current'] = cur + gain; said.push(`${label} +${gain}`); }
+    }
+    if (!said.length) continue;
+    const changes = derive.playChanges(c, c.second_form, patch);
+    try {
+      await postJson(`characters/${c.id}/events`,
+        { kind: 'pool', note: `G.M.: rested ${hours}h: ${said.join(', ')}`, changes });
+      derive.applyPlayChanges(c, c.second_form, changes);
+      repaintRow(c);
+      rested += 1;
+    } catch (err) { failed.push(`${c.name} (${err.message})`); }
+  }
+  gmMsg(`Rested ${hours}h: ${rested} of ${party.length} recovered something.`
+    + (failed.length ? ` Failed: ${failed.join('; ')}.` : ''), failed.length > 0);
 }
 
 async function gmUndo(id) {
