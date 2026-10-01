@@ -46,19 +46,27 @@
   </div>
   <div class="mc-panel">
     <h3>Ledger</h3>
-    ${S.ledger.length ? S.ledger.map((l) => `<div class="mc-item">
+    ${S.ledger.length ? S.ledger.map((l, i) => `<div class="mc-item">
       <span><b class="${l.delta < 0 ? 'mc-err' : 'mc-ok'}">${l.delta > 0 ? '+' : ''}${Number(l.delta).toLocaleString()}</b>
         <span class="mc-muted">${esc(l.currency)}</span> ${esc(l.reason || '')}</span>
-      <span class="mc-muted mc-small">${esc(l.created_by)} · ${esc((l.created_at || '').slice(0, 16))}</span>
+      <span class="mc-muted mc-small">${esc(l.created_by)} · ${esc((l.created_at || '').slice(0, 16))}
+        <button class="mc-btn mc-btn-sm mc-btn-ghost" onclick="mcCampaign.ledger.reverse(${i})"
+          aria-label="Record an opposing entry for this one">reverse</button></span>
     </div>`).join('') : '<p class="mc-muted">Nothing recorded yet.</p>'}
   </div>`;
   }
 
   async function add() {
     const currency = ($('cur-name')?.value || '').trim();
-    const delta = parseInt($('cur-delta')?.value, 10);
+    const typed = String($('cur-delta')?.value ?? '').trim();
+    const delta = parseInt(typed, 10);
     if (!currency || !Number.isFinite(delta) || delta === 0) {
       $('cur-msg').textContent = 'Needs a currency and a non-zero amount.';
+      return;
+    }
+    // parseInt reads "12.5" as 12 and says nothing; the ledger holds whole units.
+    if (!/^[+-]?\d+$/.test(typed)) {
+      $('cur-msg').textContent = 'Whole numbers only.';
       return;
     }
     try {
@@ -68,5 +76,19 @@
     } catch (err) { $('cur-msg').textContent = 'Failed: ' + err.message; }
   }
 
-  M.ledger = { state: S, load, html, add };
+  // THE CORRECTION THE LEDGER ASKS FOR, as one press. Entries are never edited
+  // or deleted; a mistake is answered by an opposing entry that says so, and
+  // that used to mean retyping the currency, the amount and a reason.
+  async function reverse(i) {
+    const l = S.ledger[i];
+    if (!l) return;
+    if (!(await M.ctx.ui.modal(`Record ${l.delta > 0 ? '−' : '+'}${Math.abs(l.delta).toLocaleString()} ${l.currency} to reverse this entry?`))) return;
+    try {
+      await M.ctx.api(`campaigns/${cid()}/currency`, M.json('POST',
+        { currency: l.currency, delta: -l.delta, reason: `Reverses: ${l.reason || 'an earlier entry'}`.slice(0, 200) }));
+      await M.ctx.reload();
+    } catch (err) { $('cur-msg').textContent = 'Failed: ' + err.message; }
+  }
+
+  M.ledger = { state: S, load, html, add, reverse };
 })(globalThis);
