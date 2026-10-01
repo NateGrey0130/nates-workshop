@@ -279,6 +279,17 @@ own complete stat blocks and are self-contained classes, so they do not take
 the breed group; the Sea Dog and K-9 Sniffer entries say the size and breed
 tables are not rolled for them.
 
+## Judgement calls Nate confirmed
+
+Put to him after the import and confirmed on 2026-10-01; none needed a change.
+
+- **Psi-X Alien:** a master psionic. The page states no tier.
+- **Brodkil:** five attacks per melee and its combat bonuses stored as printed,
+  with the catalog's Boxing bonuses on top.
+- **The mutant classes whose entries print only a monthly salary** start with no
+  money.
+- **Mini Monkey Spy:** playable, with its entry's NPC-leaning note on the class.
+
 ## Ledger
 
 | date | branch | what went in |
