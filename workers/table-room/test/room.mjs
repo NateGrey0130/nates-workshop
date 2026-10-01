@@ -942,6 +942,44 @@ section('initiative: a Palladium melee runs out by attacks, once per pass');
   await say(t.room, t.gm, { type: 'init.next' });
   check('a Next after the end says so', errorsOn(t.gm).at(-1) === 'The melee is over. Start a new one.');
 
+  // BACK. The last Next ended the melee; Back puts the turn, the pass and the
+  // attack it spent exactly where they were, once.
+  const ended = lastInit(t.gm);
+  check('the GM is told Back is available, and nobody else is',
+    ended.canBack === true && lastInit(P.Vex).canBack === false && lastInit(t.tv).canBack === false);
+  await say(t.room, P.Vex, { type: 'init.back' });
+  check('a player cannot step the turn back', errorsOn(P.Vex).at(-1) === 'Only the GM moves the turn back');
+  await say(t.room, t.gm, { type: 'init.back' });
+  const stepped = lastInit(t.gm);
+  const spentOf = (init) => init.entries.reduce((n, e) => n + (e.spent || 0), 0);
+  check('Back un-ends the melee and gives the last attack back',
+    stepped.over === false && stepped.turn !== null && spentOf(stepped) === spentOf(ended) - 1,
+    JSON.stringify({ over: stepped.over, turn: nameOf(stepped, stepped.turn), spent: spentOf(stepped), was: spentOf(ended) }));
+  check('and it is one step: a second Back has nothing to restore', stepped.canBack === false);
+  await say(t.room, t.gm, { type: 'init.back' });
+  check('which the room says', errorsOn(t.gm).at(-1) === 'Nothing to step back to');
+
+  // EDIT. A wrong attack count is corrected in place instead of by removing
+  // the combatant; a number that makes no sense is refused; a player cannot.
+  const upNow = stepped.entries.find((e) => e.id === stepped.turn);
+  await say(t.room, t.gm, { type: 'init.set', id: upNow.id, attacks: upNow.attacks + 2, total: 30 });
+  const edited = lastInit(t.gm).entries.find((e) => e.id === upNow.id);
+  check('the GM corrects a row\'s attacks and total in place, and the row does not move',
+    edited.attacks === upNow.attacks + 2 && edited.total === 30
+      && lastInit(t.gm).entries.findIndex((e) => e.id === upNow.id) === stepped.entries.findIndex((e) => e.id === upNow.id),
+    JSON.stringify(edited));
+  await say(t.room, t.gm, { type: 'init.set', id: upNow.id, attacks: 2.5 });
+  check('a number that is not a whole one is refused', errorsOn(t.gm).at(-1) === 'attacks must be a whole number from 0 to 20');
+  await say(t.room, t.gm, { type: 'init.set', id: upNow.id, attacks: 0 });
+  check('spent never exceeds attacks', lastInit(t.gm).entries.find((e) => e.id === upNow.id).spent === 0);
+  await say(t.room, P.Vex, { type: 'init.set', id: upNow.id, attacks: 9 });
+  check('a player cannot edit a row', errorsOn(P.Vex).at(-1) === 'Only the GM changes a row');
+  check('an edit is a change, so Back no longer applies', lastInit(t.gm).canBack === false);
+  // Put the melee back to over, as the checks below expect it.
+  await say(t.room, t.gm, { type: 'init.set', id: upNow.id, attacks: upNow.attacks, total: upNow.total, spent: upNow.attacks });
+  for (let i = 0; i < 3 && !lastInit(t.gm).over; i++) await say(t.room, t.gm, { type: 'init.next' });
+  check('the melee is over again after the corrections', lastInit(t.gm).over === true);
+
   // A new melee keeps the order; a latecomer is slotted in by the roll.
   await say(t.room, t.gm, { type: 'init.newRound' });
   const m2 = lastInit(t.gm);

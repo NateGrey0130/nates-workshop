@@ -572,6 +572,7 @@ function initRowHtml(e, i, I, gm) {
       ${e.kind !== 'pc' ? `<button type="button" class="btn small" data-init="hide" data-id="${esc(e.id)}" data-hidden="${e.hidden ? '1' : ''}">${e.hidden ? 'Show name' : 'Hide'}</button>` : ''}
       ${e.rolled && i > 0 ? `<button type="button" class="btn small" data-init="up" data-id="${esc(e.id)}" aria-label="Move ${esc(e.name)} up">↑</button>` : ''}
       ${e.rolled && i < rolledCount - 1 ? `<button type="button" class="btn small" data-init="down" data-id="${esc(e.id)}" aria-label="Move ${esc(e.name)} down">↓</button>` : ''}
+      ${e.rolled ? `<button type="button" class="btn small" data-init="edit" data-id="${esc(e.id)}" aria-label="Correct ${esc(e.name)}'s numbers">edit</button>` : ''}
       <button type="button" class="btn small" data-init="remove" data-id="${esc(e.id)}" aria-label="Take ${esc(e.name)} out of initiative">✕</button>
     </span>`;
   return `<li class="${initClass(e, I)}" data-id="${esc(e.id)}"${gm && e.rolled ? ' draggable="true"' : ''}${e.id === I.turn ? ' aria-current="true"' : ''}>
@@ -624,9 +625,11 @@ function initBarHtml(I) {
   const buttons = palladium()
     ? [b('npcs', 'Roll for NPCs', false, !I.entries.some((e) => !e.rolled && e.kind !== 'pc')),
       b('next', nextLabel, true, !rolledAny || I.over),
+      b('back', '↶ Back', false, !I.canBack),
       b('round', 'New melee', false, !any), b('reroll', 'New melee, roll again', false, !any)]
     : [b('all', rolledAny ? 'Re-roll all' : 'Roll the round', !rolledAny, !any),
-      b('next', nextLabel, rolledAny, !rolledAny)];
+      b('next', nextLabel, rolledAny, !rolledAny),
+      b('back', '↶ Back', false, !I.canBack)];
   return `<div class="init-bar">${buttons.join('')}${b('clear', 'Clear', false, !any)}</div>`;
 }
 
@@ -699,6 +702,25 @@ function wireInitGm() {
   });
 }
 
+// Correct a row's numbers mid-fight. One prompt, the numbers in the order the
+// row shows them; a blank or Cancel changes nothing. Palladium has a total,
+// attacks per melee and how many are spent; Marvel has the roll alone.
+function editInitRow(e) {
+  if (!e) return;
+  const pal = palladium();
+  const now = pal ? `${e.total}, ${e.attacks ?? 0}, ${e.spent ?? 0}` : String(e.total);
+  const typed = prompt(pal
+    ? `${e.name}: initiative total, attacks per melee, attacks spent`
+    : `${e.name}: initiative roll`, now);
+  if (typed == null || !typed.trim()) return;
+  const nums = typed.split(/[\s,]+/).filter(Boolean).map(Number);
+  if (nums.some((n) => !Number.isInteger(n)) || nums.length !== (pal ? 3 : 1)) {
+    return say(pal ? 'Three whole numbers: total, attacks, spent.' : 'One whole number.', true);
+  }
+  const [total, attacks, spent] = nums;
+  send({ type: 'init.set', id: e.id, total, ...(pal ? { attacks, spent } : {}) });
+}
+
 // One listener for every button the order repaints, so a repaint re-wires nothing.
 function wireInit() {
   const body = $('init-body');
@@ -715,6 +737,8 @@ function wireInit() {
       case 'npcs': return send({ type: 'init.roll', all: true });
       case 'all': return send({ type: 'init.roll', all: true });
       case 'next': return send({ type: 'init.next' });
+      case 'back': return send({ type: 'init.back' });
+      case 'edit': return editInitRow((S.init?.entries || [])[at]);
       case 'round': return send({ type: 'init.newRound' });
       case 'reroll': return send({ type: 'init.newRound', reroll: true });
       case 'hide': return send({ type: 'init.set', id, hidden: !b.dataset.hidden });

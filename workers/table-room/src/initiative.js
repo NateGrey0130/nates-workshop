@@ -145,11 +145,18 @@ function moveOn(init, from, rules) {
 // The GM's Next. The first press starts the round; each after it ends the
 // current combatant's action (in Palladium, spending one attack) and lights
 // the next one who can act.
+//
+// Each successful press keeps the order as it stood BEFORE it, in `init.undo`,
+// for back() below. One step, not a history: a mis-pressed Next is noticed at
+// once or not at all, and Next is the one press that cannot be re-made by hand
+// - it spends an attack, and in Marvel the last one un-rolls the whole round.
 export function next(init, rules) {
+  const before = snapshot(init);
   if (!init.started) {
     if (!rolledOf(init).length) return { error: 'Nobody has rolled yet' };
     Object.assign(init, { started: true, over: false, pass: 1 });
     moveOn(init, -1, rules);
+    init.undo = before;
     return {};
   }
   if (init.over || init.turn == null) return { error: 'The melee is over. Start a new one.' };
@@ -157,8 +164,25 @@ export function next(init, rules) {
   const cur = init.entries[i];
   if (rules.perMelee) cur.spent = (Number(cur.spent) || 0) + 1;
   moveOn(init, i, rules);
+  init.undo = before;
   return {};
 }
+
+const snapshot = (init) => { const { undo, ...rest } = init; return structuredClone(rest); };
+
+// The GM's Back: the order exactly as it stood before the last Next - the
+// turn, the pass, the round and every attack spent. Only straight after a
+// Next; the room drops `undo` on any other change (forgetUndo), because a
+// snapshot from before someone was added or removed would bring them back or
+// lose them.
+export function back(init) {
+  if (!init.undo) return { error: 'Nothing to step back to' };
+  const prev = init.undo;
+  for (const k of Object.keys(init)) delete init[k];
+  Object.assign(init, prev);
+  return {};
+}
+export function forgetUndo(init) { delete init.undo; }
 
 // Who acts after the current combatant, for "On deck".
 export function onDeck(init, rules) {
@@ -216,9 +240,27 @@ export function moveEntry(init, id, to) {
 
 // The GM's switches on one row: hidden (an NPC only), and Marvel's
 // "Talent applies" tick.
-export function setEntry(init, id, { hidden, applies } = {}) {
+//
+// And its NUMBERS, mid-fight: the total a roll came to, and in Palladium the
+// bonus, the attacks per melee and how many are spent. A wrong attack count
+// used to mean taking the combatant out and adding them again. Whole numbers
+// within what a sheet can hold; a total that changes does NOT move the row -
+// the order is the GM's to move, and re-sorting under them mid-melee would be
+// a second surprise on top of the correction.
+const NUMERIC = { total: [-99, 999], bonus: [-99, 99], attacks: [0, 20], spent: [0, 20] };
+export function setEntry(init, id, fields = {}) {
+  const { hidden, applies } = fields;
   const e = byId(init, id);
   if (!e) return { error: 'Nobody by that name is in the order' };
+  for (const [k, [lo, hi]] of Object.entries(NUMERIC)) {
+    if (fields[k] === undefined) continue;
+    const n = Number(fields[k]);
+    if (!Number.isInteger(n) || n < lo || n > hi) return { error: `${k} must be a whole number from ${lo} to ${hi}` };
+    if (k === 'total' && !e.rolled) return { error: `${e.name} has not rolled yet` };
+  }
+  for (const k of Object.keys(NUMERIC)) if (fields[k] !== undefined) e[k] = Number(fields[k]);
+  // Never more spent than there are: the row would read "-1 left".
+  if (e.attacks !== undefined && (Number(e.spent) || 0) > Number(e.attacks)) e.spent = Number(e.attacks);
   if (typeof hidden === 'boolean') {
     if (e.kind === 'pc' && hidden) return { error: 'A player\'s character cannot be hidden' };
     e.hidden = hidden;
@@ -248,6 +290,8 @@ export function initView(init, conn, rules) {
   return {
     round: i.round, pass: i.pass, started: i.started, over: i.over,
     turn: i.turn, onDeck: rules ? onDeck(i, rules) : null,
+    // Whether Back would do anything. The GM's alone, like the control.
+    canBack: conn?.role === 'gm' && !!i.undo,
     entries: i.entries.map((e) => entryView(e, conn)),
   };
 }
