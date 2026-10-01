@@ -194,3 +194,37 @@ export function statementsKeepingTriggers(sql) {
   if (pending !== null) parts.push(pending);
   return parts;
 }
+
+// ── sequence numbers a file claims ──
+//
+// A migration (`db/migrations/NNN-`, one sequence across the root and every
+// group folder) and a late-tier data script (`~NNN-`) each take "the next
+// number". Two sessions take the same one, and the number is in the filename
+// that production records - so the collision has to be seen BEFORE the apply,
+// not by the smoke check that reads the tree after both have landed.
+//
+// { seq, n, base } for a path that claims a number, or null.
+export function sequenceClaim(path) {
+  const p = String(path).replace(/\\/g, '/');
+  const base = p.split('/').pop();
+  if (/(^|\/)db\/migrations\//.test(p)) {
+    const m = /^(\d+)-.*\.sql$/.exec(base);
+    return m ? { seq: 'migration', n: Number(m[1]), base } : null;
+  }
+  const m = /^~(\d+)-.*\.sql$/.exec(base);
+  return m ? { seq: 'data script', n: Number(m[1]), base } : null;
+}
+
+// Each of `files` whose number another path in `others` already carries under
+// a DIFFERENT name. The same name is the file itself, already merged or pushed.
+export function sequenceCollisions(files, others) {
+  const taken = others.map((o) => ({ path: o, claim: sequenceClaim(o) })).filter((o) => o.claim);
+  const out = [];
+  for (const file of files) {
+    const mine = sequenceClaim(file);
+    if (!mine) continue;
+    const clash = taken.find((o) => o.claim.seq === mine.seq && o.claim.n === mine.n && o.claim.base !== mine.base);
+    if (clash) out.push({ file, seq: mine.seq, n: mine.n, other: clash.path });
+  }
+  return out;
+}
