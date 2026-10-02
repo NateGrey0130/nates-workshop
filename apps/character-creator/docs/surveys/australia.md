@@ -1,8 +1,8 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `importing` — batches 1 to 3 (skills, gear, vehicles) shipped; bestiary and classes next. (2026-10-02)
+**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) shipped; the 29 classes next. (2026-10-02)
 
-**Rows citing this book:** gear 73, skills 14, vehicles 9
+**Rows citing this book:** gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
 
 Slug `australia`. Cached 2026-10-01 from
 `Rifts - World Book 19 - Australia.pdf`, 226 PDF pages, **text layer**
@@ -304,6 +304,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/australia-skills` | batch 1: 14 skills (`~059-australia-skills.sql`), production 426 to 440 skills. Five of the book's names are catalog rows under the catalog's spelling and are not touched. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/australia-gear` | batch 2: 73 gear rows (`add-australia-gear.sql`): 4 kit, 3 flame throwers, 8 boomerangs/spear/woomera, 3 air crossbows, 20 Tech-City weapons, 5 Mokoloi TW items (a fourth weapon, the Warrior's Blade, was not in the survey's count), 9 Tech-City armors with the riot shield, 21 homespun armors. Six readings came off renders. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-vehicles` | batch 3: 9 vehicles (`add-australia-vehicles.sql`) with 80 location rows and 35 weapon rows: 3 power armors (the two Prey-Stalker headings are one suit, so not the survey's 4) and the 6 Notable Vehicles. The Prey-Stalker row is incomplete because printed 146 is missing from the PDF, and says so. Reconcile found three missing main-body location rows and one wrong remark; both fixed before the apply. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/australia-bestiary` | batches 4 and 8: 14 creatures and 4 notable NPCs with 68 attacks (`add-australia-bestiary.sql`, from `bestiary-sql.mjs`). Not the survey's 16 and 3-4: Bunyil, the Rainbow Serpent and Tikilik have no stat block (printed 188-192 say so), nor does Perth's computer; the book prints the Rainbow Serpent's Avatar (a notable NPC) and Tikilik's Demon Frog minion (a creature) instead. Reconcile checked all 18 rows and 68 attacks: no disagreement. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -321,4 +322,4 @@ the baseline this book's import must not move:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Batches 4 to 8 of the extraction plan remain, and the class-schema change for the mutant tables.
+Batches 5 to 7 of the extraction plan (the classes) remain, and the class-schema change for the mutant tables.
