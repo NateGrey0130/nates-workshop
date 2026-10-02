@@ -5682,13 +5682,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Rifts World Book 19: Australia prints one stat block for the Kwarla race
   // (printed 132-135) and two trained castes inside it, the Demon Hunter (134)
   // and the Mystic (135): each pairs only with the kwarla R.C.C.
+  // Rifts World Book 20: Canada prints the Worldly Sasquatch O.C.C. (printed
+  // 166) inside the True Sasquatch's entry, for a Sasquatch who has left the
+  // wild: it pairs only with the true-sasquatch R.C.C.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
     'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
     'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound',
-    'kwarla-demon-hunter', 'kwarla-mystic'];
+    'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
