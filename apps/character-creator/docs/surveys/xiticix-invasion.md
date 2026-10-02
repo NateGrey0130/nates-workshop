@@ -1,8 +1,8 @@
 # Rifts World Book 23: Xiticix Invasion — survey
 
-**Status:** `importing` — gear and creatures shipped; NPCs next, then the Psi-Stalker tribes. (2026-10-01)
+**Status:** `importing` — gear, creatures and notable NPCs shipped; the Psi-Stalker tribes remain. (2026-10-01)
 
-**Rows citing this book:** creatures 11, gear 15
+**Rows citing this book:** creatures 11, gear 15, notable_npcs 21
 
 Slug `xiticix-invasion`. Cached 2026-10-01 from
 `Rifts- World Book 23 Xiticix Invasion.pdf`, 162 PDF pages, **text layer**
@@ -80,10 +80,15 @@ the page numbers as separate runs and drops some of the numbers, so they
 cannot be paired by position. Both were read off 130 dpi renders for this
 survey.
 
-The two lists agree wherever they name the same thing, with two differences
-that are the book's: the Contents puts the Xiticix Killer at 88 and its stat
-block starts on printed 90; the Contents spells the fort *Barron* and one
-Quick Find line spells it *Barren*.
+The two lists agree wherever they name the same thing, with one difference
+that is the book's: the Contents puts the Xiticix Killer at 88 and its stat
+block starts on printed 90.
+
+**The text layer misspells two names the ink prints correctly.** It reads
+*Barren* for Fort Barron on one Quick Find line, and *Helgoland* for Commander
+Jess Helgeland on the Quick Find and throughout printed 153. Both were read
+off renders; neither is a variant the book prints. Take a proper name from a
+render, not from the cache.
 
 **The book prints no Experience Tables.** Every Xiticix entry gives an average
 level instead, and the two Psi-Stalker entries are reprints of a class that
@@ -228,7 +233,7 @@ book's weapons (the Madhaven lesson).
    alone. **Shipped.**
 3. **Notable NPCs** — 21 rows from printed 105-108, 133-135, 137, 144-146
    and 153-160: 19 named characters and the two typical-soldier blocks.
-   Printed 107 and 108 from renders.
+   Printed 107 and 108 from renders. **Shipped.**
 4. **The Psi-Stalker tribes** — the three tribe blocks of printed 103-105 as
    a pick-one ability group on `wild-psi-stalker`, the way Lone Star's breed
    table landed on `mutant-dog`. It edits a held class, so the proposal goes
@@ -269,7 +274,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/xiticix-invasion-survey` | cache built (162 pp), `xiticix-invasion` registered in `books.json`, this survey written, offset +1 verified, the missing printed 136 recorded. No data. |
 | 2026-10-01 | `pal/data/xiticix-invasion-gear` | 15 gear rows (`add-xiticix-invasion-gear.sql`): nine resin melee weapons, the Resin Claws and Shoulder Spikes, and four ranged weapons. Every name carries a Xiticix prefix; a printed range is stored by its low end with the whole range in the note. Checked 15 of 15 by `book-reconcile`. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/xiticix-invasion-creatures` | `add-xiticix-invasion-creatures.sql` through `scripts/bestiary-sql.mjs`: 11 creatures (Nit, Grub, Worker, Digger, Hunter, Leaper, Nanny, Young Queen, Elder Queen, Warrior, Super-Warrior) with 67 attack lines, category `insectoid`, none playable. Four extraction agents; three `book-reconcile` passes read every dice token off 170 dpi renders and found no wrong figure and one omission (the Warrior squad Horror Factor, added). Hit Points and S.D.C. are left empty on the M.D.C. forms with the S.D.C.-world figures in the note. Stored as printed where the book disagrees with itself: the Warrior and Nanny bite, the Hunter bite that names a poison the entry never describes, the Leaper Rear Power Kick. Printed 57, 63, 65 and 73 are full-page art. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/xiticix-invasion-npcs` | `add-xiticix-invasion-npcs.sql` through `scripts/bestiary-sql.mjs`: 21 notable NPCs with 92 attack lines (2 Deathbringer necromancers, 4 Free Thinkers, the 2 typical Strike Force Durango blocks, 2 at Fort Barron, 4 of the Wild Pack, 4 of Manitoba and Company, 3 of the Lazlo Triad). Kent and Copeland are not in it. Four extraction agents; three `book-reconcile` passes read every attribute line and pool off 170 dpi renders and found no wrong figure. Their two findings were a surname variant that only the text layer prints (removed) and one page cite inside a note (corrected). Skills the book prints only as a bonus are listed in the skills note and the percentage list is empty. Dekker and the typical RPA pilot share one attribute line in the book, and Greenfeld shares height, weight and P.P.E. with Haim; both are as printed. Applied `--remote` before the PR. |
 
 ### What remains
 
-Steps 3 and 4 of the plan: notable NPCs, the Psi-Stalker tribes.
+Step 4 of the plan: the Psi-Stalker tribes. Kent and Copeland wait for a scan of printed 136.
