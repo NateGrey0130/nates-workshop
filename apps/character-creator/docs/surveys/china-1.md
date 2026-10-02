@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `importing` — the curses and the whole bestiary shipped (24 spells, 37 creatures); the Terra-Cotta Warriors, the named NPCs and the Naga-Spawn class remain. (2026-10-02)
+**Status:** `importing` — every catalog row the book supports has shipped (24 spells, 39 creatures, 23 notable NPCs); the Naga-Spawn class remains, and a Were-Beast class waits on another book. (2026-10-02)
 
-**Rows citing this book:** spells 24, creatures 37
+**Rows citing this book:** spells 24, notable_npcs 23, creatures 39
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -266,6 +266,10 @@ Phase 4 costs money; everything above was free. **Agreed by Nate on
   Boars, Jackal Wolves, Crimson Moth, White Lead Leopards or the iron
   servants. That takes the `creatures` plan from 49 entries to **41**.
 - **D4 — the four Living Statues are `notable_npcs` rows**, 18 in all.
+  **23 as shipped (2026-10-02).** Extraction found five more named
+  individuals with stat lines the survey had not counted: Feng Xiao and Feng
+  Zhong as living people beside their statues (printed 23), and three allies
+  of Tai Shan Chun, Chi Chou Lu, Ast-Oth and Zhua Zhao (printed 39-40).
 - **D5 — this book's bestiary ships before `china-2`'s classes.**
 
 Slices for `book-extract-worker`, if fanned out, follow those five page
@@ -289,18 +293,19 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/china-1-ghosts-goblins` | Plan step 2: **11 `creatures` rows** and 35 `stat_attacks`, printed 61-84, in `~060-china-1-ghosts-and-goblins.sql`, written by `scripts/bestiary-sql.mjs`. First applied as `~059`; renumbered at merge when Australia's skills took that number, with the file made to re-apply over its own rows. Ghosts: Ch'iang Shih, Kuei, Preta, Shen Mo, Vapours. Goblins: Fox Spirit, Goat, Shadow, Mountain, One-Horned, Tall Man. Two `book-extract-worker` slices, then `book-reconcile` over every field with renders of printed 74-76, 80, 82 and 83: 11 of 11 clean. None playable. Each row's curses are named in `magic` as the `Demonic Curse:` rows of step 1. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/china-1-lesser-demons` | Plan step 3: **10 `creatures` rows** and 57 `stat_attacks`, printed 84-105, in `~061-china-1-lesser-demons.sql`, written by `scripts/bestiary-sql.mjs`: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Yang Ching. Two `book-extract-worker` slices with every stat line read on a render, then `book-reconcile` over every field: one page range corrected (Ox-Head, 99-100), every value clean. **No row for the Were-Beasts or the Dead & the Damned: neither prints a stat block**, confirmed by the reconcile. None playable. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-1-greater-demons` | Plan step 4: **16 `creatures` rows** and 77 `stat_attacks`, printed 106-141, in `~062-china-1-greater-demons.sql`, written by `scripts/bestiary-sql.mjs`. Greater demons: Kinnaras, Kou Ching, Mahoragas, Monkey Spirit, Naga, Red Child Demon, Shen Wu, White Monkey, Yaksha, Ying Hsuan Shang, Mara Asuras. Demon Lords: Mo-Lo, Shih-Ju Shen. From inside the Naga entry: the **Naga-Spawn** (`playable` 1, the only playable row from this book), the Water Goblin and the Water Devil. Three `book-extract-worker` slices, three shaping agents, then two `book-reconcile` passes over every field with renders: four page ranges corrected and one derived damage figure unsummed, every stat value clean. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/china-1-npcs` | Plan steps 5 and 6: **23 `notable_npcs` rows, 2 `creatures` rows** and 36 `stat_attacks`, printed 12-53, in `~063-china-1-npcs-and-terra-cotta.sql`, written by `scripts/bestiary-sql.mjs`. Rulers and heroes: Huan Shih, Wu Je Nao, Chu Chiang, Xian Ya, Qin Kuai, Wu Kuan, Yen Lo, Pien Cheng, Tai Shan Chun, Ping Teng, Tu Shis, Meng P'o Niang Niang, Huang Di. Qin Kuai's household: Lady Wang, Feng Xiao, Feng Zhong and the four Living Statues (D4). Tai Shan Chun's allies: Chi Chou Lu, Ast-Oth, Zhua Zhao. Creatures: Terra-Cotta Warrior, Tiny Terra-Cotta Warrior. **The minor province creatures are text on their ruler's `allies`, with every printed number (D3)**: the iron servants, Ice Spider, Book Demons, Black Bees, Never-Dying Servants, Jackal Wolves, Demon Boars, Crimson Moth, White Lead Leopards and the lesser Demon Lords of each province. The unique artifacts are in `weapons_and_equipment`. Three `book-extract-worker` slices, three shaping agents, three `book-reconcile` passes with renders of every stat block: two page ranges, three page citations and four loose phrasings corrected, every stat value clean. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-02, after the greater demons
-were applied:
+`node scripts/source-coverage.mjs --remote`, 2026-10-02, after the NPCs were
+applied:
 
 ```
-  china-1             61 / 0
+  china-1             86 / 0
 ```
 
-All 61 rows (24 spells, 37 creatures) trace to their page. That run's
-`BACKLOG` block:
+All 86 rows (24 spells, 39 creatures, 23 notable NPCs) trace to their page.
+That run's `BACKLOG` block:
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -315,8 +320,12 @@ All 61 rows (24 spells, 37 creatures) trace to their page. That run's
 **`spell stubs` moved 19 to 43 with the curses, and the 24 are this book's.**
 They are not unfinished: the book prints no level and no per-curse cost, and
 each row carries the cost rule in `ppe_note`, as the 19 counted before them
-do. The line counts every imported level-0 row with 0 P.P.E. No creatures
-batch moved anything in the block.
+do. The line counts every imported level-0 row with 0 P.P.E. No later batch
+moved anything in the block.
+
+**Still to do from the plan:** step 7, the Naga-Spawn as a class (D2). Its
+`creatures` row is in (`naga-spawn`, playable). The Were-Beast half of D2
+cannot be built from this book.
 
 ### Notes for the next batch
 
@@ -359,3 +368,14 @@ batch moved anything in the block.
 - **A page range is the error extraction makes most**: five of the 26 demon
   rows cited a page too many or too few, and no stat value was wrong. Place
   each heading and each Habitat line by folio.
+- **The province chapters hide more named stat lines than the Quick Find
+  lists.** One-paragraph blocks sit inside "Other Notable Allies" lists and
+  "Quick Stats" notes; five NPCs were found only at extraction.
+- **An NPC block's attribute order changes between entries** (I.Q., M.E., M.A.
+  for Huan Shih, Wu Je Nao, Xian Ya and the Hubei allies; I.Q., M.A., M.E. for
+  the Yama Kings). Key each by its label.
+- **A family statue prints a rule, not attributes** (the person's attributes,
+  +15 to P.S. and Spd), and Qin Kuai's own statue does not follow it. The three
+  family statues store no `attributes` and state the rule in `bonuses_note`.
+- **Pien Cheng's stored M.D.C. is 250**, the amount he adds to a possessed
+  body; his god form (6,700) and spirit form (1,850) are in `bonuses_note`.
