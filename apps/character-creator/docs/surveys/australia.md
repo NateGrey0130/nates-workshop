@@ -1,8 +1,8 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `importing` — batches 1 and 2 (skills, gear) shipped; vehicles and power armor next. (2026-10-01)
+**Status:** `importing` — batches 1 to 3 (skills, gear, vehicles) shipped; bestiary and classes next. (2026-10-02)
 
-**Rows citing this book:** gear 73, skills 14
+**Rows citing this book:** gear 73, skills 14, vehicles 9
 
 Slug `australia`. Cached 2026-10-01 from
 `Rifts - World Book 19 - Australia.pdf`, 226 PDF pages, **text layer**
@@ -44,6 +44,13 @@ Tables start at the foot of cache `p224` (printed 223) and fill cache `p225`
 and `p226` is blank; there are no house ads.
 
 ## Cache health
+
+**Printed page 146 is missing from the source PDF.** Cache `p146` and `p147`
+are the same page, both printing folio 145; `p148` prints 147, so the offset
+holds on both sides and nothing else is displaced. The lost page holds the
+first part of the Mokoloi Prey-Stalker power armor's weapon list and its
+speed, size, weight and price. Found 2026-10-02 at extraction; the seven-folio
+offset check did not land on it. Another copy of the book would fill it in.
 
 | key | value |
 |---|---|
@@ -296,6 +303,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/australia-survey` | cache built (226 pp, text layer), `australia` registered in `books.json` (offset +1 verified at seven folios, 224 printed), survey written. No data. |
 | 2026-10-01 | `pal/data/australia-skills` | batch 1: 14 skills (`~059-australia-skills.sql`), production 426 to 440 skills. Five of the book's names are catalog rows under the catalog's spelling and are not touched. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/australia-gear` | batch 2: 73 gear rows (`add-australia-gear.sql`): 4 kit, 3 flame throwers, 8 boomerangs/spear/woomera, 3 air crossbows, 20 Tech-City weapons, 5 Mokoloi TW items (a fourth weapon, the Warrior's Blade, was not in the survey's count), 9 Tech-City armors with the riot shield, 21 homespun armors. Six readings came off renders. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/australia-vehicles` | batch 3: 9 vehicles (`add-australia-vehicles.sql`) with 80 location rows and 35 weapon rows: 3 power armors (the two Prey-Stalker headings are one suit, so not the survey's 4) and the 6 Notable Vehicles. The Prey-Stalker row is incomplete because printed 146 is missing from the PDF, and says so. Reconcile found three missing main-body location rows and one wrong remark; both fixed before the apply. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -313,4 +321,4 @@ the baseline this book's import must not move:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Batches 3 to 8 of the extraction plan remain, and the class-schema change for the mutant tables.
+Batches 4 to 8 of the extraction plan remain, and the class-schema change for the mutant tables.
