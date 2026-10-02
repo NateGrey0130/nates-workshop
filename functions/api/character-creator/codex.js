@@ -133,11 +133,17 @@ const SECTIONS = {
   // you visit tabs reads like a page still loading. One tiny fetch on open
   // keeps the labels honest and complete from the first paint, and it is one
   // COUNT(*) per tab rather than another catalog.
+  //
+  // `gear_names` is what the Gear TAB shows. The page lists one entry per
+  // name and puts every book that prints it inside (apps/codex/gear-groups.js),
+  // so the row count would promise 780 more lines than the tab holds. `gear`
+  // stays the row count, which is what the section serves.
   index: async (env) => ({
     counts: (await env.DB.prepare(
       `SELECT (SELECT count(*) FROM spells)         AS spells,
               (SELECT count(*) FROM psionic_powers) AS psionics,
               (SELECT count(*) FROM gear)           AS gear,
+              (SELECT count(DISTINCT lower(trim(name))) FROM gear) AS gear_names,
               (SELECT count(*) FROM vehicles)       AS vehicles,
               (SELECT count(*) FROM skills)         AS skills,
               (SELECT count(*) FROM talents)        AS talents,

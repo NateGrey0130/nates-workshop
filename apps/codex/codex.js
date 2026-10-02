@@ -66,17 +66,37 @@ const SECTIONS = [
     id: 'gear',
     groupNoun: 'category',
     label: 'Gear',
-    key: (r) => String(r.slug).toLowerCase(),
+    // ONE ENTRY PER NAME, NOT PER ROW. The table holds a row for every book
+    // that prints an item, so `r` here is an entry from gear-groups.js: its
+    // `printings` are the rows. An item one book prints reads exactly as it did
+    // as a bare row; an item several print says so on its line, and opens to a
+    // line per book with that book's price and whatever else it prints
+    // differently (see printingsHtml).
+    countKey: 'gear_names',
+    fold: (rows) => GearGroups.fold(rows),
+    narrow: (r, system) => GearGroups.narrow(r, system),
+    resolve: (rows, key) => GearGroups.resolve(rows, key),
+    key: (r) => r.key,
+    // Every printing's slug, because a character holds ONE printing and
+    // me/holdings is keyed by the slug it holds.
+    keys: (r) => r.slugs,
     title: (r) => r.name,
-    meta: (r) => r.category || 'Uncategorised',
-    cost: (r) => money(r.cost, r.system, r.cost_note),
+    badge: (r) => (r.printings.length > 1
+      ? ` <span class="tag codex-books">${r.printings.length} books</span>` : ''),
+    // Four names are `gear` in one book and `weapon` in another. The line shows
+    // both and the category menu finds the entry under either.
+    groups: (r) => [...new Set(r.printings.map((p) => p.category || 'Uncategorised'))],
+    meta: (r) => [...new Set(r.printings.map((p) => p.category || 'Uncategorised'))].join(' · '),
+    // Each distinct price once: three books at two prices is two figures.
+    cost: (r) => [...new Set(r.printings.map((p) => money(p.cost, p.system, p.cost_note)).filter(Boolean))].join(' · '),
     // Only what this row has; a knife should not print an empty A.R. See
     // `have` in statBlock(). Weight is last because it is the one figure that
-    // is about carrying rather than fighting.
-    stats: (r) => [['Damage', damage(r)], ['Range', r.range], ['Payload', r.payload],
-                   ['Rate of fire', r.rate_of_fire], ['A.R.', r.ar],
-                   ['S.D.C.', r.sdc], ['M.D.C.', r.mdc],
-                   ['Weight', r.weight_lbs != null ? `${r.weight_lbs} lbs` : null]],
+    // is about carrying rather than fighting. With several books, only what
+    // they all AGREE on prints here; the rest is on each book's own line.
+    stats: (r) => gearStats(r.printings[0]).filter((_, i) => gearAgrees(r, i)),
+    extra: (r) => (r.printings.length > 1 ? printingsHtml(r) : ''),
+    textHtml: (r) => printingsTextHtml(r),
+    foot: (r) => (r.printings.length > 1 ? `${r.printings.length} books` : r.source_book),
     // A NULL price is a finished row, not an unfinished one — books print
     // issued kit and unique artifacts with no price at all, and the schema says
     // so at length. The entry says nothing rather than showing an em dash that
@@ -88,13 +108,13 @@ const SECTIONS = [
     // `vessel_name` is NULL when the pointer names a vessel not yet imported,
     // which migration 053 allows on purpose, so that case says the honest thing
     // instead of printing a slug that looks like a name.
-    notes: (r) => [
-      r.cost_note && `Price: ${r.cost_note}`,
-      r.vehicle_slug && (r.vessel_name
-        ? `Also recorded as a vessel — see ${r.vessel_name} under Vessels, which carries its M.D.C. by location and its weapon systems.`
-        : 'Recorded as a vessel, which has not been imported yet.'),
-    ],
-    hay: (r) => `${r.name} ${r.source_book || ''} ${r.category || ''}`,
+    // With several books these two notes belong to ONE of them, so they move to
+    // that book's line.
+    notes: (r) => (r.printings.length > 1 ? [] : [
+      r.printings[0].cost_note && `Price: ${r.printings[0].cost_note}`,
+      vesselNote(r.printings[0]),
+    ]),
+    hay: (r) => `${r.name} ${r.printings.map((p) => `${p.source_book || ''} ${p.category || ''}`).join(' ')}`,
   },
   {
     id: 'vehicles',
@@ -329,6 +349,7 @@ const S = {
   holdings: null,       // me/holdings: { holds: {section: {key: [ids]}}, byId }
   focus: null,          // "<section>:<key>" a link named - scrolled to and marked
   missing: null,        // the key a link named that this section does not hold
+  mark: null,           // the gear slug a link named: one book's line in its entry
   folds: new Set(),     // spell tradition folds opened by hand: "air" or "warlock/air"
   traditionClasses: {}, // tradition slug -> the class names that can learn it
 };
@@ -379,6 +400,84 @@ function damage(r) {
   if (!r.damage) return null;
   const d = String(r.damage);
   return r.is_mega_damage && !/M\.?D\.?/i.test(d) ? `${d} (M.D.)` : d;
+}
+
+// ── gear: one entry, several books ──
+
+// One printing's stat block. The entry prints the lines every book agrees on
+// and each book's line prints the rest, so the two are the same list split by
+// gearAgrees() and nothing falls between them.
+function gearStats(p) {
+  return [['Damage', damage(p)], ['Range', p.range], ['Payload', p.payload],
+          ['Rate of fire', p.rate_of_fire], ['A.R.', p.ar],
+          ['S.D.C.', p.sdc], ['M.D.C.', p.mdc],
+          ['Weight', p.weight_lbs != null ? `${p.weight_lbs} lbs` : null]];
+}
+
+const blank = (v) => v == null || String(v).trim() === '';
+
+// Whether every book prints the same thing for stat `i`. A book that prints
+// nothing where another prints a figure DISAGREES: the Rifts Eggshell Bomb has
+// a range and the other two do not, and that range is the Rifts book's alone.
+function gearAgrees(g, i) {
+  const vals = g.printings.map((p) => { const v = gearStats(p)[i][1]; return blank(v) ? '' : String(v); });
+  return vals.every((v) => v === vals[0]);
+}
+
+function vesselNote(p) {
+  if (!p.vehicle_slug) return '';
+  return p.vessel_name
+    ? `Also recorded as a vessel — see ${p.vessel_name} under Vessels, which carries its M.D.C. by location and its weapon systems.`
+    : 'Recorded as a vessel, which has not been imported yet.';
+}
+
+// A line per book: the book and its price, then what THAT book prints that the
+// others do not - the game, its own figures, a note on the price. The price is
+// exact here, without the "+" the entry's line uses, because the note it stands
+// for is printed right under it. A book with no price prints none: NULL is a
+// finished row (see the schema), not a gap to mark.
+//
+// `yours` goes on the printing a character actually holds, and S.mark is the
+// printing a link named - the sheet links an item by the slug it holds.
+function printingsHtml(g) {
+  const cats = new Set(g.printings.map((p) => p.category || 'Uncategorised'));
+  return `<div class="codex-sub">Found in</div>
+    ${g.printings.map((p) => {
+      const slug = String(p.slug).toLowerCase();
+      const held = (S.holdings?.holds?.gear?.[slug] || []).length > 0;
+      const bits = [['Game', SYSTEM_LABEL[p.system]],
+                    cats.size > 1 ? ['Category', p.category || 'Uncategorised'] : null,
+                    ...gearStats(p).filter((_, i) => !gearAgrees(g, i)),
+                    ['Price note', p.cost_note]]
+        .filter((b) => b && !blank(b[1]));
+      const vessel = vesselNote(p);
+      return `<div class="codex-printing${S.mark === slug ? ' mark' : ''}">
+        <div class="codex-printing-head">
+          <span class="codex-printing-book">${escHtml(p.source_book || 'source not recorded')}${
+            held ? ' <span class="tag codex-yours">yours</span>' : ''}</span>
+          <span class="codex-cost">${escHtml(money(p.cost, p.system))}</span>
+        </div>
+        ${bits.length ? `<dl class="codex-stats">${bits.map(([k, v]) =>
+          `<dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd>`).join('')}</dl>` : ''}
+        ${vessel ? `<p class="note small">${escHtml(vessel)}</p>` : ''}
+      </div>`;
+    }).join('')}`;
+}
+
+// Every book's text, all showing, each under the book it came from. Books that
+// word it identically share one heading. Returns null when there is at most one
+// wording, and the entry prints it the way every other section does.
+function printingsTextHtml(g) {
+  const by = new Map();
+  for (const p of g.printings) {
+    if (blank(p.description)) continue;
+    const t = String(p.description).trim();
+    if (!by.has(t)) by.set(t, []);
+    by.get(t).push(p.source_book || 'source not recorded');
+  }
+  if (by.size < 2) return null;
+  return [...by.entries()].map(([t, books]) =>
+    `<div class="codex-sub">${escHtml(books.join('; '))}</div><p class="codex-text">${escHtml(t)}</p>`).join('');
 }
 
 // ── Talent and super ability labels ──
@@ -452,7 +551,10 @@ async function loadSection(id) {
   render();
   try {
     const res = await api('codex?section=' + encodeURIComponent(id));
-    S.rows[id] = res[id] || [];
+    // A section that lists something other than its rows says how (gear: one
+    // entry per name). Everything below this line reads entries.
+    const sec = byId(id);
+    S.rows[id] = sec.fold ? sec.fold(res[id] || []) : (res[id] || []);
     if (res.traditions) S.traditionClasses = res.traditions;
     delete S.error[id];
   } catch (err) {
@@ -483,8 +585,9 @@ async function loadHoldings() {
 }
 
 function heldBy(sec, r) {
-  const ids = S.holdings?.holds?.[sec.id]?.[sec.key(r)] || [];
-  return ids.map((id) => S.holdings.byId[id]).filter(Boolean);
+  const held = S.holdings?.holds?.[sec.id] || {};
+  const ids = new Set((sec.keys ? sec.keys(r) : [sec.key(r)]).flatMap((k) => held[k] || []));
+  return [...ids].map((id) => S.holdings.byId[id]).filter(Boolean);
 }
 
 async function loadIndex() {
@@ -549,10 +652,15 @@ function visible() {
   // A group this section does not have (a stale link) narrows nothing, rather
   // than narrowing to nothing.
   const group = (groupsFor(sec) || []).some(([g]) => g === S.group) ? S.group : '';
-  const rows = rowsFor(S.tab).filter((r) => {
+  // An entry holding several rows is narrowed to the chosen system's rows
+  // rather than kept or dropped whole, so the Rifts view of a four-book item
+  // shows the Rifts price and not the other three.
+  const all = sec.narrow && S.system
+    ? rowsFor(S.tab).map((r) => sec.narrow(r, S.system)).filter(Boolean) : rowsFor(S.tab);
+  const rows = all.filter((r) => {
     // A NULL system is unrestricted, which is how every picker already reads it.
     if (S.system && r.system && r.system !== 'both' && r.system !== S.system) return false;
-    if (group && sec.meta(r) !== group) return false;
+    if (group && !groupsOf(sec, r).includes(group)) return false;
     if (!terms.length) return true;
     const hay = sec.hay(r).toLowerCase();
     return terms.every((t) => hay.includes(t));
@@ -572,13 +680,18 @@ function visible() {
 // being faster than typing.
 const GROUP_MAX = 60;
 
+// The groups ONE row is in. Its meta line, unless the section says the line
+// names more than one - a gear entry two books file differently is in both.
+function groupsOf(sec, r) {
+  return sec.groups ? sec.groups(r) : [sec.meta(r)].filter(Boolean);
+}
+
 function groupsFor(sec) {
   const rows = rowsFor(sec.id);
   if (!rows.length) return null;
   const n = new Map();
   for (const r of rows) {
-    const g = sec.meta(r);
-    if (g) n.set(g, (n.get(g) || 0) + 1);
+    for (const g of groupsOf(sec, r)) n.set(g, (n.get(g) || 0) + 1);
   }
   if (n.size < 2 || n.size > GROUP_MAX) return null;
   // Natural order, so "Level 10" follows "Level 9" rather than "Level 1".
@@ -594,12 +707,19 @@ function groupsFor(sec) {
 const SORT_EXTRA = {
   spells: [['ppe', 'P.P.E. cost', (r) => r.ppe]],
   psionics: [['isp', 'I.S.P. cost', (r) => r.isp]],
-  gear: [['cost', 'Price', (r) => (typeof r.cost === 'number' ? r.cost : null)],
-         ['weight', 'Weight', (r) => r.weight_lbs]],
+  // An entry sorts on the LOWEST figure among the books showing, so under a
+  // system filter it sorts on that system's own.
+  gear: [['cost', 'Price', (r) => lowest(r.printings.map((p) => p.cost))],
+         ['weight', 'Weight', (r) => lowest(r.printings.map((p) => p.weight_lbs))]],
   skills: [['base', 'Base %', (r) => (r.base ? Number(r.base) : null)]],
   notables: [['level', 'Level', (r) => r.level]],
   talents: [['acquire', 'Cost to acquire', (r) => r.acquire_ppe]],
 };
+
+function lowest(vals) {
+  const nums = vals.filter((v) => typeof v === 'number');
+  return nums.length ? Math.min(...nums) : null;
+}
 
 function sortsFor(sec) {
   return [['', 'Catalog order'], ['name', 'Name'], ['book', 'Book'],
@@ -659,7 +779,9 @@ function entry(sec, r) {
   // Three things an open entry with no text can mean, and only a `detail`
   // section can mean the first two: still on its way, failed to arrive, or not
   // in the catalog at all.
-  const textHtml = text ? `<p class="codex-text">${escHtml(text)}</p>`
+  const ownText = sec.textHtml ? sec.textHtml(r) : null;
+  const textHtml = ownText ? ownText
+    : text ? `<p class="codex-text">${escHtml(text)}</p>`
     : S.textLoading[key] ? '<p class="codex-text muted">Loading…</p>'
     : S.textError[key] ? `<p class="err">Could not load this entry: ${escHtml(S.textError[key])}. Close it and open it again to retry.</p>`
     : sec.noText ? '' : '<p class="codex-text muted">No description imported yet.</p>';
@@ -671,7 +793,7 @@ function entry(sec, r) {
   const mine = heldBy(sec, r);
   return `<div class="codex-entry${open ? ' open' : ''}${S.focus === key ? ' focus' : ''}">
     <button type="button" class="codex-head" data-key="${escHtml(key)}" aria-expanded="${open}">
-      <span class="codex-name">${escHtml(sec.title(r))}${mine.length
+      <span class="codex-name">${escHtml(sec.title(r))}${sec.badge ? sec.badge(r) : ''}${mine.length
         ? ` <span class="tag codex-yours" title="${escHtml(`Held by ${mine.map((c) => c.name).join(', ')}`)}">yours</span>` : ''}</span>
       <span class="codex-meta">${escHtml(sec.meta(r))}</span>
       <span class="codex-cost">${escHtml(cost)}</span>
@@ -685,7 +807,7 @@ function entry(sec, r) {
       ${mine.length ? `<p class="small codex-mine noprint">${sec.id === 'classes'
         ? 'Your characters of this class' : 'Your characters with this'}: ${mine.map((c) =>
           `<a href="/apps/character-sheet/?id=${encodeURIComponent(c.id)}">${escHtml(c.name)}</a>`).join(', ')}</p>` : ''}
-      <p class="muted small codex-foot">${escHtml(r.source_book || 'source not recorded')}
+      <p class="muted small codex-foot">${escHtml((sec.foot ? sec.foot(r) : r.source_book) || 'source not recorded')}
         <button type="button" class="btn btn-sm btn-ghost noprint" data-copy="${escHtml(entryHash(sid, rest.join(':')))}">Copy link</button></p>
     </div>` : ''}
   </div>`;
@@ -754,7 +876,9 @@ function spellListHtml(sec, rows) {
 function tabsHtml() {
   return `<div class="tabbar codex-tabs">
     ${SECTIONS.map((s) => {
-      const n = S.counts ? S.counts[s.id] : (S.rows[s.id] ? S.rows[s.id].length : null);
+      // What is listed once it is loaded, the index's count until then. A
+      // section that lists fewer entries than it has rows names its own count.
+      const n = S.rows[s.id] ? S.rows[s.id].length : (S.counts ? S.counts[s.countKey || s.id] : null);
       return `<button type="button" class="tab${S.tab === s.id ? ' on' : ''}" data-tab="${s.id}">
         ${escHtml(s.label)}${n != null ? ` <span class="tab-n">${n}</span>` : ''}</button>`;
     }).join('')}
@@ -864,6 +988,7 @@ document.addEventListener('click', (e) => {
     S.filterFocused = false;
     S.focus = null;
     S.missing = null;
+    S.mark = null;
     // The address follows the row: opening one makes the URL bar a link to it,
     // closing it falls back to the section. See "a link to one entry" below.
     const sid = key.slice(0, key.indexOf(':'));
@@ -884,7 +1009,7 @@ let filterTimer = null;
 document.addEventListener('input', (e) => {
   if (e.target.id !== 'codex-filter') return;
   S.filter = e.target.value; S.filterFocused = true; S.missing = null;
-  // The list is rebuilt whole on a render - 3,121 rows on the Gear tab - so it
+  // The list is rebuilt whole on a render - thousands of entries on the Gear tab - so it
   // waits for a pause in the typing rather than running on every key.
   clearTimeout(filterTimer);
   filterTimer = setTimeout(() => { syncQuery(); render(); }, 140);
@@ -929,9 +1054,25 @@ function parseHash() {
 // a renamed spell, a typo in a hand-made link - says so rather than landing on
 // the top of the list as if it had worked.
 function settleFocus() {
-  const want = S.focus;
+  let want = S.focus;
   if (!want || !S.rows[S.tab]) return;
   const sec = byId(S.tab);
+  // A gear link names ONE printing by its slug, and the entry is keyed by its
+  // first. Any of its slugs opens it, and the one named is marked inside.
+  if (sec.resolve) {
+    const named = want.slice(sec.id.length + 1);
+    const real = sec.resolve(rowsFor(sec.id), named);
+    if (real) {
+      S.mark = named;
+      if (real !== named) {
+        S.open.delete(want);
+        want = sec.id + ':' + real;
+        S.open.add(want);
+        S.focus = want;
+      }
+      render();
+    }
+  }
   const row = rowsFor(sec.id).find((r) => sec.id + ':' + sec.key(r) === want);
   if (!row) {
     S.focus = null;
@@ -951,6 +1092,7 @@ function applyHash() {
   S.tab = tab;
   S.missing = null;
   S.focus = null;
+  S.mark = null;
   if (key) {
     const k = tab + ':' + key;
     S.open.add(k);
