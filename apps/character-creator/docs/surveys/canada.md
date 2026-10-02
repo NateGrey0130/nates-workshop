@@ -1,8 +1,8 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `importing` — batch 1 (skills) shipped; gear and vehicles next. (2026-10-02)
+**Status:** `importing` — skills, gear and vehicles shipped; creatures next. (2026-10-02)
 
-**Rows citing this book:** skills 8
+**Rows citing this book:** gear 45, vehicles 4, skills 8
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -271,6 +271,7 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-01 | `pal/data/canada-survey` | cache built (194 pp, text layer), `canada` registered in `books.json`, offset +1 verified at six folios, survey written. No D1 change. |
 | 2026-10-02 | `pal/data/canada-skills` | batch 1: six Professional Status rows (three skating, three skiing) and `Ice Skating` and `Snow Skiing` re-cited from the Skill List to printed 36. `~065-canada-skills.sql`, applied `--remote` before the PR. The three pilot notes on printed 37 are held under their *Ultimate Edition* names and were left alone. |
+| 2026-10-02 | `pal/data/canada-gear` | batch 2: 45 gear rows (`add-canada-gear.sql`) and 4 vehicles with 40 M.D.C. locations and 11 weapon entries (`add-canada-vehicles.sql`), both applied `--remote` before the PR. Three more false gaps found at extraction: Homemade M.D.C. Armor and both kinds of skis are held from *Warlords of Russia* (printed 173 and 187 there), which shipped after this survey's diff. This book prints 30-40 M.D.C. for light homemade armor where that one prints 30-45, and 40 M.D.C. for the communication helmet where the held *Ultimate Edition* row stores 30; the held rows were left alone. The dog sled (31) was not in the survey's gear count and is in. |
 
 ### What remains
 
