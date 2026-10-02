@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `importing` — the 24 demonic curses, 11 ghosts and goblins and 10 lesser demons shipped; greater demons, Demon Lords, NPCs and the Naga-Spawn class remain. (2026-10-01)
+**Status:** `importing` — the curses and the whole bestiary shipped (24 spells, 37 creatures); the Terra-Cotta Warriors, the named NPCs and the Naga-Spawn class remain. (2026-10-02)
 
-**Rows citing this book:** spells 24, creatures 21
+**Rows citing this book:** spells 24, creatures 37
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -288,17 +288,18 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/china-1-curses` | Plan step 1 (D1): **24 `spells` rows**, tradition `demonic-curse`, named `Demonic Curse: <name>`, printed 55-60, in `~058-china-1-demonic-curses.sql`. Level 0 and 0 P.P.E. with the cost in `ppe_note` (half the creature's pool, printed 54). Every row checked against the chapter by `book-reconcile`: 24 of 24 clean. Spells 1,119 to 1,143. Moves `spell stubs` 19 to 43; all 24 are finished rows, the line counts level 0 with 0 P.P.E. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/china-1-ghosts-goblins` | Plan step 2: **11 `creatures` rows** and 35 `stat_attacks`, printed 61-84, in `~060-china-1-ghosts-and-goblins.sql`, written by `scripts/bestiary-sql.mjs`. First applied as `~059`; renumbered at merge when Australia's skills took that number, with the file made to re-apply over its own rows. Ghosts: Ch'iang Shih, Kuei, Preta, Shen Mo, Vapours. Goblins: Fox Spirit, Goat, Shadow, Mountain, One-Horned, Tall Man. Two `book-extract-worker` slices, then `book-reconcile` over every field with renders of printed 74-76, 80, 82 and 83: 11 of 11 clean. None playable. Each row's curses are named in `magic` as the `Demonic Curse:` rows of step 1. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/china-1-lesser-demons` | Plan step 3: **10 `creatures` rows** and 57 `stat_attacks`, printed 84-105, in `~061-china-1-lesser-demons.sql`, written by `scripts/bestiary-sql.mjs`: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Yang Ching. Two `book-extract-worker` slices with every stat line read on a render, then `book-reconcile` over every field: one page range corrected (Ox-Head, 99-100), every value clean. **No row for the Were-Beasts or the Dead & the Damned: neither prints a stat block**, confirmed by the reconcile. None playable. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/china-1-greater-demons` | Plan step 4: **16 `creatures` rows** and 77 `stat_attacks`, printed 106-141, in `~062-china-1-greater-demons.sql`, written by `scripts/bestiary-sql.mjs`. Greater demons: Kinnaras, Kou Ching, Mahoragas, Monkey Spirit, Naga, Red Child Demon, Shen Wu, White Monkey, Yaksha, Ying Hsuan Shang, Mara Asuras. Demon Lords: Mo-Lo, Shih-Ju Shen. From inside the Naga entry: the **Naga-Spawn** (`playable` 1, the only playable row from this book), the Water Goblin and the Water Devil. Three `book-extract-worker` slices, three shaping agents, then two `book-reconcile` passes over every field with renders: four page ranges corrected and one derived damage figure unsummed, every stat value clean. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the lesser demons
+`node scripts/source-coverage.mjs --remote`, 2026-10-02, after the greater demons
 were applied:
 
 ```
-  china-1             45 / 0
+  china-1             61 / 0
 ```
 
-All 45 rows (24 spells, 21 creatures) trace to their page. That run's
+All 61 rows (24 spells, 37 creatures) trace to their page. That run's
 `BACKLOG` block:
 
 ```
@@ -314,7 +315,7 @@ All 45 rows (24 spells, 21 creatures) trace to their page. That run's
 **`spell stubs` moved 19 to 43 with the curses, and the 24 are this book's.**
 They are not unfinished: the book prints no level and no per-curse cost, and
 each row carries the cost rule in `ppe_note`, as the 19 counted before them
-do. The line counts every imported level-0 row with 0 P.P.E. Neither creatures
+do. The line counts every imported level-0 row with 0 P.P.E. No creatures
 batch moved anything in the block.
 
 ### Notes for the next batch
@@ -344,3 +345,17 @@ batch moved anything in the block.
   lines or wherever negative energy gathers)" from the start.
 - **Number the script late and expect to renumber.** `~059` was taken by
   another book between the push and the merge; the fix is in `~060`'s header.
+- **A greater demon's M.D.C. and P.P.E. carry a per-level addition** the
+  creature grammar cannot hold. `mdc` and `ppe` store the base and
+  `pools_note` the addition ("+1D6x100 per level").
+- **The Naga-Spawn prints attribute bonuses over a human, not formulas.** Its
+  row stores the human 3D6 plus the bonus ("3D6+1D6", "3D6+2D6") and says so.
+  It is `playable` 1: the book allows it as a player character in a campaign
+  of Heroes of the Celestial Court.
+- **The Naga and Mo-Lo print one attribute line word for word**, with no comma
+  between M.A. and M.E. Both were read off renders independently.
+- **The Red Child prints an Awe Factor of 15 and no Horror Factor number.** Its
+  `horror_factor` holds the 15 and `pools_note` says which it is.
+- **A page range is the error extraction makes most**: five of the 26 demon
+  rows cited a page too many or too few, and no stat value was wrong. Place
+  each heading and each Habitat line by folio.
