@@ -1,8 +1,8 @@
 # Rifts World Book 23: Xiticix Invasion — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-01)
+**Status:** `importing` — gear and creatures shipped; NPCs next, then the Psi-Stalker tribes. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** creatures 11, gear 15
 
 Slug `xiticix-invasion`. Cached 2026-10-01 from
 `Rifts- World Book 23 Xiticix Invasion.pdf`, 162 PDF pages, **text layer**
@@ -221,10 +221,11 @@ Gear ships before creatures and NPCs, because their stat blocks name this
 book's weapons (the Madhaven lesson).
 
 1. **Gear** — 15 rows from printed 77-82. Printed 81-82 from a render.
+   **Shipped.**
 2. **Creatures** — 11 rows from printed 43-76, through
    `scripts/bestiary-sql.mjs`. Each adult block leans on the shared abilities
    of printed 36-43; a row restates what it takes from there so it stands
-   alone.
+   alone. **Shipped.**
 3. **Notable NPCs** — 21 rows from printed 105-108, 133-135, 137, 144-146
    and 153-160: 19 named characters and the two typical-soldier blocks.
    Printed 107 and 108 from renders.
@@ -266,7 +267,9 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/xiticix-invasion-survey` | cache built (162 pp), `xiticix-invasion` registered in `books.json`, this survey written, offset +1 verified, the missing printed 136 recorded. No data. |
+| 2026-10-01 | `pal/data/xiticix-invasion-gear` | 15 gear rows (`add-xiticix-invasion-gear.sql`): nine resin melee weapons, the Resin Claws and Shoulder Spikes, and four ranged weapons. Every name carries a Xiticix prefix; a printed range is stored by its low end with the whole range in the note. Checked 15 of 15 by `book-reconcile`. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/xiticix-invasion-creatures` | `add-xiticix-invasion-creatures.sql` through `scripts/bestiary-sql.mjs`: 11 creatures (Nit, Grub, Worker, Digger, Hunter, Leaper, Nanny, Young Queen, Elder Queen, Warrior, Super-Warrior) with 67 attack lines, category `insectoid`, none playable. Four extraction agents; three `book-reconcile` passes read every dice token off 170 dpi renders and found no wrong figure and one omission (the Warrior squad Horror Factor, added). Hit Points and S.D.C. are left empty on the M.D.C. forms with the S.D.C.-world figures in the note. Stored as printed where the book disagrees with itself: the Warrior and Nanny bite, the Hunter bite that names a poison the entry never describes, the Leaper Rear Power Kick. Printed 57, 63, 65 and 73 are full-page art. Applied `--remote` before the PR. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+Steps 3 and 4 of the plan: notable NPCs, the Psi-Stalker tribes.

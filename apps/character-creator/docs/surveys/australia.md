@@ -1,8 +1,8 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-01)
+**Status:** `importing` — batch 1 (skills) shipped; gear next. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 14
 
 Slug `australia`. Cached 2026-10-01 from
 `Rifts - World Book 19 - Australia.pdf`, 226 PDF pages, **text layer**
@@ -207,11 +207,20 @@ spear and grappling hook all match.
 | Outback Combat Driving | Combat Driving | new row |
 | Outback Survival | Wilderness Survival | new row |
 
-Genuinely new, about **16**: Lore: Aborigines, Lore: Cities, Lore: Dreamtime
-Culture, Corroboree, Play Aboriginal Musical Instrument, Rock Painting &
-Engraving, Road Train, Blend, Use Songlines, W.P. Boomerang, four languages
-(Australian English, Mokoloi, Kwarla, Aboriginal), plus the three variants
-above. Language `systems` stays NULL, as for every other language row.
+**Read against the descriptions at extraction (2026-10-01), the count is 14
+new rows, not 16.** Three more of the 20 turned out to be rows the catalog
+holds at the figure this book prints: Weapons Armorer is Field Armorer &
+Munitions Expert (40/5), Find Contraband, Parts & Relics is Find Contraband
+(26/4), and Outback Combat Driving is Combat Driving (no percentage). Kayaking
+is Boat: Paddle Types/Canoe/Kayak (50/5). The Kwarla and Aboriginal languages
+share one line in the list and one percentage, so they are one row.
+
+The 14: Corroboree, Rock Painting & Engraving, Play Aboriginal Musical
+Instrument, Road Train, Language: Aboriginal, Language: Australian English,
+Language: Mokoloi, Lore: Aborigines, Lore: Cities, Lore: Dreamtime Culture,
+Blend, Outback Survival, Use Songlines, W.P. Boomerang. Language `systems`
+stays NULL, as for every other language row. **A class that prints one of the
+five held names cites the catalog's spelling.**
 
 ### classes: 29 missing, 0 false gaps
 
@@ -285,6 +294,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/australia-survey` | cache built (226 pp, text layer), `australia` registered in `books.json` (offset +1 verified at seven folios, 224 printed), survey written. No data. |
+| 2026-10-01 | `pal/data/australia-skills` | batch 1: 14 skills (`~059-australia-skills.sql`), production 426 to 440 skills. Five of the book's names are catalog rows under the catalog's spelling and are not touched. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -302,4 +312,4 @@ the baseline this book's import must not move:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Everything in the extraction plan remains.
+Batches 2 to 8 of the extraction plan remain, and the class-schema change for the mutant tables.
