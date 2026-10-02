@@ -1,8 +1,10 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) and the 12 Outback O.C.C.s shipped; the City O.C.C.s and the R.C.C.s next. (2026-10-02)
+**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) and the 22 O.C.C.s shipped; the 7 R.C.C.s next. (2026-10-02)
 
-**Rows citing this book:** classes 12, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
+**Rows citing this book:** classes 22, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
+
+**MOS:** police-trg 2
 
 Slug `australia`. Cached 2026-10-01 from
 `Rifts - World Book 19 - Australia.pdf`, 226 PDF pages, **text layer**
@@ -314,6 +316,15 @@ Change one with a `fix-` script if Nate reads it differently.
 | Songjuicer | 84 | "+4 to save vs possession" at level 4, "+6" at level 7 | a further +6 |
 | Songjuicer | 82-85 | S.D.C. at level 1, Mega-Damage from level 2 on a rolled ladder | prose; no `mdc_base` |
 | Bushman | 57 | the Classic type's own psionic schedule | prose; the common block is stored |
+| Cyber-Specter | 108-109 | Computer Hacking 15% +25% in the ability, "(+30%)" in the skill list | 40% |
+| Sportsman | 115 | Coastline/Rim prints a P.E. bonus twice (+1D4 and +2) | both, 1D4+2 |
+| Sportsman | 117 | Surfer & Swimmer prints a P.P. bonus twice (+2 and +1) | both, +3 |
+| Technologist | 120 | two full blocks, City and Outback | one class, two variants; the Outback related list is prose |
+| Special Operations Soldier | 124 | Espionage +15% in the opening sentence, +10% in the list | +10% |
+| Infantry Grunt | 123 | "Pilot: Tank and APC (+14%)" | as printed |
+| Infantry Grunt, Police: TRG | 123, 114 | "W.P. Heavy Weapons" | the catalog's W.P. Heavy Military Weapons |
+| Navy Sailor | 126 | pay for "technicians" without naming them | Communications Technician, Sensors Operator and Mechanic |
+| Administrator | 105 | headed an NPC and villain | playable, tagged `evil` (Nate, 2026-10-01) |
 
 ## Ledger
 
@@ -325,6 +336,7 @@ Change one with a `fix-` script if Nate reads it differently.
 | 2026-10-02 | `pal/data/australia-vehicles` | batch 3: 9 vehicles (`add-australia-vehicles.sql`) with 80 location rows and 35 weapon rows: 3 power armors (the two Prey-Stalker headings are one suit, so not the survey's 4) and the 6 Notable Vehicles. The Prey-Stalker row is incomplete because printed 146 is missing from the PDF, and says so. Reconcile found three missing main-body location rows and one wrong remark; both fixed before the apply. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-bestiary` | batches 4 and 8: 14 creatures and 4 notable NPCs with 68 attacks (`add-australia-bestiary.sql`, from `bestiary-sql.mjs`). Not the survey's 16 and 3-4: Bunyil, the Rainbow Serpent and Tikilik have no stat block (printed 188-192 say so), nor does Perth's computer; the book prints the Rainbow Serpent's Avatar (a notable NPC) and Tikilik's Demon Frog minion (a creature) instead. Reconcile checked all 18 rows and 68 attacks: no disagreement. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-outback-classes` | batch 5: the 12 Outback O.C.C.s, one `add-<id>-class.sql` each (`bushman`, `bushranger`, `guide-australia`, `jackaroo`, `merchant-trader-australia`, `city-trader`, `outbacker-runabout`, `raider-australia`, `roadganger`, `road-sentinel`, `sham-man`, `songjuicer`). No stub rows. `book-reconcile` checked every skill, figure and experience ladder: one missed bonus (Merchant Trader, Espionage +5%), fixed. Readings the book leaves open are listed below. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/australia-city-classes` | batch 6: the 10 City and City Military O.C.C.s, one `add-<id>-class.sql` each (`administrator-australia`, `cyber-specter`, `city-police-australia`, `police-trg`, `sportsman`, `technologist`, `aerojock`, `infantry-grunt-australia`, `special-operations-soldier-australia`, `navy-sailor-australia`). No stub rows. `book-reconcile` checked every skill, figure, the Sportsman's 19 specialties, the Navy Sailor's 7 MOS packages and each experience ladder: no wrong figure; two consistency fixes (the Sportsman's English line, the Infantry Grunt's heavy-weapons proficiency). Applied `--remote` before the PR. |
 
 ### What remains
 
