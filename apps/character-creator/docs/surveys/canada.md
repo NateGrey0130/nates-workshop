@@ -1,8 +1,8 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `importing` — skills, gear and vehicles shipped; creatures next. (2026-10-02)
+**Status:** `importing` — skills, gear, vehicles and creatures shipped; classes next. (2026-10-02)
 
-**Rows citing this book:** gear 45, vehicles 4, skills 8
+**Rows citing this book:** gear 45, vehicles 5, skills 8, creatures 34
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -272,6 +272,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/canada-survey` | cache built (194 pp, text layer), `canada` registered in `books.json`, offset +1 verified at six folios, survey written. No D1 change. |
 | 2026-10-02 | `pal/data/canada-skills` | batch 1: six Professional Status rows (three skating, three skiing) and `Ice Skating` and `Snow Skiing` re-cited from the Skill List to printed 36. `~065-canada-skills.sql`, applied `--remote` before the PR. The three pilot notes on printed 37 are held under their *Ultimate Edition* names and were left alone. |
 | 2026-10-02 | `pal/data/canada-gear` | batch 2: 45 gear rows (`add-canada-gear.sql`) and 4 vehicles with 40 M.D.C. locations and 11 weapon entries (`add-canada-vehicles.sql`), both applied `--remote` before the PR. Three more false gaps found at extraction: Homemade M.D.C. Armor and both kinds of skis are held from *Warlords of Russia* (printed 173 and 187 there), which shipped after this survey's diff. This book prints 30-40 M.D.C. for light homemade armor where that one prints 30-45, and 40 M.D.C. for the communication helmet where the held *Ultimate Edition* row stores 30; the held rows were left alone. The dog sled (31) was not in the survey's gear count and is in. |
+| 2026-10-02 | `pal/data/canada-bestiary` | batch 3: 34 creatures with 100 attacks (`add-canada-bestiary.sql`, written by `scripts/bestiary-sql.mjs`) and the Faerie Bot Vehicle (`add-canada-faerie-bot-vehicle.sql`), both applied `--remote` before the PR. Four extraction slices, then `book-reconcile` over the extracted rows: no number disagreed; four wording and placement findings were fixed before the apply. **The inventory missed the Faerie Bot Vehicle**: it is printed inside the Faerie Bot's own stat block (151) as its standard equipment. Ogopogo is two rows (adult and hatchling print their own figures) and the dinosaur template is three (one per size class). No rows, because none prints a stat block: Rogue Dog Packs (132), Faerie Folk (152), Russian Demons (173) and the other spirits of the north (180), five of which print only an M.D.C. total and an alignment. **The Giant Squid (154) is not a row**: its attributes, M.D.C. and Horror Factor are the *Underseas* p.24 row's exactly, so it is a reprint. It was applied `--remote` as `giant-squid-canada` and deleted again, with its five attacks, before this PR opened; the script that ships never had it. The Windigo Demon and the Loup Garou are their own rows beside *Spirit West*'s Wendigo and *Conversion Book One*'s Loogaroo: every attribute and pool compared differs. A Natural A.R. printed only for S.D.C. worlds is in `pools_note`, not `ar`. |
 
 ### What remains
 
