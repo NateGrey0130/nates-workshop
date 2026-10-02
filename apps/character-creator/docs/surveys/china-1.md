@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `importing` — the 24 demonic curses and the 11 ghosts and goblins shipped; lesser and greater demons, NPCs and two classes remain. (2026-10-01)
+**Status:** `importing` — the 24 demonic curses, 11 ghosts and goblins and 10 lesser demons shipped; greater demons, Demon Lords, NPCs and the Naga-Spawn class remain. (2026-10-01)
 
-**Rows citing this book:** spells 24, creatures 11
+**Rows citing this book:** spells 24, creatures 21
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -105,7 +105,7 @@ pages, with the Contents and Quick Find read off renders.
 | Demonic Curses | 54-60 | **24 curses**, each with penalties and a duration. The rules for casting one are on printed 54 |
 | Ghosts | 60-73 | **5**: Ch'iang Shih (Chinese Vampire), Kuei, Preta, Shen Mo, Vapours |
 | Goblins | 74-84 | **6**: Fox Spirit, Goat Goblin, Shadow Goblin (also Ghost Goblin), Mountain Goblin, One-Horned Goblin, Tall Man Goblin |
-| Lesser Demons | 84-105 | **11**: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Were-Beasts (four types under one entry), Yang Ching. Then *The Dead & the Damned* (105), a short entry |
+| Lesser Demons | 84-105 | **11**: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Were-Beasts (four types under one entry), Yang Ching. Then *The Dead & the Damned* (105), a short entry. **Ten of the eleven print a stat block**: the Were-Beasts are prose and defer to Rifts Dark Conversions pp.99-105, and the Dead & the Damned is prose too (found at extraction, 2026-10-01) |
 | Greater Demons | 106-132 | **10**: Kinnaras, Kou Ching, Mahoragas, Monkey Spirit, Naga, Red Child, Shen Wu, White Monkey, Yaksha, Ying Hsuan Shang. Inside the Naga entry: the **Naga-Spawn** (118), and inline stat lines for the Water Goblin and the Water Devil (119-120) |
 | Demon Lords | 133-140 | **2**: Mo-Lo, Shih-Ju Shen; and the **Mara Asuras** (136), a greater demon printed between them |
 | Using Demon NPCs | 141-149 | play advice, weaknesses common to all demons (143), and four optional percentile tables |
@@ -113,9 +113,10 @@ pages, with the Contents and Quick Find read off renders.
 | Maps | 158-159 | images |
 | Release schedule | 160 | advertising |
 
-That is **36 bestiary entries with a full stat block** (2 + 5 + 6 + 11 + 10 +
-2), plus the Mara Asuras, the Naga-Spawn, the Dead & the Damned, two inline
-water creatures and the minor creatures of the province chapters.
+That is **35 bestiary entries with a full stat block** (2 + 5 + 6 + 10 + 10 +
+2), plus the Mara Asuras, the Naga-Spawn, two inline water creatures and the
+minor creatures of the province chapters. This said 36 until the lesser
+demons were extracted and the Were-Beast entry turned out to print no numbers.
 
 ### The named NPCs (14), printed 12-50
 
@@ -229,8 +230,8 @@ Phase 4 costs money; everything above was free. **Agreed by Nate on
    printed 54-60 (D1). First, because every later row names them. One PR.
 2. **Ghosts and goblins** — 11 `creatures` rows, printed 60-84, through
    `scripts/bestiary-sql.mjs`. One PR.
-3. **Lesser demons** — 11 rows plus the Dead & the Damned, printed 84-105.
-   One PR.
+3. **Lesser demons** — **10 rows**, printed 84-105. One PR. The Were-Beasts
+   and the Dead & the Damned print no stat block (see the amendment to D2).
 4. **Greater demons and Demon Lords** — 13 rows (10 greater, the Mara Asuras,
    2 lords), plus the Naga-Spawn, Water Goblin and Water Devil, printed
    106-140. One PR.
@@ -253,7 +254,13 @@ Phase 4 costs money; everything above was free. **Agreed by Nate on
   what `spell stubs` in the backlog counts before choosing level and cost, so
   24 rows do not land as stubs.
 - **D2 — Naga-Spawn and Were-Beasts become classes too**, as well as
-  `creatures` rows.
+  `creatures` rows. **Amended 2026-10-01 by what the book prints: the
+  Were-Beast entry (printed 103-104) is prose.** It names four types and sends
+  the reader to Rifts Dark Conversions pp.99-105 for every number, so this
+  book supplies neither a `creatures` row nor a class for them. The only
+  were-creature in production is South America's Werejaguar / Werepanther. A
+  Were-Beast class waits on Dark Conversions being cached. The Naga-Spawn
+  half of D2 stands.
 - **D3 — the minor province creatures stay in their ruler's text.** No rows
   for the Ice Spider, Book Demons, Black Bees, Never-Dying Servant, Demon
   Boars, Jackal Wolves, Crimson Moth, White Lead Leopards or the iron
@@ -280,17 +287,18 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/china-1-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified on renders and on 128 OCR folios, `china-1` registered in `books.json`, this survey. No rows. Written in its own worktree while five other book trees were live (`australia`, `canada`, `china-2`, `warlords-of-russia`, `xiticix-invasion`). |
 | 2026-10-01 | `pal/data/china-1-curses` | Plan step 1 (D1): **24 `spells` rows**, tradition `demonic-curse`, named `Demonic Curse: <name>`, printed 55-60, in `~058-china-1-demonic-curses.sql`. Level 0 and 0 P.P.E. with the cost in `ppe_note` (half the creature's pool, printed 54). Every row checked against the chapter by `book-reconcile`: 24 of 24 clean. Spells 1,119 to 1,143. Moves `spell stubs` 19 to 43; all 24 are finished rows, the line counts level 0 with 0 P.P.E. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/china-1-ghosts-goblins` | Plan step 2: **11 `creatures` rows** and 35 `stat_attacks`, printed 61-84, in `~060-china-1-ghosts-and-goblins.sql`, written by `scripts/bestiary-sql.mjs`. First applied as `~059`; renumbered at merge when Australia's skills took that number, with the file made to re-apply over its own rows. Ghosts: Ch'iang Shih, Kuei, Preta, Shen Mo, Vapours. Goblins: Fox Spirit, Goat, Shadow, Mountain, One-Horned, Tall Man. Two `book-extract-worker` slices, then `book-reconcile` over every field with renders of printed 74-76, 80, 82 and 83: 11 of 11 clean. None playable. Each row's curses are named in `magic` as the `Demonic Curse:` rows of step 1. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/china-1-lesser-demons` | Plan step 3: **10 `creatures` rows** and 57 `stat_attacks`, printed 84-105, in `~061-china-1-lesser-demons.sql`, written by `scripts/bestiary-sql.mjs`: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Yang Ching. Two `book-extract-worker` slices with every stat line read on a render, then `book-reconcile` over every field: one page range corrected (Ox-Head, 99-100), every value clean. **No row for the Were-Beasts or the Dead & the Damned: neither prints a stat block**, confirmed by the reconcile. None playable. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the ghosts and
-goblins were applied:
+`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the lesser demons
+were applied:
 
 ```
-  china-1             35 / 0
+  china-1             45 / 0
 ```
 
-All 35 rows (24 spells, 11 creatures) trace to their page. That run's
+All 45 rows (24 spells, 21 creatures) trace to their page. That run's
 `BACKLOG` block:
 
 ```
@@ -306,8 +314,8 @@ All 35 rows (24 spells, 11 creatures) trace to their page. That run's
 **`spell stubs` moved 19 to 43 with the curses, and the 24 are this book's.**
 They are not unfinished: the book prints no level and no per-curse cost, and
 each row carries the cost rule in `ppe_note`, as the 19 counted before them
-do. The line counts every imported level-0 row with 0 P.P.E. The creatures
-batch moved nothing in the block.
+do. The line counts every imported level-0 row with 0 P.P.E. Neither creatures
+batch moved anything in the block.
 
 ### Notes for the next batch
 
@@ -323,3 +331,16 @@ batch moved nothing in the block.
 - **Vulnerabilities go in `natural_abilities`** after the word
   VULNERABILITIES, since `creatures` has no column for them. The alias a
   heading prints ("also known as") goes at the head of `pools_note`.
+- **Printed 97 is white text on black** in its lower right, and the OCR drops
+  it whole: the Monkey-Wolf's attributes, M.D.C. and Horror Factor are not in
+  the cache. A 300 dpi render of that region reads cleanly without inverting.
+- **A power punch is often printed as dice with no unit.** The rows call it
+  M.D., after the full-strength punch beside it, and say so in the attack's
+  note.
+- **Two demons can print one Damage and one R.C.C. Bonuses line word for
+  word** (Falcon Demon and Ma T-ou). It is the book, not a copying error.
+- **The copy check catches the bio-regeneration sentence in every block.**
+  Write it as "Bio-regeneration: 2D6 M.D. each melee round (double at ley
+  lines or wherever negative energy gathers)" from the start.
+- **Number the script late and expect to renumber.** `~059` was taken by
+  another book between the push and the merge; the fix is in `~060`'s header.
