@@ -1,8 +1,8 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `imported` — the plan is done: skills, gear, vehicles, creatures, 23 new classes and the Techno-Warrior correction. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
+**Status:** `imported` — the plan is done: skills, gear, vehicles, creatures and 23 new classes. The Techno-Warrior stays the *Ultimate Edition* class. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
 
-**Rows citing this book:** classes 24, gear 45, vehicles 5, skills 13, creatures 34
+**Rows citing this book:** classes 23, gear 45, vehicles 5, skills 13, creatures 34
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -254,13 +254,14 @@ What is deliberately left, with the reason for each:
 1. **The ten optional-PC races are playable.** Each is imported as a
    playable R.C.C. as well as a `creatures` row. The Spirit Sasquatch stays
    NPC-only, by the book's own rule.
-2. **`Headhunter Techno-Warrior`: the printing with the highest World Book
-   number wins.** Production's row (id 23) cites *Rifts Ultimate Edition*
-   p.74-77, which is not a World Book, so this book (World Book 20) is the
-   only numbered printing and printed 110-113 wins wherever the two differ.
-   It is a correction to the existing row, never a second row. The two
-   ladders already agree: the row's `xp_table` is the HH Techno-Warrior
-   ladder on printed 192.
+2. **`Headhunter Techno-Warrior`: *Ultimate Edition* wins** (settled
+   2026-10-02). The first answer, on 2026-10-01, was that the printing with
+   the highest World Book number wins. Read literally that put this book
+   (World Book 20) over a core book that carries no number, and batch 6 moved
+   the class to printed 110-112. Seeing the result, Nate reversed it: the
+   row is the *Rifts Ultimate Edition* p.74-77 class and this book's
+   printing is not stored. How the two printings differ is in the header of
+   `~067-canada-headhunter-techno-warrior.sql`.
 3. **The skating and skiing specialisations are rows of their own**, not
    prose on the base skill.
 4. **The typical-dinosaur template (168) is a creature row.**
@@ -276,11 +277,12 @@ What is deliberately left, with the reason for each:
 | 2026-10-02 | `pal/data/canada-classes-a` | batch 4: the 13 new classes on the printed 192 ladders, one `add-<id>-class.sql` each (`tundra-ranger`, `tundra-ranger-scout`, `tundra-ranger-cavalry`, `trapper-woodsman`, `centaur`, `cyber-horsemen-of-ixion`, `headhunter-assassin`, `headhunter-anti-robot-specialist`, `headhunter-techno-hound`, `momano-headhunter`, `true-sasquatch`, `worldly-sasquatch`, `inuit-shaman`), and five skills they grant that the survey's skill inventory missed because they are printed inside class entries (`~066-canada-class-skills.sql`: Fanatic Robophile, Hotwire Robot Vehicles & Power Armor, Language and Literacy: Techno-Can, Dog Sled). All applied `--remote` before the PR. Each draft read `ready` on `class-check --remote` and was then read against its pages by `book-reconcile`: no rules number disagreed; ration quantities on four Headhunter classes, two cybernetics the Momano was wrongly granted, and copied phrasing were corrected before the emit. Every class carries the ladder printed for it. The True Sasquatch's sexes are variants for skills and a pick-one ability for psionics, because a variant cannot carry psionics. Gear the classes print that has no catalog row is named in each class's `extraction_notes`, not stubbed. |
 | 2026-10-02 | `pal/data/canada-races` | batch 5: the ten optional-PC races as playable R.C.C.s, per decision 1 (`aardan-tek`, `grackle-tooth`, `greot-hunter`, `mastadonoid`, `noli-bushman`, `yeno`, `armored-slayer`, `faerie-bot`, `loup-garou`, `ogopogo`), one `add-<id>-class.sql` each, applied `--remote` before the PR. Each read `ready` on `class-check --remote` and was read against its pages by `book-reconcile`; no rules number disagreed. The six D-Bees store no ladder (a D-Bee takes its O.C.C.'s); the other four store the Dragon ladder copied from `dragon-hatchling`, as the note on 192 and the Armored Slayer's own entry direct. **The Loup Garou names two ladders and prints Hit Points twice** (156): Dragon is stored, and the per-level Hit Points line; both readings are in its `extraction_notes`. Each race's *Available O.C.C.s* line is an `occ_restrictions` list where the book closes it, with this book's own classes added (the four new Headhunters for the Greot, the three Tundra Rangers for the Grackle Tooth, the Inuit Shaman for the Mastadonoid). **Names that resolve to no class and are left out, each said in the race's notes**: Military Specialist, CyberSlinger Cyborg, and for the Yeno the Assassin, Commando, Special Forces and Spy. Grunt is `merc-soldier` throughout, because `coalition-grunt` is barred to non-humans. The Noli Cowboy and Noli Scout psionic packages are prose. `aardan-tek` joins the pinned `yields_to_occupation` races in `regression.mjs`: its P.P.E. is printed as 5D6 or per magic O.C.C. |
 | 2026-10-02 | `pal/data/canada-techno-warrior` | batch 6: `headhunter-techno-warrior` takes this book's printing (110-112), per decision 2. `~067-canada-headhunter-techno-warrior.sql`, applied `--remote` before the PR. Nine figures change from the *Ultimate Edition* printing and the script's header lists each: P.E. bonus gone, roll bonus gone, Perception gone, Language: Native 80% +1%, the three languages at +10%, Radio: Scramblers in place of Electronic Countermeasures, Jujitsu in place of Commando, two related skills at level 3, 1D4 implants. The class now cites this book, so it counts here and no longer under `rue`. The Lore and GM Notes body is still the wording written from *Ultimate Edition*. |
+| 2026-10-02 | `pal/data/canada-techno-warrior-rue` | batch 6 reversed: `~068-headhunter-techno-warrior-ultimate-edition.sql` undoes each of `~067`'s eleven replacements, so `headhunter-techno-warrior` reads exactly as it did before and cites *Ultimate Edition* again. Applied `--remote` before the PR. The class counts under `rue` again and this book is back to 23. |
 
 ### What remains
 
 Nothing from the agreed plan. `node scripts/source-coverage.mjs --remote`,
-2026-10-02, after batch 5 and before batch 6 moved one class here:
+2026-10-02, after batch 5; batch 6 and its reversal leave it unchanged:
 
 ```
   canada             120 / 0
