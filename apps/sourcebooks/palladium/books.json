@@ -355,7 +355,7 @@
    "added": [
     [
      "Classes",
-     40
+     39
     ],
     [
      "Gear",
@@ -378,7 +378,7 @@
      6
     ]
    ],
-   "total": 674
+   "total": 673
   },
   {
    "slug": "atlantis",
@@ -965,6 +965,36 @@
     ]
    ],
    "total": 143
+  },
+  {
+   "slug": "canada",
+   "title": "Rifts World Book 20: Canada",
+   "code": "canada",
+   "status": "imported",
+   "date": "2026-10-02",
+   "added": [
+    [
+     "Classes",
+     24
+    ],
+    [
+     "Creatures",
+     34
+    ],
+    [
+     "Gear",
+     45
+    ],
+    [
+     "Skills",
+     13
+    ],
+    [
+     "Vehicles",
+     5
+    ]
+   ],
+   "total": 121
   },
   {
    "slug": "free-quebec",

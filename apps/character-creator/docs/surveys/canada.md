@@ -1,8 +1,8 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `importing` — skills, gear, vehicles, creatures and the 13 classes on the Experience Tables and the ten optional-PC races shipped; the Techno-Warrior comparison remains. (2026-10-02)
+**Status:** `imported` — the plan is done: skills, gear, vehicles, creatures, 23 new classes and the Techno-Warrior correction. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
 
-**Rows citing this book:** classes 23, gear 45, vehicles 5, skills 13, creatures 34
+**Rows citing this book:** classes 24, gear 45, vehicles 5, skills 13, creatures 34
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -275,9 +275,40 @@ What is deliberately left, with the reason for each:
 | 2026-10-02 | `pal/data/canada-bestiary` | batch 3: 34 creatures with 100 attacks (`add-canada-bestiary.sql`, written by `scripts/bestiary-sql.mjs`) and the Faerie Bot Vehicle (`add-canada-faerie-bot-vehicle.sql`), both applied `--remote` before the PR. Four extraction slices, then `book-reconcile` over the extracted rows: no number disagreed; four wording and placement findings were fixed before the apply. **The inventory missed the Faerie Bot Vehicle**: it is printed inside the Faerie Bot's own stat block (151) as its standard equipment. Ogopogo is two rows (adult and hatchling print their own figures) and the dinosaur template is three (one per size class). No rows, because none prints a stat block: Rogue Dog Packs (132), Faerie Folk (152), Russian Demons (173) and the other spirits of the north (180), five of which print only an M.D.C. total and an alignment. **The Giant Squid (154) is not a row**: its attributes, M.D.C. and Horror Factor are the *Underseas* p.24 row's exactly, so it is a reprint. It was applied `--remote` as `giant-squid-canada` and deleted again, with its five attacks, before this PR opened; the script that ships never had it. The Windigo Demon and the Loup Garou are their own rows beside *Spirit West*'s Wendigo and *Conversion Book One*'s Loogaroo: every attribute and pool compared differs. A Natural A.R. printed only for S.D.C. worlds is in `pools_note`, not `ar`. |
 | 2026-10-02 | `pal/data/canada-classes-a` | batch 4: the 13 new classes on the printed 192 ladders, one `add-<id>-class.sql` each (`tundra-ranger`, `tundra-ranger-scout`, `tundra-ranger-cavalry`, `trapper-woodsman`, `centaur`, `cyber-horsemen-of-ixion`, `headhunter-assassin`, `headhunter-anti-robot-specialist`, `headhunter-techno-hound`, `momano-headhunter`, `true-sasquatch`, `worldly-sasquatch`, `inuit-shaman`), and five skills they grant that the survey's skill inventory missed because they are printed inside class entries (`~066-canada-class-skills.sql`: Fanatic Robophile, Hotwire Robot Vehicles & Power Armor, Language and Literacy: Techno-Can, Dog Sled). All applied `--remote` before the PR. Each draft read `ready` on `class-check --remote` and was then read against its pages by `book-reconcile`: no rules number disagreed; ration quantities on four Headhunter classes, two cybernetics the Momano was wrongly granted, and copied phrasing were corrected before the emit. Every class carries the ladder printed for it. The True Sasquatch's sexes are variants for skills and a pick-one ability for psionics, because a variant cannot carry psionics. Gear the classes print that has no catalog row is named in each class's `extraction_notes`, not stubbed. |
 | 2026-10-02 | `pal/data/canada-races` | batch 5: the ten optional-PC races as playable R.C.C.s, per decision 1 (`aardan-tek`, `grackle-tooth`, `greot-hunter`, `mastadonoid`, `noli-bushman`, `yeno`, `armored-slayer`, `faerie-bot`, `loup-garou`, `ogopogo`), one `add-<id>-class.sql` each, applied `--remote` before the PR. Each read `ready` on `class-check --remote` and was read against its pages by `book-reconcile`; no rules number disagreed. The six D-Bees store no ladder (a D-Bee takes its O.C.C.'s); the other four store the Dragon ladder copied from `dragon-hatchling`, as the note on 192 and the Armored Slayer's own entry direct. **The Loup Garou names two ladders and prints Hit Points twice** (156): Dragon is stored, and the per-level Hit Points line; both readings are in its `extraction_notes`. Each race's *Available O.C.C.s* line is an `occ_restrictions` list where the book closes it, with this book's own classes added (the four new Headhunters for the Greot, the three Tundra Rangers for the Grackle Tooth, the Inuit Shaman for the Mastadonoid). **Names that resolve to no class and are left out, each said in the race's notes**: Military Specialist, CyberSlinger Cyborg, and for the Yeno the Assassin, Commando, Special Forces and Spy. Grunt is `merc-soldier` throughout, because `coalition-grunt` is barred to non-humans. The Noli Cowboy and Noli Scout psionic packages are prose. `aardan-tek` joins the pinned `yields_to_occupation` races in `regression.mjs`: its P.P.E. is printed as 5D6 or per magic O.C.C. |
+| 2026-10-02 | `pal/data/canada-techno-warrior` | batch 6: `headhunter-techno-warrior` takes this book's printing (110-112), per decision 2. `~067-canada-headhunter-techno-warrior.sql`, applied `--remote` before the PR. Nine figures change from the *Ultimate Edition* printing and the script's header lists each: P.E. bonus gone, roll bonus gone, Perception gone, Language: Native 80% +1%, the three languages at +10%, Radio: Scramblers in place of Electronic Countermeasures, Jujitsu in place of Commando, two related skills at level 3, 1D4 implants. The class now cites this book, so it counts here and no longer under `rue`. The Lore and GM Notes body is still the wording written from *Ultimate Edition*. |
 
 ### What remains
 
-Everything: nothing from this book has shipped. `source-coverage.mjs` has no
-line for a book no row cites, so there is nothing to paste yet.
-| 2026-10-01 | `pal/docs/canada-decisions` | the four decisions Nate settled; plan agreed. No D1 change. |
+Nothing from the agreed plan. `node scripts/source-coverage.mjs --remote`,
+2026-10-02, after batch 5 and before batch 6 moved one class here:
+
+```
+  canada             120 / 0
+```
+
+```
+  BACKLOG       rows an importer created and nobody finished
+    gear stubs            14   description still says STUB - created by class import
+    skill stubs            5   created by an import and never given a base %, a bonus or a note
+    spell stubs           43   level 0 and 0 P.P.E.
+    psionic stubs          1   0 I.S.P.
+    spell text missing     0   nothing for the codex to show
+    psionic text missing   0   nothing for the codex to show
+```
+
+No class script in this import wrote a stub (`class-check --emit-script`
+reported 0 stub statements for all 23), so none of those lines is this book's.
+`other` is 0: every row citing this book carries a page the cache holds.
+
+**Left for a later decision, none of it imported:**
+
+- Gear the classes print that has no catalog row. Each class names its own in
+  `extraction_notes`: the Rangers' pick-hatchet, survival kit, climbing
+  anchors, mallet, web vest and winter cap; the Headhunters' black paint
+  stick, plastic gloves and NG-S2 survival pack; the Worldly Sasquatch's comb
+  and loincloth; and others.
+- `Language: Inuit` and a Native American tongue have no rows; the classes
+  that speak them take `Language: Other` picks.
+- The Noli Cowboy and Noli Scout psionic packages (138) are prose on the
+  Noli Bushman. Making them enforceable is two variant O.C.C.s.
+- The cold, exposure and snow-travel rules (23-35) and the gazetteer.
