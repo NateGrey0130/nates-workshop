@@ -861,6 +861,40 @@
    "total": 58
   },
   {
+   "slug": "warlords-of-russia",
+   "title": "Rifts World Book 17: Warlords of Russia",
+   "code": "warlords-of-russia",
+   "status": "imported",
+   "date": "2026-10-01",
+   "added": [
+    [
+     "Classes",
+     22
+    ],
+    [
+     "Creatures",
+     5
+    ],
+    [
+     "Gear",
+     92
+    ],
+    [
+     "Notable NPCs",
+     8
+    ],
+    [
+     "Skills",
+     7
+    ],
+    [
+     "Vehicles",
+     35
+    ]
+   ],
+   "total": 169
+  },
+  {
    "slug": "mystic-russia",
    "title": "Rifts World Book 18: Mystic Russia",
    "code": "mystic-russia",

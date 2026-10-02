@@ -1,8 +1,10 @@
 # Rifts World Book 17: Warlords of Russia — survey
 
-**Status:** `importing` — batch 1 (skills) shipped; gear next. (2026-10-01)
+**Status:** `imported` — PRs #1593-#1613 and the cyborgs PR: 7 skills, 92 gear, 22 classes, 35 vehicles, 5 creatures, 8 notable NPCs. What was left out on purpose is under *What remains*. (2026-10-01)
 
-**Rows citing this book:** skills 7
+**Rows citing this book:** classes 22, gear 92, vehicles 35, skills 7, notable_npcs 8, creatures 5
+
+**MOS:** soldati 5, sovietski-police-officer 7, warlord-heavy-machine 4, cyborg-shocktrooper 4
 
 Slug `warlords-of-russia`. Cached 2026-10-01 from
 `Rifts - World Book 17 - Warlords of Russia.pdf`, 226 PDF pages, **text layer**
@@ -187,8 +189,10 @@ and differ in body, M.D.C. and weapons.
 the `free-quebec` survey records as the mechanism; do not design a third.
 
 The Quick Find Table also names a **Black Panther** Shocktrooper under
-Kolodenko (printed 41). The roster at printed 57 does not list it and no stat
-block for it was found. Read printed 41 before deciding it is a mention.
+Kolodenko (printed 41). **Read 2026-10-01: it is a mention.** Printed 41 is one
+prose paragraph in the Warlord's write-up describing a secret Heavy Machine
+(230 M.D.C. plus medium armor, a list of gear with no damage or range); it has
+no M.D.C. by Location and no weapon statistics, and it is not a row.
 
 ### The Sovietski blocks — printed 208–223
 
@@ -275,7 +279,9 @@ in `gear` under category `cybernetics` (132 rows there today).
 
 **The name list is survey-grade, not extraction-grade.** It was read off entry
 headings; the price lists at printed 141–142 and the bows are not itemised in
-it.
+it. **Batch 2 proved the point**: sixteen of the names it called missing are in
+the catalog under a differently ordered name (see the ledger). For the bionics
+batch, build the entry list from the catalog's own naming before diffing.
 
 ### vehicles, creatures, notable NPCs: all missing
 
@@ -335,12 +341,24 @@ Deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-01 | `pal/data/warlords-of-russia-survey` | cache built (226 pp, text layer), `warlords-of-russia` registered in `books.json`, survey written, offset +1 verified at seven folios. No data. |
 | 2026-10-01 | `pal/data/warlords-of-russia-skills` | **Batch 1, skills.** `~057-warlords-of-russia-skills.sql`: five new rows (`Lore: History of Russia`, `Lore: General Law`, `W.P. Net`, `W.P. Siege Weapons`, `W.P. Trick Shooting`), production skills 421 -> 426. Two rows that cited the Rifts Skill List now cite the page that defines them: `Wingrider Flying Wing` (printed 196) and `Language: Mongolian` (printed 198); no other cache defines either. The ten false gaps were left at the catalog's spelling and figures. `Trap Construction` also cites the Skill List and is printed here, but Coalition War Campaign prints it first; left alone. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-gear` | **Batch 2, gear: 59 rows**, production gear 3,428 -> 3,487. `add-warlords-of-russia-weapons.sql` (35: clips, shields, the Servo-Harness Rig, six AR rail guns, four AR-M launchers, four cannons, eight rifles and pistols, three Vibro-Blades, three Sovietski weapons), `add-warlords-of-russia-armor.sql` (13: seven armors in ten rows, horse barding, the two bionic horses as `gear` rows per D3) and `add-warlords-of-russia-equipment.sql` (11). **Printed 175, 180, 183 and 184 were read off renders**: the stat blocks sit beside the art and the cache returns them under the wrong headings. Every row was checked by `book-reconcile` against the page before the apply. **The survey's gear count was wrong by 16**: the arrowheads, the Portable Field Unit, two communicators and the Communication Helmet are held from Triax, Spirit West, Japan and RUE under names the survey's heading-derived list did not use (`Arrowhead: Light Explosive`, not `Light Explosive Arrowhead`), and the equipment script's own pre-flight refused the first draft. Left out: those sixteen, the large communicator (ambiguous against RUE's medium row), the bows, and the three bare price lists at printed 187-189. The Vibro-Scythe Polearm ships with the Avenging Angel in batch 5; the MM-61 Exoframe with the vehicles. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-bionics` | **Batch 3, bionics: 33 rows**, category `cybernetics`, production gear 3,487 -> 3,520. `add-warlords-of-russia-bionics.sql`, printed 100-106: the two cyberlink systems, robot strength, nine optic and audio features, the Gromeko identification computer, chassis options, and thirteen weapon and tool limbs including the four Mekanikal arms. **Left out because the catalog holds them from Triax p.153-154 at the same prices** (printed 99 says the chapter reprints them): the Macro-Eyes, the eye socket, the Third Eye, the Medical Sensor Hand and its features, Bio-Comp, the Comp-Calculator, the hydraulic arm, the Laser Beam Eye, LGL-31, RVB-31 and the psionic dampers. The W-41 Palm Laser Torch is left as ambiguous against Triax's PL-31. `book-reconcile` checked all 33: no wrong figure. **It found a dropped apostrophe, and that was a generator bug, not a typo**: row text written as a doubled quote inside a Python single-quoted string is two strings joined, so the apostrophe never reached the SQL escaper. Three batch 2 rows had shipped that way (both bionic horses, the Thermal Jacket) and `fix-warlords-of-russia-gear-apostrophes.sql` corrects them, guarded. No number was affected. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-bestiary` | **Batches 7 and 8, out of plan order because they depend on nothing**: `add-warlords-of-russia-bestiary.sql`, generated by `scripts/bestiary-sql.mjs`. **5 creatures** (True Megahorse, Horned Steed, Burkov Mastodon, Steppe Ostrich, Ursan Forest Steed; printed 164-170) with 40 attacks, and **8 notable NPCs** (the seven Warlords, printed 37-56, and General Katya Nikoforov, printed 207) with 4. Production creatures 462 -> 467, notable NPCs 390 -> 398. `book-reconcile` checked all 13: no figure disagreed. A render settles the Megahorse's extra-skill levels as 2, 5, 7, 10 and 13 (the text layer prints the 7 as 1). Three book oddities are stored as printed and named in the script header: Kolodenko's hit points and resources are Burgasov's word for word, Orloff and Romanov print two skills twice, and Nikoforov's block has no M.D.C. number. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-occs` | **Batch 4, 19 O.C.C.s**, one `add-<id>-class.sql` each; production live classes 572 -> 591. Adventurers (`occ_group: optional`): `bogatyr-hero-knight`, `ectohunter`, `russian-explorer`, `huntsman-trapper`, `travelling-story-teller`, `russian-villager`. Warlord troops (`men-of-arms`): `cossack`, `reaver-soldier`, `reaver-mechanized-cavalryman`, `reaver-assassin`, `reaver-military-scout`, `reaver-bandit-raider`, `soldati`, `smoke-soldier`, `war-knight`, `warlord-cyber-doc`, `wingrider-rpa-pilot`. Sovietski (D1): `sovietski-police-officer`, `sovietski-soldier`. Every draft was validated `ready` by `class-check --remote` and checked against the page by `book-reconcile`: across the 19, **one wrong figure** (a literacy printed at a flat 90% given a per-level gain) and no missing skill. **Readings, each stated in its class's `extraction_notes`:** the Pilot exclusion ("robots, ships and aircraft") is mapped to catalog rows one way in every class; a category printing two bonuses (Technical +10%, +15% for some skills) stores the lower; the Cossack's born-and-raised attribute dice stay prose; a Horror Factor line listing levels is stored cumulatively; the Sovietski Soldier takes the ladder the Experience Tables print for "Sovietski Police & Soldati/Soldier". The Huntsman-Trapper prints no coin, only trade goods. **Regression failed twice before the apply and both were this batch**: two new classes carry an MOS block and needed the `**MOS:**` pin above; and one language pick printed with no bonus needed `bonus: 0` stated. Not rows: the War-Knight power armor, the Wingrider wing and armor (vehicles batch), and each class's starting mount or vehicle. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-vehicles` | **Batch 6, vehicles and power armor: 18 rows**, 152 M.D.C. locations and 47 weapon entries; production vehicles 419 -> 437. `add-warlords-of-russia-vehicles.sql`: the five Novyet vehicles, the Heavy M.D.C. Snowmobile, the Tek-12 Bushbike and Tek-20 'Borgbike, the Landflier, the Warrior Assault Hoversled (light and heavy, two rows), the War Chariot, the War Wagon/Mechanized Ram, the Warthrone, the Wingrider Flying Wing, and three suits (Wingrider Power Armor, War-Knight Power Armor, MM-61 Explorer Exoframe). **Every number was read off a 130 dpi render and checked against the render again by `book-reconcile`**: 18 rows, two page citations corrected, no figure. The heavy hoversled's cost is derived (light price plus the printed 600,000) and says so. The Explorer-Sku and the War Wagon print two main-body sections; the forward one is `mdc_main_body`. About thirty of the book's own slips on these pages (metric conversions, a missing "each", two fuel ranges) are stored as printed and named in the rows. Applied `--remote` before the merge. |
+| 2026-10-01 | `pal/data/warlords-of-russia-cyborgs` | **Batch 5, the cyborgs, and the last batch.** `add-warlords-of-russia-cyborgs.sql`: **17 `vehicles` rows of class `borg`**, 174 M.D.C. locations and 92 weapon entries (production vehicles 437 -> 454): the typical Warlord Light Machine and Heavy Machine, the ten Shocktrooper bodies, and the Sovietski Light Machine, Heavy Machine, Thunderhammer, Thunderstrike and Thunderstorm (D2). Three classes (production live classes 591 -> 594): `warlord-light-machine`, `warlord-heavy-machine`, and `cyborg-shocktrooper` with **ten `variants`, one per body**, each carrying that body's `mdc_base`, robotic P.S. and bionic P.P., Horror Factor, unconditional bonuses and bonus skills. **Variants, not ten classes**: the Free Quebec chassis classes this survey pointed to say in their own notes that they predate `skills_additional` and would be variants today. `fix-sovietski-soldier-cyborg-bodies.sql` adds a restriction line to `sovietski-soldier` naming the two bodies whose entries point to it. Every body was read off renders and checked by `book-reconcile` (17 rows, no figure); the three class drafts likewise (no error). **Readings:** the Assassin's printed +2 attacks and the Mantis's +1 "take into account the boxing skill", which the O.C.C. already grants, so 1 and 0 are stored; the three Thunder bodies print no O.C.C. and are vessel rows only; the Sovietski Light Machine has no stat block and its row is mostly NULL by design; the Black Panther of printed 41 is a prose paragraph about a Heavy Machine, not a Shocktrooper, and is not a row. Applied `--remote` before the merge. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-01: the book is counted
-among the caches present and has **no line** in the BY BOOK list, because
-nothing cites it. There is no per-book figure to paste yet.
+**The book is fully imported as of 2026-10-01.** Nothing below is a gap in the
+data; it is what was left out on purpose and what a reader of the catalog
+cannot see from the rows.
+
+`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the last apply:
+
+```
+  warlords-of-russia 169 / 0
+```
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -352,8 +370,41 @@ nothing cites it. There is no per-book figure to paste yet.
     psionic text missing   0   nothing for the codex to show
 ```
 
-None of those is this book's. They are the baseline: a number that moves
-during this import is this import's.
+The backlog is the same six figures it was before the first row went in: this
+import created no stub. All 169 rows are traceable to a cached page.
+
+**Left out on purpose:**
+
+- **The Catholic Priest** (printed 208) — decision D1; its own entry discourages it
+  as a player character.
+- **The two generic vehicle price lists** (printed 141–142) — decision D4.
+- **The three Sovietski Thunder bodies as classes.** They are vessel rows. Their
+  entries print no O.C.C., no skill list and no pointer to one, so making them
+  classes or Shocktrooper variants would mean choosing a skill list the book
+  does not name.
+- **Catalog rows the book reprints**: ten skills, the high-tech arrowheads, the
+  Triax cybernetics of printed 99–106, and the generic equipment and clothing
+  lists. The catalog's spelling and figures stand.
+- **Ambiguous against an existing row, and left alone**: the W-41 Palm Laser
+  Torch (against Triax's PL-31), the large radio communicator (against RUE's
+  medium row), `Trap Construction`'s citation (Coalition War Campaign prints it
+  first).
+- **The Black Panther** (printed 41) — a prose paragraph, not a stat block.
+
+**Readings a GM may want to overrule**, each stated in the row or class that
+carries it: the Pilot exclusion mapped to catalog rows; a category that prints
+two bonuses storing the lower; Horror Factor lines that list levels stored
+cumulatively; the Cossack's born-and-raised attribute dice kept as prose; the
+Sovietski Soldier's ladder; the Assassin and Mantis attack counts net of
+Boxing; `W.P. Heavy Weapons` read as `W.P. Heavy M.D. Weapons`.
+
+**What caught mistakes in this book**, in the order it happened: the
+`--field-sources` continuation block (the Soldati's Cybernetics line past a
+page break); `catalog-diff` and a script's own pre-flight (sixteen "new"
+equipment rows that were already held); `book-reconcile` (a dropped
+apostrophe that turned out to be a generator bug in three shipped rows, and
+one per-level figure); and `regression` (the MOS pins and a language pick
+with no stated bonus).
 
 **The source PDF was handed over in `Downloads` and copied to
 `C:\Users\natha\Projects\workshop\books`**, where the registry points.
