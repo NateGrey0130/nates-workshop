@@ -1,6 +1,6 @@
 # Rifts World Book 23: Xiticix Invasion — survey
 
-**Status:** `importing` — gear, creatures and notable NPCs shipped; the Psi-Stalker tribes remain. (2026-10-01)
+**Status:** `imported` — all four steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-10-02)
 
 **Rows citing this book:** creatures 11, gear 15, notable_npcs 21
 
@@ -239,6 +239,8 @@ book's weapons (the Madhaven lesson).
    table landed on `mutant-dog`. It edits a held class, so the proposal goes
    through `audit-premise-auditor` before it is scoped (`book-survey` §8).
    The Deathbringer exoskeleton armor (printed 105) travels with it.
+   **Shipped, on the race `mutant-psi-stalker` and not the occupation**: see
+   *The Psi-Stalker tribes* below.
 
 Each batch is extracted off renders by `book-extract-worker` where a page is
 flagged above, and checked by `book-reconcile` before its script is written.
@@ -267,6 +269,36 @@ What is deliberately left, with the reason for each:
   the consignment list (118, 143) — G.M. material.
 - **Lore, plans, adventures and hooks.**
 
+## The Psi-Stalker tribes
+
+The plan named `wild-psi-stalker`. `audit-premise-auditor` found that premise
+false before anything was written: the wizard offers an ability pick from the
+race slot only (`app.js` `abilityPicker` reads `S.rcc`, and the closure of
+`BOOK-INGEST-AUDIT` F52 records that as a known, unfiled limit), so a group on
+the occupation would have parsed, composed and been offered to nobody. The
+Dog Boy breeds worked because `mutant-dog` is a race.
+
+So the group is on the race, `mutant-psi-stalker`, which every Psi-Stalker
+occupation pairs with. It has four options: the Spider Tribe, the Pony-Tail
+Tribe, the Deathbringer cult, and *other or none*, which is the one a Coalition
+or civilized Psi-Stalker takes. No code change.
+
+| option | printed | applied as numbers | in the option text |
+|---|---|---|---|
+| Spider Tribe | 101-104 | M.A., M.E. and P.S. +2; initiative +3; strike +1; saves vs possession and Horror Factor +2 | +5% to sense and track the supernatural and the Xiticix; alignment and weapon breakdowns |
+| Pony-Tail Tribe | 103-104 | P.S. and Spd +3; P.B. +1; S.D.C. +14; initiative +2 | level, alignment and weapon breakdowns |
+| Deathbringer cult | 104-105 | S.D.C. +20; Hit Points +1D6; initiative +1; saves vs Horror Factor and possession +1; saves vs poisons and drugs +3 | the hand to hand split, attacks per round, level, alignment and weapon breakdowns, and the exoskeleton armor (3D6+50 M.D.C., rolled per suit; no price or weight is printed, so it is not a gear row) |
+
+Only the Deathbringer block says *Wild* outright; the other two sit in the
+section on the wild tribes and are described as tribes of the northern wilds.
+The Northern Tribes paragraph (printed 112) prints no bonuses.
+
+**Measured** through `js/compose.js` `composeClass` with the race and
+`wild-psi-stalker`: with no pick, and with *other or none*, the bonuses are
+exactly what they were; with a tribe picked its figures add to the race's
+(Spider: possession 3 becomes 5 and Horror Factor 6 becomes 8). The option
+names carry no percentile bands, so the group gets no Roll d100 button.
+
 ## Ledger
 
 | date | branch | what went in |
@@ -275,7 +307,20 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/xiticix-invasion-gear` | 15 gear rows (`add-xiticix-invasion-gear.sql`): nine resin melee weapons, the Resin Claws and Shoulder Spikes, and four ranged weapons. Every name carries a Xiticix prefix; a printed range is stored by its low end with the whole range in the note. Checked 15 of 15 by `book-reconcile`. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/xiticix-invasion-creatures` | `add-xiticix-invasion-creatures.sql` through `scripts/bestiary-sql.mjs`: 11 creatures (Nit, Grub, Worker, Digger, Hunter, Leaper, Nanny, Young Queen, Elder Queen, Warrior, Super-Warrior) with 67 attack lines, category `insectoid`, none playable. Four extraction agents; three `book-reconcile` passes read every dice token off 170 dpi renders and found no wrong figure and one omission (the Warrior squad Horror Factor, added). Hit Points and S.D.C. are left empty on the M.D.C. forms with the S.D.C.-world figures in the note. Stored as printed where the book disagrees with itself: the Warrior and Nanny bite, the Hunter bite that names a poison the entry never describes, the Leaper Rear Power Kick. Printed 57, 63, 65 and 73 are full-page art. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/xiticix-invasion-npcs` | `add-xiticix-invasion-npcs.sql` through `scripts/bestiary-sql.mjs`: 21 notable NPCs with 92 attack lines (2 Deathbringer necromancers, 4 Free Thinkers, the 2 typical Strike Force Durango blocks, 2 at Fort Barron, 4 of the Wild Pack, 4 of Manitoba and Company, 3 of the Lazlo Triad). Kent and Copeland are not in it. Four extraction agents; three `book-reconcile` passes read every attribute line and pool off 170 dpi renders and found no wrong figure. Their two findings were a surname variant that only the text layer prints (removed) and one page cite inside a note (corrected). Skills the book prints only as a bonus are listed in the skills note and the percentage list is empty. Dekker and the typical RPA pilot share one attribute line in the book, and Greenfeld shares height, weight and P.P.E. with Haim; both are as printed. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/xiticix-invasion-psi-stalker-tribes` | `~064-psi-stalker-tribes.sql`: the Spider, Pony-Tail and Deathbringer tribe blocks (printed 103-105) as one pick-one group on `mutant-psi-stalker`, with an other-or-none option, and a line on the race's restrictions. Moved from the occupation to the race after `audit-premise-auditor` found the wizard offers an ability pick from the race only. `book-reconcile` read the three blocks off 170 dpi renders: every figure agrees; one page range and the word Wild on two options were corrected. Edits one held class; adds no row citing this book. Status moved to `imported`. Applied `--remote` before the PR. |
 
 ### What remains
 
-Step 4 of the plan: the Psi-Stalker tribes. Kent and Copeland wait for a scan of printed 136.
+Nothing in the plan. Lieutenant Thomas Kent and Copeland wait for a scan of
+printed 136, which this PDF lacks.
+
+`node scripts/source-coverage.mjs --remote`, 2026-10-02, after the last apply:
+
+```
+  xiticix-invasion    47 / 0
+```
+
+All 47 rows citing this book trace to a cached page. `repo-vs-live.mjs
+--offenders` the same day: `imported_classes`, `creatures` and `notable_npcs`
+rebuild exactly; the only `gear` differences were another book's rows, applied
+ahead of its open PR.
