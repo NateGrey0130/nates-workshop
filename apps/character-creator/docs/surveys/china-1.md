@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `importing` — every catalog row the book supports has shipped (24 spells, 39 creatures, 23 notable NPCs); the Naga-Spawn class remains, and a Were-Beast class waits on another book. (2026-10-02)
+**Status:** `imported` — the plan is done: 24 curses, 39 creatures, 23 notable NPCs and the Naga-Spawn class. Left out on purpose: the Were-Beasts (no numbers in this book), setting lore and the optional demon tables. (2026-10-02)
 
-**Rows citing this book:** spells 24, notable_npcs 23, creatures 39
+**Rows citing this book:** classes 1, spells 24, notable_npcs 23, creatures 39
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -294,6 +294,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/china-1-lesser-demons` | Plan step 3: **10 `creatures` rows** and 57 `stat_attacks`, printed 84-105, in `~061-china-1-lesser-demons.sql`, written by `scripts/bestiary-sql.mjs`: Ch'uan Ti, Falcon Demon, Fox Faerie, Headless One, Long-Armed Giant, Ma T-ou, Monkey-Wolf, Ox-Head Demon, Pig Demon, Yang Ching. Two `book-extract-worker` slices with every stat line read on a render, then `book-reconcile` over every field: one page range corrected (Ox-Head, 99-100), every value clean. **No row for the Were-Beasts or the Dead & the Damned: neither prints a stat block**, confirmed by the reconcile. None playable. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-1-greater-demons` | Plan step 4: **16 `creatures` rows** and 77 `stat_attacks`, printed 106-141, in `~062-china-1-greater-demons.sql`, written by `scripts/bestiary-sql.mjs`. Greater demons: Kinnaras, Kou Ching, Mahoragas, Monkey Spirit, Naga, Red Child Demon, Shen Wu, White Monkey, Yaksha, Ying Hsuan Shang, Mara Asuras. Demon Lords: Mo-Lo, Shih-Ju Shen. From inside the Naga entry: the **Naga-Spawn** (`playable` 1, the only playable row from this book), the Water Goblin and the Water Devil. Three `book-extract-worker` slices, three shaping agents, then two `book-reconcile` passes over every field with renders: four page ranges corrected and one derived damage figure unsummed, every stat value clean. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-1-npcs` | Plan steps 5 and 6: **23 `notable_npcs` rows, 2 `creatures` rows** and 36 `stat_attacks`, printed 12-53, in `~063-china-1-npcs-and-terra-cotta.sql`, written by `scripts/bestiary-sql.mjs`. Rulers and heroes: Huan Shih, Wu Je Nao, Chu Chiang, Xian Ya, Qin Kuai, Wu Kuan, Yen Lo, Pien Cheng, Tai Shan Chun, Ping Teng, Tu Shis, Meng P'o Niang Niang, Huang Di. Qin Kuai's household: Lady Wang, Feng Xiao, Feng Zhong and the four Living Statues (D4). Tai Shan Chun's allies: Chi Chou Lu, Ast-Oth, Zhua Zhao. Creatures: Terra-Cotta Warrior, Tiny Terra-Cotta Warrior. **The minor province creatures are text on their ruler's `allies`, with every printed number (D3)**: the iron servants, Ice Spider, Book Demons, Black Bees, Never-Dying Servants, Jackal Wolves, Demon Boars, Crimson Moth, White Lead Leopards and the lesser Demon Lords of each province. The unique artifacts are in `weapons_and_equipment`. Three `book-extract-worker` slices, three shaping agents, three `book-reconcile` passes with renders of every stat block: two page ranges, three page citations and four loose phrasings corrected, every stat value clean. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/china-1-naga-spawn-class` | Plan step 7 (D2): **the Naga-Spawn R.C.C.**, printed 118, in `add-naga-spawn-class.sql`, emitted by `class-check --remote --emit-script` at 0 errors and 0 warnings. A race over a human O.C.C.: attribute dice are the human 3D6 plus the printed bonus (4d6; 5d6 for M.A. and P.S.), M.D.C. P.E. x3 plus 2D6 per level, Swimming 98%, no occupation barred. Tag `supernatural`. **This closes the plan.** The Were-Beast class of D2 is not built: the book prints no numbers for it. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -323,9 +324,10 @@ each row carries the cost rule in `ppe_note`, as the 19 counted before them
 do. The line counts every imported level-0 row with 0 P.P.E. No later batch
 moved anything in the block.
 
-**Still to do from the plan:** step 7, the Naga-Spawn as a class (D2). Its
-`creatures` row is in (`naga-spawn`, playable). The Were-Beast half of D2
-cannot be built from this book.
+**Nothing remains of the plan.** The Naga-Spawn class shipped last, beside its
+`creatures` row. Open for a later session, none of it owed by this book: a
+Were-Beast class once Rifts Dark Conversions is cached (D2), and a home for
+the minor province creatures if they are ever wanted as rows (D3).
 
 ### Notes for the next batch
 
