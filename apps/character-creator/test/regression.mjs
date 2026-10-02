@@ -5032,9 +5032,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // PINNED BY NAME: each of these prints its P.P.E. as the figure for a
   // character who does NOT take a magic (or, in Palladium Fantasy, clergy)
   // occupation - Underseas printed 99, PF printed 289 and 291, South America 2
-  // printed 186. A race added here should be a decision someone reads the book
+  // printed 186, Canada printed 131 (the Aardan Tek's "5D6 or per magic
+  // O.C.C."). A race added here should be a decision someone reads the book
   // for, and the ADD races (rifts-cyclops, rifts-elf) must never be among them.
-  const want = ['amphib', 'elf', 'human', 'larhold-barbarian'];
+  const want = ['aardan-tek', 'amphib', 'elf', 'human', 'larhold-barbarian'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
