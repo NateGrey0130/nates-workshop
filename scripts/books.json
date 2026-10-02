@@ -95,6 +95,16 @@
       "note": "Cached 2026-09-26 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Offset 0 verified by render: d[2] prints folio 3 (credits), d[3] prints 4 (Contents); ocr-book.py measured +0 over the whole book and last folio 158 at cache p158. Cache p159-p161 are advertisements and the back cover (Cat. No. 804). The Quick Find (printed 5) cites 'Magic Weapons (misc.)' at 159, past the last folio - the misc. weapons are on printed 152-154. See apps/character-creator/docs/surveys/atlantis.md."
     },
 
+    "australia": {
+      "title": "Rifts World Book 19: Australia",
+      "aliases": ["Australia", "Rifts Australia", "Rifts World Book Nineteen: Australia", "Rifts World Book 19 Australia"],
+      "source_pdf": "Rifts - World Book 19 - Australia.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from its TEXT LAYER, --probe median 4,580 chars/page and 35.5% stop words. Offset verified by folio at seven points - cache p012 reads 11, p050 reads 49, p100 reads 99, p150 reads 149, p200 reads 199, p222 reads 221, p223 reads 222 - one region, no split. printed_pages is 224: the Experience Tables run from the foot of cache p224 (printed 223) through cache p225 (printed 224) and neither page prints a folio, so ocr-book.py measured 222; the Contents puts Experience Points on 224. Cache p001 is the cover and p226 is blank; no house ads. welded_pages 1 (12), corrupt_pages 3 pages (p5 the Contents, p29 and p44 prose), substituted_digits 64 pages. See apps/character-creator/docs/surveys/australia.md."
+    },
+
     "bom": {
       "title": "Rifts Book of Magic",
       "aliases": [],
