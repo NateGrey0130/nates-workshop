@@ -1,8 +1,8 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) and the 22 O.C.C.s shipped; the 7 R.C.C.s next. (2026-10-02)
+**Status:** `imported` — skills, gear, vehicles, bestiary, notable NPCs and all 29 classes. What was left out on purpose is under *Extraction plan*; what the PDF is missing is under *Cache health*. (2026-10-02)
 
-**Rows citing this book:** classes 22, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
+**Rows citing this book:** classes 29, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
 
 **MOS:** police-trg 2
 
@@ -294,6 +294,10 @@ What is deliberately left, with the reason for each:
    under `book-survey` section 8: in scope because he asked. It is its own PR,
    scoped through `audit-premise-auditor` first, and it lands before batch 7
    (the R.C.C.s). The other batches do not wait for it.
+   **Outcome, 2026-10-02: no schema change was needed.** A pick-one
+   `special_abilities` group whose option names carry the band already holds a
+   percentile table (the Dog Boy's breeds), with the d100 roll from PR #1602.
+   Both mutant classes carry all three tables that way.
 3. **Homespun armor: gear rows.** The 21 price-list rows (printed 206-207) are
    imported as gear, with the printed range in `cost_note` and the range of
    A.R., S.D.C. or M.D.C. in the description where a column holds one number.
@@ -325,6 +329,18 @@ Change one with a `fix-` script if Nate reads it differently.
 | Infantry Grunt, Police: TRG | 123, 114 | "W.P. Heavy Weapons" | the catalog's W.P. Heavy Military Weapons |
 | Navy Sailor | 126 | pay for "technicians" without naming them | Communications Technician, Sensors Operator and Mechanic |
 | Administrator | 105 | headed an NPC and villain | playable, tagged `evil` (Nate, 2026-10-01) |
+| Outback Mutie, Phreaker Military Grunt | 128-131 | three tables headed pick one or roll; no number of rolls stated | one pick per table |
+| Outback Mutie, Phreaker Military Grunt | 128-129 | four deformity bands turn Hit Points into M.D.C.; the Tanker power is 4D4x10 + P.E. M.D.C. | the option's text only |
+| Outback Mutie, Phreaker Military Grunt | 130 | psychic results print no I.S.P. figure | none for the four master results; the standard major formula for Ecto-Freak and Psi-Healer |
+| Outback Mutie, Phreaker Military Grunt | 130 | the natural spell caster learns "one additional spell per level equal to his level" | one spell per level |
+| Outback Mutie, Phreaker Military Grunt | 129 | the Echidna band's A.R. 14 and quills follow the quilled half's sentence | the whole band's text |
+| Kwarla | 135 | males 1D4 Physical powers, females 1D4+1 Sensitive or Healing | 5 picks from all three categories; a restriction line states the rule |
+| Kwarla Demon Hunter, Kwarla Mystic | 132-137 | one stat block for the race, two trained castes | one race and two occupations limited to it |
+| Kwarla Mystic | 136 | P.P.E. 4D6+22 in the attribute lines, 1D6x10 + P.E. and 2D6 per level in power 5 | power 5, overriding the race |
+| Kwarla Mystic | 136 | "R.C.C. & Mystic Bonuses" on saves | read as totals; the difference from the race is stored |
+| Kwarla Demon Hunter | 135 | the rogue's skill bonuses are "half" | halves rounded down |
+| Mokoloi | 137 | headed an NPC villain and optional player race | playable, tagged `evil` |
+| Shadow People | 150 | three skills "from Espionage (+10%) or Physical (any)" | +10 on the whole choice |
 
 ## Ledger
 
@@ -337,6 +353,7 @@ Change one with a `fix-` script if Nate reads it differently.
 | 2026-10-02 | `pal/data/australia-bestiary` | batches 4 and 8: 14 creatures and 4 notable NPCs with 68 attacks (`add-australia-bestiary.sql`, from `bestiary-sql.mjs`). Not the survey's 16 and 3-4: Bunyil, the Rainbow Serpent and Tikilik have no stat block (printed 188-192 say so), nor does Perth's computer; the book prints the Rainbow Serpent's Avatar (a notable NPC) and Tikilik's Demon Frog minion (a creature) instead. Reconcile checked all 18 rows and 68 attacks: no disagreement. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-outback-classes` | batch 5: the 12 Outback O.C.C.s, one `add-<id>-class.sql` each (`bushman`, `bushranger`, `guide-australia`, `jackaroo`, `merchant-trader-australia`, `city-trader`, `outbacker-runabout`, `raider-australia`, `roadganger`, `road-sentinel`, `sham-man`, `songjuicer`). No stub rows. `book-reconcile` checked every skill, figure and experience ladder: one missed bonus (Merchant Trader, Espionage +5%), fixed. Readings the book leaves open are listed below. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-city-classes` | batch 6: the 10 City and City Military O.C.C.s, one `add-<id>-class.sql` each (`administrator-australia`, `cyber-specter`, `city-police-australia`, `police-trg`, `sportsman`, `technologist`, `aerojock`, `infantry-grunt-australia`, `special-operations-soldier-australia`, `navy-sailor-australia`). No stub rows. `book-reconcile` checked every skill, figure, the Sportsman's 19 specialties, the Navy Sailor's 7 MOS packages and each experience ladder: no wrong figure; two consistency fixes (the Sportsman's English line, the Infantry Grunt's heavy-weapons proficiency). Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/australia-rccs` | batch 7, the last: the 7 R.C.C.s, one `add-<id>-class.sql` each (`outback-mutie`, `phreaker-military-grunt`, `kwarla`, `kwarla-demon-hunter`, `kwarla-mystic`, `mokoloi`, `shadow-people`). No stub rows. Both mutant classes carry the three percentile tables (17, 11 and 13 bands; 48 options) as pick-one ability groups, the Dog Boy's existing shape, so Decision 2 needed no schema change. `kwarla-mystic` joins the pinned `overrides_race` list in `regression.mjs` for its own P.P.E. `book-reconcile` read all 41 bands off renders: no wrong figure. Applied `--remote` before the PR. |
 
 ### What remains
 
@@ -354,4 +371,6 @@ the baseline this book's import must not move:
     psionic text missing   0   nothing for the codex to show
 ```
 
-Batches 5 to 7 of the extraction plan (the classes) remain, and the class-schema change for the mutant tables.
+Nothing in the extraction plan remains. The mutant tables needed no schema change: a pick-one ability group already carries a percentile table, with the d100 roll from PR #1602.
+
+Still open: printed page 146 (see *Cache health*), and the readings in *Class readings the book leaves open*.
