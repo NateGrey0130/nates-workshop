@@ -677,6 +677,13 @@ check('/items returns the gear catalog', items.status === 200 && items.body.item
     && index.body.counts?.spells === catalogs.body.spells.length
     && index.body.counts?.gear === items.body.items.length,
     JSON.stringify(index.body.counts));
+  // The Gear tab lists one entry per name (apps/codex/gear-groups.js), so its
+  // label is a second count. Held against the names the section itself serves,
+  // folded the way the page folds them.
+  const gearNames = new Set((gear.body.gear || []).map((g) => String(g.name).trim().toLowerCase())).size;
+  check('and counts gear names apart from gear rows, for a tab that lists names',
+    index.body.counts?.gear_names === gearNames && gearNames > 0 && gearNames <= (gear.body.gear || []).length,
+    `index says ${index.body.counts?.gear_names}, the section holds ${gearNames} names in ${(gear.body.gear || []).length} rows`);
 
   // A section is REQUIRED. The bare route used to serve spells and psionics
   // together; serving one of them by default would be a second contract to keep

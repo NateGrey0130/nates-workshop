@@ -3003,6 +3003,18 @@ button.codex-fold[aria-expanded="true"]::before { content: '\25BE'; }
    the bullets outside the entry's left rule; this keeps them inside it. */
 .codex-attacks { margin: 6px 0; padding-left: 18px; }
 
+/* A gear entry several books print (apps/codex/gear-groups.js): a line per
+   book, the book against its price, and under it what that book alone prints.
+   The price uses .codex-cost so it lines up with the entry's own. The marked
+   line is the printing a link named, drawn the way .codex-entry.focus is. */
+.codex-books { margin-left: 6px; font-size: 10px; vertical-align: 1px; }
+.codex-printing { padding: 6px 0 4px 8px; border-top: 1px dotted var(--border); }
+.codex-printing.mark { box-shadow: inset 3px 0 0 var(--accent); }
+.codex-printing-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.codex-printing-book { font-size: 12.5px; color: var(--text-primary); }
+.codex-printing .codex-stats { margin: 2px 0 2px; }
+.codex-printing .note { margin: 2px 0; }
+
 /* pre-wrap for the same reason .power-desc uses it: the catalog holds the
    book's own paragraph breaks, and escHtml plus pre-wrap shows them without
    parsing prose that came out of a PDF. */

@@ -2120,12 +2120,57 @@ export function run() {
     // in either order, since "no price" is not the cheapest item; and the
     // whole narrowing rides in the query string, so a filtered view is a link.
     check('the list can be narrowed to one group and sorted, and says so in its address',
-      /if \(group && sec\.meta\(r\) !== group\) return false/.test(js)
+      /if \(group && !groupsOf\(sec, r\)\.includes\(group\)\) return false/.test(js)
+        && /return sec\.groups \? sec\.groups\(r\) : \[sec\.meta\(r\)\]/.test(js)
         && /return sortRows\(sec, rows\)/.test(js)
         && /x == null \? 1 : -1/.test(js)
         && /new URLSearchParams\(location\.search\)/.test(js)
         && /history\.replaceState\(null, '', location\.pathname \+ \(qs \?/.test(js),
       'codex.js lost its group filter, its sort, or the query string that makes a filtered view a link');
+    // Gear lists one entry per NAME with every book inside it. Run, not read:
+    // the fold has no DOM in it so that this can call it. The rows are the
+    // shapes production holds - a name three books print in two spellings, a
+    // name two books file under different categories, and a slug that sorts
+    // after its entry's key, which is the one a sheet link is likeliest to
+    // carry.
+    {
+      const mod = { exports: {} };
+      new Function('module', 'window', readFileSync(join(appDir, '..', 'codex', 'gear-groups.js'), 'utf8'))(mod, undefined);
+      const G = mod.exports;
+      const rows = [
+        { slug: 'espandon', name: '2-Handed Espandon', system: 'palladium-fantasy', category: 'weapon', cost: 60, source_book: 'Palladium RPG Main Book p.271', description: 'pf' },
+        { slug: 'lantern', name: 'Lantern', system: 'rifts', category: 'gear', cost: 5, source_book: 'Rifts Ultimate Edition p.262' },
+        { slug: '2-handed-espandon-nb', name: '2-handed Espandon ', system: 'nightbane', category: 'weapon', cost: 460, source_book: 'Nightbane RPG p.205' },
+        { slug: 'eggshell-bomb', name: 'Eggshell Bomb', system: 'heroes-unlimited', category: 'gear', cost: 5, source_book: 'Revised Heroes Unlimited p.197' },
+        { slug: 'eggshell-bomb-rifts', name: 'Eggshell Bomb', system: 'rifts', category: 'weapon', cost: 35, source_book: 'Rifts World Book 8: Japan p.54' },
+      ];
+      const groups = G.fold(rows);
+      const esp = groups.find((g) => g.slugs.includes('espandon'));
+      check('gear is listed once per name, whatever the case, with every book inside',
+        groups.length === 3 && esp?.printings.length === 2
+          && groups.reduce((n, g) => n + g.printings.length, 0) === rows.length,
+        JSON.stringify(groups.map((g) => [g.name, g.slugs])));
+      check('and a name two books file under different categories is still one entry',
+        groups.find((g) => g.name === 'Eggshell Bomb')?.printings.length === 2);
+      check('any printing\'s slug opens its entry, not only the first',
+        !!esp && G.resolve(groups, 'espandon') === esp.key
+          && G.resolve(groups, '2-Handed-Espandon-NB') === esp.key
+          && G.resolve(groups, 'no-such-slug') === null,
+        `key ${esp?.key}`);
+      const pf = esp && G.narrow(esp, 'palladium-fantasy');
+      check('a system filter narrows an entry to that game\'s books and keeps its key',
+        pf?.printings.length === 1 && pf.printings[0].slug === 'espandon' && pf.key === esp.key
+          && G.narrow(esp, 'rifts') === null && G.narrow(esp, '') === esp,
+        JSON.stringify(pf && [pf.key, pf.slugs]));
+      check('the page loads the fold before the script that calls it, and asks it for gear',
+        /src="gear-groups\.js"[\s\S]*src="codex\.js"/.test(html)
+          && /fold: \(rows\) => GearGroups\.fold\(rows\)/.test(js)
+          && /sec\.fold \? sec\.fold\(res\[id\] \|\| \[\]\)/.test(js),
+        'codex.html no longer loads gear-groups.js first, or the gear section stopped folding its rows');
+      check('and an entry\'s "yours" reads every printing a character could hold',
+        /sec\.keys \? sec\.keys\(r\) : \[sec\.key\(r\)\]/.test(js) && /keys: \(r\) => r\.slugs/.test(js),
+        'a character holding the second printing of an item would not mark its entry');
+    }
     // A class entry starts a character (plan PR 5). The codex half is a LINK
     // so the page stays read-only; the wizard half must take the class off the
     // address (or a reload starts a second build) and must NOT start over a
