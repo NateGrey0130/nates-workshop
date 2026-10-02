@@ -442,6 +442,15 @@
       "printed_pages": 159,
       "page_offset": 0,
       "note": "The second book here with a ZERO offset, and the only one whose folios line up with the PDF end to end: printed N is cache pNNN and read-columns.py N. Verified on printed 3, 4, 5, 6, 83 and 157 by reading the folio off the render, and measured independently by ocr-book.py. A scan with no text layer, but a clean one - no page needed a re-read and no table pages needed a higher dpi."
+    },
+    "xiticix-invasion": {
+      "title": "Rifts World Book 23: Xiticix Invasion",
+      "aliases": ["Xiticix Invasion", "Rifts Xiticix Invasion"],
+      "source_pdf": "Rifts- World Book 23 Xiticix Invasion.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from its TEXT LAYER, --probe median 3,436 chars/page and 36.8% stop words. Offset verified by folio at six points - cache p012 reads 11, p050 reads 49, p100 reads 99, p150 reads 149, p160 reads 159, p161 reads 160 - one region. THE PDF IS MISSING PRINTED 136: cache p137 and p138 are byte-identical text and both show folio 137, so printed 137 was scanned twice and the first copy sits where 136 belongs. p136 reads 135 and p139 reads 138, so the offset holds on both sides and no exception is needed; printed 137 is cache p138 by the rule. printed_pages is 160, the last folio, at cache p161; p162 is blank. welded_pages 3 (3, 36, 108), corrupt_pages 5 pages (p74, p109, p117, p129, p152), substituted_digits 46 pages. See apps/character-creator/docs/surveys/xiticix-invasion.md."
     }
   }
 }
