@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `importing` — the 24 demonic curses shipped; the bestiary, NPCs and two classes remain. (2026-10-01)
+**Status:** `importing` — the 24 demonic curses and the 11 ghosts and goblins shipped; lesser and greater demons, NPCs and two classes remain. (2026-10-01)
 
-**Rows citing this book:** spells 24
+**Rows citing this book:** spells 24, creatures 11
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -279,17 +279,19 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-01 | `pal/data/china-1-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified on renders and on 128 OCR folios, `china-1` registered in `books.json`, this survey. No rows. Written in its own worktree while five other book trees were live (`australia`, `canada`, `china-2`, `warlords-of-russia`, `xiticix-invasion`). |
 | 2026-10-01 | `pal/data/china-1-curses` | Plan step 1 (D1): **24 `spells` rows**, tradition `demonic-curse`, named `Demonic Curse: <name>`, printed 55-60, in `~058-china-1-demonic-curses.sql`. Level 0 and 0 P.P.E. with the cost in `ppe_note` (half the creature's pool, printed 54). Every row checked against the chapter by `book-reconcile`: 24 of 24 clean. Spells 1,119 to 1,143. Moves `spell stubs` 19 to 43; all 24 are finished rows, the line counts level 0 with 0 P.P.E. Applied `--remote` before the PR. |
+| 2026-10-01 | `pal/data/china-1-ghosts-goblins` | Plan step 2: **11 `creatures` rows** and 35 `stat_attacks`, printed 61-84, in `~060-china-1-ghosts-and-goblins.sql`, written by `scripts/bestiary-sql.mjs`. First applied as `~059`; renumbered at merge when Australia's skills took that number, with the file made to re-apply over its own rows. Ghosts: Ch'iang Shih, Kuei, Preta, Shen Mo, Vapours. Goblins: Fox Spirit, Goat, Shadow, Mountain, One-Horned, Tall Man. Two `book-extract-worker` slices, then `book-reconcile` over every field with renders of printed 74-76, 80, 82 and 83: 11 of 11 clean. None playable. Each row's curses are named in `magic` as the `Demonic Curse:` rows of step 1. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the curses were
-applied:
+`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the ghosts and
+goblins were applied:
 
 ```
-  china-1             24 / 0
+  china-1             35 / 0
 ```
 
-All 24 rows trace to their page. That run's `BACKLOG` block:
+All 35 rows (24 spells, 11 creatures) trace to their page. That run's
+`BACKLOG` block:
 
 ```
   BACKLOG       rows an importer created and nobody finished
@@ -301,7 +303,23 @@ All 24 rows trace to their page. That run's `BACKLOG` block:
     psionic text missing   0   nothing for the codex to show
 ```
 
-**`spell stubs` moved 19 to 43, and the 24 are this book's.** They are not
-unfinished: the book prints no level and no per-curse cost, and each row
-carries the cost rule in `ppe_note`, as the 19 counted before them do. The
-line counts every imported level-0 row with 0 P.P.E.
+**`spell stubs` moved 19 to 43 with the curses, and the 24 are this book's.**
+They are not unfinished: the book prints no level and no per-curse cost, and
+each row carries the cost rule in `ppe_note`, as the 19 counted before them
+do. The line counts every imported level-0 row with 0 P.P.E. The creatures
+batch moved nothing in the block.
+
+### Notes for the next batch
+
+- **A stat block's M.A. and M.E. change order between entries.** Some print
+  I.Q., M.A., M.E. and some I.Q., M.E., M.A. Key each by its label.
+- **The same percentile OCR damage recurs**: `0/-25%` is 01-25%, `|D4` is 1D4,
+  and a Horror Factor read as `1]` or `/5` is 11 or 15. Render the line.
+- **The OCR drops the Goat Goblin from the Quick Find**, reading only the
+  Ghost Goblin cross-reference beside it. The render of printed 5 lists both.
+- **`bestiary-sql.mjs` refuses an 8-word run shared with the cache** in
+  `natural_abilities` and `description`. Lists of illnesses and of clergy
+  were the ones caught; reorder a list rather than trim it.
+- **Vulnerabilities go in `natural_abilities`** after the word
+  VULNERABILITIES, since `creatures` has no column for them. The alias a
+  heading prints ("also known as") goes at the head of `pools_note`.
