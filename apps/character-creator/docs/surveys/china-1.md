@@ -1,8 +1,8 @@
 # Rifts World Book 24: China 1 — survey
 
-**Status:** `surveyed` — inventory, authority tables and catalog diff done; nothing imported, plan agreed 2026-10-01 (D1-D5). (2026-10-01)
+**Status:** `importing` — the 24 demonic curses shipped; the bestiary, NPCs and two classes remain. (2026-10-01)
 
-**Rows citing this book:** none
+**Rows citing this book:** spells 24
 
 Slug `china-1`. Cached 2026-10-01 from
 `Rifts- World Book 24 China 1 Yama Kings.pdf`, 162 PDF pages, **scan (no text
@@ -278,21 +278,30 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/china-1-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified on renders and on 128 OCR folios, `china-1` registered in `books.json`, this survey. No rows. Written in its own worktree while five other book trees were live (`australia`, `canada`, `china-2`, `warlords-of-russia`, `xiticix-invasion`). |
+| 2026-10-01 | `pal/data/china-1-curses` | Plan step 1 (D1): **24 `spells` rows**, tradition `demonic-curse`, named `Demonic Curse: <name>`, printed 55-60, in `~058-china-1-demonic-curses.sql`. Level 0 and 0 P.P.E. with the cost in `ppe_note` (half the creature's pool, printed 54). Every row checked against the chapter by `book-reconcile`: 24 of 24 clean. Spells 1,119 to 1,143. Moves `spell stubs` 19 to 43; all 24 are finished rows, the line counts level 0 with 0 P.P.E. Applied `--remote` before the PR. |
 
 ### What remains
 
-`node scripts/source-coverage.mjs --remote`, 2026-10-01: the book has no line
-in the per-book report, because no row cites it. That run's `BACKLOG` block,
-recorded so a later import can tell what it moved:
+`node scripts/source-coverage.mjs --remote`, 2026-10-01, after the curses were
+applied:
+
+```
+  china-1             24 / 0
+```
+
+All 24 rows trace to their page. That run's `BACKLOG` block:
 
 ```
   BACKLOG       rows an importer created and nobody finished
     gear stubs            14   description still says STUB — created by class import
     skill stubs            5   created by an import and never given a base %, a bonus or a note
-    spell stubs           19   level 0 and 0 P.P.E.
+    spell stubs           43   level 0 and 0 P.P.E.
     psionic stubs          1   0 I.S.P.
     spell text missing     0   nothing for the codex to show
     psionic text missing   0   nothing for the codex to show
 ```
 
-None of these is this book's.
+**`spell stubs` moved 19 to 43, and the 24 are this book's.** They are not
+unfinished: the book prints no level and no per-curse cost, and each row
+carries the cost rule in `ppe_note`, as the 19 counted before them do. The
+line counts every imported level-0 row with 0 P.P.E.
