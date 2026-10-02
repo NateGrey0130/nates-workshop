@@ -1,8 +1,8 @@
 # Rifts World Book 19: Australia — survey
 
-**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) shipped; the 29 classes next. (2026-10-02)
+**Status:** `importing` — batches 1 to 4 and 8 (skills, gear, vehicles, bestiary, notable NPCs) and the 12 Outback O.C.C.s shipped; the City O.C.C.s and the R.C.C.s next. (2026-10-02)
 
-**Rows citing this book:** gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
+**Rows citing this book:** classes 12, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
 
 Slug `australia`. Cached 2026-10-01 from
 `Rifts - World Book 19 - Australia.pdf`, 226 PDF pages, **text layer**
@@ -296,6 +296,25 @@ What is deliberately left, with the reason for each:
    imported as gear, with the printed range in `cost_note` and the range of
    A.R., S.D.C. or M.D.C. in the description where a column holds one number.
 
+## Class readings the book leaves open
+
+Each is stored as the book prints it and flagged in the class's own notes.
+Change one with a `fix-` script if Nate reads it differently.
+
+| class | printed | what the book prints | stored |
+|---|---|---|---|
+| Guide | 62 | a skill line reading only "Use (+10%)" | Use Songlines 40% |
+| Guide | 62 | "Play Musical Instrument: (+5%)" with the instrument blank | the general skill, 40% |
+| Guide | 62 | Aboriginal racial bonuses deferred to a later book | none; a prose restriction |
+| Jackaroo | 64 | Lore: Demons and Monsters "(+2%)" | 27%, as printed |
+| City Trader | 69 | the Outsider background repeats two O.C.C. skills at a second bonus | the bonuses stack |
+| City Trader | 67 | headed a non-player villain and optional player class | playable, tagged `evil` |
+| Roadganger, Road Sentinel | 76, 79 | "Pilot: Motorcycle or (+20%)" with the second option blank | motorcycles alone |
+| Road Sentinel | 79 | a stray "(+20%)" under Outback Combat Driving | no bonus |
+| Songjuicer | 84 | "+4 to save vs possession" at level 4, "+6" at level 7 | a further +6 |
+| Songjuicer | 82-85 | S.D.C. at level 1, Mega-Damage from level 2 on a rolled ladder | prose; no `mdc_base` |
+| Bushman | 57 | the Classic type's own psionic schedule | prose; the common block is stored |
+
 ## Ledger
 
 | date | branch | what went in |
@@ -305,6 +324,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/australia-gear` | batch 2: 73 gear rows (`add-australia-gear.sql`): 4 kit, 3 flame throwers, 8 boomerangs/spear/woomera, 3 air crossbows, 20 Tech-City weapons, 5 Mokoloi TW items (a fourth weapon, the Warrior's Blade, was not in the survey's count), 9 Tech-City armors with the riot shield, 21 homespun armors. Six readings came off renders. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-vehicles` | batch 3: 9 vehicles (`add-australia-vehicles.sql`) with 80 location rows and 35 weapon rows: 3 power armors (the two Prey-Stalker headings are one suit, so not the survey's 4) and the 6 Notable Vehicles. The Prey-Stalker row is incomplete because printed 146 is missing from the PDF, and says so. Reconcile found three missing main-body location rows and one wrong remark; both fixed before the apply. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-bestiary` | batches 4 and 8: 14 creatures and 4 notable NPCs with 68 attacks (`add-australia-bestiary.sql`, from `bestiary-sql.mjs`). Not the survey's 16 and 3-4: Bunyil, the Rainbow Serpent and Tikilik have no stat block (printed 188-192 say so), nor does Perth's computer; the book prints the Rainbow Serpent's Avatar (a notable NPC) and Tikilik's Demon Frog minion (a creature) instead. Reconcile checked all 18 rows and 68 attacks: no disagreement. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/australia-outback-classes` | batch 5: the 12 Outback O.C.C.s, one `add-<id>-class.sql` each (`bushman`, `bushranger`, `guide-australia`, `jackaroo`, `merchant-trader-australia`, `city-trader`, `outbacker-runabout`, `raider-australia`, `roadganger`, `road-sentinel`, `sham-man`, `songjuicer`). No stub rows. `book-reconcile` checked every skill, figure and experience ladder: one missed bonus (Merchant Trader, Espionage +5%), fixed. Readings the book leaves open are listed below. Applied `--remote` before the PR. |
 
 ### What remains
 
