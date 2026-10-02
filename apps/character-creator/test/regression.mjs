@@ -4972,7 +4972,7 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // taken with: adding it to an occupation open to all races (the Larhold
   // Shaman, which F111 names) moves some 200 pairings, the ADD and own-figure
   // races among them. That should be a decision someone makes, so it fails here.
-  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter'];
+  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter', 'kwarla-mystic'];
   const got = takers.map((c) => c.id).sort();
   check('the occupations declaring overrides_race are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5674,12 +5674,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // 155, "mutant humans only") pair only with mutant-psi-stalker, and the Dog
   // Boy (printed 142) and the NTSET Psi-Hound (Coalition War Campaign printed
   // 187, "Race: Mutant Dog") only with mutant-dog. A human is none of them.
+  // Rifts World Book 19: Australia prints one stat block for the Kwarla race
+  // (printed 132-135) and two trained castes inside it, the Demon Hunter (134)
+  // and the Mystic (135): each pairs only with the kwarla R.C.C.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
     'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
-    'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound'];
+    'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound',
+    'kwarla-demon-hunter', 'kwarla-mystic'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),

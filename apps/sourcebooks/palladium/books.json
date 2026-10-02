@@ -933,6 +933,40 @@
    "total": 263
   },
   {
+   "slug": "australia",
+   "title": "Rifts World Book 19: Australia",
+   "code": "australia",
+   "status": "imported",
+   "date": "2026-10-02",
+   "added": [
+    [
+     "Classes",
+     29
+    ],
+    [
+     "Creatures",
+     14
+    ],
+    [
+     "Gear",
+     73
+    ],
+    [
+     "Notable NPCs",
+     4
+    ],
+    [
+     "Skills",
+     14
+    ],
+    [
+     "Vehicles",
+     9
+    ]
+   ],
+   "total": 143
+  },
+  {
    "slug": "free-quebec",
    "title": "Rifts World Book 22: Free Quebec",
    "code": "free-quebec",
