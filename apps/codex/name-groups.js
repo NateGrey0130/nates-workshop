@@ -13,7 +13,7 @@
 // book and `weapon` in another, and they are still one thing.
 //
 // A classic script with no DOM in it, like js/traditions.js, so the test suite
-// can run it: the page reads `window.GearGroups`.
+// can run it: the page reads `window.NameGroups`.
 (() => {
   const nameKey = (name) => String(name == null ? '' : name).trim().toLowerCase();
   const slugKey = (p) => String(p.slug).toLowerCase();
@@ -69,6 +69,6 @@
   }
 
   const api = { fold, narrow, resolve, nameKey };
-  if (typeof window !== 'undefined') window.GearGroups = api;
+  if (typeof window !== 'undefined') window.NameGroups = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

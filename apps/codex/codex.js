@@ -67,15 +67,15 @@ const SECTIONS = [
     groupNoun: 'category',
     label: 'Gear',
     // ONE ENTRY PER NAME, NOT PER ROW. The table holds a row for every book
-    // that prints an item, so `r` here is an entry from gear-groups.js: its
+    // that prints an item, so `r` here is an entry from name-groups.js: its
     // `printings` are the rows. An item one book prints reads exactly as it did
     // as a bare row; an item several print says so on its line, and opens to a
     // line per book with that book's price and whatever else it prints
     // differently (see printingsHtml).
     countKey: 'gear_names',
-    fold: (rows) => GearGroups.fold(rows),
-    narrow: (r, system) => GearGroups.narrow(r, system),
-    resolve: (rows, key) => GearGroups.resolve(rows, key),
+    fold: (rows) => NameGroups.fold(rows),
+    narrow: (r, system) => NameGroups.narrow(r, system),
+    resolve: (rows, key) => NameGroups.resolve(rows, key),
     key: (r) => r.key,
     // Every printing's slug, because a character holds ONE printing and
     // me/holdings is keyed by the slug it holds.
@@ -93,8 +93,8 @@ const SECTIONS = [
     // `have` in statBlock(). Weight is last because it is the one figure that
     // is about carrying rather than fighting. With several books, only what
     // they all AGREE on prints here; the rest is on each book's own line.
-    stats: (r) => gearStats(r.printings[0]).filter((_, i) => gearAgrees(r, i)),
-    extra: (r) => (r.printings.length > 1 ? printingsHtml(r) : ''),
+    stats: (r) => gearStats(r.printings[0]).filter((_, i) => agrees(r, gearStats, i)),
+    extra: (r) => (r.printings.length > 1 ? printingsHtml(r, GEAR_LINES) : ''),
     textHtml: (r) => printingsTextHtml(r),
     foot: (r) => (r.printings.length > 1 ? `${r.printings.length} books` : r.source_book),
     // A NULL price is a finished row, not an unfinished one — books print
@@ -120,10 +120,21 @@ const SECTIONS = [
     id: 'vehicles',
     groupNoun: 'class',
     label: 'Vessels',
-    key: (r) => String(r.slug).toLowerCase(),
+    // One entry per name, as Gear is and for the same reason: Heroes Unlimited
+    // and Nightbane print the same 35 present-day vehicles, figure for figure,
+    // and listed them twice (production, 2026-10-02: 463 rows, 428 names).
+    countKey: 'vehicle_names',
+    fold: (rows) => NameGroups.fold(rows),
+    narrow: (r, system) => NameGroups.narrow(r, system),
+    resolve: (rows, key) => NameGroups.resolve(rows, key),
+    key: (r) => r.key,
+    keys: (r) => r.slugs,
     title: (r) => r.name,
-    meta: (r) => r.vehicle_class || 'Unclassed',
-    cost: (r) => money(r.cost, r.system, r.cost_note),
+    badge: (r) => (r.printings.length > 1
+      ? ` <span class="tag codex-books">${r.printings.length} books</span>` : ''),
+    groups: (r) => [...new Set(r.printings.map((p) => p.vehicle_class || 'Unclassed'))],
+    meta: (r) => [...new Set(r.printings.map((p) => p.vehicle_class || 'Unclassed'))].join(' · '),
+    cost: (r) => [...new Set(r.printings.map((p) => money(p.cost, p.system, p.cost_note)).filter(Boolean))].join(' · '),
     // THE MAIN BODY IS LISTED HERE AND DID NOT USED TO BE. While every vessel
     // in the table was a Rifts machine with a locations block, the number was
     // reachable through the by-location list; Heroes Unlimited's vehicles mostly
@@ -134,16 +145,14 @@ const SECTIONS = [
     // S.D.C. when `is_mega_damage` is 0 (migration 062), and one M.D.C. point
     // absorbs a hundred S.D.C. - a fixed "M.D.C." would overstate a Patton's
     // 1000 a hundredfold.
-    stats: (r) => [['Crew', r.crew], ['Passengers', r.passengers],
-                   [vesselUnit(r), r.mdc_main_body], ['A.R.', r.ar],
-                   ['Ground speed', r.speed_ground], ['Air speed', r.speed_air],
-                   ['Water speed', r.speed_water],
-                   ['Dimensions', r.dimensions], ['Weight', r.weight_tons]],
+    stats: (r) => vesselStats(r.printings[0]).filter((_, i) => agrees(r, vesselStats, i)),
     // The two things a vessel has that no other catalog row does, and the whole
     // reason `vehicles` is three tables rather than one.
-    extra: (r) => locationsHtml(r) + weaponsHtml(r),
-    notes: (r) => [r.cost_note && `Price: ${r.cost_note}`],
-    hay: (r) => `${r.name} ${r.source_book || ''} ${r.vehicle_class || ''}`,
+    extra: (r) => (r.printings.length > 1 ? printingsHtml(r, VESSEL_LINES) : '') + vesselBlocksHtml(r),
+    textHtml: (r) => printingsTextHtml(r),
+    foot: (r) => (r.printings.length > 1 ? `${r.printings.length} books` : r.source_book),
+    notes: (r) => (r.printings.length > 1 ? [] : [r.printings[0].cost_note && `Price: ${r.printings[0].cost_note}`]),
+    hay: (r) => `${r.name} ${r.printings.map((p) => `${p.source_book || ''} ${p.vehicle_class || ''}`).join(' ')}`,
   },
   // UI-AUDIT F48. Appended rather than placed first so the default tab and every
   // #spells / #gear link already sent keep opening where they did.
@@ -349,7 +358,7 @@ const S = {
   holdings: null,       // me/holdings: { holds: {section: {key: [ids]}}, byId }
   focus: null,          // "<section>:<key>" a link named - scrolled to and marked
   missing: null,        // the key a link named that this section does not hold
-  mark: null,           // the gear slug a link named: one book's line in its entry
+  mark: null,           // the slug a link named: one book's line in its entry
   folds: new Set(),     // spell tradition folds opened by hand: "air" or "warlock/air"
   traditionClasses: {}, // tradition slug -> the class names that can learn it
 };
@@ -402,11 +411,11 @@ function damage(r) {
   return r.is_mega_damage && !/M\.?D\.?/i.test(d) ? `${d} (M.D.)` : d;
 }
 
-// ── gear: one entry, several books ──
+// ── one entry, several books (gear and vessels) ──
 
 // One printing's stat block. The entry prints the lines every book agrees on
 // and each book's line prints the rest, so the two are the same list split by
-// gearAgrees() and nothing falls between them.
+// agrees() and nothing falls between them.
 function gearStats(p) {
   return [['Damage', damage(p)], ['Range', p.range], ['Payload', p.payload],
           ['Rate of fire', p.rate_of_fire], ['A.R.', p.ar],
@@ -419,10 +428,36 @@ const blank = (v) => v == null || String(v).trim() === '';
 // Whether every book prints the same thing for stat `i`. A book that prints
 // nothing where another prints a figure DISAGREES: the Rifts Eggshell Bomb has
 // a range and the other two do not, and that range is the Rifts book's alone.
-function gearAgrees(g, i) {
-  const vals = g.printings.map((p) => { const v = gearStats(p)[i][1]; return blank(v) ? '' : String(v); });
+// The LABEL counts too: a vessel's durability line is "S.D.C." or "M.D.C." by
+// the row's own unit, and the same number in two units is not agreement.
+function agrees(g, statsOf, i) {
+  const vals = g.printings.map((p) => { const [k, v] = statsOf(p)[i]; return blank(v) ? '' : `${k}|${v}`; });
   return vals.every((v) => v === vals[0]);
 }
+
+function vesselStats(p) {
+  return [['Crew', p.crew], ['Passengers', p.passengers],
+          [vesselUnit(p), p.mdc_main_body], ['A.R.', p.ar],
+          ['Ground speed', p.speed_ground], ['Air speed', p.speed_air],
+          ['Water speed', p.speed_water],
+          ['Dimensions', p.dimensions], ['Weight', p.weight_tons]];
+}
+
+// A vessel's locations and weapon systems, once when every book prints the
+// same ones and otherwise under each book's name.
+function vesselBlocksHtml(g) {
+  const blocks = g.printings.map((p) => locationsHtml(p) + weaponsHtml(p));
+  if (blocks.every((b) => b === blocks[0])) return blocks[0];
+  return g.printings.map((p, i) => (blocks[i]
+    ? `<div class="codex-sub">${escHtml(p.source_book || 'source not recorded')}</div>${blocks[i]}` : '')).join('');
+}
+
+// What a section's book lines are made of: which holdings they read, the stat
+// block they split, and the field two books may file an entry under differently.
+const GEAR_LINES = { sec: 'gear', statsOf: gearStats, kindLabel: 'Category',
+                     kind: (p) => p.category || 'Uncategorised', note: (p) => vesselNote(p) };
+const VESSEL_LINES = { sec: 'vehicles', statsOf: vesselStats, kindLabel: 'Class',
+                       kind: (p) => p.vehicle_class || 'Unclassed', note: () => '' };
 
 function vesselNote(p) {
   if (!p.vehicle_slug) return '';
@@ -439,18 +474,18 @@ function vesselNote(p) {
 //
 // `yours` goes on the printing a character actually holds, and S.mark is the
 // printing a link named - the sheet links an item by the slug it holds.
-function printingsHtml(g) {
-  const cats = new Set(g.printings.map((p) => p.category || 'Uncategorised'));
+function printingsHtml(g, lines) {
+  const cats = new Set(g.printings.map(lines.kind));
   return `<div class="codex-sub">Found in</div>
     ${g.printings.map((p) => {
       const slug = String(p.slug).toLowerCase();
-      const held = (S.holdings?.holds?.gear?.[slug] || []).length > 0;
+      const held = (S.holdings?.holds?.[lines.sec]?.[slug] || []).length > 0;
       const bits = [['Game', SYSTEM_LABEL[p.system]],
-                    cats.size > 1 ? ['Category', p.category || 'Uncategorised'] : null,
-                    ...gearStats(p).filter((_, i) => !gearAgrees(g, i)),
+                    cats.size > 1 ? [lines.kindLabel, lines.kind(p)] : null,
+                    ...lines.statsOf(p).filter((_, i) => !agrees(g, lines.statsOf, i)),
                     ['Price note', p.cost_note]]
         .filter((b) => b && !blank(b[1]));
-      const vessel = vesselNote(p);
+      const vessel = lines.note(p);
       return `<div class="codex-printing${S.mark === slug ? ' mark' : ''}">
         <div class="codex-printing-head">
           <span class="codex-printing-book">${escHtml(p.source_book || 'source not recorded')}${

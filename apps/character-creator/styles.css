@@ -3003,7 +3003,7 @@ button.codex-fold[aria-expanded="true"]::before { content: '\25BE'; }
    the bullets outside the entry's left rule; this keeps them inside it. */
 .codex-attacks { margin: 6px 0; padding-left: 18px; }
 
-/* A gear entry several books print (apps/codex/gear-groups.js): a line per
+/* A gear entry several books print (apps/codex/name-groups.js): a line per
    book, the book against its price, and under it what that book alone prints.
    The price uses .codex-cost so it lines up with the entry's own. The marked
    line is the printing a link named, drawn the way .codex-entry.focus is. */
