@@ -125,6 +125,16 @@
       "note": "The 200-page PDF ends in a Palladium catalogue and order form the book does not number. The last folio is 192 (file p193, the Zavor), read off a render on 2026-09-18; this said 172 until then. Its one reader, cacheCoverage, passes either way (all 200 pages are cached), but a reader scoping the book by it stopped twenty pages short, in the middle of the monsters. The cache manifest records 172 as well; the text layer prints the late folios with an interior space ('1 91', '1 92')."
     },
 
+    "china-1": {
+      "title": "Rifts World Book 24: China 1",
+      "aliases": ["China 1", "China One", "Rifts China 1", "Rifts China One", "Rifts World Book 24: China 1 - The Yama Kings", "The Yama Kings"],
+      "source_pdf": "Rifts- World Book 24 China 1 Yama Kings.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-01 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Offset +1 read off renders at printed 3, 4, 5 and 160 (cache p004, p005, p006, p161) and off the OCR folio on 128 of 162 cache pages - one region, no split. printed_pages is 160, the release-schedule page at cache p161; the last content folio is 159 (the map keys, cache p160), which is what the manifest records. Cache p162 is the back cover. Six cache pages are empty or near-empty and each is a full-page art plate or map (p007, p011, p118, p135, p149, p159), checked on a contact sheet. See apps/character-creator/docs/surveys/china-1.md."
+    },
+
     "china-2": {
       "title": "Rifts World Book 25: China 2",
       "aliases": ["China 2", "China Two", "Rifts China 2", "Rifts China Two", "Rifts World Book 25: China 2 - Heroes of the Celestial Court", "Heroes of the Celestial Court"],
