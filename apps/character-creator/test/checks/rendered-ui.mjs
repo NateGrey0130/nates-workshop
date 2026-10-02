@@ -2135,7 +2135,7 @@ export function run() {
     // carry.
     {
       const mod = { exports: {} };
-      new Function('module', 'window', readFileSync(join(appDir, '..', 'codex', 'gear-groups.js'), 'utf8'))(mod, undefined);
+      new Function('module', 'window', readFileSync(join(appDir, '..', 'codex', 'name-groups.js'), 'utf8'))(mod, undefined);
       const G = mod.exports;
       const rows = [
         { slug: 'espandon', name: '2-Handed Espandon', system: 'palladium-fantasy', category: 'weapon', cost: 60, source_book: 'Palladium RPG Main Book p.271', description: 'pf' },
@@ -2163,10 +2163,18 @@ export function run() {
           && G.narrow(esp, 'rifts') === null && G.narrow(esp, '') === esp,
         JSON.stringify(pf && [pf.key, pf.slugs]));
       check('the page loads the fold before the script that calls it, and asks it for gear',
-        /src="gear-groups\.js"[\s\S]*src="codex\.js"/.test(html)
-          && /fold: \(rows\) => GearGroups\.fold\(rows\)/.test(js)
+        /src="name-groups\.js"[\s\S]*src="codex\.js"/.test(html)
+          && /fold: \(rows\) => NameGroups\.fold\(rows\)/.test(js)
           && /sec\.fold \? sec\.fold\(res\[id\] \|\| \[\]\)/.test(js),
-        'codex.html no longer loads gear-groups.js first, or the gear section stopped folding its rows');
+        'codex.html no longer loads name-groups.js first, or the gear section stopped folding its rows');
+      // Vessels fold the same way. The two sections must not share a holdings
+      // bucket: a book line's "yours" reads the section it is drawn in.
+      check('vessels are listed once per name too, through the same fold',
+        (js.match(/fold: \(rows\) => NameGroups\.fold\(rows\)/g) || []).length === 2
+          && /countKey: 'vehicle_names'/.test(js)
+          && /const VESSEL_LINES = \{ sec: 'vehicles'/.test(js) && /const GEAR_LINES = \{ sec: 'gear'/.test(js)
+          && /S\.holdings\?\.holds\?\.\[lines\.sec\]/.test(js),
+        'the Vessels tab stopped folding its rows, or its book lines read gear holdings');
       check('and an entry\'s "yours" reads every printing a character could hold',
         /sec\.keys \? sec\.keys\(r\) : \[sec\.key\(r\)\]/.test(js) && /keys: \(r\) => r\.slugs/.test(js),
         'a character holding the second printing of an item would not mark its entry');
