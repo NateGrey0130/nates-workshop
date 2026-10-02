@@ -959,6 +959,32 @@
    "total": 59
   },
   {
+   "slug": "china-1",
+   "title": "Rifts World Book 24: China 1",
+   "code": "china-1",
+   "status": "imported",
+   "date": "2026-10-02",
+   "added": [
+    [
+     "Classes",
+     1
+    ],
+    [
+     "Creatures",
+     39
+    ],
+    [
+     "Notable NPCs",
+     23
+    ],
+    [
+     "Spells",
+     24
+    ]
+   ],
+   "total": 87
+  },
+  {
    "slug": "madhaven",
    "title": "Rifts World Book 29: Madhaven",
    "code": "madhaven",
