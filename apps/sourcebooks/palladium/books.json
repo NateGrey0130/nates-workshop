@@ -355,7 +355,7 @@
    "added": [
     [
      "Classes",
-     39
+     40
     ],
     [
      "Gear",
@@ -378,7 +378,7 @@
      6
     ]
    ],
-   "total": 673
+   "total": 674
   },
   {
    "slug": "atlantis",
@@ -975,7 +975,7 @@
    "added": [
     [
      "Classes",
-     24
+     23
     ],
     [
      "Creatures",
@@ -994,7 +994,7 @@
      5
     ]
    ],
-   "total": 121
+   "total": 120
   },
   {
    "slug": "free-quebec",

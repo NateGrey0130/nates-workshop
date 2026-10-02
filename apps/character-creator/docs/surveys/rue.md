@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 39, gear 208, vehicles 6, skills 216, spells 115, psionic_powers 89
+**Rows citing this book:** classes 40, gear 208, vehicles 6, skills 216, spells 115, psionic_powers 89
 
 **MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
 
