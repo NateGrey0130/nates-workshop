@@ -1,8 +1,8 @@
 # Rifts World Book 20: Canada — survey
 
-**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
+**Status:** `importing` — batch 1 (skills) shipped; gear and vehicles next. (2026-10-02)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 8
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -270,6 +270,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-01 | `pal/data/canada-survey` | cache built (194 pp, text layer), `canada` registered in `books.json`, offset +1 verified at six folios, survey written. No D1 change. |
+| 2026-10-02 | `pal/data/canada-skills` | batch 1: six Professional Status rows (three skating, three skiing) and `Ice Skating` and `Snow Skiing` re-cited from the Skill List to printed 36. `~065-canada-skills.sql`, applied `--remote` before the PR. The three pilot notes on printed 37 are held under their *Ultimate Edition* names and were left alone. |
 
 ### What remains
 
