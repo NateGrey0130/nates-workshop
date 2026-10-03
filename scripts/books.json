@@ -165,6 +165,16 @@
       "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 3,666 chars/page and 35.2% stop words. Offset verified by folio at five points - cache p020 reads 19, p100 reads 99, p200 reads 199, p223 reads 222, p225 reads 224 - one region, no split. printed_pages is 224, the Experience Tables at cache p225; cache p226 is the blank back cover. ocr-book.py measured 222 because p224 (printed 223) carries no bare folio line. welded_pages 4 (9, 72, 90, 151), corrupt_pages 3 (39, 136, 146, low counts), substituted_digits 54 pages, heaviest p098 (19). See apps/character-creator/docs/surveys/cwc.md."
     },
 
+    "d-bees-of-north-america": {
+      "title": "Rifts World Book 30: D-Bees of North America",
+      "aliases": ["D-Bees of North America", "Rifts D-Bees of North America", "Rifts World Book Thirty: D-Bees of North America"],
+      "source_pdf": "Rifts- World Book 30 D-Bees of North America.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-10-03 from a SCAN (--probe median 0 chars/page on all 20 samples), OCR 300 dpi psm 3. Offset +1 read off renders at printed 3, 4, 5 and 224 (cache p004, p005, p006, p225). printed_pages is 224, the last numbered folio (a subscription advertisement); cache p226 is the back cover. The book has no experience-table page. See apps/character-creator/docs/surveys/d-bees-of-north-america.md."
+    },
+
     "dag": {
       "title": "Palladium Fantasy Dragons and Gods",
       "aliases": ["dragons-and-gods"],
