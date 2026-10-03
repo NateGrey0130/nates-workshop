@@ -1125,6 +1125,20 @@
     ]
    ],
    "total": 79
+  },
+  {
+   "slug": "d-bees-of-north-america",
+   "title": "Rifts World Book 30: D-Bees of North America",
+   "code": "d-bees-of-north-america",
+   "status": "imported",
+   "date": "2026-10-03",
+   "added": [
+    [
+     "Classes",
+     52
+    ]
+   ],
+   "total": 52
   }
  ]
 }
