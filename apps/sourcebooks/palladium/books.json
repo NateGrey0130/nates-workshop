@@ -1139,6 +1139,32 @@
     ]
    ],
    "total": 52
+  },
+  {
+   "slug": "triax-2",
+   "title": "Rifts World Book 31: Triax 2",
+   "code": "triax-2",
+   "status": "imported",
+   "date": "2026-10-03",
+   "added": [
+    [
+     "Classes",
+     1
+    ],
+    [
+     "Gear",
+     45
+    ],
+    [
+     "Notable NPCs",
+     3
+    ],
+    [
+     "Vehicles",
+     59
+    ]
+   ],
+   "total": 108
   }
  ]
 }
