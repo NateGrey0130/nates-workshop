@@ -554,6 +554,19 @@ p.45-47 → 45-48 (F1).
   full writer — hence the `rue-` prefix. Readbacks
   `reqs_ok 3, ranges_ok 5, old_left 0, cr_free 8`, idempotent; all eight
   re-parse ready.
+- **Adjusted 2026-10-03 (branch `pal/fix/rue-coalition-grunt-and-samas`):
+  the samas-pilot half of this finding was wrong, and its fix introduced the
+  error it set out to remove.** Re-read off renders of printed 233-235: the
+  SAMAS Pilot's stats (headed *Coalition Elite RPA O.C.C. Stats*, printed
+  233) print I.Q. 10 and P.P. 10, the values production already had. The
+  I.Q. 12, M.E. 12, P.E. 10 this finding quoted from printed 235 belong to the
+  CS Military Specialist, whose stats open in that page's right column.
+  `~072-coalition-samas-pilot-against-its-page.sql` restores 10/10, with four
+  other defects the same re-read confirmed. Found by the Rifts China 2
+  drafter, who copied the SAMAS Pilot for the Geofront Metal Warrior and
+  read the page rather than the row. The coalition-grunt range fix above was
+  right, but nobody then read the stat block it pointed at;
+  `~071-coalition-grunt-stat-block.sql` adds it.
 
 ### F18 — low — 39 classes have no page range in `source_book` at all, so the page-break defence cannot run on them
 
