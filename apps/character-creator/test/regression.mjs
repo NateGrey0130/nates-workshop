@@ -2627,6 +2627,7 @@ check('and none of them with ?mine=1',
     gameSkillsBy.set(sys, skillsNamedByClasses(mdRows.filter((r) => r.system === sys).map((r) => r.markdown), cat.skills));
   }
   let pfPicks = 0;
+  let pfPastGame = 0;
   const pfStray = new Set();
   // EVERY occupation a race allows, not the first one. Until 2026-09-23 this
   // rolled each race with fits[0] alone, so a race rolled as one occupation
@@ -2660,12 +2661,20 @@ check('and none of them with ?mine=1',
           character: { mos: chosen.mos, abilities: chosen.abilities, totem: chosen.totem } });
         const at = Math.min(level, xpTableFor(composed).length || 1);
         const gameSkills = gameSkillsBy.get(c.system) ?? null;
+        const pastGame = new Map();
         const body = generateNpc({ cls: composed, level: at, catalog: cat.skills, derive: D,
-          system: c.system, chosen, powerCatalog, gameSkills });
+          system: c.system, chosen, powerCatalog, gameSkills,
+          onPastGame: (p) => pastGame.set(p.name.toLowerCase(), p) });
         if (c.system === 'palladium-fantasy' && gameSkills) {
           for (const s of body.skills.filter((k) => k.type !== 'occ')) {
             pfPicks++;
-            if (!gameSkills.has(s.name.toLowerCase())) pfStray.add(s.name);
+            if (gameSkills.has(s.name.toLowerCase())) continue;
+            // Past the game, which is right only once the pick's pool held no
+            // skill the game's classes name. Unreported, or reported with one
+            // still open, is the leak.
+            const why = pastGame.get(s.name.toLowerCase());
+            if (why && why.in_game_left === 0) pfPastGame++;
+            else pfStray.add(`${s.name} (${why ? `${why.in_game_left} in-game left` : 'unreported'}, ${c.id}@${at})`);
           }
         }
         const p = body.pools;
@@ -2702,8 +2711,19 @@ check('and none of them with ?mine=1',
   // Fantasy mercenary rolled W.P. Heavy Military Weapons and Language: Gargoyle.
   // The catalog is tagged now, and random picks still prefer, within the game,
   // the skills Palladium Fantasy classes name.
-  check('a Palladium Fantasy NPC\'s random skill picks are ones Palladium Fantasy classes name',
-    pfPicks > 0 && pfStray.size === 0, `${pfPicks} picks; outside the game: ${[...pfStray].slice(0, 8).join(', ')}`);
+  //
+  // THE RULE, NOT THE ODDS. Until 2026-10-03 this asserted that no pick ever
+  // left the game. But the generator's preference is a preference: a pick that
+  // has used up the game's own skills in its pool reaches past them, and with
+  // thousands of seeded-random picks that happens now and then - CI run
+  // 37112561435 failed on one Language: Dolphin/Whale in 6116 picks, and passed
+  // on re-run. So the generator reports every pick past the game with how many
+  // in-game skills were still open in its pool, and this holds each one to
+  // zero. A picker that stopped preferring the game would leave one open and
+  // fail here every run, not one run in sixty.
+  check("a Palladium Fantasy NPC's random skill picks leave the game only when the pool has no in-game skill left",
+    pfPicks > 0 && pfStray.size === 0,
+    `${pfPicks} picks, ${pfPastGame} past the game with the pool exhausted; wrong: ${[...pfStray].slice(0, 6).join('; ')}`);
 
   // A skill with systems NULL is offered to EVERY game. That is right for the
   // 54 all four games print and the 25-row Language:/Literacy: family, and it
