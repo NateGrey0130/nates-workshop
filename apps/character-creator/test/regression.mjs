@@ -3876,9 +3876,14 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // one M.D.C. total, permanently. The Psycho-Stalker's conversion is temporary
   // and the Spirit Warrior's rides on two of its realms (F64), so neither may
   // carry the class-wide flag.
+  // The Spirit Host (Rifts China 2, printed 70) is the second: its hit points
+  // and S.D.C. become M.D.C. in its half-animal form, which the book calls its
+  // natural and most comfortable one, and its totems add M.D.C. on top. It
+  // reverts only when it chooses mortal form, so it is the Totem Warrior's case
+  // and not the Psycho-Stalker's.
   const converting = classes.filter((c) => c.mdc_from_hp_sdc === true).map((c) => c.id).sort();
-  check('only the Totem Warrior turns S.D.C. and hit points into M.D.C.',
-    converting.join() === 'totem-warrior', 'classes with the flag: ' + converting.join(', '));
+  check('only the Totem Warrior and the Spirit Host turn S.D.C. and hit points into M.D.C.',
+    converting.join() === 'spirit-host,totem-warrior', 'classes with the flag: ' + converting.join(', '));
   // F64: the Spirit Warrior's rides on its Earth and Plant realms instead, and
   // arrives only when one is chosen. Asked of the real composer.
   {
@@ -4204,7 +4209,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
       if (grantsLiteracyPlaceholder(e)) literacyFixed.push(c.id);
       if (e.name) continue;
       const about = /^Literate/i.test(e.note || '') || /^Literacy: Other,/.test(e.note || '')
-        || (Array.isArray(e.from) && e.from.some((n) => /^Literacy/.test(n)));
+        || (Array.isArray(e.from) && e.from.length > 0 && e.from.every((n) => /^Literacy/.test(n)));
+      // `every`, not `some`, as `isLiteracy` above has it: a Lore pick that
+      // names one specific literacy row among its Lore rows (Rifts China 2's
+      // "Lore: Ancient & Classical Chinese", which the catalog holds as a
+      // Literacy row) is a Lore pick and needs no Literacy: Other.
       if (about) literacyGroups.push({ id: c.id, e });
     }
   }

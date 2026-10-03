@@ -1,8 +1,10 @@
 # Rifts World Book 25: China 2 — survey
 
-**Status:** `importing` — steps 1-5 (skills, Chi-Gung powers, magic and Geofront gear, vehicles) shipped; classes next. (2026-10-02)
+**Status:** `imported` — all seven steps shipped: skills, Chi-Gung powers, gear, vehicles and all 25 classes; what was left out on purpose is under Extraction plan. (2026-10-02)
 
-**Rows citing this book:** gear 94, psionic_powers 29, skills 37, vehicles 6
+**Rows citing this book:** classes 25, gear 94, psionic_powers 29, skills 37, vehicles 6
+
+**MOS:** geofront-lightning-warrior 8, geofront-shadow-warrior 8, geofront-technical-officer 7, geofront-whack-job-scientist 7
 
 Slug `china-2`. Cached 2026-10-01 from
 `Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf`, 162 PDF
@@ -174,8 +176,8 @@ class plus additions. Production holds the base for most of them:
 | Whack Job Scientist | CS RCSG Scientist | `cs-rcsg-scientist` |
 | Shadow Warrior, Lightning Warrior (skills) | CS Special Forces | `cs-special-forces` |
 | Lightning Warrior (related skills) | the core Crazy | `crazy` |
-| Metal Warrior | CS RPA Pilot / Elite RPA Pilot | `cs-rpa-fly-boy-ace`; confirm it is the class meant |
-| Demon-Eater Geo-Borg, Assault Geo-Borg | CS Heavy Cyborg, CS Light Cyborg | `cs-cyborg-strike-trooper` only; **confirm which printed class each means** |
+| Metal Warrior | CS Elite RPA SAMAS Pilot (the book says see the Rifts RPG) | `coalition-samas-pilot`, RUE's - **not** `cs-rpa-fly-boy-ace`, Coalition War Campaign's aircraft pilot. Read off RUE's page, because the production row disagrees with it (2026-10-02) |
+| Demon-Eater Geo-Borg, Assault Geo-Borg | CS Heavy Cyborg, CS Light Cyborg | **`cs-cyborg-strike-trooper`'s heavy and light variants** (Coalition War Campaign p.69-70); printed 128 heads the section with that class's name. Found 2026-10-02 |
 | Geofront Military Specialist | CS Military Specialist | **not in production.** Coalition War Campaign (cache `p068`) points to the core book for it, and the core book defines it (`rue` cache `p238`). It was never imported |
 
 A class here is written out in full from its base (see `declared-copy-pairs`
@@ -279,6 +281,18 @@ What is deliberately left, with the reason for each:
    before step 7. A base that is printed but was never imported is imported
    first, as its own class.
 
+   **Adjusted 2026-10-02 (branch `pal/data/china-2-classes`):** the Heavy and
+   Light Cyborg are the heavy and light variants of `cs-cyborg-strike-trooper`
+   (see *The Geofront classes are deltas*). The CS Military Specialist was
+   **not** imported as its own class, contrary to the last sentence above: the
+   Geofront Military Specialist is written out in full from RUE's printed
+   235-236, which is all its own class needed, and importing the CS one is
+   separate work. Two base rows turned out to disagree with their own pages -
+   `coalition-grunt` is a stub and `coalition-samas-pilot` carries the next
+   class's attribute requirements - so those Geofront classes were read off
+   the RUE renders rather than copied from the rows. Both are flagged as
+   separate tasks, not fixed here.
+
 ## Ledger
 
 | date | branch | what went in |
@@ -287,6 +301,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/docs/china-2-decisions` | the six decisions Nate settled, recorded under *Agreed with Nate*; the plan's steps 1, 2 and 6 and the status line follow them. No rows. |
 | 2026-10-02 | `pal/data/china-2-skills` | step 1: 37 skills (`add-a-china-2-skills.sql`, tagged by `~069-china-2-skill-systems.sql`): 26 Domestic, Medical, Physical, Rogue and Technical skills, the four Ancient Chinese W.P.s, and the seven Hand to Hand styles with their level tables, every figure read off a render. Go, Fasting, Begging and Calligraphy are not duplicated. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-2-powers-gear-vehicles` | steps 2-5 in one PR: 29 Chi-Gung powers in `Special` (`add-a-china-2-chi-gung-powers.sql`); 68 Green Scarf magic items, Soothsayer tools, the Book of Ten Thousand Demons and the five fans (`add-a-china-2-magic-gear.sql`); 26 Geofront guns, rounds, Chi weapons and armors (`add-a-china-2-geofront-gear.sql`); 6 vehicles with 62 M.D.C. locations and 22 weapon entries (`add-china-2-vehicles.sql`). Five extraction workers and five reconcile passes; reconcile moved a restriction from Mystic Body to Lightning Fists, stopped the Demon Skin storing 4 M.D.C. from its 4D6+18, and corrected four descriptions. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/china-2-classes` | steps 6-7 in one PR: all 25 classes, one `add-<id>-class.sql` each - `jian-shih`, `chun-tzu`, `nei-chia-wu-shih`, `wai-chia-wu-shih`, `chi-gung-seng-ren`, `soothsayer`, `spirit-host`, `blind-mystic`, `fu-yao-da-chia`, `demon-and-dead-slaver`, `goblin-wrangler`, `enlightened-demon` and the thirteen `geofront-*` classes. Eight drafting agents from one shared brief; every class reads `ready` against production with 0 stubs, and every XP ladder was checked against printed 160. Mystic Martial Art Powers and Body Hardening Exercises are level 1 only, from two shared blocks pasted into each class (Nate, 2026-10-01); filed as `BOOK-INGEST-AUDIT.md` F117, with the exercises' later picks under F116. A native Chinese speaker is `Language: Native Tongue` throughout; the Enlightened Demon, who learns it, has `Language: Chinese`. Applied `--remote` before the PR. |
 
 ### What remains
 

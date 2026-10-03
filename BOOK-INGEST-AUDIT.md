@@ -3489,3 +3489,48 @@ zenjoriki power at levels 2, 7, 12 and 20, with no level-1 pick, so all four
 are prose, and its notes cite this finding. `dragon-hatchling-kumo-mi`
 (printed 214) takes one art and one zenjoriki power with no level named; it
 stores both as level-1 picks and is not affected.
+
+## Filed from the Rifts China 2 import, 2026-10-02
+
+### F117 - low - a Mystic Martial Art Power is a fifteen-level progression a class advances in, and only its level-1 abilities are stored
+
+Rifts World Book 25: China 2 prints 11 Mystic Martial Art Powers (printed
+25-41): Ba Gua, Bok Pai, Gui Long, Hsien Hsia, Mien-Ch'uan, Pao Chih, She
+Shen, Tien-Hsueh, Tong Lun, Xian Pu and Xian Tai Chi Chuan. Each is a table of
+named abilities, I.S.P. and S.D.C. additions and combat bonuses from level 1 to
+15, learned whole and advanced in as the character levels - a martial-arts
+equivalent of a class's own `level_progression`, but shared by many classes.
+The China 2 classes that learn one either pick it (`choose: 1`) or are granted
+it, and some begin it at a level other than the power's first (the
+Enlightened Demon learns one at its own tenth level and starts it at the
+power's tenth).
+
+What the import stored, by Nate's decision on 2026-10-01 (survey
+`apps/character-creator/docs/surveys/china-2.md`, *Agreed with Nate* items 1
+and 2): each power is a `special_abilities` entry describing its **level-1**
+abilities only, pasted into every class that offers it from one shared block;
+levels 2-15 are not stored anywhere and each class's `extraction_notes` cites
+this finding. The Body Hardening Exercises' later picks (printed 92-94, picked
+at set levels by the three Demon Queller classes) are the `F116` shape and are
+prose under that finding, not this one.
+
+**Evidence.** Measured 2026-10-02 against production: no `special_abilities`
+entry carries a per-level table; `level_bonuses` exists only on `skills` rows,
+where a hand to hand style uses it, and a style is limited to one per
+character by `js/hand-to-hand.js`, so a power stored as a skill would collide
+with the style the same class grants. The 11 powers' level 2-15 entries were
+extracted (survey step 6; scratch JSON, not committed) and are in the book.
+
+**Also met, and the same gap's neighbour:** the Nei Chia Wu Shih (printed
+48-51) is taught two hand to hand styles at once - Eighteen Weapons and one
+empty-hand style - and the app keeps one style per character, so the second is
+a `special_abilities` choice applied by hand.
+
+**Proposal:** a catalog home for a named, shared, levelled ability - a
+`martial_art_powers` table, or `skills` rows of a new kind that
+`hand-to-hand.js` does not treat as a style - carrying `level_bonuses` and
+per-level ability text, which a class grants by name with an optional starting
+level. **Posture:** a capability, opt-in per class. **Confidence:** medium on
+the gap (measured), low on the cost (not traced through `leveling.js` or the
+sheet). **Ongoing cost:** a third levelled-ability shape beside skills and
+spells. If prose stays acceptable, closing this as declined is a fair answer.
