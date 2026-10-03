@@ -222,4 +222,4 @@ What is deliberately left:
 |---|---|---|
 | 2026-10-03 | `pal/data/d-bees-of-north-america-survey` | cache built (226 pp, scan, OCR 300 dpi), offset +1 verified at four folios, `d-bees-of-north-america` registered in `books.json`, this survey. No rows. |
 | 2026-10-03 | `pal/data/d-bees-of-north-america-classes` | 52 classes, one `add-<id>-class.sql` each: 35 new races, 14 unheld reprints and the Idie Fishermen, Iktektumik Hunter-Gatherer and Roane Musician O.C.C.s. Nine drafting agents from one brief; every class reads `ready` against production with 0 stubs, every number read off a render. Named experience tables copied from the named class. Applied `--remote` before the PR. |
-
+| 2026-10-03 | `pal/data/d-bees-of-north-america-adna-armor` | `~073-adna-nomad-light-armor-choice.sql`: the Adna Nomad's generic light armour becomes the four-suit choice every other class has (the F115 correction). `repo-vs-live --offenders` found production holding the placeholder while the repo rebuilt the choice, the one differing field after #1651. Changes production, one row; a no-op on a clean build. No new rows. |
