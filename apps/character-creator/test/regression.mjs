@@ -2301,6 +2301,10 @@ check('a hit on armour the character does not have is refused', noArmor.status =
 // imports and the rebuild agreed with it. ~042-f105-sync-repo-to-production.sql
 // restores production's tags. Keyed on the CATEGORY as well as the book: five
 // Psyscape rows in `Special` are untagged in production, and stay so.
+//
+// Rifts China 2 joined on 2026-10-02: its 29 Chi-Gung powers are `Special`,
+// reached only by the Chi-Gung Seng Ren naming them - Africa's case exactly -
+// and ~070-china-2-chi-gung-systems.sql restores the tag the untags clear.
 {
   const q = (sql) => {
     const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json',
@@ -2323,7 +2327,8 @@ check('a hit on armour the character does not have is refused', noArmor.status =
     : /^Nightbane RPG/.test(book || '') ? 'nightbane'
       : /^Rifts Dimension Book 2: Phase World/.test(book || '') ? 'rifts'
         : /^Rifts World Book 12: Psyscape/.test(book || '') && ['Mind Bleeder', 'Super'].includes(category) ? 'rifts'
-          : /^Rifts World Book 4: Africa/.test(book || '') && category === 'Special' ? 'rifts' : null);
+          : /^Rifts World Book 4: Africa/.test(book || '') && category === 'Special' ? 'rifts'
+            : /^Rifts World Book 25: China 2/.test(book || '') && category === 'Special' ? 'rifts' : null);
   const wrong = rows.filter((r) => (r.system ?? null) !== gameOf(r.source_book, r.category));
   check('every psionic power from a single-game book carries that game, and every other one none',
     wrong.length === 0, wrong.map((r) => `${r.name}: ${r.system ?? 'NULL'}`).join(', '));
