@@ -74,10 +74,15 @@ const norm = (s) => String(s ?? '').trim().toLowerCase();
  * derive   the attribute-chart module (js/derive.js installs it as a global).
  * system   the campaign's game, for skills a single game prints.
  * random   injectable, so a test can make a run repeatable.
+ * onPastGame  optional; called for every random pick that reaches past the
+ *          game's own skills, with { name, kind, in_game_left } - how many
+ *          skills the game's classes name were still open in that pick's pool.
+ *          A test reads it; nothing in the app passes it, so the endpoint's
+ *          result is unchanged.
  */
 export function generateNpc({ cls, level = 1, catalog, derive, system = null, random = Math.random, name = null,
                               chosen = { mos: null, abilities: [], totem: null }, powerCatalog = null,
-                              gameSkills = null }) {
+                              gameSkills = null, onPastGame = null }) {
   if (!cls) throw new NpcGap('class_unknown', 'That class could not be loaded');
   refuseWhatWeCannotChoose(cls, chosen);
 
@@ -206,7 +211,9 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
         `${cls.name || 'This class'} needs ${f.count} related skills from ${f.categories.join(' or ')}, `
         + `and the catalog offers ${pool.length} it can take`, { floor: f.categories, want: f.count, have: pool.length });
     }
-    for (const r of pool.slice(0, f.count)) { relatedChosen.push(r); taken.add(norm(r.name)); }
+    const floorPicks = pool.slice(0, f.count);
+    reportPastGame(pool, floorPicks, 'related');
+    for (const r of floorPicks) { relatedChosen.push(r); taken.add(norm(r.name)); }
   }
   fill(relatedChosen, relatedAt1, relatedPool, 'related', relatedCats);
   for (const r of relatedChosen) {
@@ -290,7 +297,19 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
         + `from ${where}, and only ${into.length + open.length} can be taken`,
         { kind, level: atLevel, categories: (cats || []).map(categoryName), want: count, have: into.length + open.length });
     }
-    for (const r of open.slice(0, need)) { into.push(r); taken.add(norm(r.name)); }
+    const picks = open.slice(0, need);
+    reportPastGame(open, picks, kind);
+    for (const r of picks) { into.push(r); taken.add(norm(r.name)); }
+  }
+
+  // A pick past the game is right only when the pool had no in-game skill left
+  // to take, which preferInGame guarantees by putting them all first. Reported
+  // with the in-game count still open, so a test can hold the picker to that
+  // rule instead of to how often the pool happens to run out.
+  function reportPastGame(pool, picks, kind) {
+    if (!onPastGame) return;
+    const inGameLeft = pool.filter(inGame).length - picks.filter(inGame).length;
+    for (const r of picks) if (!inGame(r)) onPastGame({ name: r.name, kind, in_game_left: inGameLeft });
   }
 
   function rollAttributesMeeting(c) {
