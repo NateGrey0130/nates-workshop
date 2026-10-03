@@ -1,8 +1,8 @@
 # Rifts World Book 30: D-Bees of North America — survey
 
-**Status:** `surveyed` — inventory and catalog diff done; the plan below follows the standing precedents, nothing imported yet. (2026-10-03)
+**Status:** `imported` — 49 races and 3 occupations shipped; the held reprints and Aarden Tek and Pogtal (held under other names) are left on purpose. (2026-10-03)
 
-**Rows citing this book:** none
+**Rows citing this book:** classes 52
 
 Slug `d-bees-of-north-america`. Cached 2026-10-03 from
 `Rifts- World Book 30 D-Bees of North America.pdf`, 226 PDF pages, **scan (no
@@ -70,7 +70,7 @@ Contents, every entry confirmed by its stat block in the cache.
 
 | entry | printed | status |
 |---|---|---|
-| Aarden Tek | 9 | reprint, **not held** - imported from here |
+| Aarden Tek | 9 | reprint, held: `aardan-tek` (Canada), the book's other spelling - corrected 2026-10-03 |
 | Adna Nomads | 11 | new to this book |
 | Akysse Tribal Hunters | 13 | new to this book |
 | Altara, Blind Warrior Women | 15 | reprint, held: `blind-warrior-women` (Atlantis) |
@@ -125,7 +125,7 @@ Contents, every entry confirmed by its stat block in the cache.
 | Nuhr Dwarves | 149 | reprint, **not held** - imported from here |
 | Obsedai | 151 | new to this book |
 | Phlebus | 154 | new to this book |
-| Pogtal Giants | 156 | reprint, **not held** - imported from here |
+| Pogtal Giants | 156 | reprint, held: `pogtalian-dragon-slayer` (South America), the same race and stat block - corrected 2026-10-03 |
 | Posluznik | 159 | new to this book |
 | Power Leech | 161 | reprint, **not held** - imported from here |
 | Psi-Goblins | 164 | reprint, held: `psi-goblin` (Psyscape) |
@@ -169,15 +169,36 @@ only, not as a class).
   so this book is the only source the catalog has. They import from here,
   citing this book.
 
+### Corrected 2026-10-03: two more held, three occupations found
+
+The name sweep missed two held reprints because they are held under other
+names: Aarden Tek is `aardan-tek` (Canada; this book spells it Aardan in its
+own tag line), and Pogtal Giants is `pogtalian-dragon-slayer` (South
+America), the same race with the same attribute dice, M.D.C. and energy
+aura. Neither is re-imported. So the unheld reprints are **14**, not 16.
+
+Three entries also print a full **O.C.C.** of their own, which the
+inventory did not count: the Idie Fishermen O.C.C. (printed 105-106), the
+Iktektumik Hunter-Gatherer O.C.C. (108-109) and the Roane Musician O.C.C.
+(172-173). All three import, as `idie-fisherman`,
+`iktektumik-hunter-gatherer` and `roane-musician`.
+
+**Experience tables:** the survey said no class stores one. Twenty-odd
+entries do name another class's table ("use the Psi-Stalker experience
+table"), and those copy the named class's stored ladder, by the class-import
+rule (Nate, 2026-09-26). Only entries that point to the chosen O.C.C.'s
+table, or name a class the catalog lacks, store none.
+
 ## Extraction plan
 
 Every importable entry is a race class (`category: rcc`), one
 `add-<id>-class.sql` each, drafted from renders by agents working from one
 brief, as China 2's classes were.
 
-1. **Classes A-F** — the importable entries from Aarden Tek to Forest Warden.
-2. **Classes G-N** — Ganka to Nuhr Dwarves.
-3. **Classes O-Z** — Obsedai to Vintex Warriors.
+1. **All 52 classes in one PR** - 35 new races, 14 unheld reprints and the
+   3 occupations - drafted by nine agents from one shared brief. (Planned as
+   three alphabetical batches; shipped as one because every draft was ready
+   at once.)
 
 Each batch checks `class-check --remote` `ready` with 0 stubs, and runs smoke
 and regression, before its data is applied `--remote` and its PR opened. A
@@ -200,3 +221,5 @@ What is deliberately left:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-03 | `pal/data/d-bees-of-north-america-survey` | cache built (226 pp, scan, OCR 300 dpi), offset +1 verified at four folios, `d-bees-of-north-america` registered in `books.json`, this survey. No rows. |
+| 2026-10-03 | `pal/data/d-bees-of-north-america-classes` | 52 classes, one `add-<id>-class.sql` each: 35 new races, 14 unheld reprints and the Idie Fishermen, Iktektumik Hunter-Gatherer and Roane Musician O.C.C.s. Nine drafting agents from one brief; every class reads `ready` against production with 0 stubs, every number read off a render. Named experience tables copied from the named class. Applied `--remote` before the PR. |
+

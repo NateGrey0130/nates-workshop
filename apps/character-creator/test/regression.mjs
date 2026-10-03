@@ -5067,9 +5067,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // character who does NOT take a magic (or, in Palladium Fantasy, clergy)
   // occupation - Underseas printed 99, PF printed 289 and 291, South America 2
   // printed 186, Canada printed 131 (the Aardan Tek's "5D6 or per magic
-  // O.C.C."). A race added here should be a decision someone reads the book
-  // for, and the ADD races (rifts-cyclops, rifts-elf) must never be among them.
-  const want = ['aardan-tek', 'amphib', 'elf', 'human', 'larhold-barbarian'];
+  // O.C.C."), and D-Bees of North America printed 26 (the A'rac's identical
+  // "2D6 or per magic O.C.C."). A race added here should be a decision someone
+  // reads the book for, and the ADD races (rifts-cyclops, rifts-elf) must never
+  // be among them.
+  const want = ['aardan-tek', 'amphib', 'arac', 'elf', 'human', 'larhold-barbarian'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5720,13 +5722,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Rifts World Book 20: Canada prints the Worldly Sasquatch O.C.C. (printed
   // 166) inside the True Sasquatch's entry, for a Sasquatch who has left the
   // wild: it pairs only with the true-sasquatch R.C.C.
+  // Rifts World Book 30: D-Bees of North America prints the Roane Musician
+  // O.C.C. (printed 172-173) inside the Roane Pipers' entry, written for the
+  // Roane alone: it pairs only with the roane-piper R.C.C.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
     'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
     'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound',
-    'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch'];
+    'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch', 'roane-musician'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
