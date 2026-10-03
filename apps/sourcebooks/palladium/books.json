@@ -1071,6 +1071,36 @@
    "total": 87
   },
   {
+   "slug": "china-2",
+   "title": "Rifts World Book 25: China 2",
+   "code": "china-2",
+   "status": "imported",
+   "date": "2026-10-02",
+   "added": [
+    [
+     "Classes",
+     25
+    ],
+    [
+     "Gear",
+     94
+    ],
+    [
+     "Psionic powers",
+     29
+    ],
+    [
+     "Skills",
+     37
+    ],
+    [
+     "Vehicles",
+     6
+    ]
+   ],
+   "total": 191
+  },
+  {
    "slug": "madhaven",
    "title": "Rifts World Book 29: Madhaven",
    "code": "madhaven",
