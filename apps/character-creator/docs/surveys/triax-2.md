@@ -1,8 +1,8 @@
 # Rifts World Book 31: Triax 2 — survey
 
-**Status:** `importing` — gear and the three notable NPCs shipped; vehicles and the O.C.C. next. (2026-10-03)
+**Status:** `imported` — PRs #1653, #1654 and `pal/data/triax-2-vehicles-and-pilot`: 45 gear, 3 notable NPCs, 59 vehicles and the Luftwaffe Cyborg Combat Pilot. What was left out on purpose is under *What remains*. (2026-10-03)
 
-**Rows citing this book:** gear 45, notable_npcs 3
+**Rows citing this book:** classes 1, gear 45, vehicles 59, notable_npcs 3
 
 Slug `triax-2`. Cached 2026-10-03 from `Rifts- World Book 31 Triax 2.pdf`,
 194 PDF pages, **text layer**: `--probe` median 5,244 characters a page, 36.1%
@@ -142,3 +142,29 @@ before the apply, as Warlords of Russia's vessels were.
 |---|---|---|
 | 2026-10-03 | `pal/data/triax-2-survey` | cache built (194 pp, text layer), `triax-2` registered in `books.json`, offset +1 verified at eight folios, this survey. No rows. |
 | 2026-10-03 | `pal/data/triax-2-gear-and-npcs` | **Batch 1, gear, and batch 6, notable NPCs.** `add-triax-2-gear.sql`: 45 gear rows (12 commercial products and body armor, 27 weapons and shields, 6 XLH hardpoint pods). `add-triax-2-bestiary.sql` through `bestiary-sql.mjs`: Jinna Gir Song, Struwwelpeter and General Rasheen, 7 attacks. Every number read off renders and checked again by `book-reconcile`: no figure disagreed in 48 rows; the reconciles corrected one page range and several phrasings. Held and left: `tx-j50-juicer-eba` (see *Catalog diff*), `triax-electro-mace` (the new 70,000 credit price is in the TX-H1-M row's note). Applied `--remote` before the merge. |
+| 2026-10-03 | `pal/data/triax-2-vehicles-and-pilot` | **Batches 2-5: 59 vehicles and the O.C.C.** `add-triax-2-civilian-vehicles.sql` (26: the Triax commercial cars and hover vehicles, the WR-3030 Bear, the RRK and WaffenTek vehicles, the five domestic robots), `add-triax-2-power-armor-and-drones.sql` (11), `add-triax-2-robots-and-aircraft.sql` (13), `add-triax-2-airframes-and-bases.sql` (9: the three XML airframes as `borg`, the drop pod and fort, the Undertow, the TX-MISB, the IA-30 and the AA-50); 511 locations and 152 weapon entries. `add-luftwaffe-cyborg-combat-pilot-class.sql`: the one O.C.C., `class-check --remote` ready with no stub. Every number read off renders and checked again by `book-reconcile`: no figure disagreed in 59 vessels; the reconciles caught an invented "small target" note on the drop fort, an invented crew line, and two page ranges. Applied `--remote` before the merge. |
+
+### What remains
+
+**The book is fully imported as of 2026-10-03.** Nothing below is a gap in
+the data; it is what was left out on purpose.
+
+- **The vehicle features and add-on weapon systems** (printed 85-89): a price
+  list of options for other machines, left out on the Warlords of Russia D4
+  precedent.
+- **The Jaeger shoulder modules** (printed 125-126): unpriced, and they fit the
+  held `x-535-hunter-jager`.
+- **Held rows the book reprices**: `tx-j50-juicer-eba` (see *Catalog diff*)
+  and `triax-electro-mace` (70,000 credits here, in the TX-H1-M row's note).
+- **The drop pod's six load-out pods** (printed 177-178): cargo lists, in the
+  pod row's description.
+- **The setting** (printed 8-68), the Autobahn table (50) and the Victor Lazlo
+  update (46, prose about a held NPC).
+- **Two O.C.C. skills no book on this machine defines**: Combat Flying and
+  Elite Aerial Combat: XML Series are abilities on the class, not skill rows.
+  History: Aviation/Luftwaffe is stored as `History` at its +20%.
+
+**Readings a GM may want to overrule**, each named in its row: the X-5050
+Black Death's and the TX-MISB's `mdc_main_body` (books print sections, not a
+main body); the Undertow's NULL price; the drink names, which add "Energy
+Drink" to a bare brand.
