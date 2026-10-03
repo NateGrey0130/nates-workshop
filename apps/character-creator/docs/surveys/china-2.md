@@ -1,8 +1,8 @@
 # Rifts World Book 25: China 2 — survey
 
-**Status:** `surveyed` — survey written and plan agreed; nothing imported yet. (2026-10-01)
+**Status:** `importing` — step 1 (skills) shipped; Chi-Gung powers next. (2026-10-02)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 37
 
 Slug `china-2`. Cached 2026-10-01 from
 `Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf`, 162 PDF
@@ -285,6 +285,7 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-01 | `pal/data/china-2-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified at eight folios, `china-2` registered in `books.json`, this survey. No rows. Written in its own worktree while three other book sessions were live. |
 | 2026-10-01 | `pal/docs/china-2-decisions` | the six decisions Nate settled, recorded under *Agreed with Nate*; the plan's steps 1, 2 and 6 and the status line follow them. No rows. |
+| 2026-10-02 | `pal/data/china-2-skills` | step 1: 37 skills (`add-a-china-2-skills.sql`, tagged by `~069-china-2-skill-systems.sql`): 26 Domestic, Medical, Physical, Rogue and Technical skills, the four Ancient Chinese W.P.s, and the seven Hand to Hand styles with their level tables, every figure read off a render. Go, Fasting, Begging and Calligraphy are not duplicated. Applied `--remote` before the PR. |
 
 ### What remains
 
