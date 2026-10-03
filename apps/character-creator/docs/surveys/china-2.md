@@ -1,8 +1,8 @@
 # Rifts World Book 25: China 2 — survey
 
-**Status:** `importing` — step 1 (skills) shipped; Chi-Gung powers next. (2026-10-02)
+**Status:** `importing` — steps 1-5 (skills, Chi-Gung powers, magic and Geofront gear, vehicles) shipped; classes next. (2026-10-02)
 
-**Rows citing this book:** skills 37
+**Rows citing this book:** gear 94, psionic_powers 29, skills 37, vehicles 6
 
 Slug `china-2`. Cached 2026-10-01 from
 `Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf`, 162 PDF
@@ -286,6 +286,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-01 | `pal/data/china-2-survey` | cache built (162 pp, scan, OCR 300 dpi), offset +1 verified at eight folios, `china-2` registered in `books.json`, this survey. No rows. Written in its own worktree while three other book sessions were live. |
 | 2026-10-01 | `pal/docs/china-2-decisions` | the six decisions Nate settled, recorded under *Agreed with Nate*; the plan's steps 1, 2 and 6 and the status line follow them. No rows. |
 | 2026-10-02 | `pal/data/china-2-skills` | step 1: 37 skills (`add-a-china-2-skills.sql`, tagged by `~069-china-2-skill-systems.sql`): 26 Domestic, Medical, Physical, Rogue and Technical skills, the four Ancient Chinese W.P.s, and the seven Hand to Hand styles with their level tables, every figure read off a render. Go, Fasting, Begging and Calligraphy are not duplicated. Applied `--remote` before the PR. |
+| 2026-10-02 | `pal/data/china-2-powers-gear-vehicles` | steps 2-5 in one PR: 29 Chi-Gung powers in `Special` (`add-a-china-2-chi-gung-powers.sql`); 68 Green Scarf magic items, Soothsayer tools, the Book of Ten Thousand Demons and the five fans (`add-a-china-2-magic-gear.sql`); 26 Geofront guns, rounds, Chi weapons and armors (`add-a-china-2-geofront-gear.sql`); 6 vehicles with 62 M.D.C. locations and 22 weapon entries (`add-china-2-vehicles.sql`). Five extraction workers and five reconcile passes; reconcile moved a restriction from Mystic Body to Lightning Fists, stopped the Demon Skin storing 4 M.D.C. from its 4D6+18, and corrected four descriptions. Applied `--remote` before the PR. |
 
 ### What remains
 
