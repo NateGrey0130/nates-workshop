@@ -1,8 +1,8 @@
 # Rifts World Book 31: Triax 2 — survey
 
-**Status:** `surveyed` — inventory and catalog diff done; the plan below follows the standing precedents, nothing imported yet. (2026-10-03)
+**Status:** `importing` — gear and the three notable NPCs shipped; vehicles and the O.C.C. next. (2026-10-03)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 45, notable_npcs 3
 
 Slug `triax-2`. Cached 2026-10-03 from `Rifts- World Book 31 Triax 2.pdf`,
 194 PDF pages, **text layer**: `--probe` median 5,244 characters a page, 36.1%
@@ -55,8 +55,8 @@ cover; `p001`-`p004` cover and credits, `p005`-`p006` Contents and Quick Find.
 | **p005-p006** | 4-5 | *Contents* | every section's first page and every named machine |
 | **p006** | 5 | *Quick Find* | a second index; it repeats the Contents' page numbers |
 
-There is no experience table. The one O.C.C. (printed 165-168) names its
-ladder in its own entry, read at import.
+There is no experience table, and the one O.C.C. (printed 165-168) names no
+ladder, so it stores none.
 
 ## Inventory
 
@@ -101,6 +101,13 @@ Run against **production** (`--remote`) on 2026-10-03.
 - **Notable NPCs:** Jinna Gir Song, Struwwelpeter and General Rasheen are not
   held. Victor Lazlo is (Africa); his printed-46 update is prose.
 - **Classes:** the Luftwaffe Cyborg Combat Pilot is not held.
+- **Found at extraction, not in the Contents:** the T-E02 Infiltrator
+  espionage armor (printed 109-110) and the TX-J50 Juicer EBA (108-109).
+  The TX-J50 **is held** as `tx-j50-juicer-eba` from Free Quebec p.51, and
+  this book prints different figures for it (main body 100, 30 lbs, 225,000
+  credits against 90, 20 lbs, 50,000). The held row stands, as the Triax
+  designer drugs did against Juicer Uprising's prices; the Triax 2 figures
+  are recorded here.
 
 Each batch re-diffs its own rows against production before its script is
 written (`book-survey` §4).
@@ -134,3 +141,4 @@ before the apply, as Warlords of Russia's vessels were.
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-03 | `pal/data/triax-2-survey` | cache built (194 pp, text layer), `triax-2` registered in `books.json`, offset +1 verified at eight folios, this survey. No rows. |
+| 2026-10-03 | `pal/data/triax-2-gear-and-npcs` | **Batch 1, gear, and batch 6, notable NPCs.** `add-triax-2-gear.sql`: 45 gear rows (12 commercial products and body armor, 27 weapons and shields, 6 XLH hardpoint pods). `add-triax-2-bestiary.sql` through `bestiary-sql.mjs`: Jinna Gir Song, Struwwelpeter and General Rasheen, 7 attacks. Every number read off renders and checked again by `book-reconcile`: no figure disagreed in 48 rows; the reconciles corrected one page range and several phrasings. Held and left: `tx-j50-juicer-eba` (see *Catalog diff*), `triax-electro-mace` (the new 70,000 credit price is in the TX-H1-M row's note). Applied `--remote` before the merge. |
