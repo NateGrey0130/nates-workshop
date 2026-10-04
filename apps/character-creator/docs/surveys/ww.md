@@ -2,7 +2,7 @@
 
 **Status:** `imported` — 17 of 17 classes, per the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 17, gear 73, vehicles 2, skills 3, spells 37, notable_npcs 8, creatures 15
+**Rows citing this book:** classes 17, gear 73, vehicles 2, skills 3, spells 37, notable_npcs 8, creatures 17
 
 **MOS:** demon-goblin 3, monk 3
 
@@ -253,6 +253,7 @@ What is deliberately left:
 | 2026-09-19 | #1178 | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-wormwood.sql`, 15 `creatures` rows for the Dark Minions species of printed 119-138, attacks in `stat_attacks`. Eight are the playable R.C.C.s already published as classes; the rest are NPC-only. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-19 | #1181 | **notable NPCs**: `add-notable-npcs-phase-world-and-wormwood.sql`, 8 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-26 | #1444 | **The nine R.C.C. ladders move out of their notes into `xp_table`**, by `~010-own-book-xp-ladders.sql`: `demon-goblin`, `demon-hound-rider`, `ram-rat`, `sky-rider`, `morphworm`, `rumbler`, `holy-terror`, `entrancer`, `shade`. The rule that kept them out (no R.C.C. carries a ladder) was lifted 2026-09-17 by the Nightbane decision. **The goblin-group notes had level 15 wrong**: they recorded 289,881, and a 400 dpi render of p.157 reads 290,881-335,000, which is what is stored (the cache drops that column's last two levels, so the note had nothing to be checked against). The other three columns agree with the cache. Each note is rewritten as the decision. No row count moves. Applied `--remote` before the PR. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Host and the Dark Priest as creatures** (`~082`). The Host's M.D.C. is stored with the addition the book gives when three or more are in one world, since Wormwood has nineteen; the bare base is in its note. Printed 140 is a full-page illustration. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 Each draft branch carries ONE EMPTY COMMIT and nothing else. That is what lets
 a PR exist before the work does; `git commit --allow-empty` keeps the scope in

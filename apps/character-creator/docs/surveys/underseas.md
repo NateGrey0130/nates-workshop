@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 30
+**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 31
 
 **MOS:** navy-seaman 9
 
@@ -387,6 +387,7 @@ The merged PR body cannot be edited into truth retroactively and is left as the 
 | 2026-09-26 | #1451 | **XP ladders**, `~014-underseas-xp-ladders.sql`: all **25** classes take the p.214 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. Two odd lower bounds stored as printed (Pneuma Biform level 5, Dragon Ray level 5). **The Navy Seaman is on the Navy Seaman / Salvage Expert / Kreel-Lok Warrior column**, not the Amphib one; the class table above said otherwise and is corrected. **The Sea Titan takes the "Sea Titan, Whale Singer" column** although its entry names the dragon's tables, two of them; its note says so. No row count moves. `--remote` is applied before the merge |
 | 2026-09-27 | #1466 | **`salvage-expert` stops citing F3 for its starting vessel**, by `~029-class-vessel-notes.sql`. Printed 134's submersible, sailboat, cabin cruiser or power armour names no model. Two of the four are this book's generic gear rows (`sailboat-large`, `cabin-cruiser`, printed 135-136) and the two- to six-man submersible and the power armour have none, so a choice would offer half the list and it stays a restriction line with that reason; the note and the line had said the catalog had no vessel rows at all. No row count moves. `--remote` is applied before the merge. |
 | 2026-09-27 | #1469 | **`salvage-expert` names its own `men_of_arms: false` line**, by `~033-ngr-police-and-core-sdc-notes.sql`. Its note said it *"needs a `CORE_SDC_BY_CLASS` entry"*, a map `js/compose.js` dropped on 2026-09-25 (`~001-men-of-arms-frontmatter.sql`). It now says the class carries the line, and that the line was that entry until then. Production searched for `instr(markdown, 'CORE_SDC_BY_CLASS') > 0` found **49** classes, all describing the map as live. Nine are this book's: the Sea Inquisitor, Whale Singer, Ocean Wizard, Sea Druid, Tritonian Sea Wolf, Tritonian Scientist, Navy Seaman, Marine and Salvage Expert, and each now names its own line. The same script rewrites the other 40: Phase World 25, Triax 4, Pantheons 3, and two each from Juicer Uprising, Spirit West, Mystic Russia and Madhaven. No row count moves. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **Ship Dreamers as a creature** (`~080`), which the plan left out as "not a character class". **Seven classes' percentile tables become banded pick-one groups** (`~089`): the Amphib's appearance and the psionics of the Sea Titan, Naut'Yll Soldier, Dolphin, Killer Whale, Sperm Whale and Humpback. The Naut'Yll Devastator is left: its own page prints a different breakdown. The Naut'Yll psionics line is on printed 149, not 148. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What the vehicle pass had to decide
 

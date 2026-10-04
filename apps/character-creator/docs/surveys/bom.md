@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows arrived before surveys existed; this file was written for the INGESTION-AUDIT F24 re-provenance, not as an import plan. (2026-09-24)
 
-**Rows citing this book:** classes 1, spells 427
+**Rows citing this book:** classes 1, vehicles 9, spells 452
 
 Slug `bom`. Cached 2026-08-28 from `526065744-Rifts-Book-of-Magic.pdf`,
 360 PDF pages, **text layer**, no OCR.
@@ -263,6 +263,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-08-28 | [#374](https://github.com/NateGrey0130/nates-workshop/pull/374) | `zzzz-cite-bom-invocations.sql` — the other 177, the general invocations, **all to an exact printed page**. Applied `--remote` before the PR. **`bom` is 409 / 0.** |
 | 2026-09-27 | #1459 | *Annihilate* stores `ppe` 600, by `~024-dragon-helm-and-annihilate.sql`, keyed on name. Printed 150, read off a render: *"Six Hundred"*, with Shifters, Conjurers, Temporal Raiders and Temporal Wizards casting it for 300. The row stored the 300; Nate's decision that day was the normal cost, and the `ppe_note` (600 normally, 300 for those four) is kept unchanged because it reads right against 600. Federation of Magic prints 600 too (`fom.md`, *Spell diff*). No row count moves. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **The whole book inventoried by chapter** (*The whole book by chapter*): printed 26-347 read by the text layer's heading sizes, the spell chapters diffed against production, the item chapters compared by name as a lead list. No rows. Temporal Magic (20 spells) and the Iron Juggernauts (9) are the two sections the catalog holds nothing of. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The nine Iron Juggernauts as vessels** (`~085`) **and all 25 Temporal Magic spells** in tradition `temporal` (`~091`), four linked by `same_spell_as` to rows the catalog held. The two gaps the inventory above names are closed; nothing grants the tradition yet. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

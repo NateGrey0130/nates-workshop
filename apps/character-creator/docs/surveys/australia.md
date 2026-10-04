@@ -2,7 +2,7 @@
 
 **Status:** `imported` — skills, gear, vehicles, bestiary, notable NPCs and all 29 classes. What was left out on purpose is under *Extraction plan*; what the PDF is missing is under *Cache health*. (2026-10-02)
 
-**Rows citing this book:** classes 29, gear 73, skills 14, vehicles 9, creatures 14, notable_npcs 4
+**Rows citing this book:** classes 29, gear 76, vehicles 9, skills 14, notable_npcs 4, creatures 14
 
 **MOS:** police-trg 2
 
@@ -354,6 +354,7 @@ Change one with a `fix-` script if Nate reads it differently.
 | 2026-10-02 | `pal/data/australia-outback-classes` | batch 5: the 12 Outback O.C.C.s, one `add-<id>-class.sql` each (`bushman`, `bushranger`, `guide-australia`, `jackaroo`, `merchant-trader-australia`, `city-trader`, `outbacker-runabout`, `raider-australia`, `roadganger`, `road-sentinel`, `sham-man`, `songjuicer`). No stub rows. `book-reconcile` checked every skill, figure and experience ladder: one missed bonus (Merchant Trader, Espionage +5%), fixed. Readings the book leaves open are listed below. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-city-classes` | batch 6: the 10 City and City Military O.C.C.s, one `add-<id>-class.sql` each (`administrator-australia`, `cyber-specter`, `city-police-australia`, `police-trg`, `sportsman`, `technologist`, `aerojock`, `infantry-grunt-australia`, `special-operations-soldier-australia`, `navy-sailor-australia`). No stub rows. `book-reconcile` checked every skill, figure, the Sportsman's 19 specialties, the Navy Sailor's 7 MOS packages and each experience ladder: no wrong figure; two consistency fixes (the Sportsman's English line, the Infantry Grunt's heavy-weapons proficiency). Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/australia-rccs` | batch 7, the last: the 7 R.C.C.s, one `add-<id>-class.sql` each (`outback-mutie`, `phreaker-military-grunt`, `kwarla`, `kwarla-demon-hunter`, `kwarla-mystic`, `mokoloi`, `shadow-people`). No stub rows. Both mutant classes carry the three percentile tables (17, 11 and 13 bands; 48 options) as pick-one ability groups, the Dog Boy's existing shape, so Decision 2 needed no schema change. `kwarla-mystic` joins the pinned `overrides_race` list in `regression.mjs` for its own P.P.E. `book-reconcile` read all 41 bands off renders: no wrong figure. Applied `--remote` before the PR. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The automated sentry gun and the two Tech-City defense turrets as gear rows** (`~088`), left out as fixed emplacements. The book prints one M.D.C. block for both turret sizes without saying which figure is which, so neither stores an `mdc`. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

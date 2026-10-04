@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 28, psionic_powers 2, creatures 36
+**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 79, psionic_powers 2, creatures 36
 
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
@@ -111,6 +111,7 @@ None. This book has no open import.
 | 2026-09-18 | #1172 | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-palladium-fantasy.sql`, 36 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-27 | `pal/data/rebuild-audit-f16-f25-f26` | **`Falconry` cites this book**, by `~040-rifts-skill-list-recitations.sql` (REBUILD-AUDIT F16): it moves from the non-book `Rifts Skill List` to `Palladium Fantasy RPG Main Book p.54`, where it prints under Military at 30%+5%, as the row stores (its `systems` carries both `rifts` and `palladium-fantasy`). `Locate Secret Compartments` is **not** moved: printed 57 prints 15%+5% against the stored 20, and the row's note already says so. Skills citing this book 7 -> **8**. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. The spell index diffs 180 of 182 against production and all 78 psionic headings match; the ward symbols (printed 126-132) and the 51 circles (138-155) are held nowhere. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Summoner's 51 circles as spells** in tradition `circle` (`~091`): 18 protection, 15 summoning, 18 power, by the book's own list on printed 137 (the inventory above counted 14 and 19 from headings). Level 0, each with its printed P.P.E. Nothing grants the tradition yet, and the Summoner's note says so (`~092`). The wards are not rows. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

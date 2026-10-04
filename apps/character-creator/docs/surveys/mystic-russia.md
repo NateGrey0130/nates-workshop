@@ -468,6 +468,8 @@ across the four traditions produced **7 links**.
 | - | the bestiary as `creatures` | **2026-09-19**, NPC and bestiary plan Phase 3: `add-creatures-mystic-russia.sql`, **26 `creatures` rows** with attacks in `stat_attacks` ([#1175](https://github.com/NateGrey0130/nates-workshop/pull/1175)). The eighteen NPC demons are catalog rows now, though still not classes. Row added 2026-09-27; the PR did not write one |
 | - | notable NPCs | **2026-09-19**, `add-notable-npcs-juicer-uprising-and-others.sql`, **1 `notable_npcs` row** citing this book ([#1183](https://github.com/NateGrey0130/nates-workshop/pull/1183)). Row added 2026-09-27 |
 
+**2026-10-03, `pal/data/retro-holdable-gaps`.** Seven classes' rolled attribute bonuses move from prose into `bonuses` (`~075`: Gypsy Beguiler, Enforcer, Fortune Teller, Gypsy Thief, Old Believer, Mystic Kuznya, Hidden Witch), as New West's did in #1440, and the Gifted One's four Gifts name their bands in parentheses (`~074`) so the Roll d100 button reads them. No figure was re-read from the book: each was already in its class. Applied `--remote` before the merge.
+
 ## What remains
 
 **The book is fully imported. Nothing below is a gap in the data** — these are

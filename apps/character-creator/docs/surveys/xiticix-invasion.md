@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all four steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-10-02)
 
-**Rows citing this book:** creatures 11, gear 15, notable_npcs 21
+**Rows citing this book:** gear 16, notable_npcs 21, creatures 11
 
 Slug `xiticix-invasion`. Cached 2026-10-01 from
 `Rifts- World Book 23 Xiticix Invasion.pdf`, 162 PDF pages, **text layer**
@@ -308,6 +308,7 @@ names carry no percentile bands, so the group gets no Roll d100 button.
 | 2026-10-01 | `pal/data/xiticix-invasion-creatures` | `add-xiticix-invasion-creatures.sql` through `scripts/bestiary-sql.mjs`: 11 creatures (Nit, Grub, Worker, Digger, Hunter, Leaper, Nanny, Young Queen, Elder Queen, Warrior, Super-Warrior) with 67 attack lines, category `insectoid`, none playable. Four extraction agents; three `book-reconcile` passes read every dice token off 170 dpi renders and found no wrong figure and one omission (the Warrior squad Horror Factor, added). Hit Points and S.D.C. are left empty on the M.D.C. forms with the S.D.C.-world figures in the note. Stored as printed where the book disagrees with itself: the Warrior and Nanny bite, the Hunter bite that names a poison the entry never describes, the Leaper Rear Power Kick. Printed 57, 63, 65 and 73 are full-page art. Applied `--remote` before the PR. |
 | 2026-10-01 | `pal/data/xiticix-invasion-npcs` | `add-xiticix-invasion-npcs.sql` through `scripts/bestiary-sql.mjs`: 21 notable NPCs with 92 attack lines (2 Deathbringer necromancers, 4 Free Thinkers, the 2 typical Strike Force Durango blocks, 2 at Fort Barron, 4 of the Wild Pack, 4 of Manitoba and Company, 3 of the Lazlo Triad). Kent and Copeland are not in it. Four extraction agents; three `book-reconcile` passes read every attribute line and pool off 170 dpi renders and found no wrong figure. Their two findings were a surname variant that only the text layer prints (removed) and one page cite inside a note (corrected). Skills the book prints only as a bonus are listed in the skills note and the percentage list is empty. Dekker and the typical RPA pilot share one attribute line in the book, and Greenfeld shares height, weight and P.P.E. with Haim; both are as printed. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/xiticix-invasion-psi-stalker-tribes` | `~064-psi-stalker-tribes.sql`: the Spider, Pony-Tail and Deathbringer tribe blocks (printed 103-105) as one pick-one group on `mutant-psi-stalker`, with an other-or-none option, and a line on the race's restrictions. Moved from the occupation to the race after `audit-premise-auditor` found the wizard offers an ability pick from the race only. `book-reconcile` read the three blocks off 170 dpi renders: every figure agrees; one page range and the word Wild on two options were corrected. Edits one held class; adds no row citing this book. Status moved to `imported`. Applied `--remote` before the PR. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Deathbringer exoskeleton armor as a gear row** (`~088`). It was left out for printing no price or weight; a NULL cost is a finished row. Its M.D.C. is rolled (3D6+50) and is in the description. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 
