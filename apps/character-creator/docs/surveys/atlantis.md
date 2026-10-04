@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the whole plan shipped: tattoos, 22 classes, gear, vehicles, creatures and notable NPCs. What was left out on purpose is under Extraction plan. (2026-09-26)
 
-**Rows citing this book:** classes 22, gear 100, vehicles 20, spells 32, notable_npcs 7, creatures 35
+**Rows citing this book:** classes 21, gear 100, vehicles 20, spells 32, notable_npcs 7, creatures 35
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
@@ -457,6 +457,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1434](https://github.com/NateGrey0130/nates-workshop/pull/1434) | vehicles: `add-atlantis-vehicles.sql`, 20 vehicles with 133 locations and 38 weapons. `book-reconcile` checked every one; three fixes. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1435](https://github.com/NateGrey0130/nates-workshop/pull/1435) | creatures and NPCs: `add-atlantis-creatures-and-npcs.sql`, 35 creatures, 7 notable NPCs, 179 attacks. `book-reconcile` checked every row; no disagreements. Applied `--remote` before the PR. MERGED. |
 | 2026-09-26 | [#1437](https://github.com/NateGrey0130/nates-workshop/pull/1437) | follow-ups (decisions 4-5): `fix-atlantis-minion-class-gear.sql` wires the new gear into the Overlord, Powerlord, Conservator, Blind Warrior Women and Sunaj Assassin; `add-atlantis-bio-wizard-augmentation.sql` adds 39 bio-wizard transmutation, reconstruction, eye and sensor rows as `cybernetics` gear (gear 61 -> 100). `book-reconcile` checked the 39. Applied `--remote` before the PR. |
+| 2026-10-04 | `pal/data/d-bees-of-north-america-last-updates` | **`blind-warrior-women` leaves this book's count for D-Bees of North America** (`~098`), which reprints and updates it (2007) under the heading Altara; by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`, keeping this book's figures in its `extraction_notes`: six attacks (D-Bees eight), kick 1D8, leap kick 2D8, punch 1D6, Hand to Hand: Martial Arts heading the skill list, about 25% runaways. The `creatures` row of the same name still cites this book and was not changed. Applied `--remote` before the merge. |
 
 ### What remains
 

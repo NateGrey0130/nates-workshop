@@ -405,7 +405,7 @@
    "added": [
     [
      "Classes",
-     22
+     21
     ],
     [
      "Creatures",
@@ -428,7 +428,7 @@
      20
     ]
    ],
-   "total": 216
+   "total": 215
   },
   {
    "slug": "africa",
@@ -507,7 +507,7 @@
    "added": [
     [
      "Classes",
-     24
+     23
     ],
     [
      "Creatures",
@@ -534,7 +534,7 @@
      19
     ]
    ],
-   "total": 146
+   "total": 145
   },
   {
    "slug": "underseas",
@@ -545,7 +545,7 @@
    "added": [
     [
      "Classes",
-     25
+     24
     ],
     [
      "Creatures",
@@ -572,7 +572,7 @@
      50
     ]
    ],
-   "total": 284
+   "total": 283
   },
   {
    "slug": "japan",
@@ -749,7 +749,7 @@
    "added": [
     [
      "Classes",
-     15
+     12
     ],
     [
      "Creatures",
@@ -768,7 +768,7 @@
      7
     ]
    ],
-   "total": 65
+   "total": 62
   },
   {
    "slug": "new-west",
@@ -779,7 +779,7 @@
    "added": [
     [
      "Classes",
-     25
+     21
     ],
     [
      "Creatures",
@@ -806,7 +806,7 @@
      17
     ]
    ],
-   "total": 240
+   "total": 236
   },
   {
    "slug": "spirit-west",
@@ -1147,14 +1147,14 @@
    "title": "Rifts World Book 30: D-Bees of North America",
    "code": "d-bees-of-north-america",
    "status": "imported",
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "added": [
     [
      "Classes",
-     76
+     86
     ]
    ],
-   "total": 76
+   "total": 86
   },
   {
    "slug": "triax-2",
