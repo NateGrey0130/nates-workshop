@@ -685,7 +685,7 @@
    "added": [
     [
      "Classes",
-     21
+     15
     ],
     [
      "Creatures",
@@ -708,7 +708,7 @@
      33
     ]
    ],
-   "total": 98
+   "total": 92
   },
   {
    "slug": "psyscape",
@@ -1151,10 +1151,10 @@
    "added": [
     [
      "Classes",
-     52
+     58
     ]
    ],
-   "total": 52
+   "total": 58
   },
   {
    "slug": "triax-2",
