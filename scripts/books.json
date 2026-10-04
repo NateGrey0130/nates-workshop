@@ -50,6 +50,17 @@
     "                 --field-sources reports every region it detects, so the",
     "                 next book with a split announces itself.",
     "  note           why a value is what it is, when it is not simply measured.",
+    "  published      the year this EDITION's text was first published: the latest",
+    "                 copyright year on its copyright page, not the year of the",
+    "                 printing that was scanned (a 1999 third printing of a 1996",
+    "                 book is 1996; a revised edition is the revision's year).",
+    "                 It exists for one rule, Nate's of 2026-10-04: when two books",
+    "                 print the same thing differently, the NEWEST printing that",
+    "                 states the figure wins, and the row keeps the older figure",
+    "                 in a note. null for something that is not a published book.",
+    "  published_basis",
+    "                 present only when `published` was NOT read off the book:",
+    "                 it says why. Absent means the copyright page was read.",
     "",
     "Entries under `books` are sorted by slug, and smoke fails if they are not.",
     "Two book sessions in parallel each register a book; appended at the end,",
@@ -77,6 +88,7 @@
   "books": {
     "africa": {
       "title": "Rifts World Book 4: Africa",
+      "published": 1993,
       "aliases": ["Africa", "Rifts Africa", "Rifts World Book Four: Africa"],
       "source_pdf": "604225358-Rifts-World-Book-04-Africa.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -87,6 +99,8 @@
 
     "atlantis": {
       "title": "Rifts World Book 2: Atlantis",
+      "published": 1992,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": ["Atlantis", "Rifts Atlantis", "Rifts World Book Two: Atlantis", "Rifts World Book 2 Atlantis"],
       "source_pdf": "Rifts- World Book 2 Atlantis.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -97,6 +111,7 @@
 
     "australia": {
       "title": "Rifts World Book 19: Australia",
+      "published": 1999,
       "aliases": ["Australia", "Rifts Australia", "Rifts World Book Nineteen: Australia", "Rifts World Book 19 Australia"],
       "source_pdf": "Rifts - World Book 19 - Australia.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -107,6 +122,7 @@
 
     "bom": {
       "title": "Rifts Book of Magic",
+      "published": 2001,
       "aliases": [],
       "source_pdf": "526065744-Rifts-Book-of-Magic.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -117,6 +133,7 @@
 
     "canada": {
       "title": "Rifts World Book 20: Canada",
+      "published": 1999,
       "aliases": ["Rifts Canada", "Rifts World Book 20: Rifts Canada"],
       "source_pdf": "Rifts - World Book 20 - Canada.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -127,6 +144,7 @@
 
     "cb1": {
       "title": "Rifts Conversion Book One",
+      "published": 2002,
       "aliases": [],
       "source_pdf": "595586607-Rifts-Conversion-Book-1-Revised-and-Updated-PAL803P.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -137,6 +155,7 @@
 
     "china-1": {
       "title": "Rifts World Book 24: China 1",
+      "published": 2004,
       "aliases": ["China 1", "China One", "Rifts China 1", "Rifts China One", "Rifts World Book 24: China 1 - The Yama Kings", "The Yama Kings"],
       "source_pdf": "Rifts- World Book 24 China 1 Yama Kings.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -147,6 +166,7 @@
 
     "china-2": {
       "title": "Rifts World Book 25: China 2",
+      "published": 2004,
       "aliases": ["China 2", "China Two", "Rifts China 2", "Rifts China Two", "Rifts World Book 25: China 2 - Heroes of the Celestial Court", "Heroes of the Celestial Court"],
       "source_pdf": "Rifts- World Book 25 China 2 Heroes of the Celestial Court.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -157,6 +177,7 @@
 
     "cwc": {
       "title": "Rifts World Book 11: Coalition War Campaign",
+      "published": 1996,
       "aliases": ["Coalition War Campaign", "Rifts World Book Eleven: Coalition War Campaign", "Rifts Coalition War Campaign"],
       "source_pdf": "Rifts- World Book 11 Coalition War Campaign.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -167,6 +188,7 @@
 
     "d-bees-of-north-america": {
       "title": "Rifts World Book 30: D-Bees of North America",
+      "published": 2007,
       "aliases": ["D-Bees of North America", "Rifts D-Bees of North America", "Rifts World Book Thirty: D-Bees of North America"],
       "source_pdf": "Rifts- World Book 30 D-Bees of North America.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -177,6 +199,7 @@
 
     "dag": {
       "title": "Palladium Fantasy Dragons and Gods",
+      "published": 1996,
       "aliases": ["dragons-and-gods"],
       "source_pdf": "PFRPG - Dragons and Gods (1).pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -187,6 +210,7 @@
 
     "fom": {
       "title": "Rifts World Book 16: Federation of Magic",
+      "published": 1997,
       "aliases": [],
       "source_pdf": "Rifts- World Book 16 Federation of Magic.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -197,6 +221,7 @@
 
     "free-quebec": {
       "title": "Rifts World Book 22: Free Quebec",
+      "published": 2000,
       "aliases": [],
       "source_pdf": "Rifts- World Book 22 Free Quebec.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -207,6 +232,7 @@
 
     "heroes-unlimited-core": {
       "title": "Revised Heroes Unlimited",
+      "published": 1987,
       "aliases": [],
       "source_pdf": "93229611-Heroes-Unlimited-Core-Book-Revised.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -217,6 +243,7 @@
 
     "japan": {
       "title": "Rifts World Book 8: Japan",
+      "published": 1995,
       "aliases": ["Rifts Japan", "Rifts World Book Eight: Japan"],
       "source_pdf": "rifts-world-book-8-japan_compress.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -227,6 +254,7 @@
 
     "ju": {
       "title": "Rifts World Book 10: Juicer Uprising",
+      "published": 1996,
       "aliases": [],
       "source_pdf": "Rifts- World Book 10 Juicer Uprising.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -236,6 +264,7 @@
 
     "lone-star": {
       "title": "Rifts World Book 13: Lone Star",
+      "published": 1997,
       "aliases": ["Rifts Lone Star"],
       "source_pdf": "Rifts-WorldBook13-LoneStar.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -246,6 +275,7 @@
 
     "madhaven": {
       "title": "Rifts World Book 29: Madhaven",
+      "published": 2006,
       "aliases": ["Madhaven", "Rifts World Book Twenty-Nine: Madhaven"],
       "source_pdf": "974230361-Rifts-World-Book-29-Madhaven.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -256,6 +286,7 @@
 
     "mystic-russia": {
       "title": "Rifts World Book 18: Mystic Russia",
+      "published": 1998,
       "aliases": [],
       "source_pdf": "Rifts- World Book 18 Mystic Russia.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -266,6 +297,7 @@
 
     "new-west": {
       "title": "Rifts World Book 14: New West",
+      "published": 1997,
       "aliases": ["Rifts New West"],
       "source_pdf": "Rifts- World Book 14 New West.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -276,6 +308,7 @@
 
     "nightbane-core": {
       "title": "Nightbane RPG",
+      "published": 1995,
       "aliases": ["Nightbane", "Nightbane Core", "nightbane-core"],
       "source_pdf": "Nightbane - Core.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -286,6 +319,7 @@
 
     "pf": {
       "title": "Palladium Fantasy RPG Main Book",
+      "published": 1996,
       "aliases": [
         "Palladium RPG Main Book",
         "Palladium Fantasy RPG",
@@ -304,6 +338,8 @@
 
     "phase-world": {
       "title": "Rifts Dimension Book 2: Phase World",
+      "published": 1994,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": [],
       "source_pdf": "Rifts- Dimension Book 2 Phase World.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -314,6 +350,7 @@
 
     "potm": {
       "title": "Rifts Conversion Book Two: Pantheons of the Megaverse",
+      "published": 1994,
       "aliases": ["pantheons-of-the-megaverse", "Pantheons of the Megaverse"],
       "source_pdf": "Pantheons of the Megaverse.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -324,6 +361,7 @@
 
     "powers-unlimited-1": {
       "title": "Powers Unlimited One",
+      "published": 2003,
       "aliases": [],
       "source_pdf": "236094939-Powers-Unlimited-1-0.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -334,6 +372,7 @@
 
     "powers-unlimited-2": {
       "title": "Powers Unlimited Two",
+      "published": 2004,
       "aliases": [],
       "source_pdf": "97891933-Powers-Unlimited-2.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -344,6 +383,7 @@
 
     "powers-unlimited-3": {
       "title": "Powers Unlimited Three",
+      "published": 2006,
       "aliases": [],
       "source_pdf": "793577120-HU-Powers-Unlimited-3-PAL523P.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -354,6 +394,7 @@
 
     "psyscape": {
       "title": "Rifts World Book 12: Psyscape",
+      "published": 1997,
       "aliases": [],
       "source_pdf": "Rifts- World Book 12 Psyscape.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -364,6 +405,7 @@
 
     "rifts-core": {
       "title": "Rifts RPG (original core book)",
+      "published": 1990,
       "aliases": ["Rifts RPG"],
       "source_pdf": "Rifts Main.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -374,6 +416,8 @@
 
     "rifts-skill-list": {
       "title": "Rifts Skill List",
+      "published": null,
+      "published_basis": "not a published book; see the note",
       "aliases": [],
       "source_pdf": "31810627-Rifts-Skills-List.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -384,6 +428,7 @@
 
     "rue": {
       "title": "Rifts Ultimate Edition",
+      "published": 2005,
       "aliases": [],
       "source_pdf": "Rifts - Ultimate Edition.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -393,6 +438,7 @@
 
     "south-america": {
       "title": "Rifts World Book 6: South America",
+      "published": 1994,
       "aliases": ["South America", "Rifts World Book Six: South America", "Rifts South America"],
       "source_pdf": "Rifts- World Book 6 South-America.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -403,6 +449,8 @@
 
     "south-america-2": {
       "title": "Rifts World Book 9: South America 2",
+      "published": 1995,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": ["South America 2", "South America Two", "Rifts World Book 9: South America Two", "Rifts South America 2"],
       "source_pdf": "Rifts- World Book 9 South America 2.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -413,6 +461,7 @@
 
     "spirit-west": {
       "title": "Rifts World Book 15: Spirit West",
+      "published": 1997,
       "aliases": [],
       "source_pdf": "Rifts- World Book 15 Spirit West.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -423,6 +472,8 @@
 
     "triax": {
       "title": "Rifts World Book 5: Triax and the NGR",
+      "published": 1994,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": ["Triax & The NGR"],
       "source_pdf": "Rifts- World Book 5 Triax and the NGR.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -433,6 +484,7 @@
 
     "triax-2": {
       "title": "Rifts World Book 31: Triax 2",
+      "published": 2010,
       "aliases": ["Triax 2", "Rifts Triax 2", "Rifts World Book Thirty-One: Triax 2"],
       "source_pdf": "Rifts- World Book 31 Triax 2.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -443,6 +495,8 @@
 
     "underseas": {
       "title": "Rifts World Book 7: Underseas",
+      "published": 1995,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": [],
       "source_pdf": "Rifts- World Book 7 Underseas.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -456,6 +510,7 @@
 
     "warlords-of-russia": {
       "title": "Rifts World Book 17: Warlords of Russia",
+      "published": 1998,
       "aliases": ["Warlords of Russia", "Rifts Warlords of Russia"],
       "source_pdf": "Rifts - World Book 17 - Warlords of Russia.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -466,6 +521,8 @@
 
     "ww": {
       "title": "Rifts Dimension Book 1: Wormwood",
+      "published": 1993,
+      "published_basis": "not read from the book: this PDF has no copyright page (printed 2 is missing from the scan)",
       "aliases": ["Wormwood", "Rifts Dimension Book One: Wormwood"],
       "source_pdf": "Rifts- Dimension Book 1 Wormwood.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
@@ -475,6 +532,7 @@
     },
     "xiticix-invasion": {
       "title": "Rifts World Book 23: Xiticix Invasion",
+      "published": 1999,
       "aliases": ["Xiticix Invasion", "Rifts Xiticix Invasion"],
       "source_pdf": "Rifts- World Book 23 Xiticix Invasion.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",

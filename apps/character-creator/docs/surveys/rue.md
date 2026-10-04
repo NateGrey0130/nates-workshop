@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 40, gear 208, vehicles 14, skills 216, spells 115, psionic_powers 89
+**Rows citing this book:** classes 40, gear 207, vehicles 14, skills 216, spells 115, psionic_powers 89
 
 **MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
 
@@ -201,6 +201,7 @@ Physical.
 | 2026-09-18 | #1154 | **OCR text repair**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`. `Control & Enslave Entity` (printed 218) stopped mid-sentence at the page turn and lost most of itself; it is completed from a render of printed 219, where the cache also reads `contro!`. `Telekinetic Push` ended in the next section's heading, `Sensitive Psionics`. Applied `--remote` before the merge. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. Eight robots, power armours and vehicles on printed 249-253 and 271-273 are in neither `vehicles` nor `gear`; the book prints no bestiary and no named-NPC block. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The eight machines the inventory found unheld, as vessels** (`~084`): UAR-1 Enforcer, CR-003 Spider-Skull Walker, Mark V APC, AFC-050 Death's Head Transport, AFC-023 Sky Cycle, NG-X9 Samson, FT-005 Flying Titan, TR-001 Titan Combat Robot. Vehicles 6 to 14. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a1-newest-wins` | **Newest printing wins (Nate's ruling, 2026-10-04), `~093`.** `neural-mace` cited printed 259 but carried the 1D8 S.D.C. of Triax and the NGR printed 150; it now carries this book's 2D6 S.D.C. club and 1D6 jab damage and its 8,000 credit Black Market cost, with Lone Star's M.D.C., payload and length for what this book does not print. **Stands, because this is the newer printing:** `knife-throwing` at 200-600 credits against Warlords of Russia's 100, and the rows `lone-star.md` lists. **Leaves this book's count:** `poncho`, an unpriced stub citing printed 88 (a class's equipment list, no price), now takes Warlords of Russia printed 189. Applied `--remote` before the merge. |
 
 ### What remains
 

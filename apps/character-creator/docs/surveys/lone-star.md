@@ -164,7 +164,10 @@ Rifts Ultimate Edition is the later printing:
 - **Dog Pack DPM Riot Armor** — held at main body 30 M.D.C. and 8 lbs; printed
   52 here gives the light riot armor 50 M.D.C. and 10 lbs.
 - **Neural Mace** — held with no price; printed 49 here prices it at 8,000
-  credits and gives it 100 M.D.C. and a payload of 100 stun attacks.
+  credits and gives it 100 M.D.C. and a payload of 100 stun attacks. Since
+  2026-10-04 (`~093`) the row carries Rifts Ultimate Edition's damage and
+  its 8,000 credit price, and this book's M.D.C., payload and length, which
+  RUE does not print (see the Ledger).
 
 ### vehicles: 8 entries, 0 matched, 1 false gap
 
@@ -305,6 +308,7 @@ Put to him after the import and confirmed on 2026-10-01; none needed a change.
 | 2026-10-01 | `pal/fix/lone-star-c-12-rebuild` | `~056-c-12-laser-rifle-rebuilds-filled.sql`. The end-of-session `repo-vs-live.mjs --offenders` found one row the repo no longer rebuilt as production holds it: three of this book's classes name `c-12-laser-rifle`, which keeps an old stub alive past the script that used to retire it, so the filled insert after it was ignored. The script writes production's values over the stub; against production it changes nothing (the row and a table checksum were read before and after the apply and are identical). |
 | 2026-10-01 | `pal/feat/ability-roll-button` | Code, not data: a Roll d100 button on pick-one ability groups named for percentile bands (`abilityRollBands` in `js/parser.js`, the picker in `app.js`, six smoke checks, `docs/wizard-and-sheet.md`). No D1 change. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Mutant Rat's psionics line becomes a banded pick-one group** (`~090`): 01-25 minor with four Sensitive powers, and 26-00 none, a band the page does not print and the option says so. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a1-newest-wins` | **Newest printing wins (Nate's ruling, 2026-10-04), `~093`.** `scripts/books.json` now records a `published` year per book: this book is 1997 and Rifts Ultimate Edition 2005, so RUE's rows stand where both print a figure, as this survey already left them: the Dog Pack DPM riot armor, the Speedster hovercycle, the Dog Boy and its breed tables, and the skills under *The Dog Boy, in full*. **The Neural Mace is the one row filled from here**: RUE printed 259 prints its damage and an 8,000 credit Black Market cost but no M.D.C. figure, payload or size, so printed 49's 100 M.D.C., 100 stun attacks and 3-4 foot length go in the row, which still cites RUE. The retrospective had read RUE as printing no cost; the render shows it does, at the same 8,000. Read off renders and checked again by `book-reconcile`. Applied `--remote` before the merge. |
 
 ### What remains
 

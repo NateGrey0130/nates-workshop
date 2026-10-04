@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1653, #1654 and `pal/data/triax-2-vehicles-and-pilot`: 45 gear, 3 notable NPCs, 59 vehicles and the Luftwaffe Cyborg Combat Pilot. What was left out on purpose is under *What remains*. (2026-10-03)
 
-**Rows citing this book:** classes 1, gear 45, vehicles 59, notable_npcs 3
+**Rows citing this book:** classes 1, gear 46, vehicles 59, notable_npcs 3
 
 Slug `triax-2`. Cached 2026-10-03 from `Rifts- World Book 31 Triax 2.pdf`,
 194 PDF pages, **text layer**: `--probe` median 5,244 characters a page, 36.1%
@@ -105,9 +105,10 @@ Run against **production** (`--remote`) on 2026-10-03.
   espionage armor (printed 109-110) and the TX-J50 Juicer EBA (108-109).
   The TX-J50 **is held** as `tx-j50-juicer-eba` from Free Quebec p.51, and
   this book prints different figures for it (main body 100, 30 lbs, 225,000
-  credits against 90, 20 lbs, 50,000). The held row stands, as the Triax
-  designer drugs did against Juicer Uprising's prices; the Triax 2 figures
-  are recorded here.
+  credits against 90, 20 lbs, 50,000). The row stood until 2026-10-04, when
+  Nate ruled that the newest printing which states a figure wins: `~093`
+  gives it this book's figures and citation and keeps Free Quebec's in its
+  note.
 
 Each batch re-diffs its own rows against production before its script is
 written (`book-survey` §4).
@@ -143,6 +144,7 @@ before the apply, as Warlords of Russia's vessels were.
 | 2026-10-03 | `pal/data/triax-2-survey` | cache built (194 pp, text layer), `triax-2` registered in `books.json`, offset +1 verified at eight folios, this survey. No rows. |
 | 2026-10-03 | `pal/data/triax-2-gear-and-npcs` | **Batch 1, gear, and batch 6, notable NPCs.** `add-triax-2-gear.sql`: 45 gear rows (12 commercial products and body armor, 27 weapons and shields, 6 XLH hardpoint pods). `add-triax-2-bestiary.sql` through `bestiary-sql.mjs`: Jinna Gir Song, Struwwelpeter and General Rasheen, 7 attacks. Every number read off renders and checked again by `book-reconcile`: no figure disagreed in 48 rows; the reconciles corrected one page range and several phrasings. Held and left: `tx-j50-juicer-eba` (see *Catalog diff*), `triax-electro-mace` (the new 70,000 credit price is in the TX-H1-M row's note). Applied `--remote` before the merge. |
 | 2026-10-03 | `pal/data/triax-2-vehicles-and-pilot` | **Batches 2-5: 59 vehicles and the O.C.C.** `add-triax-2-civilian-vehicles.sql` (26: the Triax commercial cars and hover vehicles, the WR-3030 Bear, the RRK and WaffenTek vehicles, the five domestic robots), `add-triax-2-power-armor-and-drones.sql` (11), `add-triax-2-robots-and-aircraft.sql` (13), `add-triax-2-airframes-and-bases.sql` (9: the three XML airframes as `borg`, the drop pod and fort, the Undertow, the TX-MISB, the IA-30 and the AA-50); 511 locations and 152 weapon entries. `add-luftwaffe-cyborg-combat-pilot-class.sql`: the one O.C.C., `class-check --remote` ready with no stub. Every number read off renders and checked again by `book-reconcile`: no figure disagreed in 59 vessels; the reconciles caught an invented "small target" note on the drop fort, an invented crew line, and two page ranges. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a1-newest-wins` | **Newest printing wins (Nate's ruling, 2026-10-04), `~093`.** `tx-j50-juicer-eba` takes printed 108-109 (main body 100, 30 lbs, 225,000 credits) and now cites this book, with Free Quebec's figures kept in its note; `triax-electro-mace` takes the 70,000 credits printed 104 states and stays cited to Triax and the NGR, which prints its stats. Both read off renders and checked again by `book-reconcile`, no disagreement. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -156,6 +158,7 @@ the data; it is what was left out on purpose.
   held `x-535-hunter-jager`.
 - **Held rows the book reprices**: `tx-j50-juicer-eba` (see *Catalog diff*)
   and `triax-electro-mace` (70,000 credits here, in the TX-H1-M row's note).
+  Both took this book's figures on 2026-10-04 (`~093`, see the Ledger).
 - **The drop pod's six load-out pods** (printed 177-178): cargo lists, in the
   pod row's description.
 - **The setting** (printed 8-68), the Autobahn table (50) and the Victor Lazlo
