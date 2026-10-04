@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1375-#1400: gear, Biomancy spells, vehicles, 8 O.C.C.s, 16 R.C.C.s, creatures and notable NPCs. (2026-09-25)
 
-**Rows citing this book:** classes 24, gear 36, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 26
+**Rows citing this book:** classes 23, gear 36, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 26
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no
@@ -307,3 +307,4 @@ What is deliberately left, with the reason:
 | 2026-09-25 | #1420 | `~004-rue-xp-ladders.sql` renamed `~006-rue-xp-ladders.sql`: #1413 landed `~004-ignores-style-attacks.sql` and two files shared the prefix. Re-applied `--remote` as a no-op on the ladders; it repoints the five South America notes and replaces the run record |
 | 2026-09-26 | #1453 | **The Monster Hunter's magic tattoos as data**, `~022-monster-hunter-tattoos.sql`: Atlantis (#1429) added the 32 tattoo-tradition spells, and the class now grants them in undead-slayer's shape - the two Marks of Heritage, All Simple Weapons, Animals and Monsters outright, starting picks of two magic weapons, three powers and one of any category, one major tattoo per level 2-15. The four Monster-Shaping tattoos stay prose. Its race note's "the catalog has no True Atlantean race" is rewritten. No row count moves. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Felinoid's sub-strain table becomes a banded pick-one group** (`~090`). The book prints shares, not bands; the bands are the shares laid end to end in printed order. Added dice are bonuses; reductions and Horror Factor 10 stay in the option text. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/d-bees-of-north-america-last-updates` | **`pogtalian-dragon-slayer` leaves this book's count for D-Bees of North America** (`~098`), which reprints and updates it (2007) as the Pogtal Giants; by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`, keeping this book's figures in its `extraction_notes`: Horror Factor 12 (D-Bees prints none), a flat 1D4x100 M.D.C., six related skills, the heavy energy rifle. The class id and name are unchanged. Applied `--remote` before the merge. |
