@@ -4032,3 +4032,116 @@ override. Whether another race prints the same instruction was sampled, not
 settled: the auditor matched four phrases across live race notes and read
 eight contexts, finding only `draconid`.
 `node scripts/audit-citations.mjs --remote F122`: 0.
+
+### F123 - low - the Diabolist's wards have no catalog home, and a held spell from a tradition is headed "Spells" on the sheet whatever it is
+
+Palladium Fantasy's Diabolist casts no spells; its magic is ward symbols
+(cache `p121.txt`-`p135.txt`, read 2026-10-04; the symbols themselves run
+`p128`-`p135`): ten kinds listed under *Ward
+Symbols & Descriptions* - alarms, area affect, colors, conditions, inflict,
+numbers, permanence, power, protection, trigger - each energised for one
+P.P.E. (five for power, twenty for permanence). The class page says the
+Diabolist *"knows all currently known power words"*: the symbols are learned
+in the apprenticeship, not picked. Production's `diabolist` (`--remote`,
+2026-10-04) carries no `magic` block; its note says *"there is no ward
+catalog, so the mechanics are recorded as special abilities rather than faked
+into the spell list"*.
+
+Nate's ruling 9 on the 2026-10-03 retrospective: **the symbol catalog shown on
+the sheet, no builder UI** for composing ward phrases. The plan left one thing
+to this finding: a table of their own, or a spell tradition.
+
+**An earlier scope decision this moves past.** `apps/character-creator/CLASS-AUDIT.md`
+(its schema-limits paragraph and the re-verification beneath it, read
+2026-10-04) records that *"the Diabolist's ward system"* <!-- claim-ok: quoting the scope decision this finding moves past -->
+remains out of scope, and calls that a decision rather than a capability
+check. Ruling 9 is the later word, and it takes the catalog half only: what a
+ward phrase does when its symbols are combined stays with the G.M.
+
+**A spell tradition, `ward`.** Measured 2026-10-04, `--remote`: `spells`
+already holds 21 traditions beside 422 general invocations - warlock 231,
+circle 64, bone 59, cloud 58, ocean 41, living-fire 39, shaman 34, tattoo 32
+and thirteen more. `circle` and `tattoo` are the precedent for things nobody
+casts. A row has what a symbol needs (name, P.P.E. cost, range, duration,
+saving throw, area of effect, description, source); there is no general note
+column, so a symbol's power words and components live in its description. The codex folds a tradition under
+its own heading and splits it into families by name prefix
+(`apps/character-creator/js/traditions.js`, read 2026-10-04), so `Alarm:
+Silent`, `Condition: Agony` come out as the book's kinds with no code -
+provided EVERY row carries a `Kind: ` prefix, since one bare name collapses
+the split. A table would be a tenth catalog across the nine places
+`schema-change` lists, for about 34 rows one class reads (22 conditions, 4
+alarms, 2 protections and 6 single symbols, counted off the cache by the
+premise audit).
+
+**What the tradition does not get for free is the sheet.** A held power is
+headed by kind and level - *"Spells - Level 3"*
+(`apps/character-sheet/sheet.js`, the `group` expression in the power rows,
+read 2026-10-04). `spells.level` is `NOT NULL DEFAULT 0`, so a Diabolist
+granted the symbols would have them under *"Spells - Level 0"*, on a class
+whose page says it cannot learn spell magic. Eight traditions in production
+are stored wholly at level 0 and read that way today: circle, cloud, tattoo,
+nazca, demonic-curse, african-ceremonial, spellsong and african-witch
+(`--remote`, 2026-10-04).
+
+**Proposal:** (1) the tradition gets its label, `ward` -> *Ward Symbols*, in
+`js/traditions.js`. (2) The sheet reads each held spell's tradition off
+the spell catalog it already loads, by name, and heads a held spell that has
+one by the tradition's label - *"Ward Symbols"*, *"Warlock Elemental - Level
+3"*, the level shown only where it is above 0 - with general invocations
+still under *"Spells"*, and the tradition groups after them. (3) Docs. The Diabolist is then granted the
+symbols by name through an ordinary `magic` block (`spells: [...]`), which is
+data: the 32 rows and the class edit are the close-out's package C3.
+**Posture:** no schema change, no new key; a display change on the sheet for
+every character holding a tradition spell, which is a heading and an order,
+not a number; no class or catalog row is edited here. **Evidence for the
+proposal:** the census and the sheet's heading are measured as above; that a
+class granted spells by name with no picks shows them in the wizard and on
+the sheet without further work was read from `powersPayload` and the power
+rows, and is to be exercised in the build with a local fixture.
+
+**Confidence:** high that a tradition holds the rows; medium on the sheet
+until the fixture is looked at. **Ongoing cost:** the sheet loads one more small script; a tradition added
+later gets its heading with no further work.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f123-ward-tradition`).**
+Posture said back: no schema change, no new key; a display change on the sheet
+for every character holding a tradition spell, which is a heading and an
+order, not a number; no class or catalog row is edited here. The premise
+auditor checked sixteen premises; nine held and seven did not, and the text
+above carries its corrections. Two changed what was built:
+
+- **The sheet already had each spell's tradition.** The catalogs endpoint
+  sends `tradition` on every spell row and the sheet keeps that catalog, so
+  the proposed endpoint map was not needed and is not built. The cost is that
+  a held spell since renamed in the catalog is not found by name and stays
+  under *"Spells"*; the description lookup, which resolves redirects on the
+  server, is unchanged.
+- **The sheet did not load `js/traditions.js`.** It does now.
+
+Built: `ward: 'Ward Symbols'`, `heldGroup` and `heldOrder` in
+`js/traditions.js`; `spellTradition` and the two call sites in the sheet's
+power rows; the script tag. Eleven smoke checks, five seen to fail with four
+faults injected. The stored index every handler uses (`usePower(i)`) is
+untouched by the new order, as the auditor confirmed.
+
+Seen on the running sheet, on a port of this tree's own, against a character
+made through the API in this tree's local D1 and deleted afterwards, holding
+eleven real catalog spells: the headings read *Spells - Level 1*, *Spells -
+Level 4*, *Circle*, *Magic Tattoos*, *Warlock Elemental - Level 1*, *Warlock
+Elemental - Level 3*, each once, rows together, no console error. The Browser
+pane was hidden, so that is the DOM's text and not a screenshot; print uses
+the same heading element and was not rendered.
+
+**Not done, by scope** (ruling 9 is the sheet): the wizard's Powers and Review
+steps head a class's granted list *"Spells"*, the codex counts a fold as *"N
+spells"*, and the *use* button deducts a ward's P.P.E. like any spell's.
+
+**For the data that follows (package C3):** about 34 rows, every one named
+`Kind: Name`; the catalogue runs cache `p128`-`p135`, past the range the plan
+gave; power words and components go in `description`. The `diabolist` takes
+`magic: { type: ..., spells: [...], spells_per_level: 0 }` - without the
+`spells_per_level: 0` the sheet's level-up panel says the class does not record
+how many spells it learns - and its note about there being no ward catalog
+goes stale then. No class cites this finding
+(`node scripts/audit-citations.mjs --remote F123`: 0).

@@ -2301,11 +2301,19 @@ function render() {
   // spend - the exact failure the comment above records for super abilities.
   const kindOf = (x) => (x.type === 'spell' ? 'spell' : x.type === 'super' ? 'super'
     : x.type === 'talent' ? 'talent' : 'psionic');
+  // A held spell's TRADITION, read off the catalog the sheet already loaded -
+  // the stored power carries none (BOOK-INGEST-AUDIT F123). A spell the catalog
+  // no longer names by that spelling has none, and stays under "Spells".
+  const tradOf = (p) => (p.type === 'spell' ? spellTradition(p.name) : '');
   const powerView = powers.map((p, i) => ({ p, i })).sort((a, b) => {
     const A = a.p, B = b.p;
     const ka = kindOf(A), kb = kindOf(B);
     if (ka !== kb) return KIND_ORDER[ka] - KIND_ORDER[kb];
     if (ka === 'spell') {
+      // General invocations first, then each tradition together, so a
+      // heading's rows are contiguous and it prints once.
+      const byTradition = SpellTraditions.heldOrder(tradOf(A), tradOf(B));
+      if (byTradition) return byTradition;
       const la = A.level ?? Infinity, lb = B.level ?? Infinity;
       if (la !== lb) return la - lb;
     } else if ((A.category || '') !== (B.category || '')) {
@@ -2335,7 +2343,7 @@ function render() {
     // The group heading carries what the per-row "spell · L3" label used to.
     const TIER_LABEL = { minor: 'Minor', major: 'Major', common: 'Common', elite: 'Elite' };
     const group = kind === 'spell'
-      ? (p.level != null ? `Spells — Level ${p.level}` : 'Spells — Unleveled')
+      ? SpellTraditions.heldGroup(p.level, tradOf(p))
       : kind === 'super'
         ? (p.category ? `Super abilities — ${TIER_LABEL[p.category] || p.category}`
                       : 'Super abilities')
@@ -3646,6 +3654,15 @@ function toggleItemDesc(itemId) {
 // The dice a held spell burns out of the base, from the catalog the sheet already
 // loaded (BOOK-INGEST-AUDIT F101). Read at render rather than stored on the
 // power, so a character who learned the spell before migration 067 gets it too.
+// The tradition a held spell belongs to, from the same catalog and for the same
+// reason: it is a property of the spell, not of the character's copy of it.
+// '' for a general invocation, and for a name the catalog does not carry.
+function spellTradition(name) {
+  const key = String(name ?? '').toLowerCase();
+  const row = (C.spellCatalog || []).find((x) => String(x.name).toLowerCase() === key);
+  return row?.tradition ? String(row.tradition).trim().toLowerCase() : '';
+}
+
 function spellBurnDice(name) {
   const key = String(name ?? '').toLowerCase();
   const row = (C.spellCatalog || []).find((x) => String(x.name).toLowerCase() === key);

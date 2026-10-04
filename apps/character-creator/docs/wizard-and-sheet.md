@@ -293,6 +293,28 @@ absent rather than partially restored.
 
 ---
 
+## A held spell is headed by its tradition
+
+The sheet's power list heads general invocations *"Spells - Level N"*, as it
+always did. A held spell whose catalog row carries a `tradition` is headed by
+that tradition's label instead (`BOOK-INGEST-AUDIT` F123): *"Warlock
+Elemental - Level 3"*, and plain *"Magic Tattoos"*, *"Circle"* or *"Ward
+Symbols"* for the traditions stored at level 0, which used to read *"Spells -
+Level 0"*. General spells come first, then each tradition by its label.
+
+- **The tradition is read off the spell catalog the sheet already loads**, by
+  name (`spellTradition` in `apps/character-sheet/sheet.js`), because the
+  stored power carries none. A held spell the catalog no longer names stays
+  under *"Spells"*.
+- **The heading and the order are `SpellTraditions.heldGroup` and
+  `heldOrder`** in [`js/traditions.js`](../js/traditions.js), which the sheet
+  page now loads beside the wizard and the codex.
+- **`ward` is a tradition**, labelled *Ward Symbols*: Palladium Fantasy's
+  Diabolist holds symbols, not spells. Its rows are named `Kind: Name` so the
+  codex splits them into the book's kinds; one unprefixed row collapses the
+  split. The wizard's Powers and Review steps still say "Spells" over a class's
+  granted list, whatever its tradition.
+
 ## A table the book rolls on gets the dice
 
 Some pick-one ability groups are a percentile table in the book: the Dog Boy's
