@@ -181,7 +181,14 @@ O.C.C. charts; Nate's decision, 2026-09-17
 (`apps/character-creator/docs/surveys/nightbane-core.md`, *Follow-up decisions
 after the import*).
 
-**In a pairing the occupation's ladder wins.** `combineClasses` takes `xp_table`
+**A race whose own page says it keeps its ladder states `keeps_xp_table: true`**
+(BOOK-INGEST-AUDIT.md F122). Phase World's Draconid takes an occupation's
+powers and *"in either case"* levels on the Draconid's table. R.C.C. only, and
+only beside an `xp_table`; a superseding occupation still wins. Regression pins
+the carriers by name, so a new one updates that list in
+`apps/character-creator/test/regression.mjs`.
+
+**In a pairing the occupation's ladder wins**, that flag aside. `combineClasses` takes `xp_table`
 from the O.C.C. whenever it states one, so a race's ladder applies only when the
 race is played alone, or beside an occupation that states none. **This rule ran
 the other way until 2026-09-17**: `xp_table` rode the race-wins key loop, a
@@ -448,6 +455,23 @@ the row is `Object Read (Psychometry)`. A regression invariant checks every one.
 
 Named powers and spells need catalog rows; `class-check` lists the missing ones.
 
+**A race that rolls psionics on its OWN table states `psionics_allowed: false`**
+(BOOK-INGEST-AUDIT.md F118). The book's odds (*"01-77 none, 78-90 minor ..."*)
+are a pick-one ability group whose options carry the `psionics` blocks; the
+class-level flag switches the standard Random Psionics roll off whatever is
+picked, and a picked option's block still applies. Without the flag a player
+who lands on *None* is offered the standard roll as a second chance, and
+`class-check` warns. The same flag still means "no psychic potential at all"
+on a class with no such group. It holds from either half of a pairing.
+
+```yaml
+psionics_allowed: false
+special_abilities:
+  - { name: "Psionics (01-77): None", description: "..." }
+  - { name: "Psionics (78-00): Minor", description: "...", psionics: { type: "minor", isp_base: "...", powers_starting: 2 } }
+  - { choose: 1, from: ["Psionics (01-77): None", "Psionics (78-00): Minor"] }
+```
+
 **`supersedes_race: true` says the character stops being what it was**
 (BOOK-INGEST-AUDIT.md F11). Composition is race-primary by default - a dragon
 that studies an O.C.C. is still a dragon - and this flag inverts it for the
@@ -491,7 +515,13 @@ take that kind of occupation - *"2D6 for most adults, unless a mage or clergy
 O.C.C."* (Palladium Fantasy `human`, `elf`), *"P.P.E.: 3D6 unless a magic
 O.C.C."* (`amphib`). **Never on a race whose book ADDS its P.P.E. to a mage's**
 (`rifts-cyclops`, `rifts-elf`, `true-atlantean`) **or prints its own mage
-figure** (`godling`, `true-inca`, `draconid`). Money yields only on the book's
+figure** (`godling`, `true-inca`). **The exception is a mage figure that is
+the occupation's plus something** (BOOK-INGEST-AUDIT.md F121): the Draconid
+magician has a Ley Line Walker's P.P.E. *plus 1D6x10*, which is the yield and a
+`bonuses.pools.ppe` on the chosen ability, with `occ_options` on a REQUIRED
+pick-one group so the wizard offers only the occupations the page names - the
+yield itself reaches every magic occupation. The worked shape is in
+`apps/character-creator/docs/race-and-occupation.md`. Money yields only on the book's
 evidence: `larhold-barbarian` yields it to all five groups because its 1D6x1000
 is the R.C.C.'s own equipment line and an O.C.C. replaces that package (printed
 186). Regression pins the carriers by name, so a new one updates that list in
@@ -541,6 +571,13 @@ bonuses:
   at_level:
     - { level: 5, combat: { attacks: 1 } }
 ```
+
+**A dice bonus may be a reduction** (BOOK-INGEST-AUDIT.md F119): *"reduce M.E.
+by 1D6"* is `ME: "-1d6"`, in `attributes`, `combat`, `saves` and `pools`, on a
+class, a variant, a second form or a chosen ability. Rolled once and stored
+negative. A leading PLUS is still a parse error, and `attribute_dice`, a pool
+BASE, an equipment `qty` and `saves.other` stay unsigned. There is no floor: a
+reduction can take a number below zero, as a flat negative always could.
 
 An unrecognised **group** is a warning, not an error, so a typo there does
 nothing loudly. `at_level` entries start at level 2 — level 1 belongs in
@@ -616,6 +653,50 @@ natural_abilities:                # rcc — display only
 
 An option named in a `choose` but never defined is a warning: it can be picked
 and grants nothing.
+
+**What a chosen option may carry**, beyond `bonuses`, `psionics`, `magic`,
+`super_abilities` and `talents`: `related_skills_count` (F24),
+`mdc_from_hp_sdc` (F64), `occ_options` (the occupations the pick brings), and
+since BOOK-INGEST-AUDIT.md F119 and F120:
+
+```yaml
+  - { name: "Strain (76-82): African Lion", description: "...", horror_factor: 10,
+      bonuses: { attributes: { PS: "2d6", IQ: "-1d4" } } }
+  - { name: "Head (01-05): Wild Boar", description: "...", horror_factor_bonus: 2 }
+  - { name: "Appearance (21-40): Webbed Hands and Feet", description: "...", attribute_dice: { PB: "3d4" } }
+```
+
+- `horror_factor` RESTATES the Horror Factor the character projects while the
+  option is held (a number or the book's phrase); `horror_factor_bonus` is a
+  non-zero whole number ADDED to it, summed across held options. Display-only,
+  like the class's own. Neither reaches a `second_form`, and neither earns the
+  derived `horror-factor` tag.
+- `attribute_dice` restates the class's dice for the attributes it names - a
+  table row that prints *"P.B. 3D4"*. It wins over the race and the occupation.
+  The wizard rolls attributes after the pick.
+
+**A pick group whose options are named for percentile bands gets a Roll
+button.** The band is read from the NAME, exactly `(NN-NN)` with `00` closing
+at 100: a `%` inside the parentheses, or no parentheses, silently gives no
+button. A pick-one group needs the bands to cover 01-00.
+
+**A table the book rolls on MORE THAN ONCE states `rolls` in place of
+`choose`** (F120):
+
+```yaml
+  - { rolls: 2, from: ["Feature (01-07): Rat Tail", "..."] }
+  - { rolls: "1d4", from: ["Oddity (01-10): Extra Eyes", "..."], note: "Roll 1D4 times; a repeat is rolled again." }
+```
+
+- A whole number, or UNSIGNED dice when the book rolls the count. State
+  `rolls` alone: the parser fills `choose` with the most the group can hold.
+- Every option must be band-named and the bands must cover 01-00, and every
+  row needs its own definition entry. Either missing is a parse ERROR, and an
+  error hides the class.
+- Two options may share a band; the roll leaves that one to the player.
+- Not modelled, so keep them in the group's `note` or the row's prose: a cap
+  on one band (*"at most one from 87-00"*) and a row that sends the player to
+  a sub-table.
 
 ### `totem` — one animal from the shared `totems` catalog
 

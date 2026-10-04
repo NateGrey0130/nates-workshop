@@ -3968,3 +3968,67 @@ posture; each is answered here or in the doc:
 Nate's word was given in the session, 2026-10-04, to a question that put both
 options with the measurement; it is not in any file but this one.
 `node scripts/audit-citations.mjs --remote F121`: 0.
+
+### F122 - low - a race cannot keep its own experience table in a pairing, and the Draconid's page says it does
+
+Since 2026-09-17 an occupation's `xp_table` wins a pairing whenever it states
+one (`apps/character-creator/js/parser.js`, the line
+`if (occ.xp_table != null) out.xp_table = occ.xp_table;` in `combineClasses`,
+read 2026-10-04), on Nate's call that day: a race's ladder is for the race
+played alone. That is right for Nightbane, which it was decided for.
+
+Phase World's Draconid prints the opposite for itself. Its Other Powers
+paragraph (cache `p036.txt`, read 2026-10-04) gives a magician *"all the powers
+of a ley line walker"* and a psychic those of a mind melter, and ends: *"In
+either case, use the draconid's experience points table presented in this
+book."* The same paragraph and the class's own R.C.C. skill list show the book
+grants powers, not O.C.C. skills; the class is still to be written as a
+pairing with the Ley Line Walker or the Mind Melter, because only a pairing
+carries that occupation's P.P.E. formula and its own abilities (read
+2026-10-04; `F121` left the shape open, and the read is recorded in the
+close-out's status notes, not in a menu). Paired, it levels on the
+occupation's ladder: production's `ley-line-walker` and `mind-melter` both
+store 2,241 at level two against the Draconid's 2,201 (`--remote`,
+2026-10-04).
+
+**Proposal:** a race-side flag, `keeps_xp_table: true`, read by
+`combineClasses`: a race that states it, and states an `xp_table`, keeps its
+own ladder when paired with an occupation that states one. The parser refuses
+it on an O.C.C. and warns on a race with no `xp_table`. A superseding
+occupation (`supersedes_race`) still wins, because the character has stopped
+being its race. Regression's invariant *"paired with an O.C.C. that states a
+ladder, the occupation's wins"* exempts the carriers, and pins them by name as
+it pins the yielders. **Posture:** a capability, opt-in per race; the rule for
+every other race is unchanged; no class is edited here - `draconid` takes the
+flag in the close-out's package C1. Nate's word, 2026-10-04 (recommendation 1
+of sixteen, accepted). **Evidence for the proposal:** the page line was read
+off the cache, not a render; production holds no class with the key
+(`--remote`, 2026-10-04, `instr(markdown, 'keeps_xp_table')`: 0).
+
+**Confidence:** high. **Ongoing cost:** one more race-side opt-in beside
+`yields_to_occupation` and `pairing_skills`, and one more pinned list.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f122-keeps-xp-table`).**
+Posture said back: a capability, opt-in per race; the rule for every other
+race is unchanged; no class is edited here. The premise auditor checked
+fourteen premises; twelve held and two were attributions, corrected in the
+text above. It confirmed there is one decision point (`combineClasses`, called
+only from `composeClass`, with nothing after it touching `xp_table`), that a
+variant restating the ladder needs no handling because `applyVariant` runs on
+both halves first, and that production's `draconid` stores a ladder today.
+
+Built: the flag in `combineClasses` and its validation in `js/parser.js`;
+`keeps_xp_table` in `class-check`'s known keys; six smoke checks under
+*Starting XP*, two of which were seen to fail with the two code lines
+reverted; regression's pairing invariant exempts a carrier and holds it to the
+opposite, and pins the carriers by name - an empty list today, which
+`draconid` joins with its data. Three places that stated the old rule as
+absolute now name the exception (two parser comments, `docs/leveling.md`).
+
+Not done here: `class-import`'s `reference/frontmatter.md` still says a race's
+ladder applies only when it is played alone; a skill file is edited from the
+main checkout, in the close-out's skills PR. The flag is not a variant
+override. Whether another race prints the same instruction was sampled, not
+settled: the auditor matched four phrases across live race notes and read
+eight contexts, finding only `draconid`.
+`node scripts/audit-citations.mjs --remote F122`: 0.
