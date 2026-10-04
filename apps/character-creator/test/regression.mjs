@@ -4493,11 +4493,18 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   const raceWonPairing = [];
   const raceLostAlone = [];
   let paired = 0;
+  // A race stating `keeps_xp_table` is the exception its own book prints
+  // (BOOK-INGEST-AUDIT F122), and is held to the opposite: its ladder survives.
+  const keeperLost = [];
   for (const r of rccWithTable) {
     const job = occWithTable.find((o) => JSON.stringify(o.xp_table) !== JSON.stringify(r.xp_table));
     if (!job) continue;
     paired++;
-    if (JSON.stringify(combineClasses(r, job).xp_table) !== JSON.stringify(job.xp_table)) {
+    if (r.keeps_xp_table === true) {
+      if (JSON.stringify(combineClasses(r, job).xp_table) !== JSON.stringify(r.xp_table)) {
+        keeperLost.push(`${r.id}+${job.id}`);
+      }
+    } else if (JSON.stringify(combineClasses(r, job).xp_table) !== JSON.stringify(job.xp_table)) {
       raceWonPairing.push(`${r.id}+${job.id}`);
     }
     if (JSON.stringify(composeClass({ rcc: r, character: {} })?.xp_table) !== JSON.stringify(r.xp_table)) {
@@ -4508,6 +4515,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     paired >= nbRaceLadders.length, `paired ${paired}`);
   check('paired with an O.C.C. that states a ladder, the occupation’s wins',
     raceWonPairing.length === 0, raceWonPairing.join(', '));
+  // PINNED BY NAME, like the yielders: a race here is one whose page says it
+  // levels on its own table whatever occupation it takes. Phase World's
+  // Draconid is the one the flag was built for; it joins this list with the
+  // data script that gives it the flag.
+  const keepers = classes.filter((c) => c.keeps_xp_table != null).map((c) => c.id).sort();
+  const wantKeepers = [];
+  check('the races declaring keeps_xp_table are the pinned ones',
+    JSON.stringify(keepers) === JSON.stringify(wantKeepers), `got ${JSON.stringify(keepers)}`);
+  check('and each keeps its own ladder beside an occupation that states one',
+    keeperLost.length === 0, keeperLost.join(', '));
   check('and a race played alone keeps its own',
     raceLostAlone.length === 0, raceLostAlone.join(', '));
 

@@ -2418,6 +2418,32 @@ section('Starting XP');
   check('when both halves state a ladder, the occupation’s wins',
     JSON.stringify(paired.xp_table) === JSON.stringify(occ.xp_table),
     JSON.stringify(paired.xp_table));
+  // UNLESS THE RACE SAYS IT KEEPS ITS OWN (BOOK-INGEST-AUDIT F122): Phase
+  // World's Draconid takes an occupation's powers and "in either case" levels
+  // on the Draconid's table.
+  const keeper = { ...ladderRace, keeps_xp_table: true };
+  check('a race that keeps its ladder levels on it beside an occupation that states one',
+    JSON.stringify(composeClass({ rcc: keeper, occ, character: {} }).xp_table)
+      === JSON.stringify(ladderRace.xp_table));
+  check('but not beside an occupation that supersedes the race',
+    JSON.stringify(composeClass({ rcc: keeper, occ: { ...occ, supersedes_race: true }, character: {} }).xp_table)
+      === JSON.stringify(occ.xp_table));
+  check('and the flag on a race with no ladder leaves the occupation\'s standing',
+    JSON.stringify(composeClass({ rcc: { ...race, keeps_xp_table: true }, occ, character: {} }).xp_table)
+      === JSON.stringify(occ.xp_table));
+  {
+    const LF = String.fromCharCode(10);
+    const mkc = (cat, ...lines) => parseClassMarkdown(
+      ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', `category: ${cat}`, 'tags: []',
+       ...(cat === 'occ' ? ['occ_group: men-of-arms'] : []), ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+    const ladder = 'xp_table: [0, 2201, 4401, 8801, 17601, 27701, 37801, 54001, 76001, 101001, 151001, 201001, 251001, 301001, 401001]';
+    check('the parser takes the flag on a race with a ladder',
+      mkc('rcc', ladder, 'keeps_xp_table: true').ok && mkc('rcc', ladder, 'keeps_xp_table: true').warnings.length === 0);
+    check('refuses it on an occupation, and as anything but true',
+      !mkc('occ', ladder, 'keeps_xp_table: true').ok && !mkc('rcc', ladder, 'keeps_xp_table: false').ok);
+    check('and warns when the race has no ladder to keep',
+      mkc('rcc', 'keeps_xp_table: true').warnings.some((w) => w.includes('no ladder to keep')));
+  }
   const alone = composeClass({ rcc: ladderRace, character: {} });
   check('a race played alone levels on its own ladder',
     thresholdFor(xpTableFor(alone), 2) === 5001 && thresholdFor(xpTableFor(alone), 4) === 20001,
@@ -6287,7 +6313,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // O.C.C. stating one must not be warned that it will be lost.
   check('xp_table is NOT among them: the occupation’s ladder wins a pairing',
     !/LOST_TO_RACE[\s\S]{0,200}xp_table/.test(cc)
-    && /if \(occ\.xp_table != null\) out\.xp_table = occ\.xp_table;/.test(parser));
+    // "Bar a race that keeps its own": BOOK-INGEST-AUDIT F122's one opt-out.
+    && /if \(occ\.xp_table != null && !keepsLadder\) out\.xp_table = occ\.xp_table;/.test(parser));
   // A race's `pairing_skills` (F114) narrows its own list in a pairing; with
   // no key the helper hands back the whole list, so the union is still the
   // default and still nothing an occupation is warned about.
