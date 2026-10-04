@@ -3881,3 +3881,90 @@ DOM's text and not a screenshot.
 **For the data that follows (package C2):** the Pseudo-Men body lists 21
 bands where its note says 19 rows, and several rows carry a nested Oddity
 sub-roll, which stays prose in the row. `audit-citations --remote F120`: 0.
+
+### F121 - low - the Draconid magician's P.P.E. needs no new mechanism, only the yield its race was told not to take
+
+Phase World printed 36 gives the Draconid *"P.P.E.: 1D6x10 unless they use
+magic"*, and a magician Draconid *"all the powers of a ley line walker plus a
+bonus of 1D6x10 P.P.E."* The class (`draconid`, production, `--remote`,
+2026-10-04) stores the first as a phrase in `ppe_base` and the
+Magician-or-Psychic branch as one prose ability. The close-out plan filed this
+as a code package: *an ability's pool bonus applied on top of the
+occupation's base, without `yields_to_occupation`*, because
+`apps/character-creator/docs/race-and-occupation.md` (the paragraph under *A
+race may yield its P.P.E. or money to an occupation*, read 2026-10-04) names
+`draconid` among the races that must not carry that key, as one that *"prints
+its own mage figure"*.
+
+**Measured 2026-10-04**, production's `draconid`, `ley-line-walker` and
+`mind-melter` through `parseClassMarkdown`, `combineClasses` and
+`applyAbilities`, with the race's `ppe_base` set to `1d6x10`:
+
+| build | composed `ppe_base` | pool bonus |
+|---|---|---|
+| today's rules, Magician option carrying `pools: { ppe: "1d6x10" }`, paired with the Ley Line Walker | the race's `1d6x10` | `ppe: 1d6x10` |
+| the same, with `yields_to_occupation: { ppe_base: [magic] }` on the race | the Ley Line Walker's `3d6x10+20 plus P.E. ...` | `ppe: 1d6x10` |
+| Psychic option carrying `pools: { isp: "1d4x10" }`, paired with the Mind Melter (`occ_group: psychic`), with the yield | the race's `1d6x10` | `isp: 1d4x10` |
+| unpaired and holding neither option, with the yield | the race's `1d6x10` | none |
+
+The first row is wrong by the book and the other three are the book's
+figures. So the "own mage figure" the exclusion protects is the yield plus a
+pool bonus on the ability option, both of which exist. A yield alone would
+have lost the 1D6x10, which is what the exclusion was right about.
+
+**The decision this adjusts is `F111`'s, in this file.** Its text and its
+outcome note (read 2026-10-04, under `### F111`) list `draconid` beside
+`godling` and `true-inca` as races that print their own mage figure, which
+is why the general rule was declined and why the race-side key was not given
+to them. That reasoning holds for a yield alone and for the other two races;
+this changes it for one race, with the bonus that makes its figure come out.
+
+**Proposal:** lift the exclusion for `draconid`, by Nate's word (asked
+2026-10-04 with both options; he chose this one over building an option-level
+key). Correct the doc sentence that names it. No code. The class edit - the
+yield, a clean `ppe_base`, a pick-one Magician/Psychic group with
+`occ_options` - is the close-out's package C1, which also adds `draconid` to
+the yielders regression pins by name. **Posture:** documentation only; no
+class is edited here. **Evidence for the proposal:** measured as above.
+**Confidence:** high on the arithmetic; medium on the class shape until C1
+reads the page for whether the magician takes the Ley Line Walker's skills or
+only its powers. **Ongoing cost:** none beyond one more pinned yielder.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f121-draconid-yield`).**
+Posture said back: documentation only; no class is edited here; no code. The
+premise auditor re-ran the measurement and all four rows reproduced. It
+checked eleven premises and disagreed with five, none of which moves the
+posture; each is answered here or in the doc:
+
+- **The yield reaches every magic occupation, not one.** 69 are legal for a
+  Draconid in production, 71 with variants; all move, and thirteen can land
+  below 1D6x10 at a low P.E. (auditor's census, `--remote`, 2026-10-04,
+  `poolFormulaBounds` at P.E. 7, 17 and 27). The doc now says so, and says
+  that `occ_options` on a required pick is what narrows the wizard's
+  occupation picker to the two the book names. So the *Ongoing cost* above is
+  understated: regression's every-legal-pairing loop will walk all 69.
+- **A paired Draconid levels on the Ley Line Walker's experience table**,
+  where its page says it uses its own either way: `xp_table` is
+  occupation-first in a pairing. **This is not fixed and not filed as a
+  finding**: it is recorded in the doc and in the close-out's status notes for
+  package C1 to state in the class's `extraction_notes`, and for Nate to rule
+  on if he wants a race to keep its ladder. The same pairing takes the
+  occupation's related-skill count and money.
+- **Five places named `draconid` this way, and two are corrected here.** The
+  doc's yield section is rewritten. Its other mention, under *It is opt-in per
+  occupation*, and the comment in `js/parser.js` beside `overrides_race`
+  both describe what the declined GENERAL rule would have broken on
+  2026-09-27, which is still true, and are left as the record. The
+  instruction in `class-import`'s `reference/frontmatter.md` ("Never on a
+  race whose book ... prints its own mage figure") is the one a taker would
+  obey; a skill file is edited from the main checkout, so it is corrected in
+  the close-out's skills PR and not here.
+- **The paragraph was already stale on its count**: it said four carriers
+  where production has six. `aardan-tek` and `arac` are added to its table
+  from the pages regression's own comment cites.
+- The fourth row of the table measured a Draconid holding no option; it says
+  so now.
+
+Nate's word was given in the session, 2026-10-04, to a question that put both
+options with the measurement; it is not in any file but this one.
+`node scripts/audit-citations.mjs --remote F121`: 0.
