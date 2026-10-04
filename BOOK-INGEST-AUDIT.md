@@ -3726,3 +3726,158 @@ dice reductions in production prose returned twelve classes to read: juicer,
 stone-master, murder-wraith, symbiotic-warrior, wormspeaker, pseudo-men,
 felinoid, psi-nullifier, lanotaur-hunter, psi-goblin, songjuicer,
 forest-warden. Not each was read.
+
+### F120 - medium - a table a book rolls on MORE THAN ONCE has no shape, and a result that sets an attribute's dice cannot say so
+
+Nate's ruling 10 on the 2026-10-03 retrospective (2026-10-04): **one general
+roll-table mechanic, designed once** - a pick group rolled `rolls: N` times,
+N a number or dice, a duplicate rerolled, its options allowed to carry
+`attribute_dice` and negative dice. Negative dice are F119. This is the rest.
+
+**What exists.** A pick-one group whose options are named for percentile bands
+gets a Roll d100 button (`abilityRollBands`, `apps/character-creator/js/parser.js`,
+read 2026-10-04). Its first line returns null unless `choose` is 1, and smoke
+pins that (*"nor is a group with no bands, a choose-2 group, or a named
+ability"*, `apps/character-creator/test/smoke.mjs`, read 2026-10-04). The roll
+handler (`rollAbilityGroup` in `app.js`) clears the group and takes one result.
+
+**What the books print, and what production holds for it** (`--remote`,
+2026-10-04, each class's markdown read):
+
+- `pseudo-men`: *"Roll 1D4 times on the Random Unusual Abilities and Oddities
+  table"*, a repeated result rerolled - 19 rows by its own note, 21 bands in its
+  stored body, where Third Eye is three of them. Its note: *"Not stored as
+  mechanics: the frontmatter has no random-table construct, and a fixed choose
+  count would state a number the book rolls."* The whole table is body prose.
+- `amphib`: seven Appearance rows, each setting the P.B. dice (3D6, 3D4, 2D6,
+  2D4, 1D6). The group exists and rolls; every row but the first says *"P.B. is
+  3D4: re-roll it by hand, the sheet rolls 3D6."*
+- `oni-of-the-one-hundred`: its Legs table *"sets the Spd attribute"*, and the
+  class stores the 6D6 that four of the eight results print.
+
+**A decision this argues past.** The comment above `ABILITY_GRANTS` in
+`js/parser.js` (read 2026-10-04) says: *"a chosen ability that could restate
+attribute_dice or starting_money is not an ability, it is a second class
+wearing one's name."* <!-- claim-ok: quoting the comment this finding argues past -->
+That was written for the Godling's eleven powers, which are bonuses. A table
+row that prints *"P.B. 2D4"* is not adding to the roll, it is the roll, and
+ruling 10 names `attribute_dice` on an option outright. `starting_money` stays
+out.
+
+**An earlier finding on this subject was declined, and this does not reopen
+it.** `F78` (text in `BOOK-INGEST-AUDIT.closed.md` under its own heading, read
+2026-10-04) asked for a home for Nightbane's nineteen creation tables and was
+declined on Nate's word on 2026-09-16; its note says tables that grant bonuses
+are ability choice groups, and lists as residue a percentile range as data,
+three-level nesting, and "roll twice and combine". The Morphus tables have
+since been built as their own catalog (migration 068). This proposal stays on
+the path that note endorsed - an ability choice group - and takes one piece of
+that residue on Nate's later ruling 10: a table rolled more than once. The
+range stays in the option's name, and nesting stays out. F78's note ends
+*"Short of that, this is settled and should not be re-proposed"*; <!-- claim-ok: quoting the decision this finding argues past -->
+ruling 10 is the later word, and it is for classes outside Nightbane.
+
+**A roller of this kind already exists for one catalog.** `js/morphus.js`
+(read 2026-10-04) rolls the Morphus tables several times and rerolls an entry
+already held, keyed to `second_form` and the `traits` rows of migration 068,
+which store routing between tables as data. It does not reach an ability
+group, so this is the second roller, for the other mechanism.
+
+**Proposal:**
+
+1. **`rolls` on a pick group, in place of `choose`.** `{ rolls: 2, from: [...] }`
+   or `{ rolls: "1d4", from: [...] }`. The options must be named for bands that
+   cover 1-100 (a parse error otherwise: a table with a hole cannot be rolled
+   N times). The group holds at most N picks, or at most the dice's maximum,
+   each option once.
+2. **The Roll button rolls the whole table**: the count first when it is dice,
+   then that many d100s, rerolling any roll that lands only on a result already
+   taken, and replaces what the group held. The rolls and the count stay on
+   screen. Picking by hand still works, up to the same limit, because the
+   books allow a G.M.-approved choice.
+3. **The server counts a `rolls` group at its maximum** in the existing
+   `ability_count` rule and refuses a second take of one row. It does not
+   check that the count was really rolled: there is no column for the roll,
+   and the picks are the record.
+4. **An option may carry `attribute_dice`**, a map like the class's, which
+   restates the class's dice for the attributes it names while the option is
+   held. Folded by `applyAbilities`; the wizard re-rolls an attribute whose
+   dice a pick changes, as it does for a variant.
+5. A `choose` group is unchanged, the Roll d100 button on a pick-one group
+   included.
+
+**Posture:** a capability, opt-in per class; nothing that exists changes; no
+new violation beyond the count and repeat rules a `choose` group already has;
+no class is edited here except smoke fixtures - the tables are the close-out's
+package C2. **Evidence for the proposal:** the gaps are measured as above. That
+attributes are rolled from the composed class after the ability pick, and that
+the server's attribute ceiling reads the composed class, was read from
+`app.js` (`rollAttribute(S.cls?.attribute_dice...)`) and
+`validate-character.js` (`cls.attribute_dice?.[attr]`), not exercised.
+
+**Not proposed:** a per-band cap (*"at most one from 87-00"*, Pseudo-Men) stays
+a note on the group; a result that is another roll on a sub-table stays prose
+in its row, since an ability option cannot hold a sub-choice.
+
+**Confidence:** high on the gaps. Medium on the cost until the build walks the
+places that read `choose` (`abilityGroupCounts`, `takeAbility`, the validator's
+`ability_count`, the NPC generator) and the attribute re-roll on a changed pick.
+
+**Ongoing cost:** every reader of a group's limit has to ask one helper
+rather than read `choose`; one more key on an ability option.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f120-roll-tables`).**
+Posture said back: a capability, opt-in per class; nothing that exists
+changes; no new violation beyond the count and repeat rules a `choose` group
+already has; no class edited. Written and taken in one session on Nate's
+standing word for the close-out. The premise auditor checked eighteen
+premises; twelve held, and its six disagreements are corrected in the text
+above (the Pseudo-Men row count, the Morphus wording, F78's closing words) or
+shaped the build:
+
+- **Every reader of a group's limit reads `choose` directly** - the wizard's
+  own group filter, the picker, `takeAbility`, the Race-step gate, the
+  validator's count, the NPC generator, the sheet's G.M. dropdown. So `rolls`
+  does not re-plumb them: **the parser fills `choose` with the most the group
+  can hold** (the number, or the dice's ceiling), and a class that states both
+  must make them agree.
+- **That alone would have blocked the Race step**: its gate summed `choose`, so
+  a Pseudo-Man who rolled 2 on 1D4 could not go on until four rows were held.
+  The gate now counts per group and asks `abilityGroupOwed`, which for a dice
+  count is the least the dice can come up. The rolled count is stored nowhere;
+  the picks are the record.
+- **A changed pick does not recompose**, so nothing cleared an attribute whose
+  dice a row had set. `confirmRace` now captures the composed dice, recomposes
+  and clears the attributes that moved, as a variant change does. A stage
+  change after creation (`variant.js`) still proposes re-rolls from the
+  variant alone, and under `supersedes_race` a held row's dice win over the
+  "whichever is higher" merge; both are stated in `docs/leveling.md`.
+- **The server refuses a repeated row only where the row is defined**, so the
+  parser requires a definition for every row of a `rolls` group.
+
+Built: `abilityRollLimit`, `abilityGroupOwed` and `rollAbilityTable` in
+`js/parser.js`, with `abilityRollBands` now answering for a `rolls` group;
+`attribute_dice` on an ability option, folded by `applyAbilities`; the
+wizard's **Roll the table** button and its log; the NPC generator rolls such a
+table instead of shuffling it. A band that prints two results is left to the
+player, as a pick-one roll leaves it, and landing on it again counts as a
+repeat. Thirty-two smoke checks, eleven of which were seen to fail across two
+rounds of injected faults.
+
+Measured 2026-10-04, `--remote` (auditor's census through this tree's parser):
+725 published classes, none unparsable; `abilityRollBands` is non-null for 35
+groups on 24 classes, as before; no group carries `rolls` and no option
+carries `attribute_dice`, so nothing that exists changes.
+
+Seen in the running wizard, on a port of this tree's own, against a fixture
+class applied to this tree's local D1 only and deleted afterwards: the heading
+and the gate (*"Choose 1 more power to continue"* on a 1D4 table), six rolls
+of the table with their logs, P.B. rolled on a held row's 2D4 over 25 rolls
+(2 to 8), a `-1d4` reduction from another row rolled and shown, and P.B.
+cleared back to the class's 3D6 when the row was dropped and the race
+confirmed again, Spd untouched. The Browser pane was hidden, so that is the
+DOM's text and not a screenshot.
+
+**For the data that follows (package C2):** the Pseudo-Men body lists 21
+bands where its note says 19 rows, and several rows carry a nested Oddity
+sub-roll, which stays prose in the row. `audit-citations --remote F120`: 0.

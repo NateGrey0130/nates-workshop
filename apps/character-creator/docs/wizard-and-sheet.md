@@ -303,8 +303,17 @@ button on such a group beside the usual `+` and `-`.
 - **The bands are read from the option names**, by `abilityRollBands` in
   [`js/parser.js`](../js/parser.js). No class states them a second time, so a
   name and its band cannot disagree. `00` closes a band at 100.
-- **A group is rollable only when it is pick-one and its banded options cover
-  every number from 1 to 100.** A table with a hole would sometimes land on
+- **A table the book rolls on more than once states `rolls`** in place of
+  `choose` (`BOOK-INGEST-AUDIT` F120): `{ rolls: 2, from: [...] }`, or
+  `{ rolls: "1d4", from: [...] }` when the book rolls the count too. Its button
+  is **Roll the table**: it rolls the count, then that many d100s, rolls again
+  when a roll lands on a row already held, and replaces what the group held.
+  Every roll stays on screen. The parser fills `choose` with the most the group
+  can hold, which is the limit the picker and the server use; the Race step asks
+  only for the least a dice count can come up, because the rolled count is not
+  stored. Every row needs its own definition. Choosing by hand still works.
+- **A group is rollable only when it is pick-one, or states `rolls`, and its
+  banded options cover every number from 1 to 100.** A table with a hole would sometimes land on
   nothing. An option with no band, such as "table not used", is never what a
   roll lands on, and is still there to choose.
 - **A roll replaces whatever the group held** and shows its number beside the

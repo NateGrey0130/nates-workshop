@@ -24,7 +24,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
-         abilityRollBands, abilityRollMatches, abilityOffersPsionics,
+         abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
@@ -1626,8 +1626,11 @@ function classBlock() {
   // character to have them, so leaving one blank is an oversight rather than a
   // deliberate omission. Unspent SKILL picks are banked instead, because those
   // are earned over time.
-  const owed = abilityGroups(S.rcc).reduce((n, g) => n + (+g.choose || 0), 0);
-  const short = owed - S.abilities.length;
+  // Counted per group, and a table rolled a dice number of times owes only the
+  // least its dice can come up (abilityGroupOwed, F120).
+  const held = abilityGroupCounts(S.rcc, S.abilities);
+  const short = abilityGroups(S.rcc)
+    .reduce((n, g, gi) => n + Math.max(0, abilityGroupOwed(g) - (held[gi] || 0)), 0);
   if (short > 0) {
     return { why: `Choose ${short} more ${short === 1 ? 'power' : 'powers'} to continue.`,
              anchor: 'ability-picker' };
@@ -1873,7 +1876,15 @@ function abilityPicker() {
     // rolls on, so it gets the dice as well as the buttons. The last roll stays
     // on screen: a pick that appeared with no number beside it would look chosen.
     const rolled = abilityRolls[abilityRollKey(gi)];
-    const roller = abilityRollBands(g)
+    // A table the book rolls on more than once (`rolls`, F120) rolls the lot:
+    // the count when that is dice, then each d100, a repeat rolled again.
+    const tableRoller = g.rolls === undefined ? '' : `<p class="small">
+        <button class="btn btn-sm" onclick="rollAbilityGroup(${gi})">🎲 Roll the table</button>
+        ${rolled?.table ? ` Rolled ${rolled.dice ? `<b>${rolled.count}</b> on ${esc(String(rolled.dice).toUpperCase())}, then ` : ''}${
+          rolled.log.map((l) => `<b>${l.roll}</b>${l.taken === null ? ' (already held, rolled again)'
+            : l.taken === undefined ? ` (the book prints ${l.names.length} results here &mdash; choose between ${l.names.map(esc).join(' and ')})` : ''}`).join(', ')}.`
+          : ' <span class="muted">or choose below.</span>'}</p>`;
+    const roller = tableRoller ? tableRoller : abilityRollBands(g)
       ? `<p class="small"><button class="btn btn-sm" onclick="rollAbilityGroup(${gi})">🎲 Roll d100</button>
           ${rolled ? ` Rolled <b>${rolled.roll}</b>: ${rolled.names.length === 1
             ? esc(rolled.names[0])
@@ -1886,10 +1897,14 @@ function abilityPicker() {
         and both are rolled on the next two steps.</p>`
       : '';
     return `<div class="panel-inset"${gi === 0 ? ' id="ability-picker"' : ''}>
-      <h3>Powers <span class="muted small">&mdash; choose ${limit}</span></h3>
+      <h3>Powers <span class="muted small">&mdash; ${g.rolls === undefined ? `choose ${limit}`
+        : typeof g.rolls === 'number' ? `rolled ${g.rolls} time${g.rolls === 1 ? '' : 's'}, a repeat rolled again`
+        : `rolled ${esc(String(g.rolls).toUpperCase())} times, a repeat rolled again`}</span></h3>
       ${why}
       ${note}
-      <p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>
+      ${typeof g.rolls === 'string'
+        ? `<p class="small ${picked >= abilityGroupOwed(g) ? 'ok' : 'warn'}">${picked} held, of at most ${limit}</p>`
+        : `<p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>`}
       ${roller}
       ${opts}
     </div>`;
@@ -1910,6 +1925,18 @@ function rollAbilityGroup(gi) {
   const group = abilityGroups(S.rcc)[gi];
   const bands = abilityRollBands(group);
   if (!bands) return;
+  if (group.rolls !== undefined) {
+    const dice = typeof group.rolls === 'string' ? group.rolls : null;
+    const count = dice ? evalDice(dice) : group.rolls;
+    const { picks, log } = rollAbilityTable(group, count, () => evalDice('1d100'));
+    abilityRolls[abilityRollKey(gi)] = { table: true, count, dice, log };
+    for (const held of S.abilities.filter((n) => abilityGroupIndexFor(S.rcc, n) === gi)) {
+      removeAbility(held);
+    }
+    for (const row of picks) { S.abilities.push(row); poolsMayHaveChanged(row); }
+    render();
+    return;
+  }
   const roll = evalDice('1d100');
   const names = abilityRollMatches(bands, roll);
   abilityRolls[abilityRollKey(gi)] = { roll, names };
@@ -2124,7 +2151,13 @@ function pickTotem(slug) {
 }
 
 function confirmRace() {
+  // A pick may restate the dice an attribute is rolled on (`attribute_dice` on
+  // an ability option, F120). First time through nothing is rolled yet; on a
+  // return to this step, an attribute whose dice the new pick moved is cleared
+  // so the next step rolls it again, as a variant change does.
+  const dice = S.cls?.attribute_dice;
   recompose();
+  clearAttrsWhoseDiceChanged(dice);
   // Rolled here so the Attributes step, which comes next, can show the bonus
   // beside the roll it modifies. computePools() re-rolls it later if asked.
   rollAttrBonuses(true);

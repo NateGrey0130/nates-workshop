@@ -323,7 +323,16 @@ special_abilities:
 **Three grant keys, not the variant override set:** `bonuses`, `psionics`,
 `magic`. That is what the Godling's eleven powers actually need, and an ability
 that could restate `attribute_dice` or `starting_money` is not an ability, it is
-a second class wearing one's name. A fragment's `bonuses` block is validated
+a second class wearing one's name. **`attribute_dice` has since been let in on
+its own** (`BOOK-INGEST-AUDIT` F120): a table row that prints *"P.B. 2D4"* is the
+roll, not an addition to it, so an option may carry
+`attribute_dice: { PB: "2d4" }`, restating the class's dice for the attributes
+it names while it is held. It is folded after the race and the occupation are
+combined, so it wins over both, a superseding occupation's included. The wizard
+rolls attributes after the pick, and clears one whose dice a changed pick moved
+when the Race step is confirmed again; a stage change after creation
+(`variant.js`) does not read a held option's dice. `starting_money` stays out.
+A fragment's `bonuses` block is validated
 through exactly the same path a class's own bonuses take, so an ability cannot
 express a bonus a class could not.
 
