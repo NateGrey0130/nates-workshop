@@ -323,6 +323,24 @@ function naturalAbilities(cls) {
   return `<h2 class="sub-h">Natural abilities</h2><ul style="margin-left:18px">${rows}</ul>`;
 }
 
+// An ability's level table (BOOK-INGEST-AUDIT F117): the lines the character
+// has reached, and the next one, muted. DISPLAY ONLY - a martial art power's
+// techniques and additions in the book's words, applied by hand. The same
+// split as abilityProgressionAt in js/parser.js, which this classic script
+// cannot import.
+function abilityProgressionHtml(a) {
+  const lvl = Number(C.data?.level) || 1;
+  const all = (Array.isArray(a?.progression) ? a.progression : [])
+    .filter((l) => l && Number.isInteger(l.level) && typeof l.text === 'string')
+    .sort((x, y) => x.level - y.level);
+  if (!all.length) return '';
+  const reached = all.filter((l) => l.level <= lvl)
+    .map((l) => `<div class="small"><b>Level ${l.level}:</b> ${escHtml(l.text)}</div>`).join('');
+  const next = all.find((l) => l.level > lvl);
+  return reached + (next
+    ? `<div class="muted small noprint"><b>Next, at level ${next.level}:</b> ${escHtml(next.text)}</div>` : '');
+}
+
 // Rebuilt in place after a G.M. edit — the same targeted-refresh discipline
 // the inventory uses, because a full load() here would discard anything typed
 // into the section inputs and not yet saved.
@@ -340,6 +358,7 @@ function powersHtml(cls) {
     ${w && a.gm ? `<button class="btn btn-sm btn-ghost noprint" onclick="removeGmPower('${escJs(a.name)}')">Remove</button>` : ''}
     ${a.description ? `<div class="muted small">${escHtml(a.description)}</div>` : ''}
     ${a.on_repeat ? `<div class="small"><b>Twice:</b> ${escHtml(a.on_repeat)}</div>` : ''}
+    ${abilityProgressionHtml(a)}
   </li>`).join('');
   // The add control offers the class's own list first — the Demigod's extra is
   // "similar to that of the godly father or mother", usually one of these — and

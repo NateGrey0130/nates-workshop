@@ -2690,6 +2690,37 @@ export function abilityTouchesPool(def) {
     || def.psionics?.isp_base != null;
 }
 
+// AN ABILITY THAT GROWS BY LEVEL, AS TEXT (BOOK-INGEST-AUDIT F117).
+//
+// A China 2 Mystic Martial Art Power is a table from level 1 to 15: named
+// techniques, I.S.P. and S.D.C. additions, combat bonuses. Only level 1 was
+// stored, in the ability's description. On Nate's word (2026-10-04) the rest
+// is DISPLAY ONLY - no catalog of powers, no levelled-ability reader - so the
+// lines ride on the ability and the sheet shows the ones the character has
+// reached, and the next one:
+//
+//   - name: "Mystic Martial Art Power: Gui Long Kung Fu (Dragon Blade)"
+//     description: "Level 1: ..."
+//     progression:
+//       - { level: 2, text: "+1 to strike and parry with the blade." }
+//       - { level: 3, text: "Blade Chi Strike: ..." }
+//
+// `level` is the CHARACTER's level. A class that learns the power late, or
+// begins it part-way, writes its own levels: every class carries its own copy
+// of the ability, so the lines are that class's.
+//
+// NOTHING ROLLS OR ADDS WHAT A LINE SAYS. A bonus the book grants at a level
+// that should reach the sheet's numbers belongs in the class's own
+// `bonuses.at_level`, as it always did.
+export function abilityProgressionAt(ability, characterLevel) {
+  const lvl = Number(characterLevel) || 1;
+  const all = (Array.isArray(ability?.progression) ? ability.progression : [])
+    .filter((l) => l && Number.isInteger(l.level) && typeof l.text === 'string')
+    .map((l) => ({ level: l.level, text: l.text }))
+    .sort((a, b) => a.level - b.level);
+  return { reached: all.filter((l) => l.level <= lvl), next: all.find((l) => l.level > lvl) || null };
+}
+
 // The Horror Factor a chosen ability carries (BOOK-INGEST-AUDIT F119).
 //
 // Two keys on an ability option, both DISPLAY-ONLY like the class's own
@@ -2829,7 +2860,11 @@ export function applyAbilities(cls, chosen) {
     if (isHorrorFactor(def.horror_factor)) horrorSet = def.horror_factor;
     if (Number.isInteger(def.horror_factor_bonus)) horrorAdded += def.horror_factor_bonus;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
-      description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
+      description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined,
+      // What the ability becomes as the character levels, in the book's own
+      // words (BOOK-INGEST-AUDIT F117). Display only: the sheet lists it under
+      // the ability, and nothing here adds a number.
+      ...(Array.isArray(def.progression) && def.progression.length ? { progression: def.progression } : {}) });
   }
   const horror = withHorrorBonus(horrorSet !== undefined ? horrorSet : out.horror_factor, horrorAdded);
   if (horror !== undefined) out.horror_factor = horror;
@@ -4115,6 +4150,30 @@ export function parseClassMarkdown(text) {
         && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
       errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
         + 'non-negative integer');
+    }
+    // F117: an ability's level table, as display text. Every malformed entry is
+    // an error - a line with no level would be shown at the wrong time, or not
+    // at all, and nothing else would say so.
+    if (e.progression !== undefined) {
+      if (!Array.isArray(e.progression) || !e.progression.length) {
+        errors.push(`special_abilities: ${e.name}.progression must be a non-empty list of { level, text }`);
+      } else {
+        const seenLevels = new Set();
+        for (const l of e.progression) {
+          if (!l || typeof l !== 'object' || !Number.isInteger(l.level) || l.level < 1
+              || typeof l.text !== 'string' || !l.text.trim()) {
+            errors.push(`special_abilities: ${e.name}.progression entries need a whole-number level `
+              + 'of 1 or more and text');
+            break;
+          }
+          if (seenLevels.has(l.level)) {
+            errors.push(`special_abilities: ${e.name}.progression states level ${l.level} twice - `
+              + 'put everything that level gives in one entry');
+            break;
+          }
+          seenLevels.add(l.level);
+        }
+      }
     }
     // F120: the dice a table row prints for an attribute. The class's own
     // grammar - dice, a fixed number, or N/A - and only real attributes.
