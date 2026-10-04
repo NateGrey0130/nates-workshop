@@ -3535,6 +3535,61 @@ the gap (measured), low on the cost (not traced through `leveling.js` or the
 sheet). **Ongoing cost:** a third levelled-ability shape beside skills and
 spells. If prose stays acceptable, closing this as declined is a fair answer.
 
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f117-ability-progression`),
+NOT AS WRITTEN, on Nate's word.** He was shown a recommendation to decline the
+catalog this proposes and accepted it (2026-10-04; it reverses his own ruling
+3 on the retrospective, for this finding only): **no `martial_art_powers`
+table, no new kind of `skills` row, no levelled-ability reader.** In their
+place an ability definition may carry its later levels as display text -
+`progression: [{ level, text }]` - which `applyAbilities` carries onto what the
+character holds and the sheet lists under the ability: the lines at or below
+the character's level, and the next one, muted and not printed. Nothing adds
+what a line says. Posture said back: a capability, opt-in per class; and, in
+this proposal's own closing words, prose stayed acceptable.
+
+The premise auditor checked twelve premises. What it corrected:
+
+- **Ten powers are stored, not eleven.** No live class defines Hsien Hsia
+  (production, `--remote`, 2026-10-04); its table has no home under a
+  per-definition key until a class offers it.
+- **The display reaches a HELD ability only**, and the citing classes do not
+  all hold their power. Of the twenty `audit-citations --remote F117` lists:
+  eleven offer it in a multi-option `choose: 1` group and two in a one-option
+  group, so thirteen reach the sheet; `wai-chia-wu-shih` grants Xian Tai Chi
+  Chuan as a plain definition, which the sheet does not list; and six define
+  no power at all - `enlightened-demon` (its pick is at tenth level, so it is
+  prose), `soothsayer`, the three geo-borgs, and `geofront-gun-master`, which
+  cites this finding for a different levelled ability (Tao Jen Qiang) that
+  this does not lift.
+- `level_bonuses` is also on `skill_system_bases` (`db/schema.sql`, read
+  2026-10-04), not only on `skills`. It changes nothing here.
+- **Text that goes stale with the data, which no script sees:** each stored
+  power ends *"later levels not imported"* <!-- claim-ok: quoting the class text the data PR must remove -->
+  (fifteen live classes) and each group note says *"level 1 only"*
+  (fifteen); they would print directly above the new lines.
+
+This also supersedes the survey's *"not written out per class"*
+(`apps/character-creator/docs/surveys/china-2.md`, *Agreed with Nate* item 1,
+read 2026-10-04 by the auditor): the tables are now pasted per class, 48
+definition copies across 14 classes, because each class carries its own copy
+of the ability.
+
+Built: `abilityProgressionAt` and the validation in `js/parser.js`; the lines
+under a held ability in the sheet's `powersHtml`; `docs/leveling.md`. Both
+YAML spellings parse (inline list, and a nested block list). Fourteen smoke
+checks, six seen to fail with three faults injected. Seen on the running
+sheet, on a port of this tree's own, against a fixture class and a character
+in this tree's local D1, both deleted afterwards: at level 1 the description
+and *"Next, at level 2"*; at level 3 the level-2 and level-3 lines and *"Next,
+at level 5"*; no console error. DOM text, not a screenshot - the Browser pane
+was hidden.
+
+**The data is the close-out's package C4**: the level 2-15 lines for the ten
+stored powers, the one-option group for `wai-chia-wu-shih`, and the stale
+phrases above. The scratch JSON of those levels from the import was not
+committed; the book is the source. The Nei Chia Wu Shih's second hand to hand
+style, this finding's *"Also met"*, is not affected.
+
 ## Filed for the book-retrospective close-out, Phase B, 2026-10-04
 
 Nate's ruling 3 on the 2026-10-03 retrospective was to implement its code

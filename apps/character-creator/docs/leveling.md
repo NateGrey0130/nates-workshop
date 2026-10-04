@@ -338,6 +338,30 @@ A fragment's `bonuses` block is validated
 through exactly the same path a class's own bonuses take, so an ability cannot
 express a bonus a class could not.
 
+**An ability may carry its later levels as text** (`BOOK-INGEST-AUDIT` F117).
+A China 2 Mystic Martial Art Power is a table from level 1 to 15, and only its
+level 1 was stored. On Nate's word the rest is display only - no catalog of
+powers and no levelled-ability reader:
+
+```yaml
+  - name: "Mystic Martial Art Power: Gui Long Kung Fu (Dragon Blade)"
+    description: "Level 1: ..."
+    progression:
+      - { level: 2, text: "+1 to strike and parry with the blade." }
+      - { level: 3, text: "Blade Chi Strike: ..." }
+```
+
+`level` is the character's level. The sheet lists, under the held ability, the
+lines at or below the character's level and the next one, muted and not
+printed. **Nothing adds what a line says**: a bonus that should reach the
+sheet's numbers still belongs in the class's `bonuses.at_level`. Each class
+carries its own copy of the ability, so a class that learns the power late
+writes its own levels. **Only a HELD ability is shown** - one the character
+picked, or one granted through a one-option `choose: 1` group. The sheet does
+not list an ability a class grants as a plain definition, so a power written
+that way (China 2's `wai-chia-wu-shih` is) needs the one-option group before
+its table can be seen.
+
 M.D.C. arrives as a pool **bonus** rather than an override, which is why pool
 bonuses had to exist first: Super-Tough adds to whatever the class already rolls
 rather than replacing the formula.

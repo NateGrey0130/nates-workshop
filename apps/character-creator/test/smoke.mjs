@@ -833,7 +833,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupIndexFor, abilityOffersPsionics, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
          combineClasses, isDiceBonus, isGearChoice, isSignedDiceBonus, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
-         relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, sumBonusGroups, validateBonuses } from '../js/parser.js';
+         relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, abilityProgressionAt, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -7087,6 +7087,60 @@ section('Morphus tables catalog');
   // A table CHECK is refused input, not a server fault.
   check('the catalog write path answers a CHECK failure with a 422',
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+}
+
+section('An ability may carry its later levels as text (BOOK-INGEST-AUDIT F117)');
+{
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: rcc', 'tags: []',
+     ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+  // DISPLAY ONLY. A Mystic Martial Art Power is a table from level 1 to 15;
+  // level 1 is the description and the rest are lines the sheet shows as the
+  // character reaches them. Nothing adds what a line says.
+  const inline = mk('special_abilities:',
+    '  - { name: "Art", description: "Level 1: a blade.", progression: [{ level: 5, text: "Five, with a comma." }, { level: 2, text: "Two." }], bonuses: { combat: { strike: 1 } } }',
+    '  - { name: "Plain", description: "x" }',
+    '  - { choose: 1, from: ["Art", "Plain"] }');
+  const block = mk('special_abilities:', '  - name: "Art"', '    description: "Level 1: a blade."',
+    '    progression:', '      - { level: 2, text: "Two." }', '      - { level: 5, text: "Five." }',
+    '  - { choose: 1, from: ["Art"] }');
+  check('an ability may state a level table, written inline or as a block',
+    inline.ok && block.ok && inline.warnings.length === 0, [...inline.errors, ...block.errors, ...inline.warnings].join('; '));
+  check('both spellings read the same lines',
+    block.data.special_abilities[0].progression.length === 2
+    && inline.data.special_abilities[0].progression[0].text === 'Five, with a comma.');
+  const held = applyAbilities(inline.data, ['Art']).abilities_taken[0];
+  check('a held ability carries its table to the sheet', Array.isArray(held?.progression) && held.progression.length === 2);
+  check('an ability without one carries none',
+    !('progression' in applyAbilities(inline.data, ['Plain']).abilities_taken[0]));
+  check('the table adds no number: the bonuses are the ability\'s own and nothing else',
+    JSON.stringify(applyAbilities(inline.data, ['Art']).bonuses.combat) === '{"strike":1}');
+  check('at level 1 nothing is reached and the next line is the lowest, whatever order it was written in',
+    abilityProgressionAt(held, 1).reached.length === 0 && abilityProgressionAt(held, 1).next?.level === 2);
+  check('at level 3 the level-2 line is reached and level 5 is next',
+    abilityProgressionAt(held, 3).reached.map((l) => l.level).join() === '2' && abilityProgressionAt(held, 3).next?.level === 5);
+  check('at level 5 and beyond every line is reached, in order, and nothing is next',
+    abilityProgressionAt(held, 5).reached.map((l) => l.level).join() === '2,5' && abilityProgressionAt(held, 9).next === null);
+  check('an ability with no table reaches nothing, rather than crashing',
+    abilityProgressionAt({ name: 'x' }, 9).reached.length === 0 && abilityProgressionAt(null, 9).next === null);
+  const bad = (prog) => mk('special_abilities:', `  - { name: "Art", description: "x", progression: ${prog} }`,
+    '  - { choose: 1, from: ["Art"] }');
+  check('a line with no level, no text, or a level below 1 is an error',
+    !bad('[{ text: "No level." }]').ok && !bad('[{ level: 2 }]').ok && !bad('[{ level: 0, text: "x" }]').ok
+    && !bad('[{ level: "two", text: "x" }]').ok);
+  check('an empty table, or one that is not a list, is an error',
+    !bad('[]').ok && !bad('"lots"').ok);
+  check('the same level stated twice is an error, so one entry holds what that level gives',
+    !bad('[{ level: 2, text: "a" }, { level: 2, text: "b" }]').ok);
+
+  // The sheet, pinned by source: it lists the reached lines and the next one
+  // under the held ability, and the next one stays off paper.
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  check('the sheet lists a held ability\'s table under it',
+    /\$\{abilityProgressionHtml\(a\)\}/.test(sheetSrc) && /function abilityProgressionHtml\(a\)/.test(sheetSrc));
+  check('by the character\'s level, with the next line muted and not printed',
+    /const lvl = Number\(C\.data\?\.level\) \|\| 1;[\s\S]{0,520}l\.level <= lvl[\s\S]{0,400}muted small noprint/.test(sheetSrc));
 }
 
 section('The row generators refuse what they cannot write (BOOK-INGEST-AUDIT F124)');
