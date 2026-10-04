@@ -399,6 +399,17 @@ unions it across a race and an occupation, like `spell_levels_allowed`.
 **A new spell import must set `spells.tradition`** when the spells belong to a
 tradition, or they land as general invocations in every level-gated pool.
 
+**`ward` is a tradition** (BOOK-INGEST-AUDIT.md F123), labelled *Ward Symbols*
+on the sheet: Palladium Fantasy's Diabolist holds symbols, not spells. Its
+rows are stored at level 0 and named `Kind: Name` (`Area Effect: ...`), every
+row prefixed - the codex splits the tradition into the book's kinds by that
+prefix, and ONE unprefixed row collapses the split. Power words and components
+go in `description`. A class that is granted its whole list and learns none by
+level states `spells_per_level: 0` beside `spells: [...]`; without it the
+sheet's level-up panel says the class does not record how many it learns. The
+sheet heads every held spell by its tradition's label; the wizard's Powers
+and Review steps still say "Spells".
+
 That is nine psionics keys and eleven magic keys in the live catalog as of
 2026-09-02; `mergePsionics` and `mergeMagic` in `parser.js` both say so in
 their own comments, and both spread unknown keys through rather than
@@ -697,6 +708,48 @@ button. A pick-one group needs the bands to cover 01-00.
 - Not modelled, so keep them in the group's `note` or the row's prose: a cap
   on one band (*"at most one from 87-00"*) and a row that sends the player to
   a sub-table.
+
+**A group the book picks from at SET LEVELS states `at_levels`** (F116):
+
+```yaml
+  - { choose: 1, at_levels: [1, 3, 6, 9, 12, 15], from: ["Art of ...", "..."] }
+  - { choose: 1, at_levels: [3], from: ["Art of ...", "..."] }
+```
+
+- `choose` is what EACH listed level gives. Level 1, when listed, is the
+  creation pick; a group with no level 1 is named in the wizard and not
+  offered. Each later level banks a pick the player spends from the sheet's
+  banked-picks panel, never in the level-up dialog.
+- A level past the class's fifteen-level ladder never fires: keep that pick
+  as prose. `at_levels` and `rolls` do not combine.
+- A later pick's dice and pool bonuses are rolled and stored when it is spent.
+  NOT handled for a later pick: `mdc_from_hp_sdc`, `attribute_dice`, and the
+  I.S.P. base of a `psionics` block. `docs/leveling.md` has the whole account.
+
+**An ability whose text changes by level carries `progression`** (F117),
+display only:
+
+```yaml
+  - name: "Mystic Martial Art Power: ..."
+    description: "Level 1: ..."
+    progression:
+      - { level: 2, text: "+1 to strike and parry with the blade." }
+      - { level: 3, text: "Blade Chi Strike: ..." }
+```
+
+- `level` is the character's level. The sheet shows the lines reached and the
+  next one. **Nothing adds what a line says**: a number that must reach the
+  sheet still goes in the class's `bonuses.at_level`.
+- **Only a HELD ability is shown** - one picked, or one granted through a
+  one-option `choose: 1` group. A power written as a plain definition needs
+  that one-option group before its table can be seen.
+
+**An O.C.C.'s pick group is offered wherever the O.C.C. is taken** (F125): on
+the Race step when it is played alone, on the Occupation step when it is paired
+with a race. Write the group once, on the O.C.C.; nothing is stated on the
+race. **Do not give a race and an occupation that can be paired the same
+option NAMES**: `abilities` is one flat list, so a shared name counts in both
+groups and the occupation's own pick is not separately offered.
 
 ### `totem` — one animal from the shared `totems` catalog
 

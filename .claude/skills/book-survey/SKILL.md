@@ -306,7 +306,14 @@ authority; page position is not.** Also:
 A data script, per `class-import` (production is behind Access, so the import
 UI cannot reach it). Creatures and notable NPCs go from reconciled JSON to
 their script through `node scripts/bestiary-sql.mjs`, not a generator
-rebuilt in the scratchpad; its header gives the JSON shape. **Delete the rows and re-apply the script from scratch**:
+rebuilt in the scratchpad; its header gives the JSON shape. The same holds for
+vehicles with their locations and weapons (`node scripts/vessel-sql.mjs`) and
+for flat catalog rows - spells, gear, skills, psionic powers, enchantments
+(`node scripts/rows-sql.mjs`), both as `<worker-json-dir> <out.sql>`; each
+header gives its JSON shape, each has a `--self-test` and refuses to overwrite
+a file that exists (BOOK-INGEST-AUDIT.md F124). No check enforces their use,
+and that is not leave to write your own, retyped from memory or by hand: when
+one refuses the input, the JSON is what gets fixed. **Delete the rows and re-apply the script from scratch**:
 the script is what ships, not the review's leftovers. Then
 `node scripts/drift-check.mjs --remote`, and drive one real user path in the
 browser: a picker offering the new rows is the only proof they are reachable.
