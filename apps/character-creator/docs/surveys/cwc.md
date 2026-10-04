@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1377-#1407 and the creatures PR: gear, 21 classes, 33 vehicles, 9 creatures, 7 notable NPCs. What was left out on purpose is under *Extraction plan*. (2026-09-25)
 
-**Rows citing this book:** classes 21, gear 25, vehicles 33, skills 3, notable_npcs 7, creatures 9
+**Rows citing this book:** classes 15, gear 25, vehicles 33, skills 3, notable_npcs 7, creatures 9
 
 **MOS:** cs-rcsg-scientist 7, cs-special-forces 8, iss-peacekeeper 7, iss-specter 8, iss-intel-specter 10, ntset-protector 7, psi-net-agent 10, kremin-cyborg 7
 
@@ -276,6 +276,7 @@ What is deliberately left, with the reason:
 | 2026-09-27 | `pal/data/rebuild-audit-f16-f25-f26` | **`Radar/Sonar Operations` cites this book**, by `~040-rifts-skill-list-recitations.sql` (REBUILD-AUDIT F16): it moves from the non-book `Rifts Skill List` to `Rifts World Book 11: Coalition War Campaign p.66`, where *Pilot Related: Radar/Sonar Operations (Read Sensor Equipment)* prints 30%+5%, as the row stores. Printed 59's list marks it *(new)*. `Trap Construction` is **not** moved: printed 62 defines it at the stored 20%+4%, and so does New West printed 75. Skills citing this book 2 -> **3**. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The NTSET Protector's Medical +10% on Crime Scene Investigation and Pathology is a scoped second entry** (`~086`), the shape `BOOK-INGEST-AUDIT.md` F109 added and named this class for. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a2-reprints-compared` | **Vehicle overlap with Rifts Ultimate Edition measured, no row changed** (the `~094` PR). This book stats none of the five vehicles held from RUE (it points to the Rifts RPG for them). The overlap runs the other way: `pa-06a-deaths-head-samas` and `fassar-20-30-skelebot` are held from this book (1996) and RUE (2005) prints both with lower figures (SAMAS wings 30 against 50, altitude 500 ft against 6000; Skelebot main body 100 against 150, vibro-blades 2D4 against 2D6) under a heading dating them to 100-104 P.A., while this book calls its machines improved. The year rule says RUE; the books' own account says this book describes the later machine. **Left as held, for Nate's ruling.** |
+| 2026-10-04 | `pal/data/d-bees-of-north-america-cwc-updates` | **Six classes leave this book's count for D-Bees of North America** (`~095`): `nmbyr-gorilla-man`, `tirrvol-sword-fist`, `quick-flex-alien`, `vanguard-brawler`, `trimadore`, `kremin-cyborg`. D-Bees (2007) reprints and updates each, and by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`. This book's figures are kept in each class's `extraction_notes`, and the comparison found nothing the held rows had dropped from printed 202-211. The Quick-Flex Rogue, Thug and Kremin Technical Officer skill programs and their ladders (printed 224), which D-Bees does not restate, are still stored. Applied `--remote` before the merge. |
 
 ### What remains
 

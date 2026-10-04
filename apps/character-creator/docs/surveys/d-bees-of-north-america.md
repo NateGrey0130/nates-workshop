@@ -2,7 +2,7 @@
 
 **Status:** `imported` — 49 races and 3 occupations shipped; the held reprints and Aarden Tek and Pogtal (held under other names) are left on purpose. (2026-10-03)
 
-**Rows citing this book:** classes 52
+**Rows citing this book:** classes 58
 
 Slug `d-bees-of-north-america`. Cached 2026-10-03 from
 `Rifts- World Book 30 D-Bees of North America.pdf`, 226 PDF pages, **scan (no
@@ -199,8 +199,12 @@ file are the count before the Aarden Tek and Pogtal correction.
 
 **None of the 32 is identical to its held row.** The book's own Contents
 calls each one "a reprint or update", and they are updates. Nothing below
-was changed in the catalog: which book a held class follows is a decision per
-class, as it was for Canada's Techno-Warrior.
+was changed in the catalog when this table was written: which book a held
+class follows was a decision per class, as it was for Canada's
+Techno-Warrior. **Nate ruled on 2026-10-04** that the newest printing which
+states a figure wins and that a class this book updates moves its
+`source_book` here, with the original named in its notes. The Ledger records
+each batch as it ships; a class it names no longer matches its row below.
 
 Four kinds of difference recur, and most entries show all four:
 
@@ -300,3 +304,4 @@ What is deliberately left:
 | 2026-10-03 | `pal/data/d-bees-of-north-america-adna-armor` | `~073-adna-nomad-light-armor-choice.sql`: the Adna Nomad's generic light armour becomes the four-suit choice every other class has (the F115 correction). `repo-vs-live --offenders` found production holding the placeholder while the repo rebuilt the choice, the one differing field after #1651. Changes production, one row; a no-op on a clean build. No new rows. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **The 32 held reprints compared with their held rows** (*The held reprints compared*), by three `book-reconcile` passes reading renders. No rows, and nothing changed in the catalog. None of the 32 is identical; the Lyn-Srial Cloudweaver is not printed in this book at all. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Larmac's rare-psionics table becomes a banded pick-one group** (`~090`). Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/d-bees-of-north-america-cwc-updates` | **The held reprints follow this book, batch 1 of 4: the six held from Coalition War Campaign** (`~095`): `nmbyr-gorilla-man` (printed 143-144), `tirrvol-sword-fist` (201-203), `quick-flex-alien` (168-170), `vanguard-brawler` (208-210), `trimadore` (206-208), `kremin-cyborg` (111-114). Each was read against BOTH books off renders, one agent per class, so a difference is known to be this book's revision and not a drop: about 110 changes, 100 of them revisions. `book-reconcile` checked every figure against renders again and found **no disagreement**. Each cites this book now and keeps Coalition War Campaign's figures in `extraction_notes`. Where this book restates a complete line (bonuses, R.C.C. skills, equipment, money) without an item, the item is gone and noted; where it is silent about a whole block, the block is kept. **Three keep the shape they had**: this book prints the Quick-Flex Alien, the Vanguard Brawler and the Kremin as races that take an O.C.C. with the O.C.C.'s table, equipment and money, and the catalog holds each as an R.C.C. with its own program and ladder; that conversion is left for Nate. Production held no saved character on any of the six. Applied `--remote` before the merge. |
