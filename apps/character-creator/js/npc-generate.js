@@ -35,7 +35,7 @@
 
 import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus } from './dice.js';
 import { skillBase } from './skill-base.js';
-import { isChoiceGroup, isAbilityChoice, rollAbilityTable, categoryAllows, namedByOnly, categoryBonus, categoryName,
+import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryBonus, categoryName,
          relatedFloorStatus } from './parser.js';
 import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
          startingPicksFor } from './leveling.js';
@@ -412,7 +412,9 @@ export function chooseClassOptions(cls, { totems = [], random = Math.random } = 
     return Array.isArray(d?.occ_options) && d.occ_options.length > 0;
   };
   for (const g of (cls?.special_abilities || []).filter(isAbilityChoice)) {
-    const want = parseInt(g.choose, 10) || 0;
+    // What the group allows AT CREATION: a group picked at set levels gives only
+    // its level-1 pick here, and its later picks are banked (F116).
+    const want = abilityGroupAllowance(g, 1);
     if (want <= 0) continue;
     // A table the book rolls on more than once is ROLLED, count and all
     // (BOOK-INGEST-AUDIT F120); `choose` there is only the most it can hold.
@@ -447,7 +449,7 @@ function refuseWhatWeCannotChoose(cls, chosen) {
   if (cls.second_form) {
     throw new NpcGap('second_form', `${who} has a second form (a Morphus), which the NPC generator does not roll yet`);
   }
-  if ((cls.special_abilities || []).some((e) => isAbilityChoice(e) && Number(e.choose) > 0)
+  if ((cls.special_abilities || []).some((e) => isAbilityChoice(e) && abilityGroupAllowance(e, 1) > 0)
       && !chosen.abilities?.length) {
     throw new NpcGap('abilities', `${who} has abilities to choose, and none were chosen`);
   }

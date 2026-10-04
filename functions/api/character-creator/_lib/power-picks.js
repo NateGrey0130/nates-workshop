@@ -16,7 +16,7 @@ import { chunks, selectInChunks } from './sql-chunk.js';
 import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
 import { loadPsionicCosts, applyPsionicCosts } from './system-bases.js';
-import { categoryAllows, categoryLabel } from '../../../../apps/character-creator/js/parser.js';
+import { categoryAllows, categoryLabel, abilityLevelGrants } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          spellGrantsFor, psionicGrantsFor, talentGrantsFor, talentPurchaseGrantsFor, spellTraditionsAllowed,
          spellTraditionAllowed } from './leveling.js';
@@ -125,6 +125,15 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
     out.push({ ...g, kind: 'talent_purchase', spell_levels: null, traditions: null,
                categories: null, from: null, note: null });
   }
+  // A class ability picked at a set level (BOOK-INGEST-AUDIT F116): the Mystic
+  // Ninja's art of invisibility at 3, 6, 9, 12 and 15. Its list is the grant's
+  // only restriction and rides in `from`, so a banked pick keeps the options
+  // it was granted with. SPENT INTO `abilities`, NOT `powers`: what it yields
+  // is a class ability, folded by applyAbilities like one chosen at creation.
+  for (const g of abilityLevelGrants(cls, fromLevel, toLevel)) {
+    out.push({ level: g.level, slot: g.slot, count: g.count, kind: 'ability', spell_levels: null,
+               traditions: null, categories: null, from: g.from, note: g.note ?? null });
+  }
   return out;
 }
 
@@ -143,15 +152,20 @@ export function powerGrantsFor(cls, fromLevel, toLevel) {
 // fit and together do not are not half-allowed. `null` pays for nothing.
 // `ppeSpent` comes back as what the purchases cost, for the caller to add to
 // `ppe_base_spent` in the same batch that stores the Talents.
-export async function resolvePowerPicks(env, { picks, grants, existingPowers, system, ppeAvailable = null }) {
+export async function resolvePowerPicks(env, { picks, grants, existingPowers, existingAbilities = [], system, ppeAvailable = null }) {
   const errors = [];
   const chosen = [];
+  // Class abilities picked from a levelled group (F116). Returned apart from
+  // `powers`, because they are stored in `abilities`.
+  const abilities = [];
+  const heldAbilities = new Set((existingAbilities || [])
+    .map((a) => String(a?.name ?? a ?? '').trim().toLowerCase()).filter(Boolean));
   const spent = new Map();
   let ppeSpent = 0;
   // `spent` is returned alongside the powers: how many picks were taken from each
   // grant, keyed `kind:level:slot` exactly the way a banked row and
   // remainingPowerGrants key one. See the note at the return below.
-  if (!Array.isArray(picks) || !picks.length) return { powers: [], errors, spent: new Map(), ppeSpent };
+  if (!Array.isArray(picks) || !picks.length) return { powers: [], abilities: [], errors, spent: new Map(), ppeSpent };
 
   const held = new Set((existingPowers || [])
     .map((p) => String(p?.name || '').toLowerCase()).filter(Boolean));
@@ -183,7 +197,8 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     // wrong catalog for a row that exists.
     const kind = pick?.kind === 'psionic' ? 'psionic'
       : pick?.kind === 'talent' ? 'talent'
-      : pick?.kind === 'talent_purchase' ? 'talent_purchase' : 'spell';
+      : pick?.kind === 'talent_purchase' ? 'talent_purchase'
+      : pick?.kind === 'ability' ? 'ability' : 'spell';
     // A purchase YIELDS a Talent, so it reads the Talent catalog and passes the
     // Talent gates; only the grant it consumes and the price differ.
     const isTalent = kind === 'talent' || kind === 'talent_purchase';
@@ -199,6 +214,25 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     }
     if (room.get(k) <= 0) {
       errors.push(`${name}: the level ${level} ${what} grant is already full`);
+      continue;
+    }
+    // A CLASS ABILITY has no catalog row: its grant's own list is the whole
+    // restriction, and what it must not repeat is the character's abilities.
+    if (kind === 'ability') {
+      const list = fromFor.get(k) || [];
+      const match = list.find((n) => String(n).toLowerCase() === name.toLowerCase());
+      if (!match) {
+        errors.push(`${name} is not on the list the level ${level} grant draws from`);
+        continue;
+      }
+      if (heldAbilities.has(name.toLowerCase())) {
+        errors.push(`${name} is already held — a class ability is picked once`);
+        continue;
+      }
+      room.set(k, room.get(k) - 1);
+      spent.set(k, (spent.get(k) || 0) + 1);
+      heldAbilities.add(name.toLowerCase());
+      abilities.push({ name: String(match), gained_at_level: level, slot });
       continue;
     }
     if (held.has(name.toLowerCase())) {
@@ -334,7 +368,7 @@ export async function resolvePowerPicks(env, { picks, grants, existingPowers, sy
     errors.push(`Those Talent purchases cost ${ppeSpent} permanent P.P.E., and this character `
       + `has ${available} left to spend`);
   }
-  return { powers: chosen, errors, spent, ppeSpent };
+  return { powers: chosen, abilities, errors, spent, ppeSpent };
 }
 
 // Only the rows actually named, rather than both catalogs whole: a level-up

@@ -43,6 +43,7 @@
 //    category both over- and under-counts. Choice groups are therefore reported
 //    as WARNINGS and never block a save.
 
+import { abilityGroupAllowance } from '../../../../apps/character-creator/js/parser.js';
 import { isChoiceGroup, categoryAllows, categoryLabel, categoryName, needsOccupation, relatedFloorStatus,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
          applyAbilities, mosList } from '../../../../apps/character-creator/js/parser.js';
@@ -370,7 +371,10 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
   // the same reasoning that makes an `override: true` skill legal by definition.
   {
     const groups = (cls.special_abilities || []).filter(isAbilityChoice);
-    const allowed = groups.reduce((n, g) => n + (+g.choose || 0), 0);
+    // By the character's LEVEL: a group picked at set levels allows one more
+    // round of `choose` for each of its levels reached (BOOK-INGEST-AUDIT F116).
+    // A group with no `at_levels` allows `choose`, as it always did.
+    const allowed = groups.reduce((n, g) => n + abilityGroupAllowance(g, level), 0);
     const offered = new Set(abilityOptions(cls).map(norm));
     const defs = new Map((cls.special_abilities || [])
       .filter(isAbilityDefinition).map((d) => [norm(d.name), d]));

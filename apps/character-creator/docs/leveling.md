@@ -338,6 +338,39 @@ A fragment's `bonuses` block is validated
 through exactly the same path a class's own bonuses take, so an ability cannot
 express a bonus a class could not.
 
+**A class ability may be picked at set levels** (`BOOK-INGEST-AUDIT` F116,
+migration 090). Rifts Japan's Mystic Ninja takes one art of invisibility at
+levels 1, 3, 6, 9, 12 and 15; its Bishamon monk takes one at 3 and none at
+creation:
+
+```yaml
+  - { choose: 1, at_levels: [1, 3, 6, 9, 12, 15], from: ["Art of ...", "..."] }
+  - { choose: 1, at_levels: [3], from: ["Art of ...", "..."] }
+```
+
+- **`choose` is what EACH level gives.** Level 1, when it is on the list, is
+  the creation pick the wizard already offers; a group with no level 1 is named
+  on the Race step and not offered. Without `at_levels` a group is what it
+  always was. `at_levels` and `rolls` do not combine.
+- **Every later level banks a grant** when the level is reached (or at
+  creation, for a character made above level 1): a `pending_power_picks` row
+  of kind `ability`, its option list in `from_names`, its `slot` the group's
+  index among the composed class's choice groups. It is never spent in the
+  level-up dialog; the sheet's banked-picks panel offers each grant its own
+  list, less what the character holds.
+- **Spending one adds the name to `abilities`** and writes what the wizard
+  would have written at creation: a dice bonus to an attribute, a combat number
+  or a save is rolled and added to `attribute_bonuses` / `rolled_bonuses`, and
+  a pool bonus, flat or dice, is added to that pool's maximum and current
+  value (`_lib/ability-picks.js`). Flat attribute, combat and save bonuses, the
+  ability's text and any psionics it brings need nothing: `applyAbilities` folds
+  them whenever the class is composed. **Not handled:** an ability that
+  converts hit points and S.D.C. to M.D.C., one that restates
+  `attribute_dice`, and the I.S.P. base of a psionics block it brings.
+- **The server counts picks by level**: a levelled group allows one round of
+  `choose` for each of its levels the character has reached. A level past the
+  class's fifteen-level ladder never fires; keep that pick as prose.
+
 **An ability may carry its later levels as text** (`BOOK-INGEST-AUDIT` F117).
 A China 2 Mystic Martial Art Power is a table from level 1 to 15, and only its
 level 1 was stored. On Nate's word the rest is display only - no catalog of

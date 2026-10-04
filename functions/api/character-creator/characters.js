@@ -362,6 +362,16 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
     statements.push(...insertPowerGrantStatements(env, row.id, purchases));
   }
 
+  // Class abilities picked at set levels (BOOK-INGEST-AUDIT F116). A character
+  // created above level one is owed the picks of every level it skipped; the
+  // wizard has no picker for them, so they bank, as the purchases above do. A
+  // generated NPC's caller already passes them among its own grants, so they
+  // are not banked a second time.
+  if (cls && level > 1 && !bankPowers.some((g) => g?.kind === 'ability')) {
+    const levelled = powerGrantsFor(cls, 1, level).filter((g) => g.kind === 'ability');
+    statements.push(...insertPowerGrantStatements(env, row.id, levelled));
+  }
+
   // The caller's extra grants - a generated NPC's spells, psionics and Talents
   // to choose, banked for the sheet's picks panel. Empty for a player's
   // character, whose wizard spent its own.

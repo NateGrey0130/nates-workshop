@@ -2594,9 +2594,72 @@ export function abilityRollLimit(rolls) {
 // the dice can come up - the rolled count is not stored, so the Race step
 // cannot hold a player who rolled 2 on 1D4 until four rows are held, which is
 // what reading the filled-in `choose` did (found by F120's premise audit).
+//
+// A group picked AT SET LEVELS (F116, below) owes its level-1 pick at creation
+// and nothing else: the later ones are banked when the level is reached.
 export function abilityGroupOwed(group) {
   if (typeof group?.rolls === 'string') return diceBounds(group.rolls)?.min ?? 1;
-  return +group?.choose || 0;
+  return abilityGroupAllowance(group, 1);
+}
+
+// A PICK MADE AT SET LEVELS (BOOK-INGEST-AUDIT F116).
+//
+//   - { choose: 1, at_levels: [1, 3, 6, 9, 12, 15], from: ["Art of ...", ...] }
+//
+// Rifts Japan's Mystic Ninja takes one art of invisibility at each of those
+// levels; the Bishamon monk takes one at level 3 and none at creation. Without
+// `at_levels` a group is what it always was: `choose` picks, at creation.
+//
+// `choose` is the number of picks EACH level gives. Level 1, when it is on the
+// list, is the creation pick the wizard already offers; every later level
+// banks a grant the sheet's banked-picks panel spends (kind `ability` in
+// `pending_power_picks`), and spending one adds the name to the character's
+// abilities, where applyAbilities folds it like any other.
+//
+// SO A GROUP'S LIMIT DEPENDS ON THE CHARACTER'S LEVEL, and everything that
+// measured picks against `choose` asks this instead: the wizard's picker and
+// gate (level 1), the server's count (the character's level), the NPC
+// generator's creation picks.
+export function abilityGroupLevels(group) {
+  const l = group?.at_levels;
+  return Array.isArray(l) && l.length && l.every((n) => Number.isInteger(n) && n >= 1)
+    ? [...l].sort((a, b) => a - b) : null;
+}
+
+export function abilityGroupAllowance(group, level) {
+  const choose = +group?.choose || 0;
+  const levels = abilityGroupLevels(group);
+  if (!levels) return choose;
+  const reached = levels.filter((n) => n <= (Number(level) || 1)).length;
+  return choose * reached;
+}
+
+// What a span of levels earns from a class's levelled groups, itemised by the
+// level that earned each - the shape perLevelGrants gives spells and Talents.
+// Every level strictly above `fromLevel` and up to `toLevel`, so creation
+// (from 1) never re-grants the level-1 pick the wizard already took.
+//
+// `slot` is the group's index among the composed class's choice groups: two
+// groups may fire at one level (the Bishamon's exercise at 4 is not its art at
+// 3, but a class could give both at 10), and level plus slot is what every
+// grant is keyed on. The option names ride on the grant, so a banked pick
+// keeps the list it was granted with even if the class is re-imported.
+export function abilityLevelGrants(cls, fromLevel, toLevel) {
+  const out = [];
+  const groups = (cls?.special_abilities || []).filter(isAbilityChoice);
+  groups.forEach((g, slot) => {
+    const levels = abilityGroupLevels(g);
+    const count = +g.choose || 0;
+    if (!levels || count <= 0) return;
+    const from = (g.from || []).map((o) => (typeof o === 'string' ? o : o?.name)).filter(Boolean).map(String);
+    if (!from.length) return;
+    for (const level of levels) {
+      if (level <= fromLevel || level > toLevel) continue;
+      out.push({ level, slot, count, from,
+        ...(typeof g.note === 'string' && g.note.trim() ? { note: g.note.trim() } : {}) });
+    }
+  });
+  return out.sort((a, b) => a.level - b.level || a.slot - b.slot);
 }
 
 // Roll a `rolls` group's table. `d100()` supplies each percentile roll and
@@ -4089,6 +4152,24 @@ export function parseClassMarkdown(text) {
     }
     if (e.choose !== undefined && (typeof e.choose !== 'number' || e.choose < 1)) {
       errors.push('special_abilities: choose must be a positive number');
+    }
+    // A pick made at set levels (F116): which levels, each giving `choose`
+    // picks. Rising, distinct, whole and at least 1, and never beside `rolls`,
+    // whose count is a table's and not a level's.
+    if (e.at_levels !== undefined) {
+      const l = e.at_levels;
+      if (!Array.isArray(l) || !l.length || l.some((n) => !Number.isInteger(n) || n < 1)) {
+        errors.push('special_abilities: at_levels must be a non-empty list of whole-number levels of 1 or more');
+      } else if (l.some((n, i) => i > 0 && n <= l[i - 1])) {
+        errors.push('special_abilities: at_levels must rise, each level once - '
+          + `got [${l.join(', ')}]`);
+      }
+      if (e.rolls !== undefined) {
+        errors.push('special_abilities: a group states at_levels or rolls, not both');
+      }
+      if (e.choose === undefined) {
+        errors.push('special_abilities: an at_levels group needs choose - the picks each of its levels gives');
+      }
     }
     // A table rolled more than once (F120). `rolls` stands in for `choose`,
     // which is filled in here with the most the group can hold.

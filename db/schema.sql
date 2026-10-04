@@ -472,7 +472,13 @@ CREATE TABLE IF NOT EXISTS pending_power_picks (
   -- permanent P.P.E. A kind of its own rather than a 'talent' row, because a
   -- purchase is spent by choosing AND paying, and the two would otherwise share
   -- the key `talent:level:slot` at levels four, seven, ten and twelve.
-  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic', 'talent', 'talent_purchase')),
+  --
+  -- 'ability' arrived with migration 090 (BOOK-INGEST-AUDIT F116): a CLASS
+  -- ABILITY picked at a set level - the Mystic Ninja's art of invisibility at 3,
+  -- 6, 9, 12 and 15. Its option list rides in `from_names`, which already
+  -- existed, so this too is a CHECK widening and not a new column. A kind of
+  -- its own because it is spent into `characters.abilities`, not `powers`.
+  kind TEXT NOT NULL CHECK (kind IN ('spell', 'psionic', 'talent', 'talent_purchase', 'ability')),
   -- JSON array of SPELL levels this grant may draw from; NULL is unrestricted,
   -- and always NULL for a psionic grant. Copied from the class at grant time,
   -- as pending_skill_picks copies its categories.
@@ -523,6 +529,12 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '066-pending-power-picks-talent-purchase.sql'
 WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks'
                 AND instr(sql, '''talent_purchase''') > 0);
+
+-- 090 the same way, on its own value.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '090-pending-power-picks-ability.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'pending_power_picks'
+                AND instr(sql, '''ability''') > 0);
 
 -- Things a table hands out that no class schedule granted: a patron teaches a
 -- skill, an artefact confers a power, an implant adds S.D.C. The G.M. usually
