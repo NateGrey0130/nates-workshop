@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 40, gear 207, vehicles 14, skills 216, spells 115, psionic_powers 89
+**Rows citing this book:** classes 40, gear 207, vehicles 14, skills 218, spells 115, psionic_powers 89
 
 **MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
 
@@ -202,6 +202,7 @@ Physical.
 | 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. Eight robots, power armours and vehicles on printed 249-253 and 271-273 are in neither `vehicles` nor `gear`; the book prints no bestiary and no named-NPC block. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The eight machines the inventory found unheld, as vessels** (`~084`): UAR-1 Enforcer, CR-003 Spider-Skull Walker, Mark V APC, AFC-050 Death's Head Transport, AFC-023 Sky Cycle, NG-X9 Samson, FT-005 Flying Titan, TR-001 Titan Combat Robot. Vehicles 6 to 14. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a1-newest-wins` | **Newest printing wins (Nate's ruling, 2026-10-04), `~093`.** `neural-mace` cited printed 259 but carried the 1D8 S.D.C. of Triax and the NGR printed 150; it now carries this book's 2D6 S.D.C. club and 1D6 jab damage and its 8,000 credit Black Market cost, with Lone Star's M.D.C., payload and length for what this book does not print. **Stands, because this is the newer printing:** `knife-throwing` at 200-600 credits against Warlords of Russia's 100, and the rows `lone-star.md` lists. **Leaves this book's count:** `poncho`, an unpriced stub citing printed 88 (a class's equipment list, no price), now takes Warlords of Russia printed 189. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a2-reprints-compared` | **Rows that cite this book and had dropped what it prints** (`~094`), found by comparing other books' reprints: prices on `vibro-knife`, `vibro-saber`, `vibro-sword`, `vibro-claws` and the three Dog Pack spike rows (printed 259); the Boom Gun's 1000-round payload (72); `crossbow-pistol`'s damage and range (326); notes on twelve skills (printed 302-330) and `Brewing` and `Field Armorer & Munitions Expert` re-cited here from no book; three `mutant-psi-stalker` abilities (153-154) and each Psi-Stalker occupation's weapon issue (155, 156). Each read off a render and checked again by `book-reconcile`. Applied `--remote` before the merge. |
 
 ### What remains
 
