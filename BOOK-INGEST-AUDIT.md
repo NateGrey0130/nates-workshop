@@ -4145,3 +4145,103 @@ gave; power words and components go in `description`. The `diabolist` takes
 how many spells it learns - and its note about there being no ward catalog
 goes stale then. No class cites this finding
 (`node scripts/audit-citations.mjs --remote F123`: 0).
+
+### F124 - low - three more SQL generators were rebuilt in a session scratchpad, the pattern F112 closed for one table family
+
+`F112` (this file, taken 2026-09-27) tracked the creatures-and-notables
+generator as `scripts/bestiary-sql.mjs`, because every book had rewritten it in
+a scratchpad and re-decided what the last had settled. The retrospective of
+2026-10-03 did the same again for three other shapes (reported by the
+close-out's ledger note in memory, `book-imports-ledger.md`, the
+*Retrospective 2026-10-03* paragraph, item 4): vehicles with their locations
+and weapons, flat spell and gear rows, and whole-markdown class fixes. The
+scripts they produced are in the repo - `~084-rue-and-pantheons-machines.sql`,
+`~085-iron-juggernauts-and-cyborg-bodies.sql`,
+`~088-xiticix-australia-warlords-gear.sql`,
+`~089-underseas-percentile-groups.sql`, `~090-percentile-groups-six-classes.sql`,
+`~091-temporal-magic-and-circles.sql` under `apps/character-creator/db/`, read
+2026-10-04 - and the generators are not. A search of the session scratchpads
+on this machine on 2026-10-04 found earlier sessions' `veh-gen.mjs` and
+`gear-gen.mjs` but not the ones that wrote those six files.
+
+**Proposal** (Nate's word, 2026-10-04, recommendation 7 of sixteen: rebuild
+them from the scripts they produced, each with a self-test, and do not hunt
+for the originals): three opt-in generators beside `bestiary-sql.mjs`, sharing
+one small library.
+
+- `scripts/vessel-sql.mjs`: `vehicles` rows with `locations` and `weapons`
+  lists, written as `vehicles`, `vehicle_locations` and `vehicle_weapons`.
+- `scripts/rows-sql.mjs`: flat rows for `spells`, `gear`, `skills`,
+  `psionic_powers` and `enchantments`, keyed on each table's portable identity.
+- `scripts/class-fix-sql.mjs`: a class's markdown replaced whole, guarded on a
+  sentence of the old text and its exact stored length, with `--remote` to
+  read that length from production.
+
+Each refuses what it cannot write - a key that is not a column, a missing
+required value, a value outside a CHECK list, a duplicate identity, a row with
+no `source_book`, any non-ASCII character, and for a class fix markdown that
+does not parse - reports every refusal in one pass and writes nothing; emits
+`INSERT OR IGNORE` (or the guarded `UPDATE`), read-backs of its own rows, and
+the `data_script_runs` line; never overwrites a file; and has `--self-test`.
+**Posture:** opt-in tooling. No check requires a data script to come from one,
+and no existing script is regenerated. Smoke runs the three self-tests.
+**Evidence for the proposal:** the six scripts' statement forms were read
+2026-10-04; the round trip is in the outcome note.
+
+**Confidence:** high. **Ongoing cost:** three scripts and a library that must
+follow the schema. They read columns from `db/schema.sql`, so an ordinary new
+column needs no change here; a column whose DEFAULT is an expression, or whose
+CHECK runs past one line, makes the reader refuse until it is taught that
+shape. `bestiary-sql.mjs` keeps its own copy of two helpers.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f124-row-generators`).**
+Posture said back: opt-in tooling; no check requires a data script to come
+from one; no existing script is regenerated; smoke runs the three self-tests.
+**Filed and taken in one PR**, which `audit-menu` says not to do; Nate's word
+for the close-out is to write each finding and build it in the same session,
+with the premise auditor in between, and that is what happened here - except
+that the generators were written while another audit was running, so the
+auditor reviewed finished code rather than a proposal. It found nothing wrong
+with the finding's premises and eleven things wrong with the code, all fixed
+before the first commit:
+
+- **`rows-sql` would have written `source = 'seed'`** on a row that stated no
+  `source`, because the library fills a missing value from the schema's
+  default. `scripts/source-coverage.mjs` counts a book's rows by
+  `source = 'import'`. A row with none is now written `import`.
+- **`class-fix-sql` could not reproduce three of the thirteen UPDATEs** it was
+  written to track: `~089` guards dolphin, killer-whale and sperm-whale on the
+  ABSENCE of `special_abilities:`. `guard_absent` is the second guard form.
+- **The read-back split guarded the wrong limit.** `d1-apply` sends every
+  trailing SELECT as one command, capped near 7,900 escaped characters, and
+  past it the apply lands and the assertions go unevaluated. Each generator
+  now refuses a script over that budget and says to split the input.
+- **The column reader guessed at shapes it could not read.** An expression
+  DEFAULT or a CHECK continued onto a second line now stops it with a message,
+  and smoke compares its column count with each real table's CREATE.
+- Smaller: the overwrite refusal was tested nowhere (it is now, against a real
+  data script that is the same bytes afterwards); `--remote` did not check
+  that production lacks the proof; a `--title` with a newline would have put
+  text outside the comment; the closing message told the reader to run
+  `class-check` on a script it does not read.
+
+**The round trip, measured by the auditor and re-run after the fixes**
+(2026-10-04; each script built into a fresh SQLite from `db/schema.sql`, its
+rows read back out as JSON, regenerated, and the VALUES lines compared in
+place): `~084` 10 vehicles, 85 locations, 54 weapons, 0 differing; `~085`
+16 / 79 / 71, 0; `~088` 136 gear rows, 0; `~091` 89 spells, 0. Ten of the
+thirteen class UPDATEs in `~089` and `~090` come out byte-identical; the three
+that do not are the absence-guarded ones, which were compared before
+`guard_absent` existed and are covered since by the self-test rather than by
+a second round trip. The generated scripts differ from the originals in batch
+size and in the read-backs' labels, nothing else.
+
+Built: `scripts/sql-gen-lib.mjs`, `scripts/vessel-sql.mjs`,
+`scripts/rows-sql.mjs`, `scripts/class-fix-sql.mjs`; one smoke section;
+`docs/operations.md` and the README's file map. `F112`'s own note says its
+self-test is run by hand and no suite calls it; these three are run by smoke,
+which is this finding's posture and a departure from that precedent.
+`book-survey` and `class-import` still point only at `bestiary-sql.mjs`; a
+skill file is edited from the main checkout, in the close-out's second skills
+pass. A fourth rebuild of the class-fix generator, dated today, sits in
+another session's scratchpad - the pattern this closes was still running.
