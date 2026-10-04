@@ -35,7 +35,7 @@
 
 import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus } from './dice.js';
 import { skillBase } from './skill-base.js';
-import { isChoiceGroup, isAbilityChoice, categoryAllows, namedByOnly, categoryBonus, categoryName,
+import { isChoiceGroup, isAbilityChoice, rollAbilityTable, categoryAllows, namedByOnly, categoryBonus, categoryName,
          relatedFloorStatus } from './parser.js';
 import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
          startingPicksFor } from './leveling.js';
@@ -414,6 +414,13 @@ export function chooseClassOptions(cls, { totems = [], random = Math.random } = 
   for (const g of (cls?.special_abilities || []).filter(isAbilityChoice)) {
     const want = parseInt(g.choose, 10) || 0;
     if (want <= 0) continue;
+    // A table the book rolls on more than once is ROLLED, count and all
+    // (BOOK-INGEST-AUDIT F120); `choose` there is only the most it can hold.
+    if (g.rolls !== undefined) {
+      const count = typeof g.rolls === 'number' ? g.rolls : evalDice(g.rolls);
+      out.abilities.push(...rollAbilityTable(g, count, () => evalDice('1d100')).picks);
+      continue;
+    }
     const opts = (g.from || []).filter((o) => !bringsAnOccupation(o))
       .map((o) => (typeof o === 'string' ? o : o?.name)).filter(Boolean);
     if (opts.length < want) {

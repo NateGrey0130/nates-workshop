@@ -1,4 +1,4 @@
-import { diceBounds, isAbsentAttribute, poolFormulaBounds } from './dice.js';
+import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
@@ -2392,6 +2392,11 @@ export function isAbilityChoice(entry) {
 // chosen ability that could restate attribute_dice or starting_money is not an
 // ability, it is a second class wearing one's name.
 //
+// `attribute_dice` has since been let in on its own, like the two flags below
+// this list (BOOK-INGEST-AUDIT F120, on Nate's ruling): a table ROW that prints
+// "P.B. 2D4" is not adding to the roll, it is the roll. `starting_money` stays
+// out, and the argument above still holds for it.
+//
 //   - name: "Super-Tough"
 //     description: "Add 1D6 to P.E. and 3D4x10 to M.D.C."
 //     bonuses: { attributes: { PE: "1d6" }, pools: { mdc: "3d4x10" } }
@@ -2518,9 +2523,17 @@ export function abilityGroupCounts(cls, chosenNames) {
 // table with a hole in it would sometimes land on nothing, and a button that
 // sometimes does nothing reads as broken. Two options MAY share a band - the
 // Dog Boy's 66-70 prints two breeds - and `abilityRollMatches` returns both.
+//
+// A group that states `rolls` is a table too, whatever it holds: the book
+// rolls on it more than once (BOOK-INGEST-AUDIT F120, below).
 const ABILITY_BAND = /\((\d{2})\s*-\s*(\d{2})\)/;
 export function abilityRollBands(group) {
-  if (!isAbilityChoice(group) || (+group.choose || 0) !== 1) return null;
+  if (!isAbilityChoice(group)) return null;
+  if (group.rolls === undefined && (+group.choose || 0) !== 1) return null;
+  return bandsOf(group);
+}
+
+function bandsOf(group) {
   const bands = [];
   for (const opt of group.from || []) {
     const name = typeof opt === 'string' ? opt : opt?.name;
@@ -2542,6 +2555,76 @@ export function abilityRollBands(group) {
 // prints more than one result for a band.
 export function abilityRollMatches(bands, roll) {
   return (bands || []).filter((b) => roll >= b.lo && roll <= b.hi).map((b) => b.name);
+}
+
+// A TABLE THE BOOK ROLLS ON MORE THAN ONCE (BOOK-INGEST-AUDIT F120, Nate's
+// ruling 10 on the 2026-10-03 retrospective: one general mechanic).
+//
+//   - { rolls: 2, from: ["Feature (01-07): Rat Tail", ...] }
+//   - { rolls: "1d4", from: ["Oddity (01-10): Extra Eyes", ...] }
+//
+// `rolls` stands where `choose` would: how many times the table is rolled - a
+// whole number, or dice when the book rolls the count too ("roll 1D4 times").
+// Each roll is a pick, and a result already held is rolled again, so no row is
+// taken twice. The player may still choose by hand; the books say "or select".
+//
+// THE PARSER FILLS IN `choose` with the most the group can hold - the number,
+// or the dice's ceiling - so everything that reads a group's limit (the picker,
+// the server's count, the NPC generator) is right without knowing about
+// `rolls`. A class that writes both must make them agree.
+//
+// What a dice count ROLLED is not stored: there is no column for it and the
+// picks are the record. The server holds a `rolls` group to its ceiling.
+export function abilityRollLimit(rolls) {
+  if (Number.isInteger(rolls) && rolls >= 1) return rolls;
+  if (isDiceBonus(rolls)) return diceBounds(rolls)?.max ?? null;
+  return null;
+}
+
+// How many picks a group OWES before the wizard moves on. A `choose` group
+// owes all of them. A table rolled a dice number of times owes only the least
+// the dice can come up - the rolled count is not stored, so the Race step
+// cannot hold a player who rolled 2 on 1D4 until four rows are held, which is
+// what reading the filled-in `choose` did (found by F120's premise audit).
+export function abilityGroupOwed(group) {
+  if (typeof group?.rolls === 'string') return diceBounds(group.rolls)?.min ?? 1;
+  return +group?.choose || 0;
+}
+
+// Roll a `rolls` group's table. `d100()` supplies each percentile roll and
+// `count` how many results are wanted; both are passed in so the wizard, the
+// NPC generator and the tests drive one walk.
+//
+// Returns { picks, log }: the option names taken, and one log line per d100 -
+// { roll, names, taken } - where `taken` is the name that roll took, null when
+// it was rolled again (every result in its band already held), and undefined
+// when the band prints several results still open, which is left for the
+// player rather than ruled on, as a pick-one roll leaves it.
+//
+// Bounded: a table cannot give more results than it has rows, and the walk
+// stops after a fixed number of rolls rather than spin on a nearly full table.
+export function rollAbilityTable(group, count, d100) {
+  const bands = abilityRollBands(group);
+  const picks = [];
+  const log = [];
+  if (!bands) return { picks, log };
+  // One result per BAND: a band printing two results is one landing, left open.
+  const want = Math.min(Math.max(0, +count || 0), new Set(bands.map((b) => `${b.lo}-${b.hi}`)).size);
+  let open = want;
+  // Bands left to the player; landing on one again is a repeat like any other.
+  const left = new Set();
+  for (let guard = 0; open > 0 && guard < 500; guard++) {
+    const roll = d100();
+    const names = abilityRollMatches(bands, roll);
+    const fresh = names.filter((n) => !picks.includes(n));
+    const band = names.join('|');
+    if (!fresh.length || left.has(band)) { log.push({ roll, names, taken: null }); continue; }
+    if (fresh.length > 1) { left.add(band); log.push({ roll, names: fresh }); open--; continue; }
+    picks.push(fresh[0]);
+    log.push({ roll, names, taken: fresh[0] });
+    open--;
+  }
+  return { picks, log };
 }
 
 // A race that rolls psionics on its OWN table (BOOK-INGEST-AUDIT F118).
@@ -2728,6 +2811,13 @@ export function applyAbilities(cls, chosen) {
     // M.D.C. rides beside it as an ordinary pools.mdc bonus, so two converting
     // realms combine theirs, as printed 47 says they do.
     if (def.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
+    // A table row that prints the DICE an attribute is rolled on - the Amphib's
+    // Appearance sets P.B. to 3D4, 2D6 or 1D6 (BOOK-INGEST-AUDIT F120). It
+    // restates the class's dice for the attributes it names and leaves the
+    // rest; the wizard rolls attributes off the composed class, after the pick.
+    if (def.attribute_dice && typeof def.attribute_dice === 'object' && !Array.isArray(def.attribute_dice)) {
+      out.attribute_dice = { ...(out.attribute_dice || {}), ...def.attribute_dice };
+    }
     if (isHorrorFactor(def.horror_factor)) horrorSet = def.horror_factor;
     if (Number.isInteger(def.horror_factor_bonus)) horrorAdded += def.horror_factor_bonus;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
@@ -3946,6 +4036,31 @@ export function parseClassMarkdown(text) {
     if (e.choose !== undefined && (typeof e.choose !== 'number' || e.choose < 1)) {
       errors.push('special_abilities: choose must be a positive number');
     }
+    // A table rolled more than once (F120). `rolls` stands in for `choose`,
+    // which is filled in here with the most the group can hold.
+    if (e.rolls !== undefined) {
+      const limit = abilityRollLimit(e.rolls);
+      if (limit === null) {
+        errors.push('special_abilities: rolls must be a whole number of 1 or more, or dice '
+          + 'like "1d4" when the book rolls the count');
+      } else if (!Array.isArray(e.from) || !bandsOf(e)) {
+        errors.push('special_abilities: a rolls group needs options named for percentile bands '
+          + 'that cover 01-00, like "Kind (01-50): A" - a table with a hole in it cannot be rolled');
+      } else if (e.choose !== undefined && e.choose !== limit) {
+        errors.push(`special_abilities: rolls ${JSON.stringify(e.rolls)} holds at most ${limit}, `
+          + `but choose says ${e.choose}; state rolls alone`);
+      } else if (e.from.some((o) => !(data.special_abilities || []).some((d) => isAbilityDefinition(d)
+          && d.name.trim().toLowerCase() === String(typeof o === 'string' ? o : o?.name).trim().toLowerCase()))) {
+        errors.push('special_abilities: every row of a rolls group needs its own definition - '
+          + 'the server refuses a second take of a row only where the row is defined');
+      } else {
+        e.choose = limit;
+        if (limit > new Set(e.from.map((o) => (typeof o === 'string' ? o : o?.name))).size) {
+          warnings.push(`special_abilities: rolls ${JSON.stringify(e.rolls)} can ask for more results `
+            + 'than the table has rows; it stops when every row is held');
+        }
+      }
+    }
   }
 
   // A named ability may carry what it grants. Validated through exactly the same
@@ -3981,6 +4096,27 @@ export function parseClassMarkdown(text) {
         && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
       errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
         + 'non-negative integer');
+    }
+    // F120: the dice a table row prints for an attribute. The class's own
+    // grammar - dice, a fixed number, or N/A - and only real attributes.
+    if (e.attribute_dice !== undefined) {
+      if (!e.attribute_dice || typeof e.attribute_dice !== 'object' || Array.isArray(e.attribute_dice)) {
+        errors.push(`special_abilities: ${e.name}.attribute_dice must be a map of attribute to dice`);
+      } else {
+        for (const [attr, expr] of Object.entries(e.attribute_dice)) {
+          if (!BONUS_ATTRS.includes(attr)) {
+            errors.push(`special_abilities: ${e.name}.attribute_dice.${attr} is not an attribute `
+              + `(${BONUS_ATTRS.join(', ')})`);
+          } else if (!isAttributeExpr(expr)) {
+            errors.push(`special_abilities: ${e.name}.attribute_dice.${attr} must be dice like "3d6", `
+              + 'a fixed number, or N/A');
+          }
+        }
+        if (!optionNames.has(e.name.trim().toLowerCase())) {
+          warnings.push(`special_abilities: ${e.name} states attribute_dice but is not offered as a `
+            + 'choice, so nothing applies it - put the dice on the class (or its variant)');
+        }
+      }
     }
     // F119: the projected Horror Factor a held option restates or adds to.
     // Warnings on a bad restatement, as on the class's own (a display-only key

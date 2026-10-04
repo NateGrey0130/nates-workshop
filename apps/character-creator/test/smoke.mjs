@@ -833,7 +833,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupIndexFor, abilityOffersPsionics, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
          combineClasses, isDiceBonus, isGearChoice, isSignedDiceBonus, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
-         relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
+         relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -7060,6 +7060,150 @@ section('Morphus tables catalog');
   // A table CHECK is refused input, not a server fault.
   check('the catalog write path answers a CHECK failure with a 422',
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+}
+
+section('A table rolled more than once, and a row that sets attribute dice (BOOK-INGEST-AUDIT F120)');
+{
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: rcc', 'tags: []',
+     ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+  const ROWS = ['  - { name: "Odd (01-40): Extra Eyes", description: "x", bonuses: { attributes: { PB: "-1d4" } } }',
+    '  - { name: "Odd (41-70): Bronze Skin", description: "x", attribute_dice: { PB: "2d4" } }',
+    '  - { name: "Odd (71-90): Horns", description: "x" }',
+    '  - { name: "Odd (91-00): Tail", description: "x" }',
+    '  - { name: "Odd (91-00): Wings", description: "x" }'];
+  const FROM = '["Odd (01-40): Extra Eyes", "Odd (41-70): Bronze Skin", "Odd (71-90): Horns", "Odd (91-00): Tail", "Odd (91-00): Wings"]';
+  const table = (rolls) => mk('attribute_dice: { PB: "3d6", Spd: "4d6" }', 'special_abilities:', ...ROWS,
+    `  - { rolls: ${rolls}, from: ${FROM} }`);
+
+  // `rolls` STANDS WHERE `choose` WOULD, and the parser fills `choose` in with
+  // the most the group can hold, so every reader of a group's limit is right
+  // without knowing the key exists.
+  const two = table('2');
+  const dice = table('"1d4"');
+  const group = (c) => c.data.special_abilities.find((e) => e.rolls !== undefined);
+  check('a group may state how many times its table is rolled, as a number or as dice',
+    two.ok && dice.ok, [...two.errors, ...dice.errors].join('; '));
+  check('the parser fills choose with the most the group can hold: the number, or the dice ceiling',
+    group(two).choose === 2 && group(dice).choose === 4
+    && abilityRollLimit(2) === 2 && abilityRollLimit('1d4') === 4 && abilityRollLimit('2d4+1') === 9);
+  check('so the per-group count and the offered list see an ordinary group',
+    String(abilityGroupCounts(dice.data, ['Odd (71-90): Horns', 'Odd (91-00): Tail'])) === '2'
+    && abilityGroupIndexFor(dice.data, 'Odd (71-90): Horns') === 0);
+  check('rolls and choose that disagree are an error; that agree, fine',
+    !mk('special_abilities:', ...ROWS, `  - { rolls: 2, choose: 3, from: ${FROM} }`).ok
+    && mk('special_abilities:', ...ROWS, `  - { rolls: 2, choose: 2, from: ${FROM} }`).ok);
+  check('rolls must be a whole number of 1 or more, or unsigned dice',
+    [0, -1, '"lots"', '"-1d4"', 1.5].every((r) => !table(String(r)).ok));
+  check('a rolls group needs band-named options covering 01-00, since a table with a hole cannot be rolled',
+    !mk('special_abilities:', '  - { name: "A", description: "x" }', '  - { name: "B", description: "x" }',
+      '  - { rolls: 2, from: ["A", "B"] }').ok
+    && !mk('special_abilities:', '  - { name: "K (01-50): A", description: "x" }',
+      '  - { name: "K (61-00): B", description: "x" }',
+      '  - { rolls: 2, from: ["K (01-50): A", "K (61-00): B"] }').ok);
+  check('a count that can outrun the table is warned about, not refused',
+    mk('special_abilities:', '  - { name: "K (01-50): A", description: "x" }',
+      '  - { name: "K (51-00): B", description: "x" }',
+      '  - { rolls: "1d4", from: ["K (01-50): A", "K (51-00): B"] }').warnings
+      .some((w) => w.includes('more results than the table has rows')));
+
+  // WHAT THE RACE STEP WAITS FOR. The rolled count is not stored, so a dice
+  // table owes only the least its dice can come up; holding a player who
+  // rolled 2 on 1D4 until four rows were held is what the filled-in choose did.
+  check('a dice table owes its dice minimum, a counted table its count, a choose group its choose',
+    abilityGroupOwed(group(dice)) === 1 && abilityGroupOwed(group(two)) === 2
+    && abilityGroupOwed({ choose: 3, from: ['A', 'B', 'C'] }) === 3
+    && abilityGroupOwed(table('"2d4"').data.special_abilities.find((e) => e.rolls)) === 2);
+  check('every row of a rolls table needs a definition, or the server could not refuse a repeat',
+    !mk('special_abilities:', '  - { name: "K (01-50): A", description: "x" }',
+      '  - { rolls: 2, from: ["K (01-50): A", "K (51-00): B"] }').ok);
+
+  // THE ROLL. The dice are passed in, so the walk is pinned exactly.
+  check('a rolls group is a table the wizard may roll, whatever its count',
+    Array.isArray(abilityRollBands(group(two))) && Array.isArray(abilityRollBands(group(dice))));
+  check('and a plain choose-2 group is still not one',
+    abilityRollBands({ choose: 2, from: ['K (01-50): A', 'K (51-00): B'] }) === null);
+  const seq = (...n) => { let i = 0; return () => n[i++]; };
+  const r1 = rollAbilityTable(group(dice), 3, seq(10, 20, 55, 80));
+  check('each roll takes the row it lands on',
+    String(r1.picks) === 'Odd (01-40): Extra Eyes,Odd (41-70): Bronze Skin,Odd (71-90): Horns');
+  check('a roll that lands on a row already held is rolled again, and the log says so',
+    r1.log.length === 4 && r1.log[1].roll === 20 && r1.log[1].taken === null);
+  check('no row is ever taken twice', Array.from({ length: 200 }, () =>
+    rollAbilityTable(group(dice), 4, () => 1 + Math.floor(Math.random() * 100)).picks)
+    .every((picks) => new Set(picks).size === picks.length && picks.length >= 3));
+  const full = rollAbilityTable(group(dice), 4, seq(1, 1, 50, 75, 1, 50, 95));
+  check('and a band that prints two results is left to the player, not ruled on',
+    String(full.picks) === 'Odd (01-40): Extra Eyes,Odd (41-70): Bronze Skin,Odd (71-90): Horns'
+    && full.log[full.log.length - 1].taken === undefined
+    && full.log[full.log.length - 1].names.length === 2);
+  check('a count larger than the table stops when every band has been landed on',
+    rollAbilityTable(group(dice), 99, () => 1 + Math.floor(Math.random() * 100)).log
+      .filter((l) => l.taken !== null).length === 4);
+  const twice = rollAbilityTable(group(dice), 4, seq(95, 95, 10, 50, 75));
+  check('landing again on a band left to the player is a repeat, not a second result',
+    twice.log[1].taken === null && twice.picks.length === 3);
+  check('a count of zero, or a group that is not a table, rolls nothing',
+    rollAbilityTable(group(dice), 0, seq(1)).picks.length === 0
+    && rollAbilityTable({ choose: 2, from: ['A', 'B'] }, 2, seq(1, 2)).picks.length === 0);
+
+  // THE SERVER holds the group to its ceiling and a row to one take; both are
+  // the rules a choose group already had.
+  const v = (abilities) => validateCharacter({ character: { level: 1 }, cls: dice.data, skills: [],
+    attributes: {}, abilities, catalog: new Map() });
+  const all = ['Odd (01-40): Extra Eyes', 'Odd (41-70): Bronze Skin', 'Odd (71-90): Horns', 'Odd (91-00): Tail'];
+  check('the server allows up to the dice ceiling',
+    !v(all).violations.some((x) => x.rule === 'ability_count'));
+  check('and refuses one more',
+    v([...all, 'Odd (91-00): Wings']).violations.some((x) => x.rule === 'ability_count'));
+  check('and refuses a row taken twice',
+    v(['Odd (71-90): Horns', 'Odd (71-90): Horns']).violations.some((x) => x.rule === 'ability_repeat'));
+
+  // A ROW THAT PRINTS AN ATTRIBUTE'S DICE.
+  check('an option may restate the dice an attribute is rolled on',
+    applyAbilities(dice.data, ['Odd (41-70): Bronze Skin']).attribute_dice.PB === '2d4');
+  check('only for the attributes it names',
+    applyAbilities(dice.data, ['Odd (41-70): Bronze Skin']).attribute_dice.Spd === '4d6');
+  check('and not when another row is held, nor on the class itself',
+    applyAbilities(dice.data, ['Odd (71-90): Horns']).attribute_dice.PB === '3d6'
+    && dice.data.attribute_dice.PB === '3d6');
+  check('a class with no dice of its own takes the row\'s',
+    applyAbilities({ special_abilities: dice.data.special_abilities }, ['Odd (41-70): Bronze Skin'])
+      .attribute_dice?.PB === '2d4');
+  check('the same table carries a reduction beside it, which is F119',
+    applyAbilities(dice.data, ['Odd (01-40): Extra Eyes']).bonuses.attributes.PB === '-1d4');
+  check('the dice must be the class\'s own grammar, on a real attribute',
+    !mk('special_abilities:', '  - { name: "K (01-50): A", attribute_dice: { PB: "lots" } }',
+      '  - { name: "K (51-00): B" }', '  - { choose: 1, from: ["K (01-50): A", "K (51-00): B"] }').ok
+    && !mk('special_abilities:', '  - { name: "K (01-50): A", attribute_dice: { Luck: "3d6" } }',
+      '  - { name: "K (51-00): B" }', '  - { choose: 1, from: ["K (01-50): A", "K (51-00): B"] }').ok
+    && mk('special_abilities:', '  - { name: "K (01-50): A", attribute_dice: { PB: "N/A", PS: "30" } }',
+      '  - { name: "K (51-00): B" }', '  - { choose: 1, from: ["K (01-50): A", "K (51-00): B"] }').ok);
+  check('attribute_dice on an ability nobody is offered is warned about',
+    mk('special_abilities:', '  - { name: "Loose", attribute_dice: { PB: "2d4" } }').warnings
+      .some((w) => w.includes('states attribute_dice but is not offered')));
+  // The server's attribute ceiling reads the composed class, so a row's dice
+  // are what a stored attribute is held to.
+  const withRow = applyAbilities(dice.data, ['Odd (41-70): Bronze Skin']);
+  const ceil = (cls, PB) => validateCharacter({ character: { level: 1 }, cls, skills: [],
+    attributes: { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 10, PB, Spd: 10 },
+    abilities: ['Odd (41-70): Bronze Skin'], catalog: new Map() });
+  const flagged = (res) => [...res.violations, ...res.warnings]
+    .some((x) => /attribute/.test(x.rule || '') && (x.attribute === 'PB' || x.attr === 'PB' || /P\.?B/.test(x.message || '')));
+  check('the server holds the attribute to the row\'s dice, not the class\'s',
+    flagged(ceil(withRow, 14)) && !flagged(ceil(withRow, 8)) && !flagged(ceil(dice.data, 14)));
+
+  // The wizard and the NPC generator are pinned by source: both roll through
+  // the one walk, and a changed pick clears an attribute whose dice it moved.
+  const appSrc = readFileSync(appPath('app.js'), 'utf8');
+  check('the wizard rolls a rolls group through rollAbilityTable',
+    /if \(group\.rolls !== undefined\) \{[\s\S]{0,400}rollAbilityTable\(group, count/.test(appSrc));
+  check('and clears an attribute whose dice a pick restated, on confirming the race',
+    /function confirmRace\(\) \{[\s\S]{0,700}const dice = S\.cls\?\.attribute_dice;\s+recompose\(\);\s+clearAttrsWhoseDiceChanged\(dice\);/.test(appSrc));
+  const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
+  check('the NPC generator rolls such a table rather than shuffling it',
+    /if \(g\.rolls !== undefined\) \{[\s\S]{0,300}rollAbilityTable\(g, count/.test(npcSrc));
 }
 
 section('Reductions on dice, and a Horror Factor from a chosen ability (BOOK-INGEST-AUDIT F119)');
