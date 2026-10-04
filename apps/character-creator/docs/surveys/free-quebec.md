@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 10, gear 19, vehicles 22, notable_npcs 19
+**Rows citing this book:** classes 10, gear 18, vehicles 22, notable_npcs 19
 
 Slug `free-quebec`. Cached 2026-08-28 from `Rifts- World Book 22 Free Quebec.pdf`,
 194 PDF pages, **text layer** (no OCR), read with `scripts/read-columns.py`.
@@ -367,6 +367,7 @@ describes".*
 | #1447 | ladders: printed 191's *Experience Points* box, by `~012-cwc-fq-xp-ladders.sql`, read off a 300 dpi render and re-read by `book-reconcile` (no disagreements): `fq-descended-glitter-boy-pilot`, `fq-glitter-girl-pilot`, and `fq-side-kick-rpa` with `fq-gb-reloader` (one column). Not stored: `fq-deep-intel-agent` and the five `fq-cyborg-*` rows - the box has no column for them and their entries name no table (printed 32 points the agent at the ISS classes and printed 113 points the cyborgs at CWC's service programs, neither naming a ladder). The survey's "NO Experience Table" is corrected above | 0 | unchanged |
 | #1450 | `~018-class-vessels.sql`: the Side Kick RPA and the Reloader list the vessel their book issues them, through two `gear` pointer rows (`glitter-boy-side-kick-qpa-98`, `rhv-60-reloader-hover-vehicle`) carrying `vehicle_slug` - F41's Glitter Boy shape. Restriction lines dropped, notes rewritten as the decision. `--remote` is applied before the merge | **2** | gear citing this book 17 -> **19** |
 | `pal/data/retro-holdable-gaps`, 2026-10-03 | the eleven Cabinet members of printed 143 as notable NPCs (`~078`), each a compact block as Lone Star's printed 119 was stored; read off a render and checked again by `book-reconcile`; applied `--remote` before the merge. Also the Deep Intel Agent's +1D4 M.A. into `bonuses` (`~075`) | **11** | notable NPCs 8 -> **19** |
+| `pal/data/retro-a1-newest-wins`, 2026-10-04 | **`tx-j50-juicer-eba` leaves this book's count** (`~093`): Triax 2 (2010) prints the suit again with different figures, and by Nate's ruling of 2026-10-04 the newest printing that states a figure wins. The row now cites Triax 2 printed 108-109 and keeps this book's printed-51 figures (main body 90, 20 lbs, 50,000 credits) and its import history in the description. Applied `--remote` before the merge. |
 
 ### Batch 2 — gear (PR #819)
 

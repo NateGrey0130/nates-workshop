@@ -375,7 +375,7 @@
     ],
     [
      "Gear",
-     208
+     207
     ],
     [
      "Psionic powers",
@@ -394,7 +394,7 @@
      14
     ]
    ],
-   "total": 682
+   "total": 681
   },
   {
    "slug": "atlantis",
@@ -893,7 +893,7 @@
     ],
     [
      "Gear",
-     224
+     230
     ],
     [
      "Notable NPCs",
@@ -908,7 +908,7 @@
      35
     ]
    ],
-   "total": 301
+   "total": 307
   },
   {
    "slug": "mystic-russia",
@@ -1025,7 +1025,7 @@
     ],
     [
      "Gear",
-     19
+     18
     ],
     [
      "Notable NPCs",
@@ -1036,7 +1036,7 @@
      22
     ]
    ],
-   "total": 70
+   "total": 69
   },
   {
    "slug": "xiticix-invasion",
@@ -1169,7 +1169,7 @@
     ],
     [
      "Gear",
-     45
+     46
     ],
     [
      "Notable NPCs",
@@ -1180,7 +1180,7 @@
      59
     ]
    ],
-   "total": 108
+   "total": 109
   }
  ]
 }
