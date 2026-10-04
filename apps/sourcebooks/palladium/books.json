@@ -587,7 +587,7 @@
     ],
     [
      "Creatures",
-     8
+     14
     ],
     [
      "Gear",
@@ -602,7 +602,7 @@
      25
     ]
    ],
-   "total": 319
+   "total": 325
   },
   {
    "slug": "south-america-2",
@@ -723,7 +723,7 @@
     ],
     [
      "Creatures",
-     22
+     21
     ],
     [
      "Gear",
@@ -738,7 +738,7 @@
      21
     ]
    ],
-   "total": 78
+   "total": 77
   },
   {
    "slug": "lone-star",
@@ -753,7 +753,7 @@
     ],
     [
      "Creatures",
-     1
+     12
     ],
     [
      "Gear",
@@ -768,7 +768,7 @@
      7
     ]
    ],
-   "total": 62
+   "total": 73
   },
   {
    "slug": "new-west",
@@ -961,7 +961,7 @@
     ],
     [
      "Creatures",
-     14
+     18
     ],
     [
      "Gear",
@@ -980,7 +980,7 @@
      9
     ]
    ],
-   "total": 146
+   "total": 150
   },
   {
    "slug": "canada",
@@ -1152,9 +1152,13 @@
     [
      "Classes",
      86
+    ],
+    [
+     "Creatures",
+     52
     ]
    ],
-   "total": 86
+   "total": 138
   },
   {
    "slug": "triax-2",
