@@ -7089,6 +7089,85 @@ section('Morphus tables catalog');
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
 }
 
+section('The row generators refuse what they cannot write (BOOK-INGEST-AUDIT F124)');
+{
+  // Three generators beside scripts/bestiary-sql.mjs, each carrying its own
+  // --self-test: the refusals, and the shape of the script it writes. Run as
+  // the scripts a person runs, so a broken import or a schema the column
+  // reader can no longer parse fails here and not in the middle of a book.
+  const scriptsDir = join(appDir, '..', '..', 'scripts');
+  for (const name of ['vessel-sql', 'rows-sql', 'class-fix-sql']) {
+    const file = join(scriptsDir, `${name}.mjs`);
+    const r = spawnSync(process.execPath, [file, '--self-test'], { encoding: 'utf8' });
+    check(`${name} passes its self-test`,
+      r.status === 0 && r.stdout.includes(`${name} self-test passed`) && !/FAIL/.test(r.stdout),
+      (r.stdout + r.stderr).split('\n').filter((l) => /FAIL|Error/.test(l)).slice(0, 3).join(' | '));
+    // An existing file is never overwritten: a data script that was applied
+    // once is a record. A real one stands in, and is the same bytes afterwards.
+    const existing = join(appDir, 'db', 'seed-dev.sql');
+    const before = readFileSync(existing, 'utf8');
+    const over = spawnSync(process.execPath, [file, scriptsDir, existing], { encoding: 'utf8' });
+    check(`${name} never overwrites a data script that exists`,
+      over.status === 2 && /never overwrites a data script/.test(over.stderr)
+      && readFileSync(existing, 'utf8') === before, over.stderr.slice(0, 160));
+    const named = spawnSync(process.execPath, [file, scriptsDir, file], { encoding: 'utf8' });
+    check(`${name} refuses an output name that is not a data script's`,
+      named.status === 2 && /not a data-script name/.test(named.stderr), named.stderr.slice(0, 160));
+    const none = spawnSync(process.execPath, [file], { encoding: 'utf8' });
+    check(`${name} with no arguments prints its usage and exits 2`,
+      none.status === 2 && /usage: node scripts\//.test(none.stderr));
+  }
+  // The library reads columns out of db/schema.sql, so a table it cannot find
+  // is an error at once rather than an empty column list.
+  const lib = await import('../../../scripts/sql-gen-lib.mjs');
+  check('the column reader finds every table the generators write',
+    ['vehicles', 'vehicle_locations', 'vehicle_weapons', 'spells', 'gear', 'skills', 'psionic_powers', 'enchantments']
+      .every((t) => lib.loadColumns([t])[t].length > 3));
+  check('and refuses a table that is not in the schema', (() => {
+    try { lib.loadColumns(['no_such_table']); return false; } catch (e) { return /no CREATE TABLE found/.test(e.message); }
+  })());
+  // THE COLUMN READER REFUSES WHAT IT CANNOT READ, rather than writing wrong
+  // rows: an expression DEFAULT would land in every row as its own text, and a
+  // constraint continued onto a second line would be read as a column. None of
+  // the eight tables has either today, and the names it reads are the names
+  // the table has - checked against the CREATE itself.
+  {
+    const { mkdtempSync, mkdirSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const fake = (body) => {
+      const root = mkdtempSync(join(tmpdir(), 'sqlgen-'));
+      mkdirSync(join(root, 'db'));
+      writeFileSync(join(root, 'db', 'schema.sql'), `CREATE TABLE IF NOT EXISTS t (\n${body}\n);\n`);
+      try { return { cols: lib.loadColumns(['t'], root).t }; } catch (e) { return { error: e.message }; }
+      finally { rmSync(root, { recursive: true, force: true }); }
+    };
+    const ok = fake("  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  name TEXT NOT NULL,  -- a comment, with a comma\n"
+      + "  source TEXT NOT NULL DEFAULT 'seed',\n  kind TEXT CHECK (kind IN ('a', 'b')),\n  n INTEGER NOT NULL DEFAULT 0");
+    check('a table of the shapes the catalog uses is read whole, defaults and CHECK lists included',
+      ok.cols?.map((c) => c.name).join(',') === 'id,name,source,kind,n'
+      && ok.cols[2].default === "'seed'" && String(ok.cols[3].allowed) === 'a,b' && ok.cols[4].default === '0',
+      ok.error || JSON.stringify(ok.cols));
+    check('an expression DEFAULT is refused, not written into every row as text',
+      /DEFAULT is an expression/.test(fake("  name TEXT,\n  created_at TEXT NOT NULL DEFAULT (datetime('now'))").error || ''));
+    check('a constraint continued onto a second line is refused, not read as a column',
+      /cannot read the column line|cannot parse/.test(
+        fake("  name TEXT,\n  kind TEXT CHECK (kind IN ('a',\n    'b'))").error || ''));
+    const schemaSql = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8').replace(/\r\n/g, '\n');
+    const declared = (t) => new RegExp(`CREATE TABLE IF NOT EXISTS ${t} \\(([\\s\\S]*?)\\n\\);`).exec(schemaSql)[1]
+      .split('\n').map((l) => l.replace(/--.*$/, '').trim()).filter((l) => /^[a-z_]+\s+(TEXT|INTEGER|REAL)\b/.test(l)).length;
+    check('and for each real table it reads exactly as many columns as the CREATE declares',
+      ['vehicles', 'vehicle_locations', 'vehicle_weapons', 'spells', 'gear', 'skills', 'psionic_powers', 'enchantments']
+        .every((t) => lib.loadColumns([t])[t].length === declared(t)));
+  }
+  check('a script whose read-backs outrun d1-apply\'s one-command budget is a problem the generators refuse',
+    /over d1-apply's 7900 budget/.test(lib.readbackProblem(
+      Array.from({ length: 60 }, (_, i) => `SELECT 'part ${i}' AS assertion, count(*) AS got, 40 AS want FROM gear WHERE slug IN (${
+        Array.from({ length: 10 }, (_, j) => `'a-long-enough-slug-${i}-${j}'`).join(', ')});`).join('\n')) || '')
+    && lib.readbackProblem("SELECT 'one' AS assertion, count(*) AS got, 1 AS want FROM gear WHERE slug IN ('a');") === null);
+  check('a literal doubles an apostrophe and writes NULL for nothing',
+    lib.sqlLiteral("Death's Head") === "'Death''s Head'" && lib.sqlLiteral(null) === 'NULL' && lib.sqlLiteral(7) === '7');
+}
+
 section('A held spell is headed by its tradition, and ward symbols are one (BOOK-INGEST-AUDIT F123)');
 {
   // js/traditions.js is a classic script that hangs one global on `window`.

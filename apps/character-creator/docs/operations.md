@@ -612,6 +612,25 @@ correction?" answerable only by querying the rows it writes and inferring —
 the same guessing game `schema_migrations` was created to end. Migration 024
 added `data_script_runs` and every script now ends by writing itself into it.
 
+**Four generators write a data script from reconciled rows**, so the shape is
+not re-decided in a scratchpad for every book (`BOOK-INGEST-AUDIT` F112, F124).
+Each is opt-in, reads its columns out of `db/schema.sql`, reports every refusal
+in one pass and then writes nothing, never overwrites a file, ends the script
+with read-backs of its own rows and the `data_script_runs` line, and has
+`--self-test`:
+
+| script | from | writes |
+|---|---|---|
+| `scripts/bestiary-sql.mjs` | creature and notable-NPC JSON | `creatures`, `notable_npcs`, `stat_attacks` |
+| `scripts/vessel-sql.mjs` | vehicle JSON with `locations` and `weapons` lists | `vehicles`, `vehicle_locations`, `vehicle_weapons` |
+| `scripts/rows-sql.mjs` | flat rows, one list per table | `spells`, `gear`, `skills`, `psionic_powers`, `enchantments`, keyed on name or slug |
+| `scripts/class-fix-sql.mjs` | `fixes.json` and one finished `<class_id>.md` each | a whole-markdown `UPDATE` per class, guarded on a sentence of the old text and its exact stored length (`--remote` reads that length from production) |
+
+They cover only the step from reconciled data to SQL. None asks whether a row
+is already in the catalog (that is `catalog-diff` and `class-check --remote`),
+and `INSERT OR IGNORE` leaves a held row as it is: a correction is still a
+`fix-` script written by hand.
+
 **Reading the `z-` rows' ordinals.** They count **escalations, not `z`s**, and
 the two differ by one: `zz-` is the first escalation, `zzz-` the second — which
 is why the row for `zzzzzz-` (six `z`s) opens "A FIFTH `z`". **The prefix column

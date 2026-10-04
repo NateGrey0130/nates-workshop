@@ -919,6 +919,21 @@ scripts/
 │                           the cached book, 50-row INSERTs, read-backs, the
 │                           data_script_runs footer. Opt-in; never overwrites
 │                           a script. --self-test plants a copied sentence
+├── vessel-sql.mjs          Reconciled vehicle JSON, with its locations and
+│                           weapons lists, to ONE data script over vehicles,
+│                           vehicle_locations and vehicle_weapons. Refuses a
+│                           Main Body that disagrees with mdc_main_body.
+│                           Opt-in; never overwrites a script; --self-test
+├── rows-sql.mjs            The same for flat rows - spells, gear, skills,
+│                           psionic powers, enchantments - keyed on name or
+│                           slug, never an id; INSERT OR IGNORE, so a held row
+│                           is left as it is
+├── class-fix-sql.mjs       Finished class markdown to ONE script that replaces
+│                           each class whole, guarded on a sentence of the old
+│                           text and its exact stored length (--remote reads it
+│                           from production). Refuses markdown that does not parse
+├── sql-gen-lib.mjs         What those three share: the column reader, the
+│                           refusals, batching, read-backs, the footer
 ├── readback-lib.mjs        A data script's read-back assertions (`AS assertion`,
 │                           `AS got`, `AS want`) and the scratch replay that
 │                           evaluates them at the script's own position, which
