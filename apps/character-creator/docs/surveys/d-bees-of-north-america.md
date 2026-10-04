@@ -189,6 +189,81 @@ table"), and those copy the named class's stored ladder, by the class-import
 rule (Nate, 2026-09-26). Only entries that point to the chosen O.C.C.'s
 table, or name a class the catalog lacks, store none.
 
+### The held reprints compared with their held rows, 2026-10-03
+
+The diff above matched the held reprints **by name only**. On 2026-10-03
+every one was read against its production class, field by field, by three
+`book-reconcile` passes that render a page before reporting a figure from it.
+**The inventory marks 32 entries "reprint, held"**; the two "30"s in this
+file are the count before the Aarden Tek and Pogtal correction.
+
+**None of the 32 is identical to its held row.** The book's own Contents
+calls each one "a reprint or update", and they are updates. Nothing below
+was changed in the catalog: which book a held class follows is a decision per
+class, as it was for Canada's Techno-Warrior.
+
+Four kinds of difference recur, and most entries show all four:
+
+- **A dice life span** where the held row has a range in prose (most
+  entries; left out of the table below).
+- **Perception, disarm, pull-punch or entangle bonuses** the held row lacks,
+  and attacks per melee stated differently.
+- **A different R.C.C. skill list**: this book prints bonuses where several
+  held rows store absolute percentages, and adds or drops skills.
+- **A different rule for occupations and experience**: this book lets a race
+  take a wider or narrower list of O.C.C.s, and often says to use the chosen
+  O.C.C.'s experience table where the held row stores a ladder of its own.
+
+The figures that differ, by entry. "Printed" is this book's folio. A figure
+marked (OCR) was not read off a render.
+
+| entry, printed | held class | what this book prints differently |
+|---|---|---|
+| Aarden Tek, 9-10 | `aardan-tek` | Horror Factor 10; psionics as a human's, where the held row makes every one a Minor Psychic; any O.C.C.; equipment as per O.C.C.; +5% to four physical skills, +2 Perception |
+| Altara, 15-17 | `blind-warrior-women` | eight attacks per melee, fixed (held: six); kick 2D6, leap kick 3D8, punch 2D4, body flip 2D4 (held: 1D8, 2D8, 1D6, none); +3 Perception, +3 disarm; Demon and Monster Lore +10% (held +5%); N.P.C. level 2D6+1 (held 2D4+2) |
+| Amorph, 21-25 | `amorph` | Hit Points 2D6x10 + P.E., +1D6 per level (held 3D6x10 + P.E., +2D6); S.D.C. 1D6x10+8 (held 0); regeneration 2D6 per round in the physical realm (held 1D6); four attacks, +1 at 5, 9, 13; no Hand to Hand; no Pilot Related; four added skills |
+| Cactus People, 41-43 | `cactus-people` | P.B. 2D6 (held 2D6+2); life fluid priced per half gallon; secondary skills at 1, 4, 8, 12 (held adds level 10); three brewing and food skills; +1 roll, +2 vs possession |
+| Centaur, 44-45 | `centaur` | +1 attack only for a Man at Arms; +1 Perception; a rear power kick, 1D4x10 S.D.C.; no Glitter Boy or Robot Pilot; the chosen O.C.C.'s experience table (held: its own ladder) |
+| Cyber-Horsemen, 51-54 | `cyber-horsemen-of-ixion` | Hit Points P.E. x2 (held P.E.); horse-body P.S. 2D6+28 (held 3D6+22); front legs 110 M.D.C. (held 100), and hands, arms, head and barding figures the held row lacks; no psionics; W.P. Pole Arm only; the chosen O.C.C.'s experience table |
+| Darkhound, 54-57 | `darkhound` | four attacks, +1 at 2, 5, 8, 10, 13, 15 (held: +1 at 5 and 10); +3 Perception, +1 dodge; related and secondary skill schedules the held row lacks; money 4D6x10 in goods; "can use guns" where the held row says never |
+| Demon-Dragonmage, 58-60 | `demon-dragonmage` | skill and ability ladders that run past level 15, to 30 (held stops at 12, 15 and 10); teleport 300 lbs; Communications +5% and Domestic none (held the reverse); money plus an equal amount in valuables |
+| Faerie Bot, 76-79 | `faerie-bot` | size 1D4+8 inches, sphere 60-70 lbs; skills printed as bonuses over a longer list (held: flat 95% on five); related and secondary skills; the Techno-Wizard experience table (held: the Dragon ladder); sphere altitude 60,000 ft (held 30,000) |
+| Fennodi, 83-85 | `fennodi` | three attacks at level 1, +1 every even level (held base 2); male starts with two Healing powers (held 3); W.P. Staff (held W.P. Blunt) |
+| Grackle Tooth, 97-98 | `grackle-tooth` | Horror Factor 12 (OCR); +2 Perception; an O.C.C. rule by exclusion (held: a closed list of 17); cold penalties with figures. The entry's text starts on printed 97; printed 96 is an illustration |
+| Greot Hunter, 98-100 | `greot-hunter` | Horror Factor 10; Cyber-Knight, Smuggler and Pirate added to its O.C.C.s (OCR); hold breath one minute per P.E. point |
+| Horune Pirates, 100-103 | `horune-pirate` | M.D.C. 1D4x10 + P.E. (held has no P.E.); hold breath 12 minutes (held 3D4); Salvage and Wilderness Survival at +10%; +1 Perception at odd levels; a full equipment list (OCR) where the held row has none |
+| Kremin Cyborg, 111-114 | `kremin-cyborg` | **a different class shape**: a partial or full cyborg that takes an O.C.C. and its experience table, with a civilian and a warrior stat line (held: its own R.C.C. with no O.C.C., warrior figures only); M.A. 3D6+2; warrior P.S. 2D6+24 and Spd 4D6+108 (OCR; held 1D6+22 and 132); energy fist 2D6, 3D6 or 4D6 |
+| Lanotaur Hunter, 115-117 | `lanotaur-hunter` | P.B. 2D6+2 (held 2D6); **a full R.C.C. skill list of nineteen entries** where the held row says none is printed; related and secondary skills; +2 entangle; money 1D4x10,000 (OCR) |
+| Lyn-Srial, 127-130 | `lyn-srial` | +3 attacks per melee (held 1); +1 Perception, +2 dodge in flight; Hand to Hand: Basic, fixed; W.P. Handguns added; a secondary pick at level 1 |
+| Lyn-Srial Sky-Knight, 129-130 | `lyn-srial-sky-knight` | +4 attacks (held 2); M.D.C. bonus 2D6+6 (held 2D6); +4 Perception; five more known spells; the average Lyn-Srial's skills at different bonuses |
+| Lyn-Srial Cloudweaver | `lyn-srial-cloudweaver` | **not printed here.** Printed 130 points to New West, so there is nothing to compare |
+| Mastadonoid, 134-135 | `mastadonoid` | M.A. 2D6+3 (held 2D6); five R.C.C. skills where the held row has no skills block (OCR); heat and city penalties with figures (OCR) |
+| N'mbyr Gorilla Man, 143-144 | `nmbyr-gorilla-man` | outburst P.S. 1D4+21, punch 2D6 and power punch 4D6 M.D. (held 19, 1D6, 2D6); Major Psychic, 1D4+2 Physical powers (held minor, six powers); **a Juicer is permitted**, where the held row says the book refuses it; +1 strike and parry, +4 damage |
+| Noli Bushman, 144-146 | `noli-bushman` | I.S.P. M.E. x2 +1D6+1 per level (OCR), where the held row says the book prints none; Dowsing and Swimming added; Vagabond among its O.C.C.s |
+| Pogtal Giants, 156-158 | `pogtalian-dragon-slayer` | P.P.E. 2D6x10; +2 Perception, +2 strike, +2 pull punch; secondary skills at 2, 4, 8, 12 where the held row says none; five related skills (held six) over a narrower list; **no Horror Factor is printed** (held 12). All OCR |
+| Psi-Goblins, 164-165 | `psi-goblin` | I.S.P. 1D6x10+10 + M.E. (held 1D6x10 + M.E. x2); P.P.E. printed two ways, neither the held figure; spells cast for P.P.E., with no three-a-day limit; no P.B. in the attribute line |
+| Psi-X Aliens, 166-168 | `psi-x-alien` | the same structure as the held row - a fixed list of four powers, then a percentile table - **but the table's rows list more powers** (Kineticist five more, Manipulator eight more, Intuitive four more, others two or three); alignment split 17/17 for Aberrant and Anarchist; money 3D6x100 |
+| Quick-Flex Alien, 168-170 | `quick-flex-alien` | five R.C.C. skills where the held row has the Rogue list; +3 Perception, +1 strike, +2 parry, +3 automatic dodge; no Juicer or Crazy; the chosen O.C.C.'s experience table, equipment and money |
+| Sasquatch, 173-175 | `true-sasquatch` | four attacks for a male, three for a female (held base 2); +2 Perception; "low-end Master Psychic" with an I.S.P. formula (held: none stored); the Merc Soldier experience table; skills printed as bonuses. This book prints the save vs disease as both +5 and +2 |
+| Worldly Sasquatch, 176-177 | `worldly-sasquatch` | 1D4+1 extra skills (held 1D4+2); three category bonuses the held row lacks; second language +10% |
+| Simvan Monster Riders, 188-190 | `simvan-monster-rider` | eight combat bonuses where the held row stores none; male and female skill lists that differ from the held ones; five related skills with bonuses, and secondary skills; money 1D4x100 plus trade goods (held: none); the Psi-Stalker experience table |
+| Tirrvol Sword Fist, 201-203 | `tirrvol-sword-fist` | P.B. 1D6+1 (held 1D6); the sword fist adds 2D6 M.D. to P.S. damage; no Glitter Boy or Robot Pilot |
+| Tokanii, 203-206 | `tokanii` | bite 2D4 M.D. (held 1D6); claws 2D6+2 M.D.; five combat bonuses; Barter and Recognize Weapon Quality; money 1D6x100 plus trade goods (held: none) |
+| Trimadore, 206-208 | `trimadore` | **Major Psychic** (held minor); money 2D6x1,000 plus parts (held 2D4x1,000); five related skills, Mechanical +15% (held six, +10%); nine O.C.C.s named (held four) |
+| Vanguard Brawler, 208-210 | `vanguard-brawler` | 90% illiterate (held 70%); four R.C.C. skills where the held row has the Thug list; physical O.C.C.s only; the chosen O.C.C.'s experience table |
+| Yeno, 215-217 | `yeno` | Horror Factor 11; Hit Points and S.D.C. printed, with M.D.C. only from armour or the force field (held: an M.D.C. body); force field 2D4x10 + P.E., +3D6 per level (held 30, +10); "nearly any" O.C.C. (held four) |
+| Yhabbayar, 217-220 | `yhabbayar` | P.B. 2D6+2 (held 2D6); one Physical and one Super power per level (held one pick from either); +1 Perception at odd levels; three added skills |
+| Zenith Moon Warpers, 221-223 | `zenith-moon-warper` | **M.A. 1D6+20** (held 1D6+2); Appraise Goods +15%; related skills at 3, 5, 8, 10, 12 (held ends at 11) |
+
+**What this comparison does not say.** It compared this book with the held
+row, not with the book the held row cites. So a difference is one of two
+things - this book revising the earlier one, or the held row having dropped
+something its own book prints - and this table cannot tell them apart. The
+Lanotaur skill list, the Noli I.S.P. line and the Simvan and Tokanii combat
+bonuses are the likeliest to be the second kind, because the held row says
+the book prints nothing. The experience tables this book names were not
+checked against the held ladders.
+
 ## Extraction plan
 
 Every importable entry is a race class (`category: rcc`), one
@@ -223,3 +298,4 @@ What is deliberately left:
 | 2026-10-03 | `pal/data/d-bees-of-north-america-survey` | cache built (226 pp, scan, OCR 300 dpi), offset +1 verified at four folios, `d-bees-of-north-america` registered in `books.json`, this survey. No rows. |
 | 2026-10-03 | `pal/data/d-bees-of-north-america-classes` | 52 classes, one `add-<id>-class.sql` each: 35 new races, 14 unheld reprints and the Idie Fishermen, Iktektumik Hunter-Gatherer and Roane Musician O.C.C.s. Nine drafting agents from one brief; every class reads `ready` against production with 0 stubs, every number read off a render. Named experience tables copied from the named class. Applied `--remote` before the PR. |
 | 2026-10-03 | `pal/data/d-bees-of-north-america-adna-armor` | `~073-adna-nomad-light-armor-choice.sql`: the Adna Nomad's generic light armour becomes the four-suit choice every other class has (the F115 correction). `repo-vs-live --offenders` found production holding the placeholder while the repo rebuilt the choice, the one differing field after #1651. Changes production, one row; a no-op on a clean build. No new rows. |
+| 2026-10-03 | `pal/docs/retro-open-questions` | **The 32 held reprints compared with their held rows** (*The held reprints compared*), by three `book-reconcile` passes reading renders. No rows, and nothing changed in the catalog. None of the 32 is identical; the Lyn-Srial Cloudweaver is not printed in this book at all. |
