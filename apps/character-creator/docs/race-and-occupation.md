@@ -188,7 +188,7 @@ pool bases as before — none of them knows a character can have two classes.
 | fixed skills | **both**, a shared skill held once at the higher base |
 | the race's fixed skills, when it declares `pairing_skills` | only the ones it lists (see below) |
 | related & secondary allowances | the **occupation** |
-| experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's (see below) |
+| experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's, and the race's always where it states `keeps_xp_table` (see below) |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
 | magic | **both** - merged, the occupation setting the KIND (see below) |
@@ -208,6 +208,13 @@ Four rules earned by getting them wrong first:
   ([survey](surveys/nightbane-core.md), *Follow-up decisions after the import*).
   Until then `xp_table` sat with the pools, the race won, and a regression
   invariant that no R.C.C. carried one was all that kept a Knight's chart alive.
+
+  **A race whose own book says otherwise states `keeps_xp_table: true`**
+  (`BOOK-INGEST-AUDIT` F122). Phase World's Draconid takes a Ley Line Walker's
+  or a Mind Melter's powers and *"in either case"* uses the Draconid's table. The
+  flag goes on an R.C.C. that states an `xp_table`, and that ladder then
+  survives a pairing; a superseding occupation still wins. Regression pins the
+  carriers by name.
 - **A skill both classes grant is held once**, at the higher base. Concatenating
   blindly produced a character holding Wilderness Survival twice, which the
   validator correctly refused to save. Choice-groups are *not* collapsed — they
@@ -307,8 +314,9 @@ Three things that shape does not settle, each measured the same day:
   wizard requires, which narrows the occupation picker to the two named. The
   server only warns there.
 - **A paired race levels on the occupation's experience table**, and the
-  Draconid's page says it uses its own either way. Nothing lets a race keep
-  its ladder in a pairing; the difference is 2,241 against 2,201 at level two.
+  Draconid's page says it uses its own either way (2,241 against 2,201 at
+  level two). `keeps_xp_table: true` on the race is the answer, since
+  `BOOK-INGEST-AUDIT` F122.
 - **The pairing also takes the occupation's related-skill count and money.**
   Whether the page means that is C1's reading.
 

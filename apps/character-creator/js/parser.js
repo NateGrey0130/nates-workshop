@@ -91,7 +91,8 @@ export const VARIANT_OVERRIDES = [
   // A scalar array, so it replaces. Every reader goes through `xpTableFor`
   // with the class AFTER `applyVariant` (the server's `loadClass`, and the
   // wizard's `composeClass` / `applyVariant`); an O.C.C.'s ladder still wins a
-  // pairing in `combineClasses`. BOOK-INGEST-AUDIT F108.
+  // pairing in `combineClasses`, unless the race states `keeps_xp_table` (F122).
+  // BOOK-INGEST-AUDIT F108.
   'xp_table',
   'bonuses',
   // NOT the skills block. `skill_overrides` below restates numbers on skills
@@ -1292,7 +1293,7 @@ export function combineClasses(rcc, occ) {
     }
   }
   // `xp_table` runs the OTHER way: when both halves state one, the OCCUPATION's
-  // wins, superseding or not. Palladium names its experience charts by O.C.C. -
+  // wins, superseding or not (one opt-out, F122, at the foot of this comment). Palladium names its experience charts by O.C.C. -
   // "Knight & Noble", "Thief & Merchant" - because experience comes from what
   // you do, so a character who takes up a trade levels on the trade's chart.
   // Left to the race, an occupation's table was dropped on every Palladium
@@ -1308,7 +1309,14 @@ export function combineClasses(rcc, occ) {
   // occupation states none - and an O.C.C.'s ladder wins a pairing. Until then
   // this key rode the loop above, where the race won, and the one thing keeping
   // that harmless was a regression invariant that no R.C.C. carried a table.
-  if (occ.xp_table != null) out.xp_table = occ.xp_table;
+  //
+  // UNLESS THE RACE'S OWN BOOK SAYS IT KEEPS ITS LADDER (BOOK-INGEST-AUDIT
+  // F122). Phase World's Draconid takes a Ley Line Walker's or a Mind Melter's
+  // powers and "in either case" levels on the Draconid's table. A race-side
+  // flag, like `yields_to_occupation`: the race knows which kind it is. A
+  // superseding occupation still wins - the character is no longer its race.
+  const keepsLadder = rcc.keeps_xp_table === true && rcc.xp_table != null && !superseded;
+  if (occ.xp_table != null && !keepsLadder) out.xp_table = occ.xp_table;
   // The attributes are the ONE field the book carves out, and it does not say
   // replace - it says "use these die rolls, or the attributes of the
   // character's original race, WHICHEVER ARE HIGHER". Per attribute, because
@@ -3528,6 +3536,17 @@ export function parseClassMarkdown(text) {
     if (data.category !== 'rcc') {
       errors.push('yields_to_occupation belongs on an R.C.C.; an occupation that takes a race\'s'
         + ' figure says so with overrides_race');
+    }
+  }
+  // F122. A race whose own book says it levels on its own table even when it
+  // takes an occupation's powers. A flag, true or absent, on an R.C.C.
+  if (data.keeps_xp_table !== undefined) {
+    if (data.keeps_xp_table !== true) {
+      errors.push('keeps_xp_table is a flag and may only be true; omit it otherwise');
+    } else if (data.category !== 'rcc') {
+      errors.push('keeps_xp_table belongs on an R.C.C.; an occupation\'s ladder already wins a pairing');
+    } else if (!Array.isArray(data.xp_table)) {
+      warnings.push('keeps_xp_table is set on a race that states no xp_table, so there is no ladder to keep');
     }
   }
   // F114. The race's named skills that survive a pairing, where its book keeps

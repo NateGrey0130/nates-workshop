@@ -200,7 +200,9 @@ A variant may override **only** the keys in `VARIANT_OVERRIDES`: `attribute_dice
 World Book 29 printed 79 gives the Madhaven Mutant Shaman the Gateway Knight &
 Mutant Shaman column, and the Shaman is a `shaman` variant on each of the eight
 Haven Mutants (`BOOK-INGEST-AUDIT` F108). It replaces the parent's ladder; an
-O.C.C.'s ladder still wins a pairing. A variant still cannot take a skill away,
+O.C.C.'s ladder still wins a pairing, unless the race states `keeps_xp_table`
+(`BOOK-INGEST-AUDIT` F122), which keeps whichever ladder the race's variant left
+it with. A variant still cannot take a skill away,
 so the Shaman's lost Secondary, Piloting and modern W.P. skills stay prose.
 
 `horror_factor` is on that list for classes that print "none normally, N if
