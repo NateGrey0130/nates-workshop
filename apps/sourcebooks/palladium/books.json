@@ -719,7 +719,7 @@
    "added": [
     [
      "Classes",
-     18
+     11
     ],
     [
      "Creatures",
@@ -738,7 +738,7 @@
      21
     ]
    ],
-   "total": 85
+   "total": 78
   },
   {
    "slug": "lone-star",
@@ -1151,10 +1151,10 @@
    "added": [
     [
      "Classes",
-     58
+     65
     ]
    ],
-   "total": 58
+   "total": 65
   },
   {
    "slug": "triax-2",
