@@ -4469,3 +4469,29 @@ classes and is the place to settle it. The "Related skills" preview on the
 Occupation step does not read picks. A later-level pick (F116) from an
 occupation's group is banked and spent by the server as before; this finding
 is the creation pick only.
+
+### F126 - low - a dice bonus inside `saves.other` is accepted by the parser and shown nowhere
+
+`validateSaveOther` (`apps/character-creator/js/parser.js`, read 2026-10-04)
+accepts an entry's `bonus` as a number or a dice expression. Nothing rolls
+the dice: `rollDiceBonusesOf` (`apps/character-creator/app.js`) rolls the keyed
+combat and save groups, `derive.js` skips the key `other` when it folds rolled
+bonuses, and the sheet's `otherSaves` (`apps/character-sheet/sheet.js`) keeps
+only entries whose bonus is a finite number. So *"+1D4 to save vs disease"*,
+written the way the parser allows, parses clean and never reaches the sheet.
+
+**Measured 2026-10-04, `--remote`**, the 725 published classes through the
+real parser, reading the class, its `at_level` blocks, its abilities and its
+variants: 41 classes carry a `saves.other` entry and **none carries a dice
+one**. Nothing is wrong on any sheet today.
+
+**Proposal:** make the parser say what the rest does - a dice `bonus` in
+`saves.other` becomes a warning that it will not be shown, and
+`class-import`'s frontmatter reference says to write the roll in the label
+until it is. Rolling and storing it is the larger alternative and waits for a
+class that needs it. **Posture:** a warning only; no class changes.
+**Evidence for the proposal:** the three readers above were read, not
+exercised with a dice entry. Seen while building F119, and filed rather than
+fixed in passing on Nate's word (2026-10-04, recommendation 14).
+
+**Confidence:** high. **Ongoing cost:** none.
