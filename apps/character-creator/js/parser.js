@@ -2009,6 +2009,14 @@ const DICE_BONUS = /^\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
 // type), so a catalog column holding a roll accepts exactly what a bonus does.
 export const isDiceBonus = (v) => typeof v === 'string' && DICE_BONUS.test(v.trim());
 
+// A BONUS may also be a reduction - "reduce M.E. by 1D6" is `"-1d6"`
+// (BOOK-INGEST-AUDIT F119). Its own predicate, because the two callers above
+// and below must stay unsigned: a catalog `dice` column and an equipment
+// quantity are amounts, not adjustments. A leading PLUS stays refused, as
+// RETRO-AUDIT recorded it: the unsigned form already means that.
+const SIGNED_DICE_BONUS = /^-?\s*\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?$/i;
+export const isSignedDiceBonus = (v) => typeof v === 'string' && SIGNED_DICE_BONUS.test(v.trim());
+
 // An equipment quantity: a plain count, or a roll the book prints — the Priest
 // of Light's 1D6 vials of holy water. The wizard rolls the dice form once at
 // creation and stores the number.
@@ -2025,7 +2033,7 @@ function validateBonusGroup(where, group, block, errors, warnings) {
     // `saves.other` is a labelled list rather than a keyed number, and has its
     // own validator (BOOK-INGEST-AUDIT.md F7).
     if (group === 'saves' && k === 'other') continue;
-    const dice = isDiceBonus(v);
+    const dice = isSignedDiceBonus(v);
     if (!dice && (typeof v !== 'number' || !Number.isFinite(v))) {
       errors.push(`${where}.${group}.${k} must be a number or a dice expression like "2d6"`);
     } else if (group === 'attributes' && !BONUS_ATTRS.includes(k)) {
@@ -2092,7 +2100,7 @@ function validatePoolBonuses(where, block, errors, warnings) {
   for (const [k, v] of Object.entries(block)) {
     if (!POOL_BONUS_KEYS.includes(k)) {
       errors.push(`${where}.pools.${k} is not a pool (${POOL_BONUS_KEYS.join(', ')})`);
-    } else if (!isDiceBonus(v) && (typeof v !== 'number' || !Number.isFinite(v))) {
+    } else if (!isSignedDiceBonus(v) && (typeof v !== 'number' || !Number.isFinite(v))) {
       errors.push(`${where}.pools.${k} must be a number or a dice expression like "4d6"`);
     } else if (v === 0) {
       warnings.push(`${where}.pools.${k} is 0 and will do nothing`);
@@ -2591,6 +2599,37 @@ export function abilityTouchesPool(def) {
     || def.psionics?.isp_base != null;
 }
 
+// The Horror Factor a chosen ability carries (BOOK-INGEST-AUDIT F119).
+//
+// Two keys on an ability option, both DISPLAY-ONLY like the class's own
+// `horror_factor` (F75), which is the only thing either touches:
+//
+//   horror_factor: 10        RESTATES it while the option is held - a number or
+//                            the book's phrase, exactly as on a class. The
+//                            Felinoid is 9, and 10 as one of the larger cats.
+//   horror_factor_bonus: 2   ADDS to it, summed across every held option - the
+//                            Oni's head shape is "+2 Horror Factor" on its 11.
+//
+// THE NAMES FOLLOW THE CLASS AND THE VARIANT, where `horror_factor` is a
+// replacing scalar (VARIANT_OVERRIDES). A `traits` row runs the other way -
+// its `horror_factor` adds and `horror_factor_set` replaces - because a
+// Morphus result adds far more often than it sets; an ability option sits on
+// the class, so it reads like the class.
+//
+// A bonus needs a number to add to. Onto a phrase ("10+1D4") it is appended as
+// written rather than guessed at, and with no factor at all it is the factor.
+// Neither reaches a second form: a Morphus folds its own (js/second-form.js).
+const isHorrorFactor = (v) => (typeof v === 'number' && Number.isFinite(v))
+  || (typeof v === 'string' && v.trim() !== '');
+
+function withHorrorBonus(base, added) {
+  if (!added) return base;
+  if (base === undefined || base === null || String(base).trim() === '') return added;
+  const n = typeof base === 'number' ? base : (/^\s*\d+\s*$/.test(String(base)) ? Number(base) : null);
+  if (n !== null) return n + added;
+  return `${String(base).trim()} ${added > 0 ? '+' : '-'}${Math.abs(added)}`;
+}
+
 // Folds the abilities a character actually chose into its class.
 //
 // `chosen` is a list of names and DUPLICATES ARE MEANINGFUL: the Godling's Shape
@@ -2614,6 +2653,11 @@ export function applyAbilities(cls, chosen) {
   const out = { ...cls };
   const taken = [];
   const counts = new Map();
+  // The Horror Factor a held option restates, and what held options add to it
+  // (BOOK-INGEST-AUDIT F119). Folded after the loop, because a restatement and
+  // a bonus may come from different picks in either order.
+  let horrorSet;
+  let horrorAdded = 0;
   for (const { name, gm } of picks) {
     const key = name.toLowerCase();
     const def = byName.get(key);
@@ -2684,9 +2728,13 @@ export function applyAbilities(cls, chosen) {
     // M.D.C. rides beside it as an ordinary pools.mdc bonus, so two converting
     // realms combine theirs, as printed 47 says they do.
     if (def.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
+    if (isHorrorFactor(def.horror_factor)) horrorSet = def.horror_factor;
+    if (Number.isInteger(def.horror_factor_bonus)) horrorAdded += def.horror_factor_bonus;
     taken.push({ name: def.name, times: n, granted: true, ...(gm ? { gm: true } : {}),
       description: def.description, on_repeat: n > 1 ? def.on_repeat : undefined });
   }
+  const horror = withHorrorBonus(horrorSet !== undefined ? horrorSet : out.horror_factor, horrorAdded);
+  if (horror !== undefined) out.horror_factor = horror;
   // What the character actually holds, for the sheet — as opposed to
   // special_abilities, which is what the class OFFERS.
   out.abilities_taken = taken;
@@ -3933,6 +3981,24 @@ export function parseClassMarkdown(text) {
         && (!Number.isInteger(e.related_skills_count) || e.related_skills_count < 0)) {
       errors.push(`special_abilities: ${e.name}.related_skills_count must be a `
         + 'non-negative integer');
+    }
+    // F119: the projected Horror Factor a held option restates or adds to.
+    // Warnings on a bad restatement, as on the class's own (a display-only key
+    // must not make a class vanish); the bonus is arithmetic, so it is an error.
+    if (e.horror_factor !== undefined && !isHorrorFactor(e.horror_factor)) {
+      warnings.push(`special_abilities: ${e.name}.horror_factor should be a number or the phrase `
+        + 'the book prints, and this one is neither; it is ignored');
+    }
+    if (e.horror_factor_bonus !== undefined
+        && (!Number.isInteger(e.horror_factor_bonus) || e.horror_factor_bonus === 0)) {
+      errors.push(`special_abilities: ${e.name}.horror_factor_bonus must be a whole number other `
+        + 'than 0 - what the option adds to the Horror Factor the character projects');
+    }
+    if ((e.horror_factor !== undefined || e.horror_factor_bonus !== undefined)
+        && !optionNames.has(e.name.trim().toLowerCase())) {
+      warnings.push(`special_abilities: ${e.name} states a Horror Factor but is not offered as a `
+        + 'choice, so nothing applies it - put it on the class (or its variant) if every '
+        + 'character has it');
     }
     // F64: F62's conversion flag, carried by a chosen ability. True or absent.
     if (e.mdc_from_hp_sdc !== undefined && e.mdc_from_hp_sdc !== true) {

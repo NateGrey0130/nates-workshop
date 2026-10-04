@@ -208,6 +208,16 @@ revealed". It was first argued from the Nightbane, which projects none in its
 human form and 6 to 18 in its Morphus - but that is two states of one character,
 not two kinds of the class, and it is `second_form.horror_factor` now (see
 [A second body](race-and-occupation.md#a-second-body)).
+**A chosen ability may carry it too** (`BOOK-INGEST-AUDIT` F119), with two keys
+on the option: `horror_factor` restates the class's while the option is held
+(a number or the book's phrase), and `horror_factor_bonus` is a whole number
+added to it, summed across every held option. Both are display-only. A bonus
+onto a phrase is appended as written (`10+1D4 +2`); with no factor on the class
+it is the factor. Neither reaches a second form, which folds its own, and
+neither earns the derived `horror-factor` tag, which reads the class and its
+variants. The names follow the class and the variant; a `traits` row runs the
+other way round (`horror_factor` adds, `horror_factor_set` replaces).
+
 `add-cosmo-knight-class.sql` and `add-asgardian-dwarf-class.sql` both print
 "none normally, N if revealed". It is the one a character IMPOSES - not the save
 of the same name, which is a `bonuses.saves` key and means the opposite

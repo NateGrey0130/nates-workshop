@@ -821,7 +821,7 @@ import { statements, expressionDepth, D1_MAX_EXPR_DEPTH } from '../../../scripts
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
 import { composeClass } from '../js/compose.js';
 import { evalDice, rollAttribute, rollPoolFormula, rollQuantity, poolFormulaBounds,
-         diceBounds, attributeCeiling, isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
+         diceBounds, diceBonusBounds, evalDiceBonus, attributeCeiling, isAttributeExpr, isAbsentAttribute } from '../js/dice.js';
 import { validateMos, validateTotem, mosList } from '../js/parser.js';
 import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from '../js/psionic-costs.js';
@@ -832,7 +832,7 @@ import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupIndexFor, abilityOffersPsionics, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
-         combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
+         combineClasses, isDiceBonus, isGearChoice, isSignedDiceBonus, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
          relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
@@ -7060,6 +7060,99 @@ section('Morphus tables catalog');
   // A table CHECK is refused input, not a server fault.
   check('the catalog write path answers a CHECK failure with a 422',
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+}
+
+section('Reductions on dice, and a Horror Factor from a chosen ability (BOOK-INGEST-AUDIT F119)');
+{
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: rcc', 'tags: []',
+     ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+
+  // A REDUCTION IS A BONUS WITH A MINUS. "Reduce M.E. by 1D6" was prose,
+  // because a dice bonus had to start with a digit.
+  const red = mk('bonuses:', '  attributes: { ME: "-1d6", PS: "2d6" }',
+    '  combat: { initiative: "-1d4" }', '  pools: { sdc: "-2d4x10" }');
+  check('a dice bonus may carry a leading minus, in attributes, combat and pools',
+    red.ok && red.errors.length === 0, red.errors.join('; '));
+  check('a leading plus is still refused, as it always was',
+    !mk('bonuses:', '  attributes: { ME: "+1d6" }').ok);
+  check('the unsigned predicate is untouched, so a quantity and a catalog dice field stay amounts',
+    isDiceBonus('-1d6') === false && isSignedDiceBonus('-1d6') === true && isSignedDiceBonus('1d6') === true
+    && !mk('equipment_starting:', '  - { item_id: "x", qty: "-1d6" }').ok);
+  check('nor does the sign reach attribute dice: nothing is rolled on -3d6',
+    isAttributeExpr('-3d6') === false);
+
+  // Rolled and bounded the right way round. Pinning every die to its floor
+  // gives a negative term its CEILING, which is what the bounds used to do.
+  const rolls = Array.from({ length: 200 }, () => evalDiceBonus('-1d6'));
+  check('a reduction rolls negative, inside its dice',
+    rolls.every((v) => Number.isInteger(v) && v <= -1 && v >= -6) && rolls.some((v) => v < -1));
+  check('and an ordinary bonus rolls as it did',
+    Array.from({ length: 50 }, () => evalDiceBonus('2d6')).every((v) => v >= 2 && v <= 12));
+  check('its bounds run from the most it can take to the least',
+    JSON.stringify(diceBonusBounds('-1d6')) === '{"min":-6,"max":-1}'
+    && JSON.stringify(diceBonusBounds('-2d4x10')) === '{"min":-80,"max":-20}'
+    && JSON.stringify(diceBonusBounds('2d6')) === '{"min":2,"max":12}');
+  check('a pool with a reduction is bounded the same way, alone and in a composed list',
+    JSON.stringify(poolFormulaBounds(20, {}, '-1d6')) === '{"min":14,"max":19}'
+    && JSON.stringify(poolFormulaBounds(20, {}, ['1d4', '-1d6', 3])) === '{"min":18,"max":26}');
+  check('and rolls inside those bounds',
+    Array.from({ length: 200 }, () => rollPoolFormula(20, {}, '-1d6')).every((v) => v >= 14 && v <= 19));
+  // The wizard collects the dice by group and stores what they rolled; the
+  // fold then counts the stored number, whatever its sign.
+  check('the reduction is collected for rolling like any dice bonus',
+    derive.diceBonuses(red.data).ME === '-1d6'
+    && derive.diceBonusesByGroup(red.data).combat.initiative === '-1d4');
+  check('and its stored roll lowers the attribute',
+    derive.classBonuses(red.data, 1, { attributes: { ME: -4, PS: 7 }, combat: { initiative: -2 }, saves: {} })
+      .attributes.ME === -4
+    && derive.effective({ ME: 12 }, { attributes: { ME: -4 } }).ME === 8);
+
+  // THE HORROR FACTOR A CHOSEN ABILITY CARRIES. Display-only, like the class's.
+  const hf = mk('horror_factor: 9', 'special_abilities:',
+    '  - { name: "Jaguar", description: "x" }',
+    '  - { name: "Lion", description: "x", horror_factor: 10, bonuses: { attributes: { IQ: "-1d4" } } }',
+    '  - { name: "Boar Head", description: "x", horror_factor_bonus: 2 }',
+    '  - { name: "Rotting Skull", description: "x", horror_factor_bonus: 4 }',
+    '  - { choose: 1, from: ["Jaguar", "Lion"] }',
+    '  - { choose: 1, from: ["Boar Head", "Rotting Skull"] }');
+  check('an option may restate the Horror Factor or add to it', hf.ok && hf.warnings.length === 0,
+    [...hf.errors, ...hf.warnings].join('; '));
+  check('unpicked, or on an option that states none, the class keeps its own',
+    applyAbilities(hf.data, []).horror_factor === 9
+    && applyAbilities(hf.data, ['Jaguar']).horror_factor === 9);
+  check('a held option that restates it replaces it',
+    applyAbilities(hf.data, ['Lion']).horror_factor === 10);
+  check('a held option that adds to it is added, and two are summed',
+    applyAbilities(hf.data, ['Boar Head']).horror_factor === 11
+    && applyAbilities(hf.data, ['Boar Head', 'Rotting Skull']).horror_factor === 15);
+  check('the bonus lands on the restated figure, in either pick order',
+    applyAbilities(hf.data, ['Lion', 'Boar Head']).horror_factor === 12
+    && applyAbilities(hf.data, ['Boar Head', 'Lion']).horror_factor === 12);
+  check('onto a phrase it is appended as written rather than guessed at',
+    applyAbilities({ ...hf.data, horror_factor: '10+1D4' }, ['Boar Head']).horror_factor === '10+1D4 +2');
+  check('with no factor on the class the bonus is the factor',
+    applyAbilities({ ...hf.data, horror_factor: undefined }, ['Boar Head']).horror_factor === 2);
+  check('the class object is not mutated', hf.data.horror_factor === 9);
+  check('the same pick carries its reduction, so one option holds both halves of F119',
+    applyAbilities(hf.data, ['Lion']).bonuses.attributes.IQ === '-1d4');
+  check('a bonus of zero, or one that is not a whole number, is an error',
+    !mk('special_abilities:', '  - { name: "A", horror_factor_bonus: 0 }', '  - { choose: 1, from: ["A"] }').ok
+    && !mk('special_abilities:', '  - { name: "A", horror_factor_bonus: "lots" }', '  - { choose: 1, from: ["A"] }').ok);
+  check('a Horror Factor on an ability nobody is offered is warned about, since nothing applies it',
+    mk('special_abilities:', '  - { name: "Loose", horror_factor: 12 }').warnings
+      .some((w) => w.includes('states a Horror Factor but is not offered')));
+  // The sheet reads cls.horror_factor off the composed class, and the picker
+  // prints a tag per option; both are pinned by their source, not a render.
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  check('the sheet still reads the composed class for the card',
+    sheetSrc.includes('C.cls?.horror_factor'));
+  const appSrc = readFileSync(appPath('app.js'), 'utf8');
+  check('and the picker shows what an option does to it',
+    appSrc.includes('def?.horror_factor != null') && appSrc.includes('def?.horror_factor_bonus'));
+  check('the wizard rolls a bonus through the signed evaluator',
+    /typeof d === 'number' \? d : evalDiceBonus\(d\)/.test(appSrc));
 }
 
 section('Ability validation');

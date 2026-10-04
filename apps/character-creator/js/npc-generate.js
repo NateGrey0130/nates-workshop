@@ -33,7 +33,7 @@
 // otherwise have to duplicate to pick a mage's spells at random. A G.M. choosing
 // an NPC's spells is also usually the point. See bankedPowerGrants below.
 
-import { rollAttribute, rollPoolFormula, evalDice } from './dice.js';
+import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus } from './dice.js';
 import { skillBase } from './skill-base.js';
 import { isChoiceGroup, isAbilityChoice, categoryAllows, namedByOnly, categoryBonus, categoryName,
          relatedFloorStatus } from './parser.js';
@@ -546,7 +546,7 @@ function describeGroup(group) {
 // rollDiceBonusesOf() in the wizard.
 function rollDiceBonuses(cls, derive) {
   const roll = (dice) => {
-    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDiceBonus(d))).filter((v) => v != null);
     return rolls.length ? rolls.reduce((a, b) => a + b, 0) : null;
   };
   const out = { attributes: {}, combat: {}, saves: {} };
