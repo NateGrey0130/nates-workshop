@@ -24,7 +24,7 @@ import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSI
 import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
-         abilityRollBands, abilityRollMatches,
+         abilityRollBands, abilityRollMatches, abilityOffersPsionics,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
@@ -1311,7 +1311,11 @@ function raceBriefing() {
 
   // psionics_allowed: false is a statement (a troll has no psychic potential),
   // and is worth printing precisely because it looks like an absence.
-  const psi = c.psionics_allowed === false ? 'none — this race has no psychic potential'
+  // Unless the flag is there because the race rolls on a table of its OWN, a
+  // pick group below whose options carry the psionics (BOOK-INGEST-AUDIT F118).
+  const psi = c.psionics_allowed === false
+    ? (abilityOffersPsionics(c) ? 'rolled on its own table — the standard psionics roll is not used'
+      : 'none — this race has no psychic potential')
     : c.psionics?.type ? `${c.psionics.type}${c.psionics.powers_starting ? ` · ${c.psionics.powers_starting} to choose` : ''}`
     : 'none stated';
 
