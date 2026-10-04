@@ -89,6 +89,93 @@ them. Only the element's own page block separates them.
 A second false positive worth recording: grepping for `Level Four: Air` matched
 **`Level Four: Air Doubler`**, a spell name, not a section heading.
 
+### The whole book by chapter, counted 2026-10-03
+
+The table above stops at printed 153 and files everything after it as "classes,
+gear, lore". This one covers printed 26-347. **The text layer sets a chapter
+title at 37pt and an entry heading at 14pt** (11pt in the item chapters), so
+the entry lists below are the book's own headings read by font size, not
+marker counts. A heading that wraps across two lines can read as two entries,
+and the Techno-Wizard weapon lists at printed 317-332 name their items in bold
+body type, which this reading does not see.
+
+**The Index of Rifts Magic covers the elemental lists and the invocations
+only** (printed 57-159). It is silent on every chapter from 160 on, so it is
+not an authority for them.
+
+| printed | chapter | entry headings | where the catalog holds them (production, 2026-10-03) |
+|---|---|---|---|
+| 26-32 | African Ceremonial Magic | 24 | tradition `african-ceremonial`, citing Africa |
+| 32-36 | African Witch Spells | 19 | tradition `african-witch`, citing Africa; the five Witch Powers on printed 32 match no spell row |
+| 36-39 | Biomancy | 24 | tradition `biomancy`, citing South America |
+| 39-41 | Blue Flame | a level list, not headings | tradition `blue-flame` |
+| 41-44 | Bio-Wizardry | 2 | a process, not a spell list |
+| 44-52 | Cloud Magic | 54 | tradition `cloud`, citing New West |
+| 52-54 | Conjuring | 5 | rules for one class, not a spell list |
+| 54-56 | Dolphin Magic | a level list | tradition `dolphin`, citing Underseas |
+| 56-88 | Elemental Magic, four lists | 235 | tradition `warlock`, citing this book |
+| 88-160 | Invocations | 306 | untagged rows citing this book, RUE and Palladium Fantasy |
+| 160 | Korallyte Shaping | 2 | not checked |
+| 160-168 | Living Fire Magic | 40 | tradition `living-fire`, citing Mystic Russia |
+| 168-175 | Nature Magic | 35 | tradition `nature`, citing Mystic Russia |
+| 175-184 | Nazcan Line Magic | 34 | tradition `nazca`, citing South America 2; the Great Lines on 183-184 are places |
+| 184-200 | Necromancy | 65 | traditions `bone` (Mystic Russia) and `necromancy` (Africa) |
+| 200-208 | Ocean Magic | 41 | tradition `ocean`, citing Underseas |
+| 208-218 | Rift and Ley Line Magic, Shamanistic Magic | 7 | tradition `shaman`, citing Spirit West |
+| 218-222 | Spoiling Magic | 19 | tradition `spoiling`, citing Mystic Russia |
+| 222-229 | Stone Magic | 3 | the `stone-master` class |
+| 229-243 | Tattoo Magic | by type | tradition `tattoo`, citing Atlantis |
+| 243-251 | **Temporal Magic** | 25 | **no tradition holds it** - see below |
+| 251-255 | Whale Singer Spellsongs | 21 | tradition `spellsong` |
+| 255-279 | Biomancer, Bio-Wizard, Eylor, Faerie, rune weapons and statues, restraints | about 75 | part held under Atlantis; see below |
+| 279-294 | Herb magic, Millennium Tree items | about 40 | from Rifts England, a book not on this machine |
+| 294-301 | Japanese magic items | about 12 | held under Japan |
+| 301-312 | African charms; fetishes of North America; Inuit amulets | lists by rank | held under Africa, Spirit West and Canada; not compared row by row |
+| 312-333 | Techno-Wizard armour, weapons, bionics, devices | not counted | part held under Federation of Magic, South America, Atlantis |
+| 333-341 | Techno-Wizard vehicles | 22 | part held under Federation of Magic, Underseas, New West |
+| 341-343 | Automatons of the Federation of Magic | 7 | held under Federation of Magic |
+| 343-347 | Iron Juggernauts of Tolkeen | 9 named, plus "other war machines" | **none held** |
+
+**How the spell chapters were checked.** All 965 entry headings on printed
+26-255 went through `scripts/catalog-diff.mjs --remote --table spells`: 785
+matched and 180 did not. The 180 were then read by hand and by a
+name-containment query. Almost all are false gaps of three kinds: a heading
+split or welded by the text layer, a spell this book prints in two lists (the
+Air, Water and Ocean lists repeat one another, and the matcher spends a row
+once), and a sub-heading that is not a spell.
+
+**What is left after that, by name:**
+
+| printed | what | count |
+|---|---|---|
+| 244-251 | Temporal Magic. Twenty of the 25 headings match no `spells` row. The five that match are same-named Palladium Fantasy and invocation rows, in no temporal tradition. | 20 |
+| 32 | African Witch Powers (Creature of the Night, Lycanthropy, Create Magic Snakes and two more). Not checked against the `african-witch` class's abilities. | 5 |
+| 171, 175 | Nature Magic: Keep (Preserve) Food, Summon Rain | 2 |
+| 192, 198 | Necromancy: Chicken Bone, Mend Living Bone, Shape Bone | 3 |
+| 165 | Living Fire: Impervious to Fever | 1 |
+
+The six Nature, Necromancy and Living Fire names were not read on the page.
+Each tradition's other spells came from Mystic Russia or Africa, so a name
+this book alone prints is either new here or spelled differently there.
+
+**How the item chapters were checked, and how far to trust it.** The 11pt
+headings on printed 255-347 were compared with `gear`, `vehicles` and
+`enchantments` by a containment match written for this pass, **not** by
+`catalog-diff.mjs`. It is a lead list, not a diff: a generic name can match a
+Palladium Fantasy or Heroes Unlimited row that is not the same item. With that
+said, the sections where nothing matched at all are:
+
+| printed | section | what matched |
+|---|---|---|
+| 257-267 | Entity, Eylor and Faerie Bio-Wizard weapons (Atlantis and Splynn Dimensional Market) | 10 of 35 headings |
+| 274-276 | Magic restraints and anti-magic containment (Coalition Wars) | 0 of 11 |
+| 284-294 | Herbs of legend, Millennium Tree staves, wands and corrupted weapons (England) | Millennium Tree names match Japan rows only |
+| 336-340 | Techno-Wizard aircraft, boats and land vehicles | 10 of 22 |
+| 343-347 | Iron Juggernauts of Tolkeen: Blazing, Earthwake, Fury, Sea Viper, Thundering, Warhawk, Wing Blade, Millipede, and the Iron-Dragonfly heavy air juggernaut | 0 of 9 |
+
+Splynn Dimensional Market, Rifts England and Coalition Wars are not cached on
+this machine, so for their material this book is the only copy here.
+
 ## Classes
 
 One class cites this book, `stone-master`. F1's earlier count found the book
@@ -175,6 +262,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-08-28 | [#372](https://github.com/NateGrey0130/nates-workshop/pull/372) | `fix-bom-elemental-citations.sql` — all **231** elemental spells re-cited: **222 to an exact printed page**, 9 to their element's range. Applied `--remote` before the PR. **THE REPAIR IS COMPLETE.** |
 | 2026-08-28 | [#374](https://github.com/NateGrey0130/nates-workshop/pull/374) | `zzzz-cite-bom-invocations.sql` — the other 177, the general invocations, **all to an exact printed page**. Applied `--remote` before the PR. **`bom` is 409 / 0.** |
 | 2026-09-27 | #1459 | *Annihilate* stores `ppe` 600, by `~024-dragon-helm-and-annihilate.sql`, keyed on name. Printed 150, read off a render: *"Six Hundred"*, with Shifters, Conjurers, Temporal Raiders and Temporal Wizards casting it for 300. The row stored the 300; Nate's decision that day was the normal cost, and the `ppe_note` (600 normally, 300 for those four) is kept unchanged because it reads right against 600. Federation of Magic prints 600 too (`fom.md`, *Spell diff*). No row count moves. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/docs/retro-open-questions` | **The whole book inventoried by chapter** (*The whole book by chapter*): printed 26-347 read by the text layer's heading sizes, the spell chapters diffed against production, the item chapters compared by name as a lead list. No rows. Temporal Magic (20 spells) and the Iron Juggernauts (9) are the two sections the catalog holds nothing of. |
 
 ### What remains
 

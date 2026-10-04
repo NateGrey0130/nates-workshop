@@ -74,7 +74,35 @@ verdict.
 
 ## Inventory
 
-**Not counted.** Never surveyed as a book. Six dragon hatchling species were
+**Counted by structure on 2026-10-03**, over all 382 cached pages. The book
+is a scan, so this is stat-block markers per page off the OCR, with the
+vehicle blocks then read by their `Model Type:` and `M.D.C. by Location:`
+lines. No figure was read off a render.
+
+| printed | what is there | how it compares with production (2026-10-03) |
+|---|---|---|
+| 47-156 | the O.C.C.s and R.C.C.s, each with its skill and equipment blocks | held (the classes line above) |
+| 164-184 | psionic powers, 85 `I.S.P.:` blocks | held (`psionic_powers` 89) |
+| 198-225 | spell descriptions, 153 `P.P.E.:` blocks | held under this book and the Book of Magic |
+| 233-237 | the Coalition military O.C.C.s | held; the CS Military Specialist (235-236) has no class |
+| 240, 255 | SAMAS power armor; FASSAR-20 Skelebot | held as `vehicles` rows citing Coalition War Campaign |
+| **249-253** | **five Coalition war machines**: UAR-1 Enforcer (249), CR-003 Spider-Skull Walker (250), Mark V APC (251), AFC-050 Death's Head Transport (252), AFC-023 Sky Cycle (253) | **none held** in `vehicles` or `gear` |
+| 261 | two body-armour blocks with M.D.C. by location | gear; not compared row by row |
+| 266-268 | common vehicles and body armour, thirteen one-line `M.D.C. by Location` entries | `vehicles` 6 and gear; not compared row by row |
+| **271-273** | **three Northern Gun and Titan machines**: NG-X9 Samson power armor (271), FT-005 Flying Titan (272), TR-001 Titan Combat Robot (273) | **none held** |
+| 240-274 | weapons and equipment | held (`gear` above) |
+| 304-329 | skill descriptions | held (`skills` 216) |
+
+**No bestiary and no named-NPC stat block**: every `Alignment:` and `Horror
+Factor:` marker in the book falls on a class page. So the zero rows this book
+has in `creatures` and `notable_npcs` are the book's, not a gap.
+
+**The eight machines in bold are the one category this book prints and the
+catalog does not hold.** Each has a `Model Type:` line and a full
+`M.D.C. by Location:` block. The near-names in `vehicles` (CR-004, Mark VII,
+AFC-033) are Coalition War Campaign's later models, not these.
+
+Six dragon hatchling species were
 imported from it (`5c66a60`); the hand-cut PDF slices that import used —
 `142-159`, `264-277`, `329-332`, `347-356` — are debris in `Downloads` now, not
 a record, and `INGESTION-AUDIT` F11 is closed as moot.
@@ -171,6 +199,7 @@ Physical.
 | 2026-09-09 | #859 | **`BOOK-INGEST-AUDIT` F41 vessels.** 5 vessels, 11 M.D.C. locations and 7 weapon entries from printed 266-267 - the whole `Common Vehicles` section bar the jet pack - plus `gear.vehicle_slug` pointers on 8 gear rows, because three of the five machines are stored twice under different slugs. **Three findings filed, not fixed**: F42 (six rows carry FIRST-EDITION M.D.C. under a RUE citation; ten class references point at them), F43 (`northern-gun-sky-king` is in the ORIGINAL core book, `wilk-s-atv-transport-vehicle` is the Mountaineer under a page-break name), F44 (`findDuplicates` splits `A.T.V.` into three tokens and misses two of three pairs). Applied `--remote` before the PR. |
 | 2026-09-09 | #861 | **`BOOK-INGEST-AUDIT` F41, the last item.** The **Glitter Boy Power Armor (USA-G10)** imported as a vessel from printed **71-72** - 7 M.D.C. locations, 3 weapon systems, the book's own ordinals. F41 called this row *the one with no book behind it*; this book stats it in full, and all seven figures the row had stored from the web are printed here verbatim. The gear row was re-cited from `Web reference (not book-verified)` to `p.71-72`, given the printed 25 million black-market price, and had ONE figure corrected - a 20-year nuclear charge against the printed 25. Free Quebec's `classic-glitter-boy-qgb-100` stays a separate vessel: it carries a Quebec forearm weapon package the USA-G10 does not have. Applied `--remote` before the merge. |
 | 2026-09-18 | #1154 | **OCR text repair**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`. `Control & Enslave Entity` (printed 218) stopped mid-sentence at the page turn and lost most of itself; it is completed from a render of printed 219, where the cache also reads `contro!`. `Telekinetic Push` ended in the next section's heading, `Sensitive Psionics`. Applied `--remote` before the merge. |
+| 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. Eight robots, power armours and vehicles on printed 249-253 and 271-273 are in neither `vehicles` nor `gear`; the book prints no bestiary and no named-NPC block. |
 
 ### What remains
 

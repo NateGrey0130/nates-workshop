@@ -50,7 +50,32 @@ cost here is reconciled between two readings rather than transcribed from one.
 
 ## Inventory
 
-**Not counted.** Never surveyed as a book.
+**Counted by structure on 2026-10-03**, over all 339 cached pages: stat-block
+markers per page, and the text layer's own headings read by font size (chapter
+titles at 24pt and up, entry headings at 17pt, ward and circle names at
+11-13pt). No page was read for its figures.
+
+| printed | what is there | how it compares with production (2026-10-03) |
+|---|---|---|
+| 49-61 | skill descriptions | not diffed; `skills` holds 8 rows citing this book, the rest by name under other books |
+| 63-99 | clergy, men of arms and optional O.C.C.s | held (the classes line above) |
+| 104-117 | Wizard, Warlock, Witch, Diabolist | held as classes |
+| **120-133** | **Ward magic**: ten symbol kinds on printed 126 (Alarms, Area Affect, Permanence, Power, Protection, Inflict, Trigger, Conditions, Colors, Numbers) and 22 condition wards on 128-132 | **nothing held.** No `spells` or `enchantments` row is a ward; the `diabolist` class note says there is no ward catalog |
+| **135-155** | Summoner O.C.C., then **51 circles**: 18 protection circles (138-140), 14 summoning circles (146-148), 19 power circles (149-155) | **nothing held** as rows; the `summoner` class note says there is no circle catalog. Two invocations share a name with a protection circle and are not it |
+| 156-161 | four Psychic Character Classes | held as classes |
+| 163-179 | psionic powers, 78 entry headings | all 78 match a `psionic_powers` row by name; two cite this book |
+| 187-188 | the two spell authority tables (by level, by page) | 182 entries; `catalog-diff.mjs --remote` matches 180, and the other two are near-names (`Swim as a Fish (lesser)`, `Invulnerability`) |
+| 189-218 | wizard spell descriptions, levels 1-15 and Spells of Legend | as the index above |
+| 221-244 | Air, Earth, Fire and Water elemental magic, about 200 stat blocks | not diffed here; the `warlock` tradition's 231 rows cite the Book of Magic, which reprints these lists |
+| 249-253 | magic weapon, armour and charm enchantments | `enchantments` 62 |
+| 257-260, 267 | weapons, armour, goods and prices | `gear` (the 511 above, under two spellings of the title) |
+| 289-333 | races, creatures and monsters | `creatures` 36, and the race classes |
+
+**A ward is not one row.** The book builds a ward from a sequence of symbols -
+a kind, a condition, optionally an area, a trigger and a permanence - so the
+32 headings on printed 126-132 are parts, not finished spells. A circle is one
+entry with its own P.P.E. cost and power words, the shape a `spells` row in
+its own tradition already holds.
 
 ## Classes
 
@@ -85,6 +110,7 @@ None. This book has no open import.
 | 2026-08-28 | [#376](https://github.com/NateGrey0130/nates-workshop/pull/376) | `zzzz-cite-pf-rows.sql` — **39 of 42** rows cited by page: 28 spells, 6 skills, 5 armor. Three spellings of the book's name normalised to the canonical title. 3 held back. Applied `--remote` before the PR. **`pf` is 583 / 3.** |
 | 2026-09-18 | #1172 | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-palladium-fantasy.sql`, 36 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-27 | `pal/data/rebuild-audit-f16-f25-f26` | **`Falconry` cites this book**, by `~040-rifts-skill-list-recitations.sql` (REBUILD-AUDIT F16): it moves from the non-book `Rifts Skill List` to `Palladium Fantasy RPG Main Book p.54`, where it prints under Military at 30%+5%, as the row stores (its `systems` carries both `rifts` and `palladium-fantasy`). `Locate Secret Compartments` is **not** moved: printed 57 prints 15%+5% against the stored 20, and the row's note already says so. Skills citing this book 7 -> **8**. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. The spell index diffs 180 of 182 against production and all 78 psionic headings match; the ward symbols (printed 126-132) and the 51 circles (138-155) are held nowhere. |
 
 ### What remains
 
