@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows arrived before surveys existed; this file was written for the INGESTION-AUDIT F24 re-provenance, not as an import plan. (2026-09-24)
 
-**Rows citing this book:** classes 1, vehicles 9, spells 452
+**Rows citing this book:** classes 1, gear 206, vehicles 24, spells 457
 
 Slug `bom`. Cached 2026-08-28 from `526065744-Rifts-Book-of-Magic.pdf`,
 360 PDF pages, **text layer**, no OCR.
@@ -158,6 +158,8 @@ The six Nature, Necromancy and Living Fire names were not read on the page.
 Each tradition's other spells came from Mystic Russia or Africa, so a name
 this book alone prints is either new here or spelled differently there.
 
+**The item chapters were diffed properly on 2026-10-04** (Ledger, `pal/data/bom-only-material`): `catalog-diff.mjs --remote` per chapter and a hand check of every name it called missing. The paragraph and table below are the earlier lead list, kept as the record of what it could and could not see; its counts are superseded.
+
 **How the item chapters were checked, and how far to trust it.** The 11pt
 headings on printed 255-347 were compared with `gear`, `vehicles` and
 `enchantments` by a containment match written for this pass, **not** by
@@ -264,6 +266,7 @@ F20 is this repo's case for not writing a repair before reading the page.
 | 2026-09-27 | #1459 | *Annihilate* stores `ppe` 600, by `~024-dragon-helm-and-annihilate.sql`, keyed on name. Printed 150, read off a render: *"Six Hundred"*, with Shifters, Conjurers, Temporal Raiders and Temporal Wizards casting it for 300. The row stored the 300; Nate's decision that day was the normal cost, and the `ppe_note` (600 normally, 300 for those four) is kept unchanged because it reads right against 600. Federation of Magic prints 600 too (`fom.md`, *Spell diff*). No row count moves. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **The whole book inventoried by chapter** (*The whole book by chapter*): printed 26-347 read by the text layer's heading sizes, the spell chapters diffed against production, the item chapters compared by name as a lead list. No rows. Temporal Magic (20 spells) and the Iron Juggernauts (9) are the two sections the catalog holds nothing of. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The nine Iron Juggernauts as vessels** (`~085`) **and all 25 Temporal Magic spells** in tradition `temporal` (`~091`), four linked by `same_spell_as` to rows the catalog held. The two gaps the inventory above names are closed; nothing grants the tradition yet. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/bom-only-material` | **What only this book gives us, after a real diff per chapter** (`~108`-`~112`), by Nate's ruling of 2026-10-04. Each chapter's entries went through `catalog-diff.mjs --remote` and every name it called missing was then hand-checked against production under other names and other books; a thing held from an earlier book is held and was not duplicated. **Spells** (`~108`): 5 of the six open single spells are new (Living Fire: Impervious to Fever, Nature: Keep Food, Bone: Chicken Bone, Mend Living Bone, Shape Bone); Summon Rain is held untraditioned as Summon and Control Rain. **The five African Witch Powers need no rows**: the `african-witch` class already carries all five as abilities. **Printed 255-279** (`~109`): 94 entries, 47 held (Atlantis, South America), 8 not items, **39 new**: 22 Bio-Wizard, Entity, Eylor and Faerie weapons, 8 magic restraints, 9 anti-magic containment items. **Printed 279-294** (`~110`): 141 entries, 23 held (the Millennium Tree items are Japan's rows, stored without the prefix), 21 not items, **97 new**: 67 herb preparations, 26 Herbs of Legend, 4 corrupted Millennium weapons. **Printed 312-333** (`~111`): 174 entries, 87 held, 14 not items, **70 new** Techno-Wizard weapons and devices. **Vehicles** (`~112`): of 22 Techno-Wizard vehicles on printed 336-340, 8 held, 2 cross-references, **12 new**; plus the Eylor Jet Pack, Eylor Hovercycle and Hover Platform of printed 316-317. **226 rows.** Every figure read off a render (the text layer swaps digits for letters throughout) and checked against renders again by `book-reconcile` in seven passes: two fields corrected, no wrong figure. A price the book does not print is null: eight Goblin Bombs and the Mega-Blade are priced by a rule, the nine containment items by nothing. **Not done:** 35 or so held rows whose figures this book prints differently from the older book they cite (listed in each chapter's verdicts; the largest are the TW Ley Streaker, Talisman of Armor, TW Snare Gun and Thundergun), which the newest-printing rule would revise; and the 27 priced vehicle features of printed 333-336, left out as a price list of options for other machines. Applied `--remote` before the merge. |
 
 ### What remains
 
