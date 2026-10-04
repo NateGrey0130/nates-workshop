@@ -7089,6 +7089,62 @@ section('Morphus tables catalog');
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
 }
 
+section('A held spell is headed by its tradition, and ward symbols are one (BOOK-INGEST-AUDIT F123)');
+{
+  // js/traditions.js is a classic script that hangs one global on `window`.
+  const tw = {};
+  new Function('window', readFileSync(join(appDir, 'js', 'traditions.js'), 'utf8'))(tw);
+  const T = tw.SpellTraditions;
+  check('the tradition module exposes the held-spell heading and its order',
+    typeof T?.heldGroup === 'function' && typeof T?.heldOrder === 'function');
+  check('ward symbols have a label of their own', T.label('ward') === 'Ward Symbols');
+
+  // General invocations keep the heading they always had, level 0 included.
+  check('a general spell is still headed "Spells", by level',
+    T.heldGroup(3, '') === 'Spells — Level 3' && T.heldGroup(0, '') === 'Spells — Level 0'
+    && T.heldGroup(null, '') === 'Spells — Unleveled' && T.heldGroup(undefined, null) === 'Spells — Unleveled');
+  // A tradition's rows are stored at level 0 when it has no levels (wards,
+  // tattoos, circles), which read "Spells - Level 0" before this.
+  check('a tradition spell is headed by its tradition, with the level only where it has one',
+    T.heldGroup(0, 'ward') === 'Ward Symbols' && T.heldGroup(null, 'ward') === 'Ward Symbols'
+    && T.heldGroup(0, 'tattoo') === 'Magic Tattoos'
+    && T.heldGroup(3, 'warlock') === 'Warlock Elemental — Level 3'
+    && T.heldGroup(2, 'TEMPORAL') === 'Temporal — Level 2');
+  check('general spells sort first, then each tradition by its label',
+    T.heldOrder('', 'ward') < 0 && T.heldOrder('ward', '') > 0 && T.heldOrder('', '') === 0
+    && T.heldOrder('ward', 'ward') === 0 && T.heldOrder('bone', 'ward') < 0
+    && T.heldOrder('ward', 'warlock') < 0);
+  // The order and the heading together: every heading's rows are contiguous,
+  // which is what lets the sheet print a heading once.
+  const held = [
+    { name: 'Globe of Daylight', level: 1, t: '' }, { name: 'Alarm: Silent', level: 0, t: 'ward' },
+    { name: 'Air: Thunderclap', level: 1, t: 'warlock' }, { name: 'Condition: Agony', level: 0, t: 'ward' },
+    { name: 'Carpet of Adhesion', level: 4, t: '' }, { name: 'Air: Cloud of Slumber', level: 1, t: 'warlock' },
+  ].sort((a, b) => T.heldOrder(a.t, b.t) || (a.level - b.level) || a.name.localeCompare(b.name));
+  const heads = held.map((x) => T.heldGroup(x.level, x.t));
+  const runs = heads.filter((h, i) => i === 0 || h !== heads[i - 1]);
+  check('sorted that way, no heading appears twice',
+    new Set(runs).size === runs.length && runs.length === 4,
+    runs.join(' | '));
+  check('and they read general first, then Ward Symbols, then Warlock Elemental',
+    runs.join('|') === 'Spells — Level 1|Spells — Level 4|Ward Symbols|Warlock Elemental — Level 1');
+
+  // THE SHEET, pinned by source: it loads the module, reads a held spell's
+  // tradition off the catalog it already holds, sorts by it and heads by it.
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  const sheetHtml = readFileSync(join(appDir, '..', 'character-sheet', 'index.html'), 'utf8');
+  check('the sheet page loads the tradition module before its own script',
+    sheetHtml.indexOf('/apps/character-creator/js/traditions.js') > 0
+    && sheetHtml.indexOf('/apps/character-creator/js/traditions.js') < sheetHtml.indexOf('src="sheet.js"'));
+  check('the sheet reads the tradition off its spell catalog, by name',
+    /function spellTradition\(name\)[\s\S]{0,260}C\.spellCatalog[\s\S]{0,200}row\?\.tradition/.test(sheetSrc));
+  check('and heads and orders a held spell through the module',
+    /SpellTraditions\.heldGroup\(p\.level, tradOf\(p\)\)/.test(sheetSrc)
+    && /SpellTraditions\.heldOrder\(tradOf\(A\), tradOf\(B\)\)/.test(sheetSrc));
+  check('the old hard-coded spell heading is gone from the sheet',
+    !/Spells — Level \$\{p\.level\}/.test(sheetSrc));
+}
+
 section('A table rolled more than once, and a row that sets attribute dice (BOOK-INGEST-AUDIT F120)');
 {
   const LF = String.fromCharCode(10);

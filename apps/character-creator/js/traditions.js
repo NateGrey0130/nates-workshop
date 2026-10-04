@@ -35,6 +35,9 @@
     spoiling: 'Spoiling Magic',
     nightbane: 'Nightbane Magic',
     dolphin: 'Dolphin Magic',
+    // Palladium Fantasy's Diabolist "cannot learn spell magic": what it holds
+    // are symbols (BOOK-INGEST-AUDIT F123).
+    ward: 'Ward Symbols',
   };
 
   const slugOf = (sp) => (sp && sp.tradition ? String(sp.tradition).trim().toLowerCase() : '');
@@ -77,5 +80,31 @@
     return { general, traditions };
   }
 
-  window.SpellTraditions = { label, partition, slugOf };
+  // THE HEADING A HELD SPELL SITS UNDER ON THE SHEET (BOOK-INGEST-AUDIT F123).
+  //
+  // The sheet headed every held spell "Spells — Level N", whatever it was. A
+  // Diabolist's ward symbols, a Tattooed Man's tattoos and a Summoner's circles
+  // are not spells anybody casts, and their rows are stored at level 0, so they
+  // read "Spells — Level 0". A spell that belongs to a tradition is headed by
+  // the tradition's label instead, with the level only where it has one.
+  //
+  // General invocations keep the heading they always had, level 0 included.
+  function heldGroup(level, slug) {
+    const s = String(slug || '').toLowerCase();
+    const has = level !== null && level !== undefined && level !== '';
+    if (!s) return has ? `Spells — Level ${level}` : 'Spells — Unleveled';
+    return has && Number(level) > 0 ? `${label(s)} — Level ${level}` : label(s);
+  }
+
+  // General spells first, then each tradition by its label - so every heading's
+  // rows stay together, which is what lets the sheet print a heading once.
+  function heldOrder(slugA, slugB) {
+    const a = String(slugA || '').toLowerCase();
+    const b = String(slugB || '').toLowerCase();
+    if (a === b) return 0;
+    if (!a || !b) return a ? 1 : -1;
+    return label(a).localeCompare(label(b)) || a.localeCompare(b);
+  }
+
+  window.SpellTraditions = { label, partition, slugOf, heldGroup, heldOrder };
 })();
