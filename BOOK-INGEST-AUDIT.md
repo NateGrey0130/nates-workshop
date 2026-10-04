@@ -3490,6 +3490,75 @@ are prose, and its notes cite this finding. `dragon-hatchling-kumo-mi`
 (printed 214) takes one art and one zenjoriki power with no level named; it
 stores both as level-1 picks and is not affected.
 
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f116-ability-at-levels`).**
+Posture said back: a capability, opt-in per class; nothing that exists changes
+until a class states the new key. Built on Nate's word (2026-10-04) rather
+than left as prose, which this finding's own cost line had offered. The
+premise auditor checked thirteen premises and traced the path this proposal
+said nobody had; what it changed:
+
+- **No new column.** The proposal says `pending_power_picks` <!-- claim-ok: restating the premise this note corrects -->
+  needs one for the option list. `from_names` has held one since migration 030
+  (`db/schema.sql`, read 2026-10-04) and is written, read back and enforced
+  for spell and psionic grants. The schema work is only the `kind` CHECK
+  widening: migration `090-pending-power-picks-ability.sql`, the single-table
+  rebuild `064` and `066` made (0 rows in production, nothing references the
+  table, `--remote`, 2026-10-04).
+- **A later pick's dice and pool bonuses would not have applied.**
+  `applyAbilities` folds flat numbers at render; a dice bonus counts only what
+  `attribute_bonuses` / `rolled_bonuses` stored at creation, and a pool bonus
+  is rolled into `*_max` only by the wizard. Six of the Sohei's seven exercises
+  carry one. So spending a banked pick rolls them and writes them
+  (`functions/api/character-creator/_lib/ability-picks.js`).
+- **A levelled group was a creation pick everywhere**: the wizard's picker,
+  gate and `takeAbility`, the validator's `ability_count` (which would have
+  refused every later level-up), and the NPC generator. All of them now ask
+  `abilityGroupAllowance(group, level)`.
+- **Six classes are this shape, not three** (production, `--remote`,
+  2026-10-04): the four Japan classes named above and China 2's
+  `demon-and-dead-slaver` and `goblin-wrangler`. `bishamon-fighting-monk` and
+  `dragon-hatchling-asama-tatsu` have no definitions for the powers yet, and
+  the latter's level 20 is past the fifteen-level ladder and stays prose.
+- **Nine other classes cite this finding for a different shape** - a
+  level-gated radius, S.D.C. per level, an insanity roll, a language per level:
+  `amana`, `arac`, `chasseur-vert`, `dewtani`, `forest-warden`, `lyvorrk`,
+  `mraghiile-tree-man`, `squilb`, `vernulian`
+  (`node scripts/audit-citations.mjs --remote F116`, 2026-10-04, and each
+  class's `add-` script read by the auditor). **Taking this lifts none of
+  those**; their notes need a different pointer, not "now supported".
+
+Built: `at_levels` on a choice group, `abilityGroupLevels`,
+`abilityGroupAllowance` and `abilityLevelGrants` in `js/parser.js`; a fifth
+kind in `powerGrantsFor` and `resolvePowerPicks`; the banked-picks endpoint
+stores abilities with what they roll, after validating the character with the
+new picks; `level-confirm` banks an ability grant and refuses to spend one;
+creation above level one banks the levels skipped; the sheet's banked panel
+offers each grant its own list; the wizard names a later-only group without
+offering it; the NPC generator picks only the creation allowance. **Scope
+decided in the build:** an ability pick is never spent in the level-up dialog,
+only from the banked panel - one spend path rather than two.
+
+Thirty-three smoke checks, seven seen to fail with four faults injected, and
+a regression block that drives create, level-confirm and the spend endpoint
+on a fixture class. Seen on the running wizard-side API and sheet, on a port
+of this tree's own, against a fixture class and characters in this tree's
+local D1, all deleted afterwards: two picks at creation refused; levelling
+1 to 10 banked three grants; the sheet's panel offered each its list without
+the ability already held; spending them stored four abilities, took S.D.C.
+from 30 to 150 and stored a +4 P.S. roll; a second take of a held ability was
+refused. DOM text and API responses, not a screenshot - the Browser pane was
+hidden.
+
+**Not handled, and stated in `docs/leveling.md`:** a later-picked ability that
+converts to M.D.C., restates `attribute_dice`, or brings a psionics block's
+I.S.P. base. The sheet does not show WHICH level an ability was picked at:
+`abilities` stores names. An occupation's group is still not offered by the
+wizard when paired with a race (the close-out's package B8), though the server
+banks and spends its later picks.
+
+**The data is the close-out's package C4**: `at_levels` on the six classes'
+groups, the missing definitions, and the nine notes above.
+
 ## Filed from the Rifts China 2 import, 2026-10-02
 
 ### F117 - low - a Mystic Martial Art Power is a fifteen-level progression a class advances in, and only its level-1 abilities are stored

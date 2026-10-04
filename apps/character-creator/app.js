@@ -25,6 +25,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
+         abilityGroupAllowance, abilityGroupLevels,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
@@ -1841,9 +1842,24 @@ function abilityPicker() {
   // `choose`, so on a class with more than one group the first pick disabled
   // every remaining `+` button in every panel. BOOK-INGEST-AUDIT.md F98.
   const counts = abilityGroupCounts(S.rcc, S.abilities);
+  // A group picked at set levels (`at_levels`, BOOK-INGEST-AUDIT F116) is
+  // offered here only for its LEVEL-1 pick. Its later picks are banked when the
+  // level is reached and chosen on the sheet, so a group with no level-1 pick
+  // is named and not offered.
+  const firstOffered = groups.findIndex((g) => abilityGroupAllowance(g, 1) > 0);
 
   return groups.map((g, gi) => {
-    const limit = +g.choose || 1;
+    const limit = abilityGroupAllowance(g, 1);
+    const later = (abilityGroupLevels(g) || []).filter((n) => n > 1);
+    if (limit <= 0) {
+      return `<div class="panel-inset">
+        <h3>Powers <span class="muted small">&mdash; chosen later</span></h3>
+        ${g.note ? `<p class="attr-note">${esc(g.note)}</p>` : ''}
+        <p class="muted small">Nothing to choose now: ${+g.choose || 1} of these at level${later.length === 1 ? '' : 's'}
+          ${later.join(', ')}, picked on the sheet when the level is reached.</p>
+        <p class="muted small">${(g.from || []).map((n) => esc(String(n))).join(' &middot; ')}</p>
+      </div>`;
+    }
     const picked = counts[gi] || 0;
     const opts = (g.from || []).map((name) => {
       const def = defs.get(String(name).trim().toLowerCase());
@@ -1892,11 +1908,13 @@ function abilityPicker() {
             : ' <span class="muted">or choose below.</span>'}</p>`
       : '';
     // The standing sentence is worth saying once rather than four times.
-    const why = gi === 0
+    const why = gi === firstOffered
       ? `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
         and both are rolled on the next two steps.</p>`
       : '';
-    return `<div class="panel-inset"${gi === 0 ? ' id="ability-picker"' : ''}>
+    const laterNote = later.length
+      ? `<p class="muted small">And again at level${later.length === 1 ? '' : 's'} ${later.join(', ')}, on the sheet.</p>` : '';
+    return `<div class="panel-inset"${gi === firstOffered ? ' id="ability-picker"' : ''}>${laterNote ? '<!-- levelled -->' : ''}
       <h3>Powers <span class="muted small">&mdash; ${g.rolls === undefined ? `choose ${limit}`
         : typeof g.rolls === 'number' ? `rolled ${g.rolls} time${g.rolls === 1 ? '' : 's'}, a repeat rolled again`
         : `rolled ${esc(String(g.rolls).toUpperCase())} times, a repeat rolled again`}</span></h3>
@@ -1905,6 +1923,7 @@ function abilityPicker() {
       ${typeof g.rolls === 'string'
         ? `<p class="small ${picked >= abilityGroupOwed(g) ? 'ok' : 'warn'}">${picked} held, of at most ${limit}</p>`
         : `<p class="small ${picked === limit ? 'ok' : 'warn'}">${picked} of ${limit} chosen</p>`}
+      ${laterNote}
       ${roller}
       ${opts}
     </div>`;
@@ -1984,10 +2003,11 @@ function takeAbility(name) {
   const groups = abilityGroups(S.rcc);
   const gi = abilityGroupIndexFor(S.rcc, name);
   if (gi >= 0) {
-    const limit = +groups[gi]?.choose || 1;
+    // At creation a levelled group allows only its level-1 pick (F116).
+    const limit = abilityGroupAllowance(groups[gi], 1);
     if ((abilityGroupCounts(S.rcc, S.abilities)[gi] || 0) >= limit) return;
   } else {
-    const total = groups.reduce((n, g) => n + (+g.choose || 0), 0);
+    const total = groups.reduce((n, g) => n + abilityGroupAllowance(g, 1), 0);
     if (S.abilities.length >= total) return;
   }
   S.abilities.push(name);

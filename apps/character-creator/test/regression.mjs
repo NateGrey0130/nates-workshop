@@ -1490,6 +1490,114 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
   check('the Talent purchase fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── A class ability picked at set levels (BOOK-INGEST-AUDIT F116) ──
+//
+// Rifts Japan's Mystic Ninja takes an art of invisibility at 1, 3, 6, 9, 12 and
+// 15. A choice group states `at_levels`; the level-1 pick is the wizard's, and
+// every later level banks a `pending_power_picks` row of kind 'ability'
+// (migration 090) that the banked-picks endpoint spends into `abilities`,
+// rolling the pick's dice and pool bonuses into the stored character. Driven
+// through the real routes, on a fixture class that exists only in this scratch
+// database and is unpublished again at the end.
+{
+  const md = ['---', 'id: f116-probe', 'name: F116 Probe', 'system: rifts', 'source_book: fixture',
+    'category: occ', 'occ_group: men-of-arms', 'tags: []', 'men_of_arms: true',
+    'hit_points_base: "P.E. + 1d6 per level"', 'sdc_base: "3d6+20"',
+    'special_abilities:',
+    '  - { name: "F116 Stone Ox", description: "x", bonuses: { pools: { sdc: "4d4x10" } } }',
+    '  - { name: "F116 Wrist", description: "x", bonuses: { attributes: { PS: "1d6" } } }',
+    '  - { name: "F116 Iron Hand", description: "x" }',
+    '  - { name: "F116 Vanish", description: "x" }',
+    '  - { name: "F116 Fade", description: "x" }',
+    '  - { choose: 1, at_levels: [1, 2], from: ["F116 Stone Ox", "F116 Wrist", "F116 Iron Hand"] }',
+    '  - { choose: 1, at_levels: [2], from: ["F116 Vanish", "F116 Fade"] }',
+    '---', '', '## Lore', '', 'A regression fixture.', ''].join('\n');
+  const fixture = join(state, 'f116-fixture.sql');
+  writeFileSync(fixture, "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) "
+    + "VALUES ('f116-probe', 'F116 Probe', 'rifts', 'published', '" + md.replace(/'/g, "''")
+    + "', 'regression', datetime('now'));\n", 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the levelled-ability fixture is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const make = (name, abilities, level) => api('POST', '/characters', {
+    campaign_id: campaignId, name, class_id: 'f116-probe', attributes: attrs, skills: [], abilities,
+    pools: { hp: 20, sdc: 30 }, ...(level ? { level } : {}),
+  });
+  const tooMany = await make('F116 Too Many', ['F116 Iron Hand', 'F116 Stone Ox']);
+  check('creation allows a levelled group only its level-1 pick',
+    tooMany.status === 422 && (tooMany.body.violations || []).some((v) => v.rule === 'ability_count'),
+    JSON.stringify(tooMany.body).slice(0, 200));
+  const early = await make('F116 Too Early', ['F116 Iron Hand', 'F116 Vanish']);
+  check('and none from a group whose first level is later',
+    early.status === 422 && (early.body.violations || []).some((v) => v.rule === 'ability_count'),
+    JSON.stringify(early.body).slice(0, 200));
+
+  const made = await make('F116 Levelled', ['F116 Iron Hand']);
+  check('a character holding its level-1 pick is created', made.status === 201, JSON.stringify(made.body).slice(0, 300));
+  const pid = made.body.id;
+  const pendingOf = async () => (await api('GET', `/characters/${pid}/power-picks`)).body.pending || [];
+  check('and nothing is banked at level one', (await pendingOf()).length === 0);
+
+  const xp = await api('POST', `/characters/${pid}/xp`, { total: 2500 });
+  const to = xp.body.proposal?.to_level;
+  check('enough XP proposes level two', to === 2, JSON.stringify(xp.body).slice(0, 200));
+  const inDialog = await api('POST', `/characters/${pid}/level-confirm`, { to_level: 2, picks: [],
+    power_picks: [{ kind: 'ability', name: 'F116 Vanish', granted_at_level: 2, slot: 1 }] });
+  check('level-confirm refuses to spend an ability pick itself',
+    inDialog.status === 400 && /banked picks/.test(inDialog.body.error || ''), JSON.stringify(inDialog.body).slice(0, 200));
+  const lvl = await api('POST', `/characters/${pid}/level-confirm`, { to_level: 2, picks: [] });
+  check('the level-up confirms with the picks unspent', lvl.status === 200, JSON.stringify(lvl.body).slice(0, 250));
+  const banked = await pendingOf();
+  check('and both groups\' level-two picks are banked as kind ability, each with its own list and slot',
+    JSON.stringify(banked.map((g) => [g.kind, g.granted_at_level, g.slot, g.count, (g.from || []).length]))
+      === '[["ability",2,0,1,3],["ability",2,1,1,2]]',
+    JSON.stringify(banked));
+
+  const spend = (picks) => api('POST', `/characters/${pid}/power-picks`, { picks });
+  const held = await spend([{ kind: 'ability', name: 'F116 Iron Hand', granted_at_level: 2, slot: 0 }]);
+  check('an ability already held cannot be picked again',
+    held.status === 422 && JSON.stringify(held.body).includes('already held'), JSON.stringify(held.body).slice(0, 200));
+  const offList = await spend([{ kind: 'ability', name: 'F116 Vanish', granted_at_level: 2, slot: 0 }]);
+  check('nor one from the other group\'s list',
+    offList.status === 422 && JSON.stringify(offList.body).includes('not on the list'), JSON.stringify(offList.body).slice(0, 200));
+
+  const before = (await api('GET', `/characters/${pid}`)).body.character;
+  const took = await spend([{ kind: 'ability', name: 'F116 Stone Ox', granted_at_level: 2, slot: 0 },
+    { kind: 'ability', name: 'F116 Vanish', granted_at_level: 2, slot: 1 }]);
+  check('both banked picks are spent in one request', took.status === 200 && took.body.pending_total === 0,
+    JSON.stringify(took.body).slice(0, 250));
+  const after = (await api('GET', `/characters/${pid}`)).body.character;
+  check('the picks land in abilities, beside the level-1 one',
+    JSON.stringify(after.abilities) === '["F116 Iron Hand","F116 Stone Ox","F116 Vanish"]', JSON.stringify(after.abilities));
+  const gain = after.sdc_max - before.sdc_max;
+  check('and the pool bonus the pick carries is rolled into the stored S.D.C., maximum and current',
+    gain >= 40 && gain <= 160 && gain % 10 === 0 && after.sdc_current - before.sdc_current === gain,
+    `sdc_max ${before.sdc_max} -> ${after.sdc_max}`);
+  check('the spend reports what it rolled',
+    (took.body.rolled || []).some((r) => r.ability === 'F116 Stone Ox' && r.dice === '4d4x10' && r.value === gain),
+    JSON.stringify(took.body.rolled));
+  check('the powers list is untouched by an ability-only spend',
+    JSON.stringify(after.powers) === JSON.stringify(before.powers));
+  const again = await spend([{ kind: 'ability', name: 'F116 Wrist', granted_at_level: 2, slot: 0 }]);
+  check('a spent grant cannot be spent twice', again.status === 400 || again.status === 422,
+    JSON.stringify(again.body).slice(0, 160));
+
+  // Created ABOVE level one, the wizard has no picker for the levels skipped:
+  // they are banked at creation.
+  const high = await make('F116 Starts At Two', ['F116 Iron Hand'], 2);
+  check('a character created at level two is created', high.status === 201, JSON.stringify(high.body).slice(0, 250));
+  const highPending = high.status === 201
+    ? ((await api('GET', `/characters/${high.body.id}/power-picks`)).body.pending || []) : [];
+  check('and is owed the level-two picks it skipped, banked once',
+    JSON.stringify(highPending.map((g) => [g.kind, g.granted_at_level, g.slot, g.count])) === '[["ability",2,0,1],["ability",2,1,1]]',
+    JSON.stringify(highPending));
+
+  const cleanup = join(state, 'f116-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f116-probe';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the levelled-ability fixture is unpublished again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // ── A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74) ──
 //
 // Nightbane survey D5. A fixture class states a `second_form`; a character is

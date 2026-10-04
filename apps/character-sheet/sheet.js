@@ -3281,6 +3281,11 @@ function pendingPowersPanel() {
   }
   const held = new Set((C.data.powers || []).map((x) => String(x.name).toLowerCase()));
   const rows = C.pendingPowers.map((g) => {
+    // A CLASS ABILITY picked at a set level (BOOK-INGEST-AUDIT F116). It has no
+    // catalog: the banked row's own list is everything it may be, less what the
+    // character already holds. Left to the code below it would be offered the
+    // psionic catalog filtered by that list - an empty select nobody could clear.
+    if (g.kind === 'ability') return abilityPickRows(g);
     const isSpell = g.kind === 'spell';
     const isPurchase = g.kind === 'talent_purchase';
     // A banked Talent row offered PSIONIC powers before #1094, being two-way.
@@ -3336,6 +3341,29 @@ function pendingPowersPanel() {
       <button class="btn btn-sm btn-ghost" onclick="C.claimingPowers = false; render()">Later</button>
     </div>
   </div>`;
+}
+
+// The selects for one banked class-ability grant. The option's own description
+// is its tooltip, read off the class the sheet already holds.
+function abilityPickRows(g) {
+  const heldNames = new Set((C.data.abilities || [])
+    .map((a) => String(a?.name ?? a ?? '').trim().toLowerCase()).filter(Boolean));
+  const defs = new Map((C.cls?.special_abilities || [])
+    .filter((e) => e && typeof e.name === 'string' && !e.choose && !e.from)
+    .map((d) => [d.name.trim().toLowerCase(), d]));
+  const pool = (Array.isArray(g.from) ? g.from : []).map(String)
+    .filter((n) => !heldNames.has(n.trim().toLowerCase()));
+  const note = g.note ? `<p class="small muted" style="margin:2px 0">${escHtml(g.note)}</p>` : '';
+  return note + Array.from({ length: g.count }, (_, i) => `
+      <div class="rowline">
+        <span class="muted small">Level ${g.granted_at_level}</span>
+        <select id="claim-power-ability-${g.granted_at_level}-${g.slot ?? 0}-${i}"
+          data-level="${g.granted_at_level}" data-slot="${g.slot ?? 0}" data-kind="ability">
+          <option value="">— not yet —</option>
+          ${pool.map((n) => `<option value="${escHtml(n)}" title="${escHtml(defs.get(n.trim().toLowerCase())?.description || '')}">${escHtml(n)}</option>`).join('')}
+        </select>
+        <span class="muted small">a class ability, from a list of ${(g.from || []).length}</span>
+      </div>`).join('');
 }
 
 async function claimPowers() {

@@ -173,6 +173,12 @@ export async function onRequestPost({ request, env, params }) {
   const ppeMaxAfter = typeof b.pools?.ppe_max === 'number' && character.ppe_max != null
     ? b.pools.ppe_max : character.ppe_max;
   const baseSpent = Number(character.ppe_base_spent) || 0;
+  // A class ability earned at this level is BANKED, never spent here
+  // (BOOK-INGEST-AUDIT F116): spending one rolls its dice and pool bonuses into
+  // the stored character, and that is the banked-picks endpoint's job alone.
+  if (Array.isArray(b.power_picks) && b.power_picks.some((p) => p?.kind === 'ability')) {
+    return json({ error: 'A class ability pick is chosen from the banked picks, after the level-up' }, 400);
+  }
   if (powerGrants.length && Array.isArray(b.power_picks) && b.power_picks.length) {
     const resolved = await resolvePowerPicks(env, {
       picks: b.power_picks,

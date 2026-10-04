@@ -16,6 +16,9 @@
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { listPendingPowers, resolvePowerPicks, powerPickErrors } from '../../_lib/power-picks.js';
 import { loadCharacter } from '../../_lib/character-json.js';
+import { loadCharacterClass } from '../../_lib/class-loader.js';
+import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
+import { abilityPickEffects } from '../../_lib/ability-picks.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id, { write: false });
@@ -59,11 +62,40 @@ export async function onRequestPost({ request, env, params }) {
     picks: b.picks,
     grants,
     existingPowers: character.powers,
+    existingAbilities: character.abilities,
     system: campaign?.system ?? null,
     ppeAvailable: character.ppe_max == null ? null : character.ppe_max - baseSpent,
   });
   if (resolved.errors?.length) return powerPickErrors(resolved.errors);
-  if (!resolved.powers.length) return json({ error: 'Nothing to spend' }, 400);
+  const gainedAbilities = resolved.abilities || [];
+  if (!resolved.powers.length && !gainedAbilities.length) return json({ error: 'Nothing to spend' }, 400);
+
+  // CLASS ABILITIES picked from a levelled group (BOOK-INGEST-AUDIT F116) go
+  // into `abilities`, and what they roll is written where the wizard would have
+  // written it - see _lib/ability-picks.js. The character is validated WITH the
+  // new picks, against the class composed with them, before anything is stored.
+  let abilityWrite = null;
+  if (gainedAbilities.length) {
+    const abilities = (character.abilities || []).concat(gainedAbilities.map((a) => a.name));
+    const cls = await loadCharacterClass(env, request.url, { ...character, abilities });
+    if (cls) {
+      const { violations } = validateCharacter({
+        character: { level: character.level }, cls, skills: character.skills,
+        attributes: character.attributes, abilities,
+        catalog: await loadSkillCategories(env),
+      });
+      if (violations.length) {
+        return json({ error: 'Those picks would break the class rules', violations }, 422);
+      }
+    }
+    const effects = abilityPickEffects(cls, gainedAbilities.map((a) => a.name), character);
+    const sets = ['abilities = ?'];
+    const binds = [JSON.stringify(abilities)];
+    if (effects.attribute_bonuses) { sets.push('attribute_bonuses = ?'); binds.push(JSON.stringify(effects.attribute_bonuses)); }
+    if (effects.rolled_bonuses) { sets.push('rolled_bonuses = ?'); binds.push(JSON.stringify(effects.rolled_bonuses)); }
+    for (const [col, v] of Object.entries(effects.pools)) { sets.push(`${col} = ?`); binds.push(v); }
+    abilityWrite = { sets, binds, rolled: effects.rolled };
+  }
 
   // Consume from the earliest row of the right kind and level, decrementing
   // rather than deleting so a grant only PARTLY spent keeps its remainder and
@@ -91,7 +123,13 @@ export async function onRequestPost({ request, env, params }) {
   // price, the rule level-confirm applies too.
   const ppeSpent = resolved.ppeSpent || 0;
   const cap = character.ppe_max == null ? null : character.ppe_max - baseSpent - ppeSpent;
-  statements.unshift(ppeSpent > 0
+  if (abilityWrite) {
+    statements.unshift(env.DB.prepare(
+      `UPDATE characters SET ${abilityWrite.sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`
+    ).bind(...abilityWrite.binds, params.id));
+  }
+  // Only when a power was picked: an ability-only spend leaves `powers` alone.
+  if (resolved.powers.length) statements.unshift(ppeSpent > 0
     ? env.DB.prepare(
         `UPDATE characters SET powers = ?, ppe_base_spent = ?,
            ppe_current = CASE WHEN ppe_current IS NOT NULL AND ppe_current > ? THEN ? ELSE ppe_current END,
@@ -108,7 +146,9 @@ export async function onRequestPost({ request, env, params }) {
   const left = await listPendingPowers(env, params.id);
   return json({
     ok: true,
-    gained: resolved.powers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level })),
+    gained: resolved.powers.map((p) => ({ type: p.type, name: p.name, level: p.gained_at_level }))
+      .concat(gainedAbilities.map((a) => ({ type: 'ability', name: a.name, level: a.gained_at_level }))),
+    ...(abilityWrite?.rolled.length ? { rolled: abilityWrite.rolled } : {}),
     ppe_spent: ppeSpent,
     pending_total: left.reduce((n, g) => n + g.count, 0),
   });

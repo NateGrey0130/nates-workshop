@@ -815,6 +815,7 @@ import { parseMentions } from '../../../functions/api/character-creator/_lib/men
 import { paging } from '../../../functions/api/character-creator/_lib/paging.js';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
+import { abilityPickEffects } from '../../../functions/api/character-creator/_lib/ability-picks.js';
 import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
 import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
 import { statements, expressionDepth, D1_MAX_EXPR_DEPTH } from '../../../scripts/sql-statements.mjs';
@@ -833,7 +834,8 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupIndexFor, abilityOffersPsionics, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
          combineClasses, isDiceBonus, isGearChoice, isSignedDiceBonus, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
-         relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, abilityProgressionAt, sumBonusGroups, validateBonuses } from '../js/parser.js';
+         relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, abilityProgressionAt,
+         abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -7087,6 +7089,150 @@ section('Morphus tables catalog');
   // A table CHECK is refused input, not a server fault.
   check('the catalog write path answers a CHECK failure with a 422',
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+}
+
+section('A class ability picked at set levels (BOOK-INGEST-AUDIT F116)');
+{
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ', 'occ_group: men-of-arms',
+     'tags: []', 'men_of_arms: true', ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+  const DEFS = ['  - { name: "Stone Ox", description: "x", bonuses: { pools: { sdc: "4d4x10" } } }',
+    '  - { name: "Wrist Hardening", description: "x", bonuses: { attributes: { PS: "1d6" } } }',
+    '  - { name: "Dam Sum Sing", description: "x", bonuses: { pools: { sdc: 20 } } }',
+    '  - { name: "Iron Hand", description: "x" }',
+    '  - { name: "Vanish", description: "x" }', '  - { name: "Fade", description: "x" }'];
+  const EX = '["Stone Ox", "Wrist Hardening", "Dam Sum Sing", "Iron Hand"]';
+  // The Sohei's shape: an exercise at 1, 5 and 9; and the Bishamon's: an art at 3, none at creation.
+  const cls = mk('special_abilities:', ...DEFS,
+    `  - { choose: 1, at_levels: [1, 5, 9], from: ${EX}, note: "A body hardening exercise." }`,
+    '  - { choose: 1, at_levels: [3], from: ["Vanish", "Fade"] }');
+  check('a choice group may state the levels it is picked at', cls.ok && cls.warnings.length === 0,
+    [...cls.errors, ...cls.warnings].join('; '));
+  const [exercises, arts] = cls.data.special_abilities.filter((e) => e.choose);
+  check('the levels are read back in order, and a group without them has none',
+    String(abilityGroupLevels(exercises)) === '1,5,9' && abilityGroupLevels({ choose: 2, from: ['a'] }) === null);
+
+  // THE LIMIT DEPENDS ON THE LEVEL. Everything that measured picks against
+  // `choose` asks this instead.
+  check('a levelled group allows one round of choose for each of its levels reached',
+    abilityGroupAllowance(exercises, 1) === 1 && abilityGroupAllowance(exercises, 4) === 1
+    && abilityGroupAllowance(exercises, 5) === 2 && abilityGroupAllowance(exercises, 15) === 3);
+  check('a group with no level-1 pick allows nothing at creation, and owes nothing there',
+    abilityGroupAllowance(arts, 1) === 0 && abilityGroupOwed(arts) === 0
+    && abilityGroupAllowance(arts, 3) === 1);
+  check('a plain choose group is what it always was, at any level',
+    abilityGroupAllowance({ choose: 2, from: ['a', 'b'] }, 1) === 2
+    && abilityGroupAllowance({ choose: 2, from: ['a', 'b'] }, 9) === 2
+    && abilityGroupOwed({ choose: 2, from: ['a', 'b'] }) === 2 && abilityGroupOwed(exercises) === 1);
+  check('at_levels must be rising whole levels, with choose, and never beside rolls',
+    !mk('special_abilities:', ...DEFS, `  - { choose: 1, at_levels: [3, 3], from: ${EX} }`).ok
+    && !mk('special_abilities:', ...DEFS, `  - { choose: 1, at_levels: [5, 3], from: ${EX} }`).ok
+    && !mk('special_abilities:', ...DEFS, `  - { choose: 1, at_levels: [0, 3], from: ${EX} }`).ok
+    && !mk('special_abilities:', ...DEFS, `  - { choose: 1, at_levels: [], from: ${EX} }`).ok
+    && !mk('special_abilities:', ...DEFS, `  - { at_levels: [3], from: ${EX} }`).ok
+    && !mk('special_abilities:', '  - { name: "K (01-50): A" }', '  - { name: "K (51-00): B" }',
+      '  - { rolls: 2, at_levels: [3], from: ["K (01-50): A", "K (51-00): B"] }').ok);
+
+  // THE GRANTS, itemised by the level that earned each, level 1 never among them.
+  const grants = abilityLevelGrants(cls.data, 1, 9);
+  check('levels above the starting one are granted, each with its list, its slot and its note',
+    grants.map((g) => `${g.level}:${g.slot}:${g.count}`).join() === '3:1:1,5:0:1,9:0:1'
+    && grants[1].from.length === 4 && grants[1].note === 'A body hardening exercise.' && grants[0].note === undefined);
+  check('a span collects only what lies inside it',
+    abilityLevelGrants(cls.data, 5, 9).map((g) => g.level).join() === '9'
+    && abilityLevelGrants(cls.data, 9, 15).length === 0 && abilityLevelGrants({}, 1, 15).length === 0);
+  const banked = powerGrantsFor(cls.data, 1, 9).filter((g) => g.kind === 'ability');
+  check('powerGrantsFor banks them as their own kind, the list in from and every other restriction null',
+    banked.length === 3 && banked.every((g) => g.spell_levels === null && g.categories === null && Array.isArray(g.from)));
+  check('and a class with no levelled group banks none',
+    powerGrantsFor({ special_abilities: [{ name: 'A' }, { choose: 1, from: ['A'] }] }, 1, 15)
+      .filter((g) => g.kind === 'ability').length === 0);
+
+  // SPENDING. No catalog row: the grant's own list is the restriction.
+  const env = { DB: { prepare: () => {
+    const q = { all: async () => ({ results: [] }), first: async () => null };
+    return { ...q, bind: () => q };
+  }, batch: async (st) => Promise.all(st.map((x) => x.all())) } };
+  const spend = (names, existingAbilities = ['Iron Hand']) => resolvePowerPicks(env, {
+    picks: names.map((name) => ({ kind: 'ability', name, granted_at_level: 5, slot: 0 })),
+    grants: banked, existingPowers: [], existingAbilities, system: 'rifts' });
+  const good = await spend(['stone ox']);
+  check('a pick on the grant\'s list resolves into abilities, not powers, in the list\'s own spelling',
+    good.errors.length === 0 && good.powers.length === 0 && good.abilities?.[0]?.name === 'Stone Ox'
+    && good.spent.get('ability:5:0') === 1, good.errors.join('; '));
+  check('a name off the list is refused',
+    (await spend(['Vanish'])).errors.some((e) => e.includes('not on the list')));
+  check('an ability already held is refused',
+    (await spend(['Iron Hand'])).errors.some((e) => e.includes('already held')));
+  check('two picks against a grant of one are refused',
+    (await spend(['Stone Ox', 'Dam Sum Sing'])).errors.some((e) => e.includes('already full')));
+  check('a pick for a level nothing granted is refused',
+    (await resolvePowerPicks(env, { picks: [{ kind: 'ability', name: 'Stone Ox', granted_at_level: 7, slot: 0 }],
+      grants: banked, existingPowers: [], existingAbilities: [], system: 'rifts' })).errors
+      .some((e) => e.includes('no ability grant from level 7')));
+
+  // WHAT SPENDING ROLLS. Flat attribute, combat and save bonuses fold at render;
+  // dice and pool bonuses are stored at creation and nowhere else, so a pick
+  // made later would add nothing unless the spend path writes them.
+  const fixed = (d) => ({ '4d4x10': 70, '1d6': 4 }[d]);
+  const before = { sdc_max: 40, sdc_current: 35, hp_max: 20, hp_current: 20, mdc_max: null,
+    attribute_bonuses: { PS: 2 }, rolled_bonuses: { combat: { initiative: 1 }, saves: {} } };
+  const fx = abilityPickEffects(cls.data, ['Stone Ox', 'Wrist Hardening', 'Dam Sum Sing', 'Iron Hand'], before, fixed);
+  check('a dice pool bonus is rolled into the maximum and the current pool',
+    fx.pools.sdc_max === 40 + 70 + 20 && fx.pools.sdc_current === 35 + 70 + 20);
+  check('a dice attribute bonus is added to what the character already rolled',
+    fx.attribute_bonuses.PS === 6);
+  check('untouched stores are left alone, so the write names only what moved',
+    fx.rolled_bonuses === null && !('hp_max' in fx.pools) && !('mdc_max' in fx.pools));
+  check('each roll is reported, with the ability it came from',
+    fx.rolled.some((r) => r.ability === 'Stone Ox' && r.dice === '4d4x10' && r.value === 70)
+    && fx.rolled.some((r) => r.ability === 'Dam Sum Sing' && r.dice === null && r.value === 20));
+  check('a pool the character does not have is not conjured',
+    abilityPickEffects(cls.data, ['Stone Ox'], { sdc_max: null, sdc_current: null }, fixed).pools.sdc_max === undefined);
+  check('an ability with nothing to roll changes nothing',
+    JSON.stringify(abilityPickEffects(cls.data, ['Iron Hand'], before, fixed))
+      === '{"attribute_bonuses":null,"rolled_bonuses":null,"pools":{},"rolled":[]}');
+  check('the character passed in is not mutated', before.sdc_max === 40 && before.attribute_bonuses.PS === 2);
+
+  // THE SERVER'S COUNT is by level, in both directions.
+  const v = (level, abilities) => validateCharacter({ character: { level }, cls: cls.data, skills: [],
+    attributes: {}, abilities, catalog: new Map() }).violations.filter((x) => x.rule === 'ability_count');
+  check('at level 1 one exercise is allowed and a second is not',
+    v(1, ['Stone Ox']).length === 0 && v(1, ['Stone Ox', 'Iron Hand']).length === 1);
+  check('at level 5 the second exercise and the level-3 art are allowed, which used to be refused',
+    v(5, ['Stone Ox', 'Iron Hand', 'Vanish']).length === 0);
+  check('and a fourth pick at level 5 is still one too many',
+    v(5, ['Stone Ox', 'Iron Hand', 'Vanish', 'Dam Sum Sing']).length === 1);
+
+  // The wizard, the sheet, the endpoints and the schema, pinned by source.
+  const appSrc = readFileSync(appPath('app.js'), 'utf8');
+  check('the wizard offers a levelled group for its level-1 pick only',
+    /const limit = abilityGroupAllowance\(g, 1\);/.test(appSrc)
+    && /const limit = abilityGroupAllowance\(groups\[gi\], 1\);/.test(appSrc));
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  check('the sheet offers a banked class ability from its own list, not from a catalog',
+    /if \(g\.kind === 'ability'\) return abilityPickRows\(g\);/.test(sheetSrc)
+    && /function abilityPickRows\(g\)[\s\S]{0,900}data-kind="ability"/.test(sheetSrc));
+  const fnDir = join(appDir, '..', '..', 'functions', 'api', 'character-creator');
+  const spendSrc = readFileSync(join(fnDir, 'characters', '[id]', 'power-picks.js'), 'utf8');
+  check('the banked-picks endpoint stores an ability in abilities, with what it rolled, after validating it',
+    /existingAbilities: character\.abilities/.test(spendSrc) && /abilityPickEffects\(cls,/.test(spendSrc)
+    && /const sets = \['abilities = \?'\];/.test(spendSrc) && /validateCharacter\(\{/.test(spendSrc));
+  check('and an ability-only spend no longer answers "Nothing to spend"',
+    /if \(!resolved\.powers\.length && !gainedAbilities\.length\)/.test(spendSrc));
+  const confirmSrc = readFileSync(join(fnDir, 'characters', '[id]', 'level-confirm.js'), 'utf8');
+  check('level-confirm banks an ability grant and refuses to spend one itself',
+    /p\?\.kind === 'ability'/.test(confirmSrc) && /chosen from the banked picks/.test(confirmSrc));
+  const createSrc = readFileSync(join(fnDir, 'characters.js'), 'utf8');
+  check('creation above level one banks the levels skipped, once',
+    /level > 1 && !bankPowers\.some\(\(g\) => g\?\.kind === 'ability'\)/.test(createSrc));
+  const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
+  check('the NPC generator picks only what a group allows at creation',
+    /const want = abilityGroupAllowance\(g, 1\);/.test(npcSrc));
+  const schemaSrc = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8');
+  check('schema.sql admits the kind a fresh database needs',
+    /kind TEXT NOT NULL CHECK \(kind IN \('spell', 'psionic', 'talent', 'talent_purchase', 'ability'\)\)/.test(schemaSrc));
 }
 
 section('An ability may carry its later levels as text (BOOK-INGEST-AUDIT F117)');
