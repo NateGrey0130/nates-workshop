@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all seven steps shipped: skills, Chi-Gung powers, gear, vehicles and all 25 classes; what was left out on purpose is under Extraction plan. (2026-10-02)
 
-**Rows citing this book:** classes 25, gear 94, vehicles 9, skills 37, psionic_powers 29
+**Rows citing this book:** classes 25, gear 97, vehicles 9, skills 37, psionic_powers 29
 
 **MOS:** geofront-lightning-warrior 8, geofront-shadow-warrior 8, geofront-technical-officer 7, geofront-whack-job-scientist 7
 
@@ -304,6 +304,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-02 | `pal/data/china-2-classes` | steps 6-7 in one PR: all 25 classes, one `add-<id>-class.sql` each - `jian-shih`, `chun-tzu`, `nei-chia-wu-shih`, `wai-chia-wu-shih`, `chi-gung-seng-ren`, `soothsayer`, `spirit-host`, `blind-mystic`, `fu-yao-da-chia`, `demon-and-dead-slaver`, `goblin-wrangler`, `enlightened-demon` and the thirteen `geofront-*` classes. Eight drafting agents from one shared brief; every class reads `ready` against production with 0 stubs, and every XP ladder was checked against printed 160. Mystic Martial Art Powers and Body Hardening Exercises are level 1 only, from two shared blocks pasted into each class (Nate, 2026-10-01); filed as `BOOK-INGEST-AUDIT.md` F117, with the exercises' later picks under F116. A native Chinese speaker is `Language: Native Tongue` throughout; the Enlightened Demon, who learns it, has `Language: Chinese`. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-2-chi-gung-systems` | `~070-china-2-chi-gung-systems.sql`: re-tags the 29 Chi-Gung powers `rifts` after the clean build's psionic system reset. `repo-vs-live.mjs --offenders` found the repo rebuilding them with system NULL - 29 fields, all this column - while production holds `rifts`; production wins (F105). A no-op in production. No rows. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The three Geo-Borg bodies as `borg` vessels** (`~085`): DB-800 Demon-Eater, AB-830 Assault, AB-955 Lion. Vehicles 6 to 9. The classes are not rewired. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The three Geo-Borg classes are wired to their bodies** (`~113`): `gear` pointer rows `db-800-demon-eater-cyborg`, `ab-830-assault-geo-borg` and `ab-955-lion-geo-borg`, each carrying `vehicle_slug` and listed first in its class's `equipment_starting` (the F41 shape, as `~018`). The Lion's starting equipment was empty and now holds only its body's pointer. Applied `--remote` before the merge. |
 
 ### What remains
 
