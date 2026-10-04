@@ -991,7 +991,7 @@
    "added": [
     [
      "Classes",
-     23
+     12
     ],
     [
      "Creatures",
@@ -1010,7 +1010,7 @@
      5
     ]
    ],
-   "total": 120
+   "total": 109
   },
   {
    "slug": "free-quebec",
@@ -1151,10 +1151,10 @@
    "added": [
     [
      "Classes",
-     65
+     76
     ]
    ],
-   "total": 65
+   "total": 76
   },
   {
    "slug": "triax-2",
