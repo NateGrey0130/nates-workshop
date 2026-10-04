@@ -76,7 +76,11 @@ export function psionicShape(tier, shapeId) {
 // and the class is the one the books wrote down.
 export function withRolledPsionics(cls, character) {
   const tier = character?.psychic_tier;
-  if (!tier || !cls || cls.psionics) return cls;
+  // Asked of rollsForPsionics rather than of the block alone, so a class that
+  // may not roll (`psionics_allowed: false`) is not handed a tier the wizard
+  // would never have offered - this runs on the server too, where the tier
+  // arrives in a request (BOOK-INGEST-AUDIT F118).
+  if (!tier || !cls || !rollsForPsionics(cls)) return cls;
   const spec = PSIONIC_TIER_RULES[tier];
   if (!spec) return cls;
   const shape = psionicShape(tier, character.psychic_shape);

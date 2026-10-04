@@ -3534,3 +3534,100 @@ level. **Posture:** a capability, opt-in per class. **Confidence:** medium on
 the gap (measured), low on the cost (not traced through `leveling.js` or the
 sheet). **Ongoing cost:** a third levelled-ability shape beside skills and
 spells. If prose stays acceptable, closing this as declined is a fair answer.
+
+## Filed for the book-retrospective close-out, Phase B, 2026-10-04
+
+Nate's ruling 3 on the 2026-10-03 retrospective was to implement its code
+items, each as a finding taken through the premise auditor, one PR each. These
+are those findings, in the close-out plan's order.
+
+### F118 - low - a race that rolls psionics on its OWN table is still sent to the standard Random Psionics roll, and the one class that avoids it is told it has no psychic potential
+
+A book that gives a race its own psionics odds (*"01-77 none, 78-90 minor
+..."*) is stored as a pick-one ability group whose options carry `psionics`
+blocks, with a "None" option that carries nothing. Picking a psionic option
+puts a `psionics` block on the composed class, and `rollsForPsionics`
+(`apps/character-creator/js/psionics.js:124`, read 2026-10-04) then returns
+false. Picking "None" leaves no block, so the Powers step offers the standard
+table as well: a Dolphin who rolled "None" at 77% may roll again at 25%.
+
+**Evidence.** Measured 2026-10-04 against production (`--remote`, the 725
+published classes read through `parseClassMarkdown`, each no-psionics option
+of each pick group applied with `applyAbilities` and asked
+`rollsForPsionics`): nine classes have a pick-one group with a psionic option
+and an option named *None*, and still roll after *None* is picked - `dolphin`,
+`killer-whale`, `sea-titan`, `nautyll-soldier`, `arkhon`, `amaki-stone-man`,
+`mutant-rat`, `momano-headhunter`, `larmac`.
+
+**The working answer is already in the catalog.** `nb-doppleganger` states
+`psionics_allowed: false` on the class beside its *Awakened Psionics* group
+(`apps/character-creator/db/add-nb-doppleganger-class.sql:35` and `:51`, read
+2026-10-04). The same measurement shows it never rolls, picked or unpicked,
+and its psionic options still grant their blocks, because `applyAbilities`
+merges an option's `psionics` without asking the flag. It is also the more
+correct shape than a flag on the *None* option, which the close-out plan's
+wording (*"a None option switches off the step"*) presumed: a race with its
+own table does not use the standard one before the player has picked, either.
+
+What is wrong around that answer, both read 2026-10-04:
+
+- **The Race briefing says the opposite of the book.** `app.js:1314` prints
+  *"none — this race has no psychic potential"* for any class stating
+  `psionics_allowed: false`, which is false of a race with a 40% chance.
+- **Nothing but the wizard honours the flag.** `withRolledPsionics`
+  (`js/psionics.js:79`) returns early only for a class with a `psionics`
+  block, so a request carrying `psychic_tier` for a troll is given a tier by
+  `functions/api/character-creator/characters.js:197-228`. Production holds no
+  such character (`--remote`, 2026-10-04: no row with a `psychic_tier` on a
+  class stating the flag).
+- **Nothing tells an importer.** `class-check` is silent on the nine.
+
+**Proposal:** (1) the briefing prints that the race rolls on its own table
+when the class states `psionics_allowed: false` and offers a psionic ability
+option; (2) `withRolledPsionics` returns the class unchanged when
+`rollsForPsionics` is false, so the server and the sheet refuse a rolled tier
+the wizard would not have offered; (3) `class-check` warns on a class that
+still rolls while holding a pick group with a psionic option and an option
+named *None*; (4) the docs say that `psionics_allowed: false` is how a race's
+own table replaces the standard one. **Posture:** no new key, no new gate; one
+warning, which moves no exit code; no class is edited here - the nine take
+the flag as data, in the close-out's package C5. **Evidence for the
+proposal:** the gap and the working shape are measured as above; the briefing
+and server halves are read from the lines cited, not exercised.
+
+**Confidence:** high on the gap; medium on the warning's precision until C5
+reads each of the nine pages - `nautyll-soldier` and `momano-headhunter` have
+options that are neither psionic nor *None*.
+
+**Ongoing cost:** one name-matched warning in `class-check` (a *None* option
+spelled another way is missed, which is the safe direction).
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f118-own-psi-table`).**
+Posture said back: no new key, no new gate; one `class-check` warning that
+moves no exit code; no class edited. Written and taken in one session on Nate's
+standing word for the close-out, so the premise auditor ran before any code.
+It settled fourteen premises and disagreed with two, both corrected in the
+build rather than in the text above:
+
+- **The flag only worked from the race slot.** `combineClasses` starts from the
+  race's keys and did not carry an occupation's `psionics_allowed`, so
+  `momano-headhunter` (an O.C.C., one of the nine) would still have rolled when
+  paired, and `yamabushi-mountain-priest`, the one occupation already stating
+  the flag, rolled as a human's occupation (measured by the auditor against
+  production, 2026-10-04). The build carries the occupation's `false` into the
+  pairing. That is a behaviour change for one live class, in the direction its
+  own frontmatter states.
+- **No option is named exactly *None*.** They are band-prefixed -
+  `Psionics (01-77): None` - so the warning matches the word, not the name.
+  Re-measured: the word match returns the same nine.
+
+Built: `abilityOffersPsionics` and `psionicsTableLeftRolling` in
+`js/parser.js`; `withRolledPsionics` asks `rollsForPsionics`; the Race briefing
+line; the `class-check` warning; twelve smoke checks under *Variant skills &
+psionic penalty*, two of which were seen to fail with the two code lines taken
+out. Production holds no character with a `psychic_tier` at all (auditor,
+`--remote`, 2026-10-04), so the server half moves nobody. The briefing was read
+off the running wizard on a port of this tree's own (`nb-doppleganger` against
+`nb-wampyr`); the Browser pane was hidden, so that is the DOM's text and not a
+screenshot. No class note cites this finding
+(`node scripts/audit-citations.mjs --remote F118`: 0).

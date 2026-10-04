@@ -830,9 +830,9 @@ import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../functions/api/charact
 import { LANGUAGE_OTHER, LITERACY_OTHER, isFamilyName, isRepeatableRow,
          otherRowFor, familySkillName } from '../js/language-skills.js';
 import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
-         abilityGroupIndexFor, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
+         abilityGroupIndexFor, abilityOffersPsionics, abilityRollBands, abilityRollMatches, abilityOccOptions, applyAbilities, applyVariant,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
-         combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml,
+         combineClasses, isGearChoice, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
          relatedFloorStatus, relatedMinimums, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
@@ -8427,6 +8427,58 @@ section('Variant skills & psionic penalty');
   check('an ordinary class still rolls', rollsForPsionics({}) === true);
   check('a class with its own psionics does not roll',
     rollsForPsionics({ psionics: { type: 'major' } }) === false);
+
+  // ── a race that rolls on its OWN psionics table (BOOK-INGEST-AUDIT F118) ──
+  // The table is a pick group whose options carry the psionics; the class
+  // states psionics_allowed: false so the standard roll is never offered,
+  // whatever is picked, and the options' blocks still apply.
+  const ownTable = (flag) => ({
+    id: 'own-table', name: 'Own Table', category: 'rcc',
+    ...(flag ? { psionics_allowed: false } : {}),
+    special_abilities: [
+      { name: 'Psionics (01-77): None', description: 'No psionics.' },
+      { name: 'Psionics (78-00): Minor', description: 'Two powers.',
+        psionics: { type: 'minor', isp_base: '2d6', powers_starting: 2 } },
+      { choose: 1, from: ['Psionics (01-77): None', 'Psionics (78-00): Minor'] },
+    ],
+  });
+  check('without the flag, landing on None still sends the race to the standard roll',
+    rollsForPsionics(applyAbilities(ownTable(false), ['Psionics (01-77): None'])) === true);
+  check('with it the race never rolls: unpicked, on None, or on a psionic result',
+    rollsForPsionics(ownTable(true)) === false
+    && rollsForPsionics(applyAbilities(ownTable(true), ['Psionics (01-77): None'])) === false
+    && rollsForPsionics(applyAbilities(ownTable(true), ['Psionics (78-00): Minor'])) === false);
+  check('and the picked option still grants its psionics through the flag',
+    applyAbilities(ownTable(true), ['Psionics (78-00): Minor']).psionics?.type === 'minor');
+  check('a rolled tier is refused on a class that may not roll, so the server cannot be handed one',
+    withRolledPsionics(applyAbilities(ownTable(true), ['Psionics (01-77): None']),
+      { psychic_tier: 'major' }).psionics === undefined
+    && withRolledPsionics({ psionics_allowed: false }, { psychic_tier: 'minor' }).psionics === undefined);
+  check('while an ordinary class is still handed its rolled tier',
+    withRolledPsionics({ skills: {} }, { psychic_tier: 'minor' }).psionics?.from_roll === true);
+  // The flag was dropped from a class in the OCCUPATION slot: the race's rides
+  // combineClasses' spread and the occupation's did not.
+  const plainRace = { id: 'plain', name: 'Plain', category: 'rcc' };
+  const flaggedOcc = { ...ownTable(true), id: 'own-occ', category: 'occ' };
+  check('the flag survives a pairing from the occupation as well as from the race',
+    rollsForPsionics(combineClasses(plainRace, flaggedOcc)) === false
+    && rollsForPsionics(combineClasses(ownTable(true), { id: 'o', name: 'O', category: 'occ' })) === false);
+  check('and a pairing where neither half states it still rolls',
+    rollsForPsionics(combineClasses(plainRace, { id: 'o', name: 'O', category: 'occ' })) === true);
+  check('the briefing can tell an own-table race from one with no psychic potential',
+    abilityOffersPsionics(ownTable(true)) === true
+    && abilityOffersPsionics({ psionics_allowed: false }) === false
+    && abilityOffersPsionics({ special_abilities: [{ name: 'Loose', psionics: { type: 'minor' } }] }) === false);
+  check('class-check is told about a table left rolling, by its None option',
+    String(psionicsTableLeftRolling(ownTable(false))) === 'Psionics (01-77): None');
+  check('and is told nothing once the flag is there, or when the class has psionics of its own',
+    psionicsTableLeftRolling(ownTable(true)).length === 0
+    && psionicsTableLeftRolling({ ...ownTable(false), psionics: { type: 'minor' } }).length === 0);
+  check('nor about a group with no None option, or a None beside no psionic option',
+    psionicsTableLeftRolling({ special_abilities: [
+      { name: 'A', psionics: { type: 'minor' } }, { name: 'B' }, { choose: 1, from: ['A', 'B'] }] }).length === 0
+    && psionicsTableLeftRolling({ special_abilities: [
+      { name: 'Kind: none' }, { name: 'B' }, { choose: 1, from: ['Kind: none', 'B'] }] }).length === 0);
 }
 
 // ---------- 1c28. Character background tables ----------
