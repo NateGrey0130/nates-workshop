@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 10, gear 18, vehicles 22, notable_npcs 19
+**Rows citing this book:** classes 10, gear 18, vehicles 22, notable_npcs 31
 
 Slug `free-quebec`. Cached 2026-08-28 from `Rifts- World Book 22 Free Quebec.pdf`,
 194 PDF pages, **text layer** (no OCR), read with `scripts/read-columns.py`.
@@ -368,6 +368,7 @@ describes".*
 | #1450 | `~018-class-vessels.sql`: the Side Kick RPA and the Reloader list the vessel their book issues them, through two `gear` pointer rows (`glitter-boy-side-kick-qpa-98`, `rhv-60-reloader-hover-vehicle`) carrying `vehicle_slug` - F41's Glitter Boy shape. Restriction lines dropped, notes rewritten as the decision. `--remote` is applied before the merge | **2** | gear citing this book 17 -> **19** |
 | `pal/data/retro-holdable-gaps`, 2026-10-03 | the eleven Cabinet members of printed 143 as notable NPCs (`~078`), each a compact block as Lone Star's printed 119 was stored; read off a render and checked again by `book-reconcile`; applied `--remote` before the merge. Also the Deep Intel Agent's +1D4 M.A. into `bonuses` (`~075`) | **11** | notable NPCs 8 -> **19** |
 | `pal/data/retro-a1-newest-wins`, 2026-10-04 | **`tx-j50-juicer-eba` leaves this book's count** (`~093`): Triax 2 (2010) prints the suit again with different figures, and by Nate's ruling of 2026-10-04 the newest printing that states a figure wins. The row now cites Triax 2 printed 108-109 and keeps this book's printed-51 figures (main body 90, 20 lbs, 50,000 credits) and its import history in the description. Applied `--remote` before the merge. |
+| `pal/data/retro-a5-inline-npcs`, 2026-10-04 | Twelve people of Old Bones the book stats inside running text, as notable NPCs (`~105`), by Nate's ruling of 2026-10-04 that inline NPCs go in even with partial stats: Pierre Champlain (printed 157), Sylvette Jiroyan (158, 160), Roland Desjardin, Cyrean Hoist, Shelly Winslow, Martin Petit, Philip Dushane, Salmand (160-161), the three of the Shade of Atlantis shop (Syd Lycrean, Mick Kilaan, Kyrforge, printed 161 under Rumors, which the book then confirms) and Capt. Michael Barrett (179). Each row holds only what its passage prints. Read off renders and checked against renders again by `book-reconcile`: no wrong figure; it also read the cached text of printed 163-171 and 176-184 and found no one else given a level, an alignment or an attribute. The receptionist is Winslow on the page (the cached text reads Winslaw). Two levels are qualified in print and kept that way in the class field: Dushane is an ex-8th level NTSET Protector, Barrett the equivalent of a 9th level Privateer. Applied `--remote` before the merge. |
 
 ### Batch 2 — gear (PR #819)
 

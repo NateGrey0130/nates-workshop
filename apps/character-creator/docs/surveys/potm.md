@@ -2,7 +2,7 @@
 
 **Status:** `imported` — finished in #268, before surveys existed; this file was written afterwards. (2026-09-24)
 
-**Rows citing this book:** classes 14, vehicles 2, skills 4, notable_npcs 140, creatures 6
+**Rows citing this book:** classes 14, vehicles 2, skills 4, notable_npcs 145, creatures 6
 
 Slug `potm`. Cached from `Pantheons of the Megaverse.pdf`, 210 PDF pages,
 **text layer**.
@@ -85,6 +85,7 @@ Complete — the book was finished in
 | 2026-09-25 | [#1374](https://github.com/NateGrey0130/nates-workshop/pull/1374) | the four languages cited to their pages: `fix-potm-language-citations.sql` |
 | 2026-09-26 | #1444 | `norse-giant` copies the dragon ladder, by `~011-borrowed-xp-ladders.sql`: printed 163 says *"Experience: Use same table as the Dragon R.C.C."*, and `dragon-hatchling` has stored RUE's dragon ladder since #1415. The import stored none because both rows then fell through to the app default. Nate's rule, 2026-09-26: a class whose book names another class's table copies that ladder. The note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **Six minion species as creatures** (`~076`: Galla, the Hundred-Handed, the Furies, Asurkan, Kravyads, the Average Evil Immortal) **and two machines as vessels** (`~084`: the Atlas Mark I and the Ahriman Mark I Rune Assault Suit). The first creature and vehicle rows this book has. Odin's ravens are a unique pair with one stat block, not a species, and were left for a notable-NPC filing. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a5-inline-npcs` | **Five unique beasts as notable NPCs** (`~107`), by Nate's ruling of 2026-10-04: Odin's Ravens (printed 148), Yama's Bull (136), Ganesa's Riding Rat (130), Sarasvati's Peacock (121) and Siva's Cobras (127), with six attacks. **The ravens are one row and are not named Hugin and Munin:** the page heads them Odin's Ravens, says the stats of both are identical, and neither name appears anywhere in the book. Siva's three cobras are one row for the same reason, with figures per cobra. Read off renders and checked again by `book-reconcile`: every figure agrees. Five other unique beasts were already held (Sleipnir, Airavata, Cerberus, Fenrir, the Midgard Serpent). Left out, with stats but not beasts: Hecate's Living Armor (printed 92), Kali's Demon's Head (134) and the Chest Amalgamate (61), which are worn or carried. Hel's two wolves (158) print no figure of their own. Applied `--remote` before the merge. |
 
 ### What remains
 

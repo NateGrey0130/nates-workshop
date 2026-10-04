@@ -273,7 +273,7 @@
     ],
     [
      "Notable NPCs",
-     140
+     145
     ],
     [
      "Skills",
@@ -284,7 +284,7 @@
      2
     ]
    ],
-   "total": 166
+   "total": 171
   },
   {
    "slug": "ww",
@@ -791,7 +791,7 @@
     ],
     [
      "Notable NPCs",
-     7
+     25
     ],
     [
      "Skills",
@@ -806,7 +806,7 @@
      17
     ]
    ],
-   "total": 236
+   "total": 254
   },
   {
    "slug": "spirit-west",
@@ -1029,14 +1029,14 @@
     ],
     [
      "Notable NPCs",
-     19
+     31
     ],
     [
      "Vehicles",
      22
     ]
    ],
-   "total": 69
+   "total": 81
   },
   {
    "slug": "xiticix-invasion",
@@ -1137,10 +1137,10 @@
     ],
     [
      "Notable NPCs",
-     2
+     4
     ]
    ],
-   "total": 79
+   "total": 81
   },
   {
    "slug": "d-bees-of-north-america",
