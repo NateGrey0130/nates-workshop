@@ -478,6 +478,12 @@ reading twice: it can never *have* psychic powers **and** is +1 to save against
 them, which is not a contradiction and is the clearest demonstration that the
 two are different fields.
 
+**The flag also marks a race that rolls psionics on its own table**
+(`BOOK-INGEST-AUDIT` F118): a pick-one ability group whose options carry the
+psionics, with `psionics_allowed: false` on the class so the standard table is
+not offered as well. `docs/house-rules.md` has the rule. An occupation's flag is
+carried into a pairing like the race's; before F118 it was dropped.
+
 #### What a race states that the app cannot yet hold
 
 Three things, all recorded as prose and all listed in the affected classes'

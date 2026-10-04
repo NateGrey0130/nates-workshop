@@ -222,6 +222,17 @@ many went. A psychic O.C.C. never rolls and never pays. A class may also declare
 `psionics_allowed: false` — troll and orc have no psychic potential at all —
 which skips Step 3 entirely.
 
+**A race with a psionics table of its own states the same flag.** Where a book
+prints a race's own odds (*"01-77 none, 78-90 minor ..."*), the table is a
+pick-one ability group whose options carry the psionics, and the class states
+`psionics_allowed: false` beside it: the standard roll is then never offered,
+whether the player has picked, landed on *None*, or landed on a psionic result,
+and a picked option's psionics still apply. The Race briefing says the race
+rolls on its own table rather than that it has no psychic potential. The flag
+holds from either half of a pairing, and the server refuses a rolled tier on a
+class that may not roll. `class-check` warns on a class that holds such a table
+and still rolls the standard one (`BOOK-INGEST-AUDIT` F118).
+
 **Psionics can be rolled for** (p.20–21). A class granting no psychic powers
 sends the character to the Random Psionics Table — 01-09 major, 10-25 minor,
 26-00 none, so three quarters of characters get nothing and that is the ordinary

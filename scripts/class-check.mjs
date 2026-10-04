@@ -40,7 +40,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS } from '../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS, psionicsTableLeftRolling } from '../apps/character-creator/js/parser.js';
 import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
@@ -262,6 +262,17 @@ if (menOfArmsBesideOwnSdc(data?.sdc_base != null, data?.men_of_arms)) {
   warnings.push('men_of_arms sits beside a stated sdc_base. The grouping only picks the '
     + 'core S.D.C. roll for a class that prints no formula, so here it never applies; '
     + 'remove it. smoke refuses this: "no S.D.C. grouping sits on a class that states its own".');
+}
+
+// A race with its own psionics table that is still sent to the standard roll
+// (BOOK-INGEST-AUDIT F118). A WARNING and no exit code: whether the book's
+// table replaces the standard one is read off the page.
+const leftRolling = psionicsTableLeftRolling(data);
+if (leftRolling.length) {
+  warnings.push(`a pick group offers psionics beside "${leftRolling[0]}", and the class still `
+    + 'rolls the standard Random Psionics table as well, so a player who lands on None is '
+    + 'offered a second roll. If the table the book prints replaces the standard one, add '
+    + 'psionics_allowed: false to the class; a picked option still grants its psionics block.');
 }
 
 // A new class with no authored tags is missing from every tag filter a player

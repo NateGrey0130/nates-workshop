@@ -1223,6 +1223,13 @@ export function combineClasses(rcc, occ) {
   // `out` starts as the race spread, so it is carried (BOOK-INGEST-AUDIT F62).
   // An M.D.C. race still keeps its own pool: convertsToMdc yields to mdc_base.
   if (occ.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
+  // `psionics_allowed: false` is carried from the occupation the same way
+  // (BOOK-INGEST-AUDIT F118). The race's rides the spread; an occupation's was
+  // dropped, so a class stating it in the occupation slot - its own psionics
+  // table, or none at all - sent the pair to the standard Random Psionics roll
+  // anyway. Either half saying no is a no: the flag only ever switches the
+  // standard roll off, and a `psionics` block on either half is untouched.
+  if (occ.psionics_allowed === false) out.psionics_allowed = false;
   // `horror_factor` rides this loop rather than the bare spread above, and both
   // halves of the loop matter for it (F75). Without it: an OCCUPATION that
   // projects one is silently dropped when the race states none, and a
@@ -2527,6 +2534,41 @@ export function abilityRollBands(group) {
 // prints more than one result for a band.
 export function abilityRollMatches(bands, roll) {
   return (bands || []).filter((b) => roll >= b.lo && roll <= b.hi).map((b) => b.name);
+}
+
+// A race that rolls psionics on its OWN table (BOOK-INGEST-AUDIT F118).
+//
+// The book prints the odds (*"01-77 none, 78-90 minor ..."*) and the class
+// stores them as a pick group whose options carry `psionics` blocks. Such a
+// class states `psionics_allowed: false` beside the group, which switches the
+// standard Random Psionics roll off whatever is picked - its own table has
+// replaced that one - while an option's block is still merged by
+// applyAbilities, which does not ask the flag.
+//
+// `abilityOffersPsionics` is what the Race briefing asks, so a flagged class
+// with such a group is not told it has no psychic potential.
+export function abilityOffersPsionics(cls) {
+  const offered = new Set(abilityOptions(cls).map((n) => n.trim().toLowerCase()));
+  return (cls?.special_abilities || []).some((e) => isAbilityDefinition(e)
+    && e.psionics && offered.has(e.name.trim().toLowerCase()));
+}
+
+// The "None" options of a class that holds such a table and STILL rolls the
+// standard one, or an empty list. `class-check` warns on it. Matched on the
+// word, because the options are named for their band ("Psionics (01-77):
+// None"); a no-psionics result spelled another way is missed, which is the
+// safe direction for a warning.
+export function psionicsTableLeftRolling(cls) {
+  if (!cls || cls.psionics || cls.psionics_allowed === false) return [];
+  const defs = new Map((cls.special_abilities || []).filter(isAbilityDefinition)
+    .map((d) => [d.name.trim().toLowerCase(), d]));
+  const out = [];
+  for (const g of (cls.special_abilities || []).filter(isAbilityChoice)) {
+    const names = (g.from || []).map((o) => (typeof o === 'string' ? o : o?.name)).filter(Boolean);
+    if (!names.some((n) => defs.get(n.trim().toLowerCase())?.psionics)) continue;
+    out.push(...names.filter((n) => /\bnone\b/i.test(n) && !defs.get(n.trim().toLowerCase())?.psionics));
+  }
+  return out;
 }
 
 // Whether taking or dropping this ability changes a pool the wizard has ALREADY
