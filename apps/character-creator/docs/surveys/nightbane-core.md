@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the extraction plan is done; what was left on purpose is in the ledger. (2026-09-24)
 
-**Rows citing this book:** classes 19, gear 663, vehicles 35, skills 10, skill_system_bases 3, spells 39, psionic_powers 4, talents 25, morphus_characteristics 173, creatures 15
+**Rows citing this book:** classes 19, gear 663, vehicles 35, skills 10, skill_system_bases 3, spells 39, psionic_powers 4, talents 25, morphus_characteristics 173, creatures 22
 
 **Surveyed 2026-09-12**, offline, off the cache. No extraction has been spent
 yet: this file is what phases 1–3 of `book-survey` produced, and the extraction
@@ -916,6 +916,7 @@ One line per shipped PR, appended when it merges.
 | 2026-09-19 | [#1179](https://github.com/NateGrey0130/nates-workshop/pull/1179) | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-nightbane.sql`, 15 `creatures` rows citing this book, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-27 | #1466 | **`nb-sorcerer` and `nb-psychic` stop giving a vehicle not being gear as the reason their car is not in equipment_starting**, by `~029-class-vessel-notes.sql`, the sweep of class notes made false by the vessel work (#1445, #1450). The book names a kind and no model, and the chapter's `vehicles` rows (`compact-nb`, `jeep-4-wheel-drive-nb` and the rest) have no gear row pointing at them - the `BOOK-INGEST-AUDIT.md` F41 shape - and none was made. Notes and one restriction line only. No row count moves. `--remote` is applied before the merge. |
 | 2026-09-27 | `pal/data/rebuild-audit-f16-nightbane-wp` | **Four W.P. rows cite this book**, by `~037-nightbane-wp-citations.sql` (REBUILD-AUDIT F16, taken in part): `W.P. Revolver`, `W.P. Automatic Pistol`, `W.P. Bolt Action Rifle` and `W.P. Automatic and Semi-automatic Rifles` move from the non-book `Rifts Skill List` to `Nightbane RPG p.59-60`, the definitions on printed 59 and the bonuses the rows store on printed 60. The pistol note that described a semi-automatic is rewritten to the page. Skills citing this book 6 -> **10**; rows citing no surveyed book 229 -> **225**. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **Seven creatures** (`~077`): the Nightlord with the Avatar figures in its note, the Priest of Night, and the five minor NPC templates of printed 198-202. The Nightlord's Hit Points (P.E. times level) and the Priest's attributes (modifiers to a human only) are not rollable and are NULL. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

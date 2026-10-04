@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all seven steps shipped: skills, Chi-Gung powers, gear, vehicles and all 25 classes; what was left out on purpose is under Extraction plan. (2026-10-02)
 
-**Rows citing this book:** classes 25, gear 94, psionic_powers 29, skills 37, vehicles 6
+**Rows citing this book:** classes 25, gear 94, vehicles 9, skills 37, psionic_powers 29
 
 **MOS:** geofront-lightning-warrior 8, geofront-shadow-warrior 8, geofront-technical-officer 7, geofront-whack-job-scientist 7
 
@@ -303,6 +303,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-02 | `pal/data/china-2-powers-gear-vehicles` | steps 2-5 in one PR: 29 Chi-Gung powers in `Special` (`add-a-china-2-chi-gung-powers.sql`); 68 Green Scarf magic items, Soothsayer tools, the Book of Ten Thousand Demons and the five fans (`add-a-china-2-magic-gear.sql`); 26 Geofront guns, rounds, Chi weapons and armors (`add-a-china-2-geofront-gear.sql`); 6 vehicles with 62 M.D.C. locations and 22 weapon entries (`add-china-2-vehicles.sql`). Five extraction workers and five reconcile passes; reconcile moved a restriction from Mystic Body to Lightning Fists, stopped the Demon Skin storing 4 M.D.C. from its 4D6+18, and corrected four descriptions. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-2-classes` | steps 6-7 in one PR: all 25 classes, one `add-<id>-class.sql` each - `jian-shih`, `chun-tzu`, `nei-chia-wu-shih`, `wai-chia-wu-shih`, `chi-gung-seng-ren`, `soothsayer`, `spirit-host`, `blind-mystic`, `fu-yao-da-chia`, `demon-and-dead-slaver`, `goblin-wrangler`, `enlightened-demon` and the thirteen `geofront-*` classes. Eight drafting agents from one shared brief; every class reads `ready` against production with 0 stubs, and every XP ladder was checked against printed 160. Mystic Martial Art Powers and Body Hardening Exercises are level 1 only, from two shared blocks pasted into each class (Nate, 2026-10-01); filed as `BOOK-INGEST-AUDIT.md` F117, with the exercises' later picks under F116. A native Chinese speaker is `Language: Native Tongue` throughout; the Enlightened Demon, who learns it, has `Language: Chinese`. Applied `--remote` before the PR. |
 | 2026-10-02 | `pal/data/china-2-chi-gung-systems` | `~070-china-2-chi-gung-systems.sql`: re-tags the 29 Chi-Gung powers `rifts` after the clean build's psionic system reset. `repo-vs-live.mjs --offenders` found the repo rebuilding them with system NULL - 29 fields, all this column - while production holds `rifts`; production wins (F105). A no-op in production. No rows. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The three Geo-Borg bodies as `borg` vessels** (`~085`): DB-800 Demon-Eater, AB-830 Assault, AB-955 Lion. Vehicles 6 to 9. The classes are not rewired. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

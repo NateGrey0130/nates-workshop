@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 40, gear 208, vehicles 6, skills 216, spells 115, psionic_powers 89
+**Rows citing this book:** classes 40, gear 208, vehicles 14, skills 216, spells 115, psionic_powers 89
 
 **MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
 
@@ -200,6 +200,7 @@ Physical.
 | 2026-09-09 | #861 | **`BOOK-INGEST-AUDIT` F41, the last item.** The **Glitter Boy Power Armor (USA-G10)** imported as a vessel from printed **71-72** - 7 M.D.C. locations, 3 weapon systems, the book's own ordinals. F41 called this row *the one with no book behind it*; this book stats it in full, and all seven figures the row had stored from the web are printed here verbatim. The gear row was re-cited from `Web reference (not book-verified)` to `p.71-72`, given the printed 25 million black-market price, and had ONE figure corrected - a 20-year nuclear charge against the printed 25. Free Quebec's `classic-glitter-boy-qgb-100` stays a separate vessel: it carries a Quebec forearm weapon package the USA-G10 does not have. Applied `--remote` before the merge. |
 | 2026-09-18 | #1154 | **OCR text repair**, `zzzzzzzzzzzzzz-fix-spell-psionic-ocr-text.sql`. `Control & Enslave Entity` (printed 218) stopped mid-sentence at the page turn and lost most of itself; it is completed from a render of printed 219, where the cache also reads `contro!`. `Telekinetic Push` ended in the next section's heading, `Sensitive Psionics`. Applied `--remote` before the merge. |
 | 2026-10-03 | `pal/docs/retro-open-questions` | **Inventory counted by structure**, the first this book has had. No rows. Eight robots, power armours and vehicles on printed 249-253 and 271-273 are in neither `vehicles` nor `gear`; the book prints no bestiary and no named-NPC block. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The eight machines the inventory found unheld, as vessels** (`~084`): UAR-1 Enforcer, CR-003 Spider-Skull Walker, Mark V APC, AFC-050 Death's Head Transport, AFC-023 Sky Cycle, NG-X9 Samson, FT-005 Flying Titan, TR-001 Titan Combat Robot. Vehicles 6 to 14. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

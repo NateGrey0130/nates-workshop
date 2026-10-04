@@ -2,7 +2,7 @@
 
 **Status:** `imported` — imported to completion before surveys existed; this file was written afterwards. (2026-09-24)
 
-**Rows citing this book:** classes 14, gear 42, vehicles 7, skills 5, notable_npcs 9, creatures 4
+**Rows citing this book:** classes 14, gear 42, vehicles 7, skills 5, notable_npcs 9, creatures 5
 
 Slug `ju`. Cached from `Rifts- World Book 10 Juicer Uprising.pdf`, 162 PDF
 pages, **text layer**.
@@ -91,6 +91,7 @@ as an NPC Villain with no column and its experience is frozen at death.
 | 2026-09-26 | #1439 | `~008-rue-ju-xp-ladders.sql`: the Experience Tables of printed 156 as `xp_table` on 13 of the 14 classes, each read off a 200 dpi render and reconciled against it - Standard & Gladiator (Gladiator), Juicer Scout, Titan/Hyperion/Delphi/Phaeton, Psycho-Stalker & Juicer Assassin, Mega-Juicer & Maxi-Killer, Dragon Juicer, and Juicer Wannabe & Gambler. The Murder-Wraith has no column and stores none. Two printed lower bounds that repeat the previous band's upper bound are stored plus one (Dragon Juicer level 11, Wannabe level 5). Applied `--remote` before the merge. |
 | 2026-09-26 | #1444 | The two other names in printed 156's columns, settled. **Coalition Juicer** (in the Psycho-Stalker & Juicer Assassin column): `coalition-juicer` cites Coalition War Campaign, the later book, whose printed 224 prints it a different ladder (*CS Juicer, CS Commando, CS Strike Cyborg*); `~010-own-book-xp-ladders.sql` stores CWC's, and the class note records this column. **Vallax (alien) and Newcomer Android**: no class of either name exists in the catalog, so there is nothing to store. `--remote` is applied before the merge. |
 | 2026-09-27 | `pal/data/rebuild-audit-f16-f25-f26` | **`Juicer Technology` cites this book**, by `~040-rifts-skill-list-recitations.sql` (REBUILD-AUDIT F16): it moves from the non-book `Rifts Skill List` to `Rifts World Book 10: Juicer Uprising p.65`, where *Medical: Juicer Technology* prints 40%+5%, as the row stores. RUE prints no entry for it. Skills citing this book 4 -> **5**. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **Newcomer Androids as a creature** (`~081`), printed 152-153. The book says 3,000 androids in one place and 4,000 in another; the row uses the later, fuller count. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 Dates are absent because these merged before the ledger existed; the PR numbers
 are the durable handle and `git log` carries the dates.

@@ -2,7 +2,7 @@
 
 **Status:** `imported` — finished in #268, before surveys existed; this file was written afterwards. (2026-09-24)
 
-**Rows citing this book:** classes 14, skills 4, notable_npcs 140
+**Rows citing this book:** classes 14, vehicles 2, skills 4, notable_npcs 140, creatures 6
 
 Slug `potm`. Cached from `Pantheons of the Megaverse.pdf`, 210 PDF pages,
 **text layer**.
@@ -84,6 +84,7 @@ Complete — the book was finished in
 | 2026-09-18 | [#1167](https://github.com/NateGrey0130/nates-workshop/pull/1167) | **notable NPCs - the gods** (NPC and bestiary plan, Phase 2b): `add-notable-npcs-pantheons.sql`, 140 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-25 | [#1374](https://github.com/NateGrey0130/nates-workshop/pull/1374) | the four languages cited to their pages: `fix-potm-language-citations.sql` |
 | 2026-09-26 | #1444 | `norse-giant` copies the dragon ladder, by `~011-borrowed-xp-ladders.sql`: printed 163 says *"Experience: Use same table as the Dragon R.C.C."*, and `dragon-hatchling` has stored RUE's dragon ladder since #1415. The import stored none because both rows then fell through to the app default. Nate's rule, 2026-09-26: a class whose book names another class's table copies that ladder. The note is rewritten as the decision. No row count moves. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **Six minion species as creatures** (`~076`: Galla, the Hundred-Handed, the Furies, Asurkan, Kravyads, the Average Evil Immortal) **and two machines as vessels** (`~084`: the Atlas Mark I and the Ahriman Mark I Rune Assault Suit). The first creature and vehicle rows this book has. Odin's ravens are a unique pair with one stat block, not a species, and were left for a notable-NPC filing. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 ### What remains
 

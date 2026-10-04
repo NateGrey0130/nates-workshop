@@ -17,7 +17,7 @@
     ],
     [
      "Creatures",
-     15
+     22
     ],
     [
      "Gear",
@@ -52,7 +52,7 @@
      35
     ]
    ],
-   "total": 986
+   "total": 993
   },
   {
    "slug": "dag",
@@ -117,10 +117,10 @@
     ],
     [
      "Spells",
-     28
+     79
     ]
    ],
-   "total": 687
+   "total": 738
   },
   {
    "slug": "powers-unlimited-1",
@@ -166,6 +166,10 @@
      30
     ],
     [
+     "Creatures",
+     2
+    ],
+    [
      "Gear",
      708
     ],
@@ -191,7 +195,7 @@
     ],
     [
      "Spells",
-     16
+     29
     ],
     [
      "Super abilities",
@@ -202,7 +206,7 @@
      49
     ]
    ],
-   "total": 986
+   "total": 1001
   },
   {
    "slug": "bom",
@@ -217,10 +221,14 @@
     ],
     [
      "Spells",
-     427
+     452
+    ],
+    [
+     "Vehicles",
+     9
     ]
    ],
-   "total": 428
+   "total": 462
   },
   {
    "slug": "cb1",
@@ -260,15 +268,23 @@
      14
     ],
     [
+     "Creatures",
+     6
+    ],
+    [
      "Notable NPCs",
      140
     ],
     [
      "Skills",
      4
+    ],
+    [
+     "Vehicles",
+     2
     ]
    ],
-   "total": 158
+   "total": 166
   },
   {
    "slug": "ww",
@@ -283,7 +299,7 @@
     ],
     [
      "Creatures",
-     15
+     17
     ],
     [
      "Gear",
@@ -306,7 +322,7 @@
      2
     ]
    ],
-   "total": 155
+   "total": 157
   },
   {
    "slug": "phase-world",
@@ -375,10 +391,10 @@
     ],
     [
      "Vehicles",
-     6
+     14
     ]
    ],
-   "total": 674
+   "total": 682
   },
   {
    "slug": "atlantis",
@@ -465,7 +481,7 @@
     ],
     [
      "Creatures",
-     1
+     6
     ],
     [
      "Gear",
@@ -480,7 +496,7 @@
      55
     ]
    ],
-   "total": 213
+   "total": 218
   },
   {
    "slug": "south-america",
@@ -533,7 +549,7 @@
     ],
     [
      "Creatures",
-     30
+     31
     ],
     [
      "Gear",
@@ -556,7 +572,7 @@
      50
     ]
    ],
-   "total": 283
+   "total": 284
   },
   {
    "slug": "japan",
@@ -583,10 +599,10 @@
     ],
     [
      "Vehicles",
-     21
+     25
     ]
    ],
-   "total": 315
+   "total": 319
   },
   {
    "slug": "south-america-2",
@@ -601,7 +617,7 @@
     ],
     [
      "Creatures",
-     2
+     17
     ],
     [
      "Gear",
@@ -624,7 +640,7 @@
      23
     ]
    ],
-   "total": 169
+   "total": 184
   },
   {
    "slug": "ju",
@@ -639,7 +655,7 @@
     ],
     [
      "Creatures",
-     4
+     5
     ],
     [
      "Gear",
@@ -658,7 +674,7 @@
      7
     ]
    ],
-   "total": 81
+   "total": 82
   },
   {
    "slug": "cwc",
@@ -877,7 +893,7 @@
     ],
     [
      "Gear",
-     92
+     224
     ],
     [
      "Notable NPCs",
@@ -892,7 +908,7 @@
      35
     ]
    ],
-   "total": 169
+   "total": 301
   },
   {
    "slug": "mystic-russia",
@@ -949,7 +965,7 @@
     ],
     [
      "Gear",
-     73
+     76
     ],
     [
      "Notable NPCs",
@@ -964,7 +980,7 @@
      9
     ]
    ],
-   "total": 143
+   "total": 146
   },
   {
    "slug": "canada",
@@ -1013,14 +1029,14 @@
     ],
     [
      "Notable NPCs",
-     8
+     19
     ],
     [
      "Vehicles",
      22
     ]
    ],
-   "total": 59
+   "total": 70
   },
   {
    "slug": "xiticix-invasion",
@@ -1035,14 +1051,14 @@
     ],
     [
      "Gear",
-     15
+     16
     ],
     [
      "Notable NPCs",
      21
     ]
    ],
-   "total": 47
+   "total": 48
   },
   {
    "slug": "china-1",
@@ -1095,10 +1111,10 @@
     ],
     [
      "Vehicles",
-     6
+     9
     ]
    ],
-   "total": 191
+   "total": 194
   },
   {
    "slug": "madhaven",

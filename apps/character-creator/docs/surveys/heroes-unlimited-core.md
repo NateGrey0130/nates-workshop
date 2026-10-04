@@ -2,7 +2,7 @@
 
 **Status:** `imported` — with the exclusions recorded under D7; the batch decisions are below. (2026-09-24)
 
-**Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 94, spells 16, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5
+**Rows citing this book:** classes 30, gear 708, vehicles 49, skills 10, skill_system_bases 94, spells 29, psionic_powers 4, psionic_system_costs 1, super_abilities 69, notable_npcs 5, creatures 2
 
 **MOS:** hu-edu-high-school 6 choose 2, hu-edu-military 15 choose 2, hu-edu-trade-school 16 choose 2, hu-edu-one-year-college 13 choose 2, hu-edu-two-years-college 13 choose 2, hu-edu-three-years-college 13 choose 3, hu-edu-four-years-college 13 choose 3, hu-edu-military-specialist 16 choose 1, hu-edu-bachelors 13 choose 3, hu-edu-masters 13 choose 3, hu-edu-doctorate 14 choose 4
 
@@ -675,6 +675,7 @@ ability carries `related_skills_count` and nothing else. Both were tried.
 | 2026-09-18 | #1164 | **notable NPCs** (NPC and bestiary plan, Phase 2a): `add-notable-npcs.sql`, 5 `notable_npcs` rows citing this book. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-26 | #1453 | **D0 carve-out**: Powers Unlimited Two's four New Super Abilities (printed 94-95), `~019-pu2-new-super-abilities.sql`; recorded under *The carve-out, 2026-09-26* above and in `powers-unlimited-2.md`. Super abilities **364 -> 368**. PU2's categories stay excluded. `--remote` is applied before the merge. |
 | 2026-09-27 | #1463 | **Experience ladders** for the fourteen Power Category classes, printed 17's ten columns read off a render and re-read by a `book-reconcile` agent, `~028-hu-xp-ladders.sql`. The five Special Training classes share one column; the sixteen education classes state none, by design (see *The slot mapping, as built*). One misprint: the Alien's level 5 lower bound repeats level 4's top, stored +1 as 17,201. No row counts move. `--remote` is applied before the merge. |
+| 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Golem and Zombies of printed 107 as creatures** (`~083`), the first Heroes Unlimited rows in `creatures`; **13 circles as spells** in tradition `circle` (`~091`), at level 0 and 0 P.P.E. because this book prints neither for a circle. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 
 Earlier also, ahead of the ledger: Powers Unlimited One's new psionic powers
 (`af196d9`), which is why the psionic count moves from 125 rather than from 116.
