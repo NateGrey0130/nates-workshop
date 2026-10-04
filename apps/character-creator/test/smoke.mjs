@@ -835,6 +835,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          bonusesFromSkills, categoryAllows, namedByOnly, categoryBonus, categoryLabel,
          combineClasses, isDiceBonus, isGearChoice, isSignedDiceBonus, needsOccupation, parseClassMarkdown, parseYaml, psionicsTableLeftRolling,
          relatedFloorStatus, relatedMinimums, rollAbilityTable, abilityRollLimit, abilityGroupOwed, abilityProgressionAt,
+         abilityTouchesPool as abilityTouchesPoolOf,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { spawnSync } from 'node:child_process';
@@ -3503,7 +3504,7 @@ section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
   // The render path is browser-only, so this half is a text check on app.js -
   // the same compensation `rendered-ui.mjs` makes, and it names its symptom.
   const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
-  const picker = appSrc.slice(appSrc.indexOf('function abilityPicker()'),
+  const picker = appSrc.slice(appSrc.indexOf("function abilityPicker(side = 'rcc')"),
     appSrc.indexOf('function abilityDef('));
   check('the picker reads a PER-GROUP count rather than the length of every pick',
     /abilityGroupCounts\(/.test(picker) && !/const picked = S\.abilities\.length/.test(picker),
@@ -6198,8 +6199,9 @@ section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUD
   // forgets S.levelPools is exactly what this shape exists to prevent.
   const bare = (appSrc.match(/S\.pools = null/g) || []).length;
   check('and it is the ONLY place S.pools is nulled', bare === 1, 'sites: ' + bare);
-  check('every clear site calls it - nine of them',
-    (appSrc.match(/clearRolledPools\(\);/g) || []).length === 9,
+  // The tenth is occAbilitiesChanged (F125): a pick from an occupation's group.
+  check('every clear site calls it - ten of them',
+    (appSrc.match(/clearRolledPools\(\);/g) || []).length === 10,
     'calls: ' + (appSrc.match(/clearRolledPools\(\);/g) || []).length);
   // rerollAdvancement(lvl) reaches computePools() through rollAdvancement's
   // lazy branch, so a clear inside computePools would wipe the other levels.
@@ -7089,6 +7091,87 @@ section('Morphus tables catalog');
   // A table CHECK is refused input, not a server fault.
   check('the catalog write path answers a CHECK failure with a 422',
     /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+}
+
+section('An occupation beside a race offers its own pick groups (BOOK-INGEST-AUDIT F125)');
+{
+  // WHAT THE SERVER ALREADY DID, and the wizard did not. A pairing lists the
+  // race's abilities and then the occupation's, so the composed class carries
+  // both halves' groups and the count allows both - but the picker read the
+  // race slot alone, and the occupation's group was never offered.
+  const race = { id: 'r', name: 'R', category: 'rcc', special_abilities: [
+    { name: 'Claws' }, { name: 'Tail' }, { choose: 1, from: ['Claws', 'Tail'] }] };
+  const occ = { id: 'o', name: 'O', category: 'occ', special_abilities: [
+    { name: 'Mental Bonus (I.Q.)', bonuses: { attributes: { IQ: '1d4' } } },
+    { name: 'Mental Bonus (M.E.)', bonuses: { attributes: { ME: '1d4' } } },
+    { name: 'Thick Hide', bonuses: { pools: { sdc: '2d6' } } },
+    { choose: 1, from: ['Mental Bonus (I.Q.)', 'Mental Bonus (M.E.)', 'Thick Hide'] }] };
+  const paired = combineClasses(race, occ);
+  const groups = paired.special_abilities.filter((e) => e.choose);
+  check('a pairing carries the race\'s groups and then the occupation\'s',
+    groups.length === 2 && groups[0].from[0] === 'Claws' && groups[1].from.length === 3);
+  const count = (abilities) => validateCharacter({ character: { level: 1 }, cls: paired, skills: [],
+    attributes: {}, abilities, catalog: new Map() }).violations.filter((x) => x.rule === 'ability_count');
+  check('and the server allows one pick from each half',
+    count(['Claws', 'Mental Bonus (M.E.)']).length === 0 && count(['Claws', 'Tail', 'Mental Bonus (M.E.)']).length === 1);
+  // Counted against the OCCUPATION's own class, a race's pick belongs to no
+  // group of it - which is what lets each picker count only its own side.
+  check('counted against the occupation alone, the race\'s pick is in none of its groups',
+    String(abilityGroupCounts(occ, ['Claws', 'Mental Bonus (M.E.)'])) === '1'
+    && abilityGroupIndexFor(occ, 'Claws') === -1 && abilityGroupIndexFor(race, 'Mental Bonus (M.E.)') === -1);
+  // The occupation's dice are rolled from the occupation alone, with its own
+  // picks applied; a race's pick has no definition there and adds nothing.
+  const occWithPick = applyAbilities(occ, ['Claws', 'Mental Bonus (M.E.)']);
+  check('the occupation\'s roll sees its own pick\'s dice and not the race\'s pick',
+    occWithPick.bonuses?.attributes?.ME === '1d4' && occWithPick.bonuses?.attributes?.IQ === undefined
+    && derive.diceBonuses(occWithPick).ME === '1d4'
+    && occWithPick.abilities_taken.find((a) => a.name === 'Claws')?.granted === false);
+  check('and a pick that touches a pool is known to, so the pools are cleared',
+    occ.special_abilities.filter((d) => d.name).map((d) => abilityTouchesPoolOf(d)).join() === 'false,false,true');
+
+  // THE WIZARD, pinned by source: every picker handler takes a side and reads
+  // its class through one function.
+  const appSrc = readFileSync(appPath('app.js'), 'utf8');
+  check('the picker reads the class for its side, the occupation with its variant',
+    /const abilityClass = \(side\) => \(side === 'occ' \? occAbilityClass\(\) : S\.rcc\);/.test(appSrc)
+    && /function occAbilityClass\(\) \{[\s\S]{0,200}applyVariant\(occ, S\.occVariant\)/.test(appSrc)
+    && /function abilityPicker\(side = 'rcc'\)/.test(appSrc));
+  check('the Occupation step draws the occupation\'s picker, and only once one is chosen',
+    /\$\{occPicker\(\)\}\s+\$\{S\.occ \? abilityPicker\('occ'\) : ''\}/.test(appSrc));
+  check('its buttons name their side, so they count the occupation\'s groups',
+    /onclick="takeAbility\('\$\{escJs\(name\)\}'\$\{sideArg\}\)"/.test(appSrc)
+    && /onclick="dropAbility\('\$\{escJs\(name\)\}'\$\{sideArg\}\)"/.test(appSrc)
+    && (appSrc.match(/onclick="rollAbilityGroup\(\$\{gi\}\$\{sideArg\}\)"/g) || []).length === 2);
+  check('take, drop and roll all read that side\'s class',
+    /function takeAbility\(name, side = 'rcc'\) \{\s+const cls = abilityClass\(side\);/.test(appSrc)
+    && /function dropAbility\(name, side = 'rcc'\)/.test(appSrc)
+    && /function rollAbilityGroup\(gi, side = 'rcc'\) \{\s+const cls = abilityClass\(side\);/.test(appSrc));
+  check('no picker handler still counts against the race slot by name',
+    !/abilityGroupIndexFor\(S\.rcc, n\) === gi/.test(appSrc)
+    && !/const gi = abilityGroupIndexFor\(S\.rcc, name\);/.test(appSrc));
+  // This step comes AFTER the attributes are rolled and nothing recomposes
+  // between it and Skills, so a pick here rebuilds the class and clears what
+  // it moved.
+  check('a pick from the occupation recomposes, re-rolls its dice, and clears pools and moved attributes',
+    /function occAbilitiesChanged\(\) \{\s+const dice = S\.cls\?\.attribute_dice;\s+recompose\(\);\s+rollOccBonuses\(\);\s+clearRolledPools\(\);\s+clearAttrsWhoseDiceChanged\(dice\);/.test(appSrc)
+    && (appSrc.match(/if \(side === 'occ'\) occAbilitiesChanged\(\);/g) || []).length === 4);
+  check('the occupation\'s dice roll with its picks applied',
+    /rollDiceBonusesOf\(applyAbilities\(applyVariant\(occ, S\.occVariant\), S\.abilities\)\)/.test(appSrc));
+  check('changing the occupation drops the picks that were the old one\'s, unless the race offers the name',
+    /function dropOccAbilityPicks\(\) \{[\s\S]{0,420}return !old\.has\(key\) \|\| race\.has\(key\);/.test(appSrc));
+  check('and the step does not let the player on while one of its groups is owed a pick',
+    /const occCls = occAbilityClass\(\);[\s\S]{0,360}abilityGroupOwed\(g\) - \(held\[gi\] \|\| 0\)[\s\S]{0,200}for \$\{occCls\.name\} to continue/.test(appSrc));
+  check('the rail\'s forward jump asks the same gate as the step\'s Next button',
+    /if \(i === ST\.OCCUPATION\) return occBlocker\(\);/.test(appSrc));
+  const dropFn = appSrc.slice(appSrc.indexOf('function dropOccAbilityPicks()'), appSrc.indexOf('function pickOcc(id)'));
+  check('an occupation released by a dropped ability loses its picks too, before the slot is cleared',
+    /dropOccAbilityPicks\(\);\s+S\.occ = null; S\.occVariant = null;/.test(appSrc)
+    && /if \(\(id \|\| null\) !== S\.occ\) dropOccAbilityPicks\(\);\s+S\.occ = id \|\| null;/.test(appSrc)
+    && /occAbilityClass\(\)/.test(dropFn));
+  check('and a change of stage re-rolls the occupation\'s dice, as a change of occupation does',
+    /S\.occVariant = id \|\| null;\s+recompose\(\);\s+rollOccBonuses\(\);/.test(appSrc));
+  check('the Race step\'s picker and gate still read the race slot',
+    /const held = abilityGroupCounts\(S\.rcc, S\.abilities\);\s+const short = abilityGroups\(S\.rcc\)/.test(appSrc));
 }
 
 section('A class ability picked at set levels (BOOK-INGEST-AUDIT F116)');
