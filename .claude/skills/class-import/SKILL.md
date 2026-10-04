@@ -179,6 +179,21 @@ finding.
 readback `SELECT`s asserting the result. (`backfill-`, `merge-`, `rename-` and
 `retire-` name more specific jobs.)
 
+**An edit too large for a `replace()`** - a prose table turned into a pick
+group, a class rewritten whole - goes through
+`node scripts/class-fix-sql.mjs <fix-dir> <out.sql>`, not a generator rebuilt
+in the scratchpad
+or retyped from memory (BOOK-INGEST-AUDIT.md F124). The test for "too large":
+the guarded `replace()` calls would outnumber the lines left alone. It takes
+the finished markdown and, per class, a `guard` sentence (or `guard_absent`)
+and a `proof`, and writes the guarded whole-markdown `UPDATE`s with their
+read-backs; pass `--remote` so `old_length` is read from production rather
+than measured off a file. Its header gives the input shape. When it refuses
+the input, fix the input. NEW catalog rows a class needs go through
+`scripts/rows-sql.mjs` and vehicles through `scripts/vessel-sql.mjs`; a
+correction to a row that EXISTS is still a hand-written `fix-` script, because
+those two write `INSERT OR IGNORE`.
+
 **Check where the new name sorts BEFORE choosing it.** A rebuild applies
 `apps/character-creator/db/*.sql` as one sorted glob, so a correction that sorts
 before the file it corrects is silently undone:
