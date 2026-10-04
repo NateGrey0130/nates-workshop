@@ -257,19 +257,63 @@ It exists because `overrides_race` could not reach the Larhold Shaman. That
 O.C.C. is open to every race, so the list on it would have replaced the P.P.E.
 of every race it pairs with, including the ones whose book adds theirs to a
 mage's. The race knows which kind it is; the occupation does not. Nate's
-decision, 2026-09-27. Four races carry it, each on its own book's wording:
+decision, 2026-09-27. Six races carry it (production, `--remote`, 2026-10-04),
+each on its own book's wording:
 
 | race | yields | the book |
 |---|---|---|
 | `larhold-barbarian` | `ppe_base` to magic; `starting_money` to all five groups | South America 2 printed 186: P.P.E. 3D6 beside *Magic Powers: None unless a magical O.C.C. is selected*. Its 1D6x1000 is the R.C.C.'s own equipment line, and the same page has a Larhold take an O.C.C. in place of the basic R.C.C. |
 | `amphib` | `ppe_base` to magic | Underseas printed 99: *P.P.E.: 3D6 unless a magic O.C.C.* |
 | `human`, `elf` | `ppe_base` to magic and clergy | Palladium Fantasy printed 289 and 291: *for most adults, unless a mage or clergy O.C.C.* |
+| `aardan-tek` | `ppe_base` to magic | Canada printed 131: *5D6 or per magic O.C.C.* |
+| `arac` | `ppe_base` to magic | D-Bees of North America printed 26: *2D6 or per magic O.C.C.* |
 
 A census of every legal same-system pairing against production, 2026-09-27,
-found the four move 298 pairings and no others, none of them to a P.P.E. below
-the race's own. The races whose P.P.E. adds (`rifts-cyclops`, `rifts-elf`,
-`true-atlantean`) or that print their own mage figure (`godling`, `true-inca`,
-`draconid`) do not carry it, and regression pins the four by name.
+found the first four move 298 pairings and no others, none of them to a P.P.E.
+below the race's own. The races whose P.P.E. adds (`rifts-cyclops`, `rifts-elf`,
+`true-atlantean`) or that print their own mage figure (`godling`, `true-inca`)
+do not carry it, and regression pins the carriers by name.
+
+**`draconid` was on that second list until 2026-10-04, and its mage figure is
+why it came off** (`BOOK-INGEST-AUDIT` F121, Nate's word). Phase World printed
+36 gives a magician Draconid a Ley Line Walker's powers *"plus a bonus of
+1D6x10 P.P.E."*, and 1D6x10 otherwise. A yield alone would lose the bonus,
+which is what the exclusion guarded against; the yield **and** a pool bonus on
+the chosen ability give the book's figure:
+
+```yaml
+ppe_base: "1d6x10"
+yields_to_occupation: { ppe_base: [magic] }
+special_abilities:
+  - { name: "Magician", description: "...", occ_options: [ley-line-walker], bonuses: { pools: { ppe: "1d6x10" } } }
+  - { name: "Psychic", description: "...", occ_options: [mind-melter], bonuses: { pools: { isp: "1d4x10" } } }
+  - { choose: 1, from: ["Magician", "Psychic"] }
+```
+
+Measured through the parser against production's three classes that day: the
+magician composes to the Ley Line Walker's base plus 1D6x10, the psychic keeps
+the race's 1D6x10 (the Mind Melter's group is `psychic`, which the yield does
+not name), and a Draconid holding neither option and no occupation keeps
+1D6x10. The class itself takes these keys as data, and joins the pinned
+carriers, in the close-out's package C1.
+
+Three things that shape does not settle, each measured the same day:
+
+- **The yield names a group, not an occupation.** A Draconid may legally pair
+  with 69 magic occupations in production (71 with their variants), and the
+  yield moves every one. Thirteen can roll below 1D6x10 at a low P.E.; three
+  (`inuit-shaman`, `corrupt`, `african-priest`) are below it at any P.E. the
+  race can roll. What keeps a Draconid off them is `occ_options` on a pick the
+  wizard requires, which narrows the occupation picker to the two named. The
+  server only warns there.
+- **A paired race levels on the occupation's experience table**, and the
+  Draconid's page says it uses its own either way. Nothing lets a race keep
+  its ladder in a pairing; the difference is 2,241 against 2,201 at level two.
+- **The pairing also takes the occupation's related-skill count and money.**
+  Whether the page means that is C1's reading.
+
+So this is the shape for a race whose mage figure is *the occupation's, plus
+something*, and it is not a reason to key a race that merely prints a figure.
 
 ### A race may name the few skills a pairing keeps
 
