@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the plan is done: skills, gear, vehicles, creatures and 23 new classes. The Techno-Warrior stays the *Ultimate Edition* class. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
 
-**Rows citing this book:** classes 23, gear 45, vehicles 5, skills 13, creatures 34
+**Rows citing this book:** classes 12, gear 45, vehicles 5, skills 13, creatures 34
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -280,6 +280,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-02 | `pal/data/canada-techno-warrior-rue` | batch 6 reversed: `~068-headhunter-techno-warrior-ultimate-edition.sql` undoes each of `~067`'s eleven replacements, so `headhunter-techno-warrior` reads exactly as it did before and cites *Ultimate Edition* again. Applied `--remote` before the PR. The class counts under `rue` again and this book is back to 23. |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Momano Headhunter's psionics group names its bands in parentheses** (`~074`). It was written "Psionics 01-50: None", a day after the Roll d100 button shipped reading "(01-50)". Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a2-reprints-compared` | **The Centaur and the pilot notes compared with their held rows** (`~094`). The `creatures` row `centaurs` cites Conversion Book One revised (2002), newer than this book (1999), and stands on every figure both print, although this book calls its block an update. Taken from printed 102-103, because Conversion Book One does not state them: swim 50%, W.P. Bow and Arrow, and the equipment list. The kick damage both books print (2D6 front, 4D6 rear) had been dropped and is restored. The three pilot notes of printed 37 match the held skills; `Tracked & Construction Vehicles` gains RUE's tank and APC penalty. Off renders, checked again by `book-reconcile`. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/d-bees-of-north-america-canada-updates` | **Eleven classes leave this book's count for D-Bees of North America** (`~097`): `centaur`, `cyber-horsemen-of-ixion`, `true-sasquatch`, `worldly-sasquatch`, `aardan-tek`, `grackle-tooth`, `greot-hunter`, `mastadonoid`, `noli-bushman`, `yeno`, `faerie-bot`. D-Bees (2007) reprints and updates each, and by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`. This book's figures, including the experience ladders of printed 192, are kept in each class's `extraction_notes`. **One held-row error found against this book:** `grackle-tooth`'s GM Notes said the heading reads Crackle Tooth, which is the text layer's misreading: the render of printed 133 reads Grackle. **For the Noli occupations planned from this book:** D-Bees no longer names the Noli Cowboy and Noli Scout of printed 138; it prints the psionic package on the race and lists Cowboy, Wilderness Scout and Vagabond as occupations. Neither book's Noli entry prints a language line. Applied `--remote` before the merge. |
 
 ### What remains
 
