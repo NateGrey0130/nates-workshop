@@ -52,8 +52,8 @@
 // that side effect, so the fold below reads a character's first-form bonuses
 // through the SAME classBonuses/effective the sheet reads them through.
 import './derive.js';
-import { diceBounds, evalDice, fixedFormulaValue, poolFormulaBounds } from './dice.js';
-import { isDiceBonus, SECOND_FORM_POOLS } from './parser.js';
+import { diceBounds, diceBonusBounds, evalDice, evalDiceBonus, fixedFormulaValue, poolFormulaBounds } from './dice.js';
+import { isDiceBonus, isSignedDiceBonus, SECOND_FORM_POOLS } from './parser.js';
 import { secondFormHitPointDice } from './leveling.js';
 
 const GROUPS = ['attributes', 'combat', 'saves'];
@@ -90,12 +90,12 @@ function diceIn(bonuses) {
   for (const g of GROUPS) {
     for (const [k, v] of Object.entries(isObj(bonuses[g]) ? bonuses[g] : {})) {
       if (g === 'saves' && k === 'other') continue;
-      if (isDiceBonus(v)) out.push({ group: g, key: k, dice: v });
+      if (isSignedDiceBonus(v)) out.push({ group: g, key: k, dice: v });
     }
   }
   const pools = isObj(bonuses.pools) ? bonuses.pools : {};
   for (const k of SECOND_FORM_POOLS) {
-    if (isDiceBonus(pools[k])) out.push({ group: 'pools', key: k, dice: pools[k] });
+    if (isSignedDiceBonus(pools[k])) out.push({ group: 'pools', key: k, dice: pools[k] });
   }
   return out;
 }
@@ -111,12 +111,12 @@ export function bonusPaths(bonuses) {
   for (const g of GROUPS) {
     for (const [k, v] of Object.entries(isObj(b[g]) ? b[g] : {})) {
       if (g === 'saves' && k === 'other') continue;
-      if (finite(v) || isDiceBonus(v)) out.push(`${g}.${k}`);
+      if (finite(v) || isSignedDiceBonus(v)) out.push(`${g}.${k}`);
     }
   }
   const pools = isObj(b.pools) ? b.pools : {};
   for (const k of SECOND_FORM_POOLS) {
-    if (finite(pools[k]) || isDiceBonus(pools[k])) out.push(`pools.${k}`);
+    if (finite(pools[k]) || isSignedDiceBonus(pools[k])) out.push(`pools.${k}`);
   }
   return out;
 }
@@ -124,7 +124,7 @@ export function bonusPaths(bonuses) {
 function rollBlock(bonuses) {
   const rolls = {};
   for (const { group, key, dice } of diceIn(bonuses)) {
-    (rolls[group] ||= {})[key] = evalDice(dice);
+    (rolls[group] ||= {})[key] = evalDiceBonus(dice);
   }
   return rolls;
 }
@@ -164,7 +164,7 @@ function foldBlock(bonuses, rolls, out, unrolled, where, omit = null) {
       if (g === 'saves' && k === 'other') continue;
       if (skip(`${g}.${k}`)) continue;
       if (finite(v)) out[g][k] = (out[g][k] || 0) + v;
-      else if (isDiceBonus(v)) {
+      else if (isSignedDiceBonus(v)) {
         const r = rolls?.[g]?.[k];
         if (finite(r)) out[g][k] = (out[g][k] || 0) + r;
         else unrolled.push(`${where}: ${g}.${k} (${v})`);
@@ -179,7 +179,7 @@ function foldBlock(bonuses, rolls, out, unrolled, where, omit = null) {
     const v = pools[k];
     if (skip(`pools.${k}`)) continue;
     if (finite(v)) out.pools[k] += v;
-    else if (isDiceBonus(v)) {
+    else if (isSignedDiceBonus(v)) {
       const r = rolls?.pools?.[k];
       if (finite(r)) out.pools[k] += r;
       else unrolled.push(`${where}: pools.${k} (${v})`);
@@ -356,7 +356,9 @@ export function secondFormViolations({ cls, character, state, rows = null }) {
       const path = group ? `${group}.${key}` : key;
       seen.add(path);
       const v = group ? rolls?.[group]?.[key] : rolls?.[key];
-      const b = diceBounds(dice);
+      // A bonus may be a reduction (F119); a result's Horror Factor is unsigned
+      // and reads the same through this.
+      const b = diceBonusBounds(dice);
       if (!Number.isInteger(v)) {
         push('second_form_roll_missing', `${where}: ${path} is ${dice} and has no roll stored`, { key: where, path });
       } else if (b && (v < b.min || v > b.max)) {

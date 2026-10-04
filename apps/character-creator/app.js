@@ -11,7 +11,7 @@
 // /shared/js/ui.js loads first as a classic script, so escHtml() is global;
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
-import { evalDice, rollPoolFormula, rollAttribute, rollQuantity,
+import { evalDice, evalDiceBonus, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute } from './js/dice.js';
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
@@ -313,7 +313,7 @@ function pairedWith(list) {
 
 function rollDiceBonusesOf(cls) {
   const roll = (dice) => {
-    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDice(d))).filter((v) => v != null);
+    const rolls = [dice].flat().map((d) => (typeof d === 'number' ? d : evalDiceBonus(d))).filter((v) => v != null);
     return rolls.length ? rolls.reduce((a, b) => a + b, 0) : null;
   };
   const out = { attributes: {}, combat: {}, saves: {} };
@@ -1288,7 +1288,9 @@ function raceBriefing() {
     .filter(([, v]) => v != null).map(([k, v]) => tag(k, v)).join(' ');
 
   const b = c.bonuses || {};
-  const plus = (v) => (typeof v === 'number' && v > 0 ? '+' : '') + [v].flat().join(' & +');
+  // A dice bonus may be a reduction ("-1d6", F119), which takes no plus sign.
+  const plus = (v) => (typeof v === 'number' && v > 0 ? '+' : '')
+    + [v].flat().map((x, i) => (i > 0 && !/^\s*-/.test(String(x)) ? '+' : '') + x).join(' & ');
   // POOLS BELONG HERE TOO, and were the one group missing. A pool bonus is
   // added to whatever the pool's own formula rolls, so it does not appear in
   // the `pools` line above - that line prints the FORMULA, and a race that adds
@@ -1852,7 +1854,9 @@ function abilityPicker() {
           onclick="takeAbility('${escJs(name)}')">+</button>
         <span><b>${esc(name)}</b>${times > 1 ? ` <span class="tag">taken ${times}&times;</span>`
           : times === 1 ? ' <span class="tag">taken</span>' : ''}
-          ${repeatable ? '<span class="muted small">&nbsp;may be taken twice</span>' : ''}</span>
+          ${repeatable ? '<span class="muted small">&nbsp;may be taken twice</span>' : ''}
+          ${def?.horror_factor != null ? ` <span class="tag">Horror Factor ${esc(String(def.horror_factor))}</span>` : ''}${
+            Number.isInteger(def?.horror_factor_bonus) ? ` <span class="tag">Horror Factor ${def.horror_factor_bonus > 0 ? '+' : ''}${def.horror_factor_bonus}</span>` : ''}</span>
         ${def?.description ? `<div class="muted small" style="flex-basis:100%">${esc(def.description)}</div>` : ''}
         ${times > 1 && def?.on_repeat ? `<div class="small" style="flex-basis:100%"><b>Twice:</b> ${esc(def.on_repeat)}</div>` : ''}
       </div>`;
@@ -3386,7 +3390,7 @@ function renderSkills() {
     .map((x) => x.name + (x.bonus ? ` (+${x.bonus}%)` : '')).join(', ');
   const totemBonuses = (b) => {
     const out = [];
-    const plus = (v) => (typeof v === 'number' && v < 0 ? String(v) : `+${v}`);
+    const plus = (v) => ((typeof v === 'number' && v < 0) || /^\s*-/.test(String(v)) ? String(v) : `+${v}`);
     for (const [k, v] of Object.entries(b?.attributes || {})) out.push(`${plus(v)} ${k}`);
     for (const [k, v] of Object.entries(b?.pools || {})) out.push(`${plus(v)} ${k.toUpperCase()}`);
     for (const [k, v] of Object.entries(b?.combat || {})) out.push(`${plus(v)} ${k.replace(/_/g, ' ')}`);

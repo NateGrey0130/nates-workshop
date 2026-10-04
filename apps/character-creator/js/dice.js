@@ -91,6 +91,32 @@ export function diceBounds(expr) {
   return min == null ? null : { min, max: evalDiceWith(expr, MAX_DIE) };
 }
 
+// A BONUS may be a REDUCTION (BOOK-INGEST-AUDIT F119): "reduce M.E. by 1D6" is
+// `"-1d6"`. The sign belongs to the bonus, not to the dice grammar - an
+// attribute is never rolled on -3D6 and nobody starts with -1D6 vials - so
+// DICE_EXPR is untouched and these two read the minus themselves. Anything
+// that rolls or bounds a BONUS calls these; evalDice and diceBounds stay
+// unsigned for attribute dice, quantities and pool bases.
+//
+// The bounds are the right way round: -1d6 runs from -6 to -1.
+const signOf = (expr) => {
+  const s = String(expr ?? '').trim();
+  return s.startsWith('-') ? { neg: true, body: s.slice(1).trim() } : { neg: false, body: s };
+};
+
+export function evalDiceBonus(expr) {
+  const { neg, body } = signOf(expr);
+  const v = evalDice(body);
+  return v == null ? null : (neg ? -v : v);
+}
+
+export function diceBonusBounds(expr) {
+  const { neg, body } = signOf(expr);
+  const b = diceBounds(body);
+  if (!b) return null;
+  return neg ? { min: -b.max, max: -b.min } : b;
+}
+
 // A book quantity is usually a number, occasionally a roll — the Priest of
 // Light starts with 1D6 vials of holy water. Rolled ONCE at character creation
 // and stored as the rolled number, the same discipline as pools and attribute
@@ -227,17 +253,22 @@ function attrIn(text, attrs) {
 // falls through to the occupation", and if neither states one the character
 // simply does not have that pool — a bonus must not conjure it into existence.
 // That is the same rule that keeps an M.D.C. race from acquiring hit points.
-function bonusWith(bonus, die) {
+//
+// `pick` reads one term: its roll, or one end of its bounds. A term may be a
+// reduction ("-1d6", F119), which is why the bounds are asked of
+// diceBonusBounds and not walked with a pinned die - pinning every die to its
+// floor gives a NEGATIVE term its ceiling.
+function bonusWith(bonus, pick) {
   if (bonus == null) return 0;
-  if (Array.isArray(bonus)) return bonus.reduce((sum, b) => sum + bonusWith(b, die), 0);
+  if (Array.isArray(bonus)) return bonus.reduce((sum, b) => sum + bonusWith(b, pick), 0);
   if (typeof bonus === 'number') return Number.isFinite(bonus) ? bonus : 0;
-  const rolled = evalDiceWith(bonus, die);
-  return rolled == null ? 0 : rolled;
+  const v = pick(bonus);
+  return v == null ? 0 : v;
 }
 
 export function rollPoolFormula(expr, attrs = {}, bonus = null) {
   const base = poolBaseWith(expr, attrs, d);
-  return base == null ? null : base + bonusWith(bonus, d);
+  return base == null ? null : base + bonusWith(bonus, evalDiceBonus);
 }
 
 // The range a pool formula can legitimately produce — { min, max }, or null
@@ -249,8 +280,8 @@ export function poolFormulaBounds(expr, attrs = {}, bonus = null) {
   const min = poolBaseWith(expr, attrs, MIN_DIE);
   if (min == null) return null;
   return {
-    min: min + bonusWith(bonus, MIN_DIE),
-    max: poolBaseWith(expr, attrs, MAX_DIE) + bonusWith(bonus, MAX_DIE),
+    min: min + bonusWith(bonus, (b) => diceBonusBounds(b)?.min),
+    max: poolBaseWith(expr, attrs, MAX_DIE) + bonusWith(bonus, (b) => diceBonusBounds(b)?.max),
   };
 }
 // A formula's value when - and ONLY when - it cannot vary.

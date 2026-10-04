@@ -3631,3 +3631,98 @@ off the running wizard on a port of this tree's own (`nb-doppleganger` against
 `nb-wampyr`); the Browser pane was hidden, so that is the DOM's text and not a
 screenshot. No class note cites this finding
 (`node scripts/audit-citations.mjs --remote F118`: 0).
+
+### F119 - low - a dice bonus cannot be negative, and a chosen ability cannot restate or raise the Horror Factor the character projects
+
+Two things a pick-one result prints that the option cannot carry, so both are
+"do it by hand" prose on live classes.
+
+**A reduction rolled on dice.** `DICE_BONUS` (`apps/character-creator/js/parser.js:2007`,
+read 2026-10-04) is `^\d+\s*d\s*\d+...`, so `"-1d6"` is refused where `-2`
+is accepted: measured 2026-10-04, `isDiceBonus('-1d6')` is `false`, and a class
+with `bonuses: { attributes: { ME: "-1d6" } }` fails to parse with *"must be a
+number or a dice expression"*. `felinoid` (production, `--remote`, 2026-10-04)
+carries five strains whose reductions are prose for that reason - *"Not
+applied, so do it by hand: reduce I.Q. by 1D4"* - while the same options'
+added dice are applied.
+
+**The projected Horror Factor.** `applyAbilities` folds an option's `bonuses`,
+`psionics`, `magic`, `super_abilities`, `talents`, `related_skills_count` and
+`mdc_from_hp_sdc` (`js/parser.js`, the function's body, read 2026-10-04) and
+not `horror_factor`, the class's display-only projected factor
+(`BOOK-INGEST-AUDIT` F75). `felinoid` stores 9 and says 10 for the four larger
+cats in a restriction line; `oni-of-the-one-hundred` stores 11 and twelve of its
+thirteen head shapes add +1 to +4 *"by hand"* - seven print +2 (13), two +1
+(12), two +3 (14), one +4 (15), and the human head adds nothing (production,
+`--remote`, 2026-10-04).
+
+**Signed dice were measured once before.** `apps/character-creator/RETRO-AUDIT.closed.md:984-988`
+(read 2026-10-04) records that a leading sign is a hard parse error and that
+the wormspeaker's `-1D4 Spd` therefore cannot be stored. That is a
+measurement, not a decision against; this proposes the minus only and keeps a
+leading plus refused.
+
+**Proposal:** (1) a dice bonus may carry a leading minus - `"-1d6"`,
+`"-2d4x10"` - in `attributes`, `combat`, `saves` and `pools`, rolled once and
+stored as the negative number, with every pool bound read the right way round;
+an equipment quantity, a catalog `dice` field, `attribute_dice` and
+`saves.other` (whose dice nothing rolls today) stay unsigned. (2) An ability option may
+carry `horror_factor` (a number or the book's phrase, as on a class), which
+replaces the class's while the option is held, and `horror_factor_bonus` (a
+whole number, may be negative), which is added to a numeric factor and summed
+across picks. Both are display-only, as F75 made the class's. **Posture:** a
+capability, opt-in per class; nothing that exists changes; no class is edited
+here except test fixtures - Felinoid and the Oni are the close-out's package
+C1. **Evidence for the proposal:** the two gaps are measured as above; the
+rolled-bonus storage path (`attribute_bonuses`, `rolled_bonuses`) was read, not
+exercised, before the build.
+
+**Confidence:** high on both gaps. Medium that nothing downstream assumes a
+rolled bonus is positive, until the build walks `dice.js`, `derive.js`, the
+wizard's roll and the server's bounds.
+
+**Ongoing cost:** one more sign in the dice grammar, and two option keys the
+sheet must keep reading. Small.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f119-negative-dice-hf`).**
+Posture said back: a capability, opt-in per class; nothing that exists changes;
+no class edited. Written and taken in one session on Nate's standing word for
+the close-out, so the premise auditor ran before any code: eighteen premises,
+thirteen held, and its five disagreements are in the text above (the Oni
+count, the earlier RETRO-AUDIT measurement, `saves.other`) or here:
+
+- **There is no server range check on a rolled attribute, combat or save
+  bonus**, only on pools. `validate-character.js` never reads
+  `attribute_bonuses` or `rolled_bonuses`, and adding a check would be a new
+  gate. So the bounds that could invert were the pool ones, and all of them go
+  through `poolFormulaBounds`: the validator's `pool_out_of_range`,
+  `convertedMdcBounds`, and the second form's `checkRolls`.
+- **`horror_factor` already means "add" on a `traits` row.** The option keys
+  follow the class and the variant instead, where it replaces; the parser
+  comment and `docs/leveling.md` say which precedent was taken.
+- **The wizard never displayed a class's Horror Factor**, so there was no
+  Review cell to update. The picker now tags an option that carries either key;
+  the sheet's card reads the composed class and needed no change.
+
+Built: `evalDiceBonus` and `diceBonusBounds` in `js/dice.js` (`DICE_EXPR` is
+untouched, so nothing is rolled on `-3d6`); `isSignedDiceBonus` in
+`js/parser.js`, with `isDiceBonus` left unsigned for quantities and the catalog
+`dice` field; the wizard's and the NPC generator's bonus rolls; the second
+form's dice paths; `horror_factor` and `horror_factor_bonus` on an ability
+option, folded by `applyAbilities`. Twenty-five smoke checks, nine of which
+were seen to fail with three faults injected (the bounds inverted, the fold
+removed, the validator left unsigned).
+
+Measured 2026-10-04, `--remote`: all 725 published classes parse under this
+branch, and no ability option in production carries either key, so nothing
+that exists changes. Not done, by posture: no floor under an attribute or a
+pool a reduction takes below zero (a flat negative bonus has none either), and
+the derived `horror-factor` tag still reads the class and its variants only.
+
+**For the data that follows (package C1):** `felinoid`, `oni-of-the-one-hundred`
+and `wormspeaker` carry notes this makes stale by subject, not by citation
+(`node scripts/audit-citations.mjs --remote F119`: 0). The auditor's GLOB for
+dice reductions in production prose returned twelve classes to read: juicer,
+stone-master, murder-wraith, symbiotic-warrior, wormspeaker, pseudo-men,
+felinoid, psi-nullifier, lanotaur-hunter, psi-goblin, songjuicer,
+forest-warden. Not each was read.

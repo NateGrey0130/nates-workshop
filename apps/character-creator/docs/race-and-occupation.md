@@ -409,6 +409,14 @@ of its ten starting picks and three of its four allowed spell levels.
   lost all five of its `+1D4`s, and nothing reported it. The same collect rule
   now applies within one class, where a level-1 dice bonus and an `at_level` one
   for the same attribute used to overwrite each other.
+- **A dice bonus may be a reduction** (`BOOK-INGEST-AUDIT` F119). *"Reduce M.E.
+  by 1D6"* is `ME: "-1d6"`, in `attributes`, `combat`, `saves` and `pools`, on a
+  class, a variant, a second form or a chosen ability. It is rolled once and
+  stored as the negative number, and a pool's legal range is read the right way
+  round (`-1d6` runs from -6 to -1). A leading plus is still refused, and the
+  sign is the bonus's alone: `attribute_dice`, a pool base, an equipment
+  quantity and a catalog `dice` field stay unsigned. `saves.other` keeps its
+  old grammar, because nothing rolls a dice entry there.
 
 ---
 
