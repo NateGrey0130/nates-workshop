@@ -4369,3 +4369,129 @@ which is this finding's posture and a departure from that precedent.
 skill file is edited from the main checkout, in the close-out's second skills
 pass. A fourth rebuild of the class-fix generator, dated today, sits in
 another session's scratchpad - the pattern this closes was still running.
+
+### F125 - medium - an occupation's pick group is never offered when the occupation is paired with a race
+
+The wizard's ability picker is on the Race step and reads the class in the
+race slot: `abilityGroups(S.rcc)`, `abilityGroupCounts(S.rcc, ...)`,
+`abilityGroupIndexFor(S.rcc, ...)`, `abilityDef`, `takeAbility`,
+`rollAbilityGroup` and the Race-step gate are all keyed on `S.rcc`
+(`apps/character-creator/app.js`, read 2026-10-04). Played alone, an O.C.C. is
+in that slot and its groups are offered. Taken on the Occupation step beside
+a race, it is in `S.occ`, and nothing offers its groups: the character is
+saved without the pick, and nothing asks for it afterwards - the server's
+`ability_count` is a ceiling, not a floor.
+
+**Measured 2026-10-04, `--remote`**, the 725 published classes through the
+real parser: **42 occupations carry a pick group, and 38 of them are legal
+beside at least one race** - `ley-line-walker` beside 243, `operator` 252,
+`freelancer` 250, `spirit-warrior` 249, `gypsy-gifted` 236. 41 are Rifts, one
+is Palladium Fantasy.
+
+**This was recorded once and deliberately left unfiled.** `F52`'s closing note
+(text in `BOOK-INGEST-AUDIT.closed.md` under its own heading, read 2026-10-04)
+found six ability entries on two occupations out of reach this way, called it
+*"an ability-PICKING limitation"*, <!-- claim-ok: quoting the note this finding files past -->
+and ends with Nate's decision of 2026-09-10 that it stay unfiled. That note
+counted occupations whose abilities carry DICE (two then; ten today, same
+measure); the 38 above counts every occupation with a pick group, a wider
+thing. Three of the close-out's mechanics (F116,
+F120, F121) put more on a pick group, and Nate kept this package when shown
+the plan (2026-10-04) and again as recommendation 8.
+
+**Proposal:** offer an occupation's pick groups on the **Occupation** step,
+under the occupation picker, when the occupation is paired with a race. The
+Race-step picker is not moved and not changed for a class played alone. The
+occupation's groups get the same panel - `+`/`-`, the note, the Roll button,
+the per-group count - and the same rules: a pick that changes a pool clears
+the rolled pools, a pick that restates an attribute's dice clears that
+attribute (attributes are rolled BEFORE this step), the occupation's own dice
+bonuses are re-rolled with its picks applied, and changing the occupation
+drops the picks that belonged to the one before. The Occupation step does not
+let the player go on while a group it offers is owed a pick. **Posture:** the
+wizard only; no server change (the server already composes both halves, banks
+and counts their picks); no class is edited. **Evidence for the proposal:**
+the gap is measured as above; that the server composes an occupation's groups
+is read from `combineClasses` (`js/parser.js`, the `special_abilities`
+concatenation) and from F116's regression fixture, an O.C.C. whose group the
+server counted; the wizard's handlers were read, not yet exercised with an
+occupation's group.
+
+**Confidence:** high on the gap; medium on the cost until the build finds
+every handler that assumes the race slot. **Ongoing cost:** the picker's
+handlers take a side (race or occupation) from then on.
+
+**Taken, 2026-10-04 (branch `pal/audit/book-ingest-audit-f125-occupation-pick-groups`).**
+Posture said back: the wizard only; the Race-step picker is not moved; no
+server change; no class edited. The premise auditor checked fourteen premises;
+the numbers held (42 occupations with a pick group, 38 pairable, `--remote`).
+What it changed:
+
+- **Two sentences of this finding were wrong and are corrected above**: the
+  server does not count a missing pick as unspent (`ability_count` is a
+  ceiling), and the two-then-38-now comparison measured different things.
+- **Nothing recomposed on a pick, and the occupation's dice were rolled without
+  its picks.** This step comes after the attributes are rolled. A pick from an
+  occupation's group now rebuilds the class, re-rolls the occupation's own dice
+  bonuses with its picks applied, clears the rolled pools and clears any
+  attribute whose dice the pick restated (`occAbilitiesChanged`).
+- **The rail's forward jump walked past the Occupation step's gate.**
+  `stepBlocker` had no case for the step, which was already true of the two
+  blockers it had before this one. It asks `occBlocker` now.
+- **An occupation released by a dropped ability kept its picks.**
+  `removeAbility` clears the slot without going through `pickOcc`; both now
+  call one `dropOccAbilityPicks`.
+- **A change of stage did not re-roll the occupation's dice**; `pickOccVariant`
+  does now, as `pickOcc` does.
+
+Built in `apps/character-creator/app.js`: every picker handler takes a side
+and reads its class through `abilityClass(side)`; the Occupation step draws
+`abilityPicker('occ')` under the occupation picker once one is chosen;
+`occBlocker` holds the step while a group is owed; changing or clearing the
+occupation drops the picks that were its own, unless the race offers the name.
+`docs/wizard-and-sheet.md` has the section.
+
+Eighteen smoke checks, seven seen to fail under injected faults; three older
+source pins moved with the refactor (F98's two, and F71's count of
+`clearRolledPools()` call sites, nine to ten). Seen on the running wizard, on
+a port of this tree's own, against production's classes in this tree's local
+D1: an Elf taking Ley Line Walker was offered the Walker's pick on the
+Occupation step and held there until it was made; M.E. then read its bonus
+from the pairing; changing the occupation dropped the pick; clearing it
+removed the picker. DOM text, not a screenshot - the Browser pane was hidden.
+
+**Not handled.** One pairing offers the SAME names on both sides:
+`dragon-hatchling-kumo-mi` with `mystic-ninja`, six arts each. `abilities` is
+one flat list, so a pick there counts in both pickers and the occupation's own
+is not separately offered - the character has one pick where the server allows
+two, which is what it had before. The close-out's package C4 edits both
+classes and is the place to settle it. The "Related skills" preview on the
+Occupation step does not read picks. A later-level pick (F116) from an
+occupation's group is banked and spent by the server as before; this finding
+is the creation pick only.
+
+### F126 - low - a dice bonus inside `saves.other` is accepted by the parser and shown nowhere
+
+`validateSaveOther` (`apps/character-creator/js/parser.js`, read 2026-10-04)
+accepts an entry's `bonus` as a number or a dice expression. Nothing rolls
+the dice: `rollDiceBonusesOf` (`apps/character-creator/app.js`) rolls the keyed
+combat and save groups, `derive.js` skips the key `other` when it folds rolled
+bonuses, and the sheet's `otherSaves` (`apps/character-sheet/sheet.js`) keeps
+only entries whose bonus is a finite number. So *"+1D4 to save vs disease"*,
+written the way the parser allows, parses clean and never reaches the sheet.
+
+**Measured 2026-10-04, `--remote`**, the 725 published classes through the
+real parser, reading the class, its `at_level` blocks, its abilities and its
+variants: 41 classes carry a `saves.other` entry and **none carries a dice
+one**. Nothing is wrong on any sheet today.
+
+**Proposal:** make the parser say what the rest does - a dice `bonus` in
+`saves.other` becomes a warning that it will not be shown, and
+`class-import`'s frontmatter reference says to write the roll in the label
+until it is. Rolling and storing it is the larger alternative and waits for a
+class that needs it. **Posture:** a warning only; no class changes.
+**Evidence for the proposal:** the three readers above were read, not
+exercised with a dice entry. Seen while building F119, and filed rather than
+fixed in passing on Nate's word (2026-10-04, recommendation 14).
+
+**Confidence:** high. **Ongoing cost:** none.

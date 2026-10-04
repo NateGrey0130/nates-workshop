@@ -25,7 +25,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
-         abilityGroupAllowance, abilityGroupLevels,
+         abilityGroupAllowance, abilityGroupLevels, applyAbilities,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
@@ -370,7 +370,10 @@ function rollOccBonuses() {
     S.occRolledBonuses = { combat: {}, saves: {} };
     return;
   }
-  const r = rollDiceBonusesOf(applyVariant(occ, S.occVariant));
+  // With the occupation's own picked abilities applied (F125): a dice bonus on
+  // one is the occupation's to roll. A race's pick has no definition here and
+  // adds nothing, so it is not rolled twice.
+  const r = rollDiceBonusesOf(applyAbilities(applyVariant(occ, S.occVariant), S.abilities));
   S.occAttrBonuses = r.attributes;
   S.occRolledBonuses = { combat: r.combat, saves: r.saves };
 }
@@ -1024,6 +1027,9 @@ function stepBlocker(i) {
       ? 'Class minimum not met.' : '';
   }
   if (i === ST.EQUIPMENT) return gearChoicesOutstanding().length ? 'Gear still to choose.' : '';
+  // The Occupation step's own gate (F125): without this the rail's forward
+  // jump walked past a pick the step's Next button refuses to leave owed.
+  if (i === ST.OCCUPATION) return occBlocker();
   return '';
 }
 
@@ -1716,6 +1722,7 @@ function pickOccVariant(id) {
   const dice = S.cls?.attribute_dice;
   S.occVariant = id || null;
   recompose();
+  rollOccBonuses();
   clearRolledPools();
   clearAttrsWhoseDiceChanged(dice);
   render();
@@ -1830,10 +1837,27 @@ function abilityGroups(cls) {
   return (cls?.special_abilities || []).filter((e) => e && e.choose);
 }
 
-function abilityPicker() {
-  const groups = abilityGroups(S.rcc);
+// WHICH CLASS A PICKER READS (BOOK-INGEST-AUDIT F125). The picker lived on the
+// Race step and read the race slot, so an O.C.C. taken beside a race - a
+// D-Bee who becomes a Ley Line Walker - was never offered the Walker's own
+// pick group: 38 published occupations with one can be taken that way.
+//
+// 'occ' is the occupation chosen on the Occupation step, with its variant;
+// anything else is the race slot, which is also where a class played alone
+// sits. Every picker handler takes the side and reads its class through this,
+// so the two cannot count each other's groups.
+function occAbilityClass() {
+  const occ = S.occ ? S.classes.find((c) => c.id === S.occ) : null;
+  return occ ? applyVariant(occ, S.occVariant) : null;
+}
+const abilityClass = (side) => (side === 'occ' ? occAbilityClass() : S.rcc);
+
+function abilityPicker(side = 'rcc') {
+  const cls = abilityClass(side);
+  const sideArg = side === 'occ' ? ", 'occ'" : '';
+  const groups = abilityGroups(cls);
   if (!groups.length) return '';
-  const defs = new Map((S.rcc.special_abilities || [])
+  const defs = new Map((cls.special_abilities || [])
     .filter((e) => e && typeof e.name === 'string' && !e.choose)
     .map((d) => [d.name.trim().toLowerCase(), d]));
 
@@ -1841,7 +1865,7 @@ function abilityPicker() {
   // the total across every group - and it is compared against ONE group's
   // `choose`, so on a class with more than one group the first pick disabled
   // every remaining `+` button in every panel. BOOK-INGEST-AUDIT.md F98.
-  const counts = abilityGroupCounts(S.rcc, S.abilities);
+  const counts = abilityGroupCounts(cls, S.abilities);
   // A group picked at set levels (`at_levels`, BOOK-INGEST-AUDIT F116) is
   // offered here only for its LEVEL-1 pick. Its later picks are banked when the
   // level is reached and chosen on the sheet, so a group with no level-1 pick
@@ -1868,9 +1892,9 @@ function abilityPicker() {
       const full = picked >= limit;
       return `<div class="chkrow">
         <button class="btn btn-sm btn-ghost" ${times === 0 ? 'disabled' : ''}
-          onclick="dropAbility('${escJs(name)}')">&minus;</button>
+          onclick="dropAbility('${escJs(name)}'${sideArg})">&minus;</button>
         <button class="btn btn-sm" ${full || (times > 0 && !repeatable) ? 'disabled' : ''}
-          onclick="takeAbility('${escJs(name)}')">+</button>
+          onclick="takeAbility('${escJs(name)}'${sideArg})">+</button>
         <span><b>${esc(name)}</b>${times > 1 ? ` <span class="tag">taken ${times}&times;</span>`
           : times === 1 ? ' <span class="tag">taken</span>' : ''}
           ${repeatable ? '<span class="muted small">&nbsp;may be taken twice</span>' : ''}
@@ -1891,30 +1915,34 @@ function abilityPicker() {
     // A group whose options are named for percentile bands is a table the book
     // rolls on, so it gets the dice as well as the buttons. The last roll stays
     // on screen: a pick that appeared with no number beside it would look chosen.
-    const rolled = abilityRolls[abilityRollKey(gi)];
+    const rolled = abilityRolls[abilityRollKey(gi, side)];
     // A table the book rolls on more than once (`rolls`, F120) rolls the lot:
     // the count when that is dice, then each d100, a repeat rolled again.
     const tableRoller = g.rolls === undefined ? '' : `<p class="small">
-        <button class="btn btn-sm" onclick="rollAbilityGroup(${gi})">🎲 Roll the table</button>
+        <button class="btn btn-sm" onclick="rollAbilityGroup(${gi}${sideArg})">🎲 Roll the table</button>
         ${rolled?.table ? ` Rolled ${rolled.dice ? `<b>${rolled.count}</b> on ${esc(String(rolled.dice).toUpperCase())}, then ` : ''}${
           rolled.log.map((l) => `<b>${l.roll}</b>${l.taken === null ? ' (already held, rolled again)'
             : l.taken === undefined ? ` (the book prints ${l.names.length} results here &mdash; choose between ${l.names.map(esc).join(' and ')})` : ''}`).join(', ')}.`
           : ' <span class="muted">or choose below.</span>'}</p>`;
     const roller = tableRoller ? tableRoller : abilityRollBands(g)
-      ? `<p class="small"><button class="btn btn-sm" onclick="rollAbilityGroup(${gi})">🎲 Roll d100</button>
+      ? `<p class="small"><button class="btn btn-sm" onclick="rollAbilityGroup(${gi}${sideArg})">🎲 Roll d100</button>
           ${rolled ? ` Rolled <b>${rolled.roll}</b>: ${rolled.names.length === 1
             ? esc(rolled.names[0])
             : `the book prints ${rolled.names.length} results for this band &mdash; choose between ${rolled.names.map(esc).join(' and ')}`}`
             : ' <span class="muted">or choose below.</span>'}</p>`
       : '';
     // The standing sentence is worth saying once rather than four times.
-    const why = gi === firstOffered
-      ? `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
-        and both are rolled on the next two steps.</p>`
-      : '';
+    // On the Occupation step the attributes are already rolled; a pick that
+    // changes a pool or an attribute's dice clears it, to be rolled again.
+    const why = gi !== firstOffered ? ''
+      : side === 'occ'
+        ? `<p class="muted small">${esc(cls.name)} offers these to whoever takes it. A pick that changes a pool,
+          or the dice an attribute is rolled on, clears it to be rolled again.</p>`
+        : `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
+        and both are rolled on the next two steps.</p>`;
     const laterNote = later.length
       ? `<p class="muted small">And again at level${later.length === 1 ? '' : 's'} ${later.join(', ')}, on the sheet.</p>` : '';
-    return `<div class="panel-inset"${gi === firstOffered ? ' id="ability-picker"' : ''}>${laterNote ? '<!-- levelled -->' : ''}
+    return `<div class="panel-inset"${gi === firstOffered ? ` id="${side === 'occ' ? 'occ-ability-picker' : 'ability-picker'}"` : ''}>${laterNote ? '<!-- levelled -->' : ''}
       <h3>Powers <span class="muted small">&mdash; ${g.rolls === undefined ? `choose ${limit}`
         : typeof g.rolls === 'number' ? `rolled ${g.rolls} time${g.rolls === 1 ? '' : 's'}, a repeat rolled again`
         : `rolled ${esc(String(g.rolls).toUpperCase())} times, a repeat rolled again`}</span></h3>
@@ -1934,38 +1962,41 @@ function abilityPicker() {
 // what the character holds is `S.abilities`, and a reloaded wizard showing a
 // pick without its roll loses nothing the save needs.
 const abilityRolls = {};
-const abilityRollKey = (gi) => `${S.rcc?.id || ''}:${gi}`;
+const abilityRollKey = (gi, side = 'rcc') => `${side}:${abilityClass(side)?.id || ''}:${gi}`;
 
 // Roll the group's table and take what the dice land on, in place of whatever
 // the group held. Where the book prints two results for one band the roll
 // narrows the choice to those and the player makes it; taking either for them
 // would be a ruling the book does not make.
-function rollAbilityGroup(gi) {
-  const group = abilityGroups(S.rcc)[gi];
+function rollAbilityGroup(gi, side = 'rcc') {
+  const cls = abilityClass(side);
+  const group = abilityGroups(cls)[gi];
   const bands = abilityRollBands(group);
   if (!bands) return;
   if (group.rolls !== undefined) {
     const dice = typeof group.rolls === 'string' ? group.rolls : null;
     const count = dice ? evalDice(dice) : group.rolls;
     const { picks, log } = rollAbilityTable(group, count, () => evalDice('1d100'));
-    abilityRolls[abilityRollKey(gi)] = { table: true, count, dice, log };
-    for (const held of S.abilities.filter((n) => abilityGroupIndexFor(S.rcc, n) === gi)) {
+    abilityRolls[abilityRollKey(gi, side)] = { table: true, count, dice, log };
+    for (const held of S.abilities.filter((n) => abilityGroupIndexFor(cls, n) === gi)) {
       removeAbility(held);
     }
     for (const row of picks) { S.abilities.push(row); poolsMayHaveChanged(row); }
+    if (side === 'occ') occAbilitiesChanged();
     render();
     return;
   }
   const roll = evalDice('1d100');
   const names = abilityRollMatches(bands, roll);
-  abilityRolls[abilityRollKey(gi)] = { roll, names };
-  for (const held of S.abilities.filter((n) => abilityGroupIndexFor(S.rcc, n) === gi)) {
+  abilityRolls[abilityRollKey(gi, side)] = { roll, names };
+  for (const held of S.abilities.filter((n) => abilityGroupIndexFor(cls, n) === gi)) {
     removeAbility(held);
   }
   if (names.length === 1) {
     S.abilities.push(names[0]);
     poolsMayHaveChanged(names[0]);
   }
+  if (side === 'occ') occAbilitiesChanged();
   render();
 }
 
@@ -1975,9 +2006,25 @@ function rollAbilityGroup(gi) {
 // would miss it.
 function abilityDef(name) {
   const key = String(name || '').trim().toLowerCase();
-  return (S.rcc?.special_abilities || [])
+  // The race slot first, then the occupation beside it (F125): the same order
+  // combineClasses lists them in.
+  return [...(S.rcc?.special_abilities || []), ...(occAbilityClass()?.special_abilities || [])]
     .find((d) => d && typeof d.name === 'string' && !d.choose
       && d.name.trim().toLowerCase() === key) || null;
+}
+
+// What a pick from the OCCUPATION's group moves, and the Race step's does not
+// have to: this step comes AFTER the attributes are rolled, and nothing
+// recomposes between here and Skills. So the class is rebuilt now, the
+// occupation's own dice bonuses are rolled again with its picks applied, the
+// pools are cleared, and an attribute whose dice the pick restated is cleared
+// to be rolled again - what pickOccVariant does for a stage. (F125.)
+function occAbilitiesChanged() {
+  const dice = S.cls?.attribute_dice;
+  recompose();
+  rollOccBonuses();
+  clearRolledPools();
+  clearAttrsWhoseDiceChanged(dice);
 }
 
 // Taking or dropping an ability that changes a pool clears the rolled pools, so
@@ -1999,24 +2046,27 @@ function poolsMayHaveChanged(name) {
 // A name no group offers keeps the old sum-based cap. That is a `{ gm: true }`
 // ruling or a pick stranded by a class edit, neither of which belongs to a
 // group, and refusing it outright would strand a character who already holds it.
-function takeAbility(name) {
-  const groups = abilityGroups(S.rcc);
-  const gi = abilityGroupIndexFor(S.rcc, name);
+function takeAbility(name, side = 'rcc') {
+  const cls = abilityClass(side);
+  const groups = abilityGroups(cls);
+  const gi = abilityGroupIndexFor(cls, name);
   if (gi >= 0) {
     // At creation a levelled group allows only its level-1 pick (F116).
     const limit = abilityGroupAllowance(groups[gi], 1);
-    if ((abilityGroupCounts(S.rcc, S.abilities)[gi] || 0) >= limit) return;
+    if ((abilityGroupCounts(cls, S.abilities)[gi] || 0) >= limit) return;
   } else {
     const total = groups.reduce((n, g) => n + abilityGroupAllowance(g, 1), 0);
     if (S.abilities.length >= total) return;
   }
   S.abilities.push(name);
   poolsMayHaveChanged(name);
+  if (side === 'occ') occAbilitiesChanged();
   render();
 }
 
-function dropAbility(name) {
+function dropAbility(name, side = 'rcc') {
   removeAbility(name);
+  if (side === 'occ') occAbilitiesChanged();
   render();
 }
 
@@ -2032,10 +2082,25 @@ function removeAbility(name) {
   if (!still && S.occ) {
     const def = (S.rcc?.special_abilities || []).find((d) => d?.name === name);
     if (Array.isArray(def?.occ_options) && def.occ_options.includes(S.occ)) {
+      dropOccAbilityPicks();
       S.occ = null; S.occVariant = null;
     }
   }
   poolsMayHaveChanged(name);
+}
+
+// The picks made from the occupation's own groups, dropped when the occupation
+// goes (F125) - unless the race offers the same name, when the pick is the
+// race's to keep. Called BEFORE S.occ changes: it reads the occupation leaving.
+function dropOccAbilityPicks() {
+  const offeredBy = (cls) => new Set(abilityGroups(cls)
+    .flatMap((g) => (g.from || []).map((n) => String(typeof n === 'string' ? n : n?.name).trim().toLowerCase())));
+  const old = offeredBy(occAbilityClass());
+  const race = offeredBy(S.rcc);
+  S.abilities = S.abilities.filter((n) => {
+    const key = String(n?.name ?? n).trim().toLowerCase();
+    return !old.has(key) || race.has(key);
+  });
 }
 
 function pickOcc(id) {
@@ -2046,6 +2111,10 @@ function pickOcc(id) {
   const byRace = occAllowedForRace(S.rcc, want);
   const verdict = byRace.allowed ? raceAllowedForOcc(want, S.rcc) : byRace;
   if (want && !verdict.allowed) { alert(verdict.reason); return; }
+  // The picks made from the PREVIOUS occupation's groups go with it (F125),
+  // unless the race offers the same name. Kept, they would count against the
+  // server's allowance for groups the character no longer has.
+  if ((id || null) !== S.occ) dropOccAbilityPicks();
   S.occ = id || null;
   // A different occupation cannot keep the previous one's stage.
   S.occVariant = null;
@@ -2850,6 +2919,7 @@ function renderOccupation() {
   <div class="panel">
     <h2>Occupation <span class="muted small">— what ${esc(S.rcc?.name || 'this character')} trained as</span></h2>
     ${occPicker()}
+    ${S.occ ? abilityPicker('occ') : ''}
     ${shortfallPanel(short)}
     ${rerollLog()}
   </div>
@@ -2887,6 +2957,17 @@ function occBlocker() {
   const need = abilityOccOptions(S.rcc, S.abilities);
   if (need && (!S.occ || !need.options.includes(S.occ))) {
     return `Choose an occupation for ${need.name} to continue.`;
+  }
+  // The occupation's own pick groups (F125), offered on this step: what each
+  // owes at creation, counted per group as the Race step counts the race's.
+  const occCls = occAbilityClass();
+  if (occCls) {
+    const held = abilityGroupCounts(occCls, S.abilities);
+    const owed = abilityGroups(occCls)
+      .reduce((n, g, gi) => n + Math.max(0, abilityGroupOwed(g) - (held[gi] || 0)), 0);
+    if (owed > 0) {
+      return `Choose ${owed} more ${owed === 1 ? 'power' : 'powers'} for ${occCls.name} to continue.`;
+    }
   }
   // Guarded on S.occ to match shortfallPanel: without an occupation there is no
   // panel and no re-roll button, so blocking would be a disabled button with

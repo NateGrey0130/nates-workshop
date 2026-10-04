@@ -293,6 +293,31 @@ absent rather than partially restored.
 
 ---
 
+## An occupation's pick groups are offered on the Occupation step
+
+The ability picker is on the Race step and reads the class in the race slot,
+which is also where a class played alone sits. An O.C.C. taken **beside** a
+race is chosen two steps later, and until `BOOK-INGEST-AUDIT` F125 nothing
+offered its own pick groups: an Elf who became a Ley Line Walker never chose
+the Walker's +1D4 to a mental attribute. Thirty-eight published occupations
+with a group can be taken that way.
+
+- **The Occupation step draws the same picker for the occupation**, under the
+  occupation select, once one is chosen. Every handler takes a side
+  (`abilityClass(side)` in `app.js`): the race slot, or the occupation with its
+  variant. Each side counts only its own groups.
+- **This step comes after the attributes are rolled**, and nothing recomposes
+  between it and Skills. So a pick here rebuilds the class at once, rolls the
+  occupation's dice bonuses again with its picks applied, clears the rolled
+  pools, and clears an attribute whose dice the pick restated
+  (`occAbilitiesChanged`).
+- **Changing the occupation drops the picks that were the old one's**, unless
+  the race offers the same name.
+- **The step does not let the player on** while one of the occupation's groups
+  is owed a pick, as the Race step does for the race's.
+- The server needed nothing: a pairing lists the race's abilities and then the
+  occupation's, and its count already allowed both.
+
 ## A held spell is headed by its tradition
 
 The sheet's power list heads general invocations *"Spells - Level N"*, as it
