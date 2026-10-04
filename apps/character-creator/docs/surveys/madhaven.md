@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1337-#1342. (2026-09-24)
 
-**Rows citing this book:** classes 12, gear 40, notable_npcs 2, creatures 25
+**Rows citing this book:** classes 12, gear 40, notable_npcs 4, creatures 25
 
 **MOS:** squire-of-the-white-rose 10
 
@@ -213,6 +213,7 @@ What is deliberately left, with the reason:
 | 2026-09-24 | creatures PR | `add-madhaven-creatures.sql`: 25 creatures (10 monsters, 7 Entities, the 8 Haven Mutants as their NPC view with `playable` 1 and slugs matching the class ids) and 2 notable NPCs (Sir Geoffrey Colt, Sir Gabriel Prescott Davenport), with 68 + 6 attacks. Every number from a render; `book-reconcile` found two faults, both fixed before the script was written. Applied `--remote` before the PR, five read-backs hold; production then held 335 creatures and 295 notable NPCs. **BOOK IMPORTED.** |
 | 2026-09-27 | #1465 | `BOOK-INGEST-AUDIT` F108 taken: `xp_table` joins `VARIANT_OVERRIDES`, and `~030-f108-shaman-ladders.sql` puts the Gateway Knight & Mutant Shaman ladder (printed 79, copied from `gateway-knight`) on the `shaman` variant of all eight Haven Mutants. The skill removal and the prayers stay prose. No row count moves. Applied `--remote` before the PR |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Gateway Knight's +1D4+3 Spd moves from prose into `bonuses`** (`~075`). No figure was re-read from the book. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a5-inline-npcs` | **Two people the book stats inside running text, as notable NPCs** (`~106`), by Nate's ruling of 2026-10-04: Sir Charles Krieger (printed 49: 12th level Mystic Knight, Diabolic, with his warband in the row) and The Wind and the Fury (printed 125, an encounter-table personality: 7th level Mind Melter, 173 I.S.P., with her powers). Read off renders and checked again by `book-reconcile`: no disagreement. The whole book was searched: the unnamed but statted figures (the hermit Gateway Knight of printed 49, the encounter archetypes of printed 124-126) have no name to file under, and the mutant clan write-ups name no leader. The book stats no unique named beast. Applied `--remote` before the merge. |
 
 ### What remains
 
