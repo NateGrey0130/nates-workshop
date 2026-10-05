@@ -86,6 +86,20 @@
   ],
 
   "books": {
+    "adventures-in-dinosaur-swamp": {
+      "title": "Rifts World Book 27: Adventures in Dinosaur Swamp",
+      "published": 2006,
+      "aliases": [
+        "Adventures in Dinosaur Swamp",
+        "Rifts Adventures in Dinosaur Swamp"
+      ],
+      "source_pdf": "Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-05 by OCR (a SCAN, no text layer; 300 dpi, psm 3), median 5,596 chars/page. Offset verified by folio at nine points - cache p027 reads 26, p050 reads 49, p075 reads 74, p129 reads 128, p130 reads 129, p140 reads 139, p150 reads 149, p160 reads 159, p161 reads 160 - one region. printed_pages is 160, the last folio, at cache p161; ocr-book.py measured 128 and the registry outranks the manifest. p129 (printed 128) holds a folio and no other text. p162 is an unnumbered catalogue page. See apps/character-creator/docs/surveys/adventures-in-dinosaur-swamp.md."
+    },
+
     "africa": {
       "title": "Rifts World Book 4: Africa",
       "published": 1993,
