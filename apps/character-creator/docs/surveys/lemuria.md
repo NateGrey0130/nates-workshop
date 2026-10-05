@@ -267,7 +267,8 @@ What is deliberately left, with the reason for each:
 
 - **The 22 held Biomancy spells** — held; the reprint is compared at
   extraction and any difference recorded, not overwritten.
-- **The 19 held skills** — held from Underseas and the core book.
+- **The 19 held skills** — held already; which book each row came from was
+  not traced for this survey.
 - **The Lord of the Deep** (163) — held from Underseas; no stat block here.
 - **The Junk Crab shell-building rules** (45-46), **optional underwater
   combat** (59) and **plant P.P.E. rules** (62) — rules text, cited from the
