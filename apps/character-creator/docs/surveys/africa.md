@@ -123,7 +123,7 @@ mattered.
 | Medicine Man | 79-82 | African Medicine Man | `medicine-man` | innate sensitive psionics, fixed starting spells, charm-making |
 | Rain Maker | 83-85 | African Rain Maker | `rain-maker` | mega-damage lightning as an ability; the rain maker dances |
 | Priest | 85-87 | African Priest | `african-priest` | chants and dances. `priest` alone is too generic an id for the catalog |
-| Necromancer | 99-104 | Necromancer & Phoenixi | `necromancer` | **optional**, alignment-restricted. `necromancer-russian` (Mystic Russia) exists beside it; this is the original. Union with the Dead and Augmentation are tables of P.P.E.-priced options: prose plus a pool, not 26 abilities |
+| Necromancer | 99-104 | Necromancer & Phoenixi | `necromancer` | **optional**, alignment-restricted. `necromancer-russian` (Mystic Russia) exists beside it; this is the original. Union with the Dead and Augmentation are tables of P.P.E.-priced options: 26 abilities since `~118`, each named with its cost |
 | African Witch | 72-74 | African Witch | `african-witch` | the book marks it an NPC villain and not recommended for players. **Imported anyway (Nate, 2026-09-25)**, flagged in the class note, on the Hidden Witch precedent (Mystic Russia imported that NPC-villain O.C.C.), because the NPC generator rolls from published classes. Witch Insanity Table is prose |
 
 ### Playable R.C.C.s (8)
@@ -351,8 +351,6 @@ What is deliberately left, with the reason for each:
 - Drum messages, troop templates, the Punishments and raid tables — no stats.
 - The insanity, disease and bites tables — rules prose; they stay on the page.
 - Pygmy talismans and charms as items — a system, recorded on the class.
-- Union with the Dead and Augmentation as abilities — P.P.E.-priced option
-  tables, recorded on the Necromancer as prose.
 - The Magot — `magots` exists and the book defers to Conversion Book One.
 - Named beings with no stat block — listed above.
 
@@ -368,3 +366,4 @@ What is deliberately left, with the reason for each:
 | 2026-09-26 | [#1423](https://github.com/NateGrey0130/nates-workshop/pull/1423) | 8 R.C.C.s and the 2 racial empathy psionics (category `Special`). Applied `--remote` before the PR |
 | 2026-09-26 | [#1424](https://github.com/NateGrey0130/nates-workshop/pull/1424) | 24 creatures (8 of them the playable races' NPC view), 29 notable NPCs, their 239 printed attacks, and the body parts of Osiris as one magic gear row. Applied `--remote` before the PR. Book `imported` |
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Agogwe, Ramen and Crocodillian pick-one groups name their bands in parentheses** (`~074`), so the Roll d100 button reads them; the bands are the ones each class's descriptions already stated. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/africa-necromancer-unions` | **The Necromancer's unions and augmentations are abilities** (`~118`), by Nate's rulings of 2026-10-04 (in, and as class abilities with their cost, not spell rows). Each of the 26 options of printed 100-102 is a special ability named with its P.P.E. cost: fifteen unions and eleven augmentations. The two general abilities keep the rule and lose the option list. Every figure read off a render and checked again by `book-reconcile`: 26 of 26 agree, and nothing differed from the paragraphs the class already held. The class's other text, its insanity table included, is untouched. No row count moves. Applied `--remote` before the merge. |
