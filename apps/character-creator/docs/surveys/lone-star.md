@@ -186,7 +186,7 @@ shared title word.
 
 ### creatures
 
-The Xiticix Killer is missing. Ostrosaurus is held (New West p.153-155) and
+The Xiticix Killer is held as the creature `xiticix-killer` (Ledger, 2026-10-01). Ostrosaurus is held (New West p.153-155) and
 the book prints only quick stats for it. Brodkil is held (Triax).
 
 ## Extraction plan
