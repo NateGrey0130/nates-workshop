@@ -302,6 +302,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-19 | [#1173](https://github.com/NateGrey0130/nates-workshop/pull/1173) | **creatures** (NPC and bestiary plan, Phase 3): `add-creatures-spirit-west.sql`, 28 `creatures` rows, attacks in `stat_attacks`. Row added 2026-09-27; the PR did not write one. |
 | 2026-09-19 | [#1182](https://github.com/NateGrey0130/nates-workshop/pull/1182) | **notable NPCs**: `add-notable-npcs-spirit-west.sql`, 16 `notable_npcs` rows citing this book. Row added 2026-09-27. |
 | 2026-09-26 | #1451 | **XP ladders**, `~017-spirit-west-xp-ladders.sql`: all **15** classes take the printed 7 column whose heading names them, read off a render and re-read by a `book-reconcile` agent; none had one. The four `elemental-shaman-*` rows share the one Elemental Shaman column, so the copy pairs stay equal. Every printed bound is the previous top plus one; nothing adjusted. No row count moves. `--remote` is applied before the merge |
+| 2026-10-04 | `pal/data/retro-a13-category-bonuses` | **Related-skill category bonuses that lived only in a note now apply** (`~122`, `~123`): 1 of this book's classes (`totem-warrior`). `categoryBonus` reads an entry's `bonus` key and nothing else, so a bonus written only in the entry's note reached no character. A plain one gains the key; a bonus for part of a category gains a second entry naming those skills (`BOOK-INGEST-AUDIT` F109's shape). Taken from each class's own stored note; no page was reopened. No row count moves. Applied `--remote` before the merge. |
 
 ### What remains
 
