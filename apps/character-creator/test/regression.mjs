@@ -5135,7 +5135,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // taken with: adding it to an occupation open to all races (the Larhold
   // Shaman, which F111 names) moves some 200 pairings, the ADD and own-figure
   // races among them. That should be a decision someone makes, so it fails here.
-  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter', 'kwarla-mystic'];
+  // Rifts World Book 32: Lemuria prints the Serpent Hunter its own P.P.E.
+  // (printed 76: P.E. x2, +2D6 per level) for the eleven spells it grants, and
+  // the class is open to every race (95% are Lemurians), so the override
+  // reaches them all. Added 2026-10-05 with the class.
+  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter', 'kwarla-mystic', 'serpent-hunter'];
   const got = takers.map((c) => c.id).sort();
   check('the occupations declaring overrides_race are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5149,7 +5153,14 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     for (const r of with_) {
       const c = combineClasses(r, occ);
       for (const k of ['ppe_base', 'starting_money']) {
-        const listed = occ.overrides_race.includes(k);
+        // A key the RACE yields to this occupation's group is the occupation's
+        // too, the same rule the yield check below states from the other side.
+        // No taker met a yielding race on an unlisted key until the Serpent
+        // Hunter (men-of-arms, open to every race) met the Larhold Barbarian,
+        // which yields its money to men-of-arms.
+        const yielded = r.yields_to_occupation?.[k];
+        const listed = occ.overrides_race.includes(k)
+          || (Array.isArray(yielded) && yielded.includes(occ.occ_group));
         const expect = listed && occ[k] != null ? occ[k] : (r[k] ?? occ[k]);
         if (c[k] !== expect) wrong.push(`${r.id}+${occ.id}: ${k} ${c[k]} (want ${expect})`);
       }
@@ -5192,10 +5203,15 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // occupation - Underseas printed 99, PF printed 289 and 291, South America 2
   // printed 186, Canada printed 131 (the Aardan Tek's "5D6 or per magic
   // O.C.C."), and D-Bees of North America printed 26 (the A'rac's identical
-  // "2D6 or per magic O.C.C."). A race added here should be a decision someone
+  // "2D6 or per magic O.C.C."), and Rifts World Book 32: Lemuria printed 49
+  // (the Lemurian's 5D6 + P.E. is the figure of one "who does not take up a
+  // magic O.C.C.") and printed 41-42 (the Ichthylean, whose only printed
+  // occupations are magic ones; its page gives a mage no figure, and the
+  // yield is the importer's reading, recorded in the survey).
+  // A race added here should be a decision someone
   // reads the book for, and the ADD races (rifts-cyclops, rifts-elf) must never
   // be among them.
-  const want = ['aardan-tek', 'amphib', 'arac', 'draconid', 'elf', 'human', 'larhold-barbarian'];
+  const want = ['aardan-tek', 'amphib', 'arac', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5849,13 +5865,16 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // Rifts World Book 30: D-Bees of North America prints the Roane Musician
   // O.C.C. (printed 172-173) inside the Roane Pipers' entry, written for the
   // Roane alone: it pairs only with the roane-piper R.C.C.
+  // Rifts World Book 32: Lemuria prints the Sea Sentinel O.C.C. (printed 72)
+  // as exclusive to Lemurians: it pairs only with the lemurian R.C.C.
   const RACE_OWN_TRAINING = ['nb-package-basic', 'nb-package-resistance', 'nb-package-nocturne',
     'nb-package-warlord', 'nb-nightbane-sorcerer', 'nb-nightbane-mystic',
     'pucara-mind-mage', 'arkhon-spectral-hunter', 'arkhon-esp-specialist',
     'fallam-battlemaster', 'ojahee-borg', 'atlantean-nomad',
     'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
     'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound',
-    'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch', 'roane-musician'];
+    'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch', 'roane-musician',
+    'sea-sentinel'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),

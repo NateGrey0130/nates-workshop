@@ -1,8 +1,10 @@
 # Rifts World Book 32: Lemuria — survey
 
-**Status:** `importing` — everything but the classes has shipped; the fifteen classes are next. (2026-10-05)
+**Status:** `imported` — the plan is done: skills, psionics, spells, gear, vehicles, creatures, NPCs and fifteen classes. What was left out and what is open for Nate is under Ledger. (2026-10-05)
 
-**Rows citing this book:** gear 74, vehicles 7, skills 10, spells 71, psionic_powers 21, notable_npcs 2, creatures 33
+**Rows citing this book:** classes 15, gear 74, vehicles 7, skills 11, spells 71, psionic_powers 21, notable_npcs 2, creatures 33
+
+**MOS:** lemurian-scout 5
 
 Slug `lemuria`. Cached 2026-10-05 from `Rifts- World Book 32 Lemuria.pdf`,
 226 PDF pages, **text layer** (no OCR). `--probe` median 5,790 chars/page.
@@ -286,6 +288,7 @@ What is deliberately left, with the reason for each:
 
 | 2026-10-05 | `pal/data/lemuria-skills-psionics-spells` | 10 skills, 21 psionic powers (the Spouter's Hydro-Psionics, category `Special`, system left NULL as Psyscape's are), 63 Biomancy and 8 Ocean Magic spells. Applied `--remote` before the PR. The untagged-skills pin moves 88 to 92 for the four languages. |
 | 2026-10-05 | `pal/data/lemuria-gear-vehicles-creatures` | 74 gear rows (11 armors, 47 weapons, 16 symbiotes and transportation), 7 vehicles with 43 locations and 41 weapon entries (the six symbiotic vehicles and the Moai), 33 creatures and 2 notable NPCs with 179 attacks. Applied `--remote` before the PR. |
+| 2026-10-05 | `pal/data/lemuria-classes` | 15 classes: the Ichthylean, Junk Crab, Lemurian and Meran R.C.C.s; the Biomancer Gene-Mage, Birdman Warrior, Oceanic Guardsman, Sea Sentinel, Serpent Hunter, Lemurian Scout and Spouter O.C.C.s; the Ghost, Hydros, Octo and Sand dragon hatchlings. One more skill, `Literacy: Lemurian` (`~177`), which the classes grant by name. Applied `--remote` before the PR. Regression pins moved: `serpent-hunter` joins the `overrides_race` list, `ichthylean` and `lemurian` the `yields_to_occupation` list, `sea-sentinel` the race-own-training list. |
 
 ### Decided by Nate on 2026-10-05
 
@@ -343,7 +346,65 @@ What is deliberately left, with the reason for each:
   hides (Sun Turtle shell, Storm Crab shell, Seal Serpent hide, Tiger Serpent)
   and the Blue Death Fruit, each named in its creature's notes.
 
+### What the class import settled
+
+- **Class entries run a page longer than the Contents suggests.** The
+  Birdman Warrior is printed 66-68, the Oceanic Guardsman 68-70, the Sea
+  Sentinel 70-73, the Lemurian Scout 77-80 and the Gene-Mage 60-66: each
+  entry's skills, equipment and money finish on the next entry's first page.
+  The tables above give the heading pages.
+- **"Skills Known by All Lemurians" is stored on each O.C.C. that prints it**,
+  at that page's own figures (they differ from class to class), as well as on
+  the race.
+- **The two native languages improve at 1% per level** where a class page
+  prints a percentage and no rate; that is the native-speaker rate in the
+  skill descriptions (printed 55). The Gene-Mage page prints half a percent
+  per level, which is stored as 0 with the rate in the note.
+- **"Aquatic: Any" has no catalog category.** It is stored as the book's
+  Aquatic Skills list (printed 54) by name at the printed bonus, less the
+  skills the class already grants. The hatchlings carry it as per-category
+  lists, because their selections are a pick inside the R.C.C. skills.
+- **The four hatchlings borrow from Rifts Ultimate Edition** (p.156-159 and
+  the Dragon Hatchling ladder on p.295), because each entry sends the reader
+  there: the experience ladder, magic knowledge, two spells a round, and the
+  weapons and equipment rule. Each stores the hatchling; adult figures are
+  prose.
+- **The Lemurian Scout's five specialty packages are an MOS block**, choose
+  one, pinned on the MOS line above.
+- **The Hydros hatchling takes the Spouter's fifteen Hydro-Psionics**, as its
+  entry says, though printed 82 heads them as exclusive to the Spouter.
+
+### Open for Nate
+
+These are readings the book does not settle. Each is stored one way and can
+be changed with a `fix-` script.
+
+- **Ichthylean: limited to magic occupations.** The page says 97% of males
+  and 94% of females are the R.C.C. and the rest become mages. Stored as
+  `occ_restrictions` to the magic group, with its P.P.E. yielding to the
+  occupation's. The page prints neither rule in so many words.
+- **Junk Crab: psionic tier `major`.** The page prints three powers, an
+  I.S.P. formula and picks, and no tier.
+- **Serpent Hunter: `overrides_race: [ppe_base]`.** The class prints its own
+  P.P.E. and is open to every race, so the override reaches every race it is
+  taken with. Its Hand to Hand line is read as Martial Arts granted and Kapu
+  Kuialua for one related skill; it can be read as either style costing one.
+- **Sea Sentinel: its "Pilot (special)" line** is stored as Symbiotic Conduit
+  Vehicle Combat at Born to Soar's 80% +2%. The page names no skill there.
+- **Lemurian Scout: one Hand to Hand cost block for five packages.** Martial
+  Arts is stored at the Ranger's price of one; the Explorer's second is
+  charged by hand, and three packages print no Martial Arts at all.
+- **Spouter: the rolled 1D4+1 starting Hydro-Psionics** is a pick-one group
+  in four even bands so the wizard can roll it. Its 2D4x1,000 savings may be
+  meant only for Spouters without the salary.
+- **Lemurian: a fourth, unrolled psionics option** stands for the page's note
+  that a Lemurian O.C.C. with its own psionics replaces the race's. Its
+  Master Psychic table names a "Shrieker" class this book does not print.
+- **Seven held Biomancy rows** differ from this book's reprint (listed under
+  *What the first import settled*).
+- **Creature-hide armors and the Blue Death Fruit** are printed with figures
+  and were not imported.
+
 ### What remains
 
-The fifteen classes: four R.C.C.s, seven O.C.C.s and the four dragon
-hatchlings.
+Nothing from the plan. See *Open for Nate*.

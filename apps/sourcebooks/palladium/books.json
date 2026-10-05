@@ -1197,6 +1197,48 @@
     ]
    ],
    "total": 109
+  },
+  {
+   "slug": "lemuria",
+   "title": "Rifts World Book 32: Lemuria",
+   "code": "lemuria",
+   "status": "imported",
+   "date": "2026-10-05",
+   "added": [
+    [
+     "Classes",
+     15
+    ],
+    [
+     "Creatures",
+     33
+    ],
+    [
+     "Gear",
+     74
+    ],
+    [
+     "Notable NPCs",
+     2
+    ],
+    [
+     "Psionic powers",
+     21
+    ],
+    [
+     "Skills",
+     11
+    ],
+    [
+     "Spells",
+     71
+    ],
+    [
+     "Vehicles",
+     7
+    ]
+   ],
+   "total": 234
   }
  ]
 }
