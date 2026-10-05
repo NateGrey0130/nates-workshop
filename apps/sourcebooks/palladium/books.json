@@ -1160,9 +1160,13 @@
     [
      "Creatures",
      52
+    ],
+    [
+     "Gear",
+     46
     ]
    ],
-   "total": 138
+   "total": 184
   },
   {
    "slug": "triax-2",
