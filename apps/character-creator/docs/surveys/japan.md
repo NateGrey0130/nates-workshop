@@ -228,6 +228,10 @@ arts powers at set levels (for example one body hardening exercise at levels
 choice from a named list may not be expressible as a class ability. Check at
 step 5; if it cannot be stated, import the level-1 pick, put the later ones
 in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
+**It could not be stated then (F116), and it can now:** since 2026-10-05
+(`~167`) the Mystic Ninja, Bishamon, Sohei and Asama-Tatsu pick at the levels
+their pages print. The Demon Queller's page (printed 64) grants its four
+exercises outright, so it was never a level-gated pick.
 
 ### Agreed with Nate, 2026-09-30
 
@@ -286,5 +290,6 @@ same as before the import started, so no step left a stub behind:
 
 `node scripts/drift-check.mjs --remote` reports NO DRIFT the same day.
 
-**Open finding from this book:** BOOK-INGEST-AUDIT F116 (level-gated mystic
-martial arts picks, stored as prose in four classes).
+**Finding from this book, since built and used:** BOOK-INGEST-AUDIT F116
+(level-gated mystic martial arts picks). It was stored as prose in four
+classes until `~167` on 2026-10-05; see the ledger.
