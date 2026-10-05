@@ -4495,3 +4495,443 @@ exercised with a dice entry. Seen while building F119, and filed rather than
 fixed in passing on Nate's word (2026-10-04, recommendation 14).
 
 **Confidence:** high. **Ongoing cost:** none.
+
+## Filed 2026-10-05: what the retrospective close-out left open
+
+The book retrospective of 2026-10-03 was closed out on 2026-10-05 in three
+phases (PRs #1658 to #1694). Each phase kept a list of what it met and could
+not finish. `F127` to `F144` are those lists, filed so nothing lives only in
+a session's notes. **None is taken by this PR, and none was built.**
+
+**Where the evidence comes from.** Unless a finding says "read 2026-10-05",
+its claims are **reported by** the three phase sessions' status notes (Phase
+A, B and C of the close-out, kept in the machine's memory directory, not in
+this repo) and by Phase C's claim-sweep working notes, and were **not
+re-measured** when filed. A taker re-measures; that is what `/take` is for.
+
+**`F138` to `F144` are not code.** This file's preamble says it holds code
+changes only and that data ships with its book. These seven are data and
+decisions that span books whose import sessions are over, so no book session
+is left to carry them. They are filed here, on the menu the close-out used,
+and each says "data only" or "a decision" in its posture.
+
+### F127 - low - a pick group gives the same count at every level it lists
+
+`at_levels` (`F116`) makes a `special_abilities` choice group pick `choose`
+options at each listed level. A book that grants several at creation and one
+more at later levels, from the same list, has no shape: the count is one
+number for the group, and one option name cannot sit in two groups, because
+`abilityGroupIndexFor` returns the first group that names it
+(`apps/character-creator/js/parser.js` lines 2486-2496, read 2026-10-05).
+
+Three China 2 classes keep Body Hardening by hand for this: `fu-yao-da-chia`
+(four, then one at levels 3, 6, 9, 12, 15), `demon-and-dead-slaver` (two,
+then one at 4, 8, 12) and `goblin-wrangler` (two, then one at 3, 6, 9, 12,
+15). Reported by the Phase C status note, 2026-10-05.
+
+**Proposal:** let an `at_levels` entry carry its own count -
+`at_levels: [{ level: 1, count: 4 }, 3, 6, 9]`, a bare number meaning
+`choose` as today - and convert the three classes. **Posture:** opt-in; a
+group that states bare numbers behaves as it does now. **Evidence:** the
+function was read, not exercised; the three class shapes are reported, not
+re-read from the book.
+
+**Confidence:** medium until the three pages are re-read. **Ongoing cost:**
+one more shape in the pick-group validator and in the sheet's banked panel.
+
+### F128 - low - a chosen option cannot SET a pool's base, only add to one
+
+A pool bonus adds to a base the class states. `rollPoolFormula`
+(`apps/character-creator/js/dice.js` lines 269-272, read 2026-10-05) returns
+null when the base is null, so a bonus on a class with no `mdc_base` adds to
+nothing and shows nothing. Phase C met it on its own two new classes:
+`phase-world-alien`, whose "Base M.D.C." table rows decide whether the alien
+is an M.D.C. being at all, and `gene-splicer-mutant`. The second was worked
+around with `mdc_base: "0"`, which is right only for a class that is always
+M.D.C.; the first tells the player to apply it by hand.
+
+**Proposal:** let an ability option carry a pool base (`mdc_base`,
+`sdc_base`, `hp_base`), the way `F120` let one carry `attribute_dice`, so an
+S.D.C.-or-M.D.C. choice can be a pick. **Posture:** opt-in key; no class
+changes until one is converted. **Evidence:** the function was read
+2026-10-05; the two classes are reported by the Phase C status note.
+
+**Confidence:** high on the mechanism, low on how many classes need it:
+nobody has counted. A census of classes whose notes say an option "makes the
+character M.D.C." would raise it. **Ongoing cost:** composition gains a
+second place a pool base can come from.
+
+### F129 - medium - a race cannot trim what a paired occupation brings
+
+A pairing takes the occupation whole: its O.C.C. skills, its related and
+secondary counts, its equipment and its money. A race can keep things of its
+OWN across a pairing (`F111`'s `overrides_race` and `yields_to_occupation`,
+`F114`'s `pairing_skills`, `F122`'s `keeps_xp_table`), but nothing lets it
+take LESS of the occupation. Cases the close-out met:
+
+- `draconid` (Phase World printed 36): the page grants a Ley Line Walker's or
+  Mind Melter's POWERS; the pairing also brings that occupation's skills,
+  related count, equipment and money. Nate's decision of 2026-10-05: the
+  pairing stands and the over-grant is said in the pick's note (`~172`).
+- Noli Bushman (Canada printed 138): a Wilderness Scout or Vagabond Noli gets
+  three related and three secondary skills, by hand today.
+- `nmbyr-gorilla-man` (D-Bees): related and secondary picks halved for the
+  race.
+
+**Proposal:** one race-side key naming what a pairing takes from the
+occupation - whether its O.C.C. skills, its equipment and its money come
+across, and a cap or factor on its related and secondary counts. Decide its
+exact shape at take time, from these three pages. **Posture:** opt-in on the
+race; a race that says nothing pairs as it does now. **Evidence:** reported
+by the Phase A and Phase C status notes; the Draconid ruling is Nate's.
+
+**Confidence:** medium. The three cases want three different trims, and a
+key general enough for all three may be more than any one needs.
+**Ongoing cost:** `combineClasses` gains a branch every pairing passes
+through; it is the function `F111`, `F114` and `F122` already each added to.
+
+### F130 - low - per-level and conditional values that no key holds, on eight D-Bees classes
+
+Seven classes from D-Bees of North America carry a value that changes with
+level and has no home: a radius by level (`amana`), S.D.C. per level
+(`arac`), uses per day by level (`squilb`), one new spoken language per level
+(`vernulian`), a skill pick limited to a category at a level
+(`mraghiile-tree-man`), abilities at levels past 15 (`forest-warden`) and a
+per-level duration (`chasseur-vert`). `nmbyr-gorilla-man` adds two more: a
+Horror Factor that applies only while enraged, and an `only` list with one
+member excluded (the Crazy). Several of these notes cite `F116`, which is
+about picks at set levels and does not cover them (the Phase C sweep's
+"wrong pointer" list, 2026-10-05).
+
+**Proposal:** do not build a key per case. Give each class's ability a
+`progression` (`F117`: display text by character level, shown on the sheet)
+for what scales by level, leave the two conditional values as prose, and
+correct the citations to this finding. **Posture:** data only, display only;
+no mechanic. **Evidence:** reported by the Phase C status note; the eight
+pages were not re-read for this filing.
+
+**Confidence:** medium. `progression` was built for a fifteen-level power and
+has not been tried on a radius or a count. **Ongoing cost:** none beyond the
+rows. If a later book needs one of these to be computed, that is a new
+finding.
+
+### F131 - low - an ability option cannot grant a skill
+
+`ABILITY_GRANTS` is `['bonuses', 'psionics', 'magic', 'super_abilities',
+'talents']` (`apps/character-creator/js/parser.js` line 2415, read
+2026-10-05). A table whose result is a skill stays prose: the family and
+background tables of the Palladium Fantasy Knight, Squire and Noble, and the
+natural Prowl several mutant tables hand out.
+
+**This reverses a decision this menu made on purpose.** `F24` kept a
+`skills` block off abilities deliberately - the comment where its key was built
+(`apps/character-creator/js/parser.js` lines 2885-2893, read 2026-10-05) calls
+an ability carrying a whole `skills` block "the same power by another name"
+as a variant - and gave abilities `related_skills_count` instead. `F50` (a gear choice that grants a
+skill) is held for the same reason. An options table in `BOOK-INGEST-AUDIT.closed.md`
+(line 7256, read 2026-10-05) turned down "let a chosen ability ... grant a skill" as reversing `F24`.
+
+**Proposal:** `skills_additional` on an ability option - the key a variant
+has carried since `F31` - limited to ADDING named skills, never removing or
+re-pricing one. The argument past `F24`: since `F120` an option is rolled
+from a table, and a table result that is a skill is now the common case
+rather than one class's oddity. **Posture:** opt-in key; recommend taking it
+only if `F24`'s reasoning is read first and still disagreed with.
+**Evidence:** the grant list was read 2026-10-05; the class cases are
+reported by the Phase C status note.
+
+**Confidence:** low that it should be built at all. **Ongoing cost:** a
+skill can then arrive by a third route (class, variant, ability), and the
+three-carries rule for a new skills block applies: `combineClasses`, the
+sheet, and fail-closed matching.
+
+### F132 - low - `class-fix-sql.mjs` refuses a class whose markdown is not pure ASCII
+
+`scripts/class-fix-sql.mjs` (lines 45 and 74-75, read 2026-10-05) refuses any
+character outside printable ASCII in the markdown it is given. `class-check`
+does not: it splices an em dash as `char(8212)` when it emits an add script.
+So a published class that names a skill spelled with one - `psi-x-alien`
+names `Chemistry` followed by an em dash and `Analytical` - cannot be
+corrected through the tracked generator, and the Phase C sweep left its false
+sentence standing for that reason.
+
+**Proposal:** splice non-ASCII characters as `char(N)` in `class-fix-sql.mjs`
+the way `class-check`'s emitter does, with a `--self-test` case. **Posture:**
+tooling only. **Evidence:** the two lines were read; the splice in
+`class-check` is reported by the `class-import` skill, not re-read here.
+
+**Confidence:** high. **Ongoing cost:** none.
+
+### F133 - low - a fixed per-level pool gain is not added on level-up
+
+`perLevelDiceOf` (`apps/character-creator/js/leveling.js` lines 83-87, read
+2026-10-05) matches a DICE expression before "per level". A base written
+"+10 per level" has no dice, so nothing is added when the character levels.
+Reported on `tattooed-man` and `t-monster-man` `ppe_base` (Phase C status
+note, 2026-10-05).
+
+**Proposal:** measure first - run every published class's pool bases through
+`perLevelDiceOf` and list the ones with a "per level" the function does not
+capture - then let the match take a bare number. **Posture:** a fix to
+level-up, which CHANGES what existing characters gain from their next level
+on; say so in the PR, and do not back-fill past levels. **Evidence:** the
+regular expression was read; the census has not been run.
+
+**Confidence:** high on the two classes, unknown on the total.
+**Ongoing cost:** none.
+
+### F134 - low - nobody has driven the sheet's banked-pick panel on a band-named `at_levels` group
+
+`F116` banks a later-level pick and spends it from the sheet's banked panel.
+`F120` and the Roll d100 button read a percentile band out of an option's
+name. Phase C wrote classes that combine the two (an `at_levels` group whose
+options are named for bands, the insanity tables among them) and recorded
+that whether the banked panel offers a Roll button for such a group "was
+never driven".
+
+**Proposal:** drive it once in a browser with a throwaway local character
+(`verify-ui`), and either record that it works or file what is missing.
+**Posture:** verification only; no change expected. **Evidence:** reported
+by the Phase C status note; not looked at for this filing.
+
+**Confidence:** n/a - this is a gap in what was checked. **Ongoing cost:**
+none.
+
+### F135 - low - a pick from a named list cannot give each option its own bonus
+
+RUE printed 154 gives the Psi-Stalker one Pilot skill: Tanks and APCs at
++10% OR Hovercycles at +15%. A skill choice group carries one `bonus` for
+the whole group, so `psi-stalker` stores the pick as any Pilot skill at +10%
+(Phase A status note, 2026-10-04).
+
+**Proposal:** let a `from` entry in a skill choice group be an object with
+its own bonus - `from: [{ name: "...", bonus: 10 }, { name: "...", bonus:
+15 }]` - a bare string taking the group's. **Posture:** opt-in.
+**Evidence:** reported, not re-read from RUE; how many other classes have
+the shape is not measured.
+
+**Confidence:** medium. **Ongoing cost:** one more accepted shape in a skill
+group, and `categoryAllows`-style helpers must not assume strings.
+
+### F136 - low - a related-skill category bonus written only in a note is invisible until someone sweeps for it
+
+Phase A's package A13 found 64 classes where a related-skill category's
+printed bonus lived only in the entry's `note`: 179 entries gained a `bonus`
+key and 53 scoped ones a second entry (PR #1685). `categoryBonus` reads only
+the `bonus` key, so each of those had been applying nothing. Nothing stops
+the next import doing the same.
+
+**Proposal:** a `class-check` WARNING on a `categories` entry whose `note`
+carries a bare "+N%" and which states no `bonus`. **Posture:** warn only, no
+exit code, the posture `class-check` gives its other advisory sections.
+**Evidence:** the A13 counts are reported by the Phase A status note; the
+warning's false-positive rate is not measured - thirty entries were left in
+A13 "with a reason each", and those would warn.
+
+**Confidence:** medium until the thirty are run through a prototype.
+**Ongoing cost:** a warning that fires on the thirty forever unless they are
+given an explicit opt-out.
+
+### F137 - low - the `circle` and `temporal` traditions have no label of their own
+
+`LABELS` in `apps/character-creator/js/traditions.js` (lines 25-41, read
+2026-10-05) names its traditions and neither of these, so the sheet and
+the codex head them with the title-cased slug: "Circle", "Temporal". The
+neighbours read "Bone Magic", "Ward Symbols".
+
+**Proposal:** add `circle: 'Circles'` and `temporal: 'Temporal Magic'`.
+**Posture:** two lines of display text. **Evidence:** the table was read
+2026-10-05.
+
+**Confidence:** high. **Ongoing cost:** none.
+
+### F138 - low - a key exists, and about thirty classes still carry the value as prose
+
+Data only. The close-out's final claim sweep (Phase C, 2026-10-05) judged
+988 limit-stating sentences in production class markdown and corrected the
+ones where only the sentence was wrong (PR #1693). These are the ones where
+the sentence is false of the APP and true of the class's DATA: the key
+exists and the class does not use it. Each needs its page read before a data
+script; none was re-checked for this filing.
+
+- **Scoped or negative category bonus** (the `F109` shape, a second entry
+  `{ name, only: [...], bonus }`): `titan-juicer` Prowl -5%;
+  `trapper-woodsman` Whittling and Breed Dogs +15%; `huntsman-trapper`
+  Whittling +15%; `travelling-story-teller` Technical +15% on languages;
+  `trimadore` +10% on Demolitions and Trap skills; `sohei-warrior-monk`
+  Streetwise +8%, Concealment +6%, languages +10%; `mystic-ninja` languages
+  +10%; `psi-druid` Concealment +5%; `ectohunter` +15% on language or
+  computer skills; `dolphin`, `killer-whale` and `humpback-whale` Radio:
+  Basic -10% (no live class carries a negative one, so the first of these
+  also proves the shape).
+- **Cross-category `only`** (`F9`): `gypsy-wizard-thief` Wilderness Survival;
+  `saloon-bum` Pick Pockets +10%; `professional-gambler` Sing, whose "add by
+  hand" note would double-count a bonus that already applies.
+- **Other keys:** `outback-mutie` and `phreaker-military-grunt` serpent Spd
+  1D6+6 (`attribute_dice` on an option); `mutant-psi-stalker` Perception +4;
+  `pseudo-men` Automatic Dodge +3 on band 01-10; `russian-fire-sorcerer` +4
+  vs magic fumes (`saves.other`); `russian-mystic-kuznya` +1D6+12 P.S.;
+  `dragon-juicer` +1D4 initiative stored as a flat 2; the three Lyn-Srial
+  classes' Horror Factor; `gifted-one-russian` master band
+  `related_skills_count: 0`; `roane-piper` psionics table as a banded group;
+  `witch` Sixth Sense; the Summoner's Deciphering Circles percentage and
+  circle strength, which A7 left unstored.
+
+**Proposal:** one data PR per book, each class read off a render, through
+`class-fix-sql.mjs`. **Posture:** data only. **Evidence:** reported by the
+Phase C claim sweep's notes; the count "about thirty" is this list counted by
+hand on 2026-10-05, not a query.
+
+**Confidence:** medium per item: the sweep's verifier judged the app side,
+and the page side is unread. **Ongoing cost:** none.
+
+### F139 - low - the catalog holds the row, and the class does not grant it
+
+Data only. A class note says an item has no catalog row, or simply leaves it
+out, and the row exists. From the Phase A and Phase C status notes; not
+re-queried for this filing.
+
+- belt and boots: `bogatyr-hero-knight`, `cossack`,
+  `reaver-mechanized-cavalryman`, `reaver-soldier`, `russian-explorer`,
+  `russian-villager` (also shovel and staff);
+- `born-mystic` riding horse; `adna-nomad` sidearm choice, utensil kit,
+  horse; `cyber-samurai` motorcycle; `loronoid` camera and translator;
+- `travelling-story-teller` cleaver, frying pan, kettle, pot, bowl, belt,
+  boots; `totem-warrior` spear, bow, hooded cloak, rope, rations;
+  `paradox-shaman` hooded cloak and seven more;
+- T-40 suits for the four Gypsy classes, and their bandanna (the row is a
+  Heroes Unlimited one - whether another system's row should be granted is
+  a judgement the sweep left open);
+- `sack-medium` for `symbiotic-warrior`, `apok`, `monk` and
+  `wormwood-priest-of-light`; Japan's robots and power armor for
+  `samas-samurai-pilot`, `robot-pilot-japan` and `glitter-force-trooper`;
+  `blood-lizard` for the Blood Riders; Warlords of Russia's mundane kit for
+  nine classes; tear gas and plasma grenades for `ngr-power-armor-commando`.
+
+One item has no row at all: the Vernulian Serpent Power Armor (D-Bees), a
+vessel, not gear.
+
+**Proposal:** one data PR per book granting the rows, and one vessel row for
+the Serpent Power Armor. Decide once, first, whether a row tagged for another
+game system may be granted to a Rifts class (the bandanna, blackjack, belt
+and boots cases): recommend no, and import a Rifts row where the book prices
+one. **Posture:** data only. **Evidence:** reported; each row's existence is
+the sweep verifier's query of 2026-10-05, not repeated here.
+
+**Confidence:** medium. **Ongoing cost:** none.
+
+### F140 - low - class sentences the close-out sweep could not settle
+
+Data and decisions. The same sweep left 36 sentences unsettled - neither
+shown true nor shown false - and a handful it could settle only by asking.
+Phase C's status note carries examples, not the list; the list below is
+copied from that session's working notes on 2026-10-05 so it outlives them.
+
+- **Unsettled, by class** (the number is the sentence's index in that
+  sweep's slices, kept only to show how many each class has): `amphib` (3),
+  `apok`, `cyber-samurai`, `anti-monster`, `bounty-hunter`, `cyberoid`,
+  `druid`, `gypsy-seer` and `gypsy-gifted` leaf armour, `huntsman-trapper`,
+  `ectohunter`, `flooper`, `fingertooth-carpetbagger`, `enlightened-demon`
+  (a count of about 45 against 39 plus 23), `lyvorrk` (2),
+  `mraghiile-tree-man`, `noble`, `norse-giant`, `priest-of-darkness` (2),
+  `pneuma-biform-dolphin` (combat form against `second_form`),
+  `phreaker-military-grunt`, `shaper`, `russian-villager`, `psi-druid` (herb
+  rows: 67 held against "about thirty"), `war-knight` (2: a 2% Master
+  psionic variant whose pieces exist), `worldly-sasquatch` (-5%),
+  `vintex-warrior`, `trapper-woodsman` fur cloak; and the Palladium Fantasy
+  classes naming `W.P. Siege`, for which a Rifts-only row now exists.
+- **Needs a ruling:** `malvoren` "Electrical Generation" against the
+  catalog's `Electricity Generation`; `layer-of-laws` grants 16 of 30 Lore
+  rows where its note says every one; `norse-giant` table row 96-00
+  (`master` tier) and row 01-05 (M.D.C. as prose); `blind-mystic`'s closed
+  list against the book's "usually prefers".
+
+**Proposal:** one read-only pass with each page rendered, sorting every
+entry into "true, leave", "false, fix the sentence" or "move to `F138` or
+`F139`", then the data PRs that follow. **Posture:** data only; four items
+are decisions for Nate. **Evidence:** reported by the Phase C sweep's notes;
+nothing here was re-read.
+
+**Confidence:** low by construction - these are the ones nobody could
+settle. **Ongoing cost:** none.
+
+### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
+
+A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
+held classes took D-Bees' figures (Phase A, PRs #1667, #1668, #1671, #1672).
+For several of them D-Bees prints a different KIND of class: the held class
+is an R.C.C. with its own skill program and experience ladder, and D-Bees
+prints a race that takes an O.C.C. and uses that O.C.C.'s table, equipment
+and money. Named by Phase A: `quick-flex-alien`, `vanguard-brawler`,
+`kremin-cyborg`, `centaur`; it expected more. Phase A took every figure
+D-Bees states and KEPT the held shape, saying so in each class's notes.
+
+**Proposal:** decide whether these convert. Converting removes the skill
+program and ladder (expressible with `pairing_skills` and
+`yields_to_occupation`, whose carriers `regression` pins by name) and changes
+how a character already saved on the class is built. Recommend: list every
+one of the 34 whose shape differs first, count saved characters on each, and
+convert only where there are none. **Posture:** a decision, then data.
+**Evidence:** reported by the Phase A status note; the full list of
+shape-changed classes has not been made.
+
+**Confidence:** n/a until the list exists. **Ongoing cost:** none.
+
+### F142 - low - three rows where "newest printing wins" and the books' own account disagree
+
+A decision. Phase A applied the year rule and recorded three places where it
+is not obviously right, leaving each as held:
+
+- `pa-06a-deaths-head-samas` and `fassar-20-30-skelebot` are held from
+  Coalition War Campaign (1996). RUE (2005) prints lower M.D.C. and damage
+  for both under a "Circa 100 to 104 P.A." heading, while Coalition War
+  Campaign calls its machines the improved models. The year rule says RUE;
+  the books say Coalition War Campaign describes the later machine.
+- The `centaurs` creature: Conversion Book One revised (2002) prints the
+  older-looking block, and Canada (1999) calls its own an update. The rule
+  was applied as ruled; only what Conversion Book One does not state was
+  taken from Canada.
+- `ostrosaurus`: New West and Lone Star are both 1997 and disagree on five
+  figures; left on New West, the fuller entry.
+
+**Proposal:** rule on each, and say whether the rule needs a second clause:
+"the newest printing wins unless the newer book says it describes an earlier
+model". **Posture:** a decision; at most three data rows follow.
+**Evidence:** reported by the Phase A status note; the pages were not
+re-read for this filing.
+
+**Confidence:** n/a. **Ongoing cost:** a second clause is one more thing an
+import has to check.
+
+### F143 - low - the creature rows of the reprinted D-Bees races still carry their original book's figures
+
+Data only. Phase A updated 34 held CLASSES to D-Bees (`F141`) and added 72
+new playable-race `creatures` rows (PR #1675). The creature rows that
+already stood for those 34 reprinted races were not touched: a race's class
+now follows D-Bees and its creature row follows the older book.
+
+**Proposal:** update the 34 creature rows from the same D-Bees pages, with
+the original's figure kept in a note, and move each row's `source_book`.
+The two surveys' `Rows citing this book` lines move with them. **Posture:**
+data only. **Evidence:** reported by the Phase A status note, which raised
+it as "NOT done and worth raising"; the count 34 is A3's class count and has
+not been checked against `creatures`.
+
+**Confidence:** medium until a query lists which of the 34 have a creature
+row at all. **Ongoing cost:** none.
+
+### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
+
+Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
+by chapter and imported 226 rows (PR #1678). The diff also surfaced about 35
+rows the catalog already held under an older book where the Book of Magic
+(2001) prints a different figure. They were not changed.
+
+**Proposal:** apply the year rule row by row - the Book of Magic is newer
+than most of the world books it compiles and older than RUE - reading each
+figure off a render of both books. **Posture:** data only. **Evidence:**
+reported by the Phase A status note; "about 35" is its figure, and the list
+itself was in that session's working files, which may be gone. A taker
+should expect to re-run the diff.
+
+**Confidence:** low on the count. **Ongoing cost:** none.
