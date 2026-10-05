@@ -322,3 +322,5 @@ reported 0 stub statements for all 23), so none of those lines is this book's.
   enforced since `~097`: a pick-one group on `noli-bushman` keyed to the
   occupation.)
 - The cold, exposure and snow-travel rules (23-35) and the gazetteer.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `canada 110 / 0`). Left: a Momano Headhunter who rolls Burster, Zapper or Nega-Psychic gets the label and no powers (printed 124 sends the reader to Psyscape).

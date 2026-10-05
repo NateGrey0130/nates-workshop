@@ -332,3 +332,5 @@ recorded so a later import can tell what it moved:
 ```
 
 None of these is this book's.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `china-2 197 / 0`). Left: the body hardening picks after creation (`fu-yao-da-chia`, `demon-and-dead-slaver`, `goblin-wrangler`) are made by hand, because a pick group holds one count for every level it lists and these take several at creation and one later from the same list - a code gap, on the Phase C status file's list for the code side. A power's later levels are text: nothing a level says is added to the character. The in-power pick lists (Specialty Attacks, Arts of Invisibility, the eight Tien-Hsueh Powers) are text too. Hsien Hsia is extracted and held by no class. `geofront-military-specialist` has not been compared line by line with `coalition-military-specialist`, imported after it.

@@ -257,6 +257,7 @@ What is deliberately left:
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 5 classes of this book (`apok`, `demon-hound-rider`, `monk`, `symbiotic-warrior`, `wormwood-priest-of-light`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c1-draconid-felinoid-oni` | **Two Spd reductions stored** (`~160`, close-out package C1; `BOOK-INGEST-AUDIT` F119): the Wormspeaker's and the Symbiotic Warrior's -1D4 Spd (printed 63 and 64, read off renders, checked by `book-reconcile`) are signed dice bonuses instead of a by-hand note. The Wormspeaker's halved P.B. stays prose. No rows added. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c2-roll-tables` | **The Freelancer's special chart carries its bands** (`~162`, close-out package C2): the five options of the Special Freelancer's Weapons or Abilities chart (printed 68, rolled once) are named for their bands. Checked by `book-reconcile`. No rows added. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/retro-closeout-claim-sweep` | **The close-out's claim sweep** (`~170`, `~171`): 1 class of this book corrected (`apok`). `claim-capability-verifier` judged 988 limitation claims across the 218 classes the close-out touched; these are sentences that were false while the class's data was right, or that cited a finding for a gap it did not cover. No figure read from a book moves. No rows added. Applied `--remote` before the merge. |
 
 Each draft branch carries ONE EMPTY COMMIT and nothing else. That is what lets
 a PR exist before the work does; `git commit --allow-empty` keeps the scope in
@@ -274,3 +275,7 @@ Decisions taken 2026-08-27, on Nate's call:
   *Summon and Command Parasites* make them player-reachable. So the gear PR is
   ~71 rows, not ~63.
 - **Standing authorisation to apply `--remote`** for the rest of this import.
+
+### What remains
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `ww 157 / 0`). Left: the Wormspeaker's halved P.B. is prose (there is no halving). The Freelancer's chart is rolled; nothing else.

@@ -378,3 +378,5 @@ the baseline this book's import must not move:
 Nothing in the extraction plan remains. The mutant tables needed no schema change: a pick-one ability group already carries a percentile table, with the d100 roll from PR #1602.
 
 Still open: printed page 146 (see *Cache health*), and the readings in *Class readings the book leaves open*.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `australia 150 / 0`). Left: `psionics_allowed: false` on the two mutant classes is a reading of pages that print no Psionics line; the serpent result's Spd of 1D6+6 is prose though an option may now set attribute dice.

@@ -892,3 +892,5 @@ phantom -171 in `--vs-build`.) **F85 was taken on 2026-09-15 in #1075**, so the
 blindness above is a record: `source-coverage.mjs --remote` lists
 `super_abilities` among its catalogs, and on 2026-09-27 it printed
 `heroes-unlimited-core 986 / 0`.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `heroes-unlimited-core 1001 / 0`). Left: the Alien's Humanoid Mineral S.D.C. (stored as +180 on the base 20; printed 55 prints 180 without the word bonus) wants a ruling; the Experiment's Tables A, B, E and F print bands and are prose in the body; a Mutant or Alien who opts for psionics is given nothing per level by the class (+10 I.S.P. a level is in the option's text).

@@ -110,3 +110,5 @@ from the Greater Cyclops (printed 92), `Language: Dwarven` and
 
 It stood at 14 / 4 on 2026-08-28; the 140 notable NPCs added since are all
 traceable.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `potm 309 / 0`). Left as found on the Norse Giant: row 96-00 carries a `master` psionics tier the page does not name, and row 01-05's 1D6x1000 M.D.C. (or 2D4x100 S.D.C.) is prose.
