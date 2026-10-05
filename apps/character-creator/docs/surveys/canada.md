@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the plan is done: skills, gear, vehicles, creatures and 23 new classes. The Techno-Warrior stays the *Ultimate Edition* class. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
 
-**Rows citing this book:** classes 12, gear 45, vehicles 5, skills 13, creatures 34
+**Rows citing this book:** classes 12, gear 45, vehicles 5, skills 14, creatures 34
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
@@ -281,6 +281,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The Momano Headhunter's psionics group names its bands in parentheses** (`~074`). It was written "Psionics 01-50: None", a day after the Roll d100 button shipped reading "(01-50)". Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a2-reprints-compared` | **The Centaur and the pilot notes compared with their held rows** (`~094`). The `creatures` row `centaurs` cites Conversion Book One revised (2002), newer than this book (1999), and stands on every figure both print, although this book calls its block an update. Taken from printed 102-103, because Conversion Book One does not state them: swim 50%, W.P. Bow and Arrow, and the equipment list. The kick damage both books print (2D6 front, 4D6 rear) had been dropped and is restored. The three pilot notes of printed 37 match the held skills; `Tracked & Construction Vehicles` gains RUE's tank and APC penalty. Off renders, checked again by `book-reconcile`. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/d-bees-of-north-america-canada-updates` | **Eleven classes leave this book's count for D-Bees of North America** (`~097`): `centaur`, `cyber-horsemen-of-ixion`, `true-sasquatch`, `worldly-sasquatch`, `aardan-tek`, `grackle-tooth`, `greot-hunter`, `mastadonoid`, `noli-bushman`, `yeno`, `faerie-bot`. D-Bees (2007) reprints and updates each, and by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`. This book's figures, including the experience ladders of printed 192, are kept in each class's `extraction_notes`. **One held-row error found against this book:** `grackle-tooth`'s GM Notes said the heading reads Crackle Tooth, which is the text layer's misreading: the render of printed 133 reads Grackle. **For the Noli occupations planned from this book:** D-Bees no longer names the Noli Cowboy and Noli Scout of printed 138; it prints the psionic package on the race and lists Cowboy, Wilderness Scout and Vagabond as occupations. Neither book's Noli entry prints a language line. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a8-class-extras` | **`Language: Inuit` is a row** (`~114`), at the 50% +5% every spoken language carries, tagged `rifts` as `Language: Techno-Can` is; `tundra-ranger-scout` and `trapper-woodsman` grant it at 65% instead of asking the player to name a `Language: Other` pick. The Scout's Native American tongue stays a `Language: Other` pick, as Spirit West's tribal languages are. The Noli Cowboy and Scout packages needed nothing: `~097` made them a pick-one group keyed to the occupation when the race moved to D-Bees. Skills 1 up. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -312,8 +313,11 @@ reported 0 stub statements for all 23), so none of those lines is this book's.
   anchors, mallet, web vest and winter cap; the Headhunters' black paint
   stick, plastic gloves and NG-S2 survival pack; the Worldly Sasquatch's comb
   and loincloth; and others.
-- `Language: Inuit` and a Native American tongue have no rows; the classes
-  that speak them take `Language: Other` picks.
-- The Noli Cowboy and Noli Scout psionic packages (138) are prose on the
-  Noli Bushman. Making them enforceable is two variant O.C.C.s.
+- A Native American tongue has no row: the book names no tribe, so the
+  Tundra Ranger Scout takes it as a `Language: Other` pick. (`Language: Inuit`
+  is a row since `~114`.)
+- The Noli's cut of O.C.C. Related and Secondary Skills to three each, for a
+  Wilderness Scout or Vagabond, is applied by hand. (The psionic packages are
+  enforced since `~097`: a pick-one group on `noli-bushman` keyed to the
+  occupation.)
 - The cold, exposure and snow-travel rules (23-35) and the gazetteer.
