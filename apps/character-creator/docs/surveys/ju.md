@@ -43,7 +43,7 @@ Not counted by structure. What shipped, by the page ranges the rows cite:
 
 ## Classes
 
-15 classes trace to this book. The five Juicer variants from printed 30-41 are
+14 classes cite this book (the Rows line above is the count a clean build gives; this sentence said 15 until 2026-10-04). The five Juicer variants from printed 30-41 are
 the block this import was cut for; the rest arrived alongside them.
 
 Two corrections this book produced are worth carrying:

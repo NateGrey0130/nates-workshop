@@ -168,9 +168,10 @@ Decisions every one of them shares:
   bonuses** (the Coyle's +5% Espionage/Wilderness, the Dwarf's +5% tech, the
   Elf's +2% Wilderness, the Goblin's +2% Rogue) are prose. The app has no key for
   the first two and no race-level per-skill modifier for the third.
-- **The Cobbler Goblin is prose, not a variant** — the Palladium `goblin` row's
-  note gives the reasons, and they hold here. The book disagrees with itself on
-  the odds: one in 20 in the text, 1-15 on percentile in the procedure.
+- **The Cobbler Goblin is a pick-one group on `rifts-goblin` since `~121`**, the
+  page's two bands (01-15 Cobbler, 16-00 ordinary). The book disagrees with
+  itself on the odds: one in 20 in the text, 1-15 on percentile in the
+  procedure. The Palladium `goblin` row still holds it as prose.
 - Horror Factor is the top-level `horror_factor` key, which the Palladium rows
   predate.
 
@@ -306,7 +307,7 @@ its own catalog script; the stubs `--emit-script` printed for them were removed.
 Agreed 2026-09-26. One PR each, in order.
 
 1. **The nine races the Palladium Fantasy catalog holds** — Wolfen, Coyle,
-   Changeling, Dwarf, Elf, Goblin (with the Cobbler as prose), Orc, Ogre, Troll.
+   Changeling, Dwarf, Elf, Goblin (with the Cobbler as a pick since `~121`), Orc, Ogre, Troll.
    *Shipped, this PR.*
 2. **The seven new humanoids** — Bearman, Kankoran, Dragonman, Gosai, Quillback,
    Quorian, Vrill. `rifts-` ids only if Palladium Fantasy rows for them could
@@ -345,6 +346,7 @@ Elemental Spell list's descriptions, which the book defers to the Book of Magic
 | 2026-09-26 | #1449 | batch 2, seven new Rifts race classes (`rifts-bearman`, `rifts-kankoran`, `rifts-dragonman`, `rifts-gosai`, `rifts-quillback`, `rifts-quorian`, `rifts-vrill`), reconciled against the book with no figure in dispute; no stub rows; classes citing this book 19 -> 26. Applied `--remote` before the merge |
 | 2026-09-26 | #1452 | batch 3, the eight giants (`rifts-algor`, `rifts-cyclops`, `rifts-jotan`, `rifts-gigantes`, `rifts-minotaur`, `rifts-nimro`, `rifts-rahu-man`, `rifts-titan`); classes citing this book 26 -> 34. Applied `--remote` before the merge |
 | 2026-09-27 | #1457 | batch 4, the three race occupations (`rifts-gosai-assassin`, `rifts-quillback-scavenger` as `copy_of: vagabond`, `rifts-quorian-oneiromancer` as `copy_of: mystic`), the skill row Hand to Hand: Skudasa and the spell row Chant of Dreaming; the Quorian and Quillback opened to their occupations; reconciled with no figure in dispute; classes citing this book 34 -> 37, skills 0 -> 1, spells 0 -> 1. Applied `--remote` before the merge |
+| 2026-10-04 | `pal/data/retro-a12-small-corrections` | **The Cobbler Goblin is a pick** (`~121`): `rifts-goblin`'s one hand-applied natural ability becomes a pick-one group of printed 99's two bands. The Cobbler option adds +1 to save vs all magic and +1 vs possession; its P.P.E. (which replaces the Goblin's), its +3 vs Horror Factor (the page does not say whether it joins the Goblin's +2) and its three skill bonuses stay by hand, in the option's text. Printed 98-99 re-read off a render: nothing in the class disagreed. No row count moves. Applied `--remote` before the merge. |
 
 ### What remains
 

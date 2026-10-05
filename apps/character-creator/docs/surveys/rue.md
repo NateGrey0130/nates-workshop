@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 40, gear 207, vehicles 14, skills 218, spells 115, psionic_powers 89
+**Rows citing this book:** classes 41, gear 207, vehicles 14, skills 218, spells 115, psionic_powers 89
 
 **MOS:** coalition-technical-officer 7, merc-soldier 7, robot-pilot 2
 
@@ -84,7 +84,7 @@ lines. No figure was read off a render.
 | 47-156 | the O.C.C.s and R.C.C.s, each with its skill and equipment blocks | held (the classes line above) |
 | 164-184 | psionic powers, 85 `I.S.P.:` blocks | held (`psionic_powers` 89) |
 | 198-225 | spell descriptions, 153 `P.P.E.:` blocks | held under this book and the Book of Magic |
-| 233-237 | the Coalition military O.C.C.s | held; the CS Military Specialist (235-236) has no class |
+| 233-237 | the Coalition military O.C.C.s | held; the CS Military Specialist (235-236) is `coalition-military-specialist` since `~120` |
 | 240, 255 | SAMAS power armor; FASSAR-20 Skelebot | held as `vehicles` rows citing Coalition War Campaign |
 | **249-253** | **five Coalition war machines**: UAR-1 Enforcer (249), CR-003 Spider-Skull Walker (250), Mark V APC (251), AFC-050 Death's Head Transport (252), AFC-023 Sky Cycle (253) | **none held** in `vehicles` or `gear` |
 | 261 | two body-armour blocks with M.D.C. by location | gear; not compared row by row |
@@ -203,6 +203,7 @@ Physical.
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The eight machines the inventory found unheld, as vessels** (`~084`): UAR-1 Enforcer, CR-003 Spider-Skull Walker, Mark V APC, AFC-050 Death's Head Transport, AFC-023 Sky Cycle, NG-X9 Samson, FT-005 Flying Titan, TR-001 Titan Combat Robot. Vehicles 6 to 14. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a1-newest-wins` | **Newest printing wins (Nate's ruling, 2026-10-04), `~093`.** `neural-mace` cited printed 259 but carried the 1D8 S.D.C. of Triax and the NGR printed 150; it now carries this book's 2D6 S.D.C. club and 1D6 jab damage and its 8,000 credit Black Market cost, with Lone Star's M.D.C., payload and length for what this book does not print. **Stands, because this is the newer printing:** `knife-throwing` at 200-600 credits against Warlords of Russia's 100, and the rows `lone-star.md` lists. **Leaves this book's count:** `poncho`, an unpriced stub citing printed 88 (a class's equipment list, no price), now takes Warlords of Russia printed 189. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a2-reprints-compared` | **Rows that cite this book and had dropped what it prints** (`~094`), found by comparing other books' reprints: prices on `vibro-knife`, `vibro-saber`, `vibro-sword`, `vibro-claws` and the three Dog Pack spike rows (printed 259); the Boom Gun's 1000-round payload (72); `crossbow-pistol`'s damage and range (326); notes on twelve skills (printed 302-330) and `Brewing` and `Field Armorer & Munitions Expert` re-cited here from no book; three `mutant-psi-stalker` abilities (153-154) and each Psi-Stalker occupation's weapon issue (155, 156). Each read off a render and checked again by `book-reconcile`. Applied `--remote` before the merge. |
+| 2026-10-04 | `pal/data/retro-a12-small-corrections` | **The Coalition Military Specialist O.C.C.** (`~120`, `coalition-military-specialist`), printed 235-236, the one Coalition military class of these pages the catalog lacked. Drafted beside its siblings `coalition-grunt` and `coalition-technical-officer`, read off renders, `ready` on `class-check --remote` with no stub, and checked against renders by `book-reconcile`: no disagreement. Its ladder is the CS Technical Officer / CS Military Specialist & Shifter column of printed 295. Stored as printed: Rogue at (+2%). Not stored: the weapons for its three W.P.s of choice, the vehicle, the cybernetics (1D4 implants and a bionic limb), which are prose. Classes 40 to 41. Applied `--remote` before the merge. |
 
 ### What remains
 
