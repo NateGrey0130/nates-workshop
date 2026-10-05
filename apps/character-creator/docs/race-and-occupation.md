@@ -301,8 +301,8 @@ Measured through the parser against production's three classes that day: the
 magician composes to the Ley Line Walker's base plus 1D6x10, the psychic keeps
 the race's 1D6x10 (the Mind Melter's group is `psychic`, which the yield does
 not name), and a Draconid holding neither option and no occupation keeps
-1D6x10. The class itself takes these keys as data, and joins the pinned
-carriers, in the close-out's package C1.
+1D6x10. The class has carried these keys, and `keeps_xp_table`, since
+2026-10-05 (`~160`), and is among the pinned carriers of both.
 
 Three things that shape does not settle, each measured the same day:
 
@@ -317,8 +317,12 @@ Three things that shape does not settle, each measured the same day:
   Draconid's page says it uses its own either way (2,241 against 2,201 at
   level two). `keeps_xp_table: true` on the race is the answer, since
   `BOOK-INGEST-AUDIT` F122.
-- **The pairing also takes the occupation's related-skill count and money.**
-  Whether the page means that is C1's reading.
+- **The pairing also takes the occupation's O.C.C. skills, related-skill count,
+  equipment and money.** The page (printed 36, read off a render) grants the
+  occupation's *powers* and prints the Draconid's own R.C.C. skills, so the
+  pairing gives more than the book does. A powers-only shape cannot carry the
+  Ley Line Walker's P.P.E. formula or that class's own abilities, so the
+  pairing stands and the class's `extraction_notes` say what it over-grants.
 
 So this is the shape for a race whose mage figure is *the occupation's, plus
 something*, and it is not a reason to key a race that merely prints a figure.

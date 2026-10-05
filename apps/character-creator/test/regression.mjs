@@ -4625,10 +4625,9 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     raceWonPairing.length === 0, raceWonPairing.join(', '));
   // PINNED BY NAME, like the yielders: a race here is one whose page says it
   // levels on its own table whatever occupation it takes. Phase World's
-  // Draconid is the one the flag was built for; it joins this list with the
-  // data script that gives it the flag.
+  // Draconid is the one the flag was built for; `~160` gave it the flag.
   const keepers = classes.filter((c) => c.keeps_xp_table != null).map((c) => c.id).sort();
-  const wantKeepers = [];
+  const wantKeepers = ['draconid'];
   check('the races declaring keeps_xp_table are the pinned ones',
     JSON.stringify(keepers) === JSON.stringify(wantKeepers), `got ${JSON.stringify(keepers)}`);
   check('and each keeps its own ladder beside an occupation that states one',
@@ -5196,7 +5195,7 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // "2D6 or per magic O.C.C."). A race added here should be a decision someone
   // reads the book for, and the ADD races (rifts-cyclops, rifts-elf) must never
   // be among them.
-  const want = ['aardan-tek', 'amphib', 'arac', 'elf', 'human', 'larhold-barbarian'];
+  const want = ['aardan-tek', 'amphib', 'arac', 'draconid', 'elf', 'human', 'larhold-barbarian'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
