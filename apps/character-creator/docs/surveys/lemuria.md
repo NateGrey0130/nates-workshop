@@ -1,8 +1,8 @@
 # Rifts World Book 32: Lemuria — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — skills, psionics and spells shipped; gear, vehicles, creatures, NPCs and classes next. (2026-10-05)
 
-**Rows citing this book:** none
+**Rows citing this book:** skills 10, spells 71, psionic_powers 21
 
 Slug `lemuria`. Cached 2026-10-05 from `Rifts- World Book 32 Lemuria.pdf`,
 226 PDF pages, **text layer** (no OCR). `--probe` median 5,790 chars/page.
@@ -284,6 +284,32 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-05 | `pal/data/lemuria-survey` | cache built (226 pp), `lemuria` registered in `books.json`, this survey written, offset +1 verified. No data. |
 
+| 2026-10-05 | `pal/data/lemuria-skills-psionics-spells` | 10 skills, 21 psionic powers (the Spouter's Hydro-Psionics, category `Special`, system left NULL as Psyscape's are), 63 Biomancy and 8 Ocean Magic spells. Applied `--remote` before the PR. The untagged-skills pin moves 88 to 92 for the four languages. |
+
+### Decided by Nate on 2026-10-05
+
+- The four hatchling dragons are playable R.C.C.s as well as creature rows.
+- The Moai is a vehicle row.
+- Of the ten garden plants, only the Carnivorous Blue Fruit Tree is imported.
+- Merge each data PR when it is green.
+
+### What the first import settled
+
+- **Animal Phantom is the held Animal Ghost.** The entry on printed 97 says it
+  is also known by that name, and level, cost, range and duration match. No
+  second row was written; a class names `Biomancy: Animal Ghost`.
+- **Heal Plants is tagged new in the alphabetical listing** (printed 86) and
+  only its body heading lacks the tag. Tree Phasing is the reverse: tagged in
+  the body, not in the listing. 63 Biomancy rows went in.
+- **Hand to Hand: Demon Combat prints its own level table** (printed 56-58)
+  under the name Kapu Kuialua; the Spouter entry uses that name.
+- **Seven held Biomancy rows differ from this book's reprint** and were left
+  as they are: Chitin (range adds others by touch), Metamorphosis: Plant
+  (range self only against touch), Bio-Blast (range), Undo Undead (range and
+  save), Suspended Animation (duration), Touch of Life (a cost schedule by
+  creature size and a permanent P.P.E. loss), Heal the Earth (range and area
+  printed separately). Which printing the catalog should follow is open.
+
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+Gear, vehicles, creatures, notable NPCs and classes.
