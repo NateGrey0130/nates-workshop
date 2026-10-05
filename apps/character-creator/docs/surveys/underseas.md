@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 24, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 31
+**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 31
 
 **MOS:** navy-seaman 9
 
@@ -49,7 +49,7 @@ stripped before any SQL.
 
 | page | table | states |
 |---|---|---|
-| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across ten ladders. Twenty-five of them are importable; see the Gene-Splicer note below. |
+| **214** | *Experience Tables* | **which classes are playable.** Twenty-six names across ten ladders. Twenty-five of them were importable in September; the twenty-sixth, the Gene-Splicer Mutant, was imported on 2026-10-05 (see its section below). |
 | **57** | *Alphabetical List of Spellsongs* | the 21 Whale Singer spellsongs and each one's P.P.E. cost |
 | **63** | *Alphabetical List of Ocean Spells* | the 41 ocean spells and each one's P.P.E. cost |
 | **70** | *Alphabetical Spell List* (Dolphin Magic) | the 10 dolphin spells and each one's P.P.E. cost |
@@ -65,7 +65,8 @@ ladder. Everything else in those pages is an NPC.
 
 **And one of those two turns out not to be a class at all.** See the
 Gene-Splicer section under *Classes* below - it has a ladder and no stat block,
-which page 214 alone cannot tell you.
+which page 214 alone cannot tell you. (It became a class on 2026-10-05, built
+from its roll tables; that section says how.)
 
 Page 214 also settles two names the chapter headings spell differently: the
 **Ocean Wizard O.C.C.** (p.60) is *Ocean Mage* in the ladder, and the **Sea
@@ -149,7 +150,18 @@ belongs in the class's `special_abilities`, not in `psionic_powers`.
 | Kreel-Lok Nomad R.C.C. | 152-153 | Navy Seaman / Salvage Expert / Kreel-Lok Warrior |
 | Horune Pirate R.C.C. | 164-165 | Horune Pirate / Naut'Yll Soldier |
 
-### Gene-Splicer Mutants has a ladder and NO class data — not imported
+### Gene-Splicer Mutants: a ladder and no stat block, imported from its tables on 2026-10-05
+
+**Imported on 2026-10-05 as `gene-splicer-mutant`, on Nate's ruling of
+2026-10-04** (close-out package C2). What follows is the September reading,
+kept because its reason was right at the time: a class row then had nowhere to
+put a value that comes out of a roll. Since `BOOK-INGEST-AUDIT` F119 and F120 a
+pick group's rows carry dice, pool bonuses and attribute dice, so the class is
+the tables themselves. There are **eight**, not six - this section missed
+*Intelligence & Aggression* and *Depth Tolerance* - each rolled once (printed
+39-40). The book still prints no attribute dice but I.Q., and no hit points,
+S.D.C., P.P.E., Horror Factor, alignment, skills, equipment or money; the class
+stores none and says the G.M. supplies them.
 
 Page 214 gives *Gene-Splicer Mutants* an experience ladder, so the survey first
 counted it among the playable classes. **Reading printed 38-40 settles it the
@@ -390,6 +402,7 @@ The merged PR body cannot be edited into truth retroactively and is left as the 
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **Ship Dreamers as a creature** (`~080`), which the plan left out as "not a character class". **Seven classes' percentile tables become banded pick-one groups** (`~089`): the Amphib's appearance and the psionics of the Sea Titan, Naut'Yll Soldier, Dolphin, Killer Whale, Sperm Whale and Humpback. The Naut'Yll Devastator is left: its own page prints a different breakdown. The Naut'Yll psionics line is on printed 149, not 148. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/d-bees-of-north-america-last-updates` | **`horune-pirate` leaves this book's count for D-Bees of North America** (`~098`), which reprints and updates it (2007); by Nate's ruling of 2026-10-04 the newest printing wins and the class moves its `source_book`, keeping this book's figures in its `extraction_notes`. **Three things the held row had dropped from printed 164-165**, found because D-Bees prints them too: the P.E. in its M.D.C. (P.E. plus 1D4x10), Horror Factor 10 as a figure, and the equipment list. The experience ladder of printed 214 is unchanged: D-Bees names the Operator's table, which is the same ladder. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a8-class-extras` | **The Pneuma-Biform Dolphin and Killer Whale roll their psionics** (`~114`): each carries the pick-one group of four banded options `~090` gave the `dolphin` and `killer-whale` classes, copied whole, because their entries say their psionics are the normal animal's (printed 80 and 88). Neither sets `psionics_allowed`, as the two animals do not; that page read is close-out package C5's. **Two false sentences on `nautyll-koral-shaper` rewritten**: a restriction and a note said no psionics block is stored, copied from the Soldier and Devastator, while the class is a major psionic with its own block. No row count moves. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/retro-c2-roll-tables` | **The Gene-Splicer Mutant is a class, and the Amphib's Appearance rows set P.B.** (close-out package C2). `add-gene-splicer-mutant-class.sql`: `gene-splicer-mutant`, on Nate's ruling of 2026-10-04, built from the EIGHT tables of printed 39-40 (the September survey counted six), each rolled once, with every unconditional number on its row and the ladder of printed 214; the book prints no attribute dice but I.Q. and none are invented. `~161`: each of the Amphib's seven Appearance options carries `attribute_dice` for P.B. as printed 99 gives it, replacing the re-roll by hand. Both read off renders and checked by `book-reconcile`. Classes 24 to 25. Applied `--remote` before the merge. |
 
 ### What the vehicle pass had to decide
 
