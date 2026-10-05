@@ -228,6 +228,10 @@ arts powers at set levels (for example one body hardening exercise at levels
 choice from a named list may not be expressible as a class ability. Check at
 step 5; if it cannot be stated, import the level-1 pick, put the later ones
 in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
+**It could not be stated then (F116), and it can now:** since 2026-10-05
+(`~167`) the Mystic Ninja, Bishamon, Sohei and Asama-Tatsu pick at the levels
+their pages print. The Demon Queller's page (printed 64) grants its four
+exercises outright, so it was never a level-gated pick.
 
 ### Agreed with Nate, 2026-09-30
 
@@ -262,6 +266,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 8 classes of this book (`cyber-samurai`, `cyberoid`, `glitter-force-trooper`, `republic-cyborg-soldier`, `robot-pilot-japan`, `ronin`, `samas-samurai-pilot`, `sohei-warrior-monk`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c1-draconid-felinoid-oni` | **The Oni of the One Hundred's head shapes add their Horror Factor** (`~160`, close-out package C1; `BOOK-INGEST-AUDIT` F119). The twelve non-human Head options carry `horror_factor_bonus` (+1 to +4) as printed 201 gives them, read off a render and checked again by `book-reconcile`. The Legs table's Spd dice and the four tables still in prose are package C2. No rows added. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c2-roll-tables` | **All nine Oni creation tables are picks** (`~161`, close-out package C2). The Legs rows set the Spd dice (`attribute_dice` on the option: 5D6, 4D6, 6D6+10, 6D6 for four rows, 3D6), replacing the by-hand reroll and the Classic Oni's +10 bonus; Body Shape, Nose, Eyes and Skin Color, held as prose until now, are band-named pick-one groups; and the groups follow the book's order. Printed 201-202 read off renders and checked row by row by `book-reconcile`: no disagreement. No rows added. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/japan-mystic-martial-arts-picks` | **Five classes pick their mystic martial arts powers at the levels their pages print** (`~167`, close-out package C4; `BOOK-INGEST-AUDIT` F116). The section on printed 195-199 prints nineteen powers (six arts of invisibility, seven body hardening exercises, six zenjoriki); each class carries identical copies of the definitions it can pick, there being no table for them. `mystic-ninja`: one art at each of levels 1, 3, 6, 9, 12 and 15 (printed 52). `bishamon-fighting-monk`: an art at 3, a body hardening exercise at 4 and at 10, a zenjoriki at 14 (printed 55-56); its own Chi-Gung untouched. `sohei-warrior-monk`: an exercise at 1, 5 and 9, a zenjoriki at 14 (printed 59). `dragon-hatchling-asama-tatsu`: a zenjoriki at 2, 7 and 12 (printed 215; the level-20 pick is past the ladder and stays a line). `dragon-hatchling-kumo-mi`: one art and one zenjoriki, as before, with the fuller text. The two hatchlings' options are prefixed `Hatchling`, because a race and an occupation that can be paired must not share option names. Powers and class pages read off renders and checked by `book-reconcile`: no wrong figure, level or bonus. Not done: `demon-queller` and `yamabushi-mountain-priest`, whose pages grant their exercises outright, keep their own definitions (read against the page: no number disagrees); the Oni Mystic (printed 205) and Japanese Imp (209) pick from the section and have no class. No rows added. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -285,5 +290,6 @@ same as before the import started, so no step left a stub behind:
 
 `node scripts/drift-check.mjs --remote` reports NO DRIFT the same day.
 
-**Open finding from this book:** BOOK-INGEST-AUDIT F116 (level-gated mystic
-martial arts picks, stored as prose in four classes).
+**Finding from this book, since built and used:** BOOK-INGEST-AUDIT F116
+(level-gated mystic martial arts picks). It was stored as prose in four
+classes until `~167` on 2026-10-05; see the ledger.
