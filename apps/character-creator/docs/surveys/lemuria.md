@@ -53,7 +53,7 @@ lists; `p006`-`p007` are the Contents (printed 5-6) and `p008` the Quick Find
 | **p006-p007** | 5-6 | *Contents* | the printed page of every section and entry |
 | **p008** | 7 | *Quick Find* | a second reading of the page of the stat blocks and rules |
 | **p087** | 86 | *Experience Tables* | the ladder each class uses; the classes share ladders in groups |
-| **p087-p088** | 86-87 | the alphabetical listing of Biomancy spells | the canonical name of each Biomancy spell |
+| **p087-p088** | 86-87 | the alphabetical listing of Biomancy spells | the canonical name of each Biomancy spell, with its P.P.E. cost, level, *(New)* tag and page |
 | **p088-p107** | 87-106 | the *Level One* to *Level Twelve* headings | each Biomancy spell's level, and a *(New)* tag on the ones this book adds |
 | **p107-p108** | 106-107 | the list of invocations open to Biomancers | which general spells the class may also take |
 
@@ -64,9 +64,10 @@ number below from where the heading sits in the body, found by font size
 under 10 pt), and used the Contents only for names. Read the Contents and the
 Quick Find off a render before relying on either for a number.
 
-**Biomancy levels are printed twice**: once by the level heading an entry
-sits under, and once in the entry's own stat lines. The alphabetical listing
-is the name authority. Spell levels are reconciled, not just transcribed.
+**Biomancy levels and costs are printed twice**: in the alphabetical listing
+and again in the body, under the level heading and in the entry's own lines.
+The listing is the name authority. Levels and costs are reconciled between
+the two, not just transcribed.
 
 ## Inventory
 
@@ -125,10 +126,11 @@ accounted for in the table above.
 | Lemurian Scout | 77-79 | adventurer |
 | Spouter | 80-82 | psychic; owns the fifteen exclusive Hydro-Psionics |
 
-The ladders on printed 86 are shared: one for the Birdman and Junk Crab, one
-for the Oceanic Guardsman and Ichthyleans, one for the Sea Sentinel and
-Lemurian Scout, and separate ones for the Spouter and the Serpent Hunter.
-That page is flagged corrupt, so each is read off a render.
+Printed 86 holds six ladders, read off a render on 2026-10-05: Birdman and
+Junk Crab; Gene-Mage and Milu; Oceanic Guardsman and Ichthyleans; Sea
+Sentinel and Lemurian Scout; Serpent Hunter; Spouter. The Lemurian and Meran
+R.C.C.s are not named on it. That page is flagged corrupt, so the figures are
+transcribed from a render too.
 
 **The catalog holds a `biomancer` class already.** The Biomancer Gene-Mage is
 a different class with its own entry; it gets its own id and the held class
