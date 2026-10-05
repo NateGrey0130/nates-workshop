@@ -242,3 +242,5 @@ BACKLOG       rows an importer created and nobody finished
 
 None of it is Madhaven's. Every class here emitted 0 stub statements, and this
 book defines no spells or psionics.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `madhaven 81 / 0`). Left: the Pseudo-Men's Automatic Dodge at +3 (band 01-10) is prose though `automatic_dodge` is a combat field now; its conditional rows (night only, against the supernatural, per arm) stay prose by design.

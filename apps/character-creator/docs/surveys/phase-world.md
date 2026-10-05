@@ -884,6 +884,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The Promethean Time Master is granted its temporal magic** (`~113`): the 25 Temporal Magic spells `~091` added from the Rifts Book of Magic are a named list on the class. First level is two temporal spells and two regular spells of levels 1-3 (printed 28), and each level from 2 to 15 is one temporal spell and one normal spell of the character's level or lower, as two schedule entries. Until now only the normal half was granted. The level bound is read as the normal spell's only: the temporal list starts at spell level 7. No row count moves. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c1-draconid-felinoid-oni` | **The Draconid's magician-or-psychic branch is a pick** (`~160`, close-out package C1). The one prose ability becomes a required pick-one group whose options name their occupation (`occ_options`: Ley Line Walker, Mind Melter) and carry the printed bonus (1D6x10 P.P.E., 1D4x10 I.S.P.); `ppe_base` is 1D6x10 and yields to a magic occupation (`BOOK-INGEST-AUDIT` F121); the race keeps its own experience table in a pairing (`keeps_xp_table`, F122); and `horror_factor: 10` is stated (printed 35). Printed 35-36 read off renders and checked again by `book-reconcile`: no figure disagreed. The pairing also brings the occupation's O.C.C. skills, related count, equipment and money, which the page does not give; the class's notes say so. No rows added. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c2-roll-tables` | **Creating More Alien Races is a class** (`add-phase-world-alien-class.sql`, close-out package C2, Nate's ruling of 2026-10-04): `phase-world-alien`, the nine steps of printed 104-108 as nine pick-one groups with every unconditional number on its row; 3D6 base attributes as printed 104 states; the optional steps carry an unbanded None. Not held by the mechanic and said so in the class: the G.M.'s S.D.C.-or-M.D.C. choice for each bonus, the halving for a Minor M.D.C. race, per-level M.D.C., and bonuses the builder assigns to attributes of his choice. Read off renders and checked by `book-reconcile`: no wrong figure; six unprinted sentences removed. Classes 34 to 35. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/retro-closeout-claim-sweep` | **The close-out's claim sweep** (`~170`, `~171`): 1 class of this book corrected (`phase-world-alien`). `claim-capability-verifier` judged 988 limitation claims across the 218 classes the close-out touched; these are sentences that were false while the class's data was right, or that cited a finding for a gap it did not cover. The `phase-world-alien`'s M.D.C. rows are pool bonuses with no base to add to; the class can state none (most of its races are S.D.C. beings), so its rows and notes now say the M.D.C. is entered by hand. No figure read from a book moves. No rows added. Applied `--remote` before the merge. |
 
 ### What remains
 
@@ -901,7 +902,7 @@ into the vessel tables migration 048 built (see the ledger and the gear
 section); the **12
 entries the book names but does not make playable**, seven labelled NPC or GM
 material in its own Contents, one in its section heading, three that are lore
-or a cross-reference or the alien-race generator, and the Dominator; the
+or a cross-reference or the alien-race generator (a class since 2026-10-05, `phase-world-alien`), and the Dominator; the
 **dog-fighting and space combat rules** of 151-157, which are rules text and
 not catalog data; and the **`Space:` family rename**, which is duplicate-tool
 work rather than an import. Ten findings, F2 through F11, record every
@@ -966,3 +967,5 @@ them turned out to be printed here.
 
 The pre-import paste this section used to hold said `phase-world (absent - no
 row cites this book)`. That is the line this batch replaced.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `phase-world 164 / 0`). Left on the two classes the close-out touched. `phase-world-alien`: its M.D.C. rows add nothing (the class can state no M.D.C. base, most of its races being S.D.C. beings) and are entered by hand; every S.D.C.-or-M.D.C. bonus is stored as S.D.C.; Greater Psionics carries no power block; the class does not state `psionics_allowed` because the pages are silent. `draconid`: taking the occupation its pick names also brings that occupation's O.C.C. skills, related count, equipment and money, which printed 36 does not give.

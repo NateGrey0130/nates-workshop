@@ -338,3 +338,5 @@ None of these is this book's: no class script here emitted a stub, and the
 book adds no skill, spell or psionic power.
 
 **The roll button** has since shipped (see *The Dog Boy, in full*).
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `lone-star 73 / 0`). Nothing on the retrospective's list is left for this book.

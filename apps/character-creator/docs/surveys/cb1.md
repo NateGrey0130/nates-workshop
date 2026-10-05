@@ -364,3 +364,5 @@ was applied:
 Batch 1 takes it to 96, batch 2 to 103, batch 3 to 111 and batch 4 to 116.
 **Nothing remains to take** from the extraction plan. Left out on purpose: the
 chapters listed under *Left out, with reasons* above.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `cb1 116 / 0`). Nothing on the retrospective's list is left for this book. The Gigante tables are rolled; the page says nothing about a repeated result.

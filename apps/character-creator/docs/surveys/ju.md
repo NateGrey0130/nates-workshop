@@ -113,3 +113,5 @@ confirm.
 
 **Re-measured 2026-09-27**, after the vessels (#857), creatures and notable
 NPCs above: `ju                  80 / 0` - still nothing untraceable.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `ju 82 / 0`). Left: the Murder-Wraith's two-thirds cut to P.B. is prose; the Dragon Juicer's insanity table is rolled after two years in play and stays prose, and its +1D4 initiative is stored as the average 2 although dice are accepted now (not changed: it needs the page).

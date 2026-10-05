@@ -947,3 +947,5 @@ two of them as a line the import would move; it never could.
 This section held a paste from 2026-09-12, taken before anything of this book
 had shipped, until 2026-09-25 - which is why the book went on reading as open
 work after the import was done.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `nightbane-core 993 / 0`). Nothing on the retrospective's list is left for this book. The Doppleganger whose human is a psychic (all the human's powers, two-thirds of the I.S.P.) stays a note.

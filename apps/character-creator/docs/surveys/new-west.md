@@ -458,6 +458,8 @@ description and a non-zero P.P.E. `BOOK-INGEST-AUDIT` F22.
 in: `new-west           240 / 0`. The `1` above is gone - `W.P. Rope` was
 re-cited to RUE in #882.
 
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `new-west 254 / 0`). Left: the Keeper of the Desert's rows that restate attribute dice or convert to M.D.C. stay prose (a pick banked at level 6 or 12 does not apply either); `trapper-woodsman`, `saloon-bum`, `professional-gambler` and `psi-druid` each carry a per-skill percentage in a note where a scoped or cross-category entry could hold it.
+
 ## What the classes needed from the app
 
 Recorded here because it is the answer to "what has to change to take these

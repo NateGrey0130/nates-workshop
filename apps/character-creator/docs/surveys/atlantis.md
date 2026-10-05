@@ -486,3 +486,5 @@ printed 89 prints track by smell **0%** in clean ink where the South America 2
 reprint prints 60%; the row keeps 0% and says so in `variant_note`. The OCR
 also merged `1D6+4 S.D.C.` into `1D6+48.D.C.` on that page, which only the
 reconciler caught; expect the same `S` -> `8` merge elsewhere in this cache.
+
+**After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `atlantis 215 / 0`). Left: the Maxi-Killer's race list. Its notes say most of the races the book names are not in the catalog and that the list "will widen by itself"; Kittani, Simvan, the three Hawrk and True Atlantean classes exist now and the list did not widen (it names ids). Which of them belong on it is a ruling (the True Atlantean line is conditional), so the list is unchanged and the sentence stands uncorrected.
