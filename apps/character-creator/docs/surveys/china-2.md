@@ -269,6 +269,13 @@ What is deliberately left, with the reason for each:
    filed in `BOOK-INGEST-AUDIT.md` when the first class batch meets it, and
    each row or class says what was dropped (`book-survey` §8).
 2. **Body hardening exercises: the same.** Level-1 picks in, the rest filed.
+
+   **Both moved on 2026-10-05** (`~168`, `~169`). Item 1: the later levels
+   are now written out, as each power's `progression` (`BOOK-INGEST-AUDIT`
+   F117, closed as display text with no powers table), on every class that
+   holds a power. Item 2: the exercises print no level table, so there was
+   nothing to write out; the picks after creation are still made by hand,
+   because a pick group holds one count for every level it lists.
 3. **Enlightened Demon R.C.C. goes in now**, with its demon form in prose,
    not held for China 1.
 4. **Literacy: Chinese is a new skill row**, not `Language: Chinese` and not
@@ -306,6 +313,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-03 | `pal/data/retro-holdable-gaps` | **The three Geo-Borg bodies as `borg` vessels** (`~085`): DB-800 Demon-Eater, AB-830 Assault, AB-955 Lion. Vehicles 6 to 9. The classes are not rewired. Read off renders and checked again by `book-reconcile`; applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The three Geo-Borg classes are wired to their bodies** (`~113`): `gear` pointer rows `db-800-demon-eater-cyborg`, `ab-830-assault-geo-borg` and `ab-955-lion-geo-borg`, each carrying `vehicle_slug` and listed first in its class's `equipment_starting` (the F41 shape, as `~018`). The Lion's starting equipment was empty and now holds only its body's pointer. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 1 classes of this book (`enlightened-demon`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/china-2-martial-art-power-levels` | **The Mystic Martial Art Powers carry their later levels** (`~168`, `~169`, close-out package C4; `BOOK-INGEST-AUDIT` F117, F116). Each of the eleven powers of printed 25-41 was read off renders as a fifteen-level table and checked level by level against renders by three reviewers (17 corrections, all omitted rules or wording; no wrong level figure). Levels 2-15 are each definition's `progression`, shown on the sheet for a held power (display only): 48 definitions on fourteen classes, identical copies of one set. `wai-chia-wu-shih`'s fixed power gains a one-option group so it is held. `enlightened-demon` picks one of five powers at 10th level (`at_levels: [10]`, printed 99) and starts it at the tenth level of advancement. `geofront-gun-master`'s own art, Tao Jen Qiang, gains a definition with its levels 2-15 (printed 138-140). `soothsayer` and the three Geo-Borgs, whose pages print no power, and `demon-and-dead-slaver` and `goblin-wrangler`, whose pages give none, stop citing F117 as a gap. **Body Hardening** (printed 92-94): no exercise prints a level table; the eleven definitions on three classes take three corrections (Hardened Internal Organs, Yung Chin's printed penalties, Feign Death's held-breath steps as a `progression`). **Not done:** the body hardening picks after creation (`fu-yao-da-chia` at 3, 6, 9, 12, 15; `demon-and-dead-slaver` at 4, 8, 12; `goblin-wrangler` at 3, 6, 9, 12, 15) stay by hand, because a pick group holds one count for every level it lists and these classes take several at creation and one later, from the same list. Hsien Hsia, the eleventh power, is extracted and held by no class, as before. No rows added. Applied `--remote` before the merge. |
 
 ### What remains
 
