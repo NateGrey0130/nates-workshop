@@ -149,6 +149,20 @@
       "note": "Cached 2026-10-01 from its TEXT LAYER, --probe median 4,580 chars/page and 35.5% stop words. Offset verified by folio at seven points - cache p012 reads 11, p050 reads 49, p100 reads 99, p150 reads 149, p200 reads 199, p222 reads 221, p223 reads 222 - one region, no split. printed_pages is 224: the Experience Tables run from the foot of cache p224 (printed 223) through cache p225 (printed 224) and neither page prints a folio, so ocr-book.py measured 222; the Contents puts Experience Points on 224. Cache p001 is the cover and p226 is blank; no house ads. welded_pages 1 (12), corrupt_pages 3 pages (p5 the Contents, p29 and p44 prose), substituted_digits 64 pages. See apps/character-creator/docs/surveys/australia.md."
     },
 
+    "baalgor-wastelands": {
+      "title": "Palladium Fantasy RPG Book 9: The Baalgor Wastelands",
+      "published": 1999,
+      "aliases": [
+        "The Baalgor Wastelands",
+        "Baalgor Wastelands"
+      ],
+      "source_pdf": "515266553-Palladium-Fantasy-Book-9-The-Baalgor-Wastelands.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 215,
+      "page_offset": 1,
+      "note": "Cached 2026-10-05 by OCR (a SCAN, no text layer; 300 dpi, psm 3), median 5,340 chars/page. Second edition (first printing March 1999). Offset verified by folio at six points - cache p020 reads 19, p150 reads 149, p200 reads 199, p214 reads 213, p215 reads 214, p216 reads 215 - one region. printed_pages is 215, the Experience Tables page, at cache p216 (read off a render); ocr-book.py measured 214 and the registry outranks the manifest. p217 and p218 are unnumbered catalogue pages. See apps/character-creator/docs/surveys/baalgor-wastelands.md."
+    },
+
     "bom": {
       "title": "Rifts Book of Magic",
       "published": 2001,
