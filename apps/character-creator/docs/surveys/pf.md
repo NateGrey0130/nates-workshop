@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows accumulated across the project, not in one import, and no full inventory has been taken. (2026-09-24)
 
-**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 79, psionic_powers 2, creatures 36
+**Rows citing this book:** classes 39, gear 511, enchantments 62, skills 8, skill_system_bases 1, spells 113, psionic_powers 2, creatures 36
 
 Slug `pf`. Cached from `Palladium RPG - Main Book.pdf`, 339 PDF pages,
 **text layer**.
@@ -60,7 +60,7 @@ titles at 24pt and up, entry headings at 17pt, ward and circle names at
 | 49-61 | skill descriptions | not diffed; `skills` holds 8 rows citing this book, the rest by name under other books |
 | 63-99 | clergy, men of arms and optional O.C.C.s | held (the classes line above) |
 | 104-117 | Wizard, Warlock, Witch, Diabolist | held as classes |
-| **120-133** | **Ward magic**: ten symbol kinds on printed 126 (Alarms, Area Affect, Permanence, Power, Protection, Inflict, Trigger, Conditions, Colors, Numbers) and 22 condition wards on 128-132 | **nothing held.** No `spells` or `enchantments` row is a ward; the `diabolist` class note says there is no ward catalog |
+| **120-133** | **Ward magic**: ten symbol kinds on printed 126 (Alarms, Area Affect, Permanence, Power, Protection, Inflict, Trigger, Conditions, Colors, Numbers) and 22 condition wards on 128-132 | **held since 2026-10-05**: 34 `spells` rows in tradition `ward` (`~165`) covering the 52 symbols of the printed 127 plate, and the `diabolist` class names them in its magic block (`~166`). Until then nothing was held |
 | **135-155** | Summoner O.C.C., then **51 circles**: 18 protection circles (138-140), 14 summoning circles (146-148), 19 power circles (149-155) | **nothing held** as rows; the `summoner` class note says there is no circle catalog. Two invocations share a name with a protection circle and are not it |
 | 156-161 | four Psychic Character Classes | held as classes |
 | 163-179 | psionic powers, 78 entry headings | all 78 match a `psionic_powers` row by name; two cite this book |
@@ -75,7 +75,7 @@ titles at 24pt and up, entry headings at 17pt, ward and circle names at
 a kind, a condition, optionally an area, a trigger and a permanence - so the
 32 headings on printed 126-132 are parts, not finished spells. A circle is one
 entry with its own P.P.E. cost and power words, the shape a `spells` row in
-its own tradition already holds.
+its own tradition already holds. That is still true of a finished ward; what the catalog took on 2026-10-05 is the SYMBOLS, one row per kind, on Nate's ruling that the sheet shows a symbol catalog and builds no phrases.
 
 ## Classes
 
@@ -115,6 +115,7 @@ None. This book has no open import.
 | 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The Summoner is granted its circles** (`~113`): a `magic` block granting the 18 protection and 15 summoning circles by name, because printed 135 says the Summoner knows all protection and summoning circles and starts with no power circles. The 18 power circles are not granted and no pick offers them; the class learns nothing by level. Its Circle Magic ability and its note no longer say the sheet has no circle list. Not stored: the Deciphering Circles percentage and the circle strength rule. No row count moves. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a13-category-bonuses` | **Related-skill category bonuses that lived only in a note now apply** (`~122`, `~123`): 22 of this book's classes (`assassin`, `druid`, `knight`, `mercenary-fighter`, `merchant`, `mind-mage`, `noble`, `palladin`, `priest-of-darkness`, `psi-healer`, `psi-mystic`, `psychic-sensitive`, `ranger`, `scholar`, `soldier`, `squire`, `summoner`, `thief`, `vagabond-peasant`, `warrior-monk`, `witch`, `wizard`). `categoryBonus` reads an entry's `bonus` key and nothing else, so a bonus written only in the entry's note reached no character. A plain one gains the key; a bonus for part of a category gains a second entry naming those skills (`BOOK-INGEST-AUDIT` F109's shape). Taken from each class's own stored note; no page was reopened. No row count moves. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 1 classes of this book (`summoner`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/retro-c3-ward-symbols` | **The ward symbols as a catalog, and the Diabolist wired to them** (`~165`, `~166`, close-out package C3; `BOOK-INGEST-AUDIT` F123, Nate's ruling 9). `~165`: 34 `spells` rows in tradition `ward`, level 0, covering the 52 symbols of the printed 127 plate (4 alarms, 22 conditions, 6 major wards; the seven colors and thirteen numerals one row per group), each named for its kind; P.P.E. from the general rule of printed 120 and 122 (1, 5 for power, 20 for permanence), components and power words in each description. Where the book contradicts itself (the trigger alarm's range, the power ward's components, inflict with area affect) the row states both sides. `~166`: the `diabolist` names all 34 in a magic block, because no page gives a first-level count or a gain by level (printed 117, 119, 120); Use Magic Circles is corrected (it can use an active circle at 30% +5%, two tries, and cannot create or activate one), Recognize Wards, Runes & Circles takes printed 119's 22% +4% in place of the Rifts catalog base, and the Lore's ward that lasts a year lasts centuries. Read off renders of printed 117-133 and checked row by row by `book-reconcile`: no wrong figure. Spells 79 to 113. Applied `--remote` before the merge. |
 
 ### What remains
 
