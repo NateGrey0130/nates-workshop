@@ -337,11 +337,11 @@
    "title": "Rifts Dimension Book 2: Phase World",
    "code": "phase-world",
    "status": "imported",
-   "date": "2026-09-24",
+   "date": "2026-10-05",
    "added": [
     [
      "Classes",
-     34
+     35
     ],
     [
      "Creatures",
@@ -368,7 +368,7 @@
      24
     ]
    ],
-   "total": 163
+   "total": 164
   },
   {
    "slug": "rue",
@@ -553,7 +553,7 @@
    "added": [
     [
      "Classes",
-     24
+     25
     ],
     [
      "Creatures",
@@ -580,7 +580,7 @@
      50
     ]
    ],
-   "total": 283
+   "total": 284
   },
   {
    "slug": "japan",
