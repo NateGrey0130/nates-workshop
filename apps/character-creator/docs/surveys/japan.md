@@ -73,7 +73,7 @@ cached pages.
 | Cyborgs of Japan | 96-108 | **Republic Cyborg Soldier O.C.C.** (97) and **4 Dragon 'Borg** bodies (Wing Blade, Tsunami, Imperial Combat, Flame Cloud, 101-108) |
 | Cybernetics & bionics | 109-113 | **~20** implants and bionic weapons |
 | High-tech weapons and gear | 114-131 | **~30**: ArmaTech and H-Brand pistols, rifles, rail guns, ARC-2, plasma thrower, neural stick, grenades, launcher, satchel charge, 3 mines, bomb detector, SNARLS, backpack, energy clips, vibro-blades; bows and arrow types (118); **traditional S.D.C. weapons** (118-120, ~20, several already in the catalog) |
-| Power armor | 132-157 | **12**: Japanese SAMAS, Samurai-class SAMAS, Point and Hawkeye Glitter Boys, optional GB weapons (142), ATPA-85, H-Brand Ninjabot, IPA-40, -45, -50, -60, -62, -70. The Glitter Boy on 135 is the core book's |
+| Power armor | 132-157 | **12**: Japanese SAMAS, Samurai-class SAMAS, Point and Hawkeye Glitter Boys, optional GB weapons (142), ATPA-85, H-Brand Ninjabot, IPA-40, -45, -50, -60, -62, -70. The Glitter Boy on 136-137 is the core book's |
 | Robots | 158-180 | **9**: AT-1053, AT-1063, IR-2015, -2020, -2040, -2050, -2060, -2070, IR-4000 |
 | Body armor | 181-186 | **8 armor entries** (two cover a pair of models each) plus the KM-200 jet pack |
 | Japanese skills | 187-190 | **36 skills** (see *Catalog diff*) |
@@ -139,7 +139,7 @@ classes under short ids. Use a `japan-` or `-japan` form where one is taken.
 
 - **Goblin** (printed 206-207) is adapted from Conversion Book One; `rifts-goblin`
   holds it. Not re-imported.
-- **Glitter Boy** (printed 135) is the core book's; `Glitter Boy Power Armor`
+- **Glitter Boy** (printed 136-137) is the core book's; `Glitter Boy Power Armor`
   is in `gear`. Not re-imported.
 
 ## Catalog diff
@@ -259,6 +259,7 @@ in prose, and file it in `BOOK-INGEST-AUDIT.md` (`book-survey` §8).
 | 2026-10-04 | `pal/data/retro-a4-race-creatures` | **The six playable races as creatures** (`~100`), `playable = 1`, by Nate's ruling of 2026-10-04: `tengu`, `oni-of-the-one-hundred`, `sura-kappa` and the three hatchlings `dragon-hatchling-shikome-kido-mi`, `dragon-hatchling-kumo-mi`, `dragon-hatchling-asama-tatsu`, with 31 attacks. Built from renders and checked again by `book-reconcile`: no wrong figure. **What a hatchling row holds:** the book prints M.D.C., P.P.E. and attacks per melee for a hatchling and everything else once for the species, so the attribute dice and damage are the species', and each row says so. The adult dragon rows (`japan-*-dragon`) are separate and unchanged. The Tengu's combat figures are Teng-jutsu at level one (printed 69), which every Tengu knows; the R.C.C.'s own bonuses on printed 68 are saves only. The Oni's Spd has no printed formula (it comes from the Oni Legs table); the commonest result is stored and the table is in the note. Its nine appearance tables and the powers table are summarised with their pages, not expanded. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The four Dragon 'Borg classes are wired to their bodies** (`~113`): four `gear` pointer rows whose slug is the vessel's own and which carry `vehicle_slug` (`at-c8000-wing-blade-cyborg`, `at-c9000-tsunami-cyborg`, `at-c10000-imperial-dragon-cyborg`, `at-c12000-flame-cloud-cyborg`), each first in its class's `equipment_starting`, the shape `BOOK-INGEST-AUDIT` F41 settled for a class's vessel (`~018`). Cost and main body M.D.C. are the vessel row's. The three notes `~092` wrote saying the class was not wired are rewritten; each class still describes its body in `special_abilities`. Applied `--remote` before the merge. |
 | 2026-10-04 | `pal/data/retro-a12-small-corrections` | **Checked, nothing to add: the power armor list's twelfth name.** The chapter's list on printed 132 has twelve names and the catalog holds eleven Japan power armors. Printed 132-135 were rendered: "Japanese SAMAS" is a section heading over history text, and the only machine statted under it is the Samurai-class SAMAS PA-10A, the held `at-samurai-samas-pa-10a`. The twelfth name is the plain AT-USA-10 Glitter Boy, which the inventory above already gives to the core book. |
+| 2026-10-05 | `pal/data/retro-a14-stale-notes` | **Stale "no catalog row" sentences corrected** (`~124`, `~125`), the last sweep of the close-out: 8 classes of this book (`cyber-samurai`, `cyberoid`, `glitter-force-trooper`, `republic-cyborg-soldier`, `robot-pilot-japan`, `ronin`, `samas-samurai-pilot`, `sohei-warrior-monk`) said the catalog lacked an item, skill, spell, class or vehicle that it now holds. Each sentence was checked against production and now names the row; nothing a class grants changes. Applied `--remote` before the merge. |
 
 ### What remains
 
