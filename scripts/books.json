@@ -111,6 +111,21 @@
       "note": "Cached 2026-09-25 from its TEXT LAYER, --probe median 4,968 chars/page and 35.1% stop words (not the F73 glyph-dropped kind). Offset verified by folio at six points - cache p010 reads 9, p030 reads 29, p060 reads 59, p090 reads 89, p150 reads 149, p161 reads 160 - one region, no split. printed_pages is 160, the last numbered folio at cache p161; cache p162 is the back cover. ocr-book.py measured 158 and that is a max-folio misread (p160/p161 print their folios split as '1 59' and '1 60'); the registry outranks the manifest. welded_pages 2 (5, 6 - front matter), corrupt_pages 7 pages at one or two hits each, substituted_digits 19 pages. See apps/character-creator/docs/surveys/africa.md."
     },
 
+    "arzno": {
+      "title": "Rifts World Book 28: Arzno - Vampire Incursion",
+      "published": 2006,
+      "aliases": [
+        "Arzno",
+        "Rifts Arzno",
+        "Arzno: Vampire Incursion"
+      ],
+      "source_pdf": "Rifts- World Book 28 Arzno- Vampire Incursion.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 160,
+      "page_offset": 1,
+      "note": "Cached 2026-10-05 by OCR (a SCAN, no text layer; 300 dpi, psm 3), median 5,267 chars/page. Offset verified by folio at ten points - cache p020 reads 19, p050 reads 49, p075 reads 74, p100 reads 99, p125 reads 124, p140 reads 139, p147 reads 146, p150 reads 149, p155 reads 154, p161 reads 160 - one region. printed_pages is 160, the last folio, at cache p161; ocr-book.py measured 146 and the registry outranks the manifest. p162 is an unnumbered catalogue page. See apps/character-creator/docs/surveys/arzno.md."
+    },
+
     "atlantis": {
       "title": "Rifts World Book 2: Atlantis",
       "published": 1992,
