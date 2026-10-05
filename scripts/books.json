@@ -262,6 +262,20 @@
       "page_offset": 1
     },
 
+    "lemuria": {
+      "title": "Rifts World Book 32: Lemuria",
+      "published": 2012,
+      "aliases": [
+        "Lemuria",
+        "Rifts Lemuria"
+      ],
+      "source_pdf": "Rifts- World Book 32 Lemuria.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 224,
+      "page_offset": 1,
+      "note": "Cached 2026-10-05 from its TEXT LAYER, --probe median 5,790 chars/page. Offset verified by folio at eight points - cache p010 reads 9, p030 reads 29, p060 reads 59, p088 reads 87, p100 reads 99, p150 reads 149, p200 reads 199, p224 reads 223 - one region. printed_pages is 224, the last numbered folio, at cache p225 (a catalogue page); ocr-book.py measured 223 and the registry outranks the manifest. p226 is an unnumbered catalogue page. welded_pages 1 (cache p3, the credits), corrupt_pages 9 pages (p87, p98, p143, p148, p150, p155, p191, p192, p223), substituted_digits 30 pages. See apps/character-creator/docs/surveys/lemuria.md."
+    },
+
     "lone-star": {
       "title": "Rifts World Book 13: Lone Star",
       "published": 1997,
