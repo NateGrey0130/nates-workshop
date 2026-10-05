@@ -1,8 +1,8 @@
 # Rifts Dimension Book 2: Phase World — survey
 
-**Status:** `imported` — all 34 playable classes; the ledger below is the authority. (2026-09-24)
+**Status:** `imported` — all 34 playable classes and, since 2026-10-05, the alien-race builder of printed 104-108 as a 35th; the ledger below is the authority. (2026-10-05)
 
-**Rows citing this book:** classes 34, gear 50, vehicles 24, skills 17, psionic_powers 15, notable_npcs 11, creatures 12
+**Rows citing this book:** classes 35, gear 50, vehicles 24, skills 17, psionic_powers 15, notable_npcs 11, creatures 12
 
 Slug `phase-world`. Cached 2026-08-28 from
 `Rifts- Dimension Book 2 Phase World.pdf`, 209 PDF pages,
@@ -132,7 +132,7 @@ Counted by structure over all 209 cached pages, not by reading prose.
 | The Star Hives | 91-95 | 5 classes |
 | The Dominators | 96-98 | 1 class |
 | The Cosmo-Knights | 99-103 | 2 classes |
-| Creating More Alien Races | 104-108 | a generator, not a class |
+| Creating More Alien Races | 104-108 | a generator; a class since 2026-10-05, `phase-world-alien` |
 | Monsters and Animals | 109-113 | 5 creatures, no O.C.C. stat blocks |
 | Weapons and personal technology | 114-129 | ~42 gear stat blocks |
 | Robots & Powered Armor | 130-142 | 6 vehicles |
@@ -271,7 +271,7 @@ and carry no stat block at all:
 | Dominator | 96-98 | no ladder, no O.C.C. skills, godlike stat block |
 | Promethean R.C.C. | 24-25 | the race overview; First Stage is the stat block |
 | Other Rifts O.C.C.s and R.C.C.s | 43-46 | cross-references to other books, no stat blocks |
-| Creating More Alien Races | 104-108 | a nine-step generator, not a class |
+| Creating More Alien Races | 104-108 | a nine-step generator, imported 2026-10-05 as `phase-world-alien`: each step is a pick group (close-out package C2) |
 | Gene Splicers | 49-50 | lore, no stat block |
 
 `book-survey` §1's rule decided every one of these: a mention is not a
@@ -883,6 +883,7 @@ What is deliberately left, with the reason for each:
 | 2026-09-27 | #1466 | **Five class notes stop citing F3 for a vessel**, by `~029-class-vessel-notes.sql`, after #1445 put this book's vessels in `vehicles`. `noro-mystic-warrior` no longer calls its `psionic-power-armor` gear row lossy: it points at its vessel since #860. `galactic-tracer`, `space-pirate` and `runner` keep their small spaceship out of equipment_starting because the book makes it the GM's option and names no model; the Runner's note names the book's `typical-runner-ship` row for a GM who grants one. `naruni-repo-bot`'s conditional shuttle names no model and no Naruni shuttle is among the book's vessels; its note said those vessels were out of scope. No row count moves. `--remote` is applied before the merge. |
 | 2026-10-04 | `pal/data/retro-a7-wire-classes` | **The Promethean Time Master is granted its temporal magic** (`~113`): the 25 Temporal Magic spells `~091` added from the Rifts Book of Magic are a named list on the class. First level is two temporal spells and two regular spells of levels 1-3 (printed 28), and each level from 2 to 15 is one temporal spell and one normal spell of the character's level or lower, as two schedule entries. Until now only the normal half was granted. The level bound is read as the normal spell's only: the temporal list starts at spell level 7. No row count moves. Applied `--remote` before the merge. |
 | 2026-10-05 | `pal/data/retro-c1-draconid-felinoid-oni` | **The Draconid's magician-or-psychic branch is a pick** (`~160`, close-out package C1). The one prose ability becomes a required pick-one group whose options name their occupation (`occ_options`: Ley Line Walker, Mind Melter) and carry the printed bonus (1D6x10 P.P.E., 1D4x10 I.S.P.); `ppe_base` is 1D6x10 and yields to a magic occupation (`BOOK-INGEST-AUDIT` F121); the race keeps its own experience table in a pairing (`keeps_xp_table`, F122); and `horror_factor: 10` is stated (printed 35). Printed 35-36 read off renders and checked again by `book-reconcile`: no figure disagreed. The pairing also brings the occupation's O.C.C. skills, related count, equipment and money, which the page does not give; the class's notes say so. No rows added. Applied `--remote` before the merge. |
+| 2026-10-05 | `pal/data/retro-c2-roll-tables` | **Creating More Alien Races is a class** (`add-phase-world-alien-class.sql`, close-out package C2, Nate's ruling of 2026-10-04): `phase-world-alien`, the nine steps of printed 104-108 as nine pick-one groups with every unconditional number on its row; 3D6 base attributes as printed 104 states; the optional steps carry an unbanded None. Not held by the mechanic and said so in the class: the G.M.'s S.D.C.-or-M.D.C. choice for each bonus, the halving for a Minor M.D.C. race, per-level M.D.C., and bonuses the builder assigns to attributes of his choice. Read off renders and checked by `book-reconcile`: no wrong figure; six unprinted sentences removed. Classes 34 to 35. Applied `--remote` before the merge. |
 
 ### What remains
 
