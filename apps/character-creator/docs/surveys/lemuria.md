@@ -1,8 +1,8 @@
 # Rifts World Book 32: Lemuria — survey
 
-**Status:** `importing` — skills, psionics and spells shipped; gear, vehicles, creatures, NPCs and classes next. (2026-10-05)
+**Status:** `importing` — everything but the classes has shipped; the fifteen classes are next. (2026-10-05)
 
-**Rows citing this book:** skills 10, spells 71, psionic_powers 21
+**Rows citing this book:** gear 74, vehicles 7, skills 10, spells 71, psionic_powers 21, notable_npcs 2, creatures 33
 
 Slug `lemuria`. Cached 2026-10-05 from `Rifts- World Book 32 Lemuria.pdf`,
 226 PDF pages, **text layer** (no OCR). `--probe` median 5,790 chars/page.
@@ -285,6 +285,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-05 | `pal/data/lemuria-survey` | cache built (226 pp), `lemuria` registered in `books.json`, this survey written, offset +1 verified. No data. |
 
 | 2026-10-05 | `pal/data/lemuria-skills-psionics-spells` | 10 skills, 21 psionic powers (the Spouter's Hydro-Psionics, category `Special`, system left NULL as Psyscape's are), 63 Biomancy and 8 Ocean Magic spells. Applied `--remote` before the PR. The untagged-skills pin moves 88 to 92 for the four languages. |
+| 2026-10-05 | `pal/data/lemuria-gear-vehicles-creatures` | 74 gear rows (11 armors, 47 weapons, 16 symbiotes and transportation), 7 vehicles with 43 locations and 41 weapon entries (the six symbiotic vehicles and the Moai), 33 creatures and 2 notable NPCs with 179 attacks. Applied `--remote` before the PR. |
 
 ### Decided by Nate on 2026-10-05
 
@@ -310,6 +311,39 @@ What is deliberately left, with the reason for each:
   creature size and a permanent P.P.E. loss), Heal the Earth (range and area
   printed separately). Which printing the catalog should follow is open.
 
+### What the second import settled
+
+- **Bio-Armor and melee Bio-Weapons store no `cost`.** The book prints no
+  price for either: each armor is "easily worth" a range of millions and is
+  never sold, and the melee weapons share one valuation line for the whole
+  class (printed 131). The printed text is in `cost_note`. The ranged weapons
+  and symbiotes carry real printed prices.
+- **Weapon families are one row per type.** The six melee families print 37
+  weapon types between them; a family's "Sword" that prints a large and a
+  short damage is two rows.
+- **Bio-Skins are four suits** (Gill, Dive, Protective, Terrain), each with its
+  own figures on printed 137.
+- **The Moai is one vehicle row covering three sizes**, with each size's
+  M.D.C. as its own locations and no single main-body figure. The Wave Shadow
+  likewise prints three hull sections and no total.
+- **A vehicle's numbered "Weapon Systems" entries are all stored**, including
+  the ones that are repairs or sensors, so the ordinals match the book.
+- **The Mahiki Milu row asserts only what its entry prints** (alignment,
+  attributes, M.D.C. and the vampire powers). The book says it keeps the
+  living Milu's basic stats without reprinting them; those figures are quoted
+  in its notes, not stored as its own.
+- **Path Walkers and the Undead Zombie Servant have no stat block** and are
+  described inside the Mahiki Milu row.
+- **The four dragon rows roll the hatchling**; adult figures are in the notes.
+  The Leviathan's slug is `lemurian-leviathan`, because `leviathan` is taken.
+- **Creature categories follow the catalog's vocabulary**: `monster` for the
+  sea creatures and serpents, `animal`, `plant`, `humanoid`, `undead`,
+  `dragon`.
+- **Not imported, though printed with figures**: armors made from creature
+  hides (Sun Turtle shell, Storm Crab shell, Seal Serpent hide, Tiger Serpent)
+  and the Blue Death Fruit, each named in its creature's notes.
+
 ### What remains
 
-Gear, vehicles, creatures, notable NPCs and classes.
+The fifteen classes: four R.C.C.s, seven O.C.C.s and the four dragon
+hatchlings.
