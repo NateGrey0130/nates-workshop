@@ -374,6 +374,20 @@
       "note": "Cached 2026-09-12 from its TEXT LAYER, median 3,925 chars/page. Offset verified by folio at three points rather than taken from the vote - cache p005 reads 4, p121 reads 120, p241 reads 240. printed_pages is 240, the last NUMBERED folio, and the book's own content ends well before it: printed 233 is the Experience Tables and 234-240 are blank character record sheets and a trademark page. Cache p242-p248 are Palladium house ads the book does not number. THE FIRST BOOK HERE THAT IS NEITHER RIFTS NOR PALLADIUM FANTASY - Nightbane is its own game. THIS SENTENCE USED TO SAY no catalog row could cite it until `system` accepted a third value; that stopped being true with the 2026-09-16 gear import, and measured --remote on 2026-09-22 production holds 963 catalog rows - 663 gear, 173 morphus characteristics, 39 spells, 35 vehicles, 25 talents, 15 creatures, 6 skills, 4 psionic powers and 3 skill system bases - plus 19 published classes (BOOK-INGEST-AUDIT F104). See apps/character-creator/docs/surveys/nightbane-core.md. substituted_digits is 45 PAGES, the third fault class in book-survey 0 - a render does not fix it, the damage is in the ink - and it lands on cache p036-p193 - the Morphus tables and the Money: lines of the class entries - and on NONE of the equipment chapter. CORRECTED 2026-09-16 by the gear import: printed 204-232 carries a digit cipher in its TEXT LAYER (`$ 1 1 00.00`, `l 6lbs`, `I l Omph`) that this detector does not flag, and 150-220 dpi renders of every one of those pages read it clean. welded_pages is 8 and corrupt_pages 12 pages, four of them (205, 206, 209, 216) inside the weapons chapter. source_pdf_dir was Downloads and NOT the workshop books directory every OTHER entry here names; the PDF was MOVED there on 2026-09-12 in PR #992 and this field was repointed with it, so all twenty-three entries now name one directory and every recorded source_pdf resolves to a file on disk. A count is still deliberately not stated, because it moves with the next book."
     },
 
+    "old-ones": {
+      "title": "The Palladium RPG Book II: Old Ones",
+      "published": 1984,
+      "aliases": [
+        "Old Ones",
+        "Palladium RPG Book II: Old Ones"
+      ],
+      "source_pdf": "959867819-PFRPG-Book-02-Old-Ones.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "printed_pages": 210,
+      "page_offset": 7,
+      "note": "Cached 2026-10-05 from its TEXT LAYER, --probe median 6,121 chars/page. THIS IS THE FIRST-EDITION BOOK (copyright 1984, fifth printing January 1993), not the 1996 second-edition Old Ones; pf and dag are second edition. Offset verified by folio at eight points - cache p011 reads 4, p012 reads 5, p020 reads 13, p050 reads 43, p100 reads 93, p150 reads 143, p200 reads 193, p217 reads 210 - one region; printed 1 is cache p008 and p001-p007 are cover, notice, title, contents and a map key. printed_pages is 210, at cache p217; p218 is blank. The text layer is poor: welded_pages 38, corrupt_pages 51 pages, substituted_digits 21 pages (cache p94 has 26, p114 has 24). See apps/character-creator/docs/surveys/old-ones.md."
+    },
+
     "pf": {
       "title": "Palladium Fantasy RPG Main Book",
       "published": 1996,
