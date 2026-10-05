@@ -322,7 +322,9 @@ Three things that shape does not settle, each measured the same day:
   occupation's *powers* and prints the Draconid's own R.C.C. skills, so the
   pairing gives more than the book does. A powers-only shape cannot carry the
   Ley Line Walker's P.P.E. formula or that class's own abilities, so the
-  pairing stands and the class's `extraction_notes` say what it over-grants.
+  pairing stands (Nate's decision, 2026-10-05) and the class's
+  `extraction_notes` say what it over-grants, as does the note on the pick
+  itself, which the wizard shows (`~172`).
 
 So this is the shape for a race whose mage figure is *the occupation's, plus
 something*, and it is not a reason to key a race that merely prints a figure.
