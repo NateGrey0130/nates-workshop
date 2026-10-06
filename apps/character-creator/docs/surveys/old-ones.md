@@ -1,8 +1,8 @@
 # The Palladium RPG Book II: Old Ones — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. The edition question under *Extraction plan* comes first. (2026-10-05)
+**Status:** `imported` — the plan is done: 144 notable NPCs and 9 creatures, every one marked first edition. Left out on purpose: the three classes, one-line people, the one-line residents of the Place of Magic, generic garrisons and the places themselves. (2026-10-05)
 
-**Rows citing this book:** none
+**Rows citing this book:** notable_npcs 144, creatures 9
 
 Slug `old-ones`. Cached 2026-10-05 from
 `959867819-PFRPG-Book-02-Old-Ones.pdf`, 218 PDF pages, **text layer** (no
@@ -141,9 +141,95 @@ Production holds 73 Palladium Fantasy NPC rows and none cites this book. The
 115 stat blocks here were not diffed by name, because the names cannot be
 trusted from this text layer.
 
-## Extraction plan
+## What Nate decided (2026-10-05)
 
-**Nothing is planned until the edition question is answered.** The choices:
+Asked with a recommendation each; the answers are his.
+
+1. **People only.** The named people and monsters go in; the Monk,
+   Illusionist and Lumber-Jack classes do not. A stat block stands on its
+   own, and a first-edition class would build a character on second-edition
+   rules.
+2. **Every full stat block.** A person is a row when the entry prints Hit
+   Points with a level or class and an alignment. One-line people in the town
+   code keys are counted below, not imported.
+3. **A named being is a notable NPC; a kind of monster is a creature.**
+4. **One-line dungeon residents fold into their kind.** The Place of Magic
+   (printed 176-196) names 132 residents on a line each: a name, Hit Points,
+   one or two powers and a height. They are not rows. The book prints a
+   typical block for each kind, and those are the creature rows.
+5. **Merge each PR when green.**
+
+Every row says it is first edition: `bonuses_note` opens with that sentence
+and `description` closes with one. Figures are as printed, including
+first-edition damage ranges such as 1-8+2. No personal S.D.C. or P.P.E. is
+entered, because the book prints none; an armour's S.D.C. sits with the
+armour.
+
+## What went in
+
+Read from page renders, never the text layer. `book-reconcile` then checked
+every row against the renders, by section.
+
+| section | printed | notable NPCs |
+|---|---|---|
+| Cities | 17-59 | 9 (all in Credia, 34-38) |
+| Towns | 60-115 | 12 (Arian, Baca, Hanna, Tanith) |
+| Forts | 116-130 | 32 across 19 forts |
+| The Mystic Parcel | 131-133 | 1 |
+| The Giant Firebrand | 134-136 | 4 |
+| Ogre Invasion and the Ogre Caravan | 137-140 | 6 |
+| The Hidden Temple | 141-150 | 22 |
+| The Forest of Enchantment | 151-156 | 2 |
+| The Secret Complex of the Old Ones | 157-160 | 4 |
+| The Place of Magic | 161-210 | 52, the seven Old Ones (210) among them |
+
+**Creatures (9):** Serpent Beast (145-146), Mystic Spider (157), Monster Toad
+(157), Serpent Man (158), Pseudo-Demon Guard (174), Low Caste Pseudo-Demon
+(174), Tomb Worm (182), Minotaur (188, slug `minotaur-old-ones`), Zombie of
+Artimus (199). Categories are the catalog's: monster, humanoid, undead.
+
+### Left out, and counted
+
+- **One-line people with no Hit Points**, roughly 600 across the code keys.
+  The larger keys: Aracho about 110, Credia about 160 over three keys, Yria
+  about 45, Acoroc about 30, Aria about 27, Hanna about 22. These are
+  estimates made while reading, not tallies.
+- **People with a partial block and no Hit Points:** Captain Jersi Braws and
+  Lt. Camphar Moss (Fort Ac, 121), Sgt. Bull Tull (Fort Ibi, 127), Samoan
+  Pletol (156), Cardinal Palance Medean (Old Timiro, 43-46), Dominana
+  (Rankin, 50), Tanda (Smia, 54), and Antipator's three attendants (35).
+- **The 132 one-line residents of the Place of Magic** (176-196): 98
+  pseudo-demons, 17 minotaurs, and 17 dwarves, humans, orcs, ogres and a dog.
+- **Animals printed inside an owner's block** are on the owner's row, in
+  `allies` or the equipment line, not rows: Brother Bear's fox and two bears
+  (63), the war horses Nightshade (65), Silver (122), Titan (126), Mad-Cap
+  (130) and Kea-la (138), and the Mystic's weasel (167).
+- **Unnamed groups that print Hit Points:** the Sword and Buckler guards
+  (84), the red-bear knights (132-133), the raiders table (135), the ogre
+  army (137-140), mummies, golems, skeletons and cave spiders of the Hidden
+  Temple (145-148), the serpent man hunters (160), the four changelings
+  (164), the twenty henchmen (208).
+- **Beings with no Hit Points:** Xy the Great Old One (210), the imprisoned
+  Old One of the pit (201-205), the seven Helmet of Rurga personas (193).
+
+### Readings worth knowing
+
+- The book spells the alignment *Abberant* in places; rows use *Aberrant*.
+- Sir Arin Gatik's block says age 72 and the Tanith text says seventy-four
+  (108, 110). The row holds 72.
+- Kimmbot's block gives one true name and the room text another (207-208).
+  One row, both names recorded.
+- Grol-tee prints two damage bonuses (207-208). The row holds the Bonuses
+  line's figure and notes the other.
+- Three goblins of the Hidden Temple (150) print no race on their lines; the
+  rows leave `race` empty and say why.
+- The Monster Toad prints a range of 10 ft with nothing to say what it
+  measures (157). It is in the note, not on the bite.
+
+## Extraction plan, as surveyed
+
+*Kept as the record of what was proposed. The section above is what was
+decided and done.* The choices were:
 
 1. **Leave the book out** (`excluded`). Its mechanics are first-edition and
    the catalog's Palladium Fantasy rows are second-edition.
@@ -170,7 +256,10 @@ What is left under every choice:
 |---|---|---|
 | 2026-10-05 | `pal/data/old-ones-survey` | cache built (218 pp), `old-ones` registered in `books.json`, this survey written, offset +7 verified, the edition recorded. No data. |
 
+| 2026-10-05 | `pal/data/old-ones-people-and-monsters` | 144 notable NPCs and 9 creatures with their attacks, one data script. Status to `imported`. |
+
 ### What remains
 
-The edition decision, and then everything that follows from it. Nothing from
-this book has been imported.
+Nothing is planned. The three classes are out by decision; a first-edition
+class in the picker would need a ruling and code. The one-line people and
+residents are counted above if a later decision wants them.

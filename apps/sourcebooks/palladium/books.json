@@ -1239,6 +1239,24 @@
     ]
    ],
    "total": 234
+  },
+  {
+   "slug": "old-ones",
+   "title": "The Palladium RPG Book II: Old Ones",
+   "code": "old-ones",
+   "status": "imported",
+   "date": "2026-10-05",
+   "added": [
+    [
+     "Creatures",
+     9
+    ],
+    [
+     "Notable NPCs",
+     144
+    ]
+   ],
+   "total": 153
   }
  ]
 }
