@@ -250,10 +250,16 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
       const chosen = [];
       fill(chosen, g.count, pool, g.kind, cats, g.level);
       for (const r of chosen) {
-        finalSkills.push(withIq({ name: r.name, category: r.category,
+        // NO I.Q. BONUS on a skill gained at a level-up (Nate's ruling,
+        // 2026-10-10). The bonus is a one-time gift to the skills a character
+        // starts with; a skill learned at level five is new and starts at its
+        // base. This wrapped the row in withIq until then, so an NPC's
+        // level-gained skills ran higher than the same picks made in the wizard
+        // or on the sheet, which never added it.
+        finalSkills.push({ name: r.name, category: r.category,
           pct: newPickPercent(r, attributes, cats, { secondary: g.kind === 'secondary' }),
           per_level: r.per_level || 0, type: g.kind === 'secondary' ? 'secondary' : 'related',
-          gained_at_level: g.level }));
+          gained_at_level: g.level });
         picksSpent += 1;
       }
     }
