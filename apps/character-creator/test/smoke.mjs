@@ -2044,6 +2044,18 @@ section('Wizard markup escapes what it is handed');
   const toggle = src.match(/function toggleProgram\(name\) \{[\s\S]*?\n\}/)?.[0] || '';
   check('toggleProgram is found', toggle.length > 0);
   check('ticking a program goes through render()', /\n  render\(\);\r?\n\}$/.test(toggle) && !/renderSkills\(\)[;,]/.test(toggle));
+
+  // The roster and the campaign list moved to their own apps on 2026-09-19 and
+  // seven of their helpers stayed here with no caller for three weeks, one of
+  // them still exported to window. A function named once in this file is named
+  // only by its own definition: nothing calls it, no handler string does, and
+  // the window export does not list it.
+  const fns = [...src.matchAll(/^(?:async )?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)].map((m) => m[1]);
+  // A property of the same name on something else is not a use; a spread is.
+  const named = (n) => (src.match(new RegExp(`(?<![\\w$])(?<![\\w$)\\]]\\.)${n.replace(/\$/g, '\\$')}(?![\\w$])`, 'g')) || []).length;
+  check('the wizard\'s functions are found', fns.length > 150, `${fns.length}`);
+  const uncalled = fns.filter((n) => named(n) < 2);
+  check('no wizard function is left with no caller', uncalled.length === 0, uncalled.join(', '));
 }
 
 // ---------- Starting above level 1 ----------
