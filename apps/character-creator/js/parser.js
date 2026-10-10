@@ -1509,6 +1509,29 @@ export function combineClasses(rcc, occ) {
     if (both.length) out[key] = both;
   }
 
+  // What the occupation tracks at the table and what it costs to be one are the
+  // occupation's own, whatever body it is taken in. Neither key was named
+  // anywhere above, so `{ ...rcc }` answered for both and an occupation's were
+  // dropped the moment a race was chosen - silently, and even when the race
+  // stated none. A resource the race already names is the race's, as its pools
+  // are.
+  {
+    const mine = rcc.trackable_resources || [];
+    const held = new Set(mine.map((r) => r?.name));
+    const theirs = (occ.trackable_resources || []).filter((r) => !held.has(r?.name));
+    if (theirs.length) out.trackable_resources = [...mine, ...theirs];
+  }
+  // `side_effects` is free text or a list, and both readers take either. One
+  // side speaking keeps its own shape; two become a list, race first.
+  {
+    const said = (v) => (Array.isArray(v) ? v : [v]).filter((s) => s != null && String(s).trim() !== '');
+    const theirs = said(occ.side_effects);
+    if (theirs.length) {
+      const mine = said(rcc.side_effects);
+      out.side_effects = mine.length ? [...mine, ...theirs] : occ.side_effects;
+    }
+  }
+
   return out;
 }
 
