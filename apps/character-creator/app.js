@@ -362,7 +362,7 @@ function validQuiz(answers) {
 }
 
 // ---------- draft persistence ----------
-// Eight steps, and step 3 ROLLS. A refresh or a closed tab used to lose all of
+// Eleven steps, and the Attributes step ROLLS. A refresh or a closed tab used to lose all of
 // it, and a roll is the one thing you cannot honestly redo — you either accept
 // different numbers or re-roll until you like them.
 //
@@ -569,8 +569,7 @@ async function dismissDraft() {
 // opened with nothing named. What is left here is the one job this app has:
 // starting a character, and finishing the one already under way.
 //
-// S.existing is still loaded: the count below links to the roster, and
-// canDeleteCharacter and the campaign picker in the Details step read it.
+// S.existing is still loaded: the count below links to the roster.
 function renderHome() {
   const d = S.draftOffer;
   const building = !d && S.rcc && !S.savedId;
@@ -856,8 +855,7 @@ function wirePickers() {
 
   for (const [id, key] of [['class-filter', 'classFilter'],
     ['related-filter', 'relatedFilter'], ['secondary-filter', 'secondaryFilter'],
-    ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter'],
-    ['super-filter', 'superFilter'], ['talent-filter', 'talentFilter']]) {
+    ['spell-filter', 'spellFilter'], ['psi-filter', 'psiFilter']]) {
     Picker.wire(id, { onInput: (v) => { S[key] = v; render(); } });
   }
 
@@ -965,66 +963,7 @@ function seekStep(from, dir) {
 function nextStep() { goStep(seekStep(S.step, 1)); }
 function prevStep() { goStep(seekStep(S.step, -1)); }
 
-// Step 0 — system
-function gmCampaigns() {
-  return S.me ? S.campaigns.filter((c) => c.gm_email === S.me) : [];
-}
-
-// The same rule characterAccess() applies on the server: a character belongs to
-// its owner and to its campaign's G.M. This decides whether the Delete button is
-// DRAWN; the endpoint decides whether it works, and is the one that matters.
-// Kept in that order deliberately - offering a control that then refuses is the
-// thing R1 was about.
-function canDeleteCharacter(c) {
-  if (!S.me) return false;
-  if (c.player_email === S.me) return true;
-  return S.campaigns.some((g) => g.id === c.campaign_id && g.gm_email === S.me);
-}
-
-// The most destructive thing this page can do, so the confirmation says what
-// goes and what stays rather than asking whether you are sure. The journal line
-// is there because it is the part people would otherwise assume wrong, and
-// wrong in the dangerous direction: the foreign key alone WOULD take a player's
-// posts out of the campaign log, and the endpoint detaches them first
-// specifically so it does not.
-async function deleteCharacter(id) {
-  const c = S.existing.find((x) => x.id === id);
-  if (!c) return;
-  if (!confirm(`Delete ${c.name} (level ${c.level})? This cannot be undone.\n\n`
-    + `Their inventory, level history, unspent picks and play log go with them. `
-    + `Anything they had claimed from the campaign stash returns to it.\n\n`
-    + `Journal entries they wrote stay in the campaign log.`)) return;
-  try {
-    await api('characters/' + id, { method: 'DELETE' });
-  } catch (err) {
-    alert('Could not delete ' + c.name + ': ' + err.message);
-    return;
-  }
-  S.existing = S.existing.filter((x) => x.id !== id);
-  // The campaign list above prints its own "N characters" and that count came
-  // from the server; without this it keeps the old number until a reload, on
-  // the same screen as the row that just disappeared.
-  const camp = S.campaigns.find((g) => g.id === c.campaign_id);
-  if (camp && typeof camp.character_count === 'number') camp.character_count -= 1;
-  render();
-}
-
-// `2026-08-31 21:17:28` as `31 Aug`, and `31 Aug 2025` once the year has
-// turned - a bare day and month is only unambiguous inside one year, and a
-// campaign list is exactly the place old rows accumulate. Parsed by hand
-// rather than through Date: the column is stored as UTC without a Z, which
-// Date reads as local time and can shift by a day.
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function shortDate(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
-  if (!m) return null;
-  const [, y, mo, d] = m;
-  const month = MONTHS[parseInt(mo, 10) - 1];
-  if (!month) return null;
-  const thisYear = String(new Date().getUTCFullYear());
-  return `${parseInt(d, 10)} ${month}${y === thisYear ? '' : ' ' + y}`;
-}
+// The System step
 function renderSystem() {
   $('app').innerHTML = `
   <div class="panel">
@@ -1077,7 +1016,7 @@ function resetBuild() {
   Object.assign(S, freshBuild());
 }
 
-// Step 1 — the race (browse | guided)
+// The Race step (browse | guided)
 //
 // The R.C.C. comes first and gets the step to itself. The list still holds
 // every class for the system, because an O.C.C. taken alone is a human
@@ -1227,12 +1166,6 @@ function raceBriefing() {
       : 'An occupation may be taken alongside this race on the step after the dice.'}</p>` : ''}
   </div>`;
 }
-// A class's display name when the catalog is loaded, its id when not — the
-// existing-characters list renders before /classes resolves on a cold start.
-function className(id) {
-  return S.classes.find((c) => c.id === id)?.name || id;
-}
-
 // A blurb cut to fit, at a word boundary, saying so only when it was cut.
 //
 // Three bugs in one line of card markup, and the first hid the other two.
@@ -1529,8 +1462,6 @@ function classBlock() {
   // — blocking the Race step on a choice two steps away had no way to offer it.
   return { why: '', anchor: null };
 }
-
-function canUseClass() { return !classBlocker(); }
 
 // Which stage of the class. Shown only when the class has stages, so every
 // other class is unaffected.
@@ -2437,7 +2368,7 @@ function renderMorphus() {
   ${nav(morphusBlocker())}`;
 }
 
-// Step 7 — everything the levels above 1 earn.
+// The Advancement step — everything the levels above 1 earn.
 //
 // Placed AFTER Powers rather than woven through the earlier steps, because by
 // this point the level-1 character is complete — which is exactly the input
@@ -2787,7 +2718,7 @@ function characterAtLevelOne() {
   };
 }
 
-// Step 3 — the occupation, chosen after the dice.
+// The Occupation step, chosen after the dice.
 //
 // Rolling before the occupation is known admits a state the old order could not
 // reach: a stat block that fails the occupation's minimums. Both classes'
@@ -2916,7 +2847,7 @@ function rerollForMinimum(attr) {
   render();
 }
 
-// Step 2 — attributes
+// The Attributes step
 function renderAttributes() {
   const classBonus = derive.classBonuses(skillBonusClass(), 1, rolledAll());
   // Split out so the label can say where a bonus came from. Once skills fold
@@ -3054,7 +2985,7 @@ function pbAdj(a, delta) {
   render();
 }
 
-// Step 3 — skills
+// The Skills step
 // A catalog row belongs to this build's system, or to no system at all.
 // NULL/blank means unrestricted, which is how skills.systems has always read and
 // is now how spells, psionics and gear read too. A Palladium Fantasy spell
@@ -3885,7 +3816,7 @@ function toggleSkill(kind, name) {
   render();
 }
 
-// Step 4 — equipment
+// The Equipment step
 
 // Class markdown cites gear by slug, and a slug can be retired by a catalog
 // merge or a rename without the markdown ever being touched. Falling through to
@@ -4083,7 +4014,7 @@ function addCustom() {
   render();
 }
 
-// Step 5 — powers (magic / psionics guided picker)
+// The Powers step (magic / psionics guided picker)
 // Psionic starting-count house rule (class frontmatter can override with
 // psionics.powers_starting / psionics.categories_allowed — no schema change):
 // minor = 2 powers, major = 6, master = 8; Super category is master-only.
@@ -4742,7 +4673,7 @@ function renderPowers() {
     stepApplies(ST.ADVANCEMENT) ? 'Advancement' : 'Details'} &rarr;</button></div>`;
 }
 
-// Step 6 — bio details. Optional; the derived percentages come straight from
+// The Details step — bio details. Optional; the derived percentages come straight from
 // the attribute tables and are shown so the numbers are not a surprise later.
 function renderDetails() {
   // Money is rolled with the pools, and this step is the first place it is
@@ -4943,7 +4874,7 @@ function powersPayload() {
   ];
 }
 
-// Step 6 — review & save
+// The Review step — review & save
 //
 // A character's I.Q. adds a ONE-TIME bonus to every skill percentage (p.22).
 // One-time is the operative word: it lands in the starting number and never
@@ -5594,7 +5525,6 @@ Object.assign(window, {
   // every checkbox throws ReferenceError on click - which no test caught,
   // because nothing tests a click.
   toggleProgram,
-  deleteCharacter,
   goHome, newCharacter, continueBuild,
   groupUi,
   // The Morphus step's buttons (survey D5).
