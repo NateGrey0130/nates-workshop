@@ -219,8 +219,9 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Fourteen modules are imported by both the browser and the Workers runtime, or
-written to be: `js/parser.js`, `js/dice.js`, `js/skill-base.js`,
+Fifteen modules are imported by both the browser and the Workers runtime, or
+written to be: `js/parser.js`, `js/class-keys.js` (through the parser),
+`js/dice.js`, `js/skill-base.js`,
 `js/psionic-costs.js`, `js/catalog-fields.js`, `js/compose.js`, `js/psionics.js`
 (through compose), `js/language-skills.js`, `js/hand-to-hand.js`,
 `js/leveling.js`, `js/second-form.js`, `js/derive.js`, and `js/npc-generate.js`
