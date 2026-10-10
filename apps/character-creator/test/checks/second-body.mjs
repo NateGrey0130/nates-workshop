@@ -37,6 +37,7 @@ import { morphusTables, replayMorphus, entriesFor, rollOn, decide, rollNext, pic
          rollUntilBlocked, chooseSub, morphusResults, animalCombinations, animalForDie, rulesDisagreeWithRows,
          MORPHUS_RULES, MORPHUS_START, UNPRINTED_TABLE, DUPLICATE_ENTRY }
   from '../../js/morphus.js';
+import { DRAFT_KEYS } from '../../js/wizard-state.js';
 import { appDir, appPath, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 // Declared by hand, and smoke.mjs's 'The checks modules declare the sections
@@ -759,7 +760,7 @@ section('The Morphus generator (survey D5, PR 3 of 4)');
   check('the Morphus step applies only to a composed class whose second form draws on the morphus tables',
     /const morphusForm = \(\) => \(S\.cls\?\.second_form\?\.traits_from === 'morphus'/.test(appSrc)
     && /if \(i === ST\.MORPHUS\) return !!morphusForm\(\);/.test(appSrc));
-  check('the draft keeps the decisions', /'morphus',\r?\n\];/.test(appSrc));
+  check('the draft keeps the decisions', DRAFT_KEYS.includes('morphus'));
   check('the create request sends the generated form', /second_form: secondFormPayload\(\),/.test(appSrc)
     && /results: S\.traitTables \? morphusResults\(S\.traitTables, S\.morphus\.decisions\) : \[\]/.test(appSrc));
   check('the preview folds through secondFormView, the sheet endpoint\'s fold',
