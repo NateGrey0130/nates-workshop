@@ -35,15 +35,15 @@
 
 import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus } from './dice.js';
 import { skillBase } from './skill-base.js';
-import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryBonus, categoryName,
+import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryName,
          relatedFloorStatus } from './parser.js';
 import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
-         startingPicksFor } from './leveling.js';
+         startingPicksFor, newPickPercent, classSkillNumbers, withIqBonus } from './leveling.js';
 import { isHandToHand } from './hand-to-hand.js';
 import { isFamilyName, isRepeatableRow, otherRowFor } from './language-skills.js';
 
 const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
-const SKILL_PCT_CAP = 98;          // p.22, the same cap the wizard applies
+// SKILL_PCT_CAP is js/leveling.js's, with the rest of the skill arithmetic.
 // Re-rolls allowed to meet an attribute minimum. Large on purpose: the
 // Berserker needs P.S. 16 AND P.E. 16 on 3D6, about one set in five hundred,
 // and a re-roll is a few microseconds. A class whose minimum the dice truly
@@ -134,9 +134,7 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   const taken = new Set();
   const skills = [];
 
-  const withIq = (row) => (row.pct
-    ? { ...row, pct: Math.min(SKILL_PCT_CAP, row.pct + iq), iq_bonus: iq }
-    : { ...row, iq_bonus: 0 });
+  const withIq = (row) => withIqBonus(row, iq);
 
   // The class's own fixed skills, at the percentages the class or the catalog
   // states - resolveSkill() in the wizard, rule for rule.
@@ -217,9 +215,8 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   }
   fill(relatedChosen, relatedAt1, relatedPool, 'related', relatedCats);
   for (const r of relatedChosen) {
-    const base = skillBase(r, attributes) || 0;
     skills.push(withIq({ name: r.name, category: r.category,
-      pct: base ? base + categoryBonus(relatedCats, r) : 0, per_level: r.per_level || 0, type: 'related' }));
+      pct: newPickPercent(r, attributes, relatedCats), per_level: r.per_level || 0, type: 'related' }));
   }
 
   // Secondary skills: unrestricted by category, the validator's reading.
@@ -253,9 +250,8 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
       const chosen = [];
       fill(chosen, g.count, pool, g.kind, cats, g.level);
       for (const r of chosen) {
-        const base = skillBase(r, attributes) || 0;
-        const bonus = g.kind === 'secondary' ? 0 : categoryBonus(cats || [], r);
-        finalSkills.push(withIq({ name: r.name, category: r.category, pct: base ? base + bonus : 0,
+        finalSkills.push(withIq({ name: r.name, category: r.category,
+          pct: newPickPercent(r, attributes, cats, { secondary: g.kind === 'secondary' }),
           per_level: r.per_level || 0, type: g.kind === 'secondary' ? 'secondary' : 'related',
           gained_at_level: g.level }));
         picksSpent += 1;
@@ -498,9 +494,8 @@ function usableCatalog(catalog, system, categories = null) {
 function resolve(name, explicit, byName, attributes) {
   const cat = byName.get(norm(name))
     || (isFamilyName(name) ? (byName.get(norm(otherRowFor(name))) || {}) : {});
-  const catBase = skillBase(cat, attributes);
-  const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
-  return { base: base || 0, per_level: explicit.per_level ?? cat.per_level ?? 0 };
+  const { base, per_level } = classSkillNumbers(cat, explicit, attributes);
+  return { base: base || 0, per_level };
 }
 
 // Members of a repeatable family the catalog NAMES - "Language: Dragonese",

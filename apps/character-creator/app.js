@@ -23,7 +23,7 @@ import { isHandToHand, oneHandToHand, replacePrompt, handToHandCost, handToHandC
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
-         categoryAllows, namedByOnly, categoryLabel, categoryName, categoryBonus, needsOccupation,
+         categoryAllows, namedByOnly, categoryLabel, categoryName, needsOccupation,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
          abilityGroupAllowance, abilityGroupLevels, applyAbilities,
@@ -33,7 +33,8 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, newPickPercent, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
+         skillGrantsFor, newPickPercent, classSkillNumbers, withIqBonus, advancedPercent,
+         spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
          startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
 import { rollSecondForm, secondFormView } from './js/second-form.js';
@@ -3133,13 +3134,9 @@ function resolveSkill(name, explicit = {}) {
   // A base a book states as an attribute times a multiplier — "P.P. number x5%"
   // (BOOK-INGEST-AUDIT.md F2). skillBase() falls back to the stored `base`
   // whenever there is no formula, so every row without one is unaffected.
-  const catBase = skillBase(cat, S.attrs);
-  const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
-  return {
-    base,
-    per_level: explicit.per_level ?? cat.per_level ?? 0,
-    category: cat.category || 'Class',
-  };
+  // The arithmetic is classSkillNumbers' (js/leveling.js), shared with the NPC
+  // generator.
+  return { ...classSkillNumbers(cat, explicit, S.attrs), category: cat.category || 'Class' };
 }
 
 // Names already spoken for: fixed class skills, every choice-group pick made so
@@ -4891,7 +4888,6 @@ function powersPayload() {
 // A skill with no percentage at all — W.P.s, hand to hand — stays at zero. It
 // is not a percentile skill, so there is nothing for a percentage bonus to
 // modify, and giving it a number would invent a roll that does not exist.
-const SKILL_PCT_CAP = 98;   // p.22: "there is always a margin for error"
 
 // The character's skills as they stand at level 1 — the class's own, the
 // choice-group picks, and the related and secondary skills chosen on the
@@ -4907,10 +4903,7 @@ function skillsAtLevelOne() {
   // pct stays the true current percentage, because level-up increments it and
   // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
   // number can explain itself rather than being unexplained arithmetic.
-  const withIq = (row) => {
-    if (!row.pct) return { ...row, iq_bonus: 0 };
-    return { ...row, pct: Math.min(SKILL_PCT_CAP, row.pct + iq), iq_bonus: iq };
-  };
+  const withIq = (row) => withIqBonus(row, iq);
 
   // Read off the COMPOSED class, the same source renderSkills() builds its
   // picker from. A rolled major psionic halves the related allowance without
@@ -4947,9 +4940,9 @@ function skillsAtLevelOne() {
     // choice group's `bonus`, for the same reason.
     ...S.related.map((n) => {
       const row = find(n);
-      // F2: a formula-derived base, falling back to the stored one.
-      const base = skillBase(row, S.attrs) || 0;
-      return { name: n, category: row.category, pct: base ? base + categoryBonus(relatedCats(), row) : 0,
+      // newPickPercent is that rule (js/leveling.js): the level-up pick and the
+      // NPC generator ask it too.
+      return { name: n, category: row.category, pct: newPickPercent({ ...row, name: n }, S.attrs, relatedCats()),
                per_level: row.per_level || 0, type: 'related' };
     }),
     // Secondary skills get no O.C.C. bonus, but they are not frozen: "all
@@ -4991,7 +4984,7 @@ function skillsPayload() {
   if (S.level <= 1) return rows;
   const gained = S.level - 1;
   const advanced = rows.map((sk) => (sk.pct && sk.per_level
-    ? { ...sk, pct: Math.min(SKILL_PCT_CAP, sk.pct + sk.per_level * gained) }
+    ? { ...sk, pct: advancedPercent(sk.pct, sk.per_level, gained) }
     : sk));
   // Filtered like the level-1 rows, and defensively: setLevelPick() never
   // leaves two chosen styles standing, but a draft saved before it asked can.
