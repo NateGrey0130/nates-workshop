@@ -2644,7 +2644,9 @@ section('Wizard steps');
     /the save would be refused/.test(occBlocker));
   // The other half of the pair: the Attributes step has always gated on it.
   check('the Attributes step still gates on the same shortfall',
-    /const canNext = missing\.length === 0 && unmet\.length === 0 && !over;/.test(src));
+    // Through attributesBlocker() since 2026-10-10, which the rail reads too;
+    // the F125 section runs that function against an unmet minimum.
+    /const canNext = !attrWhy;/.test(src) && /why: attrWhy \} = attributesBlocker\(\)/.test(src));
 
   // One attribute, with its own dice. Not the whole block, and never raised to
   // the minimum without dice - see docs/plans/13-rcc-first-wizard.md.
