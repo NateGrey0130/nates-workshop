@@ -65,6 +65,9 @@ export function freshState() {
     removedEquip: null,
     charName: '', campaignId: null, newCampaign: '',
     spells: [], psi: [], bio: {},
+    // The starting sum in `bio.money` was typed by the player, so re-rolling
+    // the pools must not replace it.
+    moneyTyped: false,
     // Super abilities chosen at level 1. `supers` is the flat list and
     // `superGroups` the per-group one, exactly as spells and psionics have both -
     // except that no Power Category uses the flat form, since every one that
@@ -153,7 +156,7 @@ export function freshState() {
 // learns to hold belongs here unless there is a reason it does not.
 export const BUILD_KEYS = [
   'variant', 'occ', 'occVariant', 'attrMethods', 'attrs', 'attrRolls', 'related', 'secondary',
-  'groupPicks', 'gearPicks', 'mos', 'totem', 'programs', 'equipment', 'equipInit', 'spells',
+  'groupPicks', 'gearPicks', 'mos', 'totem', 'programs', 'equipment', 'equipInit', 'moneyTyped', 'spells',
   'psi', 'bio', 'pools', 'longLived', 'bioRolls', 'psiRoll', 'psiShape', 'psiCategory',
   'attrBonuses', 'rolledBonuses', 'abilities', 'occAttrBonuses', 'occRolledBonuses',
   'totemAttrBonuses', 'totemRolledBonuses', 'minRerolls', 'level', 'levelPools', 'levelSpells',

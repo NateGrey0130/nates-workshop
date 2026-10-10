@@ -2008,6 +2008,42 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
     /Object\.assign\(S, freshBuild\(\)\)/.test(reset) && !/\bS\.\w+\s*=/.test(reset));
   check('a draft is resumed onto a fresh build', /Object\.assign\(S, freshBuild\(\), d\.state\)/.test(appText));
   check('and saved from the imported list', /for \(const k of DRAFT_KEYS\) state\[k\] = S\[k\]/.test(appText));
+
+  // A sum the player typed is theirs. computePools() runs whenever the pools
+  // were cleared and used to re-roll starting money over it every time.
+  check('a typed starting sum is part of the build', BUILD_KEYS.includes('moneyTyped') && state.moneyTyped === false);
+  check('typing one marks it, and clearing the box hands it back to the dice',
+    /function setBio\(key, value\) \{[\s\S]{0,160}if \(key === 'money'\) S\.moneyTyped = !!v;/.test(appText));
+  check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
+    /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollPoolFormula\(c\.starting_money, S\.attrs\);/.test(appText));
+}
+
+// ---------- The wizard's markup, where a value meets it ----------
+// Three small ones found reading app.js end to end on 2026-10-10. None was
+// reachable with today's catalog - class ids are slugs - so each is held as a
+// shape, not as an exploit.
+section('Wizard markup escapes what it is handed');
+{
+  const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+  // escHtml leaves an apostrophe alone, so a value inside a quoted handler
+  // argument needs escJs. A class or variant id is catalog data.
+  const dataIds = src.match(/on\w+="pick(?:Class|Variant|OccVariant|Occ)\('\$\{[^}]*\}'/g) || [];
+  check('the class and variant pickers are found', dataIds.length >= 2, `${dataIds.length}`);
+  check('a class or variant id in a handler goes through escJs',
+    dataIds.every((h) => /'\$\{escJs\(/.test(h)), dataIds.filter((h) => !/escJs\(/.test(h)).join(' | '));
+  check('no handler argument anywhere is escaped with the markup escaper',
+    !/on\w+="[^"]*'\$\{esc\(/.test(src));
+  // Review prints the starting sum through poolRow, and that is free text.
+  check('a Review pool row escapes its label and its value',
+    /function poolRow\(label, v\) \{[\s\S]{0,220}<span>\$\{esc\(label\)\}<\/span><b>\$\{esc\(String\(v\)\)\}<\/b>/.test(src));
+  check('a Review section escapes its title', /<h3>\$\{esc\(title\)\} <span class="muted small">/.test(src));
+  check('a class-card tag escapes its label', /const tag = \(label, v\) => `<span class="tag">\$\{esc\(label\)\} /.test(src));
+
+  // Ticking a skill program re-rendered the step directly, which skips the
+  // re-binding of its filter boxes and the draft save.
+  const toggle = src.match(/function toggleProgram\(name\) \{[\s\S]*?\n\}/)?.[0] || '';
+  check('toggleProgram is found', toggle.length > 0);
+  check('ticking a program goes through render()', /\n  render\(\);\r?\n\}$/.test(toggle) && !/renderSkills\(\)[;,]/.test(toggle));
 }
 
 // ---------- Starting above level 1 ----------
