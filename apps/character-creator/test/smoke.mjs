@@ -2888,6 +2888,46 @@ section('Class prompt covers the schema');
     /do not put a pool bonus in at_level/i.test(prompt));
   check('the prompt warns that an unknown bonus key does nothing',
     /silently does nothing/.test(prompt));
+
+  // "Use ONLY these keys" was written when derive.js produced nine saves and
+  // seven combat numbers, and it went on saying so: a model following it on
+  // 2026-10-10 would have dropped `pull_punch`, which 247 shipped classes
+  // state. So the two lists are held from both sides - every key a shipped
+  // class uses is offered, and nothing is offered that the sheet has no field
+  // for - and the variant sentence is held to the parser's own list.
+  const listed = (label) => (prompt.match(new RegExp(`\\n {6}${label}:([\\s\\S]*?)\\n {6}(?:saves|pools):`))?.[1] || '')
+    .replace(/\([^)]*\)/g, ' ').match(/[a-z][a-z_]+/g) || [];
+  const offered = { combat: listed('combat'), saves: listed('saves') };
+  check('the prompt\'s combat and save lists are found', offered.combat.length > 5 && offered.saves.length > 5,
+    JSON.stringify(offered));
+  const sheetText = readFileSync(appPath('sheet.js'), 'utf8');
+  const fieldKeys = (name) => [...(sheetText.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\n\\s*\\];`))?.[1] || '')
+    .matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
+  // `attacks_base` has no field of its own: derive.js folds it into `attacks`.
+  const hasField = { combat: [...fieldKeys('COMBAT_FIELDS'), 'attacks_base'], saves: fieldKeys('SAVE_FIELDS') };
+  check('the sheet\'s combat and save fields are found', hasField.combat.length > 10 && hasField.saves.length > 10);
+  const used = { combat: new Set(), saves: new Set() };
+  const dbDir = join(appDir, 'db');
+  for (const f of readdirSync(dbDir).filter((n) => /^add-.*-class[.]sql$/.test(n))) {
+    const md = extractClassMarkdown(readFileSync(join(dbDir, f), 'utf8'));
+    const b = md ? parseClassMarkdown(md).data?.bonuses : null;
+    for (const group of ['combat', 'saves']) {
+      for (const k of Object.keys(b?.[group] || {})) if (k !== 'other') used[group].add(k);
+    }
+  }
+  for (const group of ['combat', 'saves']) {
+    const missing = [...used[group]].filter((k) => hasField[group].includes(k) && !offered[group].includes(k));
+    check(`the prompt offers every ${group} key a shipped class states and the sheet shows`,
+      missing.length === 0, missing.join(', '));
+    const unread = offered[group].filter((k) => !hasField[group].includes(k));
+    check(`and offers no ${group} key the sheet has no field for`, unread.length === 0, unread.join(', '));
+  }
+  const variantSentence = prompt.match(/A variant may override ONLY([\s\S]*?)anything else in/)?.[1] || '';
+  const variantOnly = ['skill_overrides', 'skills_additional', 'related_skills_count'];
+  const unnamed = VARIANT_OVERRIDES.filter((k) => !variantOnly.includes(k) && !new RegExp(`\\b${k}\\b`).test(variantSentence));
+  check('the prompt names every key a variant may override', unnamed.length === 0, unnamed.join(', '));
+  check('and tells the model to leave the three variant-only skill keys to a person',
+    variantOnly.every((k) => VARIANT_OVERRIDES.includes(k) && prompt.includes(k)) && /Do not write them/.test(prompt));
 }
 
 // ---------- 1c12. Class variants ----------
