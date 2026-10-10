@@ -33,7 +33,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
+         skillGrantsFor, newPickPercent, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
          startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
 import { rollSecondForm, secondFormView } from './js/second-form.js';
@@ -5058,7 +5058,11 @@ function levelPickRows() {
     for (const name of (S.levelPicks[grantKey('skill', g)] || []).filter(Boolean)) {
       const r = find(name);
       out.push({
-        name, category: r.category, pct: r.base || 0, per_level: r.per_level || 0,
+        // The server's own rule for a pick made on the sheet, so the same pick
+        // made here saves the same number.
+        name, category: r.category,
+        pct: newPickPercent({ ...r, name }, S.attrs, g.categories, { secondary: g.kind === 'secondary' }),
+        per_level: r.per_level || 0,
         type: g.kind === 'secondary' ? 'secondary' : 'related',
         gained_at_level: g.level,
       });

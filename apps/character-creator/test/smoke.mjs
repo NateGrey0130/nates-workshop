@@ -839,6 +839,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
+import { newPickPercent as LV_newPickPercent } from '../js/leveling.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -5347,6 +5348,27 @@ section('A pick spent on an attribute-derived skill');
     { attributes: { PP: 12 }, categories: [{ name: 'Weapon Proficiencies', bonus: 5 }] });
   check('while a non-percentile skill still takes no bonus at all',
     wp.skills[0]?.pct === 0, `got ${wp.skills[0]?.pct}`);
+
+  // The wizard's Advancement step makes the same pick before the character
+  // exists, and until 2026-10-10 it wrote the stored `base` alone: this skill
+  // at 0%, and any related pick without its class bonus. Both now ask one
+  // function, held here directly and then as the two call sites.
+  const { newPickPercent } = await import('../js/leveling.js');
+  const physical = [{ name: 'Physical', bonus: 5 }];
+  check('one rule: a formula base plus the class bonus on a related pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical) === 65);
+  check('no class bonus on a secondary pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical, { secondary: true }) === 60);
+  check('none where the grant names no categories', newPickPercent(ZERO_G, { PP: 12 }, null) === 60);
+  check('and nothing at all for a skill with no percentage',
+    newPickPercent({ name: 'W.P. Sword', category: 'Physical', base: 0 }, { PP: 12 }, physical) === 0);
+  const pickSrc = readFileSync(join(repoRoot, 'functions/api/character-creator/_lib/skill-picks.js'), 'utf8');
+  check('the server\'s pick path asks it',
+    /pct: newPickPercent\(row, attributes, allowed, \{ secondary: asSecondary \}\)/.test(pickSrc));
+  const wizardRows = readFileSync(join(appDir, 'app.js'), 'utf8').match(/function levelPickRows\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+  check('and so does the wizard\'s, with the grant\'s own categories and kind',
+    /pct: newPickPercent\(\{ \.\.\.r, name \}, S\.attrs, g\.categories, \{ secondary: g\.kind === 'secondary' \}\)/.test(wizardRows)
+    && !/r\.base/.test(wizardRows));
 }
 
 // ---------- 1c25a2. The percentage printed beside a category ----------
@@ -5529,15 +5551,18 @@ section('Category skill bonuses');
   check('the server applies it to a level-up pick', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'skill-picks.js'), 'utf8');
-    return src.includes('categoryBonus(allowed,') && src.includes('!asSecondary && allowed');
+    // Through newPickPercent since 2026-10-10, which the wizard's Advancement
+    // step calls too; 'A pick spent on an attribute-derived skill' runs it.
+    return src.includes('newPickPercent(row, attributes, allowed, { secondary: asSecondary })');
   })());
   // A W.P. and a hand to hand sit at 0 because they are not percentile skills.
   // Adding ten to that would invent a roll that does not exist.
   check('both places guard the bonus on a real base', (() => {
     const wiz = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const srv = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
-      '_lib', 'skill-picks.js'), 'utf8');
-    return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
+    // The level-up half is the shared function now, so it is run, not read.
+    const noPercent = { name: 'W.P. Sword', category: 'Technical', base: 0 };
+    return wiz.includes('base ? base + categoryBonus')
+      && LV_newPickPercent(noPercent, {}, [{ name: 'Technical', bonus: 10 }]) === 0;
   })());
 }
 

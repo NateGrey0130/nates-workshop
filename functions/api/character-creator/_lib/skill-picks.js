@@ -10,9 +10,10 @@
 
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
-import { categoryAllows, categoryBonus } from '../../../../apps/character-creator/js/parser.js';
+import { categoryAllows } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
-import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { newPickPercent } from '../../../../apps/character-creator/js/leveling.js';
 import { isHandToHand, oneHandToHand, handToHandCost, costLabel } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { selectInChunks } from './sql-chunk.js';
 
@@ -226,15 +227,14 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     // any other. Testing `row.base` here would trade F18's visible 0% for a
     // percentage quietly missing its class bonus, which is harder to notice than
     // the bug it replaces. BOOK-INGEST-AUDIT F18.
-    const catBonus = !asSecondary && allowed
-      ? categoryBonus(allowed, { name: row.name, category: row.category }) : 0;
-    const base = skillBase(row, attributes);
+    // The rule itself is newPickPercent's, which the wizard's Advancement step
+    // calls too.
 
     skills.push({
       name: row.name,
       category: row.category,
       // Base percentage as written. A skill learned at level 6 is still new.
-      pct: base ? base + catBonus : 0,
+      pct: newPickPercent(row, attributes, allowed, { secondary: asSecondary }),
       per_level: row.per_level ?? 0,
       type: asSecondary ? 'secondary' : 'related',
       gained_at_level: level,
