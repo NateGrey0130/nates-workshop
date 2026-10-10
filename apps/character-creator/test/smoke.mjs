@@ -2069,6 +2069,24 @@ section('Wizard markup escapes what it is handed');
     check(`${fn} is handed to tieredStartHtml`, /return tieredStartHtml\(groups, \{/.test(body) && !/Picker\./.test(body));
   }
 
+  // The Skills step in five parts (2026-10-10). renderSkills was 425 lines with
+  // four closures inside it - the MOS, the totem, the class's own skills, the
+  // pick lists and the programs each read and wrote the same dozen locals, so
+  // none could be changed without reading all of it.
+  {
+    const body = src.match(/\nfunction renderSkills\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+    const lines = body.split(/\r?\n/).length;
+    check('renderSkills is found, and lays out parts it does not build', lines > 20 && lines < 160, `${lines} lines`);
+    for (const [fn, call] of [['skillsMosHtml', 'skillsMosHtml(sk.mos)'], ['skillsTotemHtml', 'skillsTotemHtml(effective.totem)'],
+      ['skillsOccPartFor', '.map(skillsOccPartFor(ctx))'], ['skillPickListFor', 'skillPickListFor(ctx)'],
+      ['skillsProgramsHtml', 'skillsProgramsHtml(sk.skill_programs || null)']]) {
+      check(`${fn} is its own function, and renderSkills calls it`,
+        new RegExp(`\\nfunction ${fn}\\(`).test(src) && body.includes(call));
+    }
+    check('the step\'s checkbox rows are built in the parts, not in the layout',
+      !/data-act="(?:skill|group)"/.test(body) && (src.match(/data-act="skill"/g) || []).length === 1);
+  }
+
   check('the wizard\'s functions are found', fns.length > 150, `${fns.length}`);
   const uncalled = fns.filter((n) => named(n) < 2);
   check('no wizard function is left with no caller', uncalled.length === 0, uncalled.join(', '));
