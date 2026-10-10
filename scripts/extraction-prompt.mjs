@@ -133,11 +133,16 @@ Optional — include only what the page actually states:
     Everything the stages SHARE — skills, natural_abilities, special_abilities,
     psionics, magic, equipment, lore — stays at the top level and is written
     once. A variant may override ONLY attribute_dice, attribute_requirements,
-    hit_points_base, sdc_base, mdc_base, ppe_base, starting_money and bonuses;
-    anything else in
+    attribute_maximums, hit_points_base, sdc_base, mdc_base, ppe_base,
+    starting_money, horror_factor, xp_table and bonuses; anything else in
     a variant is ignored.
-    attribute_dice and attribute_requirements merge per attribute, so a variant
-    naming only P.S. keeps the others from the top level. The rest replace.
+    attribute_dice, attribute_requirements and attribute_maximums merge per
+    attribute, so a variant naming only P.S. keeps the others from the top
+    level. The rest replace.
+    Three more keys exist ONLY inside a variant - skill_overrides,
+    skills_additional and related_skills_count - for a stage that changes the
+    skills it shares. Do not write them: say in extraction_notes what the book
+    prints for the stage's skills and a person will add them.
     If a stat differs between stages, put it in the variants and NOT at the top
     level. If the page describes only one form, omit variants entirely.
 - skills:
@@ -229,10 +234,16 @@ Optional — include only what the page actually states:
     never read by anything — it silently does nothing, which is worse than
     leaving it as prose.
       attributes: IQ, ME, MA, PS, PP, PE, PB, Spd
-      combat:     attacks, initiative, strike, parry, dodge, roll, damage_bonus
-                  ("roll" is roll with punch/fall/impact)
+      combat:     attacks, attacks_base, initiative, strike, parry, dodge, roll,
+                  pull_punch, perception, damage_bonus, disarm, entangle,
+                  body_flip, automatic_dodge
+                  ("roll" is roll with punch/fall/impact; "attacks_base"
+                  STATES the number of attacks the class starts with, where
+                  "attacks" adds to it)
       saves:      spell_magic, ritual_magic, psionics, toxins_poisons,
-                  harmful_drugs, insanity, possession, horror_factor, pain
+                  harmful_drugs, insanity, possession, horror_factor, pain,
+                  illusionary_magic, mind_control, curses, faerie_magic,
+                  disease, fatigue, coma_death_pct (a percentage)
       pools:      hp, sdc, mdc, ppe, isp
     A pool bonus is what the class adds ON TOP of a pool's own formula, and it
     is the ONLY bonus group that takes dice as well as a flat number. Use it for

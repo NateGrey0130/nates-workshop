@@ -140,8 +140,10 @@ mdc_base: "1d4x100"               # M.D.C. beings use this instead of hp/sdc
 ppe_base: "2d6"
 starting_money: "2d6x10"          # gold (Palladium) or credits (Rifts); coin only
 # Stages of the same creature — a hatchling and an adult. Each overrides only
-# attribute_dice, attribute_requirements, the pool bases and bonuses; skills,
-# abilities and lore stay shared. Delete this block if the class has one form.
+# what VARIANT_OVERRIDES in js/parser.js names: the attribute dice, minimums and
+# maximums, the pool bases, starting_money, horror_factor, xp_table and bonuses,
+# plus three variant-only skill keys. Skills, abilities and lore stay shared.
+# Delete this block if the class has one form.
 # variants:
 #   - id: hatchling
 #     name: "${o.name} Hatchling"
