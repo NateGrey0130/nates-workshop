@@ -6017,6 +6017,35 @@ section('Category skill bonuses');
       check(`${name} asks the shared functions`,
         /withIqBonus\(row, iq\)/.test(text) && /classSkillNumbers\(cat, explicit, /.test(text) && /newPickPercent\(/.test(text));
     }
+    // NO I.Q. BONUS ON A SKILL GAINED AT A LEVEL-UP (Nate's ruling, 2026-10-10).
+    // The wizard and the server's pick path never added it; the NPC generator
+    // did, so the same pick came out higher on an NPC. Run, with an I.Q. high
+    // enough that the bonus is not zero.
+    {
+      const { generateNpc } = await import('../js/npc-generate.js');
+      const world = {};
+      new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(world, world);
+      const catalog = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot'].map((n, i) =>
+        ({ name: n, category: 'Technical', base: 30 + i, per_level: 5 }));
+      const cls = { id: 'npc-test', name: 'Test', category: 'occ', system: 'rifts',
+        attribute_dice: { IQ: '3d6+14' },
+        skills: { occ_skills: [], secondary_skills: { count: 0 },
+          occ_related_skills: { count: 2, categories: [{ name: 'Technical', bonus: 10 }],
+            schedule: [{ level: 3, count: 2 }] } } };
+      const npc = generateNpc({ cls, level: 4, catalog, derive: world.derive, system: 'rifts' });
+      const iq = world.derive.bio(npc.attributes, null, world.derive.classBonuses(cls, 1, {})).iq_skill_bonus_pct;
+      const started = npc.skills.filter((s) => s.gained_at_level == null);
+      const gained = npc.skills.filter((s) => s.gained_at_level != null);
+      const base = (s) => catalog.find((r) => r.name === s.name).base;
+      check('the generated NPC has an I.Q. bonus, two starting picks and two gained at level 3',
+        iq > 0 && started.length === 2 && gained.length === 2 && gained.every((s) => s.gained_at_level === 3),
+        JSON.stringify({ iq, started: started.length, gained: gained.length }));
+      check('a skill held since level one carries the I.Q. bonus',
+        started.every((s) => s.iq_bonus === iq), JSON.stringify(started));
+      check('a skill gained at a level-up starts at its base and the class bonus, with no I.Q. bonus',
+        gained.every((s) => s.pct === base(s) + 10 && !('iq_bonus' in s)), JSON.stringify(gained));
+    }
+
     check('and the level-up proposal advances through the same function',
       /to: advancedPercent\(s\.pct, s\.per_level, gained\)/.test(levelSrc)
       && (levelSrc.match(/Math\.min\(SKILL_PCT_CAP/g) || []).length === 2);
