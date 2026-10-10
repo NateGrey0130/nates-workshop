@@ -228,6 +228,30 @@ section('Browser scripts parse');
     check(`${name} parses`, res.status === 0,
       (res.stderr || '').split('\n').slice(0, 3).join(' ').trim());
   }
+
+  // A script that parses can still fail to LOAD. The Codex's catalog editor
+  // imported `./js/catalog-fields.js` from a folder that has no js/ - the file
+  // had moved apps and its import had not - and the page showed "Checking
+  // access…" for three weeks. So every import a page script states is resolved
+  // against the tree: a relative one from the script's own folder, an absolute
+  // one from the site root, which is the repo root.
+  const siteRoot = join(appDir, '..', '..');
+  const broken = [];
+  let imports = 0;
+  for (const path of scripts) {
+    const text = readFileSync(path, 'utf8');
+    for (const m of text.matchAll(/^\s*(?:import|export)\s[^'"]*?from\s*['"]([^'"]+)['"]|^\s*import\s*['"]([^'"]+)['"]/gm)) {
+      const spec = m[1] || m[2];
+      if (!/^[./]/.test(spec)) continue;
+      imports += 1;
+      const target = spec.startsWith('/') ? join(siteRoot, spec) : join(path, '..', spec);
+      if (!existsSync(target)) {
+        broken.push(`${path.slice(siteRoot.length + 1).replace(/\\/g, '/')} imports ${spec}`);
+      }
+    }
+  }
+  check('the page scripts state imports to resolve', imports > 20, `only ${imports}`);
+  check('every import a page script states resolves to a file', broken.length === 0, broken.join(' | '));
 }
 
 // ---------- 1a2. Escaping a value into markup ----------
@@ -844,7 +868,7 @@ import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rol
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
 import { newPickPercent as LV_newPickPercent, classSkillNumbers as LV_classSkillNumbers } from '../js/leveling.js';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { appDir, repoRoot, check, section, summary, appPath, siblingAppDirs } from './harness.mjs';
