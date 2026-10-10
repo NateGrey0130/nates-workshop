@@ -21,6 +21,13 @@
 
 const TABLES = new Set(['pending_skill_picks', 'pending_power_picks']);
 
+// The other guard on these tables: a grant is BANKED only while the character
+// is still at the level the request read, so two confirms of one level-up do
+// not both bank its grants. Appended to an INSERT ... SELECT, with the
+// character id and the level bound after the row's own values. It was written
+// out twice, once per table's insert.
+export const LEVEL_GUARD = ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+
 /** The token for a list of unspent grants, as listPending* returned them. */
 export function pendingToken(pending) {
   const rows = pending || [];

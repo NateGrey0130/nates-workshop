@@ -19,7 +19,7 @@ import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { xpTableFor, thresholdFor, skillGrantsFor, secondFormHitPointDice,
          rollSecondFormHitPoints } from '../../_lib/leveling.js';
 import { diceBounds } from '../../../../../apps/character-creator/js/dice.js';
-import { insertGrantStatements, LEVEL_GUARD, remainingGrants, resolvePicks, mergePicked, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { insertGrantStatements, LEVEL_GUARD, remainingGrants, resolvePicks, mergePicked, pickErrors, pooledSkillAllowance } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { powerGrantsFor, resolvePowerPicks, remainingPowerGrants, insertPowerGrantStatements,
          powerPickErrors } from '../../_lib/power-picks.js';
@@ -109,17 +109,8 @@ export async function onRequestPost({ request, env, params }) {
 
   // What this level-up earns. Banked whether or not it is spent right now.
   const grants = skillGrantsFor(cls, character.level, toLevel);
-  const allowance = grants.reduce((n, g) => n + g.count, 0);
-  // Related and secondary grants are kept apart: a secondary grant is
-  // unrestricted, and folding it into the same list would unrestrict the
-  // related picks with it.
-  const related = grants.filter((g) => g.kind !== 'secondary');
-  const secondaryAllowance = grants
-    .filter((g) => g.kind === 'secondary')
-    .reduce((n, g) => n + g.count, 0);
-  const categories = related.some((g) => !g.categories)
-    ? null // one unrestricted related grant makes the related picks unrestricted
-    : dedupeCategories(related.flatMap((g) => g.categories || []));
+  // Pooled by the function the banked-pick route uses on its banked rows.
+  const { allowance, categories, secondaryAllowance } = pooledSkillAllowance(grants);
 
   const picked = await resolvePicks(env, {
     // The character's own GAME may print different percentages

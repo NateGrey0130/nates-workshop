@@ -6,7 +6,7 @@
 // until the player comes back to it. Owner/GM only, same as any character write.
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
-import { listPending, resolvePicks, mergePicked, claimPlan, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { listPending, resolvePicks, mergePicked, claimPlan, pickErrors, pooledSkillAllowance } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
@@ -36,18 +36,9 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const pending = await listPending(env, params.id);
-  const allowance = pending.reduce((n, g) => n + g.count, 0);
+  // Pooled the way level-confirm pools a level's grants: one function.
+  const { allowance, categories, secondaryAllowance } = pooledSkillAllowance(pending);
   if (!allowance) return json({ error: 'No unspent picks' }, 400);
-
-  // One unrestricted grant makes the whole remaining allowance unrestricted,
-  // matching how level-confirm combines them.
-  const related = pending.filter((g) => g.kind !== 'secondary');
-  const secondaryAllowance = pending
-    .filter((g) => g.kind === 'secondary')
-    .reduce((n, g) => n + g.count, 0);
-  const categories = related.some((g) => !g.categories)
-    ? null
-    : dedupeCategories(related.flatMap((g) => g.categories || []));
 
   // The whole row, not a column list: loadCharacterClass reads the variant,
   // the occupation, the psychic tier and the chosen abilities off it, and the

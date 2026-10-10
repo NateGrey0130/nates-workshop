@@ -15,6 +15,7 @@ import { json } from './auth.js';
 import { chunks, selectInChunks } from './sql-chunk.js';
 import { resolveKeys } from './catalog-redirects.js';
 import { safeParse } from './character-json.js';
+import { LEVEL_GUARD } from './pending-claim.js';
 import { loadPsionicCosts, applyPsionicCosts } from './system-bases.js';
 import { categoryAllows, categoryLabel, abilityLevelGrants } from '../../../../apps/character-creator/js/parser.js';
 import { spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
@@ -52,7 +53,7 @@ export async function listPendingPowers(env, characterId) {
 
 export function insertPowerGrantStatements(env, characterId, grants, { ifLevel = null } = {}) {
   // `ifLevel`: see insertGrantStatements in skill-picks.js.
-  const guard = ifLevel == null ? '' : ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+  const guard = ifLevel == null ? '' : LEVEL_GUARD;
   return grants.map((g) => env.DB.prepare(
     `INSERT INTO pending_power_picks
        (character_id, granted_at_level, slot, count, kind, spell_levels, spell_traditions, categories, from_names, note)
