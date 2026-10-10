@@ -81,6 +81,32 @@
    "total": 144
   },
   {
+   "slug": "baalgor-wastelands",
+   "title": "Palladium Fantasy RPG Book 9: The Baalgor Wastelands",
+   "code": "baalgor-wastelands",
+   "status": "imported",
+   "date": "2026-10-10",
+   "added": [
+    [
+     "Classes",
+     20
+    ],
+    [
+     "Creatures",
+     24
+    ],
+    [
+     "Notable NPCs",
+     60
+    ],
+    [
+     "Vehicles",
+     1
+    ]
+   ],
+   "total": 105
+  },
+  {
    "slug": "pf",
    "title": "Palladium Fantasy RPG Main Book",
    "code": "pf",

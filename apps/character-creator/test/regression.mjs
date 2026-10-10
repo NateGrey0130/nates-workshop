@@ -4627,7 +4627,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // levels on its own table whatever occupation it takes. Phase World's
   // Draconid is the one the flag was built for; `~160` gave it the flag.
   const keepers = classes.filter((c) => c.keeps_xp_table != null).map((c) => c.id).sort();
-  const wantKeepers = ['draconid'];
+  // Palladium Fantasy Book 9: The Baalgor Wastelands prints a Baalizad R.C.C.
+  // column (printed 215) for a race whose only occupation is the Vagabond
+  // (printed 28), so the printed column is kept for that pairing. The
+  // importer's reading, recorded in the survey. Added 2026-10-10.
+  const wantKeepers = ['baalizad', 'draconid'];
   check('the races declaring keeps_xp_table are the pinned ones',
     JSON.stringify(keepers) === JSON.stringify(wantKeepers), `got ${JSON.stringify(keepers)}`);
   check('and each keeps its own ladder beside an occupation that states one',
@@ -5139,7 +5143,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // (printed 76: P.E. x2, +2D6 per level) for the eleven spells it grants, and
   // the class is open to every race (95% are Lemurians), so the override
   // reaches them all. Added 2026-10-05 with the class.
-  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter', 'kwarla-mystic', 'serpent-hunter'];
+  // Palladium Fantasy Book 9: The Baalgor Wastelands: the Quorian
+  // Oneiromancer is the Psi-Mystic in all respects (printed 57), P.P.E.
+  // included, and the Soldier of Darkness prints its own P.E. x2 +2D6 per
+  // level (printed 144). Each pairs with one race only. Added 2026-10-10.
+  const want = ['arkhon-esp-specialist', 'arkhon-spectral-hunter', 'kwarla-mystic', 'quorian-oneiromancer', 'serpent-hunter', 'soldier-of-darkness'];
   const got = takers.map((c) => c.id).sort();
   check('the occupations declaring overrides_race are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5211,7 +5219,10 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   // A race added here should be a decision someone
   // reads the book for, and the ADD races (rifts-cyclops, rifts-elf) must never
   // be among them.
-  const want = ['aardan-tek', 'amphib', 'arac', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian'];
+  // Palladium Fantasy Book 9: The Baalgor Wastelands prints the Cyclops's
+  // and the Nimro's P.P.E. with "or by magic O.C.C." (printed 40 and 43);
+  // these are the Palladium Fantasy rows, not rifts-cyclops. Added 2026-10-10.
+  const want = ['aardan-tek', 'amphib', 'arac', 'cyclops', 'draconid', 'elf', 'human', 'ichthylean', 'larhold-barbarian', 'lemurian', 'nimro'];
   const got = yielders.map((c) => c.id).sort();
   check('the races declaring yields_to_occupation are the pinned ones',
     JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
@@ -5874,7 +5885,11 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     'rifts-gosai-assassin', 'rifts-quillback-scavenger', 'rifts-quorian-oneiromancer',
     'psi-stalker', 'wild-psi-stalker', 'dog-boy', 'ntset-psi-hound',
     'kwarla-demon-hunter', 'kwarla-mystic', 'worldly-sasquatch', 'roane-musician',
-    'sea-sentinel'];
+    'sea-sentinel',
+    // Palladium Fantasy Book 9: The Baalgor Wastelands, each printed inside
+    // its race's entry: printed 45, 53, 57, 143 and 144.
+    'gosai-assassin', 'quillback-scavenger', 'quorian-oneiromancer',
+    'crusader-of-light', 'soldier-of-darkness'];
   const barsHumans = restricted.filter((c) => !RACE_OWN_TRAINING.includes(c.id));
   check(`and every restricted O.C.C. keeps the reserved "${RACE_NONE}" for the human case`,
     humanOnly.length === barsHumans.length && humanOnly.every((c) => barsHumans.includes(c)),
