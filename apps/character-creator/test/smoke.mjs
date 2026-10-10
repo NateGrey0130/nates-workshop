@@ -5614,6 +5614,40 @@ section('A banked pick sent twice');
     batchApplied(spend(unspent(), '["Climbing","Prowl"]', 1)) && left() === 1 && unspent()[0].count === 1);
   check('and another character\'s grants are neither read nor written',
     db.prepare('SELECT count FROM pending_skill_picks WHERE character_id = 2').get().count === 5);
+  // The two pieces the skill and power stacks still each wrote out: how a set
+  // of skill grants pools into one allowance, and the level guard on banking.
+  {
+    const { pooledSkillAllowance } = await import('../../../functions/api/character-creator/_lib/skill-picks.js');
+    const tech = { name: 'Technical', bonus: 10 };
+    const pooled = pooledSkillAllowance([
+      { count: 2, categories: ['Physical', tech] }, { count: 1, categories: [tech, 'Rogue'] },
+      { count: 3, kind: 'secondary' },
+    ]);
+    check('grants pool into one allowance, with the secondary picks counted apart',
+      pooled.allowance === 6 && pooled.secondaryAllowance === 3);
+    check('the related grants\' categories are merged without a repeat',
+      JSON.stringify(pooled.categories) === JSON.stringify(['Physical', tech, 'Rogue']), JSON.stringify(pooled.categories));
+    check('a secondary grant does not unrestrict the related picks',
+      Array.isArray(pooled.categories) && pooled.categories.length === 3);
+    check('one unrestricted related grant does',
+      pooledSkillAllowance([{ count: 1, categories: ['Physical'] }, { count: 1 }]).categories === null);
+    check('nothing banked is an allowance of nothing', pooledSkillAllowance([]).allowance === 0);
+
+    const fnRoot = join(repoRoot, 'functions/api/character-creator');
+    const text = (rel) => readFileSync(join(fnRoot, rel), 'utf8');
+    for (const route of ['characters/[id]/picks.js', 'characters/[id]/level-confirm.js']) {
+      check(`${route} pools through the one function`,
+        /= pooledSkillAllowance\((?:pending|grants)\);/.test(text(route)) && !/kind !== 'secondary'/.test(text(route)));
+    }
+    const guardText = 'WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+    const holders = ['_lib/pending-claim.js', '_lib/skill-picks.js', '_lib/power-picks.js', 'characters/[id]/level-confirm.js']
+      .filter((rel) => text(rel).includes(guardText));
+    check('the level guard is written once, in pending-claim.js', holders.join() === '_lib/pending-claim.js', holders.join());
+    check('and both tables\' inserts read it',
+      /\$\{ifLevel == null \? '' : LEVEL_GUARD\}/.test(text('_lib/skill-picks.js'))
+      && /const guard = ifLevel == null \? '' : LEVEL_GUARD;/.test(text('_lib/power-picks.js')));
+  }
+
   check('a guard for a table that is not a pending table is refused',
     (() => { try { pendingGuard('characters', 1, []); return false; } catch { return true; } })());
 

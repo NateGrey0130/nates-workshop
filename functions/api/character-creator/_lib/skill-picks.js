@@ -16,6 +16,7 @@ import { applySystemBases } from '../../../../apps/character-creator/js/skill-ba
 import { newPickPercent } from '../../../../apps/character-creator/js/leveling.js';
 import { isHandToHand, oneHandToHand, handToHandCost, costLabel } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { selectInChunks } from './sql-chunk.js';
+import { LEVEL_GUARD } from './pending-claim.js';
 
 export async function listPending(env, characterId) {
   const { results } = await env.DB.prepare(
@@ -40,7 +41,9 @@ export async function listPending(env, characterId) {
 // `ifLevel` makes each insert conditional on the character still being AT that
 // level, for a level-up: two confirms of one level-up would otherwise both bank
 // its grants (see level-confirm.js, which orders these before its own UPDATE).
-export const LEVEL_GUARD = ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+// The guard itself is pending-claim.js's, where the power picks read it too;
+// re-exported because level-confirm.js imports it from here.
+export { LEVEL_GUARD };
 export function insertGrantStatements(env, characterId, grants, { ifLevel = null } = {}) {
   return grants.map((g) => env.DB.prepare(
     `INSERT INTO pending_skill_picks (character_id, granted_at_level, count, categories, kind)
@@ -70,6 +73,31 @@ export function remainingGrants(grants, spent) {
     if (left > 0) remaining.push({ ...g, count: left });
   }
   return remaining;
+}
+
+// What a set of skill grants adds up to, for a request that spends against all
+// of them at once: how many picks in all, which categories the related ones
+// may come from, and how many of the picks are secondary.
+//
+// Related and secondary grants are kept apart: a secondary grant is
+// unrestricted, and folding it into the same list would unrestrict the related
+// picks with it. One unrestricted RELATED grant does make the related picks
+// unrestricted (`categories: null`).
+//
+// The banked-pick route and the level-up confirm each wrote these seven lines
+// out, the first on banked rows and the second on a level's grants, with a
+// comment in one saying it matched the other.
+export function pooledSkillAllowance(grants) {
+  const related = grants.filter((g) => g.kind !== 'secondary');
+  return {
+    allowance: grants.reduce((n, g) => n + g.count, 0),
+    secondaryAllowance: grants
+      .filter((g) => g.kind === 'secondary')
+      .reduce((n, g) => n + g.count, 0),
+    categories: related.some((g) => !g.categories)
+      ? null
+      : dedupeCategories(related.flatMap((g) => g.categories || [])),
+  };
 }
 
 // Merge category lists from several grants without duplicating.
