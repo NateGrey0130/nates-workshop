@@ -839,7 +839,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
-import { newPickPercent as LV_newPickPercent } from '../js/leveling.js';
+import { newPickPercent as LV_newPickPercent, classSkillNumbers as LV_classSkillNumbers } from '../js/leveling.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -5092,8 +5092,12 @@ section('per_level on a skill entry');
   // says the behaviour is still there. If resolveSkill stops reading the
   // group's own figure, `per_level: 0` silently starts meaning nothing.
   check('resolveSkill still prefers the entry\'s per_level over the catalog row\'s', (() => {
+    // Run, since 2026-10-10: the wizard's resolveSkill hands the entry to
+    // classSkillNumbers in js/leveling.js, and a stated 0 must beat the row's 5.
     const src = readFileSync(join(appDir, 'app.js'), 'utf8');
-    return /per_level:\s*explicit\.per_level\s*\?\?\s*cat\.per_level\s*\?\?\s*0/.test(src);
+    return /classSkillNumbers\(cat, explicit, S\.attrs\)/.test(src)
+      && LV_classSkillNumbers({ base: 40, per_level: 5 }, { per_level: 0 }, {}).per_level === 0
+      && LV_classSkillNumbers({ base: 40, per_level: 5 }, {}, {}).per_level === 5;
   })());
   // Pins the CODE rather than the comment beside it: a comment can be reworded
   // without changing anything, which would fail this for no reason. The group's
@@ -5771,7 +5775,8 @@ section('Category skill bonuses');
   // drifts, so each is pinned to the call rather than to the arithmetic.
   check('the wizard applies it at creation', (() => {
     const src = readFileSync(join(appDir, 'app.js'), 'utf8');
-    return src.includes('categoryBonus(relatedCats(), row)');
+    // Through newPickPercent since 2026-10-10, as the level-up pick is.
+    return src.includes('pct: newPickPercent({ ...row, name: n }, S.attrs, relatedCats())');
   })());
   check('the server applies it to a level-up pick', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
@@ -5784,11 +5789,52 @@ section('Category skill bonuses');
   // Adding ten to that would invent a roll that does not exist.
   check('both places guard the bonus on a real base', (() => {
     const wiz = readFileSync(join(appDir, 'app.js'), 'utf8');
-    // The level-up half is the shared function now, so it is run, not read.
+    // Both halves are the shared function now, so it is run, not read - and
+    // neither file may write the rule out again beside it.
     const noPercent = { name: 'W.P. Sword', category: 'Technical', base: 0 };
-    return wiz.includes('base ? base + categoryBonus')
+    return !/base \? base \+ (?:categoryBonus|catBonus|bonus)/.test(wiz)
       && LV_newPickPercent(noPercent, {}, [{ name: 'Technical', bonus: 10 }]) === 0;
   })());
+
+  // THREE COPIES OF ONE ARITHMETIC (2026-10-10). The wizard, the NPC generator
+  // and the level-up proposal each wrote out the cap, the class-skill resolver,
+  // the I.Q. bonus and the per-level advance. They are js/leveling.js's now.
+  {
+    const LV = await import('../js/leveling.js');
+    check('the cap is 98, stated once', LV.SKILL_PCT_CAP === 98);
+    const row = { name: 'Zero-G', base: 0, base_formula: 'PP*5', per_level: 4 };
+    check('a class skill takes the catalog numbers when the class states none',
+      JSON.stringify(LV.classSkillNumbers(row, {}, { PP: 12 })) === '{"base":60,"per_level":4}');
+    check('a stated base replaces the catalog\'s, and a stated step replaces its step',
+      JSON.stringify(LV.classSkillNumbers(row, { base: 30, per_level: 5 }, { PP: 12 })) === '{"base":30,"per_level":5}');
+    check('a stated bonus adds to a real percentage',
+      LV.classSkillNumbers(row, { bonus: 15 }, { PP: 12 }).base === 75);
+    check('and to nothing where the skill has no percentage',
+      !LV.classSkillNumbers({ name: 'W.P. Sword', base: 0 }, { bonus: 15 }, {}).base);
+    check('a skill the catalog does not hold resolves to no numbers rather than throwing',
+      JSON.stringify(LV.classSkillNumbers(null, {}, {})) === '{"per_level":0}'
+      || LV.classSkillNumbers(null, {}, {}).per_level === 0);
+    check('the I.Q. bonus is added and recorded',
+      JSON.stringify(LV.withIqBonus({ name: 'x', pct: 40 }, 5)) === '{"name":"x","pct":45,"iq_bonus":5}');
+    check('held at the cap', LV.withIqBonus({ pct: 96 }, 5).pct === 98);
+    check('and a skill with no percentage gets none', JSON.stringify(LV.withIqBonus({ pct: 0 }, 5)) === '{"pct":0,"iq_bonus":0}');
+    check('a percentage advances by its step per level, to the cap',
+      LV.advancedPercent(40, 5, 3) === 55 && LV.advancedPercent(90, 5, 3) === 98);
+
+    const wizardSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const npcSrc = readFileSync(join(appDir, 'js', 'npc-generate.js'), 'utf8');
+    const levelSrc = readFileSync(join(appDir, 'js', 'leveling.js'), 'utf8');
+    for (const [name, text] of [['the wizard', wizardSrc], ['the NPC generator', npcSrc]]) {
+      check(`${name} states no cap of its own`, !/const SKILL_PCT_CAP/.test(text));
+      check(`${name} writes out no advance, I.Q. bonus or class-skill resolver of its own`,
+        !/Math\.min\(SKILL_PCT_CAP/.test(text) && !/explicit\.base \?\?/.test(text));
+      check(`${name} asks the shared functions`,
+        /withIqBonus\(row, iq\)/.test(text) && /classSkillNumbers\(cat, explicit, /.test(text) && /newPickPercent\(/.test(text));
+    }
+    check('and the level-up proposal advances through the same function',
+      /to: advancedPercent\(s\.pct, s\.per_level, gained\)/.test(levelSrc)
+      && (levelSrc.match(/Math\.min\(SKILL_PCT_CAP/g) || []).length === 2);
+  }
 }
 
 // ---------- 1c25a3. A spell against the row it retells ----------

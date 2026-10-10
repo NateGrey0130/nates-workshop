@@ -119,7 +119,43 @@ export function rollSecondFormHitPoints(formula, fromLevel, toLevel) {
   return out;
 }
 
-const SKILL_PCT_CAP = 98; // Palladium convention: 98% is the practical ceiling
+// The ceiling on a skill percentage. p.22: "there is always a margin for
+// error". Stated here once: the wizard and the NPC generator each carried
+// their own `const SKILL_PCT_CAP = 98` until 2026-10-10.
+export const SKILL_PCT_CAP = 98;
+
+// The three pieces of skill arithmetic every builder of a character needs, and
+// that the wizard (app.js), the NPC generator (js/npc-generate.js) and the
+// level-up proposal below each wrote out for themselves. Three copies of one
+// rule is the shape that drifts, and one pair already had: see newPickPercent.
+
+// A skill the CLASS states: the catalog row's numbers, unless the class's own
+// entry overrides them. `explicit` is that entry - `{ base }` replaces the
+// catalog base outright, `{ bonus }` adds to it (and only to a real
+// percentage: a W.P. has none for a bonus to modify), `{ per_level }` replaces
+// the step. `row` is the catalog row, or {} when the catalog has none.
+export function classSkillNumbers(row, explicit = {}, attributes = {}) {
+  const cat = row || {};
+  const catBase = skillBase(cat, attributes);
+  return {
+    base: explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase),
+    per_level: explicit.per_level ?? cat.per_level ?? 0,
+  };
+}
+
+// The one-time I.Q. bonus, on a skill that has a percentage. `pct` stays the
+// true current percentage, because level-up increments it and the sheet prints
+// it; `iq_bonus` records how much of it came from I.Q. so the number can
+// explain itself.
+export function withIqBonus(row, iq) {
+  if (!row.pct) return { ...row, iq_bonus: 0 };
+  return { ...row, pct: Math.min(SKILL_PCT_CAP, row.pct + iq), iq_bonus: iq };
+}
+
+// A percentage after `gained` levels of its per-level step, held at the cap.
+export function advancedPercent(pct, perLevel, gained) {
+  return Math.min(SKILL_PCT_CAP, pct + perLevel * gained);
+}
 
 // Extra skill picks the class grants for crossing levels, from
 // skills.occ_related_skills.schedule — a different thing from
@@ -858,7 +894,7 @@ export function buildProposal(character, cls, toLevel) {
     if (!s.pct || !s.per_level) continue;
     proposal.skills.push({
       name: s.name, type: s.type,
-      from: s.pct, to: Math.min(SKILL_PCT_CAP, s.pct + s.per_level * gained),
+      from: s.pct, to: advancedPercent(s.pct, s.per_level, gained),
     });
   }
 
