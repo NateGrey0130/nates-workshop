@@ -782,8 +782,11 @@ for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
   const offered = [...picker.matchAll(/pickSystem\('([a-z-]+)'\)/g)].map((m) => m[1]).sort();
   const campaignsApi = readFileSync(join(appDir, '..', '..', 'functions', 'api',
     'character-creator', 'campaigns.js'), 'utf8');
-  const gate = campaignsApi.match(/\[([^\]]*)\]\.includes\(body\.system\)/);
-  const allowed = gate ? [...gate[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort() : [];
+  // The endpoint's allowlist is GAME_SYSTEMS in js/class-keys.js since
+  // 2026-10-10, so the list is read from the module and the endpoint is held to
+  // asking it, where this used to read a literal out of the endpoint's source.
+  const gate = /!GAME_SYSTEMS\.includes\(body\.system\)/.test(campaignsApi);
+  const allowed = gate ? [...(await import('../js/class-keys.js')).GAME_SYSTEMS].sort() : [];
   check('the campaigns endpoint has a readable system allowlist', allowed.length > 0);
   check('renderSystem() offers exactly the systems a campaign can be created in',
     offered.length > 0 && JSON.stringify(offered) === JSON.stringify(allowed),
