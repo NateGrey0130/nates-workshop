@@ -1846,6 +1846,27 @@ section('Catalog redirects');
     const text = readFileSync(join(fnRoot, rel), 'utf8');
     check(`${rel} joins gear through gearJoin`, text.includes('${' + call + '}') && !/LEFT JOIN catalog_redirects/.test(text));
   }
+
+  // The same handler, and the request every sheet opens with. It awaited ten
+  // independent reads one after another; they are one round now, and a read
+  // added back in sequence should be a decision, not an accident.
+  {
+    const whole = readFileSync(join(fnRoot, 'characters/[id].js'), 'utf8');
+    const get = whole.slice(whole.indexOf('export async function onRequestGet'), whole.indexOf('export async function onRequestPatch'));
+    check('the sheet handler is found', get.length > 2000, `${get.length}`);
+    const round = get.match(/= await Promise\.all\(\[\s+itemsRead, vehiclesRead,[\s\S]*?\n  \]\);/)?.[0] || '';
+    const together = ['listPending(env, params.id)', 'listPendingPowers(env, params.id)', 'listGrants(env, params.id)',
+      'getStored(env, character.class_id)', 'getStored(env, character.occ_class_id)', 'loadSkillBonuses(env, character)',
+      'loadTotem(env, character.totem)', 'loadPowerDescriptions(env, character.powers)'];
+    const apart = together.filter((c) => !round.includes(c));
+    check('the sheet\'s independent reads are asked for in one round', round.length > 0 && apart.length === 0, apart.join(', '));
+    check('and none of them is awaited on its own', !together.some((c) => get.includes(`await ${c}`)));
+    check('the character is decoded before the reads that use its decoded lists',
+      get.indexOf('decodeCharacter(character);') > 0 && get.indexOf('decodeCharacter(character);') < get.indexOf(round)
+      && (get.match(/decodeCharacter\(character\);/g) || []).length === 1);
+    const awaits = (get.match(/\bawait\b/g) || []).length;
+    check('four waits remain: the character, the round, the vehicle parts, the trait rows', awaits === 4, `${awaits}`);
+  }
 }
 
 
