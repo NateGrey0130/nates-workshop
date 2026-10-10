@@ -3659,6 +3659,31 @@ x
   check('magic comes from the occupation', both.magic.type === 'wizardry');
   check('the identity stays the race', both.id === 'dragon' && both.occ_id === 'wizard');
 
+  // Neither key is physiology, and until 2026-10-10 neither was named in the
+  // merge at all: the race's spread answered for both, so an occupation's were
+  // dropped whenever a race was chosen. Built as objects because the merge is
+  // what is under test, not the parser.
+  {
+    const chi = { name: 'Chi', max: 10 };
+    const rage = { name: 'Rage', max: 3 };
+    const tracker = { id: 'monk', name: 'Monk', category: 'occ', trackable_resources: [chi], side_effects: 'Hunted.' };
+    const bare = { id: 'elf', name: 'Elf', category: 'rcc' };
+    const empty = { ...bare, trackable_resources: [], side_effects: '' };
+    const own = { ...bare, trackable_resources: [rage, { name: 'Chi', max: 99 }], side_effects: 'Long-lived.' };
+    const names = (c) => (c.trackable_resources || []).map((r) => `${r.name}:${r.max}`).join();
+    check('an occupation\'s tracked resources survive a race that states none',
+      names(combineClasses(bare, tracker)) === 'Chi:10' && names(combineClasses(empty, tracker)) === 'Chi:10');
+    check('a race\'s own resources come first, and its row wins on a shared name',
+      names(combineClasses(own, tracker)) === 'Rage:3,Chi:99');
+    check('an occupation\'s side effects survive a race that states none',
+      combineClasses(bare, tracker).side_effects === 'Hunted.' && combineClasses(empty, tracker).side_effects === 'Hunted.');
+    check('both sides\' side effects are kept, the race\'s first',
+      JSON.stringify(combineClasses(own, tracker).side_effects) === '["Long-lived.","Hunted."]');
+    check('an occupation with neither leaves the race\'s as written',
+      names(combineClasses(own, { id: 'x', name: 'X', category: 'occ' })) === 'Rage:3,Chi:99'
+      && combineClasses(own, { id: 'x', name: 'X', category: 'occ' }).side_effects === 'Long-lived.');
+  }
+
   // Every caller composes unconditionally, so the no-O.C.C. paths matter most.
   check('no occupation returns the race unchanged', combineClasses(dragon, null) === dragon);
   check('no race returns the occupation', combineClasses(null, wizard) === wizard);
