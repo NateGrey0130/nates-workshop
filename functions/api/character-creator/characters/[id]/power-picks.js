@@ -19,6 +19,7 @@ import { loadCharacter } from '../../_lib/character-json.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { abilityPickEffects } from '../../_lib/ability-picks.js';
+import { pendingGuard, claimStatement, batchApplied, STALE_PICKS } from '../../_lib/pending-claim.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id, { write: false });
@@ -101,7 +102,12 @@ export async function onRequestPost({ request, env, params }) {
   // rather than deleting so a grant only PARTLY spent keeps its remainder and
   // its cap. A row that reaches zero is marked claimed rather than removed, so
   // the history of what was granted survives.
+  // Every statement below is guarded on the grants still being as this request
+  // read them, and the claim is one statement that goes last
+  // (_lib/pending-claim.js).
+  const unchanged = pendingGuard('pending_power_picks', params.id, pending);
   const statements = [];
+  const plan = [];
   // What was consumed, keyed the way the banked rows are - handed out by
   // resolvePowerPicks rather than rebuilt here from each power's type, which is
   // what let a banked Talent row go unconsumed and be spent again.
@@ -112,9 +118,7 @@ export async function onRequestPost({ request, env, params }) {
     if (!take) continue;
     spent.set(key, (spent.get(key) || 0) - take);
     const left = g.count - take;
-    statements.push(left > 0
-      ? env.DB.prepare('UPDATE pending_power_picks SET count = ? WHERE id = ?').bind(left, g.id)
-      : env.DB.prepare("UPDATE pending_power_picks SET count = 0, claimed_at = datetime('now') WHERE id = ?").bind(g.id));
+    plan.push({ id: g.id, left, claim: left === 0 });
   }
 
   const powers = character.powers.concat(resolved.powers);
@@ -125,23 +129,26 @@ export async function onRequestPost({ request, env, params }) {
   const cap = character.ppe_max == null ? null : character.ppe_max - baseSpent - ppeSpent;
   if (abilityWrite) {
     statements.unshift(env.DB.prepare(
-      `UPDATE characters SET ${abilityWrite.sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`
-    ).bind(...abilityWrite.binds, params.id));
+      `UPDATE characters SET ${abilityWrite.sets.join(', ')}, updated_at = datetime('now') WHERE id = ? AND ${unchanged.sql}`
+    ).bind(...abilityWrite.binds, params.id, ...unchanged.binds));
   }
   // Only when a power was picked: an ability-only spend leaves `powers` alone.
   if (resolved.powers.length) statements.unshift(ppeSpent > 0
     ? env.DB.prepare(
         `UPDATE characters SET powers = ?, ppe_base_spent = ?,
            ppe_current = CASE WHEN ppe_current IS NOT NULL AND ppe_current > ? THEN ? ELSE ppe_current END,
-           updated_at = datetime('now') WHERE id = ?`
-      ).bind(JSON.stringify(powers), baseSpent + ppeSpent, cap, cap, params.id)
+           updated_at = datetime('now') WHERE id = ? AND ${unchanged.sql}`
+      ).bind(JSON.stringify(powers), baseSpent + ppeSpent, cap, cap, params.id, ...unchanged.binds)
     : env.DB.prepare(
-        "UPDATE characters SET powers = ?, updated_at = datetime('now') WHERE id = ?"
-      ).bind(JSON.stringify(powers), params.id));
+        `UPDATE characters SET powers = ?, updated_at = datetime('now') WHERE id = ? AND ${unchanged.sql}`
+      ).bind(JSON.stringify(powers), params.id, ...unchanged.binds));
 
   // One batch: a power written without its grant consumed can be claimed twice,
   // and a grant consumed without the power written is simply lost.
-  await env.DB.batch(statements);
+  const claim = claimStatement(env, 'pending_power_picks', unchanged, plan);
+  if (claim) statements.push(claim);
+  const written = await env.DB.batch(statements);
+  if (!batchApplied(written)) return json({ error: STALE_PICKS }, 409);
 
   const left = await listPendingPowers(env, params.id);
   return json({

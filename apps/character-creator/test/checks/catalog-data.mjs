@@ -383,7 +383,7 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
     // three-pick style is one row.
     check(`${f} hands resolvePicks the class, and claims what was SPENT`,
       /resolvePicks\(env, \{[\s\S]*?\n\s+cls,\r?\n/.test(text) && text.includes('picked.spent')
-      && !/(claimStatements|remainingGrants)\([^)]*picked\.skills\.length/.test(text));
+      && !/(claimPlan|claimStatements|remainingGrants)\([^)]*picked\.skills\.length/.test(text));
   }
 
   // THE PRICE. `skills.hand_to_hand`, in related-skill picks.

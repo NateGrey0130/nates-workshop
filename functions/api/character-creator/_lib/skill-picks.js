@@ -264,27 +264,29 @@ export function mergePicked(existingSkills, pickedSkills) {
   return { skills, replaced: dropped.map((d) => ({ name: d.name, by: kept.name })) };
 }
 
-// Marks grants claimed, oldest first, consuming `spent` picks. A grant only
-// partly spent stays pending with its count reduced, so two picks earned at
-// level 3 can be taken one at a time.
-export function claimStatements(env, pending, spent) {
-  const statements = [];
+// Which grants `spent` picks consume, oldest first, as a plan for
+// claimStatement() in pending-claim.js. A grant only partly spent stays
+// pending with its count reduced, so two picks earned at level 3 can be taken
+// one at a time; one spent whole is marked claimed and keeps the count it was
+// granted with.
+//
+// A plan and not statements since 2026-10-10: these were separate unguarded
+// UPDATEs, one of them `count = count - ?`, so a request sent twice took the
+// allowance down twice.
+export function claimPlan(pending, spent) {
+  const plan = [];
   let left = spent;
   for (const g of pending) {
     if (left <= 0) break;
     if (g.count <= left) {
       left -= g.count;
-      statements.push(env.DB.prepare(
-        `UPDATE pending_skill_picks SET claimed_at = datetime('now') WHERE id = ?`
-      ).bind(g.id));
+      plan.push({ id: g.id, left: g.count, claim: true });
     } else {
-      statements.push(env.DB.prepare(
-        'UPDATE pending_skill_picks SET count = count - ? WHERE id = ?'
-      ).bind(left, g.id));
+      plan.push({ id: g.id, left: g.count - left, claim: false });
       left = 0;
     }
   }
-  return statements;
+  return plan;
 }
 
 export function pickErrors(errors) {
