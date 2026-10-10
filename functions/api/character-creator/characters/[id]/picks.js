@@ -6,11 +6,12 @@
 // until the player comes back to it. Owner/GM only, same as any character write.
 
 import { json, readJson, requireCharacter } from '../../_lib/auth.js';
-import { listPending, resolvePicks, mergePicked, claimStatements, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
+import { listPending, resolvePicks, mergePicked, claimPlan, pickErrors, dedupeCategories } from '../../_lib/skill-picks.js';
 import { loadSystemBases, systemForCharacter } from '../../_lib/system-bases.js';
 import { loadCharacterClass } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 import { loadCharacter } from '../../_lib/character-json.js';
+import { pendingGuard, claimStatement, batchApplied, STALE_PICKS } from '../../_lib/pending-claim.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id, { write: false });
@@ -95,13 +96,17 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   // Skills and the claim in one batch: a pick that consumed its grant without
-  // landing on the sheet would be silently lost.
-  await env.DB.batch([
-    env.DB.prepare("UPDATE characters SET skills = ?, updated_at = datetime('now') WHERE id = ?")
-      .bind(JSON.stringify(merged), params.id),
+  // landing on the sheet would be silently lost. And both only while the
+  // grants are still as this request read them (_lib/pending-claim.js): the
+  // same request arriving twice would otherwise write once and pay twice.
+  const unchanged = pendingGuard('pending_skill_picks', params.id, pending);
+  const written = await env.DB.batch([
+    env.DB.prepare(`UPDATE characters SET skills = ?, updated_at = datetime('now') WHERE id = ? AND ${unchanged.sql}`)
+      .bind(JSON.stringify(merged), params.id, ...unchanged.binds),
     // `spent`, not the row count: a Hand to Hand style can cost several picks.
-    ...claimStatements(env, pending, picked.spent),
-  ]);
+    claimStatement(env, 'pending_skill_picks', unchanged, claimPlan(pending, picked.spent)),
+  ].filter(Boolean));
+  if (!batchApplied(written)) return json({ error: STALE_PICKS }, 409);
 
   const left = await listPending(env, params.id);
   return json({
