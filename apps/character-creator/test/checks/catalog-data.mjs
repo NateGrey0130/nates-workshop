@@ -456,7 +456,9 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
 
   // The wizard and the sheet.
   check('the Skills step charges the price against the related allowance',
-    fnOf(app, 'renderSkills').includes('handToHandSurcharge') && fnOf(app, 'renderSkills').includes('handToHandCost(effective'));
+    // The surcharge is worked out in renderSkills and the per-row price in the
+    // pick list it hands that context to, since the step was split (2026-10-10).
+    fnOf(app, 'renderSkills').includes('handToHandSurcharge') && fnOf(app, 'skillPickListFor').includes('handToHandCost(effective'));
   check('the Advancement step offers only one-pick styles',
     fnOf(app, 'skillPickBlock').includes('handToHandCost(psiClass()'));
   check('the sheet prices a pick after creation',

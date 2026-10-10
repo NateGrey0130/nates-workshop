@@ -3262,24 +3262,20 @@ function skillBonusClass() {
   return { ...S.cls, bonuses: sumBonusGroups(S.cls.bonuses, extra) };
 }
 
-function renderSkills() {
-  // The COMPOSED class: a rolled major psionic has half the related-skill
-  // allowance, and the Skills step has to show the number that actually applies.
-  // Held rather than re-derived, because the per-category floors below have to
-  // read the same object the count came from.
-  const effective = psiClass();
-  const sk = effective.skills || {};
+// How many options a "pick N" group shows before it asks to be filtered or
+// opened (UI-AUDIT F43).
+const GROUP_SHORT = 8;
 
-  // A Military Occupational Specialty decides which skills the rest of this
-  // step lists, so it is asked first. Unchosen, the class's own O.C.C. skills
-  // are all there is - which is the honest state, not a broken one.
-  const mosCfg = sk.mos;
+// A Military Occupational Specialty decides which skills the rest of this
+// step lists, so it is asked first. Unchosen, the class's own O.C.C. skills
+// are all there is - which is the honest state, not a broken one.
+function skillsMosHtml(mosCfg) {
   // How many the class grants, and how many are held. A class asking for one is
   // every class that carried this key before BOOK-INGEST-AUDIT.md F82, and it
   // must read exactly as it did then - no count, no "0 of 1", just the buttons.
   const mosWant = mosCfg ? mosWanted() : 1;
   const mosHeld = (S.mos || []).length;
-  const mosHtml = !mosCfg ? '' : `
+  return !mosCfg ? '' : `
     <div class="block">
       <h3>Military Occupational Specialt${mosWant > 1 ? 'ies' : 'y'}</h3>
       <div class="attr-note">${esc(mosCfg.note || (mosWant > 1
@@ -3315,10 +3311,12 @@ function renderSkills() {
         }).join('')}
       </div>
     </div>`;
-  // A totem animal (BOOK-INGEST-AUDIT.md F56), asked here beside the MOS because
-  // what it grants first is skills, and the list below shows them. A select, not
-  // forty buttons: UI-AUDIT F43 is what drawing every option in full costs.
-  const totemCfg = effective.totem;
+}
+
+// A totem animal (BOOK-INGEST-AUDIT.md F56), asked here beside the MOS because
+// what it grants first is skills, and the list below shows them. A select, not
+// forty buttons: UI-AUDIT F43 is what drawing every option in full costs.
+function skillsTotemHtml(totemCfg) {
   const totemPick = totemRow();
   const totemSkills = (t) => (Array.isArray(t?.skills) ? t.skills : [])
     .map((x) => x.name + (x.bonus ? ` (+${x.bonus}%)` : '')).join(', ');
@@ -3334,7 +3332,7 @@ function renderSkills() {
     for (const o of b?.saves?.other || []) out.push(`${plus(o.bonus)} ${o.label}`);
     return out.join(', ');
   };
-  const totemHtml = !totemCfg ? '' : `
+  return !totemCfg ? '' : `
     <div class="block">
       <h3>Totem animal</h3>
       <div class="attr-note">${esc(totemCfg.note || 'Pick one. Its skills are added to the O.C.C. skills, '
@@ -3351,38 +3349,14 @@ function renderSkills() {
         ${totemCfg.powers && totemPick.powers ? `<div class="attr-note"><b>Totem Warrior powers,</b>
           giant animal form only: ${esc(totemPick.powers)}</div>` : ''}`}
     </div>`;
-  const relatedCfg = sk.occ_related_skills || { count: 0, categories: [] };
-  const secondaryCfg = sk.secondary_skills || { count: 0 };
-  const taken = takenNames();
+}
 
-  // Fixed skills auto-populate; choice-groups ("pick N of these") get an inline
-  // pick control. Either kind may carry an advisory `note`.
-  //
-  // UI-AUDIT F43. Every option of every group used to be drawn in full - 811
-  // checkboxes and 13,978px for a Gunfighter, whose 34 W.P.s appeared twice. A
-  // satisfied group now folds to what it chose and a Change button; an
-  // unsatisfied one gets the filter box the related list already has and a
-  // short list until filtered or opened; the automatic skills fold to one line.
-  // PRESENTATION ONLY: what may be picked, and every rule behind it, is
-  // unchanged. The fold state lives in S.groupUi, which is not a draft key -
-  // how a list was folded is not part of the character.
-  S.groupUi ||= {};
-  const GROUP_SHORT = 8;
-  const hthReplaced = handToHandReplaced();
-  const hthStanding = oneHandToHand(handToHandHeld()).kept;
-  // What the chosen style costs BEYOND the row it sits in - the class's price
-  // less one, so -1 for a free change (js/hand-to-hand.js). The related counter
-  // and every row's "can this still be afforded" read picks SPENT, not rows.
-  const hthSurchargeOf = (names) =>
-    handToHandSurcharge(effective, names.map((name) => ({ name, type: 'related' })));
-  const hthExtra = hthSurchargeOf(S.related);
-  // "Hand to Hand: Basic" -> "Hand to Hand: Basic (replaced by ...)", for the
-  // places a choice-group pick is shown by name.
-  const hthLabel = (n) => {
-    const by = hthReplaced.get(String(n).toLowerCase());
-    return by ? `${n} (replaced by ${by})` : n;
-  };
-  const occParts = (sk.occ_skills || []).map((s, gi) => {
+// One entry of the class's own skills: a fixed skill, or a "pick N of these"
+// group with its fold, its filter and its options. A function of the step's
+// Hand to Hand context, so it is made once per render and mapped over the list.
+function skillsOccPartFor(ctx) {
+  const { hthReplaced, hthLabel } = ctx;
+  return (s, gi) => {
     const noteHtml = s.note ? `<div class="attr-note" style="margin:0 0 4px 18px">↳ ${esc(s.note)}</div>` : '';
     if (!isGroup(s)) {
       const r = resolveSkill(s.name, s);
@@ -3476,34 +3450,19 @@ function renderSkills() {
       ? `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi(${gi}, 'open', false)">Done</button>`
       : '';
     return { fixed: false, html: `${head}${noteHtml}${filterBox}${opts}${more}${close}` };
-  });
+  };
+}
 
-  // The automatic skills fold to one line. They are not choices, and a
-  // Gunfighter's thirteen sat above every group that was one. The count of
-  // noted rows is on the fold so a note is never silently out of sight.
-  const fixedParts = occParts.filter((p) => p.fixed);
-  const noted = fixedParts.filter((p) => p.noted).length;
-  const occOpen = !!S.groupUi.occ?.open;
-  const fixedHtml = !fixedParts.length ? '' : occOpen
-    ? fixedParts.map((p) => p.html).join('')
-      + `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi('occ', 'open', false)">Hide the automatic skills</button>`
-    : `<div class="grp-done">
-        <span>✔ ${fixedParts.length} skill${fixedParts.length === 1 ? '' : 's'} granted by the class${
-          noted ? ` <span class="muted small">· ${noted} with a note</span>` : ''}${
-          // Folded away, a replacement would be invisible on the very step it
-          // was made on - so it is named on the fold, like the note count.
-          fixedParts.filter((p) => p.replaced).map((p) =>
-            ` <span class="muted small">· ${esc(p.replaced)}</span>`).join('')}</span>
-        <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi('occ', 'open', true)">Show</button></div>`;
-  const occRows = fixedHtml + occParts.filter((p) => !p.fixed).map((p) => p.html).join('');
-
-  const schedule = relatedCfg.schedule || [];
-
-  // The category gate already narrows these, which is why 128 skills has been
-  // survivable — but "Any category" on the secondary list is the whole catalog,
-  // and a checkbox list you have to scroll to search is not a search.
-  // A ticked skill always stays visible, or filtering would appear to un-pick it.
-  const pickList = (catalog, chosen, kind, limit, query) => {
+// The category gate already narrows these, which is why 128 skills has been
+// survivable — but "Any category" on the secondary list is the whole catalog,
+// and a checkbox list you have to scroll to search is not a search.
+// A ticked skill always stays visible, or filtering would appear to un-pick it.
+//
+// A function of the step's context - what is already held, and the class's
+// Hand to Hand terms - so one is made per render and called for each list.
+function skillPickListFor(ctx) {
+  const { effective, taken, hthReplaced, hthStanding, hthSurchargeOf } = ctx;
+  return (catalog, chosen, kind, limit, query) => {
     // Custom languages exist on the character but not in the catalog, so the
     // concat below would never surface them — synthesize their rows from the
     // Other entry's numbers or a pick could not be seen or un-picked.
@@ -3608,20 +3567,18 @@ function renderSkills() {
       </label>`;
     }).join('');
   };
+}
 
-  const relatedPool = catalogFor(relatedCfg.categories);
-  const secondaryPool = catalogFor(null);
-
-  // SKILL PROGRAMS (BOOK-INGEST-AUDIT.md F23(b)). Choose N CATEGORIES; every
-  // skill each one allows is granted at one fixed percentage.
-  //
-  // The count beside each name is computed through `catalogFor`, the same
-  // function the related pool uses, so what the label promises and what the
-  // pick grants come from one place. It is shown because "Technical" and
-  // "Domestic" grant 61 skills and 9, and a player choosing three of thirteen
-  // blind would have no way to tell.
-  const programCfg = sk.skill_programs || null;
-  const programsHtml = !programCfg ? '' : (() => {
+// SKILL PROGRAMS (BOOK-INGEST-AUDIT.md F23(b)). Choose N CATEGORIES; every
+// skill each one allows is granted at one fixed percentage.
+//
+// The count beside each name is computed through `catalogFor`, the same
+// function the related pool uses, so what the label promises and what the
+// pick grants come from one place. It is shown because "Technical" and
+// "Domestic" grant 61 skills and 9, and a player choosing three of thirteen
+// blind would have no way to tell.
+function skillsProgramsHtml(programCfg) {
+  return !programCfg ? '' : (() => {
     const offered = programCfg.categories || [];
     const chosen = S.programs.length;
     const rows = offered.map((entry) => {
@@ -3648,6 +3605,81 @@ function renderSkills() {
         <b>${programSkills().length}</b> skills.</p>` : ''}
     </div>`;
   })();
+}
+
+function renderSkills() {
+  // The COMPOSED class: a rolled major psionic has half the related-skill
+  // allowance, and the Skills step has to show the number that actually applies.
+  // Held rather than re-derived, because the per-category floors below have to
+  // read the same object the count came from.
+  const effective = psiClass();
+  const sk = effective.skills || {};
+
+  // The step is five parts, each its own function above: the MOS, the totem,
+  // the class's own skills, the related and secondary pick lists, and the
+  // skill programs. This one gathers what they share and lays them out.
+  const mosHtml = skillsMosHtml(sk.mos);
+  const totemHtml = skillsTotemHtml(effective.totem);
+  const relatedCfg = sk.occ_related_skills || { count: 0, categories: [] };
+  const secondaryCfg = sk.secondary_skills || { count: 0 };
+  const taken = takenNames();
+
+  // Fixed skills auto-populate; choice-groups ("pick N of these") get an inline
+  // pick control. Either kind may carry an advisory `note`.
+  //
+  // UI-AUDIT F43. Every option of every group used to be drawn in full - 811
+  // checkboxes and 13,978px for a Gunfighter, whose 34 W.P.s appeared twice. A
+  // satisfied group now folds to what it chose and a Change button; an
+  // unsatisfied one gets the filter box the related list already has and a
+  // short list until filtered or opened; the automatic skills fold to one line.
+  // PRESENTATION ONLY: what may be picked, and every rule behind it, is
+  // unchanged. The fold state lives in S.groupUi, which is not a draft key -
+  // how a list was folded is not part of the character.
+  S.groupUi ||= {};
+  const hthReplaced = handToHandReplaced();
+  const hthStanding = oneHandToHand(handToHandHeld()).kept;
+  // What the chosen style costs BEYOND the row it sits in - the class's price
+  // less one, so -1 for a free change (js/hand-to-hand.js). The related counter
+  // and every row's "can this still be afforded" read picks SPENT, not rows.
+  const hthSurchargeOf = (names) =>
+    handToHandSurcharge(effective, names.map((name) => ({ name, type: 'related' })));
+  const hthExtra = hthSurchargeOf(S.related);
+  // "Hand to Hand: Basic" -> "Hand to Hand: Basic (replaced by ...)", for the
+  // places a choice-group pick is shown by name.
+  const hthLabel = (n) => {
+    const by = hthReplaced.get(String(n).toLowerCase());
+    return by ? `${n} (replaced by ${by})` : n;
+  };
+  const ctx = { effective, taken, hthReplaced, hthStanding, hthSurchargeOf, hthLabel };
+  const occParts = (sk.occ_skills || []).map(skillsOccPartFor(ctx));
+
+  // The automatic skills fold to one line. They are not choices, and a
+  // Gunfighter's thirteen sat above every group that was one. The count of
+  // noted rows is on the fold so a note is never silently out of sight.
+  const fixedParts = occParts.filter((p) => p.fixed);
+  const noted = fixedParts.filter((p) => p.noted).length;
+  const occOpen = !!S.groupUi.occ?.open;
+  const fixedHtml = !fixedParts.length ? '' : occOpen
+    ? fixedParts.map((p) => p.html).join('')
+      + `<button type="button" class="btn btn-sm btn-ghost grp-more" onclick="groupUi('occ', 'open', false)">Hide the automatic skills</button>`
+    : `<div class="grp-done">
+        <span>✔ ${fixedParts.length} skill${fixedParts.length === 1 ? '' : 's'} granted by the class${
+          noted ? ` <span class="muted small">· ${noted} with a note</span>` : ''}${
+          // Folded away, a replacement would be invisible on the very step it
+          // was made on - so it is named on the fold, like the note count.
+          fixedParts.filter((p) => p.replaced).map((p) =>
+            ` <span class="muted small">· ${esc(p.replaced)}</span>`).join('')}</span>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="groupUi('occ', 'open', true)">Show</button></div>`;
+  const occRows = fixedHtml + occParts.filter((p) => !p.fixed).map((p) => p.html).join('');
+
+  const schedule = relatedCfg.schedule || [];
+
+  const pickList = skillPickListFor(ctx);
+
+  const relatedPool = catalogFor(relatedCfg.categories);
+  const secondaryPool = catalogFor(null);
+
+  const programsHtml = skillsProgramsHtml(sk.skill_programs || null);
 
   $('app').innerHTML = `
   <div class="panel">
