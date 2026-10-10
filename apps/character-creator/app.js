@@ -4187,129 +4187,165 @@ function spellGroupRows(list, count, kind = 'spell', gi = null, query = '') {
     + `<p class="pick-band">Tradition spells <span class="muted">— your class's own</span></p>` + folds;
 }
 
-function spellLevelRows(sorted, count, kind, gi) {
-  const sizes = sorted.reduce((m, x) => { const g = x.level != null ? `Level ${x.level}` : 'Unleveled';
-    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
-  let last = null;
-  return sorted.map((sp) => {
-    const group = sp.level != null ? `Level ${sp.level}` : 'Unleveled';
-    const head = group !== last
-      ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
-      : '';
-    last = group;
-    const sel = powerList(kind, gi);
-    const on = sel.includes(sp.name);
-    const blocked = !on && sel.length >= count;
-    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(sp.name)}"${
-        gi == null ? '' : ` data-gi="${gi}"`}>
-      <span>${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}</span>
-      <span class="pct">${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.</span></label>`;
-  }).join('');
-}
-
-function psiGroupRows(list, count, kind = 'psi', gi = null) {
-  const sorted = [...list].sort((a, b) =>
-    (a.category || '￿').localeCompare(b.category || '￿') || (a.name || '').localeCompare(b.name || ''));
-  const sizes = sorted.reduce((m, x) => { const g = x.category || 'Uncategorized';
-    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
-  let last = null;
-  return sorted.map((p) => {
-    const group = p.category || 'Uncategorized';
-    const head = group !== last
-      ? `<div class="pick-group">${esc(group)}<span class="pick-group-n">${sizes.get(group)}</span></div>`
-      : '';
-    last = group;
-    const sel = powerList(kind, gi);
-    const on = sel.includes(p.name);
-    const blocked = !on && sel.length >= count;
-    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(p.name)}"${
-        gi == null ? '' : ` data-gi="${gi}"`}>
-      <span>${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}</span>
-      <span class="pct">${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.</span></label>`;
-  }).join('');
-}
-
-// The same rows for a super ability. Grouped by TIER rather than by category,
-// and the right-hand column is the stat line rather than a cost, because a
-// super ability has none: it is a permanent trait, which is the whole reason
-// it needed a table of its own rather than a spell row.
+// ONE ROW RENDERER for every power picker. There were four - spells, psionic
+// powers, super abilities, Talents - each a copy of the same forty lines:
+// count the groups, print a heading when the group changes, then a checkbox
+// row that is disabled once the allowance is spent. They differed in what
+// groups a row, what the row says, and what its right-hand column carries, so
+// those three are what a caller states.
 //
-// Only 41 of the 364 rows carry a range and 22 a damage (production,
-// 2026-09-13), so most rows show nothing there. An empty column is the honest
-// answer - the book prints no stat block for Extraordinary Speed either.
-function superGroupRows(list, count, kind = 'super', gi = null) {
-  const sorted = [...list].sort((a, b) =>
-    (a.tier || '\uffff').localeCompare(b.tier || '\uffff') || (a.name || '').localeCompare(b.name || ''));
-  const sizes = sorted.reduce((m, x) => { const g = x.tier || 'Untiered';
+//   groupOf(item)   the heading a row sits under
+//   label(group)    how that heading reads (default: as it is)
+//   text(item)      the row's own markup, already escaped
+//   right(item)     the right-hand column, already escaped
+//   barred(item)    a reason beyond the allowance to refuse the row
+function powerRows(sorted, { count, kind, gi = null, groupOf, label = (g) => g, text, right, barred = null }) {
+  const sizes = sorted.reduce((m, x) => { const g = groupOf(x);
     return m.set(g, (m.get(g) || 0) + 1); }, new Map());
-  const label = (t) => (t === 'minor' ? 'Minor super abilities'
-    : t === 'major' ? 'Major super abilities' : 'Untiered');
   let last = null;
-  return sorted.map((a) => {
-    const group = a.tier || 'Untiered';
+  return sorted.map((it) => {
+    const group = groupOf(it);
     const head = group !== last
       ? `<div class="pick-group">${esc(label(group))}<span class="pick-group-n">${sizes.get(group)}</span></div>`
       : '';
     last = group;
     const sel = powerList(kind, gi);
-    const on = sel.includes(a.name);
-    const blocked = !on && sel.length >= count;
-    const stat = [a.range, a.damage].filter(Boolean).join(' \u00b7 ');
+    const on = sel.includes(it.name);
+    const blocked = !on && (sel.length >= count || (barred ? barred(it) : false));
     return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
       <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(a.name)}"${
+        data-act="power" data-kind="${kind}" data-name="${esc(it.name)}"${
         gi == null ? '' : ` data-gi="${gi}"`}>
-      <span>${esc(a.name)}</span>
-      <span class="pct">${esc(stat)}</span></label>`;
+      <span>${text(it)}</span>
+      <span class="pct">${right(it)}</span></label>`;
   }).join('');
 }
 
-// The same rows for a Nightbane Talent. Grouped by TIER - common against elite
-// - and the right-hand column carries BOTH COSTS, which is the one thing this
-// picker must not do the way the other three do. A Talent is bought with a
-// permanent P.P.E. expenditure and paid for again every activation, so a
-// picker showing one number would be showing the wrong one: `15 + 20` reads
-// as fifteen to acquire, twenty to use.
+// By a key, then by name, with the rows that have no key last.
+const byKeyThenName = (key) => (a, b) =>
+  (a[key] || '\uffff').localeCompare(b[key] || '\uffff') || (a.name || '').localeCompare(b.name || '');
+
+// Spells arrive sorted by their caller, which also splits them by tradition.
+function spellLevelRows(sorted, count, kind, gi) {
+  return powerRows(sorted, {
+    count, kind, gi,
+    groupOf: (sp) => (sp.level != null ? `Level ${sp.level}` : 'Unleveled'),
+    text: (sp) => `${esc(sp.name)}${sp.ppe_note ? ` <span class="muted small">&mdash; ${esc(sp.ppe_note)}</span>` : ''}`,
+    right: (sp) => `${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.`,
+  });
+}
+
+function psiGroupRows(list, count, kind = 'psi', gi = null) {
+  return powerRows([...list].sort(byKeyThenName('category')), {
+    count, kind, gi,
+    groupOf: (p) => p.category || 'Uncategorized',
+    text: (p) => `${esc(p.name)}${p.isp_note ? ` <span class="muted small">&mdash; ${esc(p.isp_note)}</span>` : ''}`,
+    right: (p) => `${p.isp}${p.isp_note && p.isp > 0 ? '+' : ''} I.S.P.`,
+  });
+}
+
+// A super ability's rows. Grouped by TIER rather than by category, and the
+// right-hand column is the stat line rather than a cost, because a super
+// ability has none: it is a permanent trait, which is the whole reason it
+// needed a table of its own rather than a spell row.
+//
+// Only 41 of the 364 rows carry a range and 22 a damage (production,
+// 2026-09-13), so most rows show nothing there. An empty column is the honest
+// answer - the book prints no stat block for Extraordinary Speed either.
+function superGroupRows(list, count, kind = 'super', gi = null) {
+  return powerRows([...list].sort(byKeyThenName('tier')), {
+    count, kind, gi,
+    groupOf: (a) => a.tier || 'Untiered',
+    label: (t) => (t === 'minor' ? 'Minor super abilities'
+      : t === 'major' ? 'Major super abilities' : 'Untiered'),
+    text: (a) => esc(a.name),
+    right: (a) => esc([a.range, a.damage].filter(Boolean).join(' \u00b7 ')),
+  });
+}
+
+// A Nightbane Talent's rows. Grouped by TIER - common against elite - and the
+// right-hand column carries BOTH COSTS, which is the one thing this picker
+// must not do the way the other three do. A Talent is bought with a permanent
+// P.P.E. expenditure and paid for again every activation, so a picker showing
+// one number would be showing the wrong one: `15 + 20` reads as fifteen to
+// acquire, twenty to use.
 //
 // A Talent the character is too low to take is shown DISABLED with the level
 // it needs, rather than hidden. Ten of the core book's 25 are level-gated, and
 // hiding them would make the list change size as a character grows with no
 // explanation on screen.
 function talentGroupRows(list, count, kind = 'talent', gi = null, atLevel = 1) {
-  const sorted = [...list].sort((a, b) =>
-    (a.tier || '\uffff').localeCompare(b.tier || '\uffff') || (a.name || '').localeCompare(b.name || ''));
-  const sizes = sorted.reduce((m, x) => { const g = x.tier || 'Untiered';
-    return m.set(g, (m.get(g) || 0) + 1); }, new Map());
-  const label = (t) => (t === 'common' ? 'Common Talents'
-    : t === 'elite' ? 'Elite Talents' : 'Untiered');
-  let last = null;
-  return sorted.map((a) => {
-    const group = a.tier || 'Untiered';
-    const head = group !== last
-      ? `<div class="pick-group">${esc(label(group))}<span class="pick-group-n">${sizes.get(group)}</span></div>`
-      : '';
-    last = group;
-    const sel = powerList(kind, gi);
-    const on = sel.includes(a.name);
-    const tooLow = Number.isFinite(a.min_character_level) && atLevel < a.min_character_level;
-    const blocked = !on && (sel.length >= count || tooLow);
-    const cost = [Number.isFinite(a.acquire_ppe) ? `${a.acquire_ppe}` : null,
-                  Number.isFinite(a.ppe) ? `${a.ppe}` : null]
-      .filter((x) => x !== null).join(' + ');
-    const why = tooLow ? `level ${a.min_character_level}+`
-      : (cost ? `${cost} P.P.E.` : '');
-    return head + `<label class="chkrow" style="${blocked ? 'opacity:0.45' : 'cursor:pointer'}">
-      <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
-        data-act="power" data-kind="${kind}" data-name="${esc(a.name)}"${
-        gi == null ? '' : ` data-gi="${gi}"`}>
-      <span>${esc(a.name)}${a.prerequisite
-        ? ` <span class="muted small">needs ${esc(a.prerequisite)}</span>` : ''}</span>
-      <span class="pct">${esc(why)}</span></label>`;
+  const tooLow = (a) => Number.isFinite(a.min_character_level) && atLevel < a.min_character_level;
+  return powerRows([...list].sort(byKeyThenName('tier')), {
+    count, kind, gi,
+    groupOf: (a) => a.tier || 'Untiered',
+    label: (t) => (t === 'common' ? 'Common Talents'
+      : t === 'elite' ? 'Elite Talents' : 'Untiered'),
+    barred: tooLow,
+    text: (a) => `${esc(a.name)}${a.prerequisite
+        ? ` <span class="muted small">needs ${esc(a.prerequisite)}</span>` : ''}`,
+    right: (a) => {
+      const cost = [Number.isFinite(a.acquire_ppe) ? `${a.acquire_ppe}` : null,
+                    Number.isFinite(a.ppe) ? `${a.ppe}` : null]
+        .filter((x) => x !== null).join(' + ');
+      return esc(tooLow(a) ? `level ${a.min_character_level}+` : (cost ? `${cost} P.P.E.` : ''));
+    },
+  });
+}
+
+// The level-1 picks for a power that comes IN TIERS: super abilities and
+// Talents. One body for both, which were the same forty lines with five words
+// changed. Each group filters the catalog to its own list or its own tiers,
+// leaves out what another group already took, and says which named rows the
+// catalog does not hold yet.
+//
+//   kind       the powerList kind the picks are stored under
+//   catalog    the rows to choose from
+//   filterKey  the S key holding the filter text; idPrefix its input's id
+//   one, many  the noun, for "1 talent" / "2 talents"
+//   rows       the row renderer for one group's list
+//   granted    names the class gives outright, and grantedBy who gives them
+//   title, hint  the heading and the small print beside the count
+function tieredStartHtml(groups, o) {
+  const total = groups.reduce((n, g) => n + g.count, 0);
+  const takenAll = () => groups.flatMap((g, i) => powerList(o.kind, i));
+
+  const blocks = groups.map((g, gi) => {
+    const chosen = powerList(o.kind, gi);
+    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
+      .map((n) => String(n).toLowerCase()));
+    const pool = o.catalog.filter((a) => inSystem(a)
+      && (named ? named.has(String(a.name).toLowerCase())
+                : (!g.tiers || g.tiers.includes(a.tier)))
+      && !elsewhere.has(String(a.name).toLowerCase()));
+    const unknownNamed = named
+      ? g.from.filter((n) => !o.catalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
+      : [];
+    const list = Picker.filter(pool, S[o.filterKey])
+      .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S[o.filterKey])));
+    const gate = named ? `a list of ${g.from.length}`
+      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
+    return `<p class="small" style="margin-top:12px"><b>${g.count}
+      ${g.count === 1 ? o.one : o.many}</b> <span class="muted">from ${esc(gate)}</span>
+      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
+      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
+      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
+        ${unknownNamed.length === 1 ? `${o.one} is` : `${o.many} are`} not in the catalog yet:
+        ${esc(unknownNamed.join(', '))}.</p>` : '')
+      + Picker.inputHtml({ id: `${o.idPrefix}${gi}`, value: S[o.filterKey],
+          placeholder: o.placeholder,
+          shown: Picker.filter(pool, S[o.filterKey]).length, total: pool.length })
+      + o.rows(list, g.count, gi);
   }).join('');
+
+  const granted = (o.granted || []).filter((n) => typeof n === 'string' && n.trim());
+  return (granted.length ? `<h3>${o.title} &mdash; ${granted.length} granted by ${o.grantedBy}
+      <span class="muted small">(already on the character)</span></h3>`
+      + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
+    + `<h3>${o.title} &mdash; ${takenAll().length}/${total}
+    <span class="muted small">(${o.hint})</span></h3>`
+    + blocks;
 }
 
 // The level-1 Talent picks. The book gives ONE free Talent at first level
@@ -4318,46 +4354,13 @@ function talentGroupRows(list, count, kind = 'talent', gi = null, atLevel = 1) {
 // chosen Morphus characteristic arrives as a second group.
 function startingTalentHtml(groups) {
   if (!groups.length) return '';
-  const total = groups.reduce((n, g) => n + g.count, 0);
-  const takenAll = () => groups.flatMap((g, i) => powerList('talent-start', i));
-
-  const blocks = groups.map((g, gi) => {
-    const chosen = powerList('talent-start', gi);
-    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
-    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
-      .map((n) => String(n).toLowerCase()));
-    const pool = S.talentCatalog.filter((a) => inSystem(a)
-      && (named ? named.has(String(a.name).toLowerCase())
-                : (!g.tiers || g.tiers.includes(a.tier)))
-      && !elsewhere.has(String(a.name).toLowerCase()));
-    const unknownNamed = named
-      ? g.from.filter((n) => !S.talentCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
-      : [];
-    const list = Picker.filter(pool, S.talentFilter)
-      .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S.talentFilter)));
-    const gate = named ? `a list of ${g.from.length}`
-      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
-    return `<p class="small" style="margin-top:12px"><b>${g.count}
-      ${g.count === 1 ? 'talent' : 'talents'}</b> <span class="muted">from ${esc(gate)}</span>
-      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
-      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
-      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
-        ${unknownNamed.length === 1 ? 'talent is' : 'talents are'} not in the catalog yet:
-        ${esc(unknownNamed.join(', '))}.</p>` : '')
-      + Picker.inputHtml({ id: `talent-filter-${gi}`, value: S.talentFilter,
-          placeholder: 'Filter talents\u2026',
-          shown: Picker.filter(pool, S.talentFilter).length, total: pool.length })
-      + talentGroupRows(list, g.count, 'talent-start', gi, 1);
-  }).join('');
-
-  const granted = (psiClass()?.talents?.talents || [])
-    .filter((n) => typeof n === 'string' && n.trim());
-  return (granted.length ? `<h3>Talents &mdash; ${granted.length} granted by the class
-      <span class="muted small">(already on the character)</span></h3>`
-      + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
-    + `<h3>Talents &mdash; ${takenAll().length}/${total}
-    <span class="muted small">(acquire cost + activation cost)</span></h3>`
-    + blocks;
+  return tieredStartHtml(groups, {
+    kind: 'talent-start', catalog: S.talentCatalog, filterKey: 'talentFilter', idPrefix: 'talent-filter-',
+    one: 'talent', many: 'talents', placeholder: 'Filter talents\u2026',
+    rows: (list, count, gi) => talentGroupRows(list, count, 'talent-start', gi, 1),
+    granted: psiClass()?.talents?.talents, grantedBy: 'the class',
+    title: 'Talents', hint: 'acquire cost + activation cost',
+  });
 }
 
 // The level-1 super-ability picks. ALWAYS the group form, because every Power
@@ -4365,46 +4368,13 @@ function startingTalentHtml(groups) {
 // ability, and one minor" (printed 56) - so unlike spells and psionics there is
 // no single-group shape worth a second renderer.
 function startingSuperHtml(groups) {
-  const total = groups.reduce((n, g) => n + g.count, 0);
-  const takenAll = () => groups.flatMap((g, i) => powerList('super-start', i));
-
-  const blocks = groups.map((g, gi) => {
-    const chosen = powerList('super-start', gi);
-    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
-    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
-      .map((n) => String(n).toLowerCase()));
-    const pool = S.superCatalog.filter((a) => inSystem(a)
-      && (named ? named.has(String(a.name).toLowerCase())
-                : (!g.tiers || g.tiers.includes(a.tier)))
-      && !elsewhere.has(String(a.name).toLowerCase()));
-    const unknownNamed = named
-      ? g.from.filter((n) => !S.superCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
-      : [];
-    const list = Picker.filter(pool, S.superFilter)
-      .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S.superFilter)));
-    const gate = named ? `a list of ${g.from.length}`
-      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
-    return `<p class="small" style="margin-top:12px"><b>${g.count}
-      ${g.count === 1 ? 'ability' : 'abilities'}</b> <span class="muted">from ${esc(gate)}</span>
-      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
-      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
-      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
-        ${unknownNamed.length === 1 ? 'ability is' : 'abilities are'} not in the catalog yet:
-        ${esc(unknownNamed.join(', '))}.</p>` : '')
-      + Picker.inputHtml({ id: `super-filter-${gi}`, value: S.superFilter,
-          placeholder: 'Filter super abilities\u2026',
-          shown: Picker.filter(pool, S.superFilter).length, total: pool.length })
-      + superGroupRows(list, g.count, 'super-start', gi);
-  }).join('');
-
-  const granted = (psiClass()?.super_abilities?.abilities || [])
-    .filter((n) => typeof n === 'string' && n.trim());
-  return (granted.length ? `<h3>Super abilities &mdash; ${granted.length} granted by the Power Category
-      <span class="muted small">(already on the character)</span></h3>`
-      + granted.map((n) => `<div class="chkrow"><span>${esc(n)}</span></div>`).join('') : '')
-    + `<h3>Super abilities &mdash; ${takenAll().length}/${total}
-    <span class="muted small">(in the tiers the book keeps apart)</span></h3>`
-    + blocks;
+  return tieredStartHtml(groups, {
+    kind: 'super-start', catalog: S.superCatalog, filterKey: 'superFilter', idPrefix: 'super-filter-',
+    one: 'ability', many: 'abilities', placeholder: 'Filter super abilities\u2026',
+    rows: (list, count, gi) => superGroupRows(list, count, 'super-start', gi),
+    granted: psiClass()?.super_abilities?.abilities, grantedBy: 'the Power Category',
+    title: 'Super abilities', hint: 'in the tiers the book keeps apart',
+  });
 }
 
 // Spells a class knows OUTRIGHT, listed rather than picked.

@@ -2053,6 +2053,22 @@ section('Wizard markup escapes what it is handed');
   const fns = [...src.matchAll(/^(?:async )?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)].map((m) => m[1]);
   // A property of the same name on something else is not a use; a spread is.
   const named = (n) => (src.match(new RegExp(`(?<![\\w$])(?<![\\w$)\\]]\\.)${n.replace(/\$/g, '\\$')}(?![\\w$])`, 'g')) || []).length;
+  // One power row, one tiered block (2026-10-10). The four pickers each carried
+  // a copy of the checkbox row and two of them a copy of the whole group block;
+  // a fix to one - an unescaped value, a wrong disabled rule - reached a
+  // quarter of them.
+  check('the power checkbox row is written once',
+    (src.match(/data-act="power"/g) || []).length === 1, `${(src.match(/data-act="power"/g) || []).length}`);
+  for (const fn of ['spellLevelRows', 'psiGroupRows', 'superGroupRows', 'talentGroupRows']) {
+    const body = src.match(new RegExp(`function ${fn}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`))?.[0] || '';
+    check(`${fn} is a statement of what differs, handed to powerRows`,
+      /return powerRows\(/.test(body) && !/<label|<input/.test(body), `${body.length} chars`);
+  }
+  for (const fn of ['startingTalentHtml', 'startingSuperHtml']) {
+    const body = src.match(new RegExp(`function ${fn}\\(groups\\) \\{[\\s\\S]*?\\n\\}`))?.[0] || '';
+    check(`${fn} is handed to tieredStartHtml`, /return tieredStartHtml\(groups, \{/.test(body) && !/Picker\./.test(body));
+  }
+
   check('the wizard\'s functions are found', fns.length > 150, `${fns.length}`);
   const uncalled = fns.filter((n) => named(n) < 2);
   check('no wizard function is left with no caller', uncalled.length === 0, uncalled.join(', '));
