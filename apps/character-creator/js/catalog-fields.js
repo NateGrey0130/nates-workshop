@@ -38,6 +38,7 @@
 // insert. Where the column cannot hold NULL, say what empty means instead.
 
 import { validateBonuses, validateSkillEntries, isDiceBonus } from './parser.js';
+import { GAME_SYSTEMS } from './class-keys.js';
 
 // The creature pool grammar (js/creature-roll.js), stated where a form shows it.
 const FORMULA_HELP = 'A formula: dice, whole numbers and attributes joined by + or - - '
@@ -91,7 +92,7 @@ export const CATALOGS = {
       // only; when it is burned stays in the description.
       { name: 'ppe_permanent', label: 'Permanent P.P.E. from base', type: 'text',
         help: 'Blank for most spells. A number or dice, e.g. "2" or "2D6". When it applies goes in the description.' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Stat block. Text, not numbers — books write "100 feet per level of
       // experience" and "2D6 melee rounds" as often as they write a figure.
@@ -125,7 +126,7 @@ export const CATALOGS = {
       // says the schedule in a few words.
       { name: 'isp_note', label: 'I.S.P. varies', type: 'text',
         help: 'Blank for a flat cost. Otherwise the schedule in a few words, e.g. "more for more damage".' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Same field names as spells, so the sheet renders both the same way.
       { name: 'range', label: 'Range', type: 'text' },
@@ -158,7 +159,7 @@ export const CATALOGS = {
       { name: 'tier', label: 'Tier', type: 'select', allowOther: true,
         options: ['minor', 'major'],
         help: 'The only division these have. Blank when the book does not say.' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Same field names as spells and psionic powers, so the sheet renders all
       // three the same way. TEXT because books write "100 feet per level of
@@ -216,7 +217,7 @@ export const CATALOGS = {
         help: 'Blank when the book states no form.' },
       { name: 'prerequisite', label: 'Prerequisite', type: 'text',
         help: 'Another Talent, or a Morphus characteristic the Nightbane must already have.' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       // Same field names as spells, psionic powers and super abilities, so the
       // sheet renders all four the same way.
@@ -294,7 +295,7 @@ export const CATALOGS = {
         help: 'JSON list of strings, when the entry offers options inside itself.' },
       { name: 'description', label: 'Description', type: 'longtext' },
       { name: 'note', label: 'Note', type: 'longtext' },
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'],
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'],
         help: 'Blank means unrestricted — offered to characters in any system.' },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
@@ -335,7 +336,7 @@ export const CATALOGS = {
       // columns carry a SQLite CHECK naming two values, and offering a third
       // here would put a value in the editor that the database refuses.
       // BOOK-INGEST-AUDIT F73.
-      { name: 'system', label: 'System', type: 'select', options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+      { name: 'system', label: 'System', type: 'select', options: [...GAME_SYSTEMS, 'both'] },
       { name: 'source_book', label: 'Source book', type: 'text' },
     ],
   },
@@ -352,7 +353,7 @@ export const CATALOGS = {
       { name: 'slug', label: 'Slug', type: 'text', required: true,
         help: 'What equipment_starting[].item_id references. Changing it leaves the old slug redirecting here.' },
       { name: 'system', label: 'System', type: 'select',
-        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+        options: [...GAME_SYSTEMS, 'both'] },
       { name: 'category', label: 'Category', type: 'select', allowOther: true,
         options: ['weapon', 'armor', 'vehicle', 'cybernetics', 'gear', 'magic'] },
       { name: 'weight_lbs', label: 'Weight (lbs)', type: 'real' },
@@ -419,7 +420,7 @@ export const CATALOGS = {
       { name: 'slug', label: 'Slug', type: 'text', required: true,
         help: 'The portable key, as gear.slug is. Nothing references it yet.' },
       { name: 'system', label: 'System', type: 'select',
-        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+        options: [...GAME_SYSTEMS, 'both'] },
       { name: 'vehicle_class', label: 'Class', type: 'select', allowOther: true,
         options: ['power-armor', 'robot', 'drone', 'borg', 'vehicle', 'ship', 'other'],
         help: 'The column is free text so a book that invents a category is recorded rather '
@@ -518,7 +519,7 @@ export const CATALOGS = {
       { name: 'real_name', label: 'Real name', type: 'text' },
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'system', label: 'System', type: 'select',
-        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+        options: [...GAME_SYSTEMS, 'both'] },
       { name: 'race', label: 'Race', type: 'text' },
       { name: 'occ', label: 'O.C.C. / occupation', type: 'text',
         help: 'As printed - "24th level Lord Magus". Not a class id: the book\'s numbers '
@@ -585,7 +586,7 @@ export const CATALOGS = {
       { name: 'category', label: 'Category', type: 'text',
         help: 'Free text: animal, monster, demon, faerie, dragon...' },
       { name: 'system', label: 'System', type: 'select',
-        options: ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both'] },
+        options: [...GAME_SYSTEMS, 'both'] },
       { name: 'playable', label: 'Optional player race', type: 'bool', blankAs: 0,
         help: 'The book offers it as a player character. A catalog fact, not a class.' },
       { name: 'alignment', label: 'Alignment', type: 'text' },
@@ -674,7 +675,7 @@ export function coerceField(field, raw) {
       // system picker still offers two, so nothing resolves a skill against
       // `nightbane` or `heroes-unlimited` yet.
       if (!Array.isArray(raw) || raw.length === 0) return { value: null };
-      const allowed = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
+      const allowed = [...GAME_SYSTEMS];
       const picked = raw.filter((s) => allowed.includes(s));
       if (picked.length === 0 || picked.length === allowed.length) return { value: null };
       return { value: JSON.stringify(picked) };

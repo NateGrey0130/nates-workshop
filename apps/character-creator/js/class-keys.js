@@ -20,6 +20,14 @@
 //
 // No imports, on purpose: parser.js imports this, and so does a Node script.
 
+// The games a class, a catalog row or a campaign may belong to. `system` is a
+// class key with a closed set of values, and this is the set. The parser, the
+// catalog editor's eleven select lists, the campaign endpoint and the skill
+// cross-reference each typed it out. A NEW GAME ALSO NEEDS the SQLite CHECK
+// constraints widened (db/schema.sql and a migration): this list does not
+// reach those, and the app refuses a system the database does not accept.
+export const GAME_SYSTEMS = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
+
 export const CLASS_KEYS = [
   'id', 'name', 'system', 'source_book', 'category',
   'attribute_requirements', 'attribute_maximums', 'attribute_dice',

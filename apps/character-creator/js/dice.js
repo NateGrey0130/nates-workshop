@@ -213,6 +213,14 @@ export function rollAttribute(expr) {
 const DICE_RE = /\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i;
 // The attribute a formula can add in. Books write both orders, and spell the
 // attribute with or without full stops.
+// The eight attributes, in the order the books and every sheet list them.
+// Stated here once for the modules: the wizard, the NPC generator, the creature
+// roller, the bonus validator, the skill-formula reader and the variant
+// endpoint each carried their own copy until 2026-10-10. The two classic
+// scripts that cannot import (the sheet, the NPC sheets) keep theirs, and
+// smoke.mjs holds both to this.
+export const ATTRIBUTES = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+
 const ATTR_RE = /\b(IQ|ME|MA|PS|PP|PE|PB|Spd)\b|\b([IMPS])\.\s*([QEASPB])\./i;
 
 // A multiplier the book attaches to the attribute itself — "M.D.C.: P.E. x 10",

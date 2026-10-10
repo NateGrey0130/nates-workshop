@@ -782,8 +782,11 @@ for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
   const offered = [...picker.matchAll(/pickSystem\('([a-z-]+)'\)/g)].map((m) => m[1]).sort();
   const campaignsApi = readFileSync(join(appDir, '..', '..', 'functions', 'api',
     'character-creator', 'campaigns.js'), 'utf8');
-  const gate = campaignsApi.match(/\[([^\]]*)\]\.includes\(body\.system\)/);
-  const allowed = gate ? [...gate[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort() : [];
+  // The endpoint's allowlist is GAME_SYSTEMS in js/class-keys.js since
+  // 2026-10-10, so the list is read from the module and the endpoint is held to
+  // asking it, where this used to read a literal out of the endpoint's source.
+  const gate = /!GAME_SYSTEMS\.includes\(body\.system\)/.test(campaignsApi);
+  const allowed = gate ? [...(await import('../js/class-keys.js')).GAME_SYSTEMS].sort() : [];
   check('the campaigns endpoint has a readable system allowlist', allowed.length > 0);
   check('renderSystem() offers exactly the systems a campaign can be created in',
     offered.length > 0 && JSON.stringify(offered) === JSON.stringify(allowed),
@@ -2039,6 +2042,56 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
     /function setBio\(key, value\) \{[\s\S]{0,160}if \(key === 'money'\) S\.moneyTyped = !!v;/.test(appText));
   check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
     /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollPoolFormula\(c\.starting_money, S\.attrs\);/.test(appText));
+}
+
+// ---------- The eight attributes and the four games ----------
+// Each was typed out wherever it was needed: the attributes in nine files, the
+// games in about eighteen places. The modules import one list of each now. The
+// three classic scripts that cannot import keep a copy, and the SQL CHECK
+// constraints cannot read JavaScript at all, so those are held to the lists
+// here instead.
+section('One list of attributes and one of games');
+{
+  const { ATTRIBUTES } = await import('../js/dice.js');
+  const { GAME_SYSTEMS } = await import('../js/class-keys.js');
+  check('eight attributes, in the order the books list them', ATTRIBUTES.join() === 'IQ,ME,MA,PS,PP,PE,PB,Spd');
+  check('four games', GAME_SYSTEMS.join() === 'rifts,palladium-fantasy,nightbane,heroes-unlimited');
+
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    (e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+  const files = [join(appDir, 'app.js'), ...walk(join(appDir, 'js')), ...siblingAppDirs.flatMap(walk),
+    ...walk(join(repoRoot, 'functions/api/character-creator'))];
+  const rel = (f) => f.slice(repoRoot.length + 1).replace(/\\/g, '/');
+  const holding = (re) => files.filter((f) => re.test(readFileSync(f, 'utf8'))).map(rel).sort();
+
+  // A classic script is loaded by a <script> tag with no type and cannot import.
+  const attrCopies = holding(/\[\s*'IQ',\s*'ME',\s*'MA',\s*'PS',\s*'PP',\s*'PE',\s*'PB',\s*'Spd'\s*\]/);
+  check('the attribute list is typed out only where it is stated and in the two classic scripts',
+    attrCopies.join() === 'apps/character-creator/js/dice.js,apps/character-creator/js/npc-sheets.js,apps/character-sheet/sheet.js',
+    attrCopies.join(', '));
+  const gameCopies = holding(/\[\s*'rifts',\s*'palladium-fantasy',\s*'nightbane',\s*'heroes-unlimited'/);
+  check('the game list is typed out only where it is stated and in the one classic script',
+    gameCopies.join() === 'apps/character-creator/js/class-keys.js,apps/codex/codex.js', gameCopies.join(', '));
+
+  // The copies, held to the lists: a ninth attribute or a fifth game added to
+  // the module and not to these fails here.
+  const listIn = (file, re) => (readFileSync(file, 'utf8').match(re)?.[1] || '').match(/'([^']+)'/g)?.map((x) => x.slice(1, -1)) || [];
+  for (const f of [appPath('sheet.js'), join(appDir, 'js', 'npc-sheets.js')]) {
+    check(`${rel(f)} keeps the same eight`, listIn(f, /const ATTRS = \[([^\]]+)\]/).join() === ATTRIBUTES.join());
+  }
+  check('the Codex keeps the same four',
+    listIn(join(appDir, '..', 'codex', 'codex.js'), /S\.system = \[([^\]]+)\]\.includes/).join() === GAME_SYSTEMS.join());
+
+  // The database's half. A game the app offers and a CHECK refuses is a 500 on
+  // the first save; `both` is a catalog value, never a class's or a campaign's.
+  const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+  const checks = [...schema.matchAll(/CHECK\s*\(\s*system IN \(([^)]+)\)\)/g)]
+    .map((m) => m[1].match(/'([^']+)'/g).map((x) => x.slice(1, -1)));
+  check('the schema states a system CHECK', checks.length > 0, `${checks.length}`);
+  const strays = checks.filter((list) => list.some((v) => v !== 'both' && !GAME_SYSTEMS.includes(v)));
+  check('no system CHECK accepts a game the list does not name', strays.length === 0, JSON.stringify(strays));
+  const narrow = checks.filter((list) => GAME_SYSTEMS.some((g) => !list.includes(g)));
+  check('and every one accepts every game on it', narrow.length === 0, `${narrow.length} of ${checks.length} are narrower`);
 }
 
 // ---------- The wizard's markup, where a value meets it ----------

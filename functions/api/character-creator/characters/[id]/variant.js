@@ -18,12 +18,12 @@ import { json, readJson, requireCharacter } from '../../_lib/auth.js';
 import { getStored } from '../../_lib/class-store.js';
 import { parseClassMarkdown, applyVariant } from '../../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../../apps/character-creator/js/compose.js';
-import { evalDice, rollPoolFormula } from '../../../../../apps/character-creator/js/dice.js';
+import { evalDice, rollPoolFormula, ATTRIBUTES as ATTRS } from '../../../../../apps/character-creator/js/dice.js';
 import { loadCharacter } from '../../_lib/character-json.js';
 import { loadClass, loadTotem } from '../../_lib/class-loader.js';
 import { validateCharacter, loadSkillCategories } from '../../_lib/validate-character.js';
 
-const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+// ATTRS is js/dice.js's ATTRIBUTES.
 // name on the class → the character's two columns.
 const POOLS = [
   ['hit_points_base', 'hp'],

@@ -9,11 +9,12 @@
 
 import { isChoiceGroup, isGearChoice } from '../../../../apps/character-creator/js/parser.js';
 import { resolveKeys } from './catalog-redirects.js';
+import { GAME_SYSTEMS } from '../../../../apps/character-creator/js/class-keys.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
 // The games a skills.systems array may name (parser.js VALID_SYSTEMS).
-const SKILL_GAMES = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
+const SKILL_GAMES = GAME_SYSTEMS;
 
 // Every skill name the class references: fixed occ_skills plus every option
 // inside an enumerated choice-group (any of them could be picked, so all must

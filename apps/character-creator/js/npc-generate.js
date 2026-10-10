@@ -33,7 +33,7 @@
 // otherwise have to duplicate to pick a mage's spells at random. A G.M. choosing
 // an NPC's spells is also usually the point. See bankedPowerGrants below.
 
-import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus } from './dice.js';
+import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus, ATTRIBUTES } from './dice.js';
 import { skillBase } from './skill-base.js';
 import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryName,
          relatedFloorStatus } from './parser.js';
@@ -42,7 +42,7 @@ import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, b
 import { isHandToHand } from './hand-to-hand.js';
 import { isFamilyName, isRepeatableRow, otherRowFor } from './language-skills.js';
 
-const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+const ATTRS = ATTRIBUTES;
 // SKILL_PCT_CAP is js/leveling.js's, with the rest of the skill arithmetic.
 // Re-rolls allowed to meet an attribute minimum. Large on purpose: the
 // Berserker needs P.S. 16 AND P.E. 16 on 3D6, about one set in five hundred,
