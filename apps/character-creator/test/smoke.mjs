@@ -5295,6 +5295,27 @@ section('A pick spent on an attribute-derived skill');
     { attributes: { PP: 12 }, categories: [{ name: 'Weapon Proficiencies', bonus: 5 }] });
   check('while a non-percentile skill still takes no bonus at all',
     wp.skills[0]?.pct === 0, `got ${wp.skills[0]?.pct}`);
+
+  // The wizard's Advancement step makes the same pick before the character
+  // exists, and until 2026-10-10 it wrote the stored `base` alone: this skill
+  // at 0%, and any related pick without its class bonus. Both now ask one
+  // function, held here directly and then as the two call sites.
+  const { newPickPercent } = await import('../js/leveling.js');
+  const physical = [{ name: 'Physical', bonus: 5 }];
+  check('one rule: a formula base plus the class bonus on a related pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical) === 65);
+  check('no class bonus on a secondary pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical, { secondary: true }) === 60);
+  check('none where the grant names no categories', newPickPercent(ZERO_G, { PP: 12 }, null) === 60);
+  check('and nothing at all for a skill with no percentage',
+    newPickPercent({ name: 'W.P. Sword', category: 'Physical', base: 0 }, { PP: 12 }, physical) === 0);
+  const pickSrc = readFileSync(join(repoRoot, 'functions/api/character-creator/_lib/skill-picks.js'), 'utf8');
+  check('the server\'s pick path asks it',
+    /pct: newPickPercent\(row, attributes, allowed, \{ secondary: asSecondary \}\)/.test(pickSrc));
+  const wizardRows = readFileSync(join(appDir, 'app.js'), 'utf8').match(/function levelPickRows\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+  check('and so does the wizard\'s, with the grant\'s own categories and kind',
+    /pct: newPickPercent\(\{ \.\.\.r, name \}, S\.attrs, g\.categories, \{ secondary: g\.kind === 'secondary' \}\)/.test(wizardRows)
+    && !/r\.base/.test(wizardRows));
 }
 
 // ---------- 1c25a2. The percentage printed beside a category ----------
