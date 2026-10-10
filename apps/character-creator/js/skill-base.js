@@ -16,7 +16,7 @@
 // makes the same argument in the other direction — a second occurrence is a
 // better trigger for more than this finding is.
 
-const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+import { ATTRIBUTES as ATTRS } from './dice.js';
 
 // `PP*5`, `PE * 3`, `Spd*2`. Case-insensitive on the attribute, space-tolerant
 // around the operator, because a data script is written by hand.

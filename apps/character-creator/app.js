@@ -12,7 +12,7 @@
 // inline onclick handlers need their entry points on window — see the
 // Object.assign at the bottom.
 import { evalDice, evalDiceBonus, rollPoolFormula, rollAttribute, rollQuantity,
-         isAbsentAttribute } from './js/dice.js';
+         isAbsentAttribute, ATTRIBUTES } from './js/dice.js';
 import { freshState, freshBuild, DRAFT_KEYS } from './js/wizard-state.js';
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
@@ -42,7 +42,7 @@ import { morphusTables, replayMorphus, entriesFor, rollNext, pickNext, skipNext,
          rollUntilBlocked, chooseSub, morphusResults, animalCombinations, effectParts,
          horrorPart } from './js/morphus.js';
 
-const ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+const ATTRS = ATTRIBUTES;   // js/dice.js
 const STEPS = ['System', 'Race', 'Attributes', 'Occupation', 'Morphus', 'Skills', 'Equipment', 'Powers',
                'Advancement', 'Details', 'Review'];
 // Steps by name. Every transition used to be a bare index — goStep(3) — and

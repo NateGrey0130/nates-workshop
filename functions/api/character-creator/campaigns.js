@@ -5,6 +5,8 @@
 
 import { getUserEmail, unauthorized, json, readJson } from './_lib/auth.js';
 import { paging, pagedQuery } from './_lib/paging.js';
+// The one list of games, from a module with no imports of its own.
+import { GAME_SYSTEMS } from '../../../apps/character-creator/js/class-keys.js';
 
 export async function onRequestGet({ request, env }) {
   const email = getUserEmail(request);
@@ -67,12 +69,12 @@ export async function onRequestPost({ request, env }) {
   // schema alone would have shipped a database that accepts a Heroes Unlimited
   // campaign and an API that still refuses to create one.
   //
-  // `VALID_SYSTEMS` in js/parser.js is the same four values for classes. Kept as
-  // a literal rather than imported: this is a Worker route and that is a browser
-  // module, and the import would drag the whole parser into every request.
+  // The same four values the parser accepts for a class. It was a literal here
+  // because importing the list meant importing the parser into every request;
+  // it is `GAME_SYSTEMS` in js/class-keys.js now, a module with no imports.
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   if (!name
-      || !['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'].includes(body.system)) {
+      || !GAME_SYSTEMS.includes(body.system)) {
     return json({ error: 'name and a valid system are required' }, 400);
   }
   // description and open are optional, and exist here because a campaign can

@@ -1,6 +1,6 @@
-import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds } from './dice.js';
+import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds, ATTRIBUTES } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
-import { keysMergedBy } from './class-keys.js';
+import { keysMergedBy, GAME_SYSTEMS } from './class-keys.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
@@ -21,7 +21,7 @@ import { keysMergedBy } from './class-keys.js';
 // of BOOK-INGEST-AUDIT F73. `campaigns.system` is a SQLite CHECK and is
 // deliberately NOT widened in the same change, which is why the wizard's own
 // system picker in app.js still offers two: S.system feeds the campaign POST.
-const VALID_SYSTEMS = ['rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited'];
+const VALID_SYSTEMS = GAME_SYSTEMS;   // js/class-keys.js
 const VALID_CATEGORIES = ['rcc', 'occ'];
 
 // YAML block scalar introducers: | and > with optional chomping/indent modifiers.
@@ -2011,7 +2011,7 @@ function validateRelatedMinimums(related, errors) {
 // Not exported: js/class-blocks.js was the only thing outside this file that
 // read it, and that went with the in-app importer. Still used three times
 // below, so it stays a const rather than being inlined.
-const BONUS_ATTRS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
+const BONUS_ATTRS = ATTRIBUTES;
 
 // The pools a class bonus may add to. Books state these as "plus 4D6" on top of
 // whatever the occupation gives — the Demigod's P.P.E. and I.S.P. are both

@@ -29,9 +29,8 @@
 // live test. A roll under the floor is raised to it. Attributes only; a pool
 // states its own shape in its dice.
 
-import { d } from './dice.js';
+import { d, ATTRIBUTES as ATTR_KEYS } from './dice.js';
 
-const ATTR_KEYS = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 const ATTR_BY_UPPER = Object.fromEntries(ATTR_KEYS.map((k) => [k.toUpperCase(), k]));
 const TERM = /^(?:(\d+)D(\d+)|(\d+)|(IQ|ME|MA|PS|PP|PE|PB|SPD))(?:X(\d+))?$/;
 
