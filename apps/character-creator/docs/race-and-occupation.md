@@ -193,6 +193,17 @@ pool bases as before — none of them knows a character can have two classes.
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
 | magic | **both** - merged, the occupation setting the KIND (see below) |
 | equipment, abilities, level progression | **both** |
+| tracked resources | **both**, joined by name, the race's row winning a shared one |
+| side effects | **both** - one side keeps its own shape, two become a list |
+
+**The rule for every key is stated once**, in `CLASS_MERGE` in
+[`js/class-keys.js`](../js/class-keys.js): `race`, `race-first`,
+`occupation-first`, `concat`, `flag` or `custom`. `combineClasses` loops over the
+`race-first` and `concat` keys from it, and the smoke suite fails on a class key
+with no rule and runs each plain rule against the merge. The table above is the
+readable half. It exists because the merge starts from a copy of the race, so a
+key nobody decided was silently the race's: tracked resources and side effects
+were dropped from every paired occupation until 2026-10-10.
 
 Four rules earned by getting them wrong first:
 

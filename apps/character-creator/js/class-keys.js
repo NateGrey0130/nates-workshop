@@ -151,6 +151,71 @@ export const SKILLS_KEYS = [
   'hand_to_hand',
 ];
 
+// WHAT A RACE AND AN OCCUPATION DO WITH EACH KEY when one character holds
+// both. combineClasses() in parser.js starts from a copy of the race, so a key
+// it never mentions is the race's - which is the right answer for an id and
+// was the wrong one for `trackable_resources` and `side_effects`, dropped from
+// every paired occupation until 2026-10-10 because nobody had to decide.
+//
+// So every key decides, here. smoke.mjs fails on a key with no rule, and runs
+// each plain rule against combineClasses itself, so a rule written here and
+// not implemented there fails too.
+//
+//   race              the race's, always. The occupation's is not carried:
+//                     either it describes the class rather than the character
+//                     (id, tags, occ_group), or it is read off the raw class
+//                     before the two are combined (men_of_arms, variants).
+//   race-first        the race's where it states one, else the occupation's.
+//                     Physiology: a dragon's hit points are a dragon's.
+//                     combineClasses loops over these.
+//   occupation-first  the occupation's where it states one, else the race's.
+//   concat            both lists, the race's first. combineClasses loops.
+//   flag              true if either side says so.
+//   custom            its own code in combineClasses, with its reason there.
+export const CLASS_MERGE = {
+  id: 'race', system: 'race', source_book: 'race', category: 'race',
+  // "<race> <occupation>".
+  name: 'custom',
+  attribute_dice: 'race-first', hit_points_base: 'race-first', sdc_base: 'race-first',
+  mdc_base: 'race-first', ppe_base: 'race-first', starting_money: 'race-first',
+  horror_factor: 'race-first', second_form: 'race-first',
+  // The stricter of the two, key by key.
+  attribute_requirements: 'custom', attribute_maximums: 'custom',
+  // Read by compose.js off the occupation, then the race, before they combine.
+  men_of_arms: 'race',
+  // The lists union by name and the allowances are the occupation's.
+  skills: 'custom',
+  equipment_starting: 'concat', level_progression: 'concat', special_abilities: 'concat',
+  natural_abilities: 'concat', restrictions: 'concat',
+  // Each through its own merge function; bonuses sum.
+  psionics: 'custom', magic: 'custom', super_abilities: 'custom', talents: 'custom', bonuses: 'custom',
+  // Joined by name, the race's row winning a shared one.
+  trackable_resources: 'custom',
+  // One side keeps its own shape; two become a list.
+  side_effects: 'custom',
+  // Applied to each class before the two are combined.
+  variants: 'race',
+  extraction_notes: 'race', copy_of: 'race', tags: 'race',
+  // False from the occupation closes it; nothing reopens it.
+  psionics_allowed: 'custom',
+  // The occupation's, unless the race keeps its own ladder.
+  xp_table: 'custom',
+  // Read off the raw classes: by the pickers, and by combineClasses from the
+  // side that owns each.
+  occ_group: 'race', occ_restrictions: 'race', race_restrictions: 'race',
+  overrides_race: 'race', yields_to_occupation: 'race', keeps_xp_table: 'race',
+  pairing_skills: 'race',
+  supersedes_race: 'flag', ignores_style_attacks: 'flag', mdc_from_hp_sdc: 'flag',
+  totem: 'occupation-first',
+  // The race's page is the character's; the occupation's body is its own page.
+  lore: 'race', gm_notes: 'race', sections: 'race',
+};
+
+/** The keys that merge by one rule, in the order CLASS_MERGE states them. */
+export function keysMergedBy(rule) {
+  return Object.keys(CLASS_MERGE).filter((k) => CLASS_MERGE[k] === rule);
+}
+
 const TOP = new Set([...CLASS_KEYS, ...PRODUCED_KEYS]);
 const UNDER_SKILLS = new Set(SKILLS_KEYS);
 
