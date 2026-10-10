@@ -839,6 +839,7 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
+import { newPickPercent as LV_newPickPercent } from '../js/leveling.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -5550,15 +5551,18 @@ section('Category skill bonuses');
   check('the server applies it to a level-up pick', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'skill-picks.js'), 'utf8');
-    return src.includes('categoryBonus(allowed,') && src.includes('!asSecondary && allowed');
+    // Through newPickPercent since 2026-10-10, which the wizard's Advancement
+    // step calls too; 'A pick spent on an attribute-derived skill' runs it.
+    return src.includes('newPickPercent(row, attributes, allowed, { secondary: asSecondary })');
   })());
   // A W.P. and a hand to hand sit at 0 because they are not percentile skills.
   // Adding ten to that would invent a roll that does not exist.
   check('both places guard the bonus on a real base', (() => {
     const wiz = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const srv = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
-      '_lib', 'skill-picks.js'), 'utf8');
-    return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
+    // The level-up half is the shared function now, so it is run, not read.
+    const noPercent = { name: 'W.P. Sword', category: 'Technical', base: 0 };
+    return wiz.includes('base ? base + categoryBonus')
+      && LV_newPickPercent(noPercent, {}, [{ name: 'Technical', bonus: 10 }]) === 0;
   })());
 }
 
