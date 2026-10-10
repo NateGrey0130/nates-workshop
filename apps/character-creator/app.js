@@ -316,8 +316,15 @@ function computePools(force = false) {
   // starts above level 1 includes the levels it climbed to get there.
   if (force) rollAdvancement(true);
 
-  const money = rollPoolFormula(c.starting_money, S.attrs);
-  if (money == null) delete S.bio.money; else S.bio.money = String(money);
+  // Not over a sum the player typed. This runs whenever the pools were cleared
+  // - an attribute, a variant, an occupation or a totem changing - and it used
+  // to replace a hand-entered figure every time, which is the opposite of the
+  // paragraph above. Review's Reroll (`force`) is the player asking for dice.
+  if (force) S.moneyTyped = false;
+  if (!S.moneyTyped) {
+    const money = rollPoolFormula(c.starting_money, S.attrs);
+    if (money == null) delete S.bio.money; else S.bio.money = String(money);
+  }
 }
 
 // ---------- guided quiz ----------
@@ -1162,7 +1169,7 @@ function renderRace() {
 function raceBriefing() {
   if (!S.rcc) return '';
   const c = applyVariant(S.rcc, S.variant);
-  const tag = (label, v) => `<span class="tag">${label} ${esc(String(v))}</span>`;
+  const tag = (label, v) => `<span class="tag">${esc(label)} ${esc(String(v))}</span>`;
 
   const dice = ATTRS.filter((a) => c.attribute_dice?.[a]).map((a) => tag(a, c.attribute_dice[a])).join(' ');
   const pools = [['H.P.', c.hit_points_base], ['S.D.C.', c.sdc_base], ['M.D.C.', c.mdc_base],
@@ -1377,7 +1384,7 @@ function tagReadout(c) {
 function classCard(c, score) {
   const sel = S.rcc?.id === c.id ? ' sel' : '';
   const badge = score != null ? `<span class="tag score">match ${score}/6</span>` : '';
-  return `<button type="button" class="pick${sel}" onclick="pickClass('${c.id}')">
+  return `<button type="button" class="pick${sel}" onclick="pickClass('${escJs(c.id)}')">
     <h3>${esc(c.name)}</h3>
     <span class="tag">${esc(c.category)}</span><span class="tag">${esc(c.source_book)}</span>${
       needsOccupation(c) ? '<span class="tag">pairs with an O.C.C.</span>' : ''}${badge}
@@ -1543,7 +1550,7 @@ function variantPicker() {
       ].filter(Boolean).join(' · ');
       return `<label class="chkrow" style="cursor:pointer">
         <input type="radio" name="class-variant" ${on ? 'checked' : ''}
-          onchange="pickVariant('${esc(v.id)}')">
+          onchange="pickVariant('${escJs(v.id)}')">
         <span><b>${esc(v.name || v.id)}</b></span>
         <span class="pct">${bits}</span></label>`;
     }).join('')}
@@ -3819,7 +3826,11 @@ function toggleProgram(name) {
   const i = S.programs.indexOf(name);
   if (i >= 0) S.programs.splice(i, 1);
   else if (S.programs.length < (+cfg.choose || 0)) S.programs.push(name);
-  renderSkills();
+  // render(), not renderSkills(): the step's filter inputs are re-created by
+  // every render and only render() re-binds them (wirePickers), so calling
+  // the step directly left the related, secondary and group filters dead
+  // until something else rendered. It also queues the draft save.
+  render();
 }
 
 function toggleGroupPick(groupIndex, name, limit) {
@@ -4817,6 +4828,8 @@ function setLongLived(on) {
 function setBio(key, value) {
   const v = String(value).trim();
   if (v) S.bio[key] = v; else delete S.bio[key];
+  // Clearing the box hands the sum back to the dice.
+  if (key === 'money') S.moneyTyped = !!v;
 }
 // Four lists, not two: what the class grants at level 1, and what the levels
 // above it earned. Kept apart so each picker counts against its own budget —
@@ -5095,7 +5108,9 @@ function picksSpent() {
 const REVIEW_COLUMN = 15;   // entries per column before a new one starts
 
 function poolRow(label, v) {
-  return v == null ? '' : `<div class="stat-row"><span>${label}</span><b>${v}</b></div>`;
+  // Escaped: one caller hands this the starting sum, which is free text the
+  // player typed.
+  return v == null ? '' : `<div class="stat-row"><span>${esc(label)}</span><b>${esc(String(v))}</b></div>`;
 }
 
 // A section laid out in columns of REVIEW_COLUMN, so a long list reads down
@@ -5107,7 +5122,7 @@ function listSection(title, entries) {
   for (let i = 0; i < entries.length; i += REVIEW_COLUMN) {
     columns.push(entries.slice(i, i + REVIEW_COLUMN));
   }
-  return `<h3>${title} <span class="muted small">(${entries.length})</span></h3>
+  return `<h3>${esc(title)} <span class="muted small">(${entries.length})</span></h3>
     <div class="review-cols">
       ${columns.map((col) => `<ul class="review-col">${col.map((e) => `<li>${e}</li>`).join('')}</ul>`).join('')}
     </div>`;
