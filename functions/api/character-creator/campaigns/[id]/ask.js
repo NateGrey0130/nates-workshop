@@ -12,6 +12,7 @@
 // retrieval problem that is not yet hard.
 
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
+import { gearJoin } from '../../_lib/catalog-redirects.js';
 import { validateClaudeRequest, callAnthropic, recordUsage } from '../../../_lib/claude-client.js';
 import { toMatchQuery } from './search.js';
 import { parseAliases } from './npcs.js';
@@ -69,8 +70,7 @@ export async function onRequestPost({ request, env, params }) {
       `SELECT COALESCE(g.name, ci.custom_name) AS name, ci.qty, ci.notes,
               ci.removed_at IS NOT NULL AS gone
        FROM campaign_items ci
-       LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
-       LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
+       ${gearJoin('ci.gear_slug', 'g')}
        WHERE ci.campaign_id = ? ORDER BY gone, name LIMIT 200`
     ).bind(params.id),
     env.DB.prepare(

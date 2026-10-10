@@ -10,6 +10,7 @@
 
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
+import { gearJoin } from '../../_lib/catalog-redirects.js';
 
 // The gear row is joined in rather than copied, so a catalog correction reaches
 // the stash the same way it reaches a character sheet.
@@ -19,9 +20,7 @@ import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 const SELECT = `SELECT ci.*, g.name AS item_name, g.slug AS item_slug, g.category AS item_category,
                        g.weight_lbs, g.cost, c.name AS claimed_by_name
                 FROM campaign_items ci
-                LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
-                LEFT JOIN gear g ON g.slug = ci.gear_slug
-                                 OR g.id = cr.to_id
+                ${gearJoin('ci.gear_slug', 'g')}
                 LEFT JOIN characters c ON c.id = ci.claimed_by_character_id`;
 
 export async function onRequestGet({ request, env, params }) {

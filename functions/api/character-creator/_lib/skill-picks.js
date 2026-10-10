@@ -12,7 +12,7 @@ import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { categoryAllows } from '../../../../apps/character-creator/js/parser.js';
 import { REPEATABLE_ROWS, isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
-import { applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { applySystemBases, SKILL_BASE_COLUMNS } from '../../../../apps/character-creator/js/skill-base.js';
 import { newPickPercent } from '../../../../apps/character-creator/js/leveling.js';
 import { isHandToHand, oneHandToHand, handToHandCost, costLabel } from '../../../../apps/character-creator/js/hand-to-hand.js';
 import { selectInChunks } from './sql-chunk.js';
@@ -203,7 +203,7 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
   // along in EVERY chunk, not just the first - a custom language landing in the
   // second chunk needs them as much as one in the first.
   const results = await selectInChunks(names, (batch) => env.DB.prepare(
-    `SELECT name, category, base, base_formula, per_level FROM skills
+    `SELECT ${SKILL_BASE_COLUMNS} FROM skills
      WHERE name COLLATE NOCASE IN (${[...batch, ...REPEATABLE_ROWS].map(() => '?').join(',')})`
   ).bind(...batch, ...REPEATABLE_ROWS));
   // ONE GAME'S OWN PERCENTAGES, substituted before anything reads a row

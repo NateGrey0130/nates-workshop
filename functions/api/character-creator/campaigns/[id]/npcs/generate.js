@@ -39,6 +39,7 @@
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
 import { loadClass, loadTotems } from '../../../_lib/class-loader.js';
 import { loadSystemBases, applySystemBases } from '../../../_lib/system-bases.js';
+import { SKILL_BASE_COLUMNS } from '../../../../../../apps/character-creator/js/skill-base.js';
 import { loadPowerCatalog, powerGrantsFor } from '../../../_lib/power-picks.js';
 import { createCharacter } from '../../../characters.js';
 import { composeClass } from '../../../../../../apps/character-creator/js/compose.js';
@@ -115,7 +116,7 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const [rawSkills, overrides, totems, gameClasses] = await Promise.all([
-    env.DB.prepare('SELECT name, category, base, base_formula, per_level, systems FROM skills').all(),
+    env.DB.prepare(`SELECT ${SKILL_BASE_COLUMNS}, systems FROM skills`).all(),
     loadSystemBases(env, system),
     loadTotems(env),
     // This game's own classes, read only for the skill names they quote - see
