@@ -13,6 +13,7 @@
 // Object.assign at the bottom.
 import { evalDice, evalDiceBonus, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute } from './js/dice.js';
+import { freshState, freshBuild, DRAFT_KEYS } from './js/wizard-state.js';
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
@@ -32,7 +33,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
-         skillGrantsFor, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
+         skillGrantsFor, newPickPercent, spellGrantsFor, psionicGrantsFor, grantKey, startingGroups,
          startingPicksFor, relatedAllowance, spellTraditionsAllowed, convertedPools,
          spellTraditionAllowed, secondFormHitPointDice } from './js/leveling.js';
 import { rollSecondForm, secondFormView } from './js/second-form.js';
@@ -72,126 +73,8 @@ const bioLabel = ([key, label]) => label ?? (key === 'money' ? rules.currencyLab
 // 2 points from 16-18 (cap 18, floor 3); lowering below 8 refunds 1/point.
 const PB_POOL = 40, PB_BASE = 8, PB_CAP = 18, PB_FLOOR = 3;
 
-const S = {
-  step: 0, system: null, classMode: 'browse', quiz: [null, null, null],
-  // An unfinished build found on the server, awaiting resume-or-discard.
-  draftOffer: null,
-  // Showing the home view rather than a wizard step - UI-AUDIT F39.
-  home: false,
-  // The updated_at of the draft this tab believes it owns, sent with every
-  // save so the server can refuse to overwrite someone else's newer one.
-  // null means "there is no draft and I expect to create it".
-  draftVersion: null,
-  draftConflict: null,
-  // Two class fields, and the difference matters. `rcc` is what the player
-  // PICKED on the Race step — raw, unresolved, still carrying its variants and
-  // its choose-groups, which is what that step's pickers read. `cls` is what
-  // the character IS: variant applied, occupation composed in, abilities folded
-  // in. Nothing after the Occupation step knows there were ever two.
-  //
-  // It used to be one field that `confirmClass` overwrote in place, which was
-  // fine while both halves were chosen on the same step and is not any more:
-  // adding an occupation two steps later has to re-compose from the original.
-  classes: [], rcc: null, cls: null,
-  // The race half alone, composed. Kept because its dice bonuses are rolled and
-  // read on the Attributes step, and choosing an occupation afterwards must not
-  // re-roll a number the player has already seen.
-  raceCls: null,
-  attrMethods: {}, attrs: {}, attrRolls: {},
-  // `mos` is a LIST since BOOK-INGEST-AUDIT.md F82 - `skills.mos.choose` may
-  // ask for more than one, and until F82 it was validated and then ignored.
-  related: [], secondary: [], groupPicks: {}, mos: [], totem: null,
-  // Starting-gear choices the class leaves open, and the slugs picked for each,
-  // keyed by the entry's index in equipment_starting.
-  gearChoices: [], gearPicks: {},
-  // Which stage of the class, for classes that come in stages (a Dragon
-  // hatchling vs an adult). NULL for every class that has none.
-  variant: null,
-  // The O.C.C. taken alongside an R.C.C., and its own stage. A racial class
-  // grants no related or secondary skills — those come from the occupation —
-  // so an R.C.C. character without one is deliberately thin.
-  occ: null, occVariant: null,
-  equipment: [], equipInit: false,
-  charName: '', campaignId: null, newCampaign: '',
-  spells: [], psi: [], bio: {},
-  // Super abilities chosen at level 1. `supers` is the flat list and
-  // `superGroups` the per-group one, exactly as spells and psionics have both -
-  // except that no Power Category uses the flat form, since every one that
-  // grants abilities splits them by tier. It exists so the three kinds stay the
-  // same shape and `powerList` needs no special case.
-  supers: [],
-  talents: [],
-  // Step 3. psiRoll is {roll, tier} once rolled — null means not yet rolled,
-  // and a tier of null is a real result (26-00, no psionics) rather than an
-  // absence, so the two must stay distinguishable.
-  psiRoll: null, psiShape: null, psiCategory: null, psiTrimmed: 0,
-  // The Age table's ×2 for long-lived races, and the percentile each field
-  // last rolled — shown so a result can be checked against the book.
-  longLived: false, bioRolls: {},
-  // A class may state an attribute bonus as dice ("add 2D6 to P.S."). Rolled
-  // once here and stored, because it cannot be re-evaluated on every render.
-  attrBonuses: {},
-  // What a class's DICE combat/save bonuses came up. Rolled once, like
-  // attrBonuses, because both are read at render time.
-  rolledBonuses: { combat: {}, saves: {} },
-  // The occupation's own dice bonuses, rolled when it is chosen and kept apart
-  // from the race's — so switching occupation re-rolls its half and leaves the
-  // race's alone. rolledAll() is the only thing that sees them summed.
-  occAttrBonuses: {}, occRolledBonuses: { combat: {}, saves: {} },
-  totemAttrBonuses: {}, totemRolledBonuses: { combat: {}, saves: {} },
-  // A character may start above level 1. Everything the levels earn is resolved
-  // on the Advancement step, which exists only while this is above 1.
-  level: 1,
-  // What the levels above 1 rolled and chose. Held apart from the level-1
-  // build rather than folded into it, because the two are answerable to
-  // different rules: a skill picked at level 5 starts at its catalog base and
-  // is NOT back-dated, while a skill held since level 1 advances per level.
-  // levelSpells is keyed by grant index, not a flat list: a spell's allowed
-  // LEVEL can depend on which level earned it, so the two gained at level 2 are
-  // a different choice from the two gained at level 5 and cannot share a pool.
-  // levelPsi stays flat - no book states a per-level cap on psionic powers.
-  // levelPsi is keyed by grant index for the same reason levelSpells is: a
-  // psionic grant can name its own CATEGORIES, and the Mystic's level-4 power
-  // comes from Super while its starting ones came from Sensitive and Healing.
-  levelPools: {}, levelSpells: {}, levelPicks: {}, levelPsi: {}, levelSupers: {}, levelTalents: {},
-  // The level-1 picks when the class SPLITS them across restrictions - the
-  // Delphi Juicer's "3 Physical + 1 Super". Keyed by group index for the same
-  // reason levelSpells is, and separate from the flat `spells`/`psi` on
-  // purpose: a class with one starting group keeps writing into those, so no
-  // draft saved before this existed changes shape.
-  spellGroups: {}, psiGroups: {}, superGroups: {}, talentGroups: {},
-  // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
-  // roll missed. Kept so the assist is visible as one rather than presented as
-  // what the dice said first — posted as play events once the character exists.
-  minRerolls: [],
-  // Abilities picked from a class's choice group. A LIST, not a set: some are
-  // repeatable and the second take means something different.
-  abilities: [],
-  // The Morphus (Nightbane survey D5): the generator's DECISIONS, in order, and
-  // the second form's own rolls. Everything else - what is resolved, what is
-  // pending - is replayed from the decisions by js/morphus.js, so undo is
-  // dropping the last one and the draft holds nothing derived. `formSig` is the
-  // composed class's second_form as JSON, so a different occupation that brings
-  // a different form re-rolls the form's dice and keeps the table results.
-  morphus: { decisions: [], form: null, formSig: null },
-  // The traits catalog's rows, fetched the first time the Morphus step renders
-  // and never persisted: a catalog, not the build.
-  traitTables: null, traitError: null, morphusError: null,
-  pools: null, savedId: null, saving: false,
-  skillCatalog: [], items: [], campaigns: [], existing: [],
-  // Retired gear slugs → the slug they resolve to now. See findItem().
-  itemRedirects: {},
-  spellCatalog: [], psiCatalog: [], superCatalog: [], me: null, isAdmin: false,
-  // Picker filter text. Transient view state, never persisted in a draft —
-  // resuming a build should not resume half a search.
-  gearFilter: '', relatedFilter: '', secondaryFilter: '', spellFilter: '', psiFilter: '',
-  superFilter: '',
-  talentFilter: '',
-  classFilter: '',
-  // Tag chips pressed on the Race and Occupation steps. Same posture as the
-  // filter text: view state, never persisted.
-  classTagFilter: [], occTagFilter: [],
-};
+// What it holds, and which keys are the build, is js/wizard-state.js.
+const S = freshState();
 
 const $ = (id) => document.getElementById(id);
 const esc = escHtml; // from /shared/js/ui.js
@@ -479,18 +362,7 @@ function validQuiz(answers) {
 // An explicit allowlist, not a copy of S: the state also holds the class,
 // skill, spell and gear catalogs, which are large, shared, and stale the moment
 // they are written down. Everything here is the build itself.
-const DRAFT_KEYS = [
-  'step', 'system', 'classMode', 'quiz', 'variant', 'occ', 'occVariant', 'attrMethods', 'attrs',
-  'related', 'secondary', 'groupPicks', 'gearPicks', 'mos', 'totem',
-  'equipment', 'equipInit', 'charName', 'campaignId', 'newCampaign',
-  'spells', 'psi', 'bio', 'pools', 'longLived', 'bioRolls',
-  'psiRoll', 'psiShape', 'psiCategory', 'attrBonuses', 'rolledBonuses', 'abilities',
-  'occAttrBonuses', 'occRolledBonuses', 'totemAttrBonuses', 'totemRolledBonuses', 'minRerolls',
-  'level', 'levelPools', 'levelSpells', 'levelPsi', 'levelPicks',
-  'spellGroups', 'psiGroups',
-  'supers', 'superGroups', 'levelSupers',
-  'morphus',
-];
+// The list itself is DRAFT_KEYS in js/wizard-state.js.
 
 // Bumped whenever STEPS changes shape, because a draft stores `step` as an
 // INDEX into it.
@@ -628,7 +500,9 @@ function resumeDraft() {
   // Adopt the version this build was loaded at, so the first save replaces
   // exactly the row it came from and nothing newer.
   S.draftVersion = d.updated_at ?? null;
-  Object.assign(S, d.state);
+  // Onto a fresh build, so a key this draft predates takes its default and not
+  // whatever the tab last held.
+  Object.assign(S, freshBuild(), d.state);
   // A draft saved before BOOK-INGEST-AUDIT.md F82 holds `mos` as one id or as
   // null, and `character_drafts.state` is stored opaquely so nothing migrated
   // it. This is the ONE place a pre-F82 string reaches the wizard - production
@@ -1189,30 +1063,11 @@ function pickSystem(sys) {
   S.step = ST.RACE; render();
 }
 function resetBuild() {
-  S.maxStep = 0;
-  S.attrMethods = {}; S.attrs = {}; S.attrRolls = {}; S.related = []; S.secondary = []; S.groupPicks = {}; S.mos = []; S.totem = null;
-  // Group indices belong to one class's occ_skills, so their folds do too.
-  S.groupUi = {};
-  // Chosen skill PROGRAMS, held by CATEGORY name rather than by skill
-  // (BOOK-INGEST-AUDIT.md F23(b)): picking one grants everything that category
-  // allows, at one fixed percentage.
-  S.programs = [];
-  S.equipment = []; S.equipInit = false; clearRolledPools();
-  S.gearChoices = []; S.gearPicks = {};
-  S.variant = null;
-  S.occ = null; S.occVariant = null;
-  S.abilities = [];
-  S.spells = []; S.psi = []; S.bio = {}; S.longLived = false; S.bioRolls = {};
-  S.psiRoll = null; S.psiShape = null; S.psiCategory = null; S.attrBonuses = {};
-  S.rolledBonuses = { combat: {}, saves: {} };
-  S.raceCls = null; S.cls = null;
-  S.occAttrBonuses = {}; S.occRolledBonuses = { combat: {}, saves: {} };
-  S.totemAttrBonuses = {}; S.totemRolledBonuses = { combat: {}, saves: {} };
-  S.minRerolls = [];
-  S.level = 1; S.levelPools = {}; S.levelSpells = {}; S.levelPsi = {}; S.levelPicks = {};
-  S.spellGroups = {}; S.psiGroups = {};
-  S.supers = []; S.superGroups = {}; S.levelSupers = {};
-  S.morphus = { decisions: [], form: null, formSig: null }; S.morphusError = null;
+  // Every key of the build and everything derived from it, at its fresh value.
+  // The list is js/wizard-state.js's, so a pick the wizard learns to hold is
+  // cleared here without being named here - Talent picks were not, and carried
+  // into the next character.
+  Object.assign(S, freshBuild());
 }
 
 // Step 1 — the race (browse | guided)
@@ -5213,7 +5068,11 @@ function levelPickRows() {
     for (const name of (S.levelPicks[grantKey('skill', g)] || []).filter(Boolean)) {
       const r = find(name);
       out.push({
-        name, category: r.category, pct: r.base || 0, per_level: r.per_level || 0,
+        // The server's own rule for a pick made on the sheet, so the same pick
+        // made here saves the same number.
+        name, category: r.category,
+        pct: newPickPercent({ ...r, name }, S.attrs, g.categories, { secondary: g.kind === 'secondary' }),
+        per_level: r.per_level || 0,
         type: g.kind === 'secondary' ? 'secondary' : 'related',
         gained_at_level: g.level,
       });

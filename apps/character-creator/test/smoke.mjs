@@ -838,6 +838,8 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityTouchesPool as abilityTouchesPoolOf,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses } from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
+import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
+import { newPickPercent as LV_newPickPercent } from '../js/leveling.js';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -1950,11 +1952,63 @@ check('cross-reference on a class with no equipment yields nothing',
 // stale the moment they are written down.
 section('Draft persistence');
 
-const DRAFT_KEYS = readFileSync(join(appDir, 'app.js'), 'utf8')
-  .match(/const DRAFT_KEYS = \[([\s\S]*?)\];/)?.[1]
-  ?.match(/'([^']+)'/g)?.map((s) => s.slice(1, -1)) || [];
+// The list is js/wizard-state.js's, imported rather than read out of app.js as
+// text: it is the same array the wizard saves with.
+check('the persisted key list is found', DRAFT_KEYS.length > 0);
 
-check('the persisted key list is found in app.js', DRAFT_KEYS.length > 0);
+// Three hand-kept lists of "what the build is" disagreed until 2026-10-10 - the
+// state literal, the draft's keys and resetBuild's assignments - and each gap
+// was a bug nothing reported: programs and Talent picks were not saved, Talent
+// picks survived into the next character, and `programs` did not exist on a
+// resumed draft. These hold the one declaration that replaced them.
+{
+  const state = freshState();
+  const lists = { BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS };
+  const listed = Object.values(lists).flat();
+  const unlisted = Object.keys(state).filter((k) => !listed.includes(k));
+  check('every key of the wizard\'s state is named in one of the four lists',
+    unlisted.length === 0, unlisted.join(', '));
+  const twice = listed.filter((k, i) => listed.indexOf(k) !== i);
+  check('and in only one', twice.length === 0, twice.join(', '));
+  const undeclared = listed.filter((k) => !(k in state));
+  check('every listed key is declared with a default', undeclared.length === 0, undeclared.join(', '));
+
+  // The half a module cannot see: app.js creating a key by assigning to it.
+  // That is how `programs`, `groupUi` and four catalogs came to exist outside
+  // the declaration.
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  // A lower-case first letter, which every key has: `S.D.C.` in a sentence is
+  // not one.
+  const used = [...new Set([...appText.matchAll(/(?<![\w$.])S\.([a-z_]\w*)/g)].map((m) => m[1]))];
+  check('app.js is read for the keys it uses', used.length > 50, `only ${used.length}`);
+  const adHoc = used.filter((k) => !(k in state));
+  check('app.js uses no state key the declaration lacks', adHoc.length === 0, adHoc.join(', '));
+
+  check('a draft is the kept keys and the build, and nothing else',
+    JSON.stringify(DRAFT_KEYS) === JSON.stringify([...KEPT_KEYS, ...BUILD_KEYS]));
+  const cleared = Object.keys(freshBuild());
+  check('a class change clears the build and what is derived from it',
+    JSON.stringify(cleared) === JSON.stringify([...BUILD_KEYS, ...DERIVED_KEYS]));
+  check('and nothing a draft keeps across it', KEPT_KEYS.every((k) => !cleared.includes(k)));
+  for (const k of ['programs', 'talents', 'talentGroups', 'levelTalents']) {
+    check(`\`${k}\` is saved in a draft and cleared with the build`,
+      DRAFT_KEYS.includes(k) && cleared.includes(k));
+  }
+  // Two builds must not share one array: the second character's picks would
+  // land in the first's.
+  const a = freshBuild(), b = freshBuild();
+  a.talents.push('x'); a.rolledBonuses.combat.strike = 1;
+  check('each fresh build holds its own lists', b.talents.length === 0
+    && b.rolledBonuses.combat.strike === undefined && freshState().talents.length === 0);
+
+  // And the two places that must use it, read as text because app.js is a
+  // page script: the reset, and a resume onto a fresh build.
+  const reset = appText.match(/function resetBuild\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+  check('resetBuild assigns the fresh build and names no key itself',
+    /Object\.assign\(S, freshBuild\(\)\)/.test(reset) && !/\bS\.\w+\s*=/.test(reset));
+  check('a draft is resumed onto a fresh build', /Object\.assign\(S, freshBuild\(\), d\.state\)/.test(appText));
+  check('and saved from the imported list', /for \(const k of DRAFT_KEYS\) state\[k\] = S\[k\]/.test(appText));
+}
 
 // ---------- Starting above level 1 ----------
 // The engine is the live level-up's, run before the character exists. What is
@@ -4377,8 +4431,7 @@ section('Dice combat and save bonuses');
   check('rolledAll sums the race, the occupation and the totem',
     /attributes: sumRolled\(sumRolled\(S\.attrBonuses, S\.occAttrBonuses\), S\.totemAttrBonuses\)/.test(appSrc));
   check('and keeps them across a draft',
-    /'rolledBonuses'/.test(appSrc) && /'occRolledBonuses'/.test(appSrc)
-    && /'totemRolledBonuses'/.test(appSrc));
+    ['rolledBonuses', 'occRolledBonuses', 'totemRolledBonuses'].every((k) => DRAFT_KEYS.includes(k)));
 }
 
 // ---------- 1c25. Per-category skill restrictions ----------
@@ -5295,6 +5348,27 @@ section('A pick spent on an attribute-derived skill');
     { attributes: { PP: 12 }, categories: [{ name: 'Weapon Proficiencies', bonus: 5 }] });
   check('while a non-percentile skill still takes no bonus at all',
     wp.skills[0]?.pct === 0, `got ${wp.skills[0]?.pct}`);
+
+  // The wizard's Advancement step makes the same pick before the character
+  // exists, and until 2026-10-10 it wrote the stored `base` alone: this skill
+  // at 0%, and any related pick without its class bonus. Both now ask one
+  // function, held here directly and then as the two call sites.
+  const { newPickPercent } = await import('../js/leveling.js');
+  const physical = [{ name: 'Physical', bonus: 5 }];
+  check('one rule: a formula base plus the class bonus on a related pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical) === 65);
+  check('no class bonus on a secondary pick',
+    newPickPercent(ZERO_G, { PP: 12 }, physical, { secondary: true }) === 60);
+  check('none where the grant names no categories', newPickPercent(ZERO_G, { PP: 12 }, null) === 60);
+  check('and nothing at all for a skill with no percentage',
+    newPickPercent({ name: 'W.P. Sword', category: 'Physical', base: 0 }, { PP: 12 }, physical) === 0);
+  const pickSrc = readFileSync(join(repoRoot, 'functions/api/character-creator/_lib/skill-picks.js'), 'utf8');
+  check('the server\'s pick path asks it',
+    /pct: newPickPercent\(row, attributes, allowed, \{ secondary: asSecondary \}\)/.test(pickSrc));
+  const wizardRows = readFileSync(join(appDir, 'app.js'), 'utf8').match(/function levelPickRows\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+  check('and so does the wizard\'s, with the grant\'s own categories and kind',
+    /pct: newPickPercent\(\{ \.\.\.r, name \}, S\.attrs, g\.categories, \{ secondary: g\.kind === 'secondary' \}\)/.test(wizardRows)
+    && !/r\.base/.test(wizardRows));
 }
 
 // ---------- 1c25a2. The percentage printed beside a category ----------
@@ -5477,15 +5551,18 @@ section('Category skill bonuses');
   check('the server applies it to a level-up pick', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'skill-picks.js'), 'utf8');
-    return src.includes('categoryBonus(allowed,') && src.includes('!asSecondary && allowed');
+    // Through newPickPercent since 2026-10-10, which the wizard's Advancement
+    // step calls too; 'A pick spent on an attribute-derived skill' runs it.
+    return src.includes('newPickPercent(row, attributes, allowed, { secondary: asSecondary })');
   })());
   // A W.P. and a hand to hand sit at 0 because they are not percentile skills.
   // Adding ten to that would invent a roll that does not exist.
   check('both places guard the bonus on a real base', (() => {
     const wiz = readFileSync(join(appDir, 'app.js'), 'utf8');
-    const srv = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
-      '_lib', 'skill-picks.js'), 'utf8');
-    return wiz.includes('base ? base + categoryBonus') && srv.includes('base ? base + catBonus : 0');
+    // The level-up half is the shared function now, so it is run, not read.
+    const noPercent = { name: 'W.P. Sword', category: 'Technical', base: 0 };
+    return wiz.includes('base ? base + categoryBonus')
+      && LV_newPickPercent(noPercent, {}, [{ name: 'Technical', bonus: 10 }]) === 0;
   })());
 }
 
@@ -6244,9 +6321,13 @@ section('The level pools are cleared with the pools they sit on (BOOK-INGEST-AUD
   const bare = (appSrc.match(/S\.pools = null/g) || []).length;
   check('and it is the ONLY place S.pools is nulled', bare === 1, 'sites: ' + bare);
   // The tenth is occAbilitiesChanged (F125): a pick from an occupation's group.
-  check('every clear site calls it - ten of them',
-    (appSrc.match(/clearRolledPools\(\);/g) || []).length === 10,
+  // Nine since 2026-10-10: resetBuild was one of the ten, and it now clears the
+  // whole build from js/wizard-state.js's list, which holds both halves.
+  check('every clear site calls it - nine of them',
+    (appSrc.match(/clearRolledPools\(\);/g) || []).length === 9,
     'calls: ' + (appSrc.match(/clearRolledPools\(\);/g) || []).length);
+  check('and a class change clears both halves with the rest of the build',
+    freshBuild().pools === null && JSON.stringify(freshBuild().levelPools) === '{}');
   // rerollAdvancement(lvl) reaches computePools() through rollAdvancement's
   // lazy branch, so a clear inside computePools would wipe the other levels.
   const cp = /function computePools\(force = false\) \{([\s\S]*?)\n\}/.exec(appSrc);
@@ -6926,7 +7007,7 @@ section('MOS');
       !/CHARACTER_JSON_COLUMNS\s*=\s*\[[^\]]*'mos'/.test(charJsonSrc)
         && !/ARRAY_COLUMNS\s*=\s*new Set\(\[[^\]]*'mos'/.test(charJsonSrc));
     check('the wizard holds S.mos as a list',
-      /groupPicks: \{\}, mos: \[\], totem: null/.test(mosAppSrc));
+      Array.isArray(freshState().mos) && Array.isArray(freshBuild().mos));
     check('and sends it only when something is chosen',
       /mos: S\.mos\?\.length \? S\.mos : undefined/.test(mosAppSrc));
     check('resuming a draft normalises a pre-F82 string',

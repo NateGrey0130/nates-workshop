@@ -16,6 +16,8 @@
 // roughly tracking the shape of the official charts. Max level 15.
 
 import { evalDice, rollPoolFormula, poolFormulaBounds, diceBounds } from './dice.js';
+import { skillBase } from './skill-base.js';
+import { categoryBonus } from './parser.js';
 
 const DEFAULT_XP_TABLE = [
   0, 2000, 4000, 8000, 16000, 25000, 35000, 50000,
@@ -126,6 +128,27 @@ const SKILL_PCT_CAP = 98; // Palladium convention: 98% is the practical ceiling
 // Every threshold strictly above fromLevel and up to toLevel counts, so a jump
 // from 2 to 7 collects both the level-3 and the level-6 grants, itemised by the
 // level that earned them rather than merged into one pool.
+// The percentage a skill starts at when a level-up pick buys it.
+//
+// Its base as the catalog states it - a formula resolved against the
+// character's attributes - plus the class's bonus for its category on a
+// RELATED pick. A secondary pick takes no class bonus, and a skill with no
+// percentage (a W.P., a Hand to Hand) has none for a bonus to modify, which is
+// why the guard is on the resolved base and not on the stored one
+// (BOOK-INGEST-AUDIT F18). No level advance and no I.Q. bonus: a skill learned
+// at level 6 is new.
+//
+// One function because there were two rules. The sheet's picker went through
+// the server, which did this; the wizard's Advancement step wrote the stored
+// `base` alone, so the same pick made before the character existed saved a
+// formula skill at 0% and a related one without its class bonus.
+export function newPickPercent(row, attributes, categories, { secondary = false } = {}) {
+  const base = skillBase(row, attributes);
+  if (!base) return 0;
+  const related = !secondary && Array.isArray(categories) && categories.length;
+  return base + (related ? categoryBonus(categories, { name: row?.name, category: row?.category }) : 0);
+}
+
 export function skillGrantsFor(cls, fromLevel, toLevel) {
   const related = cls?.skills?.occ_related_skills;
   const secondary = cls?.skills?.secondary_skills;

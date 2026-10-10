@@ -274,8 +274,10 @@ Four things worth knowing:
   that lasts minutes. The wizard's state is not a character shape either: it
   carries which roll method was used per attribute, which choice-group options
   are ticked, and how far through the steps you are.
-- **An allowlist, not a copy of the state.** `DRAFT_KEYS` in `app.js` names the
-  build itself. The wizard's state also holds the class, skill, spell and gear
+- **An allowlist, not a copy of the state.** `DRAFT_KEYS` in
+  `js/wizard-state.js` names the build itself, and the same module's list is
+  what a class change clears, so a pick is saved and reset from one
+  declaration. The wizard's state also holds the class, skill, spell and gear
   catalogs, which are large, shared, and stale the moment they are written down.
   A real draft is ~1.5 KB.
 - **The class is stored as an id and re-resolved on restore**, so an edited
