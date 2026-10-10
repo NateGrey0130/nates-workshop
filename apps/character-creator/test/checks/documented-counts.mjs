@@ -142,7 +142,12 @@ export function run() {
       const src = readFileSync(join(appDir, 'js', mod), 'utf8');
       for (const m of src.matchAll(/from '\.\/([a-z-]+\.js)'/g)) directShared.add(m[1]);
     }
-    const bothSentence = readme.slice(readme.indexOf('modules are imported by both'), readme.indexOf('modules are imported by both') + 400);
+    // To the end of the list, not a fixed 400 characters: the fifteenth name
+    // pushed the last two past that, and the check then reported two modules
+    // the sentence does name. What follows names its modules without `js/`.
+    const bothAt = readme.indexOf('modules are imported by both');
+    const bothEnd = readme.indexOf('server-only today', bothAt);
+    const bothSentence = readme.slice(bothAt, bothEnd > bothAt ? bothEnd : bothAt + 400);
     const unnamed = [...directShared].filter((m) => !bothSentence.includes('`js/' + m + '`'));
     check('every module both runtimes load is named in the README',
       unnamed.length === 0, 'not in the sentence: ' + unnamed.join(', '));
