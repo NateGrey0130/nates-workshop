@@ -791,7 +791,7 @@ for (const cat of ['spells', 'psionics', 'enchantments', 'superAbilities']) {
 }
 
 import { classesMentioning, findDuplicates, normaliseName, pairKey, qualifiersDisagree, similarity } from '../../../functions/api/character-creator/_lib/catalog-merge.js';
-import { collapseStatement, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
+import { collapseStatement, gearJoin, keysOf, redirectStatements, resolveKeys } from '../../../functions/api/character-creator/_lib/catalog-redirects.js';
 import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
@@ -1811,39 +1811,41 @@ section('Catalog redirects');
 {
   const mem = new DatabaseSync(':memory:');
   mem.exec(`CREATE TABLE gear (id INTEGER PRIMARY KEY, slug TEXT UNIQUE, name TEXT);
-    CREATE TABLE character_items (id INTEGER PRIMARY KEY, item_id INTEGER, gear_slug TEXT);
+    CREATE TABLE character_items (id INTEGER PRIMARY KEY, gear_slug TEXT);
     CREATE TABLE catalog_redirects (catalog TEXT, from_key TEXT, to_id INTEGER, reason TEXT);
     INSERT INTO gear VALUES (7, 'long-sword', 'Long Sword');
-    INSERT INTO character_items VALUES (1, 7, 'long-sword');`);
+    INSERT INTO character_items VALUES (1, 'long-sword');`);
 
-  const resolved = () => mem.prepare(
-    `SELECT g.name AS item_name FROM character_items ci
-     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
-     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
-                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
+  // THE JOIN THAT SHIPS (2026-10-10). This block ran against its own typed copy
+  // of the join, which still carried an arm for a column migration 046 dropped -
+  // so it proved a query nothing served. gearJoin() is what the sheet, the stash
+  // and the campaign's question-answering all interpolate now.
+  const resolved = (alias) => mem.prepare(
+    `SELECT ${alias}.name AS item_name FROM character_items ci
+     ${gearJoin('ci.gear_slug', alias)}
      WHERE ci.id = 1`).get()?.item_name ?? null;
   const plain = () => mem.prepare(
     `SELECT g.name AS item_name FROM character_items ci
      LEFT JOIN gear g ON g.slug = ci.gear_slug WHERE ci.id = 1`).get()?.item_name ?? null;
 
-  check('the inventory join resolves an unrenamed slug', resolved() === 'Long Sword');
+  check('the inventory join resolves an unrenamed slug', resolved('g') === 'Long Sword');
+  check('and under the gear table\'s own name, as the sheet writes it',
+    mem.prepare(`SELECT gear.name AS n FROM character_items
+      ${gearJoin('character_items.gear_slug')} WHERE character_items.id = 1`).get()?.n === 'Long Sword');
 
   mem.exec(`UPDATE gear SET slug = 'sword-long' WHERE id = 7;
     INSERT INTO catalog_redirects VALUES ('gear', 'long-sword', 7, 'rename');`);
   check('a plain slug join LOSES the row after a rename', plain() === null);
-  check('and the redirect arm still resolves it', resolved() === 'Long Sword');
-
-  // The legacy arm: a row written before migration 044 has an id and no
-  // slug, and must still resolve.
-  mem.exec(`INSERT INTO character_items VALUES (2, 7, NULL);`);
-  const legacy = mem.prepare(
-    `SELECT g.name AS item_name FROM character_items ci
-     LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ci.gear_slug
-     LEFT JOIN gear g ON g.slug = ci.gear_slug OR g.id = cr.to_id
-                      OR (ci.gear_slug IS NULL AND g.id = ci.item_id)
-     WHERE ci.id = 2`).get()?.item_name ?? null;
-  check('and a pre-044 row with only an id still resolves', legacy === 'Long Sword');
+  check('and the redirect arm still resolves it', resolved('g') === 'Long Sword');
   mem.close();
+
+  // Every read of an inventory row's gear goes through it.
+  const fnRoot = join(repoRoot, 'functions/api/character-creator');
+  for (const [rel, call] of [['characters/[id].js', "gearJoin('character_items.gear_slug')"],
+    ['campaigns/[id]/items.js', "gearJoin('ci.gear_slug', 'g')"], ['campaigns/[id]/ask.js', "gearJoin('ci.gear_slug', 'g')"]]) {
+    const text = readFileSync(join(fnRoot, rel), 'utf8');
+    check(`${rel} joins gear through gearJoin`, text.includes('${' + call + '}') && !/LEFT JOIN catalog_redirects/.test(text));
+  }
 }
 
 
@@ -5548,6 +5550,24 @@ section('A pick spent on an attribute-derived skill');
   check('and so does the wizard\'s, with the grant\'s own categories and kind',
     /pct: newPickPercent\(\{ \.\.\.r, name \}, S\.attrs, g\.categories, \{ secondary: g\.kind === 'secondary' \}\)/.test(wizardRows)
     && !/r\.base/.test(wizardRows));
+
+  // The columns that rule reads, selected by five server queries. A row
+  // fetched without `base_formula` resolves this very skill to 0% with no
+  // error, so the list is stated beside its reader and nobody types it.
+  const { SKILL_BASE_COLUMNS, skillBase: baseOf } = await import('../js/skill-base.js');
+  const cols = SKILL_BASE_COLUMNS.split(',').map((c) => c.trim());
+  check('the skill column list carries what the base and the advance are read from',
+    ['name', 'category', 'base', 'base_formula', 'per_level'].every((c) => cols.includes(c)), SKILL_BASE_COLUMNS);
+  check('a row holding exactly those columns resolves',
+    baseOf(Object.fromEntries(cols.map((c) => [c, ZERO_G[c]])), { PP: 12 }) === 60);
+  const fnFiles = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    (e.isDirectory() ? fnFiles(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+  const fnDir17 = join(repoRoot, 'functions/api/character-creator');
+  const typed = fnFiles(fnDir17).filter((f) => /base,\s*base_formula,\s*per_level/.test(readFileSync(f, 'utf8')))
+    .map((f) => f.slice(fnDir17.length + 1));
+  check('no server query types the list out', typed.length === 0, typed.join(', '));
+  const readers = fnFiles(fnDir17).filter((f) => /\$\{SKILL_BASE_COLUMNS\}/.test(readFileSync(f, 'utf8'))).length;
+  check('five queries select it by name', readers === 5, `${readers}`);
 }
 
 // ---------- A banked pick sent twice ----------

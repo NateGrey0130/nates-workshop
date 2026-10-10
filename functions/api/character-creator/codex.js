@@ -71,6 +71,7 @@
 
 import { getUserEmail, unauthorized, json } from './_lib/auth.js';
 import { loadPublished } from './_lib/class-store.js';
+import { SKILL_BASE_COLUMNS } from '../../../apps/character-creator/js/skill-base.js';
 
 // A class's lore, trimmed to a reading excerpt (UI-AUDIT F48). The whole class
 // markdown is ~750KB parsed and the codex wants none of the mechanics - a
@@ -226,7 +227,7 @@ const SECTIONS = {
   // description; the catalog has never held one.
   skills: async (env) => ({
     skills: (await env.DB.prepare(
-      `SELECT name, category, base, base_formula, per_level, systems, source_book
+      `SELECT ${SKILL_BASE_COLUMNS}, systems, source_book
        FROM skills ORDER BY category, name`
     ).all()).results.map(({ systems, ...s }) => {
       let list = null;

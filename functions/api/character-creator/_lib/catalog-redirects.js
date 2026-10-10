@@ -31,6 +31,26 @@ const LOOKUP_BATCH = 50;
 
 // The keys a row answers to: its unique key, and its display name when that is
 // a different column (gear is the only catalog where it is — slug vs name).
+// The join from an inventory row to its gear row, as SQL.
+//
+// An inventory row holds the gear's SLUG, and a slug is renamed when a catalog
+// entry is corrected or merged. So the join has two arms: the slug as it
+// stands, or the row a redirect points the old slug at. A plain slug join loses
+// the item the day its catalog row is renamed - the sheet shows a bare custom
+// line - and nothing errors.
+//
+// It was written out by each of the three reads that need it (the sheet, the
+// campaign stash, the campaign's question-answering), and the smoke test that
+// proves the redirect arm ran against a fourth copy typed into the test. They
+// all ask this now, so the proof is of the SQL that ships.
+//
+//   slugColumn  the inventory row's slug column, qualified: `ci.gear_slug`
+//   alias       what the gear row is called in the rest of the query
+export function gearJoin(slugColumn, alias = 'gear') {
+  return `LEFT JOIN catalog_redirects cr ON cr.catalog = 'gear' AND cr.from_key = ${slugColumn}
+     LEFT JOIN gear${alias === 'gear' ? '' : ` ${alias}`} ON ${alias}.slug = ${slugColumn} OR ${alias}.id = cr.to_id`;
+}
+
 export function keysOf(cat, row) {
   return [...new Set([row?.[cat.uniqueField], row?.[cat.displayField]].filter(Boolean).map(String))];
 }

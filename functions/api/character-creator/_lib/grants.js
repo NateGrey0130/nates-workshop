@@ -29,7 +29,7 @@
 import { json } from './auth.js';
 import { safeParse } from './character-json.js';
 import { isFamilyName, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
-import { skillBase, applySystemBases } from '../../../../apps/character-creator/js/skill-base.js';
+import { skillBase, applySystemBases, SKILL_BASE_COLUMNS } from '../../../../apps/character-creator/js/skill-base.js';
 
 const GRANT_KINDS = ['skill', 'spell', 'psionic', 'ability',
                      'attribute', 'pool', 'combat', 'save'];
@@ -66,7 +66,7 @@ export async function findSkillRow(env, name, systemBases = null) {
   const wanted = [name];
   if (isFamilyName(name)) wanted.push(String(otherRowFor(name)));
   const { results } = await env.DB.prepare(
-    `SELECT name, category, base, base_formula, per_level FROM skills
+    `SELECT ${SKILL_BASE_COLUMNS} FROM skills
      WHERE name COLLATE NOCASE IN (${wanted.map(() => '?').join(',')})`
   ).bind(...wanted).all();
   const rows = applySystemBases(results || [], systemBases);

@@ -6,7 +6,7 @@
 // endpoint rather than three because the wizard needs all of them at boot.
 
 import { getUserEmail, unauthorized } from './_lib/auth.js';
-import { applySystemBases, systemBaseMap } from '../../../apps/character-creator/js/skill-base.js';
+import { applySystemBases, systemBaseMap, SKILL_BASE_COLUMNS } from '../../../apps/character-creator/js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from '../../../apps/character-creator/js/psionic-costs.js';
 
 export async function onRequestGet({ request, env }) {
@@ -38,7 +38,7 @@ export async function onRequestGet({ request, env }) {
     // sheet was right, because its endpoint selects the column itself, and
     // only the wizard silently showed a fighting style granting nothing.
     // Roughly 28KB across the 36 rows that have one.
-    env.DB.prepare('SELECT name, category, base, base_formula, per_level, systems, source_book, bonuses, level_bonuses FROM skills ORDER BY category, name').all(),
+    env.DB.prepare(`SELECT ${SKILL_BASE_COLUMNS}, systems, source_book, bonuses, level_bonuses FROM skills ORDER BY category, name`).all(),
     // `system` likewise: the wizard filters spells and powers by the campaign's
     // system client-side, the same way it already does skills. `tradition` for
     // the same reason: a level-gated pick filters on it (BOOK-INGEST-AUDIT F57).

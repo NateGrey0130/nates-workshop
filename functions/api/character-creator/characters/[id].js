@@ -10,6 +10,7 @@ import { listPendingPowers, loadPowerDescriptions } from '../_lib/power-picks.js
 import { listGrants } from '../_lib/grants.js';
 import { decodeCharacter, decodeItemEnchantments, decodeVehicleMdc } from '../_lib/character-json.js';
 import { getStored } from '../_lib/class-store.js';
+import { gearJoin } from '../_lib/catalog-redirects.js';
 import { parseClassMarkdown } from '../../../../apps/character-creator/js/parser.js';
 import { composeClass } from '../../../../apps/character-creator/js/compose.js';
 import { loadSkillBonuses } from '../_lib/skill-bonuses.js';
@@ -69,11 +70,7 @@ export async function onRequestGet({ request, env, params }) {
             gear.cost_note AS item_cost_note, gear.system AS item_system,
             gear.description AS item_description, gear.source_book AS item_source_book
      FROM character_items
-     LEFT JOIN catalog_redirects cr
-            ON cr.catalog = 'gear' AND cr.from_key = character_items.gear_slug
-     LEFT JOIN gear
-            ON gear.slug = character_items.gear_slug
-            OR gear.id = cr.to_id
+     ${gearJoin('character_items.gear_slug')}
      WHERE character_items.character_id = ? AND character_items.removed_at IS NULL
      ORDER BY character_items.id`
   ).bind(params.id).all();

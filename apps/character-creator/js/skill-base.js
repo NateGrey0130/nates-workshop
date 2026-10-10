@@ -46,6 +46,17 @@ function skillBaseFrom(formula, attrs = {}) {
 }
 
 /**
+ * The `skills` columns a row needs before skillBase() and the per-level
+ * advance can read it, as a SQL column list.
+ *
+ * Five server queries selected these five by hand, each followed by whatever
+ * else it wanted. A sixth column this module learns to read - a second formula,
+ * say - would have had to be added to all five, and the one that was missed
+ * would have returned rows that resolve to 0% with no error anywhere.
+ */
+export const SKILL_BASE_COLUMNS = 'name, category, base, base_formula, per_level';
+
+/**
  * The starting percentage for a catalog skill row: the formula when it has one
  * and the attributes can satisfy it, otherwise the stored `base`.
  *
