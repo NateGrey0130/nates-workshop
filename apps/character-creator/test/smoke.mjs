@@ -6006,6 +6006,25 @@ section('Chosen ability fragments');
   check('and does not overwrite a stronger one it already had',
     applyAbilities(alreadyMaster, ['Super-Psionic Powers']).psionics?.isp_base === '4d6x10');
 
+  // Magic takes the same fold. Built on the class above with one more defined
+  // ability, so the fold is what is under test and not the parser.
+  {
+    const gift = { name: 'Magic Gift', magic: { type: 'innate', spells: ['Globe of Daylight'], spells_starting: 5 } };
+    const withGift = (magic) => ({ ...cls, magic, special_abilities: [...(cls.special_abilities || []), gift] });
+    const taken = (magic) => applyAbilities(withGift(magic), ['Magic Gift']).magic;
+    check('an ability\'s magic arrives whole on a class with none',
+      taken(undefined)?.type === 'innate' && taken(undefined).spells_starting === 5);
+    // The Godling's shape: `none` is a statement, and its magic is the
+    // occupation the ability demands.
+    check('a class whose magic is `type: none` is left as it states',
+      JSON.stringify(taken({ type: 'none' })) === '{"type":"none"}');
+    const caster = taken({ type: 'wizardry', spells: ['Blind'], spells_starting: 3 });
+    check('a class that casts keeps its own type', caster.type === 'wizardry');
+    check('and gains the ability\'s spells and the higher count',
+      [...caster.spells].sort().join() === 'Blind,Globe of Daylight' && caster.spells_starting === 5,
+      JSON.stringify(caster));
+  }
+
   // Recorded even when nothing defines it, or the sheet would disagree with
   // what the player actually chose.
   const unknown = applyAbilities(cls, ['Something The Book Only Describes']);

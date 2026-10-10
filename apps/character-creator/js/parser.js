@@ -2863,7 +2863,14 @@ export function applyAbilities(cls, chosen) {
     // `{ type: master }` and nothing else, so choosing the ability's block
     // outright replaced the class's I.S.P. formula with none at all.
     if (def.psionics) out.psionics = mergePsionics(out.psionics, def.psionics);
-    if (def.magic) out.magic = out.magic || def.magic;
+    // Magic through the same fold. This line was `out.magic || def.magic`, which
+    // gave the ability nothing whenever the class cast at all: its named spells
+    // and its higher count were dropped. The class's own statements still win
+    // key for key - the ability is the `born` side - which is the order that
+    // stops an "innate" ability renaming how a Wizard casts. `type: none` is
+    // left exactly as it was: the Godling states it on purpose, because its
+    // magic is the occupation Magic Powers makes it pick (docs/leveling.md).
+    if (def.magic && out.magic?.type !== 'none') out.magic = mergeMagic(def.magic, out.magic);
     // Super abilities ADD rather than defer to whichever side spoke first: a
     // Power Category states what its own page grants and a chosen option states
     // what the roll bought, and both are real. The merge also has to work from
