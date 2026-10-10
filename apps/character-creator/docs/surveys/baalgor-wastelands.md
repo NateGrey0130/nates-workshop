@@ -1,8 +1,8 @@
 # Palladium Fantasy RPG Book 9: The Baalgor Wastelands — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — creatures, notable NPCs and the warship are in; the twenty classes are next. (2026-10-10)
 
-**Rows citing this book:** none
+**Rows citing this book:** creatures 24, notable_npcs 60, vehicles 1
 
 Slug `baalgor-wastelands`. Cached 2026-10-05 from
 `515266553-Palladium-Fantasy-Book-9-The-Baalgor-Wastelands.pdf`, 218 PDF
@@ -199,6 +199,66 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-05 | `pal/data/baalgor-wastelands-survey` | cache built (218 pp, OCR), `baalgor-wastelands` registered in `books.json`, this survey written, offset +1 verified, printed 215 read off a render. No data. |
 
+| 2026-10-10 | `pal/data/baalgor-wastelands-bestiary` | 24 creatures and 60 notable NPCs with 216 attacks (`~180`), and the Orcish Delight warship with 9 locations and 3 weapons (`~181`). Applied `--remote` first. Status to `importing`. |
+
+### Nate's answers, 2026-10-05
+
+- Races go in as Palladium Fantasy classes AND as creature rows; the held
+  Rifts rows of the same names stay as they are.
+- The five classes with their own ladders and the two mutant Minotaur races
+  are all imported.
+- A notable NPC row needs printed Hit Points, a level or class, and an
+  alignment. Thinner blocks are listed below, not imported.
+- Desert rules, encounter tables and adventures stay out. Each PR is merged
+  when green.
+
+### What extraction found that this survey had wrong
+
+- **The survey estimated 39 leader blocks from `Alignment:` lines; 60 pass
+  the rule.** Many blocks print the alignment inside a sentence.
+- **Sloderi (printed 61-63) has its own full block** and was missing from
+  the monster list above. It is in.
+- **Titan and Algor have no stat block in this book** (named on printed
+  38 and 43 only). The giants with blocks are Cyclops, Jotan, Gigantes and
+  Nimro.
+- **The Quillback Scavenger is held as a Rifts class** (`rifts-quillback-scavenger`);
+  the diff above says it is not held.
+- Entry page ranges run one page past the Contents: Baalizad 26-29,
+  Eandroth 32-35, Quillback 52-54, Vrill 66-68.
+- Three creature slugs were taken by Rifts Conversion Book One rows, so
+  this book's rows are `eandroth-pf`, `gromek-pf` and `sandwyrm-pf`.
+
+### Left out of the bestiary, with the reason
+
+- **Named people with no printed Hit Points or no alignment** (about 90
+  across Part Three): the Troker residents of printed 96-104, the colony
+  and cove figures of 74-76 and 85-86, and the lieutenants named in tribe
+  and war-camp essays. Four print Hit Points and a level but no alignment:
+  Gonsol Rorgatha, Quillon Cashcraw and Hargus Ferthik (195) and
+  Highwatcher (201); so do Freelym Deryn and Seethen Jhyheryn (152).
+- **Encounter-table animals** printed as one line (a desert viper on 146
+  and 168, a baboon on 169) and the five-line typical Gromek of 125, which
+  repeats the race row.
+- **Eandroth rogues** are a life stage and sit inside the Eandroth row.
+
+### Readings recorded in the rows
+
+- Giants: the punch damages of printed 40 are on all four giants; the
+  Gigantes and Nimro blocks do not repeat them and rest on that page's
+  section rule.
+- The Kkairojan Minotaur prints its attributes only as those of all
+  Minotaurs; the row carries the dice of printed 50.
+- The Sandwyrm row holds the young figures; the adult multipliers are in
+  its notes.
+- The warship's main body is printed as three sections with no total, so
+  it has no main-body figure. Its ballistas (124) and run-over damage
+  (123) are stored from the prose, outside the book's own two lists.
+- The book's own metric conversions are wrong in two places (Mologoth
+  size, Rock Buzzer weight); the rows keep the printed text.
+
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+The twenty classes: fifteen races (four of them giants, two of them mutant
+Minotaurs) and the
+five classes with ladders on printed 215. Drafted and reconciled; they ship
+next on `pal/data/baalgor-wastelands-classes`.
