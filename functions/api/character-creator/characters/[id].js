@@ -37,7 +37,7 @@ export async function onRequestGet({ request, env, params }) {
     return json({ error: 'Character not found' }, 404);
   }
 
-  const { results: items } = await env.DB.prepare(
+  const itemsRead = env.DB.prepare(
     // THE WHOLE STAT BLOCK rides along, per held item, and is deliberately NOT
     // added to the /items picker projection. The two are sized completely
     // differently: /items is the catalog, 1,253 rows and 32.4 KB gzipped on
@@ -90,7 +90,7 @@ export async function onRequestGet({ request, env, params }) {
   // and nothing files vessel redirects, because `vehicles` has no MERGE_REFS
   // entry and so cannot be merged through the editor. If that changes, this
   // join needs the second arm inventory already has.
-  const { results: vehicles } = await env.DB.prepare(
+  const vehiclesRead = env.DB.prepare(
     `SELECT character_vehicles.*, vehicles.name AS vehicle_name,
             vehicles.vehicle_class, vehicles.system AS vehicle_system,
             vehicles.crew, vehicles.passengers, vehicles.speed_ground,
@@ -109,6 +109,33 @@ export async function onRequestGet({ request, env, params }) {
      WHERE character_vehicles.character_id = ? AND character_vehicles.removed_at IS NULL
      ORDER BY character_vehicles.id`
   ).bind(params.id).all();
+
+  // ONE ROUND OF READS. Nothing below needs anything but the character row,
+  // and each used to be awaited in turn: ten round trips to D1, one after the
+  // other, on the request every sheet opens with. They are asked for together
+  // now and the handler waits once. Only the vehicle parts still follow, since
+  // they are keyed by which vehicles came back.
+  //
+  // Decoded FIRST: the skill bonuses and the power descriptions are looked up
+  // from the character's decoded lists.
+  decodeCharacter(character);
+  const [{ results: items }, { results: vehicles }, pending_picks, pending_powers, grants,
+    stored, occRow, skillRows, totem, power_descriptions] = await Promise.all([
+    itemsRead, vehiclesRead,
+    // So the sheet can badge unspent picks without a second request.
+    listPending(env, params.id), listPendingPowers(env, params.id),
+    // What a table handed this character outside its class schedule: the sheet
+    // needs it on first paint, to say where a granted skill came from.
+    listGrants(env, params.id),
+    // The class rows, fetched directly: see the note on composing, below.
+    getStored(env, character.class_id),
+    character.occ_class_id ? getStored(env, character.occ_class_id) : null,
+    // The bonuses the character's SKILLS grant, not just its classes.
+    loadSkillBonuses(env, character),
+    // The chosen totem animal's row (BOOK-INGEST-AUDIT.md F56).
+    loadTotem(env, character.totem),
+    loadPowerDescriptions(env, character.powers),
+  ]);
 
   if (vehicles.length) {
     const slugs = [...new Set(vehicles.map((v) => v.vehicle_slug).filter(Boolean))];
@@ -148,7 +175,6 @@ export async function onRequestGet({ request, env, params }) {
     }
   }
 
-  decodeCharacter(character);
   // The campaign's rest rates ride along, decoded, so the rest panel can prefer
   // them without a second request (UI-AUDIT F52). NULL stays NULL.
   try {
@@ -157,14 +183,6 @@ export async function onRequestGet({ request, env, params }) {
   decodeItemEnchantments(items);
   decodeVehicleMdc(vehicles);
   const can_write = email === character.player_email || email === character.campaign_gm;
-  // So the sheet can badge unspent skill picks without a second request.
-  const pending_picks = await listPending(env, params.id);
-  const pending_powers = await listPendingPowers(env, params.id);
-  // What a table handed this character outside its class schedule. Rides
-  // along for the same reason the pending picks do: the sheet needs it on
-  // first paint, and the granted skills are already IN `character.skills`, so
-  // without this it can show them and not say where they came from.
-  const grants = await listGrants(env, params.id);
 
   // The class as this character plays it, variant already applied.
   //
@@ -180,17 +198,13 @@ export async function onRequestGet({ request, env, params }) {
   // published classes: a character whose class was retired after it was built
   // must still resolve, or the sheet loses its name and advisory text. Only the
   // FETCH differs — composeClass() does the rest, the same as everywhere else.
-  const stored = await getStored(env, character.class_id);
   const parsed = stored ? parseClassMarkdown(stored.markdown) : null;
-
-  const occRow = character.occ_class_id ? await getStored(env, character.occ_class_id) : null;
   const occParsed = occRow ? parseClassMarkdown(occRow.markdown) : null;
 
 
 
-  // The bonuses the character's SKILLS grant, not just its classes. Boxing is
-  // +1 attack per melee and +2 P.S.; before this they were shown nowhere.
-  const skillRows = await loadSkillBonuses(env, character);
+  // `skillRows`, read above: Boxing is +1 attack per melee and +2 P.S., and
+  // before those rows were loaded they were shown nowhere.
 
   const composeArgs = {
     rcc: parsed?.ok ? parsed.data : null,
@@ -199,7 +213,7 @@ export async function onRequestGet({ request, env, params }) {
     // The chosen totem animal's row (BOOK-INGEST-AUDIT.md F56). In the class
     // half deliberately: its bonuses are the character's for life, like the
     // class's, and not a skill's.
-    totem: await loadTotem(env, character.totem),
+    totem,
   };
   let cls = composeClass({ ...composeArgs, skillRows });
 
@@ -245,7 +259,7 @@ export async function onRequestGet({ request, env, params }) {
   // powers this character holds, keyed by the name it holds them under - the
   // catalogs' whole description corpus is sixteen times bigger and belongs
   // nowhere near a boot payload. See docs/plans/20-power-descriptions.md.
-  const power_descriptions = await loadPowerDescriptions(env, character.powers);
+
 
   // THE SECOND BODY, FOLDED (BOOK-INGEST-AUDIT F74, survey D5): the form's
   // attributes, its S.D.C. and hit point maxima and current values, its Horror
