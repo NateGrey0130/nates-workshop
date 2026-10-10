@@ -6599,7 +6599,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // Cosmo-Knight on the day it was imported.
   const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
   check('class-check knows the eight keys combineClasses hands to the race',
-    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'horror_factor', 'second_form'\];/.test(cc));
+    // Not a copy of them any more: it asks the registry the merge loops over.
+    /const LOST_TO_RACE = keysMergedBy\('race-first'\);/.test(cc));
   check('and warns only for an O.C.C. that has not claimed supersedes_race',
     /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
   check('it is a WARNING, so it cannot fire the exit code on the common case',
@@ -6607,8 +6608,13 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // The list is the one the parser actually branches on. If someone adds an
   // ninth key there, this fails rather than the warning going quietly stale.
   const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'horror_factor', 'second_form'\]\) \{/.exec(parser);
-  check('and the parser still hands exactly those eight to the race', !!branch);
+  // The loop reads CLASS_MERGE's `race-first` keys since 2026-10-10, so the
+  // eight are held where they are stated and the loop is held to reading them.
+  const { keysMergedBy: mergedBy } = await import('../js/class-keys.js');
+  check('and the parser still hands exactly those eight to the race',
+    /for \(const key of keysMergedBy\('race-first'\)\) \{/.test(parser)
+    && mergedBy('race-first').join() === 'attribute_dice,hit_points_base,sdc_base,mdc_base,ppe_base,starting_money,horror_factor,second_form',
+    mergedBy('race-first').join());
   // `xp_table` rode that loop - and this list - until 2026-09-17, when an
   // occupation's ladder started winning a pairing (Nate's decision in
   // docs/surveys/nightbane-core.md). A race discards nothing of it now, so an

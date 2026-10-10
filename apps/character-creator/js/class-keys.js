@@ -1,18 +1,22 @@
 // Every key a class's frontmatter may carry, stated once.
 //
 // Until 2026-10-10 this list lived in scripts/class-check-lib.mjs as
-// KNOWN_KEYS, kept by hand beside a parser that never looked at it: the parser
-// stores whatever YAML it finds, so a mistyped key - `hit_point_base` - parsed
-// clean and was then read by nothing. class-check caught it for whoever ran
-// class-check; the import tool and the class editor, which call the parser,
-// said nothing.
+// KNOWN_KEYS, and the question "what does a race and an occupation do with
+// this key" was answered nowhere: the merge in parser.js named the keys it
+// had an opinion about and left the rest to a copy of the race. The two lists
+// are one here - the keys, and CLASS_MERGE below them - so a key cannot be
+// taught to the app without saying how it merges.
 //
-// The parser warns from this list now, and class-check's KNOWN_KEYS is built
-// from it, so there is one list and two readers. It is still a LITERAL list,
-// for the reason its old header gave: the question is not "does the parser
-// touch it" but "does anything downstream act on it", and that answer is
-// spread across parser.js, compose.js, derive.js, app.js and sheet.js. A key
-// is added here in the change that teaches something to read it.
+// THE PARSER DOES NOT CHECK A CLASS AGAINST THIS LIST, and that is deliberate.
+// It stores whatever YAML it finds. `class-check` is what reports a key
+// nothing reads (UNMODELLED), and the smoke suite fails a shipped class that
+// has one; classes are written by data scripts, so those two are every door.
+//
+// It is still a LITERAL list, for the reason its old header gave: the
+// question is not "does the parser touch it" but "does anything downstream
+// act on it", and that answer is spread across parser.js, compose.js,
+// derive.js, app.js and sheet.js. A key is added here in the change that
+// teaches something to read it.
 //
 // No imports, on purpose: parser.js imports this, and so does a Node script.
 
@@ -152,14 +156,14 @@ export const SKILLS_KEYS = [
 ];
 
 // WHAT A RACE AND AN OCCUPATION DO WITH EACH KEY when one character holds
-// both. combineClasses() in parser.js starts from a copy of the race, so a key
+// both. The merge in parser.js starts from a copy of the race, so a key
 // it never mentions is the race's - which is the right answer for an id and
 // was the wrong one for `trackable_resources` and `side_effects`, dropped from
 // every paired occupation until 2026-10-10 because nobody had to decide.
 //
 // So every key decides, here. smoke.mjs fails on a key with no rule, and runs
-// each plain rule against combineClasses itself, so a rule written here and
-// not implemented there fails too.
+// each plain rule against the merge itself, so a rule written here and not
+// implemented there fails too.
 //
 //   race              the race's, always. The occupation's is not carried:
 //                     either it describes the class rather than the character
@@ -167,11 +171,11 @@ export const SKILLS_KEYS = [
 //                     before the two are combined (men_of_arms, variants).
 //   race-first        the race's where it states one, else the occupation's.
 //                     Physiology: a dragon's hit points are a dragon's.
-//                     combineClasses loops over these.
+//                     The merge loops over these.
 //   occupation-first  the occupation's where it states one, else the race's.
-//   concat            both lists, the race's first. combineClasses loops.
+//   concat            both lists, the race's first. The merge loops.
 //   flag              true if either side says so.
-//   custom            its own code in combineClasses, with its reason there.
+//   custom            its own code in the merge, with its reason there.
 export const CLASS_MERGE = {
   id: 'race', system: 'race', source_book: 'race', category: 'race',
   // "<race> <occupation>".
@@ -200,8 +204,8 @@ export const CLASS_MERGE = {
   psionics_allowed: 'custom',
   // The occupation's, unless the race keeps its own ladder.
   xp_table: 'custom',
-  // Read off the raw classes: by the pickers, and by combineClasses from the
-  // side that owns each.
+  // Read off the raw classes: by the pickers, and by the merge from the side
+  // that owns each.
   occ_group: 'race', occ_restrictions: 'race', race_restrictions: 'race',
   overrides_race: 'race', yields_to_occupation: 'race', keeps_xp_table: 'race',
   pairing_skills: 'race',
@@ -216,18 +220,3 @@ export function keysMergedBy(rule) {
   return Object.keys(CLASS_MERGE).filter((k) => CLASS_MERGE[k] === rule);
 }
 
-const TOP = new Set([...CLASS_KEYS, ...PRODUCED_KEYS]);
-const UNDER_SKILLS = new Set(SKILLS_KEYS);
-
-/** Top-level keys of a parsed class that nothing reads. */
-export function unknownClassKeys(data) {
-  if (!data || typeof data !== 'object') return [];
-  return Object.keys(data).filter((k) => !TOP.has(k));
-}
-
-/** Keys under `skills` that nothing reads. */
-export function unknownSkillsKeys(data) {
-  const skills = data && typeof data === 'object' ? data.skills : null;
-  if (!skills || typeof skills !== 'object' || Array.isArray(skills)) return [];
-  return Object.keys(skills).filter((k) => !UNDER_SKILLS.has(k));
-}

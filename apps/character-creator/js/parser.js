@@ -1,6 +1,6 @@
 import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
-import { unknownClassKeys, unknownSkillsKeys, keysMergedBy } from './class-keys.js';
+import { keysMergedBy } from './class-keys.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
@@ -3564,18 +3564,6 @@ export function parseClassMarkdown(text) {
     data = parseYaml(fm[1]);
   } catch (e) {
     return { ok: false, data: null, errors: ['Frontmatter parse error: ' + e.message], warnings };
-  }
-
-  // A key nothing reads. The parser keeps whatever YAML it finds, so a
-  // mistyped key used to parse clean and then do nothing, with no word said
-  // to whoever was importing the class. A WARNING: the list is
-  // js/class-keys.js, and a key missing from it is as likely to be the list
-  // behind the app as the class ahead of it.
-  for (const k of unknownClassKeys(data)) {
-    warnings.push(`Unknown key \`${k}\`: nothing in the app reads it. A typo, or a key js/class-keys.js does not list yet.`);
-  }
-  for (const k of unknownSkillsKeys(data)) {
-    warnings.push(`Unknown key \`skills.${k}\`: nothing in the app reads it.`);
   }
 
   // Required fields

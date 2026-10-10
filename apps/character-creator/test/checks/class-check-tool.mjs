@@ -73,32 +73,13 @@ export function run() {
   check('an unmodelled top-level key is reported',
     unmodelledKeys({ id: 'x', name: 'X', elemental_affinity: {} }).join() === 'elemental_affinity');
 
-  // ONE LIST, TWO READERS (2026-10-10). The list was this tool's alone, and the
-  // parser - which the import tool and the class editor call - stored a
-  // mistyped key without a word. It is js/class-keys.js now; this tool builds
-  // its set from it and the parser warns from it.
+  // ONE LIST (2026-10-10). It is js/class-keys.js, beside the rule for how a
+  // race and an occupation merge each key; this tool builds its sets from it.
   check('the known keys of class-check ARE the registry, with nothing added by hand',
     JSON.stringify([...KNOWN_KEYS]) === JSON.stringify([...CLASS_KEYS, ...PRODUCED_KEYS])
     && JSON.stringify([...KNOWN_SKILL_KEYS]) === JSON.stringify(SKILLS_KEYS));
   check('the registry names no key twice',
     new Set(CLASS_KEYS).size === CLASS_KEYS.length && new Set(SKILLS_KEYS).size === SKILLS_KEYS.length);
-  {
-    const fm = (...lines) => ['---', 'id: t', 'name: T', 'category: occ', 'system: rifts',
-      'source_book: X', ...lines, '---', '## Lore', 'x'].join('\n');
-    const unknown = (r) => r.warnings.filter((w) => /^Unknown key/.test(w));
-    const typo = parseClassMarkdown(fm('hit_point_base: 5'));
-    check('the parser warns on a top-level key nothing reads',
-      unknown(typo).length === 1 && /`hit_point_base`/.test(unknown(typo)[0]), JSON.stringify(typo.warnings));
-    check('as a warning: the class still parses', typo.ok && typo.errors.length === 0, JSON.stringify(typo.errors));
-    const under = parseClassMarkdown(fm('skills:', '  occ_secondary_skills: { count: 2 }'));
-    check('and on one under skills', unknown(under).length === 1 && /`skills\.occ_secondary_skills`/.test(unknown(under)[0]),
-      JSON.stringify(under.warnings));
-    const clean = parseClassMarkdown(fm('hit_points_base: 5', 'skills:', '  secondary_skills: { count: 2 }'));
-    check('a class that states only known keys draws no such warning', unknown(clean).length === 0,
-      JSON.stringify(clean.warnings));
-    check('the sections the parser produces from the body are not reported against it',
-      PRODUCED_KEYS.every((k) => k in clean.data) && unknown(clean).length === 0);
-  }
 
   // ── one level down, under `skills` (BOOK-INGEST-AUDIT F87) ──
   // `unmodelledKeys` reads Object.keys(data), and `skills` is in KNOWN_KEYS, so
