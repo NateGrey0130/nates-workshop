@@ -2644,7 +2644,9 @@ section('Wizard steps');
     /the save would be refused/.test(occBlocker));
   // The other half of the pair: the Attributes step has always gated on it.
   check('the Attributes step still gates on the same shortfall',
-    /const canNext = missing\.length === 0 && unmet\.length === 0 && !over;/.test(src));
+    // Through attributesBlocker() since 2026-10-10, which the rail reads too;
+    // the F125 section runs that function against an unmet minimum.
+    /const canNext = !attrWhy;/.test(src) && /why: attrWhy \} = attributesBlocker\(\)/.test(src));
 
   // One attribute, with its own dice. Not the whole block, and never raised to
   // the minimum without dice - see docs/plans/13-rcc-first-wizard.md.
@@ -7288,6 +7290,35 @@ section('An occupation beside a race offers its own pick groups (BOOK-INGEST-AUD
     /const occCls = occAbilityClass\(\);[\s\S]{0,360}abilityGroupOwed\(g\) - \(held\[gi\] \|\| 0\)[\s\S]{0,200}for \$\{occCls\.name\} to continue/.test(appSrc));
   check('the rail\'s forward jump asks the same gate as the step\'s Next button',
     /if \(i === ST\.OCCUPATION\) return occBlocker\(\);/.test(appSrc));
+
+  // The Attributes and Morphus steps the same way. The rail's copy of the
+  // Attributes rule read `S.cls.requirements.attributes`, a key no class has,
+  // and ignored an overspent point-buy pool; the Morphus step had no case.
+  {
+    const rail = appSrc.match(/function stepBlocker\(i\) \{[\s\S]*?\n\}/)?.[0] || '';
+    check('the rail asks the Attributes step\'s own gate',
+      /if \(i === ST\.ATTRIBUTES\) return attributesBlocker\(\)\.why;/.test(rail));
+    check('and the Morphus step\'s', /if \(i === ST\.MORPHUS\) return morphusBlocker\(\) \|\| '';/.test(rail));
+    check('the rail restates no attribute rule of its own', !/S\.attrs/.test(rail));
+    check('the Attributes step reads the same gate for its Next button',
+      /const \{ missing, unmet, over, why: attrWhy \} = attributesBlocker\(\);\s+const usesPB[^\n]*\s+const canNext = !attrWhy;/.test(appSrc));
+
+    // The gate itself, run rather than read: lifted out of app.js with the four
+    // names it closes over supplied.
+    const gateSrc = appSrc.match(/function attributesBlocker\(\) \{[\s\S]*?\n\}/)?.[0] || '';
+    check('attributesBlocker is found', gateSrc.length > 0);
+    const gate = (S, spent = 0, absent = []) => new Function('S', 'ATTRS', 'attrAbsent', 'pbSpent', 'PB_POOL',
+      `${gateSrc}; return attributesBlocker();`)(S, ['IQ', 'PS', 'PE'], (a) => absent.includes(a), () => spent, 40);
+    const cls = { attribute_requirements: { PS: 12 } };
+    check('a missed class minimum blocks, and says which',
+      gate({ cls, attrs: { IQ: 9, PS: 11, PE: 9 } }).why === 'Class minimum not met: PS 12+.');
+    check('an attribute still to roll blocks first',
+      gate({ cls, attrs: { IQ: 9, PS: 14 } }).why === 'Still to roll or enter: PE.');
+    check('an overspent point-buy pool blocks', /overspent/.test(gate({ cls, attrs: { IQ: 9, PS: 14, PE: 9 } }, 41).why));
+    check('an attribute the class does not have is not waited for',
+      gate({ cls, attrs: { IQ: 9, PS: 14 } }, 0, ['PE']).why === '');
+    check('and a met build passes', gate({ cls, attrs: { IQ: 9, PS: 12, PE: 9 } }).why === '');
+  }
   const dropFn = appSrc.slice(appSrc.indexOf('function dropOccAbilityPicks()'), appSrc.indexOf('function pickOcc(id)'));
   check('an occupation released by a dropped ability loses its picks too, before the slot is cleared',
     /dropOccAbilityPicks\(\);\s+S\.occ = null; S\.occVariant = null;/.test(appSrc)
