@@ -3771,6 +3771,57 @@ x
       combineClasses(bare, tracker).side_effects === 'Hunted.' && combineClasses(empty, tracker).side_effects === 'Hunted.');
     check('both sides\' side effects are kept, the race\'s first',
       JSON.stringify(combineClasses(own, tracker).side_effects) === '["Long-lived.","Hunted."]');
+    // EVERY KEY DECIDES (2026-10-10). Those two keys were dropped because
+    // combineClasses starts from a copy of the race and nobody had to say what
+    // the occupation's meant. CLASS_MERGE in js/class-keys.js is where each key
+    // says, and the plain rules are run here against the merge itself - so a
+    // key added without a rule fails, and so does a rule the merge does not
+    // implement.
+    {
+      const { CLASS_KEYS, PRODUCED_KEYS, CLASS_MERGE, keysMergedBy } = await import('../js/class-keys.js');
+      const all = [...CLASS_KEYS, ...PRODUCED_KEYS];
+      const RULES = ['race', 'race-first', 'occupation-first', 'concat', 'flag', 'custom'];
+      const unruled = all.filter((k) => !(k in CLASS_MERGE));
+      check('every class key states how a race and an occupation merge it', unruled.length === 0, unruled.join(', '));
+      const strays = Object.keys(CLASS_MERGE).filter((k) => !all.includes(k));
+      check('and no rule is stated for a key that is not a class key', strays.length === 0, strays.join(', '));
+      const odd = Object.entries(CLASS_MERGE).filter(([, r]) => !RULES.includes(r)).map(([k, r]) => `${k}: ${r}`);
+      check('every rule is one of the six', odd.length === 0, odd.join(', '));
+
+      const race = (extra) => ({ id: 'r', name: 'R', category: 'rcc', ...extra });
+      const occn = (extra) => ({ id: 'o', name: 'O', category: 'occ', ...extra });
+      const merged = (r, o) => combineClasses(race(r), occn(o));
+      const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+      const wrong = (rule, holds) => keysMergedBy(rule).filter((k) => {
+        try { return !holds(k); } catch (e) { return true; }
+      });
+
+      // `id` and `category` are in both stubs, so they are tested as stated.
+      const raceOnly = wrong('race', (k) => {
+        const mine = k === 'id' ? 'r' : k === 'category' ? 'rcc' : 'the race';
+        const said = merged({ [k]: mine }, { [k]: 'the occupation' })[k];
+        const silent = k === 'id' || k === 'category' ? mine : merged({}, { [k]: 'the occupation' })[k];
+        return same(said, mine) && (silent === undefined || silent === mine);
+      });
+      check('a `race` key is the race\'s, and an occupation\'s alone is not carried', raceOnly.length === 0, raceOnly.join(', '));
+      const raceFirst = wrong('race-first', (k) => same(merged({ [k]: 'the race' }, { [k]: 'the occupation' })[k], 'the race')
+        && same(merged({}, { [k]: 'the occupation' })[k], 'the occupation'));
+      check('a `race-first` key is the race\'s where it states one, else the occupation\'s', raceFirst.length === 0, raceFirst.join(', '));
+      const occFirst = wrong('occupation-first', (k) => same(merged({ [k]: 'the race' }, { [k]: 'the occupation' })[k], 'the occupation')
+        && same(merged({ [k]: 'the race' }, {})[k], 'the race'));
+      check('an `occupation-first` key is the occupation\'s where it states one, else the race\'s', occFirst.length === 0, occFirst.join(', '));
+      const both = wrong('concat', (k) => same(merged({ [k]: ['a'] }, { [k]: ['b'] })[k], ['a', 'b'])
+        && same(merged({}, { [k]: ['b'] })[k], ['b']) && same(merged({ [k]: ['a'] }, {})[k], ['a']));
+      check('a `concat` key holds both lists, the race\'s first', both.length === 0, both.join(', '));
+      const flags = wrong('flag', (k) => merged({}, { [k]: true })[k] === true && merged({ [k]: true }, {})[k] === true
+        && merged({}, {})[k] === undefined);
+      check('a `flag` key is true when either side says so', flags.length === 0, flags.join(', '));
+      check('each plain rule has keys to run, so none of the five passes on nothing',
+        ['race', 'race-first', 'occupation-first', 'concat', 'flag'].every((r) => keysMergedBy(r).length > 0));
+      check('class-check reads the same race-first list the merge loops over',
+        /const LOST_TO_RACE = keysMergedBy\('race-first'\);/.test(readFileSync(join(repoRoot, 'scripts/class-check.mjs'), 'utf8')));
+    }
+
     check('an occupation with neither leaves the race\'s as written',
       names(combineClasses(own, { id: 'x', name: 'X', category: 'occ' })) === 'Rage:3,Chi:99'
       && combineClasses(own, { id: 'x', name: 'X', category: 'occ' }).side_effects === 'Long-lived.');
@@ -6548,7 +6599,8 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // Cosmo-Knight on the day it was imported.
   const cc = readFileSync(join(repoRoot, 'scripts', 'class-check.mjs'), 'utf8');
   check('class-check knows the eight keys combineClasses hands to the race',
-    /const LOST_TO_RACE = \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',\s*\n?\s*'ppe_base', 'starting_money', 'horror_factor', 'second_form'\];/.test(cc));
+    // Not a copy of them any more: it asks the registry the merge loops over.
+    /const LOST_TO_RACE = keysMergedBy\('race-first'\);/.test(cc));
   check('and warns only for an O.C.C. that has not claimed supersedes_race',
     /data\?\.category === 'occ' && data\?\.supersedes_race !== true/.test(cc));
   check('it is a WARNING, so it cannot fire the exit code on the common case',
@@ -6556,8 +6608,13 @@ section('An O.C.C. is warned about what a race will discard (BOOK-INGEST-AUDIT F
   // The list is the one the parser actually branches on. If someone adds an
   // ninth key there, this fails rather than the warning going quietly stale.
   const parser = readFileSync(join(appDir, 'js', 'parser.js'), 'utf8');
-  const branch = /for \(const key of \['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',\s*\n\s*'starting_money', 'horror_factor', 'second_form'\]\) \{/.exec(parser);
-  check('and the parser still hands exactly those eight to the race', !!branch);
+  // The loop reads CLASS_MERGE's `race-first` keys since 2026-10-10, so the
+  // eight are held where they are stated and the loop is held to reading them.
+  const { keysMergedBy: mergedBy } = await import('../js/class-keys.js');
+  check('and the parser still hands exactly those eight to the race',
+    /for \(const key of keysMergedBy\('race-first'\)\) \{/.test(parser)
+    && mergedBy('race-first').join() === 'attribute_dice,hit_points_base,sdc_base,mdc_base,ppe_base,starting_money,horror_factor,second_form',
+    mergedBy('race-first').join());
   // `xp_table` rode that loop - and this list - until 2026-09-17, when an
   // occupation's ladder started winning a pairing (Nate's decision in
   // docs/surveys/nightbane-core.md). A race discards nothing of it now, so an

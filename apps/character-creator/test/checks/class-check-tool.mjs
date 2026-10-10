@@ -12,11 +12,12 @@ import { spawnSync } from 'node:child_process';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceSpans,
   fieldTokens, freeTextFields, parseSourcePages, resolveBookSlug, unclosedFlowLines,
-  unmodelledKeys, unmodelledSkillKeys, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
+  unmodelledKeys, unmodelledSkillKeys, KNOWN_KEYS, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
   grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
 import { parseClassMarkdown } from '../../js/parser.js';
+import { CLASS_KEYS, PRODUCED_KEYS, SKILLS_KEYS } from '../../js/class-keys.js';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['class-check'];
@@ -72,6 +73,14 @@ export function run() {
   check('an unmodelled top-level key is reported',
     unmodelledKeys({ id: 'x', name: 'X', elemental_affinity: {} }).join() === 'elemental_affinity');
 
+  // ONE LIST (2026-10-10). It is js/class-keys.js, beside the rule for how a
+  // race and an occupation merge each key; this tool builds its sets from it.
+  check('the known keys of class-check ARE the registry, with nothing added by hand',
+    JSON.stringify([...KNOWN_KEYS]) === JSON.stringify([...CLASS_KEYS, ...PRODUCED_KEYS])
+    && JSON.stringify([...KNOWN_SKILL_KEYS]) === JSON.stringify(SKILLS_KEYS));
+  check('the registry names no key twice',
+    new Set(CLASS_KEYS).size === CLASS_KEYS.length && new Set(SKILLS_KEYS).size === SKILLS_KEYS.length);
+
   // ── one level down, under `skills` (BOOK-INGEST-AUDIT F87) ──
   // `unmodelledKeys` reads Object.keys(data), and `skills` is in KNOWN_KEYS, so
   // everything beneath it was accepted unseen. Sixteen live classes wrote
@@ -109,7 +118,7 @@ export function run() {
     return out;
   })();
   check('no shipped class reports an unmodelled key', unmodelledOffenders.length === 0,
-    unmodelledOffenders.join(' | ') + ' — KNOWN_KEYS in scripts/class-check-lib.mjs is out of date');
+    unmodelledOffenders.join(' | ') + ' — CLASS_KEYS in apps/character-creator/js/class-keys.js is out of date');
 
   // The parser reads inline [...] / {...} on ONE line only. A flow list wrapped
   // across lines parses the opener as a scalar and fails later with a shape

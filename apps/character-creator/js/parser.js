@@ -1,5 +1,6 @@
 import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
+import { keysMergedBy } from './class-keys.js';
 
 // RCC/OCC markdown parser — YAML frontmatter → structured data, body → lore sections.
 // Zero dependencies; runs in the browser, Node, and Cloudflare Pages Functions.
@@ -1249,8 +1250,8 @@ export function combineClasses(rcc, occ) {
   // `{ ...rcc }` spread already carries - but an occupation that is itself the
   // transformation would be dropped without the loop, and a superseding one
   // must replace the race's. Race wins when both state one.
-  for (const key of ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base', 'ppe_base',
-                     'starting_money', 'horror_factor', 'second_form']) {
+  // The list is CLASS_MERGE's `race-first` keys in js/class-keys.js.
+  for (const key of keysMergedBy('race-first')) {
     if (superseded && occ[key] != null) out[key] = occ[key];
     else if (rcc[key] == null && occ[key] != null) out[key] = occ[key];
   }
@@ -1503,8 +1504,7 @@ export function combineClasses(rcc, occ) {
     out.magic = superseded ? (occ.magic || rcc.magic) : mergeMagic(rcc.magic, occ.magic);
   }
 
-  for (const key of ['equipment_starting', 'level_progression', 'special_abilities',
-                     'natural_abilities', 'restrictions']) {
+  for (const key of keysMergedBy('concat')) {
     const both = [...(rcc[key] || []), ...(occ[key] || [])];
     if (both.length) out[key] = both;
   }

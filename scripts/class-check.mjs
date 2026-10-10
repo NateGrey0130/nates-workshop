@@ -42,6 +42,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS, psionicsTableLeftRolling } from '../apps/character-creator/js/parser.js';
 import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
+import { keysMergedBy } from '../apps/character-creator/js/class-keys.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
 import {
   extractClassMarkdown, unmodelledKeys, unmodelledSkillKeys,
@@ -218,8 +219,9 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
 // of the occupation's is discarded. The loss runs the other way, and only when
 // the flag IS set.
 {
-  const LOST_TO_RACE = ['attribute_dice', 'hit_points_base', 'sdc_base', 'mdc_base',
-    'ppe_base', 'starting_money', 'horror_factor', 'second_form'];
+  // combineClasses' own list: the keys CLASS_MERGE marks `race-first`. This was a
+  // hand copy of the loop, with a line citation that had gone stale.
+  const LOST_TO_RACE = keysMergedBy('race-first');
   if (data?.category === 'occ' && data?.supersedes_race !== true) {
     // A key the occupation takes over through `overrides_race` (F111) is not
     // discarded, so it is not named.

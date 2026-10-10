@@ -38,6 +38,7 @@ import { morphusTables, replayMorphus, entriesFor, rollOn, decide, rollNext, pic
          MORPHUS_RULES, MORPHUS_START, UNPRINTED_TABLE, DUPLICATE_ENTRY }
   from '../../js/morphus.js';
 import { DRAFT_KEYS } from '../../js/wizard-state.js';
+import { CLASS_KEYS } from '../../js/class-keys.js';
 import { appDir, appPath, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 // Declared by hand, and smoke.mjs's 'The checks modules declare the sections
@@ -157,8 +158,7 @@ section('A Horror Factor the character PROJECTS (F75)');
   // class-check must know the key, or every class using it reports UNMODELLED
   // and test/checks/class-check-tool.mjs fails the suite.
   check('class-check knows the key',
-    readFileSync(join(repoRoot, 'scripts', 'class-check-lib.mjs'), 'utf8')
-      .includes("'horror_factor'"));
+    CLASS_KEYS.includes('horror_factor'));
 }
 
 section('A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)');
@@ -218,7 +218,7 @@ section('A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74)');
       + 'variants:\n  - id: a\n    name: A\n    second_form: { name: M }\n---\n\n## Lore\n\nx\n')
       .warnings.some((w) => /sets second_form, which a variant cannot override/.test(w)));
   check('class-check knows the key',
-    readFileSync(join(repoRoot, 'scripts', 'class-check-lib.mjs'), 'utf8').includes("'second_form'"));
+    CLASS_KEYS.includes('second_form'));
 
   // ---- composition ----
   const rcc = good.data;

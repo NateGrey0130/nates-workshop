@@ -219,8 +219,10 @@ db/
                               schema_migrations; see Production configuration
 ```
 
-Fourteen modules are imported by both the browser and the Workers runtime, or
-written to be: `js/parser.js`, `js/dice.js`, `js/skill-base.js`,
+Fifteen modules are imported by both the browser and the Workers runtime, or
+written to be: `js/parser.js`, `js/class-keys.js` (through the parser: the
+class keys and how a race and an occupation merge each),
+`js/dice.js`, `js/skill-base.js`,
 `js/psionic-costs.js`, `js/catalog-fields.js`, `js/compose.js`, `js/psionics.js`
 (through compose), `js/language-skills.js`, `js/hand-to-hand.js`,
 `js/leveling.js`, `js/second-form.js`, `js/derive.js`, and `js/npc-generate.js`
@@ -1351,16 +1353,16 @@ would train you to stop reading the output.
 
 A top-level frontmatter key the app does not read parses cleanly, stores
 cleanly, and then does nothing at all — which is how a class ships looking
-complete. The checker lists any key outside `KNOWN_KEYS` in
-`scripts/class-check-lib.mjs` under `UNMODELLED`.
+complete. The list of keys the app reads is `CLASS_KEYS` in `js/class-keys.js`.
+The checker lists any key outside it under `UNMODELLED`.
 
 It is a decision, not a defect, and both answers are legitimate: move the
 mechanic into the body as prose so the class can ship now, or model it —
 `parser.js`, `validate-character.js`, `compose.js`, the wizard, the sheet, a
-smoke case, and `KNOWN_KEYS`. The Godling's occupation-demanding Magic Powers
+smoke case, and `CLASS_KEYS`. The Godling's occupation-demanding Magic Powers
 and the staged-R.C.C. `variants` block both started as exactly this shape.
 
 The smoke test asserts every shipped class comes back with no unmodelled key, so
-`KNOWN_KEYS` going stale fails loudly rather than turning the check into noise.
+`CLASS_KEYS` going stale fails loudly rather than turning the check into noise.
 
 ---
