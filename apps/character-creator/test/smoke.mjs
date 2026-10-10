@@ -5373,6 +5373,90 @@ section('A pick spent on an attribute-derived skill');
     && !/r\.base/.test(wizardRows));
 }
 
+// ---------- A banked pick sent twice ----------
+// The pick routes read the character and its unspent grants, then write both
+// in one batch. The batch was atomic and unconditional: two requests that read
+// the same grants both wrote, so the second replaced the first one's picks on
+// the character and took the allowance down again. Run here against a real
+// SQLite through the D1 shape the routes use, because the guard is SQL and a
+// regex over it would prove nothing.
+section('A banked pick sent twice');
+{
+  const { pendingGuard, claimStatement, batchApplied, pendingToken } =
+    await import('../../../functions/api/character-creator/_lib/pending-claim.js');
+  const { claimPlan } = await import('../../../functions/api/character-creator/_lib/skill-picks.js');
+
+  const db = new DatabaseSync(':memory:');
+  db.exec(`CREATE TABLE characters (id INTEGER PRIMARY KEY, skills TEXT);
+    CREATE TABLE pending_skill_picks (id INTEGER PRIMARY KEY AUTOINCREMENT, character_id INTEGER,
+      count INTEGER NOT NULL, claimed_at TEXT);
+    INSERT INTO characters VALUES (1, '[]');
+    INSERT INTO pending_skill_picks (character_id, count) VALUES (1, 1), (1, 2), (2, 5);`);
+  const env = { DB: {
+    prepare: (sql) => ({ bind: (...b) => ({ sql, b }) }),
+    // One transaction, as D1's batch is.
+    batch: (stmts) => {
+      db.exec('BEGIN');
+      const out = stmts.map((s) => ({ meta: { changes: Number(db.prepare(s.sql).run(...s.b).changes) } }));
+      db.exec('COMMIT');
+      return out;
+    },
+  } };
+  const unspent = () => db.prepare(
+    'SELECT id, count FROM pending_skill_picks WHERE character_id = 1 AND claimed_at IS NULL ORDER BY id').all();
+  // The route's own batch: the character, then the claim, both guarded.
+  const spend = (pending, skills, spent) => {
+    const unchanged = pendingGuard('pending_skill_picks', '1', pending);
+    return env.DB.batch([
+      env.DB.prepare(`UPDATE characters SET skills = ? WHERE id = ? AND ${unchanged.sql}`).bind(skills, '1', ...unchanged.binds),
+      claimStatement(env, 'pending_skill_picks', unchanged, claimPlan(pending, spent)),
+    ].filter(Boolean));
+  };
+  const skillsNow = () => db.prepare('SELECT skills FROM characters WHERE id = 1').get().skills;
+  const left = () => unspent().reduce((n, g) => n + g.count, 0);
+
+  check('the plan claims the oldest grant whole and takes the rest from the next',
+    JSON.stringify(claimPlan([{ id: 7, count: 1 }, { id: 9, count: 2 }], 2))
+      === '[{"id":7,"left":1,"claim":true},{"id":9,"left":1,"claim":false}]');
+  check('the token reads the rows, their ids and their counts', pendingToken(unspent()) === '2:3:3');
+
+  const read = unspent();           // both requests read the same two grants
+  const first = spend(read, '["Climbing"]', 1);
+  check('the first request writes', batchApplied(first) && skillsNow() === '["Climbing"]' && left() === 2);
+  const second = spend(read, '["Climbing"]', 1);
+  check('the same request again writes NOTHING', !batchApplied(second) && second.every((r) => r.meta.changes === 0));
+  check('so one pick is kept and one is paid for', skillsNow() === '["Climbing"]' && left() === 2);
+
+  // The case separate claim statements would get half-right: a stale request
+  // that spends MORE reaches a grant the first one never touched.
+  const greedy = spend(read, '["Prowl","Swimming"]', 2);
+  check('a stale request that reaches an untouched grant leaves that one alone too',
+    !batchApplied(greedy) && skillsNow() === '["Climbing"]' && left() === 2);
+
+  check('a request that read the grants as they now stand goes through',
+    batchApplied(spend(unspent(), '["Climbing","Prowl"]', 1)) && left() === 1 && unspent()[0].count === 1);
+  check('and another character\'s grants are neither read nor written',
+    db.prepare('SELECT count FROM pending_skill_picks WHERE character_id = 2').get().count === 5);
+  check('a guard for a table that is not a pending table is refused',
+    (() => { try { pendingGuard('characters', 1, []); return false; } catch { return true; } })());
+
+  // Both routes, read: every write in the batch carries the guard, and a batch
+  // that wrote nothing is a 409 rather than a success.
+  const routeDir = join(repoRoot, 'functions/api/character-creator/characters/[id]');
+  for (const [file, table] of [['picks.js', 'pending_skill_picks'], ['power-picks.js', 'pending_power_picks']]) {
+    const text = readFileSync(join(routeDir, file), 'utf8');
+    const post = text.slice(text.indexOf('export async function onRequestPost'));
+    const writes = post.match(/UPDATE characters SET[\s\S]*?WHERE id = \?[^`"']*/g) || [];
+    check(`${file}: every character write is guarded`,
+      writes.length > 0 && writes.every((w) => /AND \$\{unchanged\.sql\}/.test(w)), `${writes.length} writes`);
+    check(`${file}: the guard is on its own pending table, and the claim is the one guarded statement`,
+      post.includes(`pendingGuard('${table}', params.id, pending)`)
+      && post.includes(`claimStatement(env, '${table}', unchanged,`) && !/UPDATE pending_/.test(post));
+    check(`${file}: a batch that wrote nothing answers 409`,
+      /if \(!batchApplied\(written\)\) return json\(\{ error: STALE_PICKS \}, 409\);/.test(post));
+  }
+}
+
 // ---------- 1c25a2. The percentage printed beside a category ----------
 // "Technical: Any (+10%)". Before `bonus` existed those numbers had nowhere to
 // go, so an import either dropped them silently or wrote a key that parsed and
