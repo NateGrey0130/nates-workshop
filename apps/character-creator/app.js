@@ -894,17 +894,37 @@ function goStep(i) {
 function stepBlocker(i) {
   if (i === ST.SYSTEM) return S.system ? '' : 'Choose a game system.';
   if (i === ST.RACE) return S.rcc ? classBlocker() : 'Pick a class.';
-  if (i === ST.ATTRIBUTES) {
-    if (ATTRS.some((a) => !attrAbsent(a) && typeof S.attrs?.[a] !== 'number')) return 'Attributes still to roll.';
-    const reqs = S.cls?.requirements?.attributes || {};
-    return Object.entries(reqs).some(([k, v]) => typeof S.attrs?.[k] === 'number' && S.attrs[k] < v)
-      ? 'Class minimum not met.' : '';
-  }
+  // The step's own gate, not a second reading of it. This used to restate the
+  // rule and read `S.cls.requirements.attributes`, a key no class has, so the
+  // rail walked past an unmet minimum and an overspent point-buy pool.
+  if (i === ST.ATTRIBUTES) return attributesBlocker().why;
+  if (i === ST.MORPHUS) return morphusBlocker() || '';
   if (i === ST.EQUIPMENT) return gearChoicesOutstanding().length ? 'Gear still to choose.' : '';
   // The Occupation step's own gate (F125): without this the rail's forward
   // jump walked past a pick the step's Next button refuses to leave owed.
   if (i === ST.OCCUPATION) return occBlocker();
   return '';
+}
+
+// What stops the Attributes step being left: the attributes still to set, the
+// class minimums not met, whether point-buy is overspent, and the sentence the
+// Next button prints for the first of them. renderAttributes() and the rail's
+// stepBlocker() both read this, so the two cannot disagree.
+//
+// An absent attribute is not "still to roll" - it is never going to have a
+// value, and counting it would leave the step permanently unable to continue.
+// It stays in `unmet` when an occupation requires it, which is the fail-closed
+// half: a machine person cannot take a class that needs a P.E.
+function attributesBlocker() {
+  const reqs = S.cls?.attribute_requirements || {};
+  const unmet = Object.entries(reqs).filter(([k, min]) => (S.attrs[k] ?? -1) < min);
+  const missing = ATTRS.filter((a) => !attrAbsent(a) && S.attrs[a] == null);
+  const over = pbSpent() > PB_POOL;
+  const why = missing.length ? `Still to roll or enter: ${missing.join(', ')}.`
+    : unmet.length ? `Class minimum not met: ${unmet.map(([k, v]) => `${k} ${v}+`).join(', ')}.`
+    : over ? 'Point-buy pool overspent — free up points to continue.'
+    : '';
+  return { missing, unmet, over, why };
 }
 
 // Not every step applies to every character. The Occupation step is the first
@@ -2968,24 +2988,14 @@ function renderAttributes() {
       <td>${control}</td><td>${req}${cap ? ' ' + cap : ''}${boost}${floorNote}${dice ? ` <span class="attr-note">${diceLabel}: ${esc(dice)}</span>` : ''}</td></tr>`;
   }).join('');
 
-  // An absent attribute is not "still to roll" — it is never going to have a
-  // value, and counting it here would leave the step permanently unable to
-  // continue. It stays in `unmet` when an occupation requires it, which is the
-  // fail-closed half: a machine person cannot take a class that needs a P.E.
-  const unmet = Object.entries(reqs).filter(([k, min]) => (S.attrs[k] ?? -1) < min);
-  const missing = ATTRS.filter((a) => !attrAbsent(a) && S.attrs[a] == null);
+  const { missing, unmet, over, why: attrWhy } = attributesBlocker();
   const usesPB = ATTRS.some((a) => method(a) === 'point');
-  const over = spent > PB_POOL;
-  const canNext = missing.length === 0 && unmet.length === 0 && !over;
+  const canNext = !attrWhy;
   // The panel already warns about missing values and unmet minimums, and this
   // repeats them beside the button on purpose: the button is where you look
   // when you are stuck, and a warning further up the page is not an answer to
   // "why can't I continue". Overspending point-buy had NO warning at all —
   // only a number turning red — so that case is new information.
-  const attrWhy = missing.length ? `Still to roll or enter: ${missing.join(', ')}.`
-    : unmet.length ? `Class minimum not met: ${unmet.map(([k, v]) => `${k} ${v}+`).join(', ')}.`
-    : over ? 'Point-buy pool overspent — free up points to continue.'
-    : '';
 
   $('app').innerHTML = `
   <div class="panel">
