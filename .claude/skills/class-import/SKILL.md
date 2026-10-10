@@ -227,9 +227,10 @@ Expected, not a failure. `class-check` reports it as `UNMODELLED`, a key that
 parses and that nothing reads. **Never leave one unresolved**: silent storage is
 how a class ships looking complete and doing nothing.
 
-**Verify the report first.** `KNOWN_KEYS` in `scripts/class-check-lib.mjs` is
-hand-kept and has falsely reported modelled keys (`psionics_allowed`,
-`xp_table`). **Grep the key across `js/` and `functions/`**; one hit in a
+**Verify the report first.** `CLASS_KEYS` in
+`apps/character-creator/js/class-keys.js` is hand-kept and has falsely reported
+modelled keys (`psionics_allowed`, `xp_table`). The parser warns from the same
+list, so the import tool and the class editor say `Unknown key` too. **Grep the key across `js/` and `functions/`**; one hit in a
 `??`/`?.` chain means it is read.
 
 Then it is Nate's call:
@@ -241,7 +242,7 @@ Then it is Nate's call:
   | File | What goes in it |
   |---|---|
   | `js/parser.js` | Validate the block; add it to `VARIANT_OVERRIDES` if a variant may override it |
-  | `scripts/class-check-lib.mjs` | Add the key to `KNOWN_KEYS` |
+  | `js/class-keys.js` | Add the key to `CLASS_KEYS`; `class-check` and the parser both read it |
   | `functions/api/.../validate-character.js` | Enforce it server-side, if a character can violate it |
   | `js/compose.js` | Fold it in, if an R.C.C.+O.C.C. pair combines it |
   | `js/derive.js` | Turn it into a number, if the sheet adds it up |

@@ -12,11 +12,12 @@ import { spawnSync } from 'node:child_process';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceSpans,
   fieldTokens, freeTextFields, parseSourcePages, resolveBookSlug, unclosedFlowLines,
-  unmodelledKeys, unmodelledSkillKeys, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
+  unmodelledKeys, unmodelledSkillKeys, KNOWN_KEYS, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
   grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
 import { parseClassMarkdown } from '../../js/parser.js';
+import { CLASS_KEYS, PRODUCED_KEYS, SKILLS_KEYS } from '../../js/class-keys.js';
 
 // Declared so a --section run can skip the module without reading it.
 const SECTIONS = ['class-check'];
@@ -72,6 +73,33 @@ export function run() {
   check('an unmodelled top-level key is reported',
     unmodelledKeys({ id: 'x', name: 'X', elemental_affinity: {} }).join() === 'elemental_affinity');
 
+  // ONE LIST, TWO READERS (2026-10-10). The list was this tool's alone, and the
+  // parser - which the import tool and the class editor call - stored a
+  // mistyped key without a word. It is js/class-keys.js now; this tool builds
+  // its set from it and the parser warns from it.
+  check('the known keys of class-check ARE the registry, with nothing added by hand',
+    JSON.stringify([...KNOWN_KEYS]) === JSON.stringify([...CLASS_KEYS, ...PRODUCED_KEYS])
+    && JSON.stringify([...KNOWN_SKILL_KEYS]) === JSON.stringify(SKILLS_KEYS));
+  check('the registry names no key twice',
+    new Set(CLASS_KEYS).size === CLASS_KEYS.length && new Set(SKILLS_KEYS).size === SKILLS_KEYS.length);
+  {
+    const fm = (...lines) => ['---', 'id: t', 'name: T', 'category: occ', 'system: rifts',
+      'source_book: X', ...lines, '---', '## Lore', 'x'].join('\n');
+    const unknown = (r) => r.warnings.filter((w) => /^Unknown key/.test(w));
+    const typo = parseClassMarkdown(fm('hit_point_base: 5'));
+    check('the parser warns on a top-level key nothing reads',
+      unknown(typo).length === 1 && /`hit_point_base`/.test(unknown(typo)[0]), JSON.stringify(typo.warnings));
+    check('as a warning: the class still parses', typo.ok && typo.errors.length === 0, JSON.stringify(typo.errors));
+    const under = parseClassMarkdown(fm('skills:', '  occ_secondary_skills: { count: 2 }'));
+    check('and on one under skills', unknown(under).length === 1 && /`skills\.occ_secondary_skills`/.test(unknown(under)[0]),
+      JSON.stringify(under.warnings));
+    const clean = parseClassMarkdown(fm('hit_points_base: 5', 'skills:', '  secondary_skills: { count: 2 }'));
+    check('a class that states only known keys draws no such warning', unknown(clean).length === 0,
+      JSON.stringify(clean.warnings));
+    check('the sections the parser produces from the body are not reported against it',
+      PRODUCED_KEYS.every((k) => k in clean.data) && unknown(clean).length === 0);
+  }
+
   // ── one level down, under `skills` (BOOK-INGEST-AUDIT F87) ──
   // `unmodelledKeys` reads Object.keys(data), and `skills` is in KNOWN_KEYS, so
   // everything beneath it was accepted unseen. Sixteen live classes wrote
@@ -109,7 +137,7 @@ export function run() {
     return out;
   })();
   check('no shipped class reports an unmodelled key', unmodelledOffenders.length === 0,
-    unmodelledOffenders.join(' | ') + ' — KNOWN_KEYS in scripts/class-check-lib.mjs is out of date');
+    unmodelledOffenders.join(' | ') + ' — CLASS_KEYS in apps/character-creator/js/class-keys.js is out of date');
 
   // The parser reads inline [...] / {...} on ONE line only. A flow list wrapped
   // across lines parses the opener as a scalar and fails later with a shape

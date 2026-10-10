@@ -1351,16 +1351,18 @@ would train you to stop reading the output.
 
 A top-level frontmatter key the app does not read parses cleanly, stores
 cleanly, and then does nothing at all — which is how a class ships looking
-complete. The checker lists any key outside `KNOWN_KEYS` in
-`scripts/class-check-lib.mjs` under `UNMODELLED`.
+complete. The list of keys the app reads is `CLASS_KEYS` in `js/class-keys.js`.
+The checker lists any key outside it under `UNMODELLED`, and the parser warns
+`Unknown key` from the same list, so the import tool and the class editor say
+so too.
 
 It is a decision, not a defect, and both answers are legitimate: move the
 mechanic into the body as prose so the class can ship now, or model it —
 `parser.js`, `validate-character.js`, `compose.js`, the wizard, the sheet, a
-smoke case, and `KNOWN_KEYS`. The Godling's occupation-demanding Magic Powers
+smoke case, and `CLASS_KEYS`. The Godling's occupation-demanding Magic Powers
 and the staged-R.C.C. `variants` block both started as exactly this shape.
 
 The smoke test asserts every shipped class comes back with no unmodelled key, so
-`KNOWN_KEYS` going stale fails loudly rather than turning the check into noise.
+`CLASS_KEYS` going stale fails loudly rather than turning the check into noise.
 
 ---
