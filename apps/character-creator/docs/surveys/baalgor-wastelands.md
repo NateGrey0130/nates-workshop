@@ -1,8 +1,8 @@
 # Palladium Fantasy RPG Book 9: The Baalgor Wastelands — survey
 
-**Status:** `importing` — creatures, notable NPCs and the warship are in; the twenty classes are next. (2026-10-10)
+**Status:** `imported` — the plan is done: creatures, notable NPCs, the warship and twenty classes. What was left out and what is open for Nate is under Ledger. (2026-10-10)
 
-**Rows citing this book:** creatures 24, notable_npcs 60, vehicles 1
+**Rows citing this book:** classes 20, vehicles 1, notable_npcs 60, creatures 24
 
 Slug `baalgor-wastelands`. Cached 2026-10-05 from
 `515266553-Palladium-Fantasy-Book-9-The-Baalgor-Wastelands.pdf`, 218 PDF
@@ -200,6 +200,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-05 | `pal/data/baalgor-wastelands-survey` | cache built (218 pp, OCR), `baalgor-wastelands` registered in `books.json`, this survey written, offset +1 verified, printed 215 read off a render. No data. |
 
 | 2026-10-10 | `pal/data/baalgor-wastelands-bestiary` | 24 creatures and 60 notable NPCs with 216 attacks (`~180`), and the Orcish Delight warship with 9 locations and 3 weapons (`~181`). Applied `--remote` first. Status to `importing`. |
+| 2026-10-10 | `pal/data/baalgor-wastelands-classes` | twenty classes, one script each: fifteen races (`baalizad`, `dragonman`, `eandroth`, `cyclops`, `jotan`, `gigantes`, `nimro`, `gosai`, `gromek`, `minotaur`, `quillback`, `quorian`, `vrill`, `adraodan-minotaur`, `kkairojan-minotaur`) and five race-tied classes (`gosai-assassin`, `quillback-scavenger`, `quorian-oneiromancer`, `crusader-of-light`, `soldier-of-darkness`); `~182` tags Hand to Hand: Skudasa for Palladium Fantasy as well. Palladium Fantasy classes 49 to 69. Applied `--remote` first. Status to `imported`. |
 
 ### Nate's answers, 2026-10-05
 
@@ -245,20 +246,65 @@ What is deliberately left, with the reason for each:
 
 - Giants: the punch damages of printed 40 are on all four giants; the
   Gigantes and Nimro blocks do not repeat them and rest on that page's
-  section rule.
-- The Kkairojan Minotaur prints its attributes only as those of all
-  Minotaurs; the row carries the dice of printed 50.
-- The Sandwyrm row holds the young figures; the adult multipliers are in
-  its notes.
-- The warship's main body is printed as three sections with no total, so
-  it has no main-body figure. Its ballistas (124) and run-over damage
-  (123) are stored from the prose, outside the book's own two lists.
-- The book's own metric conversions are wrong in two places (Mologoth
-  size, Rock Buzzer weight); the rows keep the printed text.
-
 ### What remains
 
-The twenty classes: fifteen races (four of them giants, two of them mutant
-Minotaurs) and the
-five classes with ladders on printed 215. Drafted and reconciled; they ship
-next on `pal/data/baalgor-wastelands-classes`.
+Nothing is planned. The desert rules (15-25), the encounter and rift tables
+and the adventures (206-214) are out by decision.
+
+### How the classes were read
+
+- Every class was drafted off renders, checked with `class-check --remote`,
+  and read against the renders a second time by `book-reconcile`. No die,
+  pool, bonus, percentage or ladder figure disagreed; the fixes were
+  wording, two page ranges and unsupported lore claims.
+- All six ladders of printed 215 are stored. The Soldier of Darkness
+  column has three misprinted lower bounds (level 2 prints 2,301, level 6
+  repeats 26,480, level 12 prints 194,101); each is stored as the band
+  before it plus one, and the class's notes carry the printed figures.
+- No class needed a new skill, spell, psionic power or gear row. The book
+  prints no money or equipment for any race.
+- Natural Armor Ratings are prose in `natural_abilities` on every race.
+- A language the book prints with no percentage is stored at 98 with a
+  note saying the figure is the import's.
+
+### Open for Nate
+
+These are readings the book does not settle. Each is stored one way and can
+be changed with a `fix-` script.
+
+- **Baalizad ladder.** Printed 215 prints a Baalizad column; printed 28
+  allows the race only the Vagabond/Peasant, whose own ladder would win a
+  pairing. Stored with `keeps_xp_table: true`, so the printed column
+  governs.
+- **Oneiromancer and Scavenger ladders.** Printed 57 says the Oneiromancer
+  levels as a Psi-Mystic and printed 53 says the Scavenger levels as a
+  Thief or Merchant, while printed 215 prints a different column under
+  each class's own name. The 215 columns are stored.
+- **Soldier of Darkness prints no skills.** Printed 144 gives it bonuses,
+  ten spells and a P.P.E. figure and names no skill list, base O.C.C.,
+  money or gear. It is stored with none, as a `magic` group occupation.
+- **Crusader of Light.** Built on the Knight with the page's deletions.
+  The page deletes two related skills without saying which; the count went
+  from eight to six with the Knight's two-Communications floor kept. The
+  Knight's lance and horse were dropped from the kit as a reading.
+- **Gosai Assassin kit.** Built on the Assassin. Weapons are dropped
+  because the class refuses them; the studded leather is dropped on the
+  strength of the race's metal allergy, which the entry does not state.
+- **Vrill radar bonuses** are stored as standing combat bonuses, as the
+  held Rifts row does, with the conditions that remove them in prose.
+- **Giants' shared bonus line.** Printed 40 says most giants also get a
+  short list of bonuses; each giant's own Bonuses line restates part of it
+  with different figures. Only each giant's own line is in `bonuses`; the
+  section line is prose.
+- **Cyclops and Nimro P.P.E.** yield to a magic O.C.C.'s figure, on the
+  pages' "or by magic O.C.C."; the Rifts Cyclops adds instead.
+- **Eandroth.** Sex is a variant and life stage is a pick-one ability;
+  nothing ties the two, so a mismatched pair can be built. A male rogue is
+  barred from the psychic occupations including Mind Mage, on the page's
+  "except Psychics".
+- **Occupations the book names that the catalog lacks** (Gladiator,
+  Sailor, Monk, Warlock, Shaman, Bard, Necromancer as a Palladium Fantasy
+  class) are named in each race's restriction note and cannot be picked.
+- **Chant of Dreaming** is held only as a Rifts row; the Oneiromancer's
+  cheaper casting is prose. The book it cites, Adventures on the High
+  Seas, is not cached.
