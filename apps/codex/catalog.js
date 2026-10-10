@@ -10,7 +10,12 @@
 // An ES module (it imports the config), so handlers are wired with addEventListener
 // rather than inline onclick — nothing here is on `window`.
 
-import { CATALOGS, CATALOG_KEYS } from './js/catalog-fields.js';
+// From the Creator's js/, by its absolute path. This file moved here from
+// apps/character-creator/ when the apps split (2026-09-19) and the import
+// stayed `./js/catalog-fields.js` - a path that does not exist under
+// apps/codex/ - so the page sat on "Checking access…" for three weeks with
+// one line in the console and no test that opened it.
+import { CATALOGS, CATALOG_KEYS } from '/apps/character-creator/js/catalog-fields.js';
 
 const S = {
   isAdmin: false,
