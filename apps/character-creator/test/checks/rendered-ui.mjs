@@ -112,6 +112,7 @@ const SECTIONS = [
   'A redraw keeps what was typed',
   'A refused save keeps what was typed since',
   'The Hit to picker follows the armour list',
+  'A row behind an Undo stays off the screen',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -2630,6 +2631,140 @@ export async function run() {
       check('and the next armour save keeps the hit where it landed',
         ok === true && w.held() === 'Charlie:290', JSON.stringify({ ok, stored: w.held(), state: w.AS.state }));
     }
+  }
+
+  // ---------- A row behind an Undo stays off the screen until the toast is done ----------
+  // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-11). The
+  // DELETE waits six seconds behind the Undo (js/undo-toast.js), so for those
+  // six seconds the server still holds the row - and every re-read of the
+  // character handed it straight back. Two ways in, neither unusual: add
+  // another item or vessel inside the window, or remove a second row, whose
+  // toast commits the first and whose commit re-reads. The row was drawn again
+  // under a toast saying it was removed, and Undo then drew it twice. The
+  // server only ever held one.
+  //
+  // RUN, not matched: the sheet's two removers and two re-reads, and the real
+  // undo-toast.js, over a stand-in server, a stand-in page and timers this
+  // section fires by hand.
+  section('A row behind an Undo stays off the screen');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const toastSrc = readFileSync(join(appDir, 'js', 'undo-toast.js'), 'utf8');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const src = ['function removeItem(rowId) {', 'function removeVessel(vid) {',
+      'async function refreshInventory() {', 'async function refreshVessels() {'].map(fn);
+    check('the sheet has its two removers and its two re-reads', src.every(Boolean),
+      'one of them is not where this looks for it');
+    // The list of rows waiting behind an Undo, and the filter every re-read
+    // goes through. Absent, the rest still runs - and says what the bug did.
+    const waiting = fn('const removing = ') || '';
+    const clone = (v) => JSON.parse(JSON.stringify(v));
+    const settle = () => new Promise((r) => setImmediate(r));
+
+    const world = (items, vehicles) => {
+      const server = { items: clone(items), vehicles: clone(vehicles) };
+      const C = { items: clone(items), vehicles: clone(vehicles) };
+      const w = { server, C, page: { 'inv-rows': { innerHTML: '' }, 'vessel-list': { innerHTML: '' } }, refuse: false, deletes: [] };
+      const api = async (path, req) => {
+        if (!req) return clone(server);
+        const [, kind, rowId] = /\/(items|vehicles)\/(\d+)$/.exec(path);
+        if (w.refuse) throw new Error('refused');
+        w.deletes.push(kind + ' ' + rowId);
+        server[kind] = server[kind].filter((x) => x.id !== +rowId);
+        return { ok: true };
+      };
+      // undo-toast.js, with a page it can draw on and timers held here.
+      const timers = new Map(); let nextTimer = 0; const on = {};
+      const box = { hidden: true, innerHTML: '', setAttribute() {} };
+      const doc = {
+        createElement: () => box, body: { contains: () => false, appendChild() {} },
+        addEventListener: (type, h) => { on[type] = h; },
+      };
+      const g = { addEventListener: (type, h) => { on[type] = h; } };
+      new Function('globalThis', 'document', 'setTimeout', 'clearTimeout', toastSrc)(
+        g, doc, (h) => { timers.set(++nextTimer, h); return nextTimer; }, (t) => { timers.delete(t); });
+      w.toast = () => (box.hidden ? null : box.innerHTML.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+      w.undo = () => on.click({ target: { closest: (sel) => (sel === '[data-undo-now]' && !box.hidden ? {} : null) } });
+      // The six seconds running out.
+      w.expire = async () => { for (const [t, h] of [...timers]) { timers.delete(t); h(); } await settle(); };
+      const names = (rows) => rows.map((x) => x.name).join(',');
+      w.fns = new Function('C', 'id', 'api', '$', 'undoable', 'inventoryRowsHtml', 'vesselsHtml',
+        waiting + src.join('\n') + '; return { removeItem, removeVessel, refreshInventory, refreshVessels };')(
+        C, 3, api, (elId) => w.page[elId] || null, g.undoable, () => names(C.items), () => names(C.vehicles));
+      w.fns.refreshInventory(); w.fns.refreshVessels();
+      return w;
+    };
+    const rows = (...ns) => ns.map((name, i) => ({ id: i + 1, name, item_name: name, vehicle_name: name }));
+
+    if (src.every(Boolean)) {
+      for (const [what, key, el, remove, reread] of [
+        ['an item', 'items', 'inv-rows', 'removeItem', 'refreshInventory'],
+        ['a vessel', 'vehicles', 'vessel-list', 'removeVessel', 'refreshVessels'],
+      ]) {
+        const seen = (w) => w.page[el].innerHTML + ' / ' + w.C[key].map((x) => x.name).join(',');
+        const held = (w) => w.server[key].map((x) => x.name).join(',');
+
+        let w = world(rows('Alpha', 'Bravo', 'Charlie'), rows('Alpha', 'Bravo', 'Charlie'));
+        await settle();
+        w.fns[remove](2);
+        check(`${what} removed is off the screen at once, and not yet deleted`,
+          seen(w) === 'Alpha,Charlie / Alpha,Charlie' && held(w) === 'Alpha,Bravo,Charlie' && w.toast() === 'Removed Bravo. Undo',
+          JSON.stringify({ seen: seen(w), held: held(w), toast: w.toast() }));
+        await w.fns[reread]();
+        check('a re-read inside the Undo window leaves it off',
+          seen(w) === 'Alpha,Charlie / Alpha,Charlie', `the toast says "${w.toast()}" and the page shows ${seen(w)}`);
+        w.undo();
+        check('Undo puts it back once, where it was',
+          seen(w) === 'Alpha,Bravo,Charlie / Alpha,Bravo,Charlie' && w.toast() === null, seen(w));
+        await w.fns[reread]();
+        await w.expire();
+        check('and it stays: the next re-read draws it, and nothing was deleted',
+          seen(w) === 'Alpha,Bravo,Charlie / Alpha,Bravo,Charlie' && held(w) === 'Alpha,Bravo,Charlie' && !w.deletes.length,
+          JSON.stringify({ seen: seen(w), held: held(w), deletes: w.deletes }));
+
+        // Two removals in a row. The second toast commits the first, and that
+        // commit re-reads the character while the second is still only hidden.
+        w = world(rows('Alpha', 'Bravo', 'Charlie'), rows('Alpha', 'Bravo', 'Charlie'));
+        await settle();
+        w.fns[remove](1); w.fns[remove](2);
+        await settle();
+        check(`a second ${what.split(' ')[1]} removed straight after stays off while the first is deleted`,
+          seen(w) === 'Charlie / Charlie' && held(w) === 'Bravo,Charlie' && w.toast() === 'Removed Bravo. Undo',
+          JSON.stringify({ seen: seen(w), held: held(w), toast: w.toast() }));
+        w.undo();
+        check('and Undo brings the second back once',
+          seen(w) === 'Bravo,Charlie / Bravo,Charlie', seen(w));
+
+        w = world(rows('Alpha', 'Bravo'), rows('Alpha', 'Bravo'));
+        await settle();
+        w.fns[remove](1);
+        await w.fns[reread]();
+        await w.expire();
+        check('left alone, it is deleted when the toast runs out',
+          seen(w) === 'Bravo / Bravo' && held(w) === 'Bravo' && w.deletes.length === 1,
+          JSON.stringify({ seen: seen(w), held: held(w), deletes: w.deletes }));
+
+        w = world(rows('Alpha', 'Bravo'), rows('Alpha', 'Bravo'));
+        await settle();
+        w.fns[remove](1);
+        w.refuse = true;
+        await w.expire();
+        await w.fns[reread]();
+        check('a refused delete puts it back, and it is still there after a re-read',
+          seen(w) === 'Alpha,Bravo / Alpha,Bravo' && /Could not remove Alpha/.test(w.toast() || ''),
+          JSON.stringify({ seen: seen(w), toast: w.toast() }));
+      }
+    }
+    // load() is the third re-read, and too wide to run here: read instead that
+    // nothing stores the server's rows without passing them through the filter.
+    const stores = [...sheet.matchAll(/C\.(items|vehicles) = ([^;]*res\.[^;]*);/g)];
+    const raw = stores.filter(([, kind, from]) => !from.startsWith(`stillHere('${kind}', res.${kind})`));
+    check('every re-read of the character leaves out a row that is behind an Undo',
+      stores.length === 4 && !raw.length,
+      `${stores.length} stores of the server's rows (load, refreshInventory, refreshVessels: 4 expected); unfiltered: ${raw.map((m) => m[0]).join(' ') || 'none'}`);
   }
 
   // ---------- The sheet reads item_* fields the endpoint actually sends ----------

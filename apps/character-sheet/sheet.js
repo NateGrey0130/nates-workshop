@@ -177,6 +177,17 @@ document.addEventListener('change', (ev) => {
 // api() and errorDetails() come from js/api.js, loaded first as a classic script.
 const jsonReq = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
+// Rows taken off the screen with Undo still on offer (removeItem, removeVessel).
+// The server holds them until the toast runs out, because the DELETE has not
+// been sent - so every re-read of the character goes through stillHere(), or
+// the row is drawn again under a toast saying it was removed, and Undo then
+// draws it twice. Adding another row inside the window did it, and so did
+// removing a second one: that commits the first, and the commit re-reads.
+const removing = { items: new Set(), vehicles: new Set() };
+function stillHere(kind, rows) {
+  return (rows || []).filter((x) => !removing[kind].has(x.id));
+}
+
 async function load() {
   // Whatever is typed is saved before the reload replaces C.data, or carried
   // across it when it cannot be (settleEdits, below). load() used to be the
@@ -184,8 +195,8 @@ async function load() {
   const held = await settleEdits();
   try {
     const res = await api('characters/' + id);
-    C.data = res.character; C.items = res.items; C.canWrite = res.can_write; C.isGm = res.is_gm;
-    C.vehicles = res.vehicles || [];
+    C.data = res.character; C.items = stillHere('items', res.items); C.canWrite = res.can_write; C.isGm = res.is_gm;
+    C.vehicles = stillHere('vehicles', res.vehicles);
     // Skill picks a level-up granted and nobody has spent yet.
     C.pendingPicks = res.pending_picks || [];
     C.skillLevelNotes = res.skill_level_notes || [];
@@ -4302,8 +4313,8 @@ function removeVessel(vid) {
   const paint = () => { const list = $('vessel-list'); if (list) list.innerHTML = vesselsHtml(); };
   undoable({
     label: v.nickname || v.vehicle_name || v.custom_name || 'the vessel',
-    hide: () => { C.vehicles = (C.vehicles || []).filter((x) => x.id !== vid); paint(); },
-    restore: () => { C.vehicles = C.vehicles || []; C.vehicles.splice(Math.min(at, C.vehicles.length), 0, v); paint(); },
+    hide: () => { removing.vehicles.add(vid); C.vehicles = (C.vehicles || []).filter((x) => x.id !== vid); paint(); },
+    restore: () => { removing.vehicles.delete(vid); C.vehicles = C.vehicles || []; C.vehicles.splice(Math.min(at, C.vehicles.length), 0, v); paint(); },
     commit: async (keepalive) => {
       await api('characters/' + id + '/vehicles/' + vid, { method: 'DELETE', keepalive });
       if (!keepalive) await refreshVessels();
@@ -4331,7 +4342,7 @@ async function patchVesselMdc(vid, location, value) {
 // load() would replace C.data and discard anything typed into the sheet.
 async function refreshVessels() {
   const res = await api('characters/' + id);
-  C.vehicles = res.vehicles || [];
+  C.vehicles = stillHere('vehicles', res.vehicles);
   const list = $('vessel-list');
   if (list) list.innerHTML = vesselsHtml();
 }
@@ -4344,7 +4355,7 @@ async function refreshVessels() {
 // overwrote the state it had just saved.
 async function refreshInventory() {
   const res = await api('characters/' + id);
-  C.items = res.items;
+  C.items = stillHere('items', res.items);
   const body = $('inv-rows');
   if (body) {
     body.innerHTML = inventoryRowsHtml() || '<tr><td class="muted" colspan="5">Empty.</td></tr>';
@@ -4822,8 +4833,8 @@ function removeItem(rowId) {
   };
   undoable({
     label: it.item_name || it.custom_name || 'the item',
-    hide: () => { C.items = C.items.filter((x) => x.id !== rowId); paint(); },
-    restore: () => { C.items.splice(Math.min(at, C.items.length), 0, it); paint(); },
+    hide: () => { removing.items.add(rowId); C.items = C.items.filter((x) => x.id !== rowId); paint(); },
+    restore: () => { removing.items.delete(rowId); C.items.splice(Math.min(at, C.items.length), 0, it); paint(); },
     commit: async (keepalive) => {
       await api(`characters/${id}/items/${rowId}`, { method: 'DELETE', keepalive });
       if (!keepalive) await refreshInventory();
