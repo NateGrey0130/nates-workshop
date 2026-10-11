@@ -106,6 +106,7 @@ const SECTIONS = [
   'Two people, one character',
   'Board & Tissue: the chip column and the mark',
   'The front door agrees with the rooms',
+  'A typed override is drawn as text',
   'Changes that could not be sent',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
@@ -1892,6 +1893,66 @@ export function run() {
         : 'the manifest has no groups list');
     check('and the section titles are escaped like the other typed fields',
       /\$\{esc\(g\.title\)\}/.test(landing), 'g.title reaches innerHTML unescaped');
+  }
+
+  // ---------- A typed override is drawn as text ----------
+  // "DERIVED - OVERRIDABLE": every combat and save row takes whatever is typed
+  // over it and stores it as typed, because some of them are not numbers (a
+  // punch is "1D4"). Two places drew such a value without treating it as text.
+  // The psionic save's target went into the roll button's handler as it stood,
+  // and attacks per melee went into the play strip as markup. Either ran as
+  // script for whoever opened the sheet next, the G.M. included.
+  //
+  // RUN, not matched: the functions are cut out of sheet.js and called with the
+  // page's own escapers, and what is asserted is the markup they return.
+  section('A typed override is drawn as text');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8');
+    const ui = readFileSync(join(repoRoot, 'shared', 'js', 'ui.js'), 'utf8');
+    const whole = (src, sig) => { const b = functionBody(src, sig); return b === null ? null : b + '\n}'; };
+    const parts = [whole(ui, 'function escHtml('), whole(ui, 'function escJs('),
+      whole(sheet, 'function rollBtn('), whole(sheet, 'function playControlsHtml('),
+      whole(sheet, 'function meleeLabel(')];
+    // rollTarget is new with the fix, so it is optional here: against the old
+    // file the checks below must FAIL, not stop at "cannot be located".
+    const rollTargetSrc = whole(sheet, 'function rollTarget(') ?? '';
+    check('the five functions these checks run can be located', parts.every((x) => x !== null),
+      'a signature moved - nothing below would run');
+    let fns = null;
+    try {
+      fns = new Function('C', 'meleeState', 'weaponCardsHtml', 'restPanelHtml',
+        parts.join('\n') + '\n' + rollTargetSrc + '\nreturn { rollBtn, playControlsHtml };')(
+        {}, () => ({ round: 1, attack: 1 }), () => '', () => '');
+    } catch (e) {
+      check('the roll button and the play strip run outside the page', false, e.message);
+    }
+    const handler = (html) => (/onclick="([^"]*)"/.exec(html) || [])[1] ?? null;
+    const save = (target) => (fns ? fns.rollBtn({ kind: 'save', name: 'vs Psionics', bonus: 2, target }) : '');
+
+    check('a save with no target rolls against nothing',
+      handler(save(null)) === "rollD20('save', 'vs Psionics', 2, null)", save(null));
+    check('a target typed as a number is the number',
+      handler(save('12')) === "rollD20('save', 'vs Psionics', 2, 12)", save('12'));
+    check('and so is one typed with its plus sign, which used to be a dead button',
+      handler(save('12+')) === "rollD20('save', 'vs Psionics', 2, 12)", save('12+'));
+    for (const hostile of ['0);alert(1);//', '0)" onmouseover="alert(1)', "0);alert('x');(", '<img src=x onerror=alert(1)>']) {
+      const html = save(hostile);
+      check('a target that is not a number writes ' + (hostile.startsWith('0') ? '0' : 'null')
+        + ' and nothing else: ' + hostile,
+        /^rollD20\('save', 'vs Psionics', 2, (0|null)\)$/.test(handler(html) ?? '')
+          && (html.match(/="/g) || []).length === 4 && !html.includes('<img'), html);
+    }
+
+    const strip = (attacks) => (fns ? fns.playControlsHtml(false, { attacks, strike: 1 }) : '');
+    const label = (html) => (/<span id="play-melee-label">([\s\S]*?)<\/span>/.exec(html) || [])[1] ?? null;
+    check('attacks per melee is shown in the play strip', /attack 1 of 4$/.test(label(strip(4)) ?? ''), label(strip(4)));
+    check('typed as a line of text, it is shown as that text',
+      label(strip('4 (5 with a sword)'))?.endsWith('attack 1 of 4 (5 with a sword)'), label(strip('4 (5 with a sword)')));
+    const marked = strip('<img src=x onerror=alert(1)>');
+    check('typed as markup, it is still shown as text',
+      !marked.includes('<img') && marked.includes('&lt;img src=x onerror=alert(1)&gt;'), label(marked));
+    check('and the three buttons beside it take a number whatever was typed',
+      (marked.match(/(nextAttack|newRound|resetMelee)\(0\)/g) || []).length === 3, marked);
   }
 
   // ---------- Changes that could not be sent ----------
