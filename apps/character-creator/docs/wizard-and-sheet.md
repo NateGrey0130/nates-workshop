@@ -261,7 +261,10 @@ honestly redo: you either accept different numbers or re-roll until you like
 them.
 
 The build now autosaves to `character_drafts`, debounced ~1.5s off `render()`,
-which already runs after every mutation. Returning to the wizard offers
+which runs after every mutation but the typed ones. A name, a campaign or a
+background line does not re-render, because that would rebuild the input the
+cursor is in, so `setDetail()` and `setBio()` queue the same save themselves.
+Returning to the wizard offers
 **resume or discard** rather than dropping you into step 4 of a half-finished
 character with no explanation.
 
