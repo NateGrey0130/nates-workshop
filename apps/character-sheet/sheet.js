@@ -74,6 +74,8 @@ const C = { data: null, items: [], journal: [], catalog: [], cls: null, canWrite
             playAmt: 1, lastRoll: null, rollLog: [],
             // Rolls that never reached the log. Not a queue - see persistRoll.
             rollsNotLogged: 0,
+            // Why the last change that got no answer got none - see whyUnsent.
+            unsent: null,
             // A proposed change of stage, awaiting confirmation.
             variantProposal: null,
             // What a table handed this character outside its class schedule.
@@ -774,7 +776,7 @@ async function adjustPool(key, delta, retried = false) {
     // wi-fi is not, so it stands on screen and waits in the queue.
     if (err.status === undefined && await queueChange('pool',
       note, changes.character || {}, null, formExtra(changes))) {
-      renderQueueState();
+      renderQueueState(err);
       return;
     }
     applyChanges(changes, 'from');
@@ -908,24 +910,27 @@ async function flushOnce() {
         // as the refusal it is.
         if (noteConflicts(e, err.detail.fields, err.detail.form_fields)) return;
       }
-      if (err.status === undefined) { renderQueueState(); return; }  // still offline
+      if (err.status === undefined) { renderQueueState(err); return; }  // still unsent
       // The server refused it on its merits. It will never succeed, so it
       // leaves the queue rather than blocking everything behind it.
       await playQueue.remove(e.seq);
       continue;
     }
 
-    // A REQUEST THAT LANDS ON THE ACCESS LOGIN PAGE COMES BACK AS HTML, and
-    // api() answers {} for a body it cannot parse - so a replay after the
-    // session expired looks exactly like success. The event id is the proof
-    // that our API answered and not the login wall.
+    // A REQUEST THAT LANDS ON THE ACCESS LOGIN PAGE COMES BACK AS HTML. api()
+    // throws that as `notData` now, and the catch above keeps the entry; this
+    // is what is left for an answer api() could not tell from a success - a
+    // 204, a JSON body that is not ours. The event id is the proof that our
+    // API answered, so without one the entry stays and the player is sent to
+    // sign in.
     if (!res || res.event_id == null) {
-      flash('Queued changes need you to sign in again. Reload the page.', true);
+      C.unsent = 'signin';
       renderQueueState();
       return;
     }
     await playQueue.remove(e.seq);
   }
+  C.unsent = null;
   renderQueueState();
   await load();
 }
@@ -954,8 +959,25 @@ function noteConflicts(entry, reported, reportedForm) {
   return any;
 }
 
-// How many are waiting, said once, near the pools they belong to.
-async function renderQueueState() {
+// NO STATUS IS NOT ALWAYS NO NETWORK. A change that got no answer is kept
+// either way, but what the player has to do about it differs, and "waiting for
+// the network" told someone whose session had expired to wait for something
+// that was never coming back.
+//   'signin' - a page arrived where data was expected (api() marks it
+//              `notData`): the sign-in wall, answering for our API.
+//   'server' - the request failed while the browser says it is connected. The
+//              server may be down; a sign-in redirect to another origin also
+//              fails exactly this way, so the message names both.
+//   null     - the browser itself says it is offline.
+function whyUnsent(err) {
+  if (err.notData) return 'signin';
+  return navigator.onLine === false ? null : 'server';
+}
+
+// How many are waiting, said once, near the pools they belong to. Passed the
+// error that left a change unsent, it records why before saying so.
+async function renderQueueState(err) {
+  if (err) C.unsent = whyUnsent(err);
   const el = $('queue-state');
   if (!el || !window.playQueue) return;
   let n = 0;
@@ -969,9 +991,12 @@ async function renderQueueState() {
   const parts = [];
   // Plural because one Damage can clash on two pools at once, and being told to
   // resolve "the" highlighted pool while two are lit is a small lie.
+  const waiting = `${n} change${n === 1 ? '' : 's'} waiting`;
   if (n) parts.push(conflicts
-    ? `${n} change${n === 1 ? '' : 's'} waiting — resolve the highlighted pool${conflicts === 1 ? '' : 's'}`
-    : `${n} change${n === 1 ? '' : 's'} waiting for the network`);
+    ? `${waiting} — resolve the highlighted pool${conflicts === 1 ? '' : 's'}`
+    : C.unsent === 'signin' ? `${waiting} — you are signed out. Reload the page to sign in`
+    : C.unsent === 'server' ? `${waiting} — the server is not answering. If this lasts, reload the page: you may be signed out`
+    : `${waiting} for the network`);
   // NOT "waiting" - these are gone. Said plainly, because the alternative is a
   // player wondering why the session recap is thin.
   if (lost) parts.push(`${lost} roll${lost === 1 ? '' : 's'} not logged`);
@@ -1077,7 +1102,7 @@ async function bodyDamage(amt) {
     // it again means deciding a second time how much came off.
     if (err.status === undefined && await queueChange('damage', `took ${amt}`,
       changes.character || {}, null, formExtra(changes))) {
-      renderQueueState();
+      renderQueueState(err);
       return;
     }
     applyChanges(changes, 'from');
@@ -1161,7 +1186,7 @@ async function sendHit(note, change, undo) {
     return true;
   } catch (err) {
     if (err.status === undefined && await queueChange('damage', note, {}, null, change)) {
-      renderQueueState();
+      renderQueueState(err);
       return true;
     }
     undo();
@@ -1578,7 +1603,7 @@ async function writeAmmo(invId, next, cap, ammoNote) {
     // carrying no pools; its replay composes onto the stored count rather than
     // overwriting it (queueChange says why that matters).
     if (err.status === undefined && await queueChange('ammo', ammoNote, {}, change)) {
-      renderQueueState();
+      renderQueueState(err);
       return;
     }
     it.ammo_current = stored;
@@ -2021,7 +2046,7 @@ async function applyRest() {
     if (err.status === undefined && await queueChange('pool',
       `rested ${hours}h: ${applied.join(', ')}`, changes.character || {}, null, formExtra(changes))) {
       recordRoll('rest', `Rested ${hours}h`, { note: applied.join(', ') });
-      renderQueueState();
+      renderQueueState(err);
       return;
     }
     applyChanges(changes, 'from');
@@ -3857,7 +3882,7 @@ async function usePower(index) {
   } catch (err) {
     if (err.status === undefined && await queueChange('power', note, spent)) {
       logSpend();
-      renderQueueState();
+      renderQueueState(err);
       return;
     }
     C.data[pool + '_current'] = cur;
