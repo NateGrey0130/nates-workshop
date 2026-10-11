@@ -10,7 +10,7 @@
 // shared fixture. Every one of those is a local of the same name. Nothing
 // outside these two sections reads the ones declared here.
 
-import { relatedAllowance, validateCharacter }
+import { relatedAllowance, validateCharacter, storedNumberProblems }
   from '../../../../functions/api/character-creator/_lib/validate-character.js';
 import { evalDice, rollAttribute, poolFormulaBounds, diceBounds, attributeCeiling, isAttributeExpr,
          isAbsentAttribute }
@@ -208,6 +208,26 @@ check('relatedAllowance adds base and grants',
 // (a pick passes if ANY applicable pool admits it), and everything a class
 // edit or a table ruling could explain warns instead of blocking.
 section('Creation validation');
+{
+  // What a character is stored holding is drawn into the sheet's markup, so
+  // the numbers among it have to be numbers. Its own function because
+  // validateCharacter checks nothing for a character whose class was retired.
+  const np = (o) => storedNumberProblems({ skills: legal.skills, attributes: legal.attributes, ...o });
+  const withSkill = (extra) => ({ skills: [{ name: 'Prowl', category: 'Rogue', type: 'related', ...extra }] });
+  check('a character whose numbers are numbers has no problem to report',
+    np({}).length === 0 && np(withSkill({ pct: 25, per_level: 5, iq_bonus: 0 })).length === 0
+    && np(withSkill({ pct: null })).length === 0 && np({ skills: undefined, attributes: undefined }).length === 0,
+    JSON.stringify(np({})));
+  check('a skill percentage, climb or I.Q. bonus that is a string is named',
+    ['pct', 'per_level', 'iq_bonus'].every((k) =>
+      np(withSkill({ [k]: '<b>' })).join() === `skill ${k} must be a number`
+      && np(withSkill({ [k]: '5' })).length === 1));
+  check('and so is an attribute that is one, or is not finite',
+    np({ attributes: { ME: '<b>' } }).join() === 'attribute ME must be a number'
+    && np({ attributes: { ME: Infinity } }).length === 1 && np({ attributes: { ME: {} } }).length === 1);
+  check('skills that are not a list and attributes that are not an object are refused whole',
+    np({ skills: 'x' }).length === 1 && np({ attributes: [1] }).length === 1 && np({ attributes: 'x' }).length === 1);
+}
 {
   const magicCls = { ...vCls, magic: { spells_starting: 2, spell_levels_allowed: [1, 2] } };
   const pcat = {

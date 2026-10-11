@@ -449,8 +449,8 @@ function grantedSkillsHtml() {
     const g = grantOf(s.name);
     return `<tr class="skill-row">
       <td>${escHtml(s.name)}</td>
-      <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
-      <td class="num pct">${s.pct ? s.pct + '%' : '—'}</td>
+      <td class="num">${s.per_level ? '+' + escHtml(s.per_level) : '—'}</td>
+      <td class="num pct">${s.pct ? escHtml(s.pct) + '%' : '—'}</td>
     </tr>${g ? `<tr class="skill-note"><td colspan="3">
       <span class="note">↳ ${escHtml(g.reason)}
         <span class="muted">— ${escHtml(g.granted_by)}${
@@ -2277,9 +2277,9 @@ function render() {
         <th>Skill</th><th class="num">+%/Lvl</th><th class="num">%</th>
       </tr></thead>
       <tbody>${list.map((s) => `<tr class="skill-row">
-        <td>${escHtml(s.name)}${codexLink('skills', s.name, s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${s.iq_bonus}% from I.Q.">+${s.iq_bonus} I.Q.</span>` : ''}</td>
-        <td class="num">${s.per_level ? '+' + s.per_level : '—'}</td>
-        <td class="num pct">${s.pct ? s.pct + '%' : '—'}${s.pct ? rollBtn({ name: s.name, pct: s.pct }) : ''}</td>
+        <td>${escHtml(s.name)}${codexLink('skills', s.name, s.name)}${s.iq_bonus ? ` <span class="note-inline" title="Includes a one-time +${escHtml(s.iq_bonus)}% from I.Q.">+${escHtml(s.iq_bonus)} I.Q.</span>` : ''}</td>
+        <td class="num">${s.per_level ? '+' + escHtml(s.per_level) : '—'}</td>
+        <td class="num pct">${s.pct ? escHtml(s.pct) + '%' : '—'}${s.pct ? rollBtn({ name: s.name, pct: s.pct }) : ''}</td>
       </tr>${s.note ? `<tr class="skill-note"><td colspan="3">
         <span class="note">↳ ${escHtml(s.note)}</span></td></tr>` : ''}`).join('')}</tbody>
     </table>` : '<p class="muted small">None.</p>');
@@ -2732,8 +2732,8 @@ function render() {
         // The stored attribute is what was rolled; the class bonus rides
         // alongside it so both stay legible, and effAttrs is what the tables read.
         return field(a, attrs[a] == null ? '—'
-          : add ? `<span class="attr-work">${attrs[a]} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${src}`)}">${add > 0 ? '+' : ''}${add}</span> =</span> ${effAttrs[a]}`
-          : attrs[a]);
+          : add ? `<span class="attr-work">${escHtml(attrs[a])} <span class="attr-bonus" title="${escHtml(`${add > 0 ? '+' : ''}${add} from ${src}`)}">${add > 0 ? '+' : ''}${escHtml(add)}</span> =</span> ${escHtml(effAttrs[a])}`
+          : escHtml(attrs[a]));
       }).join('')}
     </div>`)}
 
@@ -3064,8 +3064,8 @@ function levelUpPanel() {
     `<tr><td>${POOL_LABELS[field]}</td><td>${v.from}</td>
      <td>→ <input type="number" id="lu-${field}" value="${v.to}"></td></tr>`).join('');
   const skillRows = p.skills.map((s, i) =>
-    `<tr><td>${escHtml(s.name)} <span class="muted small">(${escHtml(s.type)})</span></td><td>${s.from}%</td>
-     <td>→ <input type="number" id="lu-skill-${i}" value="${s.to}">%</td></tr>`).join('');
+    `<tr><td>${escHtml(s.name)} <span class="muted small">(${escHtml(s.type)})</span></td><td>${escHtml(s.from)}%</td>
+     <td>→ <input type="number" id="lu-skill-${i}" value="${escHtml(s.to)}">%</td></tr>`).join('');
   const grants = p.grants.map((g) =>
     `<li class="small">Level ${g.level}: ${g.grants.map(escHtml).join('; ')}</li>`).join('');
   // The second form's hit points, rolled on its own dice (F74). Shown, not

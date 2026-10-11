@@ -8,7 +8,7 @@
 import { getUserEmail, unauthorized, json, readJson, campaignAccess } from './_lib/auth.js';
 import { paging, pagedQuery, pageBody } from './_lib/paging.js';
 import { loadCharacterClass } from './_lib/class-loader.js';
-import { validateCharacter, loadSkillCategories } from './_lib/validate-character.js';
+import { validateCharacter, loadSkillCategories, storedNumberProblems } from './_lib/validate-character.js';
 import { loadPowerCatalog, powerGrantsFor, insertPowerGrantStatements } from './_lib/power-picks.js';
 import { xpTableFor, thresholdFor, skillGrantsFor } from './_lib/leveling.js';
 import { insertGrantStatements, remainingGrants } from './_lib/skill-picks.js';
@@ -159,6 +159,8 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return out({ error: `Missing required field: ${field}` }, 400);
   }
+  const notNumbers = storedNumberProblems({ skills: b.skills, attributes: b.attributes });
+  if (notNumbers.length) return out({ error: `Not a character: ${notNumbers.join('; ')}` }, 400);
   const campaign = await once(loads, 'campaign:' + b.campaign_id, () => env.DB
     .prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first());
   if (!campaign) return out({ error: 'Campaign not found' }, 404);
