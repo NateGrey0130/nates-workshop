@@ -365,6 +365,13 @@ export async function onRequestPatch({ request, env, params }) {
     const v = body[section];
     const okShape = kind === 'array' ? Array.isArray(v) : (v && typeof v === 'object' && !Array.isArray(v));
     if (!okShape) return json({ error: `${section} must be ${kind === 'array' ? 'an array' : 'an object'}` }, 400);
+    // A typed override is a number or a line of text ("1D4" for a punch), and
+    // the sheet draws it as one. Anything nested is not something the sheet
+    // sends, so it is refused here rather than stored and drawn as markup.
+    const rows = kind === 'array' ? v : [v];
+    const nested = rows.some((row) => !row || typeof row !== 'object' || Array.isArray(row)
+      || Object.values(row).some((x) => x !== null && typeof x === 'object'));
+    if (nested) return json({ error: `${section} holds text and numbers only` }, 400);
     sets.push(`${section} = ?`);
     binds.push(JSON.stringify(v));
   }

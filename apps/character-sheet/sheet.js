@@ -1802,11 +1802,22 @@ function saveMelee() {
 //
 // Not gated on `w`: rolling changes nothing, and a read-only viewer at the
 // table rolls their own dice. The old play path did not gate it either.
+//
+// EVERY ARGUMENT IS COERCED HERE, the target included. A save's target is the
+// typed "vs Psionics - roll" override, which is stored as whatever was typed,
+// and it used to be written into the handler as it stood: a value of
+// `0);somethingElse(` ran as script for everyone who opened the sheet. A
+// target is a whole number or it is absent, so that is all this will write.
+function rollTarget(v) {
+  const n = Number.parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 function rollBtn(r) {
   const safe = escJs(String(r.name));
   const call = r.pct != null
     ? `rollSkill('${safe}', ${Number(r.pct) || 0})`
-    : `rollD20('${r.kind}', '${safe}', ${Number(r.bonus) || 0}, ${r.target ?? null})`;
+    : `rollD20('${escJs(String(r.kind))}', '${safe}', ${Number(r.bonus) || 0}, ${rollTarget(r.target)})`;
   return `<button type="button" class="roll-btn noprint"
     aria-label="Roll ${safe}" onclick="${call}">🎲</button>`;
 }
@@ -1872,7 +1883,10 @@ function playControlsHtml(w, combat) {
     ${w ? `<div class="play-amt play-amt-session">
       <button onclick="endSession()">✎ End session</button></div>` : ''}
     <div class="play-melee">
-      <span id="play-melee-label">${meleeLabel(combat.attacks)}</span>
+      ${/* Escaped HERE and not in meleeLabel: the three buttons below set the
+            same label through textContent, which wants the text as it is. A
+            typed attacks-per-melee is free text and reached this as markup. */''}
+      <span id="play-melee-label">${escHtml(meleeLabel(combat.attacks))}</span>
       <span>
         <button onclick="nextAttack(${Number(combat.attacks) || 0})">Next attack</button>
         <button onclick="newRound(${Number(combat.attacks) || 0})">New round</button>

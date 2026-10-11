@@ -1246,6 +1246,28 @@ if (itemId) {
   check('a removed row leaves the active inventory', !stillThere);
 }
 
+// ── a typed override is text or a number, never something nested ────────────
+// The sheet draws these values, and until this was checked the route stored
+// whatever shape arrived. What the sheet itself sends is a flat object of
+// strings, so that is all the route takes.
+{
+  const before = (await api('GET', `/characters/${charId}`)).body.character || {};
+  const typed = await api('PATCH', `/characters/${charId}`, { saves: { psionics_target: '12' }, combat: { punch: '1D4' } });
+  check('a typed override is stored: a number as text, and a line of text', typed.status === 200, typed.body);
+  const nested = await api('PATCH', `/characters/${charId}`, { saves: { psionics_target: { toString: 'x' } } });
+  check('an override that is an object is refused',
+    nested.status === 400 && /text and numbers only/.test(nested.body?.error || ''), nested.body);
+  const listed = await api('PATCH', `/characters/${charId}`, { combat: { attacks: ['4'] } });
+  check('and so is one that is a list', listed.status === 400, listed.body);
+  const armour = await api('PATCH', `/characters/${charId}`, { armor: [{ name: 'Plate', ar: { n: 1 } }] });
+  check('and an armour slot holding one', armour.status === 400, armour.body);
+  const kept = (await api('GET', `/characters/${charId}`)).body.character || {};
+  check('a refused write changed nothing', kept.saves?.psionics_target === '12' && kept.combat?.punch === '1D4',
+    JSON.stringify({ saves: kept.saves, combat: kept.combat }));
+  const restored = await api('PATCH', `/characters/${charId}`, { saves: before.saves || {}, combat: before.combat || {} });
+  check('and the character is put back as it was', restored.status === 200, restored.body);
+}
+
 // ── the party stash, both ways ──────────────────────────────────────────────
 // Part of a stack claimed onto a sheet, and an item handed back. Each is a
 // batch whose two halves are one fact - left one place, arrived at the other -
