@@ -3104,6 +3104,27 @@ const psiCatLabel = (cats) => (cats || []).map((c) => (globalThis.skillCats
   ? globalThis.skillCats.categoryLabel(c)
   : (typeof c === 'string' ? c : c?.name ?? ''))).join(', ');
 
+// WHICH TRADITIONS A LEVEL-GATED SPELL PICK MAY REACH (BOOK-INGEST-AUDIT F57).
+// The same two tests as spellTraditionAllowed and spellTraditionsAllowed in
+// js/leveling.js, which this file cannot import. ONE copy, asked by both
+// pickers: the banked panel had the test inlined and the level-up picker had
+// none, so levelling up offered every tradition's spells and the server then
+// refused the ones the class does not draw from.
+//
+// A spell with no tradition is general and always allowed. `traditions` null
+// means no restriction, and is only ever a row banked before migration 055.
+const spellTraditionOk = (spell, traditions) => {
+  const t = spell?.tradition ? String(spell.tradition).trim().toLowerCase() : '';
+  if (!t || traditions == null) return true;
+  return traditions.some((x) => String(x).trim().toLowerCase() === t);
+};
+// What the class allows today, which is what the server freezes onto a grant
+// at the moment it is earned. A class naming none reaches general spells only.
+const classTraditions = () => {
+  const list = C.cls?.magic?.spell_traditions_allowed;
+  return Array.isArray(list) ? list : [];
+};
+
 // The Talents a grant may be spent on, and the words for its restriction.
 // SHARED by the level-up picker and the banked-picks panel, because the talent
 // rule is the same in both - unlike spells and psionics, whose caps come from
@@ -3175,8 +3196,10 @@ function powerKindBlock(grant, kind) {
     const pool = talent ? talent.pool : (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
+      // A named list replaces the tradition gate as it replaces the level gate.
       .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase()) && (!levels || levels.includes(x.level)))
-                                        : (!levels || levels.includes(x.level))))
+                                        : ((!levels || levels.includes(x.level))
+                                           && spellTraditionOk(x, classTraditions()))))
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
                                         : psiAdmits(cats, x)));
     const cap = talent ? talent.cap : named ? `a list of ${g.from.length}${levels ? `, spell levels ${levels.join(', ')}` : ''}`
@@ -3311,18 +3334,15 @@ function pendingPowersPanel() {
     const pool = talent ? talent.pool : (isSpell ? C.spellCatalog : C.psiCatalog)
       .filter((x) => !held.has(String(x.name).toLowerCase()))
       .filter((x) => !x.system || x.system === C.data.campaign_system)
-      // The banked row's tradition allowance too (BOOK-INGEST-AUDIT F57), inlined
-      // because this file cannot import js/leveling.js - the same test as
-      // spellTraditionAllowed there. A row banked before migration 055 carries
+      // The banked row's tradition allowance too (BOOK-INGEST-AUDIT F57): the
+      // one it was granted with. A row banked before migration 055 carries
       // none and stays unrestricted.
       // A banked list-bound grant keeps the cap it was granted with, when its
       // entry had one (BOOK-INGEST-AUDIT F61).
       .filter((x) => !isSpell || (named ? (named.has(String(x.name).toLowerCase())
                                            && (!g.spell_levels || g.spell_levels.includes(x.level)))
                                         : ((!g.spell_levels || g.spell_levels.includes(x.level))
-                                           && (!x.tradition || !Array.isArray(g.traditions)
-                                               || g.traditions.some((t) => String(t).toLowerCase()
-                                                    === String(x.tradition).toLowerCase())))))
+                                           && spellTraditionOk(x, Array.isArray(g.traditions) ? g.traditions : null))))
       .filter((x) => isSpell || (named ? named.has(String(x.name).toLowerCase())
                                         : psiAdmits(g.categories, x)));
     // The banked row's own restriction, not the class's as it stands today.
