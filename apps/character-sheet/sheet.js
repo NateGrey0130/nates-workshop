@@ -3495,17 +3495,37 @@ function pickerBlock(grants, total, prefix) {
     : allowed.includes(s.category));
   const pool = unheld.filter((s) => showAll || !allowed || admits(s));
 
+  // THE PERCENTAGE BESIDE EACH SKILL IS THE ONE THE SERVER WILL STORE. It used
+  // to be the catalog's `base`, which is not what a pick starts at: a skill
+  // whose base is a formula (P.P. x5) printed 0%, and a related pick printed
+  // without the class's bonus for its category. The server has always written
+  // newPickPercent (js/leveling.js), so this asks that, with the same pooled
+  // categories and the stored attributes `resolvePicks` is given.
+  //
+  // A skill outside the grant's categories is spent as a secondary pick while
+  // one is left, and a secondary pick takes no class bonus. That is the order
+  // the server works in too. Past the secondary allowance it is an override,
+  // which the server prices as a related pick; the number shown is that one.
+  //
+  // Defensive like admits() above: the bridge is a deferred module.
+  const startsAt = (s) => {
+    const fn = globalThis.skillPercent?.newPickPercent;
+    if (!fn) return s.base;
+    const secondary = !!allowed && secondaryAllowance > 0 && !admits(s);
+    return fn(s, C.data.attributes || {}, allowed, { secondary });
+  };
+
   // One filter feeding every dropdown in the block, because they draw from one
   // pool — you are picking N different skills out of the same 128, not
   // searching N times. Narrowing them together is what you actually want.
   const shown = Picker.filter(pool, C.pickFilter);
   const options = shown
-    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
+    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${startsAt(s)}%</option>`)
     .join('');
   // The unrestricted rows get their own list: everything not already held.
   const shownAny = Picker.filter(unheld, C.pickFilter);
   const optionsAny = shownAny
-    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${s.base}%</option>`)
+    .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} — ${escHtml(s.category || '?')} ${startsAt(s)}%</option>`)
     .join('');
 
   const hiddenCount = allowed && !showAll
@@ -3551,7 +3571,7 @@ function pickerBlock(grants, total, prefix) {
   <h2 class="sub-h" style="margin-bottom:4px">New skill${total > 1 ? 's' : ''} — ${total} to choose</h2>
   <p class="muted small" style="margin-top:0">
     ${grants.map((g) => `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} from level ${g.level}`).join(', ')}.
-    New skills start at their base percentage. Leave any blank and it waits on your sheet.</p>
+    Each skill starts at the percentage beside it. Leave any blank and it waits on your sheet.</p>
   ${Picker.inputHtml({ id: `${prefix}-pick-filter`, value: C.pickFilter,
     placeholder: 'Filter skills…', shown: shown.length, total: pool.length })}
   ${rows}

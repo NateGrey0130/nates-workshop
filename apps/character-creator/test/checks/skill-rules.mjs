@@ -27,7 +27,8 @@ import { appDir, repoRoot, check, section, appPath, wantSection } from '../harne
 
 const SECTIONS = ['per_level on a skill entry', 'Group-level skill restrictions',
   'Attribute-derived skill base', 'Per-system skill bases', 'Per-system W.P. schedules and psionic costs',
-  'A pick spent on an attribute-derived skill', 'A banked pick sent twice', 'Category skill bonuses'];
+  'A pick spent on an attribute-derived skill',
+  'The skill picker prints what a pick will be stored at', 'A banked pick sent twice', 'Category skill bonuses'];
 
 // derive.js is a classic script, so it is loaded by evaluating it against a
 // stand-in global rather than imported. smoke.mjs builds its own the same
@@ -520,6 +521,109 @@ section('A pick spent on an attribute-derived skill');
   check('no server query types the list out', typed.length === 0, typed.join(', '));
   const readers = fnFiles(fnDir17).filter((f) => /\$\{SKILL_BASE_COLUMNS\}/.test(readFileSync(f, 'utf8'))).length;
   check('five queries select it by name', readers === 5, `${readers}`);
+}
+
+// ---------- The skill picker prints what a pick will be stored at ----------
+// The sheet's two skill pickers (level-up and banked picks) printed the
+// catalog's `base` beside each skill. That is not what a pick starts at: the
+// server stores newPickPercent, so a formula skill showed 0% and was saved at
+// 60%, and a related pick showed 40% and was saved at 50% with its class
+// bonus. Nothing was stored wrongly; the page said one number and the sheet
+// then held another.
+//
+// What is asserted is AGREEMENT WITH THE WRITE PATH: the picker is cut out of
+// sheet.js and run, each skill it offers is then spent through resolvePicks
+// itself, and the two numbers must be the same.
+section('The skill picker prints what a pick will be stored at');
+{
+  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+  const from = sheetSrc.indexOf('function pickerBlock(');
+  const end = from < 0 ? -1 : sheetSrc.slice(from).search(/\r?\n\}/);
+  const src = end < 0 ? null : sheetSrc.slice(from, from + end) + '\n}';
+  check('the picker can be located', src !== null, 'function pickerBlock( moved');
+
+  const CATALOG = [
+    { name: 'Space: Zero Gravity Movement & Combat', category: 'Space', base: 0, base_formula: 'PP*5', per_level: 4 },
+    { name: 'Climbing', category: 'Physical', base: 40, per_level: 5 },
+    { name: 'Swimming', category: 'Physical', base: 50, per_level: 5 },
+    { name: 'Cooking', category: 'Domestic', base: 35, per_level: 5 },
+    { name: 'W.P. Sword', category: 'W.P.', base: 0, per_level: 0 },
+  ];
+  const attributes = { PP: 12 };
+  const picksDb = (rows) => ({
+    DB: { prepare: () => ({ bind: () => ({ all: async () => ({ results: rows }) }) }) },
+  });
+  // The pooled shape level-confirm.js and picks.js hand to resolvePicks.
+  const pooled = (grants) => {
+    const related = grants.filter((g) => g.kind !== 'secondary');
+    return {
+      allowance: grants.reduce((n, g) => n + g.count, 0),
+      secondaryAllowance: grants.filter((g) => g.kind === 'secondary').reduce((n, g) => n + g.count, 0),
+      categories: related.some((g) => !g.categories) ? null : related.flatMap((g) => g.categories || []),
+    };
+  };
+  const printed = (grants, { bridge = true, showAll = false } = {}) => {
+    const C = { data: { skills: [], attributes, campaign_system: null }, skillCatalog: CATALOG,
+      pickShowAll: showAll, pickFilter: '', pickValues: {}, pickLangs: {} };
+    const g = { skillCats: { categoryAllows, categoryLabel },
+      ...(bridge ? { skillPercent: { newPickPercent: LV_newPickPercent } } : {}) };
+    const Picker = { filter: (rows) => rows, inputHtml: () => '' };
+    const langSkills = { isRepeatableRow: () => false, LITERACY_OTHER: 'Literacy: Other' };
+    const html = new Function('C', 'escHtml', 'globalThis', 'Picker', 'langSkills',
+      src + '\nreturn pickerBlock;')(C, (x) => String(x ?? ''), g, Picker, langSkills)(
+      grants, pooled(grants).allowance, 'lu');
+    const out = new Map();
+    for (const m of html.matchAll(/<option value="([^"]+)">[^<]* (-?\d+)%<\/option>/g)) out.set(m[1], Number(m[2]));
+    return out;
+  };
+  const stored = async (grants, name, extra = {}) => {
+    const res = await resolvePicks(picksDb(CATALOG), {
+      picks: [{ name, ...extra }], existingSkills: [], level: 4, attributes, ...pooled(grants),
+    });
+    return res.skills?.[0]?.pct ?? ('refused: ' + (res.errors || []).join('; '));
+  };
+  const agree = async (what, grants, opts, extra) => {
+    const shown = src ? printed(grants, opts) : new Map();
+    const diffs = [];
+    for (const [name, pct] of shown) {
+      const kept = await stored(grants, name, extra?.(name));
+      if (kept !== pct) diffs.push(name + ': shown ' + pct + '%, stored ' + kept);
+    }
+    check(what, shown.size > 0 && diffs.length === 0, diffs.join(' | ') || 'the picker offered nothing');
+    return shown;
+  };
+
+  const RELATED = { level: 4, count: 1, kind: 'related',
+    categories: [{ name: 'Physical', bonus: 10 }, 'Space', 'W.P.'] };
+  const one = await agree('every skill a related grant offers is shown at the percentage it will be stored at',
+    [RELATED]);
+  check('a formula skill shows the formula resolved, not the 0 in its base column',
+    one.get('Space: Zero Gravity Movement & Combat') === 60, String(one.get('Space: Zero Gravity Movement & Combat')));
+  check("a related pick shows the class's bonus for its category", one.get('Climbing') === 50, String(one.get('Climbing')));
+  check('a skill with no percentage still has none', one.get('W.P. Sword') === 0, String(one.get('W.P. Sword')));
+
+  // A skill outside the categories is spent as a secondary pick while one is
+  // left, and a secondary pick takes no class bonus.
+  const NARROW = { level: 4, count: 1, kind: 'related',
+    categories: [{ name: 'Physical', bonus: 10, except: ['Climbing'] }] };
+  const SECONDARY = { level: 4, count: 1, kind: 'secondary', categories: null };
+  const two = await agree('and so is every skill offered beside a secondary pick', [NARROW, SECONDARY]);
+  check('a skill the grant excludes is shown without the bonus, since it will be a secondary pick',
+    two.get('Climbing') === 40 && two.get('Swimming') === 60 && two.get('Cooking') === 35,
+    JSON.stringify([...two]));
+
+  await agree('with every category shown, an override is priced as the server prices it',
+    [RELATED], { showAll: true }, () => ({ override: true }));
+  await agree('an unrestricted grant shows plain bases, as it stores them',
+    [{ level: 4, count: 1, kind: 'related', categories: null }]);
+
+  // Until the bridge module has run there is no function to ask, and the
+  // picker falls back to the base column rather than throwing.
+  const bare = src ? printed([RELATED], { bridge: false }) : new Map();
+  check('without the bridge the picker still draws', bare.get('Climbing') === 40, JSON.stringify([...bare]));
+  check('and the page loads the bridge',
+    /import \{ newPickPercent \} from '\/apps\/character-creator\/js\/leveling\.js';\s*globalThis\.skillPercent = \{ newPickPercent \};/
+      .test(readFileSync(appPath('sheet.html'), 'utf8')), 'sheet.html does not set globalThis.skillPercent');
 }
 
 // ---------- A banked pick sent twice ----------
