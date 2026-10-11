@@ -40,7 +40,8 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS, psionicsTableLeftRolling } from '../apps/character-creator/js/parser.js';
+import { parseClassMarkdown, suggestClassTags, MAX_AUTHORED_TAGS, psionicsTableLeftRolling,
+         locateMessage } from '../apps/character-creator/js/parser.js';
 import { isAttributeExpr } from '../apps/character-creator/js/dice.js';
 import { keysMergedBy } from '../apps/character-creator/js/class-keys.js';
 import { crossReference, buildStubStatements, restrictionNames } from '../functions/api/character-creator/_lib/catalog.js';
@@ -319,8 +320,15 @@ if (data) {
   console.log(`  ${data.category ?? '?'} "${data.name ?? '?'}" (${data.id ?? '?'}) — ${data.system ?? '?'}`);
   if (data.source_book) console.log(`  ${data.source_book}`);
 }
-list('ERRORS', errors);
-list('WARNINGS', warnings);
+// Each with the line of the class markdown it is about, where the message
+// names one - asked here rather than read off the parser's own `lines`,
+// because half the warnings above were added by this script.
+const withLine = (m) => {
+  const at = locateMessage(m, markdown);
+  return at ? `${m}  (line ${at.line})` : m;
+};
+list('ERRORS', errors.map(withLine));
+list('WARNINGS', warnings.map(withLine));
 list('SQL PRE-FLIGHT', preflight);
 
 // The parser reads inline [...] / {...} on ONE line only. A flow list wrapped
