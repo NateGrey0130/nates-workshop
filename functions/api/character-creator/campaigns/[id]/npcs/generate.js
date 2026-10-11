@@ -132,6 +132,8 @@ export async function onRequestPost({ request, env, params }) {
     ? skillsNamedByClasses((gameClasses.results || []).map((r) => r.markdown), catalog) : null;
 
   const made = [];
+  // What every NPC in this roll shares, read once (_lib/once.js).
+  const loads = new Map();
   for (let i = 0; i < count; i++) {
     let chosen, cls, body;
     try {
@@ -178,7 +180,7 @@ export async function onRequestPost({ request, env, params }) {
       ...payload,
       campaign_id: Number(params.id), class_id: classId, class_variant: variant,
       occ_class_id: occId, occ_class_variant: occVariant,
-    }, { kind: 'npc', bankPowers: bank });
+    }, { kind: 'npc', bankPowers: bank, loads });
 
     if (res.status !== 201) {
       // The generator and the validator disagreeing is a bug in the generator,

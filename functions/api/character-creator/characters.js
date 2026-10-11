@@ -17,6 +17,7 @@ import { rollSecondForm, isEmptySecondForm, secondFormView } from '../../../apps
 import { loadTraitRows, traitKeysOf } from './_lib/second-form.js';
 import { decodeCharacter } from './_lib/character-json.js';
 import { selectInChunks } from './_lib/sql-chunk.js';
+import { once } from './_lib/once.js';
 
 // GET /api/character-creator/characters — list for linking to sheets.
 // ?campaign_id= filters; ?mine=1 keeps only the caller's own characters;
@@ -75,13 +76,16 @@ export async function onRequestGet({ request, env }) {
   // character's class, and ?mine=1 lists a player's characters across every
   // campaign, where nothing reads a pool.
   if (campaignId && page.results.length) {
+    // One class row per class, not per character: a table of Nightbane is a
+    // table of one R.C.C., and each row used to read it again.
+    const loads = new Map();
     const held = await selectInChunks(page.results.map((r) => r.id), (batch) => env.DB.prepare(
       `SELECT * FROM characters WHERE id IN (${batch.map(() => '?').join(',')})
        AND json_valid(second_form) AND second_form <> '{}'`
     ).bind(...batch));
     for (const row of held) {
       decodeCharacter(row);
-      const cls = await loadCharacterClass(env, request.url, row);
+      const cls = await loadCharacterClass(env, request.url, row, { loads });
       if (!cls?.second_form) continue;
       const v = secondFormView({ cls, character: row,
         rows: await loadTraitRows(env, cls.second_form, traitKeysOf(row.second_form)) });
@@ -101,6 +105,10 @@ export async function onRequestGet({ request, env }) {
 // Returns null when either side cannot be resolved or the race states no
 // restriction - the same "cannot check, do not block" rule the class resolution
 // above follows. A missing class must not become a refusal.
+function occRestrictionOnce(env, raceId, occId, loads) {
+  return once(loads, 'occ-restriction:' + raceId + ':' + occId, () => occRestrictionFor(env, raceId, occId));
+}
+
 async function occRestrictionFor(env, raceId, occId) {
   const { results } = await env.DB.prepare(
     "SELECT class_id, markdown FROM imported_classes WHERE class_id IN (?, ?) AND status = 'published'"
@@ -141,12 +149,18 @@ export async function onRequestPost({ request, env }) {
 // in the shape insertPowerGrantStatements takes - the generator banks the
 // spells, psionics and Talents an NPC's class lets it choose. A player's
 // character passes none; the wizard spent them.
-export async function createCharacter(env, request, email, b, { kind = 'pc', bankPowers = [] } = {}) {
+//
+// `loads` is a request's own cache (_lib/once.js), for a caller that creates
+// several characters in one request: the NPC generator rolls up to ten. What it
+// keeps is what does not depend on the character - the campaign, the class
+// rows, the race-and-occupation verdict, the skill categories.
+export async function createCharacter(env, request, email, b, { kind = 'pc', bankPowers = [], loads = null } = {}) {
   const out = (body, status) => ({ body, status });
   for (const field of ['campaign_id', 'name', 'class_id']) {
     if (!b[field]) return out({ error: `Missing required field: ${field}` }, 400);
   }
-  const campaign = await env.DB.prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first();
+  const campaign = await once(loads, 'campaign:' + b.campaign_id, () => env.DB
+    .prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first());
   if (!campaign) return out({ error: 'Campaign not found' }, 404);
 
   // Creating a character in a campaign is how you JOIN it — membership is
@@ -209,7 +223,7 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
     // powers a chosen ability legitimately grants would read as over-allowance
     // and a Super-Tough M.D.C. roll as out of range.
     abilities: b.abilities || [], mos, totem,
-  });
+  }, { loads });
   // A race may bar an occupation outright: a dwarf takes no magic O.C.C., a
   // kobold no knight or palladin. The wizard disables those options, and a
   // disabled <option> is a hint rather than a rule - this is the boundary.
@@ -219,7 +233,7 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
   // two classes are fetched raw, since the COMPOSED class has already merged
   // them and no longer knows which half was which.
   if (occId && b.class_id && occId !== b.class_id) {
-    const verdict = await occRestrictionFor(env, b.class_id, occId);
+    const verdict = await occRestrictionOnce(env, b.class_id, occId, loads);
     if (verdict && !verdict.allowed) return out({ error: verdict.reason }, 400);
   }
 
@@ -276,7 +290,7 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
     skills: b.skills || [],
     abilities: b.abilities || [],
     attributes: b.attributes || {},
-    catalog: cls ? await loadSkillCategories(env) : null,
+    catalog: cls ? await once(loads, 'skill-categories', () => loadSkillCategories(env)) : null,
     powers: b.powers || [],
     pools: { hp_max: p.hp, sdc_max: p.sdc, mdc_max: p.mdc, ppe_max: p.ppe, isp_max: p.isp },
     // The F2 hard cap, with the proposal's own tolerance: a pool maximum
