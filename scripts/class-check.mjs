@@ -51,6 +51,7 @@ import {
   detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
   LITERACY_PLACEHOLDER, grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc,
+  sheetDrawableKeys, undrawnBonusKeys,
 } from './class-check-lib.mjs';
 import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { localD1Args } from './d1-query-lib.mjs';
@@ -253,6 +254,24 @@ for (const [attr, expr] of Object.entries(data?.attribute_dice ?? {})) {
 // authority. A third shape F113 names - an equipment slug production holds and
 // the branch base does not - is deliberately not here: `--remote` is right that
 // the slug exists, and a slug newer than the base is a rebase question.
+{
+  // A third shape, since 2026-10-10: a combat or save key the sheet has no
+  // field for. The smoke suite refuses a shipped class that writes one ("no
+  // class writes a combat or save key the sheet cannot draw"), and until now
+  // that was the first anyone heard of it. Same predicate, same lists.
+  const sheetJs = path.join(repoRoot, 'apps', 'character-sheet', 'sheet.js');
+  const undrawn = existsSync(sheetJs)
+    ? undrawnBonusKeys(data, sheetDrawableKeys(readFileSync(sheetJs, 'utf8'))) : [];
+  if (undrawn.length) {
+    warnings.push(undrawn.length + ' bonus key(s) the sheet has no field for - '
+      + undrawn.join(', ') + '. Each parses, validates and composes, and is drawn'
+      + ' NOWHERE, so the bonus is lost without a word. If it is a misspelling, fix'
+      + ' it. If the book really grants it, add it to COMBAT_FIELDS or SAVE_FIELDS in'
+      + ' sheet.js, or carry it as saves.other / a special_ability. smoke refuses'
+      + ' this: "no class writes a combat or save key the sheet cannot draw".');
+  }
+}
+
 if ((data?.skills?.occ_skills ?? []).some(grantsLiteracyPlaceholder)) {
   warnings.push(`occ_skills grants "${LITERACY_PLACEHOLDER}" by name. It is a placeholder `
     + 'row, picked FROM so the player names the script; granted outright, the character '
