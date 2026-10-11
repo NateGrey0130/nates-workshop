@@ -2124,12 +2124,37 @@ export function run() {
       /if \(!window\.playQueue \|\| !\(await playQueue\.available\(\)\)\) return false;/.test(sheet),
       'a private window loses the change with no rollback');
 
-    // The trap this repo has been bitten by before: Access answers with HTML, and
-    // api() returns {} for a body it cannot parse, so a replay after the session
-    // expires looks exactly like success.
+    // The trap this repo has been bitten by before: Access answers with HTML. A
+    // replay that got an answer with no event id in it is not counted as sent.
     check('a replay that lands on the login page is not counted as sent',
       /res\.event_id == null/.test(sheet),
       'an expired Access session silently eats the queue');
+
+    // NO STATUS IS NOT ALWAYS NO NETWORK. api() throws a sign-in page as a
+    // statusless `notData`, and the counter said "waiting for the network" for
+    // it with the browser online. The reason is read off the error by the
+    // sheet's own function, run here rather than matched as text.
+    const whySrc = sheet.match(/function whyUnsent\(err\) \{[\s\S]*?\n\}/);
+    const why = (onLine, err) => (whySrc
+      ? new Function('navigator', whySrc[0] + '; return whyUnsent;')({ onLine })(err) : 'no whyUnsent');
+    check('a page where data was expected reads as signed out, online or not',
+      why(true, { notData: true }) === 'signin' && why(false, { notData: true }) === 'signin',
+      JSON.stringify([why(true, { notData: true }), why(false, { notData: true })]));
+    check('a failed request while the browser is online is the server, not the network',
+      why(true, {}) === 'server', JSON.stringify(why(true, {})));
+    check('and only a browser that says it is offline waits for the network',
+      why(false, {}) === null, JSON.stringify(why(false, {})));
+    const told = sheet.match(/err\.status === undefined && await queueChange\([\s\S]*?\n\s+renderQueueState\(err\);/g) || [];
+    check('every queueing press hands the counter its error',
+      told.length === queueCalls.length, `${told.length} of ${queueCalls.length} queueing sites pass err`);
+    check('and so does the replay',
+      /if \(err\.status === undefined\) \{ renderQueueState\(err\); return; \}/.test(sheet),
+      'the flush does not say why an entry is still waiting');
+    check('each reason has its own words',
+      /C\.unsent === 'signin' \? `\$\{waiting\} — you are signed out/.test(sheet)
+        && /C\.unsent === 'server' \? `\$\{waiting\} — the server is not answering/.test(sheet)
+        && /`\$\{waiting\} for the network`/.test(sheet),
+      'the counter says one thing for every kind of silence');
 
     // Guarded replay, per field.
     check('the server can be asked to check where the pool was',

@@ -280,6 +280,11 @@ async function sandboxFetch(input, init) {
   const path = typeof input === 'string' ? input : (input && input.url) || '';
   const isEvents = path.includes('/events');
   if (isEvents && mode === 'drop') { dropped++; throw new TypeError('Failed to fetch'); }
+  // 'page' is the sign-in wall answering for the API: a 200 carrying HTML.
+  if (isEvents && mode === 'page') {
+    return new Response('<!doctype html><title>Sign in</title>',
+      { status: 200, headers: { 'Content-Type': 'text/html' } });
+  }
   if (isEvents && mode === 'refuse') {
     return new Response(JSON.stringify({ error: 'refused on merit' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -403,8 +408,40 @@ section('A dropped Damage queues as ONE entry carrying BOTH pools');
     && q[0].fields.hp_current.to === 15, JSON.stringify(q[0] && q[0].fields));
   check("and the press's own kind", q[0] && q[0].kind === 'damage', q[0] && q[0].kind);
   check('the database has not moved', JSON.stringify(await pools()) === JSON.stringify({ hp: 20, sdc: 5 }));
-  check('the counter says so', /1 change waiting for the network/.test(byId('queue-state').textContent),
+  // The browser says it is connected, so "the network" is not what is missing.
+  check('the counter says so, and does not blame the network while the browser is online',
+    /1 change waiting — the server is not answering/.test(byId('queue-state').textContent),
     byId('queue-state').textContent);
+}
+
+// ── no answer is not always no network ──────────────────────────────────────
+// The entry queued above is replayed three ways. None of them may send it,
+// lose it, or say the same thing about why it is still waiting.
+section('A change still waiting says why');
+{
+  ctx.navigator.onLine = false;
+  await run('await flushQueue();');
+  check('offline, it waits for the network', /1 change waiting for the network/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  ctx.navigator.onLine = true;
+
+  mode = 'page';
+  await run('await flushQueue();');
+  check('a sign-in page where data was expected reads as signed out',
+    /1 change waiting — you are signed out\. Reload the page to sign in/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  check('and the entry is kept, not counted as sent', (await fakeQueue.count(CHAR)) === 1);
+  check('the database has still not moved', JSON.stringify(await pools()) === JSON.stringify({ hp: 20, sdc: 5 }));
+
+  // A press made while signed out, not only a replay.
+  await run("await adjustPool('hp', -1);");
+  check('a press made while signed out queues and says so',
+    /2 changes waiting — you are signed out/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  // Taken back out, so the clash below meets the one Damage it was written for.
+  const extra = (await fakeQueue.all(CHAR)).sort((a, b) => b.seq - a.seq)[0];
+  await fakeQueue.remove(extra.seq);
+  evalIn('C.data.hp_current = 15');
 }
 
 // ── the clash ───────────────────────────────────────────────────────────────
