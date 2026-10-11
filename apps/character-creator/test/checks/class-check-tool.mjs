@@ -16,11 +16,11 @@ import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceS
   grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
-import { parseClassMarkdown } from '../../js/parser.js';
+import { parseClassMarkdown, locateMessage } from '../../js/parser.js';
 import { CLASS_KEYS, PRODUCED_KEYS, SKILLS_KEYS } from '../../js/class-keys.js';
 
 // Declared so a --section run can skip the module without reading it.
-const SECTIONS = ['class-check'];
+const SECTIONS = ['class-check', 'A class message says which line it is about'];
 
 export function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -294,5 +294,119 @@ export function run() {
 
     check('the whole-book hint ranks pages for a wrong offset',
       bestMatchingPages(money, [midPage, boundaryPage, { page: 60, lines: ['nothing'] }]).map((h) => h.page).join() === '41,50');
+  }
+
+  // ---------- A message says which line it is about ----------
+  // A parser error names what is wrong by path and never said where that is.
+  // The line is read back off the path (js/parser.js, locateMessage). One
+  // class, broken in seven places on known lines, so a wrong answer is a
+  // wrong number and not a judgement.
+  section('A class message says which line it is about');
+  {
+    const src = [
+      '---',                                              // 1
+      'id: bad-probe',                                    // 2
+      'name: Bad Probe',                                  // 3
+      'system: rifts',                                    // 4
+      'source_book: "Probe"',                             // 5
+      'category: occ',                                    // 6
+      'hit_points_base: "P.E. + 1D6 per level"',          // 7
+      'sdc_base: "3D6"',                                  // 8
+      'attribute_maximums: { PB: zero }',                 // 9
+      'skills:',                                          // 10
+      '  occ_skills:',                                    // 11
+      '    - { name: "Boxing" }',                         // 12
+      '    - { choose: 2, from: ["A"] }',                 // 13
+      '  # a comment inside the block does not end it',   // 14
+      '  occ_related_skills:',                            // 15
+      '    count: lots',                                  // 16
+      'bonuses:',                                         // 17
+      '  saves: { magic: "x" }',                          // 18
+      '  at_level:',                                      // 19
+      '    - { level: 3, combat: { strike: "soon" } }',   // 20
+      'variants:',                                        // 21
+      '  - id: child',                                    // 22
+      '    name: Child',                                  // 23
+      '  - id: adult',                                    // 24
+      '    name: Adult',                                  // 25
+      '    skill_overrides: { Nope: 5 }',                 // 26
+      '---', '', '## Lore', '', 'x', ''].join('\n');
+    const res = parseClassMarkdown(src);
+    const lineFor = (re) => {
+      for (const kind of ['errors', 'warnings']) {
+        const i = res[kind].findIndex((m) => re.test(m));
+        if (i >= 0) return res.lines[kind][i];
+      }
+      return 'no such message';
+    };
+    check('the probe is refused, and every message has a slot beside it',
+      res.ok === false && res.lines.errors.length === res.errors.length
+      && res.lines.warnings.length === res.warnings.length, res.errors.join(' | '));
+    const want = [
+      [/^attribute_maximums\.PB /, 9, 'a top-level key written inline'],
+      [/^skills\.occ_skills choice-group /, 11, 'a nested key'],
+      [/^skills\.occ_skills "Boxing" /, 12, 'an entry named where the path ends, on its own line'],
+      [/^skills\.occ_related_skills\.count /, 16, 'a key two levels down, past a comment'],
+      [/^bonuses\.saves\.magic /, 18, 'a key inside an inline map, on the map\'s line'],
+      [/^bonuses\.at_level\[3\]/, 19, 'a list step, on its list'],
+      [/^variant "adult"/, 24, 'a variant, on its own id and not the first one\'s'],
+    ];
+    for (const [re, line, what] of want) {
+      check(`${what} is line ${line}`, lineFor(re) === line, `${re} -> ${lineFor(re)}`);
+    }
+
+    check('a message that names no key has no line, and says null rather than guessing',
+      locateMessage('Missing required field: name', src) === null
+      && locateMessage('No ## Lore section in body', src) === null
+      && locateMessage('magic.spells_starting must be a number', src) === null);
+    check('and a path that runs out part-way stops at the last key that exists',
+      JSON.stringify(locateMessage('skills.secondary_skills.count must be a number', src))
+        === JSON.stringify({ key: 'skills', line: 10 }));
+    // "Boxing" is on line 12, under occ_skills. A message about a list this
+    // class does not have must not borrow that line.
+    check('a quoted name is only looked for under the key the path reached',
+      locateMessage('skills.secondary_skills "Boxing" has no numeric base', src)?.line === 10);
+    check('text with no frontmatter has no lines to point at',
+      locateMessage('skills.occ_skills is wrong', '# just markdown') === null);
+
+    // EVERY message a shipped class produces, not a sample. A message that
+    // opens with one of the class's own top-level keys must resolve.
+    let messages = 0;
+    const lost = [];
+    for (const f of readdirSync(join(appDir, 'db')).filter((n) => n.endsWith('.sql'))) {
+      let md = null;
+      try { md = extractClassMarkdown(readFileSync(join(appDir, 'db', f), 'utf8')); } catch { md = null; }
+      if (!md) continue;
+      const r = parseClassMarkdown(md);
+      if (!r?.data) continue;
+      for (const kind of ['errors', 'warnings']) {
+        r[kind].forEach((m, i) => {
+          const head = m.match(/^[a-z_][a-z0-9_]*/)?.[0];
+          if (!head || !(head in r.data)) return;
+          messages++;
+          if (!r.lines[kind][i]) lost.push(`${f}: ${m.slice(0, 60)}`);
+        });
+      }
+    }
+    check('the shipped classes still produce messages to place', messages > 20, String(messages));
+    check('and every one that opens with a key of its class is placed', lost.length === 0, lost.slice(0, 5).join('; '));
+
+    // class-check prints it, for the parser's messages and its own.
+    const dir = mkdtempSync(join(tmpdir(), 'lines-'));
+    try {
+      const f = join(dir, 'bad-probe.md');
+      writeFileSync(f, src);
+      const out = spawnSync(process.execPath, [join(repoRoot, 'scripts', 'class-check.mjs'), f, '--no-catalog'],
+        { encoding: 'utf8' });
+      const text = `${out.stdout || ''}${out.stderr || ''}`;
+      check('class-check prints the line beside a parser error',
+        /- skills\.occ_related_skills\.count must be a number {2}\(line 16\)/.test(text), text.slice(0, 400));
+      check('and beside a warning of its own',
+        /- source_book "Probe" matches no title[^\n]*\(line 5\)/.test(text));
+      check('and leaves a message with no line as it was',
+        /- \d+ field\(s\) a racial class would discard[^\n]*(?<!\(line \d+\))\n/.test(text));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 }

@@ -3199,6 +3199,89 @@ export function parseYaml(text) {
   return value;
 }
 
+// ---------- where a message points ----------
+//
+// An error from this file names what is wrong by PATH - `skills.occ_skills
+// "Boxing" ...`, `bonuses.at_level[3].saves ...`, `variant "adult" ...` - and
+// never said where that is. On a 200-line class the author searched for it.
+//
+// This reads the path back off the front of a message and finds the line it
+// names, as deep as the frontmatter spells it out in block style: a key
+// written inline (`bonuses: { combat: { ... } }`) is on its parent's line, so
+// the answer stops there, which is still the right line to open.
+//
+// DERIVED FROM THE MESSAGE, not carried by the validators. Eighteen of them
+// push some 240 messages through four different signatures, and threading a
+// position through each would touch every one to say what the message
+// already says. The cost of doing it this way is that a message which does
+// not begin with a path has no line: `Missing required field: name` cannot
+// point at a key that is not there, and gets null. smoke holds every message
+// the three fixtures and a set of broken classes produce to resolving, or to
+// being on a short list of ones that cannot.
+//
+// Takes the whole class markdown and answers in ITS line numbers (the opening
+// `---` is line 1), since that is the file the author has open.
+export function locateMessage(message, markdown) {
+  const all = String(markdown ?? '').split(/\r?\n/);
+  if (all[0]?.trim() !== '---') return null;
+  const close = all.findIndex((l, i) => i > 0 && l.trim() === '---');
+  if (close < 0) return null;
+  const lines = all.slice(1, close);          // lines[i] is file line i + 2
+  const text = String(message ?? '');
+
+  let path;
+  let variantId = null;
+  const variant = text.match(/^variant "([^"]+)"/);
+  if (variant) {
+    path = ['variants'];
+    variantId = variant[1];
+  } else {
+    const head = text.match(/^[a-z_][a-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[^\]]*\])*/);
+    if (!head) return null;
+    path = head[0].replace(/\[[^\]]*\]/g, '').split('.');
+  }
+
+  const indentOf = (l) => l.length - l.trimStart().length;
+  const skippable = (l) => l.trim() === '' || l.trimStart().startsWith('#');
+  // The block under the key on line `at`: every following line indented
+  // deeper than it, blank lines and comments included.
+  const blockEnd = (at, limit) => {
+    const own = indentOf(lines[at]);
+    let e = at + 1;
+    while (e < limit && (skippable(lines[e]) || indentOf(lines[e]) > own)) e++;
+    return e;
+  };
+  const keyLine = (key) => new RegExp('^\\s*(?:-\\s+)?["\']?' + key + '["\']?\\s*:');
+
+  let at = lines.findIndex((l) => indentOf(l) === 0 && keyLine(path[0]).test(l));
+  if (at < 0) return null;
+  let end = blockEnd(at, lines.length);
+  let depth = 1;
+  for (; depth < path.length; depth++) {
+    const re = keyLine(path[depth]);
+    let found = -1;
+    for (let i = at + 1; i < end; i++) if (re.test(lines[i])) { found = i; break; }
+    if (found < 0) break;
+    at = found;
+    end = blockEnd(at, end);
+  }
+  if (variantId) {
+    const re = new RegExp('\\bid\\s*:\\s*["\']?' + variantId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '["\']?(?:\\s|,|}|$)');
+    for (let i = at; i < end; i++) if (re.test(lines[i])) { at = i; break; }
+  } else {
+    // `skills.occ_skills "Boxing" has no ...`, `skills.mos["Military"] ...`:
+    // the entry is named right where the path ends, so its own line is
+    // better than the list's. Only if the path was followed all the way -
+    // a name found under some OTHER key would point at the wrong thing.
+    const named = text.match(/^[a-z_][\w.]*(?:\["([^"\]]+)"\])?(?: "([^"]+)")?/);
+    const name = named?.[2] ?? named?.[1] ?? null;
+    if (name && depth === path.length) {
+      for (let i = at + 1; i < end; i++) if (lines[i].includes(name)) { at = i; break; }
+    }
+  }
+  return { key: path.slice(0, depth).join('.'), line: at + 2 };
+}
+
 // ---------- class file parser ----------
 
 // Splits the markdown body into { "lore": "...", "gm notes": "..." } keyed by lowercased ## heading.
@@ -4375,5 +4458,10 @@ export function parseClassMarkdown(text) {
   data.gm_notes = sections['gm notes'] ?? null;
   if (!data.lore) warnings.push('No ## Lore section in body');
 
-  return { ok: errors.length === 0, data, errors, warnings };
+  // Where each message points, in this markdown's own line numbers, or null.
+  // Parallel to the two lists rather than folded into the strings, so nothing
+  // that reads a message has to learn to strip a suffix. See locateMessage.
+  const lineOf = (m) => locateMessage(m, text)?.line ?? null;
+  return { ok: errors.length === 0, data, errors, warnings,
+           lines: { errors: errors.map(lineOf), warnings: warnings.map(lineOf) } };
 }
