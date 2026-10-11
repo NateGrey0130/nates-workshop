@@ -631,7 +631,7 @@ writes are gated (see [Permissions](#permissions)).
 | `campaigns/[id]/currency` | GET / POST | Balances and the ledger behind them; append a signed entry |
 | `journal/[entryId]` | PATCH / DELETE | Edit or delete one entry — the author, or the GM. A body edit **reconciles its `@mentions`** |
 | `campaigns/[id]/npcs` | GET / POST | The dossier roster (`?status=`, `?faction=`, `?q=`), with a mention count; create one by hand |
-| `campaigns/[id]/npcs/[npcId]` | GET / PATCH / DELETE | The dossier **and every entry that mentions them, oldest first**; edit; delete (the notes are untouched) |
+| `campaigns/[id]/npcs/[npcId]` | GET / PATCH / DELETE | The dossier **and every entry that mentions them, oldest first**, with `can_delete`; edit (any member); delete (its creator or the G.M.; the notes are untouched) |
 | `campaigns/[id]/npcs/[npcId]/portrait` | GET / POST / DELETE | Stream, upload (raw `image/*` body, 5MB) and remove. **Never a public bucket URL** — every read goes through the membership check |
 | `campaigns/[id]/entries` | GET / POST | The GM's own pages (`?kind=`, `?q=`), with each one's picture and revealed counts; write one. **GM only, both verbs** |
 | `campaigns/[id]/entries/[entryId]` | GET / PATCH / DELETE | One page with its pictures; edit; delete - which removes its images' **R2 objects** in the same request, because no cascade reaches a bucket. **GM only** |
