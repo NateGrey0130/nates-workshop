@@ -69,6 +69,14 @@
   import { categoryAllows, categoryLabel } from '/apps/character-creator/js/parser.js';
   globalThis.skillCats = { categoryAllows, categoryLabel };
 </script>
+<!-- What a new skill pick is STORED at: the catalog base, a formula resolved
+     against the character's attributes, plus the class's bonus for a related
+     pick's category. The server writes this number (`resolvePicks`); the two
+     skill pickers print it beside each skill, so they ask the same function. -->
+<script type="module">
+  import { newPickPercent } from '/apps/character-creator/js/leveling.js';
+  globalThis.skillPercent = { newPickPercent };
+</script>
 <script src="/apps/character-creator/js/undo-toast.js"></script>
 <script src="sheet.js"></script>
 </body>
