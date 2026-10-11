@@ -6,6 +6,7 @@
 //        kind = 'npc' character in this campaign; null unlinks.
 // DELETE …/npcs/:npcId — remove the dossier. Its mentions cascade; the notes
 //        themselves are untouched, because the @ in the text is just text.
+//        Whoever created it, or the G.M. - see mayDelete.
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
 import { STATUSES, trim, serialiseAliases, parseAliases, forViewer } from '../npcs.js';
@@ -26,7 +27,8 @@ export async function onRequestGet({ request, env, params }) {
      WHERE m.npc_id = ? ORDER BY j.created_at, j.id`
   ).bind(params.npcId).all();
 
-  return json({ npc: forViewer(npc, guard.access.isGm), mentions: results, can_write: guard.access.isMember });
+  return json({ npc: forViewer(npc, guard.access.isGm), mentions: results, can_write: guard.access.isMember,
+                can_delete: mayDelete(npc, guard) });
 }
 
 export async function onRequestPatch({ request, env, params }) {
@@ -97,6 +99,9 @@ export async function onRequestDelete({ request, env, params }) {
   if (guard.res) return guard.res;
   const npc = await found(env, params);
   if (!npc) return json({ error: 'NPC not found' }, 404);
+  if (!mayDelete(npc, guard)) {
+    return json({ error: 'Only the GM or whoever created this dossier can delete it' }, 403);
+  }
 
   // The portrait goes with it. An orphaned object in R2 costs money forever and
   // is referenced by nothing, which is the one case where deleting is clearly
@@ -107,6 +112,17 @@ export async function onRequestDelete({ request, env, params }) {
   }
   await env.DB.prepare('DELETE FROM npcs WHERE id = ?').bind(params.npcId).run();
   return json({ ok: true });
+}
+
+// Any member may write a dossier and edit one: it is the table's shared
+// memory of a person. Deleting is different in kind - it takes the portrait
+// out of R2 and every mention with it, and there is no undo once the page's
+// own grace period has passed. Until 2026-10-10 any member could do that to
+// anybody's dossier. Now it is the person who made it, or the G.M., which is
+// the journal's rule for an entry (Nate's decision). A dossier with no
+// recorded creator is the G.M.'s alone.
+function mayDelete(npc, guard) {
+  return guard.access.isGm || (!!npc.created_by && npc.created_by === guard.email);
 }
 
 async function found(env, params) {
