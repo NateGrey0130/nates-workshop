@@ -19,7 +19,7 @@ import { join } from 'node:path';
 import { appDir, repoRoot, check, section, wantSection, appPath } from '../harness.mjs';
 import { fixedFormulaValue } from '../../js/dice.js';
 import { parseClassMarkdown } from '../../js/parser.js';
-import { buildProposal } from '../../js/leveling.js';
+import { buildProposal, spellTraditionAllowed, spellTraditionsAllowed } from '../../js/leveling.js';
 
 // Every @media print block's body, brace-matched and concatenated.
 //
@@ -107,6 +107,7 @@ const SECTIONS = [
   'Board & Tissue: the chip column and the mark',
   'The front door agrees with the rooms',
   'A typed override is drawn as text',
+  'A levelled-up spell pick keeps to the traditions of its class',
   'Changes that could not be sent',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
@@ -1953,6 +1954,84 @@ export function run() {
       !marked.includes('<img') && marked.includes('&lt;img src=x onerror=alert(1)&gt;'), label(marked));
     check('and the three buttons beside it take a number whatever was typed',
       (marked.match(/(nextAttack|newRound|resetMelee)\(0\)/g) || []).length === 3, marked);
+  }
+
+  // ---------- A levelled-up spell pick keeps to the class's traditions ----------
+  // BOOK-INGEST-AUDIT F57 gave a class the traditions its level-gated spell
+  // picks may reach, and the server has refused a spell outside them since. The
+  // banked-picks panel applied the same test; the level-up picker did not. So a
+  // Ley Line Walker levelling up was offered every warlock and necromancy spell
+  // in the catalog, chose one, and was refused on Confirm.
+  //
+  // What is asserted is AGREEMENT WITH THE SERVER'S OWN RULE, spell by spell:
+  // js/leveling.js is what resolvePowerPicks asks, and the sheet cannot import
+  // it, so the only thing that keeps the two in step is a check that runs both.
+  section('A levelled-up spell pick keeps to the traditions of its class');
+  {
+    const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
+    const cut = (from, to) => {
+      const a = sheetSrc.indexOf(from), b = sheetSrc.indexOf(to, a);
+      return a >= 0 && b > a ? sheetSrc.slice(a, b) : '';
+    };
+    const src = cut('function powerPickerBlock(', '// Every power slot the level-up panel')
+      + cut('function pendingPowersPanel(', 'async function claimPowers(');
+    const spells = [
+      { name: 'Globe of Daylight', level: 1, tradition: null, system: null },
+      { name: 'Air: Cloud of Steam', level: 1, tradition: 'Warlock', system: null },
+      { name: 'Necro: Animate Dead', level: 1, tradition: 'necromancy', system: null },
+    ];
+    const run = (cls, pending = []) => {
+      const C = { data: { campaign_system: 'rifts', powers: [] }, cls, spellCatalog: spells, psiCatalog: [],
+        talentCatalog: [], claimingPowers: true, pendingPowers: pending,
+        pendingPowersTotal: pending.reduce((n, g) => n + g.count, 0) };
+      try {
+        return new Function('C', 'escHtml', 'globalThis', 'poolMax',
+          src + '\nreturn { powerPickerBlock, pendingPowersPanel };')(C, (x) => String(x ?? ''), {}, () => null);
+      } catch (e) {
+        check('the pickers run outside the page', false, e.message);
+        return null;
+      }
+    };
+    const options = (html) => [...html.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+    const levelUp = (cls) => {
+      const fns = run(cls);
+      return fns ? options(fns.powerPickerBlock(
+        buildProposal({ level: 1, hp_max: null, sdc_max: null, skills: [] }, cls, 2))) : null;
+    };
+    const serverAllows = (cls) => spells
+      .filter((x) => spellTraditionAllowed(x, spellTraditionsAllowed(cls))).map((x) => x.name);
+
+    const none = { magic: { spells_per_level: 1 } };
+    const warlock = { magic: { spells_per_level: 1, spell_traditions_allowed: ['warlock'] } };
+    const both = { magic: { spells_per_level: 1, spell_traditions_allowed: ['Warlock', 'Necromancy'] } };
+    check('a class naming no tradition is offered general spells only',
+      JSON.stringify(levelUp(none)) === '["Globe of Daylight"]', JSON.stringify(levelUp(none)));
+    check('a class naming one is offered that one beside them, whatever the capitals',
+      JSON.stringify(levelUp(warlock)) === '["Globe of Daylight","Air: Cloud of Steam"]', JSON.stringify(levelUp(warlock)));
+    for (const [what, cls] of [['none', none], ['one', warlock], ['two', both]]) {
+      check('the level-up picker offers exactly what the server will accept: a class naming ' + what,
+        JSON.stringify(levelUp(cls)) === JSON.stringify(serverAllows(cls)),
+        JSON.stringify({ picker: levelUp(cls), server: serverAllows(cls) }));
+    }
+    // A named list replaces the gate, as it does on the server (`!list &&` there).
+    const listed = { magic: { spells_schedule: [{ level: 2, count: 1, from: ['Necro: Animate Dead'] }] } };
+    check('a grant naming its spells is offered them, tradition or not',
+      JSON.stringify(levelUp(listed)) === '["Necro: Animate Dead"]', JSON.stringify(levelUp(listed)));
+
+    // The banked panel reads the grant's own frozen list, through the same test.
+    const banked = (traditions) => {
+      const fns = run(none, [{ kind: 'spell', granted_at_level: 2, slot: 0, count: 1, spell_levels: null, traditions }]);
+      return fns ? options(fns.pendingPowersPanel()) : null;
+    };
+    check('a banked pick keeps the traditions it was granted with',
+      JSON.stringify(banked(['warlock'])) === '["Globe of Daylight","Air: Cloud of Steam"]', JSON.stringify(banked(['warlock'])));
+    check('one granted with none reaches general spells only',
+      JSON.stringify(banked([])) === '["Globe of Daylight"]', JSON.stringify(banked([])));
+    check('and one banked before the column existed is unrestricted, as the server reads it',
+      banked(null)?.length === 3 && spells.every((x) => spellTraditionAllowed(x, null)), JSON.stringify(banked(null)));
+    check('both pickers ask one test, so they cannot drift apart again',
+      (sheetSrc.match(/spellTraditionOk\(x, /g) || []).length === 2
+        && !/g\.traditions\.some\(/.test(sheetSrc), 'a picker has its own copy of the tradition test');
   }
 
   // ---------- Changes that could not be sent ----------
