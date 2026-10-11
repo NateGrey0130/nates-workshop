@@ -385,6 +385,14 @@ agent and stating no count.
 `.claude/hooks/guard-bash.sh`. A fresh machine must add the user-level
 registration by hand; `hook-registration.mjs` checks it locally.
 
+**Two more hooks are registered at user level only**, each as
+`node "<absolute path>"`: `.claude/hooks/session-budget.mjs` on
+`UserPromptSubmit` and on `PostToolUse` for `Bash`, which warns about a large
+context or a cold cache and never blocks, and `.claude/hooks/agent-slice.mjs`
+on `PreToolUse` for `Agent|Task`, which refuses a `book-reconcile` brief with
+no `Slice:` line of 15 pages or fewer. Neither guards a tree, so a repo
+registration would only fire each one twice. The same check holds both.
+
 **`launch.json` exists twice.** The tracked `.claude/launch.json` is
 machine-independent. The working directory's untracked copy has every command
 wrapped in `cmd /c cd /d C:\Users\natha\Projects\nates-apps && …`. **Mirror any

@@ -29,6 +29,16 @@ A set of proposed rows or corrections, and the path to the book's OCR cache
 (`.cache/books/<slug>/txt/*.txt`, with word geometry in `../tsv/`). Read the
 book. Do not take the proposal's word for anything.
 
+**The brief carries a `Slice:` line, and it is your whole range.** It names
+printed folios, at most 15 pages in total (`Slice: 40-47, 112-115`), and
+`.claude/hooks/agent-slice.mjs` refuses a spawn without one. Check the rows
+that fall in it and stop. A row whose second reading lies outside the slice
+(an index at the back of the book) is the one reason to open a page beyond it:
+read that page and come back. If the rows need more of the book than the slice
+gives, **return what you have and say which pages are left**. A run that keeps
+going re-reads its whole context on every call, and one such run cost more
+than fifty ordinary ones.
+
 ## A CACHE PAGE IS NOT A PRINTED PAGE. Convert before you cite one
 
 You are asked below to report *where in the book* you read a fact, and the cache
