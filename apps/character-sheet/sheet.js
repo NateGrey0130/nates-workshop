@@ -1178,10 +1178,43 @@ function hitToHtml() {
       ${targets.map((t) => `<option value="${escHtml(t.value)}"${C.hitTo === t.value ? ' selected' : ''}>${escHtml(t.label)}</option>`).join('')}
     </select>`;
 }
-function repaintHitTo() { const el = $('play-hit-to'); if (el) el.outerHTML = hitToHtml(); }
+function repaintHitTo() {
+  const el = $('play-hit-to');
+  if (el) { el.outerHTML = hitToHtml(); return; }
+  // Not drawn, because there was only the body to hit when the bar was built.
+  // It goes where playActionsHtml puts it: in front of Damage.
+  document.querySelector('#play-actions .dmg')?.insertAdjacentHTML('beforebegin', hitToHtml());
+}
+
+// THE PICKER NAMES AN ARMOUR BY ITS PLACE IN THE STORED LIST, and armour is
+// edited in place and saved by autosave with no render. Nothing redrew the
+// picker then: a first armour typed in had no picker until a reload, and a
+// removed one stayed on offer, where choosing it took the points off whichever
+// armour had moved into its place. So an armour save redraws it.
+//
+// The choice goes back to the body when the list changed length or the chosen
+// place holds another name. Left alone it would still be a valid place, and
+// Damage would land on an armour nobody chose.
+function armorSaved(before) {
+  const at = /^armor:(\d+)$/.exec(C.hitTo || '')?.[1];
+  const now = C.data.armor || [];
+  if (at != null && (before.length !== now.length || before[at]?.name !== now[at]?.name)) C.hitTo = 'body';
+  repaintHitTo();
+}
+
+// The armour slots on the page that hold anything, in page order. A slot with
+// every field blank is not stored (collectSections), so stored armour i is the
+// i-th of THESE and not the i-th slot. A hit was written by the slot's own
+// number: with the first slot blanked by hand it went onto the blank slot, and
+// the next armour save stored that - the hit gone from the armour that took
+// it, and a nameless armour holding the number.
+function filledArmorSlots() {
+  return [...($('armor-list')?.querySelectorAll('.armor-slot') || [])].filter((slot) =>
+    [...slot.querySelectorAll('input[data-armor]')].some((el) => el.value.trim() !== ''));
+}
 
 function paintArmorInput(i) {
-  const el = document.querySelector(`input[data-armor="${i}"][data-key="mdc_current"]`);
+  const el = filledArmorSlots()[i]?.querySelector('input[data-key="mdc_current"]');
   if (el) el.value = C.data.armor?.[i]?.mdc_current ?? '';
 }
 function paintVesselInput(vid, location) {
@@ -4585,7 +4618,9 @@ async function sendEdits(keys, vals, retried = false) {
       ...vals, expect_updated_at: C.data.updated_at || undefined,
     }));
     if (res?.updated_at) C.data.updated_at = res.updated_at;
+    const armorWas = C.data.armor || [];
     applyToData(vals);
+    if (keys.includes('armor')) armorSaved(armorWas);
     // Typed into again while this was in flight: the new baseline is what was
     // just stored, not what it was before.
     for (const k of keys) {

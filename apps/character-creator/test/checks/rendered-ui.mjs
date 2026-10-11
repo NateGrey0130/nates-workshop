@@ -111,6 +111,7 @@ const SECTIONS = [
   'Changes that could not be sent',
   'A redraw keeps what was typed',
   'A refused save keeps what was typed since',
+  'The Hit to picker follows the armour list',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -2464,6 +2465,170 @@ export async function run() {
         check(`a save that fails (${state}) leaves the edit unsent`,
           ok === false && dirty(w) === 'bio' && w.AS.state === state, JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state }));
       }
+    }
+  }
+
+  // ---------- The Hit to picker follows the armour list ----------
+  // The picker beside Damage names an armour by its place in the stored list,
+  // and it was drawn by render() and by a hit and by nothing else. Armour is
+  // edited in place and saved by autosave, with no render. So a sheet whose
+  // first armour had just been typed in offered no picker until a reload; one
+  // whose armour had been removed still offered it, and choosing it took the
+  // points off whichever armour had moved into its place.
+  //
+  // And a slot with every field blanked is not stored, so the stored list was
+  // one shorter than the page from there down. A hit was written onto the page
+  // by the stored index: onto the blank slot. The next armour save then stored
+  // the page - the hit gone from the armour that took it, and a nameless armour
+  // holding the number.
+  //
+  // RUN, not matched: the sheet's own save path (markDirty to sendEdits), its
+  // armour reader and its picker over stand-in slots and a stand-in server that
+  // moves its version on a hit, as events.js does.
+  section('The Hit to picker follows the armour list');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    // From the armour helpers to the function that writes a hit onto the page.
+    const from = sheet.indexOf('\nconst intOrNull = '), last = sheet.indexOf('\nfunction paintArmorInput(i) {');
+    const picker = from < 0 || last < from ? null : sheet.slice(from, sheet.indexOf('\n}\n', last) + 2);
+    const src = [picker, ...['function removeArmor(i) {', 'function reindexArmor() {', 'function collectSections() {',
+      'function markDirty(key, delay = AS_DELAY) {', 'function pendingValues(keys) {', 'function applyToData(vals) {',
+      'async function saveNow() {', 'async function sendEdits(keys, vals, retried = false) {'].map(fn)];
+    check('the sheet has its armour, picker and autosave functions', src.every(Boolean),
+      'one of them is not where this looks for it');
+    const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
+    const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+    const KEYS = ['name', 'ar', 'mdc_current', 'mdc_max', 'weight', 'cost', 'prowl'];
+    // `[data-armor="1"][data-key="name"]`, read as the conditions it states.
+    const matches = (el, sel) => [...sel.matchAll(/\[data-([a-z-]+)(?:="([^"]*)")?\]/g)].every(([, attr, v]) => {
+      const key = attr.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+      return el.dataset[key] != null && (v === undefined || String(el.dataset[key]) === v);
+    });
+
+    const world = (stored = []) => {
+      const server = { updated_at: 'v1', armor: clone(stored) };
+      const AS = { dirty: new Set(), base: {}, timer: null, busy: null, state: 'idle', conflict: null };
+      const C = { canWrite: true, hitTo: 'body', vehicles: [], data: clone(server) };
+      const w = { server, AS, C, slots: [], bar: '' };
+      let version = 1;
+      const bump = () => { server.updated_at = 'v' + (++version); };
+      const slot = (a, i) => {
+        const s = { inputs: KEYS.map((key) => ({ dataset: { armor: i, key }, value: a[key] ?? '' })) };
+        s.querySelectorAll = (sel) => s.inputs.filter((el) => matches(el, sel));
+        s.querySelector = (sel) => s.querySelectorAll(sel)[0] || null;
+        s.remove = () => { w.slots.splice(w.slots.indexOf(s), 1); };
+        return s;
+      };
+      // What render() draws: one slot per stored armour, and the picker.
+      w.draw = () => { w.slots = (C.data.armor || []).map(slot); w.bar = fns.hitToHtml(); };
+      const inputs = () => w.slots.flatMap((s) => s.inputs);
+      const doc = {
+        querySelectorAll: (sel) => (/data-armor/.test(sel) ? inputs().filter((el) => matches(el, sel)) : []),
+        querySelector: (sel) => {
+          if (/data-armor/.test(sel)) return inputs().find((el) => matches(el, sel)) || null;
+          // The Damage button the picker sits in front of.
+          if (/dmg/.test(sel)) return { insertAdjacentHTML: (where, html) => { if (where === 'beforebegin') w.bar = html; } };
+          return null;
+        },
+      };
+      const $ = (elId) => {
+        if (elId === 'armor-list') return { querySelectorAll: () => [...w.slots] };
+        if (elId === 'play-hit-to') return w.bar ? { set outerHTML(html) { w.bar = html; } } : null;
+        return null;
+      };
+      const api = async (path, req) => {
+        if (!req) return { character: clone(server) };
+        const body = JSON.parse(req.body);
+        if (body.expect_updated_at !== server.updated_at) throw { status: 409, detail: { conflict: true } };
+        const { expect_updated_at: _, ...fields } = body;
+        Object.assign(server, clone(fields)); bump();
+        return { updated_at: server.updated_at };
+      };
+      const fns = new Function('AS', 'C', 'id', 'AS_DELAY', 'AS_SECTIONS', 'document', '$', 'api', 'jsonReq', 'escHtml',
+        'poolMax', 'paintPool', 'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails',
+        src.join('\n') + '; return { markDirty, saveNow, removeArmor, hitToHtml, paintArmorInput };')(
+        AS, C, 3, 1500, ['bio', 'combat', 'saves', 'armor'], doc, $, api,
+        (method, body) => ({ method, body: JSON.stringify(body) }), (s) => String(s),
+        () => null, () => {}, (state) => { AS.state = state; }, () => {},
+        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => []);
+      w.fns = fns;
+      w.add = (a) => { w.slots.push(slot({}, w.slots.length)); for (const [k, v] of Object.entries(a)) w.type(w.slots.length - 1, k, v); };
+      w.type = (i, key, v) => { w.slots[i].inputs.find((el) => el.dataset.key === key).value = v; fns.markDirty('armor'); };
+      w.blank = (i) => { for (const key of KEYS) w.type(i, key, ''); };
+      w.options = () => [...w.bar.matchAll(/<option value="([^"]*)"( selected)?>([^<]*)<\/option>/g)]
+        .map(([, value, on, label]) => (on ? '>' : '') + value + ' ' + label.trim());
+      // Damage on whatever the picker holds: one field of one stored entry by
+      // its index, the version moved, and the number written onto the page.
+      w.hit = (amt) => {
+        const i = Number(String(C.hitTo).split(':')[1]);
+        const a = C.data.armor[i];
+        if (!a || !server.armor[i]) return null;
+        const to = String((parseInt(a.mdc_current, 10) || parseInt(a.mdc_max, 10)) - amt);
+        a.mdc_current = to; server.armor[i].mdc_current = to; bump();
+        fns.paintArmorInput(i);
+        return server.armor[i].name;
+      };
+      w.onPage = () => w.slots.map((s) => s.inputs[0].value + ':' + s.inputs[2].value).join(' | ');
+      w.held = () => server.armor.map((a) => a.name + ':' + a.mdc_current).join(' | ');
+      w.draw();
+      return w;
+    };
+    const ALPHA = { name: 'Alpha', mdc_max: '100' }, BRAVO = { name: 'Bravo', mdc_max: '200' }, CHARLIE = { name: 'Charlie', mdc_max: '300' };
+    const full = (a) => ({ ...Object.fromEntries(KEYS.map((k) => [k, ''])), ...a });
+
+    if (src.every(Boolean)) {
+      let w = world();
+      check('a sheet with no armour draws no picker', w.bar === '' && w.C.hitTo === 'body', w.bar);
+      w.add(ALPHA); w.add(BRAVO);
+      let ok = await w.fns.saveNow();
+      check('armour typed in and saved is offered at once, without a redraw',
+        ok === true && w.options().join(', ') === '>body Hit to: body, armor:0 Alpha (100/100), armor:1 Bravo (200/200)',
+        JSON.stringify({ ok, picker: w.options(), stored: w.held() }));
+
+      w = world([ALPHA, BRAVO, CHARLIE].map(full));
+      w.C.hitTo = 'armor:1'; w.draw();
+      w.type(1, 'mdc_max', '250');
+      await w.fns.saveNow();
+      check('an edit to the chosen armour keeps the choice and redraws its numbers',
+        w.C.hitTo === 'armor:1' && w.options().includes('>armor:1 Bravo (250/250)'), JSON.stringify(w.options()));
+
+      w.fns.removeArmor(0);
+      await w.fns.saveNow();
+      check('a removed armour is no longer offered',
+        w.options().join(', ') === '>body Hit to: body, armor:0 Bravo (250/250), armor:1 Charlie (300/300)',
+        JSON.stringify(w.options()));
+      check('and the choice does not pass to the armour that took its place',
+        w.C.hitTo === 'body', `chosen Bravo at armor:1, which is now ${w.C.data.armor[1]?.name}; the picker holds ${w.C.hitTo}`);
+
+      w.fns.removeArmor(0); w.fns.removeArmor(0);
+      await w.fns.saveNow();
+      check('the last armour removed takes the picker with it', w.bar === '' && w.C.hitTo === 'body', w.bar);
+
+      // Three suits of one name: the place still holds that name afterwards.
+      w = world([{ name: 'Plate', mdc_max: '50' }, { name: 'Plate', mdc_max: '60' }, { name: 'Plate', mdc_max: '70' }].map(full));
+      w.C.hitTo = 'armor:1'; w.draw();
+      w.fns.removeArmor(0);
+      await w.fns.saveNow();
+      check('nor to a namesake, when a shorter list is all that says the places moved',
+        w.C.hitTo === 'body', `the picker holds ${w.C.hitTo}: ${JSON.stringify(w.options())}`);
+
+      // The first slot blanked by hand, the second still filled.
+      w = world([BRAVO, CHARLIE].map(full));
+      w.blank(0);
+      await w.fns.saveNow();
+      check('a slot blanked by hand is not stored', w.held() === 'Charlie:' && w.slots.length === 2, w.held());
+      w.C.hitTo = w.options().find((o) => /Charlie/.test(o))?.split(' ')[0];
+      const took = w.hit(10);
+      check('a hit on the armour below it is written on that armour\'s slot',
+        took === 'Charlie' && w.onPage() === ': | Charlie:290', JSON.stringify({ took, page: w.onPage() }));
+      w.type(1, 'weight', '20');
+      ok = await w.fns.saveNow();
+      check('and the next armour save keeps the hit where it landed',
+        ok === true && w.held() === 'Charlie:290', JSON.stringify({ ok, stored: w.held(), state: w.AS.state }));
     }
   }
 
