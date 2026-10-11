@@ -11,7 +11,7 @@
 // npcs/[npcId]/portrait.js gives: the whole site is behind Access and a
 // campaign's pictures are as private as its notes.
 
-import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember } from '../../../_lib/auth.js';
 
 async function found(env, params) {
   return env.DB.prepare(
@@ -20,11 +20,8 @@ async function found(env, params) {
 }
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
   if (!env.MEDIA) return json({ error: 'Image storage is not configured on this environment' }, 501);
 
   const image = await found(env, params);

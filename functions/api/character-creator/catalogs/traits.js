@@ -19,6 +19,7 @@
 // timestamp, and a data script moves the rows without touching this Worker.
 
 import { getUserEmail, unauthorized, json } from '../_lib/auth.js';
+import { jsonWithEtag } from '../_lib/etag.js';
 import { getCatalog } from '../../../../apps/character-creator/js/catalog-fields.js';
 import { SECOND_FORM_TRAIT_CATALOGS } from '../../../../apps/character-creator/js/parser.js';
 
@@ -47,12 +48,5 @@ export async function onRequestGet({ request, env }) {
   });
 
   const body = JSON.stringify({ catalog: key, rows });
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
-  const hex = [...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  const etag = `W/"traits-${key}-${hex}"`;
-  const headers = { ETag: etag, 'Cache-Control': 'private, no-cache' };
-  if (request.headers.get('If-None-Match') === etag) {
-    return new Response(null, { status: 304, headers });
-  }
-  return new Response(body, { headers: { 'Content-Type': 'application/json', ...headers } });
+  return jsonWithEtag(request, body, `traits-${key}`);
 }

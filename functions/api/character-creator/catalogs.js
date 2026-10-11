@@ -6,6 +6,7 @@
 // endpoint rather than three because the wizard needs all of them at boot.
 
 import { getUserEmail, unauthorized } from './_lib/auth.js';
+import { jsonWithEtag } from './_lib/etag.js';
 import { applySystemBases, systemBaseMap, SKILL_BASE_COLUMNS } from '../../../apps/character-creator/js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from '../../../apps/character-creator/js/psionic-costs.js';
 
@@ -172,13 +173,5 @@ export async function onRequestGet({ request, env }) {
   // are 60KB raw and 5.4KB gzipped, measured against production 2026-09-13,
   // most of the raw size being `source_book` repeated 364 times and most of
   // that compressing away.
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
-  const hex = [...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  const etag = `W/"catalogs-${hex}"`;
-  const headers = { ETag: etag, 'Cache-Control': 'private, no-cache' };
-
-  if (request.headers.get('If-None-Match') === etag) {
-    return new Response(null, { status: 304, headers });
-  }
-  return new Response(body, { headers: { 'Content-Type': 'application/json', ...headers } });
+  return jsonWithEtag(request, body, 'catalogs');
 }

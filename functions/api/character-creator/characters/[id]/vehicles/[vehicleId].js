@@ -6,13 +6,14 @@
 // Mirrors characters/:id/items/:itemId, including the guard shape, because a
 // vessel is edited and lost the same way an item is.
 
-import { getUserEmail, unauthorized, json, readJson, forbidden, characterAccess }
+import { json, readJson, requireCharacter }
   from '../../../_lib/auth.js';
 
-async function guard(env, params, email) {
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return { err: json({ error: 'Character not found' }, 404) };
-  if (!access.canWrite) return { err: forbidden() };
+// requireCharacter's three answers - signed out, no such character, not yours
+// to change - and then this route's own: the row has to be on THIS character.
+async function guard(request, env, params) {
+  const auth = await requireCharacter(request, env, params.id);
+  if (auth.res) return { err: auth.res };
   const row = await env.DB.prepare(
     'SELECT * FROM character_vehicles WHERE id = ? AND character_id = ?'
   ).bind(params.vehicleId, params.id).first();
@@ -63,9 +64,7 @@ async function validateMdc(env, row, value) {
 }
 
 export async function onRequestPatch({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const { err, row } = await guard(env, params, email);
+  const { err, row } = await guard(request, env, params);
   if (err) return err;
 
   const b = await readJson(request);
@@ -88,9 +87,7 @@ export async function onRequestPatch({ request, env, params }) {
 }
 
 export async function onRequestDelete({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const { err } = await guard(env, params, email);
+  const { err } = await guard(request, env, params);
   if (err) return err;
 
   await env.DB.prepare(

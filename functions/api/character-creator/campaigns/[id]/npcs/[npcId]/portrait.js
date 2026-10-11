@@ -12,7 +12,7 @@
 // today and filament-forge already reads file bytes: the second and third users
 // exist. See SETUP.md — the bucket must exist before the deploy that binds it.
 
-import { json, requireCampaign } from '../../../../_lib/auth.js';
+import { json, requireCampaign, requireMember } from '../../../../_lib/auth.js';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = {
@@ -20,11 +20,8 @@ const TYPES = {
 };
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
   if (!env.MEDIA) return json({ error: 'Image storage is not configured on this environment' }, 501);
 
   // Two different 404s. The optional chain collapsed them into one, so asking

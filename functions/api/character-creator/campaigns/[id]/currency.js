@@ -9,15 +9,12 @@
 // Nothing here updates a row; entries are appended, and a mistake is corrected
 // by an opposing entry that says so.
 
-import { json, readJson, requireCampaign } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember } from '../../_lib/auth.js';
 import { entryInCampaign } from './items.js';
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
 
   const limit = Math.min(Number(new URL(request.url).searchParams.get('limit')) || 100, 500);
   const [balances, ledger] = await env.DB.batch([

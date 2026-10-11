@@ -8,15 +8,12 @@
 //        themselves are untouched, because the @ in the text is just text.
 //        Whoever created it, or the G.M. - see mayDelete.
 
-import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember } from '../../../_lib/auth.js';
 import { STATUSES, trim, serialiseAliases, parseAliases, forViewer } from '../npcs.js';
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
   const npc = await found(env, params);
   if (!npc) return json({ error: 'NPC not found' }, 404);
   npc.aliases = parseAliases(npc.aliases);

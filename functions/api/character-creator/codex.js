@@ -70,6 +70,7 @@
 // Fire Bolt. This route only reads, and answers any authenticated friend.
 
 import { getUserEmail, unauthorized, json } from './_lib/auth.js';
+import { jsonWithEtag } from './_lib/etag.js';
 import { loadPublished } from './_lib/class-store.js';
 import { SKILL_BASE_COLUMNS } from '../../../apps/character-creator/js/skill-base.js';
 
@@ -427,13 +428,5 @@ export async function onRequestGet({ request, env }) {
   // identically would falsely 304 into each other — and an empty catalog on a
   // fresh database is exactly that case, `{"gear":[]}` differing from
   // `{"spells":[]}` only by luck of the key name.
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
-  const hex = [...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  const etag = `W/"codex-${section}-${hex}"`;
-  const headers = { ETag: etag, 'Cache-Control': 'private, no-cache' };
-
-  if (request.headers.get('If-None-Match') === etag) {
-    return new Response(null, { status: 304, headers });
-  }
-  return new Response(body, { headers: { 'Content-Type': 'application/json', ...headers } });
+  return jsonWithEtag(request, body, `codex-${section}`);
 }

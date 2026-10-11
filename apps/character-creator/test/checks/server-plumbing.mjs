@@ -17,9 +17,12 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { paging } from '../../../../functions/api/character-creator/_lib/paging.js';
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../../functions/api/character-creator/_lib/sql-chunk.js';
+import { jsonWithEtag } from '../../../../functions/api/character-creator/_lib/etag.js';
+import { requireMember } from '../../../../functions/api/character-creator/_lib/auth.js';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
-const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging'];
+const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging',
+  'One revalidating answer, one member guard'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -266,5 +269,78 @@ check('a negative or zero limit falls back to the default',
   pageOf('?limit=-1').limit === 200 && pageOf('?limit=0').limit === 200);
 check('a non-numeric limit falls back to the default', pageOf('?limit=abc').limit === 200);
 check('a negative offset floors at zero', pageOf('?offset=-5').offset === 0);
+
+// ---------- One revalidating answer, one member guard ----------
+// Three things every route did for itself until 2026-10-10. Four catalog
+// routes ended in the same eight lines of body-hash ETag; seven member-only
+// GETs each re-tested membership and re-typed the refusal; two character
+// routes re-typed requireCharacter. Run here, then held as source so the next
+// route reaches for the helper.
+section('One revalidating answer, one member guard');
+{
+  const ask = (tag) => new Request('https://x/catalogs', tag ? { headers: { 'If-None-Match': tag } } : {});
+  const first = await jsonWithEtag(ask(), '{"gear":[]}', 'catalogs');
+  const tag = first.headers.get('ETag');
+  check('a first answer carries the body, a weak tag and store-but-ask',
+    first.status === 200 && await first.clone().text() === '{"gear":[]}'
+    && /^W\/"catalogs-[0-9a-f]{16}"$/.test(tag) && first.headers.get('Cache-Control') === 'private, no-cache'
+    && first.headers.get('Content-Type') === 'application/json', tag);
+  // The tag is the one these routes produced before the helper, byte for byte,
+  // so a browser holding one from last week still revalidates against it.
+  const old = await (async (body) => {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+    return `W/"catalogs-${[...new Uint8Array(digest, 0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('')}"`;
+  })('{"gear":[]}');
+  check('and the tag is the one the routes wrote out by hand', tag === old, `${tag} vs ${old}`);
+  const again = await jsonWithEtag(ask(tag), '{"gear":[]}', 'catalogs');
+  check('the same body asked for again is an empty 304 with the same tag',
+    again.status === 304 && await again.text() === '' && again.headers.get('ETag') === tag);
+  const changed = await jsonWithEtag(ask(tag), '{"gear":[1]}', 'catalogs');
+  check('a changed body is sent whole', changed.status === 200 && changed.headers.get('ETag') !== tag);
+  const other = await jsonWithEtag(ask(tag), '{"gear":[]}', 'codex-gear');
+  check('and the same bytes under another label do not 304 into each other',
+    other.status === 200 && other.headers.get('ETag') !== tag);
+
+  // requireMember against a stand-in database: who is asking decides.
+  const db = (gm, members) => ({ prepare: (sql) => ({ bind: (...b) => ({ first: async () => (
+    /FROM campaigns/.test(sql) ? (b[0] === 7 ? { id: 7, gm_email: gm } : null)
+      : (members.includes(b[1]) ? { n: 1 } : null)) }) }) });
+  const as = (email) => new Request('https://x/', email
+    ? { headers: { 'Cf-Access-Authenticated-User-Email': email } } : {});
+  const env = { DB: db('gm@x', ['player@x']) };
+  const who = async (email, id = 7) => {
+    const g = await requireMember(as(email), env, id);
+    return g.res ? g.res.status : 'in';
+  };
+  check('the G.M. and a player with a character are let in',
+    await who('gm@x') === 'in' && await who('player@x') === 'in');
+  check('a stranger is refused, a missing campaign is not found, and nobody is unauthorised',
+    await who('stranger@x') === 403 && await who('gm@x', 8) === 404 && await who(null) === 401,
+    JSON.stringify([await who('stranger@x'), await who('gm@x', 8), await who(null)]));
+  const refusal = await (await requireMember(as('stranger@x'), env, 7)).res.json();
+  check('with the sentence the seven handlers each used to type',
+    refusal.error === 'Only the GM or a player with a character in this campaign can do that', refusal.error);
+
+  const fnRoot = join(repoRoot, 'functions', 'api', 'character-creator');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    (e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+  const routes = walk(fnRoot).map((f) => ({ f: f.slice(fnRoot.length + 1).replace(/\\/g, '/'), src: readFileSync(f, 'utf8') }));
+  check('the routes are found', routes.length > 60, String(routes.length));
+  const ownHash = routes.filter((r) => r.f !== '_lib/etag.js' && /crypto\.subtle\.digest/.test(r.src) && /ETag/.test(r.src));
+  check('no route hashes its own body into an ETag', ownHash.length === 0, ownHash.map((r) => r.f).join(', '));
+  const usesHelper = routes.filter((r) => r.f !== '_lib/etag.js' && /jsonWithEtag\(request, body, /.test(r.src))
+    .map((r) => r.f).sort();
+  check('four routes answer through the helper',
+    usesHelper.join() === 'catalogs.js,catalogs/traits.js,codex.js,items.js', usesHelper.join());
+  const retyped = routes.filter((r) => r.f !== '_lib/auth.js'
+    && (r.src.match(/Only the GM or a player with a character in this campaign can do that/g) || []).length
+    && /write: false \}\);\s+if \(guard\.res\) return guard\.res;\s+(?:\/\/[^\n]*\s+)*if \(!guard\.access\.isMember\)/.test(r.src));
+  check('no read re-tests membership after asking for a read guard', retyped.length === 0, retyped.map((r) => r.f).join(', '));
+  const ownGuard = routes.filter((r) => r.f.startsWith('characters/[id]/') && /characterAccess\(/.test(r.src)).map((r) => r.f);
+  // stash.js reads the character row itself and calls isHiddenNpc, which
+  // _lib/auth.js names as one of three deliberate exceptions.
+  check('and the item and vessel routes go through requireCharacter',
+    ownGuard.join() === 'characters/[id]/items/[itemId]/stash.js', ownGuard.join());
+}
 
 }

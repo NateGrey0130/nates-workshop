@@ -8,7 +8,7 @@
 // and soft-deleted rather than deleted, because "what did we used to have" is
 // a question a party asks and a DELETE cannot answer.
 
-import { json, readJson, requireCampaign } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 import { gearJoin } from '../../_lib/catalog-redirects.js';
 
@@ -24,13 +24,10 @@ const SELECT = `SELECT ci.*, g.name AS item_name, g.slug AS item_slug, g.categor
                 LEFT JOIN characters c ON c.id = ci.claimed_by_character_id`;
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
-  if (guard.res) return guard.res;
   // Membership gates reading the stash, as it does the notes: the two are the
   // same kind of shared record.
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
+  const guard = await requireMember(request, env, params.id);
+  if (guard.res) return guard.res;
 
   const url = new URL(request.url);
   const includeRemoved = url.searchParams.get('include_removed') === '1';
