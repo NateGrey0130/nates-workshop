@@ -1613,6 +1613,51 @@ check('draft does NOT persist the resolved class object', !DRAFT_KEYS.includes('
 // restore options that no longer match the class.
 check('draft does NOT persist derived gear choices', !DRAFT_KEYS.includes('gearChoices'));
 
+// A function called render must not change what it is rendering. Five step
+// renderers rolled dice part-way through building their markup - pools on
+// Morphus, Details and Review, per-level hit points on Advancement and Review,
+// equipment quantities on Equipment, the second form's own dice on Morphus.
+// The rolls are made by rollForStep() now, before the step is drawn; this
+// holds every renderer and every markup builder to only reading.
+//
+// WHEN each roll happens did not move, and that is not something this file
+// can see: it was measured in a browser with a seeded Math.random, 13 classes
+// by six routes, by hashing the markup and the rolled state and counting the
+// random numbers drawn at each of 809 stages, before and after (PR body).
+{
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const starts = [...appText.matchAll(/\n(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g)];
+  const bodies = new Map(starts.map((m, i) =>
+    [m[1], appText.slice(m.index, i + 1 < starts.length ? starts[i + 1].index : appText.length)]));
+  // An inline handler is text the renderer WRITES, not a call it makes:
+  // onclick="computePools(true); render()" rolls when pressed.
+  const made = (body) => body.replace(/\bon(?:click|change|input|blur|keydown|keyup)="[^"]*"/g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  const ROLLERS = ['computePools', 'rollAdvancement', 'initEquipment', 'ensureMorphusForm', 'rollAttrBonuses',
+    'rollOccBonuses', 'rollTotemBonuses', 'rollBio', 'doPsiRoll', 'rollAbilityGroup', 'evalDice', 'rollPoolFormula',
+    'rollQuantity', 'rollAttribute', 'rollSecondForm'];
+  check('the rollers this names are all still functions the wizard has or imports',
+    ROLLERS.every((r) => bodies.has(r) || new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))),
+    ROLLERS.filter((r) => !bodies.has(r) && !new RegExp('\\b' + r + '\\b').test(appText.slice(0, appText.indexOf('\nconst ATTRS')))).join(', '));
+  const drawers = [...bodies.keys()].filter((n) => /^render[A-Z]|Html$|Preview$/.test(n));
+  check('the step renderers and markup builders are found', drawers.length > 25, String(drawers.length));
+  const rolling = drawers.flatMap((n) => ROLLERS
+    .filter((r) => new RegExp('(?<![\\w$.])' + r + '\\s*\\(').test(made(bodies.get(n))))
+    .map((r) => `${n} calls ${r}`));
+  check('none of them rolls', rolling.length === 0, rolling.join('; '));
+  check('or draws a random number itself',
+    drawers.every((n) => !/Math\.random\s*\(/.test(made(bodies.get(n)))),
+    drawers.filter((n) => /Math\.random\s*\(/.test(made(bodies.get(n)))).join(', '));
+  check('render() rolls for the step after the rail is drawn and before the step is',
+    /\n  renderStepper\(\);\s+rollForStep\(S\.step\);\s+\[renderSystem, renderRace,/.test(bodies.get('render') || ''));
+  const forStep = bodies.get('rollForStep') || '';
+  check('and rollForStep covers the five steps that show a roll',
+    ['MORPHUS', 'EQUIPMENT', 'ADVANCEMENT', 'DETAILS', 'REVIEW'].every((s) => forStep.includes(`step === ST.${s}`)));
+  check('each pool roll there is still lazy',
+    (forStep.match(/computePools\(\)/g) || []).length === 3 && (forStep.match(/!S\.pools\)? ?computePools\(\)|!S\.pools\) computePools\(\)/g) || []).length === 3,
+    forStep.match(/[^\n]*computePools\(\)[^\n]*/g)?.join(' | '));
+}
+
 // ---------- 1c11. Class bonuses ----------
 // What a class GRANTS mechanically. `natural_abilities` and
 // `level_progression.grants` are the book's wording and display-only, so a

@@ -825,10 +825,41 @@ function render() {
   if (!stepApplies(S.step)) S.step = seekStep(S.step, 1);
   S.maxStep = Math.max(S.maxStep ?? 0, S.step);
   renderStepper();
+  rollForStep(S.step);
   [renderSystem, renderRace, renderAttributes, renderOccupation, renderMorphus, renderSkills,
    renderEquipment, renderPowers, renderAdvancement, renderDetails, renderReview][S.step]();
   wirePickers();
   queueDraftSave();
+}
+
+// EVERY ROLL A STEP MAKES BY BEING SHOWN, in one place, made before the step
+// is drawn. Five step renderers used to make these themselves, part-way
+// through building their markup: a function called render that changed what
+// it was rendering. Nothing about WHEN a roll happens has moved - each is
+// still made on arriving at the step that first shows it, each is still lazy
+// and idempotent, and this is still called on every render, because a pool
+// cleared while the player stands on the step (an attribute re-rolled from
+// Review, say) has to be there again before it is drawn. What moved is that a
+// step renderer now only reads.
+//
+// After renderStepper(), not before, which is where the renderers ran: the
+// rail is drawn from the state as it was.
+function rollForStep(step) {
+  if (step === ST.MORPHUS) {
+    // The form's own dice. The pools are wanted by the running preview, which
+    // is drawn only once the tables have loaded.
+    const form = ensureMorphusForm();
+    if (form && S.traitTables && !S.pools) computePools();
+  }
+  // Fixed gear lands, dice quantities are rolled, the choices are re-derived.
+  if (step === ST.EQUIPMENT) initEquipment();
+  if (step === ST.ADVANCEMENT) rollAdvancement();
+  // Money is rolled with the pools, and Details is the first place it shows.
+  if (step === ST.DETAILS && !S.pools) computePools();
+  if (step === ST.REVIEW) {
+    if (!S.pools) computePools();
+    if (S.level > 1) rollAdvancement();
+  }
 }
 
 // Filter inputs are re-created by every render, so their listeners are re-bound
@@ -2221,7 +2252,6 @@ function morphusBook(row) {
 // The running Morphus, through the SAME fold the sheet endpoint uses, so the
 // numbers here are the numbers the sheet's Morphus toggle will draw.
 function morphusPreview(form) {
-  if (!S.pools) computePools();
   const rolled = rolledAll();
   const p = poolsPayload();
   const character = {
@@ -2256,7 +2286,7 @@ function morphusPreview(form) {
 }
 
 function renderMorphus() {
-  const form = ensureMorphusForm();
+  const form = morphusForm();
   const nav = (blocker) => `<div class="nav"><button class="btn btn-ghost" onclick="prevStep()">&larr; Back</button>
     ${blocker ? `<span class="nav-why">${esc(blocker)}</span>` : ''}
     <button class="btn btn-primary" ${blocker ? 'disabled' : ''} onclick="nextStep()">Skills &rarr;</button></div>`;
@@ -2383,7 +2413,6 @@ function renderMorphus() {
 // resolved in one click gets that and one who wants to roll each level's hit
 // points separately gets that too.
 function renderAdvancement() {
-  rollAdvancement();
   const cls = S.cls;
   const gained = S.level - 1;
   const skillGrants = skillGrantsFor(cls, 1, S.level);
@@ -3934,7 +3963,6 @@ function toggleGearPick(gi, slug, limit) {
   render();
 }
 function renderEquipment() {
-  initEquipment();
   const rows = S.equipment.map((e, i) => {
     // The remove button's entire accessible name was the glyph, so a reader met
     // twenty-one identical "✕" with nothing to say which row each belonged to.
@@ -4679,9 +4707,8 @@ function renderPowers() {
 // the attribute tables and are shown so the numbers are not a surprise later.
 function renderDetails() {
   // Money is rolled with the pools, and this step is the first place it is
-  // shown — without this the field sits empty here and mysteriously fills in on
-  // Review. Lazy and idempotent, so arriving via Review does not re-roll.
-  if (!S.pools) computePools();
+  // shown — rollForStep() makes that roll before this is drawn, or the field
+  // would sit empty here and mysteriously fill in on Review.
   const d = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), S.level, rolledAll()));
   $('app').innerHTML = `
   <div class="panel">
@@ -5095,8 +5122,6 @@ function shortGroups() {
 }
 
 function renderReview() {
-  if (!S.pools) computePools();
-  if (S.level > 1) rollAdvancement();
   const p = poolsPayload();
   const campaigns = S.campaigns.filter((c) => c.system === S.system);
   const stat = (label, v) => v != null ? `<span class="statline">${label}: <b>${v}</b></span>` : '';
