@@ -40,7 +40,9 @@ export const IDLE_CTX = 100_000;     // below this a cold resume is not worth a 
 const TAIL_BYTES = 4 * 1024 * 1024;
 
 // The last main-thread assistant line that carries usage: { ctx, at } or null.
-export function lastCall(transcriptPath) {
+// `sidechain: true` reads a subagent's own file instead, where every line is a
+// sidechain line (agent-run-cap.mjs).
+export function lastCall(transcriptPath, { sidechain = false } = {}) {
   let fd;
   try {
     fd = openSync(transcriptPath, 'r');
@@ -54,7 +56,7 @@ export function lastCall(transcriptPath) {
       if (!lines[i].includes('"usage"')) continue;
       let j;
       try { j = JSON.parse(lines[i]); } catch { continue; }
-      if (j.type !== 'assistant' || j.isSidechain) continue;
+      if (j.type !== 'assistant' || Boolean(j.isSidechain) !== sidechain) continue;
       const u = j.message?.usage;
       if (!u) continue;
       const ctx = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);

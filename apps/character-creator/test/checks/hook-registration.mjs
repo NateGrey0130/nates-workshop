@@ -75,7 +75,7 @@
 // machine* records the registration since 2026-09-27, but nothing checks that a
 // second machine followed it.
 
-import { readFileSync, existsSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir, tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -83,10 +83,11 @@ import { repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['Session budget hooks', 'Bash guard hook registration'];
 
-// ── the two session-budget hooks ─────────────────────────────────────────────
+// ── the session-budget hooks ─────────────────────────────────────────────────
 //
-// .claude/hooks/session-budget.mjs warns and .claude/hooks/agent-slice.mjs
-// refuses; each file's header says why. Two halves here, and they differ in
+// .claude/hooks/session-budget.mjs warns, .claude/hooks/agent-slice.mjs
+// refuses, and .claude/hooks/agent-run-cap.mjs warns a subagent run and then
+// refuses it; each file's header says why. Two halves here, and they differ in
 // where they can run:
 //
 //   BEHAVIOUR   runs everywhere, CI included. Each script is spawned as the
@@ -95,12 +96,13 @@ const SECTIONS = ['Session budget hooks', 'Bash guard hook registration'];
 //               purpose. The warn hook must exit 0 on EVERY path, including the
 //               ones it cannot read, because its posture is "never blocks".
 //   REGISTRATION  local only, like the guard's below, and for the same reason.
-//               These two are registered at user level ONLY, so unlike the
+//               These are registered at user level ONLY, so unlike the
 //               guard there is no checked-in registration behind them: absent
 //               from that file is not installed, and that is a failure here.
 const HOOK_DIR = join(repoRoot, '.claude', 'hooks');
 const BUDGET = join(HOOK_DIR, 'session-budget.mjs');
 const SLICE = join(HOOK_DIR, 'agent-slice.mjs');
+const RUN_CAP = join(HOOK_DIR, 'agent-run-cap.mjs');
 
 function runHook(script, envelope) {
   const r = spawnSync(process.execPath, [script], {
@@ -188,6 +190,54 @@ function sessionBudgetChecks() {
     check('an agent that is not slice-bound is let through', unbounded.code === 0, JSON.stringify(unbounded));
     const garbled = runHook(SLICE, 'not json');
     check('the slice hook fails closed on input it cannot parse', garbled.code === 2, JSON.stringify(garbled));
+
+    // A subagent's envelope names the MAIN transcript and its own agent_id; its
+    // own file sits beside the main one, under <session>/subagents/.
+    const session = (name, mainCtx, runs) => {
+      const main = transcript(`${name}.jsonl`, [assistantLine(mainCtx, now)]);
+      mkdirSync(join(dir, name, 'subagents'), { recursive: true });
+      for (const [id, ctx] of Object.entries(runs)) {
+        writeFileSync(join(dir, name, 'subagents', `agent-${id}.jsonl`),
+          [assistantLine(60_000, now, { isSidechain: true, agentId: id }),
+            assistantLine(ctx, now, { isSidechain: true, agentId: id })].join('\n') + '\n');
+      }
+      return main;
+    };
+    const call = (main, agent_id, tool_name = 'Read') => runHook(RUN_CAP, {
+      hook_event_name: 'PreToolUse', transcript_path: main, tool_name, tool_input: {},
+      ...(agent_id ? { agent_id, agent_type: 'book-reconcile' } : {}),
+    });
+
+    // The main thread is at 400k and a sibling run at 300k. Neither is this run.
+    const calm = session('calm', 400_000, { a1: 150_000, b2: 300_000 });
+    const under = call(calm, 'a1');
+    check('a 150k subagent run is left alone, whatever the session and its siblings hold',
+      under.code === 0 && under.out === '' && under.err === '', JSON.stringify(under));
+    const mainThread = call(calm, null);
+    check('a main-thread call is never capped', mainThread.code === 0 && mainThread.out === '', JSON.stringify(mainThread));
+
+    const grown = session('grown', 90_000, { a1: 210_000 });
+    const warned = call(grown, 'a1');
+    check('a 210k run is told to return what it has, and the call still runs',
+      warned.code === 0 && /holds 210k of context, past 200k/.test(said(warned))
+        && /name exactly what is left/.test(said(warned)), JSON.stringify(warned));
+
+    const runaway = session('runaway', 90_000, { a1: 260_000 });
+    const refused = call(runaway, 'a1');
+    check('a 260k run has its tool call refused, exit 2',
+      refused.code === 2 && /agent-run-cap: this run holds 260k of context and the cap is 250k/.test(refused.err), JSON.stringify(refused));
+    const handback = call(runaway, 'a1', 'SubagentHandback');
+    check('and its hand-back is let through, or the run could never end',
+      handback.code === 0 && handback.out === '' && handback.err === '', JSON.stringify(handback));
+
+    const capUnreadable = [
+      runHook(RUN_CAP, 'not json'),
+      call(runaway, 'no-such-run'),
+      call(runaway, '../runaway/subagents/agent-a1'),
+      call(join(dir, 'no-such-session.jsonl'), 'a1'),
+    ];
+    check('the run cap exits 0 and prints nothing on input it cannot read',
+      capUnreadable.every((r) => r.code === 0 && r.out === '' && r.err === ''), JSON.stringify(capUnreadable));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -208,12 +258,15 @@ function sessionBudgetChecks() {
     { event: 'UserPromptSubmit', matcher: null, script: 'session-budget.mjs' },
     { event: 'PostToolUse', matcher: 'Bash', script: 'session-budget.mjs' },
     { event: 'PreToolUse', matcher: 'Agent', script: 'agent-slice.mjs' },
+    // '*' is every tool: a run is capped on whichever call comes next.
+    { event: 'PreToolUse', matcher: '*', script: 'agent-run-cap.mjs' },
   ];
   for (const { event, matcher, script } of WANTED) {
     const on = matcher ? `${event} for ${matcher}` : event;
     const command = (hooks[event] ?? [])
       .filter((entry) => matcher === null
-        || (typeof entry?.matcher === 'string' && new RegExp(`\\b${matcher}\\b`).test(entry.matcher)))
+        || (matcher === '*' ? [undefined, '', '*'].includes(entry?.matcher)
+          : typeof entry?.matcher === 'string' && new RegExp(`\\b${matcher}\\b`).test(entry.matcher)))
       .flatMap((entry) => entry.hooks ?? [])
       .filter((h) => h?.type === 'command' && typeof h.command === 'string')
       .map((h) => h.command)

@@ -393,6 +393,13 @@ on `PreToolUse` for `Agent|Task`, which refuses a `book-reconcile` brief with
 no `Slice:` line of 15 pages or fewer. Neither guards a tree, so a repo
 registration would only fire each one twice. The same check holds both.
 
+**A third is registered the same way**: `.claude/hooks/agent-run-cap.mjs` on
+`PreToolUse` with matcher `*`. It acts only on a subagent's calls. At 200k of
+context it tells the run to return what it has and name what is left, and from
+250k it refuses every tool call but the hand-back. It imports
+`session-budget.mjs` from beside itself, so the two move together. The same
+check holds it.
+
 **`launch.json` exists twice.** The tracked `.claude/launch.json` is
 machine-independent. The working directory's untracked copy has every command
 wrapped in `cmd /c cd /d C:\Users\natha\Projects\nates-apps && …`. **Mirror any
