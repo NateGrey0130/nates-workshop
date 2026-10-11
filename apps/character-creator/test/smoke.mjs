@@ -1655,6 +1655,29 @@ check('parts() separates the attribute half from the class half', (() => {
       && p.attacks.attrs === 2 && p.attacks.from_class === 1;
 })());
 
+// The wizard read these at a literal level 1 in six places, under a comment
+// saying it "only ever builds a level 1 character". It has built higher ones
+// since the Advancement step. Nothing on screen was wrong: on 2026-10-10 no
+// published class and no skill carried a level-gated ATTRIBUTE bonus (199
+// classes gate combat and saves, which these screens do not print). The
+// first one that does would have shown level-1 numbers beside a sheet that
+// shows the real ones.
+{
+  const later = { bonuses: { attributes: { PS: 1 }, at_level: [{ level: 4, attributes: { PS: 2 } }] } };
+  check('a level-gated attribute bonus is read at the level asked for',
+    D2.classBonuses(later, 1).attributes.PS === 1 && D2.classBonuses(later, 4).attributes.PS === 3);
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const calls = [...appText.matchAll(/derive\.classBonuses\(([^,()]+(?:\([^()]*\))?),\s*([^,()]+)/g)];
+  check('the wizard\'s class-bonus reads are found', calls.length >= 6, String(calls.length));
+  const atOne = calls.filter((m) => m[2].trim() === '1');
+  check('exactly one of them is still at level one',
+    atOne.length === 1, atOne.map((m) => m[0]).join(' | '));
+  check('and it is the I.Q. bonus on the skills held since level one, read with level-one skills',
+    /function skillsAtLevelOne\(\) \{[\s\S]{0,900}derive\.classBonuses\(skillBonusClass\(1\), 1, rolledAll\(\)\)\)\.iq_skill_bonus_pct/.test(appText));
+  check('the skills\' own schedule is read at the same level as the class\'s',
+    /function skillBonusClass\(level = S\.level\) \{[\s\S]{0,900}bonusesFromSkills\(rows, level, S\.cls\)/.test(appText));
+}
+
 // ---------- 1c13. Class template ----------
 // A starting point for writing a class by hand. The one thing that must hold is
 // that it PARSES on arrival — a template that fails validation the moment it is
