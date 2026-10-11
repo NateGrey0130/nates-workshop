@@ -850,7 +850,30 @@ function entryFields(e) {
 // CONTRACT: two adjustments to the same pool only compose if they are sent in
 // the sequence they were made, which is why this is a serial loop and not a
 // Promise.all.
-async function flushQueue() {
+//
+// ONE FLUSH AT A TIME, for the same reason. render() calls this, the 'online'
+// event calls it and so does an answered conflict, and nothing stopped a
+// second call starting while the first was still waiting on a POST. Both read
+// the same queue, so both sent the same entry. For a pool the second send came
+// back as a conflict with the player's own first send. An ammo change composes
+// on replay (events.js), so its second send took a second shot out of the
+// magazine; an armour or vessel hit is not guarded, so it was logged twice.
+//
+// A call that arrives during a flush is not dropped: it asks for one more pass
+// when this one ends, which is where an entry queued in the meantime is sent.
+let flushRun = null;
+let flushAgain = false;
+function flushQueue() {
+  if (flushRun) { flushAgain = true; return flushRun; }
+  flushRun = (async () => {
+    try {
+      do { flushAgain = false; await flushOnce(); } while (flushAgain);
+    } finally { flushRun = null; }
+  })();
+  return flushRun;
+}
+
+async function flushOnce() {
   if (!window.playQueue || !C.canWrite || !(await playQueue.available())) return;
   const pending = (await playQueue.all(Number(id))).sort((a, b) => a.seq - b.seq);
   if (!pending.length) { renderQueueState(); return; }
