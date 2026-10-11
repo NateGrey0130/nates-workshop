@@ -738,6 +738,46 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
     /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollPoolFormula\(c\.starting_money, S\.attrs\);/.test(appText));
 }
 
+// render() is the one place a draft save is queued, "instead of remembering
+// to call this from thirty handlers" - which holds for every handler that
+// renders. The typed fields on Details and Review do not, on purpose: a
+// render rebuilds the input the cursor is in. So the character's name, its
+// campaign and every background line reached the draft only if something else
+// was clicked afterwards. Asked of every inline handler, not of the four that
+// were wrong, so the next field that skips render() is caught too.
+{
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const handlers = [...appText.matchAll(/\bon(?:change|input|click|blur|keydown|keyup)="([^"]*)"/g)].map((m) => m[1]);
+  check('the wizard\'s inline handlers are found', handlers.length > 50, String(handlers.length));
+  const reaches = /\b(?:render|queueDraftSave|recompose|goStep|rollBio|saveDraft|startWithClass)\(/;
+  const assigning = handlers.filter((h) => /(?<![\w$.])S\.\w+\s*=[^=]/.test(h) && !reaches.test(h));
+  check('no inline handler writes to the wizard\'s state without a render or a save behind it',
+    assigning.length === 0, assigning.join(' | '));
+  const bodyOf = (name) => {
+    const at = appText.search(new RegExp('\\n(?:async\\s+)?function\\s+' + name + '\\s*\\('));
+    if (at < 0) return null;
+    const end = appText.slice(at + 1).search(/\n\}/);
+    return appText.slice(at, at + 1 + end);
+  };
+  const called = new Set(handlers.flatMap((h) => [...h.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1])));
+  const quiet = [...called].filter((name) => {
+    const body = bodyOf(name);
+    if (body === null) return false;
+    const mutates = /\bS\.[\w.[\]'"]+\s*(?:=[^=]|\+=|-=|\+\+|--)|delete S\.|\bS\.\w+\.(?:push|splice|add|delete|set)\(/.test(body);
+    if (!mutates || reaches.test(body)) return false;
+    // `computePools(true); render()` is fine: the handler renders for it.
+    const callers = handlers.filter((h) => new RegExp('(?<![\\w$.])' + name + '\\s*\\(').test(h));
+    return callers.some((h) => !reaches.test(h.replace(new RegExp('(?<![\\w$.])' + name + '\\s*\\('), '')));
+  });
+  check('and every function one calls that changes the build reaches a render or a save',
+    quiet.length === 0, quiet.join(', '));
+  check('the typed fields queue the save themselves',
+    /function setBio\(key, value\) \{[\s\S]{0,220}queueDraftSave\(\);\s+\}/.test(appText)
+    && /function setDetail\(key, value\) \{\s+S\[key\] = value;\s+queueDraftSave\(\);\s+\}/.test(appText));
+  check('and what they write is in the draft',
+    ['charName', 'campaignId', 'newCampaign', 'bio'].every((k) => DRAFT_KEYS.includes(k)));
+}
+
 // ---------- The eight attributes and the four games ----------
 // Each was typed out wherever it was needed: the attributes in nine files, the
 // games in about eighteen places. The modules import one list of each now. The

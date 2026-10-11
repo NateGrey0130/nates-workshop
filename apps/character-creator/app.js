@@ -4760,6 +4760,17 @@ function setBio(key, value) {
   if (v) S.bio[key] = v; else delete S.bio[key];
   // Clearing the box hands the sum back to the dice.
   if (key === 'money') S.moneyTyped = !!v;
+  queueDraftSave();
+}
+
+// The fields a player TYPES, here and in setBio above, do not re-render: a
+// render rebuilds the input the cursor is still in. render() is also the only
+// thing that queued a draft save, so a name, a campaign or a background line
+// was in the draft only if something else was clicked afterwards. A player
+// who typed the name last and closed the tab resumed a character with none.
+function setDetail(key, value) {
+  S[key] = value;
+  queueDraftSave();
 }
 // Four lists, not two: what the class grants at level 1, and what the levels
 // above it earned. Kept apart so each picker counts against its own budget —
@@ -5093,11 +5104,11 @@ function renderReview() {
   <div class="panel">
     <h2>Review &amp; save</h2>
     <div class="rowline"><label class="small" for="char-name">Character name:</label>
-      <input type="text" id="char-name" value="${esc(S.charName)}" placeholder="e.g. Sir Roderick" onchange="S.charName=this.value.trim()">
+      <input type="text" id="char-name" value="${esc(S.charName)}" placeholder="e.g. Sir Roderick" onchange="setDetail('charName', this.value.trim())">
       ${namePanel.button('char-name', { classes: nameClasses })}</div>
     ${namePanel.slot('char-name')}
     <div class="rowline"><label class="small" for="${campaigns.length ? 'campaign-sel' : 'new-campaign'}">Campaign:</label>
-      <select id="campaign-sel" ${campaigns.length ? '' : 'hidden'} onchange="S.campaignId=+this.value||null">
+      <select id="campaign-sel" ${campaigns.length ? '' : 'hidden'} onchange="setDetail('campaignId', +this.value||null)">
         <option value="">— pick —</option>
         ${campaigns.map((c) => {
           // Disabled rather than hidden, the barred-occupation pattern: a
@@ -5108,7 +5119,7 @@ function renderReview() {
         }).join('')}
       </select>
       <span class="muted small">${campaigns.length ? 'or new:' : 'none yet for this game — name one:'}</span>
-      <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="S.newCampaign=this.value.trim()">
+      <input type="text" id="new-campaign" value="${esc(S.newCampaign)}" placeholder="New campaign name" onchange="setDetail('newCampaign', this.value.trim())">
     </div>
 
     <h3>${esc(S.cls.name)} <span class="muted small">(${esc(S.system)} · ${esc(S.cls.category)})</span>
@@ -5511,7 +5522,7 @@ Object.assign(window, {
   setStartingLevel, rerollAdvancement, setLevelPick, pickMos, pickTotem,
   doPsiRoll, skipPsiRoll, setPsiShape, setPsiCategory,
   rollBio, rollBioAll, setLongLived,
-  rmEquip, addCatalog, addCustom, setBio, save, startOver,
+  rmEquip, addCatalog, addCustom, setBio, setDetail, save, startOver,
   resumeDraft, dismissDraft, pickVariant, pickOccVariant, pickOcc, takeAbility, dropAbility, rollAbilityGroup,
   // The codex's ?class= link, when a draft was waiting.
   startOfferedClass, keepDraftOverClass,
