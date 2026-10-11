@@ -257,12 +257,18 @@ export async function resolvePicks(env, { picks, existingSkills, allowance, cate
     // the bug it replaces. BOOK-INGEST-AUDIT F18.
     // The rule itself is newPickPercent's, which the wizard's Advancement step
     // calls too.
-
+    //
+    // AN OVERRIDE TAKES NO CLASS BONUS EITHER. It is out of category by
+    // definition, and the bonus is keyed on the skill's real category - so a
+    // skill the class's own `only` or `except` keeps out of a category that
+    // pays was stored with that category's bonus the moment the secondary
+    // picks ran out. Which picks those were depended on the order they
+    // arrived in, and the picker showed the plain base for all of them.
     skills.push({
       name: row.name,
       category: row.category,
       // Base percentage as written. A skill learned at level 6 is still new.
-      pct: newPickPercent(row, attributes, allowed, { secondary: asSecondary }),
+      pct: newPickPercent(row, attributes, allowed, { secondary: !!outOfCategory }),
       per_level: row.per_level ?? 0,
       type: asSecondary ? 'secondary' : 'related',
       gained_at_level: level,

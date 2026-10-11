@@ -498,7 +498,7 @@ section('A pick spent on an attribute-derived skill');
     newPickPercent({ name: 'W.P. Sword', category: 'Physical', base: 0 }, { PP: 12 }, physical) === 0);
   const pickSrc = readFileSync(join(repoRoot, 'functions/api/character-creator/_lib/skill-picks.js'), 'utf8');
   check('the server\'s pick path asks it',
-    /pct: newPickPercent\(row, attributes, allowed, \{ secondary: asSecondary \}\)/.test(pickSrc));
+    /pct: newPickPercent\(row, attributes, allowed, \{ secondary: !!outOfCategory \}\)/.test(pickSrc));
   const wizardRows = readFileSync(join(appDir, 'app.js'), 'utf8').match(/function levelPickRows\(\) \{[\s\S]*?\n\}/)?.[0] || '';
   check('and so does the wizard\'s, with the grant\'s own categories and kind',
     /pct: newPickPercent\(\{ \.\.\.r, name \}, S\.attrs, g\.categories, \{ secondary: g\.kind === 'secondary' \}\)/.test(wizardRows)
@@ -616,6 +616,31 @@ section('The skill picker prints what a pick will be stored at');
     [RELATED], { showAll: true }, () => ({ override: true }));
   await agree('an unrestricted grant shows plain bases, as it stores them',
     [{ level: 4, count: 1, kind: 'related', categories: null }]);
+
+  // AN OVERRIDE TAKES NO CLASS BONUS. `agree` spends one pick at a time, so it
+  // never ran out of secondary picks, and that is where the two numbers came
+  // apart: with "show all skills" on, three out-of-category skills against two
+  // secondary picks stored the third as an override WITH the category's bonus,
+  // though the class's own `except` keeps that skill out of the category. A
+  // Cyber-Knight's Horsemanship: Equestrian was shown at 40% and stored at 50%.
+  {
+    const both = pooled([NARROW, SECONDARY]);
+    const res = await resolvePicks(picksDb(CATALOG), {
+      picks: [{ name: 'Cooking', override: true }, { name: 'Climbing', override: true }],
+      existingSkills: [], level: 4, attributes, ...both, allowance: 2,
+    });
+    const climbing = (res.skills || []).find((s) => s.name === 'Climbing');
+    const shown = src ? printed([NARROW, SECONDARY], { showAll: true }) : new Map();
+    check('past the secondary picks, an out-of-category skill is stored as an override',
+      climbing?.override === true && climbing?.type === 'related', JSON.stringify(res));
+    check('and at the percentage shown, without the bonus of a category that excludes it',
+      climbing?.pct === 40 && shown.get('Climbing') === 40,
+      'shown ' + shown.get('Climbing') + '%, stored ' + climbing?.pct);
+  }
+  const forced = await agree('an override with no secondary pick beside it is priced the same way',
+    [NARROW], { showAll: true }, () => ({ override: true }));
+  check('which is the plain base for the excluded skill, and the bonus for its admitted neighbour',
+    forced.get('Climbing') === 40 && forced.get('Swimming') === 60, JSON.stringify([...forced]));
 
   // Until the bridge module has run there is no function to ask, and the
   // picker falls back to the base column rather than throwing.
@@ -927,7 +952,7 @@ section('Category skill bonuses');
       '_lib', 'skill-picks.js'), 'utf8');
     // Through newPickPercent since 2026-10-10, which the wizard's Advancement
     // step calls too; 'A pick spent on an attribute-derived skill' runs it.
-    return src.includes('newPickPercent(row, attributes, allowed, { secondary: asSecondary })');
+    return src.includes('newPickPercent(row, attributes, allowed, { secondary: !!outOfCategory })');
   })());
   // A W.P. and a hand to hand sit at 0 because they are not percentile skills.
   // Adding ten to that would invent a roll that does not exist.

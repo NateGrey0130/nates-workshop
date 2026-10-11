@@ -3528,13 +3528,14 @@ function pickerBlock(grants, total, prefix) {
   // A skill outside the grant's categories is spent as a secondary pick while
   // one is left, and a secondary pick takes no class bonus. That is the order
   // the server works in too. Past the secondary allowance it is an override,
-  // which the server prices as a related pick; the number shown is that one.
+  // which takes no class bonus either (resolvePicks), so one rule covers both
+  // and the number does not depend on which rows the secondary picks land in.
   //
   // Defensive like admits() above: the bridge is a deferred module.
   const startsAt = (s) => {
     const fn = globalThis.skillPercent?.newPickPercent;
     if (!fn) return s.base;
-    const secondary = !!allowed && secondaryAllowance > 0 && !admits(s);
+    const secondary = !!allowed && !admits(s);
     return fn(s, C.data.attributes || {}, allowed, { secondary });
   };
 
