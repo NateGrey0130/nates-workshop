@@ -4650,8 +4650,8 @@ async function sendEdits(keys, vals, retried = false) {
     const unsent = () => { for (const k of keys) AS.dirty.add(k); };
     if (err.status === 409 && err.detail?.conflict && !retried) {
       let fresh;
-      try { fresh = (await api('characters/' + id)).character; } catch {
-        unsent(); setAutosave('offline'); scheduleAutosave(5000); return false;
+      try { fresh = (await api('characters/' + id)).character; } catch (reread) {
+        unsent(); setAutosave('offline', whyUnsent(reread) || ''); scheduleAutosave(5000); return false;
       }
       const clash = keys.filter((k) => !sameValue(fresh[k], AS.base[k]));
       if (!clash.length) {
@@ -4665,7 +4665,9 @@ async function sendEdits(keys, vals, retried = false) {
     unsent();
     if (err.status === undefined) {
       // Never arrived. Nothing is lost - it is still typed and still dirty.
-      setAutosave('offline');
+      // WHY it never arrived goes with it (whyUnsent): a typed edit lives only
+      // in this page, so the line must not send a signed-out player to reload.
+      setAutosave('offline', whyUnsent(err) || '');
       scheduleAutosave(5000);
       return false;
     }
@@ -4723,7 +4725,14 @@ function autosaveText() {
     case 'pending': return 'Unsaved changes…';
     case 'saving': return 'Saving…';
     case 'saved': return 'All changes saved';
-    case 'offline': return 'Not saved yet — no connection. Retrying.';
+    // NOT "reload the page", which is what the queue says: a queued change
+    // survives a reload and a typed edit does not. Another tab signs this one
+    // in, and the retry already scheduled then sends it.
+    case 'offline': return AS.detail === 'signin'
+      ? 'Not saved yet — you are signed out. Sign in from another tab and this will save.'
+      : AS.detail === 'server'
+        ? 'Not saved yet — the server is not answering. Retrying. If this lasts, sign in from another tab: you may be signed out.'
+        : 'Not saved yet — no connection. Retrying.';
     case 'error': return 'Not saved: ' + escHtml(AS.detail);
     case 'conflict': return `Not saved: ${escHtml(AS.conflict.fields.map((k) => AS_LABELS[k] || k).join(', '))}
       changed somewhere else.

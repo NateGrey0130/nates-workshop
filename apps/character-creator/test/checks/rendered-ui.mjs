@@ -2155,6 +2155,25 @@ export async function run() {
       /if \(!refusedOnMerit\(err\)\) \{ renderQueueState\(err\); return; \}/.test(sheet),
       'the flush does not say why an entry is still waiting');
 
+    // THE AUTOSAVE LINE HAS THE SAME THREE REASONS AND DIFFERENT ADVICE. A
+    // typed edit is not in the queue, so it does not survive the reload the
+    // counter recommends. Run, not matched, with the sheet's own function.
+    const autoSrc = sheet.match(/function autosaveText\(\) \{[\s\S]*?\n\}/);
+    const autoLine = (detail) => (autoSrc
+      ? new Function('AS', 'escHtml', 'AS_LABELS', autoSrc[0] + '; return autosaveText();')(
+        { state: 'offline', detail }, (x) => x, {}) : 'no autosaveText');
+    check('an unsaved edit behind a sign-in page says to sign in from another tab',
+      /signed out/.test(autoLine('signin')) && /another tab/.test(autoLine('signin')), autoLine('signin'));
+    check('and never to reload, which would lose what was typed',
+      !/reload/i.test(autoLine('signin')) && !/reload/i.test(autoLine('server')),
+      autoLine('signin') + ' | ' + autoLine('server'));
+    check('a server that is not answering is not called "no connection"',
+      /server is not answering/.test(autoLine('server')) && !/no connection/.test(autoLine('server')), autoLine('server'));
+    check('and offline still says no connection', /no connection/.test(autoLine('')), autoLine(''));
+    const offlineSets = sheet.match(/setAutosave\('offline'[^)]*\)?\)/g) || [];
+    check('every save that got no answer hands the line its reason',
+      offlineSets.length > 0 && offlineSets.every((c) => /whyUnsent\(/.test(c)), offlineSets.join(' ; '));
+
     // A STATUS IS NOT ALWAYS A VERDICT ON THE CHANGE. The replay removed an
     // entry for any status at all, so a 503 while the queue drained lost a
     // change the player had made, silently. Run, not matched: the question is
@@ -2400,13 +2419,13 @@ export async function run() {
         return { updated_at: server.updated_at };
       };
       w.fns = new Function('AS', 'C', 'id', 'AS_DELAY', 'api', 'jsonReq', 'pendingValues', 'applyToData', 'paintPool',
-        'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails',
+        'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails', 'whyUnsent',
         src.join('\n') + '; return { markDirty, saveNow };')(
         AS, C, 3, 1500, api, (method, body) => ({ method, body: JSON.stringify(body) }),
         (keys) => Object.fromEntries(keys.map((k) => [k, clone(page[k])])),
         (vals) => { Object.assign(C.data, clone(vals)); }, () => {},
         (state) => { AS.state = state; }, () => {},
-        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => []);
+        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => [], () => 'server');
       w.type = (key, field, v) => { page[key][field] = v; w.fns.markDirty(key); };
       return w;
     };
@@ -2550,12 +2569,12 @@ export async function run() {
         return { updated_at: server.updated_at };
       };
       const fns = new Function('AS', 'C', 'id', 'AS_DELAY', 'AS_SECTIONS', 'document', '$', 'api', 'jsonReq', 'escHtml',
-        'poolMax', 'paintPool', 'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails',
+        'poolMax', 'paintPool', 'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails', 'whyUnsent',
         src.join('\n') + '; return { markDirty, saveNow, removeArmor, hitToHtml, paintArmorInput };')(
         AS, C, 3, 1500, ['bio', 'combat', 'saves', 'armor'], doc, $, api,
         (method, body) => ({ method, body: JSON.stringify(body) }), (s) => String(s),
         () => null, () => {}, (state) => { AS.state = state; }, () => {},
-        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => []);
+        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => [], () => 'server');
       w.fns = fns;
       w.add = (a) => { w.slots.push(slot({}, w.slots.length)); for (const [k, v] of Object.entries(a)) w.type(w.slots.length - 1, k, v); };
       w.type = (i, key, v) => { w.slots[i].inputs.find((el) => el.dataset.key === key).value = v; fns.markDirty('armor'); };
