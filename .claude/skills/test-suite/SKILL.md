@@ -197,24 +197,38 @@ server, use this module rather than a port number.
 
 ## Splitting a checks module
 
-`smoke.mjs` has been split twice and will be again — it passed 4,000 lines,
-`checks/environment.mjs` came out, it grew back past 10,000, and
-`checks/second-body.mjs` took four Nightbane sections out. `smoke.mjs`'s own
-header records where to cut next so it does not have to be re-derived.
+`smoke.mjs` has been split three times and will be again. It passed 4,000
+lines and `checks/environment.mjs` came out. It grew back past 10,000 and
+`checks/second-body.mjs` took four Nightbane sections out. At 11,000, on
+2026-10-10, nine more modules took thirty-nine sections. **`smoke.mjs`'s own
+header is the record**: how to cut, which names are really shared, and which
+sections are the next candidate. Read it there, because this page went stale
+once already by repeating it.
 
-**The test for a good cut:** a run of **adjacent** sections that are **one
-subject** and whose imports are their own. `second-body` used 26 bindings there
-and nowhere else, so nothing had to be shared out or duplicated.
+**The test for a good cut:** sections that are **one subject**, that read
+nothing the rest of the file declares, and that declare nothing the rest
+reads. Adjacent is cheaper and not required: two of the nine modules were
+gathered from runs thousands of lines apart.
 
-**Derive that list, do not eyeball it** — and derive it by counting occurrences
-outside the import block, not by analysing scope. Four scope-aware passes written
-while doing the last split each returned a confidently wrong answer.
+**Derive the list, do not eyeball it**, by counting each imported binding and
+each column-0 declaration inside and outside the range. **Then read every hit
+the count calls shared, because most are not.** `rel`, `legal`, `bad` and
+`skill` are declared at column 0 somewhere and found in dozens of other
+sections, and every one of those is a local of the same name or the word in a
+string. Four scope-aware passes written during the second split each returned
+a confidently wrong answer, and a bare count during the third was pessimistic
+in the same way.
 
-**The trap is a local no import analysis can see.** `D` is built in the `Psychic
-tiers` section by evaluating `js/derive.js` against a stand-in global, and used
-in 95 places as far down as the last few hundred lines. Do not let that section
-travel with a split, and check for the same shape before any cut: it is what
-broke the `second-body` cut on its first run.
+**The trap is a local no import analysis can see.** `D` is built in the
+`Psychic tiers` section, and `derive` in `Class bonuses`, by evaluating
+`js/derive.js` against a stand-in global. Other sections read them far below.
+Do not let either section travel with a split. A module that needs
+`js/derive.js` builds its own the same way, as `skill-rules.mjs` and
+`second-body.mjs` do.
+
+**A moved section can carry a path.** A static import is rewritten when the
+import block is. An `import('../js/...')` inside a section body is not, and
+from `checks/` it is one directory deeper.
 
 ## A skill is a check too, so pressure-test it before it ships
 
