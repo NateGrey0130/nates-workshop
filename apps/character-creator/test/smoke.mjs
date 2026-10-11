@@ -484,7 +484,8 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
          abilityGroupAllowance, abilityGroupLevels, abilityLevelGrants, sumBonusGroups, validateBonuses }
   from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
-import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS } from '../js/wizard-state.js';
+import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS,
+         STARTING_PICK_KINDS, pruneStartingPicks } from '../js/wizard-state.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -1195,6 +1196,54 @@ section('Starting picks');
   check('and from its own outright list',
     startingPicksFor({ psionics: { type: 'master', powers: ['Mend'] } }, 'psionic')
       .granted.length === 1);
+}
+
+// A level-1 pick outlived the class it was made against. Group picks are
+// keyed by the group's index and nothing cleared them when the occupation,
+// the variant or the race changed: an Amazon who was a Biomancer for one step
+// and then a Cyber-Knight kept three spells, listed them on Review and sent
+// them (seen on a local build, 2026-10-10). Run here against the function the
+// wizard calls from recompose(), with real starting groups.
+{
+  const split = { magic: { type: 'spell', spells_starting: 3,
+    spells_starting_groups: [{ count: 2, spell_levels: [1, 2] }, { count: 1, spell_levels: [3] }] } };
+  const flat = { magic: { type: 'spell', spells_starting: 3, spell_levels_allowed: [1, 2] } };
+  const none = {};
+  const shapeOf = (cls) => (kind) => startingPicksFor(cls, kind).groups;
+  const build = () => ({ ...freshBuild(), spellGroups: { 0: ['A', 'B'], 1: ['C'] }, psi: ['Mend'], talents: ['T'] });
+
+  check('the four kinds of level-1 pick are all named, and each key is part of the build',
+    STARTING_PICK_KINDS.length === 4
+    && STARTING_PICK_KINDS.every((k) => BUILD_KEYS.includes(k.flat) && BUILD_KEYS.includes(k.groups))
+    && BUILD_KEYS.includes('startShape'));
+
+  const s1 = build();
+  check('the first look at a build records and drops nothing',
+    pruneStartingPicks(s1, shapeOf(split)).length === 0 && s1.spellGroups[0].length === 2 && s1.psi.length === 1);
+  check('and nothing is dropped while the class offers the same thing',
+    pruneStartingPicks(s1, shapeOf(split)).length === 0 && s1.spellGroups[1][0] === 'C');
+  check('a class that offers no spells drops the spells, and says so',
+    pruneStartingPicks(s1, shapeOf(none)).join() === 'spell'
+    && Object.keys(s1.spellGroups).length === 0 && s1.spells.length === 0);
+  check('and leaves the kinds whose offer did not change', s1.psi.length === 1 && s1.talents.length === 1);
+
+  const s2 = build();
+  pruneStartingPicks(s2, shapeOf(split));
+  check('a different caster drops them too: group 0 there is not group 0 here',
+    pruneStartingPicks(s2, shapeOf(flat)).join() === 'spell' && Object.keys(s2.spellGroups).length === 0);
+  s2.spells = ['D'];
+  check('a flat pick goes the same way when the offer changes back',
+    pruneStartingPicks(s2, shapeOf(split)).join() === 'spell' && s2.spells.length === 0);
+
+  // A draft saved before `startShape` existed has picks and no record.
+  const old = build(); delete old.startShape;
+  check('a draft from before this existed resumes with its picks',
+    pruneStartingPicks(old, shapeOf(split)).length === 0 && old.spellGroups[0].length === 2
+    && typeof old.startShape.spell === 'string');
+
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  check('recompose() is where the wizard asks, with the composed class',
+    /function recompose\(\) \{[\s\S]*?pruneStartingPicks\(S, \(kind\) => startingPicksFor\(S\.cls, kind\)\.groups\);\s+\}/.test(appText));
 }
 
 // ---------- The Attribute Bonus Chart ----------
