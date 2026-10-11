@@ -93,10 +93,10 @@ export function setUpTree({ mainTree, dest, branch, copyD1, env, die, removeHint
   console.log(`memory     ${memoryNote}`);
 }
 
-export function removeTree(dest, die) {
-  if (!existsSync(dest)) die(`${dest} does not exist`);
-  const dirty = git(['status', '--porcelain'], { cwd: dest });
-  if (dirty) die(`${dest} has uncommitted changes:\n${dirty}`);
+// Every junction or symlink inside a tree, by full path. Not followed: what
+// is behind a link is the thing a removal must not reach. Shared with
+// scripts/ground-truth.mjs, which reports them before anyone removes a tree.
+export function linksInside(dest) {
   const links = [];
   (function walk(dir) {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -105,6 +105,14 @@ export function removeTree(dest, die) {
       else if (e.isDirectory()) walk(p);
     }
   })(dest);
+  return links;
+}
+
+export function removeTree(dest, die) {
+  if (!existsSync(dest)) die(`${dest} does not exist`);
+  const dirty = git(['status', '--porcelain'], { cwd: dest });
+  if (dirty) die(`${dest} has uncommitted changes:\n${dirty}`);
+  const links = linksInside(dest);
   if (links.length) {
     die(`refusing: ${links.length} junction(s) or symlink(s) inside the tree, which a removal can delete through:\n  `
       + links.join('\n  ') + '\n  remove each with `cmd /c rmdir <path>` (removes the link, not its target), then re-run');

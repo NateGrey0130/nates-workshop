@@ -1047,6 +1047,13 @@ scripts/
 ├── worktree-lib.mjs        The setup and the guarded removal both worktree
 │                           scripts share: own local D1, env in the tree's
 │                           settings.local.json, memory linked
+├── ground-truth.mjs        What is TRUE right now, to check a memory or a
+│                           handoff against: origin/main, every worktree
+│                           (pushed, merged, LOCAL ONLY, uncommitted), stray
+│                           branches, open PRs with a CI verdict, running dev
+│                           servers, junctions to unlink before a removal.
+│                           Read-only but for a fetch. A probe that fails
+│                           prints UNKNOWN and the run exits 2
 ├── book-board.mjs          Where every book stands and who is on it: survey
 │                           status and rows, worktree, <slug>- branches, open
 │                           PRs; --remote adds production's rows per book.

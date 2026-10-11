@@ -158,6 +158,7 @@
         "scripts/sourcebooks.mjs",
         "scripts/deploy-worker-lib.mjs",
         "scripts/drift-check.mjs",
+        "scripts/ground-truth.mjs",
         "scripts/group-worktree.mjs",
         "scripts/groups.mjs",
         "scripts/worktree-lib.mjs",
