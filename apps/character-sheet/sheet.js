@@ -4596,21 +4596,27 @@ async function sendEdits(keys, vals, retried = false) {
     setAutosave(AS.dirty.size ? 'pending' : 'saved');
     return true;
   } catch (err) {
-    for (const k of keys) AS.dirty.add(k);
+    // The keys go back to dirty only where this gives up. saveNow cleared
+    // them, so one that is dirty by now was typed into again while the request
+    // or the re-read was in flight. Marking them all here and clearing them
+    // all before the retry cleared that one too: the retry stored the older
+    // text, the line said saved, and the newer text was never sent.
+    const unsent = () => { for (const k of keys) AS.dirty.add(k); };
     if (err.status === 409 && err.detail?.conflict && !retried) {
       let fresh;
       try { fresh = (await api('characters/' + id)).character; } catch {
-        setAutosave('offline'); scheduleAutosave(5000); return false;
+        unsent(); setAutosave('offline'); scheduleAutosave(5000); return false;
       }
       const clash = keys.filter((k) => !sameValue(fresh[k], AS.base[k]));
       if (!clash.length) {
         C.data.updated_at = fresh.updated_at;
-        for (const k of keys) AS.dirty.delete(k);
         return sendEdits(keys, vals, true);
       }
+      unsent();
       holdConflict(clash, fresh);
       return false;
     }
+    unsent();
     if (err.status === undefined) {
       // Never arrived. Nothing is lost - it is still typed and still dirty.
       setAutosave('offline');

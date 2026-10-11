@@ -110,6 +110,7 @@ const SECTIONS = [
   'A levelled-up spell pick keeps to the traditions of its class',
   'Changes that could not be sent',
   'A redraw keeps what was typed',
+  'A refused save keeps what was typed since',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -119,7 +120,7 @@ const SECTIONS = [
   'The name panel beside every Name box',
 ];
 
-export function run() {
+export async function run() {
   if (!SECTIONS.some(wantSection)) return;
 
   // ---------- Perception is a roll RUE grants and the sheet had nowhere to put ----------
@@ -2344,6 +2345,126 @@ export function run() {
     check('nor an item that was added with a journal line',
       /dropDrafts\(\/\^add-\(slug\|name\|qty\|notes\|log\)\$\/\);\n\s+await load\(\);/.test(sheet),
       'addItem reloads with the form still filled');
+  }
+
+  // ---------- A refused save keeps what was typed since ----------
+  // A save answered 409 re-reads the character, and where nobody else changed
+  // the fields it retries against the new version. Any play event moves the
+  // version, so this is the ordinary path at a table, not a rare one. The
+  // retry cleared every key it was sending - including one typed into again
+  // while the refused request or the re-read was in flight. The older text was
+  // stored, the line said "All changes saved", the newer text stayed on screen
+  // unsent, and the next redraw took it away.
+  //
+  // RUN, not matched: the sheet's own markDirty, saveNow and sendEdits against
+  // a stand-in server whose answers can be held while something is typed.
+  section('A refused save keeps what was typed since');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const src = ['function markDirty(key, delay = AS_DELAY) {', 'async function saveNow() {',
+      'async function sendEdits(keys, vals, retried = false) {'].map((head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    });
+    check('the sheet has markDirty, saveNow and sendEdits', src.every(Boolean),
+      'one of the three autosave functions is not where this looks for it');
+    const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
+    const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+    // One sheet: what the server holds, what is typed on the page, and hooks
+    // that run while a request is held.
+    const world = () => {
+      const server = { updated_at: 'v1', bio: { age: '30' }, combat: {} };
+      const page = { bio: { age: '30' }, combat: {} };
+      const AS = { dirty: new Set(), base: {}, timer: null, busy: null, state: 'idle', conflict: null };
+      const C = { canWrite: true, data: clone(server) };
+      const w = { server, page, AS, C, sent: [], during: {}, fail: {} };
+      let version = 1;
+      // Somebody else: a play event moves the version and touches no field.
+      w.moved = (fields = {}) => { Object.assign(server, clone(fields)); server.updated_at = 'v' + (++version); };
+      const api = async (path, req) => {
+        if (!req) {
+          await w.during.read?.();
+          if (w.fail.read) throw {};
+          return { character: clone(server) };
+        }
+        const body = JSON.parse(req.body);
+        const nth = w.sent.push(body);
+        await w.during['patch' + nth]?.();
+        if (w.fail.patch) throw w.fail.patch;
+        if (body.expect_updated_at !== server.updated_at) throw { status: 409, detail: { conflict: true } };
+        const { expect_updated_at: _, ...fields } = body;
+        w.moved(fields);
+        return { updated_at: server.updated_at };
+      };
+      w.fns = new Function('AS', 'C', 'id', 'AS_DELAY', 'api', 'jsonReq', 'pendingValues', 'applyToData', 'paintPool',
+        'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails',
+        src.join('\n') + '; return { markDirty, saveNow };')(
+        AS, C, 3, 1500, api, (method, body) => ({ method, body: JSON.stringify(body) }),
+        (keys) => Object.fromEntries(keys.map((k) => [k, clone(page[k])])),
+        (vals) => { Object.assign(C.data, clone(vals)); }, () => {},
+        (state) => { AS.state = state; }, () => {},
+        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => []);
+      w.type = (key, field, v) => { page[key][field] = v; w.fns.markDirty(key); };
+      return w;
+    };
+    const dirty = (w) => [...w.AS.dirty].sort().join(',');
+
+    if (src.every(Boolean)) {
+      // The table moved the version; the save is refused, re-read and retried.
+      let w = world();
+      w.moved(); w.type('bio', 'age', '31');
+      let ok = await w.fns.saveNow();
+      check('a save refused only for its version is retried and lands',
+        ok === true && w.server.bio.age === '31' && w.sent.length === 2 && dirty(w) === '' && w.AS.state === 'saved',
+        JSON.stringify({ ok, stored: w.server.bio, sent: w.sent.length, dirty: dirty(w), state: w.AS.state }));
+
+      // Typed into again while the refused request was in flight.
+      for (const [when, label] of [['patch1', 'while the refused request was in flight'], ['read', 'during the re-read']]) {
+        w = world();
+        w.moved(); w.type('bio', 'age', '31');
+        w.during[when] = () => { w.type('bio', 'age', '317'); w.type('combat', 'strike', '5'); };
+        ok = await w.fns.saveNow();
+        check(`a field typed into again ${label} is still unsaved after the retry`,
+          ok === false && dirty(w) === 'bio,combat' && w.AS.state === 'pending',
+          JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state, stored: w.server.bio }));
+        delete w.during[when];
+        ok = await w.fns.saveNow();
+        check('and the next save sends it',
+          ok === true && w.server.bio.age === '317' && w.server.combat.strike === '5' && w.AS.state === 'saved',
+          JSON.stringify({ ok, stored: [w.server.bio, w.server.combat], onScreen: w.page.bio, state: w.AS.state }));
+      }
+
+      // Every way of giving up leaves the keys unsent, and says so.
+      w = world();
+      w.moved({ bio: { age: '40' } }); w.type('bio', 'age', '31');
+      ok = await w.fns.saveNow();
+      check('a field somebody else changed is not retried: it is held and asked about',
+        ok === false && dirty(w) === 'bio' && w.AS.state === 'conflict' && w.server.bio.age === '40' && w.sent.length === 1,
+        JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state, stored: w.server.bio, sent: w.sent.length }));
+
+      w = world();
+      w.moved(); w.type('bio', 'age', '31'); w.fail.read = true;
+      ok = await w.fns.saveNow();
+      check('a re-read that never arrives leaves the edit unsent',
+        ok === false && dirty(w) === 'bio' && w.AS.state === 'offline', JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state }));
+
+      w = world();
+      w.moved(); w.type('bio', 'age', '31');
+      w.during.patch2 = () => { w.moved(); };
+      ok = await w.fns.saveNow();
+      check('a retry refused in its turn leaves the edit unsent',
+        ok === false && dirty(w) === 'bio' && w.AS.state === 'error' && w.sent.length === 2,
+        JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state, sent: w.sent.length }));
+
+      for (const [err, state] of [[{ status: 500, message: 'boom' }, 'error'], [{}, 'offline']]) {
+        w = world();
+        w.type('bio', 'age', '31'); w.fail.patch = err;
+        ok = await w.fns.saveNow();
+        check(`a save that fails (${state}) leaves the edit unsent`,
+          ok === false && dirty(w) === 'bio' && w.AS.state === state, JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state }));
+      }
+    }
   }
 
   // ---------- The sheet reads item_* fields the endpoint actually sends ----------

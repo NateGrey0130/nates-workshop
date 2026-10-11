@@ -4551,7 +4551,7 @@ section('Bonuses on an ability nobody picks');
 
 await serverPlumbingChecks();
 
-renderedUiChecks();
+await renderedUiChecks();
 
 // ---------- The queue flush runs one at a time ----------
 // Queued changes are replayed oldest first, serially, because two adjustments
