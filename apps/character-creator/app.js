@@ -2850,12 +2850,12 @@ function rerollForMinimum(attr) {
 
 // The Attributes step
 function renderAttributes() {
-  const classBonus = derive.classBonuses(skillBonusClass(), 1, rolledAll());
+  const classBonus = derive.classBonuses(skillBonusClass(), S.level, rolledAll());
   // Split out so the label can say where a bonus came from. Once skills fold
   // into the same block, "+2 from Glitter Boy" is a lie whenever the +2 is
   // Boxing's - and an attribute bonus the player cannot trace is worse than
   // one shown a step later, which is what this change set out to fix.
-  const classOnlyBonus = derive.classBonuses(S.cls, 1, rolledAll());
+  const classOnlyBonus = derive.classBonuses(S.cls, S.level, rolledAll());
   const reqs = S.cls.attribute_requirements || {};
   const maxes = S.cls.attribute_maximums || {};
   const spent = pbSpent();
@@ -3242,7 +3242,7 @@ function makeRoomForHandToHand(name, { granted = false, except = () => false } =
 // takenNames() is the single source for "which skills does this character
 // hold", already used by the pickers, so a skill counted here is exactly one
 // the wizard shows as taken.
-function skillBonusClass() {
+function skillBonusClass(level = S.level) {
   if (!S.cls) return S.cls;
   const held = takenNames();
   // A replaced Hand to Hand style is still on the class's list and is not on
@@ -3254,10 +3254,10 @@ function skillBonusClass() {
     held.add(String(kept).toLowerCase());
   }
   const rows = (S.skillCatalog || []).filter((sk) => held.has(String(sk.name).toLowerCase()));
-  // The wizard only ever builds a level 1 character, so that is what the
-  // Hand to Hand schedule is read at. Levelling up goes through the sheet,
-  // which composes with the character's real level.
-  const extra = bonusesFromSkills(rows, 1, S.cls);
+  // Read at the level the character is being built at, as the sheet will read
+  // it. This said "the wizard only ever builds a level 1 character" until
+  // 2026-10-10, which stopped being true when the Advancement step arrived.
+  const extra = bonusesFromSkills(rows, level, S.cls);
   if (!extra) return S.cls;
   return { ...S.cls, bonuses: sumBonusGroups(S.cls.bonuses, extra) };
 }
@@ -4679,7 +4679,7 @@ function renderDetails() {
   // shown — without this the field sits empty here and mysteriously fills in on
   // Review. Lazy and idempotent, so arriving via Review does not re-roll.
   if (!S.pools) computePools();
-  const d = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll()));
+  const d = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), S.level, rolledAll()));
   $('app').innerHTML = `
   <div class="panel">
     <h2>Details <span class="muted small">— ${esc(S.cls.name)}</span></h2>
@@ -4911,7 +4911,10 @@ function skillsAtLevelOne() {
     || (isFamilyName(n) ? { ...(skillByName().get(otherRowFor(n)) || {}), name: n } : {});
   const occ = S.cls.skills?.occ_skills || [];
   const replaced = handToHandReplaced();
-  const iq = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(), 1, rolledAll())).iq_skill_bonus_pct || 0;
+  // Level ONE on purpose, the only place the wizard still says so: the I.Q.
+  // bonus is a one-time gift to the skills a character starts with (Nate's
+  // ruling, 2026-10-10), so it is read off the character as it stood then.
+  const iq = derive.bio(S.attrs, null, derive.classBonuses(skillBonusClass(1), 1, rolledAll())).iq_skill_bonus_pct || 0;
 
   // pct stays the true current percentage, because level-up increments it and
   // the sheet prints it. iq_bonus records how much of it came from I.Q. so the
@@ -5183,7 +5186,7 @@ function renderReview() {
         ${(() => {
           // The number the sheet will show: what was rolled plus what the class
           // and the skills taken add, as the Attributes step already printed it.
-          const add = derive.classBonuses(skillBonusClass(), 1, rolledAll()).attributes || {};
+          const add = derive.classBonuses(skillBonusClass(), S.level, rolledAll()).attributes || {};
           return ATTRS.map((a) => {
             const v = S.attrs[a];
             const plus = typeof v === 'number' && add[a] ? ` <span class="muted small">${add[a] > 0 ? '+' : ''}${add[a]} = </span>${v + add[a]}` : '';
