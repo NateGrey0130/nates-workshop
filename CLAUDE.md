@@ -41,8 +41,8 @@ MediaVault, Pick 3 Cut 5). `groups.json` owns every path and D1 table.
 
 Branch: `<group>/<type>/<slug>`. group: `pal|msh|tools|shared|proc`, where
 `proc` is `groups.json`'s `process` owner (docs, audit menus, this file). type:
-`feat|fix|data|schema|docs|test|skill|audit`. slug: kebab-case, 40 characters
-at most. A book's slug starts with the book's (`pal/data/triax-ngr-police`),
+`feat|fix|refactor|data|schema|docs|test|skill|audit`, where `refactor` moves
+code and changes no behaviour. slug: kebab-case, 40 characters at most. A book's slug starts with the book's (`pal/data/triax-ngr-police`),
 because `book-board.mjs` finds book work by that prefix. A finding's slug
 starts with its menu (`proc/audit/skill-audit-f64-pressure-test`).
 PR title: `[<group>/<type>] Sentence-case summary`. Commits: the summary
