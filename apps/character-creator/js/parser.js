@@ -3211,13 +3211,13 @@ export function parseYaml(text) {
 // the answer stops there, which is still the right line to open.
 //
 // DERIVED FROM THE MESSAGE, not carried by the validators. Eighteen of them
-// push some 240 messages through four different signatures, and threading a
-// position through each would touch every one to say what the message
-// already says. The cost of doing it this way is that a message which does
-// not begin with a path has no line: `Missing required field: name` cannot
-// point at a key that is not there, and gets null. smoke holds every message
-// the three fixtures and a set of broken classes produce to resolving, or to
-// being on a short list of ones that cannot.
+// push some 240 messages through half a dozen different signatures, and
+// threading a position through each would touch every one to say what the
+// message already says. The cost of doing it this way is that a message which
+// does not begin with a path has no line: `Missing required field: name`
+// cannot point at a key that is not there, and gets null. smoke holds one
+// class broken on known lines to those lines, and every message a shipped
+// class produces that opens with one of its own keys to resolving.
 //
 // Takes the whole class markdown and answers in ITS line numbers (the opening
 // `---` is line 1), since that is the file the author has open.
