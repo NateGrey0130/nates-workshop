@@ -4388,10 +4388,15 @@ function pendingValues(keys) {
 
 // Mirror a write into C.data. Pools are clamped exactly as the PATCH clamps
 // them (0 to the pool's max), so the screen shows what was stored.
+//
+// THE MAXIMUM IS poolMax, the one every other reader of a pool asks. This read
+// `ppe_max` off the data, which is the ROLLED value: a character who had
+// burned P.P.E. out of the base could type the old maximum, see it stay on
+// screen, and find the smaller number the server had stored after a reload.
 function applyToData(vals) {
   for (const [k, v] of Object.entries(vals)) {
     if (k.endsWith('_current') && v != null && Number.isFinite(v)) {
-      const max = C.data[k.replace(/_current$/, '_max')];
+      const max = poolMax(C.data, k.replace(/_current$/, ''));
       C.data[k] = Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
     } else {
       C.data[k] = v;
