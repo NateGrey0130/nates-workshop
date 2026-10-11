@@ -13,7 +13,7 @@
 // Object.assign at the bottom.
 import { evalDice, evalDiceBonus, rollPoolFormula, rollAttribute, rollQuantity,
          isAbsentAttribute, ATTRIBUTES } from './js/dice.js';
-import { freshState, freshBuild, DRAFT_KEYS } from './js/wizard-state.js';
+import { freshState, freshBuild, DRAFT_KEYS, pruneStartingPicks } from './js/wizard-state.js';
 import { skillBase, applySystemBases, systemBaseMap } from './js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
@@ -2003,6 +2003,9 @@ function recompose() {
   // The grant list is rebuilt above; anything pointing past its end is now an
   // orphan. F72.
   pruneOrphanLevelPicks();
+  // And the level-1 picks, which are keyed by group index and so cannot
+  // outlive the offer they were made against.
+  pruneStartingPicks(S, (kind) => startingPicksFor(S.cls, kind).groups);
 }
 
 // Clicking a chosen specialty takes it off, and the skills it granted leave

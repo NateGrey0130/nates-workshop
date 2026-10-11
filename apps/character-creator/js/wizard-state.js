@@ -114,6 +114,9 @@ export function freshState() {
     // purpose: a class with one starting group keeps writing into those, so no
     // draft saved before this existed changes shape.
     spellGroups: {}, psiGroups: {}, superGroups: {}, talentGroups: {},
+    // What the class offered at level 1 when those picks were made, per kind.
+    // See pruneStartingPicks.
+    startShape: {},
     // Attributes re-rolled because a chosen O.C.C. raised a minimum the original
     // roll missed. Kept so the assist is visible as one rather than presented as
     // what the dice said first — posted as play events once the character exists.
@@ -161,7 +164,7 @@ export const BUILD_KEYS = [
   'attrBonuses', 'rolledBonuses', 'abilities', 'occAttrBonuses', 'occRolledBonuses',
   'totemAttrBonuses', 'totemRolledBonuses', 'minRerolls', 'level', 'levelPools', 'levelSpells',
   'levelPsi', 'levelPicks', 'spellGroups', 'psiGroups', 'supers', 'superGroups', 'levelSupers',
-  'talents', 'talentGroups', 'levelTalents', 'morphus',
+  'talents', 'talentGroups', 'levelTalents', 'morphus', 'startShape',
 ];
 
 // Saved in a draft and KEPT across a class change: where the player is and
@@ -189,6 +192,43 @@ export const SESSION_KEYS = [
   'relatedFilter', 'secondaryFilter', 'spellFilter', 'psiFilter', 'superFilter', 'talentFilter',
   'classFilter', 'classTagFilter', 'occTagFilter',
 ];
+
+// The level-1 power picks, by kind: the flat list a class with one starting
+// group writes into, and the per-group map a class that splits them uses.
+export const STARTING_PICK_KINDS = [
+  { kind: 'spell', flat: 'spells', groups: 'spellGroups' },
+  { kind: 'psionic', flat: 'psi', groups: 'psiGroups' },
+  { kind: 'super', flat: 'supers', groups: 'superGroups' },
+  { kind: 'talent', flat: 'talents', groups: 'talentGroups' },
+];
+
+// Drops the level-1 power picks of any kind whose offer has changed.
+//
+// A group pick is stored under its group's INDEX, so it cannot be matched to
+// "the same group" in a different class: the Biomancer's group 0 and another
+// caster's group 0 are different lists. And nothing cleared these when the
+// occupation, the variant or the race changed, so a Cyber-Knight who had been
+// a Biomancer for one step kept three spells, showed them on Review and sent
+// them to the server. So the picks of a kind live exactly as long as what the
+// class offers of that kind stays the same, and `shapeOf(kind)` says what
+// that is - the caller passes the composed class's starting groups.
+//
+// The first call for a build records and drops nothing: a draft saved before
+// `startShape` existed resumes with its picks intact.
+export function pruneStartingPicks(state, shapeOf) {
+  const seen = state.startShape || (state.startShape = {});
+  const dropped = [];
+  for (const { kind, flat, groups } of STARTING_PICK_KINDS) {
+    const now = JSON.stringify(shapeOf(kind) ?? null);
+    if (kind in seen && seen[kind] !== now) {
+      if ((state[flat] || []).length || Object.keys(state[groups] || {}).length) dropped.push(kind);
+      state[flat] = [];
+      state[groups] = {};
+    }
+    seen[kind] = now;
+  }
+  return dropped;
+}
 
 // An explicit allowlist, not a copy of the state: everything here is the build
 // itself.
