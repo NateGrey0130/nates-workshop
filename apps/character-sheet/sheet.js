@@ -1480,21 +1480,27 @@ async function undoLast() {
 // before it can draw anything, and the log is the one thing most sessions
 // never look at; paying for it every time to serve the times it is wanted is
 // the wrong way round. <details ontoggle> is the whole mechanism.
-let logLoaded = false;
+//
+// WHICH BOX it was loaded into, not whether: render() draws a new, closed box
+// with the placeholder in it, and a yes/no outlived that. Opening the log
+// after any redraw fetched nothing and showed "Opening this loads the log."
+// until it was closed and opened a second time.
+let logLoaded = null;
 async function loadLog() {
   const d = $('log-details'), body = $('log-body');
   // Closing it forgets the load, so the next opening shows what has happened
   // since rather than the first fetch of the session.
-  if (d && !d.open) { logLoaded = false; return; }
-  if (!d || logLoaded || !body) return;
-  logLoaded = true;
+  if (d && !d.open) { logLoaded = null; return; }
+  if (!d || logLoaded === d || !body) return;
+  logLoaded = d;
   body.innerHTML = '<p class="muted small">Loading…</p>';
   let events;
   try {
     events = (await api(`characters/${id}/events?limit=300`)).events;
   } catch (err) {
     // Left retryable: a failed load must not leave the box permanently empty.
-    logLoaded = false;
+    // Only its own box: after a redraw this answer belongs to one that is gone.
+    if (logLoaded === d) logLoaded = null;
     body.innerHTML = `<p class="err small">Could not load: ${escHtml(err.message)}</p>`;
     return;
   }
@@ -1727,11 +1733,10 @@ function weaponCardsHtml(w, strikeBonus) {
 
 // ── Play mode: the fast path (UI-AUDIT F44, F45, F50) ──
 
-// The Gear tab's own equip PATCH, then the cards repainted: patchItem repaints
-// the inventory rows alone, so the play section would not have noticed.
+// The Gear tab's own equip PATCH. The cards follow because every repaint of
+// the inventory repaints them too (refreshInventory).
 async function drawWeapon(rowId) {
   await patchItem(rowId, { equipped: true });
-  repaintPlayWeapons();
 }
 
 // ── A weapon's own strike bonuses (UI-AUDIT F41) ──
@@ -4360,6 +4365,10 @@ async function refreshInventory() {
   if (body) {
     body.innerHTML = inventoryRowsHtml() || '<tr><td class="muted" colspan="5">Empty.</td></tr>';
   }
+  // The weapon cards are drawn from these rows and are in the page in both
+  // modes (switching is a class flip). Only Draw used to repaint them, so a
+  // weapon added, equipped, counted or removed on the Gear tab left them stale.
+  repaintPlayWeapons();
 }
 
 // ─── targeted updates ───
@@ -4830,6 +4839,7 @@ function removeItem(rowId) {
   const paint = () => {
     const body = $('inv-rows');
     if (body) body.innerHTML = inventoryRowsHtml() || '<tr><td class="muted" colspan="5">Empty.</td></tr>';
+    repaintPlayWeapons();
   };
   undoable({
     label: it.item_name || it.custom_name || 'the item',
