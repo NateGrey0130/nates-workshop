@@ -192,10 +192,14 @@
     <textarea rows="3" class="mc-full" placeholder="What do we know?"
       onchange="mcCampaign.people.edit(${n.id}, 'description', this.value)">${esc(n.description || '')}</textarea>
     ${opts.dossierExtra ? opts.dossierExtra(n) : ''}
+    ${S.npc.can_delete === false ? `
+    <div class="mc-row mc-dossier-foot">
+      <span class="mc-muted mc-small">Only whoever made this dossier, or the G.M., can delete it.</span>
+    </div>` : `
     <div class="mc-row mc-dossier-foot">
       <button class="mc-btn mc-btn-sm mc-btn-ghost" onclick="mcCampaign.people.remove(${n.id})">delete dossier</button>
       <span class="mc-muted mc-small">Deleting the dossier leaves the notes alone — the @ in the text is just text.</span>
-    </div>
+    </div>`}
   </div>
 
   <div class="mc-panel">

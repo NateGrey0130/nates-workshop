@@ -246,6 +246,26 @@ section('Portraits are never public');
   check('and encodes it', /encodeURIComponent/.test(pageSrc));
   check('no img src interpolates a raw timestamp', !/portrait\?v=\$\{esc\(n\.updated_at\)\}/.test(pageSrc));
 
+  // The Palladium dossier says who may delete it (`can_delete`, creator or
+  // G.M.), and the page stops offering a button the server would refuse.
+  // `=== false`, not falsy: the Marvel campaign loads this same file and its
+  // dossier endpoint sends no such key, so an absent answer keeps the button.
+  // Run rather than read: the foot of the template, built for each answer.
+  {
+    const at = pageSrc.indexOf('${S.npc.can_delete === false');
+    const end = pageSrc.indexOf('</div>`}', at);
+    check('the dossier foot asks the dossier whether it may be deleted', at > 0 && end > at);
+    const foot = (canDelete) => new Function('S', 'n',
+      'return `' + pageSrc.slice(at, end + '</div>`}'.length) + '`;')({ npc: { can_delete: canDelete } }, { id: 7 });
+    const offers = (html) => /onclick="mcCampaign\.people\.remove\(7\)"/.test(html);
+    check('someone who may not delete it is told who can, and is offered no button',
+      !offers(foot(false)) && /Only whoever made this dossier, or the G\.M\./.test(foot(false)));
+    check('its maker and the G.M. are offered the button', offers(foot(true)));
+    check('and so is a page whose server does not say', offers(foot(undefined)));
+    const route = readFileSync(join(apiDir, 'campaigns', '[id]', 'npcs', '[npcId].js'), 'utf8');
+    check('which the Palladium route does say', /can_delete: mayDelete\(npc, guard\)/.test(route));
+  }
+
   // The binding is named for the site, not the app that needed it first.
   const wrangler = readFileSync(join(appDir, '..', '..', 'wrangler.jsonc'), 'utf8');
   check('the R2 binding exists', /"binding":\s*"MEDIA"/.test(wrangler));
