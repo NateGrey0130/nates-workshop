@@ -910,7 +910,7 @@ async function flushOnce() {
         // as the refusal it is.
         if (noteConflicts(e, err.detail.fields, err.detail.form_fields)) return;
       }
-      if (err.status === undefined) { renderQueueState(err); return; }  // still unsent
+      if (!refusedOnMerit(err)) { renderQueueState(err); return; }  // still unsent
       // The server refused it on its merits. It will never succeed, so it
       // leaves the queue rather than blocking everything behind it.
       await playQueue.remove(e.seq);
@@ -933,6 +933,22 @@ async function flushOnce() {
   C.unsent = null;
   renderQueueState();
   await load();
+}
+
+// A STATUS IS NOT ALWAYS A VERDICT ON THE CHANGE. The events route answers 400,
+// 404 and 409 for itself and the sign-in check 401 and 403: each of those read
+// the entry and said no, and the same entry will get the same answer forever.
+// A 5xx, a 429 or a 408 comes from in front of the route or from a route that
+// fell over, and says nothing about the entry at all. The replay used to treat
+// every status alike, so one 503 while a queue drained took a change the
+// player had made out of the queue without a word, and the reload that ends
+// the flush put the pool back where it was.
+//
+// ONLY THE REPLAY ASKS THIS. A press that gets a 503 on its first send still
+// rolls back and says so, where the player can see it and press again.
+function refusedOnMerit(err) {
+  const s = err.status;
+  return s !== undefined && s < 500 && s !== 429 && s !== 408;
 }
 
 // Both sides of every pool this entry clashed on, each answerable on its own
@@ -967,10 +983,13 @@ function noteConflicts(entry, reported, reportedForm) {
 //              `notData`): the sign-in wall, answering for our API.
 //   'server' - the request failed while the browser says it is connected. The
 //              server may be down; a sign-in redirect to another origin also
-//              fails exactly this way, so the message names both.
+//              fails exactly this way, so the message names both. An answer
+//              that is not about the change (a 503, a 429) is this too, and
+//              it is this whatever the browser says: something answered.
 //   null     - the browser itself says it is offline.
 function whyUnsent(err) {
   if (err.notData) return 'signin';
+  if (err.status !== undefined) return 'server';
   return navigator.onLine === false ? null : 'server';
 }
 
