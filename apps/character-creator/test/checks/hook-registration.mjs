@@ -75,12 +75,163 @@
 // machine* records the registration since 2026-09-27, but nothing checks that a
 // second machine followed it.
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 
-const SECTIONS = ['Bash guard hook registration'];
+const SECTIONS = ['Session budget hooks', 'Bash guard hook registration'];
+
+// ── the two session-budget hooks ─────────────────────────────────────────────
+//
+// .claude/hooks/session-budget.mjs warns and .claude/hooks/agent-slice.mjs
+// refuses; each file's header says why. Two halves here, and they differ in
+// where they can run:
+//
+//   BEHAVIOUR   runs everywhere, CI included. Each script is spawned as the
+//               harness spawns it - an envelope on stdin, the exit code and the
+//               two streams read back - against a transcript written for the
+//               purpose. The warn hook must exit 0 on EVERY path, including the
+//               ones it cannot read, because its posture is "never blocks".
+//   REGISTRATION  local only, like the guard's below, and for the same reason.
+//               These two are registered at user level ONLY, so unlike the
+//               guard there is no checked-in registration behind them: absent
+//               from that file is not installed, and that is a failure here.
+const HOOK_DIR = join(repoRoot, '.claude', 'hooks');
+const BUDGET = join(HOOK_DIR, 'session-budget.mjs');
+const SLICE = join(HOOK_DIR, 'agent-slice.mjs');
+
+function runHook(script, envelope) {
+  const r = spawnSync(process.execPath, [script], {
+    input: typeof envelope === 'string' ? envelope : JSON.stringify(envelope),
+    encoding: 'utf8',
+  });
+  return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
+}
+
+// One main-thread assistant line, shaped as Claude Code writes it.
+function assistantLine(ctx, at, extra = {}) {
+  return JSON.stringify({
+    type: 'assistant', isSidechain: false, timestamp: new Date(at).toISOString(),
+    message: { usage: { input_tokens: 2, cache_read_input_tokens: ctx - 2, cache_creation_input_tokens: 0 } },
+    ...extra,
+  });
+}
+
+function sessionBudgetChecks() {
+  section('Session budget hooks');
+
+  const dir = mkdtempSync(join(tmpdir(), 'session-hooks-'));
+  try {
+    const now = Date.now();
+    const transcript = (name, lines) => {
+      const p = join(dir, name);
+      writeFileSync(p, lines.join('\n') + '\n');
+      return p;
+    };
+    const prompt = (path) => runHook(BUDGET, { hook_event_name: 'UserPromptSubmit', transcript_path: path });
+    const said = (r) => { try { return JSON.parse(r.out).hookSpecificOutput.additionalContext; } catch { return ''; } };
+
+    const small = prompt(transcript('small.jsonl', [assistantLine(90_000, now)]));
+    check('a 90k session draws no warning', small.code === 0 && small.out === '', JSON.stringify(small));
+
+    const near = prompt(transcript('near.jsonl', [assistantLine(160_000, now)]));
+    check('a 160k session is told it is approaching 200k',
+      near.code === 0 && /context is 160k, approaching 200k/.test(said(near)), JSON.stringify(near));
+
+    const over = prompt(transcript('over.jsonl', [assistantLine(240_000, now)]));
+    check('a 240k session is told it is past 200k, and Nate sees the same line',
+      over.code === 0 && /context is 240k, past 200k/.test(said(over))
+        && JSON.parse(over.out || '{}').systemMessage === said(over), JSON.stringify(over));
+
+    // The subagent line is LAST in the file. Read it and the session looks huge.
+    const side = prompt(transcript('side.jsonl', [
+      assistantLine(90_000, now), assistantLine(400_000, now, { isSidechain: true })]));
+    check('a subagent line is not read as the session\'s context',
+      side.code === 0 && side.out === '', JSON.stringify(side));
+
+    const cold = prompt(transcript('cold.jsonl', [assistantLine(120_000, now - 70 * 60_000)]));
+    check('a 120k session resumed after 70 minutes is told the cache expired',
+      cold.code === 0 && /70 minutes ago/.test(said(cold)) && /cache has expired/.test(said(cold)), JSON.stringify(cold));
+
+    const coldSmall = prompt(transcript('cold-small.jsonl', [assistantLine(60_000, now - 70 * 60_000)]));
+    check('a 60k session resumed after 70 minutes is not', coldSmall.code === 0 && coldSmall.out === '', JSON.stringify(coldSmall));
+
+    const big = transcript('big.jsonl', [assistantLine(240_000, now)]);
+    const merge = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: big, tool_input: { command: 'gh pr merge 12 --merge --delete-branch' } });
+    check('a merge in a large session names the PR boundary',
+      merge.code === 0 && /a PR just merged/.test(said(merge)), JSON.stringify(merge));
+    const other = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: big, tool_input: { command: 'git status' } });
+    check('any other Bash call in the same session says nothing', other.code === 0 && other.out === '', JSON.stringify(other));
+
+    const unreadable = [
+      runHook(BUDGET, 'not json'),
+      prompt(join(dir, 'no-such-file.jsonl')),
+      prompt(transcript('empty.jsonl', ['{"type":"user"}'])),
+    ];
+    check('the warn hook exits 0 and prints nothing on input it cannot read',
+      unreadable.every((r) => r.code === 0 && r.out === ''), JSON.stringify(unreadable));
+
+    const spawn = (subagent_type, text) => runHook(SLICE, { hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_input: { subagent_type, prompt: text } });
+    const noSlice = spawn('book-reconcile', 'Check the 32 proposed spell rows against the book.');
+    check('a book-reconcile brief with no Slice line is refused, exit 2',
+      noSlice.code === 2 && /agent-slice: .*must declare a bounded slice/.test(noSlice.err), JSON.stringify(noSlice));
+    const wide = spawn('book-reconcile', 'Check these rows.\nSlice: 40-47, 112-120\n');
+    check('a 17-page slice is refused and the reason gives the count',
+      wide.code === 2 && /slice is 17 pages and the cap is 15/.test(wide.err), JSON.stringify(wide));
+    const fits = spawn('book-reconcile', 'Check these rows.\n**Slice:** 40-47, 112-115, 201\n');
+    check('a 13-page slice is let through', fits.code === 0 && fits.err === '', JSON.stringify(fits));
+    const reversed = spawn('book-reconcile', 'Slice: 47-40');
+    check('a reversed range is refused rather than counted as negative', reversed.code === 2, JSON.stringify(reversed));
+    const unbounded = spawn('general-purpose', 'Read the whole book.');
+    check('an agent that is not slice-bound is let through', unbounded.code === 0, JSON.stringify(unbounded));
+    const garbled = runHook(SLICE, 'not json');
+    check('the slice hook fails closed on input it cannot parse', garbled.code === 2, JSON.stringify(garbled));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  if (!existsSync(USER_SETTINGS)) {
+    check('the user-level settings file is not on this host', true,
+      `${USER_SETTINGS} absent - the registration half is local-only and asserts nothing here`);
+    return;
+  }
+  let hooks;
+  try {
+    hooks = JSON.parse(readFileSync(USER_SETTINGS, 'utf8'))?.hooks ?? {};
+  } catch (e) {
+    check('the user-level settings file parses as JSON', false, `${USER_SETTINGS} - ${e.message}`);
+    return;
+  }
+  const WANTED = [
+    { event: 'UserPromptSubmit', matcher: null, script: 'session-budget.mjs' },
+    { event: 'PostToolUse', matcher: 'Bash', script: 'session-budget.mjs' },
+    { event: 'PreToolUse', matcher: 'Agent', script: 'agent-slice.mjs' },
+  ];
+  for (const { event, matcher, script } of WANTED) {
+    const on = matcher ? `${event} for ${matcher}` : event;
+    const command = (hooks[event] ?? [])
+      .filter((entry) => matcher === null
+        || (typeof entry?.matcher === 'string' && new RegExp(`\\b${matcher}\\b`).test(entry.matcher)))
+      .flatMap((entry) => entry.hooks ?? [])
+      .filter((h) => h?.type === 'command' && typeof h.command === 'string')
+      .map((h) => h.command)
+      .find((c) => c.includes(script));
+    check(`the user-level settings register ${script} on ${on}`, command !== undefined,
+      `${USER_SETTINGS} - hooks.${event} names no ${script}; it is registered nowhere else, so it does not run (SETUP.md -> Setting up a machine)`);
+    if (command === undefined) continue;
+    const path = scriptPathOf(command, script);
+    check(`and ${on} spells the path absolutely and it resolves`,
+      path !== null && !/\$|%\w+%/.test(path) && existsSync(path),
+      `${command} - node exits 1 on a missing script, which is reported and blocks nothing`);
+    if (path === null || !existsSync(path)) continue;
+    const ours = join(HOOK_DIR, script);
+    check(`and ${on} runs this repo's copy`,
+      readFileSync(path, 'utf8') === readFileSync(ours, 'utf8'),
+      `${path} - registered and resolves, but its contents differ from ${ours}`);
+  }
+}
 
 const USER_SETTINGS = join(homedir(), '.claude', 'settings.json');
 
@@ -92,16 +243,19 @@ const SCRIPT = 'guard-bash.sh';
 // `sh "<path>"`, so a quoted token wins; an unquoted command falls back to the
 // token carrying the basename. Returns null when neither is found, which the
 // caller reports rather than swallowing.
-function scriptPathOf(command) {
+function scriptPathOf(command, script = SCRIPT) {
   const quoted = [...command.matchAll(/(['"])(.*?)\1/g)].map((m) => m[2]);
-  const fromQuoted = quoted.find((s) => s.includes(SCRIPT));
+  const fromQuoted = quoted.find((s) => s.includes(script));
   if (fromQuoted) return fromQuoted;
-  const bare = command.split(/\s+/).find((t) => t.includes(SCRIPT));
+  const bare = command.split(/\s+/).find((t) => t.includes(script));
   return bare ? bare.replace(/^["']|["']$/g, '') : null;
 }
 
 export function run() {
   if (!SECTIONS.some(wantSection)) return;
+
+  if (wantSection('Session budget hooks')) sessionBudgetChecks();
+  if (!wantSection('Bash guard hook registration')) return;
 
   section('Bash guard hook registration');
 
