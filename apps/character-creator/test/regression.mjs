@@ -1092,6 +1092,22 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
   const gmNpc = await api('POST', '/characters', joinable('GM NPC'));
   check('and so may the GM', gmNpc.status === 201, JSON.stringify(gmNpc.body).slice(0, 200));
 
+  // The sheet draws a skill's percentage and an attribute into its markup, and
+  // both are stored as sent, so a string in either was markup on every screen
+  // that opened the character. Refused at the door, before anything is stored.
+  const markup = '<img src=x onerror=alert(1)>';
+  const before = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
+  const badPct = await api('POST', '/characters', { ...joinable('Markup pct'),
+    skills: [{ name: 'Literacy', category: 'Class', type: 'occ', pct: markup, per_level: 5 }] });
+  check('a skill percentage that is not a number is refused',
+    badPct.status === 400 && /pct must be a number/.test(badPct.body?.error || ''), badPct.body);
+  const badAttr = await api('POST', '/characters', { ...joinable('Markup attribute'),
+    attributes: { ...attrs, PB: markup } });
+  check('and so is an attribute that is not one',
+    badAttr.status === 400 && /attribute PB must be a number/.test(badAttr.body?.error || ''), badAttr.body);
+  const after = (await api('GET', `/characters?campaign_id=${campaignId}`)).body.characters.length;
+  check('and neither left a character behind', after === before, `${before} -> ${after}`);
+
   // Back to open, so nothing downstream inherits the closed state.
   await api('PATCH', `/campaigns/${campaignId}`, { open: true });
 

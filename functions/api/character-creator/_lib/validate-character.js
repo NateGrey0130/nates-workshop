@@ -73,6 +73,33 @@ export async function loadSkillCategories(env) {
   return new Map(results.map((r) => [norm(r.name), r.category]));
 }
 
+// The numbers a character is created holding must BE numbers. `skills` and
+// `attributes` are stored as the request sent them, and the sheet draws a
+// skill's percentage and an attribute into its markup, so a string in one of
+// them was markup on every screen that opened the character - the owner's, the
+// G.M.'s and the table's. Its own function and not a rule in validateCharacter,
+// which checks nothing at all for a character whose class was retired.
+// Absent and null pass: a Weapon Proficiency has no percentage.
+const SKILL_NUMBERS = ['pct', 'per_level', 'iq_bonus'];
+const isNumberOrAbsent = (v) => v == null || (typeof v === 'number' && Number.isFinite(v));
+export function storedNumberProblems({ skills, attributes }) {
+  const problems = [];
+  if (skills != null && !Array.isArray(skills)) problems.push('skills must be a list');
+  for (const s of Array.isArray(skills) ? skills : []) {
+    for (const key of SKILL_NUMBERS) {
+      if (!isNumberOrAbsent(s?.[key])) problems.push(`skill ${key} must be a number`);
+    }
+  }
+  const attrs = attributes == null ? {} : attributes;
+  if (typeof attrs !== 'object' || Array.isArray(attrs)) problems.push('attributes must be an object');
+  else {
+    for (const [attr, v] of Object.entries(attrs)) {
+      if (!isNumberOrAbsent(v)) problems.push(`attribute ${attr.slice(0, 20)} must be a number`);
+    }
+  }
+  return [...new Set(problems)];
+}
+
 export function validateCharacter({ character, cls, skills, attributes, abilities, catalog,
                                     powers, pools, system, powerCatalog,
                                     secondForm, traitRows = null,
