@@ -214,7 +214,11 @@ section('Portraits are never public');
 
   // The whole site is behind Access. An unauthenticated image endpoint would be
   // the one hole in it, so every read goes through the membership check.
-  check('the portrait GET checks membership', /isMember/.test(src));
+  // requireMember since 2026-10-10; what it refuses is run in
+  // server-plumbing.mjs. This read `isMember` in the source, which the guard
+  // now holds for it.
+  check('the portrait GET checks membership',
+    /export async function onRequestGet\(\{ request, env, params \}\) \{\s+const guard = await requireMember\(request, env, params\.id\);\s+if \(guard\.res\) return guard\.res;/.test(src));
 
   // A missing NPC and an NPC with no portrait are different answers. `!npc?.x`
   // is the tidier-looking form and collapses them, which is why this is pinned
