@@ -4552,6 +4552,95 @@ await serverPlumbingChecks();
 
 renderedUiChecks();
 
+// ---------- The queue flush runs one at a time ----------
+// Queued changes are replayed oldest first, serially, because two adjustments
+// to one pool only compose in the order they were made. That held INSIDE one
+// flush. Nothing held it between two: render() starts a flush, the 'online'
+// event starts one, an answered conflict starts one, and a second could begin
+// while the first was waiting on its POST. Both had read the same queue.
+//
+// RUN, with a queue and a network that answer slowly: the functions are cut
+// out of sheet.js and two flushes are started together. What is counted is how
+// many times each entry reached the server.
+section('The queue flush runs one at a time');
+{
+  const sheet = readFileSync(appPath('sheet.js'), 'utf8');
+  const a = sheet.indexOf('function entryFields(');
+  const b = sheet.indexOf('// Both sides of every pool this entry clashed on', a);
+  check('the flush can be located', a >= 0 && b > a, 'entryFields or the comment after the flush moved');
+
+  const rig = ({ offline = false } = {}) => {
+    const sent = [];
+    const store = [
+      { seq: 1, kind: 'pool', note: 'first', fields: { sdc_current: { from: 20, to: 12 } } },
+      { seq: 2, kind: 'ammo', note: 'second', fields: {}, item: { id: 7, ammo: -1 } },
+    ];
+    const tick = () => new Promise((r) => setTimeout(r, 2));
+    const state = { offline, loads: 0 };
+    const playQueue = {
+      available: async () => true,
+      all: async () => { await tick(); return store.map((e) => ({ ...e })); },
+      remove: async (seq) => { await tick(); const i = store.findIndex((e) => e.seq === seq); if (i >= 0) store.splice(i, 1); },
+    };
+    const api = async (_path, req) => {
+      await tick();
+      if (state.offline) throw new Error('offline');        // no .status: the network, not the server
+      sent.push(req.body.note);
+      return { event_id: sent.length };
+    };
+    let flushQueue = null;
+    try {
+      flushQueue = new Function('window', 'playQueue', 'C', 'id', 'api', 'jsonReq', 'noteConflicts',
+        'renderQueueState', 'flash', 'load',
+        sheet.slice(a, b) + '\nreturn flushQueue;')(
+        { playQueue }, playQueue, { canWrite: true, conflicts: {} }, 1, api,
+        (method, body) => ({ method, body }), () => false, () => {}, () => {},
+        async () => { state.loads += 1; });
+    } catch (e) {
+      check('the flush runs outside the page', false, e.message);
+    }
+    return { flushQueue, sent, store, state };
+  };
+
+  {
+    const r = rig();
+    if (r.flushQueue) await Promise.all([r.flushQueue(), r.flushQueue()]);
+    check('two flushes started together send each queued change once',
+      JSON.stringify(r.sent) === '["first","second"]', JSON.stringify(r.sent));
+    check('and leave the queue empty', r.store.length === 0, JSON.stringify(r.store));
+  }
+  {
+    const r = rig();
+    if (r.flushQueue) await Promise.all([r.flushQueue(), r.flushQueue(), r.flushQueue(), r.flushQueue()]);
+    check('and so do four', JSON.stringify(r.sent) === '["first","second"]', JSON.stringify(r.sent));
+  }
+  {
+    // A press queued while a flush is under way, then another caller: the new
+    // entry must still go, once, after the ones ahead of it.
+    const r = rig();
+    if (r.flushQueue) {
+      const first = r.flushQueue();
+      await new Promise((res) => setTimeout(res, 5));
+      r.store.push({ seq: 3, kind: 'pool', note: 'third', fields: { hp_current: { from: 9, to: 8 } } });
+      await Promise.all([first, r.flushQueue()]);
+    }
+    check('a change queued during a flush is sent by the pass that follows it, in order',
+      JSON.stringify(r.sent) === '["first","second","third"]', JSON.stringify(r.sent));
+  }
+  {
+    // The guard must let go. A flush that ends offline leaves the queue as it
+    // was, and the next call has to be a real attempt rather than a no-op.
+    const r = rig({ offline: true });
+    if (r.flushQueue) await r.flushQueue();
+    check('a flush that found no network sends nothing and keeps the queue',
+      r.sent.length === 0 && r.store.length === 2, JSON.stringify({ sent: r.sent, left: r.store.length }));
+    r.state.offline = false;
+    if (r.flushQueue) await r.flushQueue();
+    check('and the next one, with the network back, sends it all',
+      JSON.stringify(r.sent) === '["first","second"]' && r.store.length === 0, JSON.stringify(r.sent));
+  }
+}
+
 mosTotemChecks();
 
 
