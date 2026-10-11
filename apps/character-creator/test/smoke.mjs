@@ -465,7 +465,8 @@ import { dice, money } from '../../../scripts/ocr-fields-lib.mjs';
 import { dedupeCategories } from '../../../functions/api/character-creator/_lib/skill-picks.js';
 import { relatedAllowance, validateCharacter } from '../../../functions/api/character-creator/_lib/validate-character.js';
 import { abilityPickEffects } from '../../../functions/api/character-creator/_lib/ability-picks.js';
-import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys } from '../../../scripts/class-check-lib.mjs';
+import { crossCategoryRestrictions, extractClassMarkdown, unmodelledKeys, sheetDrawableKeys,
+         undrawnBonusKeys } from '../../../scripts/class-check-lib.mjs';
 import { buildUserPrompt, SYSTEM_PROMPT_CACHE } from '../../../scripts/extraction-prompt.mjs';
 import { statements } from '../../../scripts/sql-statements.mjs';
 import { CATALOGS, coerceField } from '../js/catalog-fields.js';
@@ -7210,55 +7211,70 @@ section('A class cannot write a bonus the sheet will not draw');
   // `{ }` match reads that very note's prose as data and reports a key that
   // is not there - which is what happened while F1 was being taken, and is
   // CLASS-AUDIT F17's shape.
-  const sheetSrc = readFileSync(appPath('sheet.js'), 'utf8');
-  const listKeys = (name) => {
-    const b = sheetSrc.slice(sheetSrc.indexOf(`const ${name}`),
-      sheetSrc.indexOf('];', sheetSrc.indexOf(`const ${name}`)));
-    return [...b.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
-  };
-  const drawable = {
-    combat: new Set([
-      ...listKeys('COMBAT_FIELDS'),
-      // States a starting number rather than adding to one. parser.js folds it
-      // and derive.js strips it before the combat map reaches the sheet, so it
-      // is correctly absent from COMBAT_FIELDS.
-      'attacks_base',
-    ]),
-    saves: new Set([
-      ...listKeys('SAVE_FIELDS'),
-      // Rendered above the sixteen as its own editField.
-      'psionics_target',
-      // A LIST of { label, bonus }, not a keyed number - the escape hatch for a
-      // save the sixteen do not name (BOOK-INGEST-AUDIT F7).
-      'other',
-    ]),
-  };
+  //
+  // The lists and the walk are scripts/class-check-lib.mjs's since 2026-10-10,
+  // shared with class-check, which now warns about the same key before the
+  // script is written. Until then this suite was the first to say so.
+  const drawable = sheetDrawableKeys(readFileSync(appPath('sheet.js'), 'utf8'));
+  check('the sheet\'s two field lists are found',
+    drawable.combat.size > 5 && drawable.saves.size > 10,
+    `${drawable.combat.size} combat, ${drawable.saves.size} saves`);
 
+  // The predicate on its own, against a class that gets every place wrong.
+  const wrong = undrawnBonusKeys({
+    bonuses: { combat: { strike: 1, dogfighting: 2 }, saves: { spell_magic: 1, other: [] },
+      at_level: [{ level: 3, saves: { horor_factor: 1 } }] },
+    variants: [{ id: 'adult', bonuses: { combat: { parry: 1, parrry: 1 } } }],
+    second_form: { bonuses: { saves: { poisen: 2 } } },
+  }, drawable);
+  check('a key the sheet does not draw is named by its path, wherever it was written',
+    wrong.join() === ['bonuses.combat.dogfighting', 'bonuses.at_level[0].saves.horor_factor',
+      'variants.adult.bonuses.combat.parrry', 'second_form.bonuses.saves.poisen'].join(),
+    wrong.join(', '));
+  check('and a class with none, or with no bonuses at all, names nothing',
+    undrawnBonusKeys({ bonuses: { combat: { strike: 1, attacks_base: 4 }, saves: { psionics_target: 10 } } }, drawable).length === 0
+    && undrawnBonusKeys({}, drawable).length === 0 && undrawnBonusKeys(null, drawable).length === 0);
+
+  // EVERY script a whole class can be read out of, not only the ones named
+  // add-*-class.sql. On 2026-10-10 that filter read 760 of 761: it missed
+  // `~120-coalition-military-specialist-class.sql`, and would miss any class
+  // restated by a script under another name.
   const offenders = [];
   let parsed = 0;
-  for (const f of readdirSync(join(appDir, 'db')).filter((n) => /^add-.*-class\.sql$/.test(n))) {
+  let outsideTheOldFilter = 0;
+  for (const f of readdirSync(join(appDir, 'db')).filter((n) => n.endsWith('.sql'))) {
     let md = null;
     try { md = extractClassMarkdown(readFileSync(join(appDir, 'db', f), 'utf8')); } catch { md = null; }
     if (!md) continue;
     const res = parseClassMarkdown(md);
     if (!res?.ok || !res.data) continue;
     parsed++;
-    // A second form's bonuses are drawn by the same two lists, in its form.
-    const groups = [res.data.bonuses, ...(res.data.bonuses?.at_level || []),
-      ...(res.data.variants || []).map((v) => v.bonuses), res.data.second_form?.bonuses].filter(Boolean);
-    for (const g of groups) {
-      for (const kind of ['combat', 'saves']) {
-        for (const key of Object.keys(g[kind] || {})) {
-          if (!drawable[kind].has(key)) offenders.push(`${f}: bonuses.${kind}.${key}`);
-        }
-      }
-    }
+    if (!/^add-.*-class\.sql$/.test(f)) outsideTheOldFilter++;
+    for (const path of undrawnBonusKeys(res.data, drawable)) offenders.push(`${f}: ${path}`);
   }
 
-  check('every add-*-class.sql was parsed', parsed > 100, `only ${parsed}`);
+  check('every script that writes a class was parsed', parsed > 100, `only ${parsed}`);
+  check('including the ones not named add-*-class.sql', outsideTheOldFilter > 0, String(outsideTheOldFilter));
   check('no class writes a combat or save key the sheet cannot draw',
     offenders.length === 0,
     `${offenders.join('; ')} - add it to COMBAT_FIELDS/SAVE_FIELDS in sheet.js, or use saves.other / a special_ability`);
+
+  // And class-check says it at authoring time, as a warning that moves no
+  // exit code - run for real, on a draft with one misspelled save.
+  {
+    const draft = join(process.env.TEMP || process.env.TMPDIR || '/tmp', `smoke-undrawn-${process.pid}.md`);
+    writeFileSync(draft, ['---', 'id: undrawn-probe', 'name: Undrawn Probe', 'system: rifts',
+      'source_book: "Probe"', 'category: occ', 'hit_points_base: "P.E. + 1D6 per level"', 'sdc_base: "3D6"',
+      'bonuses:', '  saves: { horor_factor: 2 }', '---', '', '## Lore', '', 'x', ''].join('\n'));
+    const run = spawnSync(process.execPath, [join(repoRoot, 'scripts', 'class-check.mjs'), draft, '--no-catalog'],
+      { encoding: 'utf8', cwd: repoRoot });
+    rmSync(draft, { force: true });
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    check('class-check warns about an undrawn key, by path',
+      /bonus key\(s\) the sheet has no field for - bonuses\.saves\.horor_factor/.test(out),
+      out.slice(0, 300));
+    check('and does not fail the run for it', run.status === 0, `exit ${run.status}`);
+  }
 }
 
 // ---------- The checks modules declare the sections they run ----------

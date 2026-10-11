@@ -738,3 +738,63 @@ export function crossCategoryRestrictions(data, categoryOf) {
   }
   return out;
 }
+
+/**
+ * The combat and save keys the SHEET draws, read out of sheet.js's own text.
+ *
+ * `bonuses.combat` and `bonuses.saves` are open at the validator - the group
+ * names are checked, the keys inside them are not, and derive.js adds any
+ * finite number under any key. They are closed at the sheet, which draws
+ * COMBAT_FIELDS and SAVE_FIELDS as literal lists. sheet.js is a classic script
+ * and cannot be imported, so the lists are read as text, which is what the
+ * smoke suite already did before this was shared with class-check.
+ *
+ * Three keys are drawn or consumed some other way and are added by hand:
+ *   attacks_base      states a starting number; parser.js folds it and
+ *                     derive.js strips it before the combat map reaches the
+ *                     sheet
+ *   psionics_target   rendered above the save list as its own field
+ *   other             a LIST of { label, bonus }, the escape hatch for a save
+ *                     the list does not name (BOOK-INGEST-AUDIT F7)
+ */
+export function sheetDrawableKeys(sheetSrc) {
+  const listKeys = (name) => {
+    const at = sheetSrc.indexOf(`const ${name}`);
+    if (at < 0) return [];
+    const body = sheetSrc.slice(at, sheetSrc.indexOf('];', at));
+    return [...body.matchAll(/\['([a-z_]+)',/g)].map((m) => m[1]);
+  };
+  return {
+    combat: new Set([...listKeys('COMBAT_FIELDS'), 'attacks_base']),
+    saves: new Set([...listKeys('SAVE_FIELDS'), 'psionics_target', 'other']),
+  };
+}
+
+/**
+ * Every `bonuses.combat` / `bonuses.saves` key a class writes that the sheet
+ * has no field for, as paths. Such a key parses, validates, composes and
+ * renders NOWHERE (SKILL-AUDIT F23), so a misspelling reads as a bonus that
+ * was imported and is in fact lost.
+ *
+ * Walks every place a class can state a bonus block: its own, each
+ * `at_level` step, each variant's, and a second form's.
+ */
+export function undrawnBonusKeys(data, drawable) {
+  const blocks = [
+    ['bonuses', data?.bonuses],
+    ...(data?.bonuses?.at_level || []).map((b, i) => [`bonuses.at_level[${i}]`, b]),
+    ...(Array.isArray(data?.variants) ? data.variants : [])
+      .map((v) => [`variants.${v?.id ?? '?'}.bonuses`, v?.bonuses]),
+    ['second_form.bonuses', data?.second_form?.bonuses],
+  ];
+  const out = [];
+  for (const [where, block] of blocks) {
+    if (!block || typeof block !== 'object') continue;
+    for (const kind of ['combat', 'saves']) {
+      for (const key of Object.keys(block[kind] || {})) {
+        if (!drawable[kind].has(key)) out.push(`${where}.${kind}.${key}`);
+      }
+    }
+  }
+  return out;
+}
