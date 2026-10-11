@@ -109,6 +109,7 @@ const SECTIONS = [
   'A typed override is drawn as text',
   'A levelled-up spell pick keeps to the traditions of its class',
   'Changes that could not be sent',
+  'A redraw keeps what was typed',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -2242,6 +2243,107 @@ export function run() {
     check('and an answered pool stops offering the choice',
       /delete C\.conflicts\[key\];[\s\S]{0,300}?C\.resolved\[c\.seq\]/.test(sheet),
       'an answered card keeps showing two halves, or the answer is lost');
+  }
+
+  // ---------- render() rebuilds the page, and took half-typed text with it ----------
+  // Autosave carries the fields it owns across a render (holdTypedEdits). Every
+  // other input was DOM-only: reproduced on a local sheet on 2026-10-11, one
+  // keystroke in the inventory filter emptied the journal draft, the add-item
+  // form, the XP field, a grant's name and reason and the level-up panel's
+  // numbers, and choosing a skill at level-up cleared the spell chosen before
+  // it. The sheet now reads those off the page before the rebuild and puts
+  // them back after it.
+  //
+  // RUN, not matched: the sheet's own three functions over stand-in controls,
+  // with the rebuild played by swapping in a fresh set. What is matched as text
+  // is only that render() calls them on either side of the rebuild, and that a
+  // handler which sent a draft drops it - otherwise its own success puts the
+  // sent text back in the box.
+  section('A redraw keeps what was typed');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const block = sheet.match(/const DRAFT_ELSEWHERE = [\s\S]*?\nfunction dropDrafts\(ids\) \{[\s\S]*?\n\}/);
+    const text = (id, value = '', o = {}) => ({ id, type: 'text', tagName: 'INPUT', value, defaultValue: value, ...o });
+    const pick = (id, values) => ({ id, type: 'select-one', tagName: 'SELECT', value: values[0],
+      options: values.map((v) => ({ value: v, defaultSelected: false })) });
+    const tick = (id) => ({ id, type: 'checkbox', tagName: 'INPUT', checked: false, defaultChecked: false });
+    const SPELLS = ['', 'Armor of Ithan', 'Globe of Daylight'];
+    const fresh = (spells = SPELLS) => [
+      text('j-body', '', { tagName: 'TEXTAREA', type: 'textarea' }), text('add-name'), text('add-qty', '1'),
+      tick('add-log'), text('xp-delta'), text('grant-reason'), text('lu-hp_max', '44'),
+      pick('lu-power-spell-7-0-0', spells), pick('claim-power-psionic-3-0-0', ['', 'Mind Block']),
+      pick('add-vessel', ['', 'black-galleon']),
+      // Owned by something else, and so left to it.
+      text('stat-hp', '12'), text('bio-age', '', { dataset: { sec: 'bio' } }),
+      pick('lu-pick-0', ['', 'Barter', 'Cryptography']), text('lu-lang-0'),
+      text('inv-filter'), text('lu-pick-filter'),
+    ];
+    const TYPED = { 'j-body': 'half a session', 'add-name': 'rope', 'add-qty': '3', 'xp-delta': '250',
+      'grant-reason': 'saved the village', 'lu-hp_max': '47', 'lu-power-spell-7-0-0': 'Globe of Daylight',
+      'claim-power-psionic-3-0-0': 'Mind Block', 'add-vessel': 'black-galleon' };
+    const OWNED = { 'stat-hp': '9', 'bio-age': '31', 'lu-pick-0': 'Barter', 'lu-lang-0': 'Dragonese',
+      'inv-filter': 'ro', 'lu-pick-filter': 'cr' };
+    let page = [];
+    let fills = 0;
+    const at = (id) => page.find((el) => el.id === id) || null;
+    const fns = block ? new Function('document', '$', 'autosaveKey', 'fillVesselPicker', 'syncGmPowerName',
+      block[0] + '; return { heldDrafts, restoreDrafts, dropDrafts };')(
+      { querySelectorAll: () => page }, at, (el) => el.dataset?.sec || null, () => { fills++; }, () => {}) : null;
+    check('the sheet has its three draft functions', !!fns, 'no DRAFT_ELSEWHERE … dropDrafts block in sheet.js');
+    const type = () => {
+      for (const [id, v] of Object.entries({ ...TYPED, ...OWNED })) at(id).value = v;
+      at('add-log').checked = true;
+    };
+    // One render: read, rebuild, put back.
+    const redraw = (next) => { const held = fns.heldDrafts(); page = next; fns.restoreDrafts(held); return held; };
+
+    if (fns) {
+      page = fresh();
+      check('an untouched page carries nothing across', fns.heldDrafts().length === 0, JSON.stringify(fns.heldDrafts()));
+
+      type();
+      redraw(fresh());
+      const gone = Object.entries(TYPED).filter(([id, v]) => at(id).value !== v).map(([id]) => id);
+      check('a redraw keeps the journal draft, the add-item form, the XP, the grant and the level-up fields',
+        gone.length === 0 && at('add-log').checked === true,
+        'emptied by a render: ' + [...gone, ...(at('add-log').checked ? [] : ['add-log'])].join(', '));
+      const taken = Object.keys(OWNED).filter((id) => at(id).value !== fresh().find((el) => el.id === id).value);
+      check('and leaves alone what autosave, a picker or a filter owns',
+        taken.length === 0, 'written over what render() drew from C: ' + taken.join(', '));
+      check('the vessel picker is refilled before its choice is put back', fills === 1, fills + ' fills');
+
+      page = fresh(); type();
+      redraw(fresh(['', 'Armor of Ithan']));
+      check('a select that no longer offers the choice is left as drawn',
+        at('lu-power-spell-7-0-0').value === '', JSON.stringify(at('lu-power-spell-7-0-0').value));
+
+      page = fresh(); type();
+      let threw = null;
+      try { redraw(fresh().filter((el) => !/^lu-/.test(el.id))); } catch (err) { threw = err.message; }
+      check('a control that left the page takes its draft with it', threw === null && at('j-body').value === 'half a session',
+        threw || 'the journal draft went with the level-up panel');
+
+      page = fresh(); type();
+      fns.dropDrafts(/^(j-|add-log$)/);
+      const left = fns.heldDrafts().map(([id]) => id);
+      check('a dropped draft is not carried, and the others still are',
+        !left.includes('j-body') && !left.includes('add-log') && left.includes('add-name') && at('j-body').value === '',
+        left.join(', '));
+    }
+
+    check('render() reads the drafts before anything else',
+      /function render\(\) \{\n  const drafts = heldDrafts\(\);/.test(sheet), 'render() does not start by reading them');
+    const body = sheet.slice(sheet.indexOf('function render() {'));
+    const built = body.indexOf("$('app').innerHTML = `"), back = body.indexOf('restoreDrafts(drafts);');
+    check('and puts them back after the rebuild, before the page is measured',
+      built > 0 && back > built && back < body.indexOf('stackColumns('), `rebuild at ${built}, restore at ${back}`);
+    check('a logged XP figure does not come back',
+      /jsonReq\('POST', \{ delta \}\)\);\n\s+dropDrafts\(\/\^xp-delta\$\/\);/.test(sheet), 'logXp leaves its own field to be restored');
+    check('nor a saved journal entry',
+      /dropDrafts\(\/\^j-\/\);\n\s+await load\(\);/.test(sheet), 'addJournal reloads with its draft still held');
+    check('nor an item that was added with a journal line',
+      /dropDrafts\(\/\^add-\(slug\|name\|qty\|notes\|log\)\$\/\);\n\s+await load\(\);/.test(sheet),
+      'addItem reloads with the form still filled');
   }
 
   // ---------- The sheet reads item_* fields the endpoint actually sends ----------

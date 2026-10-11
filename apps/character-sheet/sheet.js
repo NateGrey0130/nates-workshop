@@ -397,11 +397,12 @@ async function refreshPowers() {
   if (block) block.innerHTML = powersHtml(C.cls);
 }
 
+function syncGmPowerName() {
+  const custom = $('gm-power-name');
+  if (custom) custom.style.display = $('gm-power-pick')?.value === '*' ? '' : 'none';
+}
 document.addEventListener('change', (ev) => {
-  if (ev.target?.id === 'gm-power-pick') {
-    const custom = $('gm-power-name');
-    if (custom) custom.style.display = ev.target.value === '*' ? '' : 'none';
-  }
+  if (ev.target?.id === 'gm-power-pick') syncGmPowerName();
 });
 
 async function addGmPower() {
@@ -2274,6 +2275,7 @@ window.addEventListener('hashchange', () => {
 // phone; it has sticky vitals, tabs below 820px and 44px targets throughout,
 // so the second layout was answering a question that had stopped being asked.
 function render() {
+  const drafts = heldDrafts();
   holdTypedEdits();
   syncPlayChrome();
   const c = C.data, w = C.canWrite;
@@ -3020,6 +3022,7 @@ function render() {
     <div id="table-line">${tableLineHtml()}</div>
     ${playActionsHtml(w)}
   </div>`;
+  restoreDrafts(drafts);
 
   // Before anything measures the page: the three column stacks are built by
   // moving nodes, and sizeSticky() reads rendered heights.
@@ -3729,6 +3732,10 @@ async function logXp() {
   if (!Number.isFinite(delta)) { alert('Enter an XP amount (0 re-checks for a pending level-up).'); return; }
   try {
     const res = await api(`characters/${id}/xp`, jsonReq('POST', { delta }));
+    dropDrafts(/^xp-delta$/);
+    // A proposal for a different level is a different form: numbers typed into
+    // the old one would sit in the new one's fields looking like its own.
+    if (res.proposal?.to_level !== C.proposal?.to_level) dropDrafts(/^lu-/);
     C.data.xp = res.xp;
     C.nextThreshold = res.next_threshold;
     C.proposal = res.proposal;
@@ -4226,9 +4233,15 @@ async function loadVesselCatalog() {
 }
 
 async function openVesselPicker() {
-  const list = await loadVesselCatalog();
+  await loadVesselCatalog();
+  fillVesselPicker();
+}
+
+// Apart from the fetch so a render can refill a picker that was already open.
+function fillVesselPicker() {
+  const list = C.vesselCatalog;
   const sel = $('add-vessel');
-  if (!sel) return;
+  if (!sel || !list) return;
   if (!list.length) { sel.innerHTML = '<option value="">— none available —</option>'; return; }
   sel.innerHTML = '<option value="">— catalog —</option>' + list.map((v) =>
     `<option value="${escHtml(v.slug)}">${escHtml(v.name)}${
@@ -4478,6 +4491,76 @@ function applyToData(vals) {
 // shape keepEdits() had and why it was retired.
 function holdTypedEdits() {
   if (AS.dirty.size && C.data) applyToData(pendingValues([...AS.dirty]));
+}
+
+// ─── What render() must not eat ───
+//
+// render() rebuilds the page from C, so a value that lives only in an input is
+// gone after it. holdTypedEdits covers the fields autosave owns. The rest are
+// actions half filled in: a journal entry being written, an item about to be
+// added, a grant's reason, an XP figure, the level-up panel's numbers and its
+// spell selects. One keystroke in the inventory filter cleared all of them,
+// and choosing a skill at level-up cleared the spell chosen a moment before.
+//
+// So what was typed is read off the page before the rebuild and put back after
+// it, by id. Only a control that differs from what its markup gave it: an
+// untouched one has nothing to carry, and its rebuilt copy may hold news.
+//
+// A HANDLER THAT HAS USED A DRAFT DROPS IT FIRST (dropDrafts), or its own
+// success would put the text it just sent back in the box.
+//
+// NOT the controls something else owns: a pool card (autosave, or
+// saveFormPools while a second form shows), and the pickers and filters whose
+// value is in C. setSkillPick counts on render() to put a refused <select>
+// back where it was, and a restore here would undo that.
+const DRAFT_ELSEWHERE = /^stat-|-pick-\d+$|-lang-\d+$|-filter$/;
+const DRAFT_CONTROLS = '#app input[id], #app select[id], #app textarea[id]';
+const isTick = (el) => el.type === 'checkbox' || el.type === 'radio';
+const firstOption = (el) => [...el.options].find((o) => o.defaultSelected) || el.options[0];
+
+// What a control holds that its markup did not give it, or null.
+function draftOf(el) {
+  if (isTick(el)) return el.checked !== el.defaultChecked ? ['checked', el.checked] : null;
+  if (el.tagName === 'SELECT') {
+    const first = firstOption(el);
+    return first && el.value !== first.value ? ['value', el.value] : null;
+  }
+  return el.value !== el.defaultValue ? ['value', el.value] : null;
+}
+
+function heldDrafts() {
+  const out = [];
+  for (const el of document.querySelectorAll(DRAFT_CONTROLS)) {
+    if (DRAFT_ELSEWHERE.test(el.id) || autosaveKey(el)) continue;
+    const d = draftOf(el);
+    if (d) out.push([el.id, ...d]);
+  }
+  return out;
+}
+
+// A control that is no longer on the page takes its draft with it, and so does
+// a <select> that no longer offers what was chosen.
+function restoreDrafts(drafts) {
+  if (!drafts.length) return;
+  // The vessel picker is filled on focus, so its rebuilt copy has no options.
+  if (drafts.some(([elId]) => elId === 'add-vessel')) fillVesselPicker();
+  for (const [elId, prop, v] of drafts) {
+    const el = $(elId);
+    if (!el) continue;
+    if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === v)) continue;
+    el[prop] = v;
+  }
+  syncGmPowerName();
+}
+
+// Back to what the markup gave them, so the next render carries nothing over.
+function dropDrafts(ids) {
+  for (const el of document.querySelectorAll(DRAFT_CONTROLS)) {
+    if (!ids.test(el.id)) continue;
+    if (isTick(el)) el.checked = el.defaultChecked;
+    else if (el.tagName === 'SELECT') el.value = firstOption(el)?.value ?? '';
+    else el.value = el.defaultValue;
+  }
 }
 
 async function saveNow() {
@@ -4752,6 +4835,7 @@ async function addItem() {
     // did since PR #27 - it had gone back to a whole reload. A reload only when
     // a journal entry went with it, because that one has to reach the Notes tab.
     if (journalId) {
+      dropDrafts(/^add-(slug|name|qty|notes|log)$/);
       await load();
     } else {
       await refreshInventory();
@@ -4774,6 +4858,7 @@ async function addJournal() {
       session_date: $('j-date').value.trim() || null,
       body,
     }));
+    dropDrafts(/^j-/);
     await load();
   } catch (err) { alert('Journal failed: ' + err.message); }
 }
