@@ -7,7 +7,7 @@
 // a side effect, which is the path that actually gets used. This is for the NPC
 // somebody wants to write up before the party has met them.
 
-import { json, readJson, requireCampaign } from '../../_lib/auth.js';
+import { json, readJson, requireCampaign, requireMember } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 export const STATUSES = ['alive', 'dead', 'unknown', 'never-met'];
@@ -23,11 +23,8 @@ export function forViewer(row, isGm) {
 }
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
 
   const url = new URL(request.url);
   const where = ['n.campaign_id = ?'];

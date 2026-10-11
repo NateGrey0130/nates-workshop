@@ -11,15 +11,12 @@
 // which is a different question from "what have I got", and the GM's own view
 // of everything is entries.js.
 
-import { json, requireCampaign } from '../../_lib/auth.js';
+import { json, requireMember } from '../../_lib/auth.js';
 import { paging, pagedQuery, pageBody } from '../../_lib/paging.js';
 
 export async function onRequestGet({ request, env, params }) {
-  const guard = await requireCampaign(request, env, params.id, { write: false });
+  const guard = await requireMember(request, env, params.id);
   if (guard.res) return guard.res;
-  if (!guard.access.isMember) {
-    return json({ error: 'Only the GM or a player with a character in this campaign can do that' }, 403);
-  }
 
   const { limit, offset } = paging(request);
   // Newest first: a handout is shown at a moment, and the one from tonight is

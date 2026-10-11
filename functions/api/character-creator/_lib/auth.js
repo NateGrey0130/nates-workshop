@@ -181,3 +181,13 @@ export async function requireCampaign(request, env, id, { write = true, gm = fal
   }
   return { email, access };
 }
+
+// A READ that only a member may make: the notes, the stash, the dossiers, the
+// handouts, the currency, a picture. Seven GET handlers wrote this out as
+// requireCampaign({ write: false }) followed by their own membership test and
+// their own copy of the refusal. It is the default guard under a name that
+// does not say "write" over a GET: `canWrite` IS membership (campaignAccess),
+// and the refusal is the same sentence.
+export function requireMember(request, env, id) {
+  return requireCampaign(request, env, id);
+}

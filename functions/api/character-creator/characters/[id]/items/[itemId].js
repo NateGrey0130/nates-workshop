@@ -3,12 +3,13 @@
 // DELETE /api/character-creator/characters/:id/items/:itemId — soft-remove: sets
 //        removed_at so inventory history survives (never hard-deletes).
 
-import { getUserEmail, unauthorized, json, readJson, forbidden, characterAccess, tooLong, TEXT_MAX } from '../../../_lib/auth.js';
+import { json, readJson, tooLong, TEXT_MAX, requireCharacter } from '../../../_lib/auth.js';
 
-async function guard(env, params, email) {
-  const access = await characterAccess(env, params.id, email);
-  if (!access.found) return { err: json({ error: 'Character not found' }, 404) };
-  if (!access.canWrite) return { err: forbidden() };
+// requireCharacter's three answers - signed out, no such character, not yours
+// to change - and then this route's own: the row has to be on THIS character.
+async function guard(request, env, params) {
+  const auth = await requireCharacter(request, env, params.id);
+  if (auth.res) return { err: auth.res };
   const row = await env.DB.prepare(
     'SELECT * FROM character_items WHERE id = ? AND character_id = ?'
   ).bind(params.itemId, params.id).first();
@@ -81,9 +82,7 @@ async function validateEnchantments(env, row, value) {
 }
 
 export async function onRequestPatch({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const { err, row } = await guard(env, params, email);
+  const { err, row } = await guard(request, env, params);
   if (err) return err;
 
   const b = await readJson(request);
@@ -113,9 +112,7 @@ export async function onRequestPatch({ request, env, params }) {
 }
 
 export async function onRequestDelete({ request, env, params }) {
-  const email = getUserEmail(request);
-  if (!email) return unauthorized();
-  const { err } = await guard(env, params, email);
+  const { err } = await guard(request, env, params);
   if (err) return err;
 
   await env.DB.prepare(
