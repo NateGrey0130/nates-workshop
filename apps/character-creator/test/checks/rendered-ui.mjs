@@ -1000,6 +1000,38 @@ export function run() {
     check('and the rest-recovery preview reads it, so resting cannot preview a refill past it',
       /poolMax\(C\.data, key\)/.test(rest) || /const pd = poolData\(\);[\s\S]*poolMax\(pd, key\)/.test(rest), rest.slice(0, 300));
 
+    // A FOURTH reader, found later: the mirror of a typed write into the page's
+    // own copy. RUN against the real poolMax, because the three above were
+    // pinned as text and this one sat beside them reading the rolled maximum
+    // the whole time.
+    const mirrorAt = sheetSrc.indexOf('function applyToData(');
+    const mirrorEnd = mirrorAt < 0 ? -1 : sheetSrc.slice(mirrorAt).search(/\r?\n\}/);
+    check('the typed-write mirror can be located', mirrorEnd > 0, 'function applyToData( moved');
+    const mirror = (data, vals) => {
+      const C = { data: { ...data } };
+      try {
+        new Function('C', 'poolMax',
+          sheetSrc.slice(mirrorAt, mirrorAt + mirrorEnd) + '\n}\nreturn applyToData;')(C, pm)(vals);
+      } catch (e) { return { threw: e.message }; }
+      return C.data;
+    };
+    // What the PATCH stores, written out from the clamp pinned just below.
+    const serverStores = (data, key, v) => {
+      let max = data[key + '_max'];
+      if (key === 'ppe' && typeof max === 'number') max = Math.max(0, max - (Number(data.ppe_base_spent) || 0));
+      return Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+    };
+    const burned = { ppe_max: 30, ppe_base_spent: 10, ppe_current: 5, isp_max: 40, isp_current: 1, hp_current: 3 };
+    check('P.P.E. typed back up to the rolled maximum is held at what is left of it',
+      mirror(burned, { ppe_current: 30 }).ppe_current === 20, JSON.stringify(mirror(burned, { ppe_current: 30 })));
+    const cases = [['ppe', 30], ['ppe', 20], ['ppe', 7], ['ppe', -4], ['isp', 99], ['isp', 12], ['hp', 500]];
+    const shows = ([key, v]) => mirror(burned, { [key + '_current']: v })[key + '_current'];
+    const off = cases.filter((c) => shows(c) !== serverStores(burned, c[0], c[1]));
+    check('and for every pool the page then shows what the server stored', off.length === 0,
+      off.map((c) => c[0] + ' ' + c[1] + ': page ' + shows(c) + ', server ' + serverStores(burned, c[0], c[1])).join(' | '));
+    check('anything that is not a pool is copied as it is',
+      mirror(burned, { notes: 'x' }).notes === 'x' && mirror(burned, { ppe_current: null }).ppe_current === null);
+
     // And the server, which is what actually stops a refill past the spend.
     const idSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       'characters', '[id].js'), 'utf8');
