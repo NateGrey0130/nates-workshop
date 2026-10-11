@@ -109,6 +109,17 @@ node scripts/readme-section.mjs "Class definition format"
 
 Only `ERRORS` and `SQL PRE-FLIGHT` set the exit code.
 
+**An error or warning ends in `(line N)` when it names a place in the class
+markdown.** The line is found from the message's own path, so a message that
+names no key carries none.
+
+**One warning is a merge blocker in disguise:** `N bonus key(s) the sheet has
+no field for`. The key parses, validates and composes, and the sheet draws it
+nowhere, so the bonus is lost. It does not set the exit code here, but `smoke`
+refuses a shipped class that has one. Fix the spelling, or add the key to
+`COMBAT_FIELDS` or `SAVE_FIELDS` in `apps/character-sheet/sheet.js`, or carry
+the bonus as `saves.other` or a special ability.
+
 **An unmatched restriction is usually a bug.** An unmatched `except` fails
 OPEN: the class offers what its book forbids. The known exceptions are the
 Priest of Light's `W.P. Siege` and `W.P. Large Axes`, named ahead of their rows
