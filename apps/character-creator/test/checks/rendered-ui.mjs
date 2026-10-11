@@ -2148,8 +2148,30 @@ export function run() {
     check('every queueing press hands the counter its error',
       told.length === queueCalls.length, `${told.length} of ${queueCalls.length} queueing sites pass err`);
     check('and so does the replay',
-      /if \(err\.status === undefined\) \{ renderQueueState\(err\); return; \}/.test(sheet),
+      /if \(!refusedOnMerit\(err\)\) \{ renderQueueState\(err\); return; \}/.test(sheet),
       'the flush does not say why an entry is still waiting');
+
+    // A STATUS IS NOT ALWAYS A VERDICT ON THE CHANGE. The replay removed an
+    // entry for any status at all, so a 503 while the queue drained lost a
+    // change the player had made, silently. Run, not matched: the question is
+    // which statuses the sheet's own function calls a refusal.
+    const meritSrc = sheet.match(/function refusedOnMerit\(err\) \{[\s\S]*?\n\}/);
+    const refused = (err) => (meritSrc
+      ? new Function(meritSrc[0] + '; return refusedOnMerit;')()(err) : 'no refusedOnMerit');
+    const lost = [503, 429, 500, 502, 504, 408, 522].filter((st) => refused({ status: st }) !== false);
+    check('a replay answered 503 or 429 keeps its entry: nothing judged the change',
+      lost.length === 0, 'treated as a refusal, so the entry is dropped: ' + lost.join(', '));
+    const stuck = [400, 401, 403, 404, 409, 422].filter((st) => refused({ status: st }) !== true);
+    check('and one the route itself refused still leaves the queue',
+      stuck.length === 0, 'kept forever, blocking everything behind it: ' + stuck.join(', '));
+    check('no answer at all is not a refusal either', refused({}) === false && refused({ notData: true }) === false,
+      JSON.stringify([refused({}), refused({ notData: true })]));
+    check('the replay removes an entry only behind that test',
+      /if \(!refusedOnMerit\(err\)\) \{[^\n]*\n(?:\s*\/\/[^\n]*\n)*\s*await playQueue\.remove\(e\.seq\);\s*continue;/.test(sheet),
+      'the catch in flushOnce drops an entry without asking whether it was refused');
+    check('and an answered 503 is the server, even from a browser that says it is offline',
+      why(false, { status: 503 }) === 'server' && why(true, { status: 429 }) === 'server',
+      JSON.stringify([why(false, { status: 503 }), why(true, { status: 429 })]));
     check('each reason has its own words',
       /C\.unsent === 'signin' \? `\$\{waiting\} — you are signed out/.test(sheet)
         && /C\.unsent === 'server' \? `\$\{waiting\} — the server is not answering/.test(sheet)

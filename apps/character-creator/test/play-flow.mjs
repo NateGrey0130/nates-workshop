@@ -285,6 +285,11 @@ async function sandboxFetch(input, init) {
     return new Response('<!doctype html><title>Sign in</title>',
       { status: 200, headers: { 'Content-Type': 'text/html' } });
   }
+  // 'busy' is an answer that is not about the change: the platform's 503.
+  if (isEvents && mode === 'busy') {
+    return new Response(JSON.stringify({ error: 'Service Unavailable' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } });
+  }
   if (isEvents && mode === 'refuse') {
     return new Response(JSON.stringify({ error: 'refused on merit' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -432,6 +437,19 @@ section('A change still waiting says why');
     byId('queue-state').textContent);
   check('and the entry is kept, not counted as sent', (await fakeQueue.count(CHAR)) === 1);
   check('the database has still not moved', JSON.stringify(await pools()) === JSON.stringify({ hp: 20, sdc: 5 }));
+
+  // A STATUS IS NOT ALWAYS A REFUSAL. A 503 says nothing about the entry, and
+  // the replay used to drop it for one, then reload the pools over the hit.
+  mode = 'busy';
+  await run('await flushQueue();');
+  check('a replay answered 503 keeps the entry', (await fakeQueue.count(CHAR)) === 1,
+    (await fakeQueue.count(CHAR)) + ' queued');
+  const busy = evalIn('({hp: C.data.hp_current, sdc: C.data.sdc_current})');
+  check('the hit still stands on screen', busy.hp === 15 && busy.sdc === 0, JSON.stringify(busy));
+  check('and the counter says the server is the reason',
+    /1 change waiting — the server is not answering/.test(byId('queue-state').textContent),
+    byId('queue-state').textContent);
+  mode = 'page';
 
   // A press made while signed out, not only a replay.
   await run("await adjustPool('hp', -1);");
