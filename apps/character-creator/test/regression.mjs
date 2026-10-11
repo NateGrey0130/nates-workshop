@@ -967,6 +967,53 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
     JSON.stringify({ generate: gen.status, patch: patch.status }));
   check('and a stranger is not a member of it', npcsPost.status === 403, `POST npcs → ${npcsPost.status}`);
 
+  // A DOSSIER IS DELETED BY WHOEVER MADE IT, OR THE G.M. Any member could
+  // delete anybody's until 2026-10-10. Two members here, so the refusal has to
+  // come from authorship and not from membership.
+  {
+    const dossiers = `/campaigns/${lone.id}/npcs`;
+    const idOf = (r) => r.body.npc?.id ?? r.body.id;
+    const byGm = idOf(await apiAs(loneGm, 'POST', dossiers, { name: 'Made By The GM' }));
+    const byPlayer = idOf(await apiAs(player, 'POST', dossiers, { name: 'Made By A Player' }));
+    const second = 'lone-second@example.com';
+    const joined2 = await apiAs(second, 'POST', '/characters', {
+      campaign_id: lone.id, name: 'Second Player', class_id: cls.id,
+      attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+    });
+    check('a second player joins, and both dossiers exist',
+      joined2.status === 201 && !!byGm && !!byPlayer, JSON.stringify({ joined2: joined2.status, byGm, byPlayer }));
+
+    const flags = async (who, id) => (await apiAs(who, 'GET', `${dossiers}/${id}`)).body.can_delete;
+    check('the dossier says who may delete it: its maker and the G.M., not another member',
+      await flags(player, byPlayer) === true && await flags(loneGm, byPlayer) === true
+      && await flags(second, byPlayer) === false && await flags(player, byGm) === false,
+      JSON.stringify({ maker: await flags(player, byPlayer), gm: await flags(loneGm, byPlayer),
+        other: await flags(second, byPlayer), playerOnGms: await flags(player, byGm) }));
+
+    const other = await apiAs(second, 'DELETE', `${dossiers}/${byPlayer}`);
+    const onGms = await apiAs(player, 'DELETE', `${dossiers}/${byGm}`);
+    const still = await apiAs(loneGm, 'GET', dossiers);
+    check('another member is refused, and so is a player at the one the G.M. made',
+      other.status === 403 && onGms.status === 403, JSON.stringify({ other: other.status, onGms: onGms.status }));
+    check('and a refused delete removed nothing',
+      [byGm, byPlayer].every((id) => (still.body.npcs || []).some((n) => n.id === id)),
+      JSON.stringify((still.body.npcs || []).map((n) => n.id)));
+    const edit = await apiAs(second, 'PATCH', `${dossiers}/${byPlayer}`, { faction: 'Edited by another member' });
+    check('editing a dossier somebody else made is still open to any member', edit.status === 200, edit.status);
+
+    const own = await apiAs(player, 'DELETE', `${dossiers}/${byPlayer}`);
+    check('its maker can delete it', own.status === 200, own.status);
+    const third = idOf(await apiAs(second, 'POST', dossiers, { name: 'Made By The Second' }));
+    const gmTakes = await apiAs(loneGm, 'DELETE', `${dossiers}/${third}`);
+    const gmOwn = await apiAs(loneGm, 'DELETE', `${dossiers}/${byGm}`);
+    check('and the G.M. can delete any of them', gmTakes.status === 200 && gmOwn.status === 200,
+      JSON.stringify({ gmTakes: gmTakes.status, gmOwn: gmOwn.status }));
+    // The second player leaves, so the campaign below still has exactly the
+    // one character its delete is refused over.
+    const gone = await apiAs(second, 'DELETE', `/characters/${joined2.body.character?.id ?? joined2.body.id}`);
+    check('and the second player can leave again', gone.status === 200, gone.status);
+  }
+
   // DELETING IT. Only the G.M. who created it, and not while another player's
   // character is in it: characters cascades from campaigns, so a delete that
   // ignored them would take the player's sheet too. The G.M.'s own things -
