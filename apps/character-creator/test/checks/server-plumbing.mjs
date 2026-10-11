@@ -19,10 +19,12 @@ import { paging } from '../../../../functions/api/character-creator/_lib/paging.
 import { chunks, D1_MAX_BINDS, BIND_CHUNK } from '../../../../functions/api/character-creator/_lib/sql-chunk.js';
 import { jsonWithEtag } from '../../../../functions/api/character-creator/_lib/etag.js';
 import { requireMember } from '../../../../functions/api/character-creator/_lib/auth.js';
+import { once } from '../../../../functions/api/character-creator/_lib/once.js';
+import { loadCharacterClass } from '../../../../functions/api/character-creator/_lib/class-loader.js';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging',
-  'One revalidating answer, one member guard'];
+  'One revalidating answer, one member guard', 'A load made once per request'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -341,6 +343,67 @@ section('One revalidating answer, one member guard');
   // _lib/auth.js names as one of three deliberate exceptions.
   check('and the item and vessel routes go through requireCharacter',
     ownGuard.join() === 'characters/[id]/items/[itemId]/stash.js', ownGuard.join());
+}
+
+// ---------- A load made once per request ----------
+// Rolling several NPCs is createCharacter called in a loop, and each call read
+// the campaign, both class rows, the race-and-occupation verdict and every
+// skill's category again. A roster read the class of every second-form holder
+// again. Counted here against a stand-in database that answers the class
+// query from a fixture and counts how often it was asked.
+section('A load made once per request');
+{
+  let n = 0;
+  const once1 = await once(null, 'k', async () => ++n);
+  const once2 = await once(null, 'k', async () => ++n);
+  check('with no cache every call loads for itself', once1 === 1 && once2 === 2);
+  const loads = new Map();
+  const a = once(loads, 'k', async () => ++n);
+  const b = once(loads, 'k', async () => ++n);
+  check('with one, two askers share a single load, even before it answers',
+    a === b && await a === 3 && await b === 3 && n === 3);
+  check('and a different key is a different load', await once(loads, 'other', async () => ++n) === 4);
+
+  const markdown = readFileSync(join(appDir, 'test', 'fixtures', 'cyber-knight.md'), 'utf8');
+  const asked = [];
+  const env = { DB: { prepare: (sql) => ({ bind: (...binds) => ({
+    first: async () => { asked.push(sql); return /FROM imported_classes WHERE class_id = \?/.test(sql)
+      ? { class_id: binds[0], status: 'published', markdown } : null; },
+    all: async () => { asked.push(sql); return { results: [] }; },
+  }) }) } };
+  const sheet = (id) => ({ id, class_id: 'cyber-knight', class_variant: null, skills: [] });
+  const alone1 = await loadCharacterClass(env, 'https://x/', sheet(1));
+  const alone2 = await loadCharacterClass(env, 'https://x/', sheet(2));
+  const classReads = () => asked.filter((q) => /FROM imported_classes/.test(q)).length;
+  check('two characters of one class read it twice when nothing is shared',
+    classReads() === 2 && alone1?.name === 'Cyber-Knight' && alone2?.name === 'Cyber-Knight', String(classReads()));
+  asked.length = 0;
+  const shared = new Map();
+  const one = await loadCharacterClass(env, 'https://x/', sheet(1), { loads: shared });
+  const two = await loadCharacterClass(env, 'https://x/', sheet(2), { loads: shared });
+  check('and once when the request shares its loads', classReads() === 1, String(classReads()));
+  // The row is shared; what each caller composes from it is its own.
+  check('each still gets its own composed class, equal and not the same object',
+    one !== two && JSON.stringify(one) === JSON.stringify(two) && JSON.stringify(one) === JSON.stringify(alone1));
+
+  const fnRoot = join(repoRoot, 'functions', 'api', 'character-creator');
+  const gen = readFileSync(join(fnRoot, 'campaigns', '[id]', 'npcs', 'generate.js'), 'utf8');
+  const chars = readFileSync(join(fnRoot, 'characters.js'), 'utf8');
+  check('the NPC roll makes one cache outside its loop and hands it to every create',
+    /const loads = new Map\(\);\s+for \(let i = 0; i < count; i\+\+\) \{/.test(gen)
+    && /\{ kind: 'npc', bankPowers: bank, loads \}/.test(gen));
+  check('createCharacter reads the campaign, the class, the verdict and the categories through it',
+    /once\(loads, 'campaign:' \+ b\.campaign_id/.test(chars) && /\}, \{ loads \}\);/.test(chars)
+    && /occRestrictionOnce\(env, b\.class_id, occId, loads\)/.test(chars)
+    && /once\(loads, 'skill-categories', \(\) => loadSkillCategories\(env\)\)/.test(chars));
+  check('and the roster shares one across its second-form holders',
+    /const loads = new Map\(\);\s+const held = await selectInChunks/.test(chars)
+    && /loadCharacterClass\(env, request\.url, row, \{ loads \}\)/.test(chars));
+  // An isolate outlives a request: a cache at module level would serve a class
+  // edited since.
+  const libOnce = readFileSync(join(fnRoot, '_lib', 'once.js'), 'utf8');
+  check('the cache is the caller\'s, never the module\'s',
+    !/^(?:const|let|var)\s+\w+\s*=\s*new (?:Map|WeakMap)/m.test(libOnce));
 }
 
 }
