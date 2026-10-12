@@ -71,6 +71,29 @@ function parseFile(name) {
   return parseClassMarkdown(readFileSync(join(appDir, 'test', 'fixtures', name), 'utf8'));
 }
 
+// `node --check` on each path, several at a time, answered in the order asked.
+// Each file still gets its own process, so one that fails to parse names
+// itself and cannot stop the rest; only the waiting overlaps. The 41 spawns
+// the two sections below make cost about 3.6 s one after another and about
+// 0.7 s this way (measured 2026-10-12). Capped, and awaited before anything
+// else runs, so none of them is alive when environment.mjs times wrangler's
+// start-up, which fails under CPU load.
+async function nodeCheckAll(paths) {
+  const results = new Array(paths.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < paths.length) {
+      const i = next++;
+      results[i] = await new Promise((resolve) => {
+        execFile(process.execPath, ['--check', paths[i]], { encoding: 'utf8' },
+          (err, _stdout, stderr) => resolve({ ok: !err, stderr: stderr || (err ? String(err.message) : '') }));
+      });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(8, availableParallelism(), paths.length) }, worker));
+  return results;
+}
+
 // ---------- 1. Parser ----------
 section('The browser entry points parse');
 {
@@ -82,16 +105,14 @@ section('The browser entry points parse');
   // browser - which is the wizard not loading at all. Parsed here as what each
   // one actually is: app.js an ES module, sheet.js a classic script.
   const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-parse-' + process.pid);
-  const parses = (file, ext) => {
-    const copy = stem + '-' + file.replace(/\W/g, '-') + '.' + ext;
-    writeFileSync(copy, readFileSync(appPath(file), 'utf8'));
-    const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
-    rmSync(copy, { force: true });
-    return { ok: r.status === 0, err: (r.stderr || '').split('\n').find((l) => /Error/.test(l)) || '' };
-  };
-  const app = parses('app.js', 'mjs');
+  const entries = [['app.js', 'mjs'], ['sheet.js', 'cjs'], ['codex.js', 'cjs'], ['catalog.js', 'mjs']];
+  const copies = entries.map(([file, ext]) => stem + '-' + file.replace(/\W/g, '-') + '.' + ext);
+  entries.forEach(([file], i) => writeFileSync(copies[i], readFileSync(appPath(file), 'utf8')));
+  const parsed = await nodeCheckAll(copies);
+  for (const copy of copies) rmSync(copy, { force: true });
+  const [app, sheet, codex, catalog] = parsed.map((r) => (
+    { ok: r.ok, err: r.stderr.split('\n').find((l) => /Error/.test(l)) || '' }));
   check('app.js parses as the ES module the wizard loads', app.ok, app.err);
-  const sheet = parses('sheet.js', 'cjs');
   check('and sheet.js parses as the classic script the sheet loads', sheet.ok, sheet.err);
   // codex.js and catalog.js are the other two browser entry points and were
   // NOT covered here, which is the same hole in two more pages: nothing
@@ -99,9 +120,7 @@ section('The browser entry points parse');
   // suite green. The extension is what each HTML actually asks for -
   // codex.html loads codex.js bare, catalog.html loads catalog.js as a module.
   // Added while editing both for BOOK-INGEST-AUDIT F73.
-  const codex = parses('codex.js', 'cjs');
   check('and codex.js parses as the classic script the codex loads', codex.ok, codex.err);
-  const catalog = parses('catalog.js', 'mjs');
   check('and catalog.js parses as the ES module the catalog editor loads', catalog.ok, catalog.err);
 }
 
@@ -245,12 +264,12 @@ section('Browser scripts parse');
     ...siblingAppDirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.js')).map((f) => join(d, f))),
   ];
   check('found the page scripts', scripts.length >= 10, `only ${scripts.length}`);
-  for (const path of scripts) {
-    const res = spawnSync(process.execPath, ['--check', path], { encoding: 'utf8' });
+  const parsed = await nodeCheckAll(scripts);
+  scripts.forEach((path, i) => {
     const name = path.slice(join(appDir, '..').length + 1).replace(/\\/g, '/');
-    check(`${name} parses`, res.status === 0,
-      (res.stderr || '').split('\n').slice(0, 3).join(' ').trim());
-  }
+    check(`${name} parses`, parsed[i].ok,
+      parsed[i].stderr.split('\n').slice(0, 3).join(' ').trim());
+  });
 
   // A script that parses can still fail to LOAD. The Codex's catalog editor
   // imported `./js/catalog-fields.js` from a folder that has no js/ - the file
@@ -487,8 +506,9 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS,
          STARTING_PICK_KINDS, pruneStartingPicks } from '../js/wizard-state.js';
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { appDir, repoRoot, check, section, summary, appPath, siblingAppDirs } from './harness.mjs';
