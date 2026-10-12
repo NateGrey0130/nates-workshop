@@ -131,11 +131,41 @@ const apply = wrangler(['d1', 'execute', 'DB', '--local', '--file', 'db/schema.s
 check('schema applies cleanly', apply.status === 0, (apply.stderr || apply.stdout || '').slice(-500));
 
 // SQL goes through a temp file — a quoted --command string doesn't survive the Windows shell.
-const checkSql = join(appDir, 'test', '.smoke-check.sql');
-writeFileSync(checkSql,
-  "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('import_sessions','import_staged')) AS stale_import_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;\n");
-const query = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', checkSql]);
-rmSync(checkSql, { force: true });
+const readDb = (stmts) => {
+  const file = join(appDir, 'test', '.smoke-check.sql');
+  writeFileSync(file, stmts.join('\n') + '\n');
+  const r = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', file]);
+  rmSync(file, { force: true });
+  return r;
+};
+const checkSql = "SELECT (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('campaigns','characters','journal_entries','level_history','gear','character_items')) AS cc_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('imported_classes','skills','spells','psionic_powers')) AS catalog_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='catalog_redirects') AS redirect_table, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='character_drafts') AS draft_table, (SELECT count(*) FROM pragma_table_info('spells') WHERE name='system') AS spells_system, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('import_sessions','import_staged')) AS stale_import_tables, (SELECT count(*) FROM sqlite_master WHERE type='table' AND name='items') AS stale_items_table, (SELECT sql FROM sqlite_master WHERE name='character_items') AS ci_ddl;";
+const migSql = 'SELECT filename FROM schema_migrations ORDER BY filename;';
+
+// BOTH READ-ONLY QUERIES AGAINST DB, IN ONE SPAWN (since 2026-10-12). This one
+// and 'Migration state' far below each used to start their own wrangler, at
+// about 1.7 s apiece, to read the same database. A --file with two statements
+// comes back as two result blocks in order, and each is handed on in the shape
+// its own spawn returned, so nothing below reads differently.
+//
+// WHAT MOVED: the migration read now happens HERE, before the re-apply at the
+// end of this section rather than after it. Measured 2026-10-12 on an empty
+// local database: 82 rows after one apply and the same 82 after two. Every
+// write schema.sql makes to that table is INSERT OR IGNORE, so a second apply
+// can only add a row the first one failed to, and a schema.sql that needs two
+// applies to record a migration is a defect this position reports and the old
+// one hid.
+//
+// A FAILED STATEMENT TAKES THE WHOLE FILE WITH IT: wrangler prints one error
+// object and no blocks. So anything short of two blocks falls back to the two
+// spawns this replaced, and a database with no schema_migrations still fails
+// 'schema_migrations is queryable' alone instead of every check in this
+// section.
+const both = readDb([checkSql, migSql]);
+let blocks = null;
+try { blocks = JSON.parse(both.stdout); } catch { /* falls back below */ }
+const together = both.status === 0 && Array.isArray(blocks) && blocks.length === 2;
+const query = together ? { stdout: JSON.stringify([blocks[0]]) } : readDb([checkSql]);
+const migQuery = together ? { stdout: JSON.stringify([blocks[1]]) } : readDb([migSql]);
 let row = null;
 try { row = JSON.parse(query.stdout)[0].results[0]; } catch { /* fall through to checks */ }
 check('all 6 character-creator tables exist', row?.cc_tables === 6, query.stdout?.slice(-300));
@@ -901,11 +931,9 @@ const onDisk = readdirSync(join(repoRoot, 'db', 'migrations'))
   .sort();
 check('migration files found on disk', onDisk.length > 0, 'db/migrations/ is empty');
 
-const migSql = join(appDir, 'test', '.smoke-migrations.sql');
-writeFileSync(migSql, 'SELECT filename FROM schema_migrations ORDER BY filename;\n');
-const migQuery = wrangler(['d1', 'execute', 'DB', '--local', '--json', '--file', migSql]);
-rmSync(migSql, { force: true });
-
+// migQuery was read in 'D1 schema (local, shared DB)' above, in the same spawn
+// as that section's own query. This module runs whole whenever any one of its
+// sections is asked for, so a `--section "Migration state"` run has it too.
 let recorded = null;
 try { recorded = JSON.parse(migQuery.stdout)[0].results.map((r) => r.filename); } catch { /* checked below */ }
 check('schema_migrations is queryable', Array.isArray(recorded), migQuery.stdout?.slice(-300));
