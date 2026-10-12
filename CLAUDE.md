@@ -59,7 +59,7 @@ The group must match `groups.mjs --affected`. Any `shared` path forces
 `F<n>`) are **claimed at merge**. Re-read `origin/main` for the highest number
 immediately before the merge, never earlier.
 
-## Fifteen skills, and they load from anywhere on this machine
+## Sixteen skills, and they load from anywhere on this machine
 
 Each one lives in `.claude/skills/` and is junction-linked into
 `~/.claude/skills` (`SETUP.md` → junction block). A new skill needs its link in
@@ -84,6 +84,7 @@ linked. An agent written mid-session cannot be spawned until the next turn.
 | `pick3cut5` | `apps/pick3cut5/`, `workers/pick3cut5-room/`, `shared/`, or an Access policy |
 | `media-vault` | `apps/media-vault/`, `functions/api/media-vault/`, `media_items`, `media_shares` |
 | `app-suite` | adding an app, `apps/manifest.json`, the hub, the app switcher |
+| `plan-rows` | writing briefs for a multi-PR plan, or driving the `pr-worker` chain through one |
 
 Read the skill before the code.
 
