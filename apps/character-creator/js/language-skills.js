@@ -19,8 +19,9 @@
 // agree: the wizard's related/secondary picker, the wizard's choice-group
 // control, the server's pick validator and the level-up pick resolver all
 // import it as a module, and the sheet — a plain-script page — reads the
-// globalThis mirror below, which its <script type="module"> tag has installed
-// before any render runs.
+// globalThis mirror below. Its <script type="module"> tag installs that after
+// the sheet's own script has run and usually before the first render, which
+// is not a promise: the sheet reads it through globalThis and draws without it.
 
 export const LANGUAGE_OTHER = 'Language: Other';
 export const LITERACY_OTHER = 'Literacy: Other';
