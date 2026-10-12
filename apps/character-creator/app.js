@@ -19,7 +19,7 @@ import { applyPsionicCosts, psionicCostMap } from './js/psionic-costs.js';
 import { isFamilyName, isRepeatableRow, otherRowFor, familySkillName,
          promptFor } from './js/language-skills.js';
 import { isHandToHand, oneHandToHand, replacePrompt, handToHandCost, handToHandCondition,
-         handToHandSurcharge, costLabel } from './js/hand-to-hand.js';
+         handToHandSurcharge, costLabel, handToHandBlock } from './js/hand-to-hand.js';
 import { rollPsionics, psionicShape, withRolledPsionics, PSIONIC_CATEGORIES, PSIONIC_TIER_RULES,
          rollsForPsionics as classRollsForPsionics } from './js/psionics.js';
 import { isChoiceGroup, isGearChoice, applyVariant,
@@ -3555,25 +3555,19 @@ function skillPickListFor(ctx) {
       const style = isHandToHand(s.name);
       const swapsFor = !on && !held && style ? hthStanding : null;
       const swapInList = swapsFor && chosen.includes(swapsFor.name);
-      // THE CLASS'S PRICE. `undefined` is a class that states none, and the
-      // style costs the one pick it occupies, as every skill does. `null` is a
-      // class that lists what it sells and does not list this. A number is
-      // charged against RELATED picks - which is why a priced class does not
-      // sell styles from the secondary list at all: the book says "at the cost
-      // of two O.C.C. Related Skills", and a secondary pick is not one.
-      const price = style ? handToHandCost(effective, s.name) : undefined;
-      const priced = typeof price === 'number';
-      const wrongList = style && price !== undefined && kind !== 'related';
-      const notOffered = style && price === null && !on;
       // What is left to spend if this row were ticked: the allowance, less every
       // OTHER row's pick, less nothing for a style this one would replace.
       const others = chosen.filter((n) => n !== s.name && !(swapInList && n === swapsFor.name));
       const left = limit - others.length - hthSurchargeOf(others);
-      const tooDear = !on && priced && price > left;
-      const full = !on && !priced && left < 1;
-      const blocked = held || full || tooDear || notOffered || (wrongList && !on);
+      // Whether the row may be ticked, and why not, is js/hand-to-hand.js's: the
+      // class's price, the list it is charged against and what is left to pay
+      // it with. This function keeps the sentences.
+      const { blocked, reason, price, condition } = handToHandBlock(effective, s.name, { kind, on, held, left });
+      const priced = typeof price === 'number';
+      const wrongList = reason === 'wrong_list';
+      const notOffered = reason === 'not_offered';
+      const tooDear = reason === 'too_dear';
       const gone = held && hthReplaced.get(s.name.toLowerCase());
-      const condition = style ? handToHandCondition(effective, s.name) : '';
       const terms = priced ? ` · ${costLabel(price)}${condition ? ` · ${condition} only` : ''}` : '';
       const hint = isRepeatableRow(s.name)
         ? ' <span class="muted small">— once per language; you will be asked which</span>'
