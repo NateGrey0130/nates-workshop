@@ -23,15 +23,12 @@ const SAVE_FIELDS = [
   ['curses', 'vs Curses'], ['faerie_magic', 'vs Faerie Magic'],
   ['disease', 'vs Disease'], ['fatigue', 'vs Fatigue'],
 ];
-// Play mode rolls a d20, so the one percentile row is not one of its buttons.
-// Filtered rather than listed again, which is how the two drifted the first time.
-const SAVE_ROLLS = SAVE_FIELDS.filter(([key]) => !key.endsWith('_pct'));
 // The combat rows play mode offers a die on: the four the old play view drew as
 // .play-roll buttons, and no more. Attacks per melee, damage bonuses and Run
 // are numbers you READ mid-fight rather than d20 rolls, and a die beside them
 // would invite a roll that means nothing. A Set rather than a second list of
 // labels, so it is keyed off COMBAT_FIELDS' own keys and cannot drift from
-// them the way SAVE_ROLLS was written to avoid.
+// them.
 const ROLLABLE_COMBAT = new Set(['initiative', 'strike', 'parry', 'dodge']);
 
 // The saves a book states that the sixteen fields above do not name
@@ -2920,7 +2917,6 @@ function render() {
       SAVE_FIELDS.map(([k, l]) =>
       editField('saves', k, l, saves[k], c.saves, { suffix: k === 'coma_death_pct' ? '%' : '', parts: savesParts,
         // The percentage saves roll under on d100; the rest are d20 + bonus.
-        // Same split SAVE_ROLLS makes, read the same way.
         roll: k.endsWith('_pct')
           ? { name: l, pct: saves[k] }
           : { kind: 'save', name: l, bonus: saves[k],
