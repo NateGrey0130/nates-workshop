@@ -121,10 +121,19 @@ const paintPool = (key) => sheetLayout.paintPool(key, poolData(), C.conflicts);
 // (overrides are the first form's), so their inputs leave the page on the
 // toggle, and pendingValues() skips a section whose inputs are gone - a typed
 // strike would otherwise be marked saved and never sent.
+//
+// AND IF IT CANNOT BE SAVED, THE FORM STAYS. The save's answer used to be
+// ignored. A failed or held save leaves its fields unsent, and the page under
+// them is then the other form's: the retry read the Morphus hit points out of
+// #stat-hp and stored them as the first form's, skipped the combat section it
+// could no longer find, and said "All changes saved".
 async function setForm(which) {
   const f = C.secondForm;
   if (!f || f.active === which || !['first', 'second'].includes(which)) return;
-  if (C.canWrite) await saveNow();
+  if (C.canWrite && !(await saveNow())) {
+    flash('Not switched: what you typed has not been saved yet. Try again once it has.', true);
+    return;
+  }
   f.active = which;
   render();
   if (!C.canWrite) return;
@@ -657,10 +666,17 @@ function rollLineHtml(r) {
 }
 
 // d100 roll-under against a percentage.
+//
+// NEVER AGAINST MORE THAN 98 (Nate, 2026-10-11). SKILL_PCT_CAP is
+// js/leveling.js's, which this file cannot import; smoke holds the two equal.
+// It is applied twice: to the skill, so the G.M.'s -20 comes off 98 and not
+// off a stored 120, and to the total, so a +20 cannot lift 90 past it. A roll
+// of 99 or 100 fails whatever the sheet holds.
+const SKILL_PCT_CAP = 98;
 function rollSkill(name, pct) {
   const roll = 1 + Math.floor(Math.random() * 100);
   const mod = takeRollMod();
-  const target = pct + mod;
+  const target = Math.min(SKILL_PCT_CAP, Math.min(SKILL_PCT_CAP, pct) + mod);
   recordRoll('skill', mod ? `${name} (${mod > 0 ? '+' : ''}${mod}%)` : name,
     { die: 100, roll, target, ok: roll <= target });
 }
