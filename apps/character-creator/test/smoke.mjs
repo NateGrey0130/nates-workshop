@@ -883,6 +883,55 @@ section('One list of attributes and one of games');
   check('and every one accepts every game on it', narrow.length === 0, `${narrow.length} of ${checks.length} are narrower`);
 }
 
+// ---------- The five pools ----------
+// The bare key list was typed five times: the bonus validator, the creature
+// roller, the ability-pick endpoint, the campaign's rest rates and the sheet's
+// pool refresh. The four modules import dice.js's now. The classic scripts
+// cannot, so their copies are held to it here: the sheet's bare list, and the
+// [key, label] pairs the sheet, the NPC sheets and the dashboard print from.
+// Only the same-shape copies. The label maps, the `_max` field lists and the
+// per-form pool lists are different shapes and are not this section's.
+section('One list of pool keys');
+{
+  const { POOL_KEYS } = await import('../js/dice.js');
+  const { POOL_BONUS_KEYS: reExported } = await import('../js/parser.js');
+  check('five pools, in the order every sheet prints them', POOL_KEYS.join() === 'hp,sdc,mdc,ppe,isp');
+  check('the parser re-exports that list under its old name', reExported === POOL_KEYS);
+
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    (e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+  const files = [join(appDir, 'app.js'), ...walk(join(appDir, 'js')), ...siblingAppDirs.flatMap(walk),
+    ...walk(join(repoRoot, 'functions/api/character-creator'))];
+  const rel = (f) => f.slice(repoRoot.length + 1).replace(/\\/g, '/');
+  const bare = /\[\s*'hp',\s*'sdc',\s*'mdc',\s*'ppe',\s*'isp'\s*\]/;
+  const bareCopies = files.filter((f) => bare.test(readFileSync(f, 'utf8'))).map(rel).sort();
+  check('the bare key list is typed out only where it is stated and in the one classic script',
+    bareCopies.join() === 'apps/character-creator/js/dice.js,apps/character-sheet/sheet.js', bareCopies.join(', '));
+
+  // The copies, held to the list: a sixth pool added to the module and not to
+  // one of these fails here, and so does a key dropped from one of them.
+  const quoted = (s) => (s || '').match(/'([^']+)'/g)?.map((x) => x.slice(1, -1)) || [];
+  const sheet = readFileSync(appPath('sheet.js'), 'utf8');
+  check('the sheet\'s pool refresh walks the same five',
+    quoted(sheet.match(/for \(const k of \[([^\]]+)\]\) \{\s+const f = k \+ '_current';/)?.[1]).join() === POOL_KEYS.join());
+
+  // A [key, label] list: the first string of each pair, in order.
+  const pairKeys = (file, name) => {
+    const body = readFileSync(file, 'utf8').match(new RegExp('const ' + name + ' = \\[(\\[[\\s\\S]*?\\])\\];'))?.[1] || '';
+    return [...body.matchAll(/\[\s*'([^']+)'\s*,/g)].map((m) => m[1]);
+  };
+  const dashboard = appPath('dashboard.js');
+  for (const [f, name] of [[appPath('sheet.js'), 'POOLS'], [dashboard, 'POOLS'], [dashboard, 'REST_POOLS']]) {
+    const keys = pairKeys(f, name);
+    check(`${rel(f)} ${name} pairs the same five`, keys.join() === POOL_KEYS.join(), keys.join());
+  }
+  // The NPC preview prints two more lines of a stat block after the pools.
+  // Neither is a pool: horror_factor is kept out of the sheet's POOLS on purpose.
+  const npc = pairKeys(join(appDir, 'js', 'npc-sheets.js'), 'POOLS');
+  check('the NPC sheets pair the same five, then armour rating and horror factor',
+    npc.join() === [...POOL_KEYS, 'ar', 'horror_factor'].join(), npc.join());
+}
+
 // ---------- The wizard's markup, where a value meets it ----------
 // Three small ones found reading app.js end to end on 2026-10-10. None was
 // reachable with today's catalog - class ids are slugs - so each is held as a
