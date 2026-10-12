@@ -1375,36 +1375,81 @@ if (itemId) {
     // Damage is checked against THIS vessel's own locations. Stored unchecked,
     // a typo renders as a damaged part that does not exist and no reader can
     // tell that from a book they have not read.
+    //
+    // One location a request, with the number it replaces: {location, mdc:
+    // {from, to, absent}}. `absent` is a location nothing is stored for yet.
     const loc = vessel.locations[0].location;
-    const hit = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
-      { mdc_current: { [loc]: 120 } });
+    const other = vessel.locations[1].location;
+    const setMdc = (id, location, mdc) => api('PATCH', `/characters/${charId}/vehicles/${id}`, { location, mdc });
+    const mdcNow = async (id) => ((await api('GET', `/characters/${charId}`)).body.vehicles || [])
+      .find((v) => v.id === id)?.mdc_current;
+    const hit = await setMdc(vid, loc, { from: null, to: 120, absent: true });
     check('damage can be recorded against a named location', hit.status === 200, hit.body);
-    const ghost = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
-      { mdc_current: { 'Tail Fin Of Nowhere': 10 } });
+    const ghost = await setMdc(vid, 'Tail Fin Of Nowhere', { from: null, to: 10, absent: true });
     check('a location this vessel does not have is refused by name',
       ghost.status === 400 && /Tail Fin Of Nowhere/.test(ghost.body?.error || ''), ghost.body);
-    const notNumber = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
-      { mdc_current: { [loc]: 'lots' } });
+    const notNumber = await setMdc(vid, loc, { from: 120, to: 'lots' });
     check('and so is damage that is not a number', notNumber.status === 400, notNumber.body);
-    const asArray = await api('PATCH', `/characters/${charId}/vehicles/${vid}`,
-      { mdc_current: [1, 2] });
-    check('and an array, which parses fine and is the wrong shape',
-      asArray.status === 400, asArray.body);
+    const noFrom = await setMdc(vid, loc, { to: 90 });
+    check('and a change that does not say what it replaces', noFrom.status === 400, noFrom.body);
+    const noLocation = await api('PATCH', `/characters/${charId}/vehicles/${vid}`, { mdc: { from: 120, to: 90 } });
+    check('and one that names no location', noLocation.status === 400, noLocation.body);
+    check('the recorded damage reads back, and the refused ones left it alone',
+      JSON.stringify(await mdcNow(vid)) === JSON.stringify({ [loc]: 120 }), JSON.stringify(await mdcNow(vid)));
 
-    const back = await api('GET', `/characters/${charId}`);
-    check('the recorded damage reads back',
-      (back.body.vehicles || []).find((v) => v.id === vid)?.mdc_current?.[loc] === 120,
-      JSON.stringify((back.body.vehicles || []).find((v) => v.id === vid)?.mdc_current));
+    // TWO BROWSERS, ONE VESSEL (reproduced on a local server, 2026-10-12). The
+    // route took the whole object and stored it as sent, so two requests built
+    // from one read both answered 200 and the second put the first one's
+    // location back. That shape is refused now, and neither of these writes.
+    const whole = await api('PATCH', `/characters/${charId}/vehicles/${vid}`, { mdc_current: { [other]: 7 } });
+    check('the whole object can no longer be sent over what is stored',
+      whole.status === 400 && JSON.stringify(await mdcNow(vid)) === JSON.stringify({ [loc]: 120 }),
+      `${whole.status} ${JSON.stringify(await mdcNow(vid))}`);
+    const asArray = await api('PATCH', `/characters/${charId}/vehicles/${vid}`, { mdc_current: [1, 2] });
+    check('nor an array, which parses fine and is the wrong shape', asArray.status === 400, asArray.body);
+
+    // Both of these were read off a page that showed only [loc] at 120.
+    const theirs = await setMdc(vid, other, { from: null, to: 33, absent: true });
+    const mine = await setMdc(vid, loc, { from: 120, to: 110 });
+    check('two people on different locations both land',
+      theirs.status === 200 && mine.status === 200
+        && JSON.stringify(await mdcNow(vid)) === JSON.stringify({ [loc]: 110, [other]: 33 }),
+      `${theirs.status} ${mine.status} ${JSON.stringify(await mdcNow(vid))}`);
+    const stale = await setMdc(vid, loc, { from: 120, to: 60 });
+    check('a change to a location that moved since it was read is refused with both sides',
+      stale.status === 409 && stale.body?.conflict === true && stale.body?.location === loc
+        && stale.body?.mine === 60 && stale.body?.theirs === 110 && stale.body?.base === 120, stale.body);
+    const staleAbsent = await setMdc(vid, other, { from: null, to: 5, absent: true });
+    check('and so is one that believes the location undamaged when it no longer is',
+      staleAbsent.status === 409 && staleAbsent.body?.theirs === 33, staleAbsent.body);
+    check('and neither refusal wrote anything',
+      JSON.stringify(await mdcNow(vid)) === JSON.stringify({ [loc]: 110, [other]: 33 }), JSON.stringify(await mdcNow(vid)));
+    const same = await setMdc(vid, loc, { from: 120, to: 110 });
+    check('the number already stored, asked for again, is not a clash', same.status === 200, same.body);
+    const fresh = await setMdc(vid, loc, { from: 110, to: -15 });
+    check('read afresh, the change lands, below zero included',
+      fresh.status === 200 && (await mdcNow(vid))?.[loc] === -15, JSON.stringify(await mdcNow(vid)));
+    const cleared = await setMdc(vid, other, { from: 33, to: null });
+    check('a location can be put back to undamaged, which stores nothing for it',
+      cleared.status === 200 && JSON.stringify(await mdcNow(vid)) === JSON.stringify({ [loc]: -15 }),
+      JSON.stringify(await mdcNow(vid)));
+    const gone33 = await setMdc(vid, other, { from: 33, to: 20 });
+    check('and a change that still believes the old number is told it is undamaged',
+      gone33.status === 409 && gone33.body?.theirs === null, gone33.body);
+    const named = await api('PATCH', `/characters/${charId}/vehicles/${vid}`, { nickname: 'Old Betsy' });
+    const afterName = ((await api('GET', `/characters/${charId}`)).body.vehicles || []).find((v) => v.id === vid);
+    check('a nickname is still changed on its own, and leaves the damage alone',
+      named.status === 200 && afterName?.nickname === 'Old Betsy'
+        && JSON.stringify(afterName?.mdc_current) === JSON.stringify({ [loc]: -15 }), JSON.stringify(afterName));
 
     // A freeform vessel joins to no catalog row, so it has no location list to
     // check against and any key is allowed - the same concession a freeform
     // item gets for enchantments.
     const free = await api('POST', `/characters/${charId}/vehicles`, { custom_name: 'The stolen barge' });
     check('a freeform vessel needs no catalog row', free.status === 201, free.body);
-    const freeHit = await api('PATCH', `/characters/${charId}/vehicles/${free.body.vehicle?.id}`,
-      { mdc_current: { Hull: 40 } });
+    const freeHit = await setMdc(free.body.vehicle?.id, 'Hull', { from: null, to: 40, absent: true });
     check('and takes damage anywhere, having no locations to check',
-      freeHit.status === 200, freeHit.body);
+      freeHit.status === 200 && (await mdcNow(free.body.vehicle?.id))?.Hull === 40, freeHit.body);
 
     const gone = await api('DELETE', `/characters/${charId}/vehicles/${vid}`);
     check('a vessel is soft-removed', gone.status === 200, gone.body);
