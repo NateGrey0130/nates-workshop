@@ -13,8 +13,7 @@
 //       campaign owns goes with it by ON DELETE CASCADE.
 
 import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson, requireCampaign, tooLong, TEXT_MAX } from '../_lib/auth.js';
-
-const REST_POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
+import { POOL_KEYS as REST_POOLS } from '../../../../apps/character-creator/js/dice.js';
 
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);

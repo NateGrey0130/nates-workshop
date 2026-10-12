@@ -221,6 +221,15 @@ const DICE_RE = /\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i;
 // smoke.mjs holds both to this.
 export const ATTRIBUTES = ['IQ', 'ME', 'MA', 'PS', 'PP', 'PE', 'PB', 'Spd'];
 
+// The five pools a character carries, as the bare keys behind `hp_max`,
+// `hp_current` and the rest. Stated here once for the modules: the bonus
+// validator, the creature roller, the ability-pick endpoint and the campaign's
+// rest rates each typed their own. It lives in this file because this file
+// imports nothing, so a Pages Function can reach it as cheaply as the wizard.
+// The classic scripts that cannot import (the sheet, the NPC sheets, the G.M.
+// dashboard) keep their copies, and smoke.mjs holds each to this.
+export const POOL_KEYS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
+
 const ATTR_RE = /\b(IQ|ME|MA|PS|PP|PE|PB|Spd)\b|\b([IMPS])\.\s*([QEASPB])\./i;
 
 // A multiplier the book attaches to the attribute itself — "M.D.C.: P.E. x 10",

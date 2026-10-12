@@ -24,10 +24,9 @@
 // I.S.P. base of a `psionics` block the ability brings. A pool the character
 // does not have is left alone - a bonus does not conjure one.
 
-import { evalDiceBonus } from '../../../../apps/character-creator/js/dice.js';
+import { evalDiceBonus, POOL_KEYS as POOLS } from '../../../../apps/character-creator/js/dice.js';
 import { isAbilityDefinition } from '../../../../apps/character-creator/js/parser.js';
 
-const POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 
 // The dice members of a bonus value: a string, or the strings in a list.

@@ -29,7 +29,7 @@
 // live test. A roll under the floor is raised to it. Attributes only; a pool
 // states its own shape in its dice.
 
-import { d, ATTRIBUTES as ATTR_KEYS } from './dice.js';
+import { d, ATTRIBUTES as ATTR_KEYS, POOL_KEYS as POOLS } from './dice.js';
 
 const ATTR_BY_UPPER = Object.fromEntries(ATTR_KEYS.map((k) => [k.toUpperCase(), k]));
 const TERM = /^(?:(\d+)D(\d+)|(\d+)|(IQ|ME|MA|PS|PP|PE|PB|SPD))(?:X(\d+))?$/;
@@ -102,8 +102,6 @@ export class CreatureGap extends Error {
     this.field = field;
   }
 }
-
-const POOLS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
 
 // One individual of a species: its eight attributes rolled first (a key the
 // book does not print stays absent; "N/A" is null), then each pool, which may

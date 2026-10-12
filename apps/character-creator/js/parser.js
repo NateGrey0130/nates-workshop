@@ -1,4 +1,4 @@
-import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds, ATTRIBUTES } from './dice.js';
+import { diceBounds, isAbsentAttribute, isAttributeExpr, poolFormulaBounds, ATTRIBUTES, POOL_KEYS } from './dice.js';
 import { isHandToHand } from './hand-to-hand.js';
 import { keysMergedBy, GAME_SYSTEMS } from './class-keys.js';
 
@@ -2021,7 +2021,7 @@ const BONUS_ATTRS = ATTRIBUTES;
 // rolled once and stored as `*_max`, so the bonus is rolled with the base and
 // folded into that number. A dice bonus re-evaluated every render would change
 // the character's maximum under them.
-export const POOL_BONUS_KEYS = ['hp', 'sdc', 'mdc', 'ppe', 'isp'];
+export const POOL_BONUS_KEYS = POOL_KEYS;
 
 // The three groups a bonus can land in. `combat` and `saves` deliberately do
 // not enumerate their keys: both are open sets that derive.js grows, and a
