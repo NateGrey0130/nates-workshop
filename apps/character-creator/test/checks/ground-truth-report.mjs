@@ -166,6 +166,20 @@ export function run() {
         { number: 10, title: 'Red', headRefName: 'r', isDraft: true, statusCheckRollup: [{ status: 'COMPLETED', conclusion: 'FAILURE' }] }];
       const ok = (out) => ({ ok: true, status: 0, out });
       const fail = (why) => ({ ok: false, status: 1, out: '', why });
+      // report() runs five times below and the repo is finished by now: no run
+      // writes to it, so a question git answered once has the same answer
+      // every time, and each is asked for real only once. The key is the whole
+      // question, cwd and timeout included: `git status` is asked in both
+      // trees, and the two answers differ. `fetch` is not a question, it is
+      // the one command here that writes, and it always runs. This lives in
+      // the fixture and not in the script, which must never remember anything.
+      const asked = new Map();
+      const realGit = (cmd, args, opts) => {
+        if (args[0] === 'fetch') return runProbe(cmd, args, opts);
+        const key = JSON.stringify([cmd, args, opts]);
+        if (!asked.has(key)) asked.set(key, runProbe(cmd, args, opts));
+        return asked.get(key);
+      };
       // Real git, except the remote URL, so the repo reads as a GitHub one.
       const world = (over = {}) => (cmd, args, opts) => {
         if (cmd === 'git' && args[0] === 'remote') return ok('https://github.com/test/repo.git');
@@ -176,7 +190,7 @@ export function run() {
           const head = args[args.indexOf('--head') + 1];
           return ok(JSON.stringify(args.includes('merged') ? merged[head] ?? [] : open));
         }
-        return runProbe(cmd, args, opts);
+        return realGit(cmd, args, opts);
       };
       const go = (over) => {
         const r = report({ root: repo, exec: world(over), platform: 'win32', home: dir });
