@@ -52,6 +52,25 @@ const ENUMERATE_LIMIT = 60000;
 // Draws allowed per name wanted when a space is too big to write out.
 const SAMPLE_TRIES = 400;
 
+// A space written out once is kept, with each name's key beside it. "A few
+// milliseconds" above is per CALL, and a city makes about forty single-name
+// calls, each of which wrote its space out and keyed every name in it again:
+// 110 ms a city against 3 ms with this (measured 2026-10-12).
+//
+// Keyed by the theme OBJECT, so a theme built for one request is never
+// answered from another's list - which also means a theme edited in place
+// after its first call would be answered from the old one. Nothing does that;
+// a changed theme is a new object.
+//
+// Bounded by names held, oldest space out first, because a Pages isolate keeps
+// this for as long as it lives and every built-in space together is 1.18
+// million names.
+const SPACE_CACHE_NAMES = 250000;
+const spaceCache = new Map();
+const themeSerial = new WeakMap();
+let nextSerial = 1;
+let cachedNames = 0;
+
 // A request the module cannot serve at all - an unknown theme, a kind or shape
 // the theme does not have. Different from running out: that is a result.
 export class NameGenError extends Error {
@@ -184,6 +203,36 @@ function enumerate(pieces) {
   return out;
 }
 
+// Every distinct name of one request's space, and its key, from the cache.
+function writtenOut(theme, request, compiled) {
+  let serial = themeSerial.get(theme);
+  if (!serial) themeSerial.set(theme, serial = nextSerial++);
+  const cacheKey = serial + '|' + request;
+  const hit = spaceCache.get(cacheKey);
+  if (hit) return hit;
+  const all = [];
+  const keys = [];
+  const seen = new Set();
+  for (const p of compiled) {
+    for (const n of enumerate(p)) {
+      const k = nameKey(n);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      all.push(n);
+      keys.push(k);
+    }
+  }
+  const made = { all, keys };
+  spaceCache.set(cacheKey, made);
+  cachedNames += all.length;
+  for (const [k, old] of spaceCache) {
+    if (cachedNames <= SPACE_CACHE_NAMES || k === cacheKey) break;
+    spaceCache.delete(k);
+    cachedNames -= old.all.length;
+  }
+  return made;
+}
+
 // ── generating ──
 
 /**
@@ -223,16 +272,8 @@ export function generateNames({ theme, kind = 'person', gender = 'any', shape = 
   const picked = [];
   const seen = new Set();
   if (size <= ENUMERATE_LIMIT) {
-    const all = [];
-    for (const p of compiled) {
-      for (const n of enumerate(p)) {
-        const k = nameKey(n);
-        if (seen.has(k)) continue;
-        seen.add(k);
-        all.push(n);
-      }
-    }
-    const free = all.filter((n) => !banned.has(nameKey(n)));
+    const { all, keys } = writtenOut(t, `${kind}|${kind === 'person' ? gender : 'any'}|${shape || ''}`, compiled);
+    const free = all.filter((n, i) => !banned.has(keys[i]));
     // Fisher-Yates over the free names, stopping once there are enough.
     for (let i = 0; i < free.length && picked.length < want; i++) {
       const j = i + Math.floor(random() * (free.length - i));
