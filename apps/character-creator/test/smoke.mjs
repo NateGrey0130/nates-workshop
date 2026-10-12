@@ -537,7 +537,8 @@ import { ABILITY_GRANTS, POOL_BONUS_KEYS, VARIANT_OVERRIDES, abilityGroupCounts,
   from '../js/parser.js';
 import { PSIONIC_TIER_RULES, psionicShape, psionicTierForRoll, rollPsionics, rollsForPsionics, withRolledPsionics } from '../js/psionics.js';
 import { freshState, freshBuild, DRAFT_KEYS, BUILD_KEYS, KEPT_KEYS, DERIVED_KEYS, SESSION_KEYS,
-         STARTING_PICK_KINDS, pruneStartingPicks } from '../js/wizard-state.js';
+         STARTING_PICK_KINDS, pruneStartingPicks, S as wizardS } from '../js/wizard-state.js';
+import { poolsPayload, powersPayload, psiClass } from '../js/wizard-payload.js';
 import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -791,6 +792,89 @@ check('the persisted key list is found', DRAFT_KEYS.length > 0);
     /function setBio\(key, value\) \{[\s\S]{0,160}if \(key === 'money'\) S\.moneyTyped = !!v;/.test(appText));
   check('re-rolling the pools leaves a typed sum alone, and Review\'s Reroll does not',
     /if \(force\) S\.moneyTyped = false;\s+if \(!S\.moneyTyped\) \{\s+const money = rollPoolFormula\(c\.starting_money, S\.attrs\);/.test(appText));
+}
+
+// The two payload builders that read only the state, the composed class and
+// the power catalogs are js/wizard-payload.js's since 2026-10-12, so they can
+// be run here rather than read as text. They read the wizard's ONE S, which is
+// js/wizard-state.js's: a second `freshState()` in app.js would hand the page
+// a state the builders never see, and every save would send empty powers.
+{
+  const appText = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const modText = readFileSync(join(appDir, 'js', 'wizard-payload.js'), 'utf8');
+  const moved = ['poolsPayload', 'powersPayload', 'psiClass'];
+  const stillThere = moved.filter((n) => new RegExp(`^(?:async )?function ${n}\\(`, 'm').test(appText));
+  check('app.js no longer declares the builders the payload module owns',
+    stillThere.length === 0, stillThere.join(', '));
+  const imported = appText.match(/import \{([^}]*)\} from '\.\/js\/wizard-payload\.js';/)?.[1] || '';
+  const notImported = moved.filter((n) => !new RegExp(`\\b${n}\\b`).test(imported));
+  check('and imports each of them from it', notImported.length === 0, notImported.join(', '));
+  check('app.js takes the wizard\'s state from js/wizard-state.js and makes none of its own',
+    /import \{[^}]*\bS\b[^}]*\} from '\.\/js\/wizard-state\.js';/.test(appText) && !/freshState\(/.test(appText));
+  check('and so does the payload module', /^import \{ S \} from '\.\/wizard-state\.js';$/m.test(modText)
+    && !/freshState\(/.test(modText));
+  const modKeys = [...new Set([...modText.matchAll(/(?<![\w$.])S\.([a-z_]\w*)/g)].map((m) => m[1]))];
+  const fresh = freshState();
+  const modAdHoc = modKeys.filter((k) => !(k in fresh));
+  check('the payload module reads only declared state keys', modKeys.length >= 15 && modAdHoc.length === 0,
+    modAdHoc.join(', ') || `only ${modKeys.length}`);
+
+  try {
+    // A pool the class does not have stays exactly what it was - null or
+    // absent - and a level's growth is added only to one that exists.
+    Object.assign(wizardS, freshState(), {
+      pools: { hp: 10, sdc: 20, mdc: null, ppe: 0 },
+      levelPools: { 2: { hp_max: 4, sdc_max: 6, mdc_max: 50 }, 3: { hp_max: 3, ppe_max: 7, isp_max: 9 } },
+    });
+    check('poolsPayload adds every level\'s growth to the pools the class rolled',
+      JSON.stringify(poolsPayload()) === '{"hp":17,"sdc":26,"mdc":null,"ppe":7}'
+      && 'isp' in poolsPayload() && poolsPayload().isp === undefined, JSON.stringify(poolsPayload()));
+    Object.assign(wizardS, freshState());
+    check('and is five empty pools before anything is rolled',
+      JSON.stringify(Object.keys(poolsPayload())) === '["hp","sdc","mdc","ppe","isp"]'
+      && Object.values(poolsPayload()).every((v) => v === undefined));
+
+    Object.assign(wizardS, freshState(), {
+      cls: { magic: { spells: ['Globe of Daylight', ' ', 7] }, psionics: { type: 'minor', powers: ['Sixth Sense'] },
+             super_abilities: { abilities: ['Flight: Winged'] }, talents: { talents: ['Darksong'] } },
+      spells: ['GLOBE OF DAYLIGHT', 'Armor of Ithan'], spellGroups: { 0: ['Fly'] },
+      levelSpells: { 1: ['Armor of Ithan', 'Unlisted'] },
+      psi: ['Mind Block'], psiGroups: { 1: [null, 'Sixth Sense'] }, levelPsi: { 0: ['Telepathy'] },
+      supers: ['Flight: Winged'], levelSupers: { 0: ['Extraordinary P.S.'] },
+      talents: ['Shadow Blast'],
+      spellCatalog: [{ name: 'Globe of Daylight', level: 1, ppe: 2 },
+                     { name: 'Armor of Ithan', level: 3, ppe: 10, ppe_note: 'per level' }],
+      psiCatalog: [{ name: 'Mind Block', category: 'Sensitive', isp: 4 },
+                   { name: 'Telepathy', category: 'Sensitive', isp: 4, isp_note: 'and up' }],
+      superCatalog: [{ name: 'Flight: Winged', tier: 'minor' }],
+      talentCatalog: [{ name: 'Shadow Blast', tier: 'common', ppe: 6, acquire_ppe: 8, form_required: 'morphus' }],
+    });
+    const powers = powersPayload();
+    check('powersPayload lists what the class grants, then the level-1 picks, then the levels\', each once',
+      JSON.stringify(powers.map((x) => `${x.type}:${x.name}`)) === JSON.stringify([
+        'spell:Globe of Daylight', 'spell:Armor of Ithan', 'spell:Fly', 'spell:Unlisted',
+        'psionic:Sixth Sense', 'psionic:Mind Block', 'psionic:Telepathy',
+        'super:Flight: Winged', 'super:Extraordinary P.S.',
+        'talent:Darksong', 'talent:Shadow Blast']), JSON.stringify(powers.map((x) => x.name)));
+    const row = (name) => JSON.stringify(powers.find((x) => x.name === name));
+    check('each row carries its catalog\'s cost, and a note only where there is one',
+      row('Globe of Daylight') === '{"type":"spell","name":"Globe of Daylight","level":1,"cost":2}'
+      && row('Armor of Ithan') === '{"type":"spell","name":"Armor of Ithan","level":3,"cost":10,"cost_note":"per level"}'
+      && row('Telepathy') === '{"type":"psionic","name":"Telepathy","category":"Sensitive","cost":4,"cost_note":"and up"}'
+      && row('Flight: Winged') === '{"type":"super","name":"Flight: Winged","category":"minor"}'
+      && row('Shadow Blast') === '{"type":"talent","name":"Shadow Blast","category":"common","cost":6,"acquire_cost":8,"form_required":"morphus"}'
+      && row('Unlisted') === '{"type":"spell","name":"Unlisted"}');
+
+    // A tier rolled on the Powers step is the character's, not the class's.
+    Object.assign(wizardS, freshState(), { cls: { name: 'Vagabond' } });
+    check('psiClass is the composed class itself until a tier is rolled', psiClass() === wizardS.cls);
+    wizardS.psiRoll = { roll: 12, tier: 'major' };
+    check('and carries the rolled tier once one is',
+      psiClass() !== wizardS.cls && psiClass().psionics?.type === 'major' && psiClass().psionics.from_roll === true
+      && JSON.stringify(psiClass()) === JSON.stringify(withRolledPsionics(wizardS.cls, { psychic_tier: 'major', psychic_shape: null })));
+  } finally {
+    Object.assign(wizardS, freshState());
+  }
 }
 
 // render() is the one place a draft save is queued, "instead of remembering
@@ -3578,7 +3662,8 @@ section('Super abilities');
     const src = readFileSync(join(appDir, 'app.js'), 'utf8');
     return /startingGroups\(cls, 'super'\)/.test(src)
       && /startingSuperHtml/.test(src)
-      && /type: 'super'/.test(src);
+      // The row it saves is built in js/wizard-payload.js since 2026-10-12.
+      && /type: 'super'/.test(readFileSync(join(appDir, 'js', 'wizard-payload.js'), 'utf8'));
   })());
   check('the sheet groups super abilities apart from psionics', (() => {
     const src = readFileSync(appPath('sheet.js'), 'utf8');
@@ -5767,7 +5852,7 @@ section('Variable psionic costs');
   check('the picker shows the note and marks the minimum',
     appSrcK.includes("p.isp_note && p.isp > 0 ? '+' : ''") && appSrcK.includes('esc(p.isp_note)'));
   check('the wizard stores cost_note on the character',
-    appSrcK.includes('cost_note: p.isp_note'));
+    readFileSync(join(appDir, 'js', 'wizard-payload.js'), 'utf8').includes('cost_note: p.isp_note'));
   const sheetSrcK = readFileSync(appPath('sheet.js'), 'utf8');
   check('the sheet shows the note beside the use button',
     sheetSrcK.includes('escHtml(p.cost_note)') && sheetSrcK.includes("p.cost_note && cost > 0 ? '+' : ''"));
@@ -5808,7 +5893,7 @@ section('Variable spell costs');
   check('the picker shows the note and marks the minimum',
     appSrcL.includes("sp.ppe_note && sp.ppe > 0 ? '+' : ''") && appSrcL.includes('esc(sp.ppe_note)'));
   check('the wizard stores cost_note on the character',
-    appSrcL.includes('cost_note: sp.ppe_note'));
+    readFileSync(join(appDir, 'js', 'wizard-payload.js'), 'utf8').includes('cost_note: sp.ppe_note'));
 }
 
 // ---------- 1c26. Secondary schedules and group bonuses ----------
