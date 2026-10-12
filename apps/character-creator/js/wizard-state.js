@@ -154,6 +154,11 @@ export function freshState() {
   };
 }
 
+// THE state of the wizard in this page: one object, made once. app.js and
+// js/wizard-payload.js both import it, so there is no second copy to disagree.
+// A test that wants a state of its own calls freshState().
+export const S = freshState();
+
 // THE BUILD: what the player rolled and chose for one class. Saved in a draft,
 // and cleared when the class or the game system changes. A new pick the wizard
 // learns to hold belongs here unless there is a reason it does not.
