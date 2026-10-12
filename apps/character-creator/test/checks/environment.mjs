@@ -14,7 +14,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { batchStatements, trailingSelects, collapseWhitespace, statements, stripComments } from '../../../../scripts/sql-statements.mjs';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
-import { groupDatabases, localD1Args } from '../../../../scripts/d1-query-lib.mjs';
+import { globalWranglerJs, groupDatabases, localD1Args, runWrangler } from '../../../../scripts/d1-query-lib.mjs';
 
 // The sections this file announces, declared once so a `--section` run can
 // skip the whole module — this is the file that shells out to wrangler, which
@@ -46,8 +46,11 @@ function wrangler(args) {
   // which wrangler keeps under the cwd's .wrangler/state. A git worktree has
   // an empty one, and this whole section failed there until WORKSHOP_LOCAL_D1
   // could point it at the main checkout's (`fresh-worktree-fails-two-checks`).
+  //
+  // runWrangler: the global wrangler.js under node when there is one, which is
+  // what `npx wrangler` ends up running anyway, about 3.3 s later on each spawn.
   const persist = args.includes('--local') ? localD1Args('--local') : [];
-  return spawnSync('npx', ['wrangler', ...args, ...persist], { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000, maxBuffer: 1e9 });
+  return runWrangler([...args, ...persist], { timeout: 120000 });
 }
 
 // ── how long wrangler takes to START, before it does anything ──────────────
@@ -63,9 +66,12 @@ function wrangler(args) {
 // only because somebody timed a command by hand while looking for something
 // else, and the symptom until then was "the tests feel slow".
 //
-// 7000ms is 2.4x what 4.136.0 does here (~2,850ms) and well under the 11,500
-// the bad version did. A cold or busy machine has room; a version that regresses
-// start-up the way 4.114.0 did does not.
+// 7000ms is 4x what 4.145.0 does here called directly (~1,700ms, 2026-10-12)
+// and well under the 11,500 the bad version did. A cold or busy machine has
+// room; a version that regresses start-up the way 4.114.0 did does not. Through
+// npx the same version reads ~5,100ms, so a machine with no global install has
+// far less room under the same line. The threshold was set when npx read
+// ~2,850ms and has not moved.
 //
 // LOCAL ONLY, and that is not a hedge. A GitHub runner resolves its own
 // wrangler, its timings are nobody's to act on, and a required check that fails
@@ -92,10 +98,15 @@ if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS) {
   // RAISING THE THRESHOLD INSTEAD WAS CONSIDERED AND IS WRONG: the observed
   // flap reached 12,435ms, which is ABOVE the ~11,500 this check was built to
   // catch, so any threshold clear of the flap band disarms it entirely.
+  //
+  // IT TIMES THE SPAWN THE SUITE MAKES, which since 2026-10-12 is the global
+  // wrangler.js under node where there is one, and `npx wrangler` only where
+  // there is not. Timing npx here while every later call skipped it would
+  // measure npx's own 3.3 s and report it as wrangler's.
+  const how = globalWranglerJs() ? 'the global wrangler.js under node' : 'npx wrangler';
   const time = () => {
     const startedAt = Date.now();
-    const r = spawnSync('npx', ['wrangler', '--version'],
-      { cwd: repoRoot, shell: true, encoding: 'utf8', timeout: 120000 });
+    const r = runWrangler(['--version'], { timeout: 120000 });
     return { ms: Date.now() - startedAt, out: (r.stdout || '').trim() };
   };
   const first = time();
@@ -104,10 +115,11 @@ if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS) {
   const best = second && second.ms < first.ms ? second : first;
   const version = (best.out.match(/\d+\.\d+\.\d+/) || ['unknown'])[0];
   check('wrangler starts in under 7s', best.ms < 7000,
-    `${best.ms}ms for a no-op --version, best of ${second ? 2 : 1}, on wrangler ${version}. `
+    `${best.ms}ms for a no-op --version through ${how}, best of ${second ? 2 : 1}, on wrangler ${version}. `
     + 'BOTH spawns were over the line, so this is not the transient straddle M25 measured - '
-    + 'but re-run once before believing it. 4.136.0 starts in ~2,850ms here, so 7000 is 2.4x '
-    + 'the expected baseline. WHAT THE THRESHOLD IS FOR is a START-UP REGRESSION rather than a '
+    + 'but re-run once before believing it. 4.145.0 starts in ~1,700ms here called directly and '
+    + '~5,100ms through npx (2026-10-12), so 7000 is 4x the direct baseline and 1.4x the npx one. '
+    + 'WHAT THE THRESHOLD IS FOR is a START-UP REGRESSION rather than a '
     + "broken install: 4.114.0 took ~11,500ms against 4.127.1's ~1,240, and this suite spawns "
     + 'wrangler ~25 times in regression alone, so that version cost ~500s per full local gate. '
     + 'The remedy is: npm i -g --allow-scripts=esbuild,workerd wrangler@latest. npm 12 blocks '

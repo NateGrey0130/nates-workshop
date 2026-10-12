@@ -105,7 +105,7 @@ export function localD1Args(target) {
 // stray `0` holding wrangler's usage text turned up that way on 2026-09-11;
 // reproduced the same day with `instr(markdown, '"') > 0`.
 export function d1Query(sql, { target = '--remote', db = DB } = {}) {
-  const r = runWrangler(['wrangler', 'd1', 'execute', db, target, ...localD1Args(target), '--json', '--command', sql]);
+  const r = runWrangler(['d1', 'execute', db, target, ...localD1Args(target), '--json', '--command', sql]);
   if (r.status !== 0) {
     throw new Error('wrangler d1 execute failed:\n'
       + ((r.stderr || '') + (r.stdout || '')).slice(-2000));
@@ -116,16 +116,57 @@ export function d1Query(sql, { target = '--remote', db = DB } = {}) {
   return JSON.parse(out.slice(out.indexOf('['))).flatMap((b) => b.results || []);
 }
 
-// npm's own npx-cli.js under this Node, so the child gets a real argv array:
-// Windows npx is a .cmd that Node refuses to spawn unshelled, and a shell string
-// cannot carry an embedded double quote. maxBuffer because wrangler prints the
-// whole result set, and the gear catalog alone overruns the 1 MB default.
-function runWrangler(args) {
+// THE GLOBALLY INSTALLED wrangler.js, or null when there is none. `npx
+// wrangler` runs this same file when it exists - measured 2026-10-12: npx
+// printed 4.145.0, the global install's version, with 4.149.0 sitting in the
+// npx cache - but takes about 3.3 s to find it, on every spawn: 5.1 s for a
+// no-op `--version` through npx against 1.7 s for this file under node, and
+// the suites pay it once per spawn.
+//
+// DERIVED, not asked for: `npm root -g` answers the same question and costs
+// 1-2 s itself. The two places below are npm's defaults for its global prefix.
+// A machine with the prefix moved gets null here, which is the slow path and
+// not a wrong one. So does a GitHub runner, which has no global install.
+//
+// WORKSHOP_WRANGLER=npx forces null, to exercise the fallback on a machine
+// that has the install.
+let globalWrangler;
+export function globalWranglerJs() {
+  if (globalWrangler === undefined) {
+    const root = process.platform === 'win32'
+      ? process.env.APPDATA && join(process.env.APPDATA, 'npm', 'node_modules')
+      : join(dirname(process.execPath), '..', 'lib', 'node_modules');
+    const js = root && join(root, 'wrangler', 'bin', 'wrangler.js');
+    globalWrangler = process.env.WORKSHOP_WRANGLER !== 'npx' && js && existsSync(js) ? js : null;
+  }
+  return globalWrangler;
+}
+
+/**
+ * The words that start wrangler, for a caller that spawns with `shell: true`
+ * and quotes its own arguments (regression.mjs). Both paths are quoted because
+ * node lives under `Program Files`. Without a global install this is the
+ * `npx wrangler` those callers always ran.
+ */
+export function wranglerShellWords() {
+  const js = globalWranglerJs();
+  return js ? [`"${process.execPath}"`, `"${js}"`] : ['npx', 'wrangler'];
+}
+
+// Without a shell wherever that is possible, so the child gets a real argv
+// array: a shell string cannot carry an embedded double quote. The global
+// wrangler.js under this Node when there is one; otherwise npm's own
+// npx-cli.js under this Node, because Windows npx is a .cmd that Node refuses
+// to spawn unshelled. maxBuffer because wrangler prints the whole result set,
+// and the gear catalog alone overruns the 1 MB default.
+export function runWrangler(args, opts = {}) {
+  const base = { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9, ...opts };
+  const js = globalWranglerJs();
+  if (js) return spawnSync(process.execPath, [js, ...args], base);
   const npxCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
   return existsSync(npxCli)
-    ? spawnSync(process.execPath, [npxCli, ...args],
-        { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9 })
-    : spawnSync('npx', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9, shell: true });
+    ? spawnSync(process.execPath, [npxCli, 'wrangler', ...args], base)
+    : spawnSync('npx', ['wrangler', ...args], { ...base, shell: true });
 }
 
 /**
@@ -141,20 +182,14 @@ function runWrangler(args) {
  * trailing SELECTs for exactly this reason). --command returns rows on both
  * targets.
  *
- * Runs WITHOUT a shell — npm's own npx-cli.js under this Node, the same form
- * d1-apply.mjs uses and for the same two reasons: Windows npx is a .cmd that
- * Node refuses to spawn unshelled, and a shell string cannot carry an embedded
- * double quote. That last one matters here: class markdown cites gear as
- * `item_id: "slug"`, so the verification queries most worth batching are the
- * ones a shelled --command breaks on. A real argv array makes them legal.
+ * Runs WITHOUT a shell, through runWrangler() above, because a shell string
+ * cannot carry an embedded double quote. That matters here: class markdown
+ * cites gear as `item_id: "slug"`, so the verification queries most worth
+ * batching are the ones a shelled --command breaks on. A real argv array makes
+ * them legal.
  */
 export function d1Batch(stmts, { target = '--remote', db = DB } = {}) {
-  const args = ['wrangler', 'd1', 'execute', db, target, ...localD1Args(target), '--json', '--command', stmts.join(' ')];
-  const npxCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
-  const r = existsSync(npxCli)
-    ? spawnSync(process.execPath, [npxCli, ...args],
-        { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9 })
-    : spawnSync('npx', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1e9, shell: true });
+  const r = runWrangler(['d1', 'execute', db, target, ...localD1Args(target), '--json', '--command', stmts.join(' ')]);
   if (r.status !== 0) {
     throw new Error('wrangler d1 execute failed:\n'
       + ((r.stderr || '') + (r.stdout || '')).slice(-2000));
