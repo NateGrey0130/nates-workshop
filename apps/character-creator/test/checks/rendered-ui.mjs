@@ -117,6 +117,10 @@ const SECTIONS = [
   'A row behind an Undo stays off the screen',
   'A vessel keeps every location typed into it',
   'The weapon cards follow the inventory',
+  'An item that was not added leaves no note saying it was',
+  'Pool presses go out one at a time',
+  'An overflow that was refused is still on offer',
+  'A value is escaped for the place it is written into',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -732,9 +736,11 @@ export async function run() {
       && (src.match(/onclick="setPlayAmt\(/g) || []).length === 1,
       'there are two Damage buttons or two amount strips to keep in step');
     // A roll rewrites the LINE, never the bar - otherwise pressing Damage
-    // rebuilds the button that was pressed, mid-press.
+    // rebuilds the button that was pressed, mid-press. Four writers of the
+    // line: a roll, an armour hit, the history toggle, and an overflow offer
+    // put back after the server refused it.
     check('a roll rewrites the line and not the bar',
-      !/\$\('play-roll-bar'\)/.test(src) && (src.match(/\$\('roll-line'\)/g) || []).length === 3,
+      !/\$\('play-roll-bar'\)/.test(src) && (src.match(/\$\('roll-line'\)/g) || []).length === 4,
       'a roll rebuilds the controls it was triggered from');
     // The height is measured, not written down: the bar is two rows on a phone
     // and one on a laptop, so no constant is right at both.
@@ -3426,6 +3432,394 @@ export async function run() {
       check('with no card holder on the page the inventory still repaints, quietly',
         w.page['inv-rows'].innerHTML === 'Rope,Bow' && w.held() === 'Rope,Bow×2*' && !w.alerts.length,
         JSON.stringify({ rows: w.page['inv-rows'].innerHTML, server: w.held(), alerts: w.alerts }));
+    }
+  }
+
+  // ---------- An item that was not added leaves no note saying it was ----------
+  // Add with "log it" ticked writes the journal entry FIRST, because the item
+  // row carries the entry's id. The item POST was then free to fail - a
+  // quantity the server refuses, a catalog row gone - and the entry stayed:
+  // "Acquired Bow" on the Notes tab, for a bow nobody holds.
+  //
+  // A refusal takes the entry back. A SILENCE does not, for the reason the pool
+  // presses give: a write that got no answer may have landed, and deleting the
+  // note of an item that did arrive is the same mistake the other way round.
+  //
+  // RUN, not matched: the sheet's own addItem over a stand-in server.
+  section('An item that was not added leaves no note saying it was');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const from = sheet.indexOf('\nasync function addItem() {'), to = sheet.indexOf('\n}\n', from);
+    const src = from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    check('addItem can be located', !!src, 'it is not where this looks for it');
+
+    const world = () => {
+      const server = { items: [], journal: [], nextId: 40 };
+      const field = (value, checked = false) => ({ value, checked });
+      const page = { 'add-slug': field('bow'), 'add-name': field(''), 'add-qty': field('2'),
+        'add-notes': field(''), 'add-log': field('', true) };
+      const w = { server, page, alerts: [], calls: [], fail: {}, reloads: 0 };
+      const api = async (path, req) => {
+        const method = req?.method || 'GET';
+        w.calls.push(`${method} ${path}`);
+        const body = req?.body ? JSON.parse(req.body) : {};
+        const entry = /^journal\/(\d+)$/.exec(path);
+        if (path === 'journal') {
+          if (w.fail.log) throw w.fail.log;
+          const made = { id: ++server.nextId, title: body.title };
+          server.journal.push(made);
+          return { entry: made };
+        }
+        if (entry && method === 'DELETE') {
+          if (w.fail.unlog) throw w.fail.unlog;
+          server.journal = server.journal.filter((e) => e.id !== +entry[1]);
+          return { ok: true };
+        }
+        if (/\/items$/.test(path) && method === 'POST') {
+          // The request arrives and the answer is lost on the way back.
+          if (w.fail.answer) { server.items.push(body); throw w.fail.answer; }
+          if (w.fail.item) throw w.fail.item;
+          server.items.push(body);
+          return { ok: true };
+        }
+        throw new Error('the stand-in server has no ' + method + ' ' + path);
+      };
+      w.fns = new Function('C', 'id', 'api', '$', 'jsonReq', 'alert', 'load', 'dropDrafts', 'refreshInventory',
+        src + '; return { addItem };')(
+        { catalog: [{ slug: 'bow', name: 'Bow' }] }, 3, api, (elId) => page[elId] || null,
+        (method, body) => ({ method, body: JSON.stringify(body) }), (msg) => { w.alerts.push(msg); },
+        async () => { w.reloads++; if (w.fail.reload) throw w.fail.reload; }, () => {}, async () => {});
+      w.all = () => JSON.stringify({ items: server.items.length, journal: server.journal.map((e) => e.title),
+        alerts: w.alerts, calls: w.calls });
+      return w;
+    };
+    const refused = () => Object.assign(new Error('qty is too large'), { status: 400 });
+    const silence = () => new Error('Failed to fetch');
+
+    if (src) {
+      let w = world();
+      await w.fns.addItem();
+      check('an item added with "log it" has its entry, and points at it',
+        w.server.items.length === 1 && w.server.journal.length === 1
+          && w.server.items[0].journal_entry_id === w.server.journal[0].id && !w.alerts.length, w.all());
+
+      w = world(); w.fail.item = refused();
+      await w.fns.addItem();
+      check('an item the server refused leaves no journal entry behind',
+        w.server.items.length === 0 && w.server.journal.length === 0, w.all());
+      check('and the refusal is still reported, as it was',
+        w.alerts.length === 1 && w.alerts[0].includes('qty is too large'), w.all());
+
+      w = world(); w.fail.item = refused(); w.fail.unlog = silence();
+      await w.fns.addItem();
+      check('an entry that could not be taken back is named, so it can be deleted by hand',
+        w.server.journal.length === 1 && w.alerts.length === 1 && w.alerts[0].includes('Inventory: Bow'), w.all());
+
+      w = world(); w.fail.answer = silence();
+      await w.fns.addItem();
+      check('an add that got no answer keeps its entry: the item may have arrived',
+        w.server.items.length === 1 && w.server.journal.length === 1 && !w.calls.some((c) => c.startsWith('DELETE')), w.all());
+      check('and says the entry was written, since nothing else on the page will',
+        w.alerts.length === 1 && w.alerts[0].includes('Inventory: Bow'), w.all());
+
+      w = world(); w.fail.log = refused();
+      await w.fns.addItem();
+      check('an entry that was never written is not taken back, and no item is sent after it',
+        w.calls.join(', ') === 'POST journal' && w.alerts.length === 1, w.all());
+
+      w = world(); w.fail.reload = silence();
+      await w.fns.addItem();
+      check('a reload that fails after the item landed takes nothing back',
+        w.server.items.length === 1 && w.server.journal.length === 1 && w.reloads === 1
+          && !w.calls.some((c) => c.startsWith('DELETE')), w.all());
+    }
+  }
+
+  // ---------- Pool presses go out one at a time ----------
+  // A +/- press is guarded: it says what the pool held and what it should hold,
+  // and the server refuses it when the first number is wrong. Each press is
+  // drawn at once and was SENT at once too, so two quick presses were two
+  // requests in flight, the second built on a number the server did not hold
+  // until the first arrived. Nothing orders two requests on a phone's
+  // connection. The second arriving first was refused as "changed elsewhere",
+  // retried from the old number and collided with the first: one press was
+  // lost, an alert said Failed, and the screen and the server disagreed.
+  //
+  // The drawing is still immediate. Only the sending waits its turn.
+  //
+  // RUN, not matched: the sheet's own adjustPool and applyChanges and the real
+  // derive.js, over a stand-in server that holds every request until this
+  // section answers it, in whatever order it likes, by the events route's rule.
+  section('Pool presses go out one at a time');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const press = fn('async function adjustPool('), apply = fn('function applyChanges(changes, side) {');
+    // New with the fix, so optional: against the old file the checks below
+    // must FAIL, not stop at "cannot be located".
+    const turn = (/\nlet poolSends = [^\n]*\n/.exec(sheet) || [''])[0] + (fn('async function sendPoolPress(') || '');
+    check('adjustPool and applyChanges can be located', !!press && !!apply, 'one of them is not where this looks for it');
+    const win = {};
+    new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(win, win);
+    const settle = async () => { for (let i = 0; i < 25; i++) await null; };
+
+    const world = (hp = 10) => {
+      const server = { hp_current: hp };
+      const C = { data: { hp_current: hp }, secondForm: null };
+      const w = { server, C, wire: [], sent: 0, alerts: [], flashes: [], queued: [], fail: null };
+      const api = (path, req) => new Promise((resolve, reject) => {
+        w.sent++;
+        w.wire.push({ body: JSON.parse(req.body), resolve, reject });
+      });
+      // functions/api/character-creator/characters/[id]/events.js: a guarded
+      // field whose `from` is not what is stored is a 409 carrying what is.
+      w.answer = (req) => {
+        if (w.fail) return req.reject(w.fail);
+        const fields = req.body.changes.character || {};
+        const stale = Object.entries(fields).filter(([f, v]) => req.body.guard && server[f] !== v.from);
+        if (stale.length) {
+          return req.reject(Object.assign(new Error('changed elsewhere'), { status: 409,
+            detail: { fields: Object.fromEntries(stale.map(([f, v]) => [f, { mine: v.to, theirs: server[f], base: v.from }])) } }));
+        }
+        for (const [f, v] of Object.entries(fields)) server[f] = v.to;
+        return req.resolve({ ok: true });
+      };
+      // Every request in flight, oldest first, until none is left.
+      w.drain = async () => {
+        for (let n = 0; n < 20 && (await settle(), w.wire.length); n++) w.answer(w.wire.shift());
+        await settle();
+      };
+      w.fns = new Function('C', 'id', 'derive', 'api', 'jsonReq', 'poolData', 'paintPool', 'syncPowerBtns',
+        'flash', 'alert', 'queueChange', 'renderQueueState', 'formExtra',
+        turn + apply + press + '; return { adjustPool };')(
+        C, 3, win.derive, api, (method, body) => ({ method, body: JSON.stringify(body) }), () => C.data,
+        () => {}, () => {}, (msg) => { w.flashes.push(msg); }, (msg) => { w.alerts.push(msg); },
+        async (kind, note) => { w.queued.push(note); return true; }, () => {}, () => undefined);
+      w.all = () => JSON.stringify({ server: server.hp_current, screen: C.data.hp_current, sent: w.sent,
+        inFlight: w.wire.length, alerts: w.alerts, flashes: w.flashes, queued: w.queued });
+      return w;
+    };
+
+    if (press && apply) {
+      let w = world();
+      w.fns.adjustPool('hp', 1); w.fns.adjustPool('hp', 1);
+      await settle();
+      check('two quick presses are both on the screen at once', w.C.data.hp_current === 12, w.all());
+      check('and the second is not sent until the first has its answer', w.sent === 1 && w.wire.length === 1, w.all());
+      // Whatever is in flight, the newest reaches the server first.
+      if (w.wire.length > 1) w.answer(w.wire.pop());
+      await w.drain();
+      check('two presses of +1 leave the server and the screen two higher',
+        w.server.hp_current === 12 && w.C.data.hp_current === 12, w.all());
+      check('with nothing reported as changed elsewhere, and nothing as failed',
+        !w.alerts.length && !w.flashes.length && w.sent === 2, w.all());
+
+      // The G.M. really did move it: both presses land on the G.M.'s number.
+      w = world();
+      w.server.hp_current = 20;
+      w.fns.adjustPool('hp', 1); w.fns.adjustPool('hp', 1);
+      await w.drain();
+      check('two presses on a pool somebody else moved both land on their number',
+        w.server.hp_current === 22 && w.C.data.hp_current === 22 && !w.alerts.length && w.flashes.length >= 1, w.all());
+
+      w = world(); w.fail = new Error('Failed to fetch');
+      w.fns.adjustPool('hp', -1); w.fns.adjustPool('hp', -1);
+      await w.drain();
+      check('presses the network ate wait in the queue in the order they were made, and stay on screen',
+        w.queued.join(', ') === 'HP -1, HP -1' && w.C.data.hp_current === 8 && !w.alerts.length, w.all());
+
+      w = world(); w.fail = Object.assign(new Error('no such character'), { status: 404 });
+      w.fns.adjustPool('hp', 1);
+      await w.drain();
+      check('a press the server refused comes off the screen and says so',
+        w.C.data.hp_current === 10 && w.alerts.length === 1, w.all());
+      w.fail = null;
+      const done = w.fns.adjustPool('hp', 1);
+      await w.drain();
+      check('and the press after a refused one is still sent',
+        w.server.hp_current === 11 && w.C.data.hp_current === 11 && w.alerts.length === 1, w.all());
+      check('a press answers its caller only when its request has been answered',
+        await Promise.race([done.then(() => true), settle().then(() => false)]), 'the promise adjustPool returned is still pending');
+    }
+  }
+
+  // ---------- An overflow that was refused is still on offer ----------
+  // What armour could not absorb is offered to the body: "Apply 8 to body".
+  // Pressing it ran the body's damage and then wrote "took the 8 that got past
+  // Plate" into the roll log and withdrew the offer - whatever the damage did.
+  // The damage rolls itself back when the server refuses it, so the log said a
+  // hit landed that had just been taken off the screen, and the button to try
+  // again was gone.
+  //
+  // RUN, not matched: the sheet's own applyOverflow, bodyDamage and
+  // applyChanges and the real derive.js, over a stand-in events route.
+  section('An overflow that was refused is still on offer');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const src = ['async function bodyDamage(amt) {', 'async function applyOverflow() {',
+      'function applyChanges(changes, side) {'].map(fn);
+    check('applyOverflow, bodyDamage and applyChanges can be located', src.every(Boolean),
+      'one of them is not where this looks for it');
+    const win = {};
+    new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(win, win);
+
+    const world = () => {
+      const C = { data: { sdc_current: 5, hp_current: 20 }, secondForm: null, lastRoll: null,
+        overflow: { amount: 8, label: 'Plate' } };
+      const bar = { innerHTML: 'Apply 8 to body' };
+      const w = { C, bar, log: [], posts: 0, queued: 0, alerts: [], fail: null, during: null };
+      // What the real one does that matters here: any new result retires the offer.
+      const recordRoll = (kind, name, entry) => {
+        C.overflow = null; C.lastRoll = { kind, name, ...entry };
+        w.log.push(`${name}: ${entry.note}`); bar.innerHTML = name;
+      };
+      w.recordRoll = recordRoll;
+      w.fns = new Function('C', 'derive', '$', 'poolData', 'paintPool', 'syncPowerBtns', 'postEvent', 'queueChange',
+        'renderQueueState', 'formExtra', 'recordRoll', 'rollBarHtml', 'alert',
+        src.join('\n') + '; return { applyOverflow };')(
+        C, win.derive, (elId) => (elId === 'roll-line' ? bar : null), () => C.data, () => {}, () => {},
+        async () => { w.posts++; await w.during?.(); if (w.fail) throw w.fail; }, async () => { w.queued++; return true; },
+        () => {}, () => undefined, recordRoll,
+        () => (C.overflow ? `Apply ${C.overflow.amount} to body` : (C.lastRoll?.name ?? '')), (msg) => { w.alerts.push(msg); });
+      w.all = () => JSON.stringify({ pools: [C.data.sdc_current, C.data.hp_current], offer: C.overflow, log: w.log,
+        bar: bar.innerHTML, posts: w.posts, queued: w.queued, alerts: w.alerts });
+      return w;
+    };
+    const pools = (w) => `${w.C.data.sdc_current}/${w.C.data.hp_current}`;
+
+    if (src.every(Boolean)) {
+      let w = world();
+      await w.fns.applyOverflow();
+      check('an overflow applied comes off the body, is logged, and is no longer offered',
+        pools(w) === '0/17' && w.log.join() === 'Body: took the 8 that got past Plate' && w.C.overflow === null, w.all());
+
+      w = world(); w.fail = Object.assign(new Error('no such character'), { status: 404 });
+      await w.fns.applyOverflow();
+      check('an overflow the server refused comes back off the screen', pools(w) === '5/20' && w.alerts.length === 1, w.all());
+      check('is not written to the roll log as taken', w.log.length === 0, w.all());
+      check('and is still on offer', w.C.overflow?.amount === 8 && w.C.overflow?.label === 'Plate'
+        && w.bar.innerHTML === 'Apply 8 to body', w.all());
+
+      w = world(); w.fail = new Error('Failed to fetch');
+      await w.fns.applyOverflow();
+      check('one the network ate stands, as any hit does: queued, logged, and not offered twice',
+        pools(w) === '0/17' && w.queued === 1 && w.log.length === 1 && w.C.overflow === null, w.all());
+
+      w = world(); w.fail = Object.assign(new Error('no such character'), { status: 404 });
+      w.during = () => { w.recordRoll('skill', 'Climb', { note: '41 vs 60%' }); };
+      await w.fns.applyOverflow();
+      check('a refused overflow is not offered again once the table has rolled something newer',
+        w.C.overflow === null && w.bar.innerHTML === 'Climb' && w.log.join() === 'Climb: 41 vs 60%', w.all());
+
+      w = world();
+      await Promise.all([w.fns.applyOverflow(), w.fns.applyOverflow()]);
+      check('a second tap while the first is in flight applies nothing more', w.posts === 1 && pools(w) === '0/17', w.all());
+    }
+  }
+
+  // ---------- A value is escaped for the place it is written into ----------
+  // Four slips of one rule (shared/js/ui.js): escHtml for markup and for an
+  // attribute, escJs for a string inside an inline handler. Each of these had
+  // the other one, or neither.
+  //
+  //   * the enchantment's remove button put escHtml(slug) inside a handler's
+  //     string, where an apostrophe ends the string and the button is dead;
+  //   * the roll button put escJs(name) in its aria-label, so a screen reader
+  //     read a backslash in front of every apostrophe;
+  //   * two panel headings opened as <h2> and closed as </h3>;
+  //   * and the language-family rules, which arrive by a module tag, were read
+  //     as a bare global by render(), so a sheet drawn before that tag ran (or
+  //     without it, on a failed request) was a ReferenceError and a page stuck
+  //     on "Loading sheet".
+  //
+  // RUN where it can be: the markup functions themselves, with the handler and
+  // the label read back the way a browser reads an attribute.
+  section('A value is escaped for the place it is written into');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const ui = readFileSync(join(repoRoot, 'shared', 'js', 'ui.js'), 'utf8');
+    const whole = (src, sig) => { const b = functionBody(src, sig); return b === null ? null : b + '\n}'; };
+    const parts = [whole(ui, 'function escHtml('), whole(ui, 'function escJs('), whole(sheet, 'function rollBtn('),
+      whole(sheet, 'function rollTarget('), whole(sheet, 'function enchantBySlug('),
+      whole(sheet, 'function enchantEffect('), whole(sheet, 'function enchantHtml(')];
+    check('the markup functions these checks run can be located', parts.every((x) => x !== null),
+      'a signature moved - nothing below would run');
+    // An attribute's value as the browser hands it on: character references decoded.
+    const decode = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (_, n) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" }[n]));
+    const attr = (html, name) => { const m = new RegExp(`${name}="([^"]*)"`).exec(html); return m ? decode(m[1]) : null; };
+
+    if (parts.every((x) => x !== null)) {
+      const C = { canWrite: true, enchantCatalog: [] };
+      const fns = new Function('C', parts.join('\n') + '\nreturn { rollBtn, enchantHtml };')(C);
+      for (const slug of ['flaming', "smith's-mark", 'a\\b', 'x"y', '<b>&amp;', "');alert(1);('"]) {
+        C.enchantCatalog = [{ slug, name: 'Test', applies_to: 'weapon' }];
+        const handler = attr(fns.enchantHtml({ id: 7, enchantments: [slug] }), 'onclick');
+        let got = null, why = '';
+        try { new Function('removeEnchantment', 'alert', handler)((row, sl) => { got = [row, sl]; }, () => { got = 'ran script'; }); }
+        catch (e) { why = e.message; }
+        check('the remove button hands its handler the enchantment it was drawn for: ' + slug,
+          Array.isArray(got) && got[0] === 7 && got[1] === slug, `${handler} -> ${JSON.stringify(got)} ${why}`);
+      }
+
+      for (const name of ['Climbing', "Driver's Ed", 'Lore: "Demons" & Monsters', 'a\\b']) {
+        const html = fns.rollBtn({ name, pct: 50 });
+        check('the roll button is labelled with the name as written: ' + name,
+          attr(html, 'aria-label') === 'Roll ' + name, attr(html, 'aria-label'));
+        let rolled = null;
+        try { new Function('rollSkill', attr(html, 'onclick'))((n) => { rolled = n; }); } catch { /* reported below */ }
+        check('and still rolls that skill', rolled === name, `${attr(html, 'onclick')} -> ${rolled}`);
+      }
+    }
+
+    // Headings, in file order, with the comment lines taken out: each one opened
+    // is closed at its own level before the next opens.
+    const code = sheet.split('\n').map((line, i) => [line, i + 1]).filter(([line]) => !/^\s*\/\//.test(line));
+    const mismatched = [];
+    let open = null;
+    for (const [line, at] of code) {
+      for (const [, close, level] of line.matchAll(/<(\/?)h([1-6])\b/g)) {
+        if (!close) { if (open) mismatched.push(`h${open.level} at ${open.at} never closed`); open = { level, at }; }
+        else if (!open) mismatched.push(`</h${level}> at ${at} closes nothing`);
+        else { if (open.level !== level) mismatched.push(`<h${open.level}> at ${open.at} closed as </h${level}> at ${at}`); open = null; }
+      }
+    }
+    check('the sheet draws headings at all, or the next check reads nothing',
+      code.some(([line]) => /<h[1-6]\b/.test(line)), 'no heading tag found in sheet.js');
+    check('every heading the sheet opens is closed at the same level', mismatched.length === 0 && open === null,
+      mismatched.join('; '));
+
+    // The language rules: read through globalThis, and survivable when absent.
+    const bare = code.filter(([line]) => /(?<![.\w])langSkills\b/.test(line)).map(([, at]) => at);
+    check('no line of the sheet reads the language rules as a bare global', bare.length === 0,
+      'sheet.js lines ' + bare.join(', '));
+    check('and the sheet does read them, or that check passes on nothing',
+      code.some(([line]) => /globalThis\.langSkills\b/.test(line)), 'no globalThis.langSkills in sheet.js');
+    const from = sheet.indexOf('\n  const clusterLanguages = '), to = sheet.indexOf('\n  };\n', from);
+    const cluster = from < 0 || to < 0 ? null : sheet.slice(from, to + 6);
+    check('the language clustering can be located', !!cluster, 'render() no longer declares clusterLanguages where this looks');
+    if (cluster) {
+      const run = () => new Function(cluster + '\nreturn clusterLanguages;')()(
+        ['Climbing', 'Literacy: Elven', 'Swimming', 'Language: Orc'].map((name) => ({ name }))).map((s) => s.name).join(', ');
+      const { isFamilyName } = await import('../../js/language-skills.js');
+      const had = globalThis.langSkills;
+      let without = null, withRules = null, why = '';
+      try {
+        delete globalThis.langSkills;
+        try { without = run(); } catch (e) { why = e.message; }
+        globalThis.langSkills = { isFamilyName };
+        try { withRules = run(); } catch (e) { why = e.message; }
+      } finally { globalThis.langSkills = had; }
+      check('a sheet drawn before the language rules arrive lists its skills as stored',
+        without === 'Climbing, Literacy: Elven, Swimming, Language: Orc', without ?? why);
+      check('and with them, gathers the languages where the first one stood',
+        withRules === 'Climbing, Language: Orc, Literacy: Elven, Swimming', withRules ?? why);
     }
   }
 

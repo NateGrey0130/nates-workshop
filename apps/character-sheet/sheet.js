@@ -775,12 +775,28 @@ function syncPowerBtns() {
 // ON THE ACTIVE FORM. A Morphus showing takes the press on its own S.D.C. and
 // hit points, by this same rule and through this same events route - so it
 // undoes, queues and reaches the log like the Facade's (Nightbane follow-up 5).
-async function adjustPool(key, delta, retried = false) {
+//
+// DRAWN AT ONCE, SENT ONE AT A TIME. Each press is guarded on the number the
+// one before it left, so two in flight together depended on arriving in the
+// order they were made - and nothing orders two requests on a phone. The second
+// arriving first was refused as "changed elsewhere", retried from the old
+// number and collided with the first: a press lost, an alert, and a screen that
+// disagreed with the server. A press's request, its retry included, now waits
+// for the one before it to be answered.
+let poolSends = Promise.resolve();
+
+async function adjustPool(key, delta) {
   const cur = poolData()[key + '_current'];
   if (cur == null) return;
   const changes = derive.playChanges(C.data, C.secondForm, { [key + '_current']: cur + delta });
-  const note = `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`;
   applyChanges(changes, 'to');
+  const sent = poolSends.then(() => sendPoolPress(key, delta, changes));
+  poolSends = sent.catch(() => {});
+  return sent;
+}
+
+async function sendPoolPress(key, delta, changes, retried = false) {
+  const note = `${key.toUpperCase()} ${delta > 0 ? '+' : ''}${delta}`;
   // GUARDED when it is the first form's own pool. The number on screen may be
   // minutes old - the G.M. applied damage while this phone slept - and an
   // unguarded write of "what I showed, plus one" would erase that. A press
@@ -795,7 +811,9 @@ async function adjustPool(key, delta, retried = false) {
       applyChanges(changes, 'from');
       applyChanges({ character: { [key + '_current']: { to: theirs } } }, 'to');
       flash(`${key.toUpperCase()} was changed elsewhere to ${theirs}; applied to that.`);
-      return adjustPool(key, delta, true);
+      const again = derive.playChanges(C.data, C.secondForm, { [key + '_current']: poolData()[key + '_current'] + delta });
+      applyChanges(again, 'to');
+      return sendPoolPress(key, delta, again, true);
     }
     // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS. err.status means the
     // server answered and said no - a bad field, a gone character - and the
@@ -1136,11 +1154,15 @@ async function bodyDamage(amt) {
   // a Morphus showing takes the hit on its own S.D.C. and then its own hit
   // points, below zero as the Facade's go, and the Facade's are untouched -
   // damage is tracked per form (F74, Nightbane follow-up 5).
+  //
+  // It answers whether the hit STANDS - sent or waiting in the queue - because
+  // applyOverflow below logs it and withdraws its offer only when it does.
   const patch = derive.damageCascade(poolData(), amt);
   const changes = derive.playChanges(C.data, C.secondForm, patch);
   applyChanges(changes, 'to');
   try {
     await postEvent('damage', `took ${amt}`, changes);
+    return true;
   } catch (err) {
     // THE SAME SPLIT THE +/- BUTTONS MAKE, and for the same reason: a hit that
     // the server refused was never valid and rolls back, but a hit the wi-fi
@@ -1150,10 +1172,11 @@ async function bodyDamage(amt) {
     if (err.status === undefined && await queueChange('damage', `took ${amt}`,
       changes.character || {}, null, formExtra(changes))) {
       renderQueueState(err);
-      return;
+      return true;
     }
     applyChanges(changes, 'from');
     alert('Failed: ' + err.message);
+    return false;
   }
 }
 
@@ -1321,8 +1344,21 @@ async function hitVessel(vid, location, amt) {
 async function applyOverflow() {
   const o = C.overflow;
   if (!o) return;
+  // Withdrawn while the request is out, so a second tap applies nothing more.
   C.overflow = null;
-  await bodyDamage(o.amount);
+  const rolled = C.lastRoll;
+  if (!await bodyDamage(o.amount)) {
+    // REFUSED, and bodyDamage has taken it back off the screen. This used to go
+    // on to log "took the N that got past" for a hit that had just been rolled
+    // back, and the offer was gone with it. It stays on offer - unless the table
+    // rolled something newer meanwhile, which retires an offer as it always did.
+    if (C.lastRoll === rolled) {
+      C.overflow = o;
+      const bar = $('roll-line');
+      if (bar) bar.innerHTML = rollBarHtml();
+    }
+    return;
+  }
   recordRoll('overflow', 'Body', { note: `took the ${o.amount} that got past ${o.label}` });
 }
 
@@ -1952,7 +1988,7 @@ function rollBtn(r) {
     ? `rollSkill('${safe}', ${Number(r.pct) || 0})`
     : `rollD20('${escJs(String(r.kind))}', '${safe}', ${Number(r.bonus) || 0}, ${rollTarget(r.target)})`;
   return `<button type="button" class="roll-btn noprint"
-    aria-label="Roll ${safe}" onclick="${call}">🎲</button>`;
+    aria-label="Roll ${escHtml(String(r.name))}" onclick="${call}">🎲</button>`;
 }
 
 // Everything play mode adds to the sheet: the amount strip, the melee counter,
@@ -2352,13 +2388,21 @@ function render() {
   // inside the run — which puts the spoken ones before the written ones — while
   // everything else keeps its stored order, because class skills mirror the
   // book's O.C.C. list and re-sorting the whole box would lose that.
+  //
+  // READ OFF globalThis, AND SURVIVABLE WITHOUT. The rules arrive by a module
+  // tag, which runs after this file and whenever its own request comes back;
+  // the character's can come back first, or the module's not at all. Read as a
+  // bare name that was a ReferenceError inside render() and a page stuck on
+  // "Loading sheet". Without the rules the skills are listed as stored.
   const clusterLanguages = (list) => {
-    const langs = list.filter((s) => langSkills.isFamilyName(s.name))
+    const rules = globalThis.langSkills;
+    if (!rules) return list;
+    const langs = list.filter((s) => rules.isFamilyName(s.name))
       .sort((a, b) => a.name.localeCompare(b.name));
     if (langs.length < 2) return list;
     let placed = false;
     return list.flatMap((s) => {
-      if (!langSkills.isFamilyName(s.name)) return [s];
+      if (!rules.isFamilyName(s.name)) return [s];
       if (placed) return [];
       placed = true;
       return langs;
@@ -3189,7 +3233,7 @@ function levelUpPanel() {
   return `
   <div class="levelup noprint">
     <h2 class="sub-h" style="margin-top:0">⬆ Level up! ${p.from_level} → ${p.to_level}
-      <span class="muted small">— review, tweak if your GM says so, then confirm</span></h3>
+      <span class="muted small">— review, tweak if your GM says so, then confirm</span></h2>
     <table>${poolRows}${formHpRow}${skillRows}</table>
     ${grants ? `<h3>New abilities</h3><ul style="margin-left:18px">${grants}</ul>` : ''}
     ${p.skill_picks_total ? pickerBlock(p.skill_picks, p.skill_picks_total, 'lu') : ''}
@@ -3560,7 +3604,7 @@ function pendingPicksPanel() {
     <div class="levelup noprint">
       <h2 class="sub-h" style="margin-top:0">🎓 ${n} unspent skill pick${n > 1 ? 's' : ''}
         <span class="muted small">— ${C.pendingPicks.map((g) =>
-          `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} at level ${g.granted_at_level}`).join(', ')}</span></h3>
+          `${g.count} ${g.kind === 'secondary' ? 'secondary' : 'related'} at level ${g.granted_at_level}`).join(', ')}</span></h2>
       <button class="btn" onclick="C.claiming = true; render()">Choose now</button>
     </div>`;
   }
@@ -3690,7 +3734,7 @@ function pickerBlock(grants, total, prefix) {
     // composed name is what gets submitted (see js/language-skills.js). Same
     // state-not-DOM rule as the select: a re-render must not eat a half-typed
     // language.
-    const isOther = langSkills.isRepeatableRow(chosen);
+    const isOther = !!globalThis.langSkills?.isRepeatableRow(chosen);
     const lang = C.pickLangs[`${prefix}-${i}`] || '';
     return `
     <div class="rowline">
@@ -3698,7 +3742,7 @@ function pickerBlock(grants, total, prefix) {
         <option value="">— skip —</option>${extra}${chosen ? opts : rowOptions}</select>
       ${isSecondary ? '<span class="muted small">secondary — any category</span>' : ''}
       ${isOther ? `<input class="mini-in wide" id="${prefix}-lang-${i}"
-        placeholder="${chosen === langSkills.LITERACY_OTHER ? 'Which written language?' : 'Which language?'}"
+        placeholder="${chosen === globalThis.langSkills.LITERACY_OTHER ? 'Which written language?' : 'Which language?'}"
         value="${escHtml(lang)}" oninput="C.pickLangs['${prefix}-${i}'] = this.value">` : ''}
     </div>`;
   }).join('');
@@ -3782,10 +3826,10 @@ function collectPicks(prefix, total) {
     // State first, DOM as the fallback — they agree, but state is the one that
     // survives a re-render.
     const v = C.pickValues[`${prefix}-${i}`] ?? $(`${prefix}-pick-${i}`)?.value;
-    if (langSkills.isRepeatableRow(v)) {
+    if (globalThis.langSkills?.isRepeatableRow(v)) {
       // Composed or skipped: an Other pick with no language typed waits, the
       // same way a blank row does.
-      const full = langSkills.familySkillName(v, C.pickLangs[`${prefix}-${i}`]);
+      const full = globalThis.langSkills.familySkillName(v, C.pickLangs[`${prefix}-${i}`]);
       if (full) picks.push({ name: full, override: !!C.pickShowAll });
     } else if (v) picks.push({ name: v, override: !!C.pickShowAll });
   }
@@ -4043,7 +4087,7 @@ function enchantHtml(it) {
     const effect = enchantEffect(e);
     const drop = C.canWrite
       ? ` <button class="btn btn-sm btn-ghost upkeep" title="Remove this enchantment"
-           onclick="removeEnchantment(${it.id}, '${escHtml(slug)}')">✕</button>`
+           onclick="removeEnchantment(${it.id}, '${escJs(slug)}')">✕</button>`
       : '';
     return `<div class="attr-note" style="margin-left:12px">↳ ${escHtml(e.name)}${
       effect ? ` <span class="muted">(${escHtml(effect)})</span>` : ''}${drop}</div>`;
@@ -4955,19 +4999,26 @@ async function addItem() {
   const qty = Math.max(1, +$('add-qty').value || 1);
   const notes = $('add-notes').value.trim() || null;
   if (!slug && !name) { alert('Pick a catalog item or enter a name.'); return; }
+  // The journal entry is written FIRST, because the item row carries its id -
+  // so an item that then fails would leave "Acquired X" on the Notes tab for
+  // an X nobody holds. `logged` is that entry while the item is still unsent.
+  let logged = null;
   try {
     let journalId = null;
     if ($('add-log').checked) {
       const label = slug ? C.catalog.find((i) => i.slug === slug)?.name : name;
+      const title = 'Inventory: ' + label;
       const entry = await api('journal', jsonReq('POST', {
-        character_id: +id, title: 'Inventory: ' + label,
+        character_id: +id, title,
         body: `Acquired ${label}${qty > 1 ? ' ×' + qty : ''}${notes ? ' — ' + notes : ''}`,
       }));
       journalId = entry.entry.id;
+      logged = { id: journalId, title };
     }
     await api(`characters/${id}/items`, jsonReq('POST', {
       slug, custom_name: slug ? null : name, qty, notes, journal_entry_id: journalId,
     }));
+    logged = null;
     // The inventory rows alone, which docs/wizard-and-sheet.md has said this
     // did since PR #27 - it had gone back to a whole reload. A reload only when
     // a journal entry went with it, because that one has to reach the Notes tab.
@@ -4980,7 +5031,24 @@ async function addItem() {
       if ($('add-qty')) $('add-qty').value = 1;
       if ($('add-slug')) $('add-slug').value = '';
     }
-  } catch (err) { alert('Add failed: ' + err.message); }
+  } catch (err) {
+    // A REFUSAL AND A SILENCE ARE DIFFERENT THINGS here too. The server said
+    // no: the item does not exist, so its entry is taken back. No answer at
+    // all: the item may have landed, and deleting the note of an item that
+    // arrived is the same mistake the other way round - so the entry stays and
+    // the message says it is there. A failure after the item landed (the
+    // reload) finds `logged` already cleared and takes nothing back.
+    let left = '';
+    if (logged) {
+      const kept = err.status === undefined
+        || !(await api(`journal/${logged.id}`, { method: 'DELETE' }).then(() => true, () => false));
+      if (kept) {
+        left = `\n\nThe journal entry "${logged.title}" was written before this failed and is still there.`
+          + ' Check the Gear tab after a reload, and delete the entry from the Notes tab if the item is not on it.';
+      }
+    }
+    alert('Add failed: ' + err.message + left);
+  }
 }
 
 async function addJournal() {
