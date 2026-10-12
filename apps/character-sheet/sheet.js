@@ -87,7 +87,7 @@ const $ = (i) => document.getElementById(i);
 // Presentation lives in js/sheet-layout.js - the pool widget, the box and
 // field helpers, and the table that decides a box's column. Destructured
 // here so this file's call sites read exactly as they did before the split.
-const { POOL_TONES, POOL_LOW, poolCard, poolMax, boxSlug, BOX_COL, box, field,
+const { poolCard, poolMax, BOX_COL, box, field,
   trackableRows, stackColumns } = sheetLayout;
 
 // The one binding that is not a straight re-export. sheetLayout.paintPool is
