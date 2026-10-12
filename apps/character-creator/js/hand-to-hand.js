@@ -152,5 +152,59 @@ export function replacePrompt(held, taking, granted, { cost, condition } = {}) {
     + `Replace ${held} with ${taking}?`;
 }
 
+/**
+ * May this row of the wizard's Skills step be ticked, and if not, why not.
+ *
+ * Asked of EVERY row of a pick list, not only the styles: a full list blocks a
+ * plain skill by the same arithmetic that makes a style too dear, and stating
+ * it once is the point. The caller says where the row stands -
+ *
+ *   kind  the list it is on, 'related' or 'secondary'
+ *   on    it is ticked already. A ticked row is never blocked: it can always
+ *         be un-ticked.
+ *   held  the character has it by another route
+ *   left  picks left to spend if this row were ticked - the allowance less
+ *         every OTHER row's pick and surcharge, less nothing for a style this
+ *         one would replace on the same list. The caller's sum, because which
+ *         style stands is the wizard's state and not this file's.
+ *
+ * THE CLASS'S PRICE decides the rest. `undefined` is a class that states none,
+ * and the style costs the one pick it occupies, as every skill does. `null` is
+ * a class that lists what it sells and does not list this. A number is charged
+ * against RELATED picks - which is why a priced class does not sell styles from
+ * the secondary list at all: the book says "at the cost of two O.C.C. Related
+ * Skills", and a secondary pick is not one.
+ *
+ * `reason` is the FIRST of these that holds, in the order the row explains
+ * itself, or '':
+ *
+ *   'held'         already on the character
+ *   'wrong_list'   a style on the secondary list of a class that prices styles.
+ *                  The one reason a row that is NOT blocked can carry: a style
+ *                  ticked there keeps the sentence and can still be un-ticked.
+ *   'not_offered'  the class has a price list and this style is not on it
+ *   'too_dear'     the price is more than the picks left
+ *   'full'         no pick left, for a row at the ordinary price of one
+ *
+ * At creation only. The sheet and the two level-up endpoints refuse in words
+ * of their own, and are not callers.
+ */
+export function handToHandBlock(cls, name, { kind = 'related', on = false, held = false, left = Infinity } = {}) {
+  const style = isHandToHand(name);
+  const price = style ? handToHandCost(cls, name) : undefined;
+  const priced = typeof price === 'number';
+  const wrongList = style && price !== undefined && kind !== 'related';
+  const notOffered = style && price === null && !on;
+  const tooDear = !on && priced && price > left;
+  const full = !on && !priced && left < 1;
+  return {
+    blocked: !!(held || full || tooDear || notOffered || (wrongList && !on)),
+    reason: held ? 'held' : wrongList ? 'wrong_list' : notOffered ? 'not_offered'
+      : tooDear ? 'too_dear' : full ? 'full' : '',
+    price,
+    condition: style ? handToHandCondition(cls, name) : '',
+  };
+}
+
 globalThis.handToHand = { isHandToHand, oneHandToHand, replacePrompt, styleKey,
-  handToHandCost, handToHandCondition, handToHandSurcharge, costLabel };
+  handToHandCost, handToHandCondition, handToHandSurcharge, costLabel, handToHandBlock };

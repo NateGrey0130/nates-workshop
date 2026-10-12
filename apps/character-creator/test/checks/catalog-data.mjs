@@ -19,7 +19,7 @@ import { composeClass } from '../../js/compose.js';
 import { bonusesFromSkills, combineClasses, levelGrants, parseClassMarkdown, skillLevelNotes, skillConditionalBonuses } from '../../js/parser.js';
 import { rollPoolFormula } from '../../js/dice.js';
 import { isHandToHand, oneHandToHand, replacePrompt, styleKey, handToHandCost, handToHandCondition,
-         handToHandSurcharge } from '../../js/hand-to-hand.js';
+         handToHandSurcharge, handToHandBlock } from '../../js/hand-to-hand.js';
 import { KNOWN_SKILL_KEYS, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
 
 // Declared once for the same skip-the-module contract as environment.mjs —
@@ -417,6 +417,39 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
     && /condition: evil alignment/.test(replacePrompt('a', 'b', true, { cost: 0, condition: 'evil alignment' }))
     && /3 related skill picks/.test(replacePrompt('a', 'b', true, { cost: 3 })));
 
+  // MAY THE ROW BE TICKED, AND WHY NOT (handToHandBlock). The Skills step
+  // worked this out inline until 2026-10-12; these are that arithmetic's cases.
+  const EX = 'Hand to Hand: Expert';
+  const blk = (cls, name, at) => { const b = handToHandBlock(cls, name, at); return `${b.blocked}|${b.reason}|${b.price}|${b.condition}`; };
+  check('a style the class sells, with the picks to pay for it, is open and carries its price',
+    blk(llw, MA, { kind: 'related', left: 2 }) === 'false||2|');
+  check('a price above the picks left is too dear, and a price of exactly what is left is not',
+    blk(llw, MA, { left: 1 }) === 'true|too_dear|2|' && blk(llw, MA, { left: 2 }) === 'false||2|');
+  check('a free change is open on a list with nothing left, and rides its condition',
+    blk(llw, 'Hand to Hand: Assassin', { left: 0 }) === 'false||0|evil alignment');
+  check('a style the price list leaves out is not offered, and costs: {} offers none',
+    blk(llw, 'Hand to Hand: Commando', { left: 5 }) === 'true|not_offered|null|'
+    && blk(priced({ costs: {} }), EX, { left: 5 }) === 'true|not_offered|null|');
+  check('a priced class sells no style from the secondary list, whatever is left',
+    blk(llw, EX, { kind: 'secondary', left: 5 }) === 'true|wrong_list|1|'
+    && blk(llw, 'Hand to Hand: Commando', { kind: 'secondary', left: 5 }) === 'true|wrong_list|null|');
+  check('a ticked row is never blocked, and one on the wrong list keeps its reason',
+    blk(llw, EX, { kind: 'secondary', on: true, left: 0 }) === 'false|wrong_list|1|'
+    && blk(llw, MA, { on: true, left: 0 }) === 'false||2|'
+    && blk(llw, 'Hand to Hand: Commando', { on: true, left: 0 }) === 'false||null|');
+  check('a class with no block sells any style for the one pick, on either list',
+    blk({ skills: {} }, MA, { kind: 'secondary', left: 1 }) === 'false||undefined|'
+    && blk({ skills: {} }, MA, { left: 0 }) === 'true|full|undefined|');
+  check('a plain skill is asked the same question: full at nothing left, open otherwise',
+    blk(llw, 'Swimming', { left: 0 }) === 'true|full|undefined|'
+    && blk(llw, 'Swimming', { kind: 'secondary', left: 1 }) === 'false||undefined|');
+  check('held is the first reason given, and blocks whatever else is true',
+    blk(llw, MA, { held: true, left: 9 }) === 'true|held|2|'
+    && blk(llw, EX, { kind: 'secondary', held: true, left: 9 }) === 'true|held|1|');
+  check('asked with nothing about the row, it is a related row with picks to spare',
+    blk(llw, MA) === 'false||2|' && blk(null, 'Swimming') === 'false||undefined|');
+  check('the sheet\'s mirror carries it', globalThis.handToHand.handToHandBlock === handToHandBlock);
+
   // The parser refuses what would be READ WRONG rather than merely look odd.
   const withBlock = (line) => parseClassMarkdown([
     '---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ',
@@ -458,7 +491,11 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
   check('the Skills step charges the price against the related allowance',
     // The surcharge is worked out in renderSkills and the per-row price in the
     // pick list it hands that context to, since the step was split (2026-10-10).
-    fnOf(app, 'renderSkills').includes('handToHandSurcharge') && fnOf(app, 'skillPickListFor').includes('handToHandCost(effective'));
+    // The pick list asks js/hand-to-hand.js for the price and the verdict in
+    // one call (2026-10-12) and works neither out itself.
+    fnOf(app, 'renderSkills').includes('handToHandSurcharge')
+    && fnOf(app, 'skillPickListFor').includes('handToHandBlock(effective, s.name, { kind, on, held, left })')
+    && !/handToHandCost|price === null|price > left/.test(fnOf(app, 'skillPickListFor')));
   check('the Advancement step offers only one-pick styles',
     fnOf(app, 'skillPickBlock').includes('handToHandCost(psiClass()'));
   check('the sheet prices a pick after creation',
