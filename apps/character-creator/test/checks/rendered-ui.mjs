@@ -113,6 +113,7 @@ const SECTIONS = [
   'A refused save keeps what was typed since',
   'The Hit to picker follows the armour list',
   'A row behind an Undo stays off the screen',
+  'The weapon cards follow the inventory',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
   'One header for five apps',
@@ -1687,11 +1688,86 @@ export async function run() {
     check('and render() does not fetch events',
       !/function render\(\)[\s\S]*?events\?limit[\s\S]*?^}/m.test(sheet),
       'the sheet fetches the event log at render');
-    check('it fetches once, not on every open',
-      /logLoaded = true;/.test(sheet), 'nothing stops a re-fetch on each toggle');
-    check('but a failed load stays retryable',
-      /logLoaded = false;[\s\S]{0,200}?Could not load/.test(sheet),
-      'a failed load leaves the box permanently empty');
+    // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-11). "Has
+    // it loaded" was one flag for the page, and render() draws a NEW, closed
+    // box. So after any redraw the flag still said loaded: opening the log
+    // showed "Opening this loads the log." and fetched nothing, until it was
+    // closed and opened a second time.
+    //
+    // RUN, not matched: loadLog over a stand-in page that is redrawn the way
+    // render() redraws it, and a stand-in server whose answers can be held.
+    {
+      const lf = sheet.replace(/\r\n/g, '\n');
+      const flag = (/^let logLoaded = .*;$/m.exec(lf) || [''])[0];
+      const from = lf.indexOf('\nasync function loadLog() {'), to = lf.indexOf('\n}\n', from);
+      const src = from < 0 || to < 0 ? null : lf.slice(from, to + 2);
+      check('the log loader and what it remembers can be located', !!src && !!flag,
+        'loadLog or its flag moved - nothing below would run');
+      if (src && flag) {
+        const settle = () => new Promise((r) => setImmediate(r));
+        const page = {};
+        // What render() does to the box: a new <details>, closed, and its placeholder.
+        const redraw = () => {
+          page['log-details'] = { open: false };
+          page['log-body'] = { innerHTML: 'Opening this loads the log.' };
+          return page['log-details'];
+        };
+        const net = { calls: 0, fail: false, held: null };
+        const api = () => {
+          net.calls += 1;
+          return new Promise((res, rej) => {
+            const answer = () => (net.fail ? rej(new Error('offline'))
+              : res({ events: [{ kind: 'roll', payload: { note: 'Strike 14' }, created_at: '2026-10-11 12:00:00' }] }));
+            if (net.held) net.held.push(answer); else answer();
+          });
+        };
+        const loadLog = new Function('$', 'api', 'id', 'escHtml', flag + src + '; return loadLog;')(
+          (elId) => page[elId] || null, api, 3, String);
+        const shown = () => (/Strike 14/.test(page['log-body'].innerHTML) ? 'the log'
+          : page['log-body'].innerHTML.replace(/<[^>]+>/g, '').trim());
+        const state = () => JSON.stringify({ shown: shown(), calls: net.calls });
+
+        let d = redraw();
+        d.open = true; await loadLog();
+        check('opening it loads the log', shown() === 'the log' && net.calls === 1, state());
+        await loadLog();
+        check('it fetches once, not on every toggle of an open box', net.calls === 1, state());
+
+        d = redraw();
+        d.open = true; await loadLog();
+        check('opened again after a redraw, it loads again', shown() === 'the log' && net.calls === 2, state());
+
+        d.open = false; await loadLog();
+        d.open = true; await loadLog();
+        check('closing forgets the load, so the next opening shows what happened since',
+          shown() === 'the log' && net.calls === 3, state());
+
+        d = redraw();
+        net.fail = true;
+        d.open = true; await loadLog();
+        const failed = shown();
+        net.fail = false;
+        await loadLog();
+        check('but a failed load stays retryable',
+          /^Could not load/.test(failed) && shown() === 'the log', JSON.stringify({ failed, then: shown() }));
+
+        // A load still in the air when the page is redrawn belongs to the old
+        // box. Its failure must not unmark the new one, which loaded.
+        const before = redraw();
+        net.held = [];
+        before.open = true; const stale = loadLog();
+        const waiting = net.held; net.held = null;
+        d = redraw();
+        d.open = true; await loadLog();
+        const fresh = shown(), afterOpen = net.calls;
+        net.fail = true; waiting.forEach((answer) => answer()); await stale; await settle();
+        net.fail = false;
+        await loadLog();
+        check('a load the redraw left behind cannot touch the box drawn since',
+          fresh === 'the log' && shown() === 'the log' && net.calls === afterOpen,
+          JSON.stringify({ fresh, shown: shown(), afterOpen, calls: net.calls }));
+      }
+    }
 
     // An undone event is part of the account, not removed from it.
     check('an undone event is shown struck through rather than hidden',
@@ -2710,9 +2786,9 @@ export async function run() {
       // The six seconds running out.
       w.expire = async () => { for (const [t, h] of [...timers]) { timers.delete(t); h(); } await settle(); };
       const names = (rows) => rows.map((x) => x.name).join(',');
-      w.fns = new Function('C', 'id', 'api', '$', 'undoable', 'inventoryRowsHtml', 'vesselsHtml',
+      w.fns = new Function('C', 'id', 'api', '$', 'undoable', 'inventoryRowsHtml', 'vesselsHtml', 'repaintPlayWeapons',
         waiting + src.join('\n') + '; return { removeItem, removeVessel, refreshInventory, refreshVessels };')(
-        C, 3, api, (elId) => w.page[elId] || null, g.undoable, () => names(C.items), () => names(C.vehicles));
+        C, 3, api, (elId) => w.page[elId] || null, g.undoable, () => names(C.items), () => names(C.vehicles), () => {});
       w.fns.refreshInventory(); w.fns.refreshVessels();
       return w;
     };
@@ -2784,6 +2860,131 @@ export async function run() {
     check('every re-read of the character leaves out a row that is behind an Undo',
       stores.length === 4 && !raw.length,
       `${stores.length} stores of the server's rows (load, refreshInventory, refreshVessels: 4 expected); unfiltered: ${raw.map((m) => m[0]).join(' ') || 'none'}`);
+  }
+
+  // ---------- The weapon cards are drawn from the inventory, and follow it ----------
+  // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-11). Both
+  // modes are in the page at once and switching is a class flip, so the weapon
+  // cards sit behind the Gear tab the whole time it is being edited - and only
+  // Draw repainted them. A weapon added, ticked equipped, given a quantity or
+  // removed on the sheet lens left the cards as the last full render drew
+  // them: press Play and an equipped revolver had no card, and a removed one
+  // still offered Strike.
+  //
+  // RUN, not matched: every inventory handler on the sheet and the real card
+  // markup, over a stand-in server and a stand-in page.
+  section('The weapon cards follow the inventory');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const src = ['function isWeapon(it) {', 'function weaponCardsHtml(w, strikeBonus) {',
+      'function repaintPlayWeapons() {', 'async function drawWeapon(rowId) {',
+      'async function refreshInventory() {', 'async function patchItem(rowId, fields) {',
+      'function removeItem(rowId) {', 'async function giveToStash(rowId) {', 'async function addItem() {'].map(fn);
+    check('the card markup and the inventory handlers can be located', src.every(Boolean),
+      'one of them is not where this looks for it');
+    const waiting = fn('const removing = ') || '';
+    const clone = (v) => JSON.parse(JSON.stringify(v));
+    const row = (id, name, equipped, weapon = true) => ({
+      id, item_slug: name.toLowerCase(), item_name: name, qty: 1, equipped,
+      item_category: weapon ? 'weapon' : 'gear', item_damage: weapon ? '1D8' : null,
+    });
+
+    const world = () => {
+      const server = { items: [row(1, 'Sword', 1), row(2, 'Dagger', 0), row(3, 'Rope', 0, false)], nextId: 100 };
+      const C = { items: clone(server.items), canWrite: true, playStrike: 0, data: { campaign_id: 4 }, catalog: [{ slug: 'bow', name: 'Bow' }] };
+      const field = (value) => ({ value, checked: false });
+      const page = {
+        'inv-rows': { innerHTML: '' }, 'play-weapons': { innerHTML: '' },
+        'add-slug': field(''), 'add-name': field(''), 'add-qty': field('1'), 'add-notes': field(''), 'add-log': field(''),
+      };
+      const w = { server, C, page, alerts: [] };
+      const api = async (path, req) => {
+        if (!req) return clone({ items: server.items });
+        const body = req.body ? JSON.parse(req.body) : {};
+        const [, rowId, stash] = /\/items(?:\/(\d+))?(\/stash)?$/.exec(path);
+        const at = server.items.find((x) => x.id === +rowId);
+        if (!rowId) server.items.push({ ...row(++server.nextId, 'Bow', 0), qty: body.qty });
+        else if (stash || req.method === 'DELETE') server.items = server.items.filter((x) => x !== at);
+        else {
+          if ('equipped' in body) at.equipped = body.equipped ? 1 : 0;
+          if ('qty' in body) at.qty = +body.qty;
+        }
+        return { ok: true };
+      };
+      // The Undo toast, cut down to its three callbacks.
+      const undoable = (op) => { w.op = op; op.hide(); };
+      w.fns = new Function('C', 'id', 'api', '$', 'undoable', 'inventoryRowsHtml', 'jsonReq', 'escJs', 'escHtml',
+        'leadingDice', 'payloadCapacity', 'currentAmmo', 'codexLink', 'strikeChipsHtml', 'playSecOpen',
+        'alert', 'flash', 'prompt', 'load', 'dropDrafts',
+        waiting + src.join('\n')
+          + '; return { repaintPlayWeapons, drawWeapon, refreshInventory, patchItem, removeItem, giveToStash, addItem };')(
+        C, 3, api, (elId) => page[elId] || null, undoable, () => C.items.map((x) => x.item_name).join(','),
+        (method, body) => ({ method, body: JSON.stringify(body) }), String, String,
+        (dice) => dice, () => null, () => null, () => '', () => '', () => true,
+        (msg) => { w.alerts.push(msg); }, () => {}, () => null, async () => {}, () => {});
+      // What render() leaves behind: the cards as the rows stood then.
+      w.fns.repaintPlayWeapons();
+      // "drawn | carried", the way the play strip shows them.
+      w.cards = () => {
+        const html = page['play-weapons'].innerHTML;
+        const drawn = [...html.matchAll(/<div class="pw-head"><b>([^<]*)<\/b>(?: <span class="muted small">(×\d+)<\/span>)?/g)]
+          .map((m) => m[1] + (m[2] || ''));
+        const carried = [...html.matchAll(/<span class="pw-carry">([^<]*)</g)].map((m) => m[1].trim());
+        return `${drawn.join(',') || '-'} | ${carried.join(',') || '-'}`;
+      };
+      w.held = () => server.items.map((x) => `${x.item_name}${x.qty > 1 ? '×' + x.qty : ''}${x.equipped ? '*' : ''}`).join(',');
+      return w;
+    };
+
+    if (src.every(Boolean)) {
+      const w = world();
+      const both = () => JSON.stringify({ cards: w.cards(), server: w.held(), alerts: w.alerts });
+      check('the cards start as the rows stand: the equipped weapon drawn, the other carried, the rope neither',
+        w.cards() === 'Sword | Dagger', both());
+
+      await w.fns.patchItem(2, { equipped: true });
+      check('a weapon ticked equipped on the Gear tab gets its card',
+        w.cards() === 'Sword,Dagger | -' && w.held() === 'Sword*,Dagger*,Rope', both());
+      await w.fns.patchItem(1, { equipped: false });
+      check('and one unticked goes back to carried',
+        w.cards() === 'Dagger | Sword' && w.held() === 'Sword,Dagger*,Rope', both());
+      await w.fns.patchItem(2, { qty: '3' });
+      check('a quantity typed there shows on the card',
+        w.cards() === 'Dagger×3 | Sword' && w.held() === 'Sword,Dagger×3*,Rope', both());
+
+      w.page['add-slug'].value = 'bow';
+      await w.fns.addItem();
+      check('a weapon added from the catalog is offered to draw',
+        w.cards() === 'Dagger×3 | Sword,Bow' && w.held() === 'Sword,Dagger×3*,Rope,Bow', both());
+      await w.fns.drawWeapon(101);
+      check('and Draw still gives it a card', w.cards() === 'Dagger×3,Bow | Sword', both());
+
+      w.fns.removeItem(2);
+      check('a weapon removed loses its card at once, while its Undo is still up',
+        w.cards() === 'Bow | Sword' && w.held() === 'Sword,Dagger×3*,Rope,Bow*', both());
+      w.op.restore();
+      check('Undo brings the card back', w.cards() === 'Dagger×3,Bow | Sword', both());
+      w.fns.removeItem(2);
+      await w.op.commit(false);
+      check('and left alone it is deleted, card and all',
+        w.cards() === 'Bow | Sword' && w.held() === 'Sword,Rope,Bow*', both());
+
+      await w.fns.giveToStash(1);
+      check('a weapon given to the party stash is no longer on offer',
+        w.cards() === 'Bow | -' && w.held() === 'Rope,Bow*', both());
+
+      // No holder at all (a sheet drawn before the strip exists): the
+      // inventory must still repaint, and nothing may throw into the alert.
+      w.page['play-weapons'] = null;
+      await w.fns.patchItem(101, { qty: '2' });
+      check('with no card holder on the page the inventory still repaints, quietly',
+        w.page['inv-rows'].innerHTML === 'Rope,Bow' && w.held() === 'Rope,Bow×2*' && !w.alerts.length,
+        JSON.stringify({ rows: w.page['inv-rows'].innerHTML, server: w.held(), alerts: w.alerts }));
+    }
   }
 
   // ---------- The sheet reads item_* fields the endpoint actually sends ----------
