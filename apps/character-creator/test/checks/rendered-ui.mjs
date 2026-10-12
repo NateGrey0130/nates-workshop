@@ -111,6 +111,8 @@ const SECTIONS = [
   'Changes that could not be sent',
   'A redraw keeps what was typed',
   'A refused save keeps what was typed since',
+  'A form switch waits for what was typed',
+  'A skill roll stops at 98',
   'The Hit to picker follows the armour list',
   'A row behind an Undo stays off the screen',
   'A vessel keeps every location typed into it',
@@ -2561,6 +2563,194 @@ export async function run() {
         ok = await w.fns.saveNow();
         check(`a save that fails (${state}) leaves the edit unsent`,
           ok === false && dirty(w) === 'bio' && w.AS.state === state, JSON.stringify({ ok, dirty: dirty(w), state: w.AS.state }));
+      }
+    }
+  }
+
+  // ---------- A form switch waits for what was typed ----------
+  // A two-form character (a Nightbane's Facade and Morphus) draws the second
+  // form's combat and saves read-only, and its S.D.C. and hit point cards hold
+  // THAT form's numbers under the same ids. setForm saved what was typed
+  // before switching and did not look at the answer. With the save failed or
+  // held for a Keep mine / Use theirs choice, the fields stayed unsent and the
+  // page under them changed: the retry read the Morphus hit points out of
+  // #stat-hp and stored them as the first form's, skipped the combat section
+  // because its inputs were gone, and said "All changes saved".
+  //
+  // RUN, not matched: the sheet's own setForm, markDirty, saveNow and sendEdits
+  // over a stand-in page that reads as the form showing, the way the real one
+  // does, and a stand-in server whose answers can fail.
+  section('A form switch waits for what was typed');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const src = ['async function setForm(which) {', 'function markDirty(key, delay = AS_DELAY) {',
+      'async function saveNow() {', 'async function sendEdits(keys, vals, retried = false) {'].map((head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    });
+    check('the sheet has setForm, markDirty, saveNow and sendEdits', src.every(Boolean),
+      'one of the four functions is not where this looks for it');
+    const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
+    const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+    const world = (canWrite = true) => {
+      const server = { updated_at: 'v1', hp_current: 20, combat: {}, second_form: { active: 'first', hp_current: 51 } };
+      // What the first form's inputs hold. The second form's card holds 51.
+      const typed = { hp_current: 20, combat: {} };
+      const AS = { dirty: new Set(), base: {}, timer: null, busy: null, state: 'idle', conflict: null };
+      const C = { canWrite, data: { updated_at: 'v1', hp_current: 20, combat: {} },
+        secondForm: { active: 'first', hp_current: 51 } };
+      const w = { server, typed, AS, C, sent: [], fail: {}, renders: 0, flashes: [] };
+      let version = 1;
+      w.moved = (fields = {}) => { Object.assign(server, clone(fields)); server.updated_at = 'v' + (++version); };
+      const api = async (path, req) => {
+        if (!req) return { character: clone(server) };
+        const body = JSON.parse(req.body);
+        w.sent.push(body);
+        if (w.fail.patch) throw w.fail.patch;
+        if (body.second_form) {
+          Object.assign(server.second_form, body.second_form);
+          w.moved();
+          return { updated_at: server.updated_at };
+        }
+        if (body.expect_updated_at !== server.updated_at) throw { status: 409, detail: { conflict: true } };
+        const { expect_updated_at: _, ...fields } = body;
+        w.moved(fields);
+        return { updated_at: server.updated_at };
+      };
+      // The page as pendingValues finds it: no combat inputs while the second
+      // form shows, and #stat-hp holding whichever form's hit points are drawn.
+      const pendingValues = (keys) => {
+        const second = C.secondForm.active === 'second';
+        const out = {};
+        for (const k of keys) {
+          if (k === 'combat') { if (!second) out.combat = clone(typed.combat); }
+          else out[k] = second ? C.secondForm.hp_current : typed[k];
+        }
+        return out;
+      };
+      w.fns = new Function('AS', 'C', 'id', 'AS_DELAY', 'api', 'jsonReq', 'pendingValues', 'applyToData', 'paintPool',
+        'setAutosave', 'scheduleAutosave', 'holdConflict', 'cloneValue', 'sameValue', 'errorDetails', 'whyUnsent',
+        'render', 'flash',
+        src.join('\n') + '; return { setForm, markDirty, saveNow };')(
+        AS, C, 11, 1500, api, (method, body) => ({ method, body: JSON.stringify(body) }),
+        pendingValues, (vals) => { Object.assign(C.data, clone(vals)); }, () => {},
+        (state) => { AS.state = state; }, () => {},
+        (fields) => { AS.conflict = { fields }; AS.state = 'conflict'; }, clone, same, () => [], () => 'server',
+        () => { w.renders++; }, (text, isError) => { w.flashes.push([text, !!isError]); });
+      w.type = () => {
+        typed.hp_current = 11; w.fns.markDirty('hp_current');
+        typed.combat = { strike: '7' }; w.fns.markDirty('combat');
+      };
+      w.formSent = () => w.sent.filter((b) => b.second_form).length;
+      w.see = () => JSON.stringify({ form: C.secondForm.active, renders: w.renders, sent: w.sent, dirty: [...AS.dirty],
+        state: AS.state, hp: server.hp_current, combat: server.combat, flashes: w.flashes });
+      return w;
+    };
+
+    if (src.every(Boolean)) {
+      let w = world();
+      await w.fns.setForm('second');
+      check('with nothing typed the form switches, is drawn and is saved',
+        w.C.secondForm.active === 'second' && w.renders === 1 && w.server.second_form.active === 'second'
+          && w.sent.length === 1 && w.flashes.length === 0, w.see());
+      await w.fns.setForm('second'); await w.fns.setForm('third');
+      check('the form already showing, or one that does not exist, does nothing',
+        w.renders === 1 && w.sent.length === 1 && w.C.secondForm.active === 'second', w.see());
+
+      w = world();
+      w.type();
+      await w.fns.setForm('second');
+      check('what was typed is saved first, and then the form switches',
+        w.server.hp_current === 11 && w.server.combat.strike === '7' && w.C.secondForm.active === 'second'
+          && w.renders === 1 && w.formSent() === 1 && w.sent.length === 2, w.see());
+
+      // The save never arrives.
+      w = world();
+      w.type(); w.fail.patch = {};
+      await w.fns.setForm('second');
+      check('a save that fails leaves the first form on screen',
+        w.C.secondForm.active === 'first' && w.renders === 0 && w.formSent() === 0, w.see());
+      check('and says why it did not switch',
+        w.flashes.length === 1 && w.flashes[0][1] === true && /^Not switched\b.*\bsaved/.test(w.flashes[0][0]), w.see());
+      check('and the edit is still unsent', [...w.AS.dirty].sort().join(',') === 'combat,hp_current', w.see());
+      w.fail.patch = null;
+      let ok = await w.fns.saveNow();
+      check('the retry then stores the first form\'s own numbers, the typed override with them',
+        ok === true && w.server.hp_current === 11 && w.server.combat.strike === '7' && w.AS.state === 'saved', w.see());
+      await w.fns.setForm('second');
+      check('and the next press switches',
+        w.C.secondForm.active === 'second' && w.renders === 1 && w.server.second_form.active === 'second'
+          && w.server.hp_current === 11, w.see());
+
+      // Refused on its merits: an error line, not a retry.
+      w = world();
+      w.type(); w.fail.patch = { status: 500, message: 'boom' };
+      await w.fns.setForm('second');
+      check('a save the server refuses leaves the first form on screen too',
+        w.C.secondForm.active === 'first' && w.renders === 0 && w.formSent() === 0 && w.flashes.length === 1, w.see());
+
+      // Somebody else changed the same field: held for Keep mine / Use theirs.
+      w = world();
+      w.moved({ hp_current: 15 }); w.type();
+      await w.fns.setForm('second');
+      check('an edit held for a Keep mine / Use theirs choice does not switch either',
+        w.AS.state === 'conflict' && w.C.secondForm.active === 'first' && w.renders === 0 && w.formSent() === 0
+          && w.server.hp_current === 15 && w.flashes.length === 1, w.see());
+
+      // A reader flips the view and writes nothing.
+      w = world(false);
+      await w.fns.setForm('second');
+      check('a reader switches the view without a request',
+        w.C.secondForm.active === 'second' && w.renders === 1 && w.sent.length === 0 && w.flashes.length === 0, w.see());
+    }
+  }
+
+  // ---------- A skill roll stops at 98 ----------
+  // p.22: "there is always a margin for error". js/leveling.js caps a skill at
+  // SKILL_PCT_CAP wherever one is built or levelled, and the roll did not: a
+  // stored 120%, or a 90% skill with the G.M.'s +20, passed on a roll of 99.
+  // Nate's ruling, 2026-10-11: the roll is capped at 98.
+  //
+  // RUN, not matched: the sheet's own rollSkill with the die chosen.
+  section('A skill roll stops at 98');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const from = sheet.indexOf('\nconst SKILL_PCT_CAP = ');
+    const fn = sheet.indexOf('\nfunction rollSkill(name, pct) {', from);
+    const to = sheet.indexOf('\n}\n', fn);
+    const src = from < 0 || fn < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    check('the sheet has rollSkill, with its cap stated just above it', !!src && fn - from < 1200,
+      'const SKILL_PCT_CAP and function rollSkill are not where this looks for them');
+    if (src) {
+      const leveling = readFileSync(appPath('js/leveling.js'), 'utf8');
+      const stated = /^export const SKILL_PCT_CAP = (\d+);/m.exec(leveling);
+      const mine = /^const SKILL_PCT_CAP = (\d+);/m.exec(src.trimStart());
+      check('the sheet\'s cap is the one js/leveling.js states', !!stated && !!mine && stated[1] === mine[1] && stated[1] === '98',
+        JSON.stringify({ leveling: stated?.[1], sheet: mine?.[1] }));
+
+      // One roll: the die face chosen, the modifier waiting, what was recorded.
+      const rollOnce = (pct, die, mod = 0) => {
+        let seen = null;
+        new Function('Math', 'takeRollMod', 'recordRoll', src + '; return rollSkill;')(
+          { random: () => (die - 0.5) / 100, floor: Math.floor, min: Math.min, max: Math.max },
+          () => mod, (kind, name, r) => { seen = { kind, name, ...r }; })('Climbing', pct);
+        return seen;
+      };
+      const cases = [
+        // pct, die, mod, target, ok
+        [60, 60, 0, 60, true], [60, 61, 0, 60, false],
+        [98, 98, 0, 98, true], [98, 99, 0, 98, false],
+        [120, 98, 0, 98, true], [120, 99, 0, 98, false], [120, 100, 0, 98, false],
+        [90, 99, 20, 98, false], [90, 98, 20, 98, true],
+        [120, 78, -20, 78, true], [120, 79, -20, 78, false],
+        [50, 30, -20, 30, true], [50, 31, -20, 30, false],
+      ];
+      for (const [pct, die, mod, target, ok] of cases) {
+        const r = rollOnce(pct, die, mod);
+        check(`a ${pct}% skill${mod ? ` at ${mod > 0 ? '+' : ''}${mod}%` : ''} rolling ${die} ${ok ? 'passes' : 'fails'} against ${target}`,
+          !!r && r.kind === 'skill' && r.die === 100 && r.roll === die && r.target === target && r.ok === ok,
+          JSON.stringify(r));
       }
     }
   }
