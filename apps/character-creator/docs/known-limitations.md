@@ -420,9 +420,9 @@ exactly that, read off the table with no parsing.
 
 | file | lines | |
 |---|---|---|
-| `app.js` | ~4,510 | the wizard; the largest file in the app |
-| `sheet.js` | ~3,850 | |
-| `js/parser.js` | ~3,990 | **third** largest, and not a page script at all |
+| `app.js` | ~5,570 | the wizard; the largest file in the app |
+| `sheet.js` | ~5,140 | |
+| `js/parser.js` | ~4,470 | **third** largest, and not a page script at all |
 | `catalog.js` | ~800 | |
 | `dashboard.js` | ~490 | its setting pages and journal feed moved to `/shared/js/campaign/` |
 | `campaign.js` | ~360 | its notes, people, handouts and ledger moved to `/shared/js/campaign/`; its statted-NPC panel is `js/npc-sheets.js`, shared with GM Tools |
