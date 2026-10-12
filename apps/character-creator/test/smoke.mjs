@@ -251,7 +251,7 @@ check('missing frontmatter rejected', !noFm.ok);
 // Cheap, and it would have caught a real one: a prompt string written with real
 // newlines inside single quotes shipped a SyntaxError in import.js, which meant
 // the whole page — not just that prompt — did nothing. Nothing else here loads
-// the page scripts, because they are classic scripts full of DOM calls, so a
+// the page scripts, because they are full of DOM calls or boot on import, so a
 // syntax error in one was invisible to the entire suite.
 section('Browser scripts parse');
 {
@@ -264,7 +264,39 @@ section('Browser scripts parse');
     ...siblingAppDirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.js')).map((f) => join(d, f))),
   ];
   check('found the page scripts', scripts.length >= 10, `only ${scripts.length}`);
-  const parsed = await nodeCheckAll(scripts);
+  // `node --check` on a .js file that holds an ES module exits 0 WHATEVER is
+  // in it: `const = ;` appended to js/creature-roll.js left its check green
+  // (measured 2026-10-12, node 24.18.0). About half of these files are
+  // modules, so each one is copied to a temp file whose extension says what
+  // it is, as the entry-point section above does, and node parses it as that.
+  // Fourteen of the modules never reach their check when they are broken:
+  // this suite imports them, so it dies at link naming the file. A module is a
+  // file that states a top-level import or export. A wrong guess cannot go
+  // quiet: `import` in a .cjs is a SyntaxError, and a classic script read as
+  // a .mjs is still parsed, only more strictly.
+  const texts = scripts.map((path) => readFileSync(path, 'utf8'));
+  const isModule = texts.map((text) => /^(?:import\s*["'{*\w$]|export\s*[{*\w])/m.test(text));
+  const stem = join(process.env.TEMP || process.env.TMPDIR || '/tmp', 'smoke-scripts-' + process.pid);
+  const copies = scripts.map((path, i) => (
+    `${stem}-${i}-${basename(path, '.js').replace(/\W/g, '-')}.${isModule[i] ? 'mjs' : 'cjs'}`));
+  copies.forEach((copy, i) => writeFileSync(copy, texts[i]));
+  const parsed = await nodeCheckAll(copies);
+  for (const copy of copies) rmSync(copy, { force: true });
+  check('and some are ES modules and some classic scripts',
+    isModule.includes(true) && isModule.includes(false));
+  // The other witness to what a file is: the tag that loads it. A file that
+  // states an export and is loaded without type="module" parses here and
+  // fails in the browser.
+  const mismatched = [];
+  for (const dir of [appDir, ...siblingAppDirs]) {
+    for (const page of readdirSync(dir).filter((f) => f.endsWith('.html'))) {
+      for (const m of readFileSync(join(dir, page), 'utf8').matchAll(/<script\b[^>]*\bsrc=["']([^"'?#]+)[^>]*>/g)) {
+        const i = scripts.indexOf(m[1].startsWith('/') ? join(appDir, '..', '..', m[1]) : join(dir, m[1]));
+        if (i !== -1 && /\btype=["']module["']/.test(m[0]) !== isModule[i]) mismatched.push(`${page} loads ${m[1]}`);
+      }
+    }
+  }
+  check('and every page loads each one as the kind it states', mismatched.length === 0, mismatched.join(' | '));
   scripts.forEach((path, i) => {
     const name = path.slice(join(appDir, '..').length + 1).replace(/\\/g, '/');
     check(`${name} parses`, parsed[i].ok,
@@ -510,7 +542,7 @@ import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { appDir, repoRoot, check, section, summary, appPath, siblingAppDirs } from './harness.mjs';
 import { run as environmentChecks } from './checks/environment.mjs';
 import { run as catalogDataChecks } from './checks/catalog-data.mjs';
