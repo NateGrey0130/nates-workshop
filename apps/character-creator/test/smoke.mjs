@@ -5590,7 +5590,7 @@ section('Level-scheduled save bonuses, and the curses key');
 // they had drifted: the sheet printed thirteen rows and play mode offered eight
 // buttons, so the Juicer's +6 vs mind control and the Ley Line Walker's +3 vs
 // curses were visible on the sheet and unrollable at the table. There is now one
-// list and play mode filters the percentile row out of it.
+// list, and each row's roll is decided where the row is drawn.
 //
 // Faerie magic and disease were added because four Palladium Fantasy player
 // races grant bonuses to them; fatigue is the newest, for the Operator's
@@ -5616,10 +5616,6 @@ section('The save list');
   check('the save labels are declared exactly once',
     (src.match(/'vs Spell Magic'/g) || []).length === 1,
     'sheet.js declares the save list more than once');
-  check('play mode rolls the list rather than restating it',
-    /SAVE_ROLLS\s*=\s*SAVE_FIELDS\.filter/.test(src));
-  check('and drops the percentile row, which is not a d20 save',
-    !src.includes("SAVE_ROLLS") || /_pct/.test(src.match(/SAVE_ROLLS[^;]*/)[0]));
 
   // The two new keys borrow the P.E. rows, like the magic and poison saves.
   check('faerie magic follows the P.E. magic row', (() => {
