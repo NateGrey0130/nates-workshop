@@ -5321,7 +5321,13 @@ section('A held spell is headed by its tradition, and ward symbols are one (BOOK
     T.heldGroup(0, 'ward') === 'Ward Symbols' && T.heldGroup(null, 'ward') === 'Ward Symbols'
     && T.heldGroup(0, 'tattoo') === 'Magic Tattoos'
     && T.heldGroup(3, 'warlock') === 'Warlock Elemental — Level 3'
-    && T.heldGroup(2, 'TEMPORAL') === 'Temporal — Level 2');
+    && T.heldGroup(2, 'NECROMANCY') === 'Necromancy — Level 2');
+  // BOOK-INGEST-AUDIT F137. Both read as the title-cased slug, "Circle" and
+  // "Temporal", beside "Bone Magic" and "Ward Symbols". The line above keeps
+  // the fallback pinned on a slug that has no label.
+  check('circles and temporal magic have labels of their own (BOOK-INGEST-AUDIT F137)',
+    T.label('circle') === 'Circles' && T.label('temporal') === 'Temporal Magic'
+    && T.heldGroup(0, 'circle') === 'Circles');
   check('general spells sort first, then each tradition by its label',
     T.heldOrder('', 'ward') < 0 && T.heldOrder('ward', '') > 0 && T.heldOrder('', '') === 0
     && T.heldOrder('ward', 'ward') === 0 && T.heldOrder('bone', 'ward') < 0

@@ -328,7 +328,7 @@ with a group can be taken that way.
 The sheet's power list heads general invocations *"Spells - Level N"*, as it
 always did. A held spell whose catalog row carries a `tradition` is headed by
 that tradition's label instead (`BOOK-INGEST-AUDIT` F123): *"Warlock
-Elemental - Level 3"*, and plain *"Magic Tattoos"*, *"Circle"* or *"Ward
+Elemental - Level 3"*, and plain *"Magic Tattoos"*, *"Circles"* or *"Ward
 Symbols"* for the traditions stored at level 0, which used to read *"Spells -
 Level 0"*. General spells come first, then each tradition by its label.
 

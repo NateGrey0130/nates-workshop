@@ -35,6 +35,8 @@
     spoiling: 'Spoiling Magic',
     nightbane: 'Nightbane Magic',
     dolphin: 'Dolphin Magic',
+    circle: 'Circles',
+    temporal: 'Temporal Magic',
     // Palladium Fantasy's Diabolist "cannot learn spell magic": what it holds
     // are symbols (BOOK-INGEST-AUDIT F123).
     ward: 'Ward Symbols',
