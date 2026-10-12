@@ -113,6 +113,7 @@ const SECTIONS = [
   'A refused save keeps what was typed since',
   'The Hit to picker follows the armour list',
   'A row behind an Undo stays off the screen',
+  'A vessel keeps every location typed into it',
   'The weapon cards follow the inventory',
   'The sheet reads only item fields its endpoint sends',
   'The codex',
@@ -2841,6 +2842,144 @@ export async function run() {
     check('every re-read of the character leaves out a row that is behind an Undo',
       stores.length === 4 && !raw.length,
       `${stores.length} stores of the server's rows (load, refreshInventory, refreshVessels: 4 expected); unfiltered: ${raw.map((m) => m[0]).join(' ') || 'none'}`);
+  }
+
+  // ---------- A vessel's M.D.C. keeps every location typed into it ----------
+  // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-11). The
+  // column is one object and a location edit sends all of it. The handler
+  // copied the object out of state, sent the copy, and wrote state when the
+  // answer came - so a second location typed before the first had answered
+  // copied the same stale object. The server kept the second location alone,
+  // and the page went on showing both until a reload. No slow network needed:
+  // two `change` events in one tick did it.
+  //
+  // And a request that failed left its number in the input, over a state and a
+  // server that never held it.
+  //
+  // RUN, not matched: the sheet's own handler over stand-in inputs and a
+  // stand-in server whose answers can be held or failed one by one.
+  section('A vessel keeps every location typed into it');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const src = ['function paintVesselInput(vid, location) {', 'async function patchVesselMdc(vid, location, value) {'].map(fn);
+    check('the sheet has its vessel M.D.C. handler and painter', src.every(Boolean),
+      'one of them is not where this looks for it');
+    // The turn-taking the handler keeps between calls. Absent, the rest still
+    // runs - and says what the bug did.
+    const turns = /\nlet vesselSends = [^\n]*\n/.exec(sheet)?.[0] || '';
+    const clone = (v) => JSON.parse(JSON.stringify(v));
+    const settle = async () => { for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r)); };
+    const LOCS = [['Head', 100], ['Arms', 180], ['Body', 450]];
+
+    const world = (stored = {}) => {
+      const server = { mdc: clone(stored) };
+      const C = { vehicles: [{ id: 8, vehicle_name: 'Rig', mdc_current: clone(stored),
+        locations: LOCS.map(([location, mdc]) => ({ location, mdc })) }] };
+      const w = { server, C, sent: [], hold: {}, fail: {}, alerts: [], picker: null, inputs: [] };
+      // What vesselLocationHtml draws: the stored number, or the maximum.
+      w.inputs = LOCS.map(([loc, max]) => ({ dataset: { vessel: '8', loc }, value: String(stored[loc] ?? max) }));
+      const doc = { querySelectorAll: (sel) => (/data-vessel="8"/.test(sel) ? w.inputs : []) };
+      // A held request has not ARRIVED: the server stores it when it is let go.
+      const api = async (path, req) => {
+        const body = JSON.parse(req.body);
+        const nth = w.sent.push(body.mdc_current);
+        if (w.hold[nth]) await new Promise((r) => { w.release = r; });
+        if (w.fail[nth]) throw new Error('no answer');
+        server.mdc = clone(body.mdc_current);
+        return { ok: true };
+      };
+      w.fns = new Function('C', 'id', 'api', 'jsonReq', 'document', 'hasKey', 'repaintHitTo', 'alert',
+        turns + src.join('\n') + '; return { patchVesselMdc };')(
+        C, 3, api, (method, body) => ({ method, body: JSON.stringify(body) }), doc,
+        (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k),
+        // The picker's labels are drawn from state: keep what it would have read.
+        () => { w.picker = JSON.stringify(C.vehicles[0].mdc_current || {}); }, (msg) => { w.alerts.push(msg); });
+      // The input's own `change`: the value is on the page, then the handler runs.
+      w.type = (loc, v) => { w.inputs.find((el) => el.dataset.loc === loc).value = v; return w.fns.patchVesselMdc(8, loc, v); };
+      w.page = () => w.inputs.map((el) => el.value).join('/');
+      w.state = () => JSON.stringify(C.vehicles[0].mdc_current || {});
+      w.held = () => JSON.stringify(server.mdc);
+      w.all = () => JSON.stringify({ page: w.page(), state: w.state(), stored: w.held(), sent: w.sent, alerts: w.alerts });
+      return w;
+    };
+
+    if (src.every(Boolean)) {
+      let w = world();
+      w.type('Head', '11'); w.type('Arms', '22');
+      await settle();
+      check('two locations typed one straight after the other are both stored',
+        w.held() === '{"Head":11,"Arms":22}' && w.state() === w.held() && w.page() === '11/22/450', w.all());
+      check('and the Hit to picker is redrawn with them', w.picker === w.held(), `the picker last read ${w.picker}`);
+
+      // The first request is still on its way when the second is typed.
+      w = world({ Body: 400 });
+      w.hold[1] = true;
+      w.type('Head', '11'); w.type('Arms', '22');
+      await settle();
+      check('a second edit waits its turn while the first is still on its way',
+        w.sent.length === 1 && w.held() === '{"Body":400}', w.all());
+      w.release();
+      await settle();
+      check('and both arrive, in the order they were typed, with what was already stored',
+        w.held() === '{"Body":400,"Head":11,"Arms":22}' && w.state() === w.held() && w.sent.length === 2, w.all());
+
+      w = world();
+      w.hold[1] = true;
+      w.type('Head', '11'); w.type('Head', '12');
+      await settle(); w.release(); await settle();
+      check('one location typed twice ends on the second number',
+        w.held() === '{"Head":12}' && w.state() === w.held() && w.page() === '12/180/450', w.all());
+
+      w = world({ Head: 60 });
+      w.type('Head', '');
+      await settle();
+      check('a blanked location is stored as undamaged', w.held() === '{}' && w.state() === '{}', w.all());
+
+      // A request that fails.
+      w = world();
+      w.fail[1] = true;
+      w.type('Head', '11');
+      await settle();
+      check('an edit that could not be sent comes back off the page, and says so',
+        w.page() === '100/180/450' && w.state() === '{}' && w.held() === '{}' && w.alerts.length === 1 && w.picker === '{}',
+        w.all());
+      w.type('Arms', '22');
+      await settle();
+      check('and the next edit is sent, without the one that failed',
+        w.held() === '{"Arms":22}' && w.state() === w.held() && w.page() === '100/22/450' && w.alerts.length === 1, w.all());
+
+      w = world({ Head: 60 });
+      w.fail[1] = true;
+      w.type('Head', '11');
+      await settle();
+      check('a failed edit to a damaged location goes back to the damage it had',
+        w.page() === '60/180/450' && w.state() === '{"Head":60}' && w.held() === '{"Head":60}', w.all());
+
+      w = world({ Head: 60 });
+      w.fail[1] = true;
+      w.type('Head', '');
+      await settle();
+      check('and a failed blanking does too', w.page() === '60/180/450' && w.state() === '{"Head":60}', w.all());
+
+      // The first fails while a second is waiting behind it.
+      w = world();
+      w.hold[1] = true; w.fail[1] = true;
+      w.type('Head', '11'); w.type('Arms', '22');
+      await settle(); w.release(); await settle();
+      check('an edit waiting behind one that fails is sent without it',
+        w.held() === '{"Arms":22}' && w.state() === w.held() && w.page() === '100/22/450' && w.alerts.length === 1, w.all());
+
+      w = world();
+      w.hold[1] = true; w.fail[1] = true;
+      w.type('Head', '11'); w.type('Head', '12');
+      await settle(); w.release(); await settle();
+      check('a location typed into again is not taken back when the older request fails',
+        w.held() === '{"Head":12}' && w.state() === w.held() && w.page() === '12/180/450', w.all());
+    }
   }
 
   // ---------- The weapon cards are drawn from the inventory, and follow it ----------

@@ -4328,19 +4328,34 @@ function removeVessel(vid) {
 }
 
 // One location's damage. Sent as the whole object rather than a patch of one
-// key, because that is the column's shape - and read from the DOM rather than
-// from state, so two inputs edited before either round-trips do not overwrite
-// each other with a stale copy.
+// key, because that is the column's shape.
+//
+// The edit goes into state at once, and the requests go one at a time, each
+// carrying the object as it stands when its turn comes. It used to copy state,
+// send the copy and write state on the answer, so a second location typed
+// before the first had answered copied the same stale object: the server kept
+// the second alone and the page showed both. A request that fails takes its
+// number back off the page, unless that location has been typed into since.
+let vesselSends = Promise.resolve();
 async function patchVesselMdc(vid, location, value) {
   const v = (C.vehicles || []).find((x) => x.id === vid);
   if (!v) return;
-  const next = { ...(v.mdc_current || {}) };
+  v.mdc_current ||= {};
+  const had = hasKey(v.mdc_current, location), from = v.mdc_current[location];
   const n = parseInt(value, 10);
-  if (Number.isFinite(n)) next[location] = n; else delete next[location];
-  try {
-    await api('characters/' + id + '/vehicles/' + vid, jsonReq('PATCH', { mdc_current: next }));
-    v.mdc_current = next;
-  } catch (err) { alert('Failed: ' + err.message); }
+  const wrote = Number.isFinite(n) ? n : undefined;
+  if (wrote !== undefined) v.mdc_current[location] = wrote; else delete v.mdc_current[location];
+  repaintHitTo();
+  const send = vesselSends.then(() =>
+    api('characters/' + id + '/vehicles/' + vid, jsonReq('PATCH', { mdc_current: v.mdc_current })));
+  vesselSends = send.catch(() => {});
+  try { await send; } catch (err) {
+    if (v.mdc_current[location] === wrote) {
+      if (had) v.mdc_current[location] = from; else delete v.mdc_current[location];
+      paintVesselInput(vid, location); repaintHitTo();
+    }
+    alert('Failed: ' + err.message);
+  }
 }
 
 // Repaint only the vessel block, for the reason refreshInventory exists: a full
