@@ -2946,7 +2946,8 @@ export async function run() {
       'one of them is not where this looks for it');
     // The list of rows waiting behind an Undo, and the filter every re-read
     // goes through. Absent, the rest still runs - and says what the bug did.
-    const waiting = fn('const removing = ') || '';
+    // And the vessel edits a re-read waits behind: none are on their way here.
+    const waiting = (fn('const removing = ') || '') + (/\nlet vesselSends = [^\n]*\n/.exec(sheet)?.[0] || '');
     const clone = (v) => JSON.parse(JSON.stringify(v));
     const settle = () => new Promise((r) => setImmediate(r));
 
@@ -3074,12 +3075,14 @@ export async function run() {
       const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
       return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
     };
-    const src = ['function paintVesselInput(vid, location) {', 'async function patchVesselMdc(vid, location, value) {'].map(fn);
-    check('the sheet has its vessel M.D.C. handler and painter', src.every(Boolean),
+    const src = ['function paintVesselInput(vid, location) {', 'async function patchVesselMdc(vid, location, value) {',
+      'async function vesselClash(location, typed, err) {', 'async function refreshVessels() {'].map(fn);
+    check('the sheet has its vessel M.D.C. handler, its painter, its clash answer and its re-read', src.every(Boolean),
       'one of them is not where this looks for it');
-    // The turn-taking the handler keeps between calls. Absent, the rest still
-    // runs - and says what the bug did.
-    const turns = /\nlet vesselSends = [^\n]*\n/.exec(sheet)?.[0] || '';
+    // The turn-taking the handler keeps between calls, and what it believes the
+    // server holds. Absent, the rest still runs - and says what the bug did.
+    const turns = (/\nlet vesselSends = [^\n]*\n/.exec(sheet)?.[0] || '')
+      + (/\nconst vesselBase = [^\n]*\n/.exec(sheet)?.[0] || '');
     const clone = (v) => JSON.parse(JSON.stringify(v));
     const settle = async () => { for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r)); };
     const LOCS = [['Head', 100], ['Arms', 180], ['Body', 450]];
@@ -3088,25 +3091,57 @@ export async function run() {
       const server = { mdc: clone(stored) };
       const C = { vehicles: [{ id: 8, vehicle_name: 'Rig', mdc_current: clone(stored),
         locations: LOCS.map(([location, mdc]) => ({ location, mdc })) }] };
-      const w = { server, C, sent: [], hold: {}, fail: {}, alerts: [], picker: null, inputs: [] };
+      const w = { server, C, sent: [], reads: 0, hold: {}, fail: {}, alerts: [], picker: null, inputs: [] };
       // What vesselLocationHtml draws: the stored number, or the maximum.
       w.inputs = LOCS.map(([loc, max]) => ({ dataset: { vessel: '8', loc }, value: String(stored[loc] ?? max) }));
       const doc = { querySelectorAll: (sel) => (/data-vessel="8"/.test(sel) ? w.inputs : []) };
+      const own = (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k);
       // A held request has not ARRIVED: the server stores it when it is let go.
+      // The stand-in keeps the route's rule: one location, and only if it
+      // still holds what the request says it replaces (regression.mjs asks the
+      // real route the same things).
       const api = async (path, req) => {
+        if (!req) {
+          w.reads++;
+          // A held read was TAKEN when it was asked for; it only answers late.
+          const taken = clone(server.mdc);
+          if (w.holdRead) { w.holdRead = false; await new Promise((r) => { w.releaseRead = r; }); }
+          return { vehicles: [{ ...C.vehicles[0], mdc_current: taken }] };
+        }
         const body = JSON.parse(req.body);
-        const nth = w.sent.push(body.mdc_current);
+        const nth = w.sent.push(body);
         if (w.hold[nth]) await new Promise((r) => { w.release = r; });
         if (w.fail[nth]) throw new Error('no answer');
-        server.mdc = clone(body.mdc_current);
+        const { location, mdc } = body;
+        const held = own(server.mdc, location);
+        const asSeen = mdc.absent ? !held : held && server.mdc[location] === mdc.from;
+        const wanted = mdc.to === null ? !held : held && server.mdc[location] === mdc.to;
+        if (!asSeen && !wanted) {
+          throw Object.assign(new Error(location + ' was changed somewhere else since this was read'), {
+            status: 409,
+            detail: { conflict: true, location, mine: mdc.to, theirs: held ? server.mdc[location] : null, base: mdc.from },
+          });
+        }
+        if (mdc.to === null) delete server.mdc[location]; else server.mdc[location] = mdc.to;
         return { ok: true };
       };
+      // The redraw: every input written again from state, as vesselsHtml would.
+      const redraw = () => {
+        for (const el of w.inputs) {
+          const max = LOCS.find(([loc]) => loc === el.dataset.loc)[1];
+          el.value = String(C.vehicles[0].mdc_current?.[el.dataset.loc] ?? max);
+        }
+        return '';
+      };
       w.fns = new Function('C', 'id', 'api', 'jsonReq', 'document', 'hasKey', 'repaintHitTo', 'alert',
-        turns + src.join('\n') + '; return { patchVesselMdc };')(
-        C, 3, api, (method, body) => ({ method, body: JSON.stringify(body) }), doc,
-        (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k),
+        'stillHere', '$', 'vesselsHtml',
+        turns + src.join('\n') + '; return { patchVesselMdc, refreshVessels };')(
+        C, 3, api, (method, body) => ({ method, body: JSON.stringify(body) }), doc, own,
         // The picker's labels are drawn from state: keep what it would have read.
-        () => { w.picker = JSON.stringify(C.vehicles[0].mdc_current || {}); }, (msg) => { w.alerts.push(msg); });
+        () => { w.picker = JSON.stringify(C.vehicles[0].mdc_current || {}); }, (msg) => { w.alerts.push(msg); },
+        (kind, rows) => rows, () => ({}), redraw);
+      // Somebody else, in another browser: straight into what the server holds.
+      w.elsewhere = (loc, v) => { if (v === undefined) delete server.mdc[loc]; else server.mdc[loc] = v; };
       // The input's own `change`: the value is on the page, then the handler runs.
       w.type = (loc, v) => { w.inputs.find((el) => el.dataset.loc === loc).value = v; return w.fns.patchVesselMdc(8, loc, v); };
       w.page = () => w.inputs.map((el) => el.value).join('/');
@@ -3188,6 +3223,84 @@ export async function run() {
       await settle(); w.release(); await settle();
       check('a location typed into again is not taken back when the older request fails',
         w.held() === '{"Head":12}' && w.state() === w.held() && w.page() === '12/180/450', w.all());
+
+      // TWO BROWSERS (reproduced on a local server, 2026-10-12: two requests
+      // built from one read both answered 200 and the server kept the second
+      // alone). The request is one location and the number it replaces now.
+      w = world({ Head: 60 });
+      w.type('Head', '50'); w.type('Arms', '22');
+      await settle();
+      check('an edit is sent as its one location, with the number it replaces',
+        JSON.stringify(w.sent) === JSON.stringify([
+          { location: 'Head', mdc: { from: 60, to: 50, absent: false } },
+          { location: 'Arms', mdc: { from: null, to: 22, absent: true } }]), w.all());
+
+      w = world();
+      w.hold[1] = true;
+      w.type('Head', '11'); w.type('Head', '12');
+      await settle(); w.release(); await settle();
+      check('a second number for one location replaces the first, not what the page was first drawn with',
+        w.sent[1]?.mdc?.from === 11 && w.sent[1]?.mdc?.absent === false && w.alerts.length === 0, w.all());
+
+      w = world({ Body: 400 });
+      w.elsewhere('Arms', 150);
+      w.type('Head', '11');
+      await settle();
+      check('a location changed elsewhere is kept when another is typed into here',
+        w.held() === '{"Body":400,"Arms":150,"Head":11}' && w.alerts.length === 0, w.all());
+
+      w = world({ Head: 60 });
+      w.elsewhere('Head', 90);
+      w.type('Head', '5');
+      await settle();
+      check('the same location changed elsewhere first is not replaced',
+        w.held() === '{"Head":90}', w.all());
+      check('and the page is read again, so it shows what is stored',
+        w.reads === 1 && w.state() === '{"Head":90}' && w.page() === '90/180/450' && w.picker === w.held(), w.all());
+      check('and the player is told once, with their number and the stored one',
+        w.alerts.length === 1 && /Head/.test(w.alerts[0]) && /\b90\b/.test(w.alerts[0]) && /\b5\b/.test(w.alerts[0])
+          && !/^Failed/.test(w.alerts[0]), w.all());
+      w.type('Head', '5');
+      await settle();
+      check('typed again over what is stored now, it lands',
+        w.held() === '{"Head":5}' && w.state() === w.held() && w.alerts.length === 1, w.all());
+
+      w = world({ Head: 60 });
+      w.elsewhere('Head', undefined);
+      w.type('Head', '50');
+      await settle();
+      check('a location repaired elsewhere is not damaged again from a stale page, and the message says undamaged',
+        w.held() === '{}' && w.page() === '100/180/450' && /undamaged/.test(w.alerts[0] || ''), w.all());
+
+      w = world();
+      w.elsewhere('Head', 11);
+      w.type('Head', '11');
+      await settle();
+      check('the same number typed on both sides is not a clash',
+        w.held() === '{"Head":11}' && w.alerts.length === 0 && w.reads === 0, w.all());
+
+      // A re-read while an edit is on its way (adding or removing another
+      // vessel does one) used to redraw from before the edit was stored.
+      w = world();
+      w.hold[1] = true;
+      w.type('Head', '11');
+      const reread = w.fns.refreshVessels();
+      await settle();
+      check('a re-read waits for a vessel edit that is on its way', w.reads === 0, w.all());
+      w.release();
+      await reread; await settle();
+      check('and then shows it', w.reads === 1 && w.state() === '{"Head":11}' && w.page() === '11/180/450', w.all());
+
+      w = world();
+      w.holdRead = true;
+      const slow = w.fns.refreshVessels();
+      await settle();
+      w.type('Head', '11');
+      await settle();
+      w.releaseRead();
+      await slow; await settle();
+      check('a read that an edit was typed during is taken again, not drawn',
+        w.reads === 2 && w.held() === '{"Head":11}' && w.state() === w.held() && w.page() === '11/180/450', w.all());
     }
   }
 

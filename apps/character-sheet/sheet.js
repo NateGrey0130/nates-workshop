@@ -4343,16 +4343,23 @@ function removeVessel(vid) {
   });
 }
 
-// One location's damage. Sent as the whole object rather than a patch of one
-// key, because that is the column's shape.
+// One location's damage, sent as that location alone with the number it
+// replaces: {location, mdc: {from, to, absent}}. The route stores it only if
+// the location still holds `from`. The whole object used to go, as this page
+// had read it, so a player and the G.M. on two locations of one vessel each
+// put the other's back.
 //
-// The edit goes into state at once, and the requests go one at a time, each
-// carrying the object as it stands when its turn comes. It used to copy state,
-// send the copy and write state on the answer, so a second location typed
-// before the first had answered copied the same stale object: the server kept
-// the second alone and the page showed both. A request that fails takes its
-// number back off the page, unless that location has been typed into since.
+// The edit goes into state at once, and the requests go one at a time. A
+// request that fails takes its number back off the page, unless that location
+// has been typed into since.
+//
+// `from` is what the SERVER holds, which is not always what the page showed
+// before this edit: a location typed into twice has the first number on the
+// page while the server may never get it. So the first edit to a location
+// writes down what was there, each answer moves it on, and it is forgotten
+// when nothing for that location is on its way.
 let vesselSends = Promise.resolve();
+const vesselBase = new Map();
 async function patchVesselMdc(vid, location, value) {
   const v = (C.vehicles || []).find((x) => x.id === vid);
   if (!v) return;
@@ -4362,22 +4369,50 @@ async function patchVesselMdc(vid, location, value) {
   const wrote = Number.isFinite(n) ? n : undefined;
   if (wrote !== undefined) v.mdc_current[location] = wrote; else delete v.mdc_current[location];
   repaintHitTo();
+  const key = vid + '\n' + location;
+  if (!vesselBase.has(key)) vesselBase.set(key, { had, from, waiting: 0 });
+  const base = vesselBase.get(key);
+  base.waiting++;
   const send = vesselSends.then(() =>
-    api('characters/' + id + '/vehicles/' + vid, jsonReq('PATCH', { mdc_current: v.mdc_current })));
+    api('characters/' + id + '/vehicles/' + vid, jsonReq('PATCH', {
+      location, mdc: { from: base.had ? base.from : null, to: wrote ?? null, absent: !base.had },
+    })));
   vesselSends = send.catch(() => {});
-  try { await send; } catch (err) {
+  try {
+    await send;
+    base.had = wrote !== undefined; base.from = wrote;
+  } catch (err) {
+    if (err.status === 409 && err.detail?.conflict) { await vesselClash(location, value, err); return; }
     if (v.mdc_current[location] === wrote) {
       if (had) v.mdc_current[location] = from; else delete v.mdc_current[location];
       paintVesselInput(vid, location); repaintHitTo();
     }
     alert('Failed: ' + err.message);
+  } finally {
+    if (!--base.waiting) vesselBase.delete(key);
   }
+}
+
+// Refused: somebody else changed this location first. The vessels are read
+// again, so the page shows what is stored, and the number that was typed is
+// said back, because the redraw has just taken it off the page.
+async function vesselClash(location, typed, err) {
+  try { await refreshVessels(); } catch { /* the message below still stands */ }
+  repaintHitTo();
+  const theirs = err.detail.theirs;
+  const typedText = String(typed ?? '').trim();
+  alert(`${location} was changed somewhere else${
+    'theirs' in err.detail ? (theirs == null ? ', back to undamaged' : ` to ${theirs}`) : ''
+  }, so your ${typedText === '' ? 'blank' : typedText} was not saved. The sheet shows what is stored now. Type yours again if it still stands.`);
 }
 
 // Repaint only the vessel block, for the reason refreshInventory exists: a full
 // load() would replace C.data and discard anything typed into the sheet.
 async function refreshVessels() {
-  const res = await api('characters/' + id);
+  // Not while a vessel edit is on its way, and not from a read that one was
+  // typed during: either redraws the block from before the edit was stored.
+  let res, turn;
+  do { turn = vesselSends; await turn; res = await api('characters/' + id); } while (turn !== vesselSends);
   C.vehicles = stillHere('vehicles', res.vehicles);
   const list = $('vessel-list');
   if (list) list.innerHTML = vesselsHtml();
