@@ -31,6 +31,7 @@ import { comparePair } from '../../../scripts/same-spell-lib.mjs';
 import { bookRowsSql, citingTables, countRowsPerBook, formatRowsLine, parseMosLine, parseRowsLine } from '../../../scripts/book-rows-lib.mjs';
 import { loadBookRegistry, loadNotBooks } from '../../../scripts/books-lib.mjs';
 import { bootstrapSql } from '../../../scripts/build-local-d1.mjs';
+import { wranglerShellWords } from '../../../scripts/d1-query-lib.mjs';
 import { creatureFormulaGaps } from '../js/creature-roll.js';
 import { grantsLiteracyPlaceholder } from '../../../scripts/class-check-lib.mjs';
 import { choosePort, refuseIfTaken, runMarker, waitForOwnServer } from './dev-server.mjs';
@@ -209,8 +210,14 @@ function wrangler(args) {
   // whole markdown back as JSON, which overruns spawnSync's 1 MB default - the
   // output is then truncated mid-JSON and the parse fails with no hint that
   // SIZE was the problem. This setting moved here with that sweep.
+  //
+  // wranglerShellWords: the global wrangler.js under node when there is one,
+  // which is what `npx wrangler` ends up running anyway, about 3.3 s later on
+  // every spawn this suite makes. Still through a shell, because the
+  // --command callers below quote their own SQL for one.
   const started = Date.now();
-  const r = spawnSync('npx', ['wrangler', ...args], {
+  const [command, ...words] = wranglerShellWords();
+  const r = spawnSync(command, [...words, ...args], {
     cwd: repoRoot, shell: true, encoding: 'utf8', timeout: WRANGLER_TIMEOUT_MS, maxBuffer: 1e9,
   });
   // A TIMEOUT USED TO READ EXACTLY LIKE A SQL FAULT. spawnSync reports it as
