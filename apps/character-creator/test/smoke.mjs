@@ -1066,6 +1066,21 @@ section('Wizard markup escapes what it is handed');
     const body = src.match(new RegExp(`function ${fn}\\(groups\\) \\{[\\s\\S]*?\\n\\}`))?.[0] || '';
     check(`${fn} is handed to tieredStartHtml`, /return tieredStartHtml\(groups, \{/.test(body) && !/Picker\./.test(body));
   }
+  // The level-1 spell and split-psionic pickers too (2026-10-12): each wrote
+  // the same group loop out again. One pin on the loop, one on the caller that
+  // states the most about how it differs.
+  {
+    const loops = (src.match(/const elsewhere = new Set\(takenAll\(\)/g) || []).length;
+    const tiered = src.match(/\nfunction tieredStartHtml\(groups, o\) \{[\s\S]*?\n\}/)?.[0] || '';
+    check('the starting-pick group loop is written once, in tieredStartHtml',
+      loops === 1 && /const elsewhere = new Set\(takenAll\(\)/.test(tiered)
+      && /if \(o\.head\) return o\.head\(takenAll\(\)\.length, total\) \+ blocks;/.test(tiered), `${loops} loops`);
+    const psi = src.match(/\nfunction startingPsiHtml\(cls, groups\) \{[\s\S]*?\n\}/)?.[0] || '';
+    check('startingPsiHtml hands its groups to tieredStartHtml with its tier gate, and keeps the unknown-named note off',
+      /return tieredStartHtml\(groups, \{/.test(psi) && !/Picker\./.test(psi)
+      && /open: \(p\) => derive\.meetsTier\(tier, p\.min_tier\)/.test(psi)
+      && /unknownNamed: false/.test(psi), `${psi.length} chars`);
+  }
 
   // The Skills step in five parts (2026-10-10). renderSkills was 425 lines with
   // four closures inside it - the MOS, the totem, the class's own skills, the

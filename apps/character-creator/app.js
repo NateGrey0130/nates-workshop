@@ -4341,39 +4341,68 @@ function talentGroupRows(list, count, kind = 'talent', gi = null, atLevel = 1) {
 //   rows       the row renderer for one group's list
 //   granted    names the class gives outright, and grantedBy who gives them
 //   title, hint  the heading and the small print beside the count
+//
+// SPELLS AND SPLIT PSIONICS RUN THROUGH THE SAME LOOP, which they each used to
+// write out again. What they do differently is stated by the caller, and each
+// of these defaults to what a tiered power does:
+//
+//   admits(g, row)  whether an unnamed group reaches a row (default: its tiers)
+//   gate(g)         how an unnamed group's restriction reads
+//   open(row)       a second gate applied after the first, with gatedNote(n)
+//                   saying how many rows it withheld - the psychic tier
+//   flat            one group writing into the flat list, under no index
+//   inputId         the filter box's id when it is not `idPrefix` + the index
+//   groupHead       false to leave out the per-group count line
+//   noteTail        words added to "the catalog cannot check this one"
+//   unknownNamed    false to say nothing about a named row the catalog lacks
+//   head(taken, total)  the heading, in place of the granted list and title
 function tieredStartHtml(groups, o) {
   const total = groups.reduce((n, g) => n + g.count, 0);
-  const takenAll = () => groups.flatMap((g, i) => powerList(o.kind, i));
+  const at = (gi) => (o.flat ? null : gi);
+  const takenAll = () => groups.flatMap((g, i) => powerList(o.kind, at(i)));
+  const admits = o.admits || ((g, a) => !g.tiers || g.tiers.includes(a.tier));
+  const gateOf = o.gate || ((g) => (g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier'));
 
   const blocks = groups.map((g, gi) => {
-    const chosen = powerList(o.kind, gi);
+    const chosen = powerList(o.kind, at(gi));
+    // A named list is the tightest restriction and REPLACES the group's own
+    // gate - a group that names its rows is not also asking about levels,
+    // categories or tiers. The same rule spellGrantBlock applies to a grant.
     const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
+    // A power is taken once, so the other groups' picks are out of this one.
     const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
       .map((n) => String(n).toLowerCase()));
-    const pool = o.catalog.filter((a) => inSystem(a)
-      && (named ? named.has(String(a.name).toLowerCase())
-                : (!g.tiers || g.tiers.includes(a.tier)))
+    const admitted = o.catalog.filter((a) => inSystem(a)
+      && (named ? named.has(String(a.name).toLowerCase()) : admits(g, a))
       && !elsewhere.has(String(a.name).toLowerCase()));
-    const unknownNamed = named
+    const pool = o.open ? admitted.filter(o.open) : admitted;
+    const gated = admitted.length - pool.length;
+    // A name the catalog does not carry would silently shrink the list, so say
+    // so.
+    const unknownNamed = named && o.unknownNamed !== false
       ? g.from.filter((n) => !o.catalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
       : [];
+    // A chosen row stays visible whatever the filter says, or narrowing the
+    // list would look like it had un-picked something.
     const list = Picker.filter(pool, S[o.filterKey])
       .concat(pool.filter((a) => chosen.includes(a.name) && !Picker.match(a, S[o.filterKey])));
-    const gate = named ? `a list of ${g.from.length}`
-      : g.tiers && g.tiers.length ? g.tiers.join(' or ') : 'either tier';
-    return `<p class="small" style="margin-top:12px"><b>${g.count}
+    const gate = named ? `a list of ${g.from.length}` : gateOf(g);
+    return (o.groupHead === false ? '' : `<p class="small" style="margin-top:12px"><b>${g.count}
       ${g.count === 1 ? o.one : o.many}</b> <span class="muted">from ${esc(gate)}</span>
-      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`
-      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one.</p>` : '')
+      <span class="muted">&mdash; ${chosen.length}/${g.count}</span></p>`)
+      + (g.note ? `<p class="attr-note">${esc(g.note)} &mdash; the catalog cannot check this one${
+        o.noteTail || ''}.</p>` : '')
+      + (gated ? o.gatedNote(gated) : '')
       + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
         ${unknownNamed.length === 1 ? `${o.one} is` : `${o.many} are`} not in the catalog yet:
         ${esc(unknownNamed.join(', '))}.</p>` : '')
-      + Picker.inputHtml({ id: `${o.idPrefix}${gi}`, value: S[o.filterKey],
+      + Picker.inputHtml({ id: o.inputId || `${o.idPrefix}${gi}`, value: S[o.filterKey],
           placeholder: o.placeholder,
           shown: Picker.filter(pool, S[o.filterKey]).length, total: pool.length })
       + o.rows(list, g.count, gi);
   }).join('');
 
+  if (o.head) return o.head(takenAll().length, total) + blocks;
   const granted = (o.granted || []).filter((n) => typeof n === 'string' && n.trim());
   return (granted.length ? `<h3>${o.title} &mdash; ${granted.length} granted by ${o.grantedBy}
       <span class="muted small">(already on the character)</span></h3>`
@@ -4491,60 +4520,32 @@ function startingSpellHtml() {
 
   const many = groups.length > 1;
   const kind = many ? 'spell-start' : 'spell';
-  const total = start.total;
-  const takenAll = () => groups.flatMap((g, i) => powerList(kind, many ? i : null));
-
-  const blocks = groups.map((g, gi) => {
-    const idx = many ? gi : null;
-    const chosen = powerList(kind, idx);
-    // A named list is the tightest restriction and REPLACES the level cap - a
-    // group that names its spells is not also asking about levels. The same
-    // rule spellGrantBlock applies to a level-up grant.
-    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
-    // A spell is learned once, so the other groups' picks are out of this one.
-    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
-      .map((n) => String(n).toLowerCase()));
-    const pool = S.spellCatalog.filter((sp) => inSystem(sp)
-      && (named ? named.has(String(sp.name).toLowerCase())
-                : ((!g.spell_levels || g.spell_levels.includes(sp.level))
-                   && spellTraditionAllowed(sp, g.traditions)))
-      && !elsewhere.has(String(sp.name).toLowerCase()));
-    // A chosen spell stays visible whatever the filter says, or narrowing the
-    // list would look like it had un-picked something.
-    const list = Picker.filter(pool, S.spellFilter)
-      .concat(pool.filter((sp) => chosen.includes(sp.name) && !Picker.match(sp, S.spellFilter)));
-    // A name the catalog does not carry would silently shrink the list, so say
-    // so - the same reasoning the psionic named list already uses.
-    const unknownNamed = g.from
-      ? g.from.filter((n) => !S.spellCatalog.some((x) => String(x.name).toLowerCase() === n.toLowerCase()))
-      : [];
-    const gate = named ? `a list of ${g.from.length}`
-      : g.spell_levels ? `levels ${g.spell_levels.join(', ')}` : 'any spell level';
-    return (many ? `<p class="small" style="margin-top:12px"><b>${g.count}
-        ${g.count === 1 ? 'spell' : 'spells'}</b> <span class="muted">from ${esc(gate)}</span>
-        <span class="muted">— ${chosen.length}/${g.count}</span></p>` : '')
-      + (g.note ? `<p class="attr-note">${esc(g.note)} — the catalog cannot check this one, so it
-        is yours to honour.</p>` : '')
-      + (unknownNamed.length ? `<p class="attr-note">${unknownNamed.length} named
-        ${unknownNamed.length === 1 ? 'spell is' : 'spells are'} not in the catalog yet:
-        ${esc(unknownNamed.join(', '))}.</p>` : '')
-      + Picker.inputHtml({ id: many ? `spell-filter-${gi}` : 'spell-filter', value: S.spellFilter,
-          placeholder: 'Filter spells…',
-          shown: Picker.filter(pool, S.spellFilter).length, total: pool.length })
-      + spellGroupRows(list, g.count, kind, idx, S.spellFilter);
-  }).join('');
-
   const one = groups[0];
   const caption = many ? 'in groups the book keeps apart'
     : one.from ? `from the class list of ${one.from.length}`
     : one.spell_levels ? `levels ${one.spell_levels.join(', ')}` : null;
-  // Granted spells first: they are what the character already has, and the
-  // picker below is what it still owes a decision on.
-  return (start.granted.length ? `<h3>Spells &mdash; ${start.granted.length} granted by the class
+
+  // The loop is tieredStartHtml's. What a spell does differently: a lone group
+  // prints no count line of its own, since the heading already carries it, and
+  // keeps the bare `spell-filter` id; a note is the player's to honour; and
+  // the rows are told the filter, because a tradition's fold opens while there
+  // is text in it.
+  return tieredStartHtml(groups, {
+    kind, catalog: S.spellCatalog, filterKey: 'spellFilter', idPrefix: 'spell-filter-',
+    flat: !many, inputId: many ? null : 'spell-filter', groupHead: many,
+    one: 'spell', many: 'spells', placeholder: 'Filter spells…',
+    admits: (g, sp) => (!g.spell_levels || g.spell_levels.includes(sp.level))
+      && spellTraditionAllowed(sp, g.traditions),
+    gate: (g) => (g.spell_levels ? `levels ${g.spell_levels.join(', ')}` : 'any spell level'),
+    noteTail: ', so it is yours to honour',
+    rows: (list, count, gi) => spellGroupRows(list, count, kind, many ? gi : null, S.spellFilter),
+    // Granted spells first: they are what the character already has, and the
+    // picker below is what it still owes a decision on.
+    head: (taken) => (start.granted.length ? `<h3>Spells &mdash; ${start.granted.length} granted by the class
       <span class="muted small">(already on the character)</span></h3>` + granted : '')
-    + `<h3>Spells — ${takenAll().length}/${total}
-    <span class="muted small">(${esc(magic.type)} magic${caption ? ' · ' + esc(caption) : ''})</span></h3>`
-    + blocks + misfiled;
+    + `<h3>Spells — ${taken}/${start.total}
+    <span class="muted small">(${esc(magic.type)} magic${caption ? ' · ' + esc(caption) : ''})</span></h3>`,
+  }) + misfiled;
 }
 
 // The level-1 psionic picks when the book SPLITS them across categories - the
@@ -4557,45 +4558,32 @@ function startingSpellHtml() {
 // neither the from_roll shape nor the single-category prompt.
 function startingPsiHtml(cls, groups) {
   const tier = cls.psionics.type;
-  const total = groups.reduce((n, g) => n + g.count, 0);
-  const takenAll = () => groups.flatMap((g, i) => powerList('psi-start', i));
-
-  const blocks = groups.map((g, gi) => {
-    const chosen = powerList('psi-start', gi);
-    const named = g.from && new Set(g.from.map((n) => n.toLowerCase()));
-    const elsewhere = new Set(takenAll().filter((n) => !chosen.includes(n))
-      .map((n) => String(n).toLowerCase()));
-    const inCategory = S.psiCatalog.filter((p) => inSystem(p)
-      && (named ? named.has(String(p.name).toLowerCase())
-                // categoryAllows, not a plain includes: an entry may be an
-                // object narrowing what it admits (F16), and this picker is the
-                // one the single-group one is not (BOOK-INGEST-AUDIT F69).
-                : (!g.categories || categoryAllows(g.categories, p)))
-      && !elsewhere.has(String(p.name).toLowerCase()));
+  // The loop is tieredStartHtml's. What a psionic power adds is a second gate,
+  // and a sentence counting what it withheld.
+  return tieredStartHtml(groups, {
+    kind: 'psi-start', catalog: S.psiCatalog, filterKey: 'psiFilter', idPrefix: 'psi-filter-',
+    one: 'power', many: 'powers', placeholder: 'Filter powers…',
+    // categoryAllows, not a plain includes: an entry may be an object narrowing
+    // what it admits (F16), and this picker is the one the single-group one is
+    // not (BOOK-INGEST-AUDIT F69).
+    admits: (g, p) => !g.categories || categoryAllows(g.categories, p),
+    gate: (g) => (g.categories && g.categories.length
+      ? g.categories.map(categoryLabel).join(', ') : 'any category'),
     // The per-power tier gate, exactly as the single-group picker applies it:
     // a book can say an individual power needs a higher tier than its category.
-    const pool = inCategory.filter((p) => derive.meetsTier(tier, p.min_tier));
-    const gated = inCategory.length - pool.length;
-    const list = Picker.filter(pool, S.psiFilter)
-      .concat(pool.filter((p) => chosen.includes(p.name) && !Picker.match(p, S.psiFilter)));
-    const gate = named ? `a list of ${g.from.length}`
-      : g.categories && g.categories.length
-        ? g.categories.map(categoryLabel).join(', ') : 'any category';
-    return `<p class="small" style="margin-top:12px"><b>${g.count}
-      ${g.count === 1 ? 'power' : 'powers'}</b> <span class="muted">from ${esc(gate)}</span>
-      <span class="muted">— ${chosen.length}/${g.count}</span></p>`
-      + (g.note ? `<p class="attr-note">${esc(g.note)} — the catalog cannot check this one.</p>` : '')
-      + (gated ? `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'}
-        a higher psychic tier than ${esc(tier)}.</p>` : '')
-      + Picker.inputHtml({ id: `psi-filter-${gi}`, value: S.psiFilter, placeholder: 'Filter powers…',
-          shown: Picker.filter(pool, S.psiFilter).length, total: pool.length })
-      + psiGroupRows(list, g.count, 'psi-start', gi);
-  }).join('');
-
-  return `<h3>Psionic powers — ${takenAll().length}/${total}
+    open: (p) => derive.meetsTier(tier, p.min_tier),
+    gatedNote: (gated) => `<p class="attr-note">${gated} more ${gated === 1 ? 'power needs' : 'powers need'}
+        a higher psychic tier than ${esc(tier)}.</p>`,
+    // The single-group picker names a listed power the catalog lacks, and this
+    // one never has. Kept as it was: saying it here would be a change to what
+    // the step shows, and this is the loop moving and nothing else.
+    unknownNamed: false,
+    rows: (list, count, gi) => psiGroupRows(list, count, 'psi-start', gi),
+    head: (taken, total) => `<h3>Psionic powers — ${taken}/${total}
     <span class="muted small">(${esc(tier)} psychic · in groups the book keeps apart)</span></h3>
     <p class="muted small">Each group has its own categories and its own budget. A power already
-      chosen is not offered again.</p>` + blocks;
+      chosen is not offered again.</p>`,
+  });
 }
 
 function renderPowers() {
