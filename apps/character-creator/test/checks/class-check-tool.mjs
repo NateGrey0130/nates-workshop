@@ -13,7 +13,7 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 import { bestMatchingPages, detectPageOffset, extractClassMarkdown, fieldSourceSpans,
   fieldTokens, freeTextFields, parseSourcePages, resolveBookSlug, unclosedFlowLines,
   unmodelledKeys, unmodelledSkillKeys, KNOWN_KEYS, KNOWN_SKILL_KEYS, LITERACY_PLACEHOLDER,
-  grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc } from '../../../../scripts/class-check-lib.mjs';
+  grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc, noteOnlyCategoryBonuses } from '../../../../scripts/class-check-lib.mjs';
 import { SYSTEM_PROMPT_CACHE, buildUserPrompt } from '../../../../scripts/extraction-prompt.mjs';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
 import { parseClassMarkdown, locateMessage } from '../../js/parser.js';
@@ -195,6 +195,64 @@ export function run() {
       check('and says neither on a class in the accepted shapes',
         clean.status === 0 && !/placeholder row|men_of_arms sits/.test(clean.stdout),
         clean.stdout.slice(-400));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  // ── a category bonus written only in its note (BOOK-INGEST-AUDIT F136) ──
+  // categoryBonus reads `bonus` and nothing else, so "+10%" in a `note` shows in
+  // the picker and adds nothing. The predicate first, then the real CLI: the
+  // draft warns, the same draft with a same-name sibling carrying the bonus does
+  // not (Nate's ruling, 2026-10-12), and the exit code is the same both ways.
+  {
+    const only = (cats, group = 'occ_related_skills') =>
+      noteOnlyCategoryBonuses({ skills: { [group]: { categories: cats } } });
+    check('a signed percentage in a note with no bonus beside it is found',
+      only([{ name: 'Technical', note: '+10%' }]).length === 1
+      && only([{ name: 'Technical', note: '+10%' }])[0].category === 'Technical'
+      && only([{ name: 'Rogue', note: 'Prowl only; -5%' }]).length === 1);
+    check('in all three lists that carry categories',
+      ['occ_related_skills', 'secondary_skills', 'skill_programs']
+        .every((g) => only([{ name: 'Technical', note: '+10%' }], g)[0]?.group === g));
+    check('an entry that states its bonus is not, nor a note with no signed percentage',
+      only([{ name: 'Technical', note: '+10%', bonus: 10 }]).length === 0
+      && only([{ name: 'Technical', note: 'any' }, 'Domestic', { name: 'Science' }]).length === 0
+      && only([{ name: 'Medical', note: 'Paramedic only, 10% of the time' }]).length === 0);
+    check('a same-name sibling carrying a bonus silences it, whichever comes first',
+      only([{ name: 'Technical', note: '+10%' }, { name: 'technical', only: ['Art'], bonus: 10 }]).length === 0
+      && only([{ name: 'Technical', only: ['Art'], bonus: 10 }, { name: 'Technical', note: '+10%' }]).length === 0);
+    check('and a sibling of another name, or in another list, does not',
+      only([{ name: 'Technical', note: '+10%' }, { name: 'Science', bonus: 10 }]).length === 1
+      && noteOnlyCategoryBonuses({ skills: {
+        occ_related_skills: { categories: [{ name: 'Technical', note: '+10%' }] },
+        secondary_skills: { categories: [{ name: 'Technical', bonus: 10 }] } } }).length === 1);
+    check('a class with no skills block has none', noteOnlyCategoryBonuses({ id: 'x' }).length === 0
+      && noteOnlyCategoryBonuses(null).length === 0);
+
+    const dir = mkdtempSync(join(tmpdir(), 'f136-'));
+    const cli = join(repoRoot, 'scripts', 'class-check.mjs');
+    const runOn = (name, cats) => {
+      const f = join(dir, name + '.md');
+      writeFileSync(f, '---\nid: x\nname: X\nsystem: rifts\nsource_book: B\ncategory: occ\n'
+        + 'skills:\n  occ_related_skills:\n    count: 4\n    categories:\n'
+        + cats.map((c) => `      - ${c}\n`).join('')
+        + '---\n\n## Lore\n\nA class.\n');
+      return spawnSync(process.execPath, [cli, f, '--no-catalog'], { encoding: 'utf8' });
+    };
+    const said = /WARNINGS[\s\S]*skills\.occ_related_skills\.categories "Technical" carries "\+10%" in its note and states no bonus/;
+    try {
+      const bare = runOn('bare', ['{ name: "Technical", note: "+10%" }']);
+      check('class-check WARNS on a category whose bonus is only in its note',
+        said.test(bare.stdout), `exit ${bare.status}: ${bare.stdout.slice(-600)}`);
+      check('and names the line the entry is on',
+        /states no bonus[^\n]*\(line 11\)/.test(bare.stdout), bare.stdout.slice(-600));
+      const sibling = runOn('sibling', ['{ name: "Technical", note: "+10%" }',
+        '{ name: "Technical", only: ["Art"], bonus: 10 }']);
+      check('and is silent when a same-name sibling in the list carries the bonus',
+        !/states no bonus/.test(sibling.stdout), sibling.stdout.slice(-600));
+      check('and the exit code is 0 both ways: a warning, never a gate',
+        bare.status === 0 && sibling.status === 0, `${bare.status} / ${sibling.status}`);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -117,6 +117,37 @@ export function menOfArmsBesideOwnSdc(statesSdcBase, menOfArms) {
   return Boolean(statesSdcBase) && menOfArms != null;
 }
 
+// A category's printed bonus written only in its `note` (BOOK-INGEST-AUDIT
+// F136). `categoryBonus` in js/parser.js reads the `bonus` key and nothing
+// else, so `{ name: "Technical", note: "+10%" }` shows "+10%" in the picker and
+// adds nothing to the pick. Sixty-four classes had shipped that way before
+// anyone swept for it.
+//
+// Returns the entries, in `occ_related_skills`, `secondary_skills` and
+// `skill_programs`, whose note carries a signed percentage and which state no
+// `bonus`. An entry is left out when ANOTHER entry of the same name in the SAME
+// list states one: a category printed with a bonus for part of it is two
+// entries (F109), and the plain one's note then describes what its sibling
+// pays (Nate's ruling, 2026-10-12).
+const SIGNED_PERCENT = /(?<![\w.])[+-]\d+(?:\.\d+)?%/;
+export function noteOnlyCategoryBonuses(data) {
+  const norm = (s) => String(s ?? '').trim().toLowerCase();
+  const out = [];
+  for (const group of ['occ_related_skills', 'secondary_skills', 'skill_programs']) {
+    const cats = data?.skills?.[group]?.categories;
+    if (!Array.isArray(cats)) continue;
+    const objects = cats.filter((c) => c && typeof c === 'object');
+    for (const c of objects) {
+      if (c.bonus != null) continue;
+      const percent = String(c.note ?? '').match(SIGNED_PERCENT)?.[0];
+      if (!percent) continue;
+      if (objects.some((o) => o !== c && o.bonus != null && norm(o.name) === norm(c.name))) continue;
+      out.push({ group, category: c.name, percent, note: String(c.note) });
+    }
+  }
+  return out;
+}
+
 /**
  * Read the class markdown back out of a data script.
  *
