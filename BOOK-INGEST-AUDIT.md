@@ -4854,7 +4854,8 @@ The finding is closed:** the two races carry the key (`~186`), applied
   that left the cut to the G.M. and player. `node scripts/audit-citations.mjs
   --remote F129`, run 2026-10-13 before the apply, listed no live class citing
   this finding; both classes cite it now, for the decision and not the
-  mechanism.
+  mechanism. `apps/character-creator/docs/race-and-occupation.md` said no race
+  carried the key yet and now names the two.
 - **The wizard's occupation picker**, which the mechanic note left showing
   the occupation's untrimmed counts, was settled on branch
   `pal/fix/occupation-picker-trimmed-counts` (merged 2026-10-13, ahead of

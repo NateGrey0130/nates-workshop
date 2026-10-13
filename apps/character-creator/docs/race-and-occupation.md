@@ -424,9 +424,10 @@ empty or repeating `occupations`. It cannot see the catalog, so regression
 checks that every occupation id a race names is a published O.C.C., and pins
 the carriers by name.
 
-No race carries it yet (2026-10-13): the mechanic shipped ahead of the two
-classes whose books print a cut, D-Bees' `nmbyr-gorilla-man` and Canada's
-`noli-bushman`.
+Two races carry it (`~186`, 2026-10-13), each because its page prints the cut:
+`nmbyr-gorilla-man` halves both lists for any occupation, and `noli-bushman`
+caps both at three for `wilderness-scout` and `vagabond` (D-Bees of North
+America printed 144 and 145). Regression pins those two by name.
 
 ### A class may supersede its race
 
