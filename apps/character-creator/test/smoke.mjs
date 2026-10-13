@@ -501,7 +501,7 @@ await catalogEditorChecks();
 import { buildStubStatements, referencedGear, referencedMosSkills, restrictionNames } from '../../../functions/api/character-creator/_lib/catalog.js';
 import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
-import { buildProposal, perLevelDiceOf, skillGrantsFor, spellGrantsFor, psionicGrantsFor, xpTableFor,
+import { buildProposal, perLevelDiceOf, perLevelRolledDiceOf, perLevelBounds, skillGrantsFor, spellGrantsFor, psionicGrantsFor, xpTableFor,
          thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
          startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed }
   from '../../../functions/api/character-creator/_lib/leveling.js';
@@ -2968,6 +2968,43 @@ section('Random psionics');
     const v = evalDice('1d6+1');
     return v >= 2 && v <= 7;
   })());
+
+  // A BARE NUMBER per level (BOOK-INGEST-AUDIT F133). The strings are live
+  // classes' own, from the census of production on 2026-10-12: 96 pool bases
+  // on 77 classes stated a flat gain and gained nothing, because the match
+  // needed dice.
+  check('a bare number per level is read, in each way the classes write it',
+    perLevelDiceOf('5d6+82, +10 per level of experience') === '10'      // tattooed-man
+    && perLevelDiceOf('2D6x100 plus 10 per level of experience') === '10' // norse-giant
+    && perLevelDiceOf('P.E. x5 + 12 per level') === '12'                  // nb-snake-bird
+    && perLevelDiceOf('M.E. x10, +5 per level') === '5'                   // faerie-bot
+    && perLevelDiceOf('1d4x100 plus the P.E. attribute; add 10 per level of experience') === '10' // phantom
+    && perLevelDiceOf('8/level') === '8' && perLevelDiceOf('6 per lvl') === '6');
+  check('and a level-up adds it', (() => {
+    const p = buildProposal({ level: 1, skills: [], ppe_max: 100 },
+      { ppe_base: '5d6+82, +10 per level of experience' }, 4);
+    return p.pools.ppe_max?.from === 100 && p.pools.ppe_max?.to === 130;
+  })());
+  check('dice before "per level" are still read whole, never as their last digit',
+    perLevelDiceOf('1d6+1 per level') === '1d6+1' && perLevelDiceOf('P.E. + 1d6 per level') === '1d6'
+    && perLevelDiceOf('2d4x10/level') === '2d4x10' && perLevelRolledDiceOf('1d6+1 per level') === '1d6+1');
+  check('the reading as it stood before F133 is kept, and gives a bare number nothing',
+    perLevelRolledDiceOf('5d6+82, +10 per level of experience') === null);
+  check('a class that says it gains nothing still gains nothing',
+    perLevelDiceOf('1d4x10 + M.E. attribute number, no gain per level') === null   // loak
+    && perLevelDiceOf('the former body\'s S.D.C. and hit points COMBINED - most Juicers have hundreds of S.D.C. and 30+ hit points. For a Mega-Juicer, multiply his M.D.C. by two. Neither pool ever rises again: experience level is frozen at the moment of death.') === null); // murder-wraith
+  check('a number that is the tail of something else is not a gain',
+    perLevelDiceOf('P.E. x 10 per level') === null && perLevelDiceOf('1.5 per level') === null
+    && perLevelDiceOf('-5 per level') === null && perLevelDiceOf('D6 per level') === null);
+  // The other two phrasings F133 covers are a later change each. Pinned as
+  // unread so that this match does not start taking them by accident.
+  check('"per additional level" and an amount with words after it are not read by this match',
+    perLevelDiceOf('3d4x10 plus M.E. attribute number, +10 per additional level of experience') === null // burster
+    && perLevelDiceOf('1D4x100, +10 M.D.C. per level of experience') === null);  // dragon-hatchling-flame-wind
+  check('one level\'s bounds: the most a bare number adds is itself, the least is nothing',
+    JSON.stringify(perLevelBounds('5d6+82, +10 per level of experience')) === '{"min":0,"max":10}'
+    && JSON.stringify(perLevelBounds('P.E. + 1d6+1 per level')) === '{"min":2,"max":7}'
+    && perLevelBounds('3d6') === null && perLevelBounds(20) === null);
 
   // Folding a rolled tier into the class object.
   const plain = { id: 'bowman', name: 'Bowman' };

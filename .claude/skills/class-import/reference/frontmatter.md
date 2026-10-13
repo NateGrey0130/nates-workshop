@@ -63,6 +63,14 @@ ppe_base: "1d6x10+20, +2d6 per additional level starting at level two"
 starting_money: "2d4x1000"                 # coin only, never gear
 ```
 
+**What a level-up adds is read out of the same string**, by `perLevelDiceOf`
+(`js/leveling.js`). It takes the amount written IMMEDIATELY before `per level`,
+`per lvl` or `/level`: dice (`"P.E. + 1d6 per level"` gains 1d6) or, since
+`BOOK-INGEST-AUDIT` F133, a bare number (`"5d6+82, +10 per level of experience"`
+gains 10). Anything else gains nothing on level-up, including the `ppe_base`
+example above (`per additional level`) and an amount with a word between it and
+`per level` (`"+10 M.D.C. per level"`). `"no gain per level"` reads as no gain.
+
 ## Tags — what the wizard's picker filters on
 
 ```yaml

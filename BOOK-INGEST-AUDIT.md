@@ -4725,7 +4725,7 @@ nothing was applied to production.
   2026-10-12: no live class cites it. A grep of the tree for the number found
   this heading alone. The memory directory was not searched.
 
-### F133 - low - a fixed per-level pool gain is not added on level-up
+### F133 - high - a fixed per-level pool gain is not added on level-up
 
 `perLevelDiceOf` (`apps/character-creator/js/leveling.js` lines 83-87, read
 2026-10-05) matches a DICE expression before "per level". A base written
@@ -4742,6 +4742,37 @@ regular expression was read; the census has not been run.
 
 **Confidence:** high on the two classes, unknown on the total.
 **Ongoing cost:** none.
+
+**Adjusted 2026-10-12 (branch `pal/fix/book-ingest-audit-f133-bare-number`):
+re-rated from low to high by Nate, and the bare-number shape is read. The
+finding stays open** for its other two phrasings, each a later branch.
+
+- **The census was run** on production on 2026-10-12 (one `SELECT` of
+  `imported_classes` where `deleted_at IS NULL`, each row through
+  `parseClassMarkdown`, every string-valued key ending `_base` at any depth
+  through `perLevelDiceOf`). 763 live classes, all parsed; 1,414 pool-base
+  strings, 795 of which mention a level. **249 strings on 193 classes were not
+  read.** 96 of those, on 77 classes, put a bare number immediately before
+  "per level" or "/level", and those 96 are read now. 153 strings on 118
+  classes are still not read: "per additional level", "for each additional
+  level", an amount with a word between it and "per level", and the two that
+  say there is no gain (`loak`, `murder-wraith`), which are correct as null.
+  The same rows before and after: 1,318 strings read to the same answer, none
+  read differently, 96 newly read.
+- **The premise was short by a wide margin.** The finding named two classes;
+  the shape it describes was on 77, and the wider problem on 193.
+- **Posture, said back:** a fix to level-up that changes what an existing
+  character gains from its NEXT level on, with nothing back-filled for the
+  levels it already climbed. Nate ruled on 2026-10-12 that the server's pool
+  range widens at its maximum only, so `perLevelBounds` in `js/leveling.js`
+  takes the maximum from the new reading and the minimum from the reading as
+  it stood, and a character levelled before this draws no
+  `pool_out_of_range` warning. A second form's hit points keep the old
+  reading; the census found no bare number in one.
+- **Not decided here:** five classes say "starting at level one"
+  (`mind-mage`, `psi-healer`, `psi-mystic`, `psychic-sensitive`,
+  `quorian-oneiromancer`). Whether level 1 itself gains is outside this
+  finding, and this branch adds nothing at level 1.
 
 ### F134 - low - nobody has driven the sheet's banked-pick panel on a band-named `at_levels` group
 

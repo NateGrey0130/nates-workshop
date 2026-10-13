@@ -48,7 +48,7 @@ import { isChoiceGroup, categoryAllows, categoryLabel, categoryName, needsOccupa
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
          applyAbilities, mosList } from '../../../../apps/character-creator/js/parser.js';
 
-import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
+import { skillGrantsFor, xpTableFor, thresholdFor, perLevelBounds,
          startingGroups, relatedAllowance, secondaryAllowance,
          convertsToMdc, convertedMdcBounds } from './leveling.js';
 
@@ -60,7 +60,7 @@ import { skillGrantsFor, xpTableFor, thresholdFor, perLevelDiceOf,
 export { relatedAllowance, secondaryAllowance };
 import { isRepeatableRow, otherRowFor } from '../../../../apps/character-creator/js/language-skills.js';
 import { isHandToHand, handToHandCost, handToHandSurcharge } from '../../../../apps/character-creator/js/hand-to-hand.js';
-import { poolFormulaBounds, diceBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
+import { poolFormulaBounds, attributeCeiling } from '../../../../apps/character-creator/js/dice.js';
 import { psionicShape } from '../../../../apps/character-creator/js/psionics.js';
 import { powerGrantsFor } from './power-picks.js';
 import { secondFormViolations } from '../../../../apps/character-creator/js/second-form.js';
@@ -739,8 +739,11 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
       if (!Number.isFinite(v) || formula == null) continue;
       const bounds = poolFormulaBounds(formula, attributes || {}, cls.bonuses?.pools?.[key] ?? null);
       if (!bounds) continue;
-      const per = perLevelDiceOf(formula);
-      const perB = per ? diceBounds(per) : null;
+      // perLevelBounds, not the dice's own bounds: a per-level gain that only
+      // started being read later (BOOK-INGEST-AUDIT F133) raises the maximum
+      // and never the minimum, so a character levelled before it was read
+      // draws no warning.
+      const perB = perLevelBounds(formula);
       const min = bounds.min + (perB ? perB.min * (level - 1) : 0);
       const max = bounds.max + (perB ? perB.max * (level - 1) : 0);
       if (v < min || v > max) {

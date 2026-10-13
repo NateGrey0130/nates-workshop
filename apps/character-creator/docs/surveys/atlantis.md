@@ -243,7 +243,10 @@ draft went through `book-reconcile` before any data script.
   base plus the starting level's +10 — twice for the Maxi-Man, which starts at
   second level and so matches the book's own 143-168 example (5D6+138).
   `book-reconcile` caught the Maxi-Man and Undead Slayer stored one and two
-  levels short.
+  levels short. **Adjusted 2026-10-12:** the flat `+10 per level` is added on
+  level-up now (`BOOK-INGEST-AUDIT` F133, bare-number shape), from a
+  character's next level on. The stored constants are unchanged and still
+  carry the starting level's gain.
 - **Two books' own examples disagree with their own formulas**, and the
   formula is stored with the example in prose: the Undead Slayer (printed 97,
   example 24 higher) and the female Tattooed Man (printed 93, 95-130).
