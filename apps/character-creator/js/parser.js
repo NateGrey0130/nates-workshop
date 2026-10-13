@@ -2652,18 +2652,47 @@ export function abilityGroupOwed(group) {
 // measured picks against `choose` asks this instead: the wizard's picker and
 // gate (level 1), the server's count (the character's level), the NPC
 // generator's creation picks.
-export function abilityGroupLevels(group) {
+//
+// A LEVEL MAY CARRY ITS OWN COUNT (BOOK-INGEST-AUDIT F127).
+//
+//   - { choose: 1, at_levels: [{ level: 1, count: 4 }, 3, 6, 9], from: [...] }
+//
+// Four at creation and one more at 3, 6 and 9, from one list. A bare number
+// still means `choose` picks at that level, so a group of bare numbers is
+// exactly what it was. abilityGroupLevelCounts is the one reader of the entry
+// shape; the three functions below it all go through it.
+const isLevelNumber = (n) => Number.isInteger(n) && n >= 1;
+
+function abilityLevelEntry(entry, choose) {
+  if (isLevelNumber(entry)) return { level: entry, count: choose };
+  if (entry && typeof entry === 'object' && !Array.isArray(entry)
+      && isLevelNumber(entry.level) && isLevelNumber(entry.count)) {
+    return { level: entry.level, count: entry.count };
+  }
+  return null;
+}
+
+// [{ level, count }] in level order, or null when the group states no usable
+// `at_levels` - one malformed entry makes the whole list unusable, as it did
+// when every entry was a number.
+function abilityGroupLevelCounts(group) {
   const l = group?.at_levels;
-  return Array.isArray(l) && l.length && l.every((n) => Number.isInteger(n) && n >= 1)
-    ? [...l].sort((a, b) => a - b) : null;
+  if (!Array.isArray(l) || !l.length) return null;
+  const choose = +group?.choose || 0;
+  const out = l.map((e) => abilityLevelEntry(e, choose));
+  return out.every(Boolean) ? out.sort((a, b) => a.level - b.level) : null;
+}
+
+export function abilityGroupLevels(group) {
+  return abilityGroupLevelCounts(group)?.map((e) => e.level) ?? null;
 }
 
 export function abilityGroupAllowance(group, level) {
   const choose = +group?.choose || 0;
-  const levels = abilityGroupLevels(group);
+  const levels = abilityGroupLevelCounts(group);
   if (!levels) return choose;
-  const reached = levels.filter((n) => n <= (Number(level) || 1)).length;
-  return choose * reached;
+  const at = Number(level) || 1;
+  return levels.reduce((n, e) => n + (e.level <= at ? e.count : 0), 0);
 }
 
 // What a span of levels earns from a class's levelled groups, itemised by the
@@ -2680,13 +2709,14 @@ export function abilityLevelGrants(cls, fromLevel, toLevel) {
   const out = [];
   const groups = (cls?.special_abilities || []).filter(isAbilityChoice);
   groups.forEach((g, slot) => {
-    const levels = abilityGroupLevels(g);
-    const count = +g.choose || 0;
-    if (!levels || count <= 0) return;
+    // Each level's own count (F127): `choose` for a bare number, the entry's
+    // `count` for one that states it.
+    const levels = abilityGroupLevelCounts(g);
+    if (!levels) return;
     const from = (g.from || []).map((o) => (typeof o === 'string' ? o : o?.name)).filter(Boolean).map(String);
     if (!from.length) return;
-    for (const level of levels) {
-      if (level <= fromLevel || level > toLevel) continue;
+    for (const { level, count } of levels) {
+      if (count <= 0 || level <= fromLevel || level > toLevel) continue;
       out.push({ level, slot, count, from,
         ...(typeof g.note === 'string' && g.note.trim() ? { note: g.note.trim() } : {}) });
     }
@@ -4334,14 +4364,23 @@ export function parseClassMarkdown(text) {
     }
     // A pick made at set levels (F116): which levels, each giving `choose`
     // picks. Rising, distinct, whole and at least 1, and never beside `rolls`,
-    // whose count is a table's and not a level's.
+    // whose count is a table's and not a level's. An entry may instead be
+    // `{ level, count }` (F127), a level that gives its own number of picks:
+    // those two keys and no others, both whole and at least 1, so a misspelt
+    // `cuont` is refused and not read as `choose`.
     if (e.at_levels !== undefined) {
       const l = e.at_levels;
-      if (!Array.isArray(l) || !l.length || l.some((n) => !Number.isInteger(n) || n < 1)) {
-        errors.push('special_abilities: at_levels must be a non-empty list of whole-number levels of 1 or more');
-      } else if (l.some((n, i) => i > 0 && n <= l[i - 1])) {
+      const isLevel = (n) => Number.isInteger(n) && n >= 1;
+      const levelOf = (n) => (isLevel(n) ? n
+        : n && typeof n === 'object' && !Array.isArray(n) && isLevel(n.level) && isLevel(n.count)
+          && Object.keys(n).every((k) => k === 'level' || k === 'count') ? n.level : null);
+      const lv = Array.isArray(l) ? l.map(levelOf) : [];
+      if (!Array.isArray(l) || !l.length || lv.some((n) => n === null)) {
+        errors.push('special_abilities: at_levels must be a non-empty list of whole-number levels of 1 or more, '
+          + 'each a number or { level, count } with a whole count of 1 or more');
+      } else if (lv.some((n, i) => i > 0 && n <= lv[i - 1])) {
         errors.push('special_abilities: at_levels must rise, each level once - '
-          + `got [${l.join(', ')}]`);
+          + `got [${lv.join(', ')}]`);
       }
       if (e.rolls !== undefined) {
         errors.push('special_abilities: a group states at_levels or rolls, not both');

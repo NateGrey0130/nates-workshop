@@ -352,6 +352,18 @@ creation:
   the creation pick the wizard already offers; a group with no level 1 is named
   on the Race step and not offered. Without `at_levels` a group is what it
   always was. `at_levels` and `rolls` do not combine.
+- **A level may state its own count** (`BOOK-INGEST-AUDIT` F127), for a book
+  that gives several at creation and one more later, from one list:
+
+  ```yaml
+    - { choose: 1, at_levels: [{ level: 1, count: 4 }, 3, 6, 9], from: ["...", "..."] }
+  ```
+
+  Four at level 1, then `choose` at 3, 6 and 9. An entry is a bare level or
+  `{ level, count }` with exactly those two keys, both whole numbers of 1 or
+  more; the group still needs `choose`, and levels still rise across both
+  shapes. A group of bare numbers is unchanged. A later level that states a
+  count banks one grant of that many picks.
 - **Every later level banks a grant** when the level is reached (or at
   creation, for a character made above level 1): a `pending_power_picks` row
   of kind `ability`, its option list in `from_names`, its `slot` the group's

@@ -1735,6 +1735,80 @@ check('pending skill picks are listed', picks.status === 200 && Array.isArray(pi
   check('the levelled-ability fixture is unpublished again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
 }
 
+// ── A level of a levelled group carries its own count (BOOK-INGEST-AUDIT F127) ──
+//
+// China 2's body hardening: several at creation and one more at later levels,
+// from one list. An `at_levels` entry may be `{ level, count }`; a bare number
+// still gives `choose`. Driven through the real routes on a fixture class:
+// creation is held to the level-1 count, the next level banks `choose`, and a
+// later level that states a count of two banks one grant of two.
+{
+  const md = ['---', 'id: f127-probe', 'name: F127 Probe', 'system: rifts', 'source_book: fixture',
+    'category: occ', 'occ_group: men-of-arms', 'tags: []', 'men_of_arms: true',
+    'hit_points_base: "P.E. + 1d6 per level"', 'sdc_base: "3d6+20"',
+    'special_abilities:',
+    '  - { name: "F127 One", description: "x" }',
+    '  - { name: "F127 Two", description: "x" }',
+    '  - { name: "F127 Three", description: "x" }',
+    '  - { name: "F127 Four", description: "x" }',
+    '  - { name: "F127 Vanish", description: "x" }',
+    '  - { name: "F127 Fade", description: "x" }',
+    '  - { choose: 1, at_levels: [{ level: 1, count: 2 }, 2], from: ["F127 One", "F127 Two", "F127 Three", "F127 Four"] }',
+    '  - { choose: 1, at_levels: [{ level: 2, count: 2 }], from: ["F127 Vanish", "F127 Fade"] }',
+    '---', '', '## Lore', '', 'A regression fixture.', ''].join('\n');
+  const fixture = join(state, 'f127-fixture.sql');
+  writeFileSync(fixture, "INSERT INTO imported_classes (class_id, name, system, status, markdown, created_by, created_at) "
+    + "VALUES ('f127-probe', 'F127 Probe', 'rifts', 'published', '" + md.replace(/'/g, "''")
+    + "', 'regression', datetime('now'));\n", 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the per-level-count fixture is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const make = (name, abilities) => api('POST', '/characters', {
+    campaign_id: campaignId, name, class_id: 'f127-probe', attributes: attrs, skills: [], abilities,
+    pools: { hp: 20, sdc: 30 },
+  });
+  const tooMany = await make('F127 Too Many', ['F127 One', 'F127 Two', 'F127 Three']);
+  check('creation refuses a third pick from a group whose level 1 states a count of two',
+    tooMany.status === 422 && (tooMany.body.violations || []).some((v) => v.rule === 'ability_count'),
+    JSON.stringify(tooMany.body).slice(0, 200));
+  const made = await make('F127 Levelled', ['F127 One', 'F127 Two']);
+  check('and allows the two, which choose alone would have refused', made.status === 201,
+    JSON.stringify(made.body).slice(0, 300));
+  const pid = made.body.id;
+  const pendingOf = async () => (await api('GET', `/characters/${pid}/power-picks`)).body.pending || [];
+  check('nothing is banked at level one', (await pendingOf()).length === 0);
+
+  const xp = await api('POST', `/characters/${pid}/xp`, { total: 2500 });
+  check('enough XP proposes level two', xp.body.proposal?.to_level === 2, JSON.stringify(xp.body).slice(0, 200));
+  const lvl = await api('POST', `/characters/${pid}/level-confirm`, { to_level: 2, picks: [] });
+  check('the level-up confirms', lvl.status === 200, JSON.stringify(lvl.body).slice(0, 250));
+  const banked = await pendingOf();
+  check('level two banks choose for the bare level and two for the level that states its count',
+    JSON.stringify(banked.map((g) => [g.kind, g.granted_at_level, g.slot, g.count, (g.from || []).length]))
+      === '[["ability",2,0,1,4],["ability",2,1,2,2]]',
+    JSON.stringify(banked));
+
+  const spend = (picks) => api('POST', `/characters/${pid}/power-picks`, { picks });
+  const over = await spend([{ kind: 'ability', name: 'F127 Three', granted_at_level: 2, slot: 0 },
+    { kind: 'ability', name: 'F127 Four', granted_at_level: 2, slot: 0 }]);
+  check('the bare level\'s grant of one refuses two picks',
+    over.status === 422 && JSON.stringify(over.body).includes('already full'), JSON.stringify(over.body).slice(0, 200));
+  const took = await spend([{ kind: 'ability', name: 'F127 Three', granted_at_level: 2, slot: 0 },
+    { kind: 'ability', name: 'F127 Vanish', granted_at_level: 2, slot: 1 },
+    { kind: 'ability', name: 'F127 Fade', granted_at_level: 2, slot: 1 }]);
+  check('the grant of two is spent on two picks, beside the grant of one',
+    took.status === 200 && took.body.pending_total === 0, JSON.stringify(took.body).slice(0, 250));
+  const after = (await api('GET', `/characters/${pid}`)).body.character;
+  check('and all five abilities are held, which the server accepts at level two',
+    JSON.stringify(after.abilities) === '["F127 One","F127 Two","F127 Three","F127 Vanish","F127 Fade"]',
+    JSON.stringify(after.abilities));
+
+  const cleanup = join(state, 'f127-cleanup.sql');
+  writeFileSync(cleanup, "UPDATE imported_classes SET status = 'draft' WHERE class_id = 'f127-probe';\n", 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the per-level-count fixture is unpublished again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // ── A second body: the Facade and the Morphus (BOOK-INGEST-AUDIT F74) ──
 //
 // Nightbane survey D5. A fixture class states a `second_form`; a character is

@@ -764,6 +764,11 @@ button. A pick-one group needs the bands to cover 01-00.
   creation pick; a group with no level 1 is named in the wizard and not
   offered. Each later level banks a pick the player spends from the sheet's
   banked-picks panel, never in the level-up dialog.
+- **A level that gives a different number states it** (F127):
+  `at_levels: [{ level: 1, count: 4 }, 3, 6, 9]` is four at creation and
+  `choose` at 3, 6 and 9. An entry is a bare level or `{ level, count }`,
+  those two keys only, both whole and 1 or more. `choose` is still required,
+  and a group of bare numbers is unchanged.
 - A level past the class's fifteen-level ladder never fires: keep that pick
   as prose. `at_levels` and `rolls` do not combine.
 - A later pick's dice and pool bonuses are rolled and stored when it is spent.
