@@ -11,16 +11,17 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { validateCharacter } from '../../../../functions/api/character-creator/_lib/validate-character.js';
+import { relatedAllowance, validateCharacter } from '../../../../functions/api/character-creator/_lib/validate-character.js';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
-import { combineClasses, needsOccupation, parseClassMarkdown } from '../../js/parser.js';
+import { combineClasses, needsOccupation, parseClassMarkdown, relatedFloorStatus } from '../../js/parser.js';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['R.C.C. + O.C.C.', 'Race and occupation', 'A class that supersedes its race',
   'An occupation may take its P.P.E. or money over the race (BOOK-INGEST-AUDIT F111)',
   'A race may yield its P.P.E. or money to an occupation (BOOK-INGEST-AUDIT F111)',
   'A race may name the few skills a pairing keeps (BOOK-INGEST-AUDIT F114)',
-  'A race may trim the skill counts of a paired occupation (BOOK-INGEST-AUDIT F129)'];
+  'A race may trim the skill counts of a paired occupation (BOOK-INGEST-AUDIT F129)',
+  'A trimmed related count yields the floors it cannot hold (BOOK-INGEST-AUDIT F129)'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -595,6 +596,158 @@ section('A race may trim the skill counts of a paired occupation (BOOK-INGEST-AU
     judge(halved, [...picks('related', 3), ...picks('secondary', 2)]) === '');
   check('creation counts only: the picks the occupation gains at level 3 are not trimmed',
     judge(halved, picks('related', 5), 3) === '' && judge(halved, picks('related', 6), 3) === 'related_count:5');
+}
+
+section('A trimmed related count yields the floors it cannot hold (BOOK-INGEST-AUDIT F129)');
+{
+  // `pairing_counts` can take the composed related count below the total of the
+  // occupation's own `minimums`: six picks halved to three, against two
+  // Espionage and two Military. Until 2026-10-13 every such build was
+  // unreachable - `owed > remaining` - the one with all three picks on a floor
+  // included, so the server refused every save and the NPC generator, filling
+  // each floor whole, spent four picks of three. Nate's ruling that day: the
+  // count stays what the book prints, and every pick goes to a required
+  // category until the picks run out.
+  const doc = (cat, extra, id = 't') => parseClassMarkdown(
+    `---\nid: ${id}\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n` + extra + '---\n\n## Lore\n\nx\n');
+  const occDoc = doc('occ', 'skills:\n  occ_related_skills:\n    count: 6\n'
+    + '    categories: ["Espionage", "Military", "Science"]\n'
+    + '    minimums:\n      - { count: 2, category: "Espionage" }\n      - { count: 2, category: "Military" }\n'
+    + '    schedule: [{ level: 3, count: 2 }]\n'
+    + '  secondary_skills: { count: 0 }\n', 'agent');
+  const raceDoc = doc('rcc', 'pairing_counts: [{ related: { factor: 0.5 } }]\n', 'halfling');
+  check('the fixtures parse: an occupation with floors of 2 + 2 in six, and a race that halves the count',
+    occDoc.ok && raceDoc.ok, occDoc.errors.concat(raceDoc.errors).join('; '));
+  const occ = occDoc.data;
+  const pair = combineClasses(raceDoc.data, occ);
+  check('the pair has three related picks at level one and still states both floors',
+    relatedAllowance(pair, 1) === 3 && pair.skills.occ_related_skills.minimums.length === 2
+    && relatedAllowance(pair, 3) === 5,
+    `${relatedAllowance(pair, 1)} / ${relatedAllowance(pair, 3)}`);
+
+  const E = 'Espionage';
+  const M = 'Military';
+  const S = 'Science';
+  const un = (cats, allow = 3, cls = pair) => relatedFloorStatus(cls, cats, allow).unreachable;
+  check('three picks, every one on a floor, are not unreachable',
+    un([E, E, M]) === false && un([E, M, M]) === false && un([M, E, M]) === false);
+  check('and neither is a build with picks still to spend, none of them wasted',
+    un([]) === false && un([E]) === false && un([E, M]) === false && un([M, M]) === false);
+  check('one pick outside the floors is unreachable, wherever it falls',
+    un([E, E, S]) === true && un([S]) === true && un([E, S]) === true && un([S, E, M]) === true);
+  check('and so is a third pick in a floor already full, while the other stands short',
+    un([E, E, E]) === true && un([M, M, M]) === true);
+  const st = relatedFloorStatus(pair, [E, E, M], 3);
+  check('the running totals are still each floor\'s own have and count',
+    st.floors.map((f) => `${f.have}/${f.count}`).join() === '2/2,1/2' && st.trimmed === true && st.wasted === 0
+    && relatedFloorStatus(pair, [E, E, S], 3).wasted === 1);
+
+  // AT OR ABOVE THE FLOORS' TOTAL NOTHING MOVED. The old test is written out
+  // here, not imported, and every build of every length up to one past the
+  // allowance is put to both - for the pair's own floors and for a union floor.
+  const was = (cls, cats, allow) => {
+    const held = cats.map((c) => c.toLowerCase());
+    const owed = cls.skills.occ_related_skills.minimums.reduce((n, m) => {
+      const wanted = (m.categories || [m.category]).map((c) => c.toLowerCase());
+      return n + Math.max(0, m.count - held.filter((c) => wanted.includes(c)).length);
+    }, 0);
+    return owed > Math.max(0, allow - held.length);
+  };
+  const builds = (len) => (len === 0 ? [[]] : builds(len - 1).flatMap((b) => [E, M, S].map((c) => [...b, c])));
+  const union = doc('occ', 'skills:\n  occ_related_skills:\n    count: 6\n'
+    + '    categories: ["Espionage", "Military", "Science"]\n'
+    + '    minimums:\n      - { count: 3, categories: ["Espionage", "Military"] }\n').data;
+  let compared = 0;
+  const moved = [];
+  for (const [cls, total] of [[pair, 4], [occ, 4], [union, 3]]) {
+    for (let allow = total; allow <= total + 3; allow++) {
+      for (let len = 0; len <= allow + 1; len++) {
+        for (const b of builds(len)) {
+          compared += 1;
+          const now = relatedFloorStatus(cls, b, allow);
+          if (now.unreachable !== was(cls, b, allow) || now.trimmed) moved.push(`${allow}:${b.join('')}`);
+        }
+      }
+    }
+  }
+  check('an allowance at or above the floors\' total gives the answer it gave before, for every build',
+    compared > 10000 && moved.length === 0, `${compared} compared, ${moved.length} moved: ${moved.slice(0, 5).join(' ')}`);
+  check('so the pair at level 3, five picks against floors of four, has one free pick and not two',
+    un([E, E, M, M, S], 5) === false && un([E, E, M, S, S], 5) === true && un([E, E, M, S], 5) === false);
+
+  // FLOORS THAT SHARE A CATEGORY. A pick counts toward every floor naming its
+  // category, so two Espionage picks meet both of these and the floors need two
+  // picks, not the four their counts add up to. Three picks therefore leave one
+  // free, and the sum of the counts cannot stand in for what is needed.
+  const shared = { skills: { occ_related_skills: { count: 3, categories: [E, M, S],
+    minimums: [{ count: 2, categories: [E, M] }, { count: 2, category: E }] } } };
+  check('floors sharing a category are judged by the picks they need, not by their counts added up',
+    un([E, E, S], 3, shared) === false && un([S], 3, shared) === false && un([S, E, E], 3, shared) === false
+    && un([E, M, E], 3, shared) === false);
+  check('and a build that cannot meet them in the picks it has is still unreachable',
+    un([S, S], 3, shared) === true && un([M, M, S], 3, shared) === true && un([M, S, E], 3, shared) === true
+    && un([M, M, M], 3, shared) === true);
+  check('and with two picks for them, both must be the shared category',
+    un([E, E], 2, shared) === false && un([E], 2, shared) === false
+    && un([E, M], 2, shared) === true && un([M], 2, shared) === true);
+
+  // THE SERVER, through the same arithmetic. `allowed` is absent from this
+  // rule's violation, so the rule name alone is compared.
+  const rel = (n, category) => ({ name: `${category} ${n}`, type: 'related', category });
+  const rules = (cls, skills, level = 1) => validateCharacter({
+    character: { level }, cls, skills, attributes: {}, catalog: new Map() }).violations.map((v) => v.rule).join();
+  check('the validator accepts a halved count filled from the required categories',
+    rules(pair, [rel(1, E), rel(2, E), rel(1, M)]) === '' && rules(pair, [rel(1, E), rel(1, M), rel(2, M)]) === '',
+    rules(pair, [rel(1, E), rel(2, E), rel(1, M)]));
+  check('and refuses one with a pick outside them',
+    rules(pair, [rel(1, E), rel(2, E), rel(1, S)]) === 'related_minimum'
+    && rules(pair, [rel(1, S)]) === 'related_minimum',
+    rules(pair, [rel(1, E), rel(2, E), rel(1, S)]));
+  check('and accepts a half-built one that has wasted nothing', rules(pair, [rel(1, M)]) === '' && rules(pair, []) === '');
+  check('and the occupation alone, six picks, is judged as it was',
+    rules(occ, [rel(1, E), rel(2, E), rel(1, M), rel(2, M), rel(1, S), rel(2, S)]) === ''
+    && rules(occ, [rel(1, E), rel(2, E), rel(1, M), rel(1, S), rel(2, S), rel(3, S)]) === 'related_minimum');
+
+  // THE NPC GENERATOR, RUN. Row 29a's suite never paired a trimming race with
+  // an occupation whose floors exceed the trimmed count. The picks are random,
+  // so it is run many times and every character is put to the validator.
+  const { generateNpc } = await import('../../js/npc-generate.js');
+  const world = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(world, world);
+  const catalog = [E, M, S].flatMap((category) => [1, 2, 3, 4, 5, 6].map((n) =>
+    ({ name: `${category} ${n}`, category, base: 30, per_level: 5 })));
+  const built = (cls, level) => {
+    const out = [];
+    for (let i = 0; i < 40; i++) {
+      try {
+        const npc = generateNpc({ cls, level, catalog, derive: world.derive, system: 'rifts' });
+        const related = npc.skills.filter((s) => s.type === 'related');
+        const refused = validateCharacter({ character: { level }, cls, skills: npc.skills,
+          attributes: npc.attributes, catalog: new Map(catalog.map((r) => [r.name.toLowerCase(), r.category])) })
+          .violations.map((v) => v.rule).join();
+        out.push({ n: related.length, cats: related.map((s) => s.category[0]).sort().join(''), refused });
+      } catch (e) {
+        out.push({ n: -1, cats: '', refused: `${e.code || e.name}: ${e.message}` });
+      }
+    }
+    return out;
+  };
+  const at1 = built(pair, 1);
+  check('the NPC generator builds the pair at level one: three related picks, never four, and no gap thrown',
+    at1.every((r) => r.n === 3), JSON.stringify(at1.find((r) => r.n !== 3)));
+  check('and every one of them is on a floor, two in one and one in the other',
+    at1.every((r) => r.cats === 'EEM' || r.cats === 'EMM'), JSON.stringify(at1.find((r) => !/^E(EM|MM)$/.test(r.cats))));
+  check('and the validator accepts every one', at1.every((r) => r.refused === ''),
+    JSON.stringify(at1.find((r) => r.refused !== '')));
+  const at3 = built(pair, 3);
+  check('built at level 3, the two picks gained there leave both floors met and the validator content',
+    at3.every((r) => r.n === 5 && r.refused === '' && (r.cats.match(/E/g) || []).length >= 2
+      && (r.cats.match(/M/g) || []).length >= 2),
+    JSON.stringify(at3.find((r) => r.n !== 5 || r.refused !== '' || !/^E{2,3}M{2,3}S?$/.test(r.cats))));
+  const alone = built(occ, 1);
+  check('and the occupation alone still gets its six, both floors met',
+    alone.every((r) => r.n === 6 && r.refused === '' && (r.cats.match(/E/g) || []).length >= 2
+      && (r.cats.match(/M/g) || []).length >= 2), JSON.stringify(alone.find((r) => r.n !== 6 || r.refused !== '')));
 }
 
 }

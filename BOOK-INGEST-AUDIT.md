@@ -4772,6 +4772,42 @@ convert in the next PR.
   line: the Skills step reads the composed class (`app.js:3619-3625`, read
   2026-10-13 and not run in a browser), and the server was run as above.
 
+**The floors yield to a trimmed count, 2026-10-13 (branch
+`pal/fix/pairing-counts-minimums-yield`). The finding stays open:** the two
+classes convert in row 29b's PR.
+
+- **What was wrong.** A trimmed count can fall below the total of the
+  occupation's `minimums`, and `relatedFloorStatus` then called every build
+  unreachable. Run 2026-10-13 on a fixture pair, six related halved to three
+  against floors of two Espionage and two Military: two Espionage and one
+  Military gave `owed 1, remaining 0, unreachable true`, the server refused the
+  save with `related_minimum`, and the NPC generator took four related picks of
+  three.
+- **What a trimmed count does to the minimums now** (Nate's ruling,
+  2026-10-13): the count stays what the book prints, and every pick goes to a
+  required category until the picks run out. Below the floors' total a build is
+  refused only for a wasted pick: one outside every floor, or one more in a
+  floor already full while another stands short. At or above the total the old
+  test runs unchanged, and the suite puts every build of the fixtures to both.
+  Not taken: halving each minimum, or stopping the count at the minimums' sum.
+- **Posture:** this enforces, as the floors always did; it refuses less than
+  before and nothing new. No data script on `main` carries `pairing_counts`
+  (`grep -c "^pairing_counts:"` over `apps/character-creator/db/*.sql`, 0
+  files, 2026-10-13; production was not asked), so no stored character should
+  be judged differently.
+- **The later levels.** The floors are counted over every related pick, so a
+  pair whose allowance reaches the floors' total at a later level owes them
+  whole again, and the NPC generator spends the picks gained there on a floor
+  still short.
+- **Floors that share a category** need fewer picks than their counts add up
+  to, so below the total the fewest picks that meet them is worked out, not
+  summed. No data script states such floors (70 `minimums` blocks under
+  `apps/character-creator/db/`, 18 with more than one floor, none sharing a
+  category; scanned 2026-10-13).
+- **Not changed:** the class-file error for minimums above the class's own
+  count, which judges one file; the wizard's occupation picker; the wording of
+  the server's `related_minimum` message, which still names the short floors.
+
 ### F130 - low - per-level and conditional values that no key holds, on eight D-Bees classes
 
 Seven classes from D-Bees of North America carry a value that changes with

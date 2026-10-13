@@ -403,6 +403,20 @@ both cuts apply. The server needs nothing of its own, because
 suite runs the same picks against the occupation alone and against the trimmed
 pair to hold that.
 
+**A trimmed count can fall below the occupation's own floors**, and the floors
+then yield (Nate's ruling, 2026-10-13). An occupation that takes six related
+skills, at least two Espionage and two Military, has three picks once a race
+halves it, and three picks cannot hold four. The count stays what the book
+prints, and every pick goes to a required category until the picks run out:
+two of one and one of the other. Neither the minimums nor the count is scaled.
+`relatedFloorStatus` in `js/parser.js` owns this. Below the floors' total it
+refuses a build with a *wasted* pick, which is one outside every floor or one
+more in a floor already full while another stands short. At or above the total
+it applies the test it always did. The wizard's running totals, the server's
+`related_minimum` refusal and the NPC generator all come through it. The picks
+gained at later levels are counted with the rest, so a character built at a
+level whose allowance reaches the total owes the floors whole again.
+
 The parser refuses the key on an O.C.C., a list name other than `related` or
 `secondary`, a list with both `factor` and `cap` or with neither, a `factor`
 outside 0 to 1, a `cap` that is not a whole number of zero or more, and an

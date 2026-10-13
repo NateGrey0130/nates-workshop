@@ -2028,11 +2028,28 @@ export function relatedMinimums(cls) {
  * catalog index on the other - and they must not disagree about whether a
  * character is legal. Only the mapping to categories is theirs; the arithmetic
  * is this function's.
+ *
+ * AN ALLOWANCE BELOW THE FLOORS' OWN TOTAL (BOOK-INGEST-AUDIT F129). A class's
+ * file cannot state one - validateRelatedMinimums refuses it - but a race's
+ * `pairing_counts` trims the composed count, and three picks cannot hold two
+ * Espionage and two Military. Tested the old way every such build is
+ * unreachable, the one with every pick on a floor included. Nate's ruling,
+ * 2026-10-13: the count stays what the book prints, and every pick goes to a
+ * required category until the picks run out. So below the total a build is
+ * legal exactly when no pick is WASTED, a wasted pick being one that brought
+ * the floors no nearer: one outside every floor, or one more in a floor
+ * already full. `trimmed` says which of the two tests was applied.
+ *
+ * At or above the total the old test runs, untouched. For floors that share no
+ * category the two are one test - `wasted > allowance - total` is `owed >
+ * remaining` rearranged - so the split changes nothing there; it exists so
+ * that no build judged before this was written is judged differently now.
  */
 export function relatedFloorStatus(cls, categories, allowance) {
   const floors = relatedMinimums(cls);
   const held = (Array.isArray(categories) ? categories : []).map(normName);
-  const remaining = Math.max(0, (Number.isFinite(allowance) ? allowance : held.length) - held.length);
+  const allowed = Number.isFinite(allowance) ? allowance : held.length;
+  const remaining = Math.max(0, allowed - held.length);
   const status = floors.map((f) => {
     const wanted = new Set(f.categories.map(normName));
     const have = held.filter((c) => wanted.has(c)).length;
@@ -2040,7 +2057,38 @@ export function relatedFloorStatus(cls, categories, allowance) {
   });
   const short = status.filter((f) => !f.met);
   const owed = short.reduce((n, f) => n + f.missing, 0);
-  return { floors: status, short, remaining, owed, unreachable: owed > remaining };
+  const floorTotal = floors.reduce((n, f) => n + f.count, 0);
+  if (allowed >= floorTotal) {
+    return { floors: status, short, remaining, owed, trimmed: false, wasted: 0, unreachable: owed > remaining };
+  }
+  // The fewest picks that would meet every floor, from nothing and from here.
+  // A pick counts toward EVERY floor naming its category (that is what `have`
+  // counts above), so floors sharing a category need fewer picks than their
+  // counts add up to, and the sum cannot stand in for this.
+  const sets = floors.map((f) => new Set(f.categories.map(normName)));
+  const fewest = floorPicksNeeded(sets, floors.map((f) => f.count));
+  const needed = floorPicksNeeded(sets, status.map((f) => f.missing));
+  const wasted = held.length - (fewest - needed);
+  return { floors: status, short, remaining, owed, trimmed: true, wasted,
+           unreachable: wasted > Math.max(0, allowed - fewest) };
+}
+
+// The fewest picks that bring every deficit to zero, when one pick lowers the
+// deficit of each floor whose categories include it. Floors are few and small,
+// so this walks every choice, remembering the deficits it has already solved.
+function floorPicksNeeded(sets, deficits, memo = new Map()) {
+  if (deficits.every((d) => d <= 0)) return 0;
+  const key = deficits.join(',');
+  if (memo.has(key)) return memo.get(key);
+  const open = new Set();
+  sets.forEach((set, i) => { if (deficits[i] > 0) for (const c of set) open.add(c); });
+  let best = Infinity;
+  for (const c of open) {
+    const next = deficits.map((d, i) => (sets[i].has(c) ? Math.max(0, d - 1) : d));
+    best = Math.min(best, 1 + floorPicksNeeded(sets, next, memo));
+  }
+  memo.set(key, best);
+  return best;
 }
 
 /**
