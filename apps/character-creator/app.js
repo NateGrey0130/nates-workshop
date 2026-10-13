@@ -3452,6 +3452,23 @@ function skillsOccPartFor(ctx) {
     const visible = available.filter((n) => hits.has(n) || picked.includes(n));
     const capped = !ui.filter && !ui.all && visible.length > GROUP_SHORT;
     const list = capped ? visible.filter((n, i) => i < GROUP_SHORT || picked.includes(n)) : visible;
+    // What the percentage column says. A group whose list gives an option its
+    // OWN bonus (`{ name, bonus }`, BOOK-INGEST-AUDIT.md F135) is one where the
+    // rows differ, so each row prints what picking it would store: the same
+    // `skillGroupForPick` entry, through the same `resolveSkill`, that
+    // skillsAtLevelOne() saves the pick by. The Psi-Stalker's two Pilot options
+    // read 46% and 85% instead of two dashes and a note. Every other group -
+    // all plain names, or `categories` - gets the group back from
+    // `skillGroupForPick` for every option, and prints the group's own `base`
+    // exactly as it always has.
+    const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';
+    const ownBonus = optionNames.some((name) => skillGroupForPick(s, name) !== s);
+    const optionPct = (name) => {
+      if (!ownBonus) return groupPct;
+      const entry = skillGroupForPick(s, name);
+      const r = resolveSkill(name, entry);
+      return r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—';
+    };
     const opts = list.map((name) => {
       // The Other row is taken once PER LANGUAGE and never reads as already
       // picked, exactly as it does on the related/secondary picker. Without
@@ -3467,7 +3484,7 @@ function skillsOccPartFor(ctx) {
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="group" data-group="${gi}" data-limit="${s.choose}" data-name="${esc(name)}">
         <span>${esc(hthLabel(name))}${hint}</span>
-        <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
+        <span class="pct">${optionPct(name)}</span></label>`;
     }).join('');
     const filterBox = available.length > GROUP_SHORT
       ? Picker.inputHtml({ id: `grp-filter-${gi}`, value: ui.filter, shown: visible.length, total: available.length })
