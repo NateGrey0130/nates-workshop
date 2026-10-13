@@ -4774,6 +4774,36 @@ finding stays open** for its other two phrasings, each a later branch.
   `quorian-oneiromancer`). Whether level 1 itself gains is outside this
   finding, and this branch adds nothing at level 1.
 
+**Adjusted 2026-10-12 (branch `pal/fix/book-ingest-audit-f133-additional-level`):
+"per additional level" and "for each additional level" are read, dice or a
+bare number. The finding stays open** for its last phrasing, a later branch.
+
+- **The census was run again** on production on 2026-10-12, the same way (one
+  `SELECT` of `imported_classes` where `deleted_at IS NULL`, 763 classes, all
+  parsed, 1,414 pool-base strings). Before this branch 153 strings on 118
+  classes were not read. **100 of them, on 79 classes, are read now**: 65 dice
+  and 35 a bare number. 1,314 strings read to the same answer and none reads
+  differently. **53 strings on 39 classes are still not read**: an amount with
+  a word between it and the phrase ("2d6 more per level", "+10 M.D.C. per
+  level", "+10 points per level", "+1d6 I.S.P. per level"), `necromancer`'s
+  "2d6 more per additional level", the two that say there is no gain, and
+  `true-inca`'s `mdc_base`, which adds an attribute per level and stays by
+  hand (Nate's ruling, 2026-10-12).
+- **One thing the phrasing needed that its name does not say.** No live class
+  writes "for each additional level" straight after the amount: all eight name
+  the pool first ("+10 I.S.P. for each additional level", `mind-melter` among
+  them), and so do two "per additional level" strings. So a pool's own
+  abbreviation (I.S.P., P.P.E., M.D.C., S.D.C.) may sit between the amount and
+  these two phrasings, and only these. Ten of the 100 are read that way. A
+  word of any other kind, and any word before a plain "per level", is still
+  the last phrasing's.
+- **Posture, said back:** as above. A character gains from its NEXT level only
+  and nothing is back-filled. This phrasing is mostly dice, and the server's
+  pool range still widens at its maximum only: the minimum is taken from the
+  reading as it stood before this finding, which was not widened, so the
+  per-level minimum moved on none of the 1,414 strings. A second form's hit
+  points keep the old reading; the census found this phrasing in none.
+
 ### F134 - low - nobody has driven the sheet's banked-pick panel on a band-named `at_levels` group
 
 `F116` banks a later-level pick and spends it from the sheet's banked panel.

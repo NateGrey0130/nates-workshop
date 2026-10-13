@@ -67,9 +67,14 @@ starting_money: "2d4x1000"                 # coin only, never gear
 (`js/leveling.js`). It takes the amount written IMMEDIATELY before `per level`,
 `per lvl` or `/level`: dice (`"P.E. + 1d6 per level"` gains 1d6) or, since
 `BOOK-INGEST-AUDIT` F133, a bare number (`"5d6+82, +10 per level of experience"`
-gains 10). Anything else gains nothing on level-up, including the `ppe_base`
-example above (`per additional level`) and an amount with a word between it and
-`per level` (`"+10 M.D.C. per level"`). `"no gain per level"` reads as no gain.
+gains 10). It takes the same two before `per additional level`, `for each
+additional level` and `per each additional level`, so the `ppe_base` example
+above gains 2d6; before those phrasings only, the pool's own abbreviation may
+follow the amount (`"+10 I.S.P. for each additional level"` gains 10). Anything
+else gains nothing on level-up: an amount with any other word between it and
+the phrase (`"+10 M.D.C. per level"`, `"2d6 more per level"`), and an attribute
+(`"plus P.E. attribute number per additional level"`). `"no gain per level"`
+reads as no gain.
 
 ## Tags — what the wizard's picker filters on
 

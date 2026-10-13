@@ -427,6 +427,19 @@ section('Creation validation');
     const w = pw({ hp_max: 14 }, { level: 6 });
     return !!w.warnings.find((x) => x.rule === 'pool_out_of_range' && x.min === 16 && x.max === 46);
   })());
+  // "PER ADDITIONAL LEVEL" (F133's second phrasing) is DICE, and still raises
+  // the top only: before it was read a Ley Line Walker gained nothing at any
+  // level, so a level-5 one holding its level-1 minimum is legal. The formula
+  // is production's, 60-210 at level 1 with P.E. 10.
+  const llwCls = { ...vCls, ppe_base: '3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two' };
+  const lw = (ppe_max, level) => validateCharacter({ ...legal, cls: llwCls, attributes: { ME: 14, PE: 10 },
+    pools: { ppe_max }, character: { level } }).warnings.find((w) => w.rule === 'pool_out_of_range');
+  check('a level-5 Ley Line Walker at the minimum from before "per additional level" was read draws no warning',
+    lw(60, 5) === undefined);
+  check('nor does one at the new maximum, and one over it warns with the old floor kept', (() => {
+    const w = lw(283, 5);
+    return lw(282, 5) === undefined && !!w && w.min === 60 && w.max === 282;
+  })());
   // A converted class's one M.D.C. maximum is bounded by the same rule.
   check('a converted M.D.C. pool takes a bare number at the top only',
     JSON.stringify(convertedMdcBounds({ mdc_from_hp_sdc: true, hit_points_base: 'P.E. x8, +10 per level',
