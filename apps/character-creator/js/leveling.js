@@ -81,8 +81,8 @@ export function thresholdFor(table, level) {
 // pools don't grow automatically on level-up).
 //
 // The amount must sit IMMEDIATELY before "per level", "per lvl" or "/level".
-// "per additional level", "for each additional level" and an amount with words
-// between it and "per level" ("+10 I.S.P. per level") are not read here.
+// An amount with words between it and "per level" ("+10 M.D.C. per level",
+// "2d6 more per level") is not read here.
 //
 // The trailing modifier is part of the capture, because a major psionic gains
 // "1d6+1 per level" — matching only the dice silently dropped the +1 and cost
@@ -96,15 +96,32 @@ export function thresholdFor(table, level) {
 // the same answer. A bare number is refused when it is the tail of something
 // else: a decimal, a negative, or a multiplier ("P.E. x 10 per level" gains ten
 // times an attribute, which is not 10).
+//
+// "PER ADDITIONAL LEVEL", "FOR EACH ADDITIONAL LEVEL" and "per each additional
+// level" are read too, dice or a bare number (F133's second phrasing): "+3d6
+// per additional level starting at level two" gains 3d6. It is how the core
+// Rifts casters and psychics are written, and a Ley Line Walker, a Mystic and
+// a Mind Melter gained nothing at any level until it was. Before these two
+// phrasings, and only these, the pool's OWN abbreviation may follow the amount
+// ("+10 I.S.P. for each additional level"), because that is the only way any
+// live class writes the second one. An attribute's abbreviation may not: "plus
+// P.E. attribute number per additional level" is an attribute, not an amount,
+// and stays unread.
+//
+// The readings are tried oldest first, so a formula that was read before a
+// later one was added is read to the same answer.
+const DICE = '(\\d+\\s*d\\s*\\d+(?:\\s*x\\s*\\d+)?(?:\\s*[+-]\\s*\\d+)?)';
+const NUMBER = '(^|[^\\d.])(\\d+)';
 const PER_LEVEL = '\\s*(?:per level|per lvl|\\/\\s*(?:level|lvl))';
-const PER_LEVEL_DICE = new RegExp(`(\\d+\\s*d\\s*\\d+(?:\\s*x\\s*\\d+)?(?:\\s*[+-]\\s*\\d+)?)${PER_LEVEL}`, 'i');
-const PER_LEVEL_NUMBER = new RegExp(`(^|[^\\d.])(\\d+)${PER_LEVEL}`, 'i');
+const POOL_UNIT = '(?:I\\.?S\\.?P\\.?|P\\.?P\\.?E\\.?|M\\.?D\\.?C\\.?|S\\.?D\\.?C\\.?)';
+const PER_ADDITIONAL = `(?:\\s*${POOL_UNIT})?\\s*(?:per(?:\\s+each)?|for\\s+each)\\s+additional\\s+(?:level|lvl)`;
+const PER_LEVEL_DICE = new RegExp(`${DICE}${PER_LEVEL}`, 'i');
+const PER_LEVEL_NUMBER = new RegExp(`${NUMBER}${PER_LEVEL}`, 'i');
+const PER_ADDITIONAL_DICE = new RegExp(`${DICE}${PER_ADDITIONAL}`, 'i');
+const PER_ADDITIONAL_NUMBER = new RegExp(`${NUMBER}${PER_ADDITIONAL}`, 'i');
 
-export function perLevelDiceOf(formula) {
-  const s = String(formula ?? '');
-  const dice = perLevelRolledDiceOf(s);
-  if (dice) return dice;
-  const m = s.match(PER_LEVEL_NUMBER);
+function bareNumberBefore(s, re) {
+  const m = s.match(re);
   if (!m) return null;
   const before = s.slice(0, m.index + m[1].length);
   // The letters count only where they are an operator: "add 10 per level" ends
@@ -112,8 +129,20 @@ export function perLevelDiceOf(formula) {
   return /(?:d|\d\s*d\s+|(?:^|[\s\d.)])[x×*]\s*|[−-]\s*)$/i.test(before) ? null : m[2];
 }
 
-// The per-level gain as it was read BEFORE F133: dice only, null for a bare
-// number. Two callers need the old reading on purpose. A second form's hit
+export function perLevelDiceOf(formula) {
+  const s = String(formula ?? '');
+  const dice = perLevelRolledDiceOf(s);
+  if (dice) return dice;
+  const flat = bareNumberBefore(s, PER_LEVEL_NUMBER);
+  if (flat) return flat;
+  const m = s.match(PER_ADDITIONAL_DICE);
+  return m ? m[1] : bareNumberBefore(s, PER_ADDITIONAL_NUMBER);
+}
+
+// The per-level gain as it was read BEFORE F133: dice only, straight before
+// "per level", so null for a bare number and null for "per additional level"
+// whether dice or not. NOT TO BE WIDENED: two callers need the old reading on
+// purpose. A second form's hit
 // points (F74) keep it so that this finding changes nothing about them, and
 // perLevelBounds below takes a pool's MINIMUM from it.
 export function perLevelRolledDiceOf(formula) {

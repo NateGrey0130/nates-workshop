@@ -2996,11 +2996,52 @@ section('Random psionics');
   check('a number that is the tail of something else is not a gain',
     perLevelDiceOf('P.E. x 10 per level') === null && perLevelDiceOf('1.5 per level') === null
     && perLevelDiceOf('-5 per level') === null && perLevelDiceOf('D6 per level') === null);
-  // The other two phrasings F133 covers are a later change each. Pinned as
-  // unread so that this match does not start taking them by accident.
-  check('"per additional level" and an amount with words after it are not read by this match',
-    perLevelDiceOf('3d4x10 plus M.E. attribute number, +10 per additional level of experience') === null // burster
-    && perLevelDiceOf('1D4x100, +10 M.D.C. per level of experience') === null);  // dragon-hatchling-flame-wind
+  // "PER ADDITIONAL LEVEL" and "FOR EACH ADDITIONAL LEVEL" (BOOK-INGEST-AUDIT
+  // F133, its second phrasing). The census of production on 2026-10-12 found
+  // 100 pool bases on 79 classes written this way and gaining nothing: the
+  // core Rifts casters and psychics. Every string here is a live class's own.
+  check('"per additional level" is read, with dice and with a bare number',
+    perLevelDiceOf('3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two') === '3d6' // ley-line-walker
+    && perLevelDiceOf('1d4x10+10 plus M.E. attribute number, +1d6+1 per additional level of experience') === '1d6+1' // mystic
+    && perLevelDiceOf('3d6x10 plus 2d6 per additional level of experience') === '2d6'                               // gargoyle-mage
+    && perLevelDiceOf('3d4x10 plus M.E. attribute number, +10 per additional level of experience') === '10'         // burster
+    && perLevelDiceOf('1d6x10+40, +6 per additional level of experience') === '6');                                 // ramen
+  // No live class writes "for each additional level" straight after the
+  // amount: all eight name the pool first ("+10 I.S.P. for each ..."), and two
+  // "per additional level" strings do the same. So the pool's own abbreviation
+  // may sit between the amount and either "additional level" phrasing.
+  check('"for each additional level" is read, with dice and with a bare number',
+    perLevelDiceOf('3d6x10 + M.E. attribute number, +10 I.S.P. for each additional level of experience') === '10'        // mind-melter
+    && perLevelDiceOf('1d6x10+15 + M.E. attribute number, +2D4+2 I.S.P. for each additional level of experience') === '2D4+2' // psi-druid
+    && perLevelDiceOf('3d4x10 + M.E. attribute number, +8 I.S.P. per additional level of experience') === '8'            // psi-warrior
+    && perLevelDiceOf('1d6+1 for each additional level') === '1d6+1' && perLevelDiceOf('+10 for each additional level') === '10'
+    && perLevelDiceOf('2d6 per each additional level') === '2d6' && perLevelDiceOf('+5 per additional lvl') === '5');
+  check('and a level-up adds it to a Ley Line Walker\'s P.P.E. and a Mind Melter\'s I.S.P.', (() => {
+    const llw = buildProposal({ level: 1, skills: [], ppe_max: 100 },
+      { ppe_base: '3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two' }, 3);
+    const mm = buildProposal({ level: 1, skills: [], isp_max: 100 },
+      { psionics: { isp_base: '3d6x10 + M.E. attribute number, +10 I.S.P. for each additional level of experience' } }, 3);
+    return llw.pools.ppe_max?.to >= 106 && llw.pools.ppe_max?.to <= 136 && mm.pools.isp_max?.to === 120;
+  })());
+  // An attribute is not an amount this function can return (true-inca), and
+  // an attribute's own abbreviation is not a pool's.
+  check('an attribute per additional level is not a gain',
+    perLevelDiceOf('P.E. x8, plus P.E. attribute number per additional level of experience') === null // true-inca
+    && perLevelDiceOf('P.E. x 10 per additional level') === null && perLevelDiceOf('D6 per additional level') === null
+    && perLevelDiceOf('10 P.E. per additional level') === null);
+  check('the reading as it stood before F133 gives "per additional level" nothing',
+    perLevelRolledDiceOf('3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two') === null
+    && perLevelRolledDiceOf('1d6+1 for each additional level') === null);
+  check('so its bounds rise at the top only, dice included',
+    JSON.stringify(perLevelBounds('3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two')) === '{"min":0,"max":18}'
+    && JSON.stringify(perLevelBounds('3d6x10 + M.E. attribute number, +10 I.S.P. for each additional level of experience')) === '{"min":0,"max":10}');
+  // The third phrasing F133 covers is a later change. Pinned as unread so
+  // that this match does not start taking it by accident.
+  check('an amount with a word between it and the phrase is not read by this match',
+    perLevelDiceOf('1D4x100, +10 M.D.C. per level of experience') === null  // dragon-hatchling-flame-wind
+    && perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience') === null // night-witch
+    && perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per additional level of experience') === null // necromancer
+    && perLevelDiceOf('2D4x10 +10 points per level of experience') === null);  // fire-dragon
   check('one level\'s bounds: the most a bare number adds is itself, the least is nothing',
     JSON.stringify(perLevelBounds('5d6+82, +10 per level of experience')) === '{"min":0,"max":10}'
     && JSON.stringify(perLevelBounds('P.E. + 1d6+1 per level')) === '{"min":2,"max":7}'
