@@ -4760,6 +4760,59 @@ by the Phase C status note; not looked at for this filing.
 **Confidence:** n/a - this is a gap in what was checked. **Ongoing cost:**
 none.
 
+**Taken, 2026-10-12 (branch `pal/audit/book-ingest-audit-f134-banked-roll`).**
+Posture said back: verification only, and no code changed. This note is the
+whole pull request. **Driven once, and the banked panel offers no Roll
+control for a band-named group. The pick itself works by hand.**
+
+What was driven, on a local server from this branch's tree against local D1
+(nothing on production was clicked): a throwaway `lyvorrk` character, whose
+one `at_levels` group is `[2, 4, 6, 8, 10, 12, 14]` over ten options named
+`Insanity (01-10): …` to `Insanity (91-00): …`. It was given 2,500 XP and
+taken through the sheet's own level-up dialog to level 2.
+
+- **The level-up dialog shows no ability pick at all.** At 1 to 2 it held no
+  `<select>` and two buttons, `Confirm level-up` and `Not now`
+  (`document.querySelectorAll('[id^="lu-power-"]')` gave 0). That is `F116`
+  as built: the pick is never offered there and always banks. Confirming
+  banked one `pending_power_picks` row, `kind: ability`, level 2, slot 0,
+  `count` 1, `from` of 10, read back from `GET characters/<id>/power-picks`.
+- **The banked panel is one `<select>` and nothing to roll with.** After
+  `Choose now`: `document.querySelectorAll('[id^="claim-power-ability-"]')`
+  gave 1 element, `claim-power-ability-2-0-0`, holding the blank option and
+  all ten banded names, each with its description as a tooltip. The panel's
+  only buttons were `Learn these` and `Later`. `find` for "Roll" on the page
+  returned the save-roll buttons and the insanity descriptions, and nothing
+  inside the panel. Seen in a desktop-width screenshot as well as in the DOM;
+  not looked at at tablet or phone width, since nothing was changed.
+- **The table is one the wizard would roll.** `abilityRollBands` from
+  `apps/character-creator/js/parser.js`, run in node on this group the same
+  day, returned ten bands, and `abilityRollMatches` put 37 on `(31-40)` and
+  100 on `(91-00)`. So the gap is the sheet's alone: the group qualifies, and
+  the panel never asks.
+
+Why, by reading on 2026-10-12: `abilityPickRows`
+(`apps/character-sheet/sheet.js:3557-3576`, reached from `:3500`) emits
+`<select>` rows only, and `grep -n "abilityRoll\|rollAbility"
+apps/character-sheet/sheet.js` prints nothing. The wizard's button is
+`apps/character-creator/app.js:1755-1756`, driven by `rollAbilityGroup` at
+`:1799-1819`.
+
+What it costs a player: the book says to roll these, the banked row's own
+note says so on the panel, and the sheet leaves the d100 to be rolled
+elsewhere and matched to a band by eye. Nothing is lost or stored wrong.
+Reach, reported by this row's planning check of production on 2026-10-12 and
+not re-run here: 17 `at_levels` groups in 10 classes, of which nine groups in
+six classes are band-named with full 01-00 coverage (`african-witch`,
+`dewtani` x4, `keeper-of-the-desert`, `lyvorrk`, `necromancer`,
+`wired-gunslinger`). Only `lyvorrk` was driven.
+
+**No finding is filed for the missing control**, which is a departure from
+the proposal's "file what is missing" and is deliberate: Nate said on
+2026-10-11 that he is avoiding new menu entries. A Roll d100 button on the
+banked panel is his to queue or to decline. This note is where it is
+recorded.
+
 ### F135 - low - a pick from a named list cannot give each option its own bonus
 
 RUE printed 154 gives the Psi-Stalker one Pilot skill: Tanks and APCs at
