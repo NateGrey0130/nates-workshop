@@ -5310,6 +5310,67 @@ section('A class ability picked at set levels (BOOK-INGEST-AUDIT F116)');
     /kind TEXT NOT NULL CHECK \(kind IN \('spell', 'psionic', 'talent', 'talent_purchase', 'ability'\)\)/.test(schemaSrc));
 }
 
+section('A level of a levelled group may carry its own count (BOOK-INGEST-AUDIT F127)');
+{
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: occ', 'occ_group: men-of-arms',
+     'tags: []', 'men_of_arms: true', ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+  const NAMES = ['Stone Ox', 'Wrist Hardening', 'Dam Sum Sing', 'Iron Hand', 'Kick Practice', 'Stone Ball'];
+  const DEFS = NAMES.map((n) => `  - { name: "${n}", description: "x" }`);
+  const EX = JSON.stringify(NAMES).replace(/,/g, ', ');
+  const group = (levels, choose = 'choose: 1, ') => `  - { ${choose}at_levels: ${levels}, from: ${EX} }`;
+  // The Fu Yao Da Chia's shape: four at creation, one more at each later level.
+  const cls = mk('special_abilities:', ...DEFS, group('[{ level: 1, count: 4 }, 3, 6]'));
+  check('an at_levels entry may be { level, count } beside bare numbers',
+    cls.ok && cls.warnings.length === 0, [...cls.errors, ...cls.warnings].join('; '));
+  const g = cls.data.special_abilities.find((e) => e.choose);
+  check('the levels read back as numbers, whichever shape stated them',
+    String(abilityGroupLevels(g)) === '1,3,6');
+  check('the group allows its own count at level 1 and choose at each later level',
+    abilityGroupAllowance(g, 1) === 4 && abilityGroupAllowance(g, 2) === 4
+    && abilityGroupAllowance(g, 3) === 5 && abilityGroupAllowance(g, 6) === 6
+    && abilityGroupOwed(g) === 4,
+    `1:${abilityGroupAllowance(g, 1)} 3:${abilityGroupAllowance(g, 3)} 6:${abilityGroupAllowance(g, 6)}`);
+  const grants = abilityLevelGrants(cls.data, 1, 3);
+  check('levelling from 1 to 3 yields one grant of count 1, the creation four never among them',
+    grants.length === 1 && grants[0].level === 3 && grants[0].count === 1 && grants[0].from.length === 6,
+    JSON.stringify(grants));
+  const later = mk('special_abilities:', ...DEFS, group('[2, { level: 4, count: 2 }]')).data;
+  check('a later level may carry the count too, and its grant banks that many',
+    abilityGroupAllowance(later.special_abilities.at(-1), 1) === 0
+    && abilityLevelGrants(later, 1, 4).map((x) => `${x.level}:${x.count}`).join() === '2:1,4:2'
+    && powerGrantsFor(later, 1, 4).filter((x) => x.kind === 'ability').map((x) => x.count).join() === '1,2');
+
+  // OPT-IN: a group of bare numbers gives the numbers it gave before this.
+  const bare = { choose: 4, at_levels: [1, 3, 6], from: NAMES };
+  check('an all-bare group is unchanged: choose at every level reached',
+    abilityGroupAllowance(bare, 1) === 4 && abilityGroupAllowance(bare, 3) === 8
+    && abilityGroupAllowance(bare, 6) === 12 && String(abilityGroupLevels(bare)) === '1,3,6'
+    && abilityLevelGrants({ special_abilities: [bare] }, 1, 6).map((x) => `${x.level}:${x.count}`).join() === '3:4,6:4');
+
+  // THE SERVER'S COUNT follows the entry's own number.
+  const v = (level, abilities) => validateCharacter({ character: { level }, cls: cls.data, skills: [],
+    attributes: {}, abilities, catalog: new Map() }).violations.filter((x) => x.rule === 'ability_count');
+  check('the server allows four at level 1, a fifth at level 3, and refuses a fifth at level 2',
+    v(1, NAMES.slice(0, 4)).length === 0 && v(3, NAMES.slice(0, 5)).length === 0
+    && v(2, NAMES.slice(0, 5)).length === 1 && v(3, NAMES).length === 1);
+
+  check('a malformed entry is refused: a count of 0, a fraction, a missing or misspelt key, a stray one',
+    !mk('special_abilities:', ...DEFS, group('[{ level: 1, count: 0 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 1, count: 1.5 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 1 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ count: 4 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 1, cuont: 4 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 1, count: 4, note: "x" }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 0, count: 4 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('["1", 3]')).ok);
+  check('levels still rise across both shapes, and choose is still required',
+    !mk('special_abilities:', ...DEFS, group('[{ level: 3, count: 4 }, 3]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[5, { level: 3, count: 2 }]')).ok
+    && !mk('special_abilities:', ...DEFS, group('[{ level: 1, count: 4 }, 3]', '')).ok);
+}
+
 section('An ability may carry its later levels as text (BOOK-INGEST-AUDIT F117)');
 {
   const LF = String.fromCharCode(10);

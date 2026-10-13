@@ -4559,6 +4559,34 @@ re-read from the book.
 **Confidence:** medium until the three pages are re-read. **Ongoing cost:**
 one more shape in the pick-group validator and in the sheet's banked panel.
 
+**Mechanic built, 2026-10-13 (branch
+`pal/feat/book-ingest-audit-f127-level-counts`); the finding stays open.** An
+`at_levels` entry may be `{ level, count }` beside bare numbers, read by one
+function, `abilityGroupLevelCounts` in `apps/character-creator/js/parser.js`,
+which `abilityGroupLevels`, `abilityGroupAllowance` and `abilityLevelGrants`
+go through. Posture as proposed: opt-in, and a group of bare numbers gives the
+numbers it gave before (pinned in smoke). The validator takes exactly `level`
+and `count`, both whole and 1 or more, and still requires `choose`. Measured
+2026-10-13 on this branch: `abilityGroupAllowance` on
+`{choose: 4, at_levels: [1, 3, 6]}` at level 3 returned 8 before and after;
+`{choose: 1, at_levels: [{level: 1, count: 4}, 3, 6]}` returns 4 at level 1
+and 5 at level 3, where the unbuilt parser refused the class and returned 1.
+The sheet's banked panel needed no change: `abilityPickRows`
+(`apps/character-sheet/sheet.js` line 3566, read 2026-10-13) draws one select
+per unit of a grant's stored `count`. That was read, and the grant of two was
+driven through the endpoints in regression; the panel was not looked at in a
+browser. The wizard's picker was driven in one, 2026-10-13, on a local
+fixture: "choose 4", four taken, a fifth refused. Two sentences of the wizard
+are not updated. Under a group whose level 1 states a count the picker adds
+"And again at levels 3, 6, on the sheet"
+(`apps/character-creator/app.js` line 1772, read 2026-10-13), which can be
+read as four more where the later levels give one; the three classes will
+show it. And the "chosen later" panel (`apps/character-creator/app.js` line
+1710, read 2026-10-13) prints `choose` for every later level, which is wrong
+only for a group with no level-1 pick whose later level states a count, a
+shape no class uses. **The three classes are not converted
+here**; that is the next pull request, and this finding closes with it.
+
 ### F128 - low - a chosen option cannot SET a pool's base, only add to one
 
 A pool bonus adds to a base the class states. `rollPoolFormula`
