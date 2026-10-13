@@ -4745,6 +4745,17 @@ neighbours read "Bone Magic", "Ward Symbols".
 
 **Confidence:** high. **Ongoing cost:** none.
 
+**Taken, 2026-10-12 (branch `pal/fix/book-ingest-audit-f137-labels`)**, as
+written: the two lines, display text only, no new gate beyond one smoke check
+that was seen to fail before the fix. Reproduced first by loading the module
+the way the smoke suite does (2026-10-12): `label('circle')` returned the
+title-cased slug and so did `label('temporal')`. Two things this finding did
+not carry. The smoke suite's fallback assertion used `temporal` as its
+unlabelled slug and would have gone red, so it now uses `necromancy`, which
+keeps the title-casing pinned. And `apps/character-creator/docs/wizard-and-sheet.md`
+line 331 (read 2026-10-12) gave the old heading as an example; it now gives
+the new one. The seven other traditions with no label are untouched.
+
 ### F138 - low - a key exists, and about thirty classes still carry the value as prose
 
 Data only. The close-out's final claim sweep (Phase C, 2026-10-05) judged
