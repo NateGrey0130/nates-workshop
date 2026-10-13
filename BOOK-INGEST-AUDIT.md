@@ -5087,6 +5087,33 @@ group's `note` is where a player reads it); a language taken through its
 Other row takes the group's bonus, not an Other option's own; and how many
 other classes print the shape is still not measured.
 
+**Taken, 2026-10-13 (branch `pal/data/book-ingest-audit-f135-psi-stalker`).**
+Posture as proposed, **opt-in**: one class uses the shape, and no other class
+was converted. `psi-stalker`'s Pilot group is now a `from` list of the two
+skills, each with its own bonus, written by
+`apps/character-creator/db/~185-book-ingest-audit-f135-psi-stalker.sql`, a
+script that is applied to production before its PR merges (`ship-pr`).
+
+The evidence line said "reported, not re-read", so the page was read first
+(2026-10-13, the OCR cache's page 157, which carries printed 154): *"Pilot:
+Tanks & APCs (+10%) or Hovercycles (+15%)"*. The page and the class's stored
+note agree, so no figure moved on the page's account.
+
+Measured 2026-10-13 through `parseClassMarkdown`, `skillGroupForPick` and
+`classSkillNumbers`, with the two catalog rows read `--remote` (Military:
+Tanks & APCs, base 36; Hovercycles, Skycycles & Rocket Bikes, base 70).
+Production's stored class, before: a category group over all of Pilot, Tanks
+& APCs at 46% and Hovercycles at 80%. The markdown the script writes: a list
+of those two names, 46% and 85%.
+
+`wild-psi-stalker` and `mutant-psi-stalker` were read from production the
+same day: neither states `copy_of`, and neither prints this choice, so both
+are untouched. `node scripts/audit-citations.mjs --remote F135` named no live
+class citing this finding before the change; `psi-stalker` now cites it, for
+the decision and not the mechanism.
+
+Still not done, and not filed: the three items the note above lists.
+
 ### F136 - low - a related-skill category bonus written only in a note is invisible until someone sweeps for it
 
 Phase A's package A13 found 64 classes where a related-skill category's
