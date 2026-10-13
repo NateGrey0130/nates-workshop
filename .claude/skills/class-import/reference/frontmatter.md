@@ -64,17 +64,22 @@ starting_money: "2d4x1000"                 # coin only, never gear
 ```
 
 **What a level-up adds is read out of the same string**, by `perLevelDiceOf`
-(`js/leveling.js`). It takes the amount written IMMEDIATELY before `per level`,
+(`js/leveling.js`). It takes the amount written before `per level`,
 `per lvl` or `/level`: dice (`"P.E. + 1d6 per level"` gains 1d6) or, since
 `BOOK-INGEST-AUDIT` F133, a bare number (`"5d6+82, +10 per level of experience"`
 gains 10). It takes the same two before `per additional level`, `for each
 additional level` and `per each additional level`, so the `ppe_base` example
-above gains 2d6; before those phrasings only, the pool's own abbreviation may
-follow the amount (`"+10 I.S.P. for each additional level"` gains 10). Anything
-else gains nothing on level-up: an amount with any other word between it and
-the phrase (`"+10 M.D.C. per level"`, `"2d6 more per level"`), and an attribute
-(`"plus P.E. attribute number per additional level"`). `"no gain per level"`
-reads as no gain.
+above gains 2d6. One or two words from a closed list may sit between the amount
+and any of those phrasings: `more`, `points`, `hit points`, and the pool's own
+abbreviation (`I.S.P.`, `P.P.E.`, `M.D.C.` or `M.D.`, `S.D.C.`). So
+`"+10 M.D.C. per level"` gains 10, `"2d6 more per level"` gains 2d6 and
+`"+10 I.S.P. for each additional level"` gains 10. Where two amounts come before
+the phrase, the one nearest it is the gain. Anything else gains nothing on
+level-up: an amount with any other word after it (`"10 extra per level"`), and
+an attribute (`"plus P.E. attribute number per additional level"`).
+`"no gain per level"` reads as no gain. **Write the gain in one of the shapes
+above**, because a string that is not read fails silently: the pool just never
+grows.
 
 ## Tags — what the wizard's picker filters on
 

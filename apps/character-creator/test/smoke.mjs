@@ -3035,13 +3035,77 @@ section('Random psionics');
   check('so its bounds rise at the top only, dice included',
     JSON.stringify(perLevelBounds('3d6x10+20 plus P.E. attribute number, +3d6 per additional level starting at level two')) === '{"min":0,"max":18}'
     && JSON.stringify(perLevelBounds('3d6x10 + M.E. attribute number, +10 I.S.P. for each additional level of experience')) === '{"min":0,"max":10}');
-  // The third phrasing F133 covers is a later change. Pinned as unread so
-  // that this match does not start taking it by accident.
-  check('an amount with a word between it and the phrase is not read by this match',
-    perLevelDiceOf('1D4x100, +10 M.D.C. per level of experience') === null  // dragon-hatchling-flame-wind
-    && perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience') === null // night-witch
-    && perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per additional level of experience') === null // necromancer
-    && perLevelDiceOf('2D4x10 +10 points per level of experience') === null);  // fire-dragon
+  // AN AMOUNT WITH A WORD BETWEEN IT AND THE PHRASE (BOOK-INGEST-AUDIT F133,
+  // its third and last phrasing). The census of production on 2026-10-12 found
+  // 50 pool bases on 36 classes written this way and gaining nothing, with
+  // five different words in the gap: "more", "points", "I.S.P.", "M.D.C." and
+  // "M.D.". Every string in the next two checks is a live class's own.
+  check('an amount with "more" or "points" before the phrase is read',
+    perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience') === '2d6'       // night-witch
+    && perLevelDiceOf('2d6x10 plus the P.E. attribute number, and 1d6+5 more per level of experience') === '1d6+5' // gateway-knight
+    && perLevelDiceOf('the M.E. attribute number plus 2d4x10, and 10 more per level of experience') === '10'       // born-mystic
+    && perLevelDiceOf('1d4x10+25, and 1d6+15 more per level of experience') === '1d6+15'                           // russian-mystic-kuznya
+    && perLevelDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per additional level of experience') === '2d6' // necromancer
+    && perLevelDiceOf('2D4x10 +10 points per level of experience') === '10'                                        // fire-dragon
+    && perLevelDiceOf('2D6x10 + P.E. attribute number, +10 points per level of experience') === '10');             // great-horned-dragon
+  check('and so is one with the pool\'s own name there',
+    perLevelDiceOf('1D4x100, +10 M.D.C. per level of experience') === '10'                                         // dragon-hatchling-flame-wind
+    && perLevelDiceOf('1D4x100, +1D6+4 M.D.C. per level of experience') === '1D6+4'                                // dragon-hatchling-whip-tailed
+    && perLevelDiceOf('4d6x10+60, plus 4d6 M.D.C. per level of experience') === '4d6'                              // cosmo-knight
+    && perLevelDiceOf('Hit Points and HALF S.D.C. are turned into M.D.C., plus 1d6 M.D.C. per level of experience') === '1d6' // gypsy-beguiler
+    && perLevelDiceOf('P.E. x2 for physical M.D.C., plus 2d6 M.D. per level of experience') === '2d6'              // night-witch
+    && perLevelDiceOf('6d6 plus the M.E. attribute number, +1d6 I.S.P. per level of experience, starting with level two') === '1d6' // crazy
+    && perLevelDiceOf('3d6x10 plus M.E. attribute number, +11 I.S.P. per level of experience') === '11');          // noro-psychic
+  // No live class writes these four, and the list is closed, so each word on
+  // it is pinned here or nothing would notice it leaving.
+  check('every word on the closed list is read: P.P.E., S.D.C., hit points, and two together',
+    perLevelDiceOf('2d6x10, +2d6 P.P.E. per level') === '2d6' && perLevelDiceOf('30, +5 S.D.C. per level') === '5'
+    && perLevelDiceOf('P.E. +1d6 hit points per level') === '1d6' && perLevelDiceOf('20, +4 hit points per level') === '4'
+    && perLevelDiceOf('3d6, and 10 more I.S.P. per level') === '10' && perLevelDiceOf('3d6, and 1d6 more M.D.C. per additional level') === '1d6'
+    && perLevelDiceOf('+10 MDC per lvl') === '10' && perLevelDiceOf('2d6 more/level') === '2d6');
+  // Two amounts before the phrase: the one NEAREST it is the gain. The first
+  // is crocodillian's; an open gap would have taken 3D4x10 out of it.
+  check('where two amounts precede the phrase, the nearest one wins',
+    perLevelDiceOf('3D4x10 + 1D6+1 I.S.P. per level of experience') === '1D6+1'                                     // crocodillian
+    && perLevelDiceOf('2d6x10 plus 20 at level one, 1d6 more per level') === '1d6'
+    && perLevelDiceOf('4d6 M.D.C. plus 10 more per level') === '10'
+    && perLevelDiceOf('3D4x10 +15 points per level of experience') === '15'                                         // kukulcan-dragon
+    && perLevelDiceOf('2d6x10 plus 20 at level one, 1d6 per level') === '1d6');
+  // The dragons' "2D4x10 +10 points" is a roll and then a new term, not one
+  // dice expression with a modifier. A modifier written as one still is.
+  check('a sign with a space before it and none after starts a new amount, and a modifier stays a modifier',
+    perLevelDiceOf('2D4x10 +10 points per level of experience') === '10'                                            // ice-dragon
+    && perLevelDiceOf('3D4x10 +10 points per level of experience') === '10'                                         // lo-dox-dragon
+    && perLevelDiceOf('1d6 + 4 more per level') === '1d6 + 4' && perLevelDiceOf('1d6+4 more per level') === '1d6+4'
+    && evalDice('1d6 + 4') >= 5 && evalDice('1d6 + 4') <= 10);
+  // THE GAP IS A CLOSED LIST, not "any words". A word off the list leaves the
+  // string unread, which is what keeps an attribute, a refusal and an amount
+  // that belongs to something else from being taken as a gain.
+  check('a word that is not on the list is not a gap',
+    perLevelDiceOf('2d6 at level one, then nothing per level') === null
+    && perLevelDiceOf('10 P.E. per level') === null && perLevelDiceOf('20 plus the P.E. attribute number per level') === null
+    && perLevelDiceOf('add 10 to this total, no gain per level') === null
+    && perLevelDiceOf('2d6 spells per level') === null && perLevelDiceOf('10 extra per level') === null
+    && perLevelDiceOf('1d6 no more per level') === null);
+  check('nor is a number that is the tail of something else, word or no word',
+    perLevelDiceOf('P.E. x 10 points per level') === null && perLevelDiceOf('1.5 more per level') === null
+    && perLevelDiceOf('-5 M.D.C. per level') === null && perLevelDiceOf('D6 more per level') === null);
+  check('the three that are correct as unread stay unread',
+    perLevelDiceOf('1d4x10 + M.E. attribute number, no gain per level') === null                                    // loak
+    && perLevelDiceOf('the former body\'s S.D.C. and hit points COMBINED - most Juicers have hundreds of S.D.C. and 30+ hit points. For a Mega-Juicer, multiply his M.D.C. by two. Neither pool ever rises again: experience level is frozen at the moment of death.') === null // murder-wraith
+    && perLevelDiceOf('P.E. x8, plus P.E. attribute number per additional level of experience') === null);          // true-inca
+  check('and a level-up adds it to a Night Witch\'s P.P.E. and a hatchling\'s M.D.C.', (() => {
+    const nw = buildProposal({ level: 1, skills: [], ppe_max: 60 },
+      { ppe_base: '2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience' }, 3);
+    const dh = buildProposal({ level: 1, skills: [], mdc_max: 200 },
+      { mdc_base: '1D4x100, +10 M.D.C. per level of experience' }, 4);
+    return nw.pools.ppe_max?.to >= 64 && nw.pools.ppe_max?.to <= 84 && dh.pools.mdc_max?.to === 230;
+  })());
+  check('the reading as it stood before F133 gives a worded gap nothing, so its bounds rise at the top only',
+    perLevelRolledDiceOf('2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience') === null
+    && perLevelRolledDiceOf('1D4x100, +10 M.D.C. per level of experience') === null
+    && JSON.stringify(perLevelBounds('2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience')) === '{"min":0,"max":12}'
+    && JSON.stringify(perLevelBounds('1D4x100, +10 M.D.C. per level of experience')) === '{"min":0,"max":10}');
   check('one level\'s bounds: the most a bare number adds is itself, the least is nothing',
     JSON.stringify(perLevelBounds('5d6+82, +10 per level of experience')) === '{"min":0,"max":10}'
     && JSON.stringify(perLevelBounds('P.E. + 1d6+1 per level')) === '{"min":2,"max":7}'

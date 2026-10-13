@@ -80,9 +80,8 @@ export function thresholdFor(table, level) {
 // → "10". null when a formula has no per-level component this reads (those
 // pools don't grow automatically on level-up).
 //
-// The amount must sit IMMEDIATELY before "per level", "per lvl" or "/level".
-// An amount with words between it and "per level" ("+10 M.D.C. per level",
-// "2d6 more per level") is not read here.
+// The amount sits IMMEDIATELY before "per level", "per lvl" or "/level", or
+// with one or two words from the closed list below in between.
 //
 // The trailing modifier is part of the capture, because a major psionic gains
 // "1d6+1 per level" — matching only the dice silently dropped the +1 and cost
@@ -102,11 +101,31 @@ export function thresholdFor(table, level) {
 // per additional level starting at level two" gains 3d6. It is how the core
 // Rifts casters and psychics are written, and a Ley Line Walker, a Mystic and
 // a Mind Melter gained nothing at any level until it was. Before these two
-// phrasings, and only these, the pool's OWN abbreviation may follow the amount
-// ("+10 I.S.P. for each additional level"), because that is the only way any
-// live class writes the second one. An attribute's abbreviation may not: "plus
+// phrasings the pool's OWN abbreviation may follow the amount ("+10 I.S.P. for
+// each additional level"), because that is the only way any live class writes
+// the second one. An attribute's abbreviation may not: "plus
 // P.E. attribute number per additional level" is an attribute, not an amount,
 // and stays unread.
+//
+// A WORD OR TWO BETWEEN THE AMOUNT AND THE PHRASE is read as well (F133's third
+// phrasing): "2d6 more per level", "+10 M.D.C. per level", "+10 points per
+// level", "+1d6 I.S.P. per level", and "2d6 more per additional level". The
+// words are a CLOSED LIST, GAP_WORD below, taken from what the live classes
+// write: "more", "points", "hit points", and a pool's own abbreviation, with
+// "M.D." standing for M.D.C. It is not "any words", because the amount has to
+// be the gain and nothing else. An open gap would read "no gain per level" as
+// whatever number sat before it, an attribute as an amount ("10 P.E. per
+// level"), and a level-one figure as the per-level one. The amount still
+// touches the first word, so where two amounts come before the phrase the one
+// NEAREST it is the gain: "3D4x10 + 1D6+1 I.S.P. per level" gains 1D6+1. Adding
+// a word here is a decision about every class that writes it, so run the
+// census in the finding first.
+//
+// This reading takes a modifier into the dice only when it is written as one:
+// "1D6+4 M.D.C. per level" and "1d6 + 4 more per level" gain 1d6+4. A sign with
+// a space before it and none after starts a NEW term, which is how five dragons
+// write theirs: "2D4x10 +10 points per level" rolls 2D4x10 once and gains 10.
+// GAP_DICE is DICE with that one difference.
 //
 // The readings are tried oldest first, so a formula that was read before a
 // later one was added is read to the same answer.
@@ -115,10 +134,17 @@ const NUMBER = '(^|[^\\d.])(\\d+)';
 const PER_LEVEL = '\\s*(?:per level|per lvl|\\/\\s*(?:level|lvl))';
 const POOL_UNIT = '(?:I\\.?S\\.?P\\.?|P\\.?P\\.?E\\.?|M\\.?D\\.?C\\.?|S\\.?D\\.?C\\.?)';
 const PER_ADDITIONAL = `(?:\\s*${POOL_UNIT})?\\s*(?:per(?:\\s+each)?|for\\s+each)\\s+additional\\s+(?:level|lvl)`;
+const GAP_WORD = `(?:more|hit\\s+points|points|${POOL_UNIT}|M\\.?D\\.?)`;
+const GAP = `(?:\\s+${GAP_WORD}){1,2}`;
+const GAP_DICE = '(\\d+\\s*d\\s*\\d+(?:\\s*x\\s*\\d+)?(?:[+-]\\s*\\d+|\\s+[+-]\\s+\\d+)?)';
 const PER_LEVEL_DICE = new RegExp(`${DICE}${PER_LEVEL}`, 'i');
 const PER_LEVEL_NUMBER = new RegExp(`${NUMBER}${PER_LEVEL}`, 'i');
 const PER_ADDITIONAL_DICE = new RegExp(`${DICE}${PER_ADDITIONAL}`, 'i');
 const PER_ADDITIONAL_NUMBER = new RegExp(`${NUMBER}${PER_ADDITIONAL}`, 'i');
+const GAP_READINGS = [PER_LEVEL, PER_ADDITIONAL].map((phrase) => ({
+  dice: new RegExp(`${GAP_DICE}${GAP}${phrase}`, 'i'),
+  number: new RegExp(`${NUMBER}${GAP}${phrase}`, 'i'),
+}));
 
 function bareNumberBefore(s, re) {
   const m = s.match(re);
@@ -136,7 +162,14 @@ export function perLevelDiceOf(formula) {
   const flat = bareNumberBefore(s, PER_LEVEL_NUMBER);
   if (flat) return flat;
   const m = s.match(PER_ADDITIONAL_DICE);
-  return m ? m[1] : bareNumberBefore(s, PER_ADDITIONAL_NUMBER);
+  const additional = m ? m[1] : bareNumberBefore(s, PER_ADDITIONAL_NUMBER);
+  if (additional) return additional;
+  for (const { dice: withDice, number } of GAP_READINGS) {
+    const g = s.match(withDice);
+    const read = g ? g[1] : bareNumberBefore(s, number);
+    if (read) return read;
+  }
+  return null;
 }
 
 // The per-level gain as it was read BEFORE F133: dice only, straight before
