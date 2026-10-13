@@ -4682,6 +4682,49 @@ tooling only. **Evidence:** the two lines were read; the splice in
 
 **Confidence:** high. **Ongoing cost:** none.
 
+**Taken, 2026-10-12 (branch `pal/fix/book-ingest-audit-f132-char-splice`).**
+Posture said back: tooling only. No class and no catalog row was changed, and
+nothing was applied to production.
+
+- **What was built.** `splicedLiteral` in `scripts/sql-gen-lib.mjs`, used by
+  `renderScript` in `scripts/class-fix-sql.mjs` for the markdown and for
+  nothing else. A `guard`, a `guard_absent` and a `proof` are still refused
+  when they hold a character outside printable ASCII, and the markdown is
+  still refused a CR or any other control character. The splice in
+  `scripts/class-check.mjs` (its inline `literal`, lines 862-874, read
+  2026-10-12) is left as it is and not shared.
+- **Measured, 2026-10-12.** The self-test's case was inverted and seen to
+  fail before the change (`node scripts/class-fix-sql.mjs --self-test`).
+  Production holds 24 live classes with a non-ASCII character, all 24 with
+  U+2014 and one with U+2013 as well (`scripts/q.mjs --remote`, a `GLOB` over
+  `imported_classes.markdown` where `deleted_at IS NULL`). End to end:
+  `ngr-medical-officer` was read from production (7378 characters, two
+  U+2014), given one marker line, generated with `--remote` lengths and
+  applied `--local` only; the stored markdown came back byte-identical to
+  the input file, and production was read again and was unchanged.
+- **Found while building, and not in the proposal: a flat splice fails on a
+  long class.** Local D1 refused a single chain of 599 pieces with
+  `Expression tree is too large (maximum depth 100)` and accepted the same
+  string joined in parenthesised groups of sixteen (`d1-query-lib` against
+  `--local`, 2026-10-12). So `splicedLiteral` groups, which `class-check`'s
+  emitter does not: an add script for a class with about fifty or more
+  non-ASCII characters would be refused by D1 at apply time. Not fixed here,
+  and not filed: the most any live class holds is twelve (`combat-cyborg`
+  and `crazy`, `scripts/q.mjs --remote`, 2026-10-12), so this is dropped
+  unless it bites.
+- **Also changed:** `old_length` is counted in characters, the way SQLite's
+  `length()` counts, where it was UTF-16 units. The two differ only above
+  U+FFFF, which the markdown could not hold before this.
+- **Correction to the finding.** Its `psi-x-alien` example is stale.
+  `apps/character-creator/db/~171-closeout-claim-sweep-part-2.sql` replaced
+  that class whole on 2026-10-05; its `extraction_notes` (line 629, read
+  2026-10-12) records the analytical chemistry skill as left out and "added
+  by hand", and production's row holds no non-ASCII character today (the
+  query above). This finding unblocks giving it the skill and does not do it.
+- **Citations.** `node scripts/audit-citations.mjs --remote F132`,
+  2026-10-12: no live class cites it. A grep of the tree for the number found
+  this heading alone. The memory directory was not searched.
+
 ### F133 - low - a fixed per-level pool gain is not added on level-up
 
 `perLevelDiceOf` (`apps/character-creator/js/leveling.js` lines 83-87, read
