@@ -4587,6 +4587,35 @@ only for a group with no level-1 pick whose later level states a count, a
 shape no class uses. **The three classes are not converted
 here**; that is the next pull request, and this finding closes with it.
 
+**Taken, 2026-10-13 (branch `pal/data/book-ingest-audit-f127-china-classes`);
+the finding is closed.** The three classes are converted by
+`apps/character-creator/db/~184-book-ingest-audit-f127-china-classes.sql`,
+applied to production before the merge. Posture as proposed: opt-in, and only
+these three groups state a count. Each schedule was re-read 2026-10-13 in the
+China 2 OCR cache, which answers the "reported, not re-read" in the evidence
+line: printed 79 (cache page 80) four to start and one at levels 3, 6, 9, 12
+and 15; printed 84 (cache page 85) two to start and one at 4, 8 and 12;
+printed 90 (cache page 91) Vital Breath, two more to start and one at 3, 6,
+9, 12 and 15. All three agree with what the classes recorded, so no figure
+moved; the pages were read as OCR text and not rendered. Printed 92-94 set no
+schedule of their own. Measured 2026-10-13 on production's markdown through
+`abilityGroupAllowance`: `fu-yao-da-chia` allowed 4 at level 1 and 4 at
+level 3 before the apply, and 4 and 5 after, 9 at level 15;
+`demon-and-dead-slaver` 2 at level 1, 3 at level 4, 5 at level 12;
+`goblin-wrangler` 2 at level 1, 3 at level 3, 7 at level 15, beside its
+untouched Vital Breath group. `abilityLevelGrants` gives one grant of one at
+each later level of each class. In each class the group's note and two
+`extraction_notes` passages said the later picks were made by hand and cited
+`F116` for the limit; those sentences are replaced and the notes cite this
+finding. `node scripts/audit-citations.mjs --remote F116` listed 23 classes
+before and 20 after, the three gone. No saved character held any of the
+three (the plan's query of 2026-10-12, not re-run here), so nothing was
+back-filled. Not done: the wizard sentence at
+`apps/character-creator/app.js` line 1772 is unchanged, so under "choose 4"
+these three classes print "And again at levels 3, 6, 9, 12, 15, on the
+sheet", where the later levels give one each; each group's own note, printed
+with it, states the schedule in full.
+
 ### F128 - low - a chosen option cannot SET a pool's base, only add to one
 
 A pool bonus adds to a base the class states. `rollPoolFormula`
