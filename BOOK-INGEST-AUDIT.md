@@ -5055,6 +5055,38 @@ the shape is not measured.
 **Confidence:** medium. **Ongoing cost:** one more accepted shape in a skill
 group, and `categoryAllows`-style helpers must not assume strings.
 
+**Mechanic built, 2026-10-13 (branch
+`pal/feat/book-ingest-audit-f135-from-bonus`). The finding stays open:**
+`psi-stalker` still stores the pick as any Pilot skill at +10% and converts
+in the next PR, so the parser is deployed before a class uses the shape.
+Posture as proposed, **opt-in**: a `from` option is a name or `{ name, bonus
+}`, the option's bonus replaces the group's for that pick, and a list of
+plain names is handed back untouched (`skillGroupForPick` returns the same
+object, pinned in `test/checks/skill-rules.mjs`, section *A choice-group
+option with its own bonus*).
+
+What the object form did before this, run 2026-10-13 against `c2a1089b` with
+a two-option fixture: it **passed** validation; the server's choice-group
+count compared the option as `[object Object]`, so a character holding the
+pick drew *"Looks short of 1 from Pilot: Tanks & APCs / [object Object]
+(counted 0)"*; and the NPC generator stored the object itself as the skill's
+name at 0%. The wizard offered the option by name and saved it at the
+group's bonus. All three are fixed, and the validator now refuses an option
+with no name, a non-numeric option bonus, and an option bonus beside a group
+`base`.
+
+One premise did not hold: `class-check` printed the option's name before
+this change (run 2026-10-13 from the main checkout at `c2a1089b`, `--remote`,
+same fixture), because it reads names through
+`functions/api/character-creator/_lib/catalog.js:26`. The `String(f)` in
+`scripts/class-check-lib.mjs:588` flattens `equipment_starting`, whose
+options the parser requires to be strings, so that file is unchanged.
+
+Not done here: the wizard's option row prints no per-option bonus (the
+group's `note` is where a player reads it); a language taken through its
+Other row takes the group's bonus, not an Other option's own; and how many
+other classes print the shape is still not measured.
+
 ### F136 - low - a related-skill category bonus written only in a note is invisible until someone sweeps for it
 
 Phase A's package A13 found 64 classes where a related-skill category's

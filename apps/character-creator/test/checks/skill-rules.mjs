@@ -20,7 +20,7 @@ import { resolvePicks } from '../../../../functions/api/character-creator/_lib/s
 import { skillBase, isBaseFormula, applySystemBases, systemBaseMap } from '../../js/skill-base.js';
 import { applyPsionicCosts, psionicCostMap } from '../../js/psionic-costs.js';
 import { skillConditionalBonuses, parseClassMarkdown, categoryAllows, categoryBonus, categoryLabel,
-         sumBonusGroups, validateBonuses }
+         sumBonusGroups, validateBonuses, skillGroupForPick }
   from '../../js/parser.js';
 import { classSkillNumbers as LV_classSkillNumbers, newPickPercent as LV_newPickPercent } from '../../js/leveling.js';
 import { appDir, repoRoot, check, section, appPath, wantSection } from '../harness.mjs';
@@ -28,7 +28,8 @@ import { appDir, repoRoot, check, section, appPath, wantSection } from '../harne
 const SECTIONS = ['per_level on a skill entry', 'Group-level skill restrictions',
   'Attribute-derived skill base', 'Per-system skill bases', 'Per-system W.P. schedules and psionic costs',
   'A pick spent on an attribute-derived skill',
-  'The skill picker prints what a pick will be stored at', 'A banked pick sent twice', 'Category skill bonuses'];
+  'The skill picker prints what a pick will be stored at', 'A banked pick sent twice', 'Category skill bonuses',
+  'A choice-group option with its own bonus'];
 
 // derive.js is a classic script, so it is loaded by evaluating it against a
 // stand-in global rather than imported. smoke.mjs builds its own the same
@@ -92,9 +93,15 @@ section('per_level on a skill entry');
   // without changing anything, which would fail this for no reason. The group's
   // entry is what `resolveSkill` is handed, and its per_level is what the pick
   // carries onto the character.
+  //
+  // The entry goes through `skillGroupForPick` since BOOK-INGEST-AUDIT.md F135,
+  // which may swap the group's bonus for the picked option's own. It must hand
+  // the group's per_level on either way, so that half is run.
   check('and a choice-group pick carries the resolved per_level onto the character', (() => {
     const src = readFileSync(join(appDir, 'app.js'), 'utf8');
-    return /const r = resolveSkill\(name, s\);[\s\S]{0,200}?per_level: r\.per_level/.test(src);
+    const g = { choose: 1, per_level: 0, bonus: 10, from: ['A', { name: 'B', bonus: 15 }] };
+    return /const r = resolveSkill\(name, skillGroupForPick\(s, name\)\);[\s\S]{0,200}?per_level: r\.per_level/.test(src)
+      && skillGroupForPick(g, 'A').per_level === 0 && skillGroupForPick(g, 'B').per_level === 0;
   })());
 }
 
@@ -1047,6 +1054,102 @@ section('Category skill bonuses');
     check('and the level-up proposal advances through the same function',
       /to: advancedPercent\(s\.pct, s\.per_level, gained\)/.test(levelSrc)
       && (levelSrc.match(/Math\.min\(SKILL_PCT_CAP/g) || []).length === 2);
+  }
+}
+
+// ---------- a `from` option may carry its own bonus ----------
+// BOOK-INGEST-AUDIT.md F135. RUE p.154 gives the Psi-Stalker "Tanks & APCs
+// (+10%) OR Hovercycles (+15%)", and a choice group had one `bonus` for every
+// option. An option is now a name or `{ name, bonus }`.
+//
+// What went wrong with the object form before this, each seen on 2026-10-13:
+// the server's choice-group count matched the option as "[object Object]", so
+// a character who took it read as short of the group; and the NPC generator
+// stored the OBJECT as the skill's name, at 0%.
+section('A choice-group option with its own bonus');
+{
+  const P = await import('../../js/parser.js');
+  const entry = (e) => parseClassMarkdown(
+    `---\nid: t\nname: T\nsystem: rifts\nsource_book: B\ncategory: rcc\nskills:\n`
+    + `  occ_skills:\n    - ${e}\n---\n\n## Lore\n\nx\n`);
+  const TANK = 'Pilot: Tanks & APCs';
+  const HOVER = 'Pilot: Hovercycle';
+  const mixed = { choose: 1, bonus: 10, from: [TANK, { name: HOVER, bonus: 15 }] };
+  const plain = { choose: 1, bonus: 10, from: [TANK, HOVER] };
+
+  // The validator.
+  check('a from option written { name, bonus } parses',
+    entry(`{ choose: 1, bonus: 10, from: ["${TANK}", { name: "${HOVER}", bonus: 15 }] }`).ok);
+  check('an object option with no name is refused, and the message says which option',
+    entry(`{ choose: 1, from: ["${TANK}", { bonus: 15 }] }`).errors.join(' ').includes('from[1]'));
+  check('an option bonus that is not a number is refused rather than falling back to the group\'s',
+    !entry(`{ choose: 1, bonus: 10, from: [{ name: "${HOVER}", bonus: "15%" }] }`).ok);
+  check('an option bonus on a group that fixes a base is refused, as base beside bonus is',
+    !entry(`{ choose: 1, base: 60, from: [{ name: "${HOVER}", bonus: 15 }] }`).ok);
+  check('a list of plain names validates as it always did',
+    entry(`{ choose: 1, bonus: 10, from: ["${TANK}", "${HOVER}"] }`).ok
+    && entry(`{ choose: 1, base: 60, from: ["${TANK}", "${HOVER}"] }`).ok);
+
+  // The one reader, and the entry a pick resolves against.
+  check('an option\'s name is read from either shape',
+    P.skillOptionName(HOVER) === HOVER && P.skillOptionName({ name: HOVER, bonus: 15 }) === HOVER
+    && P.skillOptionName(null) === '');
+  check('a pick of the option with its own bonus resolves against that bonus, not the group\'s',
+    LV_classSkillNumbers({ base: 70, per_level: 3 }, P.skillGroupForPick(mixed, HOVER), {}).base === 85);
+  check('a pick of the bare-string option beside it still takes the group\'s',
+    LV_classSkillNumbers({ base: 36, per_level: 4 }, P.skillGroupForPick(mixed, TANK), {}).base === 46);
+  check('the name is matched whatever its case, and the group is not edited',
+    P.skillGroupForPick(mixed, HOVER.toUpperCase()).bonus === 15 && mixed.bonus === 10);
+  check('an all-string group comes back as the very same object, so nothing about it can differ',
+    P.skillGroupForPick(plain, HOVER) === plain && P.skillGroupForPick(plain, TANK) === plain);
+  check('a "Pilot: any" option gives its bonus to the family, and an exact option beats it',
+    (() => {
+      const g = { choose: 1, from: [{ name: 'Pilot: any', bonus: 5 }, { name: HOVER, bonus: 15 }] };
+      return P.skillGroupForPick(g, TANK).bonus === 5 && P.skillGroupForPick(g, HOVER).bonus === 15;
+    })());
+
+  // The wizard is a browser script and cannot be imported, so its half is the
+  // shared function above, plus that it is what the saved pick is resolved by.
+  check('the wizard resolves a group pick through skillGroupForPick',
+    /resolveSkill\(name, skillGroupForPick\(s, name\)\)/.test(readFileSync(join(appDir, 'app.js'), 'utf8')));
+
+  // The NPC generator, run. One option, so the pick is not left to the shuffle.
+  {
+    const { generateNpc } = await import('../../js/npc-generate.js');
+    const catalog = [{ name: TANK, category: 'Pilot', base: 36, per_level: 4 },
+      { name: HOVER, category: 'Pilot', base: 70, per_level: 3 }];
+    const cls = (group) => ({ id: 'f135', name: 'F135', category: 'occ', system: 'rifts',
+      skills: { occ_skills: [group], secondary_skills: { count: 0 },
+        occ_related_skills: { count: 0, categories: [] } } });
+    const skillsOf = (group) => generateNpc({ cls: cls(group), level: 1, catalog, derive, system: 'rifts' })
+      .skills.map((s) => ({ name: s.name, pct: s.pct - (s.iq_bonus || 0), per_level: s.per_level }));
+    const own = skillsOf({ choose: 1, bonus: 10, from: [{ name: HOVER, bonus: 15 }] });
+    check('the NPC generator takes the option by its name, at the option\'s own bonus',
+      JSON.stringify(own) === JSON.stringify([{ name: HOVER, pct: 85, per_level: 3 }]), JSON.stringify(own));
+    const was = skillsOf({ choose: 1, bonus: 10, from: [HOVER] });
+    check('and a plain-name option is stored as before, at the group\'s bonus',
+      JSON.stringify(was) === JSON.stringify([{ name: HOVER, pct: 80, per_level: 3 }]), JSON.stringify(was));
+  }
+
+  // The server's choice-group count.
+  {
+    const { validateCharacter } = await import('../../../../functions/api/character-creator/_lib/validate-character.js');
+    const cls = (group) => ({ id: 'f135', name: 'F135', category: 'occ', system: 'rifts',
+      skills: { occ_skills: [group], secondary_skills: { count: 0 },
+        occ_related_skills: { count: 0, categories: [] } } });
+    const warned = (group, held) => validateCharacter({ character: { level: 1 }, cls: cls(group),
+      skills: held.map((name) => ({ name, category: 'Class', pct: 50, type: 'occ' })),
+      attributes: {}, abilities: [], catalog: new Map() }).warnings.filter((w) => w.rule === 'choice_group');
+    check('the server counts a pick of an object option toward its group',
+      warned(mixed, [HOVER]).length === 0, JSON.stringify(warned(mixed, [HOVER])));
+    const short = warned(mixed, []);
+    check('and when the group IS short, the message names the option',
+      short.length === 1 && short[0].message.includes(HOVER) && !short[0].message.includes('[object'),
+      JSON.stringify(short));
+    check('a plain-name group warns in the same words it did',
+      warned(plain, []).length === 1
+      && warned(plain, [])[0].message === `Looks short of 1 from ${TANK} / ${HOVER} (counted 0) — approximate`
+      && warned(plain, [TANK]).length === 0);
   }
 }
 

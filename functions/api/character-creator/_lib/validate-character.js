@@ -46,7 +46,7 @@
 import { abilityGroupAllowance } from '../../../../apps/character-creator/js/parser.js';
 import { isChoiceGroup, categoryAllows, categoryLabel, categoryName, needsOccupation, relatedFloorStatus,
          isAbilityChoice, isAbilityDefinition, abilityOptions, normalizeAbilities, abilityOccOptions,
-         applyAbilities, mosList } from '../../../../apps/character-creator/js/parser.js';
+         applyAbilities, mosList, skillOptionName } from '../../../../apps/character-creator/js/parser.js';
 
 import { skillGrantsFor, xpTableFor, thresholdFor, perLevelBounds,
          startingGroups, relatedAllowance, secondaryAllowance,
@@ -834,7 +834,9 @@ export function validateCharacter({ character, cls, skills, attributes, abilitie
 
 function matchesGroup(skill, entry, categoryOf) {
   if (Array.isArray(entry.from)) {
-    return entry.from.some((n) => {
+    // An option may be `{ name, bonus }` (BOOK-INGEST-AUDIT.md F135); it is
+    // matched by its name, as a bare string is.
+    return entry.from.map(skillOptionName).some((n) => {
       // "Piloting: any" in a from-list means any skill sharing that prefix.
       const m = String(n).match(/^(.*?):\s*any$/i);
       if (m) return norm(skill.name).startsWith(norm(m[1]) + ':');
@@ -857,7 +859,7 @@ function matchesGroup(skill, entry, categoryOf) {
 }
 
 function describeGroup(entry) {
-  if (Array.isArray(entry.from)) return entry.from.join(' / ');
+  if (Array.isArray(entry.from)) return entry.from.map(skillOptionName).join(' / ');
   if (Array.isArray(entry.categories)) return entry.categories.join(' / ') + ' skills';
   return 'the listed options';
 }
