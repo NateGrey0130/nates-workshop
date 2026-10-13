@@ -317,10 +317,11 @@ reported 0 stub statements for all 23), so none of those lines is this book's.
 - A Native American tongue has no row: the book names no tribe, so the
   Tundra Ranger Scout takes it as a `Language: Other` pick. (`Language: Inuit`
   is a row since `~114`.)
-- The Noli's cut of O.C.C. Related and Secondary Skills to three each, for a
-  Wilderness Scout or Vagabond, is applied by hand. (The psionic packages are
-  enforced since `~097`: a pick-one group on `noli-bushman` keyed to the
-  occupation.)
+- (Settled 2026-10-13, `pal/data/book-ingest-audit-f129-noli-nmbyr`: the
+  Noli's cut of O.C.C. Related and Secondary Skills to three each, for a
+  Wilderness Scout or Vagabond, is a `pairing_counts` line on `noli-bushman`,
+  `BOOK-INGEST-AUDIT` F129. The psionic packages are enforced since `~097`: a
+  pick-one group on `noli-bushman` keyed to the occupation.)
 - The cold, exposure and snow-travel rules (23-35) and the gazetteer.
 
 **After the retrospective close-out, 2026-10-05** (Phase C; `node scripts/source-coverage.mjs --remote` the same day: `canada 110 / 0`). Left: a Momano Headhunter who rolls Burster, Zapper or Nega-Psychic gets the label and no powers (printed 124 sends the reader to Psyscape).

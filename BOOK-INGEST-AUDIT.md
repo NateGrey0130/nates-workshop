@@ -4808,6 +4808,59 @@ classes convert in row 29b's PR.
   count, which judges one file; the wizard's occupation picker; the wording of
   the server's `related_minimum` message, which still names the short floors.
 
+**Taken, 2026-10-13 (branch `pal/data/book-ingest-audit-f129-noli-nmbyr`).
+The finding is closed:** the two races carry the key (`~186`), applied
+`--remote` before the merge.
+
+- **Posture, said back:** opt-in on the race; a race that says nothing pairs
+  as it does now. Two races opted in, each because its page prints the cut.
+- **`draconid` was left as Nate ruled on 2026-10-05**: the pairing stands and
+  the over-grant is said in the pick's note. Nothing here touches it.
+- **`nmbyr-gorilla-man`**, D-Bees of North America printed 144, read off a
+  render 2026-10-13: *"Any Men of Arms or Adventurer O.C.C., however reduce the
+  selection of O.C.C. Related Skills and Secondary Skills by half."* Stored as
+  `factor: 0.5` on each list with no `occupations`.
+- **`noli-bushman`**, the same book printed 145, read off a render the same
+  day: *"Cowboy, Wilderness Scout (any) or Vagabond ... In the case of the
+  latter two, reduce the number of O.C.C. Related and Secondary Skill
+  selections to three each."* Stored as `cap: 3` on each list for
+  `wilderness-scout` and `vagabond`. `vagabond-peasant` also matches the name
+  on production and is a Palladium Fantasy class, so it is not named.
+- **The reading the mechanic note left to this PR: "reduce ... to three" is
+  AT MOST three (Nate's ruling, 2026-10-13; not taken: exactly three).**
+  Canada printed 138 (cache p139, read off a render 2026-10-13) uses the same
+  verb for its Noli Cowboy and Noli Scout: *"except reduce the number of
+  O.C.C. Related and Secondary Skill selections to three each"*. Neither page
+  says a Noli gains picks, so a cap is what was stored: a Noli Wilderness
+  Scout has 2 related and 3 secondary, and a Noli Vagabond has 3 related and
+  no secondary picks, because production's `vagabond` states no
+  `secondary_skills` block.
+- **The halved count falls below five occupations' floors, and the floors
+  yield** (Nate's ruling, 2026-10-13, built on branch
+  `pal/fix/pairing-counts-minimums-yield`, the note above). Measured
+  2026-10-13 on production's markdown, related count against the total of
+  the occupation's `minimums`: `bounty-hunter` 7 to 3 against 4,
+  `geofront-military-specialist` 9 to 4 against 5, `roadganger` 8 to 4
+  against 5, `samas-samurai-pilot` 7 to 3 against 4,
+  `special-operations-soldier-australia` 9 to 4 against 6. This script was
+  held back until that branch merged.
+- **Measured 2026-10-13, through `parseClassMarkdown` and `combineClasses` on
+  production's markdown, related/secondary, before and after:** Noli with
+  `wilderness-scout` 2/4 to 2/3, with `vagabond` 5/none to 3/none, with
+  `cowboy` 5/4 unchanged; N'mbyr with `coalition-grunt` 7/5 to 3/2, with
+  `merc-soldier` 4/2 to 2/1, with `cowboy` 5/4 to 2/2.
+- **Three sentences made false were rewritten in the same script**: each
+  class's restriction line that ended "by hand", and the Noli's GM Notes line
+  that left the cut to the G.M. and player. `node scripts/audit-citations.mjs
+  --remote F129`, run 2026-10-13 before the apply, listed no live class citing
+  this finding; both classes cite it now, for the decision and not the
+  mechanism. `apps/character-creator/docs/race-and-occupation.md` said no race
+  carried the key yet and now names the two.
+- **The wizard's occupation picker**, which the mechanic note left showing
+  the occupation's untrimmed counts, was settled on branch
+  `pal/fix/occupation-picker-trimmed-counts` (merged 2026-10-13, ahead of
+  this script).
+
 ### F130 - low - per-level and conditional values that no key holds, on eight D-Bees classes
 
 Seven classes from D-Bees of North America carry a value that changes with

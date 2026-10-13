@@ -5570,13 +5570,41 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   const occIds = new Set(classes.filter((c) => c.category === 'occ').map((c) => c.id));
   const trimmers = classes.filter((c) => c.pairing_counts != null);
 
-  // PINNED BY NAME, and empty on purpose: the mechanic shipped ahead of the
-  // two classes whose books print a cut (`nmbyr-gorilla-man`, `noli-bushman`).
-  // A race added here should be a decision someone reads the book for.
-  const want = [];
+  // PINNED BY NAME: the two classes whose book prints a cut (`~186`, D-Bees of
+  // North America printed 144 and 145). A race added here should be a decision
+  // someone reads the book for.
+  const want = ['nmbyr-gorilla-man', 'noli-bushman'];
   const got = trimmers.map((c) => c.id).sort();
   check('the races declaring pairing_counts are the pinned ones',
     races.length > 0 && JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
+
+  // What each one's page asks for, composed through the real parser against
+  // the occupations this build holds. The Noli's is "reduce to three each" for
+  // two occupations, so the Cowboy keeps its counts and a list already under
+  // three is left alone; the N'mbyr's is "by half" for any occupation, an odd
+  // count rounding down (Nate, 2026-10-12).
+  const byId = new Map(classes.map((c) => [c.id, c]));
+  const count = (c, key) => (typeof c?.skills?.[key]?.count === 'number' ? c.skills[key].count : null);
+  const pair = (c) => `${count(c, 'occ_related_skills')}/${count(c, 'secondary_skills')}`;
+  const [noli, nmbyr, scout, vagabond, cowboy, grunt] =
+    ['noli-bushman', 'nmbyr-gorilla-man', 'wilderness-scout', 'vagabond', 'cowboy', 'coalition-grunt'].map((id) => byId.get(id));
+  const have = !!(noli && nmbyr && scout && vagabond && cowboy && grunt);
+  const atMost3 = (n) => (n == null ? null : Math.min(n, 3));
+  const halved = (n) => (n == null ? null : Math.floor(n / 2));
+  const wantPair = (occ, f) => `${f(count(occ, 'occ_related_skills'))}/${f(count(occ, 'secondary_skills'))}`;
+  check('a Noli Wilderness Scout and a Noli Vagabond have at most three of each',
+    have && pair(combineClasses(noli, scout)) === wantPair(scout, atMost3)
+      && pair(combineClasses(noli, vagabond)) === wantPair(vagabond, atMost3)
+      && count(combineClasses(noli, vagabond), 'occ_related_skills') === 3,
+    have ? `scout ${pair(combineClasses(noli, scout))}, vagabond ${pair(combineClasses(noli, vagabond))}` : 'class missing');
+  check('and a Noli Cowboy keeps the Cowboy\'s counts',
+    have && pair(combineClasses(noli, cowboy)) === pair(cowboy) && count(cowboy, 'occ_related_skills') > 3,
+    have ? `${pair(combineClasses(noli, cowboy))} of ${pair(cowboy)}` : 'class missing');
+  check('and a N\'mbyr Coalition Grunt has half of each, an odd count rounded down',
+    have && pair(combineClasses(nmbyr, grunt)) === wantPair(grunt, halved)
+      && count(grunt, 'occ_related_skills') % 2 === 1
+      && count(combineClasses(nmbyr, grunt), 'occ_related_skills') === (count(grunt, 'occ_related_skills') - 1) / 2,
+    have ? `${pair(combineClasses(nmbyr, grunt))} of ${pair(grunt)}` : 'class missing');
 
   // The parser cannot see the catalog, so an occupation id it accepts may name
   // nothing - and an entry that reaches no occupation trims nothing, silently.
