@@ -4496,6 +4496,26 @@ fixed in passing on Nate's word (2026-10-04, recommendation 14).
 
 **Confidence:** high. **Ongoing cost:** none.
 
+**Taken, 2026-10-12 (branch `pal/fix/book-ingest-audit-f126-dice-save`)**, as
+written, and the posture held: a warning only, no class changed, nothing
+rolled or stored. `validateSaveOther` now warns on a dice `bonus`, and the
+message opens with the entry's path, so `scripts/class-check.mjs` prints it
+with a line number (run 2026-10-12 on a scratch draft: `(line 11)`, the
+`other:` key above the entry). The frontmatter reference gained the sentence.
+The premise was reproduced before the change, by calling `validateBonuses`
+with `{ label: 'vs disease', bonus: '1d4' }` (2026-10-12): no error and no
+warning. Two cases in `test/checks/skill-rules.mjs` pin it, each seen to fail.
+
+One correction to the heading. A totem's `saves.other` bonus IS printed, in
+the wizard's totem summary, which writes the bonus verbatim
+(`apps/character-creator/app.js:3347`, read 2026-10-12). That is totems only
+and the wizard only; the sheet still drops it, so the warning says "on the
+sheet". The count, re-measured at planning (2026-10-12, `--remote`, reported
+by the plan's row brief and not re-run in this branch): 763 live classes, 42
+with a `saves.other` entry, none with dice. So the warning fires on no
+shipped class today. Where the placement was decided: Nate, 2026-10-12, the
+parser, and not `class-check` beside its undrawn-key warning.
+
 ## Filed 2026-10-05: what the retrospective close-out left open
 
 The book retrospective of 2026-10-03 was closed out on 2026-10-05 in three

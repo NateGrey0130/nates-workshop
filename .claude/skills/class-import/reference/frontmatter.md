@@ -629,6 +629,11 @@ override:
     other: [ { label: "vs explosive decompression", bonus: 2 } ]
 ```
 
+**Give `bonus` a number, never dice.** A dice `bonus` here parses and nothing
+rolls it, so the sheet shows no row for it and the parser warns
+(`BOOK-INGEST-AUDIT.md` F126): write the roll in the label or in a
+`special_abilities` entry.
+
 There is no `combat.other`. A combat bonus the nineteen do not name goes in a
 `special_abilities` entry, which is what the vacuum-wasp did with its
 dogfighting line.
