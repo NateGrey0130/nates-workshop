@@ -4608,6 +4608,44 @@ proposal:
   later level (`at_levels`) re-rolls nothing, like the other three shapes that
   section lists. Reasoned from reading the pick path, not run.
 
+**Taken, 2026-10-13 (branch `pal/data/book-ingest-audit-f128-two-classes`).**
+The two classes are converted by
+`apps/character-creator/db/~183-book-ingest-audit-f128-option-pool-bases.sql`,
+applied `--remote` before the merge. Posture said back: an opt-in key, and
+these two classes are the only ones moved. Every figure below was measured
+2026-10-13 by parsing the markdown with the real parser and composing it
+through `composeClass`, production's stored text first and the corrected text
+second.
+
+- `phase-world-alien`: the four M.D.C. rows of Step Two state `mdc_base` on
+  the option, per-level gain in the same formula. Before, with any of the four
+  held, the composed class had no `mdc_base` and `rollPoolFormula` returned
+  null; after, 61-70 rolls inside 15-20 at P.E. 14, 71-80 inside 10-60, 81-90
+  inside 30-180 and 91-00 inside 200-1200, and a level-up proposes the row's
+  per-level dice (1D6, 2D4, 2D6, 1D4x10). A race given one of those rows is an
+  M.D.C. being with no hit points and no S.D.C., so the S.D.C. bonuses of
+  Steps Three to Five no longer land anywhere for it; the class already told
+  the builder to move those to M.D.C. by hand, and still does.
+- **What the finding had wrong about `gene-splicer-mutant`:** its
+  `mdc_base: "0"` was a working workaround, not a broken one. Each Body row's
+  bounds are the same before and after (Sea Turtle 30-180, Sea Lion or Walrus
+  200-800, Sea Turtle with Too Big 50-260). The thirteen Body rows that print
+  an M.D.C. now state it as `mdc_base`, which is the page's own shape, and no
+  number moves.
+- **The class-level zero stays, and that departs from the plan's wording.** It
+  is printed nowhere, but the Body table's last row (96-00 Other) prints no
+  M.D.C. at all, and without a base that creature would be given core hit
+  points and S.D.C. on a page that calls every one of them a mega-damage
+  creature. A held Body row replaces the zero; it stands only for Other.
+- Not converted: the two S.D.C. rows of Phase World's Step Two (41-50 and
+  51-60). They are pool bonuses on the S.D.C. every character has and they
+  roll. The page prints them as flatly as the M.D.C. bases and does not say
+  whether they replace or add to S.D.C. determined normally, so making them
+  `sdc_base` would be a ruling, not a transcription.
+- Not re-read off a render: no figure changed, each was already stored, and
+  each agrees with the cached page text (Phase World p104-p105, Underseas
+  p039, read 2026-10-13).
+
 ### F129 - medium - a race cannot trim what a paired occupation brings
 
 A pairing takes the occupation whole: its O.C.C. skills, its related and
