@@ -575,6 +575,21 @@ O.C.C. and names what carries over: `larhold-barbarian`, South America 2 printed
 nearly every race and what the union already does. Regression pins the carriers
 by name.
 
+**`pairing_counts: [{ related?: { factor | cap }, secondary?: { factor | cap }, occupations?: [<occupation id>] }]`
+cuts the related and secondary counts of the occupation a race pairs with**
+(BOOK-INGEST-AUDIT.md F129). It goes on an R.C.C. - the parser refuses it on
+an O.C.C. - and must be one line, as every frontmatter key is. Each entry
+names one or both lists; each list carries `factor` (0 to 1, the product
+rounded DOWN) or `cap` (a whole number, which only ever lowers), never both.
+`occupations` lists occupation ids and is optional: an entry without it
+reaches every occupation. Creation counts only - picks gained at later levels
+are not trimmed - and a list the occupation does not state is not created.
+Use it only when the race's book prints the cut: both lists halved for any
+occupation is `factor: 0.5` on each. **Look each
+occupation id up; the parser cannot**, and regression fails an id that names
+no published O.C.C. Regression pins the carriers by name, so a new one updates
+that list in `apps/character-creator/test/regression.mjs`.
+
 **A race and an occupation that BOTH state psionics are MERGED, not chosen
 between** (BOOK-INGEST-AUDIT.md F10). A race says what a member of that race is
 born with and an occupation says what training adds, so `powers` and

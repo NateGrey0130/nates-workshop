@@ -1230,6 +1230,41 @@ function racePairingSkills(rcc) {
   return kept;
 }
 
+// The two allowance lists a race's `pairing_counts` may trim, by the name the
+// key uses for each (BOOK-INGEST-AUDIT F129). Read by the validator too.
+const PAIRING_COUNT_LISTS = { related: 'occ_related_skills', secondary: 'secondary_skills' };
+
+// An occupation's related and secondary allowances as a race's `pairing_counts`
+// leaves them: `{ occ_related_skills?, secondary_skills? }`, holding only a
+// list whose count moved, each a COPY so the occupation's own block is never
+// written to. Every entry that names no `occupations`, or names this one,
+// applies, in the order written. A `factor` rounds DOWN (Nate, 2026-10-12: a
+// halved five is two); a `cap` only ever lowers. A list the occupation does
+// not state is not created: there is nothing to trim.
+//
+// CREATION COUNTS ONLY, on the same word: `schedule` and `level_progression`
+// picks gained at later levels are not touched.
+function pairingCounts(rcc, occ) {
+  const trimmed = {};
+  if (!Array.isArray(rcc.pairing_counts)) return trimmed;
+  for (const entry of rcc.pairing_counts) {
+    if (!entry || typeof entry !== 'object') continue;
+    if (Array.isArray(entry.occupations) && !entry.occupations.includes(occ.id)) continue;
+    for (const [list, key] of Object.entries(PAIRING_COUNT_LISTS)) {
+      const rule = entry[list];
+      const block = trimmed[key] || occ.skills?.[key];
+      if (!rule || typeof rule !== 'object' || !block || typeof block.count !== 'number') continue;
+      let count = block.count;
+      // The epsilon keeps a product that is a whole number in the book from
+      // landing a hair under it in binary and flooring one too low.
+      if (typeof rule.factor === 'number') count = Math.floor(count * rule.factor + 1e-9);
+      else if (typeof rule.cap === 'number') count = Math.min(count, rule.cap);
+      if (count !== block.count) trimmed[key] = { ...block, count: Math.max(0, count) };
+    }
+  }
+  return trimmed;
+}
+
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.
 export function combineClasses(rcc, occ) {
@@ -1463,6 +1498,13 @@ export function combineClasses(rcc, occ) {
   };
   if (occ.skills?.occ_related_skills) out.skills.occ_related_skills = occ.skills.occ_related_skills;
   if (occ.skills?.secondary_skills) out.skills.secondary_skills = occ.skills.secondary_skills;
+  // A RACE MAY TAKE FEWER OF THEM (BOOK-INGEST-AUDIT F129). The allowances are
+  // the occupation's, whole, and that stays the default; `pairing_counts` is a
+  // race-side opt-in for a book that cuts them - D-Bees' N'mbyr Gorilla Man
+  // halves both for any occupation, Canada's Noli Bushman gets three of each
+  // as a Wilderness Scout or Vagabond. Not for a superseding occupation: that
+  // character is no longer its race.
+  if (!superseded) Object.assign(out.skills, pairingCounts(rcc, occ));
   // Skill programs are carried for the same reason the MOS below is, and the
   // omission would have been worse: this rebuilds `skills` wholesale from the
   // RACE's block, so an occupation's `skill_programs` would vanish while a
@@ -3939,6 +3981,63 @@ export function parseClassMarkdown(text) {
     }
     if (data.category !== 'rcc') {
       errors.push('pairing_skills belongs on an R.C.C.; it says which of a race\'s skills an occupation leaves standing');
+    }
+  }
+  // F129. What a race takes off a paired occupation's related and secondary
+  // counts. Each entry names one or both lists, each list a factor or a cap,
+  // and an entry without `occupations` reaches every occupation. Closed on
+  // every level, because a misspelt list or rule would trim nothing and say
+  // nothing.
+  if (data.pairing_counts !== undefined) {
+    const list = data.pairing_counts;
+    const shape = '{ related?: { factor | cap }, secondary?: { factor | cap }, occupations?: [<occupation id>] }';
+    if (!Array.isArray(list) || list.length === 0) {
+      errors.push(`pairing_counts must be a non-empty list of ${shape}`);
+    } else {
+      list.forEach((entry, i) => {
+        const at = `pairing_counts[${i}]`;
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+          errors.push(`${at} must be a map: ${shape}`);
+          return;
+        }
+        const lists = Object.keys(entry).filter((k) => k !== 'occupations');
+        const unknown = lists.filter((k) => !(k in PAIRING_COUNT_LISTS));
+        if (unknown.length) {
+          errors.push(`${at} names ${unknown.join(', ')}, which is not a list it can trim (related, secondary)`);
+        }
+        if (!lists.some((k) => k in PAIRING_COUNT_LISTS)) errors.push(`${at} must name related, secondary or both`);
+        for (const k of lists.filter((x) => x in PAIRING_COUNT_LISTS)) {
+          const rule = entry[k];
+          if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+            errors.push(`${at}.${k} must be a map with a factor or a cap`);
+            continue;
+          }
+          const extra = Object.keys(rule).filter((x) => x !== 'factor' && x !== 'cap');
+          if (extra.length) errors.push(`${at}.${k} may carry only factor or cap, got: ${extra.join(', ')}`);
+          const hasFactor = rule.factor !== undefined;
+          const hasCap = rule.cap !== undefined;
+          if (hasFactor && hasCap) errors.push(`${at}.${k} states both a factor and a cap; it takes one`);
+          else if (!hasFactor && !hasCap) errors.push(`${at}.${k} needs a factor or a cap`);
+          if (hasFactor && !(typeof rule.factor === 'number' && rule.factor >= 0 && rule.factor <= 1)) {
+            errors.push(`${at}.${k}.factor must be a number from 0 to 1; this key only takes picks away`);
+          }
+          if (hasCap && !(Number.isInteger(rule.cap) && rule.cap >= 0)) {
+            errors.push(`${at}.${k}.cap must be a whole number, zero or more`);
+          }
+        }
+        if (entry.occupations !== undefined) {
+          const occs = entry.occupations;
+          if (!Array.isArray(occs) || occs.length === 0 || occs.some((o) => typeof o !== 'string' || !o.trim())) {
+            errors.push(`${at}.occupations must be a non-empty list of occupation ids; omit it to reach every occupation`);
+          } else if (new Set(occs).size !== occs.length) {
+            errors.push(`${at}.occupations names an occupation twice`);
+          }
+        }
+      });
+    }
+    if (data.category !== 'rcc') {
+      errors.push('pairing_counts belongs on an R.C.C.; it says how many related and secondary picks'
+        + ' a race takes from the occupation it pairs with');
     }
   }
   // A class whose own attacks stand and whose Hand to Hand style adds none

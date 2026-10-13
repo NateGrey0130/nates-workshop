@@ -19,7 +19,8 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 const SECTIONS = ['R.C.C. + O.C.C.', 'Race and occupation', 'A class that supersedes its race',
   'An occupation may take its P.P.E. or money over the race (BOOK-INGEST-AUDIT F111)',
   'A race may yield its P.P.E. or money to an occupation (BOOK-INGEST-AUDIT F111)',
-  'A race may name the few skills a pairing keeps (BOOK-INGEST-AUDIT F114)'];
+  'A race may name the few skills a pairing keeps (BOOK-INGEST-AUDIT F114)',
+  'A race may trim the skill counts of a paired occupation (BOOK-INGEST-AUDIT F129)'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -485,6 +486,115 @@ section('A race may name the few skills a pairing keeps (BOOK-INGEST-AUDIT F114)
   check('and a superseding occupation still keeps none of them',
     combineClasses(ok.data, doc('occ', 'supersedes_race: true\nsdc_base: "30"\n').data)
       .skills.occ_skills.every((s) => s.name !== 'W.P. Archery'));
+}
+
+section('A race may trim the skill counts of a paired occupation (BOOK-INGEST-AUDIT F129)');
+{
+  // The allowances are the occupation's, whole, and that stays the default.
+  // Two books cut them: D-Bees' N'mbyr Gorilla Man halves both for any
+  // occupation, and Canada's Noli Bushman gets three of each as a Wilderness
+  // Scout or Vagabond. Nate's rulings, 2026-10-12: one race-side key, a halved
+  // odd count rounds down, creation counts only.
+  const doc = (cat, extra, id = 't') => parseClassMarkdown(
+    `---\nid: ${id}\nname: T\nsystem: rifts\nsource_book: B\ncategory: ${cat}\n` + extra + '---\n\n## Lore\n\nx\n');
+  const half = 'pairing_counts: [{ related: { factor: 0.5 }, secondary: { factor: 0.5 } }]\n';
+  const capped = 'pairing_counts: [{ related: { cap: 3 }, secondary: { cap: 3 }, occupations: ["scout", "vagabond"] }]\n';
+  const ok = doc('rcc', half);
+  check('pairing_counts parses on an R.C.C. with a factor per list',
+    ok.ok && ok.warnings.length === 0 && ok.data.pairing_counts[0].related.factor === 0.5,
+    ok.errors.concat(ok.warnings).join('; '));
+  const okCap = doc('rcc', capped);
+  check('and with a cap per list and the occupations it reaches',
+    okCap.ok && okCap.warnings.length === 0 && okCap.data.pairing_counts[0].occupations.length === 2,
+    okCap.errors.concat(okCap.warnings).join('; '));
+  check('and one list alone is enough', doc('rcc', 'pairing_counts: [{ secondary: { cap: 0 } }]\n').ok);
+
+  // Each refusal names its own reason, so one error cannot stand in for another.
+  const refuses = (extra, pattern, cat = 'rcc') => {
+    const r = doc(cat, extra);
+    return !r.ok && r.errors.some((e) => pattern.test(e));
+  };
+  check('and is an error on an occupation', refuses(half, /belongs on an R\.C\.C\./, 'occ'));
+  check('and refuses a list name it cannot trim',
+    refuses('pairing_counts: [{ occ_skills: { cap: 3 } }]\n', /names occ_skills, which is not a list it can trim/)
+    && refuses('pairing_counts: [{ related: { cap: 3 }, relatd: { cap: 3 } }]\n', /names relatd/));
+  check('and refuses a list stating both a factor and a cap',
+    refuses('pairing_counts: [{ related: { factor: 0.5, cap: 3 } }]\n', /both a factor and a cap/));
+  check('and refuses a cap below zero, or one that is not a whole number',
+    refuses('pairing_counts: [{ related: { cap: -1 } }]\n', /cap must be a whole number, zero or more/)
+    && refuses('pairing_counts: [{ related: { cap: 2.5 } }]\n', /cap must be a whole number/)
+    && refuses('pairing_counts: [{ related: { cap: "3" } }]\n', /cap must be a whole number/));
+  check('and refuses a factor below zero, above one or not a number',
+    refuses('pairing_counts: [{ related: { factor: -0.5 } }]\n', /factor must be a number from 0 to 1/)
+    && refuses('pairing_counts: [{ related: { factor: 2 } }]\n', /factor must be a number from 0 to 1/)
+    && refuses('pairing_counts: [{ related: { factor: "half" } }]\n', /factor must be a number from 0 to 1/));
+  check('and refuses a list with neither, or with a stray key',
+    refuses('pairing_counts: [{ related: {} }]\n', /needs a factor or a cap/)
+    && refuses('pairing_counts: [{ related: { cap: 3, per_level: 1 } }]\n', /may carry only factor or cap/)
+    && refuses('pairing_counts: [{ related: 3 }]\n', /must be a map with a factor or a cap/));
+  check('and refuses an entry naming no list, an empty or bare key, and a bad occupations list',
+    refuses('pairing_counts: [{ occupations: ["scout"] }]\n', /must name related, secondary or both/)
+    && refuses('pairing_counts: []\n', /must be a non-empty list/)
+    && refuses('pairing_counts: { related: { cap: 3 } }\n', /must be a non-empty list/)
+    && refuses('pairing_counts: ["related"]\n', /must be a map/)
+    && refuses('pairing_counts: [{ related: { cap: 3 }, occupations: [] }]\n', /occupations must be a non-empty list/)
+    && refuses('pairing_counts: [{ related: { cap: 3 }, occupations: "scout" }]\n', /occupations must be a non-empty list/)
+    && refuses('pairing_counts: [{ related: { cap: 3 }, occupations: ["scout", "scout"] }]\n', /names an occupation twice/));
+
+  const occOf = (related, secondary, id = 'soldier', extra = '') => doc('occ', extra + 'skills:\n'
+    + `  occ_related_skills: { count: ${related}, categories: ["Science"], schedule: [{ level: 3, count: 2 }] }\n`
+    + `  secondary_skills: { count: ${secondary} }\n`, id).data;
+  const counts = (c) => `${c.skills.occ_related_skills?.count}/${c.skills.secondary_skills?.count}`;
+  const six = occOf(6, 5);
+  const halved = combineClasses(ok.data, six);
+  check('a factor of 0.5 gives 3 of 6, and 2 of 5: a halved odd count rounds down',
+    counts(halved) === '3/2', counts(halved));
+  check('and the occupation\'s own block is not written to', counts({ skills: six.skills }) === '6/5');
+  check('and the rest of each list is carried: its categories and its later-level schedule',
+    halved.skills.occ_related_skills.categories[0] === 'Science'
+    && halved.skills.occ_related_skills.schedule[0].count === 2);
+  check('a factor that is a whole number in the book is not floored a hair under it',
+    counts(combineClasses(doc('rcc', 'pairing_counts: [{ related: { factor: 0.58 }, secondary: { factor: 0.29 } }]\n').data,
+      occOf(50, 100))) === '29/29');
+
+  const scout = combineClasses(okCap.data, occOf(6, 2, 'scout'));
+  check('a cap of 3 trims a count of 6 and leaves a count of 2 alone', counts(scout) === '3/2', counts(scout));
+  const cowboy = occOf(6, 5, 'cowboy');
+  const untouched = combineClasses(okCap.data, cowboy);
+  check('an entry with occupations trims a named occupation and leaves another untouched',
+    counts(combineClasses(okCap.data, occOf(6, 5, 'vagabond'))) === '3/3' && counts(untouched) === '6/5'
+    && untouched.skills.occ_related_skills === cowboy.skills.occ_related_skills);
+
+  const plain = combineClasses(doc('rcc', '').data, six);
+  check('a race with no key composes exactly as before: the occupation\'s own blocks, untouched',
+    counts(plain) === '6/5' && plain.skills.occ_related_skills === six.skills.occ_related_skills
+    && plain.skills.secondary_skills === six.skills.secondary_skills);
+
+  const both = doc('rcc', 'pairing_counts: [{ related: { factor: 0.5 } }, { related: { cap: 2 }, occupations: ["scout"] }]\n').data;
+  check('every entry that reaches the occupation applies, in the order written',
+    counts(combineClasses(both, occOf(6, 5, 'scout'))) === '2/5' && counts(combineClasses(both, six)) === '3/5');
+  const noSecondary = doc('occ', 'skills:\n  occ_related_skills: { count: 5, categories: ["Science"] }\n', 'vagabond').data;
+  check('a list the occupation does not state is not created',
+    combineClasses(okCap.data, noSecondary).skills.secondary_skills === undefined
+    && combineClasses(okCap.data, noSecondary).skills.occ_related_skills.count === 3);
+  check('and a superseding occupation is not trimmed: the character is no longer its race',
+    counts(combineClasses(ok.data, occOf(6, 5, 'reborn', 'supersedes_race: true\n'))) === '6/5');
+
+  // THE SERVER'S COUNTS COME OFF THE COMPOSED CLASS, so the trim reaches the
+  // validator with no edit there. Proved rather than assumed: the same four
+  // related picks pass against the occupation alone and fail against the pair.
+  const picks = (type, n) => Array.from({ length: n }, (_, i) => ({ name: `${type} ${i}`, type, category: 'Science' }));
+  const judge = (cls, skills, level = 1) => validateCharacter({
+    character: { level }, cls, skills, attributes: {}, catalog: new Map() }).violations.map((v) => `${v.rule}:${v.allowed}`).join();
+  check('the validator allows the occupation\'s whole count to the occupation alone',
+    judge(six, [...picks('related', 4), ...picks('secondary', 3)]) === '');
+  check('and refuses the same picks to the trimmed pair, at the trimmed counts',
+    judge(halved, [...picks('related', 4), ...picks('secondary', 3)]) === 'related_count:3,secondary_count:2',
+    judge(halved, [...picks('related', 4), ...picks('secondary', 3)]));
+  check('and allows the pair exactly its trimmed counts',
+    judge(halved, [...picks('related', 3), ...picks('secondary', 2)]) === '');
+  check('creation counts only: the picks the occupation gains at level 3 are not trimmed',
+    judge(halved, picks('related', 5), 3) === '' && judge(halved, picks('related', 6), 3) === 'related_count:5');
 }
 
 }

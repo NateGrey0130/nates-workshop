@@ -91,6 +91,11 @@ export const CLASS_KEYS = [
   // only a few - the Larhold's War Bison riding and W.P. Archery. Read by
   // combineClasses. BOOK-INGEST-AUDIT.md F114.
   'pairing_skills',
+  // What a race takes off a paired occupation's related and secondary counts,
+  // by a factor or a cap, for every occupation or the ones it names - the
+  // N'mbyr Gorilla Man's halved picks. Read by combineClasses.
+  // BOOK-INGEST-AUDIT.md F129.
+  'pairing_counts',
   // A class whose own attacks stand and whose Hand to Hand style adds none -
   // the Pneuma-Biforms' "do not add the melee round attacks from the hand to
   // hand combat skill". Read by bonusesFromSkills, carried by combineClasses.
@@ -216,7 +221,7 @@ export const CLASS_MERGE = {
   // that owns each.
   occ_group: 'race', occ_restrictions: 'race', race_restrictions: 'race',
   overrides_race: 'race', yields_to_occupation: 'race', keeps_xp_table: 'race',
-  pairing_skills: 'race',
+  pairing_skills: 'race', pairing_counts: 'race',
   supersedes_race: 'flag', ignores_style_attacks: 'flag', mdc_from_hp_sdc: 'flag',
   totem: 'occupation-first',
   // The race's page is the character's; the occupation's body is its own page.

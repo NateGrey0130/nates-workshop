@@ -188,6 +188,7 @@ pool bases as before — none of them knows a character can have two classes.
 | fixed skills | **both**, a shared skill held once at the higher base |
 | the race's fixed skills, when it declares `pairing_skills` | only the ones it lists (see below) |
 | related & secondary allowances | the **occupation** |
+| those two counts, when the race declares `pairing_counts` | the occupation's, cut by the race's factor or cap (see below) |
 | experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's, and the race's always where it states `keeps_xp_table` (see below) |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
@@ -368,6 +369,50 @@ skills* race adding its list. The Larhold keeps its native `Language: Larhold`
 as well, which the sentence does not name, on Nate's word: without it 188 of
 the 189 legal Larhold pairings lost the language. Regression pins the carrier
 by name.
+
+### A race may take fewer of the occupation's picks
+
+The related and secondary allowances are the occupation's, whole, and that
+stays the default. A race whose book cuts them says so
+(`BOOK-INGEST-AUDIT` F129), with a factor or a cap on either list:
+
+```yaml
+pairing_counts: [{ related: { factor: 0.5 }, secondary: { factor: 0.5 } }]
+pairing_counts: [{ related: { cap: 3 }, secondary: { cap: 3 }, occupations: ["<occupation id>", "<occupation id>"] }]
+```
+
+Each entry names `related`, `secondary` or both. Each list carries `factor`
+or `cap`, never both. An entry with `occupations` reaches only the occupations
+it names by id; one without it reaches every occupation the race pairs with.
+Every entry that reaches the occupation applies, in the order written.
+
+Four things the shape decides (Nate's rulings, 2026-10-12):
+
+- **A factor rounds down.** Half of five is two.
+- **A cap only lowers.** A cap of three leaves a count of two at two, and a
+  list the occupation does not state is not created.
+- **Creation counts only.** The picks an occupation gains at later levels, by
+  `schedule` or `level_progression`, are not trimmed.
+- **A superseding occupation is not trimmed.** That character is no longer its
+  race.
+
+The trim happens in `combineClasses`, so it comes before the halving a major
+psychic's rolled psionics apply (the order in *One place composes a class*):
+both cuts apply. The server needs nothing of its own, because
+`relatedAllowance` and `secondaryAllowance` read the composed class; the smoke
+suite runs the same picks against the occupation alone and against the trimmed
+pair to hold that.
+
+The parser refuses the key on an O.C.C., a list name other than `related` or
+`secondary`, a list with both `factor` and `cap` or with neither, a `factor`
+outside 0 to 1, a `cap` that is not a whole number of zero or more, and an
+empty or repeating `occupations`. It cannot see the catalog, so regression
+checks that every occupation id a race names is a published O.C.C., and pins
+the carriers by name.
+
+No race carries it yet (2026-10-13): the mechanic shipped ahead of the two
+classes whose books print a cut, D-Bees' `nmbyr-gorilla-man` and Canada's
+`noli-bushman`.
 
 ### A class may supersede its race
 

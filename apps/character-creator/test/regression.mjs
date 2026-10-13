@@ -5559,6 +5559,36 @@ console.log('\n' + '[7/7] Checks that only a database can make');
     ll ? String(ll.find((s) => s.name === 'Riding: War Bison')?.base) : 'class missing');
 }
 
+// ---------- a race that takes fewer of a paired occupation's picks ----------
+// BOOK-INGEST-AUDIT.md F129, the mechanic built 2026-10-13: a race's
+// `pairing_counts` cuts the related and secondary counts of the occupation it
+// pairs with, by a factor or a cap, for every occupation or the ones it names.
+// The occupation's whole counts stay the default for every race without it.
+{
+  const classes = (await api('GET', '/classes')).body.classes || [];
+  const races = classes.filter((c) => c.category === 'rcc');
+  const occIds = new Set(classes.filter((c) => c.category === 'occ').map((c) => c.id));
+  const trimmers = classes.filter((c) => c.pairing_counts != null);
+
+  // PINNED BY NAME, and empty on purpose: the mechanic shipped ahead of the
+  // two classes whose books print a cut (`nmbyr-gorilla-man`, `noli-bushman`).
+  // A race added here should be a decision someone reads the book for.
+  const want = [];
+  const got = trimmers.map((c) => c.id).sort();
+  check('the races declaring pairing_counts are the pinned ones',
+    races.length > 0 && JSON.stringify(got) === JSON.stringify(want), `got ${JSON.stringify(got)}`);
+
+  // The parser cannot see the catalog, so an occupation id it accepts may name
+  // nothing - and an entry that reaches no occupation trims nothing, silently.
+  const strays = [];
+  for (const r of trimmers) {
+    for (const entry of r.pairing_counts) {
+      for (const id of entry.occupations || []) if (!occIds.has(id)) strays.push(`${r.id}: ${id}`);
+    }
+  }
+  check('and every occupation one names is a published O.C.C.', strays.length === 0, strays.join('; '));
+}
+
 // ---------- a pool formula copied from its neighbour ----------
 // BOOK-INGEST-AUDIT.md F17. The Crazy's `isp_base` was "6d6" where its book
 // prints "6D6 plus the M.E. attribute number, +1D6 per level" - and two lines
