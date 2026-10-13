@@ -42,7 +42,11 @@
 //     the guard contains;
 //   - a missing old_length (without --remote), or with --remote a class
 //     production does not hold, or whose stored markdown lacks the guard;
-//   - a CR, or any character outside printable ASCII, in the markdown.
+//   - a CR, or any other control character, in the markdown;
+//   - a character outside printable ASCII in a guard, a guard_absent or a
+//     proof. The MARKDOWN may hold one (BOOK-INGEST-AUDIT F132): an em dash
+//     is written into the UPDATE as `' || char(8212) || '`, so the script
+//     stays pure ASCII. Pick a guard and a proof that avoid the character.
 //
 // OUTPUT. One UPDATE per class with its two guards, then read-backs - every
 // class carries its proof, none still carries its guard, none holds a CR -
@@ -53,7 +57,19 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseClassMarkdown } from '../apps/character-creator/js/parser.js';
-import { sqlLiteral, inList, footer, asciiProblem, noteLines, outNameProblem, scriptProblem, titleProblem, parseArgs } from './sql-gen-lib.mjs';
+import { sqlLiteral, splicedLiteral, SPLICE_GROUP, inList, footer, asciiProblem, noteLines, outNameProblem, scriptProblem, titleProblem, parseArgs } from './sql-gen-lib.mjs';
+
+// Where one line of markdown holds a control character, or null.
+function controlProblem(line) {
+  const m = /[\x00-\x1f\x7f]/.exec(line);
+  if (!m) return null;
+  const cp = m[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+  return `U+${cp} near ${JSON.stringify(line.slice(Math.max(0, m.index - 20), m.index + 5))}`;
+}
+
+// length(markdown) as SQLite counts it: characters, not UTF-16 units. The two
+// differ only above U+FFFF, which the markdown may now hold.
+const sqlLength = (s) => [...s].length;
 
 // `stored` maps class_id -> production's markdown, when --remote was asked.
 function buildFixes(entries, markdownOf, stored = null) {
@@ -71,8 +87,10 @@ function buildFixes(entries, markdownOf, stored = null) {
     if (md == null) { refusals.push(`${where}: no ${id}.md beside fixes.json`); continue; }
     if (md.includes('\r')) refusals.push(`${where}: the markdown holds a CR - save it with LF endings`);
     md = md.replace(/\r\n/g, '\n');
-    const bad = md.split('\n').map((l, i) => [i + 1, asciiProblem(l)]).find(([, p]) => p);
-    if (bad) refusals.push(`${where}: line ${bad[0]} holds a character outside printable ASCII (${bad[1]})`);
+    // A character above U+007F is fine: renderScript splices it as char(N).
+    // A control character is not - a tab or a NUL in class markdown is damage.
+    const bad = md.split('\n').map((l, i) => [i + 1, controlProblem(l)]).find(([, p]) => p);
+    if (bad) refusals.push(`${where}: line ${bad[0]} holds a control character (${bad[1]})`);
     const parsed = parseClassMarkdown(md);
     if (!parsed.ok) refusals.push(`${where}: the new markdown does not parse - ${parsed.errors.slice(0, 3).join('; ')}`);
     else if (parsed.data.id !== id) refusals.push(`${where}: the markdown's id is "${parsed.data.id}"`);
@@ -104,10 +122,10 @@ function buildFixes(entries, markdownOf, stored = null) {
         if (guard && !held.includes(guard)) refusals.push(`${where}: production's markdown does not contain the guard`);
         if (absent && held.includes(absent)) refusals.push(`${where}: production's markdown already contains guard_absent`);
         if (proof && held.includes(proof)) refusals.push(`${where}: production's markdown already contains the proof, so the read-back could not tell old from new`);
-        if (oldLength !== undefined && oldLength !== held.length) {
-          refusals.push(`${where}: old_length says ${oldLength} and production's row is ${held.length}`);
+        if (oldLength !== undefined && oldLength !== sqlLength(held)) {
+          refusals.push(`${where}: old_length says ${oldLength} and production's row is ${sqlLength(held)}`);
         }
-        oldLength = held.length;
+        oldLength = sqlLength(held);
       }
     }
     if (!Number.isInteger(oldLength) || oldLength < 1) {
@@ -139,7 +157,7 @@ function renderScript({ title, fileName, fixes, notes }) {
   for (const f of fixes) {
     L.push(`-- == ${f.class_id} ==`);
     L.push('UPDATE imported_classes');
-    L.push(`   SET markdown = ${sqlLiteral(f.markdown)},`);
+    L.push(`   SET markdown = ${splicedLiteral(f.markdown)},`);
     L.push("       updated_at = datetime('now')");
     L.push(` WHERE class_id = ${sqlLiteral(f.class_id)}`);
     L.push(f.guard ? `   AND instr(markdown, ${sqlLiteral(f.guard)}) > 0`
@@ -175,6 +193,7 @@ function selfTest() {
     'category: rcc', 'tags: []', 'men_of_arms: false', '---', '', '## Lore', '', body, ''].join('\n');
   const fine = { class_id: 'test-race', guard: 'The old sentence.', proof: 'The new sentence.', old_length: 120 };
   const files = { 'test-race': md('test-race', 'The new sentence.') };
+  const dashedFiles = { 'test-race': md('test-race', 'The new sentence. Dashed — and it\'s quoted.') };
   const run = (entries, f = files, stored = null) => buildFixes(entries, (id) => f[id] ?? null, stored);
   const cases = [
     ['a clean fix is accepted', [fine], files, null, (r) => r.refusals.length === 0 && r.fixes[0].old_length === 120],
@@ -190,8 +209,16 @@ function selfTest() {
       (r) => r.refusals.some((x) => x.includes('old_length is required'))],
     ['a CR in the markdown is refused', [fine], { 'test-race': md('test-race', 'The new sentence.').replace(/\n/g, '\r\n') }, null,
       (r) => r.refusals.some((x) => x.includes('holds a CR'))],
-    ['a non-ASCII character is refused', [fine], { 'test-race': md('test-race', 'The new sentence — dashed.') }, null,
-      (r) => r.refusals.some((x) => x.includes('outside printable ASCII'))],
+    ['a non-ASCII character in the markdown is accepted (F132)', [fine], dashedFiles, null,
+      (r) => r.refusals.length === 0 && r.fixes[0].markdown.includes('—')],
+    ['a control character in the markdown is still refused', [fine], { 'test-race': md('test-race', 'The new sentence.\tTabbed.') }, null,
+      (r) => r.refusals.some((x) => x.includes('holds a control character (U+0009'))],
+    ['a non-ASCII guard or proof is still refused',
+      [{ ...fine, proof: 'Dashed — and' }], dashedFiles, null,
+      (r) => r.refusals.some((x) => x.includes('proof holds a character outside printable ASCII'))],
+    ['the stored length is counted in characters, as length() counts it, not in UTF-16 units',
+      [{ ...fine, old_length: undefined }], files, new Map([['test-race', 'The old sentence. \u{1F409}\n']]),
+      (r) => r.refusals.length === 0 && r.fixes[0].old_length === 20],
     ['a class listed twice is refused', [fine, fine], files, null,
       (r) => r.refusals.some((x) => x.includes('listed twice'))],
     ['with production in hand, the stored length is the one used, trailing newline and all',
@@ -232,6 +259,25 @@ function selfTest() {
       && sql.includes('instr(markdown, char(13)) > 0;')],
     ['the script records its run', sql.trimEnd().endsWith("INSERT INTO data_script_runs (filename) VALUES ('~999-self-test.sql');")],
     ['in pure ASCII with no CR', scriptProblem(sql) === null],
+    ['a dashed markdown is written as a char() splice, and the script is still pure ASCII (F132)', (() => {
+      const dashed = renderScript({ title: 't', fileName: '~999-self-test.sql', notes: [], fixes: run([fine], dashedFiles).fixes });
+      return dashed.includes("The new sentence. Dashed ' || char(8212) || ' and it''s quoted.")
+        && scriptProblem(dashed) === null;
+    })()],
+    ['a markdown of many dashes is spliced in groups, so no chain nears the depth SQLite allows an expression', (() => {
+      const body = Array.from({ length: 200 }, (_, i) => `w${i}`).join(' — ');
+      const many = renderScript({ title: 't', fileName: '~999-self-test.sql', notes: [],
+        fixes: run([{ ...fine, proof: 'w199' }], { 'test-race': md('test-race', body) }).fixes });
+      const set = many.slice(many.indexOf('SET markdown = '), many.indexOf('updated_at = '));
+      // Every run of || outside parentheses, and inside each pair, stays short.
+      let depth = 0; const counts = [0]; let worst = 0;
+      for (const tok of set.match(/\(|\)|\|\||'(?:[^']|'')*'/g)) {
+        if (tok === '(') { depth++; counts[depth] = 0; }
+        else if (tok === ')') depth--;
+        else if (tok === '||') worst = Math.max(worst, ++counts[depth]);
+      }
+      return (set.match(/char\(8212\)/g) || []).length === 199 && worst <= SPLICE_GROUP && scriptProblem(many) === null;
+    })()],
     ['an absence-guarded class is updated on = 0 and left out of the sentence read-back', (() => {
       const mixed = renderScript({ title: 't', fileName: '~999-self-test.sql', notes: [],
         fixes: [...run([fine]).fixes,

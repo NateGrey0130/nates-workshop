@@ -625,7 +625,7 @@ with read-backs of its own rows and the `data_script_runs` line, and has
 | `scripts/bestiary-sql.mjs` | creature and notable-NPC JSON | `creatures`, `notable_npcs`, `stat_attacks` |
 | `scripts/vessel-sql.mjs` | vehicle JSON with `locations` and `weapons` lists | `vehicles`, `vehicle_locations`, `vehicle_weapons` |
 | `scripts/rows-sql.mjs` | flat rows, one list per table | `spells`, `gear`, `skills`, `psionic_powers`, `enchantments`, keyed on name or slug |
-| `scripts/class-fix-sql.mjs` | `fixes.json` and one finished `<class_id>.md` each | a whole-markdown `UPDATE` per class, guarded on a sentence of the old text and its exact stored length (`--remote` reads that length from production) |
+| `scripts/class-fix-sql.mjs` | `fixes.json` and one finished `<class_id>.md` each | a whole-markdown `UPDATE` per class, guarded on a sentence of the old text and its exact stored length (`--remote` reads that length from production). The markdown may hold a character above U+007F, written as a `char(N)` splice so the script stays ASCII; a guard or a proof may not |
 
 They cover only the step from reconciled data to SQL. None asks whether a row
 is already in the catalog (that is `catalog-diff` and `class-check --remote`),

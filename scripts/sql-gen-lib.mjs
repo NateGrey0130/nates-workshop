@@ -110,6 +110,40 @@ export function sqlLiteral(v) {
   return `'${String(v).replace(/'/g, "''")}'`;
 }
 
+// A string as a SQL expression that is pure ASCII whatever the string holds:
+// every character above U+007F is spliced out as char(N), the way
+// scripts/class-check.mjs writes an add script (BOOK-INGEST-AUDIT F132).
+// 'a - b' with an em dash becomes 'a ' || char(8212) || ' b'. A string of
+// plain ASCII comes back exactly as sqlLiteral writes it.
+//
+// The pieces are joined in parenthesised groups of SPLICE_GROUP, and the
+// groups in groups, because a flat chain of || is one expression as deep as
+// it is long and SQLite caps that depth (class-import: "SQLite caps an
+// expression tree at depth 100"). Grouped, four thousand pieces are three
+// levels deep.
+export const SPLICE_GROUP = 16;
+export function splicedLiteral(s) {
+  const parts = [];
+  let lit = '';
+  const flush = () => { if (lit !== '') { parts.push(sqlLiteral(lit)); lit = ''; } };
+  for (const ch of String(s)) {
+    const cp = ch.codePointAt(0);
+    if (cp > 0x7f) { flush(); parts.push(`char(${cp})`); } else lit += ch;
+  }
+  flush();
+  if (!parts.length) return "''";
+  let level = parts;
+  while (level.length > SPLICE_GROUP) {
+    const next = [];
+    for (let i = 0; i < level.length; i += SPLICE_GROUP) {
+      const group = level.slice(i, i + SPLICE_GROUP);
+      next.push(group.length > 1 ? `(${group.join(' || ')})` : group[0]);
+    }
+    level = next;
+  }
+  return level.join(' || ');
+}
+
 // Where a value stops being printable ASCII, for a refusal a person can act on.
 export function asciiProblem(s) {
   if (PRINTABLE.test(s)) return null;

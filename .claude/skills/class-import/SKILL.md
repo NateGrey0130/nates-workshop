@@ -199,7 +199,10 @@ the guarded `replace()` calls would outnumber the lines left alone. It takes
 the finished markdown and, per class, a `guard` sentence (or `guard_absent`)
 and a `proof`, and writes the guarded whole-markdown `UPDATE`s with their
 read-backs; pass `--remote` so `old_length` is read from production rather
-than measured off a file. Its header gives the input shape. When it refuses
+than measured off a file. The markdown may hold an em dash or any other
+character above U+007F: it is written as a `char(N)` splice
+(BOOK-INGEST-AUDIT.md F132). A `guard` or a `proof` may not, so pick ones
+that avoid it. Its header gives the input shape. When it refuses
 the input, fix the input. NEW catalog rows a class needs go through
 `scripts/rows-sql.mjs` and vehicles through `scripts/vessel-sql.mjs`; a
 correction to a row that EXISTS is still a hand-written `fix-` script, because
