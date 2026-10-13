@@ -254,6 +254,7 @@ skills:
     - { name: "Lore: Magic", base: 40, per_level: 5, note: "+15%" }
     - { choose: 3, categories: ["Communications"], bonus: 15, note: "..." }
     - { choose: 2, from: ["Pilot: Hovercycle", "Pilot: Truck"], base: 45, per_level: 5 }
+    - { choose: 1, bonus: 10, from: ["Pilot: Tank", { name: "Pilot: Hovercycle", bonus: 15 }] }
   occ_related_skills:             # picked at creation from these categories
     count: 6
     categories:
@@ -273,6 +274,12 @@ skills:
 - `base` is the catalog base **plus** the class's printed bonus, already added.
 - `base` and `bonus` are mutually exclusive on a choice-group. `bonus` adds to
   each pick's own base — use it when the group spans a category.
+- **A `from` option may be `{ name, bonus }`** when the book gives that one
+  option its own bonus: "Tanks & APCs (+10%) OR Hovercycles (+15%)". The
+  option's bonus **replaces** the group's for that pick; a bare name takes the
+  group's, or none. Not on a group that sets `base` (refused). An exact name
+  beats a `"Pilot: any"` entry in the same list. `skillGroupForPick` in
+  `js/parser.js` is the one reader (BOOK-INGEST-AUDIT.md F135).
 - `note` is free text, shown to the player, never enforced.
 - `only` / `except` names must match catalog rows **exactly**. An unmatched
   name does nothing, silently. `class-check` reports these.

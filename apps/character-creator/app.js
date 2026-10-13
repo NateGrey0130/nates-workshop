@@ -30,7 +30,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          abilityGroupAllowance, abilityGroupLevels, applyAbilities,
          occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
-         CLASS_TAGS, classTags, classTagInfo } from './js/parser.js';
+         CLASS_TAGS, classTags, classTagInfo, skillOptionName, skillGroupForPick } from './js/parser.js';
 import { composeClass } from './js/compose.js';
 import { buildProposal, xpTableFor, thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant,
          spellNamesForGrant, grantNote,
@@ -3313,7 +3313,7 @@ function skillsMosHtml(mosCfg) {
           const grants = (o.skills || []).map((x) => x.name
             || `${x.choose} from ${x.categories
               ? x.categories.map(categoryLabel).join(', ')
-              : (x.from || []).join(', ')}`).join(', ');
+              : (x.from || []).map(skillOptionName).join(', ')}`).join(', ');
           // `sel`, NOT `on`. `styles.css` has one rule for a chosen .pick and
           // it is `.pick.sel`; this picker was the only place in the file
           // emitting `on`, so a chosen specialty computed to exactly the same
@@ -4848,10 +4848,11 @@ function skillsAtLevelOne() {
   const relatedCats = () => psiClass().skills?.occ_related_skills?.categories || [];
 
   // Choice-group picks are stored exactly like fixed class skills, inheriting
-  // the group's base/per_level.
+  // the group's base/per_level - and the picked option's OWN bonus where the
+  // list states one for it (BOOK-INGEST-AUDIT.md F135).
   const groupPicks = occ.flatMap((s, gi) => !isGroup(s) ? [] :
     (S.groupPicks[gi] || []).map((name) => {
-      const r = resolveSkill(name, s);
+      const r = resolveSkill(name, skillGroupForPick(s, name));
       return { name, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' };
     }));
   return [

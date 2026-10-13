@@ -47,6 +47,39 @@ const REPEATABLE_SKILLS = ['language: other', 'literacy: other'];
 const hasRepeatable = (from) =>
   (from || []).some((n) => REPEATABLE_SKILLS.includes(String(n?.name ?? n).trim().toLowerCase()));
 
+// An option in a skill choice group's `from` list is a name, or `{ name, bonus }`
+// when the book gives that one option its own bonus: RUE p.154 offers the
+// Psi-Stalker "Tanks & APCs (+10%) OR Hovercycles (+15%)", and one `bonus` on
+// the group cannot say both. BOOK-INGEST-AUDIT.md F135.
+//
+// ONE reader for the name, so nothing downstream has to know which shape it was
+// handed - `String(option)` on the object form is "[object Object]", which
+// matches no skill and prints as itself.
+export function skillOptionName(option) {  const name = typeof option === 'string' ? option : option?.name;
+  return typeof name === 'string' ? name : '';
+}
+
+// What a pick from a choice group resolves against: the group itself, with the
+// picked option's own bonus in place of the group's where the option states
+// one. A bare-string option, and a pick the list does not name (a category
+// group, a language taken through its Other row), gets the group back
+// untouched, so a list of plain names behaves exactly as it did.
+//
+// An exact name wins over a "Pilot: any" prefix entry, so a list may give the
+// family one bonus and one member of it another.
+export function skillGroupForPick(group, pickName) {  const key = String(pickName ?? '').trim().toLowerCase();
+  const stated = (group?.from || []).filter((o) => o && typeof o === 'object'
+    && typeof o.bonus === 'number' && Number.isFinite(o.bonus));
+  if (!key || !stated.length) return group;
+  const nameOf = (o) => skillOptionName(o).trim().toLowerCase();
+  const own = stated.find((o) => nameOf(o) === key)
+    || stated.find((o) => {
+      const m = nameOf(o).match(/^(.*?):\s*any$/);
+      return m && key.startsWith(m[1] + ':');
+    });
+  return own ? { ...group, bonus: own.bonus } : group;
+}
+
 export function isChoiceGroup(entry) {
   return !!entry && typeof entry === 'object' && !entry.name &&
     (entry.choose !== undefined || entry.from !== undefined || entry.categories !== undefined);
@@ -266,6 +299,28 @@ export function validateSkillEntries(where, entries, errors, warnings) {
       }
       if (s.bonus !== undefined && (typeof s.bonus !== 'number' || !Number.isFinite(s.bonus))) {
         errors.push(`${where} choice-group bonus must be a number`);
+      }
+      // A `from` option is a name, or `{ name, bonus }` for an option the book
+      // gives its own bonus (BOOK-INGEST-AUDIT.md F135). The object form is
+      // checked here because nothing else would: a missing name matches no
+      // skill, and a bonus written as "15%" would fall back to the group's
+      // silently - the wrong number, with nothing flagging it. An option bonus
+      // beside a group `base` is refused for the reason the pair above is.
+      if (hasFrom) {
+        s.from.forEach((opt, oi) => {
+          if (typeof opt === 'string') return;
+          if (!opt || typeof opt !== 'object' || Array.isArray(opt)
+              || typeof opt.name !== 'string' || !opt.name.trim()) {
+            errors.push(`${where}.from[${oi}] must be a skill name or { name, bonus }`);
+            return;
+          }
+          if (opt.bonus === undefined) return;
+          if (typeof opt.bonus !== 'number' || !Number.isFinite(opt.bonus)) {
+            errors.push(`${where}.from[${oi}] bonus must be a number`);
+          } else if (s.base !== undefined) {
+            errors.push(`${where}.from[${oi}] sets a bonus on a choice-group that sets base; use one`);
+          }
+        });
       }
       // `per_level` IS READ on a choice group and was the one key here nothing
       // checked. `resolveSkill` in app.js takes `explicit.per_level ??
@@ -3507,7 +3562,7 @@ export function suggestClassTags(c) {
   if (!c) return [];
   const name = String(c.name || '').toLowerCase();
   const skills = [
-    ...(c.skills?.occ_skills || []).map((s) => s?.name || (s?.from || []).join(' ')),
+    ...(c.skills?.occ_skills || []).map((s) => s?.name || (s?.from || []).map(skillOptionName).join(' ')),
   ].map((s) => String(s || '').toLowerCase());
   const hasSkill = (re) => skills.some((s) => re.test(s));
   const countSkills = (re) => skills.filter((s) => re.test(s)).length;

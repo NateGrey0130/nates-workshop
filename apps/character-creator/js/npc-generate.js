@@ -36,7 +36,7 @@
 import { rollAttribute, rollPoolFormula, evalDice, evalDiceBonus, ATTRIBUTES } from './dice.js';
 import { skillBase } from './skill-base.js';
 import { isChoiceGroup, isAbilityChoice, rollAbilityTable, abilityGroupAllowance, categoryAllows, namedByOnly, categoryName,
-         relatedFloorStatus } from './parser.js';
+         relatedFloorStatus, skillOptionName, skillGroupForPick } from './parser.js';
 import { relatedAllowance, secondaryAllowance, skillGrantsFor, convertedPools, buildProposal,
          startingPicksFor, newPickPercent, classSkillNumbers, withIqBonus } from './leveling.js';
 import { isHandToHand } from './hand-to-hand.js';
@@ -173,7 +173,7 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
     const alreadyHeld = all.filter((n) => taken.has(norm(n))).length;
     if (options.length + alreadyHeld >= want && options.length < want) {
       for (const n of options) {
-        const r = resolve(n, group, byName, attributes);
+        const r = resolve(n, skillGroupForPick(group, n), byName, attributes);
         skills.push(withIq({ name: n, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' }));
         taken.add(norm(n));
       }
@@ -186,7 +186,7 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
         { group: gi, want, have: options.length });
     }
     for (const n of shuffle(options).slice(0, want)) {
-      const r = resolve(n, group, byName, attributes);
+      const r = resolve(n, skillGroupForPick(group, n), byName, attributes);
       skills.push(withIq({ name: n, category: 'Class', pct: r.base, per_level: r.per_level, type: 'occ' }));
       taken.add(norm(n));
     }
@@ -524,7 +524,9 @@ function namedFamilyMembers(otherRow, rows) {
 function groupOptions(group, rows) {
   if (Array.isArray(group.from)) {
     const out = [];
-    for (const n of group.from) {
+    // An option may be `{ name, bonus }` (BOOK-INGEST-AUDIT.md F135): read by
+    // name here, and its bonus is applied where the pick is resolved.
+    for (const n of group.from.map(skillOptionName)) {
       const m = String(n).match(/^(.*?):\s*any$/i);
       if (m) {
         const prefix = norm(m[1]) + ':';
@@ -548,7 +550,7 @@ function groupOptions(group, rows) {
 }
 
 function describeGroup(group) {
-  if (Array.isArray(group.from)) return group.from.join(' / ');
+  if (Array.isArray(group.from)) return group.from.map(skillOptionName).join(' / ');
   if (Array.isArray(group.categories)) return group.categories.map(categoryName).join(' / ') + ' skills';
   return 'the listed options';
 }
