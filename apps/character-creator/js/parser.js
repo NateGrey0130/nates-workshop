@@ -2111,6 +2111,15 @@ function validateSaveOther(where, list, errors, warnings) {
       errors.push(`${at}.bonus must be a number or a dice expression like "2d6"`);
     } else if (e.bonus === 0) {
       warnings.push(`${at}.bonus is 0 and will do nothing`);
+    } else if (dice) {
+      // Accepted, and rolled by nothing (BOOK-INGEST-AUDIT.md F126): the wizard
+      // rolls the keyed combat and save groups and skips `other`, and the
+      // sheet's labelled saves keep finite numbers only. A warning, not an
+      // error, because the entry is well formed - it is the readers that stop
+      // short. Rolling and storing it waits for a class that needs it.
+      warnings.push(`${at}.bonus is a dice expression (${JSON.stringify(e.bonus)}) and will not be `
+        + 'shown on the sheet - nothing rolls a saves.other bonus, so write the roll in the label '
+        + 'or in a special ability');
     }
     for (const k of Object.keys(e)) {
       if (k !== 'label' && k !== 'bonus' && k !== 'note') {

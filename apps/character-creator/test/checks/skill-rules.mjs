@@ -898,6 +898,21 @@ section('Category skill bonuses');
       check(`saves.other rejects ${why}`, e.length > 0);
     }
 
+    // A DICE bonus parses and is rolled by nothing (BOOK-INGEST-AUDIT.md F126):
+    // the wizard rolls the keyed groups only, and the sheet keeps finite
+    // numbers. So the parser says so, as a warning and not an error, and the
+    // message opens with the entry's own path so class-check can give a line.
+    const eD = [], wD = [];
+    validateBonuses({ saves: { other: [{ label: 'vs disease', bonus: '1d4' }] } }, eD, wD);
+    check('a dice bonus in saves.other warns that the sheet will not show it',
+      eD.length === 0 && wD.length === 1
+      && wD[0].startsWith('bonuses.saves.other[0].bonus ') && /not .*shown/.test(wD[0]),
+      JSON.stringify({ errors: eD, warnings: wD }));
+    const eN = [], wN = [];
+    validateBonuses({ saves: { other: [{ label: 'vs disease', bonus: 2 }] } }, eN, wN);
+    check('a numeric bonus in saves.other still warns of nothing',
+      eN.length === 0 && wN.length === 0, JSON.stringify({ errors: eN, warnings: wN }));
+
     // Composed side by side, not summed: a race granting +3 vs radiation and an
     // occupation granting +2 vs vacuum grant BOTH. The keyed saves still sum.
     const merged = sumBonusGroups(
