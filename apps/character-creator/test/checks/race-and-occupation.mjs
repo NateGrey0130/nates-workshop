@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { relatedAllowance, validateCharacter } from '../../../../functions/api/character-creator/_lib/validate-character.js';
 import { money } from '../../../../scripts/ocr-fields-lib.mjs';
-import { combineClasses, needsOccupation, parseClassMarkdown, relatedFloorStatus } from '../../js/parser.js';
+import { combineClasses, needsOccupation, pairedSkillCounts, parseClassMarkdown, relatedFloorStatus } from '../../js/parser.js';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['R.C.C. + O.C.C.', 'Race and occupation', 'A class that supersedes its race',
@@ -580,6 +580,45 @@ section('A race may trim the skill counts of a paired occupation (BOOK-INGEST-AU
     && combineClasses(okCap.data, noSecondary).skills.occ_related_skills.count === 3);
   check('and a superseding occupation is not trimmed: the character is no longer its race',
     counts(combineClasses(ok.data, occOf(6, 5, 'reborn', 'supersedes_race: true\n'))) === '6/5');
+
+  // THE WIZARD'S OCCUPATION PICKER PRINTS THE SAME NUMBERS. Until 2026-10-13 its
+  // two previews read the occupation's own counts, so beside a halving race it
+  // promised six related picks and the skills step allowed three. Both now go
+  // through `pairedSkillCounts`, which reads `combineClasses` and adds the
+  // occupation's own number so the page can say why the count is lower.
+  const shown = (rcc, occ) => {
+    const n = pairedSkillCounts(rcc, occ);
+    return `${n.related.count} of ${n.related.own}, ${n.secondary.count} of ${n.secondary.own}`;
+  };
+  const sixFour = occOf(6, 4);
+  check('the picker reads 3 and 2 for an occupation of 6 and 4 beside a halving race, each with the occupation\'s own',
+    shown(ok.data, sixFour) === '3 of 6, 2 of 4', shown(ok.data, sixFour));
+  check('and what it reads is what the composed class and the server\'s allowance hold',
+    [six, sixFour, occOf(6, 2, 'scout'), occOf(5, 5, 'vagabond'), cowboy].every((o) => [ok.data, okCap.data, both].every((r) => {
+      const n = pairedSkillCounts(r, o);
+      const c = combineClasses(r, o);
+      return n.related.count === c.skills.occ_related_skills.count && n.secondary.count === c.skills.secondary_skills.count
+        && n.related.count === relatedAllowance(c, 1) && n.related.own === o.skills.occ_related_skills.count
+        && n.secondary.own === o.skills.secondary_skills.count;
+    })));
+  check('a race with no key reads the occupation\'s own numbers, and so does an occupation with no race',
+    shown(doc('rcc', '').data, sixFour) === '6 of 6, 4 of 4' && shown(null, sixFour) === '6 of 6, 4 of 4');
+  check('an occupation the entry does not name reads its own, and a named one its cap',
+    shown(okCap.data, cowboy) === '6 of 6, 5 of 5' && shown(okCap.data, occOf(6, 5, 'vagabond')) === '3 of 6, 3 of 5');
+  check('a superseding occupation reads untrimmed in the picker too',
+    shown(ok.data, occOf(6, 4, 'reborn', 'supersedes_race: true\n')) === '6 of 6, 4 of 4');
+  check('and a list the occupation does not state reads 0, as the picker always printed it',
+    shown(okCap.data, noSecondary) === '3 of 5, 0 of 0');
+  const appSrc = readFileSync(join(appDir, 'app.js'), 'utf8');
+  const pickerSrc = appSrc.slice(appSrc.indexOf('function occPicker()'), appSrc.indexOf('function abilityGroups('));
+  const lineSrc = appSrc.slice(appSrc.indexOf('function occCountsLine('), appSrc.indexOf('function occPicker()'));
+  check('both previews in occPicker() print that line, and neither reads a count off the occupation itself',
+    pickerSrc.length > 1000 && (pickerSrc.match(/\$\{occCountsLine\(/g) || []).length === 2
+    && pickerSrc.includes('occCountsLine(chosen)') && pickerSrc.includes('occCountsLine(shown)')
+    && !/_skills\?\.count/.test(pickerSrc),
+    `${(pickerSrc.match(/\$\{occCountsLine\(/g) || []).length} calls`);
+  check('and the line takes its numbers from pairedSkillCounts, against the race with its variant applied',
+    lineSrc.includes('pairedSkillCounts(applyVariant(S.rcc, S.variant), occ)') && !/\.skills\b/.test(lineSrc));
 
   // THE SERVER'S COUNTS COME OFF THE COMPOSED CLASS, so the trim reaches the
   // validator with no edit there. Proved rather than assumed: the same four

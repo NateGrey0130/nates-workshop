@@ -1265,6 +1265,24 @@ function pairingCounts(rcc, occ) {
   return trimmed;
 }
 
+// What a preview of an occupation prints beside a race: for each of the two
+// allowance lists, `count` is what the composed character gets and `own` is
+// what the occupation states. They differ only where the race's
+// `pairing_counts` trimmed the list, so `count !== own` is the whole test for
+// "this race takes fewer". Read off `combineClasses` itself, not worked out
+// again, so the wizard's occupation picker cannot promise a count the skills
+// step and the server then refuse - which it did until 2026-10-13, printing
+// the occupation's whole six beside a race that halves it. A list the
+// occupation does not state reads 0 for both, as the picker always printed it.
+export function pairedSkillCounts(rcc, occ) {
+  const paired = (rcc && occ ? combineClasses(rcc, occ) : occ)?.skills || {};
+  const row = (key) => {
+    const own = occ?.skills?.[key];
+    return own ? { count: paired[key]?.count ?? 0, own: own.count ?? 0 } : { count: 0, own: 0 };
+  };
+  return { related: row(PAIRING_COUNT_LISTS.related), secondary: row(PAIRING_COUNT_LISTS.secondary) };
+}
+
 // `rcc` supplies physiology, `occ` supplies occupation. Returns `rcc` unchanged
 // when there is no second class, so every caller can apply it unconditionally.
 export function combineClasses(rcc, occ) {
