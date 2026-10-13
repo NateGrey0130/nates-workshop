@@ -4804,6 +4804,49 @@ bare number. The finding stays open** for its last phrasing, a later branch.
   per-level minimum moved on none of the 1,414 strings. A second form's hit
   points keep the old reading; the census found this phrasing in none.
 
+**Taken, 2026-10-12 (branch `pal/fix/book-ingest-audit-f133-filler-words`).**
+The last phrasing is read: an amount with a word between it and the phrase.
+With the two branches above, this closes the finding.
+
+- **The census was run a third time** on production on 2026-10-12, the same
+  way (one `SELECT` of `imported_classes` where `deleted_at IS NULL`, 763
+  classes, all parsed, 1,414 pool-base strings, 795 mentioning a level).
+  Before this branch 53 strings on 39 classes were not read. **50 of them, on
+  36 classes, are read now**: 32 dice and 18 a bare number. 1,364 strings read
+  to the same answer and none reads differently. **Three strings are still
+  not read, and all three are right as they are:**
+  - `loak`, `psionics.isp_base`: "no gain per level".
+  - `murder-wraith`, `hit_points_base`: "Neither pool ever rises again".
+  - `true-inca`, `mdc_base`: "plus P.E. attribute number per additional level
+    of experience". It adds an attribute per level, which this function has
+    no way to return, and it stays by hand (Nate's ruling, 2026-10-12).
+- **The gap is a closed list of words**, read off the 50 strings and not
+  guessed: "more" (25), "M.D.C." (12), "I.S.P." (6), "points" (5) and "M.D."
+  (2, standing for M.D.C.). "P.P.E.", "S.D.C." and "hit points" are on the list
+  as well, for the pools no live class happens to write this way. One or two
+  of them may sit between the amount and "per level", "/level", or either
+  "additional level" phrasing. Any other word leaves the string unread, which
+  is what keeps "no gain per level" and "10 P.E. per level" from being taken
+  as a gain. Where two amounts come before the phrase the nearest one is the
+  gain: `crocodillian`'s "3D4x10 + 1D6+1 I.S.P. per level" gains 1D6+1.
+- **One thing the census decided that the proposal could not have.** Five
+  dragons write "2D4x10 +10 points per level": a roll, then a new term. Read
+  as one dice expression with a modifier it would have gained 2D4x10+10 a
+  level. So in this reading a sign with a space before it and none after it
+  starts a new amount, and those five gain 10 (15 for `kukulcan-dragon`).
+- **Posture, said back:** as above. A character gains from its NEXT level only
+  and nothing is back-filled; the server's pool range widens at its maximum
+  only. All 50 newly read strings have a per-level minimum of nothing, so no
+  floor rose on any of the 1,414. A second form's hit points keep the old
+  reading; the census found this phrasing in none.
+- **Still not decided, and not part of this finding:** the five classes that
+  say "starting at level one", named under the first branch above. Level 1
+  itself gains nothing on any of the three branches.
+- **Read, not run:** ten of the 50 are on a variant or a chosen ability
+  (`variants[0].ppe_base` on five dragons, `special_abilities[n].psionics.isp_base`
+  on `crocodillian` and `gifted-one-russian`). The function reads them now.
+  Whether a level-up reaches a pool held there was not driven for this branch.
+
 ### F134 - low - nobody has driven the sheet's banked-pick panel on a band-named `at_levels` group
 
 `F116` banks a later-level pick and spends it from the sheet's banked panel.

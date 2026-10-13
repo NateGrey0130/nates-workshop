@@ -440,6 +440,22 @@ section('Creation validation');
     const w = lw(283, 5);
     return lw(282, 5) === undefined && !!w && w.min === 60 && w.max === 282;
   })());
+  // AN AMOUNT WITH A WORD BEFORE THE PHRASE (F133's third phrasing) goes the
+  // same way: the top only. The formula is the Night Witch's P.P.E. in
+  // production, 30-90 at level 1 with P.E. 10, and the Flame Wind hatchling's
+  // M.D.C., 100-400.
+  const nwCls = { ...vCls, ppe_base: '2d4x10 plus the P.E. attribute number, and 2d6 more per level of experience',
+    mdc_base: '1D4x100, +10 M.D.C. per level of experience' };
+  const nw = (pools, level) => validateCharacter({ ...legal, cls: nwCls, attributes: { ME: 14, PE: 10 },
+    pools, character: { level } }).warnings.find((w) => w.rule === 'pool_out_of_range');
+  check('a level-5 Night Witch at the minimum from before "2d6 more per level" was read draws no warning',
+    nw({ ppe_max: 30 }, 5) === undefined && nw({ mdc_max: 100 }, 5) === undefined);
+  check('nor does one at the new maximum, and one over it warns with the old floor kept', (() => {
+    const w = nw({ ppe_max: 139 }, 5);
+    const m = nw({ mdc_max: 441 }, 5);
+    return nw({ ppe_max: 138 }, 5) === undefined && !!w && w.min === 30 && w.max === 138
+      && nw({ mdc_max: 440 }, 5) === undefined && !!m && m.min === 100 && m.max === 440;
+  })());
   // A converted class's one M.D.C. maximum is bounded by the same rule.
   check('a converted M.D.C. pool takes a bare number at the top only',
     JSON.stringify(convertedMdcBounds({ mdc_from_hp_sdc: true, hit_points_base: 'P.E. x8, +10 per level',
