@@ -15,6 +15,7 @@ import { relatedAllowance, validateCharacter, storedNumberProblems }
 import { evalDice, rollAttribute, poolFormulaBounds, diceBounds, attributeCeiling, isAttributeExpr,
          isAbsentAttribute }
   from '../../js/dice.js';
+import { convertedMdcBounds } from '../../js/leveling.js';
 import { check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['Character validation', 'Creation validation'];
@@ -404,6 +405,32 @@ section('Creation validation');
     && !pw({ hp_max: 40 }, { level: 6 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
   check('a pool with no formula is skipped, never guessed at',
     !pw({ mdc_max: 5000 }).warnings.some((w) => w.rule === 'pool_out_of_range'));
+
+  // A BARE NUMBER per level (BOOK-INGEST-AUDIT F133) started being added on
+  // level-up on 2026-10-12. It widens the range at the TOP only: a character
+  // levelled before that gained nothing, so the old minimum is still legal,
+  // and nothing is back-filled. The formula is the Tattooed Man's, 87-112 at
+  // level 1.
+  const flatCls = { ...vCls, ppe_base: '5d6+82, +10 per level of experience' };
+  const fw = (ppe_max, level) => validateCharacter({ ...legal, cls: flatCls, attributes: { ME: 14, PE: 10 },
+    pools: { ppe_max }, character: { level } }).warnings.find((w) => w.rule === 'pool_out_of_range');
+  check('a level-5 pool at the minimum from before the bare number was read draws no warning',
+    fw(87, 5) === undefined);
+  check('a level-5 pool at the new maximum draws none either',
+    fw(152, 5) === undefined);
+  check('one over that maximum warns, and the range it names keeps the old floor', (() => {
+    const w = fw(153, 5);
+    return !!w && w.min === 87 && w.max === 152;
+  })());
+  check('one under the old floor still warns', !!fw(86, 5));
+  check('dice per level still raise both ends, as they did', (() => {
+    const w = pw({ hp_max: 14 }, { level: 6 });
+    return !!w.warnings.find((x) => x.rule === 'pool_out_of_range' && x.min === 16 && x.max === 46);
+  })());
+  // A converted class's one M.D.C. maximum is bounded by the same rule.
+  check('a converted M.D.C. pool takes a bare number at the top only',
+    JSON.stringify(convertedMdcBounds({ mdc_from_hp_sdc: true, hit_points_base: 'P.E. x8, +10 per level',
+      sdc_base: '3d6' }, { PE: 10 }, 5)) === '{"min":83,"max":138}');
 
   // The hard cap (F2 follow-up): the same finding becomes a violation when the
   // caller enforces — the create endpoint does, for a creator who is not the

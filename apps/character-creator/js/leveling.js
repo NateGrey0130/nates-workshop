@@ -75,16 +75,70 @@ export function thresholdFor(table, level) {
   return level >= 1 && level <= table.length ? table[level - 1] : null;
 }
 
-// "P.E. + 1d6 per level" / "1d6/level" → "1d6"; null when a formula has no
-// per-level component (those pools don't grow automatically on level-up).
+// What a pool gains at each level, as something evalDice can roll:
+// "P.E. + 1d6 per level" / "1d6/level" → "1d6", and "5d6+82, +10 per level"
+// → "10". null when a formula has no per-level component this reads (those
+// pools don't grow automatically on level-up).
+//
+// The amount must sit IMMEDIATELY before "per level", "per lvl" or "/level".
+// "per additional level", "for each additional level" and an amount with words
+// between it and "per level" ("+10 I.S.P. per level") are not read here.
 //
 // The trailing modifier is part of the capture, because a major psionic gains
 // "1d6+1 per level" — matching only the dice silently dropped the +1 and cost
 // the character a point of I.S.P. at every level for the life of the character.
+//
+// A BARE NUMBER is read too (BOOK-INGEST-AUDIT F133). It used to need dice, so
+// a Tattooed Man's "+10 per level" added nothing at any level. evalDice already
+// returns a plain number unchanged, so the dice grammar did not move.
+//
+// The dice are tried first, so a formula that was read before this is read to
+// the same answer. A bare number is refused when it is the tail of something
+// else: a decimal, a negative, or a multiplier ("P.E. x 10 per level" gains ten
+// times an attribute, which is not 10).
+const PER_LEVEL = '\\s*(?:per level|per lvl|\\/\\s*(?:level|lvl))';
+const PER_LEVEL_DICE = new RegExp(`(\\d+\\s*d\\s*\\d+(?:\\s*x\\s*\\d+)?(?:\\s*[+-]\\s*\\d+)?)${PER_LEVEL}`, 'i');
+const PER_LEVEL_NUMBER = new RegExp(`(^|[^\\d.])(\\d+)${PER_LEVEL}`, 'i');
+
 export function perLevelDiceOf(formula) {
-  const m = String(formula ?? '')
-    .match(/(\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?)\s*(?:per level|per lvl|\/\s*(?:level|lvl))/i);
+  const s = String(formula ?? '');
+  const dice = perLevelRolledDiceOf(s);
+  if (dice) return dice;
+  const m = s.match(PER_LEVEL_NUMBER);
+  if (!m) return null;
+  const before = s.slice(0, m.index + m[1].length);
+  // The letters count only where they are an operator: "add 10 per level" ends
+  // in a d and is a plain ten, while "D6 per level" is a die and not a six.
+  return /(?:d|\d\s*d\s+|(?:^|[\s\d.)])[x×*]\s*|[−-]\s*)$/i.test(before) ? null : m[2];
+}
+
+// The per-level gain as it was read BEFORE F133: dice only, null for a bare
+// number. Two callers need the old reading on purpose. A second form's hit
+// points (F74) keep it so that this finding changes nothing about them, and
+// perLevelBounds below takes a pool's MINIMUM from it.
+export function perLevelRolledDiceOf(formula) {
+  const m = String(formula ?? '').match(PER_LEVEL_DICE);
   return m ? m[1] : null;
+}
+
+// The least and most ONE level's gain can add to a pool's maximum, or null
+// when the formula has no per-level gain that is read.
+//
+// THE TWO ENDS ARE READ DIFFERENTLY, and every bound on a stored pool goes
+// through here so they stay that way. The maximum comes from perLevelDiceOf,
+// so a pool may hold everything a level-up can now give it. The minimum comes
+// from the reading as it stood before F133, so a shape that only started being
+// read later raises NO floor: a character levelled while the app added nothing
+// is still inside its range, and gains from its next level only (Nate's ruling,
+// 2026-10-12: no back-fill, and only the maximum widens). A later shape that
+// perLevelDiceOf learns to read follows without a change here.
+export function perLevelBounds(formula) {
+  const per = perLevelDiceOf(formula);
+  const max = per ? diceBounds(per) : null;
+  if (!max) return null;
+  const old = perLevelRolledDiceOf(formula);
+  const min = old ? diceBounds(old) : null;
+  return { min: min ? min.min : 0, max: max.max };
 }
 
 // THE DICE A SECOND FORM'S HIT POINTS ARE ROLLED ON, level by level
@@ -105,7 +159,7 @@ export function secondFormHitPointDice(formula) {
   if (formula == null) return { first: null, per: null, count: () => 0 };
   const m = String(formula).match(/\d+\s*d\s*\d+(?:\s*x\s*\d+)?(?:\s*[+-]\s*\d+)?/i);
   const first = m ? m[0] : null;
-  const per = first ? perLevelDiceOf(formula) : null;
+  const per = first ? perLevelRolledDiceOf(formula) : null;
   return { first, per, count: (level) => (!first ? 0 : per ? Math.max(1, level) : 1) };
 }
 
@@ -823,8 +877,7 @@ export function convertedMdcBounds(cls, attrs = {}, level = 1) {
     if (formula == null) continue;
     const b = poolFormulaBounds(formula, attrs, cls.bonuses?.pools?.[key] ?? null);
     if (!b) return null;
-    const per = perLevelDiceOf(formula);
-    const perB = per ? diceBounds(per) : null;
+    const perB = perLevelBounds(formula);
     min += b.min + (perB ? perB.min * (level - 1) : 0);
     max += b.max + (perB ? perB.max * (level - 1) : 0);
     any = true;
