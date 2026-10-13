@@ -4581,6 +4581,33 @@ nobody has counted. A census of classes whose notes say an option "makes the
 character M.D.C." would raise it. **Ongoing cost:** composition gains a
 second place a pool base can come from.
 
+**The mechanic is built, 2026-10-13 (branch
+`pal/feat/book-ingest-audit-f128-option-base`); the finding stays open.** No
+class changes here: `phase-world-alien` and `gene-splicer-mutant` convert in
+the next PR, and this note is not the outcome note. Posture said back: an
+opt-in key, and no class moved. What was built, and where it departs from the
+proposal:
+
+- An ability option may state `mdc_base`, `sdc_base` and `hit_points_base`.
+  **The third key is `hit_points_base`, not the proposal's `hp_base`** (Nate,
+  2026-10-12), so the option's key is the class's.
+- Two more rulings of the same day: an option that states `mdc_base` makes the
+  character an M.D.C. being exactly as a class stating it does, and an
+  option's base replaces a base the class states.
+- The base is folded by `composeClass`, on each half before the race and the
+  occupation are combined, through `applyAbilityPoolBases` in
+  `apps/character-creator/js/parser.js`. It is not a line in `applyAbilities`,
+  which runs after the core hit points and S.D.C. have been filled in; folded
+  there, the option's M.D.C. arrived beside both (run 2026-10-13: the smoke
+  section fails six checks with the fold moved to that point).
+- Reproduced before the change, 2026-10-13: production's `phase-world-alien`,
+  read with a `--remote` SELECT and parsed by the real parser, with "Damage
+  Capacity (71-80): M.D.C. Being" held, composed to no `mdc_base` and
+  `rollPoolFormula` returned null.
+- Not built, and said so in `frontmatter.md`: a base on an option picked at a
+  later level (`at_levels`) re-rolls nothing, like the other three shapes that
+  section lists. Reasoned from reading the pick path, not run.
+
 ### F129 - medium - a race cannot trim what a paired occupation brings
 
 A pairing takes the occupation whole: its O.C.C. skills, its related and

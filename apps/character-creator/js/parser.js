@@ -2782,7 +2782,61 @@ export function abilityTouchesPool(def) {
   const pools = def.bonuses?.pools;
   return (!!pools && typeof pools === 'object' && Object.keys(pools).length > 0)
     || def.mdc_from_hp_sdc === true
-    || def.psionics?.isp_base != null;
+    || def.psionics?.isp_base != null
+    // A fourth shape since F128: the option states the pool's base itself.
+    || ABILITY_POOL_BASES.some((k) => def[k] != null);
+}
+
+// A POOL BASE CARRIED BY A CHOSEN OPTION (BOOK-INGEST-AUDIT F128).
+//
+// A pool bonus adds to a base the class states, and rollPoolFormula keeps a
+// null base null whatever the bonus. So a table whose rows decide whether the
+// character is an M.D.C. being at all - the Phase World alien's "Base M.D.C."
+// - had nothing to say it with: the row's M.D.C. was a bonus on no base, and
+// rolled nothing.
+//
+//   - { name: "Damage Capacity (71-80): M.D.C. Being", mdc_base: "1d6x10" }
+//
+// The three keys are the class's own, with the class's own grammar, and on
+// Nate's rulings (2026-10-12):
+//
+//   - an option that sets `mdc_base` makes the character an M.D.C. being
+//     EXACTLY as a class-level `mdc_base` does - not a pool beside hit points;
+//   - an option's base REPLACES a base the class states.
+//
+// "Exactly as a class-level one" is why this is its own function and not a
+// line in applyAbilities. Everything that treats an M.D.C. class differently
+// runs BEFORE the abilities are folded: combineClasses drops an occupation's
+// hit points under an M.D.C. race, and compose.js's withCorePools fills in the
+// core hit points and S.D.C. only when there is no `mdc_base`. Folded
+// afterwards, the base would arrive on a character that had already been
+// given both. So composeClass runs this on each half, before the two are
+// combined, and the half then says what it would have said had the class
+// stated the base itself. applyAbilities does not fold these keys.
+//
+// Each half reads only its own definitions, so a pick the other half defines
+// is skipped here, as an undefined pick is. A later pick restating the same
+// base wins, which is the order the picks were made in. The class is returned
+// untouched - the same object - when no held option states a base.
+const ABILITY_POOL_BASES =['mdc_base', 'sdc_base', 'hit_points_base'];
+
+export function applyAbilityPoolBases(cls, chosen) {
+  const picks = normalizeAbilities(chosen);
+  if (!cls || !picks.length) return cls;
+  const byName = new Map((cls.special_abilities || [])
+    .filter(isAbilityDefinition)
+    .map((d) => [d.name.trim().toLowerCase(), d]));
+  let out = cls;
+  for (const { name } of picks) {
+    const def = byName.get(name.toLowerCase());
+    if (!def) continue;
+    for (const k of ABILITY_POOL_BASES) {
+      if (def[k] == null) continue;
+      if (out === cls) out = { ...cls };
+      out[k] = def[k];
+    }
+  }
+  return out;
 }
 
 // AN ABILITY THAT GROWS BY LEVEL, AS TEXT (BOOK-INGEST-AUDIT F117).
@@ -2952,6 +3006,9 @@ export function applyAbilities(cls, chosen) {
     // M.D.C. rides beside it as an ordinary pools.mdc bonus, so two converting
     // realms combine theirs, as printed 47 says they do.
     if (def.mdc_from_hp_sdc === true) out.mdc_from_hp_sdc = true;
+    // A pool BASE an option states (F128) is NOT folded here: composeClass
+    // folds it through applyAbilityPoolBases before the classes are combined,
+    // because that is the only point at which it can count as the class's own.
     // A table row that prints the DICE an attribute is rolled on - the Amphib's
     // Appearance sets P.B. to 3D4, 2D6 or 1D6 (BOOK-INGEST-AUDIT F120). It
     // restates the class's dice for the attributes it names and leaves the
@@ -4421,6 +4478,26 @@ export function parseClassMarkdown(text) {
     if (e.mdc_from_hp_sdc !== undefined && e.mdc_from_hp_sdc !== true) {
       errors.push(`special_abilities: ${e.name}.mdc_from_hp_sdc is a flag and may only be true; `
         + 'omit it otherwise');
+    }
+    // F128: a pool base the option states. The class's own grammar, held to
+    // what the pools can read - an unreadable base rolls nothing, which is the
+    // silence the key exists to end.
+    for (const k of ABILITY_POOL_BASES) {
+      if (e[k] === undefined) continue;
+      const probe = { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 10, PB: 10, Spd: 10 };
+      const readable = (typeof e[k] === 'number' || typeof e[k] === 'string')
+        && poolFormulaBounds(e[k], probe) != null;
+      if (!readable) {
+        errors.push(`special_abilities: ${e.name}.${k} is not a formula the pools read - a number, `
+          + 'dice, or an attribute plus dice ("P.E. x2 + 2d6 per level")');
+      } else if (!optionNames.has(e.name.trim().toLowerCase())) {
+        warnings.push(`special_abilities: ${e.name} states ${k} but is not offered as a choice, `
+          + 'so nothing applies it - put the base on the class (or its variant)');
+      }
+    }
+    if (e.mdc_base !== undefined && e.mdc_from_hp_sdc === true) {
+      warnings.push(`special_abilities: ${e.name} sets mdc_from_hp_sdc beside an mdc_base, which `
+        + 'wins; the flag does nothing');
     }
   }
 

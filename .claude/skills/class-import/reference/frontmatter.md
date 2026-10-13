@@ -709,6 +709,27 @@ since BOOK-INGEST-AUDIT.md F119 and F120:
   table row that prints *"P.B. 3D4"*. It wins over the race and the occupation.
   The wizard rolls attributes after the pick.
 
+**An option may state a pool's BASE** (BOOK-INGEST-AUDIT.md F128): `mdc_base`,
+`sdc_base` or `hit_points_base`, in the class's own grammar. A pool BONUS adds
+to a base and conjures nothing from a missing one, so a row that decides
+whether the character has the pool at all needs this:
+
+```yaml
+  - { name: "Damage Capacity (71-80): M.D.C. Being", description: "...", mdc_base: "1d6x10" }
+```
+
+- An option that states `mdc_base` makes the character an M.D.C. being exactly
+  as a class stating it does: no core hit points or S.D.C. are filled in, and
+  a paired occupation's hit points are dropped. A base the CLASS states for
+  another pool is still the class's, as it would be beside its own `mdc_base`.
+- The option's base REPLACES one the class states for that pool. An option on
+  an occupation still yields to a race that states the pool, as the
+  occupation's own base does.
+- A base the pools cannot read is a parse ERROR. Do not also set
+  `mdc_from_hp_sdc` on the option: the base wins and the flag does nothing.
+- Folded by `composeClass` only, before the race and occupation are combined.
+  `applyAbilities` on its own does not fold it.
+
 **A pick group whose options are named for percentile bands gets a Roll
 button.** The band is read from the NAME, exactly `(NN-NN)` with `00` closing
 at 100: a `%` inside the parentheses, or no parentheses, silently gives no
@@ -746,7 +767,8 @@ button. A pick-one group needs the bands to cover 01-00.
 - A level past the class's fifteen-level ladder never fires: keep that pick
   as prose. `at_levels` and `rolls` do not combine.
 - A later pick's dice and pool bonuses are rolled and stored when it is spent.
-  NOT handled for a later pick: `mdc_from_hp_sdc`, `attribute_dice`, and the
+  NOT handled for a later pick: `mdc_from_hp_sdc`, `attribute_dice`, a pool
+  base (`mdc_base`, `sdc_base`, `hit_points_base`), and the
   I.S.P. base of a `psionics` block. `docs/leveling.md` has the whole account.
 
 **An ability whose text changes by level carries `progression`** (F117),
