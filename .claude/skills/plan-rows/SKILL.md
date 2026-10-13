@@ -30,7 +30,8 @@ C:\Users\natha\.claude\projects\C--Users-natha-Projects-nates-apps\memory\plans\
 A row id is a number in run order; a row split from row 9 is `9a`, `9b`.
 **`state.md` is not a history**; the pull requests are. Its first line is
 `NEXT: row <id> (brief: rows/<id>.md), then row <id>.`, or
-`BLOCKED: <one sentence>`, or `DONE`. Then at most the last row with its pull
+`BLOCKED: <one sentence>`, or `READY: <the open pull request>` above a
+`NEXT:` line, or `DONE`. Then at most the last row with its pull
 request and outcome, and `In flight:`.
 
 ## Before a brief is written
@@ -93,8 +94,24 @@ prompt:
 pull request against the agent file; a fact about a row belongs in its brief.
 
 After each return, read `state.md` again and go by it. `MERGED` or `DROPPED`
-with a `NEXT:` line: spawn that row. **Stop and tell Nate at the first of
-these** (his ruling, 2026-10-12: no row cap):
+with a `NEXT:` line: spawn that row.
+
+**`READY` is a row the driver merges**, when Nate has said in this session to
+merge green rows (his ruling, 2026-10-12; the option he did not take was the
+driver merging every row). The worker's own merge was refused because no word
+of his is in a worker's context. Three calls, each on its own:
+
+1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
+   `--delete-branch`: the worker's worktree still holds the branch.
+2. `node .claude/scripts/pr-landed.mjs <n> --wait`, which must exit 0.
+3. `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
+
+Then replace `state.md` whole, with the `NEXT:` line first and the row as
+`MERGED` by the driver, and spawn the next row. Without that word from Nate
+in this session, or if any of the three is refused or fails, stop.
+
+**Stop and tell Nate at the first of these** (his ruling, 2026-10-12: no row
+cap):
 
 - the report or the state file says `BLOCKED`. Do not retry or fix the row.
 - the state file says `DONE`, or the next row has no brief.

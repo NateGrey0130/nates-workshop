@@ -17,7 +17,7 @@ was re-reading the same material; a brief that is missing something is a
 ## Before anything else
 
 1. **Read the state file.** If it does not name your row as next, or it begins
-   `BLOCKED` or `DONE`, return at once and say what it said.
+   `BLOCKED`, `READY` or `DONE`, return at once and say what it said.
 2. If it names a pull request as still merging, run
    `node .claude/scripts/pr-landed.mjs <n>`. Anything but exit 0 is `BLOCKED`:
    you do not build on a row that has not landed.
@@ -73,20 +73,27 @@ start one only if the brief has you look at a page.
 
 With every suite `ship-pr` lists green, four calls, each on its own:
 
-1. `gh pr merge <n> --auto --merge --repo NateGrey0130/nates-workshop`
+1. `gh pr merge <n> --auto --merge --repo NateGrey0130/nates-workshop`.
+   **Issue it once, whatever it answers.** The permission classifier refuses
+   it some days ("Merge Without Review"), and a second try is refused too.
 2. `gh pr checks <n> --watch --repo NateGrey0130/nates-workshop`, with the
    Bash timeout at its ten-minute maximum. This one call is the whole wait.
+   **If call 1 was refused, a green watch ends the row as `READY`**, and calls
+   3 and 4 are the driver's.
 3. `node .claude/scripts/pr-landed.mjs <n> --wait`. Exit 0 is merged and
-   deployed. If the watch ended green and this still reads `OPEN`, issue call 1
-   once more and read once more; still open is `BLOCKED`.
+   deployed. If the watch ended green and this still reads `OPEN`, the
+   auto-merge has not fired yet: run this call once more. Still open is
+   `BLOCKED`.
 4. `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
 
 A red required check is `BLOCKED` unless your own diff caused it, in which case
 fix it, push and start again at call 2.
 
-## Three outcomes
+## Four outcomes
 
 - **`MERGED`**: all four calls above passed.
+- **`READY`**: call 1 was refused, the watch ended green, and the pull request
+  is open with nothing else owed but the merge. The driver merges it.
 - **`DROPPED`**: every claim in the brief failed to reproduce, so there is
   nothing to fix. No branch, no pull request. What you ran and what it showed
   goes in your report, because no pull request body will hold it.
@@ -99,7 +106,9 @@ fix it, push and start again at call 2.
 
 **Replace it whole, six lines at most**: the row that is next and its brief,
 the row you did with its pull request and outcome in one line, what is in
-flight. Write `BLOCKED: <one sentence>` as its first line if you stopped.
+flight. Write `BLOCKED: <one sentence>` as its first line if you stopped, or
+`READY: #<n> is open and green, and the merge was refused.` with the `NEXT:`
+line under it.
 Detail belongs in the pull request body, or for a dropped row in your report,
 never here: the next worker reads this file before anything else. If a
 **later** row needs something you found, append one line to that row's brief
