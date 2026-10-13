@@ -28,7 +28,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
          abilityGroupAllowance, abilityGroupLevels, applyAbilities,
-         occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
+         occAllowedForRace, raceAllowedForOcc, relatedFloorStatus, pairedSkillCounts,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo, skillOptionName, skillGroupForPick } from './js/parser.js';
 import { composeClass } from './js/compose.js';
@@ -1556,6 +1556,22 @@ function pickOccVariant(id) {
   render();
 }
 
+// The related and secondary counts an occupation preview prints, and both
+// previews in occPicker() print this. The counts are the ones the COMPOSED
+// character gets, because a race's `pairing_counts` may trim the occupation's
+// (BOOK-INGEST-AUDIT F129) and the skills step allows only what is left. Where
+// the race did trim one, the occupation's own number is printed beside it and
+// the sentence names the race, so a lower number explains itself. A race with
+// no such key prints the occupation's own two numbers and nothing else.
+function occCountsLine(occ) {
+  const n = pairedSkillCounts(applyVariant(S.rcc, S.variant), occ);
+  const one = (label, c) => `${label}: <b>${c.count}</b>${
+    c.count !== c.own ? ` of the occupation's ${c.own}` : ''}`;
+  const cut = n.related.count !== n.related.own || n.secondary.count !== n.secondary.own;
+  return `${one('Related skills', n.related)} &middot; ${one('Secondary', n.secondary)}${
+    cut ? ` &middot; <b>${esc(S.rcc?.name || 'This race')}</b> takes fewer than the occupation gives` : ''}`;
+}
+
 // An O.C.C. alongside a racial class. Offered only for an R.C.C., because that
 // is the pairing the books describe: the race is what you are, the occupation
 // is what you trained as, and the related and secondary skill allowances come
@@ -1583,8 +1599,7 @@ function occPicker() {
         }).join('')}
       </select>
     </div>
-    ${chosen ? `<p class="small">Related skills: <b>${chosen.skills?.occ_related_skills?.count ?? 0}</b>
-      &middot; Secondary: <b>${chosen.skills?.secondary_skills?.count ?? 0}</b>
+    ${chosen ? `<p class="small">${occCountsLine(chosen)}
       &middot; the occupation allowances replace those of this class.</p>` : ''}
   </div>`;
   }
@@ -1650,8 +1665,7 @@ function occPicker() {
       // parent's six beside a dropdown that has just selected the three. F31.
       const shown = applyVariant(chosen, S.occVariant) || chosen;
       return `${classTags(chosen).length ? `<div>${tagReadout(chosen)}</div>` : ''}
-      <p class="small">Related skills: <b>${shown.skills?.occ_related_skills?.count ?? 0}</b>
-      · Secondary: <b>${shown.skills?.secondary_skills?.count ?? 0}</b></p>`;
+      <p class="small">${occCountsLine(shown)}</p>`;
     })() : ''}
   </div>`;
 }
