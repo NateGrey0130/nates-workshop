@@ -1112,6 +1112,24 @@ section('A choice-group option with its own bonus');
   // shared function above, plus that it is what the saved pick is resolved by.
   check('the wizard resolves a group pick through skillGroupForPick',
     /resolveSkill\(name, skillGroupForPick\(s, name\)\)/.test(readFileSync(join(appDir, 'app.js'), 'utf8')));
+  // The option ROW, which printed the group's own `base` for every option and so
+  // showed two dashes for the Psi-Stalker's 46% and 85%. Three things, each of
+  // which was a way to be wrong: the row's percentage is the function's and not
+  // the group's, the function resolves through the same two calls the save
+  // makes, and a group with no option bonus never reaches them.
+  {
+    const src = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const at = src.indexOf('const optionPct = (name) => {');
+    const fn = at < 0 ? '' : src.slice(at, src.indexOf('};', at));
+    check('a choice group\'s option row prints the percentage that option resolves to',
+      /data-act="group"[\s\S]{0,300}?<span class="pct">\$\{optionPct\(name\)\}<\/span><\/label>/.test(src));
+    check('and that percentage goes through skillGroupForPick and resolveSkill, as the saved pick does',
+      /const entry = skillGroupForPick\(s, name\);\s*const r = resolveSkill\(name, entry\);/.test(fn));
+    check('a group with no option bonus returns the group\'s own figure before either call',
+      /^const optionPct = \(name\) => \{\s*if \(!ownBonus\) return groupPct;/.test(fn)
+      && /const ownBonus = optionNames\.some\(\(name\) => skillGroupForPick\(s, name\) !== s\);/.test(src)
+      && src.includes("const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';"));
+  }
 
   // The NPC generator, run. One option, so the pick is not left to the shuffle.
   {

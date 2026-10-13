@@ -200,7 +200,15 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
   const relatedPool = usableCatalog(catalog, system, relatedCats)
     .filter((r) => pickable(r, taken) && categoryAllows(relatedCats, r));
   const relatedChosen = [];
-  const floors = relatedFloorStatus(cls, [], relatedAt1).floors || [];
+  // A RACE MAY HAVE TRIMMED THE COUNT BELOW THE FLOORS (BOOK-INGEST-AUDIT F129):
+  // three picks against two Espionage and two Military. Filling each floor
+  // whole would overspend the count, so the picks go to the floors one at a
+  // time until they run out, each one judged by the arithmetic the validator
+  // will judge the finished character by. Every other class takes the loop
+  // below, as it always has.
+  const floorsAt1 = relatedFloorStatus(cls, [], relatedAt1);
+  const floors = floorsAt1.trimmed ? [] : (floorsAt1.floors || []);
+  if (floorsAt1.trimmed) takeTowardFloors(relatedChosen, relatedAt1, relatedPool, relatedAt1, [], 1);
   for (const f of floors) {
     const wanted = new Set(f.categories.map(norm));
     const pool = preferInGame(relatedPool.filter((r) => wanted.has(norm(r.category)) && !taken.has(norm(r.name))));
@@ -243,12 +251,25 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
     const advanced = new Map((proposal.skills || []).map((s) => [norm(s.name), s.to]));
     finalSkills = skills.map((s) => (advanced.has(norm(s.name)) ? { ...s, pct: advanced.get(norm(s.name)) } : s));
 
+    const relatedAtLevel = relatedAllowance(cls, level);
+    const gainedRelated = [];
     for (const g of skillGrantsFor(cls, 1, level)) {
       const cats = g.kind === 'secondary' ? null : g.categories;
       const pool = (cats ? usableCatalog(catalog, system, cats) : rows)
         .filter((r) => pickable(r, taken) && (!cats || categoryAllows(cats, r)));
       const chosen = [];
+      // Floors a trimmed count left unmet at level one are still owed, and the
+      // validator counts every related pick against them at the level the NPC
+      // is built at. So a later grant goes to them first. A class whose floors
+      // were met at level one has nothing short here and skips this.
+      if (g.kind !== 'secondary') {
+        const heldCats = [...relatedChosen, ...gainedRelated].map((r) => r.category);
+        if (relatedFloorStatus(cls, heldCats, relatedAtLevel).short.length) {
+          takeTowardFloors(chosen, g.count, pool, relatedAtLevel, heldCats, g.level);
+        }
+      }
       fill(chosen, g.count, pool, g.kind, cats, g.level);
+      if (g.kind !== 'secondary') gainedRelated.push(...chosen);
       for (const r of chosen) {
         // NO I.Q. BONUS on a skill gained at a level-up (Nate's ruling,
         // 2026-10-10). The bonus is a one-time gift to the skills a character
@@ -302,6 +323,38 @@ export function generateNpc({ cls, level = 1, catalog, derive, system = null, ra
     const picks = open.slice(0, need);
     reportPastGame(open, picks, kind);
     for (const r of picks) { into.push(r); taken.add(norm(r.name)); }
+  }
+
+  // Take up to `count` picks into `into`, each one a pick that leaves the
+  // class's related floors still reachable within `allowance` - which, once
+  // the picks are spent, is a character the validator accepts. `heldCats` is
+  // the category of every related pick held before these. A pick is judged by
+  // its category alone, so one verdict serves every skill of that category.
+  // Stops early once no floor is short; fill() spends whatever is left.
+  function takeTowardFloors(into, count, pool, allowance, heldCats, atLevel) {
+    const cats = [...heldCats, ...into.map((r) => r.category)];
+    while (into.length < count && relatedFloorStatus(cls, cats, allowance).short.length) {
+      const open = preferInGame(pool.filter((r) => !taken.has(norm(r.name))));
+      const verdict = new Map();
+      const keeps = (r) => {
+        const c = norm(r.category);
+        if (!verdict.has(c)) verdict.set(c, !relatedFloorStatus(cls, [...cats, r.category], allowance).unreachable);
+        return verdict.get(c);
+      };
+      const pick = open.find(keeps);
+      if (!pick) {
+        const short = relatedFloorStatus(cls, cats, allowance).short;
+        throw new NpcGap('related_floor',
+          `${cls.name || 'This class'} still needs related skills from `
+          + `${short.map((f) => f.categories.join(' or ')).join(' and ')} at level ${atLevel}, `
+          + 'and the catalog offers none it can take',
+          { floor: short.flatMap((f) => f.categories), want: short.reduce((n, f) => n + f.missing, 0), have: 0 });
+      }
+      reportPastGame(open, [pick], 'related');
+      into.push(pick);
+      taken.add(norm(pick.name));
+      cats.push(pick.category);
+    }
   }
 
   // A pick past the game is right only when the pool had no in-game skill left

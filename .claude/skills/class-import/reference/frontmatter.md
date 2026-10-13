@@ -584,6 +584,9 @@ rounded DOWN) or `cap` (a whole number, which only ever lowers), never both.
 `occupations` lists occupation ids and is optional: an entry without it
 reaches every occupation. Creation counts only - picks gained at later levels
 are not trimmed - and a list the occupation does not state is not created.
+A trimmed count may fall below the occupation's `minimums`; the floors then
+yield, and every pick must go to a required category until the picks run out
+(`relatedFloorStatus`), so neither the count nor the minimums is edited to fit.
 Use it only when the race's book prints the cut: both lists halved for any
 occupation is `factor: 0.5` on each. **Look each
 occupation id up; the parser cannot**, and regression fails an id that names

@@ -28,7 +28,7 @@ import { isChoiceGroup, isGearChoice, applyVariant,
          abilityOccOptions, abilityGroupCounts, abilityGroupIndexFor,
          abilityRollBands, abilityRollMatches, abilityOffersPsionics, rollAbilityTable, abilityGroupOwed,
          abilityGroupAllowance, abilityGroupLevels, applyAbilities,
-         occAllowedForRace, raceAllowedForOcc, relatedFloorStatus,
+         occAllowedForRace, raceAllowedForOcc, relatedFloorStatus, pairedSkillCounts,
          bonusesFromSkills, sumBonusGroups, abilityTouchesPool, mosList,
          CLASS_TAGS, classTags, classTagInfo, skillOptionName, skillGroupForPick } from './js/parser.js';
 import { composeClass } from './js/compose.js';
@@ -1556,6 +1556,22 @@ function pickOccVariant(id) {
   render();
 }
 
+// The related and secondary counts an occupation preview prints, and both
+// previews in occPicker() print this. The counts are the ones the COMPOSED
+// character gets, because a race's `pairing_counts` may trim the occupation's
+// (BOOK-INGEST-AUDIT F129) and the skills step allows only what is left. Where
+// the race did trim one, the occupation's own number is printed beside it and
+// the sentence names the race, so a lower number explains itself. A race with
+// no such key prints the occupation's own two numbers and nothing else.
+function occCountsLine(occ) {
+  const n = pairedSkillCounts(applyVariant(S.rcc, S.variant), occ);
+  const one = (label, c) => `${label}: <b>${c.count}</b>${
+    c.count !== c.own ? ` of the occupation's ${c.own}` : ''}`;
+  const cut = n.related.count !== n.related.own || n.secondary.count !== n.secondary.own;
+  return `${one('Related skills', n.related)} &middot; ${one('Secondary', n.secondary)}${
+    cut ? ` &middot; <b>${esc(S.rcc?.name || 'This race')}</b> takes fewer than the occupation gives` : ''}`;
+}
+
 // An O.C.C. alongside a racial class. Offered only for an R.C.C., because that
 // is the pairing the books describe: the race is what you are, the occupation
 // is what you trained as, and the related and secondary skill allowances come
@@ -1583,8 +1599,7 @@ function occPicker() {
         }).join('')}
       </select>
     </div>
-    ${chosen ? `<p class="small">Related skills: <b>${chosen.skills?.occ_related_skills?.count ?? 0}</b>
-      &middot; Secondary: <b>${chosen.skills?.secondary_skills?.count ?? 0}</b>
+    ${chosen ? `<p class="small">${occCountsLine(chosen)}
       &middot; the occupation allowances replace those of this class.</p>` : ''}
   </div>`;
   }
@@ -1650,8 +1665,7 @@ function occPicker() {
       // parent's six beside a dropdown that has just selected the three. F31.
       const shown = applyVariant(chosen, S.occVariant) || chosen;
       return `${classTags(chosen).length ? `<div>${tagReadout(chosen)}</div>` : ''}
-      <p class="small">Related skills: <b>${shown.skills?.occ_related_skills?.count ?? 0}</b>
-      · Secondary: <b>${shown.skills?.secondary_skills?.count ?? 0}</b></p>`;
+      <p class="small">${occCountsLine(shown)}</p>`;
     })() : ''}
   </div>`;
 }
@@ -1679,6 +1693,35 @@ function occAbilityClass() {
   return occ ? applyVariant(occ, S.occVariant) : null;
 }
 const abilityClass = (side) => (side === 'occ' ? occAbilityClass() : S.rcc);
+
+// What a levelled group's LATER levels bring, as the sentence under its
+// "choose N" heading. The heading's number is the level-1 count, and since an
+// `at_levels` entry may state its own count (BOOK-INGEST-AUDIT F127) the later
+// levels need not repeat it: "choose 4", then a bare list of levels 3 and 6,
+// read as four more each time on a class that gives four and then one.
+//
+// Each count is the group's allowance differenced level to level, never typed,
+// so it is what the sheet banks. Levels bringing the same count share a clause.
+// Empty for a group with no later level. Reads only the two parser functions,
+// so the smoke suite can run it out of this file's source.
+function abilityLaterPicksNote(group) {
+  const words = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  const list = (items) => (items.length < 2 ? items.join('')
+    : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
+  const clauses = [];
+  for (const level of (abilityGroupLevels(group) || []).filter((n) => n > 1)) {
+    const count = abilityGroupAllowance(group, level) - abilityGroupAllowance(group, level - 1);
+    if (count <= 0) continue;
+    const same = clauses.find((c) => c.count === count);
+    if (same) same.levels.push(level);
+    else clauses.push({ count, levels: [level] });
+  }
+  if (!clauses.length) return '';
+  const said = clauses.map((c) => `${words[c.count] || c.count} more at ${
+    c.levels.length === 1 ? `level ${c.levels[0]}` : `each of levels ${list(c.levels)}`}`);
+  const body = said.length < 2 ? said[0] : `${said.slice(0, -1).join(', ')}, and ${said.at(-1)}`;
+  return `${body[0].toUpperCase()}${body.slice(1)}, on the sheet.`;
+}
 
 function abilityPicker(side = 'rcc') {
   const cls = abilityClass(side);
@@ -1768,8 +1811,8 @@ function abilityPicker(side = 'rcc') {
           or the dice an attribute is rolled on, clears it to be rolled again.</p>`
         : `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
         and both are rolled on the next two steps.</p>`;
-    const laterNote = later.length
-      ? `<p class="muted small">And again at level${later.length === 1 ? '' : 's'} ${later.join(', ')}, on the sheet.</p>` : '';
+    const laterText = abilityLaterPicksNote(g);
+    const laterNote = laterText ? `<p class="muted small">${laterText}</p>` : '';
     return `<div class="panel-inset"${gi === firstOffered ? ` id="${side === 'occ' ? 'occ-ability-picker' : 'ability-picker'}"` : ''}>${laterNote ? '<!-- levelled -->' : ''}
       <h3>Powers <span class="muted small">&mdash; ${g.rolls === undefined ? `choose ${limit}`
         : typeof g.rolls === 'number' ? `rolled ${g.rolls} time${g.rolls === 1 ? '' : 's'}, a repeat rolled again`
@@ -3438,6 +3481,23 @@ function skillsOccPartFor(ctx) {
     const visible = available.filter((n) => hits.has(n) || picked.includes(n));
     const capped = !ui.filter && !ui.all && visible.length > GROUP_SHORT;
     const list = capped ? visible.filter((n, i) => i < GROUP_SHORT || picked.includes(n)) : visible;
+    // What the percentage column says. A group whose list gives an option its
+    // OWN bonus (`{ name, bonus }`, BOOK-INGEST-AUDIT.md F135) is one where the
+    // rows differ, so each row prints what picking it would store: the same
+    // `skillGroupForPick` entry, through the same `resolveSkill`, that
+    // skillsAtLevelOne() saves the pick by. The Psi-Stalker's two Pilot options
+    // read 46% and 85% instead of two dashes and a note. Every other group -
+    // all plain names, or `categories` - gets the group back from
+    // `skillGroupForPick` for every option, and prints the group's own `base`
+    // exactly as it always has.
+    const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';
+    const ownBonus = optionNames.some((name) => skillGroupForPick(s, name) !== s);
+    const optionPct = (name) => {
+      if (!ownBonus) return groupPct;
+      const entry = skillGroupForPick(s, name);
+      const r = resolveSkill(name, entry);
+      return r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—';
+    };
     const opts = list.map((name) => {
       // The Other row is taken once PER LANGUAGE and never reads as already
       // picked, exactly as it does on the related/secondary picker. Without
@@ -3453,7 +3513,7 @@ function skillsOccPartFor(ctx) {
         <input type="checkbox" ${on ? 'checked' : ''} ${blocked ? 'disabled' : ''}
           data-act="group" data-group="${gi}" data-limit="${s.choose}" data-name="${esc(name)}">
         <span>${esc(hthLabel(name))}${hint}</span>
-        <span class="pct">${s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—'}</span></label>`;
+        <span class="pct">${optionPct(name)}</span></label>`;
     }).join('');
     const filterBox = available.length > GROUP_SHORT
       ? Picker.inputHtml({ id: `grp-filter-${gi}`, value: ui.filter, shown: visible.length, total: available.length })
