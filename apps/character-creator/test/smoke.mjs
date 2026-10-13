@@ -5649,6 +5649,117 @@ section('A table rolled more than once, and a row that sets attribute dice (BOOK
     /if \(g\.rolls !== undefined\) \{[\s\S]{0,300}rollAbilityTable\(g, count/.test(npcSrc));
 }
 
+section('A pool base carried by a chosen option (BOOK-INGEST-AUDIT F128)');
+{
+  const P = await import('../js/parser.js');
+  const { generateNpc } = await import('../js/npc-generate.js');
+  const LF = String.fromCharCode(10);
+  const mk = (...lines) => parseClassMarkdown(
+    ['---', 'id: t', 'name: T', 'system: rifts', 'source_book: b', 'category: rcc', 'tags: []',
+     'men_of_arms: false', ...lines, '---', '', '## Lore', '', 'x', ''].join(LF));
+  const FLESH = 'Body (01-50): Flesh';
+  const MDC = 'Body (51-80): M.D.C. Being';
+  const TOUGH = 'Body (81-00): Tough';
+  const ROWS = ['special_abilities:',
+    `  - { name: "${FLESH}", description: "x" }`,
+    `  - { name: "${MDC}", description: "x", mdc_base: "2d4x10" }`,
+    `  - { name: "${TOUGH}", description: "x", sdc_base: "4d6", hit_points_base: "P.E. x2 + 1d6 per level" }`,
+    `  - { choose: 1, from: ["${FLESH}", "${MDC}", "${TOUGH}"] }`];
+  const fx = mk(...ROWS);
+  check('an option may state a pool base, and the class still parses', fx.ok, fx.errors.join('; '));
+  const attrs = { IQ: 10, ME: 10, MA: 10, PS: 10, PP: 10, PE: 10, PB: 10, Spd: 10 };
+  const compose = (cls, ...abilities) => composeClass({ rcc: cls, character: { abilities } });
+
+  // THE DEFECT: the base was null, so the roll was null whatever the row added.
+  const held = compose(fx.data, MDC);
+  check('the composed class has the base the held option states', held.mdc_base === '2d4x10',
+    String(held.mdc_base));
+  const rolls = Array.from({ length: 200 }, () => rollPoolFormula(held.mdc_base, attrs, held.bonuses?.pools?.mdc));
+  check('the pool rolls a number, inside the formula\'s range',
+    rolls.every((n) => Number.isInteger(n) && n >= 20 && n <= 80), JSON.stringify(rolls.slice(0, 5)));
+  check('and the bounds agree with the roll',
+    JSON.stringify(poolFormulaBounds(held.mdc_base, attrs, held.bonuses?.pools?.mdc)) === '{"min":20,"max":80}');
+  check('an M.D.C. being by its option has no hit points and no S.D.C., core ones included',
+    held.hit_points_base == null && held.sdc_base == null,
+    JSON.stringify([held.hit_points_base, held.sdc_base]));
+  check('the option is still recorded as held', held.abilities_taken?.[0]?.name === MDC);
+
+  // OPT-IN: nothing moves for a character who does not hold the row.
+  const none = compose(fx.data);
+  const other = compose(fx.data, FLESH);
+  check('with no pick, or another row, the class keeps the core pools and no M.D.C.',
+    [none, other].every((c) => c.mdc_base == null && c.hit_points_base === 'P.E. + 1D6 per level'
+      && c.sdc_base === '1D6'));
+  check('a class with no such option is returned as the same object',
+    P.applyAbilityPoolBases(fx.data, [FLESH]) === fx.data && P.applyAbilityPoolBases(fx.data, []) === fx.data
+    && P.applyAbilityPoolBases(fx.data, ['Nothing Defines This']) === fx.data);
+  check('and the fold never writes to the class it was handed',
+    P.applyAbilityPoolBases(fx.data, [MDC]) !== fx.data && fx.data.mdc_base === undefined);
+
+  // THE OTHER TWO KEYS, and Nate's ruling that an option's base REPLACES.
+  const tough = compose(fx.data, TOUGH);
+  check('sdc_base and hit_points_base ride an option the same way',
+    tough.sdc_base === '4d6' && tough.hit_points_base === 'P.E. x2 + 1d6 per level' && tough.mdc_base == null);
+  const stated = mk('mdc_base: "10"', 'sdc_base: "20"', ...ROWS);
+  check('an option\'s base replaces a base the class states',
+    compose(stated.data, MDC).mdc_base === '2d4x10' && compose(stated.data, TOUGH).sdc_base === '4d6'
+    && compose(stated.data).mdc_base === '10' && compose(stated.data).sdc_base === '20');
+
+  // "EXACTLY AS A CLASS-LEVEL mdc_base DOES" (Nate's ruling), measured against
+  // the class that states it: the same three pools, alone and under an
+  // occupation that brings hit points and S.D.C. of its own.
+  const occ = { id: 'o', name: 'O', system: 'rifts', category: 'occ', men_of_arms: true,
+    hit_points_base: 'P.E. + 2d6 per level', sdc_base: '5d6' };
+  const pools = (c) => JSON.stringify([c.mdc_base, c.hit_points_base, c.sdc_base]);
+  const classLevel = { ...fx.data, mdc_base: '2d4x10' };
+  check('alone, the option composes to the pools a class stating the base composes to',
+    pools(held) === pools(composeClass({ rcc: classLevel })));
+  const paired = composeClass({ rcc: fx.data, occ, character: { abilities: [MDC] } });
+  check('and under an occupation too: its hit points do not sneak in',
+    pools(paired) === pools(composeClass({ rcc: classLevel, occ })) && paired.hit_points_base == null,
+    pools(paired));
+  check('an occupation\'s option yields to a race that states the pool, as the occupation\'s own base does',
+    composeClass({ rcc: { id: 'r', name: 'R', system: 'rifts', category: 'rcc', mdc_base: '1d4x100' },
+      occ: { ...fx.data, category: 'occ' }, character: { abilities: [MDC] } }).mdc_base === '1d4x100');
+
+  // The wizard clears pools it has already rolled when such a row is swapped.
+  const def = (name) => fx.data.special_abilities.find((e) => e.name === name);
+  check('swapping a row that states a base clears the rolled pools',
+    P.abilityTouchesPool(def(MDC)) && P.abilityTouchesPool(def(TOUGH)) && !P.abilityTouchesPool(def(FLESH)));
+
+  // THE VALIDATOR.
+  const row = (extra) => mk('special_abilities:', `  - { name: "K (01-50): A", ${extra} }`,
+    '  - { name: "K (51-00): B" }', '  - { choose: 1, from: ["K (01-50): A", "K (51-00): B"] }');
+  check('a base the pools cannot read is an error, on each of the three keys',
+    ['mdc_base', 'sdc_base', 'hit_points_base'].every((k) => !row(`${k}: "lots"`).ok
+      && row(`${k}: "lots"`).errors.some((e) => e.includes(`K (01-50): A.${k} is not a formula`)))
+    && !row('mdc_base: { dice: "2d4" }').ok);
+  check('a number, dice, and an attribute formula all pass',
+    row('mdc_base: 40').ok && row('mdc_base: "1d6x10"').ok && row('hit_points_base: "P.E. + 1d6 per level"').ok);
+  check('a base on an ability nobody is offered is warned about',
+    mk('special_abilities:', '  - { name: "Loose", mdc_base: "2d4x10" }').warnings
+      .some((w) => w.includes('states mdc_base but is not offered')));
+  check('and so is the conversion flag beside a base, which the base beats',
+    row('mdc_base: "2d4x10", mdc_from_hp_sdc: true').warnings.some((w) => w.includes('the flag does nothing')));
+
+  // THE READERS OF THE COMPOSED BASE, run rather than read. The wizard's own
+  // call (app.js computePools) is the rollPoolFormula line above.
+  const findings = (mdc) => validateCharacter({ character: { level: 1 }, cls: held, skills: [],
+    attributes: attrs, abilities: [MDC], pools: { hp_max: null, sdc_max: null, mdc_max: mdc },
+    catalog: new Map(), enforcePools: true }).violations.filter((x) => x.rule === 'pool_out_of_range');
+  check('the server holds a stored M.D.C. to the option\'s formula, and the empty pools raise nothing',
+    findings(50).length === 0 && findings(500).some((x) => x.field === 'mdc_max' && x.max === 80),
+    JSON.stringify([findings(50), findings(500)]));
+  const world = {};
+  new Function('globalThis', readFileSync(join(appDir, 'js', 'derive.js'), 'utf8')).call(world, world);
+  const npc = generateNpc({ cls: { ...held, skills: { occ_skills: [], secondary_skills: { count: 0 } } },
+    level: 1, catalog: [], derive: world.derive, system: 'rifts',
+    chosen: { mos: null, abilities: [MDC], totem: null } });
+  check('the NPC generator rolls the option\'s M.D.C. and no hit points or S.D.C.',
+    npc.pools.mdc >= 20 && npc.pools.mdc <= 80 && npc.pools.hp == null && npc.pools.sdc == null,
+    JSON.stringify(npc.pools));
+}
+
 section('Reductions on dice, and a Horror Factor from a chosen ability (BOOK-INGEST-AUDIT F119)');
 {
   const LF = String.fromCharCode(10);

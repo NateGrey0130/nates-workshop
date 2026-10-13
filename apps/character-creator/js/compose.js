@@ -21,8 +21,8 @@
 // That part is genuinely different per site and stays there. What is the same
 // everywhere is what to do once you have them, which is all this does.
 
-import { applyVariant, combineClasses, applyAbilities, bonusesFromSkills,
-         sumBonusGroups, mosList } from './parser.js';
+import { applyVariant, combineClasses, applyAbilities, applyAbilityPoolBases,
+         bonusesFromSkills, sumBonusGroups, mosList } from './parser.js';
 import { withRolledPsionics } from './psionics.js';
 
 // Hit points and S.D.C. are CORE rules (p.18), stated once for every
@@ -212,8 +212,16 @@ export function composeClass({ rcc, occ = null, character = {}, skillRows = null
   // any other slug leaves the class untouched.
   const totemRow = totem && character.totem
     && String(totem.slug).toLowerCase() === String(character.totem).toLowerCase() ? totem : null;
+  // A pool base a chosen option states (BOOK-INGEST-AUDIT F128) lands on its
+  // own half HERE, ahead of everything else an ability gives. An option that
+  // sets `mdc_base` makes the character an M.D.C. being exactly as a class
+  // stating it would, and the two things that act on that both run in the next
+  // statement: combineClasses, and withCorePools, which gives a class with no
+  // `mdc_base` the core hit points and S.D.C.
+  const raceBased = applyAbilityPoolBases(race, character.abilities);
+  const jobBased = job ? applyAbilityPoolBases(job, character.abilities) : null;
   const composed = applyTotem(applyMos(
-    withCorePools(job ? combineClasses(race, job) : race, job, race),
+    withCorePools(jobBased ? combineClasses(raceBased, jobBased) : raceBased, jobBased, raceBased),
     character.mos), totemRow);
 
   // Abilities are chosen FOR the character rather than contributed by either
