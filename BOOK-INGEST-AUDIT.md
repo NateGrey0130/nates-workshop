@@ -4752,6 +4752,30 @@ A13 "with a reason each", and those would warn.
 **Ongoing cost:** a warning that fires on the thirty forever unless they are
 given an explicit opt-out.
 
+**Taken, 2026-10-12 (branch `pal/fix/book-ingest-audit-f136-note-bonus`).**
+Posture as proposed: a WARNING, no exit code. `noteOnlyCategoryBonuses` in
+`scripts/class-check-lib.mjs` finds a `categories` entry, in
+`occ_related_skills`, `secondary_skills` or `skill_programs`, whose `note`
+carries a signed percentage and which states no `bonus`; `class-check` prints
+one warning per entry, with its line. One thing was added to the proposal, on
+Nate's ruling of 2026-10-12: **an entry is silent when another entry of the
+same name in the same list states a `bonus`**, the two-entry shape F109 gave
+a category that pays a bonus for part of itself. Not taken: nothing silencing
+it, and an explicit opt-out marker on the entry.
+
+Measured 2026-10-12 with that predicate over production's live classes
+(`imported_classes --remote`, published and not deleted: 763 classes, 5,391
+category objects): **30 entries in 16 classes warn.** With no sibling rule it
+would be 63 entries in 41 classes, so the rule quiets 33. A prototype at
+planning counted 29 with the rule and the same 63 without; the one entry
+between 29 and 30 was not traced, and the rule was not tuned to the number.
+Of the 30, `diabolist` (7) and `necromancer` (7) are real misses, to be fixed
+as data and not in this PR. The other 16 are the "with a reason each" kind
+the proposal expected: a note explaining why no category bonus is stored, or
+a bonus scoped to skills by a phrase and no `only` list. They warn on a
+re-check of those classes until each gains a sibling entry or its note is
+reworded. No class was changed here.
+
 ### F137 - low - the `circle` and `temporal` traditions have no label of their own
 
 `LABELS` in `apps/character-creator/js/traditions.js` (lines 25-41, read

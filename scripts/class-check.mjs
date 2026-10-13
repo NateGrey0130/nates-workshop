@@ -52,7 +52,7 @@ import {
   detectPageOffsetRegions, offsetForPrintedPage, freeTextFields,
   fieldTokens, fieldSourceSpans, bestMatchingPages,
   LITERACY_PLACEHOLDER, grantsLiteracyPlaceholder, menOfArmsBesideOwnSdc,
-  sheetDrawableKeys, undrawnBonusKeys,
+  sheetDrawableKeys, undrawnBonusKeys, noteOnlyCategoryBonuses,
 } from './class-check-lib.mjs';
 import { loadBookRegistry, ocrCacheDir } from './books-lib.mjs';
 import { localD1Args } from './d1-query-lib.mjs';
@@ -295,6 +295,20 @@ if (leftRolling.length) {
     + 'rolls the standard Random Psionics table as well, so a player who lands on None is '
     + 'offered a second roll. If the table the book prints replaces the standard one, add '
     + 'psionics_allowed: false to the class; a picked option still grants its psionics block.');
+}
+
+// A category bonus written only in its `note` (BOOK-INGEST-AUDIT F136).
+// categoryBonus reads `bonus` and nothing else, so the picker shows the
+// percentage and the pick gains nothing. A WARNING and no exit code: a note may
+// quote a percentage that is not this category's bonus, and only the page says.
+// One message per entry, opened with its path so the line can be found.
+for (const hit of noteOnlyCategoryBonuses(data)) {
+  warnings.push(`skills.${hit.group}.categories "${hit.category}" carries "${hit.percent}" in its `
+    + 'note and states no bonus. Only the `bonus` key is added to a pick, so the note is '
+    + `shown and nothing is applied. If the book gives the whole category ${hit.percent}, add `
+    + 'the bonus key to this entry; if it gives it to part of the category, add a second '
+    + 'entry of the same name with `only` and the bonus (BOOK-INGEST-AUDIT F109), which also '
+    + 'quiets this.');
 }
 
 // A new class with no authored tags is missing from every tag filter a player
