@@ -1694,6 +1694,35 @@ function occAbilityClass() {
 }
 const abilityClass = (side) => (side === 'occ' ? occAbilityClass() : S.rcc);
 
+// What a levelled group's LATER levels bring, as the sentence under its
+// "choose N" heading. The heading's number is the level-1 count, and since an
+// `at_levels` entry may state its own count (BOOK-INGEST-AUDIT F127) the later
+// levels need not repeat it: "choose 4", then a bare list of levels 3 and 6,
+// read as four more each time on a class that gives four and then one.
+//
+// Each count is the group's allowance differenced level to level, never typed,
+// so it is what the sheet banks. Levels bringing the same count share a clause.
+// Empty for a group with no later level. Reads only the two parser functions,
+// so the smoke suite can run it out of this file's source.
+function abilityLaterPicksNote(group) {
+  const words = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  const list = (items) => (items.length < 2 ? items.join('')
+    : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
+  const clauses = [];
+  for (const level of (abilityGroupLevels(group) || []).filter((n) => n > 1)) {
+    const count = abilityGroupAllowance(group, level) - abilityGroupAllowance(group, level - 1);
+    if (count <= 0) continue;
+    const same = clauses.find((c) => c.count === count);
+    if (same) same.levels.push(level);
+    else clauses.push({ count, levels: [level] });
+  }
+  if (!clauses.length) return '';
+  const said = clauses.map((c) => `${words[c.count] || c.count} more at ${
+    c.levels.length === 1 ? `level ${c.levels[0]}` : `each of levels ${list(c.levels)}`}`);
+  const body = said.length < 2 ? said[0] : `${said.slice(0, -1).join(', ')}, and ${said.at(-1)}`;
+  return `${body[0].toUpperCase()}${body.slice(1)}, on the sheet.`;
+}
+
 function abilityPicker(side = 'rcc') {
   const cls = abilityClass(side);
   const sideArg = side === 'occ' ? ", 'occ'" : '';
@@ -1782,8 +1811,8 @@ function abilityPicker(side = 'rcc') {
           or the dice an attribute is rolled on, clears it to be rolled again.</p>`
         : `<p class="muted small">Chosen now rather than later: these can add to attributes and pools,
         and both are rolled on the next two steps.</p>`;
-    const laterNote = later.length
-      ? `<p class="muted small">And again at level${later.length === 1 ? '' : 's'} ${later.join(', ')}, on the sheet.</p>` : '';
+    const laterText = abilityLaterPicksNote(g);
+    const laterNote = laterText ? `<p class="muted small">${laterText}</p>` : '';
     return `<div class="panel-inset"${gi === firstOffered ? ` id="${side === 'occ' ? 'occ-ability-picker' : 'ability-picker'}"` : ''}>${laterNote ? '<!-- levelled -->' : ''}
       <h3>Powers <span class="muted small">&mdash; ${g.rolls === undefined ? `choose ${limit}`
         : typeof g.rolls === 'number' ? `rolled ${g.rolls} time${g.rolls === 1 ? '' : 's'}, a repeat rolled again`

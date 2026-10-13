@@ -5349,6 +5349,41 @@ section('A level of a levelled group may carry its own count (BOOK-INGEST-AUDIT 
     && abilityGroupAllowance(bare, 6) === 12 && String(abilityGroupLevels(bare)) === '1,3,6'
     && abilityLevelGrants({ special_abilities: [bare] }, 1, 6).map((x) => `${x.level}:${x.count}`).join() === '3:4,6:4');
 
+  // THE WIZARD'S SENTENCE under "choose N" says what each LATER level brings.
+  // It read "And again at levels 3, 6" for every levelled group, which under a
+  // heading of "choose 4" is four more each time - wrong for the three China 2
+  // classes that give four (or two) and then one. The render path is
+  // browser-only, so the function is run out of app.js's own source against the
+  // real parser functions: a count typed into the sentence, or read off
+  // `choose`, fails here.
+  {
+    const appSrc = readFileSync(appPath('app.js'), 'utf8');
+    const from = appSrc.indexOf('function abilityLaterPicksNote(group) {');
+    const to = appSrc.indexOf("function abilityPicker(side = 'rcc')");
+    const say = from < 0 || to < from ? () => 'abilityLaterPicksNote not found in app.js'
+      : new Function('abilityGroupLevels', 'abilityGroupAllowance',
+        `${appSrc.slice(from, to)}\nreturn abilityLaterPicksNote;`)(abilityGroupLevels, abilityGroupAllowance);
+    const picker = appSrc.slice(to, appSrc.indexOf('function abilityDef('));
+    check('the wizard builds the later-levels sentence from the group, and the old wording is gone',
+      /const laterText = abilityLaterPicksNote\(g\);/.test(picker) && !/And again at level/.test(appSrc));
+    check('four now and one at each later level reads as one more each time, not as four again',
+      say(g) === 'One more at each of levels 3 and 6, on the sheet.', say(g));
+    check('and the Fu Yao Da Chia schedule lists all five levels in one clause',
+      say({ choose: 1, at_levels: [{ level: 1, count: 4 }, 3, 6, 9, 12, 15], from: NAMES })
+        === 'One more at each of levels 3, 6, 9, 12 and 15, on the sheet.',
+      say({ choose: 1, at_levels: [{ level: 1, count: 4 }, 3, 6, 9, 12, 15], from: NAMES }));
+    check('an all-bare group still says the full choose again at each later level',
+      say(bare) === 'Four more at each of levels 3 and 6, on the sheet.'
+      && say({ choose: 2, at_levels: [1, 3], from: NAMES }) === 'Two more at level 3, on the sheet.',
+      `${say(bare)} | ${say({ choose: 2, at_levels: [1, 3], from: NAMES })}`);
+    const mixed = { choose: 1, at_levels: [{ level: 1, count: 2 }, { level: 3, count: 2 }, 6, 9], from: NAMES };
+    check('later levels that bring different counts are each named',
+      say(mixed) === 'Two more at level 3, and one more at each of levels 6 and 9, on the sheet.', say(mixed));
+    check('a group with no later level prints no sentence',
+      say({ choose: 2, from: NAMES }) === '' && say({ choose: 2, at_levels: [1], from: NAMES }) === ''
+      && say({ choose: 2, at_levels: ['x'], from: NAMES }) === '');
+  }
+
   // THE SERVER'S COUNT follows the entry's own number.
   const v = (level, abilities) => validateCharacter({ character: { level }, cls: cls.data, skills: [],
     attributes: {}, abilities, catalog: new Map() }).violations.filter((x) => x.rule === 'ability_count');
