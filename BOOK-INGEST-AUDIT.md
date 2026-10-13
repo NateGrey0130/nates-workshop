@@ -4732,6 +4732,46 @@ key general enough for all three may be more than any one needs.
 **Ongoing cost:** `combineClasses` gains a branch every pairing passes
 through; it is the function `F111`, `F114` and `F122` already each added to.
 
+**Mechanic built, 2026-10-13 (branch
+`pal/feat/book-ingest-audit-f129-pairing-counts`). The finding stays open:**
+no class carries the key yet, and `nmbyr-gorilla-man` and `noli-bushman`
+convert in the next PR.
+
+- **The key's final shape**, one race-side key, one line:
+  `pairing_counts: [{ related?: { factor | cap }, secondary?: { factor | cap }, occupations?: [<occupation id>] }]`.
+  Each entry names one or both lists; each list carries `factor` (0 to 1) or
+  `cap` (a whole number, zero or more), never both; an entry without
+  `occupations` reaches every occupation. Every entry that reaches the
+  occupation applies, in the order written.
+- **Posture, said back:** opt-in on the race; a race that says nothing pairs
+  as it does now, and the suite holds that by object identity, not by count.
+- **Narrower than the proposal, on Nate's rulings of 2026-10-12.** The counts
+  only: nothing here decides whether the occupation's O.C.C. skills, equipment
+  or money come across, so `draconid` stays as ruled 2026-10-05 and nothing
+  was built for it. A halved odd count rounds down. Creation counts only: the
+  picks an occupation gains at later levels are not trimmed.
+- **Decided while building, not in the rulings:** a `factor` above 1 is
+  refused, because the key only takes picks away; a cap does not create a list
+  the occupation does not state; a superseding occupation is not trimmed; the
+  trim comes before a major psychic's halving, so both apply.
+- **Measured 2026-10-13, `--remote`, read-only**, through the parser and
+  `combineClasses` before the change: `nmbyr-gorilla-man` and `noli-bushman`
+  paired with `aerojock` each composed to its 9 related and 4 secondary,
+  unchanged; with `wilderness-scout`, 2 and 4; with `vagabond`, 5 related, and
+  that class states no `secondary_skills` at all. So for the Noli a cap of
+  three cannot raise the Wilderness Scout's two related or give the Vagabond
+  secondary picks. Whether Canada printed 138 means *at most* three or
+  *exactly* three is the next PR's to read off the page.
+- **The server was proved, not assumed**: `validateCharacter` reads its
+  allowances off the composed class and refuses a fourth related pick to a
+  halved six with no edit there (`test/checks/race-and-occupation.mjs`).
+- **Not done:** the wizard's occupation picker prints the occupation's own
+  counts off the unpaired class (`apps/character-creator/app.js:1586-1587` and
+  `:1653-1654`, read 2026-10-13), so it still shows the whole count for a race
+  that trims it. Dropped from this PR, which changes no page. It is a display
+  line: the Skills step reads the composed class (`app.js:3619-3625`, read
+  2026-10-13 and not run in a browser), and the server was run as above.
+
 ### F130 - low - per-level and conditional values that no key holds, on eight D-Bees classes
 
 Seven classes from D-Bees of North America carry a value that changes with
