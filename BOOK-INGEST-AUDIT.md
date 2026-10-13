@@ -4575,10 +4575,16 @@ The sheet's banked panel needed no change: `abilityPickRows`
 (`apps/character-sheet/sheet.js` line 3566, read 2026-10-13) draws one select
 per unit of a grant's stored `count`. That was read, and the grant of two was
 driven through the endpoints in regression; the panel was not looked at in a
-browser. One sentence of the wizard is not updated: the "chosen later" panel
-(`apps/character-creator/app.js` line 1710, read 2026-10-13) prints `choose`
-for every later level, which is wrong only for a group with no level-1 pick
-whose later level states a count, a shape no class uses. **The three classes are not converted
+browser. The wizard's picker was driven in one, 2026-10-13, on a local
+fixture: "choose 4", four taken, a fifth refused. Two sentences of the wizard
+are not updated. Under a group whose level 1 states a count the picker adds
+"And again at levels 3, 6, on the sheet"
+(`apps/character-creator/app.js` line 1772, read 2026-10-13), which can be
+read as four more where the later levels give one; the three classes will
+show it. And the "chosen later" panel (`apps/character-creator/app.js` line
+1710, read 2026-10-13) prints `choose` for every later level, which is wrong
+only for a group with no level-1 pick whose later level states a count, a
+shape no class uses. **The three classes are not converted
 here**; that is the next pull request, and this finding closes with it.
 
 ### F128 - low - a chosen option cannot SET a pool's base, only add to one
