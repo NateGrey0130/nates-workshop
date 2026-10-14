@@ -5458,6 +5458,47 @@ section('An ability may carry its later levels as text (BOOK-INGEST-AUDIT F117)'
     /\$\{abilityProgressionHtml\(a\)\}/.test(sheetSrc) && /function abilityProgressionHtml\(a\)/.test(sheetSrc));
   check('by the character\'s level, with the next line muted and not printed',
     /const lvl = Number\(C\.data\?\.level\) \|\| 1;[\s\S]{0,520}l\.level <= lvl[\s\S]{0,400}muted small noprint/.test(sheetSrc));
+
+  // A FIXED ability with a table - one the class simply has, offered by no
+  // choice group - is in special_abilities and never in abilities_taken, so
+  // the list above cannot reach it. The Serpent Hunter's slaying ability was
+  // stored and drawn nowhere. The sheet's own two functions, run here.
+  const from = sheetSrc.indexOf('function abilityProgressionHtml(a)');
+  const to = sheetSrc.indexOf('\nfunction powersHtml(');
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let fixedAt = null;
+  try {
+    const body = sheetSrc.slice(from, to) + '\nreturn fixedAbilitiesHtml;';
+    fixedAt = (level) => new Function('C', 'escHtml', body)({ data: { level } }, esc);
+  } catch (e) { /* reported by the check below */ }
+  const fixedCls = (taken = []) => ({
+    special_abilities: [
+      { name: 'Slaying', description: 'Kills <serpents>.', progression: [{ level: 8, text: 'Eight.' }, { level: 4, text: 'Four.' }] },
+      { name: 'Plain Fixed', description: 'No table.' },
+      { name: 'Art', description: 'Offered.', progression: [{ level: 2, text: 'Two.' }] },
+      { choose: 1, from: ['Art'] },
+    ],
+    abilities_taken: taken,
+  });
+  const html5 = from > 0 && to > from && fixedAt ? fixedAt(5)(fixedCls()) : '';
+  check('the sheet draws a fixed ability that carries a table, under its own heading',
+    html5.startsWith('<h2 class="sub-h">Special abilities</h2>')
+    && html5.includes('<b>Slaying</b>') && html5.includes('Kills &lt;serpents&gt;.'), html5.slice(0, 200));
+  check('with the lines reached, and the next one muted and off paper',
+    html5.includes('<b>Level 4:</b> Four.') && !html5.includes('<b>Level 8:</b>')
+    && /muted small noprint"><b>Next, at level 8:<\/b> Eight\./.test(html5));
+  check('a fixed ability with no table is not drawn, and neither is one a choice group offers',
+    html5 !== '' && !html5.includes('Plain Fixed') && !html5.includes('<b>Art</b>'));
+  check('a class with no such ability gets no heading and no markup at all',
+    !!fixedAt && fixedAt(5)({ special_abilities: fixedCls().special_abilities.slice(1), abilities_taken: [] }) === ''
+    && fixedAt(5)({}) === '' && fixedAt(5)(null) === '');
+  check('one the G.M. also assigned is left to "Chosen powers", whatever its case and spacing',
+    !!fixedAt && fixedAt(5)(fixedCls([{ name: ' slaying ', times: 1, gm: true }])) === '');
+  check('the block sits between the natural abilities and the chosen powers, adding no whitespace of its own',
+    /\$\{naturalAbilities\(cls\)\}\$\{fixedAbilitiesHtml\(cls\)\}\r?\n\s*\$\{abilitiesTaken\(cls\)\}/.test(sheetSrc));
+  check('and outside the block a G.M. edit rebuilds',
+    /function powersHtml\(cls\)[\s\S]*?\n}\r?\n/.exec(sheetSrc)?.[0].includes('fixedAbilitiesHtml') === false
+    && /function abilitiesTaken\(cls\)[\s\S]*?\n}\r?\n/.exec(sheetSrc)?.[0].includes('fixedAbilitiesHtml') === false);
 }
 
 section('The row generators refuse what they cannot write (BOOK-INGEST-AUDIT F124)');

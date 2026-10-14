@@ -360,6 +360,32 @@ function abilityProgressionHtml(a) {
     ? `<div class="muted small noprint"><b>Next, at level ${next.level}:</b> ${escHtml(next.text)}</div>` : '');
 }
 
+// What the class simply HAS and that grows with level: a definition in
+// special_abilities that no choice group offers, carrying a level table. The
+// Serpent Hunter's slaying ability is the first. Only these are drawn - a
+// class's other fixed abilities stay on its class page (Nate, 2026-10-13; a
+// Necromancer has 34). A name the character also holds, as a G.M.-assigned
+// power, is listed under "Chosen powers" with the same table and not here.
+// Static: outside #powers-block, which refreshPowers rebuilds. Returns '' when
+// nothing qualifies, so every other sheet's markup is unchanged.
+function fixedAbilitiesHtml(cls) {
+  const fold = (s) => String(s ?? '').trim().toLowerCase();
+  const list = cls?.special_abilities || [];
+  const offered = new Set(list.filter((e) => e && Array.isArray(e.from))
+    .flatMap((e) => e.from).map((n) => fold(typeof n === 'string' ? n : n?.name)));
+  const held = new Set((cls?.abilities_taken || []).map((a) => fold(a?.name)));
+  const rows = list
+    .filter((d) => d && typeof d.name === 'string' && !d.choose && !d.from
+      && !offered.has(fold(d.name)) && !held.has(fold(d.name)))
+    .map((d) => {
+      const table = abilityProgressionHtml(d);
+      return table ? `<li><b>${escHtml(d.name)}</b>
+      ${d.description ? `<div class="muted small">${escHtml(d.description)}</div>` : ''}
+      ${table}</li>` : '';
+    }).join('');
+  return rows ? `<h2 class="sub-h">Special abilities</h2><ul style="margin-left:18px">${rows}</ul>` : '';
+}
+
 // Rebuilt in place after a G.M. edit — the same targeted-refresh discipline
 // the inventory uses, because a full load() here would discard anything typed
 // into the section inputs and not yet saved.
@@ -3089,7 +3115,7 @@ function render() {
       ${w ? `<textarea id="stat-notes" class="noprint">${escHtml(c.notes || '')}</textarea>
              <p class="print-only small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`
           : `<p class="small" style="white-space:pre-wrap">${escHtml(c.notes || '—')}</p>`}
-      ${naturalAbilities(cls)}
+      ${naturalAbilities(cls)}${fixedAbilitiesHtml(cls)}
       ${abilitiesTaken(cls)}
       ${advisory('Side effects', cls.side_effects)}
       ${advisory('Restrictions', cls.restrictions)}
