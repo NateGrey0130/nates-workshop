@@ -5456,6 +5456,18 @@ Survival) are a name added to an `only` list on the category the book prints,
 which `categoryBonus` pays under `F9`; the rest are a second, scoped entry for
 the same category. **Posture recorded:** data only.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-sperm-whale`).**
+The finding stays open: this is the third of its data PRs. `sperm-whale` is a
+fourth cetacean the list above did not name; row 32a found it. Production's
+row stored `{ name: "Communications", only: ["Radio: Basic", "Sing"] }` with no
+bonus when read on 2026-10-14 (`imported_classes`, `--remote`), and its
+related-skills note said the -10% was left off so as not to reach Sing. Underseas
+printed 88, read off a render, gives Communication: Radio: Basic only (-10%) and
+grants Sing under Domestic. Now two entries, Sing with no bonus and Radio: Basic
+at -10, the shape `humpback-whale` carries, through `class-fix-sql.mjs` as
+`~191-book-ingest-audit-f138-sperm-whale.sql`, applied `--remote` before the
+merge; the note sentence was rewritten to match. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
