@@ -5424,6 +5424,22 @@ hand on 2026-10-05, not a query.
 **Confidence:** medium per item: the sweep's verifier judged the app side,
 and the page side is unread. **Ongoing cost:** none.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-scoped-a`).**
+The finding stays open: this is the first of five data PRs on it, split by
+book. Converted here, each figure read off a render of its cited page, through
+`class-fix-sql.mjs` as `~189-book-ingest-audit-f138-scoped-a.sql`, applied
+`--remote` before the merge: `huntsman-trapper` (Whittling & Sculpting +15),
+`travelling-story-teller` (Language rows +15), `ectohunter` (Language and
+Computer rows +15), `sohei-warrior-monk` (Streetwise +8, Concealment +6,
+Language rows +10), `mystic-ninja` (Language rows +10), and `dolphin`,
+`killer-whale` and `humpback-whale` (Radio: Basic -10). Each is a second entry
+for the same category carrying `only` or `only_prefix` and its own `bonus`.
+**Correction to the premise:** the scoped negative shape was already live
+before this PR; production's `dolphin` stored
+`{ name: "Science", only: ["Mathematics: Basic"], bonus: -10 }` when read on
+2026-10-14 (`imported_classes`, `--remote`), so the first cetacean proved
+nothing new. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
