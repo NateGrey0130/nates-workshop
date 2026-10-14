@@ -93,7 +93,8 @@ fix it, push and start again at call 2.
 
 - **`MERGED`**: all four calls above passed.
 - **`READY`**: call 1 was refused, the watch ended green, and the pull request
-  is open with nothing else owed but the merge. The driver merges it.
+  is open with nothing else owed but the merge. The driver merges it, and the
+  driver writes the state file.
 - **`DROPPED`**: every claim in the brief failed to reproduce, so there is
   nothing to fix. No branch, no pull request. What you ran and what it showed
   goes in your report, because no pull request body will hold it.
@@ -106,9 +107,14 @@ fix it, push and start again at call 2.
 
 **Replace it whole, six lines at most**: the row that is next and its brief,
 the row you did with its pull request and outcome in one line, what is in
-flight. Write `BLOCKED: <one sentence>` as its first line if you stopped, or
-`READY: #<n> is open and green, and the merge was refused.` with the `NEXT:`
-line under it.
+flight. Write `BLOCKED: <one sentence>` as its first line if you stopped.
+
+**A `READY` row does not write the state file.** The classifier refuses that
+write under the same label as the merge, and did on three of five rows on
+2026-10-14 (Nate's ruling that day: the driver writes it). Put the lines you
+would have written at the top of your report instead, first line
+`READY: #<n> is open and green, and the merge was refused.`, then the `NEXT:`
+line from your brief's `Next row:`, then the row with its pull request.
 Detail belongs in the pull request body, or for a dropped row in your report,
 never here: the next worker reads this file before anything else. If a
 **later** row needs something you found, append one line to that row's brief
