@@ -5488,6 +5488,29 @@ prose in its notes. The real `categoryAllows`/`categoryBonus` run over
 production's markdown before and after (2026-10-14, `--remote`) left every
 class's admitted skill set unchanged. **Posture recorded:** data only.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-other-keys`).**
+The finding stays open: this is the *Other keys* bullet. Converted here, each
+figure read off a render of its cited page, through `class-fix-sql.mjs` as
+`~193-book-ingest-audit-f138-other-keys.sql`, applied `--remote` before the
+merge: `dragon-juicer` (+1D4 initiative as the dice string `"1d4"`, which the
+wizard rolls once at creation, Juicer Uprising printed 47); `outback-mutie` and
+`phreaker-military-grunt` (the Serpent option's Spd 1D6+6 as `attribute_dice`
+on the option, Australia printed 129); `mutant-psi-stalker` (Perception +4,
+RUE printed 153); `pseudo-men` (Automatic Dodge +3 on band 01-10, Madhaven
+printed 72); `russian-fire-sorcerer` (+4 vs magic fumes as `saves.other`,
+Mystic Russia printed 109); `russian-mystic-kuznya` (+1D6+12 P.S. as an
+attribute dice bonus, printed 120); `gifted-one-russian` (`related_skills_count:
+0` on both Master gifts, printed 151); `roane-piper` (the psionics percentile as
+a banded pick group with `psionics_allowed: false`, D-Bees of North America
+printed 172). Left as prose: the `witch`'s Sixth Sense, because the book gives
+it no psychic tier, and the Awe Factor on `lyn-srial`, `lyn-srial-cloudweaver`
+and `lyn-srial-sky-knight` (Nate's ruling, 2026-10-12, not `horror_factor`);
+on those four only the sentence giving a false reason was rewritten. The
+`summoner`'s Deciphering Circles skill and circle strength rule stay unstored:
+the catalog holds no Deciphering Circles row (`skills`, `--remote`,
+2026-10-14), and adding one moves the Palladium Fantasy survey pin, which this
+PR does not. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
