@@ -4886,6 +4886,39 @@ has not been tried on a radius or a count. **Ongoing cost:** none beyond the
 rows. If a later book needs one of these to be computed, that is a new
 finding.
 
+**Taken in part, 2026-10-13 (branch `pal/data/book-ingest-audit-f130-stepped`).
+The finding stays open: the linear per-level values follow in the next pull
+request.** Posture as proposed: data only, display only, no mechanic. One
+data script, `~187-book-ingest-audit-f130-stepped.sql`, applied `--remote`
+before the merge, replaces five classes whole.
+
+- **Stepped values, now an ability `progression`** (each step read off the
+  OCR cache on 2026-10-13, cache page = printed + 1): `amana`'s Aura of Life
+  radius at levels 2, 4, 8, 12 and 16 (cache p021); `squilb`'s Hidden
+  Strength uses per day at 2, 5, 8 and 12 (cache p200); `forest-warden`'s
+  attacks per melee at 18, 22 and 30 (cache p094). Each line carries a
+  running total, which is a sum of the printed steps and not a printed
+  figure. A `progression` takes a level past 15, so the Amana's level 16
+  step and the Forest Warden's three are stored for the first time.
+- **Skill picks at levels, citation only** (Nate's ruling of 2026-10-12:
+  the picks keep their place and are not moved into a `progression`):
+  `vernulian`'s languages, `mraghiile-tree-man`'s category picks and
+  `forest-warden`'s related picks at 16 and 20. Their notes now cite this
+  finding and say the picks are made by hand.
+- **Citations:** all five notes cited `F116` and now cite `F130`.
+  `node scripts/audit-citations.mjs --remote F116`, run 2026-10-13 before
+  the apply, listed 20 classes citing `F116` with these five among them, and
+  flagged `forest-warden` and `mraghiile-tree-man` as limit passages.
+- **Not touched, and still owed:** `arac` (S.D.C. per level) and
+  `chasseur-vert` (a per-level duration), which are linear. `squilb`'s
+  Hidden Strength duration (2 minutes, +1 minute per level, cache p200) is
+  linear too and is left as ability text. `nmbyr-gorilla-man` cites no
+  finding and gets no edit: its stored `horror_factor: 10` is kept by
+  Nate's ruling of 2026-10-12, and its halved skills were `F129`.
+- **What the confidence line asked for:** `progression` was tried on a
+  radius and a count. The sheet draws both under "Special abilities" for a
+  local level 4 Amana (the pull request records the measure).
+
 ### F131 - low - an ability option cannot grant a skill
 
 `ABILITY_GRANTS` is `['bonuses', 'psionics', 'magic', 'super_abilities',
