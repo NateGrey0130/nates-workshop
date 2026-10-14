@@ -4919,6 +4919,37 @@ before the merge, replaces five classes whole.
   radius and a count. The sheet draws both under "Special abilities" for a
   local level 4 Amana (the pull request records the measure).
 
+**Taken, 2026-10-13 (branch `pal/data/book-ingest-audit-f130-linear`). This
+closes the finding.** Posture as proposed: data only, display only, no
+mechanic. One data script, `~188-book-ingest-audit-f130-linear.sql`, applied
+`--remote` before the merge, replaces two classes whole and changes one
+sentence of `extraction_notes` in each. No frontmatter key moved.
+
+- **Narrower than the proposal, on purpose.** The proposal gives every value
+  that scales by level a `progression`. The two linear ones did not get one:
+  they stay prose and only their citation moved, `F116` to this finding.
+- **`arac`, +5 S.D.C. per level from level two** (OCR cache p027, line 42,
+  read 2026-10-13). Nate's ruling of 2026-10-13: it stays `level_progression`
+  prose, with no `sdc_base` term and no `progression`. The earlier ruling of
+  2026-10-12, a real pool term once `F133` landed, was withdrawn after it was
+  measured through the parser on production's markdown on 2026-10-13: the
+  class states no `sdc_base` today, the key merges race-first, and stating
+  one replaced the occupation's own S.D.C. at level 1 in every pairing.
+- **`chasseur-vert`, water for two days per level and the uprooting
+  threshold of P.E. +1 per level** (OCR cache p048, lines 78 and 132, read
+  2026-10-13). The page prints a formula for each and no table, so there are
+  no lines for a `progression` to hold. Both stay in their abilities' text.
+- **`vernulian` gets no edit.** Its languages were the first half's, and its
+  `mdc_base` and `isp_base` already carry their per-level terms (production's
+  markdown, read 2026-10-13).
+- **Dropped, not filed:** `squilb`'s Hidden Strength duration (2 minutes, +1
+  minute per level), which the first half named. It is a formula with no
+  printed table, the same case as `chasseur-vert`, and stays ability text.
+- **Citations:** `node scripts/audit-citations.mjs --remote F116`, run
+  2026-10-13 before the apply, listed 15 classes citing `F116`, with `arac`
+  and `chasseur-vert` among them and `arac` among its limit passages. The
+  pull request records the run after the apply.
+
 ### F131 - low - an ability option cannot grant a skill
 
 `ABILITY_GRANTS` is `['bonuses', 'psionics', 'magic', 'super_abilities',
