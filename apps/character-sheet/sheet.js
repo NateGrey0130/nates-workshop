@@ -421,8 +421,12 @@ function powersHtml(cls) {
       <input id="gm-power-name" class="mini-in wide" style="display:none" placeholder="Power name">
       <button class="btn btn-sm noprint" onclick="addGmPower()">Add</button>
     </div>` : '';
-  const heading = taken.length || w ? '<h2 class="sub-h">Chosen powers</h2>' : '';
-  return `${heading}<ul style="margin-left:18px">${rows}</ul>${add}`;
+  // A writable sheet keeps the heading over the G.M. control when nothing is
+  // chosen, but that control is noprint, so on paper the heading and the empty
+  // list stay off too (Nate, 2026-10-13: hidden on paper only).
+  const offPaper = taken.length ? '' : ' noprint';
+  const heading = taken.length || w ? `<h2 class="sub-h${offPaper}">Chosen powers</h2>` : '';
+  return `${heading}<ul${offPaper ? ' class="noprint"' : ''} style="margin-left:18px">${rows}</ul>${add}`;
 }
 
 // The gm-flagged subset, as the PATCH endpoint wants it.
