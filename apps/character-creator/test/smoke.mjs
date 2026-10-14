@@ -5384,6 +5384,32 @@ section('A level of a levelled group may carry its own count (BOOK-INGEST-AUDIT 
       && say({ choose: 2, at_levels: ['x'], from: NAMES }) === '');
   }
 
+  // THE "CHOSEN LATER" PANEL of a group with no level-1 pick said "N of these
+  // at levels 3, 6, 9" with N read off `choose`, so `choose: 1` with a level 3
+  // that states a count of 2 read as one at level 3 while the sheet banks two.
+  // Run out of app.js's source against the real parser functions, as above.
+  {
+    const appSrc = readFileSync(appPath('app.js'), 'utf8');
+    const from = appSrc.indexOf('function abilityLaterPicksNote(group) {');
+    const to = appSrc.indexOf("function abilityPicker(side = 'rcc')");
+    const panel = from < 0 || to < from ? () => 'abilityChosenLaterNote not found in app.js'
+      : new Function('abilityGroupLevels', 'abilityGroupAllowance',
+        `${appSrc.slice(from, to)}\nreturn abilityChosenLaterNote;`)(abilityGroupLevels, abilityGroupAllowance);
+    const picker = appSrc.slice(to, appSrc.indexOf('function abilityDef('));
+    const tail = ', picked on the sheet when the level is reached.';
+    check('the chosen-later panel takes its sentence from the group, and the choose-count wording is gone',
+      /<p class="muted small">\$\{abilityChosenLaterNote\(g\)\}<\/p>/.test(picker) && !/\+g\.choose \|\| 1\} of these/.test(appSrc));
+    const odd = { choose: 1, at_levels: [{ level: 3, count: 2 }, 6, 9], from: NAMES };
+    check('a later level stating its own count is said with that count, which is what the sheet banks',
+      panel(odd) === `Nothing to choose now: two at level 3, and one at each of levels 6 and 9${tail}`
+      && abilityLevelGrants({ special_abilities: [odd] }, 1, 9).map((x) => `${x.level}:${x.count}`).join() === '3:2,6:1,9:1',
+      panel(odd));
+    check('bare later levels say choose at each, and a single later level is one "level"',
+      panel({ choose: 2, at_levels: [3, 6], from: NAMES }) === `Nothing to choose now: two at each of levels 3 and 6${tail}`
+      && panel({ choose: 1, at_levels: [5], from: NAMES }) === `Nothing to choose now: one at level 5${tail}`,
+      `${panel({ choose: 2, at_levels: [3, 6], from: NAMES })} | ${panel({ choose: 1, at_levels: [5], from: NAMES })}`);
+  }
+
   // THE SERVER'S COUNT follows the entry's own number.
   const v = (level, abilities) => validateCharacter({ character: { level }, cls: cls.data, skills: [],
     attributes: {}, abilities, catalog: new Map() }).violations.filter((x) => x.rule === 'ability_count');
