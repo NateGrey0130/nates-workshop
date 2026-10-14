@@ -3486,14 +3486,18 @@ function skillsOccPartFor(ctx) {
     // rows differ, so each row prints what picking it would store: the same
     // `skillGroupForPick` entry, through the same `resolveSkill`, that
     // skillsAtLevelOne() saves the pick by. The Psi-Stalker's two Pilot options
-    // read 46% and 85% instead of two dashes and a note. Every other group -
-    // all plain names, or `categories` - gets the group back from
-    // `skillGroupForPick` for every option, and prints the group's own `base`
-    // exactly as it always has.
+    // read 46% and 85% instead of two dashes and a note.
+    //
+    // A list of plain names with ONE group-wide `bonus` takes the same path: the
+    // bonus adds to each skill's own base, so the rows differ there too, and
+    // "Swimming or Fishing (+5%)" printed a dash on both while the pick stored
+    // 55% (Nate, 2026-10-13). Every other group - `categories`, or plain names
+    // with no `bonus` - prints the group's own `base` exactly as it always has.
     const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';
     const ownBonus = optionNames.some((name) => skillGroupForPick(s, name) !== s);
+    const groupBonus = (s.from || []).length > 0 && s.bonus != null;
     const optionPct = (name) => {
-      if (!ownBonus) return groupPct;
+      if (!ownBonus && !groupBonus) return groupPct;
       const entry = skillGroupForPick(s, name);
       const r = resolveSkill(name, entry);
       return r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—';
