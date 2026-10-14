@@ -4980,6 +4980,16 @@ skill can then arrive by a third route (class, variant, ability), and the
 three-carries rule for a new skills block applies: `combineClasses`, the
 sheet, and fail-closed matching.
 
+**Declined by Nate, 2026-10-11 (branch `pal/audit/book-ingest-audit-f131-f141-f142`).**
+Nothing is built: an ability option grants no skill, and a table result that is
+a skill stays prose. The standing decisions this finding names stand as they
+were: `F24` (no `skills` block on an ability) and `F50` (a gear choice that
+grants a skill, held). The finding's own cross-reference was checked on
+2026-10-14 and holds: `BOOK-INGEST-AUDIT.closed.md` line 7256 is option B of
+the options table it quotes, the code option that would let a chosen ability
+grant a skill. **Posture recorded:** the finding proposed an opt-in key, and the
+decision is to add none. The finding stays in this file with this note.
+
 ### F132 - low - `class-fix-sql.mjs` refuses a class whose markdown is not pure ASCII
 
 `scripts/class-fix-sql.mjs` (lines 45 and 74-75, read 2026-10-05) refuses any
@@ -5506,6 +5516,12 @@ shape-changed classes has not been made.
 
 **Confidence:** n/a until the list exists. **Ongoing cost:** none.
 
+**Held by Nate, 2026-10-11 (branch `pal/audit/book-ingest-audit-f131-f141-f142`).**
+The catalog keeps the held shape: no class converts from an R.C.C. to a race
+that takes an O.C.C., and no data follows. **Posture recorded:** a decision, and
+the decision is to keep what Phase A kept. Held is not closed, so the finding
+stays in this file with this note.
+
 ### F142 - low - three rows where "newest printing wins" and the books' own account disagree
 
 A decision. Phase A applied the year rule and recorded three places where it
@@ -5531,6 +5547,14 @@ re-read for this filing.
 
 **Confidence:** n/a. **Ongoing cost:** a second clause is one more thing an
 import has to check.
+
+**Held by Nate, 2026-10-11 (branch `pal/audit/book-ingest-audit-f131-f141-f142`).**
+All three rows stay as held: `pa-06a-deaths-head-samas` and
+`fassar-20-30-skelebot` on Coalition War Campaign, the `centaurs` creature as
+Phase A left it, and `ostrosaurus` on New West. No data row changes, and no
+second clause is added to the year rule. **Posture recorded:** a decision, with
+none of the three data rows following. Held is not closed, so the finding stays
+in this file with this note.
 
 ### F143 - low - the creature rows of the reprinted D-Bees races still carry their original book's figures
 
