@@ -94,7 +94,12 @@ prompt:
 pull request against the agent file; a fact about a row belongs in its brief.
 
 After each return, read `state.md` again and go by it. `MERGED` or `DROPPED`
-with a `NEXT:` line: spawn that row.
+with a `NEXT:` line: spawn that row. A report that begins `READY` leaves
+`state.md` still naming the worker's own row: a `READY` worker does not write
+it, because the classifier refused that write on three of five rows on
+2026-10-14 (Nate's ruling that day; the option he did not take was leaving
+the worker to try). Its report carries the lines instead, and the driver
+writes them.
 
 **`READY` is a row the driver merges**, when Nate has said in this session to
 merge green rows (his ruling, 2026-10-12; the option he did not take was the
@@ -104,10 +109,14 @@ of his is in a worker's context. Three calls, each on its own:
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
    `--delete-branch`: the worker's worktree still holds the branch.
 2. `node .claude/scripts/pr-landed.mjs <n> --wait`, which must exit 0.
-3. `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
+3. `git pull --ff-only origin main` in the driver's checkout, then
+   `node scripts/drift-check.mjs --remote`, which must print `NO DRIFT`.
+   Drift-check reads the checkout's data scripts, so after a data row an
+   un-pulled `main` prints `RUN BUT NO FILE` for the script just merged
+   (row 32a, 2026-10-14).
 
-Then replace `state.md` whole, with the `NEXT:` line first and the row as
-`MERGED` by the driver, and spawn the next row. Without that word from Nate
+Then replace `state.md` whole, with the `NEXT:` line from the report first and
+the row as `MERGED` by the driver, and spawn the next row. Without that word from Nate
 in this session, or if any of the three is refused or fails, stop.
 
 **Stop and tell Nate at the first of these** (his ruling, 2026-10-12: no row
@@ -115,7 +124,8 @@ cap):
 
 - the report or the state file says `BLOCKED`. Do not retry or fix the row.
 - the state file says `DONE`, or the next row has no brief.
-- the report and the state file disagree.
+- the report and the state file disagree, other than a `READY` report over a
+  state file that still names that row.
 - the driver's own budget warning.
 
 The closing message carries each row's outcome and pull request, every line a
