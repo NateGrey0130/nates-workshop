@@ -5499,6 +5499,28 @@ section('An ability may carry its later levels as text (BOOK-INGEST-AUDIT F117)'
   check('and outside the block a G.M. edit rebuilds',
     /function powersHtml\(cls\)[\s\S]*?\n}\r?\n/.exec(sheetSrc)?.[0].includes('fixedAbilitiesHtml') === false
     && /function abilitiesTaken\(cls\)[\s\S]*?\n}\r?\n/.exec(sheetSrc)?.[0].includes('fixedAbilitiesHtml') === false);
+
+  // "Chosen powers", run out of the sheet's source. A writable sheet draws the
+  // heading over the G.M. assign control even when nothing is chosen; that
+  // control is noprint, so the bare heading went to paper over nothing. It is
+  // hidden on paper only (Nate, 2026-10-13); on screen it stays.
+  const pTo = sheetSrc.indexOf('\n// The gm-flagged subset');
+  let powersAt = null;
+  try {
+    const body = sheetSrc.slice(from, pTo) + '\nreturn powersHtml;';
+    powersAt = (canWrite) => new Function('C', 'escHtml', 'escJs', body)({ data: { level: 3 }, canWrite }, esc, (s) => String(s));
+  } catch (e) { /* reported by the checks below */ }
+  const powersRun = (canWrite, taken) => (powersAt && pTo > from ? powersAt(canWrite)(fixedCls(taken)) : null);
+  const chosen = [{ name: 'Art', times: 1, gm: true, description: 'Offered.' }];
+  const emptyW = powersRun(true, []), heldW = powersRun(true, chosen), heldR = powersRun(false, chosen);
+  check('a writable sheet with no chosen power keeps the heading on screen and off paper',
+    typeof emptyW === 'string' && emptyW.startsWith('<h2 class="sub-h noprint">Chosen powers</h2><ul class="noprint" ')
+    && emptyW.includes('id="gm-power-pick"'), String(emptyW).slice(0, 160));
+  check('with a power chosen, the heading and its list print, writable or not',
+    typeof heldW === 'string' && heldW.startsWith('<h2 class="sub-h">Chosen powers</h2><ul style=')
+    && heldR.startsWith('<h2 class="sub-h">Chosen powers</h2><ul style=') && heldR.includes('<b>Art</b>'),
+    String(heldW).slice(0, 120));
+  check('a read-only sheet with no chosen power still draws nothing', powersRun(false, []) === '');
 }
 
 section('The row generators refuse what they cannot write (BOOK-INGEST-AUDIT F124)');
