@@ -1702,9 +1702,17 @@ const abilityClass = (side) => (side === 'occ' ? occAbilityClass() : S.rcc);
 //
 // Each count is the group's allowance differenced level to level, never typed,
 // so it is what the sheet banks. Levels bringing the same count share a clause.
-// Empty for a group with no later level. Reads only the two parser functions,
-// so the smoke suite can run it out of this file's source.
+// Empty for a group with no later level. These three functions read only the
+// two parser functions, so the smoke suite can run them out of this file's
+// source.
 function abilityLaterPicksNote(group) {
+  const body = abilityLaterClauses(group, ' more');
+  return body ? `${body[0].toUpperCase()}${body.slice(1)}, on the sheet.` : '';
+}
+
+// The clauses both sentences share: "two<more> at level 3, and one<more> at
+// each of levels 6 and 9", lower case, or '' when no later level adds a pick.
+function abilityLaterClauses(group, more) {
   const words = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
   const list = (items) => (items.length < 2 ? items.join('')
     : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
@@ -1717,10 +1725,19 @@ function abilityLaterPicksNote(group) {
     else clauses.push({ count, levels: [level] });
   }
   if (!clauses.length) return '';
-  const said = clauses.map((c) => `${words[c.count] || c.count} more at ${
+  const said = clauses.map((c) => `${words[c.count] || c.count}${more} at ${
     c.levels.length === 1 ? `level ${c.levels[0]}` : `each of levels ${list(c.levels)}`}`);
-  const body = said.length < 2 ? said[0] : `${said.slice(0, -1).join(', ')}, and ${said.at(-1)}`;
-  return `${body[0].toUpperCase()}${body.slice(1)}, on the sheet.`;
+  return said.length < 2 ? said[0] : `${said.slice(0, -1).join(', ')}, and ${said.at(-1)}`;
+}
+
+// The sentence in the "chosen later" panel of a group with no level-1 pick.
+// It read "N of these at levels 3, 6" with N taken from `choose`, which since
+// F127 need not be what a later level brings: `choose: 1` with a level 3 that
+// states a count of 2 banks two there. Same clauses as the note above, so the
+// two sentences cannot disagree with each other or with the sheet.
+function abilityChosenLaterNote(group) {
+  const body = abilityLaterClauses(group, '');
+  return `Nothing to choose now${body ? `: ${body}` : ''}, picked on the sheet when the level is reached.`;
 }
 
 function abilityPicker(side = 'rcc') {
@@ -1745,13 +1762,11 @@ function abilityPicker(side = 'rcc') {
 
   return groups.map((g, gi) => {
     const limit = abilityGroupAllowance(g, 1);
-    const later = (abilityGroupLevels(g) || []).filter((n) => n > 1);
     if (limit <= 0) {
       return `<div class="panel-inset">
         <h3>Powers <span class="muted small">&mdash; chosen later</span></h3>
         ${g.note ? `<p class="attr-note">${esc(g.note)}</p>` : ''}
-        <p class="muted small">Nothing to choose now: ${+g.choose || 1} of these at level${later.length === 1 ? '' : 's'}
-          ${later.join(', ')}, picked on the sheet when the level is reached.</p>
+        <p class="muted small">${abilityChosenLaterNote(g)}</p>
         <p class="muted small">${(g.from || []).map((n) => esc(String(n))).join(' &middot; ')}</p>
       </div>`;
     }
