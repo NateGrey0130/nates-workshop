@@ -5440,6 +5440,22 @@ before this PR; production's `dolphin` stored
 2026-10-14 (`imported_classes`, `--remote`), so the first cetacean proved
 nothing new. **Posture recorded:** data only.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-scoped-b`).**
+The finding stays open: this is the second of five data PRs on it. Converted
+here, each figure read off a render of its cited page, through
+`class-fix-sql.mjs` as `~190-book-ingest-audit-f138-scoped-b.sql`, applied
+`--remote` before the merge: `saloon-bum` (Pick Pockets +10, New West printed
+122), `professional-gambler` (Sing +15 in place of Communications' +10, New
+West printed 119), `titan-juicer` (Prowl -5, Juicer Uprising printed 34),
+`trapper-woodsman` (Whittling & Sculpting and Breed Dogs +15, Canada printed
+90), `trimadore` (the three Demolitions and two Trap rows +10, D-Bees of North
+America printed 207), `psi-druid` (Concealment +5, Psyscape printed 62) and
+`gypsy-wizard-thief` (Wilderness Survival +10 from the Espionage line, Triax
+printed 182). The cross-category three (Pick Pockets, Sing, Wilderness
+Survival) are a name added to an `only` list on the category the book prints,
+which `categoryBonus` pays under `F9`; the rest are a second, scoped entry for
+the same category. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
