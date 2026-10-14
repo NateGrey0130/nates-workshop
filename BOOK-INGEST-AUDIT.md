@@ -5468,6 +5468,26 @@ at -10, the shape `humpback-whale` carries, through `class-fix-sql.mjs` as
 `~191-book-ingest-audit-f138-sperm-whale.sql`, applied `--remote` before the
 merge; the note sentence was rewritten to match. **Posture recorded:** data only.
 
+**Corrected, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-32a-readings`).**
+The finding stays open. Nate overruled three readings `~189` stored, and
+`~192-book-ingest-audit-f138-32a-readings.sql` (through `class-fix-sql.mjs`,
+applied `--remote` before the merge) replaces them on five classes. First, a
+"language skills" bonus now reaches every `Language:` and `Literacy:` row in
+whichever category the catalog files it, and not `Language Dialects`: the
+Technical entry takes `only_prefix: ["Language:", "Literacy:"]`, and where the
+class already grants all of Communications a second Communications entry takes
+the `Literacy:` rows and `Language: Dolphin/Whale` (`travelling-story-teller`,
+`mystic-ninja`, `ectohunter`). `sohei-warrior-monk` is granted no
+Communications, so it gets no Communications entry. `Language: All (magical)`
+is left out because the catalog files it as an innate ability, not a learned
+language. Second, `ectohunter`'s computer bonus reaches `Computer Repair` too,
+through a scoped Electrical entry; `Computer Hacking` is Rogue, which its book
+limits to Streetwise, so it gets no entry. Third, `huntsman-trapper`'s
+Whittling entry is gone: Technical's +10 covers it, and the printed +15% is
+prose in its notes. The real `categoryAllows`/`categoryBonus` run over
+production's markdown before and after (2026-10-14, `--remote`) left every
+class's admitted skill set unchanged. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
