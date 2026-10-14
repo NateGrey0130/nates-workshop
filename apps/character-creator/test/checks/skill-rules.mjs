@@ -1125,10 +1125,52 @@ section('A choice-group option with its own bonus');
       /data-act="group"[\s\S]{0,300}?<span class="pct">\$\{optionPct\(name\)\}<\/span><\/label>/.test(src));
     check('and that percentage goes through skillGroupForPick and resolveSkill, as the saved pick does',
       /const entry = skillGroupForPick\(s, name\);\s*const r = resolveSkill\(name, entry\);/.test(fn));
-    check('a group with no option bonus returns the group\'s own figure before either call',
-      /^const optionPct = \(name\) => \{\s*if \(!ownBonus\) return groupPct;/.test(fn)
+    // Since 2026-10-13 (Nate's ruling) a list of plain names with one group-wide
+    // `bonus` resolves per row too. Only a group with neither an option bonus
+    // nor a `from` list carrying a group bonus keeps the group's own figure.
+    check('a group with no option bonus and no from-list group bonus returns the group\'s own figure before either call',
+      /^const optionPct = \(name\) => \{\s*if \(!ownBonus && !groupBonus\) return groupPct;/.test(fn)
       && /const ownBonus = optionNames\.some\(\(name\) => skillGroupForPick\(s, name\) !== s\);/.test(src)
+      && /const groupBonus = \(s\.from \|\| \[\]\)\.length > 0 && s\.bonus != null;/.test(src)
       && src.includes("const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';"));
+
+    // The same lines, RUN: everything from `groupPct` to the end of `optionPct`
+    // is evaluated with the real skillGroupForPick and the arithmetic
+    // resolveSkill hands to classSkillNumbers, against a stub catalog. A group
+    // that must keep its own figure is given a resolver that throws, so reaching
+    // it at all is a failure.
+    const from = src.indexOf('const groupPct = ');
+    const to = src.indexOf('};', src.indexOf('const optionPct = (name) => {', from));
+    const block = from < 0 || to < 0 ? '' : src.slice(from, to + 2);
+    const catalog = {
+      Swimming: { base: 50, per_level: 5 }, Fishing: { base: 40, per_level: 5 },
+      'Language: Other': { base: 50, per_level: 5 },
+      [TANK]: { base: 36, per_level: 4 }, [HOVER]: { base: 70, per_level: 3 },
+    };
+    const resolveStub = (name, e) => LV_classSkillNumbers(catalog[name] || {}, e, {});
+    const never = () => { throw new Error('resolveSkill reached'); };
+    const rowsOf = (s, names, resolve = resolveStub) => {
+      try {
+        const optionPct = new Function('s', 'optionNames', 'skillGroupForPick', 'resolveSkill',
+          `${block}\nreturn optionPct;`)(s, names, P.skillGroupForPick, resolve);
+        return names.map(optionPct).join(' | ');
+      } catch (e) { return String(e.message); }
+    };
+    const fixture = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'], bonus: 5 }, ['Swimming', 'Fishing']);
+    check('a plain-name group with a group-wide bonus prints each option\'s stored figure (Swimming 55%, Fishing 45%)',
+      fixture === '55% +5/lvl | 45% +5/lvl', fixture);
+    const lang = rowsOf({ choose: 2, from: ['Language: Other'], bonus: 15 }, ['Language: Other']);
+    check('a Language: Other group\'s row prints the figure its pick stores',
+      lang === '65% +5/lvl', lang);
+    const psi = rowsOf(mixed, [TANK, HOVER]);
+    check('an option with its own bonus prints what it did before (46% and 85%)',
+      psi === '46% +4/lvl | 85% +3/lvl', psi);
+    const cats = rowsOf({ choose: 1, categories: ['Science'], bonus: 10 }, ['Swimming', 'Fishing'], never);
+    const bare = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'] }, ['Swimming', 'Fishing'], never);
+    const based = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'], base: 60, per_level: 3 }, ['Swimming', 'Fishing'], never);
+    check('a categories group, and a from group with no bonus, keep the group\'s own figure and never resolve',
+      cats === '— | —' && bare === '— | —' && based === '60% +3/lvl | 60% +3/lvl',
+      JSON.stringify({ cats, bare, based }));
   }
 
   // The NPC generator, run. One option, so the pick is not left to the shuffle.
