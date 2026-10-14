@@ -3506,13 +3506,18 @@ function skillsOccPartFor(ctx) {
     // A list of plain names with ONE group-wide `bonus` takes the same path: the
     // bonus adds to each skill's own base, so the rows differ there too, and
     // "Swimming or Fishing (+5%)" printed a dash on both while the pick stored
-    // 55% (Nate, 2026-10-13). Every other group - `categories`, or plain names
-    // with no `bonus` - prints the group's own `base` exactly as it always has.
+    // 55% (Nate, 2026-10-13). So does a list with no `base` at all: with neither
+    // a base nor a bonus the pick is stored at the skill's own catalog figure,
+    // and the row printed a dash over it - Cook saved at 35% +5/lvl (Nate,
+    // 2026-10-14: show the catalog base). Only a `from` list that fixes a
+    // `base`, and every `categories` group, print the group's own figure.
     const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';
     const ownBonus = optionNames.some((name) => skillGroupForPick(s, name) !== s);
-    const groupBonus = (s.from || []).length > 0 && s.bonus != null;
+    const fromList = (s.from || []).length > 0;
+    const groupBonus = fromList && s.bonus != null;
+    const catalogBase = fromList && s.base == null;
     const optionPct = (name) => {
-      if (!ownBonus && !groupBonus) return groupPct;
+      if (!ownBonus && !groupBonus && !catalogBase) return groupPct;
       const entry = skillGroupForPick(s, name);
       const r = resolveSkill(name, entry);
       return r.base ? r.base + '%' + (r.per_level ? ' +' + r.per_level + '/lvl' : '') : '—';

@@ -1126,12 +1126,16 @@ section('A choice-group option with its own bonus');
     check('and that percentage goes through skillGroupForPick and resolveSkill, as the saved pick does',
       /const entry = skillGroupForPick\(s, name\);\s*const r = resolveSkill\(name, entry\);/.test(fn));
     // Since 2026-10-13 (Nate's ruling) a list of plain names with one group-wide
-    // `bonus` resolves per row too. Only a group with neither an option bonus
-    // nor a `from` list carrying a group bonus keeps the group's own figure.
-    check('a group with no option bonus and no from-list group bonus returns the group\'s own figure before either call',
-      /^const optionPct = \(name\) => \{\s*if \(!ownBonus && !groupBonus\) return groupPct;/.test(fn)
+    // `bonus` resolves per row too, and since 2026-10-14 so does a list with no
+    // group `base` (the pick is stored at the catalog's own figure). Only a
+    // `from` list that fixes a `base`, or a `categories` group, keeps the
+    // group's own figure.
+    check('a group with no option bonus, no from-list group bonus and a group base (or categories) returns the group\'s own figure before either call',
+      /^const optionPct = \(name\) => \{\s*if \(!ownBonus && !groupBonus && !catalogBase\) return groupPct;/.test(fn)
       && /const ownBonus = optionNames\.some\(\(name\) => skillGroupForPick\(s, name\) !== s\);/.test(src)
-      && /const groupBonus = \(s\.from \|\| \[\]\)\.length > 0 && s\.bonus != null;/.test(src)
+      && /const fromList = \(s\.from \|\| \[\]\)\.length > 0;/.test(src)
+      && /const groupBonus = fromList && s\.bonus != null;/.test(src)
+      && /const catalogBase = fromList && s\.base == null;/.test(src)
       && src.includes("const groupPct = s.base ? s.base + '%' + (s.per_level ? ' +' + s.per_level + '/lvl' : '') : '—';"));
 
     // The same lines, RUN: everything from `groupPct` to the end of `optionPct`
@@ -1165,12 +1169,21 @@ section('A choice-group option with its own bonus');
     const psi = rowsOf(mixed, [TANK, HOVER]);
     check('an option with its own bonus prints what it did before (46% and 85%)',
       psi === '46% +4/lvl | 85% +3/lvl', psi);
+    // A from list with neither a base nor a bonus: each pick is stored at the
+    // catalog's own figure, so each row prints it rather than a dash (row 32e,
+    // Nate 2026-10-14). The repeatable Other row prints the Other entry's.
+    const bare = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'] }, ['Swimming', 'Fishing']);
+    check('a from group with no base and no bonus prints each option\'s catalog figure (Swimming 50%, Fishing 40%)',
+      bare === '50% +5/lvl | 40% +5/lvl', bare);
+    const bareLang = rowsOf({ choose: 2, from: ['Language: Other'] }, ['Language: Other']);
+    check('and its Language: Other row prints the Other entry\'s own figure',
+      bareLang === '50% +5/lvl', bareLang);
     const cats = rowsOf({ choose: 1, categories: ['Science'], bonus: 10 }, ['Swimming', 'Fishing'], never);
-    const bare = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'] }, ['Swimming', 'Fishing'], never);
+    const catsBare = rowsOf({ choose: 1, categories: ['Science'] }, ['Swimming', 'Fishing'], never);
     const based = rowsOf({ choose: 1, from: ['Swimming', 'Fishing'], base: 60, per_level: 3 }, ['Swimming', 'Fishing'], never);
-    check('a categories group, and a from group with no bonus, keep the group\'s own figure and never resolve',
-      cats === '— | —' && bare === '— | —' && based === '60% +3/lvl | 60% +3/lvl',
-      JSON.stringify({ cats, bare, based }));
+    check('a categories group, and a from group that fixes a base, keep the group\'s own figure and never resolve',
+      cats === '— | —' && catsBare === '— | —' && based === '60% +3/lvl | 60% +3/lvl',
+      JSON.stringify({ cats, catsBare, based }));
   }
 
   // The NPC generator, run. One option, so the pick is not left to the shuffle.
