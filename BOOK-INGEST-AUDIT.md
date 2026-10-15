@@ -5629,6 +5629,32 @@ and no `gear` row points at one (`vehicle_slug`, queried `--remote`
 2026-10-14). The rest of this finding's list (the other books' classes, the
 Gypsy T-40 suits, the Serpent Power Armor) is untouched here and stays open.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f139-plain-grants`):
+the grants that needed no further ruling.** Data only, as proposed, under the
+2026-10-12 ruling above. Two data scripts replace fourteen classes' markdown
+whole, each slug and its `system` confirmed by a `--remote` SELECT on `gear`
+(2026-10-15), each kit read off its printed Standard Equipment paragraph in the
+OCR cache. Granted: `sack-medium` in place of the small sack for
+`symbiotic-warrior`, `apok`, `monk` (1D4) and `wormwood-priest-of-light`
+(Wormwood cache p054, p059, p062, p064); the seven `t-40-urban-*` rows as more
+options of the light M.D.C. body armor choice for the four Gypsy classes,
+because the book prints "light mega-damage body armor or T-40" (Triax cache
+p180, p182, p184, p185); 1D4 each of `triax-tear-gas-grenade` and
+`triax-plasma-grenade` for `ngr-power-armor-commando` (cache p164);
+`utensil-kit-rifts` and `riding-horse` for `adna-nomad` (D-Bees cache p013,
+the horse noted as the book's Horsemanship-only option); three motorcycles
+added to `cyber-samurai`'s transportation choice (Japan cache p083);
+`hooded-cloak`, `rope-per-20-feet-6-m` (three, for 50 feet), `food-rations`
+and `wooden-spear` for `totem-warrior` (Spirit West cache p045); and a hooded
+cloak or robe choice, the rope and the rations for `paradox-shaman` (cache
+p066). Not granted, and why: the Loronoid's camera and translator, because
+the book says only that the character "may also acquire" them (cache p128),
+so its note now says that instead; the Paradox Shaman's spear, which its
+printed kit does not list; and the Bandito Arms robot horse for `adna-nomad`
+and `cyber-samurai`, which has four `vehicles` rows and no `gear` row pointing
+at any of them (`vehicle_slug`, queried `--remote` 2026-10-15), so it stays
+prose for the pointer rows of the rest of this finding. This finding stays open.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
