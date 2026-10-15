@@ -5879,8 +5879,8 @@ books follow. `ectohunter`, `huntsman-trapper`, `russian-villager` and
 `war-knight` were read from production's stored markdown on 2026-10-15,
 every figure tested against a 170 dpi render of the page it cites (printed
 61 to 64, 66 to 69, 71 and 72, and 91 to 94), and every row
-against production's catalog by name (`--remote`, 2026-10-15). **38
-sentences sorted: 7 false, 31 true, none unsettled.** The table, one line a
+against production's catalog by name (`--remote`, 2026-10-15). **41
+sentences sorted: 7 false, 34 true, none unsettled.** The table, one line a
 sentence, is in the pull request body. Posture as proposed: data only.
 
 - False, and corrected: the Ectohunter's Pilot note leaving Air Assault Armor
