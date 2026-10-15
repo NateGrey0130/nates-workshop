@@ -5601,6 +5601,34 @@ the sweep verifier's query of 2026-10-05, not repeated here.
 
 **Confidence:** medium. **Ongoing cost:** none.
 
+**Taken in part, 2026-10-14 (branch `pal/data/book-ingest-audit-f139-russia-kit`):
+the Warlords of Russia kit and the Born Mystic's horse.** Ruled first, by Nate
+on 2026-10-12: a gear row tagged for another game is not granted to a Rifts
+class, and the class's sentence says "no Rifts row" instead; re-tagging such a
+row to `both` was not taken. Unspecified Warlords "boots" is
+`work-boots-rifts`. Data only, as proposed. One data script replaces eleven
+classes' markdown whole: `bogatyr-hero-knight`, `cossack`,
+`reaver-mechanized-cavalryman`, `reaver-soldier`, `russian-explorer`,
+`russian-villager`, `ectohunter`, `huntsman-trapper`,
+`travelling-story-teller` and `soldati` (Warlords of Russia, each kit read
+off its printed Standard Equipment paragraph in the text-layer cache, cache
+p061, p065, p066, p070, p071, p073, p077, p080, p081, p089), and
+`born-mystic` (Mystic Russia, cache p110). Granted wherever the class's
+notes or GM Notes named an item as missing and a `rifts` or `both` row exists
+(each slug confirmed by a `--remote` SELECT on `gear`, 2026-10-14): the boots,
+the bedroll, the cloak or cape, the note pad, the cooking utensils
+(`utensil-kit-rifts`), the riding horse (Cossack, Born Mystic), and the
+first-aid kit, bandages, clothing, skinning knife, flint, tinted goggles,
+water skin and pencils where printed. Soldati's Palladium Fantasy `bedroll`
+was swapped for `bedroll-rifts` under the same ruling. Not granted, and the
+sentence now says so: the belt, the shovel, the tinder box, the meat cleaver,
+the frying pan, the pot, the kettle and the bowl (their only rows are other
+games'), and the items with no row at all. The Reaver Mechanized
+Cavalryman's starting vehicle stays prose: its vehicles have `vehicles` rows
+and no `gear` row points at one (`vehicle_slug`, queried `--remote`
+2026-10-14). The rest of this finding's list (the other books' classes, the
+Gypsy T-40 suits, the Serpent Power Armor) is untouched here and stays open.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
