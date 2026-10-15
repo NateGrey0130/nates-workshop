@@ -5700,6 +5700,34 @@ stay prose for `adna-nomad`, as does the samurai's "similar open vehicle".
 Each class's note now says what is granted. This finding stays open for what
 the notes above hold.
 
+**Closed, 2026-10-15 (branch `pal/audit/book-ingest-audit-f139-close`), by
+Nate's ruling of that day, with two items held and not done.** The finding's
+data shipped as the four notes above record, each data only, as proposed:
+branches `pal/data/book-ingest-audit-f139-russia-kit`,
+`pal/data/book-ingest-audit-f139-plain-grants`,
+`pal/data/book-ingest-audit-f139-vessels` and
+`pal/data/book-ingest-audit-f139-robot-horse` (PRs #1819, #1820, #1821 and
+#1822, each merged and applied to production). Nate chose to close the finding
+with these named rather than keep it open for them:
+
+- **`robot-pilot-japan`'s issued machines stay prose**, by his ruling of
+  2026-10-12. Held, not done: the class grants none of them.
+- **The Blood Rider mounts are held** (`blood-rider`, `master-blood-rider`).
+  `blood-lizard` is a `creatures` row, and no frontmatter carrier grants a
+  creature as a mount. Held, not done.
+
+Two smaller residues this PR found and did not act on, recorded so the closure
+does not hide them: `adna-nomad`'s energy sidearm of choice is not granted,
+and its class note says it has no catalog row, because the book prints a
+choice and names no weapon (class markdown read with a `--remote` SELECT on
+`imported_classes`, 2026-10-15); and `paradox-shaman` was granted the cloak,
+the rope and the rations, which is less than the filing's "hooded cloak and
+seven more"; the 2026-10-15 note above says why the spear was not, and the
+rest of that count was not re-checked here (not measured). No class note citing this finding
+says it is open (the same SELECT over the 22 live classes
+`audit-citations.mjs --remote F139` lists, 2026-10-15), so none was corrected.
+Posture as proposed: data only, and this PR is documentation only.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
