@@ -5838,6 +5838,41 @@ proposed: data only.
 One data script, `~206-book-ingest-audit-f140-dbees.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-pf`):
+the four Palladium Fantasy classes.** The finding stays open: two more
+groups of books follow. `druid`, `noble`, `priest-of-darkness` and
+`priest-of-light` were read from production's stored markdown on
+2026-10-15, every candidate tested against the core book's text layer
+(printed 52, 60, 64 to 67, 70, 75 to 78, 96, 97 and 99), with a 110 dpi render
+read for printed 67 and 99, the two pages a correction's figures came from;
+against production's `gear` and `skills` by name
+(`q.mjs --remote`, 2026-10-15), `js/class-keys.js` and
+`reference/frontmatter.md`. **35 sentences sorted: 14 false, 21 true, none
+unsettled.** The table, one line a sentence, is in the pull request body.
+Posture as proposed: data only.
+
+- False, and corrected: the Siege half of the druid's and the dark priest's
+  W.P. note and the dark priest's extraction note (the one Siege row,
+  `W.P. Siege Weapons`, is tagged Rifts; Large Axes has no row at all); the
+  druid's stone axe as the catalog's only stone weapon (true of the
+  Palladium Fantasy rows only); the noble's family skills blamed on the
+  schema (a rolled table is a shape the format holds, F116 and F120; the
+  Knight class stores no family tables either), its weapon list as the whole
+  catalog (`hand-axe` and `knife-skinning` are now on it, both tagged `both`;
+  the four named artifact weapons stay off) and its GM note's uniqueness
+  claim (printed 99: the Vagabond/Peasant also has no minimums and no
+  bonuses); the Priest of Light's related note (Heraldry and Interrogation
+  Techniques are Palladium Fantasy rows; three of the five barred W.P.s are
+  rows) and four lines of its second extraction note (soft leather is a
+  catalog row, now granted; `race_restrictions` exists; the success ratios
+  sit in `natural_abilities`; `secondary_skills` takes a schedule in the
+  reference; the church's share was in no body section). Its two
+  `extraction_notes` keys are now one, by Nate's ruling of 2026-10-15, and
+  its `W.P. Siege` except entry stays.
+
+One data script, `~207-book-ingest-audit-f140-pf.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
