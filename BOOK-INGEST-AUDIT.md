@@ -5873,6 +5873,37 @@ Posture as proposed: data only.
 One data script, `~207-book-ingest-audit-f140-pf.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-russia`):
+the four Warlords of Russia classes.** The finding stays open: more groups of
+books follow. `ectohunter`, `huntsman-trapper`, `russian-villager` and
+`war-knight` were read from production's stored markdown on 2026-10-15,
+every figure tested against a 170 dpi render of the page it cites (printed
+61 to 64, 66 to 69, 71 and 72, and 91 to 94), and every row
+against production's catalog by name (`--remote`, 2026-10-15). **41
+sentences sorted: 7 false, 34 true, none unsettled.** The table, one line a
+sentence, is in the pull request body. Posture as proposed: data only.
+
+- False, and corrected: the Ectohunter's Pilot note leaving Air Assault Armor
+  available (it is excepted) and its Language: All (magical) "left at +10"
+  (the row is tagged Palladium Fantasy and Nightbane, so a Rifts build is
+  never offered it); the Huntsman's tinder box, frying pan and belt having
+  only Palladium Fantasy rows (the frying pan has Heroes Unlimited and
+  Nightbane rows too; still no Rifts row) and its GM note that the sheet does
+  not roll the 20% tracking (that is the Track & Trap Animals skill, which the
+  sheet rolls); the villager's "one choice group carries one bonus" (true of
+  a category group only, F135); the War-Knight's Lore pick as "every other
+  Lore row" (it named 17 rows; it is now the Ectohunter's Technical and
+  Cowboy `Lore:` category pick) and its Pilot note leaving "the Space rows"
+  available (three craft rows are excepted; Antigrav Suit and Contragravity
+  Pak are not).
+- Left for Nate: the War-Knight's gloves (`gloves`, tagged `both`) and cape
+  (`cape-or-cloak-long`) are not granted, the F139 shape; modelling the 2%
+  Master psionic variant; the Geomancy & Ley Lines lore, whose nearest rows
+  are Rifts China's and Nightbane's.
+
+One data script, `~208-book-ingest-audit-f140-russia.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
