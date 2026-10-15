@@ -5682,6 +5682,24 @@ and left to a pull request of its own: the Bandito Arms robot horse for
 `adna-nomad` and `cyber-samurai` (four `vehicles` rows, no pointer; see the
 note above). This finding stays open.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f139-robot-horse`):
+the Bandito Arms robot horse.**
+Data only, as proposed. Four `gear` rows of the shape the note above describes
+(a slug equal to the vessel's, carrying `vehicle_slug`) were added by
+`scripts/rows-sql.mjs` for `rh-1001a-appaloosa-light-robot-horse`,
+`rh-1002b-mustang-medium-robot-horse`, `rh-1003c-arabian-robot-horse` and
+`rh-1004d-war-horse-heavy-robot-horse` (New West p.196-200; a `--remote` SELECT
+on `gear` for `vehicle_slug LIKE 'rh-100%'` returned nothing on 2026-10-15
+before the apply). Neither class's printed page names a model (D-Bees cache
+p013: "a living or robot horse"; Japan cache p083: "a robot version of a
+horse"), so by Nate's ruling of 2026-10-15 each class offers all four:
+`adna-nomad`'s `riding-horse` line became a choose-one of the living horse and
+the four robot horses, still noted as Horsemanship-only, and `cyber-samurai`'s
+transportation choice gained the four. The mule and the M.D.C. riding animal
+stay prose for `adna-nomad`, as does the samurai's "similar open vehicle".
+Each class's note now says what is granted. This finding stays open for what
+the notes above hold.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
