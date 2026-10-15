@@ -5360,6 +5360,23 @@ a bonus scoped to skills by a phrase and no `only` list. They warn on a
 re-check of those classes until each gains a sibling entry or its note is
 reworded. No class was changed here.
 
+**Data, 2026-10-14 (branch `pal/data/book-ingest-audit-f136-note-bonuses`).**
+The fourteen `diabolist` and `necromancer` entries above were this finding's
+real misses and are now data, done with F138's rows (Nate's ruling,
+2026-10-12). Reproduced first: `class-check --remote` on production's stored
+markdown of each class (2026-10-14) printed seven note-only warnings apiece,
+and none after the change. Each figure was read off a render of the cited page
+(Palladium Fantasy printed 120, Africa printed 104), through
+`class-fix-sql.mjs` as `~195-book-ingest-audit-f136-note-bonuses.sql`, applied
+`--remote` before the merge. Five of the fourteen were not a bare percentage
+and are scoped entries, the F109 shape: the Diabolist's Espionage (Forgery +10,
+Intelligence +5), Rogue (Locate Secret Compartments and Streetwise +10) and
+Wilderness (Carpentry +5), and the Necromancer's Technical (+10 on lore,
+literacy, language or writing) and Medical (First Aid only, +5). The real
+`categoryAllows`/`categoryBonus` run over every production skill row with the
+old and new markdown (2026-10-14, `--remote`) left each class's admitted skill
+set unchanged. **Posture recorded:** data only; the warning is untouched.
+
 ### F137 - low - the `circle` and `temporal` traditions have no label of their own
 
 `LABELS` in `apps/character-creator/js/traditions.js` (lines 25-41, read
@@ -5537,6 +5554,14 @@ packages, and no key scopes a bonus to a package. The real
 `categoryAllows`/`categoryBonus` run over production's markdown and the new
 markdown (2026-10-14, `--remote`) left every class's admitted skill set
 unchanged. **Posture recorded:** data only.
+
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f136-note-bonuses`).**
+The finding stays open. F136's fourteen real misses on `diabolist` and
+`necromancer` were done with this finding's rows, as Nate ruled on
+2026-10-12; the record is under F136. The Necromancer's "+10% on lore,
+literacy, language or writing" follows the 2026-10-14 language ruling above,
+with its Lore rows and Creative Writing added to the scoped Technical entry.
+**Posture recorded:** data only.
 
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
