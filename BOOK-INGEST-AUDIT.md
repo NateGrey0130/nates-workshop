@@ -5735,6 +5735,48 @@ nothing here was re-read.
 **Confidence:** low by construction - these are the ones nobody could
 settle. **Ongoing cost:** none.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-four-rulings`):
+the four rulings.** The finding stays open: the unsettled sentences are
+three later PRs, one per group of books. Nate ruled on the four on
+2026-10-12, and each line below was read off a 200 dpi render of the printed
+page before anything was written. Posture as proposed: data only.
+
+- `malvoren` (D-Bees of North America, printed 142): the page's "Electrical:
+  Electrical Generation and Robot Electronics only" names the catalog's
+  `Electricity Generation`. Its related-skill `only` list now names both, and
+  the restriction and note saying the skill had no catalog row are gone.
+  Through the real parser on 2026-10-15, `categoryAllows` admitted
+  `Electricity Generation` for the stored version's list `false` and the
+  new one's `true`. Not taken: a new skill row.
+- `layer-of-laws` (Mystic Russia, printed 153): the page prints "Knows all
+  Lores (three favorites are +10%)". The grant stays at sixteen Lore rows;
+  production held 28 rows tagged `rifts` named `Lore:` (`q.mjs --remote`,
+  2026-10-15). Five sentences, in a skill note, two restrictions, the
+  extraction note and the GM notes, said every Lore row was granted; each now
+  says sixteen, by this ruling. Not taken: granting all of them, or only the
+  plausible ones.
+- `norse-giant` (Pantheons of the Megaverse, printed 163): row 96-00 names
+  no tier, and `psionics: { type: "master" }` stays. Row 01-05 ("An
+  additional 1D6x1000 M.D.C. (or 2D4x100 S.D.C.)") now carries
+  `bonuses: { pools: { mdc: "1d6x1000" } }`, the shape row 41-45 uses, with
+  the S.D.C. alternative left in its description as 41-45's is. Through the
+  real parser the bonus's bounds are 1,000 to 6,000, and the M.D.C. pool
+  with it 1,200 to 7,200 against 200 to 1,200 without. The class's other
+  doubtful sentence was its extraction note's "eight non-Coalition men of
+  arms": its `only` list names seven (`combat-cyborg`, `crazy`,
+  `cyber-knight`, `glitter-boy`, `headhunter-techno-warrior`,
+  `merc-soldier`, `robot-pilot`), and the note now says seven.
+- `blind-mystic` (China 2, printed 73): the page says the mystic "usually
+  prefers" a deceptive power and names Bok Pai, Mien-Ch'uan, Tien-Hsueh and
+  Xian Pu. The closed choice of those four stays: they are the book's four
+  examples, kept closed by this ruling. No sentence on the class misstates
+  the page (its extraction note already says "usually prefers"), so the
+  class is not edited. Not taken: opening it to every Mystic Martial Art
+  Power.
+
+One data script, `~205-book-ingest-audit-f140-four-rulings.sql`, applied
+`--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
