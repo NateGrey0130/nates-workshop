@@ -5563,6 +5563,9 @@ literacy, language or writing" follows the 2026-10-14 language ruling above,
 with its Lore rows and Creative Writing added to the scoped Technical entry.
 **Posture recorded:** data only.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-bare-literacy`).**
+The finding stays open. Nate ruled on 2026-10-14 that the catalog's bare `Literacy` row (Technical) counts as literacy for these bonuses and `Calligraphy` does not, so the scoped Technical entry of `travelling-story-teller`, `sohei-warrior-monk`, `mystic-ninja`, `ectohunter`, `grey-seer`, `pirate`, `sailor`, `monkey-boy-tech` and `necromancer` gains the exact name `Literacy` in its `only` list, through `class-fix-sql.mjs` as `~196-book-ingest-audit-f138-bare-literacy.sql`, applied `--remote` before the merge; the real `categoryBonus` over production's markdown (2026-10-14) moved `Literacy` to equal `Language: Other` on all nine and left `Calligraphy` unchanged. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
