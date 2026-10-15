@@ -5904,6 +5904,37 @@ sentence, is in the pull request body. Posture as proposed: data only.
 One data script, `~208-book-ingest-audit-f140-russia.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-china-2`):
+the China 2 Enlightened Demon.** The finding stays open: more groups of books
+follow. `enlightened-demon` was read from production's stored markdown on
+2026-10-15, every figure in a candidate tested against a 150 dpi render of
+printed 98 to 101, every row against production's catalog by name
+(`--remote`, 2026-10-15), and every claim about the app against
+`js/hand-to-hand.js`, `js/parser.js` and `reference/frontmatter.md`. **21
+sentences sorted: 3 false, 18 true, none unsettled.** The table, one line a
+sentence, is in the pull request body. Posture as proposed: data only.
+
+- False, and corrected: the extraction note's Hand to Hand line (the class
+  stores `hand_to_hand: { costs: {} }`, which `handToHandCost()` read as not
+  offered for all seven styles through the real module on 2026-10-15) and the
+  GM note's "free at any level" (the wizard offers none; the sheet refuses one
+  outside Show all skills); and the extraction note's count of rows citing
+  China 1, where production held 86 on 2026-10-15 (39 creatures, 24 spells,
+  23 notable NPCs), now the seven Lesser Demon creature slugs and a pointer
+  to the china-1 survey's Rows line.
+- True, and left: the Demon Form not modelled; Human Form I.S.P., the Chi
+  weapon W.P., Meditation and the Tai Chi option's two skills recorded by
+  hand (an ability cannot add a skill, `pools` in `at_level` is not applied,
+  and a later pick's `psionics` I.S.P. base is not handled); no rows for the
+  Unique Demonic Powers, Torment, the neck pouch or the hairbrush; and the
+  `progression` tables as display only.
+- Left for Nate: whether the seven 5th-level styles should be sold at 0 with
+  a "5th level" condition (shown, not enforced), and the Lore pick's missing
+  `Lore: Sea Creatures`.
+
+One data script, `~209-book-ingest-audit-f140-china-2.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
