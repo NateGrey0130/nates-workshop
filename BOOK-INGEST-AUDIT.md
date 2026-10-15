@@ -5511,6 +5511,33 @@ the catalog holds no Deciphering Circles row (`skills`, `--remote`,
 2026-10-14), and adding one moves the Palladium Fantasy survey pin, which this
 PR does not. **Posture recorded:** data only.
 
+**Partly taken, 2026-10-14 (branch `pal/data/book-ingest-audit-f138-nine-more`).**
+The finding stays open. Nine classes are added to its list: `grey-seer`,
+`pirate`, `sailor`, `felinoid`, `idie-fisherman`, `kill-hound`,
+`monkey-boy-tech`, `psi-ghost` and `geofront-assault-geo-borg`, found by a
+planning sweep on 2026-10-12 that was not exhaustive (Nate's ruling that day
+put them in this finding's work). Seven are converted here, each figure read
+off a render of its cited page, through `class-fix-sql.mjs` as
+`~194-book-ingest-audit-f138-nine-more.sql`, applied `--remote` before the
+merge: `grey-seer` (Technical +15 to Art, Language and Lore, Federation of
+Magic printed 91), `pirate` and `sailor` (Technical +10 to lores and
+languages, South America printed 48 and 47), `idie-fisherman` (Language +10
+from its Communications line, D-Bees of North America printed 105),
+`kill-hound` (Streetwise +10, Lone Star printed 45), `monkey-boy-tech`
+(Cryptography +15, Forgery +10, Computer Hacking +10 and language skills +15,
+printed 85) and `psi-ghost` (Locksmith +10, Psyscape printed 65). Each is a
+second, scoped entry for its category. The language bonuses follow the
+2026-10-14 ruling recorded above (every `Language:` and `Literacy:` row, in
+whichever category the catalog files it); the Grey Seer's Lore bonus reaches
+the two Lore rows the catalog files under Cowboy by the same reading. Two are
+left as prose: `felinoid`'s +10% is to Climbing and Acrobatics taken from an
+occupation, and no key adds a race's percentage to an occupation's skill;
+`geofront-assault-geo-borg`'s Rogue +10% belongs to one of two skill
+packages, and no key scopes a bonus to a package. The real
+`categoryAllows`/`categoryBonus` run over production's markdown and the new
+markdown (2026-10-14, `--remote`) left every class's admitted skill set
+unchanged. **Posture recorded:** data only.
+
 ### F139 - low - the catalog holds the row, and the class does not grant it
 
 Data only. A class note says an item has no catalog row, or simply leaves it
