@@ -5655,6 +5655,33 @@ and `cyber-samurai`, which has four `vehicles` rows and no `gear` row pointing
 at any of them (`vehicle_slug`, queried `--remote` 2026-10-15), so it stays
 prose for the pointer rows of the rest of this finding. This finding stays open.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f139-vessels`):
+the Serpent Power Armor and the Japan machines.**
+Data only, as proposed. The Vernulian Serpent Power Armor is a `vehicles` row
+now, `vernulian-serpent-power-armor`, written by `scripts/vessel-sql.mjs` from
+D-Bees printed 212 (cache p213, read off a 200 dpi render): main body 300 and
+four more locations, flight to 300 feet at 400 mph, no weapons, price or
+weight, because the book prints none. Four `gear` rows of the shape the
+`at-c*` rows took (a slug equal to the vessel's, carrying `vehicle_slug`) were
+added, by `scripts/rows-sql.mjs`, for that armor, `at-samurai-samas-pa-10a`,
+`usa-g10a1-point-glitter-boy` and `usa-g10a2-hawkeye-glitter-boy` (each vessel
+row read with a `--remote` SELECT on 2026-10-15, none had a pointer). Granted:
+the Samurai SAMAS to `samas-samurai-pilot`; a choose-one of the three Glitter
+Boys the Republic fields (with the existing `glitter-boy-power-armor` pointer)
+to `glitter-force-trooper`, since its book names no model. **The Serpent
+armor is not granted to `vernulian`** (Nate, 2026-10-15): the book makes it
+military use only, as it does the military force field collar, which the class
+already does not grant, so the class names the armor in its GM Notes as
+military issue and points at the catalog row. Not taken: granting both, or
+granting the armor alone with a note that a refugee drops it. Each class's
+note now says what is granted. Held, by Nate's ruling of
+2026-10-12: `robot-pilot-japan`'s machines stay prose, and the Blood Rider
+mounts (`blood-rider`, `master-blood-rider`) are held, because `blood-lizard`
+is a `creatures` row and no carrier grants a creature as a mount. Not done here,
+and left to a pull request of its own: the Bandito Arms robot horse for
+`adna-nomad` and `cyber-samurai` (four `vehicles` rows, no pointer; see the
+note above). This finding stays open.
+
 ### F140 - low - class sentences the close-out sweep could not settle
 
 Data and decisions. The same sweep left 36 sentences unsettled - neither
