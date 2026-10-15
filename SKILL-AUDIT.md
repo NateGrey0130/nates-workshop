@@ -6,6 +6,10 @@
 > was. Every finding of this menu recorded an outcome, so every one moved. The
 > closed file is a record like this one, and the `*AUDIT*.md` glob reaches both.
 
+> **Work was opened on this menu on 2026-10-14**, under `## Filed from the
+> outstanding-work plan, 2026-10-14` at the foot of the file. Read under the
+> finding's heading for its state. The paragraph below is dated 2026-09-27.
+
 > **Nothing is open on this menu, as of 2026-09-27**, read under every
 > finding's heading by the `open-findings-scout` agent that day. The paragraph
 > below is a dated record.
@@ -2885,3 +2889,111 @@ returned four wording disagreements, all fixed, and none to scope:**
 
 It re-derived every count in the table from the logs and the `probe` commits,
 which were still in the object store, and all of them held.
+
+## Filed from the outstanding-work plan, 2026-10-14
+
+### F68 — medium — rule 2's walk stops at a `;` or `|` only when it stands alone, so `sed -n … file; grep -i …` is refused and `echo x; sed -i … file` is allowed
+
+**Opened 2026-10-14**, from a refusal reported by the row 34b `pr-worker` of
+the outstanding-work plan: a read-only call of the shape
+`sed -n '<range>p' <file> ; grep -rn -i <pattern> <dir>` was refused as an
+in-place edit. A worker cannot tell this refusal from a real one, so it costs
+retries. Nate approved filing it rather than fixing it on the spot.
+
+**`F58` fixed this shape for `&&` and not for `;`.** Its outcome note, at
+`SKILL-AUDIT.md:1892-1895`, says the in-place flag is now found among sed's own
+options, so <!-- claim-ok: quoting the premise this finding corrects --> *"the
+defect cannot recur rather than being patched"*. It recurs, because the walk
+that bounds it has two holes, both about how `;` and `|` are spelled.
+
+**The mechanism, read in `.claude/hooks/guard-bash.sh` on `main` at `0ec33568`,
+2026-10-14:**
+
+- `lines()` at line 149 splits segments on newline, `&&` and `||` only. `;` is
+  left out on purpose, because SQL strings are full of it (the comment at
+  145-148, and `F59`'s note at `SKILL-AUDIT.md:2026-2028`).
+- Inside a segment, the token walk stops only at a token that **is** `|`, `;`
+  or `&` (line 234). A separator glued to the word before it (`CLAUDE.md;`,
+  `CLAUDE.md|`) is a different token, so the walk runs on into the next command.
+- After sed's script, any `-*i*` token still counts as sed's in-place flag
+  (line 259). That is how `F58` keeps `sed -e 's/a/b/' -i f.md` caught, and it
+  is why a later `grep -i`, `grep -rni` or `ls -i` reached past the glued
+  separator turns `sed -n` into an "in-place edit". The comment at 254-256 says
+  the walk breaks at `| ; and &`, which is true only for the spaced spelling.
+- `sed` counts as a command only at the start of a segment, after a `(` or a
+  backtick, or behind `xargs` / `-exec` (line 216). `;` is not on that list, so
+  a `sed -i` that comes after a `;` or a `|` is never looked at at all.
+
+**Reproduced 2026-10-14** by feeding the hook node-built envelopes on stdin
+(`cwd` = the main checkout, the way the hook receives it, per `F58`'s
+*Evidence*):
+
+| command | exit |
+|---|---|
+| `sed -n '1,40p' CLAUDE.md ; grep -rn -i guard .claude/hooks` | 0 |
+| `sed -n '1,40p' CLAUDE.md; grep -rn -i guard .claude/hooks` | **2, as `sed -i`** |
+| `sed -n '1,40p' CLAUDE.md;grep -rn -i guard .claude/hooks` | **2, as `sed -i`** |
+| `sed -n '1,40p' CLAUDE.md; grep -rni guard .claude/hooks` | **2, as `sed -i`** |
+| `sed -n '1,40p' CLAUDE.md; ls -i .claude` | **2, as `sed -i`** |
+| `sed -n '1,40p' CLAUDE.md\| grep -i guard` | **2, as `sed -i`** |
+| `sed -n '1,40p' CLAUDE.md \| grep -i guard` | 0 |
+| `sed -n '1,40p' CLAUDE.md && grep -rn -i guard .claude/hooks` | 0 (`F58`) |
+| `sed -n '1,40p' CLAUDE.md; grep -rn guard .claude/hooks` | 0 |
+| same `;` shape, `cwd` = `Downloads`, target `notes.md` | 0 |
+| `echo hi; sed -i 's/a/b/' README.md` | **0, a false negative** |
+| `cd apps; sed -i 's/a/b/' manifest.json` | **0, a false negative** |
+| `true \| sed -i 's/a/b/' README.md` | **0, a false negative** |
+| `echo hi && sed -i 's/a/b/' README.md` | 2 |
+
+So the reported refusal needs `file;` with no space, which is how people write
+it. Since `cd X; sed -i …` is a common way to write an edit, **the false
+negative is the more serious half** of the finding, although the false positive
+is the one that was reported. **This is the second time it has been seen in
+real work:** `book-imports-ledger.md` in the memory directory (the Baalgor
+Wastelands row, trap 7, 2026-10-05 to 10-10) records a read-only `sed -n` plus a
+later `grep -i -E` refused after `F58` merged. That note does not keep the
+separator.
+
+**Proposal:** two changes, both in rule 2.
+
+1. In the walk, a token that **ends** in an unquoted `;`, `|` or `&` is handled
+   as its word without the separator (a target when it is past the script),
+   and then the walk stops. A token whose separator sits inside a quoted sed
+   script, such as `'s/a/b/;s/c/d/'`, stays one script token and must not stop
+   the walk. That is the case `lines()` leaves `;` out for, and the case a fix
+   must not break.
+2. Add `;` and `|` to the command positions at line 216, so `x; sed -i …`,
+   `x;sed -i …` and `x | sed -i … file` are found. A piped `sed -i` with a
+   file operand edits the file and ignores the pipe.
+
+**Posture: rule 2 only. No new rule, no new splitter in `lines()`, and rules 1,
+3, 4, 5 and 6 are not touched. The refusal posture is unchanged: exit 2,
+fails closed.** This is not `F59`'s mechanism. `F59` measured anchoring rules 1
+and 4 on rule 2's segmentation and declined it (`SKILL-AUDIT.md:2008-2034`),
+because that segmentation would **stop** refusing `;`-chained merges. Change 2
+here goes the other way: it makes rule 2 refuse more `;`-chained commands, and
+only `sed -i` on a repo path.
+
+**Evidence:** the table above, 2026-10-14, run against the script as it sits on
+`main`. The row 34b refusal is *reported by* that worker and was not seen here.
+The ledger instance is *reported by* `book-imports-ledger.md`. No transcript
+census was run, so how often each half fires is **not measured**.
+
+**Confidence:** high on both defects, since each reproduces from one command.
+Medium on the fix. Change 1 has to tell a glued separator from one inside a
+script that the unquoted `for t in $toks` has already split on spaces
+(`'s/a b;/x/'` becomes two tokens). That has not been written or scored. A
+taker should rebuild `F58`'s 36-case fixture, with its newlines intact, and add
+this table to it. That would raise it.
+
+**Ongoing cost:** none new. It is a tighter walk in a rule that already exists.
+`F58` recorded that no harness for the hook is checked in and dropped one on
+purpose. This finding does not re-propose a harness.
+
+**Seen while filing it:** the hook refused this session's own `node -` heredoc
+that edited the draft of this finding. The heredoc body is kept because it
+executes (`F57`), and the markdown backtick in front of `sed -i` in this
+finding's prose counts as a command position (line 216, the decision `F54`
+made). That is
+`F59`'s quoted-text shape reaching rule 2 through a backtick rather than a
+quote. It is recorded here and not filed, because `F54` chose it on purpose.
