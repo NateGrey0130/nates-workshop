@@ -625,7 +625,7 @@
     ],
     [
      "Gear",
-     241
+     244
     ],
     [
      "Skills",
@@ -636,7 +636,7 @@
      25
     ]
    ],
-   "total": 329
+   "total": 332
   },
   {
    "slug": "south-america-2",
@@ -1193,10 +1193,14 @@
     ],
     [
      "Gear",
-     46
+     47
+    ],
+    [
+     "Vehicles",
+     1
     ]
    ],
-   "total": 184
+   "total": 186
   },
   {
    "slug": "triax-2",

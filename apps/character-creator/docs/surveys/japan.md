@@ -2,7 +2,7 @@
 
 **Status:** `imported` — all eight steps of the plan shipped (PR branches in the Ledger); what was left out on purpose is under Extraction plan. (2026-09-30)
 
-**Rows citing this book:** classes 30, gear 241, vehicles 25, skills 19, creatures 14
+**Rows citing this book:** classes 30, gear 244, vehicles 25, skills 19, creatures 14
 
 Slug `japan`. Cached 2026-09-30 from `rifts-world-book-8-japan_compress.pdf`,
 218 PDF pages, **text layer** (no OCR). `--probe` median 3,986 chars/page,
