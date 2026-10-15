@@ -5805,6 +5805,39 @@ page before anything was written. Posture as proposed: data only.
 One data script, `~205-book-ingest-audit-f140-four-rulings.sql`, applied
 `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-dbees`):
+the D-Bees of North America classes.** The finding stays open: two more
+groups of books follow. The seven classes this finding lists from D-Bees of
+North America (`fingertooth-carpetbagger`, `flooper`, `lyvorrk`,
+`mraghiile-tree-man`, `shaper`, `vintex-warrior`, `worldly-sasquatch`) were
+read from production's stored markdown on 2026-10-15, every candidate tested
+against a 170 dpi render of the page it cites (printed 86, 89, 133, 176, 184
+and 215), against production's catalog (`gear`, `skills`, `psionic_powers`
+and `imported_classes` by name, `--remote`, 2026-10-15) and against
+`js/parser.js`. **34 sentences sorted: 13 false, 21 true, none unsettled.**
+The table, one line a sentence, is in the pull request body. Posture as
+proposed: data only.
+
+- False, and corrected: a race cannot cancel an occupation's secondary picks
+  (`fingertooth-carpetbagger`; it is a restriction line, not applied, on
+  Nate's ruling of 2026-10-15); no row for the pencil refills (one
+  `mechanical-pencil-lead-24-in-a-pack` is now granted, the printed 1D4x10 in
+  its note), for alcohol or for hard candies (Palladium Fantasy rows only);
+  no row for a jacket (`flooper`) or a bag of hats (`shaper`), where the
+  Rifts rows are specific kinds and nothing is granted; no row for scarves,
+  candy, honey, tea or teacups (`shaper`), chalk (`vintex-warrior`) or shorts
+  (`worldly-sasquatch`), each "no Rifts row"; `lyvorrk`'s four reptile
+  powers all lacking rows (Psionic Empathy with Reptiles has one, not
+  granted) and two sentences saying the picker keeps every R.C.C. list (it
+  takes the occupation's Related and Secondary Skills and carries the R.C.C.
+  skills); `vintex-warrior`'s one-category Area of Specialty being
+  unenforceable (a `skills.mos` draft with one option per category read
+  `ready` under `class-check --remote`; the class is not reshaped).
+- `mraghiile-tree-man` holds no false sentence and is not edited.
+
+One data script, `~206-book-ingest-audit-f140-dbees.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
