@@ -5935,6 +5935,46 @@ sentence, is in the pull request body. Posture as proposed: data only.
 One data script, `~209-book-ingest-audit-f140-china-2.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-triax-canada`):
+two Triax classes and one Canada class.** The finding stays open: more groups
+of books follow. `gypsy-seer`, `gypsy-gifted` and `trapper-woodsman` were read
+from production's stored markdown on 2026-10-15, every candidate tested
+against a 170 dpi render of the page it cites (Triax printed 183 to 185,
+Canada printed 90), every row against production's catalog by name
+(`--remote`, 2026-10-15), and every claim about the app against
+`apps/character-sheet/sheet.js`, `js/leveling.js` and `js/parser.js`. **38
+sentences sorted: 10 false, 2 changed with a grant, 26 true, none
+unsettled.** The table, one line a sentence, is in the pull request body.
+Posture as proposed: data only.
+
+- False, and corrected: both gypsies' Millennium Tree leaf armour as a row
+  the catalog does not hold (`millennium-leaf-body-armor`, Rifts Japan,
+  tagged `rifts`, is now one more option of each light M.D.C. body armor
+  choice, as printed 184 and 185 list it; each body sentence calling it a
+  further alternative went with the grant); both gypsies' "no bandanna"
+  (Heroes Unlimited and Nightbane rows exist; each now says no Rifts row);
+  four sentences on The Gifted saying the gift is rolled and not chosen, and
+  that nothing rolls a table at creation (printed 184 says to randomly roll
+  or select one, and the wizard draws a Roll d100 button for the band-named
+  group, read through the real parser's `abilityRollBands` on 2026-10-15);
+  and the Trapper-Woodsman's cooking utensils and fur cloak or long coat as
+  having no row, in its GM note and its extraction note (`utensil-kit-rifts`
+  and `cape-or-cloak-long`, both `rifts`, are now granted, as the
+  Huntsman-Trapper's are).
+- True, and left: Spell Strength as no sheet field; the catalog bases of 25
+  and 35 under the seer's and The Gifted's flat percentages; horsemanship
+  filed as its own category; Falconry filed under Military; no skill row for
+  the Trapper's two special abilities; the "one Super power or two lesser"
+  ladders storing the Super slot only; magic sickness as no sheet save; the
+  seventeen Healing rows (production held twenty on 2026-10-15, the other
+  three tagged Heroes Unlimited or Nightbane).
+- Left for Nate: both gypsies grant the `scarf` row, tagged
+  `palladium-fantasy`, the shape the 2026-10-12 ruling says is not granted
+  to a Rifts class; not changed here.
+
+One data script, `~210-book-ingest-audit-f140-triax-canada.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
