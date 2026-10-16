@@ -6013,6 +6013,42 @@ sentence, is in the pull request body. Posture as proposed: data only.
 One data script, `~211-book-ingest-audit-f140-underseas.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-australia`):
+the Australia class.** The finding stays open: more groups of books follow.
+`phreaker-military-grunt` was read from production's stored markdown on
+2026-10-15, every figure in a candidate tested against a 130 dpi render of the
+page it cites (printed 128 to 132), every row against production's catalog by
+name (`--remote`, 2026-10-15), and every claim about the app against
+`js/parser.js` (`ABILITY_POOL_BASES`, `abilityRollMatches`, the skill `base`
+check), `js/compose.js` (`withCorePools`), `app.js` (the pool rolls) and
+`reference/frontmatter.md`. **48 sentences sorted: 6 false, 1 changed with a
+grant, 41 true, none unsettled.** The table, one line a sentence, is in the
+pull request body. Posture as proposed: data only.
+
+- False, and corrected: the Tanker's M.D.C. as entered by hand because the
+  class states no base, in its option, the extraction note (twice) and the GM
+  notes (an option has stated a pool's base since F128; the Tanker option now
+  carries `mdc_base: "P.E. + 4d4x10, +2d6 per level"`, and through the real
+  `composeClass` on 2026-10-15 the Tanker pick rolled an M.D.C. pool where the
+  stored version rolled none); and the full brimmed hat as having no catalog
+  row (`hat-large-brim-rifts`, tagged `rifts`, is now granted, and the GM
+  note's kit list lost it with the grant). The plain jacket and the
+  entrenching tool now say no Rifts row, which is true.
+- True, and left: the 3D4 on the English percentage (a skill `base` is a
+  number); natural A.R. and natural prowl (no class A.R. key; an option grants
+  no skill, F131 declined); hit points (only) as M.D.C. on four results (the
+  conversion flag takes S.D.C. too, and an option's base is a separate roll);
+  the Nate's P.P.E. (an option may state no P.P.E. base); the four master
+  results with no I.S.P. pool; the band splits rolled by the player; the
+  seventeen Healing rows (production held seventeen with no game tag on
+  2026-10-15); and every figure on printed 128 to 132.
+- Left for Nate: the Tanker keeps the hit points the class states beside its
+  new M.D.C., as F128's rulings say an option's base does; printed 130 names
+  no hit points for it.
+
+One data script, `~212-book-ingest-audit-f140-australia.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
