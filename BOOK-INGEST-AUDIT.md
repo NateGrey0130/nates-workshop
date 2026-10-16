@@ -6327,6 +6327,19 @@ figures (printed 139-140) kept in its `description`. Its body is now S.D.C.
 cited Canada on production (`q.mjs --remote`, 2026-10-16). Posture as
 proposed: data only. The finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-psyscape-cwc`).**
+Coalition War Campaign part 1 of 3:
+`~222-book-ingest-audit-f143-cwc-nmbyr-tirrvol.sql` moves the `creatures`
+rows `nmbyr-gorilla-man` and `tirrvol-sword-fist` to D-Bees printed 143-144
+and 201-203, each with Coalition War Campaign's replaced figures (printed
+202-203 and 203-205) kept in its `description`. The N'mbyr's `combat` goes
+from NULL to D-Bees' racial bonuses (+1 strike, +1 parry, +2 pull punch, +4
+damage); the Tirrvol's loses Coalition War Campaign's +1 parry, which D-Bees'
+complete Bonuses line drops. Their five `stat_attacks` rows are unchanged.
+Before the apply both cited Coalition War Campaign on production
+(`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
+stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
