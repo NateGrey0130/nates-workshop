@@ -6153,6 +6153,66 @@ request body. Posture as proposed: data only.
 One data script, `~215-book-ingest-audit-f140-ww-psyscape.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken, and closed, 2026-10-16 (branch `pal/data/book-ingest-audit-f140-new-west`):
+New West's bounty-hunter, the last class on the list.** `bounty-hunter` was
+read from production's stored markdown on 2026-10-16, every figure in a
+candidate tested against New West's text layer for printed 87 to 90 (the
+sort was begun on renders by the stopped row 37d4), and every gear row by
+slug and tag against production (`--remote`, 2026-10-16). **19 sentences
+sorted: 2 false, 1 changed with a grant, 16 true, none unsettled.** The
+table, one line a sentence, is in the pull request body. Posture as
+proposed: data only.
+
+- False, and corrected: the extraction note's "only the catalog rows that
+  exist" for Standard Equipment (by Nate's ruling of 2026-10-16 every printed
+  item with a `rifts` or `both` row is now granted: the three sets of
+  clothes, tinted goggles or sunglasses, the IRMSS kit, the infrared
+  distancing binoculars in place of the plain ones, the translator, tracer
+  bugs, the pocket scrambler, two 2 M.D.C. handcuffs, cord, sacks, a choice
+  of Vibro-Blade, Neural Mace or Electro-Stunner, a choice of New West's
+  five conventional revolvers, the silver bullets, grenades, passive
+  nightvision and the vehicle choice); and its fourth special-equipment
+  package as having no catalog shape (the four RH-100x robot horses are now
+  a choice, by the same ruling).
+- Changed with a grant: "the whole choice is recorded here rather than
+  half-modelled"; the note now says which packages are recorded only.
+- True, and left: every bounty figure and the one-third collection problem
+  (printed 88 and 89), the alignments, player notes, money, cybernetics and
+  skill lines, the four packages' contents and the second package's skill
+  grant, which `equipment_starting` cannot carry (F131).
+
+One data script, `~216-book-ingest-audit-f140-new-west.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
+**F140 is closed by this note.** Every class it named has been read and
+sorted. The four rulings are recorded above; the sentence totals, from each
+note above, and for Japan from a tally of its pull request's table on
+2026-10-16 (its note gives no count):
+
+| row | sentences | false | changed with a grant | true | unsettled |
+|---|---|---|---|---|---|
+| D-Bees of North America (7 classes) | 34 | 13 | 0 | 21 | 0 |
+| Palladium Fantasy (4) | 35 | 14 | 0 | 21 | 0 |
+| Warlords of Russia (4) | 41 | 7 | 0 | 34 | 0 |
+| China 2 (1) | 21 | 3 | 0 | 18 | 0 |
+| Triax and Canada (3) | 38 | 10 | 2 | 26 | 0 |
+| Underseas (2) | 43 | 6 | 0 | 37 | 0 |
+| Australia (1) | 48 | 6 | 1 | 41 | 0 |
+| South America (1) | 18 | 2 | 0 | 16 | 0 |
+| Japan (2) | 25 | 6 | 0 | 19 | 0 |
+| Wormwood and Psyscape (2) | 42 | 5 | 1 | 36 | 0 |
+| New West (1) | 19 | 2 | 1 | 16 | 0 |
+| **all 28 classes** | **364** | **74** | **5** | **285** | **0** |
+
+By outcome: 285 true and left, 74 false and corrected, 5 changed with a
+grant, none that could not be settled. What no row could settle by itself
+went to Nate and is named under each row's note above, not re-listed here:
+the War-Knight's gloves, cape and Master variant; the Enlightened Demon's
+5th-level styles and Sea Creatures lore; the gypsies' `scarf`; the dolphin's
+combat form and pool bases; the Tanker's hit points; anti-monster's cyborg
+armour rows; and, from this row, whether the robot horse should stand in
+the special-equipment pick for a character who takes another package.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
