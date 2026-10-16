@@ -6080,6 +6080,34 @@ Posture as proposed: data only.
 One data script, `~213-book-ingest-audit-f140-south-america.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-16 (branch `pal/data/book-ingest-audit-f140-japan`):
+the two Japan classes.** The finding stays open: two more groups follow.
+`cyberoid` and `cyber-samurai` were read from production's stored markdown on
+2026-10-16, every candidate tested against Japan's text layer (printed 78 to
+80, 82, 99 and 109 to 113), a 110 dpi render of printed 80 (the page with
+corrupt glyphs), and production's `gear` and `skills` by name (`--remote`,
+2026-10-16). The table, one line a sentence, is in the pull request body.
+Posture as proposed: data only.
+
+- False, and corrected: the cyberoid's Laws citation spanning printed 99 to
+  100 (the laws are all on printed 99); its "two catalog motorcycles" (three
+  Rifts rows exist, and `road-boss-motorcycle` is now offered); its implant
+  choice leaving out Underseas, which printed 109 allows beside the Rifts RPG
+  and Triax (the Underseas gills and depth gauge, tagged `rifts`, are now
+  offered; Underseas' sonar and echo-location are bionics and stay off); the
+  cyber-samurai's bionics having no key to grant them (by Nate's ruling of
+  2026-10-16 the four bionic features are now a choose-4 over Japan's fifteen
+  bionics rows, printed 111 to 113, and the five implants a choose-5 over the
+  pool printed 109 allows); and its armour choice leaving out
+  `cyber-samurai-armor`, the book's first armour, now offered first.
+- True, and left: the Rifts RPG implants and bionic features having no rows;
+  the XP tables and money figures; the blackmail sentence; the 4.2 meg disks
+  and a Language: American having no row; no Samurai Archery row; the True
+  Samurai references, the 10% and 15% sword sentence and pp. 239-243.
+
+One data script, `~214-book-ingest-audit-f140-japan.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
