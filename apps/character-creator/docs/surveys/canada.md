@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the plan is done: skills, gear, vehicles, creatures and 23 new classes. The Techno-Warrior stays the *Ultimate Edition* class. What was left out on purpose is under *Extraction plan* and in the ledger. (2026-10-02)
 
-**Rows citing this book:** classes 12, gear 45, vehicles 5, skills 14, creatures 27
+**Rows citing this book:** classes 12, gear 45, vehicles 5, skills 14, creatures 26
 
 Slug `canada`. Cached 2026-10-01 from `Rifts - World Book 20 - Canada.pdf`,
 194 PDF pages, **text layer** (no OCR). `--probe` median 4,457 chars/page,
