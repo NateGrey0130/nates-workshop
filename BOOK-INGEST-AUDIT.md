@@ -6301,6 +6301,14 @@ Before the apply all five cited Canada on production
 (`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
 stays open for the other Canada races and the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-canada-faerie-bot`).**
+Canada part 2 of 4: `~219-book-ingest-audit-f143-canada-faerie-bot.sql` moves
+the `creatures` row `faerie-bot` to D-Bees printed 76-79, with Canada's
+replaced figures (printed 149-151) kept in its `description`. Before the
+apply it cited Canada on production (`q.mjs --remote`, 2026-10-16). Posture
+as proposed: data only. The finding stays open for the other Canada races
+and the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
