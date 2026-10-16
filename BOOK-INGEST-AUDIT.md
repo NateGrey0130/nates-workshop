@@ -5975,6 +5975,44 @@ Posture as proposed: data only.
 One data script, `~210-book-ingest-audit-f140-triax-canada.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-underseas`):
+two Underseas classes.** The finding stays open: more groups of books follow.
+`amphib` and `pneuma-biform-dolphin` were read from production's stored
+markdown on 2026-10-15, every figure in a candidate tested against a 130 dpi
+render of the page it cites (printed 51 to 53, 80 and 98 to 100), and every
+claim about the app against `app.js` (`stepApplies`), `js/parser.js`
+(`combineClasses`, `pairingCounts`, `second_form`), `js/psionics.js`,
+`apps/character-sheet/sheet.js` and `reference/frontmatter.md`. The amphib
+was composed with `tritonian-sea-wolf` and `tritonian-scientist` through the
+real parser on 2026-10-15: each occupation's skills came whole (15 and 10
+O.C.C. skills, related 8 and 14, secondary 6 and 8, none cut). **43
+sentences sorted: 6 false, 37 true, none unsettled.** The table, one line a
+sentence, is in the pull request body. Posture as proposed: data only.
+
+- False, and corrected: the amphib's skills restriction and extraction note
+  saying nothing could pair it with a second O.C.C. and that the player picks
+  one by hand (the wizard's Occupation step offers every Rifts O.C.C. to an
+  R.C.C. and brings its skills; only the reduction by three is by hand, since
+  `pairing_counts`, F129, cuts by a factor or a cap); its underwater-bonus
+  restriction blaming the sheet (the sheet has a conditional-bonus list, fed
+  only by a skill's `applies_when`; it is a class bonus that has no
+  conditional form); the dolphin's "2 more" attacks via magic or psionics
+  (printed 52 gives two attacks a round when attacking that way); and the
+  dolphin's extraction note leaving `psionics_allowed` unset and open (it has
+  been `false` since F118, 2026-10-05).
+- True, and left: the dolphin's combat-form bonuses not stored, the three
+  "record I.S.P. by hand" lines (printed 80 gives no formula and no option
+  carries `isp_base`), the master tier's uncounted lesser category, the
+  77/11/9/3 psionic odds, the stored 3 attacks as the dolphin form's; the
+  amphib's 40% with gills, its seven appearance rows' figures and every
+  "no swimming-speed field" line.
+- Left for Nate: modelling the dolphin's combat form as a `second_form`,
+  which would be the first outside the Nightbane; and its `mdc_base` and
+  `ppe_base`, which omit printed 52's "P.E. plus".
+
+One data script, `~211-book-ingest-audit-f140-underseas.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
