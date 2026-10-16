@@ -6318,6 +6318,15 @@ in `bonuses_note` (Nate, 2026-10-16). Before the apply it cited Canada on
 production (`q.mjs --remote`, 2026-10-16). Posture as proposed: data only.
 The finding stays open for the other Canada races and the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-canada-yeno`).**
+Canada part 4 of 4: `~221-book-ingest-audit-f143-canada-yeno.sql` moves the
+`creatures` row `yeno` to D-Bees printed 215-217, with Canada's replaced
+figures (printed 139-140) kept in its `description`. Its body is now S.D.C.
+(`hp` 1D6+PE, `sdc` 5D6+30, `mdc` NULL) and the force field's 2D4x10+P.E.
+(+3D6 per level) is in `pools_note` (Nate, 2026-10-16). Before the apply it
+cited Canada on production (`q.mjs --remote`, 2026-10-16). Posture as
+proposed: data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
