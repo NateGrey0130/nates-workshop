@@ -6309,6 +6309,15 @@ apply it cited Canada on production (`q.mjs --remote`, 2026-10-16). Posture
 as proposed: data only. The finding stays open for the other Canada races
 and the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-canada-sasquatch`).**
+Canada part 3 of 4: `~220-book-ingest-audit-f143-canada-sasquatch.sql` moves
+the `creatures` row `true-sasquatch` to D-Bees printed 173-176, with Canada's
+replaced figures (printed 162-165) kept in its `description`. Its
+`combat.attacks` is the adult male's 4, the female's 3 and the youngster's 2
+in `bonuses_note` (Nate, 2026-10-16). Before the apply it cited Canada on
+production (`q.mjs --remote`, 2026-10-16). Posture as proposed: data only.
+The finding stays open for the other Canada races and the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
