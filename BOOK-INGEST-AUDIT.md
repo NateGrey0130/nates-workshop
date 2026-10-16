@@ -6292,6 +6292,15 @@ not been checked against `creatures`.
 **Confidence:** medium until a query lists which of the 34 have a creature
 row at all. **Ongoing cost:** none.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-canada-small`).**
+Canada part 1 of 4: `~218-book-ingest-audit-f143-canada-small.sql` moves the
+`creatures` rows `aardan-tek`, `grackle-tooth`, `greot-hunter`, `mastadonoid`
+and `noli-bushman` to their D-Bees pages (9-11, 97-98, 98-100, 134-135,
+144-146), each with Canada's replaced figures kept in its `description`.
+Before the apply all five cited Canada on production
+(`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
+stays open for the other Canada races and the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
