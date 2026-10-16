@@ -6177,7 +6177,7 @@ proposed: data only.
 - Changed with a grant: "the whole choice is recorded here rather than
   half-modelled"; the note now says which packages are recorded only.
 - True, and left: every bounty figure and the one-third collection problem
-  (printed 88 and 89), the alignments, player notes, money, cybernetics and
+  (printed 87 and 88), the alignments, player notes, money, cybernetics and
   skill lines, the four packages' contents and the second package's skill
   grant, which `equipment_starting` cannot carry (F131).
 
