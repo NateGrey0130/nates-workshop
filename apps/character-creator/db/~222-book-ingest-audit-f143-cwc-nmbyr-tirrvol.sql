@@ -1,14 +1,15 @@
--- Coalition War Campaign races' creature rows follow D-Bees of North America
--- (BOOK-INGEST-AUDIT F143, part 2 of 3: Coalition War Campaign).
+-- The N'mbyr Gorilla Man's and the Tirrvol Sword Fist's creature rows follow
+-- D-Bees of North America (BOOK-INGEST-AUDIT F143, Coalition War Campaign
+-- part 1 of 3; the other four Coalition War Campaign races are parts 2 and 3).
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local  apps/character-creator/db/~222-book-ingest-audit-f143-cwc.sql
---   node scripts/d1-apply.mjs --remote apps/character-creator/db/~222-book-ingest-audit-f143-cwc.sql
+--   node scripts/d1-apply.mjs --local  apps/character-creator/db/~222-book-ingest-audit-f143-cwc-nmbyr-tirrvol.sql
+--   node scripts/d1-apply.mjs --remote apps/character-creator/db/~222-book-ingest-audit-f143-cwc-nmbyr-tirrvol.sql
 --
--- Each class below follows Rifts World Book 30: D-Bees of North America
--- (2007), but its creatures row still cited Rifts World Book 11: Coalition
--- War Campaign and carried its figures. By Nate's ruling of 2026-10-04 the
+-- The classes nmbyr-gorilla-man and tirrvol-sword-fist follow Rifts World
+-- Book 30: D-Bees of North America (2007), but their creatures rows still
+-- cited Rifts World Book 11: Coalition War Campaign and carried its figures. By Nate's ruling of 2026-10-04 the
 -- newest printing that STATES a figure wins, so each row is UPDATED in place
 -- and moves its source_book; where D-Bees is silent, the Coalition War
 -- Campaign figure stays. A complete line D-Bees restates without an item
@@ -17,10 +18,12 @@
 -- Attribute dice, H.P., S.D.C. and P.P.E. are the same in both books except
 -- where named below, and each row keeps its shape (F141).
 --
--- Read off the Coalition War Campaign text layer and renders of D-Bees (both
--- at PDF offset +1). Guarded on each row still citing Coalition War
--- Campaign, so a re-run is a no-op. THIS SCRIPT CHANGES PRODUCTION. The
--- tilde number is claimed at merge.
+-- Read off renders of both books (both at PDF offset +1). Guarded on each
+-- row still citing Coalition War Campaign, so a re-run is a no-op. The
+-- combat keys follow the creatures table's own spelling (damage, pull,
+-- pull_punch), and neither row's stat_attacks rows change. THIS SCRIPT
+-- CHANGES PRODUCTION: two creatures rows. The tilde number is claimed at
+-- merge.
 
 -- N'mbyr Gorilla Man: D-Bees printed 143-144, Coalition War Campaign 202-203.
 -- D-Bees prints racial bonuses where Coalition War Campaign printed none, so
@@ -71,6 +74,42 @@ UPDATE creatures
  WHERE slug = 'tirrvol-sword-fist'
    AND source_book = 'Rifts World Book 11: Coalition War Campaign p.203-205';
 
--- READBACKS
+-- Read the result back. A guard that matched nothing must fail here, not pass.
 
-INSERT INTO data_script_runs (filename) VALUES ('~222-book-ingest-audit-f143-cwc.sql');
+SELECT 'both rows cite D-Bees and not Coalition War Campaign' AS assertion, count(*) AS got, 2 AS want
+  FROM creatures
+ WHERE (slug = 'nmbyr-gorilla-man' AND source_book = 'Rifts World Book 30: D-Bees of North America p.143-144')
+    OR (slug = 'tirrvol-sword-fist' AND source_book = 'Rifts World Book 30: D-Bees of North America p.201-203');
+
+SELECT 'the N''mbyr D-Bees figures landed' AS assertion, count(*) AS got, 1 AS want
+  FROM creatures
+ WHERE slug = 'nmbyr-gorilla-man'
+   AND combat = '{"damage":4,"parry":1,"pull_punch":2,"strike":1}'
+   AND isp = 'PE'
+   AND hp = 'PE+1D6'
+   AND sdc = '3D4x10'
+   AND horror_factor = 10
+   AND life_span LIKE '3D6+50 years%'
+   AND instr(occ_note, 'Slave market value 4D4x1,000 credits') > 0;
+
+SELECT 'the Tirrvol D-Bees figures landed and parry left combat' AS assertion, count(*) AS got, 1 AS want
+  FROM creatures
+ WHERE slug = 'tirrvol-sword-fist'
+   AND combat = '{"initiative":2,"roll":1,"pull":1}'
+   AND json_extract(attributes, '$.PB') = '1D6+1'
+   AND mdc = 'PEx3'
+   AND horror_factor = 12
+   AND weight = '250-500 lbs (112.5-225 kg)'
+   AND instr(skills_note, 'Dance +15%') > 0;
+
+SELECT 'each keeps the Coalition War Campaign figures it replaced in its description' AS assertion, count(*) AS got, 2 AS want
+  FROM creatures
+ WHERE slug IN ('nmbyr-gorilla-man', 'tirrvol-sword-fist')
+   AND instr(description, 'which this row followed until ~222') > 0;
+
+SELECT 'and their five stat_attacks rows are untouched' AS assertion, count(*) AS got, 5 AS want
+  FROM stat_attacks
+ WHERE owner_kind = 'creature'
+   AND owner_slug IN ('nmbyr-gorilla-man', 'tirrvol-sword-fist');
+
+INSERT INTO data_script_runs (filename) VALUES ('~222-book-ingest-audit-f143-cwc-nmbyr-tirrvol.sql');

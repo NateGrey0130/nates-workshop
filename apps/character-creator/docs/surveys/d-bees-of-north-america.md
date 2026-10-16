@@ -2,7 +2,7 @@
 
 **Status:** `imported` — 49 races and 3 occupations shipped, and the 34 classes this book reprints from older books now follow it (Ledger, 2026-10-04); the Lyn-Srial Cloudweaver, which it does not reprint, stays on New West. (2026-10-04)
 
-**Rows citing this book:** classes 86, gear 47, vehicles 1, creatures 60
+**Rows citing this book:** classes 86, gear 47, vehicles 1, creatures 62
 
 Slug `d-bees-of-north-america`. Cached 2026-10-03 from
 `Rifts- World Book 30 D-Bees of North America.pdf`, 226 PDF pages, **scan (no
