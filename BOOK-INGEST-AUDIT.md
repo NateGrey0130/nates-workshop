@@ -6049,6 +6049,37 @@ pull request body. Posture as proposed: data only.
 One data script, `~212-book-ingest-audit-f140-australia.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-15 (branch `pal/data/book-ingest-audit-f140-south-america`):
+the South America class.** The finding stays open: more groups of books
+follow. `anti-monster` was read from production's stored markdown on
+2026-10-15, every figure in a candidate tested against a 110 dpi render of
+the pages it cites (printed 34, 36 and 37; printed 35 is art), every row
+against production's catalog by name (`--remote`, 2026-10-15), and every
+claim about the app against `js/parser.js` (`bandsOf`), `js/class-keys.js`,
+`test/regression.mjs` (the I.S.P./P.P.E. twin check) and the creator's
+free-text Insanity field. **18 sentences sorted: 2 false, 16 true, none
+unsettled.** The table, one line a sentence, is in the pull request body.
+Posture as proposed: data only.
+
+- False, and corrected: the armour choice's note saying the book names no
+  armour (printed 37 names Heavy Infantry Armor, 420 M.D.C., as a cyborg
+  armour it may wear; no gear row holds it, so nothing is granted and the
+  note now says so); and the 2026-10-05 extraction note saying a character
+  with no obsession leaves the pick empty (`~161` gave the group an unbanded
+  Obsession: None option, which the group note already described).
+- True, and left: the two other equipment "without enumerating" notes; the
+  random obsession table rolled by hand and not stored (no table or class
+  holds it on production, 2026-10-15); the potions and later-cybernetics
+  restrictions; the 50% and 90%; the cyborg armour's missing row; cybernetics
+  as prose (no class key); Paramedic's double cost unenforced; the Roll button
+  never landing on Obsession: None; every figure on printed 34 to 37.
+- Left for Nate: whether the catalog's existing cyborg armour rows (WB8's
+  light and heavy infantry plates, CA-6C) should join the armour choice the
+  book opens to "any suit of cyborg armor".
+
+One data script, `~213-book-ingest-audit-f140-south-america.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
