@@ -6108,6 +6108,51 @@ Posture as proposed: data only.
 One data script, `~214-book-ingest-audit-f140-japan.sql`, written by
 `scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
 
+**Taken in part, 2026-10-16 (branch `pal/data/book-ingest-audit-f140-ww-psyscape`):
+Wormwood's apok and Psyscape's psi-druid.** The finding stays open: one more
+group follows. Both were read from production's stored markdown on
+2026-10-16, every candidate tested against a 110 dpi render of the page it
+cites (Wormwood printed 57 and 59, Psyscape printed 61 and 62), Psyscape's
+text layer for printed 157, production's `gear` and `skills` by name
+(`--remote`, 2026-10-16), and `js/parser.js` (`entryAdmits`,
+`realCategoryEntry`). **42 sentences sorted: 5 false, 1 changed with a grant,
+36 true, none unsettled.** The table, one line a sentence, is in the pull
+request body. Posture as proposed: data only.
+
+- False, and corrected: the apok's Technical note, three sentences saying its
+  +20% on languages and literacy could not be stored because Literacy is a
+  Communications skill and every reachable language was already granted
+  (production filed 38 `Language:` rows and 4 `Literacy` rows under
+  Technical on 2026-10-16; the +20% is now a second Technical entry with
+  `only_prefix: ["Language:", "Literacy"]`, and through the real parser and
+  `composeClass` on 2026-10-16 `Language: Spanish` and `Literacy: Chinese`
+  took +20% where the stored version gave +10%, and `Computer Operation`
+  kept +10%); the psi-druid's count of herb rows (production held 67, all
+  tagged `rifts`, on 2026-10-16; none is granted, since the page names no
+  herb); and its "no schema field" for alignment, attributes and race
+  (`race_restrictions` and `attribute_minimums` exist; printed 62 sets
+  neither).
+- Changed with a grant: the psi-druid's ski rows "not listed"; printed 62's
+  "snowshoes or skis" is now a choice of `skis-cross-country` and
+  `skis-downhill`, both `rifts`. Snowshoes have no row.
+- Granted by Nate's ruling of 2026-10-16, with no sentence to correct: the
+  apok's printed 59 weapons (a choice of the three Rifts silver cross rows,
+  1D6 `wooden-stake`, `hammer-and-mallet`, two `knife-silver-plated` for the
+  two silver plated daggers, and 1D4+1 `knife`), and printed 57's +2 to save
+  vs poison as `toxins_poisons: 2`. Its sword is not granted: the plain
+  sword rows are Palladium Fantasy, Heroes Unlimited and Nightbane. Its 1D4
+  small pouches have no Rifts row.
+- True, and left: the apok's 27 of 37 prayers, the cache sizes of printed 56
+  and 58, supernatural P.S. as unmodelled, the mask that cannot be forcibly
+  removed and every figure on printed 52 and 57; the psi-druid's W.P. note
+  (the `skills` table marks no proficiency ancient or modern), its
+  Horsemanship filing, its situational +10%, the sewing kit and arrows, the
+  ability percentages, its fifteen skill bases and every figure on printed
+  61, 62 and 157.
+
+One data script, `~215-book-ingest-audit-f140-ww-psyscape.sql`, written by
+`scripts/class-fix-sql.mjs`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
