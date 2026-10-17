@@ -6406,6 +6406,24 @@ Before the apply it cited Psyscape on production (`q.mjs --remote`,
 2026-10-17). Posture as proposed: data only. The finding stays open for the
 rest of the 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-lanotaur`).**
+Psyscape part 4 of 7: `~228-book-ingest-audit-f143-psy-lanotaur.sql` moves
+the `creatures` row `lanotaur-hunter` to D-Bees printed 115-117, with
+Psyscape's replaced figures (printed 123-126) kept in its `description`. The
+body (M.D.C., P.P.E., I.S.P.), Horror Factor 12 and size are the same in both
+books and do not move. P.B. goes from 2D6 to 2D6+2, only P.S. and P.E. stay
+Supernatural, and `combat` keeps its eight attacks while its +7 dodge becomes
+D-Bees' +7 automatic dodge and it gains +2 entangle. The row takes D-Bees'
+alignment percentages, R.C.C., related and secondary skills, life span,
+habitat, allies, enemies, equipment, money and experience levels, and the
+spell and psionic costs D-Bees adds. The Natural Abilities line loses the
+swim, climb, prowl and track percentages, which D-Bees grants as skills
+instead. Both books print the Lanotaur as an R.C.C., so `F141` does not
+arise. Its five `stat_attacks` rows match D-Bees and are unchanged. Before
+the apply it cited Psyscape on production (`q.mjs --remote`, 2026-10-17).
+Posture as proposed: data only. The finding stays open for the rest of the
+34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
