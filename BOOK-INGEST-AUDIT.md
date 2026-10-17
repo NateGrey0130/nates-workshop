@@ -6424,6 +6424,25 @@ the apply it cited Psyscape on production (`q.mjs --remote`, 2026-10-17).
 Posture as proposed: data only. The finding stays open for the rest of the
 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-psi-goblin`).**
+Psyscape part 5 of 7: `~229-book-ingest-audit-f143-psy-psi-goblin.sql` moves
+the `creatures` row `psi-goblin` to D-Bees printed 164-166, the class's own
+range, with Psyscape's replaced figures (printed 128-130) kept in its
+`description`. M.D.C., Horror Factor 11, size and the seven attribute dice
+D-Bees prints are the same in both books and do not move; D-Bees prints no
+P.B., Hit Points or S.D.C., so those stay Psyscape's. I.S.P. becomes
+1D6x10+10 plus M.E., weight 40.5 to 54 kg, and `combat` gains +1 Perception.
+D-Bees prints P.P.E. two ways on printed 165 (3D4x10+38 in the stat block,
+3D4x10 plus P.E. in the Magic paragraph); `ppe` stores the stat block's, as
+the class does, and `pools_note` names both. The seven spells lose
+Psyscape's three uses a day and take D-Bees' P.P.E. costs. The row takes
+D-Bees' life span, skills, habitat, allies, enemies, equipment, money,
+experience levels and slave value. Both books print the Psi-Goblin as an
+R.C.C., so `F141` does not arise. Its four `stat_attacks` rows match D-Bees
+and are unchanged. Before the apply it cited Psyscape on production
+(`q.mjs --remote`, 2026-10-17). Posture as proposed: data only. The finding
+stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
