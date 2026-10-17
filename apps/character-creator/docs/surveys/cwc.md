@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1377-#1407 and the creatures PR: gear, 21 classes, 33 vehicles, 9 creatures, 7 notable NPCs. What was left out on purpose is under *Extraction plan*. (2026-09-25)
 
-**Rows citing this book:** classes 15, gear 25, vehicles 33, skills 3, notable_npcs 7, creatures 7
+**Rows citing this book:** classes 15, gear 25, vehicles 33, skills 3, notable_npcs 7, creatures 5
 
 **MOS:** cs-rcsg-scientist 7, cs-special-forces 8, iss-peacekeeper 7, iss-specter 8, iss-intel-specter 10, ntset-protector 7, psi-net-agent 10, kremin-cyborg 7
 
