@@ -2,7 +2,7 @@
 
 **Status:** `imported` — every part of the plan shipped: psionic powers, gear, all eighteen playable classes, the bestiary and the book's two named NPCs; what was left out on purpose is under *Extraction plan*. (2026-09-25)
 
-**Rows citing this book:** classes 11, gear 22, psionic_powers 21, notable_npcs 2, creatures 21
+**Rows citing this book:** classes 11, gear 22, psionic_powers 21, notable_npcs 2, creatures 20
 
 Slug `psyscape`. Cached 2026-09-25 from `Rifts- World Book 12 Psyscape.pdf`,
 162 PDF pages, **text layer** (no OCR). `--probe` median 5,172 chars/page,
