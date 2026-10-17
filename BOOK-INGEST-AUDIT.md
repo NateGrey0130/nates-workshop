@@ -6340,6 +6340,19 @@ Before the apply both cited Coalition War Campaign on production
 (`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
 stays open for the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-cwc-trim-vanguard`).**
+Coalition War Campaign part 2 of 3:
+`~223-book-ingest-audit-f143-cwc-trim-vanguard.sql` moves the `creatures`
+rows `trimadore` and `vanguard-brawler` to D-Bees printed 206-208 and
+208-210, each with Coalition War Campaign's replaced figures (printed 208-209
+and 206-208) kept in its `description`. The Vanguard Brawler keeps its Thug
+R.C.C. skill and occupation lines, with D-Bees' race-plus-O.C.C. form in
+`description` (Nate, 2026-10-16); its `combat` gains D-Bees' +1 to disarm.
+The Trimadore's `combat` does not change. Neither row has `stat_attacks`
+rows. Before the apply both cited Coalition War Campaign on production
+(`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
+stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
