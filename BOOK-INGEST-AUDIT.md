@@ -6391,6 +6391,21 @@ and are unchanged. Before the apply it cited Psyscape on production
 (`q.mjs --remote`, 2026-10-17). Posture as proposed: data only. The finding
 stays open for the rest of the 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-dragonmage`).**
+Psyscape part 3 of 7: `~227-book-ingest-audit-f143-psy-dragonmage.sql` moves
+the `creatures` row `demon-dragonmage` to D-Bees printed 58-61, with
+Psyscape's replaced figures (printed 120-123) kept in its `description`. The
+body, the attributes, the psionics and Horror Factor 10 are the same in both
+books and do not move, and `combat` stays NULL. The row takes D-Bees'
+alignment percentages, its ability ladder past 10th level (to 30th), +2
+Perception at 12th, the holy-weapon vulnerability, the related and secondary
+skill schedules, life span, habitat, allies, enemies, money and experience
+levels. Both books print the Demon-Dragonmage as an R.C.C., so `F141` does
+not arise. Its two `stat_attacks` rows match D-Bees and are unchanged.
+Before the apply it cited Psyscape on production (`q.mjs --remote`,
+2026-10-17). Posture as proposed: data only. The finding stays open for the
+rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
