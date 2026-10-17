@@ -6368,6 +6368,17 @@ from NULL to +2 disarm, +1 entangle, +3 pull punch; the Quick-Flex Alien's
 Campaign on production (`q.mjs --remote`, 2026-10-16). Posture as proposed:
 data only. The finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-amorph`).**
+Psyscape part 1 of 7: `~225-book-ingest-audit-f143-psy-amorph.sql` moves the
+`creatures` row `amorph` to D-Bees printed 21-25, with Psyscape's replaced
+figures (printed 117-120) kept in its `description`. Psyscape's one
+S.D.C./Hit Points pool becomes D-Bees' Hit Points 2D6x10+P.E. and S.D.C.
+1D6x10+8, P.P.E. 2D6 becomes 2D6+6, and `combat` goes from NULL to four
+attacks and +2 automatic dodge. Both books print the Amorph as an R.C.C., so
+`F141` does not arise. It has no `stat_attacks` rows. Before the apply it
+cited Psyscape on production (`q.mjs --remote`, 2026-10-17). Posture as
+proposed: data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
