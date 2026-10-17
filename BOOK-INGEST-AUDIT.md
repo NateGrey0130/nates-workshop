@@ -6353,6 +6353,21 @@ rows. Before the apply both cited Coalition War Campaign on production
 (`q.mjs --remote`, 2026-10-16). Posture as proposed: data only. The finding
 stays open for the rest of the 34.
 
+**Partly taken, 2026-10-16 (branch `pal/data/book-ingest-audit-f143-cwc-kremin-quick`).**
+Coalition War Campaign part 3 of 3:
+`~224-book-ingest-audit-f143-cwc-kremin-quick.sql` moves the `creatures`
+rows `kremin-cyborg` and `quick-flex-alien` to D-Bees printed 111-114 and
+168-170, each with Coalition War Campaign's replaced figures (printed 209-211
+and 205-206) kept in its `description`. Both keep their R.C.C. skill and
+occupation lines, with D-Bees' race-plus-O.C.C. form in `description` (Nate,
+2026-10-16). The Kremin row takes D-Bees' explorer bionic line (P.S. 2D6+24,
+Spd 4D6+108), with the civilian line in `description`, and its `combat` goes
+from NULL to +2 disarm, +1 entangle, +3 pull punch; the Quick-Flex Alien's
+`combat` gains +1 strike, +2 parry and +3 automatic dodge. The Kremin's five
+`stat_attacks` rows are unchanged. Before the apply both cited Coalition War
+Campaign on production (`q.mjs --remote`, 2026-10-16). Posture as proposed:
+data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
