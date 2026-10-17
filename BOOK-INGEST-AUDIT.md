@@ -6379,6 +6379,18 @@ attacks and +2 automatic dodge. Both books print the Amorph as an R.C.C., so
 cited Psyscape on production (`q.mjs --remote`, 2026-10-17). Posture as
 proposed: data only. The finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-darkhound`).**
+Psyscape part 2 of 7: `~226-book-ingest-audit-f143-psy-darkhound.sql` moves
+the `creatures` row `darkhound` to D-Bees printed 54-58, with Psyscape's
+replaced figures (printed 94-98) kept in its `description`. The body, the
+attributes and Horror Factor 11 are the same in both books and do not move;
+`combat` goes from five attacks to D-Bees' four and gains +3 Perception and
++1 dodge, and the psionics gain Meditation. Both books print the Darkhound as
+an R.C.C., so `F141` does not arise. Its two `stat_attacks` rows match D-Bees
+and are unchanged. Before the apply it cited Psyscape on production
+(`q.mjs --remote`, 2026-10-17). Posture as proposed: data only. The finding
+stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
