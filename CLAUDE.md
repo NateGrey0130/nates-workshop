@@ -119,9 +119,15 @@ ones, or say in the PR body that you did not.
 
 ## Permissions and the hook are deliberate
 
-`.claude/settings.json` allows only reporting commands. `d1-apply.mjs`,
-`gh pr create/merge`, `git push/commit/checkout` and `wrangler d1 execute` are
-absent **on purpose**. Do not add them, and do not widen the `gh api` entry.
+`.claude/settings.json` allows reporting commands and one write: `gh pr merge`,
+so that a plan driver merges a green row without a word typed in its session
+(Nate, 2026-10-18; the option he did not take was typing the word once per
+driver session). `d1-apply.mjs`, `gh pr create`, `git push/commit/checkout` and
+`wrangler d1 execute` are absent **on purpose**. Do not add them, and do not
+widen the `gh api` entry. The allowed merge is still bound by the `ship-pr`
+skill's order (D1 applied first, every required check green, the merge as its
+own call) and by the `plan-rows` skill, which merges only a row a worker
+reported `READY`. Work that is not a plan row is still merged by Nate.
 `.claude/hooks/guard-bash.sh` refuses six command shapes. It is also registered
 at user level in `C:\Users\natha\.claude\settings.json`, so it runs twice in
 this repo, and that is intended. A refusal appears as

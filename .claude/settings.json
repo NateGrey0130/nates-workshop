@@ -43,6 +43,7 @@
       "Bash(gh pr list *)",
       "Bash(gh pr view *)",
       "Bash(gh pr checks *)",
+      "Bash(gh pr merge *)",
       "Bash(gh api repos/NateGrey0130/nates-workshop/commits/*)"
     ]
   },

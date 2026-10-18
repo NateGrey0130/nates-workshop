@@ -63,11 +63,18 @@ than one place: see `SETUP.md` → *Access*. Never enable public access on the
 
 ## Permissions
 
-- **Repo allowlist** (`.claude/settings.json`) allows only commands that report
-  or query. Merge, push, commit, checkout, `d1-apply.mjs` and `wrangler d1 execute`
-  are absent so that each one costs a deliberate keystroke. The `gh api` entry
-  is pinned to `commits/`, because a wildcard cannot exclude `-X DELETE`.
-  `settings.json` rejects comment keys, so this rationale lives here.
+- **Repo allowlist** (`.claude/settings.json`) allows commands that report
+  or query, and one write: `gh pr merge`. Push, commit, checkout,
+  `d1-apply.mjs` and `wrangler d1 execute` are absent so that each one costs a
+  deliberate keystroke. The merge was added 2026-10-18 on Nate's word so that a
+  plan driver (the `plan-rows` skill) merges a green row without his word
+  typed in that session: in auto mode an action matching an allow rule
+  resolves before the classifier, and a word typed in one session does not
+  reach the next. The rule is a prefix match, so `--repo` and `--merge` are
+  the skill's to supply; `guard-bash.sh` rule 4 still refuses a merge that
+  shares its call with anything. The `gh api` entry is pinned to `commits/`,
+  because a wildcard cannot exclude `-X DELETE`. `settings.json` rejects
+  comment keys, so this rationale lives here.
 - **Working-directory allowlist**
   (`C:\Users\natha\Projects\workshop\.claude\settings.local.json`) governs
   sessions started there. It is **alone**: neither list reaches the other
