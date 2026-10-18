@@ -6480,6 +6480,27 @@ R.C.C., so `F141` does not arise; the row has no `stat_attacks`. Before the
 apply it cited Psyscape on production (`q.mjs --remote`, 2026-10-18). Posture
 as proposed: data only. The finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-18 (branch `pal/data/book-ingest-audit-f143-four-books`).**
+New West, 38c part 1 of 3: `~232-book-ingest-audit-f143-new-west.sql` moves
+three `creatures` rows to D-Bees, each with New West's replaced figures kept
+in its `description`: `cactus-people` (New West printed 127, D-Bees 41-44),
+`fennodi` (New West 128-130, D-Bees 83-85) and `lyn-srial` (New West 133-136,
+D-Bees 127-130). The Lyn-Srial row keeps its three variants: D-Bees reprints
+the average Golden One and the Sky-Knight but refers back to New West for the
+Cloudweaver, so the Cloudweaver lines stay New West's, and the row cites
+D-Bees 127-130 where the class cites 127-129, because the Sky-Knight's
+weapon proficiencies and experience level are on printed 130. It takes
+D-Bees' alignment split, life span and birth figures, habitat, allies,
+enemies, vulnerabilities, Perception bonus, Hand to Hand: Basic as an R.C.C.
+skill, experience tables and slave value, and the Sky-Knight's +2D6+6 M.D.C.
+and plain +3 disarm. Its Awe Factor (1D4+9 against 9+1D4) and `combat` keep
+their stored values. Cactus People `combat` goes from two attacks to +1 roll
+with impact, and Fennodi from two attacks to three; Fennodi drops Saloon Bum,
+Saddle Tramps, Sky-Knights and the Whisker Coyote pet by the line rule. Each
+row keeps its shape (`F141`), and no `stat_attacks` row changes. Before the apply all three cited New West on
+production (`q.mjs --remote`, 2026-10-18). Posture as proposed: data only. The
+finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter

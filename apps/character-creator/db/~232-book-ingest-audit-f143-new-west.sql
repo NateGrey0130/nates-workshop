@@ -1,14 +1,14 @@
--- Reprinted D-Bees races' creature rows follow D-Bees of North America
--- (BOOK-INGEST-AUDIT F143, row 38c: New West, Atlantis, Underseas and
--- South America).
+-- New West's three reprinted D-Bees races' creature rows follow D-Bees of
+-- North America (BOOK-INGEST-AUDIT F143, row 38c1: Cactus People, Fennodi
+-- and Lyn-Srial).
 --
 -- One-off data script, run once per environment. NOT a migration.
 --
---   node scripts/d1-apply.mjs --local  apps/character-creator/db/~232-book-ingest-audit-f143-four-books.sql
---   node scripts/d1-apply.mjs --remote apps/character-creator/db/~232-book-ingest-audit-f143-four-books.sql
+--   node scripts/d1-apply.mjs --local  apps/character-creator/db/~232-book-ingest-audit-f143-new-west.sql
+--   node scripts/d1-apply.mjs --remote apps/character-creator/db/~232-book-ingest-audit-f143-new-west.sql
 --
--- The classes cactus-people and fennodi follow Rifts World Book 30: D-Bees
--- of North America (2007), but their creatures rows still cited Rifts World
+-- The classes cactus-people, fennodi and lyn-srial follow Rifts World Book
+-- 30: D-Bees of North America (2007), but their creatures rows still cited Rifts World
 -- Book 14: New West and carried its figures. By Nate's ruling of 2026-10-04
 -- the newest printing that STATES a figure wins, so each row is UPDATED in
 -- place and moves its source_book to the pages its class cites; where D-Bees
@@ -23,8 +23,17 @@
 -- impact. Fennodi: Nodox gives three attacks at first level where New West
 -- gave two; the other combat keys are the same in both books.
 --
--- Read off renders of D-Bees and New West's text layer (both at PDF offset
--- +1). Guarded on each row still citing New West, so a re-run is a no-op.
+-- Lyn-Srial: one row for three variants. D-Bees reprints the average
+-- Golden One (printed 127-129) and the Sky-Knight (129-130) but not the
+-- Cloudweaver, for which it refers back to New West, so the Cloudweaver
+-- lines stay New West's (135-136) and the row cites D-Bees 127-130. Combat
+-- stays {"attacks":3}: D-Bees' +3 attacks per melee is New West's three, and
+-- Hand to Hand: Basic becomes an R.C.C. skill that cannot be changed. The
+-- Awe Factor (1D4+9 in D-Bees, 9+1D4 in New West) is the same figure.
+--
+-- Cactus People and Fennodi read off renders of D-Bees and New West's text
+-- layer, Lyn-Srial off renders of both (both books at PDF offset +1).
+-- Guarded on each row still citing New West, so a re-run is a no-op.
 -- THIS SCRIPT CHANGES PRODUCTION. The tilde number is claimed at merge.
 
 UPDATE creatures
@@ -52,7 +61,7 @@ UPDATE creatures
    SET combat = '{"attacks":3,"initiative":1,"parry":1,"dodge":1,"pull":6,"disarm":4,"roll":2}',
        bonuses_note = 'Hand to Hand: Nodox (special), the alien art of avoidance and defense every Fennodi knows: three attacks per melee at first level, +1 at levels 2, 4, 6, 8, 10, 12 and 14; +1 on initiative, +4 to disarm, +6 to pull punch, body flip and +2 to roll with impact are flat; +1 to parry at levels 1, 3, 6, 9, 12 and 15; +1 to dodge at levels 1, 2, 4, 6, 8, 10, 12 and 14; +1 to save vs Horror Factor at levels 1, 3, 6, 9, 12 and 15. Pin or incapacitate on a roll of 17-20 (must announce intent). Generally fights only to escape or restrain; rarely kills. Vulnerabilities: they do not handle cold climates well and are sometimes too trusting of strangers.',
        skills_note = 'R.C.C. skills regardless of O.C.C.: Land Navigation +20%, Prowl +15%, Wilderness Survival +25%, W.P. Staff.',
-       natural_abilities = 'Keen 280 degree peripheral vision that sees the infrared spectrum, plus 2 vs disease and toxins, immune to carcinogens and cancer, silent gliding movement, innate psionics that differ by sex.',
+       natural_abilities = 'Keen 280 degree peripheral vision that sees the infrared spectrum, +2 to save vs disease and toxins, immune to carcinogens and cancer, silent gliding movement, innate psionics that differ by sex.',
        psionics = 'Males: Base I.S.P. M.E. x2 +2D6 per level; Empathy (4), Empathic Transmission (6), Mind Block (4), Sixth Sense (2), Telepathy (4) and two Healing abilities of choice, plus one more Healing power at levels 2, 4, 6, 8, 10 and 12. Females: Base I.S.P. M.E. x3 +2D6 per level; Bio-Manipulation (10), Empathy (4), Mind Block (4), Sixth Sense (2), Telepathy (4) and three Physical powers of choice, plus one more Physical power at levels 2, 4, 6, 8, 10 and 12. Both have a psychic affinity with the Whisker Coyote and two unique powers: a Protective Energy Aura (16 M.D.C. +1D4 per level, engaged by reflex, regenerating 2D6 M.D.C. per melee round) and Ghost Walk (a partial phase-out of physical reality, impervious to the physical plane but open to attack from the Astral Plane; two melee actions and 20% walking speed; self only; five minutes per level; I.S.P. 10).',
        life_span = '4D6+55 years; physically mature at 16; females bear one child after an eight-month pregnancy and can bear children until age 45',
        habitat = 'Prefer warm, dry climates: the deserts and plains of the American Southwest, including Nevada, Utah, Arizona, New Mexico, Lone Star/Texas and Northern Mexico, tending livestock as nomads; they love the wilderness (light forests, grasslands, prairies, canyons and deserts) and visit towns and cities only briefly. Some travel into the Canadian Southwest, but most migrate south for the winter',
@@ -64,12 +73,39 @@ UPDATE creatures
  WHERE slug = 'fennodi'
    AND source_book = 'Rifts World Book 14: New West p.128-130';
 
+UPDATE creatures
+   SET alignment = 'Any, but most are Principled (50%), Scrupulous (30%) or Aberrant (10%); very few turn to a selfish alignment and an evil Lyn-Srial is almost unheard of',
+       bonuses_note = 'The book calls the fear-reaction stat ''Awe Factor'' (9+1D4) rather than ''Horror Factor'' - possibly a naming convention difference; base 9 stored, +1D4 residual not captured. Average NPC R.C.C. Bonuses: +3 attacks per melee round, +1 on initiative, +1 on Perception Rolls, +1 to parry, +2 to dodge when in flight, +2 to pull punch, +3 to roll with impact and +4 vs Horror Factor; attacks per melee are those of Hand to Hand: Basic plus the bonus. Vulnerabilities: their inhuman appearance, four arms and wings make it impossible to disguise themselves, and their compassion and generosity sometimes get them into trouble. Sky-Knight and Cloudweaver variants share the same base stats above but differ in magic, skills, bonuses and equipment (see below); this single row covers all three.',
+       skills_note = 'Average NPC: Art +20%, Basic Math +30%, Dance +20%, History of their People 90%, Holistic Medicine +10%, Identify Fruit and Plants +20%, Land Navigation +10%, native tongue Lyn-Srial (language and literacy) 98%, Language: American and two of choice +30%, Literacy: two of choice +10%, Lore: Ley Lines and Magic +10%, Law +20%, Sing and Whistle +20%, Whittle/Sculpt +15%, Wilderness Survival +15%, Hand to Hand: Basic (cannot be changed); six R.C.C. Related Skills at level 1 (plus two more at 3,6,9,12); two Secondary Skills from the Rifts Ultimate Edition list at levels 1, 4, 8, 10 and 12. Sky-Knight variant (attribute req. IQ and ME 18+): the average R.C.C. skills plus W.P. Blunt, Paired Weapons, one Ancient weapon and one Energy weapon of choice, and Hand to Hand Expert (changeable to Martial Arts for one R.C.C. Related Skill); five R.C.C. Related Skills at level 1 (plus two more at 3,6,9,12); attacks per melee are those of Hand to Hand plus four; extra bonuses +1D6 PS, +2D6+6 MDC, +1D4x10 PPE, +3 initiative, +4 Perception, +1 parry, +2 dodge in flight, +3 disarm, +3 disarm on a called shot, +4 roll, +4 pull punch, and +1 to save vs Horror Factor at levels 1, 3, 4, 5, 7, 8, 9, 11, 12, 13 and 15. Cloudweaver variant (attribute req. IQ, MA and ME 18+): not trained for combat, three attacks per melee, R.C.C. bonuses of +2D4x10 PPE plus initiative/parry/dodge/pull/horror-factor-and-possession bonuses; skills emphasize history, language, lore, law, and art at higher percentages than the average NPC.',
+       life_span = '1D6x10+135 years; physically mature by age 17; females bear 1D4 live young after a 10 month pregnancy and can bear children until age 70',
+       habitat = 'Explore and travel anywhere in the Americas, but have made their home in Arizona (a hidden city in the Grand Canyon) and feel most at home among canyons, buttes, mountains and the clouds; most numerous in Arizona, Utah and New Mexico',
+       allies = 'Cyber-Knights; Justice Rangers; Arzno; the Tolkeen refugees who fled into the West; they try to accept all people except evil and supernatural beings',
+       enemies = 'Evil supernatural monsters, which they hate and destroy; they regard the Coalition States and the Federation of Magic with disappointment and apprehension, worry about the Monster Kingdom forming in Calgary, and stand against injustice, slavery and tyranny',
+       occ_note = 'R.C.C. only; no O.C.C. is available. Average Lyn-Srial: NPCs are level 1D6 or as the G.M. sets, player characters start at level one, on the Operator experience table. Sky-Knight requires I.Q. and M.E. of at least 18; NPCs are level 2D4, on the Cyber-Knight experience table. Cloudweaver requires I.Q., M.A. and M.E. of at least 18 (both layered on the average Golden One''s base stats). Slave market value 3D4x10,000 credits; valued as warriors, guards and gladiators.',
+       description = 'Tall, golden-skinned, four-armed, bird-like humanoids from another dimension devoted to peace, art, and cloud magic; some serve as warriors, others as scholars. New West printed 133-136, which this row followed until ~232, gave alignment as 80% principled or scrupulous, 10% aberrant and 10% other, a life span of approximately 150-200 years (some to 350, most elders 160 and up) with no maturity or birth figures, a habitat most numerous in the Southwest, three Earth languages where D-Bees names American and two of choice, Hand to Hand: Basic as an optional pick for a race not trained for combat that shies from violence, no Perception bonus, no vulnerabilities, no experience level, no slave value and no allies or enemies; for the Sky-Knight it gave +2D6 M.D.C. where D-Bees prints +2D6+6, no Perception or plain disarm bonus, its own R.C.C. skill list (Lore: one of choice +10%, Land Navigation +20%, Sing and Whistle and Art +15%, no Holistic Medicine or Identify Fruit and Plants) where D-Bees gives the average list, and no experience level. D-Bees does not reprint the Cloudweaver and refers to New West for it, so the Cloudweaver figures here are New West printed 135-136.',
+       source_book = 'Rifts World Book 30: D-Bees of North America p.127-130'
+ WHERE slug = 'lyn-srial'
+   AND source_book = 'Rifts World Book 14: New West p.133-136';
+
 -- Read the result back. A guard that matched nothing must fail here, not pass.
 
-SELECT 'the two New West rows cite D-Bees' AS assertion, count(*) AS got, 2 AS want
+SELECT 'the three New West rows cite D-Bees' AS assertion, count(*) AS got, 3 AS want
   FROM creatures
  WHERE (slug = 'cactus-people' AND source_book = 'Rifts World Book 30: D-Bees of North America p.41-44')
-    OR (slug = 'fennodi' AND source_book = 'Rifts World Book 30: D-Bees of North America p.83-85');
+    OR (slug = 'fennodi' AND source_book = 'Rifts World Book 30: D-Bees of North America p.83-85')
+    OR (slug = 'lyn-srial' AND source_book = 'Rifts World Book 30: D-Bees of North America p.127-130');
+
+SELECT 'the Lyn-Srial figures landed' AS assertion, count(*) AS got, 1 AS want
+  FROM creatures
+ WHERE slug = 'lyn-srial'
+   AND combat = '{"attacks":3}'
+   AND horror_factor = 9
+   AND life_span LIKE '1D6x10+135 years%'
+   AND instr(alignment, 'Principled (50%)') > 0
+   AND instr(skills_note, '+2D6+6 MDC') > 0
+   AND instr(bonuses_note, '+1 on Perception Rolls') > 0
+   AND allies LIKE 'Cyber-Knights;%'
+   AND instr(description, 'which this row followed until ~232') > 0;
 
 SELECT 'the Cactus People figures landed' AS assertion, count(*) AS got, 1 AS want
   FROM creatures
@@ -87,4 +123,4 @@ SELECT 'the Fennodi figures landed' AS assertion, count(*) AS got, 1 AS want
    AND life_span LIKE '4D6+55 years%'
    AND instr(description, 'which this row followed until ~232') > 0;
 
-INSERT INTO data_script_runs (filename) VALUES ('~232-book-ingest-audit-f143-four-books.sql');
+INSERT INTO data_script_runs (filename) VALUES ('~232-book-ingest-audit-f143-new-west.sql');
