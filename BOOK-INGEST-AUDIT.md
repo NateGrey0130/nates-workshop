@@ -6461,6 +6461,25 @@ D-Bees does not restate. Both books print the Yhabbayar as an R.C.C., so
 cited Psyscape on production (`q.mjs --remote`, 2026-10-17). Posture as
 proposed: data only. The finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-18 (branch `pal/data/book-ingest-audit-f143-psy-zenith`).**
+Psyscape part 7 of 7: `~231-book-ingest-audit-f143-psy-zenith.sql` moves the
+`creatures` row `zenith-moon-warper` to D-Bees printed 221-223, the class's
+own range, with Psyscape's replaced figures (printed 138-140) kept in its
+`description`. M.D.C., Hit Points, S.D.C., I.S.P., P.P.E., Horror Factor 10,
+size, weight and seven of the eight attribute dice are the same in both books
+and do not move. M.A. becomes 1D6+20, `ar` takes D-Bees' Natural A.R. 10 for
+S.D.C. environments, and the life span becomes 5D6+70 years. The row takes
+D-Bees' alignment split, facial and skin-tone shapechanging, Appraise Goods,
+related and secondary skill schedules, spell and power costs, allies,
+enemies, equipment, money, experience table and slave value. D-Bees restates
+three of Psyscape's lines without an item, so the row drops it: the 98% on
+the native-tongue line, "(objects)" after Teleport: Lesser, and Free Quebec's
+extermination list from the enemies line. Psyscape's save vs psionics stays,
+since D-Bees prints none. Both books print the Zenith Moon Warper as an
+R.C.C., so `F141` does not arise; the row has no `stat_attacks`. Before the
+apply it cited Psyscape on production (`q.mjs --remote`, 2026-10-18). Posture
+as proposed: data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
