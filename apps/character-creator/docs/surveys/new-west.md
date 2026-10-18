@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see *The book is fully imported* below. (2026-09-24)
 
-**Rows citing this book:** classes 21, gear 104, vehicles 17, skills 5, spells 58, notable_npcs 25, creatures 28
+**Rows citing this book:** classes 21, gear 104, vehicles 17, skills 5, spells 58, notable_npcs 25, creatures 25
 
 Slug `new-west`. Cached 2026-08-28 from `Rifts- World Book 14 New West.pdf`,
 226 PDF pages, **text layer** (median ~3,784 chars/page — no OCR, no cost).
