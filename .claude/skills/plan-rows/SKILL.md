@@ -28,11 +28,16 @@ C:\Users\natha\.claude\projects\C--Users-natha-Projects-nates-apps\memory\plans\
 ```
 
 A row id is a number in run order; a row split from row 9 is `9a`, `9b`.
-**`state.md` is not a history**; the pull requests are. Its first line is
+**`state.md` is not a history**; the pull requests are. It is six lines at
+most, each one sentence, replaced whole by whoever writes it; nothing is
+ever appended to it. Its first line is
 `NEXT: row <id> (brief: rows/<id>.md), then row <id>.`, or
 `BLOCKED: <one sentence>`, or `READY: <the open pull request>` above a
-`NEXT:` line, or `DONE`. Then at most the last row with its pull
-request and outcome, and `In flight:`.
+`NEXT:` line, or `DONE`. Then the last row with its pull request and
+outcome in one line, and `In flight:`. Nothing else: a ruling a later row
+needs goes on that row's brief as a `From row` line (below), and every
+other fact lives in a pull request. Measured 2026-10-18: the file had grown
+to 16KB in five lines, and every worker and every driver re-read it.
 
 ## Before a brief is written
 
@@ -81,7 +86,8 @@ late. Anything else goes in the pull request's *What this left*.
 ## Driving the chain
 
 The driver is a session. It reads `state.md` and each worker's report, never a
-brief or the code. One row is one spawn, in the foreground:
+brief or the code: a driver that opens a brief or a book cache is planning in
+the context every later row pays for. One row is one spawn, in the foreground:
 
 ```
 Agent  subagent_type: pr-worker   isolation: worktree   run_in_background: false
@@ -119,15 +125,52 @@ Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. Without that word from Nate
 in this session, or if any of the three is refused or fails, stop.
 
+**A row that outgrew its brief is split by an agent, not by the driver.** Two
+reports mean that: a `BLOCKED` that stopped at the worker's cap with work
+pushed (it names a branch and a commit), and one that says the row is larger
+than its brief describes. Neither is a stop, and neither is a reason to open
+the brief. The driver spawns one agent, in the foreground:
+
+```
+Agent  subagent_type: general-purpose   run_in_background: false
+prompt:
+  Load the `plan-rows` skill. Split one row of a plan into rows a worker can finish.
+  State file: <absolute path to state.md>
+  Row brief:  <absolute path to rows\<id>.md>
+  Report:     <the worker's report, pasted whole>
+  Return only the new row ids in run order, and the first one's branch and commit to resume from.
+```
+
+That agent does the planning: it reads the brief and the pushed work, checks
+each claim it carries forward against the code that day, writes the new
+briefs (`9a`, `9b`, … under *What a brief carries*; the first resumes the
+pushed branch and commit, the last takes the old row's `Next row:`, the old
+brief stays), and returns the ids and the resume point and nothing else.
+The driver then replaces `state.md` whole with a `NEXT:` line naming the
+first new row, and spawns it. Nate is not asked (his ruling, 2026-10-15: a
+row that stops at the cap with its work pushed is resumed without asking
+him; the option he did not take was a stop at every cap). The split is told
+to him in the closing message. One thing is the driver's before that spawn:
+a capped worker's worktree still has the branch checked out, so remove it
+through the `worktree` skill and delete the local branch, or the resuming
+worker's `checkout -b` finds the name taken.
+
 **Stop and tell Nate at the first of these** (his ruling, 2026-10-12: no row
 cap):
 
-- the report or the state file says `BLOCKED`. Do not retry or fix the row.
+- the report or the state file says `BLOCKED`, other than the cap case above.
+  Do not retry or fix the row.
 - the state file says `DONE`, or the next row has no brief.
 - the report and the state file disagree, other than a `READY` report over a
   state file that still names that row.
-- the driver's own budget warning.
+- the driver's own budget warning at 200k (`session-budget: context is …,
+  past 200k`). The post-merge line (`session-budget: a PR just merged and
+  this session holds …`) is not a stop: it fires from 100k, which a driver
+  reaches before its first row, so every driver that obeyed it handed off
+  after one merge and the next session paid a fresh start and needed Nate's
+  merge word again (five sessions, 2026-10-18). Continue to the 200k warning.
 
-The closing message carries each row's outcome and pull request, every line a
-worker marked as Nate's, and `node scripts/deploy-sweep.mjs`. Worktrees a run
-leaves behind are removed through the `worktree` skill's scan.
+The closing message carries each row's outcome and pull request, every row
+that was split and into what, every line a worker marked as Nate's, and
+`node scripts/deploy-sweep.mjs`. Worktrees a run leaves behind are removed
+through the `worktree` skill's scan.
