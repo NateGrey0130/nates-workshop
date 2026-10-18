@@ -166,6 +166,11 @@ function sessionBudgetChecks() {
       merge.code === 0 && /a PR just merged/.test(said(merge)), JSON.stringify(merge));
     const other = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: big, tool_input: { command: 'git status' } });
     check('any other Bash call in the same session says nothing', other.code === 0 && other.out === '', JSON.stringify(other));
+    // A plan-driver session starts near 95k, so a boundary at 100k ended every
+    // driver after one merge (measured 2026-10-18). The boundary is 150k.
+    const driver = transcript('driver.jsonl', [assistantLine(120_000, now)]);
+    const earlyMerge = runHook(BUDGET, { hook_event_name: 'PostToolUse', transcript_path: driver, tool_input: { command: 'gh pr merge 12 --merge --delete-branch' } });
+    check('a merge in a 120k session names no boundary', earlyMerge.code === 0 && earlyMerge.out === '', JSON.stringify(earlyMerge));
 
     const unreadable = [
       runHook(BUDGET, 'not json'),

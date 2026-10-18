@@ -3,7 +3,14 @@
 //   UserPromptSubmit      before each prompt: how large the context already is,
 //                         and whether the prompt cache has gone cold.
 //   PostToolUse on Bash   after a `gh pr merge`: a PR boundary is the cheap
-//                         place to end a session, so say so there.
+//                         place to end a session, so say so there - but only
+//                         from WARN_AT (150k) up, not from IDLE_CTX (100k).
+//                         Measured 2026-10-18 over five plan-driver sessions:
+//                         a driver starts near 95k of fixed session start and
+//                         adds 3k-9k of tool output per row, so at 100k every
+//                         driver reached the line before its first merge,
+//                         obeyed it, and handed off after one PR, each hand-off
+//                         costing a fresh 95k start and a typed merge word.
 //
 // Why it exists. One week's usage, read 2026-10-11: 1,268 of 1,489 main-thread
 // calls ran with more than 200k tokens already in context (24.2% of the week,
@@ -33,10 +40,13 @@
 
 import { openSync, readSync, fstatSync, closeSync } from 'node:fs';
 
-export const WARN_AT = 150_000;      // approaching the line the dashboard counts from
+// WARN_AT is also the merge boundary. It was IDLE_CTX until 2026-10-18, and a
+// plan-driver session starts near 95k, so every driver crossed 100k before its
+// first merge and ended after one PR (header above).
+export const WARN_AT = 150_000;      // approaching the line the dashboard counts from; the merge boundary
 export const OVER_AT = 200_000;      // the line itself
 export const IDLE_MS = 55 * 60_000;  // the cache lives one hour; warn inside it
-export const IDLE_CTX = 100_000;     // below this a cold resume is not worth a line
+export const IDLE_CTX = 100_000;     // below this a cold resume is not worth a line (not the merge boundary)
 const TAIL_BYTES = 4 * 1024 * 1024;
 
 // The last main-thread assistant line that carries usage: { ctx, at } or null.
@@ -85,7 +95,7 @@ export function warningFor(envelope, now = Date.now()) {
   const { ctx, at } = call;
 
   if (isMerge) {
-    if (ctx < IDLE_CTX) return null;
+    if (ctx < WARN_AT) return null;
     return `session-budget: a PR just merged and this session holds ${k(ctx)} of context. `
       + 'This is the boundary to stop at: finish the post-merge checks, then tell Nate '
       + 'the next piece of work belongs in a fresh session.';
