@@ -107,9 +107,10 @@ Four more things that are refused or cost you the row:
 ## Wait for green, and stop there
 
 **You do not merge, and you do not try.** `gh pr merge` in any form, `--auto`
-included, is refused for you as "Merge Without Review": no word of Nate's is
-in your context. The driver merges. With every suite `ship-pr` lists green
-locally and the pull request open, one call:
+included, is the driver's: it merges a `READY` row with three calls that a
+worker's merge would skip (`plan-rows` → *Driving the chain*). Whether the
+command would be refused for you is beside the point. With every suite
+`ship-pr` lists green locally and the pull request open, one call:
 
 `gh pr checks <n> --watch --repo NateGrey0130/nates-workshop`, with the Bash
 timeout at its ten-minute maximum. This one call is the whole wait. **Green

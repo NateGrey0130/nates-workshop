@@ -85,9 +85,11 @@ late. Anything else goes in the pull request's *What this left*.
 
 ## Driving the chain
 
-The driver is a session. It reads `state.md` and each worker's report, never a
-brief or the code: a driver that opens a brief or a book cache is planning in
-the context every later row pays for. One row is one spawn, in the foreground:
+The driver is a session, started from one line that Nate types or the driver
+before it sends (below): `Load plan-rows and drive <plan> from its state.md.`
+It reads `state.md` and each worker's report, never a brief or the code: a
+driver that opens a brief or a book cache is planning in the context every
+later row pays for. One row is one spawn, in the foreground:
 
 ```
 Agent  subagent_type: pr-worker   isolation: worktree   run_in_background: false
@@ -107,10 +109,14 @@ it, because the classifier refused that write on three of five rows on
 the worker to try). Its report carries the lines instead, and the driver
 writes them.
 
-**`READY` is a row the driver merges**, when Nate has said in this session to
-merge green rows (his ruling, 2026-10-12; the option he did not take was the
-driver merging every row). The worker's own merge was refused because no word
-of his is in a worker's context. Three calls, each on its own:
+**`READY` is a row the driver merges.** No word from Nate is needed in the
+session: `.claude/settings.json` allows `Bash(gh pr merge *)` (PR #1853,
+2026-10-18; the option he did not take was typing the word once per driver
+session), and the `ship-pr` order still binds the call: every required check
+green, D1 applied first, the merge as its own command. The driver merges a
+`READY` row and nothing else (his ruling, 2026-10-12; the option he did not
+take was the driver merging every row). The worker still never merges: one
+that did would skip the three calls below. Three calls, each on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
    `--delete-branch`: the worker's worktree still holds the branch.
@@ -122,8 +128,8 @@ of his is in a worker's context. Three calls, each on its own:
    (row 32a, 2026-10-14).
 
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
-the row as `MERGED` by the driver, and spawn the next row. Without that word from Nate
-in this session, or if any of the three is refused or fails, stop.
+the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
+request for Nate's word: if any of the three is refused or fails, stop.
 
 **A row that outgrew its brief is split by an agent, not by the driver.** Two
 reports mean that: a `BLOCKED` that stopped at the worker's cap with work
@@ -155,20 +161,33 @@ a capped worker's worktree still has the branch checked out, so remove it
 through the `worktree` skill and delete the local branch, or the resuming
 worker's `checkout -b` finds the name taken.
 
-**Stop and tell Nate at the first of these** (his ruling, 2026-10-12: no row
-cap):
+**The driver stops for Nate only at the first of these** (his ruling,
+2026-10-12: no row cap), and at nothing else:
 
 - the report or the state file says `BLOCKED`, other than the cap case above.
   Do not retry or fix the row.
 - the state file says `DONE`, or the next row has no brief.
 - the report and the state file disagree, other than a `READY` report over a
   state file that still names that row.
-- the driver's own budget warning at 200k (`session-budget: context is …,
-  past 200k`). The post-merge line (`session-budget: a PR just merged and
-  this session holds …`) is not a stop: it fires from 100k, which a driver
-  reaches before its first row, so every driver that obeyed it handed off
-  after one merge and the next session paid a fresh start and needed Nate's
-  merge word again (five sessions, 2026-10-18). Continue to the 200k warning.
+
+A ruling a brief lacks is not a stop: ask it with `AskUserQuestion`, and the
+row waits for the answer. The driver does not guess a ruling, and does not
+end the session over one.
+
+**The driver's own budget warning is a hand-off the driver makes itself, not
+a stop.** It arrives as the UserPromptSubmit line (`session-budget: context
+is …, past 200k`), or as the post-merge line (`session-budget: a PR just
+merged and this session holds …`) once the figure it prints is 150k or more.
+Then the driver finishes the row in hand, replaces `state.md` whole, and
+starts the next driver with `mcp__ccd_session__start_session` (load it with
+`ToolSearch` if it is deferred): initiation `user_asked`, context `fresh`, no
+worktree, and the one-line prompt above with the plan's name in it. Nate is
+not asked, and the new driver needs no word from him: the allow rule above
+is what lets it merge. Then the old driver's closing message. Below 150k the
+post-merge line is nothing: it fires from 100k today (PR #1854 raises it to
+150k), which a driver reaches before its first row, and five drivers that
+obeyed it there each handed off after one merge and the next paid a fresh
+start (2026-10-18). Continue to the 200k line.
 
 The closing message carries each row's outcome and pull request, every row
 that was split and into what, every line a worker marked as Nate's, and
