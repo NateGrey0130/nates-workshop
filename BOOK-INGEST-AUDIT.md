@@ -6443,6 +6443,24 @@ and are unchanged. Before the apply it cited Psyscape on production
 (`q.mjs --remote`, 2026-10-17). Posture as proposed: data only. The finding
 stays open for the rest of the 34.
 
+**Partly taken, 2026-10-17 (branch `pal/data/book-ingest-audit-f143-psy-yhabbayar`).**
+Psyscape part 6 of 7: `~230-book-ingest-audit-f143-psy-yhabbayar.sql` moves
+the `creatures` row `yhabbayar` to D-Bees printed 217-220, the class's own
+range, with Psyscape's replaced figures (printed 130-135) kept in its
+`description`. M.D.C., Hit Points, S.D.C., I.S.P., P.P.E., size and seven of
+the eight attribute dice are the same in both books and do not move. P.B.
+becomes 2D6+2, weight 40.5 to 54 kg, the life span 6D6x10+140 years, and
+`combat` gains +1 Perception. The row takes D-Bees' +2 vs illusions, its
+attacks and damage lines, its skill list and secondary-skill schedule, one
+Physical and one Super-Psionic power a level, allies, enemies, equipment,
+money, experience and slave value. D-Bees' New Spells paragraph restates
+Psyscape's without the sentence on Techno-Wizard devices and scrolls, so
+`magic` drops it. The habitat keeps Psyscape's figure of some 10,000, which
+D-Bees does not restate. Both books print the Yhabbayar as an R.C.C., so
+`F141` does not arise; the row has no `stat_attacks`. Before the apply it
+cited Psyscape on production (`q.mjs --remote`, 2026-10-17). Posture as
+proposed: data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
