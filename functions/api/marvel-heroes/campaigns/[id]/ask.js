@@ -11,11 +11,12 @@
 //
 // The call goes through the shared Claude client, and its usage row is written
 // by that client - the one file groups.json lets write another group's table
-// (claude_usage). This file names no binding but DB_MARVEL.
+// (claude_usage). The same client counts those rows for the daily call limit.
+// This file names no binding but DB_MARVEL.
 
 import { requireMember, json, readJson } from '../../_lib/campaigns.js';
 import { toMatchQuery, parseAliases } from '../../_lib/notes.js';
-import { validateClaudeRequest, callAnthropic, recordUsage } from '../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../_lib/claude-client.js';
 
 const MODEL = 'claude-sonnet-5';
 const MAX_ENTRIES = 25;
@@ -37,6 +38,9 @@ export async function onRequestPost({ request, env, params }) {
   if (!question) return json({ error: 'question is required' }, 400);
   if (question.length > 1000) return json({ error: 'question is too long' }, 400);
   // After the question is checked, so a bad request says what is wrong with it.
+  // Over the day's limit is a 429, not the 502 an upstream failure becomes.
+  const limited = await refuseOverCallLimit(env, g.email);
+  if (limited) return limited;
   if (!env.ANTHROPIC_API_KEY) return json({ error: 'API key not configured on server' }, 500);
   const db = env.DB_MARVEL;
   const match = toMatchQuery(question, { join: 'OR' });

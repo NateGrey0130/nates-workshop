@@ -1246,6 +1246,59 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
     JSON.stringify({ upload: up.status, image: image2.status }));
 }
 
+// ── 100 Claude calls per person in any 24 hours ─────────────────────────────
+// A G.M. who has made 100 calls in the last day asks the proxy, the campaign
+// Ask and the NPC sweep. Each must answer 429 with a sentence saying when the
+// next call frees up and a Retry-After header: the two campaign routes turn
+// any upstream failure into a 502, and that is what a limit there must not
+// look like. None of these requests could reach the model if the limit were
+// broken - the proxy's model is not allowed, and the campaign has no notes to
+// ask about or sweep - so a regression here costs nothing on a machine that
+// holds a real key. The admin, no-email, window and fail-open cases are run
+// against the function itself in the smoke suite.
+{
+  const who = 'call-limit-gm@example.com';
+  const made = await apiAs(who, 'POST', '/campaigns', { name: 'Over The Call Limit', system: cls.system, open: true });
+  const cid = Number(made.body.campaign?.id);
+  const seed = join(state, 'call-limit-seed.sql');
+  writeFileSync(seed, `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 100)
+INSERT INTO claude_usage (email, endpoint, status, created_at)
+SELECT '${who}', 'proxy', 200, datetime('now', '-' || i || ' minutes') FROM n;
+`, 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', seed]);
+  check('a G.M. with a campaign, and 100 Claude calls in the last day',
+    made.status === 201 && seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout));
+
+  const origin = BASE.slice(0, BASE.indexOf('/api/'));
+  const post = async (url, body) => {
+    const res = await fetch(url, { method: 'POST', body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', 'Cf-Access-Authenticated-User-Email': who } });
+    const text = await res.text();
+    let payload = null;
+    try { payload = JSON.parse(text); } catch { payload = { raw: text.slice(0, 200) }; }
+    return { status: res.status, retry: Number(res.headers.get('Retry-After')), body: payload };
+  };
+  const [proxy, ask, sweep] = await Promise.all([
+    post(`${origin}/api/claude`, { model: 'not-an-allowed-model', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+    post(`${BASE}/campaigns/${cid}/ask`, { question: 'What happened last time?' }),
+    post(`${BASE}/campaigns/${cid}/npcs/sweep`, {}),
+  ]);
+  const refused = (r) => r.status === 429 && r.retry > 0 && r.retry <= 86400
+    && /frees up at \d{4}-\d\d-\d\d \d\d:\d\d UTC/.test(r.body?.error || '');
+  check('the proxy refuses the 101st call with a 429 saying when the next frees up, and Retry-After',
+    refused(proxy), JSON.stringify(proxy));
+  check('so does the campaign Ask, as a 429 and not a 502', refused(ask), JSON.stringify(ask));
+  check('and the NPC sweep', refused(sweep), JSON.stringify(sweep));
+
+  const countFile = join(state, 'call-limit-count.sql');
+  writeFileSync(countFile, `SELECT count(*) AS n FROM claude_usage WHERE email = '${who}';`, 'utf8');
+  const counted = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--file', countFile]);
+  let rows = null;
+  try { rows = JSON.parse(counted.stdout)[0].results[0].n; } catch { /* reported below */ }
+  check('and no refusal wrote a usage row, or refusals would hold the window shut', rows === 100,
+    String(rows ?? (counted.stdout || counted.stderr || '').slice(-200)));
+}
+
 // ── the join gate ───────────────────────────────────────────────────────────
 // Joining a campaign IS creating a character in it — membership is "owns a
 // character here" — so campaigns.open is the door onto its notes, stash and
