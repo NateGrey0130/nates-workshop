@@ -1344,6 +1344,72 @@ if (itemId) {
     JSON.stringify(events.map((e) => e.kind)));
 }
 
+// ── a gear merge repoints the party stash as well as the sheet ──────────────
+// Two tables reference gear(slug): character_items and campaign_items. The
+// merge used to repoint only the first, and campaign_items' reference has no
+// ON DELETE clause, so one stash row on the losing slug - held or soft-removed -
+// made the merge's DELETE fail and the whole batch come back a 500 with nothing
+// moved. Driven through the real duplicates route on two fixture gear rows that
+// exist only in this scratch database, with a sheet item, a held stash row and
+// a removed stash row all on the loser; every fixture row is removed at the end.
+// Until this block no check had run a gear merge at all.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((x) => x.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    return [];
+  };
+  const KEEP = 'regression-merge-keep', LOSE = 'regression-merge-lose';
+  const fixture = join(state, 'gear-merge-fixture.sql');
+  writeFileSync(fixture, [
+    `INSERT INTO gear (slug, name, system, category, source_book) VALUES ('${KEEP}', 'Regression Merge Keep', 'rifts', 'gear', 'fixture'), ('${LOSE}', 'Regression Merge Lose', 'rifts', 'gear', 'fixture')`,
+    `INSERT INTO character_items (character_id, gear_slug, qty) VALUES (${Number(charId)}, '${LOSE}', 1)`,
+    `INSERT INTO campaign_items (campaign_id, gear_slug, qty, added_by) VALUES (${Number(campaignId)}, '${LOSE}', 2, 'regression@localhost')`,
+    `INSERT INTO campaign_items (campaign_id, gear_slug, qty, added_by, removed_at, removed_by) VALUES (${Number(campaignId)}, '${LOSE}', 1, 'regression@localhost', datetime('now'), 'regression@localhost')`,
+  ].join(';\n') + ';\n', 'utf8');
+  const seeded = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', fixture]);
+  check('the gear merge fixture is seeded', seeded.status === 0, cleanErr(seeded.stderr || seeded.stdout || ''));
+
+  const ids = Object.fromEntries(q(`SELECT slug, id FROM gear WHERE slug IN ('${KEEP}', '${LOSE}')`)
+    .map((r) => [r.slug, r.id]));
+  const merged = await api('POST', '/catalogs/duplicates?catalog=gear', { keep_id: ids[KEEP], remove_id: ids[LOSE] });
+  check('a gear merge succeeds with the losing row on a sheet and in the stash, held and removed',
+    merged.status === 200 && merged.body.ok === true, JSON.stringify(merged.body).slice(0, 300));
+  const repointed = Object.fromEntries((merged.body.repointed || []).map((r) => [r.table, r.rows]));
+  check('and its response names both tables it repointed',
+    repointed.character_items === 1 && repointed.campaign_items === 2, JSON.stringify(merged.body.repointed));
+
+  const sheet = q(`SELECT gear_slug FROM character_items WHERE gear_slug IN ('${KEEP}', '${LOSE}')`);
+  check('the sheet item now carries the keeper\'s slug',
+    sheet.length === 1 && sheet[0].gear_slug === KEEP, JSON.stringify(sheet));
+  const stash = q(`SELECT gear_slug, removed_at IS NOT NULL AS removed FROM campaign_items WHERE gear_slug IN ('${KEEP}', '${LOSE}') ORDER BY removed`);
+  check('and both stash rows do, the soft-removed one included',
+    JSON.stringify(stash.map((r) => [r.gear_slug, r.removed])) === JSON.stringify([[KEEP, 0], [KEEP, 1]]),
+    JSON.stringify(stash));
+  const left = q(`SELECT slug FROM gear WHERE slug IN ('${KEEP}', '${LOSE}')`).map((r) => r.slug);
+  check('the losing gear row is gone and the keeper stays', JSON.stringify(left) === JSON.stringify([KEEP]),
+    JSON.stringify(left));
+  const redirects = q(`SELECT from_key, to_id, reason FROM catalog_redirects WHERE catalog = 'gear' AND to_id = ${Number(ids[KEEP]) || 0} ORDER BY from_key`);
+  check('and the old slug and name redirect to the keeper',
+    JSON.stringify(redirects.map((r) => [r.from_key, r.reason]))
+      === JSON.stringify([['Regression Merge Lose', 'merge'], [LOSE, 'merge']]),
+    JSON.stringify(redirects));
+
+  const cleanup = join(state, 'gear-merge-cleanup.sql');
+  writeFileSync(cleanup, [
+    `DELETE FROM character_items WHERE gear_slug IN ('${KEEP}', '${LOSE}')`,
+    `DELETE FROM campaign_items WHERE gear_slug IN ('${KEEP}', '${LOSE}')`,
+    `DELETE FROM catalog_redirects WHERE catalog = 'gear' AND from_key IN ('${LOSE}', 'Regression Merge Lose')`,
+    `DELETE FROM gear WHERE slug IN ('${KEEP}', '${LOSE}')`,
+  ].join(';\n') + ';\n', 'utf8');
+  const cleaned = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--file', cleanup]);
+  check('the gear merge fixture is removed again', cleaned.status === 0, cleanErr(cleaned.stderr || ''));
+}
+
 // ── owning a vessel ─────────────────────────────────────────────────────────
 // Migration 052. Vessels have been a catalog since 048 and readable since the
 // codex learned the section, but nothing could OWN one: character_items.gear_slug
