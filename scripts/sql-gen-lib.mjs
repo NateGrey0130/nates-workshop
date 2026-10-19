@@ -67,7 +67,10 @@ function columnFrom(line, table) {
       + 'continued across lines? Teach scripts/sql-gen-lib.mjs to read it first');
   }
   const check = /CHECK \(\s*\w+ IN \(([^)]*)\)\s*\)/i.exec(line);
-  if (/CHECK\b/i.test(line) && !check) {
+  // The other shape a column CHECK takes here: `CHECK (slug <> '')`, gear's
+  // since migration 093. Read as "refuse an empty string" (columnValue).
+  const nonEmpty = new RegExp(`CHECK \\(\\s*${name}\\s*<>\\s*''\\s*\\)`, 'i').test(line);
+  if (/CHECK\b/i.test(line) && !check && !nonEmpty) {
     throw new Error(`${table}.${name}: a CHECK this reader cannot parse - teach scripts/sql-gen-lib.mjs first`);
   }
   const def = /DEFAULT\s+('(?:[^']|'')*'|\S+)/i.exec(line);
@@ -82,6 +85,7 @@ function columnFrom(line, table) {
     primary: /PRIMARY KEY/i.test(line),
     default: def ? def[1] : null,
     allowed: check ? check[1].split(',').map((s) => s.trim().replace(/^'|'$/g, '')) : null,
+    nonEmpty,
   };
 }
 
@@ -178,6 +182,7 @@ export function columnValue(col, v, where, refusals) {
   if (col.allowed && !col.allowed.includes(s)) {
     refusals.push(`${where}: ${col.name} "${s}" is not one of ${col.allowed.join(', ')}`);
   }
+  if (col.nonEmpty && s === '') refusals.push(`${where}: ${col.name} is empty, which its CHECK refuses`);
   return s;
 }
 

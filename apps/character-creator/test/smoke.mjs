@@ -967,6 +967,42 @@ section('One list of attributes and one of games');
   check('and every one accepts every game on it', narrow.length === 0, `${narrow.length} of ${checks.length} are narrower`);
 }
 
+// ---------- gear refuses an empty slug ----------
+// `047` made gear.slug NOT NULL and left '' legal, which satisfies NOT NULL and
+// UNIQUE and joins to nothing; `093` is the CHECK. Its seed line is guarded on
+// the CHECK's TEXT in sqlite_master, because pragma_table_info cannot see a
+// CHECK, so that text has to be the same three times: in schema.sql's CREATE
+// (what a fresh database stores), in 093's CREATE (what a migrated one
+// stores), and in the guard that reads either. A CHECK reworded in one place
+// leaves the guard reading nothing, and the database reports itself
+// un-migrated with the constraint in place.
+section('gear refuses an empty slug');
+{
+  const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8').replace(/\r\n/g, '\n');
+  const migration = readFileSync(join(repoRoot, 'db', 'migrations', '093-gear-slug-check.sql'), 'utf8')
+    .replace(/\r\n/g, '\n');
+  const noComments = (s) => s.replace(/--[^\n]*/g, '');
+  const slugLine = (sql, table) => {
+    const body = noComments(sql).match(new RegExp(`CREATE TABLE (?:IF NOT EXISTS )?${table}\\s*\\(([\\s\\S]*?)\\n\\);`))?.[1] || '';
+    return body.split('\n').find((l) => /^\s*slug\s+TEXT\b/.test(l))?.trim() || '';
+  };
+  const fresh = slugLine(schema, 'gear');
+  const migrated = slugLine(migration, 'gear_new');
+  const CHECK_TEXT = "CHECK (slug <> '')";
+  check("schema.sql's gear slug carries CHECK (slug <> '')", fresh.includes(CHECK_TEXT), fresh || 'no slug line in gear');
+  check("and 093's rebuilt gear carries the same text", migrated.includes(CHECK_TEXT), migrated || 'no slug line in gear_new');
+
+  // The guard, with SQL's doubled quote undone, must be the CHECK's own text.
+  const at = schema.indexOf("'093-gear-slug-check.sql'");
+  const seed = at < 0 ? '' : schema.slice(at, schema.indexOf(';', at));
+  const guardText = (seed.match(/instr\(sql, '((?:[^']|'')*)'\)/)?.[1] || '').replace(/''/g, "'");
+  check("093's seed line is guarded on the CHECK's text in gear's sqlite_master row",
+    /sqlite_master WHERE type = 'table' AND name = 'gear'/.test(seed) && guardText === CHECK_TEXT,
+    `guard reads ${JSON.stringify(guardText)} in: ${seed.slice(0, 300)}`);
+  check('and the seed line comes after the gear CREATE it reads',
+    at > schema.indexOf('CREATE TABLE IF NOT EXISTS gear ('), `seed at ${at}`);
+}
+
 // ---------- The five pools ----------
 // The bare key list was typed five times: the bonus validator, the creature
 // roller, the ability-pick endpoint, the campaign's rest rates and the sheet's
@@ -5612,6 +5648,19 @@ section('The row generators refuse what they cannot write (BOOK-INGEST-AUDIT F12
     check('a constraint continued onto a second line is refused, not read as a column',
       /cannot read the column line|cannot parse/.test(
         fake("  name TEXT,\n  kind TEXT CHECK (kind IN ('a',\n    'b'))").error || ''));
+    // gear.slug's CHECK (migration 093) is the second shape it reads, and a
+    // row it would write with an empty slug is refused rather than handed to
+    // a CHECK that fails the whole data script.
+    const slugged = fake("  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  slug TEXT NOT NULL UNIQUE CHECK (slug <> ''),\n  name TEXT");
+    const emptyRefusals = [];
+    if (slugged.cols) lib.columnValue(slugged.cols[1], '', 'row 1', emptyRefusals);
+    const fineRefusals = [];
+    if (slugged.cols) lib.columnValue(slugged.cols[1], 'a-slug', 'row 1', fineRefusals);
+    check("a non-empty CHECK is read, and an empty value for it is refused",
+      slugged.cols?.[1]?.nonEmpty === true && /is empty, which its CHECK refuses/.test(emptyRefusals.join())
+      && fineRefusals.length === 0, slugged.error || JSON.stringify(emptyRefusals));
+    check('and a CHECK of any other shape is still refused',
+      /cannot parse/.test(fake("  name TEXT,\n  n INTEGER CHECK (n > 0)").error || ''));
     const schemaSql = readFileSync(join(appDir, '..', '..', 'db', 'schema.sql'), 'utf8').replace(/\r\n/g, '\n');
     const declared = (t) => new RegExp(`CREATE TABLE IF NOT EXISTS ${t} \\(([\\s\\S]*?)\\n\\);`).exec(schemaSql)[1]
       .split('\n').map((l) => l.replace(/--.*$/, '').trim()).filter((l) => /^[a-z_]+\s+(TEXT|INTEGER|REAL)\b/.test(l)).length;
