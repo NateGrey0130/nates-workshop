@@ -29,11 +29,12 @@ export async function onRequestGet({ request, env, params }) {
     `SELECT characters.*, campaigns.name AS campaign_name, campaigns.system AS campaign_system,
             campaigns.gm_email AS campaign_gm, campaigns.rest_rates AS campaign_rest_rates
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-     WHERE characters.id = ? AND characters.deleted_at IS NULL`
+     WHERE characters.id = ? AND characters.deleted_at IS NULL AND campaigns.deleted_at IS NULL`
   ).bind(params.id).first();
   // An NPC is its G.M.'s alone, and to anyone else it is simply not there -
   // see isHiddenNpc. This read does not go through characterAccess, so it asks.
-  // A deleted character answers exactly as a missing one does (migration 091).
+  // A deleted character answers exactly as a missing one does (migration 091),
+  // and so does a character in a deleted campaign (migration 092).
   if (!character || isHiddenNpc(character.kind, character.campaign_gm, email)) {
     return json({ error: 'Character not found' }, 404);
   }

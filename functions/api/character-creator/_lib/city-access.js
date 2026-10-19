@@ -14,6 +14,9 @@ export async function cityAccess(env, id, email) {
   const row = await env.DB.prepare('SELECT * FROM cities WHERE id = ?').bind(id).first();
   if (!row) return { found: false };
   const camp = await campaignAccess(env, row.campaign_id, email);
+  // A city in a deleted campaign (migration 092) is hidden with it, shown map
+  // or not, and comes back when the campaign does.
+  if (!camp.found) return { found: false };
   return { found: true, row, isGm: camp.isGm, shown: !!row.show_map };
 }
 

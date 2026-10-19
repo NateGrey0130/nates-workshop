@@ -83,6 +83,8 @@ async function entryGuard(request, env, entryId) {
   if (!entry) return { res: json({ error: 'Entry not found' }, 404) };
 
   const access = await campaignAccess(env, entry.campaign_id, email);
+  // An entry in a deleted campaign (migration 092) is hidden with it.
+  if (!access.found) return { res: json({ error: 'Entry not found' }, 404) };
   if (entry.author_email !== email && !access.isGm) {
     return { res: json({ error: 'Only the author or the campaign GM can change an entry' }, 403) };
   }

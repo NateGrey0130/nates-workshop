@@ -9,8 +9,10 @@
 //       it, so whether creation is open to the site is the GM's call and
 //       nobody else's. See POST /characters for where it is enforced.
 // DELETE /api/character-creator/campaigns/:id — the GM who created it, and
-//       only while no one else has a character in it. Everything else the
-//       campaign owns goes with it by ON DELETE CASCADE.
+//       only while no one else has a character in it. It marks the campaign
+//       deleted (migration 092) and removes nothing: the row, everything that
+//       hangs off it and its pictures in R2 all stay, and every read skips it
+//       and the characters in it. Restoring is clearing `deleted_at` by SQL.
 
 import { getUserEmail, unauthorized, json, forbidden, campaignAccess, readJson, requireCampaign, tooLong, TEXT_MAX } from '../_lib/auth.js';
 import { POOL_KEYS as REST_POOLS } from '../../../../apps/character-creator/js/dice.js';
@@ -18,7 +20,9 @@ import { POOL_KEYS as REST_POOLS } from '../../../../apps/character-creator/js/d
 export async function onRequestGet({ request, env, params }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
-  const campaign = await env.DB.prepare('SELECT * FROM campaigns WHERE id = ?').bind(params.id).first();
+  // A deleted campaign (migration 092) answers as a missing one does.
+  const campaign = await env.DB.prepare('SELECT * FROM campaigns WHERE id = ? AND deleted_at IS NULL')
+    .bind(params.id).first();
   if (!campaign) return json({ error: 'Campaign not found' }, 404);
   const is_gm = email === campaign.gm_email;
   if (!is_gm) delete campaign.gm_notes;
@@ -74,13 +78,14 @@ export async function onRequestDelete({ request, env, params }) {
   if (guard.res) return guard.res;
   const gmEmail = guard.access.campaign.gm_email;
 
-  // OTHER PLAYERS' CHARACTERS ARE NOT THE GM'S TO DELETE. characters cascades
-  // from campaigns, so deleting the row would take every player's sheet with
-  // it. Refuse, and name what is in the way, so the table can sort it out -
-  // each player deletes their own character, and then the GM can go ahead.
-  // The GM's own characters and statted NPCs are theirs, and go.
+  // OTHER PLAYERS' CHARACTERS ARE NOT THE GM'S TO DELETE. Deleting the
+  // campaign hides every character in it, so it would take every player's
+  // sheet out of reach. Refuse, and name what is in the way, so the table can
+  // sort it out - each player deletes their own character, and then the GM
+  // can go ahead. The GM's own characters and statted NPCs are theirs, and
+  // are hidden with the campaign.
   // A character its player has deleted (migration 091) is in nobody's way: it
-  // is soft-deleted, so the cascade below takes the row, and it is not named.
+  // is already deleted, and it is not named.
   const { results: others } = await env.DB.prepare(
     'SELECT name, player_email FROM characters WHERE campaign_id = ? AND player_email <> ? AND deleted_at IS NULL ORDER BY name'
   ).bind(params.id, gmEmail).all();
@@ -91,20 +96,13 @@ export async function onRequestDelete({ request, env, params }) {
     }, 409);
   }
 
-  // THE BUCKET FIRST, and by hand, as entries/[entryId].js does: no cascade
-  // reaches R2, and an object nobody can name is invisible and billed every
-  // month. A failed object delete is swallowed so the campaign is never left
-  // half-deleted.
-  const { results: keys } = await env.DB.prepare(
-    `SELECT r2_key AS k FROM campaign_images WHERE campaign_id = ?
-     UNION ALL SELECT portrait_key FROM npcs WHERE campaign_id = ? AND portrait_key IS NOT NULL`
-  ).bind(params.id, params.id).all();
-  if (env.MEDIA) {
-    for (const row of keys ?? []) {
-      try { await env.MEDIA.delete(row.k); } catch { /* see above */ }
-    }
-  }
-  await env.DB.prepare('DELETE FROM campaigns WHERE id = ? AND gm_email = ?')
-    .bind(params.id, gmEmail).run();
-  return json({ ok: true, objects_deleted: (keys ?? []).length });
+  // MARKED, NOT REMOVED (migration 092). The row stays, and so does
+  // everything that cascaded from it - characters, pages, notes, stash,
+  // dossiers - and this route deletes nothing from the bucket: a deleted
+  // campaign keeps its pictures, and a restore by SQL brings it back whole
+  // (Nate, 2026-10-12). Nothing purges it later either.
+  await env.DB.prepare(
+    "UPDATE campaigns SET deleted_at = datetime('now') WHERE id = ? AND gm_email = ? AND deleted_at IS NULL"
+  ).bind(params.id, gmEmail).run();
+  return json({ ok: true });
 }

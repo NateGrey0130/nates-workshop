@@ -19,7 +19,9 @@ const id = (v) => (/^[1-9]\d{0,11}$/.test(String(v ?? '')) ? Number(v) : null);
 export async function campaign(env, campaignId) {
   const cid = id(campaignId);
   if (!cid) return null;
-  const row = await env.DB.prepare('SELECT id, name, gm_email FROM campaigns WHERE id = ?').bind(cid).first();
+  // A deleted campaign (migration 092) has no table, as a missing one has none.
+  const row = await env.DB.prepare('SELECT id, name, gm_email FROM campaigns WHERE id = ? AND deleted_at IS NULL')
+    .bind(cid).first();
   return row ? { id: row.id, name: row.name, gmEmail: row.gm_email } : null;
 }
 
@@ -36,7 +38,10 @@ export async function character(env, characterId) {
   const cid = id(characterId);
   if (!cid) return null;
   const row = await env.DB.prepare(
-    `SELECT id, name, campaign_id, player_email FROM characters WHERE id = ? AND kind = 'pc' AND deleted_at IS NULL`
+    // Nor is a character in a deleted campaign (migration 092), which is hidden
+    // with it: the sheet's rolls reach this read without passing campaign().
+    `SELECT id, name, campaign_id, player_email FROM characters WHERE id = ? AND kind = 'pc' AND deleted_at IS NULL
+        AND campaign_id IN (SELECT id FROM campaigns WHERE deleted_at IS NULL)`
   ).bind(cid).first();
   return row ? { id: row.id, name: row.name, campaignId: row.campaign_id, email: row.player_email } : null;
 }

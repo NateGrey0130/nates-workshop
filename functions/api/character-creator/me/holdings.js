@@ -34,15 +34,18 @@ export async function onRequestGet({ request, env }) {
   // its own text rather than through OWN, so the smoke sweep that every read
   // of `characters` says `deleted_at` can see it in all three.
   const OWN = "c.player_email = ? AND c.kind = 'pc'";
+  // Nor does a character in a deleted campaign (migration 092), which is
+  // hidden with it and comes back with it.
+  const LIVE = 'c.campaign_id IN (SELECT id FROM campaigns WHERE deleted_at IS NULL)';
   const [chars, items, vessels] = await env.DB.batch([
     env.DB.prepare(`SELECT c.id, c.name, c.class_id, c.occ_class_id, c.skills, c.powers
-                      FROM characters c WHERE ${OWN} AND c.deleted_at IS NULL ORDER BY c.name`).bind(email),
+                      FROM characters c WHERE ${OWN} AND c.deleted_at IS NULL AND ${LIVE} ORDER BY c.name`).bind(email),
     env.DB.prepare(`SELECT DISTINCT ci.character_id, ci.gear_slug FROM character_items ci
                       JOIN characters c ON c.id = ci.character_id AND c.deleted_at IS NULL
-                     WHERE ${OWN} AND ci.removed_at IS NULL AND ci.gear_slug IS NOT NULL`).bind(email),
+                     WHERE ${OWN} AND ${LIVE} AND ci.removed_at IS NULL AND ci.gear_slug IS NOT NULL`).bind(email),
     env.DB.prepare(`SELECT DISTINCT cv.character_id, cv.vehicle_slug FROM character_vehicles cv
                       JOIN characters c ON c.id = cv.character_id AND c.deleted_at IS NULL
-                     WHERE ${OWN} AND cv.removed_at IS NULL AND cv.vehicle_slug IS NOT NULL`).bind(email),
+                     WHERE ${OWN} AND ${LIVE} AND cv.removed_at IS NULL AND cv.vehicle_slug IS NOT NULL`).bind(email),
   ]);
 
   const holds = {};
