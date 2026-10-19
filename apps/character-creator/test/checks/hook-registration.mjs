@@ -226,11 +226,20 @@ function sessionBudgetChecks() {
     check('a 210k run is told to return what it has, and the call still runs',
       warned.code === 0 && /holds 210k of context, past 200k/.test(said(warned))
         && /name exactly what is left/.test(said(warned)), JSON.stringify(warned));
+    // pr-worker.md tells a worker whose work is committed and green to push, open
+    // the PR and run its one CI watch past this warning. The warning says so too,
+    // so the two cannot contradict each other again; it still says stop first.
+    check('and the warning names its one exception: committed and green, only the PR and its CI watch left',
+      /Stop here: /.test(said(warned))
+        && /One exception: if your work is committed and every suite is green locally, and only a pull request and its CI watch are left, finish those\./.test(said(warned)),
+      JSON.stringify(warned));
 
     const runaway = session('runaway', 90_000, { a1: 260_000 });
     const refused = call(runaway, 'a1');
     check('a 260k run has its tool call refused, exit 2',
       refused.code === 2 && /agent-run-cap: this run holds 260k of context and the cap is 250k/.test(refused.err), JSON.stringify(refused));
+    check('and the refusal carries no exception: from the cap there is nothing left to finish',
+      !/exception/i.test(refused.err), JSON.stringify(refused));
     const handback = call(runaway, 'a1', 'SubagentHandback');
     check('and its hand-back is let through, or the run could never end',
       handback.code === 0 && handback.out === '' && handback.err === '', JSON.stringify(handback));

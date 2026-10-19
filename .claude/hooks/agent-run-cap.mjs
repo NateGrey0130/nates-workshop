@@ -1,7 +1,9 @@
 // agent-run-cap.mjs - PreToolUse hook on every tool, acting only on a subagent's calls.
 //
 // Caps how large ONE subagent run may grow. At WARN_AT of context the run is
-// told to return what it has and name what is left, and the call still runs.
+// told to return what it has and name what is left, and the call still runs;
+// the one exception it names is a run left with only a pull request and its CI
+// watch, which finishes those.
 // At REFUSE_AT every further tool call is refused (exit 2) except the hand-back.
 // A main-thread call passes untouched: session-budget.mjs speaks for that.
 //
@@ -73,10 +75,16 @@ export function verdictFor(envelope) {
         + `This call is refused and so is every further one. Return now: ${what}.`,
     };
   }
+  // The warning's one exception is .claude/agents/pr-worker.md's: a worker with
+  // nothing left but the pull request and its CI watch finishes those, because a
+  // stop there costs a split agent and a fresh worker (rows 48a and 48b,
+  // 2026-10-19). The refusal carries no exception: past REFUSE_AT nothing runs.
   return {
     refuse: false,
     text: `agent-run-cap: this run holds ${k(ctx)} of context, past ${k(WARN_AT)}, and every further call re-reads it. `
-      + `Stop here: ${what}. Tool calls are refused from ${k(REFUSE_AT)}.`,
+      + `Stop here: ${what}. `
+      + 'One exception: if your work is committed and every suite is green locally, and only a pull request and its CI watch are left, finish those. '
+      + `Tool calls are refused from ${k(REFUSE_AT)}.`,
   };
 }
 
