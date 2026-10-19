@@ -1532,12 +1532,20 @@ export function combineClasses(rcc, occ) {
   const programs = occ.skills?.skill_programs ?? rcc.skills?.skill_programs;
   if (programs) out.skills.skill_programs = programs;
   // The Hand to Hand price list (js/hand-to-hand.js) is bought out of RELATED
-  // skills, and related skills are the occupation's - so the occupation's list
-  // governs, and the race's is the fallback for a racial class played alone in
-  // the second slot. Carried by name for the reason the two above are: this
-  // rebuilds `skills` from the race, and nearly every block is on an O.C.C.
-  const h2h = occ.skills?.hand_to_hand ?? rcc.skills?.hand_to_hand;
+  // skills, and related skills are the occupation's - so in a pairing the
+  // occupation's list is the only one, and an occupation that states none
+  // leaves the composed class with none: any style, one pick. The race's list
+  // prices the race's own Hand to Hand, which is an R.C.C. skill, so it is
+  // REMOVED here rather than left standing from the race spread above (Nate,
+  // 2026-10-12, for every race). It used to be the fallback, and a paired
+  // Larhold Cyber-Knight was priced off the Barbarian's "Expert can be
+  // changed" over a Martial Arts the Cyber-Knight grants, when the race's
+  // own Expert no longer carries over (BOOK-INGEST-AUDIT.md F114's aside). A
+  // racial class played with no occupation keeps its own list, because this
+  // function hands it back untouched on its first line and never gets here.
+  const h2h = occ.skills?.hand_to_hand;
   if (h2h) out.skills.hand_to_hand = h2h;
+  else delete out.skills.hand_to_hand;
   // An MOS belongs to the OCCUPATION - it is a military specialty, and the
   // Coalition classes that have one are all O.C.C.s. Carried across the merge
   // because this rebuilds `skills` wholesale, and without it a Technical

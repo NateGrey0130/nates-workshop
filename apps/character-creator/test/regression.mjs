@@ -5623,6 +5623,46 @@ console.log('\n' + '[7/7] Checks that only a database can make');
   check('and a Larhold ley line walker carries War Bison at the key\'s 50',
     !!ll && ll.find((s) => s.name === 'Riding: War Bison')?.base === 50,
     ll ? String(ll.find((s) => s.name === 'Riding: War Bison')?.base) : 'class missing');
+
+  // The Hand to Hand price list in a pairing is the occupation's, and NONE
+  // where the occupation states none (Nate, 2026-10-12, for every race; the
+  // aside under F114). It was the race's as a fallback, so a Larhold
+  // Cyber-Knight bought styles off the Barbarian's list over the Martial Arts
+  // the Cyber-Knight grants.
+  const ck = byId.get('cyber-knight');
+  const lck = larhold && ck ? combineClasses(larhold, ck) : null;
+  check('a Larhold Cyber-Knight carries no Hand to Hand price list, where the Cyber-Knight states none',
+    !!lck && larhold.skills?.hand_to_hand != null && ck.skills?.hand_to_hand == null
+    && lck.skills.hand_to_hand === undefined,
+    lck ? JSON.stringify(lck.skills.hand_to_hand) : 'class missing');
+  const h2hKept = [];
+  const h2hLent = [];
+  let statesOne = 0;
+  let statesNone = 0;
+  for (const r of races) {
+    if (r.skills?.hand_to_hand == null) continue;
+    for (const occ of occs) {
+      if (occ.system !== r.system || occ.supersedes_race === true) continue;
+      if (!occAllowedForRace(r, occ).allowed || !raceAllowedForOcc(occ, r).allowed) continue;
+      const got = combineClasses(r, occ).skills.hand_to_hand;
+      if (occ.skills?.hand_to_hand != null) {
+        statesOne++;
+        if (JSON.stringify(got) !== JSON.stringify(occ.skills.hand_to_hand)) h2hKept.push(`${r.id}+${occ.id}`);
+      } else {
+        statesNone++;
+        if (got !== undefined) h2hLent.push(`${r.id}+${occ.id}`);
+      }
+    }
+  }
+  check('and in every legal pairing of a race with a price list, an occupation that states one keeps exactly its own',
+    statesOne > 0 && h2hKept.length === 0, `${statesOne} pairings; ` + h2hKept.slice(0, 5).join('; '));
+  check('and one that states none is lent nothing by the race',
+    statesNone > 0 && h2hLent.length === 0, `${statesNone} pairings; ` + h2hLent.slice(0, 5).join('; '));
+  const alone = larhold ? composeClass({ rcc: larhold }) : null;
+  check('while a Larhold played with no occupation keeps its own price list',
+    !!alone && alone.skills?.hand_to_hand != null
+    && JSON.stringify(alone.skills.hand_to_hand) === JSON.stringify(larhold.skills.hand_to_hand),
+    alone ? JSON.stringify(alone.skills?.hand_to_hand) : 'class missing');
 }
 
 // ---------- a race that takes fewer of a paired occupation's picks ----------

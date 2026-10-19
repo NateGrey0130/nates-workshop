@@ -189,6 +189,7 @@ pool bases as before — none of them knows a character can have two classes.
 | the race's fixed skills, when it declares `pairing_skills` | only the ones it lists (see below) |
 | related & secondary allowances | the **occupation** |
 | those two counts, when the race declares `pairing_counts` | the occupation's, cut by the race's factor or cap (see below) |
+| the Hand to Hand price list (`skills.hand_to_hand`) | the **occupation's** alone, and **none** when it states none (see below) |
 | experience ladder (`xp_table`) | the **occupation's** when it states one; otherwise the race's, and the race's always where it states `keeps_xp_table` (see below) |
 | bonuses | **both** — flat numbers summed, dice collected (see below) |
 | psionics | **both** - merged, the stronger tier winning the tier (see below) |
@@ -369,6 +370,21 @@ skills* race adding its list. The Larhold keeps its native `Language: Larhold`
 as well, which the sentence does not name, on Nate's word: without it 188 of
 the 189 legal Larhold pairings lost the language. Regression pins the carrier
 by name.
+
+### The Hand to Hand price is the occupation's, or none
+
+A class's `skills.hand_to_hand` says what it charges, in related-skill picks,
+to change or buy a fighting style (`js/hand-to-hand.js`). Related picks are the
+occupation's, so in a pairing the occupation's list is the only one. **An
+occupation that states none leaves the composed class with none**, which means
+any style at one pick, exactly as for that occupation played by a human. The
+race's list is dropped, not kept as a fallback: it prices the race's own Hand
+to Hand skill, which is an R.C.C. skill a pairing may not even carry (Nate,
+2026-10-12, for every race). A racial class played with no occupation keeps
+its own list. Until 2026-10-19 the race's list was the fallback, and a Larhold
+Cyber-Knight was priced off the Barbarian's (Martial Arts or Assassin, one pick
+each) beside the Martial Arts the Cyber-Knight grants (BOOK-INGEST-AUDIT.md
+F114's aside). Regression pins all three cases.
 
 ### A race may take fewer of the occupation's picks
 

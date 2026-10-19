@@ -483,9 +483,15 @@ check('and nothing else is', !isHandToHand('Boxing') && !isHandToHand('W.P. Swor
   check('an occupation\'s price list survives being combined with a race',
     handToHandCost(combineClasses(race, job), 'Hand to Hand: Expert') === 1,
     JSON.stringify(combineClasses(race, job)?.skills));
-  check('and a race\'s own is the fallback',
-    handToHandCost(combineClasses({ ...race, skills: { ...race.skills, hand_to_hand: { costs: { expert: 3 } } } },
-      { ...job, skills: { occ_skills: [] } }), 'Hand to Hand: Expert') === 3);
+  // A race's own is NOT the fallback (Nate, 2026-10-12, the aside under
+  // BOOK-INGEST-AUDIT.md F114): an occupation that states none leaves the pair
+  // with none, and only a race played with no occupation keeps its list.
+  const pricedRace = { ...race, skills: { ...race.skills, hand_to_hand: { costs: { expert: 3 } } } };
+  check('and a race\'s own is not lent to an occupation that states none',
+    handToHandCost(combineClasses(pricedRace, { ...job, skills: { occ_skills: [] } }), 'Hand to Hand: Expert') === undefined,
+    JSON.stringify(combineClasses(pricedRace, { ...job, skills: { occ_skills: [] } })?.skills?.hand_to_hand));
+  check('while a race played with no occupation keeps its own',
+    handToHandCost(combineClasses(pricedRace, null), 'Hand to Hand: Expert') === 3);
 
   // The wizard and the sheet.
   check('the Skills step charges the price against the related allowance',
