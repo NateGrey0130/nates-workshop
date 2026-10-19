@@ -2,7 +2,7 @@
 
 **Status:** `backfilled` — rows arrived before surveys existed; this file was written for the INGESTION-AUDIT F24 re-provenance, not as an import plan. (2026-09-24)
 
-**Rows citing this book:** classes 1, gear 212, vehicles 25, spells 457
+**Rows citing this book:** classes 1, gear 216, vehicles 25, spells 457
 
 Slug `bom`. Cached 2026-08-28 from `526065744-Rifts-Book-of-Magic.pdf`,
 360 PDF pages, **text layer**, no OCR.

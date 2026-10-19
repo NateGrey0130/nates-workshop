@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the whole plan shipped: tattoos, 22 classes, gear, vehicles, creatures and notable NPCs. What was left out on purpose is under Extraction plan. (2026-09-26)
 
-**Rows citing this book:** classes 21, gear 100, vehicles 20, spells 32, notable_npcs 7, creatures 34
+**Rows citing this book:** classes 21, gear 99, vehicles 20, spells 32, notable_npcs 7, creatures 34
 
 Slug `atlantis`. Cached 2026-09-26 from `Rifts- World Book 2 Atlantis.pdf`
 (handed over from `Downloads`, filed beside the others in
