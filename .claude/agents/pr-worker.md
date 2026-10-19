@@ -49,7 +49,14 @@ You were started in a worktree of your own, and three things follow.
 - **It has no local D1.** Before the first suite runs:
   `mkdir -p .wrangler/state`, then
   `cp -r /c/Users/natha/Projects/nates-apps/.wrangler/state/. .wrangler/state/`.
-  The suites need `WORKSHOP_OCR_CACHE='C:\Users\natha\Projects\nates-apps\.cache\books'`.
+  **The copy can be behind `main`'s migrations.** Then
+  `node scripts/d1-apply.mjs --check --local db/migrations/*.sql`, and every
+  file it does not mark `ALREADY RECORDED` goes to the copy in one call, in its
+  order: `node scripts/d1-apply.mjs --local <those files>`. A Marvel or tools
+  row does the same with `--db marvel db/migrations/marvel/*.sql` or
+  `--db tools db/migrations/tools/*.sql`. Skipped, smoke's *Migration state*
+  fails and the creator's dev server answers 500 (five of seven rows,
+  2026-10-19). The suites need `WORKSHOP_OCR_CACHE='C:\Users\natha\Projects\nates-apps\.cache\books'`.
 - **`preview_start` serves the main checkout, not this tree**, whichever entry
   you name, and a click there writes to the main checkout's database. Start the
   server from Bash here, in the background, on a port nothing holds:
@@ -120,6 +127,17 @@ ends the row as `READY`, at once.** Do not run `pr-landed.mjs --wait` or
 A red required check is `BLOCKED` unless your own diff caused it, in which case
 fix it, push and run the watch again.
 
+**Past 200k, finish if only the pull request is left.** The run-cap hook's
+warning at 200k says stop, but it refuses calls only from 250k
+(`.claude/hooks/agent-run-cap.mjs`). If it comes with your work committed and
+every suite `ship-pr` lists green locally, push, open the pull request (or use
+the one already open) and run the one watch anyway: a stop there cost rows 48a
+and 48b a split agent and a fresh worker each (2026-10-19). If the watch cannot
+finish, refused at 250k or still pending at its timeout, stop `BLOCKED` with
+the pull request open, say `#<n> is open; only the CI watch is left.` and put
+the `NEXT:` line from your brief's `Next row:` in the report: the driver
+finishes that row itself. More than that left is `BLOCKED` at the warning.
+
 ## Three outcomes
 
 - **`READY`**: the watch ended green and the pull request is open with nothing
@@ -131,8 +149,9 @@ fix it, push and run the watch again.
 - **`BLOCKED`**, with the pull request left open if one exists: a check is red
   for a reason outside your diff, the fix needs a decision the brief does not
   record, the change is larger than the brief describes, or your context is
-  past 200k with the row unfinished. If you stop with work committed, push it
-  first and name the branch and commit, so the next worker can resume it.
+  past 200k with more left than the pull request and its watch (above). If
+  you stop with work committed, push it first and name the branch and commit,
+  so the next worker can resume it.
 
 ## The state file
 
