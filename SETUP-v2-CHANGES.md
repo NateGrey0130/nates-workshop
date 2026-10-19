@@ -193,6 +193,10 @@ Reviewed and correct as written — no change:
   missing, and the dashboard holds only the two encrypted secrets.
 - **Who is spending the Anthropic key** — the endpoint list matches, and the
   "spend visibility, not a cap" posture matches `recordUsage`.
+  **2026-10-19: no longer a match.** PR #1868 (merged 2026-10-19) made it a
+  cap: `refuseOverCallLimit` in `functions/api/_lib/claude-client.js` refuses
+  a person's call once the rows `recordUsage` writes reach `CALL_LIMIT`, 100
+  in any 24 hours.
 - **Pick 3 Cut 5 → the login wall (both halves)** — verified:
   `PUBLIC_PREFIXES = ['/api/pick3cut5/']` in `functions/api/_middleware.js`,
   and `smoke.mjs` does follow stylesheets to derive `/shared/fonts` rather than
@@ -215,12 +219,23 @@ Reviewed and correct as written — no change:
    *fonts only*, allowing `https://fonts.googleapis.com/`. That check passes
    vacuously on an empty list, so it is not evidence of a contradiction — but is
    the allowance dead code to remove, or does something still reach the CDN?
+   **2026-10-19: answered, dead code, and removed.** `apps/pick3cut5/AUDIT.md`
+   `F11` (with `F12`) replaced the allowance with one assertion that the page
+   fetches nothing from a third party, by tag or by `url()`:
+   `apps/pick3cut5/test/smoke.mjs:87-98` explains it, line 157 holds it.
 2. **Scope of change 1.** Should the deploy-verification step be stated in
    SETUP.md as the rule, or does it belong in `ship-pr` (the skill that owns the
    merge loop) with SETUP.md only describing the failure? Written above as the
    former.
+   **2026-10-19: answered 2026-09-02 the second way**, by PR #502: SETUP.md
+   describes the failure and `ship-pr` carries the verification in its merge
+   loop (this file's header, *Change 1 split across two files*).
 3. **`docs/`.** Is `pages-to-workers-migration.md` still the accepted answer
    after the 2026-08-30 outage? Its cost/benefit argument predates a real,
    Pages-specific failure that a Worker would not have had. Not a SETUP.md
    change — but if that recommendation flips, SETUP.md's whole deploy model
    changes with it.
+   **2026-10-19: answered 2026-09-02, the recommendation kept.**
+   `docs/pages-to-workers-migration.md` gained *Revisited 2026-09-01* (its
+   line 137), which keeps Pages and dates its cost/benefit as predating the
+   outage (this file's header).
