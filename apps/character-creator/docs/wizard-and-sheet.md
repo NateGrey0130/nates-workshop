@@ -296,6 +296,17 @@ One draft per person, enforced by `UNIQUE (owner_email)` — saving is an upsert
 Discarding is idempotent, and a draft that cannot be parsed is reported as
 absent rather than partially restored.
 
+**The browser's Back button walks the steps you visited.** Each visit to a step
+is a history entry (`stepHistory()`, called at the end of `render()`), so Back
+returns to the step you came from and Forward to the one you went on to: from
+step 2, a rail jump to step 5 and then Back shows step 2. Back on the first step
+of a build leaves the page, through the unload warning above. The step lives in
+`history.state` only, so the address never changes, and Back and Forward change
+nothing but which step is shown: a class or system changed since stays changed,
+and an entry naming a step the build can no longer reach shows the nearest one
+below it that it can. A new build, a resumed draft and a reload each start their
+own history.
+
 ---
 
 ## An occupation's pick groups are offered on the Occupation step
