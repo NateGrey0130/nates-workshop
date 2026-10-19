@@ -4795,8 +4795,15 @@ function startingSpellHtml() {
   const misfiled = misfiledSpellNote(start.misfiled);
   // A granted list is headed by its tradition when every spell in it shares
   // one - a Diabolist's are "Ward Symbols", not "Spells" (BOOK-INGEST-AUDIT F123).
-  const grantedTitle = esc(SpellTraditions.listTitle(start.granted.map((n) =>
-    SpellTraditions.slugOf(S.spellCatalog.find((x) => x.name === n)))));
+  const grantedSlugs = start.granted.map((n) =>
+    SpellTraditions.slugOf(S.spellCatalog.find((x) => x.name === n)));
+  const grantedTitle = esc(SpellTraditions.listTitle(grantedSlugs));
+  // The sentence under that heading counts in the same tradition's noun, so a
+  // Diabolist's are "symbols"; a list mixing traditions stays "spells", the
+  // rule listTitle keeps for its heading.
+  const grantedKinds = new Set(grantedSlugs.map((s) => String(s || '').toLowerCase()));
+  const grantedNoun = grantedKinds.size === 1
+    ? SpellTraditions.noun([...grantedKinds][0], start.granted.length) : 'spells';
 
   if (!groups.length) {
     const head = (tail) => `<h3>Spells${tail}
@@ -4804,7 +4811,7 @@ function startingSpellHtml() {
     if (start.granted.length) {
       return `<h3>${grantedTitle} &mdash; ${start.granted.length} known
         <span class="muted small">(${esc(magic.type)} magic &middot; granted by the class)</span></h3>
-        <p class="muted small">The book names this class's spells outright, so there is nothing to
+        <p class="muted small">The book names this class's ${grantedNoun} outright, so there is nothing to
           choose here. All ${start.granted.length} are already on the character.</p>`
         + granted + misfiled;
     }

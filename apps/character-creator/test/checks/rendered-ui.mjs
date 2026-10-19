@@ -2403,6 +2403,9 @@ export async function run() {
     const ward = powers(['Alarm: Silent', 'Condition: Agony']);
     check('Powers: a list of ward symbols is headed by its tradition, not "Spells"',
       heads(ward)[0] === 'Ward Symbols — 2 known (ward magic · granted by the class)', JSON.stringify(heads(ward)));
+    const says = (html) => text(html.match(/<p class="muted small">([\s\S]*?)<\/p>/)?.[1] ?? '');
+    check('and the sentence under it counts them as symbols, not spells',
+      says(ward).startsWith('The book names this class\'s symbols outright'), says(ward));
     check('and its rows carry no "level 0", only the cost',
       !/level 0/.test(ward) && /Alarm: Silent <span class="muted small">&mdash; 1 P.P.E.<\/span>/.test(ward), text(ward));
     check('and beside picks it says the same, "granted by the class"',
@@ -2413,9 +2416,15 @@ export async function run() {
     check('an ordinary caster\'s granted list reads exactly as it did',
       heads(plain)[0] === 'Spells — 1 known (spell magic · granted by the class)'
         && /Globe of Daylight <span class="muted small">&mdash; level 1, 2 P.P.E.<\/span>/.test(plain), text(plain));
+    check('and its sentence still says "spells"',
+      says(powers(['Globe of Daylight', 'Ritual: Old Rite'])).startsWith('The book names this class\'s spells outright'),
+      says(powers(['Globe of Daylight', 'Ritual: Old Rite'])));
     check('and a list mixing traditions stays "Spells"',
       !!heads(powers(['Globe of Daylight', 'Air: Cloud of Steam']))[0]?.startsWith('Spells — 2 known'),
       JSON.stringify(heads(powers(['Globe of Daylight', 'Air: Cloud of Steam']))));
+    check('and so does its sentence, wards in the mix included',
+      says(powers(['Alarm: Silent', 'Globe of Daylight'])).startsWith('The book names this class\'s spells outright'),
+      says(powers(['Alarm: Silent', 'Globe of Daylight'])));
 
     const review = (names) => (wizard ? wizard.reviewSpellSections(names.map((n) => {
       const sp = catalog.find((x) => x.name === n);
