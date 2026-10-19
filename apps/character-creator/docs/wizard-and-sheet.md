@@ -168,7 +168,10 @@ however villainous it usually is.
 `Picker.wire()` restores the caret after re-render. Both pages rebuild by
 replacing `innerHTML`, so an input loses focus and drops the caret to the end
 mid-keystroke; the catalog editor had already hand-rolled the fix, and this puts
-it in one place.
+it in one place. On the wizard, `render()` now does this for every control on
+the step, filter boxes included (`holdFocus` and `restoreFocus` in `app.js`), and
+`Picker.wire()` leaves alone a box that already has focus back; the sheet still
+relies on `Picker.wire()`.
 
 **Level-up picks are now held in state, not read off the DOM at submit time.**
 They were collected from the `<select>`s only when you pressed the button, so
