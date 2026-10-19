@@ -1604,7 +1604,7 @@ async function loadLog() {
 }
 
 // The recap walks events since the last 'recap' marker, counts what happened,
-// posts a journal entry, and drops the next marker. The entry is plain text a
+// drops the next marker, and posts a journal entry. The entry is plain text a
 // human can edit in the journal afterwards - the log summarises, it does not
 // narrate.
 async function endSession() {
@@ -1643,16 +1643,28 @@ async function endSession() {
   if (rolls) lines.push(`Rolls: ${rolls}${passes + fails ? ` (${passes} passed, ${fails} failed of those with a target)` : ''}.`);
 
   if (!confirm(`Post this recap to the journal?\n\n${lines.join('\n')}`)) return;
+  // THE MARKER GOES FIRST (Nate, 2026-10-19). It used to follow the entry, so a
+  // marker that failed left the entry standing and the next End session counted
+  // the same events again: two identical recaps. Now a failed marker writes
+  // nothing, and a retry is clean. The cost is the other order's failure: an
+  // entry that fails after a good marker loses that one recap, and says so.
+  try {
+    await postEvent('recap', 'session recap posted');
+  } catch (err) { alert('Recap failed: ' + err.message); return; }
+  // A marked recap is the end of the fight as well as the session, whether or
+  // not the entry below reaches the journal.
+  resetMelee(C.meleeAttacks);
   try {
     await api('journal', jsonReq('POST', {
       character_id: Number(id), title: 'Session recap',
       session_date: new Date().toISOString().slice(0, 10), body: lines.join('\n'),
     }));
-    await postEvent('recap', 'session recap posted');
-    recordRoll('recap', 'Session recap', { note: 'posted to the journal' });
-    // A posted recap is the end of the fight as well as the session.
-    resetMelee(C.meleeAttacks);
-  } catch (err) { alert('Recap failed: ' + err.message); }
+  } catch (err) {
+    recordRoll('recap', 'Session recap', { note: 'not saved to the journal' });
+    alert('The session was ended, but its recap was not saved to the journal: ' + err.message);
+    return;
+  }
+  recordRoll('recap', 'Session recap', { note: 'posted to the journal' });
 }
 
 

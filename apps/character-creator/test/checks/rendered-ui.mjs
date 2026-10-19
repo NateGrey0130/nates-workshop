@@ -1912,6 +1912,66 @@ export async function run() {
       }
     }
 
+    // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-19). The
+    // recap posted its journal entry first and the 'recap' marker second. When
+    // the marker failed, the entry stood, the sheet said "Recap failed", and the
+    // next End session counted the same events again: two identical entries.
+    // The marker goes first now (Nate, 2026-10-19). A failed marker writes no
+    // entry; a failed entry after a good marker loses that one recap and says so.
+    //
+    // RUN, not matched: endSession over a stand-in server that can refuse the
+    // marker or the entry.
+    {
+      const lf = sheet.replace(/\r\n/g, '\n');
+      const from = lf.indexOf('\nasync function endSession() {'), to = lf.indexOf('\n}\n', from);
+      const src = from < 0 || to < 0 ? null : lf.slice(from, to + 2);
+      check('the end-of-session recap can be located', !!src, 'endSession moved - nothing below would run');
+      if (src) {
+        const run = async ({ refuse = null, server }) => {
+          const alerts = [];
+          const api = async (path, req) => {
+            if (!req) return { events: server.events.map((e) => ({ ...e })) };
+            if (path === 'journal') {
+              if (refuse === 'journal') throw new Error('refused');
+              server.journal.push(req.body.body);
+              return { id: server.journal.length };
+            }
+            throw new Error('unexpected request ' + path);
+          };
+          const postEvent = async (kind, note) => {
+            if (refuse === kind) throw new Error('refused');
+            server.events.push({ id: server.events.length + 1, kind, payload: { note } });
+            return { ok: true };
+          };
+          const endSession = new Function('api', 'postEvent', 'jsonReq', 'id', 'C', 'confirm', 'alert',
+            'recordRoll', 'resetMelee', src + '; return endSession;')(
+            api, postEvent, (method, body) => ({ method, body }), '7', { meleeAttacks: 2 },
+            () => true, (m) => alerts.push(m), () => {}, () => {});
+          await endSession();
+          return alerts;
+        };
+        const twoRolls = () => ({ journal: [], events: [
+          { id: 1, kind: 'roll', payload: { note: 'Strike 14' } },
+          { id: 2, kind: 'roll', payload: { note: 'Parry 9' } },
+        ] });
+
+        const s = twoRolls();
+        const first = await run({ refuse: 'recap', server: s });
+        await run({ server: s });
+        check('a recap whose marker failed, then retried, is in the journal once',
+          s.journal.length === 1 && first.length === 1
+          && s.events.filter((e) => e.kind === 'recap').length === 1,
+          JSON.stringify({ entries: s.journal.length, alerts: first, events: s.events.map((e) => e.kind) }));
+
+        const t = twoRolls();
+        const lost = await run({ refuse: 'journal', server: t });
+        check('a failed journal post after a good marker says the recap was not saved',
+          t.journal.length === 0 && t.events.some((e) => e.kind === 'recap')
+          && lost.length === 1 && /not saved/i.test(lost[0]),
+          JSON.stringify({ entries: t.journal.length, alerts: lost, events: t.events.map((e) => e.kind) }));
+      }
+    }
+
     // An undone event is part of the account, not removed from it.
     check('an undone event is shown struck through rather than hidden',
       /log-row\.undone \.log-note \{ text-decoration: line-through/.test(css)
