@@ -512,6 +512,8 @@ function resumeDraft() {
   S.rcc = S.classes.find((c) => c.id === d.class_id) || null;
   recompose();
   S.savedId = null;
+  // A restored draft starts a history of its own at the step it opens on.
+  freshHistory();
   render();
 }
 
@@ -631,6 +633,7 @@ async function newCharacter() {
   S.home = false;
   S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
   resetBuild();
+  freshHistory();
   render();
 }
 
@@ -648,6 +651,7 @@ function startWithClass(c) {
   S.classOffer = null; S.classMissing = null;
   S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
   resetBuild();
+  freshHistory();
   pickSystem(c.system);
   pickClass(c.id);
 }
@@ -812,8 +816,107 @@ function render() {
   [renderSystem, renderRace, renderAttributes, renderOccupation, renderMorphus, renderSkills,
    renderEquipment, renderPowers, renderAdvancement, renderDetails, renderReview][S.step]();
   wirePickers();
+  stepHistory();
   queueDraftSave();
 }
+
+// ---------- the browser's Back button ----------
+// Each visit to a step is an entry in the browser's history, so Back returns to
+// the step visited before this one and Forward to the one after - visits, not
+// step numbers: from step 2, a rail jump to step 5 and then Back shows step 2.
+// Until this, the wizard kept no history at all and Back left the page from
+// whichever step it was on.
+//
+// Recorded here, at the end of render(), rather than in each caller, because
+// a step is entered from more places than goStep(): pickSystem() moves to the
+// Race step itself, and render() skips a step that does not apply. Every
+// render compares the step it drew with the entry the browser is on and pushes
+// only when they differ, so a re-render on the same step (a roll, a pick, a
+// keystroke in a filter) adds nothing.
+//
+// The step is kept in `history.state` and nowhere else - the address never
+// gains a hash or a query (Nate, 2026-10-12). `wizBuild` says which build the
+// entry belongs to: the first render of a new build, a resumed draft or a build
+// started after a reload REPLACES the entry it lands on instead of pushing, so
+// its history starts at the step it opens on.
+//
+// `wizPos` is the entry's place in the tab's history, so a popstate can tell
+// Back from Forward. It is needed because entries outlive the build that wrote
+// them: Chrome keeps a page's pushed entries across a reload, and a second
+// build in the same tab sits after the first one's. Such an entry is not a step
+// of this build, and is passed over in the direction travelled, so Back on the
+// first step of a build still leaves the page through the beforeunload prompt
+// below, exactly as before. Measured 2026-10-19 in headless Chrome: without
+// that, Back after a reload walked into the old build's steps.
+let histBuild = '';
+// Where the tab is, for an entry that carries no position yet: the Navigation
+// API knows; without it, a page is usually opened on the tab's newest entry.
+// A reload keeps the entry's state, position included.
+const tabIndex = () => {
+  const i = globalThis.navigation?.currentEntry?.index;
+  return Number.isInteger(i) && i >= 0 ? i : history.length - 1;
+};
+const entryPos = (st) => (Number.isInteger(st?.wizPos) ? st.wizPos : tabIndex());
+let histPos = entryPos(history.state);
+let histRestoring = false;
+function freshHistory() { histBuild = Math.random().toString(36).slice(2); }
+freshHistory();
+
+function stepHistory() {
+  const at = history.state;
+  if (at?.wizBuild === histBuild && at.wizStep === S.step) return;
+  const here = entryPos(at);
+  // A Back or Forward never adds an entry: it rewrites the one it landed on
+  // when what it shows differs from what that entry named.
+  if (histRestoring || at?.wizBuild !== histBuild) {
+    histPos = here;
+    history.replaceState({ wizStep: S.step, wizBuild: histBuild, wizPos: histPos }, '');
+  } else {
+    histPos = here + 1;
+    history.pushState({ wizStep: S.step, wizBuild: histBuild, wizPos: histPos }, '');
+  }
+}
+
+// Where Back or Forward may land: the step an entry names, unless the build can
+// no longer reach it. Never above the furthest step reached (a class or system
+// change since lowers that), never past a step whose own Next button would
+// refuse to be left - the rail's gate, applied to every step on the way up -
+// and never on a step that does not apply. Going down is never gated, as it is
+// not on the rail.
+function reachableStep(want) {
+  let i = Math.min(Math.max(Number(want) || 0, 0), S.maxStep ?? 0, STEPS.length - 1);
+  for (let k = S.step; k < i; k++) {
+    if (stepApplies(k) && stepBlocker(k)) { i = k; break; }
+  }
+  while (i > 0 && !stepApplies(i)) i--;
+  return i;
+}
+
+// Back and Forward change which step is shown, and nothing else: a class or a
+// system chosen since stays chosen.
+window.addEventListener('popstate', (ev) => {
+  const want = ev.state?.wizStep;
+  const pos = ev.state?.wizPos;
+  // Not the wizard's entry at all - an in-page link's - so nothing to show.
+  if (want == null || !Number.isInteger(pos)) return;
+  const dir = Math.sign(pos - histPos);
+  histPos = pos;
+  // Another build's entry, or any entry while the home view or a saved
+  // character is showing, which are not wizard steps: carry on past it the way
+  // the button was going. A run of them is crossed one hop at a time, and going
+  // Back past the first leaves the page as it always did.
+  if (ev.state.wizBuild !== histBuild || S.home || S.savedId) {
+    if (dir) history.go(dir);
+    return;
+  }
+  histRestoring = true;
+  try {
+    S.step = reachableStep(want);
+    render();
+  } finally {
+    histRestoring = false;
+  }
+});
 
 // EVERY ROLL A STEP MAKES BY BEING SHOWN, in one place, made before the step
 // is drawn. Five step renderers used to make these themselves, part-way
@@ -900,6 +1003,8 @@ function groupUi(gi, key, val) {
   render();
 }
 
+// The Next and Back buttons and the step rail all come through here, and the
+// render records the visit as a browser history entry (stepHistory()).
 function goStep(i) {
   if (!stepApplies(i)) return;
   const moved = i !== S.step;
@@ -5412,7 +5517,7 @@ async function recordMinRerolls(id) {
 function startOver() {
   S.savedId = null; S.step = ST.SYSTEM; S.rcc = null; S.charName = ''; S.campaignId = null; S.newCampaign = '';
   S.draftOffer = null;
-  resetBuild(); boot(false); render();
+  resetBuild(); freshHistory(); boot(false); render();
 }
 
 // ---------- boot ----------

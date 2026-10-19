@@ -97,6 +97,7 @@ const SECTIONS = [
   'A permanent P.P.E. spend lowers the maximum wherever it is shown',
   'A Talent earned at level-up can be chosen, then or later',
   'The wizard rail',
+  'The browser Back button walks the wizard steps',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
   'The printed sheet',
@@ -1236,6 +1237,81 @@ export async function run() {
     check('the wizard has its own container',
       /\.wrap\.wrap-wizard \{ max-width: 1180px; \}/.test(css) && /wrap wrap-wizard/.test(html),
       'the rail is back inside a 900px container it does not fit');
+  }
+
+  // The browser's Back button used to leave the wizard from whatever step it
+  // was on: app.js kept no history, so the only guard was the unload prompt.
+  // Each visit to a step is an entry now, the step in history.state only
+  // (Nate, 2026-10-12: not the URL hash), and Back walks visits. Text checks,
+  // because no gating suite drives a browser (Nate, 2026-10-15); the drive in
+  // real Chrome is in the pull request that added this.
+  section('The browser Back button walks the wizard steps');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const render = functionBody(app, 'function render() {');
+    const record = functionBody(app, 'function stepHistory() {');
+    const go = functionBody(app, 'function goStep(i) {');
+    const reach = functionBody(app, 'function reachableStep(want) {');
+    const popAt = app.indexOf("window.addEventListener('popstate'");
+    const pop = popAt === -1 ? null : app.slice(popAt, app.indexOf('\n});', popAt));
+    check('render(), stepHistory(), goStep(), reachableStep() and a popstate listener are all found',
+      !!render && !!record && !!go && !!reach && !!pop,
+      `render ${!!render}, stepHistory ${!!record}, goStep ${!!go}, reachableStep ${!!reach}, popstate ${!!pop}`);
+    if (render && record && go && reach && pop) {
+      // Recorded at the end of render() and after the home and saved views
+      // have returned, so only a wizard step is ever an entry.
+      const saved = render.indexOf('return renderSaved()');
+      const call = render.indexOf('stepHistory();');
+      check('every wizard render records its step, and the home and saved views do not',
+        saved !== -1 && call > saved, 'render() no longer calls stepHistory() after the saved view returns');
+      check('goStep() reaches it through render()', /\brender\(\)/.test(go), 'goStep no longer renders');
+      check('and the rail\'s step buttons go through goStep()',
+        /onclick="goStep\(\$\{i\}\)"/.test(app), 'the rail no longer calls goStep');
+      check('a step changed by render pushes an entry whose state names the step and its place',
+        /history\.pushState\(\{ wizStep: S\.step, wizBuild: histBuild, wizPos: histPos \}, ''\)/.test(record)
+          && /histPos = here \+ 1;/.test(record),
+        'stepHistory does not push { wizStep, wizPos } for a new step');
+      check('and a render on the step already recorded pushes nothing',
+        /at\.wizStep === S\.step\) return;/.test(record), 'every render pushes, so a keystroke is a history entry');
+      check('the first render of a build replaces the entry it lands on instead of pushing',
+        /at\?\.wizBuild !== histBuild\) \{\s*histPos = here;\s*history\.replaceState\(/.test(record),
+        'a new build pushes its first step, so Back on it does not leave the page');
+      for (const fn of ['async function newCharacter()', 'function startWithClass(c)', 'function resumeDraft()', 'function startOver()']) {
+        const body = functionBody(app, fn);
+        check(`${fn.replace(/^(async )?function /, '')} starts a fresh history`,
+          !!body && /freshHistory\(\);/.test(body), `${fn} carries the last build's history on`);
+      }
+      // The step is in the state only. A URL argument, or any write to the
+      // address, would put it in the address bar (the ruling not taken).
+      check('the step never reaches the address',
+        !/history\.(pushState|replaceState)\(\{[^}]*\}, '', /.test(app) && !/location\.hash\s*=[^=]/.test(app),
+        'a history call or an assignment carries the step into the URL');
+      check('the popstate listener sets the step from the entry and renders',
+        /S\.step = reachableStep\(want\)/.test(pop) && /render\(\)/.test(pop) && /ev\.state\?\.wizStep/.test(pop),
+        'popstate no longer restores the step');
+      check('and renders without pushing',
+        /histRestoring = true/.test(pop) && !/pushState/.test(pop)
+          && /if \(histRestoring \|\| /.test(record),
+        'a Back would add an entry, so Forward is lost and history grows on every press');
+      // Entries outlive their build: Chrome keeps them across a reload, and a
+      // second build in the tab sits after the first. Passed over, so Back on
+      // a build's first step still leaves the page.
+      check('another build\'s entry, or one reached from the home or saved view, is passed over',
+        /ev\.state\.wizBuild !== histBuild \|\| S\.home \|\| S\.savedId\) \{\s*if \(dir\) history\.go\(dir\);\s*return;/.test(pop),
+        'popstate shows an old build\'s step, or redraws a step over the home or saved view');
+      check('in the direction the button was going',
+        /const dir = Math\.sign\(pos - histPos\);/.test(pop), 'popstate cannot tell Back from Forward');
+      // Back never undoes a class or system change, and never passes a gate.
+      check('Back and Forward land no higher than the furthest step reached',
+        /S\.maxStep \?\? 0/.test(reach), 'an entry above maxStep is shown as it stands');
+      check('nor past a step whose own Next button is refusing',
+        /stepBlocker\(k\)/.test(reach), 'Forward walks past a blocked step');
+      check('nor on a step that does not apply', /!stepApplies\(i\)/.test(reach),
+        'an entry naming a skipped step is shown');
+      check('and change nothing but the step',
+        !/pickClass|pickSystem|resetBuild|recompose|S\.rcc\s*=/.test(pop + reach),
+        'Back reapplies or undoes a class or system change');
+    }
   }
 
   // ---------- The GM dashboard ----------
