@@ -23,7 +23,8 @@ import { once } from '../../../../functions/api/character-creator/_lib/once.js';
 import { loadCharacterClass } from '../../../../functions/api/character-creator/_lib/class-loader.js';
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
-const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging',
+const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification',
+  'A person is limited to 100 Claude calls a day', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
   'A deleted character is read by nothing', 'A deleted campaign is read by nothing'];
 
@@ -252,6 +253,120 @@ section('Access JWT verification');
     /Every Claude call in `functions\/` writes one row to\s*\r?\n?`claude_usage`/.test(setupSrc));
   check('and names the endpoints it can be read by',
     /cc-extract-class/.test(setupSrc) && /cc-npc-sweep/.test(setupSrc));
+}
+
+// ---------- 100 Claude calls per person in any 24 hours ----------
+// Nate, 2026-10-12: calls, per person, rolling, every status counted; Nate
+// exempt; fail-open when the count fails. Run against `claude_usage` as
+// db/schema.sql creates it, in node:sqlite, so the window is SQLite's own
+// datetime() arithmetic and not a stand-in's idea of it.
+section('A person is limited to 100 Claude calls a day');
+{
+  const { refuseOverCallLimit, CALL_LIMIT } = await import('../../../../functions/api/_lib/claude-client.js');
+  const { DatabaseSync } = await import('node:sqlite');
+  const schema = readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8');
+  const create = schema.match(/CREATE TABLE IF NOT EXISTS claude_usage \([\s\S]*?\n\);/)?.[0];
+  check('db/schema.sql still creates claude_usage where this section reads it', !!create);
+  const fresh = () => {
+    const sqlite = new DatabaseSync(':memory:');
+    sqlite.exec(create || '');
+    const DB = { prepare: (sql) => {
+      const st = sqlite.prepare(sql);
+      return { bind: (...args) => ({ first: async () => st.get(...args) ?? null }) };
+    } };
+    // `ago` is an SQLite modifier such as '-5 minutes'.
+    const add = (email, count, ago = (i) => `-${i} minutes`) => {
+      const ins = sqlite.prepare(`INSERT INTO claude_usage (email, endpoint, status, created_at)
+                                  VALUES (?, 'proxy', 200, datetime('now', ?))`);
+      for (let i = 1; i <= count; i++) ins.run(email, ago(i));
+    };
+    return { sqlite, DB, add };
+  };
+  const who = 'friend@example.com';
+  const limit = (env, email = who) => refuseOverCallLimit(env, email);
+  const hm = (ms) => new Date(ms).toISOString().replace('T', ' ').slice(0, 16);
+  const utc = (s) => Date.parse(s.replace(' ', 'T') + 'Z');
+
+  check('the limit is 100', CALL_LIMIT === 100, String(CALL_LIMIT));
+
+  {
+    const { DB, add } = fresh();
+    add(who, 99);
+    add('someone-else@example.com', 150);
+    check('99 calls in the last day: the 100th is allowed, and nobody else\'s calls count',
+      (await limit({ DB })) === null);
+  }
+
+  {
+    const { sqlite, DB, add } = fresh();
+    add(who, 100);
+    const oldest = sqlite.prepare('SELECT min(created_at) AS t FROM claude_usage').get().t;
+    const freesAt = utc(oldest) + 24 * 3600 * 1000;
+    const res = await limit({ DB });
+    const body = res ? await res.json() : {};
+    const retry = Number(res?.headers.get('Retry-After'));
+    check('100 calls: the next is refused with a 429',
+      res?.status === 429, String(res?.status));
+    check('saying in { error } when the oldest call ages out, which is when the next frees up',
+      typeof body.error === 'string' && body.error.includes(hm(freesAt) + ' UTC'), body.error);
+    check('with Retry-After in seconds to that same time',
+      Math.abs(retry - (freesAt - Date.now()) / 1000) < 10, `${retry} vs ${Math.round((freesAt - Date.now()) / 1000)}`);
+  }
+
+  {
+    const { sqlite, DB, add } = fresh();
+    add(who, 105);
+    // Five past the limit (a burst the in-flight rows let through): the call
+    // that brings it back under is the SIXTH oldest's, not the oldest's.
+    const sixth = sqlite.prepare('SELECT created_at AS t FROM claude_usage ORDER BY created_at, id LIMIT 1 OFFSET 5').get().t;
+    const body = await (await limit({ DB }))?.json();
+    check('past the limit, the time given is when the count falls back under it',
+      !!body?.error?.includes(hm(utc(sixth) + 24 * 3600 * 1000) + ' UTC'), body?.error);
+  }
+
+  {
+    const { DB, add } = fresh();
+    add(who, 99);
+    add(who, 50, (i) => `-${24 * 60 + i} minutes`);
+    check('calls older than 24 hours are not counted', (await limit({ DB })) === null);
+  }
+
+  {
+    const { DB, add } = fresh();
+    add(who, 300);
+    add(null, 300);   // production holds rows with no email, from local runs and the Worker
+    check('the admin email is never refused, in any case',
+      (await limit({ DB, ADMIN_EMAIL: 'Friend@Example.com' })) === null);
+    check('and a call with no email (local dev) is never refused',
+      (await limit({ DB }, null)) === null && (await limit({ DB }, '')) === null);
+    const throwing = { prepare: () => { throw new Error('no such table: claude_usage'); } };
+    check('a count that throws lets the call through (fail-open)',
+      (await limit({ DB: throwing })) === null);
+    check('and so does an environment with no DB binding', (await limit({})) === null);
+  }
+
+  // Every file that calls the model asks the limit FIRST. Counted across
+  // functions/ the same way the metering check above is, so a new caller that
+  // forgets is caught without this list naming it.
+  const unasked = [];
+  let callers = 0;
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) { walk(full); continue; }
+      if (!e.name.endsWith('.js')) continue;
+      const src = readFileSync(full, 'utf8');
+      const call = src.search(/\bawait callAnthropic\(/);
+      if (call === -1) continue;
+      callers++;
+      const ask = src.search(/\bawait refuseOverCallLimit\(/);
+      if (ask === -1 || ask > call) unasked.push(full.slice(fnDir.length + 1));
+    }
+  };
+  const fnDir = join(appDir, '..', '..', 'functions', 'api');
+  walk(fnDir);
+  check('every file in functions/ that calls the model asks the limit before it does',
+    callers >= 4 && unasked.length === 0, unasked.join(', ') || `${callers} found`);
 }
 
 // ---------- 1d. Paging ----------

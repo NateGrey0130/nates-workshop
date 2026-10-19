@@ -6,7 +6,7 @@
 // server-side callers can reuse them without going back out through this HTTP
 // route (which Cloudflare Access would intercept).
 
-import { validateClaudeRequest, callAnthropic, recordUsage } from './_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from './_lib/claude-client.js';
 import { getAccessEmail } from './_lib/access.js';
 
 const json = (body, status) => new Response(JSON.stringify(body), {
@@ -16,6 +16,12 @@ const json = (body, status) => new Response(JSON.stringify(body), {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  const email = getAccessEmail(request);
+
+  // A person over the day's limit gets a 429 saying when the next call frees
+  // up, before anything else is looked at. See refuseOverCallLimit.
+  const limited = await refuseOverCallLimit(env, email);
+  if (limited) return limited;
 
   if (!env.ANTHROPIC_API_KEY) {
     return json({ error: 'API key not configured on server' }, 500);
@@ -36,7 +42,7 @@ export async function onRequestPost(context) {
     // Who spent the key, recorded fail-open — the response below is what the
     // caller gets whether or not the row lands. See recordUsage.
     await recordUsage(env, {
-      email: getAccessEmail(request), endpoint: 'proxy', model: body.model, upstream,
+      email, endpoint: 'proxy', model: body.model, upstream,
     });
     return new Response(upstream.text, { status: upstream.status, headers: { 'Content-Type': 'application/json' } });
   } catch (err) {

@@ -7,6 +7,8 @@
 // calling its own /api/claude gets redirected to the Access login page and
 // receives HTML instead of JSON.
 
+import { isAdminEmail } from './access.js';
+
 export const ALLOWED_MODELS = [
   'claude-haiku-4-5-20251001',
   'claude-sonnet-5',
@@ -86,12 +88,78 @@ export async function callAnthropic(body, env) {
   return { status: res.status, text: await res.text() };
 }
 
+// How many model calls one person may make in any rolling 24 hours (Nate,
+// 2026-10-12). Calls, not tokens; every status counts, because a refused or
+// failed upstream call was still an attempt someone made.
+export const CALL_LIMIT = 100;
+const CALL_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// `created_at` is SQLite's datetime('now'): 'YYYY-MM-DD HH:MM:SS', in UTC.
+const parseUtc = (s) => Date.parse(String(s).replace(' ', 'T') + 'Z');
+
+/**
+ * May this person make a model call now? Returns null when they may, and a
+ * ready 429 Response when they may not, carrying `{ error }` (the shape
+ * shared/js/api.js reads) with the time the next call frees up, and a
+ * Retry-After header in seconds. Every caller asks this before callAnthropic.
+ *
+ * It counts the person's `claude_usage` rows of the last 24 hours, so it is
+ * as exact as that table and no more. A row is written after the upstream
+ * answers, which means calls still in flight are not counted: a burst of
+ * parallel calls can pass the limit by a few. That is accepted - the limit
+ * bounds a person's day, not a single second of it.
+ *
+ * Not limited: the site admin (isAdminEmail, which is Nate), and a call with
+ * no email, which is local dev - Access always supplies one in production, and
+ * there is no person to count. Fail-OPEN like the write below: a count that
+ * throws, or no `DB` binding, lets the call through rather than taking a model
+ * feature down with the meter. A refusal writes no row, or refusals would hold
+ * the window shut.
+ */
+export async function refuseOverCallLimit(env, email) {
+  if (!email || isAdminEmail(email, env)) return null;
+  let n;
+  let freesAt;
+  try {
+    if (!env?.DB) return null;
+    const since = `datetime('now', '-24 hours')`;
+    const row = await env.DB.prepare(
+      `SELECT count(*) AS n FROM claude_usage WHERE email = ? AND created_at > ${since}`
+    ).bind(email).first();
+    n = Number(row?.n) || 0;
+    if (n < CALL_LIMIT) return null;
+    // The row whose ageing out brings the count back under the limit: the
+    // oldest one when the count is exactly the limit, a later one when a burst
+    // went past it.
+    const edge = await env.DB.prepare(
+      `SELECT created_at FROM claude_usage WHERE email = ? AND created_at > ${since}
+       ORDER BY created_at, id LIMIT 1 OFFSET ?`
+    ).bind(email, n - CALL_LIMIT).first();
+    freesAt = parseUtc(edge?.created_at) + CALL_WINDOW_MS;
+    if (!Number.isFinite(freesAt)) return null;
+  } catch {
+    return null;   // fail-open: see above
+  }
+  const seconds = Math.max(1, Math.ceil((freesAt - Date.now()) / 1000));
+  const at = new Date(freesAt).toISOString().replace('T', ' ').slice(0, 16);
+  const wait = seconds >= 3600
+    ? `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`
+    : `${Math.max(1, Math.ceil(seconds / 60))} min`;
+  return new Response(JSON.stringify({
+    error: `You have made ${n} Claude calls in the last 24 hours, and the limit is ${CALL_LIMIT}. `
+      + `Your next call frees up at ${at} UTC, in about ${wait}.`,
+  }), {
+    status: 429,
+    headers: { 'Content-Type': 'application/json', 'Retry-After': String(seconds) },
+  });
+}
+
 /**
  * One row in `claude_usage` per model call — who spent the key, on what. The
  * proxy is open to every authenticated friend by design, and until this table
- * nothing recorded a single call (the audit's F3). Spend VISIBILITY, not a
- * cap: nothing reads this on the request path, and query patterns live in
- * SETUP.md.
+ * nothing recorded a single call (the audit's F3). The table is also what
+ * refuseOverCallLimit above counts on the request path, so a row that does not
+ * land is a call the limit never sees; query patterns live in SETUP.md.
  *
  * Fail-open on purpose, and it must stay that way: metering that can break
  * the call it measures — a missing table on an unmigrated environment, a D1

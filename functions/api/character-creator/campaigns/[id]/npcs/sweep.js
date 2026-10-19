@@ -15,7 +15,7 @@
 // importers use, and it earns its place for the same reason.
 
 import { json, readJson, requireCampaign } from '../../../_lib/auth.js';
-import { validateClaudeRequest, callAnthropic, recordUsage } from '../../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../../_lib/claude-client.js';
 import { parseAliases, trim } from '../npcs.js';
 import { selectInChunks } from '../../../_lib/sql-chunk.js';
 
@@ -45,6 +45,10 @@ export async function onRequestPost({ request, env, params }) {
   const url = new URL(request.url);
   if (url.searchParams.get('accept') === '1') return accept(request, env, params, guard);
   if (url.searchParams.get('dismiss') === '1') return dismiss(request, env, params, guard);
+  // Only the sweep itself calls the model, so only it is limited. A 429, not
+  // the 502 an upstream failure becomes below.
+  const limited = await refuseOverCallLimit(env, guard.email);
+  if (limited) return limited;
   if (!env.ANTHROPIC_API_KEY) return json({ error: 'API key not configured on server' }, 500);
 
   // Only what has not been looked at. A sweep that re-read everything would

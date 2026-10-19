@@ -302,11 +302,15 @@ because the tokens were spent.
 node scripts/q.mjs --remote "SELECT endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(cache_write_tokens) AS cache_write, sum(cache_read_tokens) AS cache_read, sum(output_tokens) AS output, min(created_at) AS first, max(created_at) AS last FROM claude_usage GROUP BY endpoint ORDER BY input DESC"
 node scripts/q.mjs --remote "SELECT date(created_at) AS day, endpoint, count(*) AS calls, sum(input_tokens) AS input, sum(cache_write_tokens) AS cache_write, sum(cache_read_tokens) AS cache_read, sum(output_tokens) AS output FROM claude_usage GROUP BY day, endpoint ORDER BY day DESC LIMIT 30"
 node scripts/q.mjs --remote "SELECT email, date(created_at) AS day, count(*) AS calls, sum(input_tokens) AS input, sum(output_tokens) AS output FROM claude_usage GROUP BY email, day ORDER BY day DESC LIMIT 30"
+node scripts/q.mjs --remote "SELECT email, count(*) AS calls, min(created_at) AS oldest FROM claude_usage WHERE created_at > datetime('now', '-24 hours') GROUP BY email ORDER BY calls DESC"
 ```
 
 A cache write bills at 1.25× input and a read at 0.1×. Both cache columns are
-NULL before migration 077. **This is spend visibility, not a cap:** nothing on
-the request path reads the table.
+NULL before migration 077. **The table is also the limit:** every caller in
+`functions/` asks `refuseOverCallLimit` (`functions/api/_lib/claude-client.js`)
+first, which answers 429 with `Retry-After` once an email has 100 rows in the
+last 24 hours (the last query above). The admin email and a call with no email
+are not limited, and a count that fails lets the call through.
 
 ## Access (the login wall)
 

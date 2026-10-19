@@ -13,7 +13,7 @@
 
 import { json, readJson, requireCampaign } from '../../_lib/auth.js';
 import { gearJoin } from '../../_lib/catalog-redirects.js';
-import { validateClaudeRequest, callAnthropic, recordUsage } from '../../../_lib/claude-client.js';
+import { validateClaudeRequest, callAnthropic, recordUsage, refuseOverCallLimit } from '../../../_lib/claude-client.js';
 import { toMatchQuery } from './search.js';
 import { parseAliases } from './npcs.js';
 
@@ -33,6 +33,10 @@ Rules:
 export async function onRequestPost({ request, env, params }) {
   const guard = await requireCampaign(request, env, params.id);
   if (guard.res) return guard.res;
+  // Over the day's limit is a 429 that reaches the browser as one, not the 502
+  // an upstream failure becomes below.
+  const limited = await refuseOverCallLimit(env, guard.email);
+  if (limited) return limited;
   if (!env.ANTHROPIC_API_KEY) return json({ error: 'API key not configured on server' }, 500);
 
   const b = await readJson(request);

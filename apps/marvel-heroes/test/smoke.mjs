@@ -1004,6 +1004,51 @@ section('Notes, People and handouts: the shared views on Marvel\'s own tables, m
   check('Ask checks the question before anything that costs money',
     (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: {} })).status === 400
       && (await call(R.ask, 'POST', { who: 'ann@x.org', params: p, body: { question: 'x'.repeat(1001) } })).status === 400);
+
+  // 100 Claude calls per person in any 24 hours, counted by the shared client
+  // in the Palladium DB's claude_usage, where every caller's rows are. Ann has
+  // made 100: her Ask is a 429 that says when, with Retry-After, before any
+  // request leaves for the model, and the refusal writes no row.
+  const { DatabaseSync } = await import('node:sqlite');
+  const usage = new DatabaseSync(':memory:');
+  usage.exec(readFileSync(join(repoRoot, 'db', 'schema.sql'), 'utf8')
+    .match(/CREATE TABLE IF NOT EXISTS claude_usage \([\s\S]*?\n\);/)[0]);
+  const ins = usage.prepare(`INSERT INTO claude_usage (email, endpoint, status, created_at)
+    VALUES ('ann@x.org', 'msh-campaign-ask', 200, datetime('now', ?))`);
+  for (let i = 1; i <= 100; i++) ins.run(`-${i} minutes`);
+  env.DB = { prepare: (sql) => {
+    const st = usage.prepare(sql);
+    return { bind: (...args) => ({ first: async () => st.get(...args) ?? null, run: async () => st.run(...args) }) };
+  } };
+  env.ANTHROPIC_API_KEY = 'not-a-key';
+  const realFetch = globalThis.fetch;
+  let upstreamCalls = 0;
+  // An upstream failure, so a call the limit let through reads as the 502 it
+  // would be, rather than as a crash.
+  globalThis.fetch = async () => {
+    upstreamCalls++;
+    return new Response(JSON.stringify({ error: { message: 'the limit let a call through' } }), { status: 529 });
+  };
+  let limited;
+  try {
+    const request = new Request('https://example.com/api/marvel-heroes/x', { method: 'POST',
+      headers: { 'Cf-Access-Authenticated-User-Email': 'ann@x.org', 'Content-Type': 'application/json' },
+      // Words Ann's surviving note holds, so without the limit this WOULD call.
+      body: JSON.stringify({ question: 'Who was cornered alone?' }) });
+    const res = await R.ask.onRequestPost({ request, env, params: p });
+    limited = { status: res.status, retry: Number(res.headers.get('Retry-After')), body: await res.json() };
+  } finally {
+    globalThis.fetch = realFetch;
+    delete env.DB;
+    delete env.ANTHROPIC_API_KEY;
+  }
+  check('a player with 100 Claude calls in the last day is refused Ask with a 429, not a 502',
+    limited.status === 429, JSON.stringify(limited));
+  check('saying when the next call frees up, with Retry-After in seconds',
+    /frees up at \d{4}-\d\d-\d\d \d\d:\d\d UTC/.test(limited.body.error || '') && limited.retry > 0 && limited.retry <= 86400,
+    JSON.stringify(limited));
+  check('and nothing reaches the model, and the refusal writes no usage row',
+    upstreamCalls === 0 && usage.prepare('SELECT count(*) AS n FROM claude_usage').get().n === 100);
 }
 
 section('The shared campaign views are loaded in order, reach only this app\'s API, and are styled here');
