@@ -4282,6 +4282,18 @@ how many spells it learns - and its note about there being no ward catalog
 goes stale then. No class cites this finding
 (`node scripts/audit-citations.mjs --remote F123`: 0).
 
+**2026-10-19 (branch `pal/fix/tradition-headings-wizard-codex`):** two of the
+three left by scope above are done; the *use* button's deduction stays out
+(Nate, 2026-10-12). The wizard's Powers step heads a granted list by its
+tradition when every spell in it shares one (*Ward Symbols - 34 known*), and
+Review gives each tradition its own list under its label, general spells first
+under *Spells*, in the sheet's order. Neither prints *level 0* / *L0* for a
+tradition stored wholly at level 0: nine in production (`--remote`, 2026-10-19),
+derived from the catalog by `SpellTraditions.unleveled`, never listed. The codex
+counts a ward fold, and each family in it, in *symbols*; every other tradition
+keeps *spells*. Seen on a local server with the Diabolist and the Shifter, whose
+headings and rows did not move. Display only, no D1 change.
+
 ### F124 - low - three more SQL generators were rebuilt in a session scratchpad, the pattern F112 closed for one table family
 
 `F112` (this file, taken 2026-09-27) tracked the creatures-and-notables

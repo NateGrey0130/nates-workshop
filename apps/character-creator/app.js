@@ -4534,13 +4534,15 @@ function startingSuperHtml(groups) {
 // as one it may not take.
 function grantedSpellHtml(names) {
   if (!names.length) return '';
+  const flat = SpellTraditions.unleveled(S.spellCatalog);
   const entries = names.map((n) => {
     const sp = S.spellCatalog.find((x) => x.name === n);
     // A granted name the catalog does not carry still reaches the character,
     // with no level and no cost - the same silence the two pickers already call
-    // out on a `from` list, said here for the same reason.
+    // out on a `from` list, said here for the same reason. A tradition with no
+    // levels prints none: its stored 0 is the column's default (F123).
     return `<li>${esc(n)} <span class="muted small">&mdash; ${sp
-      ? `level ${sp.level}, ${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.`
+      ? `${flat.has(SpellTraditions.slugOf(sp)) ? '' : `level ${sp.level}, `}${sp.ppe}${sp.ppe_note && sp.ppe > 0 ? '+' : ''} P.P.E.`
       : 'not in the catalog yet'}</span></li>`;
   });
   const columns = [];
@@ -4576,12 +4578,16 @@ function startingSpellHtml() {
   const groups = start.groups;
   const granted = grantedSpellHtml(start.granted);
   const misfiled = misfiledSpellNote(start.misfiled);
+  // A granted list is headed by its tradition when every spell in it shares
+  // one - a Diabolist's are "Ward Symbols", not "Spells" (BOOK-INGEST-AUDIT F123).
+  const grantedTitle = esc(SpellTraditions.listTitle(start.granted.map((n) =>
+    SpellTraditions.slugOf(S.spellCatalog.find((x) => x.name === n)))));
 
   if (!groups.length) {
     const head = (tail) => `<h3>Spells${tail}
       <span class="muted small">(${esc(magic.type)} magic)</span></h3>`;
     if (start.granted.length) {
-      return `<h3>Spells &mdash; ${start.granted.length} known
+      return `<h3>${grantedTitle} &mdash; ${start.granted.length} known
         <span class="muted small">(${esc(magic.type)} magic &middot; granted by the class)</span></h3>
         <p class="muted small">The book names this class's spells outright, so there is nothing to
           choose here. All ${start.granted.length} are already on the character.</p>`
@@ -4625,7 +4631,7 @@ function startingSpellHtml() {
     rows: (list, count, gi) => spellGroupRows(list, count, kind, many ? gi : null, S.spellFilter),
     // Granted spells first: they are what the character already has, and the
     // picker below is what it still owes a decision on.
-    head: (taken) => (start.granted.length ? `<h3>Spells &mdash; ${start.granted.length} granted by the class
+    head: (taken) => (start.granted.length ? `<h3>${grantedTitle} &mdash; ${start.granted.length} granted by the class
       <span class="muted small">(already on the character)</span></h3>` + granted : '')
     + `<h3>Spells — ${taken}/${start.total}
     <span class="muted small">(${esc(magic.type)} magic${caption ? ' · ' + esc(caption) : ''})</span></h3>`,
@@ -5072,6 +5078,26 @@ function listSection(title, entries) {
     </div>`;
 }
 
+// The Review step's held spells, one list per heading the sheet would give
+// them (BOOK-INGEST-AUDIT F123): general invocations under "Spells", each
+// tradition under its own label, in the sheet's order (`heldOrder`). The
+// tradition is read off the catalog by name, as the sheet reads it, so the
+// payload the save sends is unchanged. A tradition with no levels drops "L0".
+function reviewSpellSections(spells) {
+  const flat = SpellTraditions.unleveled(S.spellCatalog);
+  const by = new Map();
+  for (const x of spells) {
+    const t = SpellTraditions.slugOf(S.spellCatalog.find((c) => c.name === x.name));
+    if (!by.has(t)) by.set(t, []);
+    by.get(t).push(x);
+  }
+  return [...by.keys()].sort(SpellTraditions.heldOrder).map((t) => listSection(
+    t ? SpellTraditions.label(t) : 'Spells',
+    by.get(t).map((x) => esc(x.name)
+      + ` <span class="muted">${flat.has(t) ? '' : `L${x.level} · `}${x.cost} P.P.E.</span>`),
+  )).join('');
+}
+
 // Choice groups the player has not finished — "Pick 2" with one ticked.
 //
 // Read from S.groupPicks, which is what the Skills step's own pickers write,
@@ -5210,8 +5236,7 @@ function renderReview() {
       + (s.pct ? ` <span class="muted">${s.pct}%</span>` : '')
       + (s.iq_bonus ? ` <span class="muted small">+${s.iq_bonus} I.Q.</span>` : '')))}
     ${listSection('Equipment', equipmentPayload().map((e) => esc(e.name || e.custom_name) + (e.qty > 1 ? ` <span class="muted">×${e.qty}</span>` : '')))}
-    ${listSection('Spells', powersPayload().filter((x) => x.type === 'spell')
-      .map((x) => esc(x.name) + ` <span class="muted">L${x.level} · ${x.cost} P.P.E.</span>`))}
+    ${reviewSpellSections(powersPayload().filter((x) => x.type === 'spell'))}
     ${listSection('Psionic powers', powersPayload().filter((x) => x.type === 'psionic')
       .map((x) => esc(x.name) + ` <span class="muted">${esc(x.category)} · ${x.cost} I.S.P.</span>`))}
     ${listSection('Super abilities', powersPayload().filter((x) => x.type === 'super')

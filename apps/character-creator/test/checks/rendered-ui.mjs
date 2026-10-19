@@ -108,6 +108,7 @@ const SECTIONS = [
   'The front door agrees with the rooms',
   'A typed override is drawn as text',
   'A levelled-up spell pick keeps to the traditions of its class',
+  'The wizard and the codex head a held list by its tradition',
   'Changes that could not be sent',
   'A redraw keeps what was typed',
   'A refused save keeps what was typed since',
@@ -2153,6 +2154,110 @@ export async function run() {
     check('both pickers ask one test, so they cannot drift apart again',
       (sheetSrc.match(/spellTraditionOk\(x, /g) || []).length === 2
         && !/g\.traditions\.some\(/.test(sheetSrc), 'a picker has its own copy of the tradition test');
+  }
+
+  // ---------- The wizard and the codex head a held list by its tradition ----------
+  // BOOK-INGEST-AUDIT F123. The sheet stopped heading a Diabolist's ward
+  // symbols "Spells — Level 0" in #1666; the wizard's Powers and Review steps
+  // and the codex's fold count still said "Spells", "level 0", "L0" and
+  // "34 spells" (seen 2026-10-19 on a local server, the Diabolist taken to
+  // Review). Run, not read: the four wizard functions and the codex's list are
+  // cut out of their files and called on a fixture catalog, so what is asserted
+  // is the markup a player gets. An ordinary caster's output is pinned to the
+  // exact string it printed before, because that must not move.
+  section('The wizard and the codex head a held list by its tradition');
+  {
+    const win = {};
+    new Function('window', readFileSync(join(appDir, 'js', 'traditions.js'), 'utf8'))(win);
+    const T = win.SpellTraditions;
+    const catalog = [
+      { name: 'Globe of Daylight', level: 1, ppe: 2, tradition: null },
+      { name: 'Ritual: Old Rite', level: 0, ppe: 5, tradition: null },
+      { name: 'Air: Cloud of Steam', level: 1, ppe: 4, tradition: 'warlock' },
+      { name: 'Alarm: Silent', level: 0, ppe: 1, tradition: 'ward' },
+      { name: 'Condition: Agony', level: 0, ppe: 1, tradition: 'ward' },
+      { name: 'Circle of Power', level: 0, ppe: 10, tradition: 'circle' },
+      // One row above 0 gives a tradition levels, whatever the others say.
+      { name: 'Song: Low', level: 0, ppe: 3, tradition: 'mixed' },
+      { name: 'Song: High', level: 2, ppe: 6, tradition: 'mixed' },
+    ];
+    check('a tradition with no levels is read off the catalog, not listed',
+      JSON.stringify([...T.unleveled(catalog)].sort()) === '["circle","ward"]',
+      JSON.stringify([...T.unleveled(catalog)]));
+
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const bodies = ['function listSection(', 'function reviewSpellSections(',
+      'function grantedSpellHtml(', 'function startingSpellHtml('].map((s) => functionBody(app, s));
+    check('the four wizard functions can be cut out of app.js', bodies.every(Boolean),
+      'a signature moved, or its closing brace is no longer at its own indent');
+    const S = { spellCatalog: catalog, cls: { magic: { type: 'ward' } } };
+    let start = null;
+    const wizard = bodies.every(Boolean) ? new Function('S', 'esc', 'REVIEW_COLUMN', 'SpellTraditions',
+      'startingPicksFor', 'misfiledSpellNote', 'tieredStartHtml', 'spellGroupRows', 'spellTraditionAllowed',
+      bodies.map((b) => b + '\n}').join('\n')
+        + '\nreturn { reviewSpellSections, startingSpellHtml };')(
+      S, (x) => String(x ?? ''), 20, T, () => start, () => '',
+      (groups, o) => o.head(0), () => '', () => true) : null;
+    const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/&mdash;/g, '—').replace(/&middot;/g, '·')
+      .replace(/\s+/g, ' ').trim();
+    const heads = (html) => [...html.matchAll(/<h3>([\s\S]*?)<\/h3>/g)].map((m) => text(m[1]));
+    const powers = (granted, groups = []) => {
+      start = { applicable: true, groups, granted, total: 1, misfiled: 0 };
+      return wizard ? wizard.startingSpellHtml() : '';
+    };
+
+    const ward = powers(['Alarm: Silent', 'Condition: Agony']);
+    check('Powers: a list of ward symbols is headed by its tradition, not "Spells"',
+      heads(ward)[0] === 'Ward Symbols — 2 known (ward magic · granted by the class)', JSON.stringify(heads(ward)));
+    check('and its rows carry no "level 0", only the cost',
+      !/level 0/.test(ward) && /Alarm: Silent <span class="muted small">&mdash; 1 P.P.E.<\/span>/.test(ward), text(ward));
+    check('and beside picks it says the same, "granted by the class"',
+      heads(powers(['Alarm: Silent'], [{}]))[0] === 'Ward Symbols — 1 granted by the class (already on the character)',
+      JSON.stringify(heads(powers(['Alarm: Silent'], [{}]))));
+    S.cls = { magic: { type: 'spell' } };
+    const plain = powers(['Globe of Daylight']);
+    check('an ordinary caster\'s granted list reads exactly as it did',
+      heads(plain)[0] === 'Spells — 1 known (spell magic · granted by the class)'
+        && /Globe of Daylight <span class="muted small">&mdash; level 1, 2 P.P.E.<\/span>/.test(plain), text(plain));
+    check('and a list mixing traditions stays "Spells"',
+      !!heads(powers(['Globe of Daylight', 'Air: Cloud of Steam']))[0]?.startsWith('Spells — 2 known'),
+      JSON.stringify(heads(powers(['Globe of Daylight', 'Air: Cloud of Steam']))));
+
+    const review = (names) => (wizard ? wizard.reviewSpellSections(names.map((n) => {
+      const sp = catalog.find((x) => x.name === n);
+      return { type: 'spell', name: n, level: sp.level, cost: sp.ppe };
+    })) : '');
+    const wardReview = review(['Alarm: Silent', 'Condition: Agony']);
+    check('Review: the same symbols are headed "Ward Symbols", with no "L0"',
+      JSON.stringify(heads(wardReview)) === '["Ward Symbols (2)"]' && !/L0/.test(wardReview)
+        && /Alarm: Silent <span class="muted">1 P.P.E.<\/span>/.test(wardReview), text(wardReview));
+    const mixed = review(['Air: Cloud of Steam', 'Globe of Daylight', 'Circle of Power', 'Ritual: Old Rite']);
+    check('and a mixed list is one heading per tradition, general spells first, as the sheet orders them',
+      JSON.stringify(heads(mixed)) === '["Spells (2)","Circles (1)","Warlock Elemental (1)"]', JSON.stringify(heads(mixed)));
+    check('levels stay wherever a tradition has them, a general level 0 included',
+      /Globe of Daylight <span class="muted">L1 · 2 P.P.E.<\/span>/.test(mixed)
+        && /Ritual: Old Rite <span class="muted">L0 · 5 P.P.E.<\/span>/.test(mixed)
+        && /Air: Cloud of Steam <span class="muted">L1 · 4 P.P.E.<\/span>/.test(mixed)
+        && /Circle of Power <span class="muted">10 P.P.E.<\/span>/.test(mixed), text(mixed));
+
+    // The codex. Every fold is opened so the families inside the ward fold
+    // are drawn too: they count by the same noun as their tradition.
+    const codex = readFileSync(appPath('codex.js'), 'utf8');
+    const listBody = functionBody(codex, 'function spellListHtml(');
+    check('the codex\'s spell list can be cut out of codex.js', !!listBody);
+    const C = { filter: '', focus: null, sort: '', traditionClasses: {},
+      folds: new Set(['ward', 'ward/alarm', 'ward/condition', 'warlock']) };
+    const folds = listBody ? [...new Function('S', 'SpellTraditions', 'escHtml', 'entry', 'heldBy',
+      listBody + '\n}\nreturn spellListHtml;')(C, T, (x) => String(x ?? ''), () => '', () => [])(
+      { id: 'spells', key: (r) => r.name }, catalog)
+      .matchAll(/codex-fold-name">([^<]*)[\s\S]*?codex-fold-n">([^<]*)</g)].map((m) => `${m[1]}: ${m[2]}`) : [];
+    check('the codex counts a ward fold, and each family in it, in symbols; every other tradition in spells',
+      JSON.stringify(folds) === JSON.stringify(['Circles: 1 spell', 'Mixed: 2 spells', 'Ward Symbols: 2 symbols',
+        'Alarm: 1 symbol', 'Condition: 1 symbol', 'Warlock Elemental: 1 spell']), JSON.stringify(folds));
+    // The list of nine is the data's, so neither page may carry a copy of it.
+    check('neither page names a level-0 tradition of its own',
+      ![app, codex].some((src) => /'(spellsong|demonic-curse|african-witch|nazca)'/.test(src)),
+      'app.js or codex.js lists traditions by slug; ask SpellTraditions.unleveled');
   }
 
   // ---------- Changes that could not be sent ----------
