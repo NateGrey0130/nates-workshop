@@ -43,7 +43,8 @@ export async function onRequestGet({ request, env }) {
                        characters.isp_current, characters.isp_max, characters.kind,
                        campaigns.name AS campaign_name, campaigns.system AS campaign_system
                 FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-                                                AND characters.deleted_at IS NULL`;
+                                                AND characters.deleted_at IS NULL
+                                                AND campaigns.deleted_at IS NULL`;
   // An NPC (migration 070) lists for its campaign's G.M. and nobody else - the
   // same rule characterAccess applies to a single read, and for the same F39
   // reason as `mine`, applied HERE: a client-side filter over one 200-row page
@@ -59,9 +60,12 @@ export async function onRequestGet({ request, env }) {
   const page = await pagedQuery(env, {
     // The count joins campaigns now too, because the NPC condition reads
     // gm_email - a count that skipped it would page over rows the list hides.
-    // A deleted character (migration 091) is skipped in the join, by both.
+    // A deleted character (migration 091) is skipped in the join, by both, and
+    // so is a character in a deleted campaign (migration 092), whose own
+    // deleted_at stays NULL so that restoring the campaign brings it back.
     countSql: `SELECT count(*) AS n FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-                                                    AND characters.deleted_at IS NULL${where}`,
+                                                    AND characters.deleted_at IS NULL
+                                                    AND campaigns.deleted_at IS NULL${where}`,
     countBinds: binds,
     rowsSql: base + where + ' ORDER BY characters.id DESC',
     rowsBinds: binds,
@@ -165,7 +169,7 @@ export async function createCharacter(env, request, email, b, { kind = 'pc', ban
   const notNumbers = storedNumberProblems({ skills: b.skills, attributes: b.attributes });
   if (notNumbers.length) return out({ error: `Not a character: ${notNumbers.join('; ')}` }, 400);
   const campaign = await once(loads, 'campaign:' + b.campaign_id, () => env.DB
-    .prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ?').bind(b.campaign_id).first());
+    .prepare('SELECT id, open, system, gm_email FROM campaigns WHERE id = ? AND deleted_at IS NULL').bind(b.campaign_id).first());
   if (!campaign) return out({ error: 'Campaign not found' }, 404);
 
   // Creating a character in a campaign is how you JOIN it — membership is

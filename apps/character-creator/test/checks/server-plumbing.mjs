@@ -25,7 +25,7 @@ import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging',
   'One revalidating answer, one member guard', 'A load made once per request',
-  'A deleted character is read by nothing'];
+  'A deleted character is read by nothing', 'A deleted campaign is read by nothing'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -419,12 +419,16 @@ section('A load made once per request');
 //
 // Read as STRING LITERALS, not lines: a FROM whose table is on the next line
 // is one string, and a comment naming the table is no string at all.
+//
+// The reader, the walk and the exceptions are shared with the campaign
+// section below, which runs the same sweep over `campaigns`.
+let literalsOf, fnLiterals, CHARACTER_EXCEPTIONS;
 section('A deleted character is read by nothing');
 {
   // Every string and template literal in a JS file, comments skipped. A
   // template's `${...}` is read through, nested strings and all, so its text
   // is the whole literal as written.
-  const literalsOf = (src) => {
+  literalsOf = (src) => {
     const out = [];
     const regexAhead = (i) => {
       let j = i - 1;
@@ -491,7 +495,7 @@ section('A deleted character is read by nothing');
 
   // The reads that see a deleted character ON PURPOSE, each with its reason.
   // `has` is a piece of the statement, unique within its file.
-  const EXCEPTIONS = [
+  const EXCEPTIONS = CHARACTER_EXCEPTIONS = [
     { file: '_lib/catalog-merge.js', has: 'AS payload FROM characters',
       why: 'a catalog merge rewrites every stored character, so one put back by SQL holds no name the merge removed' },
     { file: 'characters.js', has: 'DELETE FROM characters',
@@ -506,9 +510,13 @@ section('A deleted character is read by nothing');
   const READ = /\b(?:FROM|JOIN)\s+characters\b/gi;
   const sites = [], missing = [];
   const used = new Map(EXCEPTIONS.map((x) => [x, 0]));
-  for (const path of walk(fnDir)) {
+  fnLiterals = walk(fnDir).flatMap((path) => {
     const rel = path.slice(fnDir.length + 1).replace(/\\/g, '/').replace(/^api\/character-creator\//, '');
-    for (const lit of literalsOf(readFileSync(path, 'utf8'))) {
+    return literalsOf(readFileSync(path, 'utf8')).map((lit) => ({ rel, ...lit }));
+  });
+  for (const lit of fnLiterals) {
+    const { rel } = lit;
+    {
       const reads = (lit.text.match(READ) || []).length;
       if (!reads) continue;
       sites.push(`${rel}:${lit.line}`);
@@ -534,6 +542,65 @@ section('A deleted character is read by nothing');
   check('the character DELETE sets deleted_at', /UPDATE characters SET deleted_at = datetime\('now'\)/.test(del));
   check('and removes no row and detaches no journal entry',
     !/DELETE FROM characters/.test(del) && !/journal_entries/.test(del));
+}
+
+// ---------- A deleted campaign is read by nothing ----------
+// The same sweep over `campaigns`, since migration 092 made the campaign
+// DELETE set `campaigns.deleted_at` and leave the row, its children and its
+// pictures. A character in a deleted campaign keeps its own `deleted_at` NULL
+// and is hidden WITH the campaign, so a statement that reads both tables -
+// `FROM characters JOIN campaigns` - has to say `deleted_at` once for each:
+// the character's, and the campaign's. A character read that is a named
+// exception above needs no `deleted_at` here either.
+section('A deleted campaign is read by nothing');
+{
+  // The reads that see a deleted campaign ON PURPOSE. Each only reads the
+  // game of a campaign the request has already been let into: through
+  // characterAccess (which refuses a character in a deleted campaign) or
+  // requireCampaign (which refuses the campaign). Filtering one could only
+  // turn a known game into none, and no game is a permissive catalog.
+  const GATED = 'the game of a campaign this request\'s guard already found live';
+  const EXCEPTIONS = [
+    { file: 'characters/[id]/level-confirm.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
+    { file: 'characters/[id]/power-picks.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
+    { file: '_lib/skill-bonuses.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
+    { file: '_lib/system-bases.js', has: 'SELECT campaigns.system AS system', why: GATED },
+    { file: '_lib/npc-snapshot.js', has: 'SELECT campaigns.system FROM characters JOIN campaigns', why: GATED },
+    { file: 'npc-library/[id]/pull.js', has: 'SELECT system FROM campaigns WHERE id = ?', why: GATED },
+    { file: 'campaigns/[id]/npcs/generate.js', has: 'SELECT id, system FROM campaigns WHERE id = ?', why: GATED },
+  ];
+
+  const READ = /\b(?:FROM|JOIN)\s+campaigns\b/gi;
+  const CHAR_READ = /\b(?:FROM|JOIN)\s+characters\b/gi;
+  const sites = [], missing = [];
+  const used = new Map(EXCEPTIONS.map((x) => [x, 0]));
+  for (const lit of fnLiterals) {
+    const reads = (lit.text.match(READ) || []).length;
+    if (!reads) continue;
+    sites.push(`${lit.rel}:${lit.line}`);
+    const excused = EXCEPTIONS.find((x) => x.file === lit.rel && lit.text.includes(x.has));
+    if (excused) { used.set(excused, used.get(excused) + 1); continue; }
+    const charExcused = CHARACTER_EXCEPTIONS.some((x) => x.file === lit.rel && lit.text.includes(x.has));
+    const charReads = charExcused ? 0 : (lit.text.match(CHAR_READ) || []).length;
+    const says = (lit.text.match(/\bdeleted_at\b/g) || []).length;
+    if (says < reads + charReads) missing.push(`${lit.rel}:${lit.line}`);
+  }
+
+  check('the sweep finds the reads of campaigns under functions/', sites.length >= 18,
+    `${sites.length} sites`);
+  check('and every one says deleted_at, once per table it reads, or is a named exception',
+    missing.length === 0, missing.join(', '));
+  const stale = EXCEPTIONS.filter((x) => used.get(x) !== (x.count ?? 1));
+  check('and every exception still names a read that is there', stale.length === 0,
+    stale.map((x) => `${x.file} "${x.has}" matched ${used.get(x)}`).join('; '));
+
+  // The DELETE itself: the column set, the row kept, the bucket untouched
+  // (Nate, 2026-10-12: a deleted campaign keeps its pictures).
+  const route = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'campaigns', '[id].js'), 'utf8');
+  const del = route.slice(route.indexOf('export async function onRequestDelete'));
+  check('the campaign DELETE sets deleted_at', /UPDATE campaigns SET deleted_at = datetime\('now'\)/.test(del));
+  check('and removes no row and deletes nothing from the bucket',
+    !/DELETE\s+FROM\s+campaigns/i.test(del) && !/\bMEDIA\b/.test(del) && !/\.delete\(/.test(del));
 }
 
 }

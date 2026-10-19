@@ -1022,9 +1022,10 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
   }
 
   // DELETING IT. Only the G.M. who created it, and not while another player's
-  // character is in it: characters cascades from campaigns, so a delete that
-  // ignored them would take the player's sheet too. The G.M.'s own things -
-  // a setting page, a statted NPC - are theirs, and go with it.
+  // character is in it: a deleted campaign hides every character in it, so a
+  // delete that ignored them would take the player's sheet too. The G.M.'s own
+  // things - a setting page, a statted NPC - are theirs, and are hidden with it
+  // (migration 092; the block after the next one asks what is kept).
   const byPlayer = await apiAs(player, 'DELETE', `/campaigns/${lone.id}`);
   const byStranger = await apiAs('stranger@example.com', 'DELETE', `/campaigns/${lone.id}`);
   check('only its G.M. can delete a campaign',
@@ -1050,7 +1051,7 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
   check('once the players are out, its G.M. deletes it',
     prep.status === 201 && gmNpc.status === 201 && deleted.status === 200 && after.status === 404,
     JSON.stringify({ page: prep.status, npc: gmNpc.status, deleted: deleted.status, after: after.status }));
-  check('and its setting pages and the G.M.\'s own characters go with it',
+  check('and its setting pages and the G.M.\'s own characters are hidden with it',
     pageAfter.status === 404 && npcAfter.status === 404,
     JSON.stringify({ page: pageAfter.status, npc: npcAfter.status }));
 }
@@ -1128,6 +1129,121 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
   check('the G.M.\'s campaign delete is blocked by the player still in it, and not by the deleted one',
     blocked.status === 409 && (blocked.body.characters || []).map((c) => c.name).join() === 'Stays At The Table',
     JSON.stringify(blocked.body));
+}
+
+// ── deleting a campaign marks it deleted (migration 092) ────────────────────
+// The DELETE used to remove the row, after deleting its pictures from R2, and
+// `characters.campaign_id` cascades: every character, page, stash item and
+// dossier went with it, and nothing could be put back. Now it sets
+// `deleted_at`, leaves every child attached and every object in the bucket,
+// and every read skips the campaign - and the characters in it, whose own
+// `deleted_at` stays NULL so that clearing the campaign's brings them back.
+// Restore is that column, by SQL (Nate, 2026-10-12), so this asks both ways.
+{
+  // One line: the command goes through a shell, which a newline would end.
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command',
+      `"${sql.replace(/\s+/g, ' ')}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((x) => x.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    return [];
+  };
+  const gm = 'soft-camp-gm@example.com';
+  const made = await apiAs(gm, 'POST', '/campaigns', { name: 'Soft Deleted Campaign', system: cls.system, open: true });
+  const camp = made.body.campaign || {};
+  const cid = Number(camp.id);
+  const pc = await apiAs(gm, 'POST', '/characters', {
+    campaign_id: cid, name: 'Kept In The Campaign', class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+  const pcId = pc.body.id;
+  const page = await apiAs(gm, 'POST', `/campaigns/${cid}/entries`, { title: 'The Docks' });
+  const note = await apiAs(gm, 'POST', '/journal', { character_id: pcId, body: 'We reached the docks.' });
+  const stash = await apiAs(gm, 'POST', `/campaigns/${cid}/items`, { custom_name: 'Shared Rope', qty: 1 });
+  const npc = await apiAs(gm, 'POST', `/campaigns/${cid}/npcs`, { name: 'Harbourmaster Quill' });
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64');
+  const upRes = await fetch(BASE + `/campaigns/${cid}/entries/${page.body.entry?.id}/images`,
+    { method: 'POST', headers: { 'Content-Type': 'image/png', 'Cf-Access-Authenticated-User-Email': gm }, body: png });
+  const up = { status: upRes.status, body: await upRes.json().catch(() => ({})) };
+  const imageId = up.body.image?.id;
+  check('a campaign with a character, a note, a page, a picture, a stash item and a dossier',
+    made.status === 201 && pc.status === 201 && [200, 201].includes(note.status) && page.status === 201
+      && stash.status === 201 && npc.status === 201 && (up.status === 201 || up.status === 501),
+    JSON.stringify({ camp: made.status, pc: pc.status, note: note.status, page: page.status, stash: stash.status,
+      npc: npc.status, image: up.status }));
+
+  const del = await apiAs(gm, 'DELETE', `/campaigns/${cid}`);
+  check('its G.M. deletes it', del.status === 200, JSON.stringify(del.body));
+
+  const row = q(`SELECT id, deleted_at FROM campaigns WHERE id = ${cid}`)[0];
+  check('the campaign row is still there, with deleted_at set', !!row && !!row.deleted_at,
+    JSON.stringify(row ?? null));
+  const kids = q(`SELECT
+      (SELECT count(*) FROM characters WHERE campaign_id = ${cid} AND deleted_at IS NULL) AS characters,
+      (SELECT count(*) FROM campaign_entries WHERE campaign_id = ${cid}) AS pages,
+      (SELECT count(*) FROM journal_entries WHERE campaign_id = ${cid}) AS notes,
+      (SELECT count(*) FROM campaign_images WHERE campaign_id = ${cid}) AS images,
+      (SELECT count(*) FROM campaign_items WHERE campaign_id = ${cid}) AS stash,
+      (SELECT count(*) FROM npcs WHERE campaign_id = ${cid}) AS npcs`)[0] || {};
+  check('and every child is still attached to it, its character not marked deleted',
+    kids.characters === 1 && kids.pages === 1 && kids.notes === 1 && kids.stash === 1 && kids.npcs === 1
+      && kids.images === (up.status === 201 ? 1 : 0),
+    JSON.stringify(kids));
+
+  // Everywhere the campaign or its character could come back.
+  const ask = () => Promise.all([
+    apiAs(gm, 'GET', '/campaigns'),
+    apiAs(gm, 'GET', `/campaigns/${cid}`),
+    apiAs(gm, 'GET', `/campaigns/${cid}/items`),
+    apiAs(gm, 'GET', `/campaigns/${cid}/npcs`),
+    apiAs(gm, 'GET', '/characters?mine=1'),
+    apiAs(gm, 'GET', `/characters?campaign_id=${cid}`),
+    apiAs(gm, 'GET', `/characters/${pcId}`),
+    imageId ? apiAs(gm, 'GET', `/campaigns/${cid}/images/${imageId}`) : Promise.resolve({ status: 'no image' }),
+  ]);
+  const listed = (r, key) => (r.body?.[key] || []).map((x) => x.id);
+  const [list, campPage, items, npcs, mine, roster, sheet, image] = await ask();
+  check('it is in no campaign list, and its page and the routes under it answer as missing',
+    list.status === 200 && !listed(list, 'campaigns').includes(cid)
+      && campPage.status === 404 && items.status === 404 && npcs.status === 404
+      && (!imageId || image.status === 404),
+    JSON.stringify({ listed: listed(list, 'campaigns').includes(cid), page: campPage.status,
+      items: items.status, npcs: npcs.status, image: image.status }));
+  check('its character is in neither its owner\'s list nor a roster, and its sheet answers as missing',
+    mine.status === 200 && !listed(mine, 'characters').includes(pcId)
+      && !listed(roster, 'characters').includes(pcId) && sheet.status === 404,
+    JSON.stringify({ mine: listed(mine, 'characters').includes(pcId), roster: roster.status,
+      sheet: sheet.status }));
+  const join = await apiAs(gm, 'POST', '/characters', {
+    campaign_id: cid, name: 'Too Late', class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+  check('and no character can be made in it', join.status === 404, JSON.stringify(join.body));
+
+  // Restore: the column, by SQL, and nothing else.
+  q(`UPDATE campaigns SET deleted_at = NULL WHERE id = ${cid}`);
+  const [list2, campPage2, items2, npcs2, mine2, roster2, sheet2, image2] = await ask();
+  check('clearing deleted_at by SQL brings the campaign back whole',
+    listed(list2, 'campaigns').includes(cid) && campPage2.status === 200
+      && listed(items2, 'items').includes(stash.body.item?.id)
+      && listed(npcs2, 'npcs').includes(npc.body.npc?.id),
+    JSON.stringify({ listed: listed(list2, 'campaigns').includes(cid), page: campPage2.status,
+      items: listed(items2, 'items'), npcs: listed(npcs2, 'npcs') }));
+  check('and its character with it',
+    listed(mine2, 'characters').includes(pcId) && listed(roster2, 'characters').includes(pcId)
+      && sheet2.status === 200,
+    JSON.stringify({ mine: listed(mine2, 'characters').includes(pcId),
+      roster: listed(roster2, 'characters').includes(pcId), sheet: sheet2.status }));
+  // The delete no longer empties the bucket (Nate, 2026-10-12: a deleted
+  // campaign keeps its pictures), so the picture is still there to serve.
+  check('and its picture is still in the bucket',
+    up.status === 501 || (image2.status === 200),
+    JSON.stringify({ upload: up.status, image: image2.status }));
 }
 
 // ── the join gate ───────────────────────────────────────────────────────────

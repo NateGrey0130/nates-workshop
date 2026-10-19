@@ -97,6 +97,11 @@ export function forbidden() {
 // The query below is that skip for every endpoint that comes through here;
 // the three reads named above, and every other read of the table under
 // functions/, carry their own (smoke: "A deleted character is read by nothing").
+//
+// A character in a DELETED CAMPAIGN (migration 092) is hidden with it the
+// same way, though its own `deleted_at` stays NULL: the query below also
+// requires the campaign to be live, so clearing the campaign's column brings
+// the character back with it.
 export function isHiddenNpc(kind, gmEmail, email) {
   return kind === 'npc' && email !== gmEmail;
 }
@@ -106,7 +111,7 @@ export async function characterAccess(env, characterId, email) {
     `SELECT characters.id, characters.player_email, characters.campaign_id, characters.kind,
             campaigns.gm_email
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-     WHERE characters.id = ? AND characters.deleted_at IS NULL`
+     WHERE characters.id = ? AND characters.deleted_at IS NULL AND campaigns.deleted_at IS NULL`
   ).bind(characterId).first();
   if (!row || isHiddenNpc(row.kind, row.gm_email, email)) {
     return { found: false, canWrite: false, isGm: false };
@@ -157,8 +162,12 @@ export async function requireCharacter(request, env, id, { write = true } = {}) 
 // `canWrite` is membership. `isGm` is the narrower right, and the two are
 // returned separately because a few actions stay G.M.-only: editing the
 // campaign's gm_notes, and deleting an entry somebody else wrote.
+//
+// A DELETED CAMPAIGN (migration 092) is not found, by anybody, its G.M.
+// included, so every endpoint under campaigns/:id answers 404 for it.
 export async function campaignAccess(env, campaignId, email) {
-  const row = await env.DB.prepare('SELECT id, gm_email FROM campaigns WHERE id = ?').bind(campaignId).first();
+  const row = await env.DB.prepare('SELECT id, gm_email FROM campaigns WHERE id = ? AND deleted_at IS NULL')
+    .bind(campaignId).first();
   if (!row) return { found: false, canWrite: false, isGm: false, isMember: false };
   const isGm = email === row.gm_email;
   let isMember = isGm;

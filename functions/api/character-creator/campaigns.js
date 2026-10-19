@@ -13,7 +13,6 @@ export async function onRequestGet({ request, env }) {
   if (!email) return unauthorized();
   const system = new URL(request.url).searchParams.get('system');
   const { limit, offset } = paging(request);
-  const where = system ? ' WHERE system = ?' : '';
   const binds = system ? [system] : [];
 
   // created_at and the character count are here so the wizard's step 1 can
@@ -31,13 +30,13 @@ export async function onRequestGet({ request, env }) {
   // scope on purpose.
   //
   // A deleted character (migration 091) is not counted, and is no membership
-  // in `mine` below either.
+  // in `mine` below either. A deleted campaign (migration 092) is not listed.
   const page = await pagedQuery(env, {
-    countSql: `SELECT count(*) AS n FROM campaigns${where}`,
+    countSql: `SELECT count(*) AS n FROM campaigns WHERE deleted_at IS NULL${system ? ' AND system = ?' : ''}`,
     countBinds: binds,
     rowsSql: `SELECT c.id, c.name, c.system, c.gm_email, c.open, c.created_at,
         (SELECT count(*) FROM characters WHERE campaign_id = c.id AND kind = 'pc' AND deleted_at IS NULL) AS character_count
-      FROM campaigns c${where ? ' WHERE c.system = ?' : ''} ORDER BY c.name`,
+      FROM campaigns c WHERE c.deleted_at IS NULL${system ? ' AND c.system = ?' : ''} ORDER BY c.name`,
     rowsBinds: binds,
     limit, offset,
   });

@@ -66,8 +66,18 @@ CREATE TABLE IF NOT EXISTS campaigns (
                                         -- only. Joining IS creating a character, so this
                                         -- is the door onto the campaign's notes, stash
                                         -- and ledger. Migration 037.
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Set by DELETE /campaigns/:id; NULL = live. The row, its characters (whose
+  -- own deleted_at stays NULL), its pages, stash, dossiers and pictures all
+  -- stay, every read skips the campaign and the characters in it, and
+  -- restoring is setting this back to NULL by SQL. Migration 092.
+  deleted_at TEXT
 );
+
+-- 092 directly after the table its column is on.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '092-campaigns-soft-delete.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('campaigns') WHERE name = 'deleted_at');
 
 CREATE TABLE IF NOT EXISTS characters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
