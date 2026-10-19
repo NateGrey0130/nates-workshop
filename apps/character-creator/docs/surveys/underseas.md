@@ -2,7 +2,7 @@
 
 **Status:** `imported` — see the ledger below. (2026-09-24)
 
-**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 31
+**Rows citing this book:** classes 25, gear 87, vehicles 50, skills 15, spells 74, notable_npcs 2, creatures 30
 
 **MOS:** navy-seaman 9
 
