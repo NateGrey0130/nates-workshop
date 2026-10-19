@@ -89,7 +89,9 @@
         const pos = el.selectionStart;
         onInput(el.value);
         const again = document.getElementById(id);
-        if (again && again !== el) { again.focus(); again.setSelectionRange(pos, pos); }
+        // The wizard's render() puts focus and caret back itself; the sheet's
+        // does not, so this still does it there.
+        if (again && again !== el && document.activeElement !== again) { again.focus(); again.setSelectionRange(pos, pos); }
       });
     }
 

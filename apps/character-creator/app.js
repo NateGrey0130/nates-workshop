@@ -801,7 +801,116 @@ function renderStepper() {
   sticky.sizeSticky();
 }
 
+// ---------- keyboard focus across a redraw ----------
+// Every step renderer replaces #app whole and the rail replaces #stepper, so a
+// control whose own change calls render() was destroyed while it had focus and
+// a keyboard user was dropped onto the body: a manual attribute left by Tab, a
+// method or starting-level select, a skill checkbox toggled by Space. render()
+// now notes the focused control by a key before the redraw and focuses the
+// control carrying the same key after it, caret and all.
+//
+// The key is the control's id where it has one. Most have none, so otherwise it
+// is the control's own markup: its tag and the attributes that say what it is
+// (an inline handler names its attribute, its skill or its level), without the
+// ones that say what state it is in, plus its place among the controls sharing
+// them. No template had to learn an id, and a control added later is covered
+// without anyone remembering to.
+//
+// A Tab that changed a field redraws the step UNDER the Tab. Measured in
+// headless Chrome, 2026-10-19: `change` fires with focus already off the field
+// and no focusout yet, then Chrome finds the control it was moving to gone and
+// leaves focus on the body. So where the Tab was going is read from its
+// keydown, and focus goes to the control after the one left in the redrawn
+// page (before it, for Shift+Tab).
+//
+// Only on the view it was noted on: a step change (Next, the rail, Back), the
+// home view and a saved character put focus where they always did. Never
+// scrolls. The filter boxes are restored here too; Picker.wire, which the
+// sheet still relies on, leaves alone a box that already has focus back.
+const FOCUS_ROOTS = ['app', 'stepper'];
+// State, not identity: these change when the control is used.
+const FOCUS_STATE_ATTRS = new Set(['value', 'checked', 'selected', 'disabled', 'class', 'style', 'title',
+  'aria-pressed', 'aria-expanded', 'aria-checked', 'aria-current', 'aria-invalid', 'aria-describedby']);
+const TABBABLE = 'a[href], button, input, select, textarea, summary, [tabindex]';
+let focusView = null;
+let tabbing = null;
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Tab') return;
+  tabbing = { from: ev.target, back: ev.shiftKey };
+  // The move, and any change and redraw it causes, run before this does.
+  setTimeout(() => { tabbing = null; }, 0);
+}, true);
+
+const inFocusRoot = (el) => !!el && FOCUS_ROOTS.some((id) => { const r = $(id); return !!r && r !== el && r.contains(el); });
+function focusSig(el) {
+  const own = [...el.attributes]
+    .filter((a) => !FOCUS_STATE_ATTRS.has(a.name) || (a.name === 'value' && /^(radio|checkbox)$/.test(el.type)))
+    .map((a) => `${a.name}=${a.value}`).sort();
+  return `${el.tagName}|${own.join('|')}`;
+}
+function focusKey(el) {
+  if (el.id) return { id: el.id };
+  const root = FOCUS_ROOTS.find((id) => $(id)?.contains(el));
+  const sig = focusSig(el);
+  const n = [...$(root).getElementsByTagName(el.tagName)].filter((e) => focusSig(e) === sig).indexOf(el);
+  return { root, tag: el.tagName, sig, n };
+}
+function byFocusKey(k) {
+  if (k.id) return document.getElementById(k.id);
+  return [...($(k.root)?.getElementsByTagName(k.tag) || [])].filter((e) => focusSig(e) === k.sig)[k.n] || null;
+}
+// The control a Tab from `from` reaches: document order, positive tabindex not
+// modelled (the app sets none), and a radio group is one stop, its checked one.
+function nextTabbable(from, dir) {
+  const all = [...document.querySelectorAll(TABBABLE)].filter((e) => e === from
+    || (e.tabIndex >= 0 && !e.disabled && e.type !== 'hidden' && !e.closest('[inert]') && e.getClientRects().length));
+  const at = all.indexOf(from);
+  if (at === -1) return null;
+  for (let i = at + dir; i >= 0 && i < all.length; i += dir) {
+    const e = all[i];
+    if (e.type === 'radio' && e.name) {
+      if (e.name === from.name) continue;
+      const group = all.filter((x) => x.type === 'radio' && x.name === e.name);
+      if (!e.checked && group.some((x) => x.checked)) continue;
+    }
+    return e;
+  }
+  return null;
+}
+function holdFocus() {
+  const view = S.home ? 'home' : S.savedId ? `saved ${S.savedId}` : `step ${S.step}`;
+  const same = view === focusView;
+  focusView = view;
+  if (!same) return null;
+  const act = document.activeElement;
+  // A Tab whose change is redrawing the step: focus has left the field already.
+  if (tabbing && inFocusRoot(tabbing.from) && (act === tabbing.from || !inFocusRoot(act))) {
+    return { view, key: focusKey(tabbing.from), step: tabbing.back ? -1 : 1 };
+  }
+  if (!inFocusRoot(act)) return null;
+  let range = null;
+  try {
+    if (typeof act.selectionStart === 'number') range = [act.selectionStart, act.selectionEnd, act.selectionDirection];
+  } catch { /* a type with no caret */ }
+  return { view, key: focusKey(act), range };
+}
+function restoreFocus(held) {
+  // Called on the wizard path only, after render() may have moved off a step
+  // that does not apply.
+  const view = `step ${S.step}`;
+  focusView = view;
+  if (!held || held.view !== view) return;
+  let el = byFocusKey(held.key);
+  if (el && held.step) el = nextTabbable(el, held.step);
+  if (!el || el === document.activeElement) return;
+  el.focus({ preventScroll: true });
+  if (held.range && document.activeElement === el) {
+    try { el.setSelectionRange(...held.range); } catch { /* a type with no caret */ }
+  }
+}
+
 function render() {
+  const held = holdFocus();
   // The draft offer is a card on the home view now (UI-AUDIT F39); nothing
   // reaches a wizard step while one is pending, because the only ways out of
   // home are Resume, which clears it, and New character, which discards it.
@@ -818,6 +927,7 @@ function render() {
   wirePickers();
   stepHistory();
   queueDraftSave();
+  restoreFocus(held);
 }
 
 // ---------- the browser's Back button ----------
@@ -949,8 +1059,8 @@ function rollForStep(step) {
 }
 
 // Filter inputs are re-created by every render, so their listeners are re-bound
-// here rather than delegated — the input needs its caret restored mid-keystroke,
-// which Picker.wire handles and a delegated listener could not.
+// here rather than delegated. The caret mid-keystroke is put back by render()
+// itself now (restoreFocus), as for every other control on the step.
 function wirePickers() {
   const only = (rows) => (rows.length === 1 ? rows[0] : null);
 

@@ -98,6 +98,7 @@ const SECTIONS = [
   'A Talent earned at level-up can be chosen, then or later',
   'The wizard rail',
   'The browser Back button walks the wizard steps',
+  'A wizard control keeps keyboard focus when its own change redraws the step',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
   'The printed sheet',
@@ -1311,6 +1312,62 @@ export async function run() {
       check('and change nothing but the step',
         !/pickClass|pickSystem|resetBuild|recompose|S\.rcc\s*=/.test(pop + reach),
         'Back reapplies or undoes a class or system change');
+    }
+  }
+
+  // Every step renderer replaces #app whole and the rail replaces #stepper, so a
+  // control whose own change calls render() used to be destroyed while it had
+  // focus: a manual attribute left by Tab, a method or starting-level select, a
+  // skill checkbox toggled by Space, each dropped a keyboard user onto the body.
+  // One mechanism in render(), not a patch per handler. Text checks, because no
+  // gating suite drives a browser (Nate, 2026-10-15); the drive in real Chrome
+  // is in the pull request that added this.
+  section('A wizard control keeps keyboard focus when its own change redraws the step');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const picker = readFileSync(join(appDir, 'js', 'picker.js'), 'utf8');
+    const render = functionBody(app, 'function render() {');
+    const hold = functionBody(app, 'function holdFocus() {');
+    const restore = functionBody(app, 'function restoreFocus(held) {');
+    const key = functionBody(app, 'function focusKey(el) {');
+    const next = functionBody(app, 'function nextTabbable(from, dir) {');
+    const wire = functionBody(picker, 'function wire(id, { onInput, onEnter, lone } = {}) {');
+    check('render(), holdFocus(), restoreFocus(), focusKey(), nextTabbable() and Picker.wire are all found',
+      !!render && !!hold && !!restore && !!key && !!next && !!wire,
+      `render ${!!render}, holdFocus ${!!hold}, restoreFocus ${!!restore}, focusKey ${!!key}, nextTabbable ${!!next}, wire ${!!wire}`);
+    if (render && hold && restore && key && next && wire) {
+      const held = render.indexOf('const held = holdFocus();');
+      check('render() notes the focused control before the rail or the step is redrawn',
+        held !== -1 && held < render.indexOf('renderStepper()'), 'holdFocus() is not the first thing render() does');
+      const drawn = render.indexOf('[S.step]()');
+      check('and restores it after the step is drawn',
+        drawn !== -1 && render.indexOf('restoreFocus(held);') > drawn, 'render() does not call restoreFocus(held) after the step renderer');
+      check('by a key: the control\'s id where it has one, its own markup where it has none',
+        /if \(el\.id\) return \{ id: el\.id \};/.test(key) && /focusSig\(el\)/.test(key),
+        'focusKey() no longer keys a control by its id, then by its markup');
+      check('a text field\'s caret is noted and put back',
+        /selectionStart/.test(hold) && /setSelectionRange\(/.test(restore), 'the selection range is not carried across');
+      check('the restore never scrolls the page',
+        /\.focus\(\{ preventScroll: true \}\)/.test(restore), 'restoreFocus() focuses without preventScroll');
+      check('and is the one place app.js moves focus',
+        (app.match(/\.focus\(/g) || []).length === 1, 'app.js moves focus somewhere other than restoreFocus()');
+      // A Tab that changed a field redraws under the Tab, after focus has left
+      // the field and before any focusout says where it went; the keydown does.
+      check('a Tab is noted at keydown, Shift+Tab as backwards',
+        /addEventListener\('keydown', \(ev\) => \{\s*if \(ev\.key !== 'Tab'\) return;\s*tabbing = \{ from: ev\.target, back: ev\.shiftKey \};/.test(app),
+        'no keydown listener records where a Tab started');
+      check('and the redraw it caused lands focus on the control after the one left',
+        /tabbing\.back \? -1 : 1/.test(hold) && /nextTabbable\(el, held\.step\)/.test(restore),
+        'a Tab that redraws puts focus back on the field it left, or nowhere');
+      // A step change (Next, the rail, Back) puts focus where it always did.
+      check('only on the view it was noted on',
+        /held\.view !== view/.test(restore) && /focusView = view;/.test(hold),
+        'a step change restores focus into the new step');
+      // The filter boxes were already restored by Picker.wire, which the sheet
+      // still relies on; it now leaves alone a box render() already focused.
+      check('Picker.wire does not restore a filter box render() already restored',
+        /again && again !== el && document\.activeElement !== again/.test(wire),
+        'Picker.wire focuses the filter box a second time');
     }
   }
 
