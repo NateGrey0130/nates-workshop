@@ -3355,6 +3355,18 @@ in `combineClasses`, and `pairing_skills` does not touch it.
 - It is recorded here, not numbered, because this take was limited to this
   section. Nate can number it.
 
+**The aside above is fixed, 2026-10-19 (branch `pal/fix/pairing-hand-to-hand-price`)**,
+unnumbered, on Nate's ruling of 2026-10-12: in a pairing the Hand to Hand
+price list is the occupation's, and **none** where the occupation states none,
+for every race and not the Larhold alone. A racial class played with no
+occupation keeps its own. Re-measured before the change on production's 763
+published classes through the real `parseClassMarkdown` and `combineClasses`
+(session scratchpad `h2h-census.mjs`, 2026-10-19): the Larhold has 277 legal
+pairings, 28 of whose occupations state no list, and 20 of those 28 grant a
+named Hand to Hand. Neither the aside's 22 nor its 17 reproduces; the aside
+counted on a 525-class snapshot. Over every race, 2,166 of 71,319 legal
+pairings change, across the 82 races that state a list.
+
 ### F115 — low — two classes hold the light body armour placeholder that `fix-category-gear-rows.sql` exists to replace, and since `F105` the repo holds it too
 
 Filed 2026-09-27 by `F105`'s take, which deferred this rather than folding it
