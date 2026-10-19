@@ -6585,3 +6585,28 @@ Federation of Magic's replaced figures are kept in the row's `description`,
 since `vehicles` has no notes column. `tw-battle-streaker` is not changed.
 Applied `--remote` before the merge. The list of about 35 is not rebuilt, by
 Nate's ruling of 2026-10-12.
+
+**Partly taken, 2026-10-19 (branch `pal/data/book-ingest-audit-f144-new-west-guns`).**
+Row 39b of the outstanding-work plan, the second of three pull requests on
+this finding; the finding stays open and the outcome note is the third's.
+Posture as proposed: data only. `~236-book-ingest-audit-f144-new-west-guns.sql`
+moves six `gear` rows from Rifts World Book 14: New West (1998) to Rifts Book
+of Magic (2001), each guarded on the New West citation and cost it replaces.
+Production re-read `--remote` on 2026-10-19 before the edit showed all six
+citing New West with the figures below; the readings are the 150 dpi renders
+of both books from row 39's first run, 2026-10-18.
+
+| row | New West | Book of Magic |
+|---|---|---|
+| `tw-snare-gun` | printed 217: 45,000 credits; 200 ft; two nets, two more for 10 P.P.E. or 20 I.S.P. | printed 326: 175,000 plus 40,000 per clip; 600 ft; Stormspire's 8 nets per clip, others two, 12 P.P.E. or 24 I.S.P. per two |
+| `tw-thundergun` | printed 215: 60,000+; 500 ft; six bullets for 15 P.P.E. or 30 I.S.P. | printed 324: 70,000; 200 ft; 10 P.P.E. or 20 I.S.P. |
+| `tw-spitfire-revolver` | printed 215: 60,000+; 200 ft | printed 324: 65,000; 500 ft |
+| `tw-super-six-carbine` | printed 215: 75,000+ | printed 326: 80,000 |
+| `tw-eagle-eye-marksman-rifle` | printed 216: 75,000+ | printed 325: 80,000 |
+| `tw-hellfire-shotgun` | printed 217: 65,000+ | printed 325: 60,000; prints no weight, so 5 lbs stays |
+
+New West's cost is kept in `cost_note` and its range, payload or recharge in
+`description`, each with its page, since `gear` has no notes column. The
+Spitfire's and the Thundergun's ranges look swapped in the Book of Magic and
+are taken as printed, by Nate's ruling of 2026-10-19. Metric roundings alone
+are not taken. Applied `--remote` before the merge.
