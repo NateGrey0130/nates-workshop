@@ -6501,6 +6501,24 @@ row keeps its shape (`F141`), and no `stat_attacks` row changes. Before the appl
 production (`q.mjs --remote`, 2026-10-18). Posture as proposed: data only. The
 finding stays open for the rest of the 34.
 
+**Partly taken, 2026-10-18 (branch `pal/data/book-ingest-audit-f143-atlantis-underseas`).**
+Atlantis and Underseas, 38c part 2 of 3:
+`~233-book-ingest-audit-f143-atlantis-underseas.sql` moves two `creatures`
+rows to D-Bees, each with its original book's replaced figures kept in its
+`description`: `blind-warrior-women` (Atlantis printed 50-51, D-Bees 15-18)
+and `horune-pirate` (Underseas printed 164-165, D-Bees 100-103). The Blind
+Warrior Women's `combat` goes from six attacks to D-Bees' eight and gains +3
+Perception and +3 disarm; by the line rule it drops Hand to Hand: Martial
+Arts, smoke and smell from the storms line, and the psionic and magical
+compensation for blindness. Its habitat and allies stay Atlantis', since
+D-Bees prints neither line, and its three `stat_attacks` rows still carry
+Atlantis' karate damage, unchanged. The Horune Pirate's `combat` gains +1
+Perception; its habitat, allies and enemies take D-Bees' lines over those the
+row had carried from Underseas printed 163, and its three `stat_attacks` rows
+match D-Bees. Each row keeps its shape (`F141`). Before the apply both cited
+their original books on production (`q.mjs --remote`, 2026-10-18). Posture
+as proposed: data only. The finding stays open for the rest of the 34.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
