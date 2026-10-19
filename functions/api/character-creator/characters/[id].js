@@ -29,10 +29,11 @@ export async function onRequestGet({ request, env, params }) {
     `SELECT characters.*, campaigns.name AS campaign_name, campaigns.system AS campaign_system,
             campaigns.gm_email AS campaign_gm, campaigns.rest_rates AS campaign_rest_rates
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-     WHERE characters.id = ?`
+     WHERE characters.id = ? AND characters.deleted_at IS NULL`
   ).bind(params.id).first();
   // An NPC is its G.M.'s alone, and to anyone else it is simply not there -
   // see isHiddenNpc. This read does not go through characterAccess, so it asks.
+  // A deleted character answers exactly as a missing one does (migration 091).
   if (!character || isHiddenNpc(character.kind, character.campaign_gm, email)) {
     return json({ error: 'Character not found' }, 404);
   }
@@ -303,7 +304,7 @@ export async function onRequestPatch({ request, env, params }) {
   // current and max together, and this is the only route that could otherwise
   // leave them inconsistent (e.g. 9999 / 24 on the sheet).
   const current = await env.DB.prepare(
-    'SELECT hp_max, sdc_max, mdc_max, ppe_max, isp_max, ppe_base_spent FROM characters WHERE id = ?'
+    'SELECT hp_max, sdc_max, mdc_max, ppe_max, isp_max, ppe_base_spent FROM characters WHERE id = ? AND deleted_at IS NULL'
   ).bind(params.id).first();
 
   const sets = [], binds = [];
@@ -322,7 +323,7 @@ export async function onRequestPatch({ request, env, params }) {
         || body.gm_abilities.some((n) => typeof n !== 'string' || !n.trim())) {
       return json({ error: 'gm_abilities must be a list of power names' }, 400);
     }
-    const row = await env.DB.prepare('SELECT abilities FROM characters WHERE id = ?')
+    const row = await env.DB.prepare('SELECT abilities FROM characters WHERE id = ? AND deleted_at IS NULL')
       .bind(params.id).first();
     let stored = [];
     try { stored = JSON.parse(row?.abilities || '[]') || []; } catch { stored = []; }
@@ -395,7 +396,7 @@ export async function onRequestPatch({ request, env, params }) {
     if (bad.length) {
       return json({ error: `second_form.${bad.join(', ')} cannot be changed here - only active, sdc_current and hp_current` }, 400);
     }
-    const row = await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first();
+    const row = await env.DB.prepare('SELECT * FROM characters WHERE id = ? AND deleted_at IS NULL').bind(params.id).first();
     decodeCharacter(row);
     const cls = row ? await loadCharacterClass(env, request.url, row) : null;
     if (!cls?.second_form) {
@@ -453,7 +454,7 @@ export async function onRequestPatch({ request, env, params }) {
     // than reporting that something went wrong. A missing row is a 404 and
     // not a conflict - the character was deleted, not edited.
     const current = await env.DB.prepare(
-      'SELECT updated_at FROM characters WHERE id = ?'
+      'SELECT updated_at FROM characters WHERE id = ? AND deleted_at IS NULL'
     ).bind(params.id).first();
     if (!current) return json({ error: 'Character not found' }, 404);
     return json({
@@ -466,40 +467,37 @@ export async function onRequestPatch({ request, env, params }) {
   // The new version, so a caller can keep making guarded writes without
   // re-reading the whole character between them.
   const after = await env.DB.prepare(
-    'SELECT updated_at FROM characters WHERE id = ?'
+    'SELECT updated_at FROM characters WHERE id = ? AND deleted_at IS NULL'
   ).bind(params.id).first();
   return json({ ok: true, updated_at: after?.updated_at ?? null });
 }
 
 // DELETE /api/character-creator/characters/:id — owner or G.M. removes the
-// character. Their journal entries are KEPT.
+// character. A SOFT DELETE since migration 091: the row stays, with
+// `deleted_at` set, and every read of `characters` skips it, so to everybody
+// the character is gone - its sheet answers as a missing one does, it leaves
+// both lists, it stops making its owner a campaign member, stops counting in
+// `character_count` and stops blocking the G.M.'s campaign delete.
 //
-// Everything that is only meaningful as part of this character goes with it,
-// by foreign key: inventory, level history, unspent skill and power picks, the
-// play log, and the grants a table handed out (migration 043). A campaign item they had claimed returns to the stash rather
-// than vanishing — campaign_items.claimed_by_character_id is ON DELETE SET NULL
-// — which is the right answer for an object the party still owns.
+// Nothing else is touched, and that is the point: its inventory, level
+// history, picks, grants, play log and journal entries all stay attached to
+// it, so a mistaken delete is undone by setting the column back to NULL, by
+// SQL (Nate, 2026-10-12: no restore button, and no purge). The journal used
+// to be DETACHED here, batched with a hard DELETE whose cascade would
+// otherwise have taken a player's posts out of the campaign log. With no
+// cascade there is nothing to rescue them from: they stay in the log as they
+// were, still naming the character they were written about.
 //
-// The journal is the exception, and it is deliberate. journal_entries.character_id
-// is ON DELETE CASCADE, so the plain delete would take a player's posts out of a
-// log the G.M. and everyone else reads. Nobody's account of a session should
-// disappear because its author retired a character. The column already models
-// the alternative — its own comment says "NULL = campaign-level entry" — so the
-// posts are detached first and stay in the campaign log under the email that
-// wrote them.
-//
-// Batched, so the detach and the delete land together or not at all. Run apart,
-// a failed DELETE leaves a live character whose journal has silently become
-// campaign-level: nothing reports it and nobody would think to look.
+// The three cleanup deletes - characters.js and _lib/npc-snapshot.js, the
+// move to the NPC library included - stay hard on purpose; they remove a row
+// the same request has just written, or one the library now holds a copy of.
 export async function onRequestDelete({ request, env, params }) {
   const guard = await requireCharacter(request, env, params.id);
   if (guard.res) return guard.res;
 
-  const [detached] = await env.DB.batch([
-    env.DB.prepare('UPDATE journal_entries SET character_id = NULL WHERE character_id = ?').bind(params.id),
-    env.DB.prepare('DELETE FROM characters WHERE id = ?').bind(params.id),
-  ]);
+  await env.DB.prepare(
+    "UPDATE characters SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL"
+  ).bind(params.id).run();
 
-  // Returned so the client can say what survived rather than guess.
-  return json({ ok: true, journal_entries_kept: detached?.meta?.changes ?? 0 });
+  return json({ ok: true });
 }

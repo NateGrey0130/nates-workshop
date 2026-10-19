@@ -37,7 +37,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!access.found) return json({ error: 'Character not found' }, 404);
   if (!access.canWrite) return forbidden();
 
-  const character = await env.DB.prepare('SELECT id, name, campaign_id FROM characters WHERE id = ?')
+  const character = await env.DB.prepare('SELECT id, name, campaign_id FROM characters WHERE id = ? AND deleted_at IS NULL')
     .bind(params.id).first();
   if (!character?.campaign_id) {
     return json({ error: 'This character is not in a campaign, so there is no party stash to give it to' }, 409);

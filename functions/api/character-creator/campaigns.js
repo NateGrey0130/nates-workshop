@@ -29,11 +29,14 @@ export async function onRequestGet({ request, env }) {
   // Read-only, and it does not touch the create-before-validate ordering that
   // produces the duplicate - that is a server question and F9 puts it out of
   // scope on purpose.
+  //
+  // A deleted character (migration 091) is not counted, and is no membership
+  // in `mine` below either.
   const page = await pagedQuery(env, {
     countSql: `SELECT count(*) AS n FROM campaigns${where}`,
     countBinds: binds,
     rowsSql: `SELECT c.id, c.name, c.system, c.gm_email, c.open, c.created_at,
-        (SELECT count(*) FROM characters WHERE campaign_id = c.id AND kind = 'pc') AS character_count
+        (SELECT count(*) FROM characters WHERE campaign_id = c.id AND kind = 'pc' AND deleted_at IS NULL) AS character_count
       FROM campaigns c${where ? ' WHERE c.system = ?' : ''} ORDER BY c.name`,
     rowsBinds: binds,
     limit, offset,
@@ -45,7 +48,7 @@ export async function onRequestGet({ request, env }) {
   // to answer it, and the server is the boundary anyway; the picker only uses
   // this to disable an option instead of offering a refusal.
   const { results: mine } = await env.DB.prepare(
-    'SELECT DISTINCT campaign_id FROM characters WHERE player_email = ?'
+    'SELECT DISTINCT campaign_id FROM characters WHERE player_email = ? AND deleted_at IS NULL'
   ).bind(email).all();
   const memberOf = new Set((mine || []).map((r) => r.campaign_id));
   for (const c of page.results) {

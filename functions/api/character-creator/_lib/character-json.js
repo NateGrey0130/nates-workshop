@@ -97,10 +97,11 @@ export function decodeCharacter(row, columns = CHARACTER_JSON_COLUMNS) {
 // Load a character and decode its JSON columns in one step.
 //
 // `columns` names the SQL columns to select; the JSON ones among them are
-// decoded. Defaults to the whole row.
+// decoded. Defaults to the whole row. A deleted character (migration 091)
+// loads as a missing one does.
 export async function loadCharacter(env, id, columns = ['*']) {
   const row = await env.DB
-    .prepare(`SELECT ${columns.join(', ')} FROM characters WHERE id = ?`)
+    .prepare(`SELECT ${columns.join(', ')} FROM characters WHERE id = ? AND deleted_at IS NULL`)
     .bind(id).first();
   return decodeCharacter(row);
 }

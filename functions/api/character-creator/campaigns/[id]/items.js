@@ -17,11 +17,13 @@ import { gearJoin } from '../../_lib/catalog-redirects.js';
 // Joined on the slug since RETRO-AUDIT R21 - same arms as the character
 // sheet's read, and the same reason: a gear id is insertion order. The legacy
 // id arm went with migration 046, which dropped the column.
+// A claimant since deleted (migration 091) names nobody, as the hard delete's
+// ON DELETE SET NULL left it.
 const SELECT = `SELECT ci.*, g.name AS item_name, g.slug AS item_slug, g.category AS item_category,
                        g.weight_lbs, g.cost, c.name AS claimed_by_name
                 FROM campaign_items ci
                 ${gearJoin('ci.gear_slug', 'g')}
-                LEFT JOIN characters c ON c.id = ci.claimed_by_character_id`;
+                LEFT JOIN characters c ON c.id = ci.claimed_by_character_id AND c.deleted_at IS NULL`;
 
 export async function onRequestGet({ request, env, params }) {
   // Membership gates reading the stash, as it does the notes: the two are the

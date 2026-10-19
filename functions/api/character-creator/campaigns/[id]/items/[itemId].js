@@ -67,7 +67,7 @@ export async function onRequestPost({ request, env, params }) {
   // An NPC reads as absent to anyone but the G.M. (isHiddenNpc): the 403 below
   // would otherwise confirm that an id a player guessed is one of the G.M.'s.
   const character = await env.DB.prepare(
-    'SELECT id, name, player_email, campaign_id, kind FROM characters WHERE id = ? AND campaign_id = ?'
+    'SELECT id, name, player_email, campaign_id, kind FROM characters WHERE id = ? AND campaign_id = ? AND deleted_at IS NULL'
   ).bind(characterId, params.id).first();
   if (!character || isHiddenNpc(character.kind, guard.access.campaign.gm_email, guard.email)) {
     return json({ error: 'That character is not in this campaign' }, 404);

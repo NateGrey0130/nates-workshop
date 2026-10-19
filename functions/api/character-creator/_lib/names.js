@@ -10,9 +10,11 @@ import { MAX_COUNT } from '../../../../shared/js/namegen.js';
 //
 // Read on the server on purpose - a G.M.-only request, so the NPC rows that
 // isHiddenNpc keeps from players never leave it except as names NOT chosen.
+// A deleted character's name (migration 091) is free again, as it was when a
+// delete removed the row.
 export async function usedNames(env, campaignId) {
   const { results } = await env.DB.prepare(
-    'SELECT name FROM npcs WHERE campaign_id = ?1 UNION SELECT name FROM characters WHERE campaign_id = ?1'
+    'SELECT name FROM npcs WHERE campaign_id = ?1 UNION SELECT name FROM characters WHERE campaign_id = ?1 AND deleted_at IS NULL'
   ).bind(campaignId).all();
   return (results || []).map((r) => r.name).filter(Boolean);
 }

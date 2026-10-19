@@ -24,7 +24,8 @@ import { loadCharacterClass } from '../../../../functions/api/character-creator/
 import { appDir, repoRoot, check, section, wantSection } from '../harness.mjs';
 
 const SECTIONS = ['SQL bind chunking', 'No query binds an unbounded list', 'Access JWT verification', 'Paging',
-  'One revalidating answer, one member guard', 'A load made once per request'];
+  'One revalidating answer, one member guard', 'A load made once per request',
+  'A deleted character is read by nothing'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -404,6 +405,135 @@ section('A load made once per request');
   const libOnce = readFileSync(join(fnRoot, '_lib', 'once.js'), 'utf8');
   check('the cache is the caller\'s, never the module\'s',
     !/^(?:const|let|var)\s+\w+\s*=\s*new (?:Map|WeakMap)/m.test(libOnce));
+}
+
+// ---------- A deleted character is read by nothing ----------
+// Since migration 091 the character DELETE sets `characters.deleted_at` and
+// leaves the row, so a mistaken delete can be put back. That is only a delete
+// if every read skips the row, and there is no helper that does it: each
+// query says `deleted_at IS NULL` itself, as `imported_classes` is read. So
+// every SQL string under functions/ that reads FROM or JOINs `characters` has
+// to say `deleted_at`, or be on the short list below with its reason. A new
+// read that forgets is the bug this section exists for: its deleted character
+// would come back in a list, a count or a membership.
+//
+// Read as STRING LITERALS, not lines: a FROM whose table is on the next line
+// is one string, and a comment naming the table is no string at all.
+section('A deleted character is read by nothing');
+{
+  // Every string and template literal in a JS file, comments skipped. A
+  // template's `${...}` is read through, nested strings and all, so its text
+  // is the whole literal as written.
+  const literalsOf = (src) => {
+    const out = [];
+    const regexAhead = (i) => {
+      let j = i - 1;
+      while (j >= 0 && /\s/.test(src[j])) j--;
+      return j < 0 || /[(,=:[!&|?{};]/.test(src[j]) || /\breturn$/.test(src.slice(Math.max(0, j - 6), j + 1));
+    };
+    const skipRegex = (i) => {
+      let k = i + 1, inClass = false;
+      while (k < src.length && src[k] !== '\n') {
+        if (src[k] === '\\') { k += 2; continue; }
+        if (src[k] === '[') inClass = true;
+        else if (src[k] === ']') inClass = false;
+        else if (src[k] === '/' && !inClass) return k + 1;
+        k++;
+      }
+      return k;
+    };
+    const skipString = (i) => {
+      const q = src[i];
+      let k = i + 1;
+      while (k < src.length && src[k] !== q) k += src[k] === '\\' ? 2 : 1;
+      return k + 1;
+    };
+    let skipTemplate;
+    const skipCode = (i) => {
+      let depth = 0, k = i;
+      while (k < src.length) {
+        const c = src[k];
+        if (c === '/' && src[k + 1] === '/') { const e = src.indexOf('\n', k); k = e < 0 ? src.length : e; continue; }
+        if (c === '/' && src[k + 1] === '*') { k = src.indexOf('*/', k + 2) + 2; continue; }
+        if (c === '/' && regexAhead(k)) { k = skipRegex(k); continue; }
+        if (c === "'" || c === '"') { k = skipString(k); continue; }
+        if (c === '`') { k = skipTemplate(k); continue; }
+        if (c === '{') depth++;
+        if (c === '}') { if (depth === 0) return k + 1; depth--; }
+        k++;
+      }
+      return k;
+    };
+    skipTemplate = (i) => {
+      let k = i + 1;
+      while (k < src.length && src[k] !== '`') {
+        if (src[k] === '\\') { k += 2; continue; }
+        if (src[k] === '$' && src[k + 1] === '{') { k = skipCode(k + 2); continue; }
+        k++;
+      }
+      return k + 1;
+    };
+    for (let i = 0; i < src.length;) {
+      const c = src[i];
+      if (c === '/' && src[i + 1] === '/') { const e = src.indexOf('\n', i); i = e < 0 ? src.length : e; continue; }
+      if (c === '/' && src[i + 1] === '*') { i = src.indexOf('*/', i + 2) + 2; continue; }
+      if (c === '/' && regexAhead(i)) { i = skipRegex(i); continue; }
+      if (c === "'" || c === '"' || c === '`') {
+        const end = c === '`' ? skipTemplate(i) : skipString(i);
+        out.push({ line: src.slice(0, i).split('\n').length, text: src.slice(i, end) });
+        i = end;
+        continue;
+      }
+      i++;
+    }
+    return out;
+  };
+
+  // The reads that see a deleted character ON PURPOSE, each with its reason.
+  // `has` is a piece of the statement, unique within its file.
+  const EXCEPTIONS = [
+    { file: '_lib/catalog-merge.js', has: 'AS payload FROM characters',
+      why: 'a catalog merge rewrites every stored character, so one put back by SQL holds no name the merge removed' },
+    { file: 'characters.js', has: 'DELETE FROM characters',
+      why: 'a cleanup delete of the row this request just wrote, hard by ruling (2026-10-12)' },
+    { file: '_lib/npc-snapshot.js', has: 'DELETE FROM characters', count: 2,
+      why: 'the half-copied restore and the move to the NPC library, both hard by ruling (2026-10-12)' },
+  ];
+
+  const fnDir = join(repoRoot, 'functions');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []);
+  const READ = /\b(?:FROM|JOIN)\s+characters\b/gi;
+  const sites = [], missing = [];
+  const used = new Map(EXCEPTIONS.map((x) => [x, 0]));
+  for (const path of walk(fnDir)) {
+    const rel = path.slice(fnDir.length + 1).replace(/\\/g, '/').replace(/^api\/character-creator\//, '');
+    for (const lit of literalsOf(readFileSync(path, 'utf8'))) {
+      const reads = (lit.text.match(READ) || []).length;
+      if (!reads) continue;
+      sites.push(`${rel}:${lit.line}`);
+      const excused = EXCEPTIONS.find((x) => x.file === rel && lit.text.includes(x.has));
+      if (excused) { used.set(excused, used.get(excused) + 1); continue; }
+      const says = (lit.text.match(/\bdeleted_at\b/g) || []).length;
+      if (says < reads) missing.push(`${rel}:${lit.line}`);
+    }
+  }
+
+  // The reader has to be reading, or every check below passes on nothing.
+  check('the sweep finds the reads of characters under functions/', sites.length >= 40,
+    `${sites.length} sites`);
+  check('and every one says deleted_at or is a named exception', missing.length === 0,
+    missing.join(', '));
+  const stale = EXCEPTIONS.filter((x) => used.get(x) !== (x.count ?? 1));
+  check('and every exception still names a read that is there', stale.length === 0,
+    stale.map((x) => `${x.file} "${x.has}" matched ${used.get(x)}`).join('; '));
+
+  // The DELETE itself: the column set, the row kept, the journal left alone.
+  const route = readFileSync(join(fnDir, 'api', 'character-creator', 'characters', '[id].js'), 'utf8');
+  const del = route.slice(route.indexOf('export async function onRequestDelete'));
+  check('the character DELETE sets deleted_at', /UPDATE characters SET deleted_at = datetime\('now'\)/.test(del));
+  check('and removes no row and detaches no journal entry',
+    !/DELETE FROM characters/.test(del) && !/journal_entries/.test(del));
 }
 
 }

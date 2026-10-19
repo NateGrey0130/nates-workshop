@@ -747,7 +747,9 @@ section('A banked pick sent twice');
       check(`${route} pools through the one function`,
         /= pooledSkillAllowance\((?:pending|grants)\);/.test(text(route)) && !/kind !== 'secondary'/.test(text(route)));
     }
-    const guardText = 'WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+    // Open-ended on purpose: the guard goes on to require a live character
+    // (deleted_at IS NULL), and a copy with or without that clause is a copy.
+    const guardText = 'WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?';
     const holders = ['_lib/pending-claim.js', '_lib/skill-picks.js', '_lib/power-picks.js', 'characters/[id]/level-confirm.js']
       .filter((rel) => text(rel).includes(guardText));
     check('the level guard is written once, in pending-claim.js', holders.join() === '_lib/pending-claim.js', holders.join());

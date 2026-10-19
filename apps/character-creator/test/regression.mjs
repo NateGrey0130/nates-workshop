@@ -1055,6 +1055,81 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
     JSON.stringify({ page: pageAfter.status, npc: npcAfter.status }));
 }
 
+// ── deleting a character marks it deleted (migration 091) ───────────────────
+// The DELETE used to remove the row, and twenty foreign keys cascade from
+// `characters`, so a mistaken delete could not be undone. Now it sets
+// `deleted_at` and every read skips the row. Two players in one campaign, one
+// deletes their character, and each place a deleted character could come back
+// is asked: the row, its journal, both lists, the sheet, two routes under it,
+// the campaign's count, membership, and the G.M.'s campaign delete.
+{
+  const q = (sql) => {
+    const r = wrangler(['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command', `"${sql}"`]);
+    const out = r.stdout || '';
+    for (let at = out.indexOf('['); at >= 0; at = out.indexOf('[', at + 1)) {
+      try { const v = JSON.parse(out.slice(at)); if (Array.isArray(v)) return v.flatMap((x) => x.results || []); }
+      catch { /* wrangler's own log line opens with a bracket too */ }
+    }
+    return [];
+  };
+  const gm = 'soft-gm@example.com', keeps = 'soft-keeps@example.com', leaves = 'soft-leaves@example.com';
+  const made = await apiAs(gm, 'POST', '/campaigns', { name: 'Soft Delete Table', system: cls.system, open: true });
+  const camp = made.body.campaign || {};
+  const join = (who, name) => apiAs(who, 'POST', '/characters', {
+    campaign_id: camp.id, name, class_id: cls.id,
+    attributes: attrs, skills: [], abilities: [], bio: { alignment: 'Principled' },
+  });
+  const kept = await join(keeps, 'Stays At The Table');
+  const gone = await join(leaves, 'Leaves The Table');
+  const goneId = gone.body.id;
+  const posted = await apiAs(leaves, 'POST', '/journal', { character_id: goneId, body: 'What I saw.' });
+  const countOf = async () => ((await apiAs(gm, 'GET', '/campaigns')).body.campaigns || [])
+    .find((c) => c.id === camp.id)?.character_count;
+  const countBefore = await countOf();
+  check('two players join one campaign, and one writes in the journal',
+    made.status === 201 && kept.status === 201 && gone.status === 201
+      && [200, 201].includes(posted.status) && countBefore === 2,
+    JSON.stringify({ camp: made.status, kept: kept.status, gone: gone.status, posted: posted.status, countBefore }));
+
+  const del = await apiAs(leaves, 'DELETE', `/characters/${goneId}`);
+  check('its owner deletes the character', del.status === 200, JSON.stringify(del.body));
+
+  const row = q(`SELECT id, deleted_at FROM characters WHERE id = ${Number(goneId)}`)[0];
+  check('the row is still there, with deleted_at set', !!row && !!row.deleted_at, JSON.stringify(row ?? null));
+  const journal = q(`SELECT count(*) AS n FROM journal_entries WHERE character_id = ${Number(goneId)}`)[0];
+  check('and its journal entry is still attached to it', journal?.n === 1, JSON.stringify(journal ?? null));
+
+  const [roster, mine, sheetAsOwner, sheetAsGm, events, items, page] = await Promise.all([
+    apiAs(gm, 'GET', `/characters?campaign_id=${camp.id}`),
+    apiAs(leaves, 'GET', '/characters?mine=1'),
+    apiAs(leaves, 'GET', `/characters/${goneId}`),
+    apiAs(gm, 'GET', `/characters/${goneId}`),
+    apiAs(leaves, 'GET', `/characters/${goneId}/events`),
+    apiAs(leaves, 'POST', `/characters/${goneId}/items`, { custom_name: 'A keepsake', qty: 1 }),
+    apiAs(leaves, 'GET', `/campaigns/${camp.id}`),
+  ]);
+  const ids = (r) => (r.body.characters || []).map((c) => c.id);
+  check('it is in neither the campaign roster nor its owner\'s list',
+    roster.status === 200 && !ids(roster).includes(goneId) && ids(roster).includes(kept.body.id)
+      && roster.body.total === 1 && mine.status === 200 && !ids(mine).includes(goneId),
+    JSON.stringify({ roster: ids(roster), total: roster.body.total, mine: ids(mine) }));
+  check('its sheet answers as a missing one does, to its owner and the G.M.',
+    sheetAsOwner.status === 404 && sheetAsGm.status === 404,
+    JSON.stringify({ owner: sheetAsOwner.status, gm: sheetAsGm.status }));
+  check('and the routes under it refuse it',
+    events.status === 404 && items.status === 404,
+    JSON.stringify({ events: events.status, items: items.status }));
+  const countAfter = await countOf();
+  check('the campaign counts one character fewer', countAfter === countBefore - 1,
+    JSON.stringify({ countBefore, countAfter }));
+  check('and its owner is no longer a member', page.status === 200 && page.body.is_member === false,
+    JSON.stringify({ status: page.status, is_member: page.body.is_member }));
+  const blocked = await apiAs(gm, 'DELETE', `/campaigns/${camp.id}`);
+  check('the G.M.\'s campaign delete is blocked by the player still in it, and not by the deleted one',
+    blocked.status === 409 && (blocked.body.characters || []).map((c) => c.name).join() === 'Stays At The Table',
+    JSON.stringify(blocked.body));
+}
+
 // ── the join gate ───────────────────────────────────────────────────────────
 // Joining a campaign IS creating a character in it — membership is "owns a
 // character here" — so campaigns.open is the door onto its notes, stash and
