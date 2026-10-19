@@ -123,7 +123,11 @@ CREATE TABLE IF NOT EXISTS characters (
   kind TEXT NOT NULL DEFAULT 'pc',
   notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Set by DELETE /characters/:id; NULL = live. The row and everything that
+  -- hangs off it stay, every read skips it, and restoring is setting this
+  -- back to NULL by SQL. Migration 091.
+  deleted_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_characters_campaign ON characters (campaign_id);
 CREATE INDEX IF NOT EXISTS idx_characters_player ON characters (player_email);
@@ -145,6 +149,11 @@ WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'second
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '070-character-kind.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'kind');
+
+-- 091 the same way.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '091-characters-soft-delete.sql'
+WHERE EXISTS (SELECT 1 FROM pragma_table_info('characters') WHERE name = 'deleted_at');
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

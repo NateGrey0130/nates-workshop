@@ -104,7 +104,7 @@ export async function onRequestPost({ request, env, params }) {
         return json({ error: `second_form.${field} needs numeric from and to` }, 400);
       }
     }
-    formRow = decodeCharacter(await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(params.id).first());
+    formRow = decodeCharacter(await env.DB.prepare('SELECT * FROM characters WHERE id = ? AND deleted_at IS NULL').bind(params.id).first());
     const cls = formRow ? await loadCharacterClass(env, request.url, formRow) : null;
     if (!cls?.second_form) return json({ error: "This character's class has no second form" }, 400);
     formView = secondFormView({ cls, character: formRow,
@@ -155,7 +155,7 @@ export async function onRequestPost({ request, env, params }) {
   if (b.guard && sets.length) {
     const cols = Object.keys(charFields);
     const current = cols.length ? await env.DB.prepare(
-      `SELECT ${cols.join(', ')} FROM characters WHERE id = ?`
+      `SELECT ${cols.join(', ')} FROM characters WHERE id = ? AND deleted_at IS NULL`
     ).bind(params.id).first() : {};
     if (!current) return json({ error: 'Character not found' }, 404);
     const moved = cols.filter((f) => current[f] !== charFields[f].from);
@@ -241,7 +241,7 @@ export async function onRequestPost({ request, env, params }) {
     if (!Number.isInteger(index) || typeof m?.to !== 'number' || typeof m?.from !== 'number') {
       return json({ error: 'armor change needs an integer index and numeric from and to' }, 400);
     }
-    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ?').bind(params.id).first();
+    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ? AND deleted_at IS NULL').bind(params.id).first();
     let armor;
     try { armor = JSON.parse(row?.armor || '[]'); } catch { armor = []; }
     if (!Array.isArray(armor) || !armor[index]) return json({ error: 'No such armour on this character' }, 404);
@@ -305,7 +305,7 @@ export async function onRequestPost({ request, env, params }) {
   }
   statements.push(env.DB.prepare(
     'INSERT INTO play_events (character_id, actor_email, kind, payload) SELECT ?, ?, ?, ?'
-    + (landed.length ? ` WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND ${landed.join(' AND ')})` : '')
+    + (landed.length ? ` WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND deleted_at IS NULL AND ${landed.join(' AND ')})` : '')
     + ' RETURNING id, created_at'
   ).bind(params.id, email, b.kind, payload, ...(landed.length ? [params.id, ...landedBinds] : [])));
 
@@ -316,7 +316,7 @@ export async function onRequestPost({ request, env, params }) {
     // drops a conflict that names no pool.
     const cols = Object.keys(charFields);
     const current = cols.length ? await env.DB.prepare(
-      `SELECT ${cols.join(', ')} FROM characters WHERE id = ?`
+      `SELECT ${cols.join(', ')} FROM characters WHERE id = ? AND deleted_at IS NULL`
     ).bind(params.id).first() : {};
     return json({
       error: 'These pools changed somewhere else since this was queued',

@@ -79,8 +79,10 @@ export async function onRequestDelete({ request, env, params }) {
   // it. Refuse, and name what is in the way, so the table can sort it out -
   // each player deletes their own character, and then the GM can go ahead.
   // The GM's own characters and statted NPCs are theirs, and go.
+  // A character its player has deleted (migration 091) is in nobody's way: it
+  // is soft-deleted, so the cascade below takes the row, and it is not named.
   const { results: others } = await env.DB.prepare(
-    'SELECT name, player_email FROM characters WHERE campaign_id = ? AND player_email <> ? ORDER BY name'
+    'SELECT name, player_email FROM characters WHERE campaign_id = ? AND player_email <> ? AND deleted_at IS NULL ORDER BY name'
   ).bind(params.id, gmEmail).all();
   if (others?.length) {
     return json({

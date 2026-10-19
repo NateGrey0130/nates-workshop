@@ -75,7 +75,7 @@ export async function onRequestPatch({ request, env, params }) {
     } else {
       const cid = Number.isInteger(Number(b.character_id)) ? Number(b.character_id) : null;
       const sheet = cid && await env.DB.prepare(
-        "SELECT id FROM characters WHERE id = ? AND campaign_id = ? AND kind = 'npc'"
+        "SELECT id FROM characters WHERE id = ? AND campaign_id = ? AND kind = 'npc' AND deleted_at IS NULL"
       ).bind(cid, params.id).first();
       if (!sheet) return json({ error: 'character_id must be an NPC sheet in this campaign' }, 400);
       sets.push('character_id = ?'); binds.push(cid);

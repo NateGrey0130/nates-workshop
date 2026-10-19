@@ -42,6 +42,7 @@ export async function onRequestGet({ request, env }) {
             characters.player_email, characters.campaign_id,
             campaigns.system AS campaign_system
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
+     WHERE characters.deleted_at IS NULL
      ORDER BY characters.id LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
 
@@ -113,7 +114,9 @@ export async function onRequestGet({ request, env }) {
     }
   }
 
-  const row = await env.DB.prepare('SELECT count(*) AS n FROM characters').first();
+  // The live characters only, as the page above: a deleted one (migration 091)
+  // is audited by nothing and counted by nothing.
+  const row = await env.DB.prepare('SELECT count(*) AS n FROM characters WHERE deleted_at IS NULL').first();
 
   // Just the numbers, for the catalog page's badge — fetched on every load,
   // so the full offender payload would be waste there.

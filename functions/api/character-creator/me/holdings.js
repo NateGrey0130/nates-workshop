@@ -30,15 +30,18 @@ export async function onRequestGet({ request, env }) {
   const email = getUserEmail(request);
   if (!email) return unauthorized();
 
+  // A deleted character (migration 091) holds nothing: each query skips it in
+  // its own text rather than through OWN, so the smoke sweep that every read
+  // of `characters` says `deleted_at` can see it in all three.
   const OWN = "c.player_email = ? AND c.kind = 'pc'";
   const [chars, items, vessels] = await env.DB.batch([
     env.DB.prepare(`SELECT c.id, c.name, c.class_id, c.occ_class_id, c.skills, c.powers
-                      FROM characters c WHERE ${OWN} ORDER BY c.name`).bind(email),
+                      FROM characters c WHERE ${OWN} AND c.deleted_at IS NULL ORDER BY c.name`).bind(email),
     env.DB.prepare(`SELECT DISTINCT ci.character_id, ci.gear_slug FROM character_items ci
-                      JOIN characters c ON c.id = ci.character_id
+                      JOIN characters c ON c.id = ci.character_id AND c.deleted_at IS NULL
                      WHERE ${OWN} AND ci.removed_at IS NULL AND ci.gear_slug IS NOT NULL`).bind(email),
     env.DB.prepare(`SELECT DISTINCT cv.character_id, cv.vehicle_slug FROM character_vehicles cv
-                      JOIN characters c ON c.id = cv.character_id
+                      JOIN characters c ON c.id = cv.character_id AND c.deleted_at IS NULL
                      WHERE ${OWN} AND cv.removed_at IS NULL AND cv.vehicle_slug IS NOT NULL`).bind(email),
   ]);
 

@@ -494,6 +494,9 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
     }
   } else {
     // Skills, spells, psionics: referenced by name inside a JSON column.
+    // EVERY row, a deleted character's included (migration 091): a delete is
+    // undone by SQL, and a character put back should not come back holding a
+    // name the catalog merged away while it was gone.
     const { results } = await env.DB.prepare(
       `SELECT id, name, ${ref.column} AS payload FROM characters`
     ).all();

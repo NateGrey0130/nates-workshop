@@ -42,7 +42,8 @@ export async function onRequestGet({ request, env }) {
                        characters.mdc_current, characters.mdc_max, characters.ppe_current, characters.ppe_max,
                        characters.isp_current, characters.isp_max, characters.kind,
                        campaigns.name AS campaign_name, campaigns.system AS campaign_system
-                FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id`;
+                FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
+                                                AND characters.deleted_at IS NULL`;
   // An NPC (migration 070) lists for its campaign's G.M. and nobody else - the
   // same rule characterAccess applies to a single read, and for the same F39
   // reason as `mine`, applied HERE: a client-side filter over one 200-row page
@@ -58,7 +59,9 @@ export async function onRequestGet({ request, env }) {
   const page = await pagedQuery(env, {
     // The count joins campaigns now too, because the NPC condition reads
     // gm_email - a count that skipped it would page over rows the list hides.
-    countSql: `SELECT count(*) AS n FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id${where}`,
+    // A deleted character (migration 091) is skipped in the join, by both.
+    countSql: `SELECT count(*) AS n FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
+                                                    AND characters.deleted_at IS NULL${where}`,
     countBinds: binds,
     rowsSql: base + where + ' ORDER BY characters.id DESC',
     rowsBinds: binds,
@@ -81,7 +84,7 @@ export async function onRequestGet({ request, env }) {
     const loads = new Map();
     const held = await selectInChunks(page.results.map((r) => r.id), (batch) => env.DB.prepare(
       `SELECT * FROM characters WHERE id IN (${batch.map(() => '?').join(',')})
-       AND json_valid(second_form) AND second_form <> '{}'`
+       AND deleted_at IS NULL AND json_valid(second_form) AND second_form <> '{}'`
     ).bind(...batch));
     for (const row of held) {
       decodeCharacter(row);

@@ -26,7 +26,7 @@ const TABLES = new Set(['pending_skill_picks', 'pending_power_picks']);
 // not both bank its grants. Appended to an INSERT ... SELECT, with the
 // character id and the level bound after the row's own values. It was written
 // out twice, once per table's insert.
-export const LEVEL_GUARD = ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ?)';
+export const LEVEL_GUARD = ' WHERE EXISTS (SELECT 1 FROM characters WHERE id = ? AND level = ? AND deleted_at IS NULL)';
 
 /** The token for a list of unspent grants, as listPending* returned them. */
 export function pendingToken(pending) {

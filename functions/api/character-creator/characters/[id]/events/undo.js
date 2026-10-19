@@ -80,7 +80,7 @@ export async function onRequestPost({ request, env, params }) {
   // - blank armour back to blank, an untouched location back to absent.
   if (changes.armor && Number.isInteger(changes.armor.index)) {
     const { index, mdc_current: m } = changes.armor;
-    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ?').bind(params.id).first();
+    const row = await env.DB.prepare('SELECT armor FROM characters WHERE id = ? AND deleted_at IS NULL').bind(params.id).first();
     let armor;
     try { armor = JSON.parse(row?.armor || '[]'); } catch { armor = []; }
     if (Array.isArray(armor) && armor[index]) {

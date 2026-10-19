@@ -23,9 +23,11 @@ export async function campaign(env, campaignId) {
   return row ? { id: row.id, name: row.name, gmEmail: row.gm_email } : null;
 }
 
+// A deleted character (migration 091) is seated, rolled for and listed by
+// none of the reads below.
 export async function characters(env, campaignId, who) {
   const { results } = await env.DB.prepare(
-    `SELECT id, name FROM characters WHERE campaign_id = ? AND player_email = ? AND kind = 'pc' ORDER BY name`
+    `SELECT id, name FROM characters WHERE campaign_id = ? AND player_email = ? AND kind = 'pc' AND deleted_at IS NULL ORDER BY name`
   ).bind(campaignId, who).all();
   return results.map((r) => ({ id: String(r.id), name: r.name }));
 }
@@ -34,7 +36,7 @@ export async function character(env, characterId) {
   const cid = id(characterId);
   if (!cid) return null;
   const row = await env.DB.prepare(
-    `SELECT id, name, campaign_id, player_email FROM characters WHERE id = ? AND kind = 'pc'`
+    `SELECT id, name, campaign_id, player_email FROM characters WHERE id = ? AND kind = 'pc' AND deleted_at IS NULL`
   ).bind(cid).first();
   return row ? { id: row.id, name: row.name, campaignId: row.campaign_id, email: row.player_email } : null;
 }
@@ -83,7 +85,7 @@ const withNumbers = async (env, rows) => {
 export async function seatStats(env, campaignId, chars) {
   if (!chars.length) return chars;
   const { results } = await env.DB.prepare(
-    `SELECT * FROM characters WHERE campaign_id = ? AND kind = 'pc' AND id IN (${chars.map(() => '?').join(', ')})`
+    `SELECT * FROM characters WHERE campaign_id = ? AND kind = 'pc' AND deleted_at IS NULL AND id IN (${chars.map(() => '?').join(', ')})`
   ).bind(campaignId, ...chars.map((c) => Number(c.id))).all();
   const of = await withNumbers(env, results);
   return chars.map((c) => ({ ...c, init: of(c.id) }));
@@ -93,7 +95,7 @@ export async function seatStats(env, campaignId, chars) {
 // its statted NPCs (migration 070's kind = 'npc' rows, the ones GM Tools lists).
 export async function roster(env, campaignId) {
   const { results } = await env.DB.prepare(
-    `SELECT * FROM characters WHERE campaign_id = ? AND kind IN ('pc', 'npc') ORDER BY kind DESC, name`
+    `SELECT * FROM characters WHERE campaign_id = ? AND kind IN ('pc', 'npc') AND deleted_at IS NULL ORDER BY kind DESC, name`
   ).bind(campaignId).all();
   const of = await withNumbers(env, results);
   return results.map((r) => ({ kind: r.kind, ref: String(r.id), name: r.name, init: of(r.id) }));

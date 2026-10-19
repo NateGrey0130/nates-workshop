@@ -89,6 +89,14 @@ export function forbidden() {
 // requireCharacter, so hiding it here hides it from all of them at once. The
 // three that read a character row WITHOUT this function call isHiddenNpc
 // themselves: the sheet GET, the character list, and a stash claim.
+//
+// A DELETED CHARACTER (migration 091) is not there to anybody, its owner and
+// the G.M. included: the DELETE route sets `deleted_at` and leaves the row,
+// so a mistaken delete can be put back by SQL, and every read of `characters`
+// skips the row with `deleted_at IS NULL` by hand, as `imported_classes` does.
+// The query below is that skip for every endpoint that comes through here;
+// the three reads named above, and every other read of the table under
+// functions/, carry their own (smoke: "A deleted character is read by nothing").
 export function isHiddenNpc(kind, gmEmail, email) {
   return kind === 'npc' && email !== gmEmail;
 }
@@ -98,7 +106,7 @@ export async function characterAccess(env, characterId, email) {
     `SELECT characters.id, characters.player_email, characters.campaign_id, characters.kind,
             campaigns.gm_email
      FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-     WHERE characters.id = ?`
+     WHERE characters.id = ? AND characters.deleted_at IS NULL`
   ).bind(characterId).first();
   if (!row || isHiddenNpc(row.kind, row.gm_email, email)) {
     return { found: false, canWrite: false, isGm: false };
@@ -156,7 +164,8 @@ export async function campaignAccess(env, campaignId, email) {
   let isMember = isGm;
   if (!isMember) {
     const own = await env.DB.prepare(
-      'SELECT 1 AS n FROM characters WHERE campaign_id = ? AND player_email = ? LIMIT 1'
+      // A deleted character makes nobody a member (migration 091).
+      'SELECT 1 AS n FROM characters WHERE campaign_id = ? AND player_email = ? AND deleted_at IS NULL LIMIT 1'
     ).bind(campaignId, email).first();
     isMember = !!own;
   }

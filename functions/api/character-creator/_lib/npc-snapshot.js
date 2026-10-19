@@ -16,8 +16,10 @@
 
 const SNAPSHOT_VERSION = 1;
 
-// Columns that belong to where a row lives, not to the NPC.
-const PLACE_COLS = new Set(['id', 'campaign_id', 'player_email', 'kind', 'created_at', 'updated_at']);
+// Columns that belong to where a row lives, not to the NPC. `deleted_at`
+// (migration 091) among them: whether a row is live is not part of a sheet, and
+// a copy is born live.
+const PLACE_COLS = new Set(['id', 'campaign_id', 'player_email', 'kind', 'created_at', 'updated_at', 'deleted_at']);
 
 // The child tables, and the columns of each that travel.
 const CHILDREN = {
@@ -35,7 +37,7 @@ const CHILDREN = {
 };
 
 async function snapshotCharacter(env, characterId) {
-  const row = await env.DB.prepare('SELECT * FROM characters WHERE id = ?').bind(characterId).first();
+  const row = await env.DB.prepare('SELECT * FROM characters WHERE id = ? AND deleted_at IS NULL').bind(characterId).first();
   if (!row) return null;
   const character = Object.fromEntries(Object.entries(row).filter(([k]) => !PLACE_COLS.has(k)));
   const out = { version: SNAPSHOT_VERSION, character };
@@ -102,7 +104,7 @@ export async function saveToLibrary(env, characterId, email, source) {
   const snap = await snapshotCharacter(env, characterId);
   if (!snap) return null;
   const camp = await env.DB.prepare(
-    'SELECT campaigns.system FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id WHERE characters.id = ?'
+    'SELECT campaigns.system FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id WHERE characters.id = ? AND characters.deleted_at IS NULL'
   ).bind(characterId).first();
   const row = await env.DB.prepare(
     `INSERT INTO npc_library (owner_email, name, system, sheet, source) VALUES (?, ?, ?, ?, ?)

@@ -29,7 +29,7 @@ export async function systemForCharacter(env, characterId) {
   const row = await env.DB.prepare(
     `SELECT campaigns.system AS system
        FROM characters JOIN campaigns ON campaigns.id = characters.campaign_id
-      WHERE characters.id = ?`
+      WHERE characters.id = ? AND characters.deleted_at IS NULL`
   ).bind(characterId).first();
   return row?.system ?? null;
 }
