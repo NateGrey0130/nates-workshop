@@ -247,7 +247,7 @@
     ],
     [
      "Gear",
-     212
+     216
     ],
     [
      "Spells",
@@ -258,7 +258,7 @@
      25
     ]
    ],
-   "total": 695
+   "total": 699
   },
   {
    "slug": "cb1",
@@ -447,7 +447,7 @@
     ],
     [
      "Gear",
-     100
+     99
     ],
     [
      "Notable NPCs",
@@ -462,7 +462,7 @@
      20
     ]
    ],
-   "total": 214
+   "total": 213
   },
   {
    "slug": "africa",
@@ -549,7 +549,7 @@
     ],
     [
      "Gear",
-     36
+     35
     ],
     [
      "Notable NPCs",
@@ -568,7 +568,7 @@
      19
     ]
    ],
-   "total": 144
+   "total": 143
   },
   {
    "slug": "underseas",
@@ -897,7 +897,7 @@
     ],
     [
      "Gear",
-     25
+     23
     ],
     [
      "Notable NPCs",
@@ -908,7 +908,7 @@
      11
     ]
    ],
-   "total": 57
+   "total": 55
   },
   {
    "slug": "warlords-of-russia",

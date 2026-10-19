@@ -2,7 +2,7 @@
 
 **Status:** `imported` — the whole plan shipped: 25 Techno-Wizard gear rows (#1448), 12 vehicles and automatons (#1446), and all eight O.C.C.s (#1454 and this PR). The 129 spells were already held under Book of Magic and RUE. (2026-09-27)
 
-**Rows citing this book:** classes 8, gear 25, vehicles 11, notable_npcs 13
+**Rows citing this book:** classes 8, gear 23, vehicles 11, notable_npcs 13
 
 Slug `fom`. Cached from `Rifts- World Book 16 Federation of Magic.pdf`,
 161 PDF pages, **text layer**. Second printing, March 1999; copyright 1997.

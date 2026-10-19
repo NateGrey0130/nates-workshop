@@ -6610,3 +6610,42 @@ New West's cost is kept in `cost_note` and its range, payload or recharge in
 Spitfire's and the Thundergun's ranges look swapped in the Book of Magic and
 are taken as printed, by Nate's ruling of 2026-10-19. Metric roundings alone
 are not taken. Applied `--remote` before the merge.
+
+**Taken, and closed, 2026-10-19 (branch `pal/data/book-ingest-audit-f144-four-gear`),
+the finding's last queued row.** Row 39c of the outstanding-work plan, the
+third of three pull requests on this finding. Posture as proposed: data only.
+`~237-book-ingest-audit-f144-four-gear.sql` moves four `gear` rows to Rifts
+Book of Magic (2001), each guarded on the citation and the figure it
+replaces, with the older figure kept in `cost_note` or `description` with its
+page. Production re-read `--remote` on 2026-10-19 before the edit showed all
+four citing the older book with the figures below; the readings are the
+150 dpi renders of both books from row 39's first run, 2026-10-18.
+
+| row | older book | Book of Magic |
+|---|---|---|
+| `talisman-of-armor` | Atlantis printed 154 (1992): 20,000,000 credits; no weight | printed 316: 10,000,000 credits; 1 lb |
+| `tw-fireburst-rifle` | Federation of Magic printed 115 (1997): 125,000 for the rifle | printed 325: 150,000; 40,000 per clip stands |
+| `tw-force-cannon` | Federation of Magic printed 115: 1D6x10+10 M.D. per shot | printed 325: 1D6x10 M.D. per shot, 3D6 M.D. at a ley line |
+| `manoan-fireball-rifle` | South America printed 92 (1994): 20,000 credits flat; 24 shots with a TW-Cell | printed 313: 20,000-35,000 credits (`cost` stays 20000); adds 15 P.P.E. per individual blast |
+
+The Force Cannon's ley-line figure is taken as printed, by Nate's ruling of
+2026-10-19, though it looks carried over from another rifle's line; the pull
+request records the doubt. Applied `--remote` before the merge.
+
+**What the finding did, across its rows.** The proposal's list of about 35
+did not survive the session that wrote it, and `scripts/catalog-diff.mjs`
+cannot rebuild it without entries parsed from the book, so by Nate's ruling
+of 2026-10-12 the rows that could still be named were taken and no more.
+Fifteen held rows were read, every figure off renders of both books
+(2026-10-18). Eleven changed: `tw-ley-streaker` (`~235`, PR #1859), the six
+New West guns (`~236`, PR #1860) and the four rows above (`~237`). Four
+were dropped because the Book of Magic prints the same figure as the book
+they cite: `tw-flamethrower` (Book of Magic printed 328 agrees with Psyscape
+printed 156), `staff-of-eylor` (printed 265-266 agrees with Atlantis printed
+122, 10 to 40 million), `kilairgh-automaton` (printed 343 agrees with
+Federation of Magic printed 110-111 but for a metric rounding, 128 against
+128.7 km), and `dragoncila` (printed 275 prices only the Dragoncila
+injector, 3 million credits, a different item from the row). **Dropped, not
+deferred:** the other twenty or so of the 35 were never identified and are
+not being looked for, by the same ruling, so nothing new is filed
+(`audit-menu` → *A deferral is work*). **F144 is closed by this note.**
