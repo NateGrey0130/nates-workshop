@@ -756,9 +756,11 @@ function renderStepper() {
     // it is worse than plain text, and the stepper is a summary, not a menu.
     if (i < S.step) return `<button type="button" class="${cls}" onclick="goStep(${i})">${stepNum(i)}${name}</button>`;
     // A step already visited is a button too, so going back to fix one thing
-    // is not a walk forward through every Next. Only while the CURRENT step
-    // would let you leave it: its Next button's own reason gates this.
-    if (i > S.step && i <= (S.maxStep ?? 0) && !stepBlocker(S.step)) {
+    // is not a walk forward through every Next. Only while every step on the
+    // way would let you leave it, the current one included: the same walk
+    // Forward takes (forwardStop()), so the rail cannot pass a step whose
+    // Next button is refusing, and a step it cannot reach stays a span.
+    if (i > S.step && i <= (S.maxStep ?? 0) && forwardStop(i) === i) {
       return `<button type="button" class="st seen" onclick="goStep(${i})">${stepNum(i)}${name}</button>`;
     }
     // Which step you are on is otherwise carried in colour alone — ten pills
@@ -990,16 +992,24 @@ function stepHistory() {
 // Where Back or Forward may land: the step an entry names, unless the build can
 // no longer reach it. Never above the furthest step reached (a class or system
 // change since lowers that), never past a step whose own Next button would
-// refuse to be left - the rail's gate, applied to every step on the way up -
-// and never on a step that does not apply. Going down is never gated, as it is
-// not on the rail.
+// refuse to be left - forwardStop(), the walk the rail's forward jump takes
+// too - and never on a step that does not apply. Going down is never gated,
+// as it is not on the rail.
 function reachableStep(want) {
-  let i = Math.min(Math.max(Number(want) || 0, 0), S.maxStep ?? 0, STEPS.length - 1);
-  for (let k = S.step; k < i; k++) {
-    if (stepApplies(k) && stepBlocker(k)) { i = k; break; }
-  }
+  let i = forwardStop(Math.min(Math.max(Number(want) || 0, 0), S.maxStep ?? 0, STEPS.length - 1));
   while (i > 0 && !stepApplies(i)) i--;
   return i;
+}
+
+// How far forward from the current step a move toward `to` gets: the first
+// applicable step on the way, the current one included, whose own Next button
+// refuses to be left (stepBlocker()), or `to` itself when none does. Forward
+// and the rail both ask this, so neither can pass a step the other stops at.
+function forwardStop(to) {
+  for (let k = S.step; k < to; k++) {
+    if (stepApplies(k) && stepBlocker(k)) return k;
+  }
+  return to;
 }
 
 // Back and Forward change which step is shown, and nothing else: a class or a
@@ -1124,8 +1134,9 @@ function goStep(i) {
 }
 
 // Why the step's own Next button is disabled, or ''. The same sentences those
-// buttons print, so a forward jump on the rail cannot pass a step its button
-// would not.
+// buttons print, and forwardStop() asks it of every step between the current
+// one and the target, so a forward jump on the rail cannot pass a step its
+// button would not.
 function stepBlocker(i) {
   if (i === ST.SYSTEM) return S.system ? '' : 'Choose a game system.';
   if (i === ST.RACE) return S.rcc ? classBlocker() : 'Pick a class.';

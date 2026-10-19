@@ -98,6 +98,7 @@ const SECTIONS = [
   'A Talent earned at level-up can be chosen, then or later',
   'The wizard rail',
   'The browser Back button walks the wizard steps',
+  'A forward jump on the rail stops where Forward does',
   'A wizard control keeps keyboard focus when its own change redraws the step',
   'Undo instead of confirm for one-row deletes',
   'The GM dashboard',
@@ -1307,12 +1308,101 @@ export async function run() {
       check('Back and Forward land no higher than the furthest step reached',
         /S\.maxStep \?\? 0/.test(reach), 'an entry above maxStep is shown as it stands');
       check('nor past a step whose own Next button is refusing',
-        /stepBlocker\(k\)/.test(reach), 'Forward walks past a blocked step');
+        /forwardStop\(/.test(reach), 'Forward walks past a blocked step');
       check('nor on a step that does not apply', /!stepApplies\(i\)/.test(reach),
         'an entry naming a skipped step is shown');
       check('and change nothing but the step',
         !/pickClass|pickSystem|resetBuild|recompose|S\.rcc\s*=/.test(pop + reach),
         'Back reapplies or undoes a class or system change');
+    }
+  }
+
+  // The rail made a visited step past the current one a button whenever the
+  // CURRENT step had no blocker, so a jump from Race to Skills walked past an
+  // unmet Attributes minimum that Forward stops at. Rendered rather than read:
+  // renderStepper(), reachableStep() and the walk they share are lifted out of
+  // app.js and drawn against a stand-in build, with every step on the rail
+  // compared with where Forward would land.
+  section('A forward jump on the rail stops where Forward does');
+  {
+    const app = readFileSync(join(appDir, 'app.js'), 'utf8');
+    const stepper = functionBody(app, 'function renderStepper() {');
+    const reach = functionBody(app, 'function reachableStep(want) {');
+    const stop = functionBody(app, 'function forwardStop(to) {');
+    const steps = app.match(/const STEPS = \[[^\]]*\];/)?.[0];
+    const named = app.match(/const ST = Object\.fromEntries\([^\n]*/)?.[0];
+    const num = app.match(/const stepNum = \(i\) => [^\n]*/)?.[0];
+    check('renderStepper(), reachableStep(), forwardStop(), STEPS, ST and stepNum are all found',
+      !!stepper && !!reach && !!stop && !!steps && !!named && !!num,
+      `renderStepper ${!!stepper}, reachableStep ${!!reach}, forwardStop ${!!stop}, STEPS ${!!steps}, ST ${!!named}, stepNum ${!!num}`);
+    // forwardStop() is lifted when present and the rest runs without it, so
+    // the rail is still drawn and judged on a tree that has lost the helper.
+    if (stepper && reach && steps && named && num) {
+      const lib = new Function(`${steps}\n${named}\nreturn { STEPS, ST };`)();
+      const { ST } = lib;
+      const N = lib.STEPS.length;
+      // One build drawn: `blocked` are the steps whose own Next refuses, `na`
+      // the steps that do not apply. Returns the indices the rail made buttons
+      // and the step Forward would land on for each wanted step.
+      const draw = ({ step, maxStep, blocked = [], na = [] }) => {
+        const page = { stepper: { innerHTML: '' } };
+        const S = { step, maxStep, home: false, rcc: { name: 'X' } };
+        const built = new Function('S', 'stepBlocker', 'stepApplies', '$', 'document', 'sticky',
+          'summaryItems', 'draftWorthSaving', 'esc',
+          `${steps}\n${named}\n${num}\n${stop ? `${stop}\n}` : ''}\n${reach}\n}\n${stepper}\n}\nreturn { renderStepper, reachableStep };`)(
+          S, (k) => (blocked.includes(k) ? 'blocked' : ''), (k) => !na.includes(k),
+          (id) => page[id], { querySelector: () => null }, { sizeSticky() {} },
+          () => [], () => false, (x) => String(x));
+        built.renderStepper();
+        const rail = page.stepper.innerHTML.match(/<div class="step-rail">([\s\S]*?)<\/div>/)?.[1] || '';
+        const buttons = [...rail.matchAll(/<button [^>]*onclick="goStep\((\d+)\)"/g)].map((m) => Number(m[1]));
+        return { buttons, reach: built.reachableStep };
+      };
+
+      // The row's own case: on Race, Skills visited, Attributes refusing.
+      const race = draw({ step: ST.RACE, maxStep: ST.SKILLS, blocked: [ST.ATTRIBUTES] });
+      check('on Race with Skills visited and Attributes blocked, no step past Attributes is a button',
+        race.buttons.every((i) => i <= ST.ATTRIBUTES), `buttons ${race.buttons.join(',')}`);
+      check('but Attributes itself is, since Race lets you leave it',
+        race.buttons.includes(ST.ATTRIBUTES), `buttons ${race.buttons.join(',')}`);
+      check('and Forward to Skills stops on Attributes too', race.reach(ST.SKILLS) === ST.ATTRIBUTES,
+        `Forward lands on ${race.reach(ST.SKILLS)}`);
+
+      // Every placement of one blocked step, with and without a step that does
+      // not apply in the way: a step past the current one is a button exactly
+      // when Forward to it lands on it.
+      const wrong = [];
+      for (const na of [[], [ST.MORPHUS], [ST.OCCUPATION, ST.MORPHUS]]) {
+        for (let b = 0; b < N; b++) {
+          for (const step of [ST.SYSTEM, ST.RACE, ST.ATTRIBUTES]) {
+            if (na.includes(step)) continue;
+            const maxStep = N - 1;
+            const w = draw({ step, maxStep, blocked: [b], na });
+            for (let i = step + 1; i <= maxStep; i++) {
+              if (na.includes(i)) continue;
+              if (w.buttons.includes(i) !== (w.reach(i) === i)) {
+                wrong.push(`on ${step}, ${b} blocked, na [${na}]: step ${i} button ${w.buttons.includes(i)}, Forward lands ${w.reach(i)}`);
+              }
+            }
+          }
+        }
+      }
+      check('across every blocked step, the rail offers a forward step exactly when Forward reaches it',
+        wrong.length === 0, wrong.slice(0, 4).join('; '));
+
+      const open = draw({ step: ST.RACE, maxStep: ST.SKILLS });
+      check('with nothing blocked, every visited step is a button and none past the furthest reached',
+        [ST.SYSTEM, ST.ATTRIBUTES, ST.OCCUPATION, ST.MORPHUS, ST.SKILLS].every((i) => open.buttons.includes(i))
+          && open.buttons.every((i) => i <= ST.SKILLS),
+        `buttons ${open.buttons.join(',')}`);
+      const stuck = draw({ step: ST.RACE, maxStep: ST.SKILLS, blocked: [ST.RACE] });
+      check('and a blocked current step offers nothing forward, only the steps behind it',
+        stuck.buttons.join(',') === String(ST.SYSTEM), `buttons ${stuck.buttons.join(',')}`);
+
+      check('the rail and Forward share the walk rather than each keeping a copy',
+        !!stop && /forwardStop\(/.test(stepper) && /forwardStop\(/.test(reach) && /stepBlocker\(k\)/.test(stop)
+          && !/stepBlocker\(/.test(stepper) && !/stepBlocker\(/.test(reach),
+        'renderStepper or reachableStep reads stepBlocker itself');
     }
   }
 
