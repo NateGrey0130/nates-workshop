@@ -9,7 +9,7 @@
 //        Whoever created it, or the G.M. - see mayDelete.
 
 import { json, readJson, requireCampaign, requireMember } from '../../../_lib/auth.js';
-import { STATUSES, trim, serialiseAliases, parseAliases, forViewer } from '../npcs.js';
+import { STATUSES, trim, serialiseAliases, parseAliases, forViewer, SHEET_LIVE } from '../npcs.js';
 
 export async function onRequestGet({ request, env, params }) {
   const guard = await requireMember(request, env, params.id);
@@ -84,9 +84,11 @@ export async function onRequestPatch({ request, env, params }) {
   if (!sets.length) return json({ error: 'Nothing to update' }, 400);
   sets.push("updated_at = datetime('now')");
 
-  const row = await env.DB.prepare(
-    `UPDATE npcs SET ${sets.join(', ')} WHERE id = ? RETURNING *`
-  ).bind(...binds, params.npcId).first();
+  await env.DB.prepare(`UPDATE npcs SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...binds, params.npcId).run();
+  // Read back through found() rather than RETURNING *, so the edited dossier
+  // carries SHEET_LIVE like every other read of one (see forViewer).
+  const row = await found(env, params);
   row.aliases = parseAliases(row.aliases);
   return json({ npc: forViewer(row, guard.access.isGm) });
 }
@@ -123,6 +125,6 @@ function mayDelete(npc, guard) {
 }
 
 async function found(env, params) {
-  return env.DB.prepare('SELECT * FROM npcs WHERE id = ? AND campaign_id = ?')
+  return env.DB.prepare(`SELECT n.*, ${SHEET_LIVE} FROM npcs n WHERE n.id = ? AND n.campaign_id = ?`)
     .bind(params.npcId, params.id).first();
 }

@@ -1092,6 +1092,16 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
       && [200, 201].includes(posted.status) && countBefore === 2,
     JSON.stringify({ camp: made.status, kept: kept.status, gone: gone.status, posted: posted.status, countBefore }));
 
+  // Something the leaving character took from the party stash, so the history
+  // has a claimant to name once it is deleted (read below).
+  const LANTERN = 'Soft delete lantern';
+  const stashed = await apiAs(leaves, 'POST', `/campaigns/${camp.id}/items`, { custom_name: LANTERN, qty: 1 });
+  const claimed = await apiAs(leaves, 'POST', `/campaigns/${camp.id}/items/${stashed.body.item?.id}`,
+    { claim_for_character_id: goneId });
+  check('it claims an item from the party stash first',
+    stashed.status === 201 && claimed.status === 200,
+    JSON.stringify({ stashed: stashed.status, claimed: claimed.body }));
+
   const del = await apiAs(leaves, 'DELETE', `/characters/${goneId}`);
   check('its owner deletes the character', del.status === 200, JSON.stringify(del.body));
 
@@ -1129,6 +1139,51 @@ check('a character that does not exist is a 404, not a 403', missing.status === 
   check('the G.M.\'s campaign delete is blocked by the player still in it, and not by the deleted one',
     blocked.status === 409 && (blocked.body.characters || []).map((c) => c.name).join() === 'Stays At The Table',
     JSON.stringify(blocked.body));
+
+  // The stash history says who took a thing, and a character deleted since
+  // still took it: the history keeps its name (Nate, 2026-10-19).
+  const history = ((await apiAs(gm, 'GET', `/campaigns/${camp.id}/items?include_removed=1`)).body.items || [])
+    .filter((i) => i.custom_name === LANTERN);
+  check('the stash history still names the deleted character that claimed an item',
+    history.length === 1 && history[0].claimed_by_character_id === goneId
+      && history[0].claimed_by_name === 'Leaves The Table',
+    JSON.stringify(history.map((i) => [i.claimed_by_character_id, i.claimed_by_name])));
+
+  // A dossier's statted sheet (migration 071), deleted. The hard delete set
+  // the link to NULL; the mark leaves the id stored, so every read of the
+  // dossier answers null while the sheet is deleted, and the stored id is
+  // what brings the link back when the sheet is restored by SQL.
+  const rolled = await apiAs(gm, 'POST', `/campaigns/${camp.id}/npcs/generate`, { class_id: cls.id, name: 'Ferryman Oake' });
+  const sheetId = rolled.body.npcs?.[0]?.id;
+  const dossier = await apiAs(gm, 'POST', `/campaigns/${camp.id}/npcs`, { name: 'The Ferryman' });
+  const npcId = dossier.body.npc?.id;
+  const linked = await apiAs(gm, 'PATCH', `/campaigns/${camp.id}/npcs/${npcId}`, { character_id: sheetId });
+  const sheetDel = await apiAs(gm, 'DELETE', `/characters/${sheetId}`);
+  check('the G.M. links a dossier to an NPC sheet, then deletes the sheet',
+    rolled.status === 201 && !!sheetId && linked.body.npc?.character_id === sheetId && sheetDel.status === 200,
+    JSON.stringify({ rolled: rolled.status, dossier: dossier.status, linked: linked.body.npc?.character_id, del: sheetDel.status }));
+  const links = async () => {
+    const [one, list, edited] = await Promise.all([
+      apiAs(gm, 'GET', `/campaigns/${camp.id}/npcs/${npcId}`),
+      apiAs(gm, 'GET', `/campaigns/${camp.id}/npcs`),
+      apiAs(gm, 'PATCH', `/campaigns/${camp.id}/npcs/${npcId}`, { faction: 'River Guild' }),
+    ]);
+    return {
+      one: one.body.npc?.character_id,
+      list: (list.body.npcs || []).find((n) => n.id === npcId)?.character_id,
+      edited: edited.body.npc?.character_id,
+    };
+  };
+  const whileGone = await links();
+  check('every dossier read gives the G.M. no link to the deleted sheet: the dossier, the roster, an edit',
+    whileGone.one === null && whileGone.list === null && whileGone.edited === null, JSON.stringify(whileGone));
+  const stored = q(`SELECT character_id FROM npcs WHERE id = ${Number(npcId)}`)[0];
+  check('while the dossier row still holds the sheet\'s id', stored?.character_id === sheetId, JSON.stringify(stored ?? null));
+  q(`UPDATE characters SET deleted_at = NULL WHERE id = ${Number(sheetId)}`);
+  const restored = await links();
+  check('so restoring the sheet by SQL brings the link back',
+    restored.one === sheetId && restored.list === sheetId && restored.edited === sheetId, JSON.stringify(restored));
+  await apiAs(gm, 'DELETE', `/characters/${sheetId}`);
 }
 
 // ── deleting a campaign marks it deleted (migration 092) ────────────────────
