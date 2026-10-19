@@ -122,6 +122,7 @@ const SECTIONS = [
   'The weapon cards follow the inventory',
   'An item that was not added leaves no note saying it was',
   'Pool presses go out one at a time',
+  'A power spend is guarded on the number it was made from',
   'An overflow that was refused is still on offer',
   'A value is escaped for the place it is written into',
   'The sheet reads only item fields its endpoint sends',
@@ -3941,6 +3942,113 @@ export async function run() {
         w.server.hp_current === 11 && w.C.data.hp_current === 11 && w.alerts.length === 1, w.all());
       check('a press answers its caller only when its request has been answered',
         await Promise.race([done.then(() => true), settle().then(() => false)]), 'the promise adjustPool returned is still pending');
+    }
+  }
+
+  // ---------- A power spend is guarded on the number it was made from ----------
+  // A spell's ⚡ posted its from/to without `guard`, so the events route wrote
+  // `to` blindly: a play-mode sheet showing 30 P.P.E. that the G.M. had set to
+  // 20 cast a 1-point spell and stored 29. Its sheet-view branch PATCHed the
+  // absolute number with no expect_updated_at, the same loss by another road.
+  // Reproduced on a local server 2026-10-19 before the fix: both stored 29.
+  //
+  // RUN, not matched: the sheet's own usePower and what it calls, over a
+  // stand-in for the events route's guard and the PATCH's version check.
+  section('A power spend is guarded on the number it was made from');
+  {
+    const sheet = readFileSync(appPath('sheet.js'), 'utf8').replace(/\r\n/g, '\n');
+    const fn = (head) => {
+      const from = sheet.indexOf('\n' + head), to = sheet.indexOf('\n}\n', from);
+      return from < 0 || to < 0 ? null : sheet.slice(from, to + 2);
+    };
+    const use = fn('async function usePower(index) {'), pool = fn('function powerPool(p) {');
+    // New with the fix, so optional: against the old file the checks below
+    // must FAIL, not stop at "cannot be located".
+    const added = (/\nlet poolSends = [^\n]*\n/.exec(sheet) || [''])[0]
+      + (fn('async function sendPowerUse(') || '') + (fn('async function spendInSheetView(') || '');
+    check('usePower and powerPool can be located', !!use && !!pool, 'one of them is not where this looks for it');
+
+    const world = ({ play, screen = 30, stored = screen, cost = 1, fail = null }) => {
+      const server = { ppe_current: stored, updated_at: stored === screen ? 'v1' : 'v2' };
+      const C = { playMode: play, data: { ppe_current: screen, updated_at: 'v1',
+        powers: [{ type: 'spell', name: 'Bolt', cost }] } };
+      const w = { server, C, bodies: [], alerts: [], flashes: [], logged: 0, queued: 0 };
+      const api = async (path, req) => {
+        await null;
+        if (fail) throw fail;
+        if (!req) return { character: { ...server } };
+        const body = JSON.parse(req.body);
+        w.bodies.push(body);
+        if (req.method === 'PATCH') {
+          // functions/api/character-creator/characters/[id].js: a stale version is refused.
+          if (body.expect_updated_at && body.expect_updated_at !== server.updated_at) {
+            throw Object.assign(new Error('changed elsewhere'), { status: 409, detail: { conflict: true } });
+          }
+          server.ppe_current = body.ppe_current;
+          server.updated_at = 'v' + (Number(server.updated_at.slice(1)) + 1);
+          return { ok: true, updated_at: server.updated_at };
+        }
+        // .../characters/[id]/events.js: a guarded field whose `from` is not stored.
+        const f = body.changes.character.ppe_current;
+        if (body.guard && server.ppe_current !== f.from) {
+          throw Object.assign(new Error('changed elsewhere'), { status: 409, detail: { conflict: true,
+            fields: { ppe_current: { mine: f.to, theirs: server.ppe_current, base: f.from } } } });
+        }
+        server.ppe_current = f.to;
+        server.updated_at = 'v' + (Number(server.updated_at.slice(1)) + 1);
+        return { ok: true };
+      };
+      const jsonReq = (method, body) => ({ method, body: JSON.stringify(body) });
+      w.fns = new Function('C', 'id', 'api', 'jsonReq', 'postEvent', 'paintPool', 'syncPowerBtns', 'recordRoll',
+        'flash', 'alert', 'queueChange', 'renderQueueState', 'load',
+        added + pool + use + '; return { usePower };')(
+        C, 3, api, jsonReq, (kind, note, changes) => api('characters/3/events', jsonReq('POST', { kind, note, changes })),
+        () => {}, () => {}, () => { w.logged++; }, (m) => { w.flashes.push(m); }, (m) => { w.alerts.push(m); },
+        async () => { w.queued++; return true; }, () => {},
+        async () => { C.data = { ...C.data, ...(await api('characters/3')).character }; });
+      w.all = () => JSON.stringify({ server: server.ppe_current, screen: C.data.ppe_current, sent: w.bodies,
+        alerts: w.alerts, flashes: w.flashes, logged: w.logged, queued: w.queued });
+      return w;
+    };
+
+    if (use && pool) {
+      let w = world({ play: true });
+      await w.fns.usePower(0);
+      check('in play mode a spend nobody else touched is sent guarded and lands',
+        w.server.ppe_current === 29 && w.C.data.ppe_current === 29 && w.bodies.length === 1
+          && w.bodies[0].guard === true && w.logged === 1 && !w.alerts.length && !w.flashes.length, w.all());
+
+      w = world({ play: true, stored: 20 });
+      await w.fns.usePower(0);
+      check('in play mode a spend on a pool set elsewhere comes out of what is stored, not what was shown',
+        w.server.ppe_current === 19 && w.C.data.ppe_current === 19, w.all());
+      check('and says so, and is logged once', w.flashes.length === 1 && !w.alerts.length && w.logged === 1, w.all());
+
+      w = world({ play: true, stored: 3, cost: 5, screen: 30 });
+      await w.fns.usePower(0);
+      check('in play mode a spend the stored pool can no longer pay is stopped, and the screen shows what is stored',
+        w.server.ppe_current === 3 && w.C.data.ppe_current === 3 && w.alerts.length === 1 && w.logged === 0, w.all());
+
+      w = world({ play: true, fail: new Error('Failed to fetch') });
+      await w.fns.usePower(0);
+      check('in play mode a spend the network ate still waits in the queue, and stays on screen',
+        w.queued === 1 && w.C.data.ppe_current === 29 && !w.alerts.length, w.all());
+
+      w = world({ play: false });
+      await w.fns.usePower(0);
+      check('in sheet view a spend carries the version it was read at, and lands',
+        w.server.ppe_current === 29 && w.bodies.length === 1 && w.bodies[0].expect_updated_at === 'v1'
+          && !w.alerts.length, w.all());
+
+      w = world({ play: false, stored: 20 });
+      await w.fns.usePower(0);
+      check('in sheet view a spend on a pool set elsewhere comes out of what is stored, not what was shown',
+        w.server.ppe_current === 19 && w.C.data.ppe_current === 19 && !w.alerts.length, w.all());
+
+      w = world({ play: false, stored: 0 });
+      await w.fns.usePower(0);
+      check('in sheet view a spend the stored pool can no longer pay is stopped',
+        w.server.ppe_current === 0 && w.alerts.length === 1, w.all());
     }
   }
 

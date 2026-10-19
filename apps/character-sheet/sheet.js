@@ -4023,44 +4023,105 @@ async function usePower(index) {
   if (cur < p.cost) { alert(`Not enough ${pool === 'ppe' ? 'P.P.E.' : 'I.S.P.'} (${cur} left, ${p.name} costs ${p.cost}).`); return; }
   const label = pool === 'ppe' ? 'P.P.E.' : 'I.S.P.';
 
-  // THE SHEET LENS IS UNCHANGED: write, then reload the page around it. There
-  // is no queue outside play mode and nothing here is optimistic.
-  if (!C.playMode) {
-    try {
-      await api('characters/' + id, jsonReq('PATCH', { [pool + '_current']: cur - p.cost }));
-      C.data[pool + '_current'] = cur - p.cost;
-      await load();
-    } catch (err) { alert('Failed: ' + err.message); }
-    return;
-  }
+  // THE SHEET LENS: write, then reload the page around it. There is no queue
+  // outside play mode and nothing here is optimistic.
+  if (!C.playMode) return spendInSheetView(p, pool, cur, label);
 
   // AT THE TABLE IT IS OPTIMISTIC NOW, like every other press in play mode. It
   // used to await the write before deducting, which made it the one play action
   // a dropped connection silently swallowed: the spell was cast, the table
   // moved on, and the sheet still showed the P.P.E. unspent. The cost comes off
   // first and the write follows it.
-  const next = cur - p.cost;
-  const note = `${p.name} −${p.cost} ${label}`;
-  const spent = { [pool + '_current']: { from: cur, to: next } };
-  C.data[pool + '_current'] = next;
+  //
+  // AND IT GOES OUT IN TURN with the pool presses (poolSends, above
+  // adjustPool), because it is guarded on the number the press before it left.
+  C.data[pool + '_current'] = cur - p.cost;
   paintPool(pool);
   // Spending is the commonest way to make the next ⚡ unaffordable, and play
   // mode never re-renders, so the buttons are re-read here.
   syncPowerBtns();
+  const sent = poolSends.then(() => sendPowerUse(p, pool, cur, label));
+  poolSends = sent.catch(() => {});
+  return sent;
+}
+
+// GUARDED, the way a pool press is (sendPoolPress). The spend used to post its
+// from/to without `guard`, and the events route writes `to` blindly then: a
+// sheet showing 30 P.P.E. that the G.M. had set to 20 cast a 1-point spell and
+// stored 29, the G.M.'s change gone without a word. A spend means "the cost
+// out of what there is", so a refusal is re-made once on the server's number -
+// or stopped, if that number can no longer pay for it.
+async function sendPowerUse(p, pool, from, label, retried = false) {
+  const key = pool + '_current';
+  const note = `${p.name} −${p.cost} ${label}`;
+  const spent = { [key]: { from, to: from - p.cost } };
   const logSpend = () => recordRoll('power', p.name,
     { die: 0, roll: 0, target: null, ok: null, note: `-${p.cost} ${label}` });
   try {
-    await postEvent('power', note, { character: spent });
+    await api(`characters/${id}/events`, jsonReq('POST', { kind: 'power', note, changes: { character: spent }, guard: true }));
     logSpend();
   } catch (err) {
+    const theirs = err.status === 409 ? err.detail?.fields?.[key]?.theirs : undefined;
+    if (!retried && typeof theirs === 'number') {
+      C.data[key] = theirs;
+      if (theirs < p.cost) {
+        paintPool(pool);
+        syncPowerBtns();
+        alert(`${label} was changed elsewhere to ${theirs}: not enough for ${p.name}, which costs ${p.cost}.`);
+        return;
+      }
+      C.data[key] = theirs - p.cost;
+      paintPool(pool);
+      syncPowerBtns();
+      flash(`${label} was changed elsewhere to ${theirs}; spent from that.`);
+      return sendPowerUse(p, pool, theirs, label, true);
+    }
     if (err.status === undefined && await queueChange('power', note, spent)) {
       logSpend();
       renderQueueState(err);
       return;
     }
-    C.data[pool + '_current'] = cur;
+    C.data[key] = from;
     paintPool(pool);
     syncPowerBtns();
+    alert('Failed: ' + err.message);
+  }
+}
+
+// THE SHEET LENS WRITES AN ABSOLUTE NUMBER, so it carries the version it was
+// read at, as every other sheet PATCH does (sendEdits). Without it a spend
+// from a stale page wrote "what I showed, less the cost" over whatever was
+// stored. A refusal re-reads the character and spends from what it holds now,
+// once; a pool that can no longer pay is left as it is.
+//
+// The new version is kept only from an unrefused write. After a refusal
+// somebody else has written since this page loaded, and taking the version
+// would let an autosave typed before it skip its own per-field check.
+async function spendInSheetView(p, pool, cur, label, expect = C.data.updated_at, retried = false) {
+  const key = pool + '_current';
+  try {
+    const res = await api('characters/' + id, jsonReq('PATCH', {
+      [key]: cur - p.cost, expect_updated_at: expect || undefined,
+    }));
+    if (!retried && res?.updated_at) C.data.updated_at = res.updated_at;
+    C.data[key] = cur - p.cost;
+    await load();
+  } catch (err) {
+    if (err.status === 409 && err.detail?.conflict && !retried) {
+      let fresh;
+      try { fresh = (await api('characters/' + id)).character; } catch (reread) {
+        alert('Failed: ' + reread.message);
+        return;
+      }
+      const theirs = fresh[key];
+      if (typeof theirs !== 'number' || theirs < p.cost) {
+        alert(`${label} was changed elsewhere to ${theirs ?? 'nothing'}: not enough for ${p.name}, which costs ${p.cost}.`);
+        await load();
+        return;
+      }
+      if (theirs !== cur) flash(`${label} was changed elsewhere to ${theirs}; spent from that.`);
+      return spendInSheetView(p, pool, theirs, label, fresh.updated_at, true);
+    }
     alert('Failed: ' + err.message);
   }
 }
