@@ -2,7 +2,7 @@
 
 **Status:** `imported` — PRs #1375-#1400: gear, Biomancy spells, vehicles, 8 O.C.C.s, 16 R.C.C.s, creatures and notable NPCs. (2026-09-25)
 
-**Rows citing this book:** classes 23, gear 36, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 26
+**Rows citing this book:** classes 23, gear 36, vehicles 19, skills 1, spells 24, notable_npcs 16, creatures 25
 
 Slug `south-america`. Cached 2026-09-24 from
 `Rifts- World Book 6 South-America.pdf`, 170 PDF pages, **text layer** (no

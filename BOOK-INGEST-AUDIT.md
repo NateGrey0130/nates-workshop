@@ -6519,6 +6519,40 @@ match D-Bees. Each row keeps its shape (`F141`). Before the apply both cited
 their original books on production (`q.mjs --remote`, 2026-10-18). Posture
 as proposed: data only. The finding stays open for the rest of the 34.
 
+**Taken, 2026-10-18 (branch `pal/data/book-ingest-audit-f143-south-america`), the
+finding's last queued row; the two rows held under `F142` stay open.**
+South America, 38c part 3 of 3: `~234-book-ingest-audit-f143-south-america.sql`
+moves the `creatures` row `pogtalian-dragon-slayer` to D-Bees printed 156-159,
+the class's own range, with South America's replaced figures (printed
+135-136) kept in its `description`. Attributes, S.D.C., size, weight and the
+bite are the same in both books; Horror Factor 12 stays South America's, since
+D-Bees prints none. Hit Points take D-Bees' 2D6 per level, M.D.C. adds the
+P.E. attribute number, P.P.E. goes from NULL to 2D6x10, and `combat` keeps its
+five attacks, +3 initiative, +1 parry and +2 dodge and gains +2 Perception, +2
+strike and +2 pull punch. By the line rule the row drops South America's
+supersensitive hearing (D-Bees' complete Bonuses line names none), the
+Cibola clauses of its alignment and Pilot, Pilot Related and Rogue lines, and
+the Supernatural mark on every attribute but P.S. and P.E. Its one `stat_attacks` row matches
+D-Bees and is unchanged, and the row keeps its shape (`F141`). Before the
+apply it cited South America on production (`q.mjs --remote`, 2026-10-18).
+
+**What the finding did, across its rows.** 27 `creatures` rows now follow
+D-Bees, each with its older book's replaced figures in its `description`:
+eight from Canada (`~218` to `~221`), six from Coalition War Campaign (`~222`
+to `~224`), seven from Psyscape (`~225` to `~231`), three from New West
+(`~232`), two from Atlantis and Underseas (`~233`) and this one (`~234`).
+The proposal's 34 was the class count (`F141`), not a row count, and the
+rest of it was settled without a script, as Nate ruled on 2026-10-12:
+`tokanii` and `simvan-monster-rider` already cited D-Bees, and
+`lyn-srial-sky-knight` and `worldly-sasquatch` have no creature row and
+need none. **Not done, and not dropped:** the `centaurs` and
+`cyber-horsemen-of-ixion` rows (Conversion Book One) are held with `F142`
+and are not moved here by the year rule (Nate, 2026-10-12). That remainder
+already has a number, so nothing new is filed (`audit-menu` → *A deferral is
+work*). `F142` is held, and held is not closed, so this finding stays in this
+file with that remainder open under `F142` rather than moving to
+`BOOK-INGEST-AUDIT.closed.md`. Posture as proposed: data only.
+
 ### F144 - low - about 35 held rows whose Book of Magic figures differ from the older book they cite
 
 Data only. Phase A's package A6 ran a real diff of the Book of Magic chapter
