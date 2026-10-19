@@ -108,5 +108,49 @@
     return label(a).localeCompare(label(b)) || a.localeCompare(b);
   }
 
-  window.SpellTraditions = { label, partition, slugOf, heldGroup, heldOrder };
+  // THE TRADITIONS WITH NO LEVELS, read off the catalog rather than listed
+  // (BOOK-INGEST-AUDIT F123). Nine were stored wholly at level 0 in production
+  // on 2026-10-19 (`--remote`, grouped by tradition, max(level) = 0), the ward
+  // symbols among them. `spells.level` is NOT NULL DEFAULT 0, so for those a
+  // "level 0" is the column's default and not something the book prints. A
+  // tradition with even one row above 0 has levels and keeps them. Derived, not
+  // listed, so a tenth stored the same way needs no edit here; cached per
+  // catalog array, which a page loads once.
+  const flatCache = new WeakMap();
+  function unleveled(catalog) {
+    if (!Array.isArray(catalog)) return new Set();
+    if (flatCache.has(catalog)) return flatCache.get(catalog);
+    const seen = new Set();
+    const leveled = new Set();
+    for (const sp of catalog) {
+      const t = slugOf(sp);
+      if (!t) continue;
+      seen.add(t);
+      if (Number(sp.level) > 0) leveled.add(t);
+    }
+    const out = new Set([...seen].filter((t) => !leveled.has(t)));
+    flatCache.set(catalog, out);
+    return out;
+  }
+
+  // The heading over a list of held or granted spells, from their traditions:
+  // one tradition's label when every spell shares it, "Spells" otherwise -
+  // general invocations, a mix, or an empty list.
+  function listTitle(slugs) {
+    const set = new Set((slugs || []).map((s) => String(s || '').toLowerCase()));
+    if (set.size !== 1) return 'Spells';
+    const [only] = set;
+    return only ? label(only) : 'Spells';
+  }
+
+  // What one row of a tradition is called in a count. A ward is a symbol the
+  // Diabolist draws, not a spell (the class "cannot learn spell magic"); every
+  // other tradition, the level-0 ones included, keeps "spell" (Nate, 2026-10-12).
+  const NOUNS = { ward: ['symbol', 'symbols'] };
+  function noun(slug, n) {
+    const pair = NOUNS[String(slug || '').toLowerCase()] || ['spell', 'spells'];
+    return n === 1 ? pair[0] : pair[1];
+  }
+
+  window.SpellTraditions = { label, partition, slugOf, heldGroup, heldOrder, unleveled, listTitle, noun };
 })();

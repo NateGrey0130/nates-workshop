@@ -878,12 +878,14 @@ function spellListHtml(sec, rows) {
     }).join('');
   };
 
-  const fold = (key, name, list, who, families, inner) => {
+  // `slug` is the tradition the fold belongs to, so a family inside it counts
+  // its rows by the same noun: a ward's are symbols (BOOK-INGEST-AUDIT F123).
+  const fold = (key, name, list, who, families, inner, slug) => {
     const forced = typed || (!!S.focus && list.some((r) => keyOf(r) === S.focus));
     const open = forced || S.folds.has(key);
     const mine = list.filter((r) => heldBy(sec, r).length).length;
     const count = `${list.length} ${typed ? (list.length === 1 ? 'match' : 'matches')
-      : (list.length === 1 ? 'spell' : 'spells')}`;
+      : SpellTraditions.noun(slug, list.length)}`;
     const inside = `<span class="codex-fold-name">${escHtml(name)}${mine
         ? ` <span class="tag codex-yours">${mine} yours</span>` : ''}</span>
       <span class="codex-fold-n">${count}</span>
@@ -895,7 +897,7 @@ function spellListHtml(sec, rows) {
       : `<button type="button" class="${cls}" data-fold="${escHtml(key)}" aria-expanded="${open}">${inside}</button>`;
     if (!open) return head;
     const body = families
-      ? families.map((f) => fold(`${key}/${f.id}`, f.label, f.rows, null, null, true)).join('')
+      ? families.map((f) => fold(`${key}/${f.id}`, f.label, f.rows, null, null, true, slug)).join('')
       : leveled(list);
     return head + `<div class="codex-fold-body">${body}</div>`;
   };
@@ -905,7 +907,7 @@ function spellListHtml(sec, rows) {
         + general.map((r) => entry(sec, r)).join('') : '')
     + `<div class="codex-band"><h2>Tradition spells</h2>
         <span>Only for the classes named under each heading · ${rows.length - general.length}</span></div>`
-    + traditions.map((t) => fold(t.id, t.label, t.rows, S.traditionClasses[t.id] || [], t.families, false)).join('');
+    + traditions.map((t) => fold(t.id, t.label, t.rows, S.traditionClasses[t.id] || [], t.families, false, t.id)).join('');
 }
 
 function tabsHtml() {
