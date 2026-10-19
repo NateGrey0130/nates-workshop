@@ -588,11 +588,14 @@ CREATE INDEX IF NOT EXISTS idx_character_grants_character
 -- 2026-09-25, and a table called `items` beside it was the likeliest collision.
 CREATE TABLE IF NOT EXISTS gear (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  slug TEXT NOT NULL UNIQUE,            -- matches equipment_starting item_id refs in class markdown,
+  slug TEXT NOT NULL UNIQUE CHECK (slug <> ''),
+                                        -- matches equipment_starting item_id refs in class markdown,
                                         -- and since migration 046 the only key inventory
                                         -- holds. NOT NULL since 047: UNIQUE alone permits
                                         -- any number of NULLs, and a slugless gear row
-                                        -- would join to nothing.
+                                        -- would join to nothing. Not empty since 093, for
+                                        -- the same reason: '' satisfies both and joins to
+                                        -- nothing too.
   name TEXT NOT NULL,
   system TEXT CHECK (system IN ('rifts', 'palladium-fantasy', 'nightbane', 'heroes-unlimited', 'both')),   -- migration 059
   category TEXT,                        -- weapon | armor | vehicle | cybernetics | gear
@@ -1486,6 +1489,14 @@ INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '047-gear-slug-not-null.sql'
 WHERE EXISTS (SELECT 1 FROM pragma_table_info('gear')
                WHERE name = 'slug' AND "notnull" = 1);
+
+-- 093 adds a CHECK, which pragma_table_info cannot see, so its guard reads the
+-- constraint's own text out of sqlite_master the way 045's does. After gear's
+-- CREATE, so a database built from this file in one pass records it.
+INSERT OR IGNORE INTO schema_migrations (filename)
+SELECT '093-gear-slug-check.sql'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'gear'
+                AND instr(sql, 'CHECK (slug <> '''')') > 0);
 
 INSERT OR IGNORE INTO schema_migrations (filename)
 SELECT '046-drop-inventory-item-id.sql'
