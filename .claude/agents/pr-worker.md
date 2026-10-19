@@ -104,9 +104,18 @@ Four more things that are refused or cost you the row:
   fail is dropped: say so in the report and fix the rest of the row.
 - **A fix carries a check**, and the check is made to fail once before it is
   trusted. Keep each suite's full output in a file; never tail a failure away.
+  A suite run in the background ends its command with `; echo "rc=$?" >> <that file>`,
+  and the wait is over only when a line of the file is exactly `rc=<n>`:
+  passing lines carry `ok` and `failed`, so a looser pattern ends it early.
+- **A pinned figure comes off `main`, never off the brief.** A survey's
+  `Rows citing this book` line, or any count the brief quotes, was written
+  against an older `main`. Paste the line `regression` prints on your branch.
 - Before the push: `git diff --name-only HEAD...origin/main`. If `main` moved on
   a path you touched or a shared one, merge it and run the suites again.
 - **D1 is applied before the merge**, through `node scripts/d1-apply.mjs`.
+  Push the branch before `--remote`: it reads every branch on origin for a
+  file with the same number, yours included, so a renamed `~NNN` script whose
+  old name origin still holds stops as `NUMBER TAKEN`.
 - The pull request body ends with a section **What this left**: what was
   dropped, what was read and not run, and anything that is Nate's to decide.
   That section is the record. Nothing is added to the plan about it.
