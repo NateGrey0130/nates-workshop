@@ -6568,3 +6568,20 @@ itself was in that session's working files, which may be gone. A taker
 should expect to re-run the diff.
 
 **Confidence:** low on the count. **Ongoing cost:** none.
+
+**Partly taken, 2026-10-19 (branch `pal/data/book-ingest-audit-f144-ley-streaker`).**
+The finding stays open: this is row 39a of the outstanding-work plan, the
+first of three pull requests on it, and the outcome note is the third's.
+Posture as proposed: data only. `~235-book-ingest-audit-f144-ley-streaker.sql`
+moves the `vehicles` row `tw-ley-streaker` from Federation of Magic printed 122
+(1997) to Rifts Book of Magic printed 337 (2001, cache p338): Main Body 150
+where it held 220, no movement off a ley line where it held about 60 mph for
+four hours, range unlimited along ley lines, and an Electro-Blaster as its
+first `vehicle_weapons` row (1D4x10 M.D., 2,000 feet, rate of fire equal to the
+attacks per melee round, payload unlimited), every figure read off a 150 dpi
+render of cache p338. By Nate's ruling of 2026-10-19 the location row
+`Wings (2; main body)` moves to 150 with the 220 kept in its `mdc_note`;
+Federation of Magic's replaced figures are kept in the row's `description`,
+since `vehicles` has no notes column. `tw-battle-streaker` is not changed.
+Applied `--remote` before the merge. The list of about 35 is not rebuilt, by
+Nate's ruling of 2026-10-12.
