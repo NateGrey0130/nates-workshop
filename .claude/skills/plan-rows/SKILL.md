@@ -116,7 +116,7 @@ session), and the `ship-pr` order still binds the call: every required check
 green, D1 applied first, the merge as its own command. The driver merges a
 `READY` row and nothing else (his ruling, 2026-10-12; the option he did not
 take was the driver merging every row). The worker still never merges: one
-that did would skip the three calls below. Three calls, each on its own:
+that did would skip the steps below. Four steps, each call on its own:
 
 1. `gh pr merge <n> --merge --repo NateGrey0130/nates-workshop`, with no
    `--delete-branch`: the worker's worktree still holds the branch.
@@ -126,14 +126,44 @@ that did would skip the three calls below. Three calls, each on its own:
    Drift-check reads the checkout's data scripts, so after a data row an
    un-pulled `main` prints `RUN BUT NO FILE` for the script just merged
    (row 32a, 2026-10-14).
+4. **Bring this checkout's local D1 up to the merge.** Every worker starts
+   from a copy of it, and nothing else applies a merged migration here.
+   `node scripts/d1-apply.mjs --check --local db/migrations/*.sql` lists
+   every migration; each one it does not mark `ALREADY RECORDED` goes in one
+   call, in its order: `node scripts/d1-apply.mjs --local <those files>`. A
+   Marvel or tools row does the same with `--db marvel db/migrations/marvel/*.sql`
+   or `--db tools db/migrations/tools/*.sql`. A data script the merge added is
+   applied the same way, `--local` with its path, but a failure there is said
+   in the closing message and is not a stop: this database is hundreds of
+   data scripts behind production, and a new one can need a row it never got.
+   Measured 2026-10-19: rows 46a1, 46b and 46c1 applied migrations 091 to 093
+   to production and to their own copies only, and five of the next seven
+   workers' copies failed smoke's *Migration state* and served the creator a
+   500.
 
 Then replace `state.md` whole, with the `NEXT:` line from the report first and
 the row as `MERGED` by the driver, and spawn the next row. A refusal is not a
-request for Nate's word: if any of the three is refused or fails, stop.
+request for Nate's word: if a call in steps 1 to 4 is refused or fails, other
+than a data script's local apply, stop.
+
+**A capped row with only the CI wait left is the driver's to finish, not a
+split.** That is a `BLOCKED` report from the worker's cap that says its pull
+request is open, every suite was green locally and the watch is all that is
+left. One call:
+`gh pr checks <n> --repo NateGrey0130/nates-workshop`. Every required check
+passing makes the row `READY`: merge it by the four steps above and write
+`state.md` from the `NEXT:` line the report carries (`pr-worker` puts it
+there for this case). Checks still pending: the same command with `--watch`,
+at the Bash tool's ten-minute timeout, once. A red check, or a report that
+names any other work left, goes to the split below. Measured 2026-10-19: rows 48a and 48b each stopped
+at the cap with their work committed and suites green, and each then cost a
+split agent (about 87k) and a resume worker (about 60k) to open a pull
+request and watch it.
 
 **A row that outgrew its brief is split by an agent, not by the driver.** Two
 reports mean that: a `BLOCKED` that stopped at the worker's cap with work
-pushed (it names a branch and a commit), and one that says the row is larger
+pushed (it names a branch and a commit) and more than the CI wait above left,
+and one that says the row is larger
 than its brief describes. Neither is a stop, and neither is a reason to open
 the brief. The driver spawns one agent, in the foreground:
 
@@ -164,7 +194,8 @@ worker's `checkout -b` finds the name taken.
 **The driver stops for Nate only at the first of these** (his ruling,
 2026-10-12: no row cap), and at nothing else:
 
-- the report or the state file says `BLOCKED`, other than the cap case above.
+- the report or the state file says `BLOCKED`, other than the two cap cases
+  above.
   Do not retry or fix the row.
 - the state file says `DONE`, or the next row has no brief.
 - the report and the state file disagree, other than a `READY` report over a
