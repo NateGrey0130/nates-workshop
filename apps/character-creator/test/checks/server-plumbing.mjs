@@ -617,6 +617,8 @@ section('A deleted character is read by nothing');
       why: 'a cleanup delete of the row this request just wrote, hard by ruling (2026-10-12)' },
     { file: '_lib/npc-snapshot.js', has: 'DELETE FROM characters', count: 2,
       why: 'the half-copied restore and the move to the NPC library, both hard by ruling (2026-10-12)' },
+    { file: 'campaigns/[id]/items.js', has: 'AS claimed_by_name',
+      why: 'the stash history names a claimant deleted since, by ruling (2026-10-19); it reads the name only' },
   ];
 
   const fnDir = join(repoRoot, 'functions');

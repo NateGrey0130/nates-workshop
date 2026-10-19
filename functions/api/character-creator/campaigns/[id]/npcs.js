@@ -17,8 +17,22 @@ export const STATUSES = ['alive', 'dead', 'unknown', 'never-met'];
 // already invisible to them (isHiddenNpc), but its id would still say that the
 // G.M. has statted this person - which is the thing being kept. So it leaves
 // every dossier response for anyone but the G.M.
+//
+// A sheet deleted since is only marked (migration 091), so the stored id still
+// names it and the G.M.'s link would open a 404. While the mark stands the
+// response says null; the row keeps the id, so a restore by SQL (Nate,
+// 2026-10-12) brings the link back. Every read that hands a dossier to
+// forViewer selects SHEET_LIVE beside it (alias `n` for npcs), and a row
+// without it gets no link: forgetting the column hides a link rather than
+// showing a dead one.
+export const SHEET_LIVE = `EXISTS (SELECT 1 FROM characters c
+                                   WHERE c.id = n.character_id AND c.deleted_at IS NULL) AS sheet_live`;
+
 export function forViewer(row, isGm) {
-  if (row && !isGm) delete row.character_id;
+  if (!row) return row;
+  if (!row.sheet_live) row.character_id = null;
+  delete row.sheet_live;
+  if (!isGm) delete row.character_id;
   return row;
 }
 
@@ -49,7 +63,8 @@ export async function onRequestGet({ request, env, params }) {
   const page = await pagedQuery(env, {
     countSql: `SELECT count(*) AS n FROM npcs n WHERE ${clause}`,
     countBinds: binds,
-    rowsSql: `SELECT n.*, (SELECT count(*) FROM npc_mentions m WHERE m.npc_id = n.id) AS mention_count
+    rowsSql: `SELECT n.*, ${SHEET_LIVE},
+                     (SELECT count(*) FROM npc_mentions m WHERE m.npc_id = n.id) AS mention_count
               FROM npcs n WHERE ${clause}
               ORDER BY mention_count DESC, n.name`,
     rowsBinds: binds,
