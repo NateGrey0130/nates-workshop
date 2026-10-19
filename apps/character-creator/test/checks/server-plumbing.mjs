@@ -659,6 +659,18 @@ section('A deleted character is read by nothing');
   check('the character DELETE sets deleted_at', /UPDATE characters SET deleted_at = datetime\('now'\)/.test(del));
   check('and removes no row and detaches no journal entry',
     !/DELETE FROM characters/.test(del) && !/journal_entries/.test(del));
+
+  // The sheet's roster asks before that DELETE, and what it asks has to be
+  // what the route now does: the character is hidden, not gone, and comes back
+  // only by SQL (Nate, 2026-10-12), and nothing it claimed from the stash goes
+  // back there - no cascade fires, so the item stays in its inventory.
+  const sheet = readFileSync(join(repoRoot, 'apps', 'character-sheet', 'sheet.js'), 'utf8');
+  const ask = sheet.slice(sheet.indexOf('async function deleteFromRoster'),
+    sheet.indexOf('// ─── changing stage ───'));
+  check('the roster\'s delete prompt says it hides the character and only Nate can restore it',
+    ask.includes('hides them from everyone') && ask.includes('Only Nate can restore them'), ask.slice(0, 400));
+  check('and no longer says it cannot be undone, or that a claimed item returns to the stash',
+    ask.length > 0 && !/cannot be undone/i.test(ask) && !/returns to it/.test(ask));
 }
 
 // ---------- A deleted campaign is read by nothing ----------
@@ -718,6 +730,18 @@ section('A deleted campaign is read by nothing');
   check('the campaign DELETE sets deleted_at', /UPDATE campaigns SET deleted_at = datetime\('now'\)/.test(del));
   check('and removes no row and deletes nothing from the bucket',
     !/DELETE\s+FROM\s+campaigns/i.test(del) && !/\bMEDIA\b/.test(del) && !/\.delete\(/.test(del));
+
+  // The G.M. dashboard asks before that DELETE, and what it asks has to be
+  // what the route now does (Nate, 2026-10-19: "hides it from everyone; only
+  // Nate can restore it"). The typed name and the 409's list of players stay.
+  const dash = readFileSync(join(repoRoot, 'apps', 'gm-tools', 'dashboard.js'), 'utf8');
+  const ask = dash.slice(dash.indexOf('async function deleteCampaign'), dash.indexOf('if (!campaignId)'));
+  check('the dashboard\'s delete prompt says it hides the campaign and only Nate can restore it',
+    ask.includes('from everyone') && ask.includes('Only Nate can restore it'), ask.slice(0, 400));
+  check('and no longer says it cannot be undone', ask.length > 0 && !/cannot be undone/i.test(ask));
+  check('and still asks for the name typed, and names the players a 409 lists',
+    ask.includes('Type the campaign\'s name to confirm') && ask.includes('typed.trim() !== name')
+      && ask.includes('err.detail?.characters'));
 }
 
 }

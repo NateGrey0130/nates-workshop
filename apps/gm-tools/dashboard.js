@@ -554,10 +554,14 @@ async function saveNotes() {
 // stash, the journal, cities, and the GM's own NPCs. Typing the name rather
 // than an OK, because one misclick here is the entire game. The server refuses
 // while another player still has a character in it, and names them.
+// Since migration 092 the delete only marks the campaign, so the prompt says
+// it is hidden and comes back by SQL alone (Nate, 2026-10-12: no restore
+// button; 2026-10-19: this wording).
 async function deleteCampaign() {
   const name = D.campaign.name;
-  const typed = prompt(`Delete "${name}" and everything in it - its pages, pictures, NPCs, `
-    + `stash, journal and cities? This cannot be undone.\n\nType the campaign's name to confirm.`);
+  const typed = prompt(`Delete "${name}"? This hides it and everything in it - its pages, pictures, `
+    + `NPCs, stash, journal and cities - from everyone. Only Nate can restore it.\n\n`
+    + `Type the campaign's name to confirm.`);
   if (typed == null) return;
   if (typed.trim() !== name) { setMsg('delete-msg', 'The name did not match, so nothing was deleted.', true); return; }
   try {

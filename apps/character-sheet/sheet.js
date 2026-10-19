@@ -5240,14 +5240,17 @@ function renderRoster() {
   </div>`;
 }
 
-// The same confirmation the wizard's list asked, because it is the same
-// deletion and the same consequences - what goes, what comes back, what stays.
+// Since migration 091 the DELETE only marks the character: nothing cascades,
+// so everything attached to it is hidden with it, an item it claimed from the
+// stash stays in its inventory, and it comes back by SQL alone (Nate,
+// 2026-10-12: no restore button).
 async function deleteFromRoster(cid) {
   const c = R.mine.find((x) => x.id === cid);
   if (!c) return;
-  if (!confirm(`Delete ${c.name} (level ${c.level})? This cannot be undone.\n\n`
-    + `Their inventory, level history, unspent picks and play log go with them. `
-    + `Anything they had claimed from the campaign stash returns to it.\n\n`
+  if (!confirm(`Delete ${c.name} (level ${c.level})? This hides them from everyone. `
+    + `Only Nate can restore them.\n\n`
+    + `Their inventory, level history, unspent picks and play log are hidden with them, `
+    + `including anything they had claimed from the campaign stash.\n\n`
     + `Journal entries they wrote stay in the campaign log.`)) return;
   try {
     await api('characters/' + cid, { method: 'DELETE' });
