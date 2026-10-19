@@ -34,7 +34,20 @@ const MERGE_REFS = {
   // `key` is the column on the CATALOG row whose value the reference stores.
   // For gear that is the slug; before migration 046 the reference stored the
   // id and this branch could bind keepId/removeId directly.
-  gear: { kind: 'fk', table: 'character_items', column: 'gear_slug', key: 'slug' },
+  //
+  // EVERY TABLE THAT REFERENCES gear(slug), not only the sheet. The party stash
+  // (`campaign_items.gear_slug`, db/schema.sql) references it too, with no ON
+  // DELETE clause, and D1 enforces foreign keys: while this listed only
+  // character_items, one stash row on the losing slug - held or soft-removed,
+  // since a removed row still holds the reference - made the DELETE below fail
+  // and the whole merge come back as a 500 with nothing moved.
+  gear: {
+    kind: 'fk', key: 'slug',
+    tables: [
+      { table: 'character_items', column: 'gear_slug' },
+      { table: 'campaign_items', column: 'gear_slug' },
+    ],
+  },
 };
 
 // ─── name normalisation ───
@@ -464,15 +477,20 @@ export async function mergeRows(env, catalogKey, keepId, removeId) {
     // binding an integer here would match nothing and silently repoint no rows -
     // the merge would appear to succeed and leave every inventory line pointing
     // at the row it just deleted. RETRO-AUDIT R21.
+    //
+    // Each referencing table is repointed in the same batch as the DELETE and
+    // ahead of it, with no `removed_at` filter: a soft-removed stash row is
+    // still a foreign key onto the losing slug.
     const keepKey = keep[ref.key], removeKey = remove[ref.key];
-    const { results } = await env.DB.prepare(
-      `SELECT id FROM ${ref.table} WHERE ${ref.column} = ?`
-    ).bind(removeKey).all();
-    if (results.length) {
+    for (const { table, column } of ref.tables) {
+      const { results } = await env.DB.prepare(
+        `SELECT id FROM ${table} WHERE ${column} = ?`
+      ).bind(removeKey).all();
+      if (!results.length) continue;
       statements.push(env.DB.prepare(
-        `UPDATE ${ref.table} SET ${ref.column} = ? WHERE ${ref.column} = ?`
+        `UPDATE ${table} SET ${column} = ? WHERE ${column} = ?`
       ).bind(keepKey, removeKey));
-      repointed.push({ table: ref.table, rows: results.length });
+      repointed.push({ table, rows: results.length });
     }
   } else {
     // Skills, spells, psionics: referenced by name inside a JSON column.
