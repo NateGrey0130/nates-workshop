@@ -1498,6 +1498,13 @@ section('The codex: every section loads, searches, filters and keeps its address
 
   if (codex) {
     const npcs = codex.byId.npcs;
+    const byName = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true });
+    const sorted = (names) => names.every((n, i) => !i || byName(names[i - 1], n) <= 0);
+    const listed = codex.search('npcs').map((r) => r.name);
+    const team = codex.search('npcs', { group: npcs.groups[0].id }).map((r) => r.name);
+    check(`Notable NPCs: the tab lists its ${listed.length} characters by name, and a team filter keeps that order`,
+      listed.length === npcs.rows.length && sorted(listed) && team.length > 1 && sorted(team),
+      listed.filter((n, i) => i && byName(listed[i - 1], n) > 0).slice(0, 3).join(', '));
     const nc = npcs.byKey.get('nightcrawler');
     check('Notable NPCs: Nightcrawler reads as the book prints him (p.7)',
       nc && npcs.summary(nc) === 'Kurt Wagner. Mutant hero'
