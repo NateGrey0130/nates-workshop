@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures and the notable NPCs shipped; classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and three of the eight classes shipped; the other five classes next. (2026-10-20)
 
-**Rows citing this book:** gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
+**Rows citing this book:** classes 3, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -273,7 +273,10 @@ book's items and special skills (the Madhaven lesson).
 4. **Creatures** — 21 rows, through `scripts/bestiary-sql.mjs`. Done:
    `~251-dinosaur-swamp-creatures.sql`.
 5. **Notable NPCs** — 9 rows. Done: `~252-dinosaur-swamp-npcs.sql`.
-6. **Classes** — 8 full classes, ladders off a render of printed 74.
+6. **Classes** — 8 full classes, ladders off a render of printed 74. Done
+   for the Swamp Stomper, Naturalist and Pathfinder:
+   `add-swamp-stomper-class.sql`, `add-naturalist-class.sql`,
+   `add-pathfinder-class.sql`.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
@@ -310,6 +313,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/dinosaur-swamp-vehicles` | The vehicles, `~250-dinosaur-swamp-vehicles.sql`: 8 rows (two bicycles, a dirt bike, an A.T.V., a buggy, two boats and a power board) with 21 locations and 3 weapons, through `scripts/vessel-sql.mjs`, applied `--remote` before the PR. Checked by `book-reconcile` (Slice: 101-106): no stored value wrong. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-creatures` | The creatures, `~251-dinosaur-swamp-creatures.sql`: 21 rows (nine from printed 15-26, seven from 27-36, three plants from 37-40, the Tunnel Goblins and the Rat Men of Atlanta) with 75 attacks, through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production creatures 742 to 763. Transcribed and checked against renders of every page; 23 passages the copy check flagged were reworded with every figure kept. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-npcs` | The notable NPCs, `~252-dinosaur-swamp-npcs.sql`: 9 rows (the Tunnel Goblin leader, Hirgg, Lyxander, Falcone, Oxrik, Zash-Danzas, Porter, Pennent, Gran), through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production notable NPCs 703 to 712. Every stat block read off a render. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-classes-a` | Three O.C.C.s, one `add-<id>-class.sql` each: the Swamp Stomper (printed 48-50), the Naturalist (50-52) and the Pathfinder (52-55), transcribed off renders, `class-check --remote` ready with no stubs, applied `--remote` before the PR; production published classes 763 to 766. The other five classes are still to come. |
 
 ### What remains
 
