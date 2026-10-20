@@ -114,6 +114,6 @@ magic weapons were applied (a `--local` run with them reads 135 / 0):
 `dag                135 / 0`, matching the `--local` figure above.
 
 **112 traceable, nothing untraceable.** That is a statement about what has been
-asked for, not about what the book holds. Still open: the playable
-hatchling R.C.C.s not yet imported (see *Classes*), and the book has never had
-a full inventory. The Dragon Helm name collision was settled on 2026-09-27 (ledger).
+asked for, not about what the book holds. The nine playable hatchling R.C.C.s
+are imported (#1460, #1461 and #1462; see *Classes* and the ledger). Still
+open: the book has never had a full inventory. The Dragon Helm name collision was settled on 2026-09-27 (ledger).
