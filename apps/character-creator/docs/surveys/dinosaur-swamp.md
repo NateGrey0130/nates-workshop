@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and seven of the eight classes shipped; the Mutant Barbarian R.C.C. next. (2026-10-20)
+**Status:** `imported` — the whole plan shipped: the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and all eight classes. What was left out on purpose is under *Extraction plan*; the one open modelling question is under *What remains*. (2026-10-20)
 
-**Rows citing this book:** classes 7, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
+**Rows citing this book:** classes 8, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -268,21 +268,20 @@ Gear and skills ship before classes, because the class entries name this
 book's items and special skills (the Madhaven lesson).
 
 1. **Skills** — 9 rows, each read from the class that owns it (49-64).
+   Done: `~246-dinosaur-swamp-skills.sql`.
 2. **Gear** — the 72 entries from printed 43-46, 59, 63 and 74-101, with the
-   four SteelTree tables expanded to one row per line.
+   four SteelTree tables expanded to one row per line. Done:
+   `~248-dinosaur-swamp-gear.sql`.
 3. **Vehicles** — 8 rows from printed 101-105, through
-   `scripts/vessel-sql.mjs`.
+   `scripts/vessel-sql.mjs`. Done: `~250-dinosaur-swamp-vehicles.sql`.
 4. **Creatures** — 21 rows, through `scripts/bestiary-sql.mjs`. Done:
    `~251-dinosaur-swamp-creatures.sql`.
 5. **Notable NPCs** — 9 rows. Done: `~252-dinosaur-swamp-npcs.sql`.
-6. **Classes** — 8 full classes, ladders off a render of printed 74. Done
-   for the Swamp Stomper, Naturalist and Pathfinder:
-   `add-swamp-stomper-class.sql`, `add-naturalist-class.sql`,
-   `add-pathfinder-class.sql`; and for the Legacy Scout, Dinosaur Hunter and
-   Wild Knives Warrior: `add-legacy-scout-class.sql`,
-   `add-dinosaur-hunter-class.sql`, `add-wild-knives-warrior-class.sql`; and
-   for the Eco-Wizard: `add-eco-wizard-class.sql`. The Mutant Barbarian
-   R.C.C. is still open.
+6. **Classes** — 8 full classes, ladders off a render of printed 74. Done,
+   all eight: `add-swamp-stomper-class.sql`, `add-naturalist-class.sql`,
+   `add-pathfinder-class.sql`, `add-legacy-scout-class.sql`,
+   `add-dinosaur-hunter-class.sql`, `add-wild-knives-warrior-class.sql`,
+   `add-eco-wizard-class.sql` and `add-mutant-barbarian-class.sql`.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
@@ -322,7 +321,13 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/dinosaur-swamp-classes-a` | Three O.C.C.s, one `add-<id>-class.sql` each: the Swamp Stomper (printed 48-50), the Naturalist (50-52) and the Pathfinder (52-55), transcribed off renders, `class-check --remote` ready with no stubs, applied `--remote` before the PR; production published classes 763 to 766. The other five classes are still to come. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-classes-b` | Three more O.C.C.s, one `add-<id>-class.sql` each: the Legacy Scout (printed 55-56), the Dinosaur Hunter (57-59) and the Wild Knives Warrior (62-64), transcribed off renders, `class-check --remote` ready with no stubs, applied `--remote` before the PR as ids 788, 789 and 790; production published classes 766 to 769. The Eco-Wizard and the Mutant Barbarian R.C.C. are still to come. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-eco-wizard` | The Eco-Wizard O.C.C. (printed 64-66), `add-eco-wizard-class.sql`, emitted by `class-check --remote` from the finished draft with no stubs: twelve held invocations by name plus picks from Spell Invocations levels 1-8, the half-effect casting penalty as prose, the items it makes left to the held `ew-` gear rows. Applied `--remote` before the PR as id 791; production published classes 769 to 770. The Mutant Barbarian R.C.C. is the one class still to come. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-mutant-barbarian` | The Mutant Barbarian R.C.C. (printed 66-69), `add-mutant-barbarian-class.sql`, emitted by `class-check --remote` from the finished draft with no stubs; the Mutant Features table stays prose in its `1. Random Mutations` ability (see *What remains*). Applied `--remote` before the PR as id 792; production published classes 770 to 771. The last of the book's eight classes. |
 
 ### What remains
 
-Plan step 6: the classes.
+One modelling gap, and it is Nate's to decide. The Mutant Barbarian's Mutant
+Features table (printed 67-68, 32 rows) is prose in its `1. Random Mutations`
+ability, because the book rolls on it zero to three times by the Number of
+Mutations table, and a `rolls` group takes a fixed number or dice while a
+`choose` group cannot take fewer picks than its count. Whether it gets a
+variable-count mechanic is open; nothing here models it.
