@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear, the vehicles and the creatures shipped; NPCs and classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures and the notable NPCs shipped; classes next. (2026-10-20)
 
-**Rows citing this book:** gear 157, vehicles 8, skills 9, creatures 21
+**Rows citing this book:** gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -242,6 +242,24 @@ get no row. The Tidal Shark's Techno-Wizard version is a note on its row
 
 Names are from the OCR and are taken from a render before a row is written.
 
+**Shipped** in `~252-dinosaur-swamp-npcs.sql`: 9 rows, no attacks, through
+`scripts/bestiary-sql.mjs`, every stat block read off a render (2026-10-20).
+Most entries run from a heading on one page to a stat block on the next, so
+the rows cite 113, 122, 123-124, 124-125, 125-126, 126-127, 128-129, 131 and
+131-132. Slugs `tunnel-goblin-leader`,
+`hirgg`, `lyxander`, `falcone`, `oxrik`, `zash-danzas`, `porter`, `pennent`,
+`gran`. The Tunnel Goblin leader's row holds no figures: the creature row
+`tunnel-goblins` holds the block and the NPC cites it. The p.126 entry is
+named by its heading, `Zash-Danzas`, with `real_name` NULL and its three
+aliases in `description`. Gear in `weapons_and_equipment` uses the catalog's
+names where one row matches (Wilk's 320 Laser Pistol, the Q2-20 LLG, the
+NG-57, GR-10P Pistol, TW Starfire Pistol, Whip of Pain, C-14 Fire Breather,
+TX-5 Triax Pump Pistol, Arrowhead: Neural Disrupter, Cloak of Invisibility,
+this book's SteelTree arrows); Juicer plate, Huntsman and Triax Explorer
+armor match two rows or none and keep the printed name. The people named
+only with a level (the seven Sunaj Trackers under Zash-Danzas on 126) and
+the Fort Hawkins training program (130) get no row, under D21.
+
 ## Extraction plan
 
 Gear and skills ship before classes, because the class entries name this
@@ -254,7 +272,7 @@ book's items and special skills (the Madhaven lesson).
    `scripts/vessel-sql.mjs`.
 4. **Creatures** — 21 rows, through `scripts/bestiary-sql.mjs`. Done:
    `~251-dinosaur-swamp-creatures.sql`.
-5. **Notable NPCs** — 9 rows.
+5. **Notable NPCs** — 9 rows. Done: `~252-dinosaur-swamp-npcs.sql`.
 6. **Classes** — 8 full classes, ladders off a render of printed 74.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
@@ -291,7 +309,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/dinosaur-swamp-gear` | The gear, `~248-dinosaur-swamp-gear.sql`: 157 rows (toxins and medicines, Ghillie Suit, Homespun Armor, Viggo's rifles, tooth weapons, SteelTree, 29 EW, 27 TW, 17 Necromancy), applied `--remote` before the PR. Checked by `book-reconcile` in three slices. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-vehicles` | The vehicles, `~250-dinosaur-swamp-vehicles.sql`: 8 rows (two bicycles, a dirt bike, an A.T.V., a buggy, two boats and a power board) with 21 locations and 3 weapons, through `scripts/vessel-sql.mjs`, applied `--remote` before the PR. Checked by `book-reconcile` (Slice: 101-106): no stored value wrong. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-creatures` | The creatures, `~251-dinosaur-swamp-creatures.sql`: 21 rows (nine from printed 15-26, seven from 27-36, three plants from 37-40, the Tunnel Goblins and the Rat Men of Atlanta) with 75 attacks, through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production creatures 742 to 763. Transcribed and checked against renders of every page; 23 passages the copy check flagged were reworded with every figure kept. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-npcs` | The notable NPCs, `~252-dinosaur-swamp-npcs.sql`: 9 rows (the Tunnel Goblin leader, Hirgg, Lyxander, Falcone, Oxrik, Zash-Danzas, Porter, Pennent, Gran), through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production notable NPCs 703 to 712. Every stat block read off a render. |
 
 ### What remains
 
-Plan steps 5-6: notable NPCs, then the classes.
+Plan step 6: the classes.
