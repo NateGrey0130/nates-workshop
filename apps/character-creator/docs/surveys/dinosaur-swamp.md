@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — the vehicles shipped; creatures, NPCs and classes next. (2026-10-20)
 
-**Rows citing this book:** none
+**Rows citing this book:** vehicles 8
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -187,6 +187,15 @@ books' rows unless the slug carries this book's maker or model. The A.T.V.
 entry (103) names a Coalition model as its equal; check that row before
 adding one.
 
+Checked 2026-10-20 `--remote`: production holds no CS-015 Bicycle and no
+CS-Mark III ATV, and none of the eight names or slugs, so all eight are new
+rows with maker and model in the slug. The Coalition names are in the Old
+Mule's description (identical, 102) and the King Grizzly's (similar, 103).
+The Typical Bicycles (101) and Hovercycles (103) print no model stats and
+get no row. The Tidal Shark's Techno-Wizard version is a note on its row
+(180,000 credits), not a row. The Copperhead prints no Flying line, so its
+`speed_air` is NULL where the others say "Not possible".
+
 ### notable_npcs: 9 entries, 0 matched, 9 missing
 
 | printed | who |
@@ -244,7 +253,8 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-05 | `pal/data/dinosaur-swamp-survey` | cache built (162 pp, OCR), `dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-vehicles` | The vehicles, `~250-dinosaur-swamp-vehicles.sql`: 8 rows (two bicycles, a dirt bike, an A.T.V., a buggy, two boats and a power board) with 21 locations and 3 weapons, through `scripts/vessel-sql.mjs`, applied `--remote` before the PR. Checked by `book-reconcile` (Slice: 101-106): no stored value wrong. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+Plan steps 4-6: creatures, notable NPCs, then the classes.
