@@ -195,6 +195,18 @@ that date. Not taken: a different split.
   vampire book is imported. Xavier Stuart and Cana the Blind are named NPCs
   and are not these blocks.
 
+**Nate's rulings of 2026-10-20 (D21, D22, D25)**, for the plan
+`book-imports-2026-10-20` that ships steps 3-5.
+
+- **D21**, standing across every book: a person named with only a level
+  and no stat block never gets an NPC row. Not taken: one-line NPC rows.
+- **D22**: named people only. The typical-member and Mercenary Corps
+  blocks on 71-73 are left, as D20 left Adventures' gang blocks. The
+  Black Sword whose name is withheld (152) gets a row under its printed
+  title if its stat block is full. Not taken: rows for the typical blocks.
+- **D25**: this book runs beside Dinosaur Swamp, in its own tree, and
+  waits on nothing. Not taken: the books in number order.
+
 What is deliberately left, with the reason for each:
 
 - **The vampire rules restated on 122-132** — a summary of rules printed in
