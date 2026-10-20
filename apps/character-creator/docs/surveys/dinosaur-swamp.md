@@ -297,6 +297,21 @@ Not taken: take some. The ruling is in the open-items plan of 2026-10-19.
   no stat block; the one-line-NPC question is standing and unruled.
 - **Dimensional Shifting** (136-142): left. G.M. tables are not catalog.
 
+**Nate's rulings of 2026-10-20 (D21, D24, D25)**, for the plan
+`book-imports-2026-10-20` that ships steps 4-6.
+
+- **D21**, standing across every book: a person named with only a level
+  and no stat block never gets an NPC row. It closes the community
+  residents question (143-160) that D18 left open. Not taken: one-line
+  NPC rows.
+- **D24**: the six ordinary classes ship apart from the Eco-Wizard and
+  the Mutant Barbarian, which get their own PR, so a modelling question
+  on those two holds nothing else up. Not taken: all eight in one PR.
+- **D25**: this book runs first. Adventures in Dinosaur Swamp's creatures
+  wait on this book's creature PR, so the New West comparisons are done
+  once, and the Eco-Wizard underpins both books' EW gear; Arzno runs
+  beside it. Not taken: the books in number order.
+
 What is deliberately left, with the reason for each:
 
 - **The classes listed on 69-73** — held or belonging to other books.

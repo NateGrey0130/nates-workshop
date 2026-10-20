@@ -202,6 +202,22 @@ the three questions this survey left open before extraction:
 
 Not taken: a different split.
 
+**Nate's rulings of 2026-10-20 (D21, D23, D25)**, for the plan
+`book-imports-2026-10-20` that ships steps 3 and 4.
+
+- **D21**, standing across every book: a person named with only a level
+  and no stat block never gets an NPC row. It applies to the Camp
+  Cherokee blocks (71-72) and the two freehold families (122-125): a
+  row only where a full stat block is printed. Not taken: one-line NPC
+  rows.
+- **D23**: the Horune weapons and vehicles reprinted on 150-155 are
+  compared against the held Underseas rows, and a difference is
+  recorded on the held row. No new rows. Not taken: rows citing this
+  book.
+- **D25**: this book's creatures ship after Dinosaur Swamp's creature PR,
+  so the New West comparisons are done once. Not taken: the books in
+  number order.
+
 What is deliberately left, with the reason for each:
 
 - **The A'rac and the Horune Pirate** — held from later or fuller printings.
