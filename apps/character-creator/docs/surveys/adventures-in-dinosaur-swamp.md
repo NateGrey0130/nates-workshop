@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear shipped; the Behemoth, creatures and NPCs next. (2026-10-20)
+**Status:** `importing` — gear and the Lazlo Model Behemoth shipped; the creatures and NPCs next. (2026-10-20)
 
-**Rows citing this book:** gear 27
+**Rows citing this book:** gear 27, vehicles 1
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -211,8 +211,9 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-05 | `pal/data/adventures-in-dinosaur-swamp-survey` | cache built (162 pp, OCR), `adventures-in-dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-gear` | **27 gear rows** (`~243`, through `scripts/rows-sql.mjs`), printed 156-159, read off renders and checked by `book-reconcile` (it caught eight rows citing 160 for 159, corrected before the apply): 11 Eco-Wizardry rows (`magic`, the Horror Armor and Armored Shield `armor`), 4 Northern Gun field items, 12 Hunter clothing rows by grade. The Horror Armor's M.D.C. is rolled (4D6+25), so `mdc` is empty and the description says so. The Cradle of Life prints no price. Ruling D20 recorded above. Applied `--remote` before the merge. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-behemoth` | **1 vehicle**, the Lazlo Model Behemoth (`~247`, through `scripts/vessel-sql.mjs`), printed 104-106, read off renders and checked by `book-reconcile` (no number disagreed; three loose paraphrases tightened): 18 M.D.C. locations and 3 numbered weapon systems. `cost` holds the 155 million credit production price without the Observation Arm; `cost_note` carries the 182 million with it. The mini-station's light laser and sensor cluster, which the book prints in prose but neither numbers nor lists by location, are in the description. Applied `--remote` before the merge. |
 
 ### What remains
 
-The Lazlo Model Behemoth, the 19 creatures (after Dinosaur Swamp's creature
-PR, so the New West comparisons are done once) and the NPCs.
+The 19 creatures (after Dinosaur Swamp's creature PR, so the New West
+comparisons are done once) and the NPCs.
