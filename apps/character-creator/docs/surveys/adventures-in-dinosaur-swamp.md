@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear, the Lazlo Model Behemoth and fifteen creatures shipped; four more creatures, the reprint comparisons and the NPCs next. (2026-10-20)
+**Status:** `importing` — gear, the Lazlo Model Behemoth and all 19 creatures shipped; the New West and Horune comparisons, then the NPCs, next. (2026-10-20)
 
-**Rows citing this book:** gear 27, vehicles 1, creatures 15
+**Rows citing this book:** gear 27, vehicles 1, creatures 19
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -126,7 +126,8 @@ Missing: Wraith Soldier, Alien Rex, Carnosuchid, Devil Eel, Devilsaurus,
 Frilled Swamp Runner, Giant Hunter Turtle, Giant Petal Turtle, Giant Swamp
 Turtle, Gruesome Tarbid, Lepidosaur, Raptor King, Razorback Rhinoceros,
 Razormouth Frog, Saurian Terror, Spiny Creeper, Titan Raptor, Tree Prowler,
-and the Quee-la (133, inside an adventure seed).
+and the Quee-la (133, inside an adventure seed). **All 19 have shipped**
+since this diff, in the three `creatures-a/b/c` scripts (plan step 3).
 
 The held **Razorback** and **Spiny Ravager** are different animals.
 
@@ -178,10 +179,11 @@ their names are read off renders first.
    Paws gloves (all 159; 160 is a catalogue page). No other cached book prints any of them.
 2. **Vehicle** — the Lazlo Model Behemoth, through `scripts/vessel-sql.mjs`.
 3. **Creatures** — 19 rows, through `scripts/bestiary-sql.mjs`, with the
-   Quick Find's trait index as the check on magic and psionics. **Part
-   done:** ten rows in `~253-adventures-in-dinosaur-swamp-creatures-a.sql`
-   and five in `~254-adventures-in-dinosaur-swamp-creatures-b.sql`; four
-   more, then the New West and Horune comparisons.
+   Quick Find's trait index as the check on magic and psionics. **Done:**
+   ten rows in `~253-adventures-in-dinosaur-swamp-creatures-a.sql`, five in
+   `~254-adventures-in-dinosaur-swamp-creatures-b.sql` and four in
+   `~255-adventures-in-dinosaur-swamp-creatures-c.sql`. The New West and
+   Horune comparisons come next.
 4. **Notable NPCs** — every stat block on printed 71-133, counted from
    renders. This is the largest batch in the book.
 
@@ -217,8 +219,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-behemoth` | **1 vehicle**, the Lazlo Model Behemoth (`~247`, through `scripts/vessel-sql.mjs`), printed 104-106, read off renders and checked by `book-reconcile` (no number disagreed; three loose paraphrases tightened): 18 M.D.C. locations and 3 numbered weapon systems. `cost` holds the 155 million credit production price without the Observation Arm; `cost_note` carries the 182 million with it. The mini-station's light laser and sensor cluster, which the book prints in prose but neither numbers nor lists by location, are in the description. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-a` | **10 creatures** (`~253`, through `scripts/bestiary-sql.mjs`), printed 23-45, with 64 attacks: the Wraith Soldier, Alien Rex, Carnosuchid, Devil Eel, Devilsaurus, Frilled Swamp Runner and the Giant Hunter, Petal and Swamp Turtles and the Gruesome Tarbid, each checked against its page and the Quick Find trait index (cache p006-p007). Thirteen runs the script's copy check refused were reworded with every figure kept. The Wraith Soldier is a creature row (ruling D20) and carries the Wraith Brigade Entity's stats; its `playable` is the optional-race display flag. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-b` | **5 creatures** (`~254`, through `scripts/bestiary-sql.mjs`), printed 47-57, with 33 attacks: the Lepidosaur, Raptor King, Razorback Rhinoceros (slugged `razorback-rhinoceros`; the held `razorback` is Australia's), Razormouth Frog and Saurian Terror, every stat block read off renders and checked against the Quick Find trait index (magic: Lepidosaur, Raptor King, Razormouth Frog; psionics: Raptor King). The Quick Find also lists the Lepidosaur as poisonous, which its entry does not bear out; the row says so. Four runs the copy check refused were reworded with every figure kept. The Raptor King is a creature row, like the Wraith Soldier, with its four M.O.S. packages in `skills_note` and `playable` as the optional-race display flag. Applied `--remote` before the merge. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-c` | **4 creatures** (`~255`, through `scripts/bestiary-sql.mjs`), with 13 attacks: the Spiny Creeper (57-59), Titan Raptor (60-62; printed 61 is a full-page painting), Tree Prowler (62-64; its Magic, Psionics, I.S.P. and Habitat lines sit at the top of 64) and the Quee-la (133-134, the 28% result of an adventure-seed table), every stat block read off renders and checked against the Quick Find trait index (psionics: Spiny Creeper, Tree Prowler; neither magic). The Quick Find lists the Quee-la only as Alien/D-Bee, though her block prints six psionic powers and Empathic Language Mastery; the row says so. She is one individual with fixed attributes and no pools printed, so her pools are empty. Five runs the copy check refused were reworded with every figure kept. All 19 creatures are in. Applied `--remote` before the merge. |
 
 ### What remains
 
-Four of the 19 creatures (Spiny Creeper, Titan Raptor, Tree Prowler, the
-Quee-la), the New West and Horune comparisons, and the NPCs.
+The New West and Horune comparisons, and the NPCs.
