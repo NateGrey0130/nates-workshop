@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and six of the eight classes shipped; the Eco-Wizard and the Mutant Barbarian R.C.C. next. (2026-10-20)
+**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and seven of the eight classes shipped; the Mutant Barbarian R.C.C. next. (2026-10-20)
 
-**Rows citing this book:** classes 6, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
+**Rows citing this book:** classes 7, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -99,8 +99,10 @@ all 162 cached pages, not by reading prose.
 ### Spells: zero
 
 `P.P.E.:` opens a line on 26 pages and every hit is a creature or NPC pool, a
-class's P.P.E. line or a device's activation cost. The Eco-Wizard works
-through special abilities and made items (64-66, 83-95), not a spell list.
+class's P.P.E. line or a device's activation cost. The book adds no spell.
+The Eco-Wizard (64-66) casts twelve held invocations, named on printed 64,
+plus picks from held Spell Invocations levels 1-8 as it rises, all at half
+effect when cast rather than channeled into an item it makes (83-95).
 
 ### Psionic powers: zero
 
@@ -278,7 +280,9 @@ book's items and special skills (the Madhaven lesson).
    `add-swamp-stomper-class.sql`, `add-naturalist-class.sql`,
    `add-pathfinder-class.sql`; and for the Legacy Scout, Dinosaur Hunter and
    Wild Knives Warrior: `add-legacy-scout-class.sql`,
-   `add-dinosaur-hunter-class.sql`, `add-wild-knives-warrior-class.sql`.
+   `add-dinosaur-hunter-class.sql`, `add-wild-knives-warrior-class.sql`; and
+   for the Eco-Wizard: `add-eco-wizard-class.sql`. The Mutant Barbarian
+   R.C.C. is still open.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
