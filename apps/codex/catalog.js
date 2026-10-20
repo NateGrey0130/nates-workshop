@@ -16,6 +16,8 @@
 // apps/codex/ - so the page sat on "Checking access…" for three weeks with
 // one line in the console and no test that opened it.
 import { CATALOGS, CATALOG_KEYS } from '/apps/character-creator/js/catalog-fields.js';
+// Beside this file, and DOM-free, so the smoke suite reads the sentence it builds.
+import { repointedText } from './merge-message.js';
 
 const S = {
   isAdmin: false,
@@ -772,7 +774,9 @@ async function mergePair(keepId, removeId) {
       body: JSON.stringify({ keep_id: keepId, remove_id: removeId }),
     });
     const bits = [`Merged into "${res.kept.name}".`];
-    if (res.repointed.length) bits.push(`${res.repointed.length} character${res.repointed.length === 1 ? '' : 's'} repointed.`);
+    // Rows per table for gear, characters for the name-based catalogs.
+    const moved = repointedText(res.repointed);
+    if (moved) bits.push(moved);
     if (res.redirected?.length) bits.push(`${res.redirected.map((k) => `"${k}"`).join(' and ')} now redirects here.`);
     // Class markdown is prose plus frontmatter, so it is still never rewritten
     // — but it no longer breaks, because the redirect resolves it. Worth
@@ -784,6 +788,11 @@ async function mergePair(keepId, removeId) {
     await loadRows();          // also refreshes the badge
     await loadDuplicates();
     if (S.redirects) await loadRedirects();
+    // Set again after the reloads: each one clears the message when it lands,
+    // so the merge's sentence used to vanish before it could be read. A reload
+    // that failed keeps its own error instead.
+    if (!S.msg?.error) S.msg = { text: bits.join(' ') };
+    render();
   } catch (err) {
     S.msg = { text: 'Merge failed: ' + err.message, error: true };
     render();
