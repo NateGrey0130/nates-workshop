@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear and the vehicles shipped; creatures, NPCs and classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills, the gear, the vehicles and the creatures shipped; NPCs and classes next. (2026-10-20)
 
-**Rows citing this book:** gear 157, vehicles 8, skills 9
+**Rows citing this book:** gear 157, vehicles 8, skills 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -160,8 +160,17 @@ Rat Men of Atlanta (121-122).
 
 The held **Panthera-Tereon** is a different animal; this book describes the
 Panthera-Thrinax as its smaller relative. The New West dinosaurs named on
-13-14 were not diffed by name here; that list is compared against the held
-New West rows at extraction.
+13-14 were not diffed by name here; that list was compared against the held
+New West rows at extraction (see *What is deliberately left*).
+
+**Shipped** in `~251-dinosaur-swamp-creatures.sql`: 21 rows with 75 attacks,
+through `scripts/bestiary-sql.mjs`, re-checked `--remote` on 2026-10-20 (0
+rows citing this book, and none of the 21 slugs held). The Azhures keep the
+Contents' spelling. `playable` is 1 for the Trysia Faerie alone ("Optional
+Player Character"); Scampers and the Rat Men of Atlanta are 0. The
+`tunnel-goblins` row's notes carry the Leader/Earth Wizard's figures and
+spells, because the book prints one block for the leader and the warriors.
+The Spitfire Leaper's cowl stays the held gear row `ew-spitfire-leaper-cowl`.
 
 ### skills: 10 entries, 1 held, 9 missing
 
@@ -243,7 +252,8 @@ book's items and special skills (the Madhaven lesson).
    four SteelTree tables expanded to one row per line.
 3. **Vehicles** — 8 rows from printed 101-105, through
    `scripts/vessel-sql.mjs`.
-4. **Creatures** — 21 rows, through `scripts/bestiary-sql.mjs`.
+4. **Creatures** — 21 rows, through `scripts/bestiary-sql.mjs`. Done:
+   `~251-dinosaur-swamp-creatures.sql`.
 5. **Notable NPCs** — 9 rows.
 6. **Classes** — 8 full classes, ladders off a render of printed 74.
 
@@ -264,8 +274,11 @@ Not taken: take some. The ruling is in the open-items plan of 2026-10-19.
 What is deliberately left, with the reason for each:
 
 - **The classes listed on 69-73** — held or belonging to other books.
-- **The New West dinosaurs** (13-14) — held from New West; anything this book
-  adds to them is recorded against those rows at extraction, not as new rows.
+- **The New West dinosaurs** (13-14) — held from New West. The list's 11
+  animals, Silonar included, were compared against the held rows at
+  extraction (2026-10-20): every page reference matches a held row and no
+  figure differs, so no new row and no notes script. Silonar's held row cites
+  Conversion Book One p.176-177 and stays.
 - **Geography, ruins, forts and towns** — places and lore.
 - **Hunting rules and hazards** (10-12) — rules text.
 
@@ -277,7 +290,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/dinosaur-swamp-skills` | Nate's D18 written into the plan. The nine special skills, `~246-dinosaur-swamp-skills.sql`, applied `--remote` before the PR; production skills 500 to 509. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-gear` | The gear, `~248-dinosaur-swamp-gear.sql`: 157 rows (toxins and medicines, Ghillie Suit, Homespun Armor, Viggo's rifles, tooth weapons, SteelTree, 29 EW, 27 TW, 17 Necromancy), applied `--remote` before the PR. Checked by `book-reconcile` in three slices. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-vehicles` | The vehicles, `~250-dinosaur-swamp-vehicles.sql`: 8 rows (two bicycles, a dirt bike, an A.T.V., a buggy, two boats and a power board) with 21 locations and 3 weapons, through `scripts/vessel-sql.mjs`, applied `--remote` before the PR. Checked by `book-reconcile` (Slice: 101-106): no stored value wrong. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-creatures` | The creatures, `~251-dinosaur-swamp-creatures.sql`: 21 rows (nine from printed 15-26, seven from 27-36, three plants from 37-40, the Tunnel Goblins and the Rat Men of Atlanta) with 75 attacks, through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production creatures 742 to 763. Transcribed and checked against renders of every page; 23 passages the copy check flagged were reworded with every figure kept. |
 
 ### What remains
 
-Plan steps 4-6: creatures, notable NPCs, then the classes.
+Plan steps 5-6: notable NPCs, then the classes.
