@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — gear and the Lazlo Model Behemoth shipped; the creatures and NPCs next. (2026-10-20)
 
-**Rows citing this book:** none
+**Rows citing this book:** vehicles 1
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -200,7 +200,9 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-05 | `pal/data/adventures-in-dinosaur-swamp-survey` | cache built (162 pp, OCR), `adventures-in-dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-behemoth` | **1 vehicle**, the Lazlo Model Behemoth (`~247`, through `scripts/vessel-sql.mjs`), printed 104-106, read off renders and checked by `book-reconcile` (no number disagreed; three loose paraphrases tightened): 18 M.D.C. locations and 3 numbered weapon systems. `cost` holds the 155 million credit production price without the Observation Arm; `cost_note` carries the 182 million with it. The mini-station's light laser and sensor cluster, which the book prints in prose but neither numbers nor lists by location, are in the description. Applied `--remote` before the merge. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+The 19 creatures (after Dinosaur Swamp's creature PR, so the New West
+comparisons are done once) and the NPCs.
