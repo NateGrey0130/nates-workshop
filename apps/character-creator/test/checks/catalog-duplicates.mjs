@@ -9,6 +9,9 @@
 //
 // The body moved verbatim. `run()` is async because the sections await the
 // functions they test, and smoke.mjs awaits it.
+//
+// A third section, added 2026-10-19, reads the sentence the codex shows after a
+// merge (apps/codex/merge-message.js), over both shapes the merge returns.
 
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
@@ -21,7 +24,7 @@ import { normalise } from '../../../../scripts/catalog-match-lib.mjs';
 import { CATALOGS } from '../../js/catalog-fields.js';
 import { repoRoot, check, section, wantSection } from '../harness.mjs';
 
-const SECTIONS = ['Duplicate detection', 'Catalog redirects'];
+const SECTIONS = ['Duplicate detection', 'Catalog redirects', 'Catalog merge message'];
 
 export async function run() {
   if (!SECTIONS.some(wantSection)) return;
@@ -504,5 +507,45 @@ check('resolving an empty list never touches the database', await (async () => {
   const map = await resolveKeys(db, 'gear', []);
   return map.size === 0 && !called;
 })());
+
+// ---------- What a merge says it repointed ----------
+// `mergeRows` fills `repointed` in two shapes: one `{ table, rows }` per table a
+// gear merge repointed, one `{ character_id, character }` per character a
+// name-based merge rewrote. The codex counted entries as characters for both,
+// so a gear merge that moved two inventory rows on one character and a stash row
+// read "2 characters repointed". The sentence is built in apps/codex/merge-message.js
+// and read here as text, over both shapes.
+section('Catalog merge message');
+{
+  const { repointedText } = await import('../../../codex/merge-message.js');
+  const gear = [{ table: 'character_items', rows: 2 }, { table: 'campaign_items', rows: 1 }];
+  check('a gear merge counts rows per table, not entries as characters',
+    repointedText(gear) === '2 inventory rows and 1 stash row repointed.', repointedText(gear));
+  check('a table the message has no noun for still reads, under its own name',
+    repointedText([{ table: 'npc_items', rows: 3 }]) === '3 npc_items rows repointed.',
+    repointedText([{ table: 'npc_items', rows: 3 }]));
+  const people = [{ character_id: 4, character: 'Ana' }, { character_id: 9, character: 'Bo' }];
+  check('a name-based merge still counts characters',
+    repointedText(people) === '2 characters repointed.', repointedText(people));
+  check('and one of each is singular',
+    repointedText([people[0]]) === '1 character repointed.'
+      && repointedText([{ table: 'campaign_items', rows: 1 }]) === '1 stash row repointed.',
+    `${repointedText([people[0]])} / ${repointedText([{ table: 'campaign_items', rows: 1 }])}`);
+  check('nothing repointed says nothing',
+    repointedText([]) === '' && repointedText(undefined) === '');
+
+  // The page has to use it, and the sentence has to outlive the reloads that
+  // follow a merge: loadDuplicates() clears the message when it lands, which is
+  // how the merge's sentence used to vanish unread.
+  const page = readFileSync(join(repoRoot, 'apps', 'codex', 'catalog.js'), 'utf8');
+  const merge = page.slice(page.indexOf('async function mergePair('), page.indexOf('async function dismissPair('));
+  check('the codex builds its merge sentence with repointedText',
+    /import \{ repointedText \} from '\.\/merge-message\.js'/.test(page)
+      && /repointedText\(res\.repointed\)/.test(merge) && !/repointed\.length\}/.test(merge));
+  const lastReload = merge.lastIndexOf('await loadDuplicates()');
+  const lastSet = merge.lastIndexOf('S.msg = { text: bits.join');
+  check('and sets it again after the reloads clear the message',
+    lastReload > 0 && lastSet > lastReload, `loadDuplicates at ${lastReload}, last set at ${lastSet}`);
+}
 
 }
