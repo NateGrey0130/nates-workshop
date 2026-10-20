@@ -2,7 +2,7 @@
 
 **Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures and the notable NPCs shipped; classes next. (2026-10-20)
 
-**Rows citing this book:** gear 157, vehicles 8, skills 9, creatures 21
+**Rows citing this book:** gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -286,9 +286,7 @@ Not taken: take some. The ruling is in the open-items plan of 2026-10-19.
 - **The five diseases** (41-43): left. Optional rules with no price and
   nothing in the app that would read a row.
 - **The community residents** (143-160): left. Named with a level in prose and
-  no stat block. Nate's ruling **D21** (2026-10-20), standing across every
-  book: a person named with only a level and no stat block never gets an
-  NPC row. Not taken: one-line NPC rows.
+  no stat block; the one-line-NPC question is standing and unruled.
 - **Dimensional Shifting** (136-142): left. G.M. tables are not catalog.
 
 What is deliberately left, with the reason for each:
@@ -311,7 +309,7 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/dinosaur-swamp-gear` | The gear, `~248-dinosaur-swamp-gear.sql`: 157 rows (toxins and medicines, Ghillie Suit, Homespun Armor, Viggo's rifles, tooth weapons, SteelTree, 29 EW, 27 TW, 17 Necromancy), applied `--remote` before the PR. Checked by `book-reconcile` in three slices. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-vehicles` | The vehicles, `~250-dinosaur-swamp-vehicles.sql`: 8 rows (two bicycles, a dirt bike, an A.T.V., a buggy, two boats and a power board) with 21 locations and 3 weapons, through `scripts/vessel-sql.mjs`, applied `--remote` before the PR. Checked by `book-reconcile` (Slice: 101-106): no stored value wrong. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-creatures` | The creatures, `~251-dinosaur-swamp-creatures.sql`: 21 rows (nine from printed 15-26, seven from 27-36, three plants from 37-40, the Tunnel Goblins and the Rat Men of Atlanta) with 75 attacks, through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production creatures 742 to 763. Transcribed and checked against renders of every page; 23 passages the copy check flagged were reworded with every figure kept. |
-| 2026-10-20 | `pal/data/dinosaur-swamp-npcs` | The notable NPCs, `~252-dinosaur-swamp-npcs.sql`: 9 rows (the Tunnel Goblin leader, Hirgg, Lyxander, Falcone, Oxrik, Zash-Danzas, Porter, Pennent, Gran), through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production notable NPCs 703 to 712. Every stat block read off a render; Nate's D21 recorded under the D18 list. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-npcs` | The notable NPCs, `~252-dinosaur-swamp-npcs.sql`: 9 rows (the Tunnel Goblin leader, Hirgg, Lyxander, Falcone, Oxrik, Zash-Danzas, Porter, Pennent, Gran), through `scripts/bestiary-sql.mjs`, applied `--remote` before the PR; production notable NPCs 703 to 712. Every stat block read off a render. |
 
 ### What remains
 
