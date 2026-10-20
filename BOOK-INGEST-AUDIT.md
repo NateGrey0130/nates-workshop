@@ -6237,6 +6237,8 @@ combat form and pool bases; the Tanker's hit points; anti-monster's cyborg
 armour rows; and, from this row, whether the robot horse should stand in
 the special-equipment pick for a character who takes another package.
 
+**Two of those granted, 2026-10-20 (branch `pal/data/book-ingest-audit-f140-gloves-cape-lore`), by Nate's ruling of 2026-10-19:** `war-knight` now starts with `cape-or-cloak-long` and `gloves` (printed 93, read off a 150 dpi render of cache p094), and `enlightened-demon`'s "Lore: Choose any two" pick (printed 100, cache p101 render) now lists `Lore: Sea Creatures`; production's markdown was read with `q.mjs --remote` before the change, and every other item left for Nate above stays left. Data only, in `~239-book-ingest-audit-f140-gloves-cape-lore.sql`, applied `--remote` before the merge.
+
 ### F141 - medium - D-Bees of North America changes the SHAPE of several races, and the catalog kept the old shape
 
 A decision. Under the ruling of 2026-10-04 that the newest printing wins, 34
