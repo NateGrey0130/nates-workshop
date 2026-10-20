@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and three of the eight classes shipped; the other five classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills, the gear, the vehicles, the creatures, the notable NPCs and six of the eight classes shipped; the Eco-Wizard and the Mutant Barbarian R.C.C. next. (2026-10-20)
 
-**Rows citing this book:** classes 3, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
+**Rows citing this book:** classes 6, gear 157, vehicles 8, skills 9, notable_npcs 9, creatures 21
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -276,7 +276,9 @@ book's items and special skills (the Madhaven lesson).
 6. **Classes** — 8 full classes, ladders off a render of printed 74. Done
    for the Swamp Stomper, Naturalist and Pathfinder:
    `add-swamp-stomper-class.sql`, `add-naturalist-class.sql`,
-   `add-pathfinder-class.sql`.
+   `add-pathfinder-class.sql`; and for the Legacy Scout, Dinosaur Hunter and
+   Wild Knives Warrior: `add-legacy-scout-class.sql`,
+   `add-dinosaur-hunter-class.sql`, `add-wild-knives-warrior-class.sql`.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
