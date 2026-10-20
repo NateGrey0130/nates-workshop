@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 -- decision (2026-09-25) - the shared Claude client is the one file outside
 -- Palladium allowed to write it (groups.json cross_group_tables). One row per
 -- call, written fail-open (a metering failure must never break the call it
--- measures). The log half of the audit's F3 - spend visibility, not a cap.
+-- measures). The log half of the audit's F3, and since PR #1868 the ledger
+-- the call limit counts: 100 rows for one email in the last 24 hours and that
+-- person's next call is refused (refuseOverCallLimit; the admin email and a
+-- call with no email are not limited).
 CREATE TABLE IF NOT EXISTS claude_usage (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT,                            -- Cloudflare Access identity; NULL on local dev
