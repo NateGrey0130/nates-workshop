@@ -1,8 +1,8 @@
 # Rifts World Book 28: Arzno - Vampire Incursion — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — gear and vehicles imported; creatures, NPCs and the two classes next. (2026-10-20)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 22, vehicles 12
 
 Slug `arzno`. Cached 2026-10-05 from
 `Rifts- World Book 28 Arzno- Vampire Incursion.pdf`, 162 PDF pages, **scan
@@ -122,22 +122,30 @@ secondary and wild vampire blocks (137-139) are Rifts stat blocks, and the
 book restates Rifts vampire rules without printing a full Rifts vampire
 entry. No Rifts vampire creature row is held.
 
-### gear: 14 entries, 0 held by name, 2 to compare
+### gear: 23 priced entries on printed 75-90, 22 rows, 1 held
 
-TW Stake Driver, TW Water Pistol, TW Vamp-Killer 2000, TW Vampire Chaser
-Steam Grenades, TW Lightning Mace, TW Active Shield, TW Concealment Cloak,
-TW Security Scammer, TW Translator; Light TW Body Armor, TW Incursion Armor,
-TW Exterminator Armor, Ironwood Armor; the TW P.P.E. Battery.
+**Corrected 2026-10-20** from the extraction off renders. The first list of
+14 was short: the book also prints the TW Water Rifle, TW Water Cannon, TW
+Wood Rail Gun, TW Flash-Bang Bombs, TW Climbing Claws (hand-held and bionic,
+priced apart), TW Reading Glasses and the TW Tactical Team Targeting System,
+and Ironwood Armor is a heading over two models (Mage, TWA-1000M, and Vampire
+Hunter, TWA-1000H). "TW Security Scammer" is the OCR's reading of **TW
+Security Scanner**; its wand and portal share one price line and are one row.
 
-Two have near relatives held from the Book of Magic and are compared at
-extraction before a row is added:
+The two near relatives, compared against production on 2026-10-20:
 
-| the book prints | the catalog holds |
-|---|---|
-| TW Vampire Chaser Steam Grenades (79) | "Vampire Chaser" Steam Grenade, Book of Magic p.329 |
-| TW Water Pistol (76) | three TW water pistols and two TW water cannons, Book of Magic p.330 |
+| the book prints | the catalog holds | decided |
+|---|---|---|
+| TW Vampire Chaser Steam Grenades (79): 5D6 H.P. per melee round to vampires, a 20 ft (6.1 m) diameter cloud, 60 P.P.E. to make | `tw-vampire-chaser-steam-grenade`, Book of Magic p.329: 6D6, 10 ft radius | **held row stands, no second row.** Price, range, cloud size, duration and recharge agree; only the vampire damage die and the creation stats differ |
+| TW Water Pistol (76), Water Rifle (76-77), Water Cannon (77-78) | Book of Magic p.330: plastic and metal pistols, water rifles, two cannons | **rows added.** The book calls these the Vampire Kingdoms weapons restated with full stats, but it prints its own prices, recharge costs and creation stats, and the cannon differs outright (3D4x10 at 600 ft against 3D6x10 at 300 ft). The name TW Water Cannon is held, so this one is `tw-water-cannon-arzno` |
 
-### vehicles: 12 entries, 0 matched, 12 missing
+Armor rows store the main body as `mdc`, with the other locations in the
+description. Prices are the A.W.M. or Arzno figure, with the other tiers in
+`cost_note`. The TW P.P.E. Battery (90) has no separate price and stores
+`cost` NULL. The bionic climbing claws' 55,000 is the printed "ten times" the
+hand-held price.
+
+### vehicles: 12 entries, 0 matched, 12 missing, 12 rows
 
 Five power armors (Jackrabbit, Lonewolf, Raging Bull, Thunderbird, Guardian
 Angel), three aircraft (Grinning Gunship, Kamikaze Fighter, Whirlybird
@@ -162,30 +170,30 @@ Names are from the OCR and are taken from a render before a row is written.
 Gear and vehicles ship before NPCs, because the NPC equipment lines name
 this book's items (the Madhaven lesson).
 
-1. **Gear** — 14 rows from printed 74-90, the two near relatives decided
-   after comparison.
-2. **Vehicles** — 12 rows from printed 91-110, through
-   `scripts/vessel-sql.mjs`. Each Imitator suit leans on the series rules of
+1. **Gear** — 22 rows from printed 75-90, the two near relatives decided
+   after comparison (see the catalog diff).
+2. **Vehicles** — 12 rows from printed 91-109 (the aircraft run 99-104;
+   printed 110 is art), through `scripts/vessel-sql.mjs`. Each Imitator suit leans on the series rules of
    89-90; a row restates what it takes from there.
 3. **Creatures** — 4 rows from printed 22-30, through
    `scripts/bestiary-sql.mjs`.
 4. **Notable NPCs** — every stat block on printed 69-73, 133-139, 145 and
    148-160, counted from renders.
-5. **Classes** — the Thumper and the Waste Monkey, if they are wanted as
-   classes (below).
+5. **Classes** — the Thumper and the Waste Monkey (D19, below).
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
 
-**For Nate to decide before extraction:**
+**Decided by Nate, ruling D19 (2026-10-19)**, in the open-items plan of
+that date. Not taken: a different split.
 
-- **The Thumper and the Waste Monkey**: optional player races. Classes as
-  well as creature rows, or creature rows only.
-- **The Blood Priest**: the book tags it as an NPC villain. Import it as a
-  class anyway, or leave it and keep High Father Suthue as an NPC row.
-- **The secondary and wild vampire blocks** (137-139): `notable_npcs` rows as
-  typical blocks, Rifts `creatures` rows beside the Nightbane ones, or left
-  until a Rifts vampire book is imported.
+- **The Thumper and the Waste Monkey**: **classes and creature rows both.**
+  Optional player races are what the creator is for.
+- **The Blood Priest**: **no class.** The book tags it as an NPC villain;
+  High Father Suthue (145) is its NPC row.
+- **The secondary and wild vampire blocks** (137-139): **left** until a Rifts
+  vampire book is imported. Xavier Stuart and Cana the Blind are named NPCs
+  and are not these blocks.
 
 What is deliberately left, with the reason for each:
 
@@ -201,7 +209,11 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-05 | `pal/data/arzno-survey` | cache built (162 pp, OCR), `arzno` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-20 | `pal/data/arzno-gear-vehicles` | ruling D19 recorded; `~244-arzno-gear.sql` (22 gear rows, printed 75-90) and `~245-arzno-vehicles.sql` (5 Imitator power armors and 7 vehicles, printed 91-109, with their locations and weapons), checked by `book-reconcile` against renders, applied `--remote` before the PR. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+Gear and vehicles are in. Next, each in its own PR and session: creatures
+and NPCs (4 creatures and 13 named NPCs through `scripts/bestiary-sql.mjs`,
+equipment mapped to this PR's gear slugs), then the Thumper and Waste Monkey
+classes, then `drift-check --remote` and removing the book tree.
