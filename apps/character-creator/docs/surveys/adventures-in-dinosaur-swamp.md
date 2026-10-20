@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear and the Lazlo Model Behemoth shipped; the creatures and NPCs next. (2026-10-20)
+**Status:** `importing` — gear, the Lazlo Model Behemoth and ten creatures shipped; nine more creatures, the reprint comparisons and the NPCs next. (2026-10-20)
 
-**Rows citing this book:** gear 27, vehicles 1
+**Rows citing this book:** gear 27, vehicles 1, creatures 10
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -178,7 +178,9 @@ their names are read off renders first.
    Paws gloves (all 159; 160 is a catalogue page). No other cached book prints any of them.
 2. **Vehicle** — the Lazlo Model Behemoth, through `scripts/vessel-sql.mjs`.
 3. **Creatures** — 19 rows, through `scripts/bestiary-sql.mjs`, with the
-   Quick Find's trait index as the check on magic and psionics.
+   Quick Find's trait index as the check on magic and psionics. **Part
+   done:** ten rows in `~253-adventures-in-dinosaur-swamp-creatures-a.sql`;
+   nine more, then the New West and Horune comparisons.
 4. **Notable NPCs** — every stat block on printed 71-133, counted from
    renders. This is the largest batch in the book.
 
@@ -212,8 +214,10 @@ What is deliberately left, with the reason for each:
 | 2026-10-05 | `pal/data/adventures-in-dinosaur-swamp-survey` | cache built (162 pp, OCR), `adventures-in-dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-gear` | **27 gear rows** (`~243`, through `scripts/rows-sql.mjs`), printed 156-159, read off renders and checked by `book-reconcile` (it caught eight rows citing 160 for 159, corrected before the apply): 11 Eco-Wizardry rows (`magic`, the Horror Armor and Armored Shield `armor`), 4 Northern Gun field items, 12 Hunter clothing rows by grade. The Horror Armor's M.D.C. is rolled (4D6+25), so `mdc` is empty and the description says so. The Cradle of Life prints no price. Ruling D20 recorded above. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-behemoth` | **1 vehicle**, the Lazlo Model Behemoth (`~247`, through `scripts/vessel-sql.mjs`), printed 104-106, read off renders and checked by `book-reconcile` (no number disagreed; three loose paraphrases tightened): 18 M.D.C. locations and 3 numbered weapon systems. `cost` holds the 155 million credit production price without the Observation Arm; `cost_note` carries the 182 million with it. The mini-station's light laser and sensor cluster, which the book prints in prose but neither numbers nor lists by location, are in the description. Applied `--remote` before the merge. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-a` | **10 creatures** (`~253`, through `scripts/bestiary-sql.mjs`), printed 23-45, with 64 attacks: the Wraith Soldier, Alien Rex, Carnosuchid, Devil Eel, Devilsaurus, Frilled Swamp Runner and the Giant Hunter, Petal and Swamp Turtles and the Gruesome Tarbid, each checked against its page and the Quick Find trait index (cache p006-p007). Thirteen runs the script's copy check refused were reworded with every figure kept. The Wraith Soldier is a creature row (ruling D20) and carries the Wraith Brigade Entity's stats; its `playable` is the optional-race display flag. Applied `--remote` before the merge. |
 
 ### What remains
 
-The 19 creatures (after Dinosaur Swamp's creature PR, so the New West
-comparisons are done once) and the NPCs.
+Nine of the 19 creatures (Lepidosaur, Raptor King, Razorback Rhinoceros,
+Razormouth Frog, Saurian Terror, Spiny Creeper, Titan Raptor, Tree Prowler,
+the Quee-la), the New West and Horune comparisons, and the NPCs.
