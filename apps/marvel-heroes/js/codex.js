@@ -229,6 +229,11 @@ export const SECTIONS = [
     // tiers: Ursa Major's Human and Bear Form, the Brood's three). The prose is
     // not in data/npcs.json - it is the book's - and each card fetches it from
     // msh_book_text through bookText below.
+    //
+    // Listed by name, not in the book's order: the tab holds every book's
+    // characters, and a name is what someone looks for. The sort is stable, so
+    // a name in two books keeps the books' order. The Team filter still gives a
+    // team's members together.
     build(data) {
       const n = data.npcs;
       this.short = shortOf(n.books);
@@ -236,7 +241,8 @@ export const SECTIONS = [
       this.source = n.books.map((b) => pagesLine(b)).join('; ');
       this.upbName = Object.fromEntries(data.powers.powers.map((p) => [p.code, p.name]));
       return {
-        rows: n.characters.map((c) => ({ ...c, group: slug(c.team) })),
+        rows: n.characters.map((c) => ({ ...c, group: slug(c.team) }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true })),
         groups: n.teams.map((t) => ({ id: slug(t), name: t })),
       };
     },
