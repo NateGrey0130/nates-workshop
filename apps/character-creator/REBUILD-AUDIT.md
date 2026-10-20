@@ -394,6 +394,41 @@ premise audit before scoping.
   cached (Lemuria, Xiticix Invasion and others). They were not searched, and a
   future cache is this finding's trigger again.
 
+**Taken further, 2026-10-20 (branch `pal/data/rebuild-audit-f16-trap-construction`),
+on Nate's word.** His ruling of 2026-10-19 (D12) chose Coalition War Campaign
+printed 62 over New West printed 75 for `Trap Construction`, the choice the
+list above left to him. `~240-rebuild-audit-f16-trap-construction.sql`, applied
+`--remote` before the PR, re-cites it to
+`Rifts World Book 11: Coalition War Campaign p.62`. A 110 dpi render of the page
+shows folio 62 and *Military and Wilderness: Trap Construction* at 20% +4%, the
+stored Military 20/4, so base and per-level are unchanged. The render of printed
+59 marks it *(new)* under both Military and Wilderness. The third reading still
+fails on New West printed 75, and the ruling is what settles it. Posture held: a
+data PR on Nate's word. `Space: Spacecraft Mechanics` and
+`Locate Secret Compartments` were ruled the same day to stay as recorded here.
+
+**The held count, corrected.** The twenty-two above was the 2026-09-27 count.
+`source-coverage.mjs --remote` on 2026-10-20 put `rifts-skill-list` at **18**
+before this change and **17** after it (both runs are in the PR body). Four rows
+had left without a note here: `Wingrider Flying Wing` (Warlords of Russia
+printed 196) and `Language: Mongolian` (printed 198) by
+`~057-warlords-of-russia-skills.sql`, and `Ice Skating` and `Snow Skiing`
+(Canada printed 36) by `~065-canada-skills.sql`, each confirmed by reading the
+row `--remote` on 2026-10-20. The seventeen, each against the reading it fails:
+
+- **The page disagrees with the row**, both ruled to stay on 2026-10-19:
+  `Space: Spacecraft Mechanics` and `Locate Secret Compartments`, as above.
+- **Defined in no cached book**, the other fifteen: `Air Assault Armor`,
+  `Antiquarian`, `Combat Pod`, `Cyberjacking`, `Doctor of Veterinary Medicine`,
+  `Geology`, `Language Dialects`, `Lore: Astral`, `Navigation: Terrestrial`,
+  `Physics`, `Space: Antigrav Suit`, `Space: Defense Systems`,
+  `Space: Oxygen Conservation`, `Space: Radio: Deep Space` and
+  `Space: Satellite Systems`. Re-searched on 2026-10-20 across all 44 book
+  caches on this machine, Lemuria and Xiticix Invasion now among them: no
+  hit is a definition. Geology's two (Lemuria and Underseas) are prose inside
+  another skill's entry, Antiquarian's is China 2's *Chinese Antiquarianism*,
+  and the rest are class skill lines or a neighbouring skill's text.
+
 - **F17** — `dragon-hatchling` still cites the pre-RUE edition, alone among its seven — Taken, 2026-08-28 (PR #393). Both halves — the data script and the registry — full text in `REBUILD-AUDIT.closed.md` under its own `### F17` heading.
 
 - **F18** — the 64 gear values a rebuild still loses, and the four it would wrongly overwrite — Taken, 2026-08-28 (PR #396). Posture held: investigated first, and the — full text in `REBUILD-AUDIT.closed.md` under its own `### F18` heading.

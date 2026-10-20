@@ -354,7 +354,7 @@ counted row:
 
 | After | Rows |
 |---|---|
-| catalog rows citing no surveyed book | 208 |
+| catalog rows citing no surveyed book | 207 |
 
 **Why per book (2026-09-24):** this table used to hold the totals (classes,
 skills, spells, psionic powers, gear, vehicles, per-system skill bases). Every
