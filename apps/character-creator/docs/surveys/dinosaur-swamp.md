@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the nine special skills shipped; gear, vehicles, creatures, NPCs and classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills and the gear shipped; vehicles, creatures, NPCs and classes next. (2026-10-20)
 
-**Rows citing this book:** skills 9
+**Rows citing this book:** gear 157, skills 9
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -190,6 +190,17 @@ The 72 are an **entry count, not a row count**. Four SteelTree entries
 (tools, forged weapons, forged armor, clubs and staves, printed 78-81) are
 tables with one line per item, and each line is a row.
 
+**Shipped** in `~248-dinosaur-swamp-gear.sql`: 157 rows, re-diffed `--remote`
+on 2026-10-20 (0 held by name or slug). The book prints more than this
+section's first count: eight synthetic medicines (not three), 29 Eco-Wizard
+items (not 28), and the Med-Shooter's 14 priced crystals, the three Lankton's
+Knot Acid sizes and the bark and twig armor pieces are one row each. The
+Vibro-Spear and Vibro-Axe are left to the held rows, with this book's figures
+(7-10 lbs, 10,000-15,000 credits) in the script header. Naming: Eco-Wizard
+items `EW ` with an `ew-` slug (the convention Adventures in Dinosaur Swamp
+shipped), `TW ` items, and `Necromancy: ` for the dinosaur parts, one row per
+animal type (P.P.E. cost only, no credit price).
+
 ### vehicles: 8 entries, 0 matched, 8 missing
 
 Generic names (Motorcycle, Hovercycle, A.T.V.) will collide with other
@@ -255,8 +266,8 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-05 | `pal/data/dinosaur-swamp-survey` | cache built (162 pp, OCR), `dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-skills` | Nate's D18 written into the plan. The nine special skills, `~246-dinosaur-swamp-skills.sql`, applied `--remote` before the PR; production skills 500 to 509. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-gear` | The gear, `~248-dinosaur-swamp-gear.sql`: 157 rows (toxins and medicines, Ghillie Suit, Homespun Armor, Viggo's rifles, tooth weapons, SteelTree, 29 EW, 27 TW, 17 Necromancy), applied `--remote` before the PR. Checked by `book-reconcile` in three slices. |
 
 ### What remains
 
-Plan steps 2-6: gear, vehicles, creatures, notable NPCs, then the eight
-classes.
+Plan steps 3-6: vehicles, creatures, notable NPCs, then the classes.
