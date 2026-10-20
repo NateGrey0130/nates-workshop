@@ -1,8 +1,8 @@
 # Rifts World Book 26: Dinosaur Swamp — survey
 
-**Status:** `importing` — the gear shipped; vehicles, creatures, NPCs and classes next. (2026-10-20)
+**Status:** `importing` — the nine special skills and the gear shipped; vehicles, creatures, NPCs and classes next. (2026-10-20)
 
-**Rows citing this book:** gear 157
+**Rows citing this book:** gear 157, skills 9
 
 Slug `dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 26 Dinosaur Swamp.pdf`, 162 PDF pages, **scan (no text
@@ -165,6 +165,16 @@ New West rows at extraction.
 
 ### skills: 10 entries, 1 held, 9 missing
 
+**Shipped** in `~246-dinosaur-swamp-skills.sql`, re-diffed `--remote` on
+2026-10-20 (still 9 missing). Two naming and figure decisions, both in the
+script's header and each row's note: the Quick Find and three of the four
+class lists spell **Lore: Swamp & Everglades** (the descriptions head it
+*Swamps*), and **Cartography** stores the general purchase figure, 34% +4%,
+with the Pathfinder's own 30% +5% left to that class's grant. The Dinosaur
+Hunter's Sign Language (35% +4%, printed 58) is that class's grant of the
+held row, and the Pathfinder's Roadwise (printed 54) is the held Rifts
+Ultimate Edition row at the same 26/4.
+
 **Sign Language** is held. Missing: Cartography, Cross-Country Pacing,
 Fashion Weapons & Tools, Lore: Dinosaurs, Lore: Swamp & Everglades, Land
 Navigation: Regional, Stalking, Trail Blazing, Track Dinosaurs. The held
@@ -231,16 +241,16 @@ book's items and special skills (the Madhaven lesson).
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
 
-**For Nate to decide before extraction:**
+**Decided before extraction: Nate's ruling D18 (2026-10-19), leave all four.**
+Not taken: take some. The ruling is in the open-items plan of 2026-10-19.
 
-- **The four barbarian versions** (61-62): `variants` on the classes they
-  modify, which edits held classes, or left.
-- **The five diseases** (41-43): optional rules with no price. Rows of some
-  kind, or left.
-- **The community residents** (143-160): named with a level in prose and no
-  stat block. This is the standing one-line-NPC question; no rows until it is
-  ruled on.
-- **Dimensional Shifting** (136-142): G.M. tables; left unless asked for.
+- **The four barbarian versions** (61-62): left. Variants would edit held
+  classes for a few lines of guideline each.
+- **The five diseases** (41-43): left. Optional rules with no price and
+  nothing in the app that would read a row.
+- **The community residents** (143-160): left. Named with a level in prose and
+  no stat block; the one-line-NPC question is standing and unruled.
+- **Dimensional Shifting** (136-142): left. G.M. tables are not catalog.
 
 What is deliberately left, with the reason for each:
 
@@ -255,6 +265,7 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-05 | `pal/data/dinosaur-swamp-survey` | cache built (162 pp, OCR), `dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-20 | `pal/data/dinosaur-swamp-skills` | Nate's D18 written into the plan. The nine special skills, `~246-dinosaur-swamp-skills.sql`, applied `--remote` before the PR; production skills 500 to 509. |
 | 2026-10-20 | `pal/data/dinosaur-swamp-gear` | The gear, `~248-dinosaur-swamp-gear.sql`: 157 rows (toxins and medicines, Ghillie Suit, Homespun Armor, Viggo's rifles, tooth weapons, SteelTree, 29 EW, 27 TW, 17 Necromancy), applied `--remote` before the PR. Checked by `book-reconcile` in three slices. |
 
 ### What remains

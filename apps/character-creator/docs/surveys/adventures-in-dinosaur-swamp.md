@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `surveyed` — survey and plan written; nothing imported yet. (2026-10-05)
+**Status:** `importing` — gear shipped; the Behemoth, creatures and NPCs next. (2026-10-20)
 
-**Rows citing this book:** none
+**Rows citing this book:** gear 27
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -169,7 +169,13 @@ their names are read off renders first.
 ## Extraction plan
 
 1. **Gear** — the 8 Eco-Wizardry items, the shelter and the clothing line,
-   from printed 156-160.
+   from printed 156-160. Read off renders, it is 27 rows: the 8 EW
+   constructs with EW Bandages as one row per printed healing level (4), two
+   shelters (NG-ICSS and NG-CCS, 158; the survey's inventory named one), the
+   Overland Harness and Frame Pack and the All-In-One Utility Belt (158), the
+   Hunter Suit jumpsuit in four printed grades (159), the Hunter Utilities
+   jacket in four and pants in two, and the Hunter Tracks boots and Hunter
+   Paws gloves (all 159; 160 is a catalogue page). No other cached book prints any of them.
 2. **Vehicle** — the Lazlo Model Behemoth, through `scripts/vessel-sql.mjs`.
 3. **Creatures** — 19 rows, through `scripts/bestiary-sql.mjs`, with the
    Quick Find's trait index as the check on magic and psionics.
@@ -179,13 +185,17 @@ their names are read off renders first.
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
 
-**For Nate to decide before extraction:**
+**Nate's ruling D20 (2026-10-19)**, plan `open-items-2026-10-19`, settled
+the three questions this survey left open before extraction:
 
-- **The Wraith Soldier** (24-25): a creature row, a class, or both.
-- **The gang and typical-member blocks** (91-94, 99): `notable_npcs` rows as
-  the Xiticix typical soldiers were, or left.
-- **The survival rules** (13-17): starvation, dehydration and heat penalties
-  are rules tables; left unless asked for.
+- **The Wraith Soldier** (24-25) is **a creature row only**, not a class: the
+  book presents it as a monster.
+- **The gang and typical-member blocks** (91-94, 99) are **left**.
+  Typical-member blocks became `notable_npcs` rows only where Nate asked for
+  them (the Xiticix).
+- **The survival rules** (13-17) are **left**.
+
+Not taken: a different split.
 
 What is deliberately left, with the reason for each:
 
@@ -200,7 +210,9 @@ What is deliberately left, with the reason for each:
 | date | branch | what went in |
 |---|---|---|
 | 2026-10-05 | `pal/data/adventures-in-dinosaur-swamp-survey` | cache built (162 pp, OCR), `adventures-in-dinosaur-swamp` registered in `books.json`, this survey written, offset +1 verified. No data. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-gear` | **27 gear rows** (`~243`, through `scripts/rows-sql.mjs`), printed 156-159, read off renders and checked by `book-reconcile` (it caught eight rows citing 160 for 159, corrected before the apply): 11 Eco-Wizardry rows (`magic`, the Horror Armor and Armored Shield `armor`), 4 Northern Gun field items, 12 Hunter clothing rows by grade. The Horror Armor's M.D.C. is rolled (4D6+25), so `mdc` is empty and the description says so. The Cradle of Life prints no price. Ruling D20 recorded above. Applied `--remote` before the merge. |
 
 ### What remains
 
-Everything in the plan. Nothing from this book has been imported.
+The Lazlo Model Behemoth, the 19 creatures (after Dinosaur Swamp's creature
+PR, so the New West comparisons are done once) and the NPCs.
