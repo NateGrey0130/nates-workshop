@@ -171,21 +171,21 @@ this book's items (the Madhaven lesson).
    `scripts/bestiary-sql.mjs`.
 4. **Notable NPCs** — every stat block on printed 69-73, 133-139, 145 and
    148-160, counted from renders.
-5. **Classes** — the Thumper and the Waste Monkey, if they are wanted as
-   classes (below).
+5. **Classes** — the Thumper and the Waste Monkey (D19, below).
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
 
-**For Nate to decide before extraction:**
+**Decided by Nate, ruling D19 (2026-10-19)**, in the open-items plan of
+that date. Not taken: a different split.
 
-- **The Thumper and the Waste Monkey**: optional player races. Classes as
-  well as creature rows, or creature rows only.
-- **The Blood Priest**: the book tags it as an NPC villain. Import it as a
-  class anyway, or leave it and keep High Father Suthue as an NPC row.
-- **The secondary and wild vampire blocks** (137-139): `notable_npcs` rows as
-  typical blocks, Rifts `creatures` rows beside the Nightbane ones, or left
-  until a Rifts vampire book is imported.
+- **The Thumper and the Waste Monkey**: **classes and creature rows both.**
+  Optional player races are what the creator is for.
+- **The Blood Priest**: **no class.** The book tags it as an NPC villain;
+  High Father Suthue (145) is its NPC row.
+- **The secondary and wild vampire blocks** (137-139): **left** until a Rifts
+  vampire book is imported. Xavier Stuart and Cana the Blind are named NPCs
+  and are not these blocks.
 
 What is deliberately left, with the reason for each:
 
