@@ -3,8 +3,9 @@
 Marvel Super Heroes adventure module, Bruce Nesmith, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh2`. Measured 2026-10-21.
 
-**Rows citing this book:** 91 `msh_book_text` rows over 20 character entries
-in production (`DB_MARVEL`, read back 2026-10-21).
+**Rows citing this book:** 91 `msh_book_text` rows over 19 character entries
+in production (`DB_MARVEL`, read back 2026-10-21); the twentieth, the
+Omegatrons, prints a grid and nothing else.
 
 Committed: 20 characters in `apps/marvel-heroes/data/npcs.json` (12 full
 blocks, 8 named one-line grids, and the Mimic's absorbed form as a second
