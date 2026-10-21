@@ -66,9 +66,12 @@ what it adds is behind its registry fields, or reads nothing MH1 or MH2 print
     between a power's last line and the next head is re-read from the page;
     a dash the block's crop reads where nothing else does is a dash; a
     bracketed Karma is held to the bracketed ranks, as a bracketed Health is.
-  - NOT READ YET: the opponents' run-in powers after their Powers: line
-    (RUNIN_POWER below is their head, and nothing calls it), and the
-    Super-Adaptoid's form on printed 9.
+  - `opponent_powers: "run-in"`: the run-in powers after a one-line grid's
+    Powers: line are its powers (RUNIN_POWER), a run-in there is not the next
+    name, an indented line ends the text, and a run-in at the top of the next
+    column goes on. A Health that opens a bracket it does not close (the
+    Super-Adaptoid's form, printed 9, a `form_grids` grid) keeps its number,
+    and the bracket is prose.
 
 THE NUMBERS ARE DERIVED, as MHSP1's are: each ability's number is its rank's
 standard number (`rank_only`), and Health = F+A+S+E and Karma = R+I+P hold on
@@ -471,12 +474,13 @@ def cards(book, slug, part, first, last, ranks, reader):
     return entries
 
 
-def line_block(lines, i, title, ranks, part, page, slug, name):
+def line_block(lines, i, title, ranks, part, page, slug, name, notes=False):
     """A one-line grid's block, from its letter row at lines[i]: each code is
     the word under its letter, by x, and the stat lines after the codes row
     are its Health and Karma. Returns (block, index after the stat lines).
     Read the same way for an opponent's grid and for one inside a card
-    (registry `card_grids`)."""
+    (registry `card_grids`). With `notes`, also returns the lines of a
+    bracketed note a stat line opens, as a third value."""
     line = lines[i]
     short = {v[0].upper(): v for v in ranks.values()}
     xs = letter_xs(line, title)
@@ -500,12 +504,24 @@ def line_block(lines, i, title, ranks, part, page, slug, name):
     block = {'label': None, 'kind': 'line', 'page': page, 'part': part, 'pdf': line['pdf'], 'col': line['col'],
              'abilities': abilities, 'rank_only': True}
     k = i + 2
-    stats = []
+    stats, note = [], []
     while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
         stats.append(lines[k]['text'])
         k += 1
+        # a stat line that opens a bracket and does not close it (registry
+        # "opponent_powers": "run-in"; MH3's Super-Adaptoid, printed 9:
+        # "Health: 150 (No matter what abilities the" over three more lines)
+        # keeps its number, and the bracket to its close is a note for prose
+        m = re.match(r'^(.*?\d)\s*(\(.*)$', stats[-1]) if notes else None
+        if m and ')' not in m.group(2):
+            stats[-1], note = m.group(1), [m.group(2)]
+            while k < len(lines) and ')' not in note[-1]:
+                note.append(lines[k]['text'])
+                k += 1
     block.update(booklet.secondary(' '.join(stats)))
     block['check'] = check(block)
+    if notes:
+        return block, k, note
     return block, k
 
 
@@ -516,6 +532,9 @@ def opponents(book, slug, part, page, ranks):
     # with no name that is a form of a card (registry `form_grids`), run-in
     # powers after the Powers: line, and paragraphs that open indented
     title = book.get('opponent_names') == 'title'
+    # MH3 (registry "opponent_powers": "run-in"): names in capitals, as MH1's,
+    # and run-in powers after the Powers: line, read by RUNIN_POWER
+    runin = book.get('opponent_powers') == 'run-in'
     forms = [f for f in book.get('form_grids', []) if (f['part'], f['page']) == (part, page)]
     is_row = lambda l: letter_xs(l, title) is not None
     entries = []
@@ -544,7 +563,11 @@ def opponents(book, slug, part, page, ranks):
         if head is None:
             raise SystemExit('%s: a one-line grid with no name above it, %s p.%d' % (slug, part, page))
         j, name, desc = head
-        block, k = line_block(lines, i, title, ranks, part, page, slug, name)
+        note = []
+        if runin:
+            block, k, note = line_block(lines, i, title, ranks, part, page, slug, name, notes=True)
+        else:
+            block, k = line_block(lines, i, title, ranks, part, page, slug, name)
         # the text: the Powers: or Special: line and the paragraph it opens,
         # or the paragraph right under the grid; it ends at a paragraph break.
         # The first line may sit a grid's row gap under a grid with no Health
@@ -563,19 +586,28 @@ def opponents(book, slug, part, page, ranks):
         text, last, first_k, carry = [], lines[k - 1], k, None
         base_x = left_x(line)
         intro = lambda: roster.join_text(text) if text and re.match(r'^Powers\s*:', text[0]) else ''
-        while k < len(lines) and not is_row(lines[k]) and not RUN_IN_HEAD.match(lines[k]['text']):
+        # In a run-in book (MH3) a run-in after the Powers: line is the grid's
+        # power, not the next name ("WEAPONS: Each tower", the Water Tower
+        # Robots, printed 4), an indented line opens the adventure's next
+        # paragraph, and a run-in at the top of the next column goes on
+        # ("MOVEMENT: A tower moves", the same robots).
+        while k < len(lines) and not is_row(lines[k]) and not (RUN_IN_HEAD.match(lines[k]['text']) and not (runin and intro())):
             l = lines[k]
             where = (l['pdf'], l['band'])
             named = title and power_named(l['text'], intro())
+            # a run-in power after a gap (the Super-Adaptoid's BODY ARMOR.,
+            # printed 9, a paragraph under its Powers: line) goes on
+            named = named or (runin and intro() and text[-1].rstrip().endswith(SENTENCE_END) and RUNIN_POWER.match(l['text']))
             if title and heading(l):
                 break
             if carry is None and l['col'] == line['col'] and where == (line['pdf'], line['band']):
                 if l['y0'] - last['y0'] >= (2 if k == first_k else 1.3) * pitch and not named:
                     break
-                if title and k != first_k and left_x(l) > base_x + 20 and not named:
+                if (title or runin) and k != first_k and left_x(l) > base_x + 20 and not named:
                     break
             elif carry is None and text and l['col'] == line['col'] + 1 and where == (line['pdf'], line['band']) \
                     and (not text[-1].rstrip().endswith(('.', '!', '?'))
+                         or (runin and intro() and RUNIN_POWER.match(l['text']))
                          or (title and (named or (k + 1 < len(lines) and left_x(l) <= left_x(lines[k + 1]) + 10)))):
                 carry = left_x(l)
             elif carry is not None and l['col'] == last['col'] and where == (last['pdf'], last['band']):
@@ -600,7 +632,25 @@ def opponents(book, slug, part, page, ranks):
                 else:
                     head_lines.append(t)
             text = head_lines
+        elif runin and intro():
+            # MH3's run-ins after the Powers: line: a head in capitals after a
+            # sentence's end, ended by a colon or a period ("WEAPONS: Each
+            # tower", "BODY ARMOR. Incredible"), or going on into its sentence
+            # ("FLIGHT is at good speed.", the Doombot), whose whole line is
+            # its text
+            head_lines = []
+            for t in text:
+                pm = RUNIN_POWER.match(t) if head_lines else None
+                prev = (powers[-1]['text'] if powers else head_lines)[-1].rstrip() if head_lines else ''
+                if pm and prev.endswith(SENTENCE_END):
+                    powers.append({'name': booklet.power_name(pm.group(1)), 'text': [pm.group(3) if pm.group(2) else t]})
+                elif powers:
+                    powers[-1]['text'].append(t)
+                else:
+                    head_lines.append(t)
+            text = head_lines
         sections, prose = {}, [desc] if desc else []
+        prose += note
         prose += [lines[x]['text'] for x in range(j + 1, i)]
         m = re.match(r'^(Powers|Special)\s*:\s*(.*)$', text[0]) if text else None
         if m:
@@ -703,10 +753,24 @@ def coverage(book, entries):
     # run-in reading it was written for: MH1's SOVIET SUPER-TROOPERS prints
     # Powers text with no run-in head, and MH1's parse path is not changed.
     title = book.get('opponent_names') == 'title'
+    # In a run-in book (MH3) the same two hold for every one-line grid with a
+    # Powers: line, an opponent's or a form's: its run-ins were all read
+    runin = book.get('opponent_powers') == 'run-in'
     for e in entries:
         if title and e['kind'] == 'entry' and e['sections'].get('powers') and not e['powers']:
             lines.append('  POWERS: TEXT AND NO RUN-IN POWER: %s' % e['header'])
             bad = True
+        grids = ([(e['header'], e)] if e['kind'] == 'opponent' else []) \
+            + [('%s (%s)' % (e['header'], b['label']), b['text']) for b in e['blocks'] if b.get('text')]
+        for name, t in grids if runin else []:
+            if t['sections'].get('powers') and not t['powers']:
+                lines.append('  POWERS: A ONE-LINE GRID\'S POWERS LINE AND NO RUN-IN POWER: %s' % name)
+                bad = True
+            for p in t['powers']:
+                m = re.search(r"(?:^|[.!?] )([A-Z][A-Z' -]{3,}[A-Z])[.:] ", p['text'])
+                if m:
+                    lines.append('  POWERS: A HEAD INSIDE %s\'s %s: %s' % (name, p['name'], m.group(1)))
+                    bad = True
         for p in e['powers']:
             m = re.search(r"(?:^|[.!?] )([A-Z][A-Z' -]{6,}[A-Z])[.:] ", p['text'])
             if e['kind'] == 'entry' and m:

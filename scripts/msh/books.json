@@ -58,6 +58,7 @@
     "  drop_corner     a cover-panels book: [part, printed page, x, y in TSV pixels]: every word right of x and below y on that page is not a card's (MH2's PROOF OF PURCHASE coupon)",
     "  opponent_names  a cover-panels book: \"title\" where a one-line grid's name is in title case, alone on the line above it (MH2's \"Aliens (humanoid)\"); its run-in powers after the Powers: line are read as a card's are. Absent, MH1's capitals",
     "  form_grids      a cover-panels book: [{part, page, entry, label}]: a one-line grid with no name above it that is a second block on that card (MH2's Mimic, once he has copied the Avengers' powers)",
+    "  opponent_powers a cover-panels book: \"run-in\" where a one-line grid's Powers: line is followed by run-in powers in capitals (MH3's \"WEAPONS: Each tower\", \"FLIGHT is at good speed.\"), read as its powers, going on at the top of the next column on a run-in line; a stat line opening a bracket it does not close keeps its number and sends the bracket to prose. Absent, MH1's",
     "  drop_lines      a cover-panels book: [part, printed page or null, text]: a line that is no card's text, matched once whole (MH3's In Loving Memory banner over Doom's card)",
     "  lost_headers    a cover-panels book: [part, printed page or null, identity line, NAME]: a card header no word of the TSV holds (MH3's Human Torch); a header line with the name goes in above that identity line",
     "  moves           a cover-panels book: [part, printed page, col, y from, y to, after col, after y in TSV pixels]: the lines of that column between those heights go on after the last line of the other column ending above that height (MH3's Super-Adaptoid, its text set round its portrait)",
@@ -1364,7 +1365,11 @@
       "opponents": [
         {"part": "Adventure Book", "page": 3, "names": ["Doombot"]},
         {"part": "Adventure Book", "page": 4, "names": ["Water Tower Robots"]}
-      ]
+      ],
+      "opponent_powers": "run-in",
+      "opponent_powers_note": "Printed 3 and 4 (PDF 5 and 6): each one-line grid's Powers: line is followed by run-in powers in capitals, ended by a colon (WEAPONS:, HERO SCOOPS:, ARMOR:, the Water Tower Robots) or going on into their sentence (FLIGHT is, the Doombot); the robots' MOVEMENT: goes on at the top of the third column. Read on the TSV 2026-10-21.",
+      "form_grids": [{"part": "Adventure Book", "page": 9, "entry": "Super-Adaptoid", "label": "Current Form"}],
+      "form_grids_note": "Printed 9 (PDF 11), Chapter 4, Battle: the line above the grid ends stats are currently:, so the grid has no name. Nate, 2026-10-21 (survey mh3.md decision 2): a second block on the Super-Adaptoid's card, as a form, labelled for the survey's current form. Its Health line opens a bracketed note (Health stays 150 whatever it absorbs) that runs three more lines, and it prints no Karma. Read on the TSV 2026-10-21."
     },
     "mhsp2": {
       "title": "MHSP2 Secret Wars II",
