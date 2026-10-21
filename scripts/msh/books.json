@@ -45,6 +45,12 @@
     "  block_labels    a code-grids book: [printed page, Health, label] for a grid that is a form or an item inside another entry (The Thing's Human Form); it gets no header of its own",
     "  statted_pages   a code-grids book: pages outside character_pages that stat beings inside a place's text, {page, team (the place), names, partial: [[NAME, Karma]] for a grid printing only R, I and P}",
     "  teams (code-grids) [printed page, first entry's header, team] in book order: each starts a run of that team",
+    "  layout cover-panels for MH1's: MHSP1's blocks on a loose cover's inside panels and a few booklet pages, with one-line grids in the chapters (scripts/msh/coverpanels.py). It reads character_ranges and opponents in ME1's form, and:",
+    "  panels          a cover-panels book: parts (offset null, no printed page) read whole for cards; a card there cites the panel",
+    "  cards           a cover-panels book: [part, printed page or null, name] for every full block, read off the page images; with opponents, the checklist",
+    "  not_characters  a cover-panels book: card headers that are not characters (a vehicle), dropped",
+    "  no_health       a cover-panels book: opponents whose one-line grid prints no Health",
+    "  drop_above      a cover-panels book: [part, printed page, y in TSV pixels]: text above y on that page is not a card's (the Epilog over Magneto's)",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -1124,9 +1130,29 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are outline display lettering that Tesseract does not read. Printed 1 has no banner, only the title art (The Uncanny X-Men: Breeder Bombs!), so Introduction is this registry's name for it. Each chapter is set as Campaign, Battle and Aftermath subsections (Chapter Seven has two Campaigns and two Battles). The character cards follow the Epilog on printed 13-15, unbannered, and are on the two inside cover panels.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [
         {"part": "Adventure Book", "pages": [13, 15]}
       ],
+      "panels": ["Inside front cover", "Inside back cover"],
+      "cards": [
+        ["Inside front cover", null, "Colossus"],
+        ["Inside front cover", null, "Nightcrawler"],
+        ["Inside front cover", null, "Rogue"],
+        ["Adventure Book", 13, "Magneto"],
+        ["Adventure Book", 14, "Professor X"],
+        ["Adventure Book", 14, "Sentinels"],
+        ["Adventure Book", 15, "Mentallo"],
+        ["Adventure Book", 15, "Crimson Dynamo"],
+        ["Adventure Book", 15, "Soviet Super-Troopers"],
+        ["Inside back cover", null, "Storm"],
+        ["Inside back cover", null, "Ariel"],
+        ["Inside back cover", null, "Lockheed the Dragon"]
+      ],
+      "not_characters": ["Lockheed RS-150 Blackbird"],
+      "no_health": ["Fluffy", "Augie Hickman"],
+      "drop_above": [["Adventure Book", 13, 1300]],
+      "drop_above_note": "Printed 13 (PDF 15): the Epilog's text runs across the top of the page to y 1076 in the TSV (300 dpi), over a rule; Magneto's card starts at y 1658. Read on the page image 2026-10-21.",
       "opponents": [
         {"part": "Adventure Book", "page": 2, "names": ["Fluffy"]},
         {"part": "Adventure Book", "page": 3, "names": ["Wolverine", "Fixer"]},
