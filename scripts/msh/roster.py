@@ -427,6 +427,13 @@ def parse(slug):
         import codegrids
         stream, entries = codegrids.parse(book, slug)
         return book, stream, entries
+    if book.get('layout') == 'cover-panels':
+        # MHSP1's blocks on a loose cover's inside panels and a few booklet
+        # pages, plus one-line grids in the chapters (MH1):
+        # scripts/msh/coverpanels.py reads them into the same entries
+        import coverpanels
+        stream, entries = coverpanels.parse(book, slug)
+        return book, stream, entries
     stream = page_stream(book, slug)
     entries = read_entries(stream, GridReader(book, slug))
     finish(entries)
@@ -732,6 +739,12 @@ def main():
         lines, missed = gridbooks.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
         print('\n'.join(lines))
         missing = ['a checklist'] if missed else []
+    elif book.get('layout') == 'cover-panels':
+        # no printed index: the survey's list of cards and opponents is the checklist
+        import coverpanels
+        lines, missed = coverpanels.coverage(book, entries)
+        print('\n'.join(lines))
+        missing = ['the checklist'] if missed else []
     else:
         if book.get('layout') == 'code-grids':
             import codegrids
