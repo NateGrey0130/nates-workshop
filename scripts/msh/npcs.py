@@ -108,8 +108,9 @@ def pair_quotes(s):
 
 def minus(s):
     """A stat value's minus sign as ME1's OCR gives it, an en or em dash
-    ('-5' read as a long dash then 5), is a minus; ascii_fold would spell it ' - '."""
-    return re.sub('^[%s%s]\\s*(?=\\d)' % (chr(0x2013), chr(0x2014)), '-', s) if s else s
+    ('-5' read as a long dash then 5), is a minus; ascii_fold would spell it ' - '.
+    So is a hyphen beside one (ME2's Fenris Wolf, '-5' read as a hyphen and a dash)."""
+    return re.sub('^-?[%s%s]-?\\s*(?=\\d)' % (chr(0x2013), chr(0x2014)), '-', s) if s else s
 
 
 def ascii_fold(s):
@@ -323,7 +324,9 @@ def main(slug_arg):
         return (title_case(e['team']) if e['team'].isupper() else e['team']) if e.get('team') else SIDE[e['side']]
 
     def name_of(e):
-        return e.get('name') or title_case(base_name(e['header']))
+        # ME2 prints MUSPELHEIM DEMON, with a comma and nothing after it
+        # (Resource p.14, read on the page image); its Contents prints none
+        return e.get('name') or title_case(re.sub(r',$', '', base_name(e['header'])) if grid else base_name(e['header']))
 
     roster = json.load(io.open(os.path.join(CACHE, 'books', slug_arg, 'roster.json'), encoding='utf-8'))
     powers = json.load(io.open(os.path.join(DATA, 'powers.json'), encoding='utf-8'))['powers']
@@ -354,6 +357,23 @@ def main(slug_arg):
                     book['title'])
 
     entries = roster['entries']
+    # A chapter's second grid for a character the Resource Book stats (ME2's
+    # Titans tormenting Zeus, and Zeus powerless in Hades; registry
+    # second_blocks, Nate 2026-10-21) is a labelled block on that character's
+    # card, not a card of its own. Its run-in powers go to D1 as the card's,
+    # named for the block. Only a grid-booklets book sets the field.
+    second = {}
+    for g in (book.get('second_blocks', []) if grid else []):
+        hits = [e for e in entries if e['part'] == g['part'] and g['page'] in e['pages'] and e.get('header') == g['name']
+                and len(e['blocks']) == 1]
+        owners = [e for e in entries if e['part'] != g['part'] and e['blocks'] and norm(base_name(e['header'])) == norm(g['name'])]
+        if len(hits) != 1 or len(owners) != 1:
+            raise SystemExit('%s: second_blocks %s finds %d grids and %d cards, not 1 and 1' % (slug_arg, g['name'], len(hits), len(owners)))
+        e = hits[0]
+        if e['prose'].strip() or e['identity'] or e['members'] or any(v.strip() for k, v in e['sections'].items() if k != 'powers'):
+            raise SystemExit('%s: the second block %s has text npcs.py has no part for' % (slug_arg, g['name']))
+        entries = [x for x in entries if x is not e]
+        second[id(owners[0])] = (dict(e['blocks'][0], label=g['label'], second=True), e['powers'])
     statted = [e for e in entries if e['blocks']]
     by_name = {}
     for e in statted:
@@ -385,12 +405,15 @@ def main(slug_arg):
             # blocks are forms and the first is named for him
             form_grid = panels and any(b.get('text') for b in e['blocks'])
             forms = forms or form_grid
+            # a chapter's second grid (second_blocks above) is not a form: the
+            # GM picks one block or the other
+            eblocks = e['blocks'] + ([second[id(e)][0]] if id(e) in second else [])
             blocks = []
-            for n, b in enumerate(e['blocks']):
+            for n, b in enumerate(eblocks):
                 label = b['label']
                 # the main block of an entry with more than one is named for
                 # the character, so the GM picks "Klaw", not "Klaw - block 1"
-                if (booklet or forms) and not label and len(e['blocks']) > 1 and n == 0:
+                if (booklet or forms) and not label and len(eblocks) > 1 and n == 0:
                     label = name_of(e) if booklet else display(e['header'])
                 if not label and n:
                     label = 'Additional statistics, p.%d' % b['page']
@@ -414,7 +437,7 @@ def main(slug_arg):
                     'abilities': abilities,
                     **({'derived': derived} if derived else {}),
                     **({'rank_only': True} if b.get('rank_only') else {}),
-                    **({'form': True} if forms else {}),
+                    **({'form': True} if forms and not b.get('second') else {}),
                     # a value the book does not print is null, not an empty
                     # string, in a roster booklet (the Summary gives no
                     # Resources or Popularity); MA1's file is kept as it was
@@ -466,6 +489,12 @@ def main(slug_arg):
                 if t.get('prose', '').strip() or any(v.strip() for k, v in t['sections'].items() if k != 'powers'):
                     raise SystemExit('%s: the form grid %s of %s has text npcs.py has no part for' % (slug_arg, b['label'], e['header']))
                 for p in t['powers']:
+                    n += 1
+                    text_row(eslug, 'power', n, '%s (%s)' % (p['name'], b['label']), b['page'], p['text'])
+            # a chapter's second grid's run-in powers, the same way
+            if id(e) in second:
+                b, sp = second[id(e)]
+                for p in sp:
                     n += 1
                     text_row(eslug, 'power', n, '%s (%s)' % (p['name'], b['label']), b['page'], p['text'])
             # A header's identity is its name and status lines: one or two short

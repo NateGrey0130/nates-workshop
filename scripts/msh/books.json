@@ -60,6 +60,7 @@
     "  form_grids      a cover-panels book: [{part, page, entry, label}]: a one-line grid with no name above it that is a second block on that card (MH2's Mimic, once he has copied the Avengers' powers)",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
+    "  second_blocks   a grid-booklets book: [{part, page, name, label}]: a one_line_grids character that is a second block on the card of that name in another booklet (ME2's Titans and Zeus in Hades), labelled, its run-in powers going to D1 as the card's (scripts/msh/npcs.py)",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -1637,10 +1638,26 @@
         {"part": "Adventure Book", "page": 18, "name": "Charon"},
         {"part": "Adventure Book", "page": 21, "name": "Modgud"}
       ],
+      "second_blocks": [
+        {"part": "Adventure Book", "page": 18, "name": "Titans", "label": "Tormenting Zeus in Hades"},
+        {"part": "Adventure Book", "page": 18, "name": "Zeus", "label": "Powerless in Hades"}
+      ],
       "roster_sections": ["Pregenerated Heroes", "The Entities", "The Olympians", "The Asgardians", "The Heliopolitans"],
+      "teams": [
+        ["Adventure Book", 4, "Ragnarok and Roll Heroes"],
+        ["Adventure Book", 8, "ME2 Ragnarok and Roll"],
+        ["Adventure Book", 16, "Entities"],
+        ["Adventure Book", 17, "ME2 Ragnarok and Roll"],
+        ["Resource Book", 2, "Entities"],
+        ["Resource Book", 6, "Olympians"],
+        ["Resource Book", 10, "Asgardians"],
+        ["Resource Book", 16, "Heliopolitans"]
+      ],
+      "teams_note": "Nate, 2026-10-21 (survey me2.md decision 1): the Resource Book's banners without the leading The; the eight heroes are Ragnarok and Roll Heroes, as ME1's are Cosmos Cubed Heroes (not taken: one group shared with ME1's); Actus, the only grid on Adventure p.16, is an Entity, so p.16 alone is Entities; Charon (p.18) and Modgud (p.21) file under the book's title, ME1's rule for a chapter's opponent. The chapter's Titans and Zeus are second_blocks on their Resource Book cards (not taken: cards of their own).",
       "reference_summary": {
         "pdf": 51,
         "part": "Pregenerated Heroes Summary",
+        "team": "Ragnarok and Roll Heroes",
         "note": "The Pregenerated Heroes Summary, printed sideways on the inside back cover. Transcribed by eye 2026-10-21 from a render turned 90 degrees; Tesseract reads the page sideways. Every value and power name agrees with ME1's chart (its rows are copied in that form), Firelord's Karma 90 included: his ranks give 110, and his block (Adventure p.5) prints 110. Power names are the chart's, with its abbreviations spelled out and each power's own rank where it prints one; a power the chart qualifies at length keeps its name only.",
         "heroes": [
           ["Mantis", ["40 In", "40 In", "6 Ty", "30 Rm", "6 Ty", "20 Ex", "50 Am"], 116, 76, ["Empathy-Am", "Healing-Un", "Life Support-Shift Z", "Plant Control-Un", "Recovery-Am", "Resistances-Am", "Teleport-In"]],

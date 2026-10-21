@@ -952,6 +952,35 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       zero.every((id) => bookNpc({ character: id }).snapshot?.karma === 0), zero.map((id) => bookNpc({ character: id }).snapshot?.karma).join());
   }
 
+  // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
+  // with one-line grids in its chapters and Nate's rulings of 2026-10-21
+  // (survey me2.md decisions 1 and 5).
+  if (data.npcs.characters.some((c) => c.book === 'me2')) {
+    const me2 = data.npcs.characters.filter((c) => c.book === 'me2');
+    const team = (t) => me2.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    check('ME2: 40 characters filed under the Resource Book\'s banners, the eight heroes, and Charon and Modgud under the book\'s title; Actus is an Entity',
+      me2.length === 40 && me2.filter((c) => c.summary_only).length === 4
+      && team('Entities') === 'Ac,Actus,Death,Gaea,Gal,Galactus,Tus' && team('ME2 Ragnarok and Roll') === 'Charon,Modgud'
+      && me2.filter((c) => c.team === 'Ragnarok and Roll Heroes').length === 8 && me2.filter((c) => c.team === 'Olympians').length === 9
+      && me2.filter((c) => c.team === 'Asgardians').length === 12 && team('Heliopolitans') === 'Isis,Osiris',
+      `${me2.length} ${[...new Set(me2.map((c) => c.team))]}`);
+    const zeus = bookNpc({ character: 'zeus-me2', block: 1 });
+    check('ME2: the chapter\'s powerless Zeus is a second block on his Resource Book card, a GM choice of its own citing Adventure p.18, not a form',
+      choices.filter((c) => c.character === 'zeus-me2').length === 2 && zeus.snapshot?.health === 151 && zeus.name === 'Zeus - Powerless in Hades'
+      && tagline(zeus.snapshot).startsWith('ME2 Ragnarok and Roll, Adventure p.18;') && bookNpc({ character: 'titans-me2', block: 1 }).snapshot?.health === 350
+      && !me2.some((c) => c.id === 'zeus-me2' && c.versions.length > 1), `${zeus.name} ${zeus.snapshot && tagline(zeus.snapshot)}`);
+    const bill = bookNpc({ character: 'beta-ray-bill-me2' }).snapshot;
+    check('ME2: Beta Ray Bill\'s humanoid form, a grid of codes only, is a form on his card (330 and 80)',
+      bill?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Beta Ray Bill 330,Humanoid form 80', JSON.stringify(bill?.forms?.map((f) => [f.name, f.health])));
+    const chim = bookNpc({ character: 'chimaera-me2' }).snapshot;
+    check('ME2: the Chimaera\'s Agility and Endurance, printed 100 Shift X, play as Unearthly',
+      chim?.abilities.agility.rank === 'unearthly' && chim.abilities.endurance.rank === 'unearthly' && chim.health === 950, JSON.stringify(chim?.abilities.agility));
+    const death = bookNpc({ character: 'death-me2' }).snapshot;
+    check('ME2: Death\'s "Health: 20,000" is 20000, his "Karma: Unlimited" is unset, and the Fenris Wolf\'s Popularity, read as a hyphen and a dash, is -5',
+      death?.health === 20000 && death.karma === null && bookNpc({ character: 'the-fenris-wolf-me2' }).snapshot?.abilities.popularity.number === -5,
+      `${death?.health} ${death?.karma}`);
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
@@ -1613,6 +1642,14 @@ section('The codex: every section loads, searches, filters and keeps its address
     if (minions) {
       check('Notable NPCs: a derived Karma says it was not printed (MH2\'s Kang\'s Minions)',
         npcs.stats(minions).some(([k, v]) => k === 'Karma' && /^Not printed; R\+I\+P/.test(v)), JSON.stringify(npcs.stats(minions)));
+    }
+    // ME2's overrides carry a further rank in `also` as a number and a code
+    const chim = npcs.byKey.get('chimaera-me2');
+    if (chim) {
+      const lines = npcs.stats(chim).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`);
+      check('Notable NPCs: a block\'s further misprint and in-range number read as the first does (ME2\'s Chimaera)',
+        lines.length === 3 && lines.filter((l) => /^Misprint: .* is printed 100 ShX; the book's own ranks give 100 Un$/.test(l)).length === 2
+        && lines.some((l) => /^As printed: .* is printed 250 ShY, inside the rank's range$/.test(l)), JSON.stringify(lines));
     }
   }
 
