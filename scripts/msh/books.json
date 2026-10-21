@@ -1068,6 +1068,56 @@
         ["Xandar", [91]],
         ["Zorba", [41]]
       ]
+    },
+    "mh1": {
+      "title": "MH1 The Breeder Bombs",
+      "short": "MH1",
+      "code": "TSR6851",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6851 MH-1 The Breeder Bombs Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "a1265df1b30e4c92f1393129fbc28229a230df189b88096a069dbdd9401ac3a3",
+      "pdf_pages": 22
+    },
+    "mh2": {
+      "title": "MH2 Time Trap",
+      "short": "MH2",
+      "code": "TSR6853",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6853 MH-2 Time Trap Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "8f97661063232e34e8ae65a38836bb7f6f58722d0ffdaf1ee45766f17d2e3200",
+      "pdf_pages": 22
+    },
+    "mh3": {
+      "title": "MH3 Murderworld!",
+      "short": "MH3",
+      "code": "TSR6855",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6855 MH-3 Murderworld! Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "5f6358bb58b9935bdd49abc7d8bddda9aa7d9cfc7d1fa4d4e791553917c28979",
+      "pdf_pages": 22
+    },
+    "mhsp2": {
+      "title": "MHSP2 Secret Wars II",
+      "short": "MHSP2",
+      "code": "TSR6869",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6869 MHSP2 Secret Wars II Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "99ed90bfe4e5c903b0beda0660b81ef75596aafb95cf0fb1d6ddf24a43ae7a11",
+      "pdf_pages": 70
+    },
+    "me2": {
+      "title": "ME2 Ragnarok and Roll",
+      "short": "ME2",
+      "code": "TSR6880",
+      "game": "Marvel Super Heroes",
+      "source_pdf": "TSR6880 ME2 Ragnarok and Roll Reduced.pdf",
+      "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
+      "sha256": "fe669bcffe559d8550c79ea2b98269e5a61ce544e2b77f69dc3968731ccc4418",
+      "pdf_pages": 53
     }
   }
 }
