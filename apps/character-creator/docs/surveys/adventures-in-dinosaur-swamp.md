@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear, the Lazlo Model Behemoth, all 19 creatures and both comparisons (New West, Horune) shipped, and Char's two full NPC stat blocks; the other NPCs next. (2026-10-20)
+**Status:** `imported` — gear, the Lazlo Model Behemoth, all 19 creatures, both comparisons (New West, Horune) and the book's five full NPC stat blocks shipped; the Quick Stats and level-only people are left under D21. (2026-10-20)
 
-**Rows citing this book:** gear 27, vehicles 1, notable_npcs 2, creatures 19
+**Rows citing this book:** gear 27, vehicles 1, notable_npcs 5, creatures 19
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -221,7 +221,12 @@ below.
    83-100: the two full stat blocks there, Jonny Maraschoc and Silas
    Skinwalker, in `~258-adventures-in-dinosaur-swamp-char.sql`; the 17 Quick
    Stats people are left under D21 and the gang and Brigade blocks under D20.
-   Printed 71-82 and 101-133 are the next row's.
+   **Done** for printed 71-82 and 101-133: the three full stat blocks there,
+   Deearn Neenok, Obioma Aardan-kwu and Alexander Washington Lee, in
+   `~259-adventures-in-dinosaur-swamp-camps.sql`; Camp Cherokee's three Quick
+   Stats blocks (71-72), the expedition's four (114-115) and the freeholds'
+   eight (122-125) are left under D21, and Aaarmen Cartilage (127) prints no
+   block at all.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
@@ -274,9 +279,9 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-c` | **4 creatures** (`~255`, through `scripts/bestiary-sql.mjs`), with 13 attacks: the Spiny Creeper (57-59), Titan Raptor (60-62; printed 61 is a full-page painting), Tree Prowler (62-64; its Magic, Psionics, I.S.P. and Habitat lines sit at the top of 64) and the Quee-la (133-134, the 28% result of an adventure-seed table), every stat block read off renders and checked against the Quick Find trait index (psionics: Spiny Creeper, Tree Prowler; neither magic). The Quick Find lists the Quee-la only as Alien/D-Bee, though her block prints six psionic powers and Empathic Language Mastery; the row says so. She is one individual with fixed attributes and no pools printed, so her pools are empty. Five runs the copy check refused were reworded with every figure kept. All 19 creatures are in. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-new-west` | **No new rows.** The seven New West creatures this book reprints (35-37, 45-49, 59-60, 64, 66) compared line by line and attack by attack with production's rows and New West's text layer; every differing figure read off a render. All seven updated in place by `~256` (newest printing that states a figure wins, ruling of 2026-10-04), `source_book` unchanged, and five attack notes added (four Tiger Claw female figures, the Tri-Tops ram). Lines the held rows never carried (Value, an Allies of None) were not compared. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-horune` | **No new rows.** The Horune weapons and vehicles this book reprints (150-155) compared with production's three gear and five vehicle rows, their 27 weapon and 37 location rows, and Underseas's page cache (166-172); every differing figure read off a render. All eight updated in place by `~257` (ruling D23 and the newest-printing ruling of 2026-10-04), `source_book` unchanged: 3 gear rows, 5 vehicles, 10 weapon rows and 1 location row, each with both pages and the old figure. Three figures that read like misprints (6 M.D. elbow blades, 2D4x10 and 4D6 laser turrets) taken under the ruling, old figures kept; the Fireball Bite's 914 m not taken. Applied `--remote` before the merge. |
-
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-char` | **2 notable NPCs** (`~258`, through `scripts/bestiary-sql.mjs`), with 6 attacks: Jonny Maraschoc (95-97) and Silas Skinwalker (97-99), the two full stat blocks of the City of Char (83-100), every figure read off renders. One run the copy check refused (Silas's tracking by smell) was reworded with every figure kept. Left: the 17 Char people printed with Quick Stats blocks only (sixteen on 83-91, and Randal Arclight on 100), under ruling D21 (a row only where a full stat block is printed); the gang blocks (91-94) and the Arclight Brigade's typical member (99), under D20; and the people the book names with no block at all. Applied `--remote` before the merge. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-camps` | **3 notable NPCs** (`~259`, through `scripts/bestiary-sql.mjs`), no attacks (none of the three prints a weapon's damage): Deearn Neenok (107-109), Obioma Aardan-kwu (112-113) and Alexander Washington Lee (113-114), the Second Neenok Expedition's three full stat blocks, every figure read off renders. Three runs the copy check refused were reworded with every figure kept. Left under D21 (a row only where a full stat block is printed): Camp Cherokee's White Chief, Red Chief and Atsil (71-72) with the seven Counselors and three Revolutionaries named by level only; the expedition's Hallsley, Montgomery, Smith and Esposito (114-115); the Heinland and Carter families' eight (122-125). Aaarmen Cartilage (127) is named in an adventure seed with no block. The Wilk's EVC-600 camera stays prose in Neenok's equipment. The plan is done; Status moved to `imported`. Applied `--remote` before the merge. |
 
 ### What remains
 
-The NPCs on printed 71-82 and 101-133.
+Nothing in the plan. What was left on purpose is listed above.

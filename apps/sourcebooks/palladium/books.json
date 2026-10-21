@@ -1185,6 +1185,32 @@
    "total": 212
   },
   {
+   "slug": "adventures-in-dinosaur-swamp",
+   "title": "Rifts World Book 27: Adventures in Dinosaur Swamp",
+   "code": "adventures-in-dinosaur-swamp",
+   "status": "imported",
+   "date": "2026-10-20",
+   "added": [
+    [
+     "Creatures",
+     19
+    ],
+    [
+     "Gear",
+     27
+    ],
+    [
+     "Notable NPCs",
+     5
+    ],
+    [
+     "Vehicles",
+     1
+    ]
+   ],
+   "total": 52
+  },
+  {
    "slug": "madhaven",
    "title": "Rifts World Book 29: Madhaven",
    "code": "madhaven",
