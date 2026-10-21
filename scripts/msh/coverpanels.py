@@ -61,17 +61,14 @@ what it adds is behind its registry fields, or reads nothing MH1 or MH2 print
     Super-Adaptoid's, printed 15).
   - `card_grids`: a one-line grid inside a card's powers (She-Hulk's and the
     Thing's human forms), a second block on that card.
-  - `opponent_powers: "run-in"`: a one-line grid's names are capitals (MH1's
-    form) and its powers are run-ins after its Powers: line, as MH2's are; a
-    run-in head here is capitals ended by a colon or a period, or capitals
-    going straight on into their sentence ("FLIGHT is at good speed.").
   - A run-in power in mixed case ("GROWTH and SHRINKING."); a name in
     capitals inside a card's Powers: prose is no power; a line Tesseract lost
     between a power's last line and the next head is re-read from the page;
     a dash the block's crop reads where nothing else does is a dash; a
-    bracketed Karma is held to the bracketed ranks, as a bracketed Health is;
-    a one-line grid's Health with a note in brackets after it keeps the
-    number, and the note goes to the text.
+    bracketed Karma is held to the bracketed ranks, as a bracketed Health is.
+  - NOT READ YET: the opponents' run-in powers after their Powers: line
+    (RUNIN_POWER below is their head, and nothing calls it), and the
+    Super-Adaptoid's form on printed 9.
 
 THE NUMBERS ARE DERIVED, as MHSP1's are: each ability's number is its rank's
 standard number (`rank_only`), and Health = F+A+S+E and Karma = R+I+P hold on
@@ -108,7 +105,7 @@ MIXED_HEAD = re.compile(r"^([A-Z][A-Z'-]+(?: (?:and|or|of|the) [A-Z][A-Z'-]+)+)\
 # ended by a colon or a period ("WEAPONS: Each tower", "BODY ARMOR. Incredible"),
 # or capitals going on into their sentence ("FLIGHT is at good speed.")
 RUNIN_POWER = re.compile(r"^([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)*)(?:\s*([:.])\s+|\s+(?=[a-z]))(.*)$")
-SENTENCE_END = ('.', ':', ')', '"', '”', '!')
+SENTENCE_END = ('.', ':', ')', '"', '\u201d', '!')
 APOSTROPHES = re.compile('(?<=[A-Za-z])[’�](?=s\\b)')
 
 
@@ -314,6 +311,62 @@ def marked_ranks(block, ranks):
                 a['alt'] = {'number': alt[1], 'code': alt[0]}
 
 
+def printed_value(v, ranks):
+    """A Resources or Popularity the book prints: a number, a rank, none or
+    varies (or a note in brackets, Crimson Dynamo's)."""
+    t = (v or '').strip()
+    return bool(t) and (booklet.first_int(t) is not None or t.startswith('(') or t == '-'
+                        or booklet.parse_rank(t, ranks)[0] is not None
+                        or re.match(r'^(none|varies)\b', t, re.I) is not None)
+
+
+def crop_dashes(block, lines, i, j, ranks, reader):
+    """A dash printed for Resources or Popularity that neither the TSV nor the
+    crop's value reading kept (MH3's Skrull Soldiers, printed 15: the TSV
+    reads nothing after either label, and the crop's "ae" is taken as a word).
+    The block's crop is re-read with full_grid's own box (the same cached
+    text), and where it reads a dash after the label and the value held is
+    nothing the book prints, the value is that dash."""
+    line = lines[i]
+    right = min(line['col_x1'], max(s['x1'] for s in lines[i:j]) + 60)
+    crop = booklet.stat_rows(reader.read(line['pdf'], (line['col_x0'], line['y0'] - 15, right, lines[j - 1]['y1'] + 45)))
+    for label in ('Resources', 'Popularity'):
+        key = label.lower()
+        v = (crop.get(label) or '').replace(' ', '')
+        if not printed_value(block[key], ranks) and v and DASH.match(v):
+            block[key] = '-'
+
+
+def check_alt_karma(block, res):
+    """booklet.block_check holds a bracketed Health to the bracketed ranks;
+    a bracketed Karma is held to them the same way (MH3's Skrull Soldiers'
+    "22 [32]", the technicians' Reason). Only where a bracket is printed, so a
+    block with none keeps block_check's result as it was."""
+    k2 = booklet.second_int(block.get('karma'))
+    alts = [(a.get('alt') or a)['number'] for a in block['abilities']]
+    if k2 is None or None in alts[4:]:
+        return res
+    res['alt_karma'] = sum(alts[4:]) == k2
+    res['ok'] = res['ok'] and res['alt_karma']
+    return res
+
+
+def lost_line(prev, line, reader):
+    """A line Tesseract lost between prev and line, two lines of one column,
+    or None. Only a gap wider than 0.8 of a body line is looked at, and it is
+    re-read as one line (--psm 7) from the column's left edge for 305 px: a
+    lost line here is a sentence's last word or two (MH3's Wizard, printed 14:
+    "speed.", read in the TSV as two marks), and a wider box takes in the art
+    beside it and the line above. What it reads must be lower-case words that
+    end a sentence, or it is not a line."""
+    if (prev['pdf'], prev['col']) != (line['pdf'], line['col']) or line['y0'] - prev['y1'] <= 0.8 * line['body_h']:
+        return None
+    x0 = min(prev['x0'], line['x0']) - 11
+    got = reader.read(line['pdf'], (x0, prev['y1'] - 2, x0 + 305, line['y0'] + 3), psm='7')
+    t = ' '.join(got).strip()
+    return t if re.match(r"^[a-z][a-z'-]*(?: [a-z][a-z'-]*){0,3}[.!?]$", t) else None
+
+
 def cards(book, slug, part, first, last, ranks, reader):
     """The entries of one card range: a header, its block, its text."""
     lines = stream(book, slug, part, first, last, split_at_rules=True)
@@ -336,6 +389,13 @@ def cards(book, slug, part, first, last, ranks, reader):
             wrapped_alternates(block, lines[i:nxt], ranks)
             marked_ranks(block, ranks)
             block['check'] = check_alt_karma(block, booklet.block_check(block))
+            # a Resources or Popularity line the block prints whose value is
+            # still nothing the book prints fails the block (the Skrull
+            # Soldiers' "ae" read for a dash, before crop_dashes)
+            unprinted = [k for k in ('Resources', 'Popularity') if not printed_value(block[k.lower()], ranks)
+                         and any((booklet.STAT_LINE.match(s['text']) or [None, ''])[1].startswith(k[:8]) for s in lines[i:nxt])]
+            if unprinted:
+                block['check'].update(unprinted=unprinted, ok=False)
             cur['blocks'].append(block)
             cur['_sec'] = 'after-grid'
             i = nxt
@@ -348,7 +408,7 @@ def cards(book, slug, part, first, last, ranks, reader):
             if len(spec) != 1:
                 raise SystemExit('%s: a one-line grid in a card that card_grids does not name, %s PDF %d'
                                  % (slug, part, line['pdf']))
-            block, nxt = line_block(lines, i, title, ranks)
+            block, nxt = line_block(lines, i, title, ranks, part, line['printed'], slug, cur['header'])
             block['label'] = spec[0]['label']
             cur['blocks'].append(block)
             grids.remove(spec[0])
@@ -401,16 +461,57 @@ def cards(book, slug, part, first, last, ranks, reader):
             sink = cur['prose']
         sink.append(text)
         i += 1
+    if grids:
+        # card_grids names a grid no letter row in that card was read as
+        raise SystemExit('%s: card_grids names %s on %s that no one-line grid in the card matched'
+                         % (slug, ', '.join('%s (%s)' % (g['entry'], g['label']) for g in grids), part))
     for e in entries:
         for b in e['blocks']:
             b['part'] = part
     return entries
 
 
+def line_block(lines, i, title, ranks, part, page, slug, name):
+    """A one-line grid's block, from its letter row at lines[i]: each code is
+    the word under its letter, by x, and the stat lines after the codes row
+    are its Health and Karma. Returns (block, index after the stat lines).
+    Read the same way for an opponent's grid and for one inside a card
+    (registry `card_grids`)."""
+    line = lines[i]
+    short = {v[0].upper(): v for v in ranks.values()}
+    xs = letter_xs(line, title)
+    if xs is None or len(xs) != 7:
+        raise SystemExit('%s: %s p.%s: %d letters in the grid row, not 7' % (slug, name, page, len(line['words'])))
+    codes = {}
+    for w in lines[i + 1]['words']:
+        n = min(range(7), key=lambda k: abs(w['x'] + w['w'] / 2 - xs[k]))
+        codes.setdefault(n, []).append(w['t'])
+    abilities = []
+    for n in range(7):
+        t = ''.join(codes.get(n, []))
+        word = re.sub(r'[^A-Za-z]', '', t)
+        if not word and t and DASH.match(t):
+            abilities.append({'letter': roster.ABILITIES[n], 'number': None, 'code': None, 'printed_code': '-'})
+            continue
+        word = CODE_MISREADS.get(word.upper(), word)
+        hit = ranks.get(word.upper()) or short.get(word.upper())
+        abilities.append({'letter': roster.ABILITIES[n], 'number': hit[1] if hit else None,
+                          'code': hit[0] if hit else None, 'printed_code': word or t})
+    block = {'label': None, 'kind': 'line', 'page': page, 'part': part, 'pdf': line['pdf'], 'col': line['col'],
+             'abilities': abilities, 'rank_only': True}
+    k = i + 2
+    stats = []
+    while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
+        stats.append(lines[k]['text'])
+        k += 1
+    block.update(booklet.secondary(' '.join(stats)))
+    block['check'] = check(block)
+    return block, k
+
+
 def opponents(book, slug, part, page, ranks):
     """The one-line grids on one chapter page, each an entry of its own."""
     lines = stream(book, slug, part, page, page, split_at_rules=False)
-    short = {v[0].upper(): v for v in ranks.values()}
     # MH2 (registry "opponent_names": "title"): names in title case, a grid
     # with no name that is a form of a card (registry `form_grids`), run-in
     # powers after the Powers: line, and paragraphs that open indented
@@ -443,33 +544,7 @@ def opponents(book, slug, part, page, ranks):
         if head is None:
             raise SystemExit('%s: a one-line grid with no name above it, %s p.%d' % (slug, part, page))
         j, name, desc = head
-        xs = letter_xs(line, title)
-        if xs is None or len(xs) != 7:
-            raise SystemExit('%s: %s p.%d: %d letters in the grid row, not 7' % (slug, name, page, len(line['words'])))
-        codes = {}
-        for w in lines[i + 1]['words']:
-            n = min(range(7), key=lambda k: abs(w['x'] + w['w'] / 2 - xs[k]))
-            codes.setdefault(n, []).append(w['t'])
-        abilities = []
-        for n in range(7):
-            t = ''.join(codes.get(n, []))
-            word = re.sub(r'[^A-Za-z]', '', t)
-            if not word and t and DASH.match(t):
-                abilities.append({'letter': roster.ABILITIES[n], 'number': None, 'code': None, 'printed_code': '-'})
-                continue
-            word = CODE_MISREADS.get(word.upper(), word)
-            hit = ranks.get(word.upper()) or short.get(word.upper())
-            abilities.append({'letter': roster.ABILITIES[n], 'number': hit[1] if hit else None,
-                              'code': hit[0] if hit else None, 'printed_code': word or t})
-        block = {'label': None, 'kind': 'line', 'page': page, 'part': part, 'pdf': line['pdf'], 'col': line['col'],
-                 'abilities': abilities, 'rank_only': True}
-        k = i + 2
-        stats = []
-        while k < len(lines) and booklet.STAT_LINE.match(lines[k]['text']):
-            stats.append(lines[k]['text'])
-            k += 1
-        block.update(booklet.secondary(' '.join(stats)))
-        block['check'] = check(block)
+        block, k = line_block(lines, i, title, ranks, part, page, slug, name)
         # the text: the Powers: or Special: line and the paragraph it opens,
         # or the paragraph right under the grid; it ends at a paragraph break.
         # The first line may sit a grid's row gap under a grid with no Health
@@ -637,6 +712,13 @@ def coverage(book, entries):
             if e['kind'] == 'entry' and m:
                 lines.append('  POWERS: A HEAD INSIDE %s\'s %s: %s' % (e['header'], p['name'], m.group(1)))
                 bad = True
+            # a head straight after a sentence left open: the line that ended
+            # the sentence was lost and not re-read (MH3's Wizard: "fly at
+            # Typical POWER GLOVES. WIZARD", without lost_line's "speed.")
+            m = re.search(r"[a-z,] ([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)+)\. [A-Z]", p['text'])
+            if e['kind'] == 'entry' and m:
+                lines.append('  POWERS: A HEAD AFTER AN OPEN SENTENCE IN %s\'s %s: %s' % (e['header'], p['name'], m.group(1)))
+                bad = True
     no_health = {roster.norm(n) for n in book.get('no_health', [])}
     for e in entries:
         for b in e['blocks']:
@@ -646,8 +728,9 @@ def coverage(book, entries):
                 bad = True
     full = sum(1 for e in entries for b in e['blocks'] if b.get('kind') != 'line')
     line = sum(1 for e in entries for b in e['blocks'] if b.get('kind') == 'line')
-    # a form grid (registry `form_grids`) is a one-line grid on a card's entry
-    forms = len(book.get('form_grids', []))
+    # a form grid (registry `form_grids`) and a grid inside a card
+    # (`card_grids`) are each a one-line grid on a card's entry
+    forms = len(book.get('form_grids', [])) + len(book.get('card_grids', []))
     if (full, line) != (len(card_names), len(opp_names) + forms):
         lines.append('  BLOCKS: %d full and %d one-line, the checklist has %d and %d' % (full, line, len(card_names), len(opp_names) + forms))
         bad = True
