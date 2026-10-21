@@ -3,9 +3,11 @@
 Marvel Super Heroes special module. Registry entry: `scripts/msh/books.json`
 -> `mhsp2`. Measured 2026-10-21.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-the reader (`scripts/msh/rosterbook.py`, #1921) and the overrides
-(`scripts/msh/mhsp2-overrides.json`) are in, and the data is not.
+**Rows citing this book:** 374 `msh_book_text` rows over 93 character entries
+in production (`DB_MARVEL`, read back 2026-10-21). Characters only: 93 cards
+in `apps/marvel-heroes/data/npcs.json`, built by `python scripts/msh/npcs.py
+mhsp2` from the reader (`scripts/msh/rosterbook.py`, #1921) and the overrides
+(`scripts/msh/mhsp2-overrides.json`).
 
 This is one of the five books registered together by the kickoff PR (#1917).
 It goes through `scripts/msh/` only. **It is MHSP1's sequel, and the same kind
@@ -325,7 +327,7 @@ These are Nate's.
    Beyonder, Mephisto, Eternity, Death). The options: the book's title, **MHSP2
    Secret Wars II**, as the skill says for a book with no team sections; or a
    team named for the book's cosmic cast. The recommendation is the book's
-   title.
+   title. **Answered** (Nate, 2026-10-21): the book's title.
 2. **The team names that collide.** A team name is a filter group shared by
    every book (MHSP1's sides became "Secret Wars Heroes" and "Secret Wars
    Villains" for that reason). **"The Bad Guys"** is printed twice (24, and
@@ -335,6 +337,9 @@ These are Nate's.
    West Coast Avengers". The banners also print a leading "The" where
    MA1's and MA4's groups do not (`X-Men`, `New Mutants`, `Fantastic Four`),
    so taken as printed they make second filter groups for the same teams.
+   **Answered** (Nate, 2026-10-21): drop the leading "The", and The Bad Guys
+   are **Secret Wars II Villains**; every other banner as printed. Recorded as
+   the registry's `team_names`, read by `npcs.py`.
 3. **Whether to import the Campaign Book's lesser demon** (Campaign 25), the
    one block outside the Roster Book: a one-line grid with a Health, inside
    the adventure, which is not imported. **Answered** (Nate, 2026-10-21): not
@@ -353,8 +358,16 @@ These are Nate's.
    blocks and 21 one-line grids (or 20, by question 3), every Health and
    Karma passing or explained by an override, 65 of 65 Summary rows placed,
    and MHSP1's outputs byte-identical.
-2. **Data:** `npcs.py mhsp2`, the rows of `msh_book_text`, this file's Rows
-   line and `node scripts/sourcebooks.mjs`.
+2. **Data** (done, row 3): `npcs.py mhsp2`, the rows of `msh_book_text`, this
+   file's Rows line and `node scripts/sourcebooks.mjs`. What `npcs.py` does
+   for this layout and no other: a one-line block is a form only beside
+   another block (Wolfsbane, Iron Man, Beta Ray Bill, Volcana), and the
+   registry's `one_line_tiers` names the beings of their own (the steeds, the
+   Skrulls, Kingpin's tiers, Psycho-Man's suits); a grid printing four codes
+   (Aragorn, the two suits) is a `rows` override and a partial card the GM is
+   not offered; an entry of tiers alone (Kingpin's Organization) has its
+   opening sentence as prose, not identity. The Nebula's Crew heading (25)
+   prints no block and is not a card, as a team heading in MA1 is not.
 
 ## How to reproduce
 

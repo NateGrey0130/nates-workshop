@@ -283,8 +283,9 @@ export const SECTIONS = [
           const where = b.part ? `${b.part} p.${b.page}` : '';
           const head = [r.versions.length > 1 && versionName(v), b.label, where].filter(Boolean).join(', ');
           // a rank the page does not print at all is a dash (MA4's New Men);
-          // one ability a line, so the card reads down the FASERIP column
-          const grid = b.abilities.map(([l, n, c, alt]) => (n === null ? `${l} -`
+          // one ability a line, so the card reads down the FASERIP column; a
+          // rank with no number (MHSP2's Beyonder, printed BEYOND) is its code
+          const grid = b.abilities.map(([l, n, c, alt]) => (n === null ? `${l} ${c || '-'}`
             : `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`));
           out.push([head || 'Abilities', grid]);
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);

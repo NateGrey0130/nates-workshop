@@ -292,15 +292,29 @@ def main(slug_arg):
     # null; a one-line grid printing no Health (`no_health`) is given F+A+S+E,
     # flagged `health_derived`; and a one-line grid's Special: line is a text
     # part of its own.
+    #
+    # A roster-book book (MHSP2, scripts/msh/rosterbook.py) is read as MHSP1
+    # is, with four differences: its entries carry the team whose banner they
+    # are printed under (the registry's `teams`), named as `team_names` says
+    # and filed under the book's title where no banner is printed; a block
+    # label printed in capitals is cased (GENERAL ZEDRAO); a one-line block is
+    # a form only in an entry of more than one block; and a one-line block
+    # that prints only four codes (Psycho-Man's suits, Valkyrie's steed: a
+    # `rows` override in mhsp2-overrides.json) is `partial`, on the Codex card
+    # but not offered to the GM.
     grid = book.get('layout') == 'grid-booklets'
-    booklet = book.get('layout') == 'roster-booklet' or grid
+    rbook = book.get('layout') == 'roster-book'
+    booklet = book.get('layout') == 'roster-booklet' or grid or rbook
     coded = book.get('layout') == 'code-grids'
     panels = book.get('layout') == 'cover-panels'
+    team_names = book.get('team_names', {})
     cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     SIDE = {'heroes': '%s Heroes' % book['title'].split(' ', 1)[-1], 'villains': '%s Villains' % book['title'].split(' ', 1)[-1]}
     tiers = set(book.get('one_line_tiers', []))
 
     def team_of_entry(e):
+        if rbook:
+            return team_names.get(e['team'], e['team']) if e.get('team') else book['title']
         # a header's capitals (WRECKING CREW) are cased; a registry team is as written
         return (title_case(e['team']) if e['team'].isupper() else e['team']) if e.get('team') else SIDE[e['side']]
 
@@ -356,7 +370,8 @@ def main(slug_arg):
             # an alter ego's one-line block makes every block of the entry a
             # form (She-Hulk and Jennifer Walters); Klaw's sound creatures are
             # beings of their own, a tier (registry one_line_tiers)
-            forms = booklet and any(b.get('kind') == 'line' and b['label'] not in tiers for b in e['blocks'])
+            forms = booklet and any(b.get('kind') == 'line' and b['label'] not in tiers for b in e['blocks']) \
+                and (not rbook or len(e['blocks']) > 1)
             # MA4's The Thing prints his human form as a second grid: the
             # entry's blocks are forms of one being, the first named for him
             forms = forms or (coded and len(e['blocks']) > 1 and any('form' in (b['label'] or '').lower() for b in e['blocks']))
@@ -383,7 +398,7 @@ def main(slug_arg):
                     abilities.append(['FASERIP'[i], number, code]
                                      + ([[a['alt']['number'], a['alt']['code']]] if a.get('alt') else []))
                 blocks.append({
-                    'label': (title_case(roman(label)) if not booklet else label) if label else None,
+                    'label': (title_case(roman(label)) if not booklet or rbook else label) if label else None,
                     'page': b['page'],
                     **({'part': cite[b['part']]} if booklet and b.get('part') != e['part'] else {}),
                     'abilities': abilities,
@@ -396,7 +411,8 @@ def main(slug_arg):
                     **{k: (None if (booklet or coded or panels) and b[k] is None else ascii_fold(minus(b[k]) if grid or coded else b[k]))
                        for k in ('health', 'karma', 'resources', 'popularity')},
                     **({'override': b['override']} if b.get('override') else {}),
-                    **({'kind': b['kind']} if b.get('kind') else {}),
+                    **({'kind': 'partial' if rbook and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
+                       if b.get('kind') else {}),
                 })
                 if panels and b['health'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_health:
                     # printed with no Health (Fluffy, Augie Hickman): the ranks'
@@ -426,9 +442,13 @@ def main(slug_arg):
             # lines. Three is the parser's cap, reached when a team's opening
             # paragraph follows its header ("The Gladiators was an organization
             # of..."). That is prose, so it goes to D1 and the identity is empty.
-            identity = [ascii_fold(x) for x in e['identity']]
+            # (a roster-book name's Roman numeral is read as the header's is:
+            # Warren Kenneth Worthington Ill is III)
+            identity = [ascii_fold(roman(x) if rbook else x) for x in e['identity']]
             prose = e['prose']
-            if len(identity) >= 3:
+            # A roster-book entry of tiers alone (Kingpin's Organization) opens
+            # with a sentence, not a name: that is prose too.
+            if len(identity) >= 3 or (rbook and identity and all(b.get('kind') == 'line' for b in e['blocks'])):
                 prose = ' '.join(e['identity']) + ' ' + prose
                 identity = []
             text_row(eslug, 'prose', None, None, page0, prose)
