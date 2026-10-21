@@ -1508,7 +1508,7 @@ section('The codex: every section loads, searches, filters and keeps its address
     const nc = npcs.byKey.get('nightcrawler');
     check('Notable NPCs: Nightcrawler reads as the book prints him (p.7)',
       nc && npcs.summary(nc) === 'Kurt Wagner. Mutant hero'
-      && npcs.stats(nc)[0][1] === 'F 20 Ex | A 50 Am | S 6 Ty | E 30 Rm | R 10 Gd | I 20 Ex | P 20 Ex'
+      && npcs.stats(nc)[0][1].join(' | ') === 'F 20 Ex | A 50 Am | S 6 Ty | E 30 Rm | R 10 Gd | I 20 Ex | P 20 Ex'
       && npcs.stats(nc)[1][1] === '106 / 50', nc ? JSON.stringify(npcs.stats(nc).slice(0, 2)) : 'no nightcrawler');
     const linked = npcs.rows.flatMap((r) => npcs.related(r)).flatMap(([, items]) => items).filter((x) => x.code);
     const links = linked.filter((x) => x.section === 'powers');

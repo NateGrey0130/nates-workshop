@@ -280,9 +280,10 @@ export const SECTIONS = [
           // in the Adventure Book's note on the Thing) says where
           const where = b.part ? `${b.part} p.${b.page}` : '';
           const head = [r.versions.length > 1 && versionName(v), b.label, where].filter(Boolean).join(', ');
-          // a rank the page does not print at all is a dash (MA4's New Men)
+          // a rank the page does not print at all is a dash (MA4's New Men);
+          // one ability a line, so the card reads down the FASERIP column
           const grid = b.abilities.map(([l, n, c, alt]) => (n === null ? `${l} -`
-            : `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`)).join(' | ');
+            : `${l} ${n} ${c || '?'}${alt ? ` (${alt[0]} ${alt[1] || ''})` : ''}`));
           out.push([head || 'Abilities', grid]);
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
           out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
@@ -329,7 +330,7 @@ export const SECTIONS = [
           const named = (p) => (p.rank ? `${p.name} (${p.rank})` : p.name);
           out.push([`${prefix}Powers`, v.powers.map((p) => (p.upb
             ? { name: named(p), code: p.upb, section: 'powers', title: `UPB ${p.upb} ${this.upbName[p.upb]}` }
-            : { name: named(p) }))]);
+            : { name: named(p) })), { stack: true }]);
         }
         if (v.members.length) {
           out.push([`${prefix}Members`, v.members.map((m) => (m.id

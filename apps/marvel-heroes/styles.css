@@ -535,6 +535,9 @@ table.gear th[scope="row"] { min-width: 10em; }
 .codex-stats { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 10px; }
 .codex-stats dt { font-weight: 700; }
 .codex-stats dd { margin: 0; }
+.codex-stats .codex-line { display: block; }
+.codex-stack-head { margin-bottom: 2px; }
+.codex-stack { margin: 0 0 10px; padding-left: 20px; }
 .codex-intro { max-height: 45vh; overflow-y: auto; }
 
 /* -- Campaigns and GM tools (campaign/, gm/) -- */
