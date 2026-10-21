@@ -1205,8 +1205,10 @@
         {"name": "Reference Summary", "cite": "Reference Summary", "pdf": [67, 67], "offset": null},
         {"name": "Maps", "cite": null, "pdf": [68, 70], "offset": null}
       ],
+      "layout": "roster-book",
       "character_part": "Roster Book",
       "character_pages": [2, 32],
+      "credits": "This book is protected",
       "offset_evidence": "2026-10-21, scripts/msh/survey.py tsv_folio: 26 pages vote printed = PDF - 1 (PDF 4-33, the Campaign Book) and 20 vote PDF - 33 (PDF 43-64, the Roster Book); the other four votes are table references at the foot of PDF 7 and 10, the Summary's numbers (PDF 67) and a map label (PDF 68). Each of those four was read on its image, and so were the Roster folios Tesseract missed (printed 2-9, 13, 20 and 32).",
       "columns": 3,
       "stat_labels": ["Health", "Karma", "Resources", "Popularity"],

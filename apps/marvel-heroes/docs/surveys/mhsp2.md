@@ -4,7 +4,8 @@ Marvel Super Heroes special module. Registry entry: `scripts/msh/books.json`
 -> `mhsp2`. Measured 2026-10-21.
 
 **Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, with no data and no parser.
+the reader (`scripts/msh/rosterbook.py`, #1921) and the overrides
+(`scripts/msh/mhsp2-overrides.json`) are in, and the data is not.
 
 This is one of the five books registered together by the kickoff PR (#1917).
 It goes through `scripts/msh/` only. **It is MHSP1's sequel, and the same kind
@@ -146,11 +147,13 @@ Roster Book. Where each is, from the headers in the cache's OCR:
 | 31 | Doctor Doom, Sentinels |
 | 32 | Molecule Man, Volcana |
 
-**21 one-line grids:** 20 in the Roster Book and one in the Campaign Book.
+**21 one-line grids:** 20 in the Roster Book and one in the Campaign Book,
+which is not imported (Nate, 2026-10-21).
 
 | where | grid |
 |---|---|
 | Roster 9 | Wolfsbane's wolf form, and her wolfoid transition form |
+| Roster 15 | Iron Man's Tony Stark, without the armor |
 | Roster 18 | Aragorn, Valkyrie's steed |
 | Roster 19 | Beta Ray Bill's humanoid form |
 | Roster 24 | Boromir, Thundersword's mount |
@@ -198,6 +201,47 @@ rows, but four:
 
 So the chart repeats the Roster's Karma misprints rather than correcting
 them (Rogue 54, Phoenix 90, Karma 111 and the rest), and cannot settle one.
+
+## The parse and its overrides
+
+`python scripts/msh/roster.py mhsp2` **exits 0** (2026-10-21, row 2b), with
+`WORKSHOP_MSH_CACHE` on the main checkout's cache:
+
+```
+mhsp2: 4768 stream lines, 104 entries, 110 stat blocks
+  entries with a block: 93; without: 11; members without a block: 0
+  blocks passing every check: 99; known from the overrides: {'misprint': 10, 'as_printed': 1}; FAILING: 0
+  powers: 239 across 85 entries
+  reference summary: 65 rows, 65 found as an entry (0 of them the chart alone), 2 chart misprints recorded; running notes on 0 entries
+```
+
+110 blocks are the 90 full ones and the 20 Roster one-line grids. Without the
+overrides file it exits 1 on the eleven blocks below and two Summary rows.
+`scripts/msh/mhsp2-overrides.json` holds 22 overrides, each read off its
+page image on 2026-10-21:
+
+- **Ten Karma `misprint`s**, the table above, each with the printed value
+  and R+I+P on the ranks' standard numbers.
+- **Wolfsbane's Health `as_printed`** (Roster 9): 50, the wolf form's.
+- **Nine `label`s** for the one-line grids that print no name over them:
+  Wolf form and Wolfoid form (Wolfsbane, 9), Tony Stark (Iron Man, 15),
+  Aragorn (Valkyrie, 18), Humanoid form (Beta Ray Bill, 19), Boromir
+  (Thundersword, 24), Earth-sized Version and Giant-Sized Version
+  (Psycho-Man, 27), Marsha Rosenberg (Volcana, 32). The other eleven grids
+  print their name and keep it. Wolfsbane's and Psycho-Man's two grids each
+  share a page and an entry, so their overrides match on the seven rank
+  codes too (`codes`, a match key `roster.apply_overrides` gained in this
+  row; every earlier book's outputs are byte-identical).
+- **Two `summary_differs`**, where the chart and the block print different
+  values and neither is a sum to check: the Beyonder's Health (chart
+  Unlimited, the Original State's block NOT APPLICABLE) and the Puma's
+  Health (chart 150, the puma form's; the block prints 36/150 and the reader
+  keeps 36).
+
+The chart's "Unlimited" against the Roster's "UNLIMITED" (the Beyonder,
+Eternity, Death) needs no override: `rosterbook.coverage` drops a word that
+differs only in case. The Beyonder's Human Form Resources is printed
+`UMLIMITED` (read on the image) and kept as printed.
 
 ## Which reader fits
 
@@ -293,16 +337,19 @@ These are Nate's.
    so taken as printed they make second filter groups for the same teams.
 3. **Whether to import the Campaign Book's lesser demon** (Campaign 25), the
    one block outside the Roster Book: a one-line grid with a Health, inside
-   the adventure, which is not imported.
+   the adventure, which is not imported. **Answered** (Nate, 2026-10-21): not
+   imported, so 20 one-line grids.
 4. **How to record the ten Karma misprints.** MHSP1's Summary misprints went
    to `scripts/msh/mhsp1-overrides.json` with `printed` and `corrected`; here
    the misprints are in the blocks themselves and the chart repeats them.
-   The recommendation is the same override shape, read off each page, with
-   Wolfsbane's wolf-form Health as `as_printed`.
+   **Answered** (Nate, 2026-10-21): the same override shape, read off each
+   page, with Wolfsbane's wolf-form Health as `as_printed`. Taken in
+   `scripts/msh/mhsp2-overrides.json` (above).
 
 ## The next PRs
 
-1. **Parser:** the six changes above, behind the registry; expected 90 full
+1. **Parser** (done: the reader in #1921, the overrides in row 2b, both
+   above): the six changes above, behind the registry; expected 90 full
    blocks and 21 one-line grids (or 20, by question 3), every Health and
    Karma passing or explained by an override, 65 of 65 Summary rows placed,
    and MHSP1's outputs byte-identical.
