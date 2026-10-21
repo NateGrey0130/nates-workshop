@@ -613,7 +613,10 @@ def apply_overrides(slug, entries):
         hits = [(e, b) for e in entries for b in e['blocks']
                 if b['page'] == m['page'] and (e['header'] or '').upper().startswith(m['header'].upper())
                 and ('label' not in m or (b['label'] or '').upper() == m['label'].upper())
-                and ('kind' not in m or b.get('kind') == m['kind'])]
+                and ('kind' not in m or b.get('kind') == m['kind'])
+                # two unnamed grids in one entry (MHSP2's Wolfsbane: her wolf and
+                # wolfoid forms) differ only in their ranks
+                and ('codes' not in m or [a['code'] for a in b['abilities']] == m['codes'])]
         if o['verdict'] == 'table':
             hits = [(e, None) for e in entries
                     if m['page'] in e['pages'] and (e['header'] or '').upper().startswith(m['header'].upper())]
