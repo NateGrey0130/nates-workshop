@@ -1177,7 +1177,76 @@
       "source_pdf": "TSR6853 MH-2 Time Trap Reduced.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "sha256": "8f97661063232e34e8ae65a38836bb7f6f58722d0ffdaf1ee45766f17d2e3200",
-      "pdf_pages": 22
+      "pdf_pages": 22,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Inside front cover", "cite": "Inside front cover", "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 18], "offset": 2},
+        {"name": "Inside back cover", "cite": "Inside back cover", "pdf": [19, 19], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [21, 22], "offset": null}
+      ],
+      "offset_evidence": "2026-10-21, scripts/msh/survey.py tsv_folio: 5 pages vote printed = PDF - 2 (PDF 14-18) and no page votes otherwise. Folios 1, 2, 4, 6-8, 10-16 were also read on the page images of PDF 3, 4, 6, 8-10 and 12-18. PDF 2 and 19 are the two inside panels of the loose folding cover, which carry six Avengers' character cards and no folio, outside the booklet's numbering on either side; PDF 21-22 are the two sides of the map sheet.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Talents", "Background"],
+      "rank_aliases": {
+        "FEEBLE": "feeble",
+        "POOR": "poor",
+        "TYPICAL": "typical",
+        "GOOD": "good",
+        "EXCELLENT": "excellent",
+        "REMARKABLE": "remarkable",
+        "INCREDIBLE": "incredible",
+        "AMAZING": "amazing",
+        "MONSTROUS": "monstrous",
+        "UNEARTHLY": "unearthly",
+        "Fb": "feeble",
+        "Pr": "poor",
+        "Ty": "typical",
+        "Gd": "good",
+        "Ex": "excellent",
+        "Rm": "remarkable",
+        "In": "incredible",
+        "Am": "amazing",
+        "Mn": "monstrous"
+      },
+      "sections": [
+        ["Introduction", null, 1, "Adventure Book"],
+        ["Chapter 1: Double Time", null, 2, "Adventure Book"],
+        ["Chapter 2: Drax - Foiled Again!", null, 4, "Adventure Book"],
+        ["Chapter 3: Skrull and Crossbones", null, 6, "Adventure Book"],
+        ["Chapter 4: Stone Walled!", null, 8, "Adventure Book"],
+        ["Chapter 5: The Omega Dimension!", null, 10, "Adventure Book"],
+        ["Chapter 6: Truth and Consequences", null, 12, "Adventure Book"],
+        ["Something Borrowed", null, 14, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are display lettering that Tesseract does not read. Printed 1 has no banner of its own, only the title art (The Mighty Avengers: Time Trap!) over a run-in INTRODUCTION, so Introduction is this registry's name for it. The last banner prints no chapter number; the text calls it Chapter 7 and its Karma table is Table 7. Each chapter is set as Campaign, Battle and Aftermath subsections, some with a second Campaign, and Chapter 5 opens on its Battle (the fortress's nine rooms). The character cards are on printed 15-16, after Chapter 7, unbannered, and on the two inside cover panels.",
+      "columns": 3,
+      "character_ranges": [
+        {"part": "Adventure Book", "pages": [15, 16]}
+      ],
+      "panels": ["Inside front cover", "Inside back cover"],
+      "cards": [
+        ["Inside front cover", null, "Captain America"],
+        ["Inside front cover", null, "Starfox"],
+        ["Inside front cover", null, "Wasp"],
+        ["Adventure Book", 15, "Kang"],
+        ["Adventure Book", 15, "Mimic"],
+        ["Adventure Book", 15, "Drax the Destroyer"],
+        ["Adventure Book", 16, "Dragon Man"],
+        ["Adventure Book", 16, "Grey Gargoyle"],
+        ["Adventure Book", 16, "Super-Skrull"],
+        ["Inside back cover", null, "Captain Marvel"],
+        ["Inside back cover", null, "Scarlet Witch"],
+        ["Inside back cover", null, "Vision"]
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 5, "names": ["Aliens (humanoid)"]},
+        {"part": "Adventure Book", "page": 7, "names": ["Skrulls"]},
+        {"part": "Adventure Book", "page": 10, "names": ["Spirits"]},
+        {"part": "Adventure Book", "page": 11, "names": ["Omegatrons (robots)", "Centipedes (robots)", "Energy Spiders", "Champion"]},
+        {"part": "Adventure Book", "page": 13, "names": ["Kang's Minions"]}
+      ]
     },
     "mh3": {
       "title": "MH3 Murderworld!",
