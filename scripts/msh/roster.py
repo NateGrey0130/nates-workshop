@@ -733,9 +733,10 @@ def main():
     in_range = [n for n, pages in book.get('index', []) if any(first <= p <= last for p in pages)]
     if book.get('layout') in ('roster-booklet', 'roster-book'):
         # no printed index: the Reference Summary chart is the checklist
-        import booklet
+        import booklet, rosterbook
+        cover = rosterbook.coverage if book.get('layout') == 'roster-book' else booklet.coverage
         path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % a.slug)
-        lines, missed = booklet.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
+        lines, missed = cover(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
         print('\n'.join(lines))
         missing = missing or (['the Reference Summary'] if missed else [])
     elif book.get('layout') == 'grid-booklets':

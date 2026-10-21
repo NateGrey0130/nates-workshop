@@ -38,7 +38,7 @@ WHAT IS DIFFERENT FROM MHSP1 (apps/marvel-heroes/docs/surveys/mhsp2.md,
 THE NUMBERS ARE DERIVED, as in MHSP1: each rank's standard number
 (apps/marvel-heroes/data/ranks.json), and every block says `rank_only`.
 """
-import re, statistics
+import difflib, re, statistics
 
 import roster, booklet
 
@@ -65,13 +65,33 @@ def team_banner(line, teams):
     return any(t == n or t.endswith(' ' + n) for n in teams)
 
 
+# a misspelt ability label with a colon: the book prints "Pysche:" (Cannonball,
+# Roster 8), "Agiltiy:" (Andromeda, 18) and "Intution:" (the Molecule Man, 32)
+MISSPELT_ROW = re.compile(r'^\W{0,2}([A-Z][a-z]{4,9})\s*:\s+(\S.*)$')
+
+
+def stat_row(text):
+    """(label, value) of a stat row, or None. A word one transposed or dropped
+    letter from an ability label, followed by a colon, is that label."""
+    m = STAT_ROW.match(text)
+    if m:
+        return ('Resources' if m.group(1).startswith('Resource') else m.group(1)), m.group(2).strip()
+    m = MISSPELT_ROW.match(text)
+    if m:
+        w = m.group(1)
+        hit = [l for l in ABILITY_LABELS if sorted(l) == sorted(w)] \
+            or difflib.get_close_matches(w, ABILITY_LABELS, n=1, cutoff=0.85)
+        if hit:
+            return hit[0], m.group(2).strip()
+    return None
+
+
 def stat_rows(lines):
     rows = {}
     for t in lines:
-        m = STAT_ROW.match(t)
-        if m:
-            label = 'Resources' if m.group(1).startswith('Resource') else m.group(1)
-            rows.setdefault(label, m.group(2).strip())
+        r = stat_row(t)
+        if r:
+            rows.setdefault(r[0], r[1])
     return rows
 
 
@@ -164,8 +184,8 @@ def full_grid(stream, i, ranks, reader):
     # a state or form named on the line above the block, in quotes
     # ('"Original State"', '"Human" Form': the Beyonder, printed 2)
     prev = stream[i - 1]['text'].strip() if i else ''
-    if prev[:1] in '"“‘\'' and not booklet.is_header(stream[i - 1]):
-        block['label'] = re.sub(r'["“”‘’]', '', prev).strip()
+    if prev[:1] in '"\u201c\u2018\'' and not booklet.is_header(stream[i - 1]):
+        block['label'] = re.sub(r'["\u201c\u201d\u2018\u2019]', '', prev).strip()
     block['check'] = check(block)
     return block, j
 
@@ -196,7 +216,9 @@ def codes_of(words, ranks):
     out = []
     for w in sorted(words, key=lambda w: w['x']):
         t = re.sub(r'[^A-Za-z0-9]', '', w['t']).upper()
-        t = ''.join(CODE_FIX.get(c, c) for c in t)
+        if not t.isdigit():
+            # a number is the steed's Health (Aragorn's 100), not a code
+            t = ''.join(CODE_FIX.get(c, c) for c in t)
         if t:
             out.append(dict(w, t=t))
     return out
@@ -260,11 +282,13 @@ def one_line_grid(stream, i, ranks, reader):
         # some pages (Iron Man's, printed 15), which the page pass read as
         # unsure words and dropped, so the crop is made black and white and
         # read for code letters only. Its rows: the codes line where the
-        # stream has one, else the gap between the letters and the next line.
+        # stream has one, else the gap between the letters and the next line,
+        # stopping short of that line: the tops of its capitals in the crop
+        # turned Iron Man's TY TY PR TY IN EX TY into YY PR Y IN EX TY.
         if same and not (re.match(r'^\W{0,2}(Health|Karma)', nxt['text']) or nxt['y0'] - line['y1'] > 1.5 * line['body_h']):
             y0, y1 = nxt['y0'] - 6, nxt['y1'] + 6
         else:
-            y0, y1 = line['y1'] - 2, (nxt['y0'] + 2 if same else line['y1'] + 50)
+            y0, y1 = line['y1'] - 2, (nxt['y0'] - 8 if same else line['y1'] + 50)
         x0 = min(w['x'] for _, w in letters) - 20
         row = codes_read(reader, line['pdf'], (x0, y0, max(w['x'] + w['w'] for _, w in letters) + 90, y1))
         if len(row) == len(letters) and all(t in ranks for t in row):
@@ -347,7 +371,7 @@ def parse(book, slug):
             # a label is the line above the block, not the end of what precedes it
             if block['label']:
                 for sink in [cur['identity'], cur['prose']] + [p['text'] for p in cur['powers'][-1:]] + list(cur['sections'].values()):
-                    if sink and re.sub(r'["“”]', '', sink[-1]).strip() == block['label']:
+                    if sink and re.sub(r'["\u201c\u201d]', '', sink[-1]).strip() == block['label']:
                         sink.pop()
                         break
             if line['printed'] not in cur['pages']:
@@ -368,7 +392,7 @@ def parse(book, slug):
         if line['printed'] not in cur['pages']:
             cur['pages'].append(line['printed'])
         m = SECTION_LINE.match(text)
-        r = roster.RUN_IN.match(text.replace('’', "'"))
+        r = roster.RUN_IN.match(text.replace('\u2019', "'"))
         label = r.group(1).strip() if r else None
         key = None
         if m and not (m.group(1) == 'Powers' and cur['_sec'] == 'powers'):
@@ -391,7 +415,7 @@ def parse(book, slug):
             pm = roster.POWER_HEAD.match(text)
             prev = stream[i - 1]['text'].rstrip() if i else ''
             if pm and len(pm.group(1)) <= 40 and roster.is_caps(pm.group(1)) \
-                    and (not cur['powers'] or prev.endswith(('.', ':', ')', '"', '”', '!'))):
+                    and (not cur['powers'] or prev.endswith(('.', ':', ')', '"', '\u201d', '!'))):
                 cur['powers'].append({'name': booklet.power_name(pm.group(1)), 'text': [pm.group(2)]})
             elif cur['powers']:
                 cur['powers'][-1]['text'].append(text)
@@ -433,3 +457,22 @@ def team_of(book, entries):
     missing = [k for k in marks if k not in found]
     if missing:
         raise SystemExit('teams name no entry: %s' % missing)
+
+
+def coverage(book, entries, overrides):
+    """booklet.coverage, where the chart's Health or Karma is the same word as
+    its block's in another case: the chart sets "Unlimited" in title case and
+    the Roster Book "UNLIMITED" in capitals (the Beyonder, Eternity and Death),
+    which is one value. booklet.coverage compares a Health or Karma as a
+    number, so it reports every word as a disagreement; only a word equal but
+    for case is dropped here, and every other difference still fails."""
+    lines, _bad = booklet.coverage(book, entries, overrides)
+    same = re.compile(r'^  SUMMARY DISAGREES: .*?: chart (\S.*), Roster Booklet (\S.*)$')
+    kept = []
+    for l in lines:
+        m = same.match(l)
+        if m and not re.match(r'^-?\d', m.group(1)) and m.group(1).upper() == m.group(2).upper():
+            continue
+        kept.append(l)
+    bad = any(k in l for l in kept for k in ('NO ENTRY', 'SUMMARY DISAGREES', 'OVERRIDE MATCHES NOTHING'))
+    return kept, bad
