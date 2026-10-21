@@ -4,11 +4,27 @@
     "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header}: a card or one-line grid; page is the printed page, or null for a card on a cover panel (which prints no page)",
     "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the rank gives",
     "  checked   the date the page image was read"
   ],
   "overrides": [
     {"match": {"page": null, "header": "LOCKHEED"}, "verdict": "as_printed", "field": "R",
      "printed": "?", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
-     "note": "Inside back cover: Reason is printed as a question mark, and the card prints no Karma, Resources or Popularity, so MH1 has nothing to settle it (MHSP1's Karma 40 did). Played as Shift 0, applying Nate's 2026-09-28 ruling on the same printed value in MHSP1 (mhsp1-overrides.json); Karma is left unset. The card's Health 48 = F 6 + A 30 + S 2 + E 10, as printed."}
+     "note": "Inside back cover: Reason is printed as a question mark, and the card prints no Karma, Resources or Popularity, so MH1 has nothing to settle it (MHSP1's Karma 40 did). Played as Shift 0, applying Nate's 2026-09-28 ruling on the same printed value in MHSP1 (mhsp1-overrides.json); Karma is left unset. The card's Health 48 = F 6 + A 30 + S 2 + E 10, as printed."},
+    {"match": {"page": 12, "header": "FALSE BLOB"}, "verdict": "as_printed", "field": "IP",
+     "printed": "-", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
+     "note": "Printed 12: Intuition and Psyche are printed as dashes, and a one-line grid prints no Karma. Each dash plays as Shift 0 and Karma is left unset (Nate, 2026-10-21, survey mh1.md decision 4, as MHSP1 played its printed '?')."},
+    {"match": {"page": 12, "header": "FALSE SCARLET WITCH"}, "verdict": "as_printed", "field": "IP",
+     "printed": "-", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
+     "note": "Printed 12: as the False Blob's."},
+    {"match": {"page": 12, "header": "FALSE QUICKSILVER"}, "verdict": "as_printed", "field": "IP",
+     "printed": "-", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
+     "note": "Printed 12: as the False Blob's."},
+    {"match": {"page": 12, "header": "FALSE TOAD"}, "verdict": "as_printed", "field": "IP",
+     "printed": "-", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
+     "note": "Printed 12: as the False Blob's. The False Magneto prints Gd and Pr and is read as printed."},
+    {"match": {"page": 5, "header": "ROBOT WOLVERINE"}, "verdict": "misprint", "field": "Claws' Remarkable damage",
+     "printed": 20, "corrected": 30, "checked": "2026-10-21",
+     "note": "Printed 5, the Special: line: the claws cause Remarkable damage, printed as 20 points, and Remarkable is 30. Nate, 2026-10-21 (survey mh1.md decision 5): an override with both values (not taken: as_printed). The grid itself adds up; the text in msh_book_text keeps the printed 20."}
   ]
 }

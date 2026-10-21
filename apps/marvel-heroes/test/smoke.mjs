@@ -1728,6 +1728,21 @@ section('The book-text endpoint reads one entry\'s rows, GET only, in the book\'
     renderParts([{ part: 'section', name: 'Karma', body: 'k' }, { part: 'part', name: 'Traps', body: 't' }])
       === '<p><strong>Karma:</strong> k</p><p><strong>Traps:</strong> t</p>');
 
+  // Every part npcs.py writes for a character has a place in the endpoint's
+  // order, and every section it writes by name (its `for part in (...)` lists)
+  // has a heading on the card. A part missing from the order sorts first; one
+  // missing a heading prints as bare prose. MH1's `special` was both.
+  const { PART_HEAD } = await import(new URL('../js/book-text.js', import.meta.url));
+  const npcsPy = readFileSync(new URL('../../../scripts/msh/npcs.py', import.meta.url), 'utf8');
+  const written = [...npcsPy.matchAll(/text_row\(\s*\w+,\s*'([a-z-]+)'/g)].map((m) => m[1]);
+  const sections = [...npcsPy.matchAll(/for part in (\([^:]*\)):/g)]
+    .flatMap((m) => [...m[1].matchAll(/'([a-z-]+)'/g)].map((x) => x[1]));
+  check(`every part npcs.py writes (${new Set([...written, ...sections]).size}) has a place in the endpoint's order`,
+    written.length > 0 && sections.length > 0 && [...written, ...sections].every((p) => mod.PART_ORDER.includes(p)),
+    [...written, ...sections].filter((p) => !mod.PART_ORDER.includes(p)).join());
+  check(`and every section it writes by name (${new Set(sections).size}) has a heading on the card`,
+    sections.every((p) => PART_HEAD[p]), sections.filter((p) => !PART_HEAD[p]).join());
+
   // An item's rows (and the adventure section a vehicle reads) are all numbered in print order,
   // and that number is the order, whatever the parts are called.
   const numbered = [

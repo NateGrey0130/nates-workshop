@@ -50,7 +50,9 @@
     "  panels          a cover-panels book: parts (offset null, no printed page) read whole for cards; a card there cites the panel",
     "  cards           a cover-panels book: [part, printed page or null, name] for every full block, read off the page images; with opponents, the checklist",
     "  not_characters  a cover-panels book: card headers that are not characters (a vehicle), dropped",
-    "  no_health       a cover-panels book: opponents whose one-line grid prints no Health",
+    "  no_health       a cover-panels book: opponents whose one-line grid prints no Health; scripts/msh/npcs.py gives each F+A+S+E, flagged health_derived",
+    "  teams (cover-panels) {team: [names]}: a character named there is that team's; every other files under the book's title",
+    "  faint_rules     a cover-panels book: [part, printed page, y in TSV pixels]: a rule between two cards that booklet.rules() cannot see (a dashed one)",
     "  drop_above      a cover-panels book: [part, printed page, y in TSV pixels]: text above y on that page is not a card's (the Epilog over Magneto's)",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
@@ -1152,6 +1154,10 @@
       ],
       "not_characters": ["Lockheed RS-150 Blackbird"],
       "no_health": ["Fluffy", "Augie Hickman"],
+      "teams": {"X-Men": ["Colossus", "Nightcrawler", "Rogue", "Storm", "Ariel", "Wolverine", "Lockheed the Dragon", "Professor X"]},
+      "teams_note": "Nate, 2026-10-21 (survey mh1.md decision 1): the six active X-Men, Lockheed and Professor X are the X-Men, the same team as MA1's and its filter group; every other character files under the book's title (not taken: the book's title for all).",
+      "faint_rules": [["Adventure Book", 15, 1020]],
+      "faint_rules_note": "Printed 15 (PDF 17): the rule between Mentallo's card and the two below it is dashed, so no dark run crosses 60% of the page and booklet.rules() finds none. It sits at about y 1020 in the TSV (300 dpi), across the first two columns; Mentallo's text ends at y 695 and the next text starts at y 1566. Read on the page image 2026-10-21.",
       "drop_above": [["Adventure Book", 13, 1300]],
       "drop_above_note": "Printed 13 (PDF 15): the Epilog's text runs across the top of the page to y 1076 in the TSV (300 dpi), over a rule; Magneto's card starts at y 1658. Read on the page image 2026-10-21.",
       "opponents": [

@@ -284,6 +284,15 @@ def main(slug_arg):
     # without a block who has a card of their own links to it (the Notable
     # Skrulls' SUPER-SKRULL).
     #
+    # A cover-panels book (MH1, scripts/msh/coverpanels.py) is read as MA1 is,
+    # with five differences (survey: mh1.md, Nate's rulings 2026-10-21): a
+    # character's team is the registry's `teams` list it is named in, or the
+    # book's title; every version carries its part, so a card on a cover panel,
+    # which prints no page, cites the panel; a value the page does not print is
+    # null; a one-line grid printing no Health (`no_health`) is given F+A+S+E,
+    # flagged `health_derived`; and a one-line grid's Special: line is a text
+    # part of its own.
+    #
     # A roster-book book (MHSP2, scripts/msh/rosterbook.py) is read as MHSP1
     # is, with four differences: its entries carry the team whose banner they
     # are printed under (the registry's `teams`), named as `team_names` says
@@ -297,6 +306,7 @@ def main(slug_arg):
     rbook = book.get('layout') == 'roster-book'
     booklet = book.get('layout') == 'roster-booklet' or grid or rbook
     coded = book.get('layout') == 'code-grids'
+    panels = book.get('layout') == 'cover-panels'
     team_names = book.get('team_names', {})
     cite = {p['name']: p['cite'] for p in book.get('parts', [])}
     SIDE = {'heroes': '%s Heroes' % book['title'].split(' ', 1)[-1], 'villains': '%s Villains' % book['title'].split(' ', 1)[-1]}
@@ -331,6 +341,12 @@ def main(slug_arg):
             name = re.sub(r'\b[IV][iv]+\b', lambda m: m.group(0).upper(), name)
             name = re.sub(r'(?<=\s)(Of|The|And|In|Von)\b', lambda m: m.group(0).lower(), name)
         return name
+
+    no_health = {norm(n) for n in book.get('no_health', [])} if panels else set()
+
+    def team_of_panel_card(e):
+        return next((t for t, names in book['teams'].items() if norm(display(e['header'])) in {norm(n) for n in names}),
+                    book['title'])
 
     entries = roster['entries']
     statted = [e for e in entries if e['blocks']]
@@ -392,12 +408,17 @@ def main(slug_arg):
                     # a value the book does not print is null, not an empty
                     # string, in a roster booklet (the Summary gives no
                     # Resources or Popularity); MA1's file is kept as it was
-                    **{k: (None if (booklet or coded) and b[k] is None else ascii_fold(minus(b[k]) if grid or coded else b[k]))
+                    **{k: (None if (booklet or coded or panels) and b[k] is None else ascii_fold(minus(b[k]) if grid or coded else b[k]))
                        for k in ('health', 'karma', 'resources', 'popularity')},
                     **({'override': b['override']} if b.get('override') else {}),
                     **({'kind': 'partial' if rbook and (b.get('override') or {}).get('verdict') == 'rows' else b['kind']}
                        if b.get('kind') else {}),
                 })
+                if panels and b['health'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_health:
+                    # printed with no Health (Fluffy, Augie Hickman): the ranks'
+                    # standard numbers give it, as they give every number here
+                    blocks[-1]['health'] = str(sum(a[1] for a in abilities[:4]))
+                    blocks[-1]['health_derived'] = True
             pw = []
             # a Summary-only character has no page; its running note has its own
             page0 = e['pages'][0] if e['pages'] else None
@@ -412,7 +433,7 @@ def main(slug_arg):
                 code = upb.get(norm(pname))
                 pw.append({'name': ascii_fold(pname), **({'rank': prank} if prank else {}), **({'upb': code} if code else {})})
                 text_row(eslug, 'power', n, pname, page0, p['text'])
-            for part in ('talents', 'contacts', 'running', 'background', 'notes'):
+            for part in ('talents', 'contacts', 'running', 'background', 'notes') + (('special',) if panels else ()):
                 text_row(eslug, part, None, None, e['running']['page'] if part == 'running' and e.get('running') else page0,
                          e['sections'].get(part, ''))
             if e['sections'].get('powers'):
@@ -437,9 +458,10 @@ def main(slug_arg):
                 text_row(eslug, 'member', n, display(m['name']), m['page'], m['text'])
             versions.append({
                 'id': eslug, 'label': variant(e['header']) if grid or not booklet else None,
-                'team': team_of_entry(e) if booklet else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
+                'team': team_of_panel_card(e) if panels else team_of_entry(e) if booklet
+                else (e.get('team') or team_of(e['pages'][0])) if coded else team_of(e['pages'][0]),
                 **({'side': SIDE[e['side']]} if booklet and e.get('side') else {}),
-                **({'part': cite[e['part']]} if booklet else {}),
+                **({'part': cite[e['part']]} if booklet or panels else {}),
                 'pages': e['pages'], 'identity': identity,
                 'blocks': blocks, 'powers': pw, 'members': members,
                 'text': sorted({r[3] for r in rows if r[2] == eslug}),
@@ -547,7 +569,9 @@ def main(slug_arg):
     # a Summary-only character has no page, and comes after the book's pages
     # a grid-booklets book reads its booklets in order, so they sort that way:
     # the Adventure Book's p.3 before the Resource Book's p.2
-    booklet_rank = {p['cite']: n for n, p in enumerate(book.get('parts', []))} if grid else {}
+    # and a cover-panels book in the PDF's order: the inside front cover, the
+    # Adventure Book, the inside back cover
+    booklet_rank = {p['cite']: n for n, p in enumerate(book.get('parts', []))} if grid or panels else {}
     chars.sort(key=lambda c: (booklet_rank.get(c['versions'][0].get('part'), 0),
                               min(v['pages'][0] if v['pages'] else 10 ** 6 for v in c['versions']), c['name']))
 
@@ -570,6 +594,29 @@ def main(slug_arg):
     for c in chars:
         if c['team'] not in teams:
             teams.append(c['team'])
+    def panel_listing(r):
+        # a cover-panels book (MH1): the Adventure Book's span, its cards' pages
+        # and its opponents' together, and the panels, which print no page
+        spans = [p for x in r['character_ranges'] for p in x['pages']] + [o['page'] for o in r['opponents']]
+        return {'pages': [min(spans), max(spans)], 'part': part_cite(r, r['character_ranges'][0]['part']),
+                'panels': [part_cite(r, p) for p in r['panels']]}
+
+    def source_pages(r):
+        if r.get('layout') == 'cover-panels':
+            x = panel_listing(r)
+            return '; '.join(['%s %d-%d' % (x['part'], x['pages'][0], x['pages'][1])] + x['panels'])
+        if r.get('character_ranges'):
+            return '; '.join('%s %s' % (g['part'], ', '.join('%d-%d' % tuple(p) for p in g['pages'])) for g in ranges(r))
+        return '%d-%d' % tuple(r['character_pages'])
+
+    def book_listing(r):
+        if r.get('layout') == 'cover-panels':
+            return panel_listing(r)
+        if r.get('character_ranges'):
+            return {'pages': ranges(r)[0]['pages'][0], 'ranges': ranges(r)}
+        return {'pages': list(r['character_pages']),
+                **({'part': part_cite(r, r['character_part'])} if r.get('character_part') else {})}
+
     out = {
         'about': [
             'Notable NPCs from the Marvel sourcebooks, built by scripts/msh/npcs.py from the parse of each book (scripts/msh/roster.py), one book at a time.',
@@ -580,14 +627,9 @@ def main(slug_arg):
             'health, karma, resources, popularity: as printed. override: a misprint or an as-printed value, read off the page (scripts/msh/<book>-overrides.json).',
             'powers[].upb: the Ultimate Powers Book code, where the name is a UPB power or in npc-power-aliases.json.',
         ],
-        'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'],
-                     'pages': '; '.join('%s %s' % (r['part'], ', '.join('%d-%d' % tuple(p) for p in r['pages'])) for r in ranges(registry[b]))
-                     if registry[b].get('character_ranges') else '%d-%d' % tuple(registry[b]['character_pages'])}
+        'sources': [{'book': registry[b]['title'], 'code': registry[b]['code'], 'pages': source_pages(registry[b])}
                     for b in present],
-        'books': [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'],
-                   **({'pages': ranges(registry[b])[0]['pages'][0], 'ranges': ranges(registry[b])} if registry[b].get('character_ranges') else
-                      {'pages': list(registry[b]['character_pages']),
-                       **({'part': part_cite(registry[b], registry[b]['character_part'])} if registry[b].get('character_part') else {})})}
+        'books': [{'slug': b, 'short': registry[b]['short'], 'title': registry[b]['title'], **book_listing(registry[b])}
                   for b in present],
         'teams': teams,
         'characters': chars,
