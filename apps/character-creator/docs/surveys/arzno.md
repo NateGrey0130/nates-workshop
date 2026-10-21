@@ -1,8 +1,8 @@
 # Rifts World Book 28: Arzno - Vampire Incursion — survey
 
-**Status:** `importing` — gear and vehicles imported; creatures, NPCs and the two classes next. (2026-10-20)
+**Status:** `importing` — gear, vehicles and creatures imported; NPCs and the two classes next. (2026-10-20)
 
-**Rows citing this book:** gear 22, vehicles 12
+**Rows citing this book:** gear 22, vehicles 12, creatures 4
 
 Slug `arzno`. Cached 2026-10-05 from
 `Rifts- World Book 28 Arzno- Vampire Incursion.pdf`, 162 PDF pages, **scan
@@ -176,7 +176,10 @@ this book's items (the Madhaven lesson).
    printed 110 is art), through `scripts/vessel-sql.mjs`. Each Imitator suit leans on the series rules of
    89-90; a row restates what it takes from there.
 3. **Creatures** — 4 rows from printed 22-30, through
-   `scripts/bestiary-sql.mjs`.
+   `scripts/bestiary-sql.mjs`. **Done:** `~260-arzno-creatures.sql` holds
+   the Waste Ghost (22-24), the Screamer (25-27, named by its printed
+   heading, with Waste Banshee in its description), the Thumper (27-29) and
+   the Waste Monkey (29-31), the last two `playable` 1, with 8 attacks.
 4. **Notable NPCs** — every stat block on printed 69-73, 133-139, 145 and
    148-160, counted from renders.
 5. **Classes** — the Thumper and the Waste Monkey (D19, below).
@@ -222,10 +225,13 @@ What is deliberately left, with the reason for each:
 |---|---|---|
 | 2026-10-05 | `pal/data/arzno-survey` | cache built (162 pp, OCR), `arzno` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-20 | `pal/data/arzno-gear-vehicles` | ruling D19 recorded; `~244-arzno-gear.sql` (22 gear rows, printed 75-90) and `~245-arzno-vehicles.sql` (5 Imitator power armors and 7 vehicles, printed 91-109, with their locations and weapons), checked by `book-reconcile` against renders, applied `--remote` before the PR. |
+| 2026-10-20 | `pal/data/arzno-creatures` | `~260-arzno-creatures.sql` (4 creature rows, printed 22-31: Waste Ghost, Screamer, Thumper and Waste Monkey, the last two playable, with 8 attacks) through `scripts/bestiary-sql.mjs`, every figure checked against renders, applied `--remote` before the PR. |
 
 ### What remains
 
-Gear and vehicles are in. Next, each in its own PR and session: creatures
-and NPCs (4 creatures and 13 named NPCs through `scripts/bestiary-sql.mjs`,
-equipment mapped to this PR's gear slugs), then the Thumper and Waste Monkey
-classes, then `drift-check --remote` and removing the book tree.
+Gear, vehicles and creatures are in. Next, each in its own PR and session:
+the NPCs, named people only (rows 7b and 7c of the plan: the Mercenary
+Corps and city people, then the five Black Swords, through
+`scripts/bestiary-sql.mjs`, equipment mapped to the gear slugs), then the
+Thumper and Waste Monkey classes, then `drift-check --remote` and removing
+the book tree.
