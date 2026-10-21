@@ -275,6 +275,9 @@ def rows_from(texts):
             texts[n - 1] = texts[n - 1].rstrip() + ' ' + nxt.group(1) + ' ' + nxt.group(2)
             del texts[n]
     texts = [re.sub(r'(?<=\d)In(?![a-z])', ' In', re.sub(r'^(\s*[FASERIP|$])(?=\d)', r'\1 ', t)) for t in texts]
+    # a Class rank's l read twice ("F 5000 CIl5000": ME2's Death and Galactus,
+    # Resource pp.2 and 4), which the code pattern reads as a bare C
+    texts = [re.sub(r'(?<=\d )C[Il1|]{2}\s?(?=\d{4}\b)', 'Cl ', t) for t in texts]
     rows = []
     for t in texts:
         m = ROW.match(t)
@@ -532,8 +535,12 @@ def read_entries(stream, reader, opponent=False, grid=None):
             prev_text = stream[i - 1]['text'].rstrip() if i else ''
             # the chapter's run-ins print a curly apostrophe ("CLAUD VICTOR'S:")
             r = RUN_IN.match(text.replace('\u2019', "'"))
+            # a paragraph indented right under a one-line grid (ME2's chapters,
+            # gridbooks.line_grids) is the chapter again: those grids end on
+            # "Karma: 56", not on a sentence
             resumes = (r and line['x0'] - line['left'] < 40 and not section_of(r.group(1).strip())) or (
-                line['x0'] - line['left'] >= 25 and prev_text.endswith(('.', '!', '?', '"', '\u201d')))
+                line['x0'] - line['left'] >= 25 and (prev_text.endswith(('.', '!', '?', '"', '\u201d'))
+                                                     or (i and stream[i - 1].get('line_grid'))))
             if resumes:
                 cur = None
                 i += 1
