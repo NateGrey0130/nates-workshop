@@ -285,3 +285,11 @@ What is deliberately left, with the reason for each:
 ### What remains
 
 Nothing in the plan. What was left on purpose is listed above.
+
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. The 17 City of Char Quick Stats people stay out under D21 (their
+draft stays outside the repo at
+`C:\Users\natha\Projects\workshop\drafts\adventures-in-dinosaur-swamp\char-quickstats-left-17.json`);
+the Wraith Soldier and Raptor King keep `playable` 1; the Wraith Brigade
+Entity gets no row of its own; the three Horune figures taken under the
+newest-printing rule stand; the Wilk's EVC-600 camera stays prose; and the
+New West reprint line's habitat and enemy drops stand.

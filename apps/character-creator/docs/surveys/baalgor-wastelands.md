@@ -308,3 +308,5 @@ be changed with a `fix-` script.
 - **Chant of Dreaming** is held only as a Rifts row; the Oneiromancer's
   cheaper casting is prose. The book it cites, Adventures on the High
   Seas, is not cached.
+
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. All eleven readings above stand as stored.

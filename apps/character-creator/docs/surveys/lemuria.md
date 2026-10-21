@@ -406,6 +406,9 @@ be changed with a `fix-` script.
 - **Creature-hide armors and the Blue Death Fruit** are printed with figures
   and were not imported.
 
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. All nine readings above stand as stored, the seven differing
+Biomancy rows and the unimported hide armors and Blue Death Fruit included.
+
 ### What remains
 
 Nothing from the plan. See *Open for Nate*.
