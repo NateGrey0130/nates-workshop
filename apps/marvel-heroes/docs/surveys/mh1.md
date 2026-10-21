@@ -3,8 +3,12 @@
 Marvel Super Heroes adventure module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh1`. Measured 2026-10-21.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, with no data and no parser.
+**Rows citing this book:** 63 `msh_book_text` rows over 25 character entries
+in production (`DB_MARVEL`, read back 2026-10-21).
+
+Committed: 25 characters in `apps/marvel-heroes/data/npcs.json` (12 full
+blocks, 13 one-line grids), with 28 powers, 15 of them linked to the Ultimate
+Powers Book, read by the `cover-panels` layout. No items and no adventure.
 
 This is the fifth Marvel book, and the first of the five registered together
 by the kickoff PR (#1917). It goes through `scripts/msh/` only. **Its stat
@@ -297,7 +301,11 @@ with MHSP1, a single mark in the text is a misread, and
 the data row can normalize it. Apostrophes after a plural (`Colossus'`) are
 real and occur 10 times.
 
-## Decisions this survey leaves open
+## Decisions this survey left open
+
+All six were decided by Nate on 2026-10-21, each as recommended below, and
+the import carries them: the robots' dashes play as Shift 0 with Karma unset,
+as Lockheed's `?` does.
 
 1. **What `team` means.** There are no team sections. The recommendation:
    the eight X-Men (the six active, Lockheed and Professor X) as **X-Men**,
@@ -328,6 +336,9 @@ real and occur 10 times.
    give them cards? The recommendation is the text only.
 
 ## The next PRs
+
+Both done: the parser is #1923 (`cover-panels`), the data is this file's Rows
+line.
 
 1. **Parser:** `booklet.py` (or a sibling) reads `character_ranges` across
    parts, the two cover panels, and `opponents`; names a one-line grid from a
