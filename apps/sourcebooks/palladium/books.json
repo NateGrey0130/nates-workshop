@@ -1211,6 +1211,36 @@
    "total": 52
   },
   {
+   "slug": "arzno",
+   "title": "Rifts World Book 28: Arzno - Vampire Incursion",
+   "code": "arzno",
+   "status": "imported",
+   "date": "2026-10-21",
+   "added": [
+    [
+     "Classes",
+     2
+    ],
+    [
+     "Creatures",
+     4
+    ],
+    [
+     "Gear",
+     22
+    ],
+    [
+     "Notable NPCs",
+     10
+    ],
+    [
+     "Vehicles",
+     12
+    ]
+   ],
+   "total": 50
+  },
+  {
    "slug": "madhaven",
    "title": "Rifts World Book 29: Madhaven",
    "code": "madhaven",

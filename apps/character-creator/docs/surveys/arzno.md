@@ -1,8 +1,8 @@
 # Rifts World Book 28: Arzno - Vampire Incursion — survey
 
-**Status:** `importing` — gear, vehicles, creatures and ten NPCs imported; the two classes next. (2026-10-20)
+**Status:** `imported` — gear, vehicles, all four creatures, the ten named NPCs and the Thumper and Waste Monkey R.C.C.s are in; what was left on purpose is under *Extraction plan* and *What remains*. (2026-10-21)
 
-**Rows citing this book:** gear 22, vehicles 12, notable_npcs 10, creatures 4
+**Rows citing this book:** classes 2, gear 22, vehicles 12, notable_npcs 10, creatures 4
 
 Slug `arzno`. Cached 2026-10-05 from
 `Rifts- World Book 28 Arzno- Vampire Incursion.pdf`, 162 PDF pages, **scan
@@ -57,7 +57,7 @@ and em-dashes; strip them before any SQL.
 | **p006-p007** | 5-6 | *Quick Find* | a second reading of the pages of places, people and item groups |
 
 There is no experience-table page. The Thumper is pointed at the Dog Boy
-ladder (28), and the Blood Priest entry carries an *Experience Table* line
+ladder (28), the Waste Monkey at the Vagabond's (30), and the Blood Priest entry carries an *Experience Table* line
 inside its own block (144); read that one off a render.
 
 **The Contents does not list what is on printed 148-160.** Those pages hold
@@ -192,7 +192,11 @@ this book's items (the Madhaven lesson).
    148-160 (Sir Jude, the knight of 152 under his printed title Sir Lunais
    the Brute, Sir Trey Risharde, Sir John of Conrad, Lady Night Runner)
    with 23 attacks. Step 4 is done.
-5. **Classes** — the Thumper and the Waste Monkey (D19, below).
+5. **Classes** — the Thumper and the Waste Monkey (D19, below). **Done:**
+   `add-thumper-class.sql` (printed 27-29, the Dog Boy ladder the entry
+   names) and `add-waste-monkey-class.sql` (printed 29-31, the Vagabond
+   ladder the entry names on printed 30), both R.C.C.s read off renders.
+   Step 5 is done.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
@@ -238,9 +242,21 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/arzno-creatures` | `~260-arzno-creatures.sql` (4 creature rows, printed 22-31: Waste Ghost, Screamer, Thumper and Waste Monkey, the last two playable, with 8 attacks) through `scripts/bestiary-sql.mjs`, every figure checked against renders, applied `--remote` before the PR. |
 | 2026-10-20 | `pal/data/arzno-npcs-a` | `~261-arzno-npcs-a.sql` (5 notable NPC rows with 19 attacks: Prince Onra Misvina 69-70, Sgt. Samantha 73-74, Xavier Stuart 134-136, Cana the Blind 136-137, High Father Suthue 145-146) through `scripts/bestiary-sql.mjs`, every figure checked against renders, equipment named as the Book 28 gear rows are. Left: Psythe, Lt. Fidel and Gerra No'ta (71-73) under D22, pending Nate's word; the typical A.M.C. soldier block (69-71) under D22; the secondary and wild vampire blocks (137-139) under D19; Carlos Vanderberg (no block) under D21. Applied `--remote` before the PR. |
 | 2026-10-20 | `pal/data/arzno-black-swords` | `~262-arzno-black-swords.sql` (5 notable NPC rows with 23 attacks: Sir Jude 148-151, Sir Lunais the Brute 151-153 with `real_name` NULL under D22, Sir Trey Risharde 153-156, Sir John of Conrad 156-158, Lady Night Runner 158-160) through `scripts/bestiary-sql.mjs`, every figure read off renders and cross-checked against the cache. Equipment names the catalog's TW Stake Driver and TW Wood Rail Gun (both Trey's); every other item keeps its printed name. Lunais's restrained punch refers to a damage bonus the book never prints, recorded in his `bonuses_note`; Trey's description puts his augmented arm on the right and his bionics on the left, so the row names no side. Left: printed 147-160 has no typical Black Sword block; Sir Edward, Sir Donavan Leona, Sir Pedro, Sir Antonio, Sir Bending River, Lady Beth, Burkha the Magnificent and Lord Coake are named with no block, under D21. Applied `--remote` before the PR. |
+| 2026-10-21 | `pal/data/arzno-classes` | `add-thumper-class.sql` (printed 27-29) and `add-waste-monkey-class.sql` (printed 29-31), the two optional R.C.C.s under D19, read off 200 dpi renders and checked `ready` by `class-check --remote`. The Thumper copies the held `dog-boy` ladder and the Waste Monkey the held `vagabond` ladder, each the table its entry names. The Thumper is a minor M.D.C. being with its minor physical psionics (Telekinetic Lift, then Levitation or Telekinetic Leap, and Resist Fatigue or Impervious to Cold) and its player-character skill bonuses; the Waste Monkey keeps its R.C.C. skills at the printed percentages with no advancement. Each book's per-level new skills are a `secondary_skills` schedule. Classes 0 to 2; status to `imported`. Applied `--remote` before the PR. |
 
 ### What remains
 
-Gear, vehicles, creatures and all ten notable NPCs are in. Left: the
-Thumper and Waste Monkey classes, then the book's close
-(`drift-check --remote` and removing the book tree).
+The plan is done: gear, vehicles, creatures, all ten notable NPCs and both
+classes are in. Left on purpose, each with its reason above: the Blood
+Priest class (D19), the typical blocks and the level-only people (D21,
+D22), and the secondary and wild vampire blocks (D19). Psythe, Lt. Fidel
+and Gerra No'ta (71-73) are still pending Nate's word under D22.
+
+Two things the classes carry as prose, decided 2026-10-21, because the
+secondary-skill picker offers every category and takes no per-skill
+bonus: the Thumper's new skills are limited to Domestic, Physical, Rogue
+and Wilderness, and the Waste Monkey's to a printed list with its own
+modifiers (Basic Mechanics -10%, Gymnastics +5%, Palming +2%, Play
+Musical Instrument -10%, Sign Language -10%, Swimming -15%). Each class
+states its list on `secondary_skills.categories` and in `restrictions`;
+neither is enforced at the pick.
