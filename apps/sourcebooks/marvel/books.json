@@ -147,11 +147,15 @@
    "title": "ME2 Ragnarok and Roll",
    "code": "TSR6880",
    "status": "imported",
-   "date": null,
+   "date": "2026-10-21",
    "added": [
     [
      "Characters",
      40
+    ],
+    [
+     "Rows of the book's text",
+     273
     ]
    ],
    "total": 40

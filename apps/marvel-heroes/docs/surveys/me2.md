@@ -3,9 +3,17 @@
 Official Advanced Game Adventure for Marvel Super Heroes, Troy Denning, 1988.
 Registry entry: `scripts/msh/books.json` -> `me2`. Measured 2026-10-21.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, with no data and no parser (production `DB_MARVEL` read
-back 2026-10-21: no `me2` rows).
+**Rows citing this book:** 273 `msh_book_text` rows over 36 character entries
+in production (`DB_MARVEL`, read back 2026-10-21); the other four, Nova,
+Thor, the Silver Surfer and Doc Strange, are on the Summary alone and print
+no text.
+
+Committed: 40 characters in `apps/marvel-heroes/data/npcs.json` (33 full
+grids, Actus, Charon and Modgud from the chapters' one-line grids, and the
+four Summary-only heroes), with 222 powers, 94 of them linked to the Ultimate
+Powers Book, read by the `grid-booklets` layout. The chapter's Titans and
+powerless Zeus are second blocks on their Resource Book cards, and Beta Ray
+Bill's humanoid form a form on his. No items, no places and no adventure.
 
 This is the eighth Marvel book, and the fifth of the five registered together
 by the kickoff PR (#1917). It goes through `scripts/msh/` only. **It is laid
@@ -314,15 +322,28 @@ For Nate. Each has a recommendation.
 6. **The four Summary-only heroes.** Recommendation: cards marked
    Summary-only, as ME1's four are.
 
-## The next PRs
+## The parser and the data (done 2026-10-21)
 
-1. **Parser:** `gridbooks.py` reads this book (the six items under *Which
-   reader fits*), and the entry gains `"layout": "grid-booklets"` and the
-   decided teams. Expected: 33 full grids, 5 one-line grids, 1 form and 4
-   chart-only heroes, every Health holding, and ME1's outputs byte-identical.
-2. **Data:** `npcs.py me2`, `scripts/msh/me2-overrides.json` for the
-   misprints, the rows of `msh_book_text`, this file's Rows line and
-   `node scripts/sourcebooks.mjs`.
+The parser (#1928) taught `gridbooks.py` this book and wrote
+`scripts/msh/me2-overrides.json`, with decisions 2, 4 and 6 as recommended.
+Decision 3 went the other way for now: the in-range numbers are `as_printed`
+overrides, one per block, as ME1's Superkree's is, and the Codex says each is
+inside its rank's range.
+
+`python scripts/msh/npcs.py me2` writes the 40 characters and 273 rows of
+`msh_book_text`, applied to production before the merge. Nate's answer to
+decisions 1 and 5 (2026-10-21) is in the registry: `teams` as recommended
+(Actus, alone on Adventure p.16, is an Entity; Charon and Modgud file under
+ME2 Ragnarok and Roll), and a new `second_blocks` field, read only for a
+grid-booklets book, makes the chapter's Titans and Zeus labelled second
+blocks ("Tormenting Zeus in Hades", "Powerless in Hades") on their Resource
+Book cards, so the GM picks either; the Titans' three run-in powers there go
+to D1 as the card's powers 9-11, named for the block. Two readings were
+added to `npcs.py`: a minus read as a hyphen beside a dash (the Fenris Wolf's
+Popularity -5) and a header printed with a trailing comma (`MUSPELHEIM
+DEMON,`, read on the page image). Every earlier book's `npcs.json` rows and
+`book-text.sql` were built with `origin/main`'s scripts and the branch's and
+compared byte for byte: identical.
 
 ## How to reproduce
 
