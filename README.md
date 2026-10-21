@@ -47,6 +47,8 @@ the landing page reads at runtime. That file is the source; these tables are onl
 a map, and deliberately do not repeat it. Adding one is the `app-suite` skill.
 The hub's sections come from the same file: its `groups` list, in order, and
 each app's `group`. An app naming no known group lands in the last section.
+A tile with an `href` and no slug is a site outside this repo, opened in a new
+tab: Surf the Stream, which has its own repository and Worker.
 
 **This table described four apps while eight were live**, for two days after the
 split. Nothing pins this file — no check reads it, which is not true of any app's

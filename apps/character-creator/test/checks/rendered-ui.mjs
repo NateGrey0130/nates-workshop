@@ -2300,6 +2300,20 @@ export async function run() {
         : 'the manifest has no groups list');
     check('and the section titles are escaped like the other typed fields',
       /\$\{esc\(g\.title\)\}/.test(landing), 'g.title reaches innerHTML unescaped');
+
+    // A tile with `href` in place of a slug is a site outside this repo
+    // (Surf the Stream, 2026-10-21). It names no directory, so groups.mjs
+    // has nothing to own and skips it; this is the check that reads it.
+    // Unescaped like `icon`, so it must be a plain https URL, and the hub
+    // must open it in a new tab without handing that tab window.opener.
+    const outside = manifest.apps.filter((a) => 'href' in a);
+    check('a tile that leaves the site is an https URL and names no directory',
+      outside.every((a) => !a.slug && /^https:\/\/[a-z0-9.-]+\/[^"'<>\s]*$/.test(a.href)),
+      outside.map((a) => `${a.name}=${a.slug}|${a.href}`).join(' '));
+    check('and the hub opens it in a new tab, saying so on the tag',
+      /href="\$\{href\}" target="_blank" rel="noopener"/.test(landing)
+      && /\$\{out \? ' ↗' : ''\}<\/span>/.test(landing),
+      'the external branch of card() lost target, rel or its arrow');
   }
 
   // ---------- A typed override is drawn as text ----------

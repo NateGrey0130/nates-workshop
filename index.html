@@ -351,17 +351,26 @@ fetch('/apps/manifest.json')
       // is not user input; if that ever changes, this line changes with it.
       // A check in apps/character-creator/test/checks/rendered-ui.mjs asserts
       // both halves, so a well-meant "fix" here fails rather than shipping.
+      //
+      // `href` in place of a slug is a site that lives outside this repo
+      // (Surf the Stream). It opens in a new tab, because it is another
+      // origin and the hub should still be there to come back to, and its
+      // tag carries an arrow so that is said before the click. It is not
+      // escaped, for the same reason `icon` is not.
+      const out = Boolean(app.href);
       const inner = `
         <div class="card-icon">${app.icon}</div>
         <h3>${esc(app.name)}</h3>
         <p>${esc(app.description)}</p>
-        <span class="card-tag">${esc(app.status)}</span>`;
+        <span class="card-tag">${esc(app.status)}${out ? ' ↗' : ''}</span>`;
       // A slug may be a page inside an app (`marvel-heroes/codex`), so each
       // segment is encoded on its own and the slashes survive.
-      const href = app.slug && `/apps/${app.slug.split('/').map(encodeURIComponent).join('/')}/`;
-      return app.status === 'live' && app.slug
-        ? `<a class="card" href="${href}">${inner}</a>`
-        : `<div class="card card-soon">${inner}</div>`;
+      const href = out ? app.href
+        : app.slug && `/apps/${app.slug.split('/').map(encodeURIComponent).join('/')}/`;
+      if (app.status !== 'live' || !href) return `<div class="card card-soon">${inner}</div>`;
+      return out
+        ? `<a class="card" href="${href}" target="_blank" rel="noopener">${inner}</a>`
+        : `<a class="card" href="${href}">${inner}</a>`;
     };
     // The LAST group is the catch-all. An app whose `group` is missing or
     // names no group lands there, so a new manifest entry that forgets the
