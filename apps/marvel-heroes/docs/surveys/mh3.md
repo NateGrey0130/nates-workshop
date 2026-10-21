@@ -215,7 +215,7 @@ them, and they are not in `opponents` (decision 5).
 | full blocks printing a word for Karma | 3: `none` (Miss Locke 30, Mr. Chambers 32 by R+I+P) and `varies` (the Super-Adaptoid) |
 | one-line grids, Health = F+A+S+E | **4 of 5**: the Super-Adaptoid's form prints 150, its ranks give 200 |
 | one-line grids printing a Karma above 0, Karma = R+I+P | **2 of 2** (Jennifer Walters, Ben Grimm) |
-| one-line grids printing Karma 0 | 2, whose R+I+P would be 18 and 16 |
+| one-line grids printing Karma 0 | 2, whose R+I+P would be 18 each (the Doombot's Gd Pr Pr, the Water Tower Robots' Pr Gd Pr, read on the page images) |
 
 Every block was read on its page image as well as in the OCR.
 
