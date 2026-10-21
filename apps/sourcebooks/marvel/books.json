@@ -107,6 +107,24 @@
    "total": 25
   },
   {
+   "slug": "mh2",
+   "title": "MH2 Time Trap",
+   "code": "TSR6853",
+   "status": "imported",
+   "date": "2026-10-21",
+   "added": [
+    [
+     "Characters",
+     20
+    ],
+    [
+     "Rows of the book's text",
+     91
+    ]
+   ],
+   "total": 20
+  },
+  {
    "slug": "mhsp2",
    "title": "MHSP2 Secret Wars II",
    "code": "TSR6869",

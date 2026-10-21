@@ -293,6 +293,8 @@ export const SECTIONS = [
           if (b.rank_only) out.push(['Numbers', 'The book prints ranks only; each number is its rank\'s standard number']);
           // a one-line grid printing no Health (MH1's Fluffy): F+A+S+E gives it
           if (b.health_derived) out.push(['Health', 'Not printed; F+A+S+E of the ranks\' standard numbers gives it']);
+          // one printing no Karma that a ruling derives (MH2's Kang's Minions)
+          if (b.karma_derived) out.push(['Karma', 'Not printed; R+I+P of the ranks\' standard numbers gives it']);
           const o = b.override;
           const field = o && (FIELD[o.field] || o.field);
           const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
