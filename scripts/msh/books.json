@@ -58,6 +58,10 @@
     "  drop_corner     a cover-panels book: [part, printed page, x, y in TSV pixels]: every word right of x and below y on that page is not a card's (MH2's PROOF OF PURCHASE coupon)",
     "  opponent_names  a cover-panels book: \"title\" where a one-line grid's name is in title case, alone on the line above it (MH2's \"Aliens (humanoid)\"); its run-in powers after the Powers: line are read as a card's are. Absent, MH1's capitals",
     "  form_grids      a cover-panels book: [{part, page, entry, label}]: a one-line grid with no name above it that is a second block on that card (MH2's Mimic, once he has copied the Avengers' powers)",
+    "  drop_lines      a cover-panels book: [part, printed page or null, text]: a line that is no card's text, matched once whole (MH3's In Loving Memory banner over Doom's card)",
+    "  lost_headers    a cover-panels book: [part, printed page or null, identity line, NAME]: a card header no word of the TSV holds (MH3's Human Torch); a header line with the name goes in above that identity line",
+    "  moves           a cover-panels book: [part, printed page, col, y from, y to, after col, after y in TSV pixels]: the lines of that column between those heights go on after the last line of the other column ending above that height (MH3's Super-Adaptoid, its text set round its portrait)",
+    "  card_grids      a cover-panels book: [{part, page or null, entry, label}]: a one-line grid inside that card's text, a second block on it with that label (MH3's She-Hulk and Thing, their human forms)",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "  second_blocks   a grid-booklets book: [{part, page, name, label}]: a one_line_grids character that is a second block on the card of that name in another booklet (ME2's Titans and Zeus in Hades), labelled, its run-in powers going to D1 as the card's (scripts/msh/npcs.py)",
@@ -1319,6 +1323,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are display lettering that Tesseract reads in part or not at all, and the text's own cross-references (Chapter 5 by its title on printed 8, Chapter 6 by its title on printed 10) agree. Printed 1 has no banner of its own, only the title art (The Fantastic Four: Murderworld!), so Introduction is this registry's name for it. Chapter 3's banner spells its number (Chapter Three) and sits at the foot of printed 5's first column, under the art; the page holds nothing of Chapter 2, whose Karma table ends printed 4. Each of Chapters 1-6 is set as Campaign, Battle and Aftermath subsections, and Chapter 3's Battle is five numbered battles (Battle 1-5, printed 5-7); Chapter 7 has none. Every chapter ends on a Karma table (Tables 1-7). The character cards are on printed 13-16, after Chapter 7, unbannered, and on the two inside cover panels.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [
         {"part": "Adventure Book", "pages": [13, 16]}
       ],
@@ -1343,6 +1348,19 @@
         ["Inside back cover", null, "Franklin Richards"],
         ["Inside back cover", null, "Alicia Masters"]
       ],
+      "drop_corner": [["Adventure Book", 16, 0, 2900]],
+      "drop_corner_note": "Printed 16 (PDF 18): the product code 6855XXX1501 at the foot of the first column, x 111-351, y 2954-2984 in the TSV (300 dpi), read as a header and taking the rest of Doom's text. It is the only line of the page below y 2800. Measured on the TSV 2026-10-21.",
+      "drop_lines": [["Adventure Book", 16, "In Loving Memory"], ["Inside front cover", null, "lil i"]],
+      "drop_lines_note": "Printed 16 (PDF 18): the In Loving Memory banner over Doom's header, x 122-816, y 114-196, read onto the end of Sally Flack's card. Inside front cover (PDF 2): art at the top of the third column, x 1853-2100, y 350-510, read as lil i. Measured on the TSV 2026-10-21.",
+      "lost_headers": [["Inside front cover", null, "Johnny Storm, adventurer", "HUMAN TORCH"]],
+      "lost_headers_note": "Inside front cover (PDF 2): HUMAN TORCH, whose letters touch the portrait's frame, holds no word of the TSV; its identity line Johnny Storm, adventurer is at x 1696-2165, y 1107-1144 in the third column. Without it the Torch's block and five powers are the Invisible Girl's. Measured on the TSV 2026-10-21.",
+      "moves": [["Adventure Book", 15, 3, 100, 540, 1, 1430]],
+      "moves_note": "Printed 15 (PDF 17): the Super-Adaptoid's card is set round its portrait. Its Powers text ends the first column at y 1430 (as Hawkeye's bows and Iron Man's armor.), and goes on at the top of the third column, y 122-530 (The SUPER-ADAPTOID can retain ..., Talents and Background), above Sally Flack's header at y 624. Without the move that text is filed on the Skrull Soldiers' card. Measured on the TSV 2026-10-21.",
+      "card_grids": [
+        {"part": "Inside back cover", "page": null, "entry": "She-Hulk", "label": "Jennifer Walters"},
+        {"part": "Inside back cover", "page": null, "entry": "The Thing", "label": "Ben Grimm"}
+      ],
+      "card_grids_note": "Inside back cover (PDF 19): She-Hulk's and the Thing's ALTER EGO. powers end on a one-line grid of the human form, the letter rows at y 2247 (first column) and y 2241 (second), each with a Health and Karma line and no name line above it. Nate, 2026-10-21 (survey mh3.md): a second block on the card, as a form, not an entry of its own.",
       "opponents": [
         {"part": "Adventure Book", "page": 3, "names": ["Doombot"]},
         {"part": "Adventure Book", "page": 4, "names": ["Water Tower Robots"]}
