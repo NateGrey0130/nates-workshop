@@ -87,6 +87,24 @@
     ]
    ],
    "total": 129
+  },
+  {
+   "slug": "mhsp2",
+   "title": "MHSP2 Secret Wars II",
+   "code": "TSR6869",
+   "status": "imported",
+   "date": "2026-10-21",
+   "added": [
+    [
+     "Characters",
+     93
+    ],
+    [
+     "Rows of the book's text",
+     374
+    ]
+   ],
+   "total": 93
   }
  ]
 }
