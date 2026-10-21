@@ -357,6 +357,13 @@ def main(slug_arg):
                     book['title'])
 
     entries = roster['entries']
+    # A leading THE is dropped from a header, so the card sorts by the next
+    # word (Nate, 2026-10-21; registry drop_leading_the, MH3's THE THING).
+    # Only a book that sets the field: every earlier book's names stand.
+    if book.get('drop_leading_the'):
+        for e in entries:
+            if e.get('header'):
+                e['header'] = re.sub(r'^THE\s+', '', e['header'], flags=re.I)
     # A chapter's second grid for a character the Resource Book stats (ME2's
     # Titans tormenting Zeus, and Zeus powerless in Hades; registry
     # second_blocks, Nate 2026-10-21) is a labelled block on that character's
@@ -405,6 +412,12 @@ def main(slug_arg):
             # blocks are forms and the first is named for him
             form_grid = panels and any(b.get('text') for b in e['blocks'])
             forms = forms or form_grid
+            # a cover-panels card whose text ends on a one-line grid of its
+            # human form (registry card_grids, MH3's She-Hulk and Thing,
+            # mh3.md decision 3): one being, its blocks forms, as above
+            card_labels = {g['label'] for g in book.get('card_grids', []) if panels
+                           and norm(re.sub(r'^the\s+', '', g['entry'], flags=re.I)) == norm(re.sub(r'^the\s+', '', base_name(e['header']), flags=re.I))}
+            forms = forms or any(b.get('kind') == 'line' and b['label'] in card_labels for b in e['blocks'])
             # a chapter's second grid (second_blocks above) is not a form: the
             # GM picks one block or the other
             eblocks = e['blocks'] + ([second[id(e)][0]] if id(e) in second else [])
@@ -452,9 +465,13 @@ def main(slug_arg):
                     # standard numbers give it, as they give every number here
                     blocks[-1]['health'] = str(sum(a[1] for a in abilities[:4]))
                     blocks[-1]['health_derived'] = True
-                if panels and b['karma'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_karma:
+                if panels and norm(display(e['header'])) in no_karma and (
+                        (b['karma'] is None and b.get('kind') == 'line')
+                        or (not b.get('kind') and (b['karma'] or '').strip().lower() == 'none')):
                     # printed with no Karma, and a ruling derives it (MH2's
-                    # Kang's Minions, survey decision 5): R+I+P of the ranks
+                    # Kang's Minions, survey decision 5): R+I+P of the ranks.
+                    # A full block printing the word none (MH3's Miss Locke and
+                    # Mr. Chambers, mh3.md decision 4) is derived the same way
                     blocks[-1]['karma'] = str(sum(a[1] for a in abilities[4:]))
                     blocks[-1]['karma_derived'] = True
             pw = []
@@ -486,11 +503,17 @@ def main(slug_arg):
                 t = b.get('text')
                 if not t:
                     continue
-                if t.get('prose', '').strip() or any(v.strip() for k, v in t['sections'].items() if k != 'powers'):
+                if any(v.strip() for k, v in t['sections'].items() if k != 'powers'):
                     raise SystemExit('%s: the form grid %s of %s has text npcs.py has no part for' % (slug_arg, b['label'], e['header']))
                 for p in t['powers']:
                     n += 1
                     text_row(eslug, 'power', n, '%s (%s)' % (p['name'], b['label']), b['page'], p['text'])
+                # the grid's own note (MH3's Super-Adaptoid: a bracketed line
+                # under its Health), after the form's powers and named for the
+                # form. No earlier book's form grid has one: they stopped here.
+                if t.get('prose', '').strip():
+                    n += 1
+                    text_row(eslug, 'power', n, b['label'], b['page'], t['prose'])
             # a chapter's second grid's run-in powers, the same way
             if id(e) in second:
                 b, sp = second[id(e)]

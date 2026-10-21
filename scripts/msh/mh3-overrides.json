@@ -4,6 +4,7 @@
     "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
     "  match     {page, header, label}: a card or one-line grid; page is the printed Adventure page, header the start of the entry's header, label the block's own label where it has one",
     "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            text              match {row}: an msh_book_text row key. 'read' is a fragment of a few words as the OCR gives it after folding to ASCII, 'printed' the same fragment as the page prints it. It must occur once in the row, or npcs.py stops.",
     "  checked   the date the page image was read"
   ],
   "overrides": [
@@ -18,6 +19,12 @@
      "note": "Printed 3, Chapter 1: Karma 0 against R Gd 10 + I Pr 4 + P Pr 4 = 18; a robot, as MH2's machines. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 18). Health 120 = 20 + 20 + 40 + 40."},
     {"match": {"page": 4, "header": "Water Tower Robots"}, "verdict": "as_printed", "field": "karma",
      "printed": 0, "checked": "2026-10-21",
-     "note": "Printed 4, Chapter 2: Karma 0 against R Pr 4 + I Gd 10 + P Pr 4 = 18 (the page image prints Pr Gd Pr; the survey's first figure, 16, was wrong). Machines, as the Doombot. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 18). Health 180 = 40 + 10 + 30 + 100."}
+     "note": "Printed 4, Chapter 2: Karma 0 against R Pr 4 + I Gd 10 + P Pr 4 = 18 (the page image prints Pr Gd Pr; the survey's first figure, 16, was wrong). Machines, as the Doombot. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 18). Health 180 = 40 + 10 + 30 + 100."},
+    {"match": {"row": "mh3:wizard-mh3:background"}, "verdict": "text", "checked": "2026-10-21",
+     "read": "ARD\"s trap", "printed": "ARD's trap", "note": "Printed 14. An apostrophe, read as a straight and a curly single mark and joined into a double one."},
+    {"match": {"row": "mh3:doctor-doom-mh3:power:2"}, "verdict": "text", "checked": "2026-10-21",
+     "read": "DOOM\"s armor", "printed": "DOOM's armor", "note": "Printed 16, Force Field. An apostrophe, read as two single marks and joined into a double one."},
+    {"match": {"row": "mh3:doctor-doom-mh3:background"}, "verdict": "text", "checked": "2026-10-21",
+     "read": "DOOM\"s life", "printed": "DOOM's life", "note": "Printed 16. An apostrophe, read as two single marks and joined into a double one."}
   ]
 }

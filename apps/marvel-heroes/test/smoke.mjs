@@ -935,9 +935,10 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       && mh2.every((c) => c.team === 'Avengers' || c.team === 'MH2 Time Trap'), `${mh2.length} ${avengers}`);
     const blk = (id) => mh2.find((c) => c.id === id)?.versions[0].blocks[0];
     const minions = bookNpc({ character: 'kang-s-minions-mh2' }).snapshot;
-    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, the only one in any book',
+    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, with MH3\'s two the only ones in any book',
       minions?.karma === 10 && blk('kang-s-minions-mh2')?.karma_derived === true
-      && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).length === 1,
+      && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).map((c) => c.id).sort().join()
+        === 'kang-s-minions-mh2,miss-locke-mh3,mr-chambers-mh3',
       `${minions?.karma} ${blk('kang-s-minions-mh2')?.karma_derived}`);
     const mimic = bookNpc({ character: 'mimic-mh2' }).snapshot;
     check('MH2: the Mimic\'s absorbed form is a second block on his card, so he is one NPC with two forms (24 and 170)',
@@ -950,6 +951,31 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
     const zero = ['spirits-mh2', 'omegatrons-mh2', 'centipedes-mh2', 'energy-spiders-mh2'];
     check('MH2: the four machine and spirit grids keep their printed Karma 0',
       zero.every((id) => bookNpc({ character: id }).snapshot?.karma === 0), zero.map((id) => bookNpc({ character: id }).snapshot?.karma).join());
+  }
+
+  // MH3 is laid out as MH1 and MH2 are (scripts/msh/coverpanels.py,
+  // mh3-overrides.json), with Nate's seven rulings of 2026-10-21 (survey
+  // mh3.md decisions 1-7) and his ruling that a leading The is dropped.
+  if (data.npcs.characters.some((c) => c.book === 'mh3')) {
+    const mh3 = data.npcs.characters.filter((c) => c.book === 'mh3');
+    const team = (t) => mh3.filter((c) => c.team === t).map((c) => c.name).sort().join();
+    check('MH3: 20 characters, the five heroes as the Fantastic Four, Franklin and Alicia as Friends of the FF, three Skrulls, the rest under the book\'s title, and no name starting The',
+      mh3.length === 20 && team('Fantastic Four') === 'Human Torch,Invisible Girl,Mr. Fantastic,She-Hulk,Thing'
+      && team('Friends of the FF') === 'Alicia Masters,Franklin Richards' && team('Skrulls') === 'Captain Sk\'yll,Sally Flack,Skrull Soldiers'
+      && mh3.filter((c) => c.team === 'MH3 Murderworld!').length === 10 && !mh3.some((c) => /^the /i.test(c.name) || /^the-/.test(c.id)),
+      `${mh3.length} ${[...new Set(mh3.map((c) => c.team))]}`);
+    const forms = (id) => bookNpc({ character: id }).snapshot?.forms?.map((f) => `${f.name} ${f.health}`).join();
+    check('MH3: the Super-Adaptoid\'s current form and the She-Hulk\'s and the Thing\'s human forms are second blocks on their cards, one NPC each',
+      forms('super-adaptoid-mh3') === 'Super-Adaptoid 150,Current Form 150' && forms('she-hulk-mh3') === 'She-Hulk 150,Jennifer Walters 26'
+      && forms('thing-mh3') === 'Thing 200,Ben Grimm 50'
+      && ['super-adaptoid-mh3', 'she-hulk-mh3', 'thing-mh3'].every((id) => choices.filter((c) => c.character === id).length === 1),
+      [forms('super-adaptoid-mh3'), forms('she-hulk-mh3'), forms('thing-mh3')].join(' | '));
+    const blk = (id) => mh3.find((c) => c.id === id)?.versions[0].blocks[0];
+    check('MH3: Miss Locke\'s and Mr. Chambers\' printed Karma none is derived as R+I+P (30, 32) and flagged; the Super-Adaptoid\'s varies is kept and not derived',
+      bookNpc({ character: 'miss-locke-mh3' }).snapshot?.karma === 30 && bookNpc({ character: 'mr-chambers-mh3' }).snapshot?.karma === 32
+      && blk('miss-locke-mh3')?.karma_derived === true && blk('mr-chambers-mh3')?.karma_derived === true
+      && blk('super-adaptoid-mh3')?.karma === 'varies' && !blk('super-adaptoid-mh3')?.karma_derived,
+      `${bookNpc({ character: 'miss-locke-mh3' }).snapshot?.karma} ${bookNpc({ character: 'mr-chambers-mh3' }).snapshot?.karma} ${blk('super-adaptoid-mh3')?.karma}`);
   }
 
   // ME2 is laid out as ME1 is (scripts/msh/gridbooks.py, me2-overrides.json),
