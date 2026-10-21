@@ -39,7 +39,7 @@ const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<'
 // How each part reads on the card. A named part - a power, a member, a
 // location's part (the Danger Room's Missiles), a section's run-in - keeps its
 // printed name as a run-in head, as the book sets it.
-const PART_HEAD = { talents: 'Talents', contacts: 'Contacts', background: 'Background', notes: 'Notes', running: 'Running the character' };
+export const PART_HEAD = { talents: 'Talents', contacts: 'Contacts', background: 'Background', notes: 'Notes', special: 'Special', running: 'Running the character' };
 const NAMED = new Set(['power', 'member', 'part', 'section']);
 
 export function renderParts(parts) {
