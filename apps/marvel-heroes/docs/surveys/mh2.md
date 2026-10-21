@@ -4,8 +4,8 @@ Marvel Super Heroes adventure module, Bruce Nesmith, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh2`. Measured 2026-10-21.
 
 **Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, with no data and no parser (production `DB_MARVEL` read
-back 2026-10-21: no `mh2` rows).
+the survey and the parser are in, the data is not (production `DB_MARVEL`
+read back 2026-10-21: no `mh2` rows).
 
 This is the seventh Marvel book, and the second of the five registered
 together by the kickoff PR (#1917). It goes through `scripts/msh/` only. **It
@@ -318,16 +318,31 @@ For Nate. Each has a recommendation.
    players): leave them in their text, as MH1's Special Sentinels were left
    (recommended), or give them cards.
 
-## The next PRs
+## The parser (done 2026-10-21)
 
-1. **Parser:** `coverpanels.py` reads this book (the four items under *Which
-   reader fits*), and the entry gains `"layout": "cover-panels"` and the
-   decided team. Expected: 12 full blocks and 8 named one-line grids plus the
-   Mimic's form, every printed Health passing but the Energy Spiders', and
-   MH1's outputs byte-identical.
-2. **Data:** `npcs.py mh2`, `scripts/msh/mh2-overrides.json` for the
-   misprint and the Karma 0s, the rows of `msh_book_text`, this file's Rows
-   line and `node scripts/sourcebooks.mjs`.
+Nate ruled on all six decisions above on 2026-10-21, each as recommended
+except 5: Kang's Minions get Karma derived as 10 (not taken: unset). The
+registry entry now has `"layout": "cover-panels"`, `teams` (Avengers), and
+three fields `coverpanels.py` reads for this book alone: `opponent_names`
+(the title-case names, and each grid's run-in powers), `form_grids` (the
+Mimic's absorbed form, a second block on his card) and `drop_corner` (the
+PROOF OF PURCHASE coupon on printed 16, which Tesseract reads onto the last
+line of the Super-Skrull's card). Two fixes apply to any cover-panels book:
+a card's run-in power that ends in a colon or fills its line, and a rank
+word read with a mark in front of it (the Super-Skrull's and the Vision's
+Strength). `python scripts/msh/roster.py mh2` exits 0: 12 full blocks, 8
+named one-line grids and the Mimic's form, all found. `mh2-overrides.json`
+holds the Energy Spiders' Health (printed 46, corrected 44, decision 4) and
+the four Karma 0s as printed (decision 3), each read again on the page image.
+MH1's outputs, and every other book's, were built with `origin/main`'s
+scripts and the branch's and compared byte for byte.
+
+## The next PR
+
+**Data:** `npcs.py mh2`, Kang's Minions' derived Karma (decision 5), the rows
+of `msh_book_text`, this file's Rows line and `node scripts/sourcebooks.mjs`.
+`npcs.py` does not yet write the text of a form grid (the Mimic's absorbed
+form carries it in its block's `text` in `roster.json`).
 
 ## How to reproduce
 
