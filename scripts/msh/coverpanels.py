@@ -49,6 +49,30 @@ And in every cover-panels book, as MH1 never needed: a card's run-in power
 may end in a colon or fill its line, and a rank word read with a mark in front
 of it is read without the mark.
 
+MH3 is the same series again (apps/marvel-heroes/docs/surveys/mh3.md), and
+what it adds is behind its registry fields, or reads nothing MH1 or MH2 print
+(each proved by building both books before and after, byte for byte):
+
+  - `lost_headers`: a card whose header Tesseract did not read at all (the
+    Human Torch's, whose letters touch the portrait's frame), placed above its
+    identity line. `drop_lines`: a line that is no card's text (the banner over
+    Doom's card, art read as letters). `moves`: a card's text set round a
+    portrait, which goes on at the top of another column (the
+    Super-Adaptoid's, printed 15).
+  - `card_grids`: a one-line grid inside a card's powers (She-Hulk's and the
+    Thing's human forms), a second block on that card.
+  - `opponent_powers: "run-in"`: a one-line grid's names are capitals (MH1's
+    form) and its powers are run-ins after its Powers: line, as MH2's are; a
+    run-in head here is capitals ended by a colon or a period, or capitals
+    going straight on into their sentence ("FLIGHT is at good speed.").
+  - A run-in power in mixed case ("GROWTH and SHRINKING."); a name in
+    capitals inside a card's Powers: prose is no power; a line Tesseract lost
+    between a power's last line and the next head is re-read from the page;
+    a dash the block's crop reads where nothing else does is a dash; a
+    bracketed Karma is held to the bracketed ranks, as a bracketed Health is;
+    a one-line grid's Health with a note in brackets after it keeps the
+    number, and the note goes to the text.
+
 THE NUMBERS ARE DERIVED, as MHSP1's are: each ability's number is its rank's
 standard number (`rank_only`), and Health = F+A+S+E and Karma = R+I+P hold on
 every block read that way. A dash printed for an ability (four False robots'
@@ -77,6 +101,14 @@ WHOLE_HEAD = re.compile(r"^([A-Z][A-Z0-9'’ /&-]{1,40}[A-Z0-9])[.:]()$")
 # "Aliens (humanoid)", "Skrulls:", "Kang's Minions"); registry
 # "opponent_names": "title". MH1's are capitals and keep MH1's rule.
 TITLE_NAME = re.compile(r"^([A-Z][a-z]+(?:'s)?(?: (?:[A-Z][a-z]+(?:'s)?|\([a-z ]+\)))*):?$")
+# a card's run-in power in mixed case, words of capitals joined by a small word
+# (MH3's three Skrulls: "GROWTH and SHRINKING. Along with their")
+MIXED_HEAD = re.compile(r"^([A-Z][A-Z'-]+(?: (?:and|or|of|the) [A-Z][A-Z'-]+)+)\.\s+(.*)$")
+# an opponent's run-in power (registry "opponent_powers": "run-in"): capitals
+# ended by a colon or a period ("WEAPONS: Each tower", "BODY ARMOR. Incredible"),
+# or capitals going on into their sentence ("FLIGHT is at good speed.")
+RUNIN_POWER = re.compile(r"^([A-Z][A-Z'-]+(?: [A-Z][A-Z'-]+)*)(?:\s*([:.])\s+|\s+(?=[a-z]))(.*)$")
+SENTENCE_END = ('.', ':', ')', '"', '”', '!')
 APOSTROPHES = re.compile('(?<=[A-Za-z])[’�](?=s\\b)')
 
 
@@ -196,6 +228,42 @@ def stream(book, slug, part, first, last, split_at_rules):
     if seen - hit:
         # the corner's coordinates no longer find the box: a re-OCR moved it
         raise SystemExit('%s: drop_corner removes nothing on %s p.%s' % (slug, part, sorted(seen - hit)))
+    return mend(book, slug, part, first, last, out)
+
+
+def mend(book, slug, part, first, last, out):
+    """The registry's line fixes, each read off the page image, and each an
+    error if it no longer finds its line (a re-OCR moved it):
+      drop_lines   [part, page, text]: a line that is no card's (MH3: the
+                   "In Loving Memory" banner over Doom's card, art at the top
+                   of the inside front cover read as letters)
+      lost_headers [part, page, identity, name]: a card whose header no word
+                   of the TSV holds (MH3's Human Torch), placed above the
+                   line that is its identity
+      moves        [part, page, col, y from, y to, after col, after y]: the
+                   lines of that column between those heights go on after the
+                   last line of the other column ending above that height (a
+                   card set round its portrait: the Super-Adaptoid's text goes
+                   on at the top of printed 15's third column)
+    Pages are printed pages, or null on a panel."""
+    here = lambda p: p[0] == part and (p[1] is None or first <= p[1] <= last)
+    for p, page, text in [d for d in book.get('drop_lines', []) if here(d)]:
+        hits = [l for l in out if l['printed'] == page and l['text'].strip() == text]
+        if len(hits) != 1:
+            raise SystemExit('%s: drop_lines finds %r %d times on %s p.%s, not once' % (slug, text, len(hits), part, page))
+        out.remove(hits[0])
+    for p, page, identity, name in [d for d in book.get('lost_headers', []) if here(d)]:
+        hits = [n for n, l in enumerate(out) if l['printed'] == page and l['text'].strip() == identity]
+        if len(hits) != 1:
+            raise SystemExit('%s: lost_headers finds %r %d times on %s p.%s, not once' % (slug, identity, len(hits), part, page))
+        out.insert(hits[0], dict(out[hits[0]], text=name, lost_header=True))
+    for p, page, col, y0, y1, after_col, after_y in [d for d in book.get('moves', []) if here(d)]:
+        moved = [l for l in out if l['printed'] == page and l['col'] == col and y0 <= l['y0'] <= y1]
+        rest = [l for l in out if l not in moved]
+        at = [n for n, l in enumerate(rest) if l['printed'] == page and l['col'] == after_col and l['y1'] <= after_y]
+        if not moved or not at:
+            raise SystemExit('%s: moves finds %d lines and %d to follow on %s p.%s' % (slug, len(moved), len(at), part, page))
+        out = rest[:at[-1] + 1] + moved + rest[at[-1] + 1:]
     return out
 
 
@@ -250,6 +318,9 @@ def cards(book, slug, part, first, last, ranks, reader):
     """The entries of one card range: a header, its block, its text."""
     lines = stream(book, slug, part, first, last, split_at_rules=True)
     entries, cur = [], None
+    title = book.get('opponent_names') == 'title'
+    grids = [g for g in book['card_grids'] if g['part'] == part and (g['page'] is None or first <= g['page'] <= last)] \
+        if 'card_grids' in book else None
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -261,15 +332,30 @@ def cards(book, slug, part, first, last, ranks, reader):
             for k in roster.LABELS:
                 if block[k.lower()] is None:
                     block[k.lower()] = raw_value(lines[i:nxt], k)
+            crop_dashes(block, lines, i, nxt, ranks, reader)
             wrapped_alternates(block, lines[i:nxt], ranks)
             marked_ranks(block, ranks)
-            block['check'] = booklet.block_check(block)
+            block['check'] = check_alt_karma(block, booklet.block_check(block))
             cur['blocks'].append(block)
             cur['_sec'] = 'after-grid'
             i = nxt
             continue
-        if booklet.is_header(line):
-            cur = {'kind': 'entry', 'header': booklet.clean_name(text), 'part': part,
+        if grids is not None and letter_xs(line, title) is not None:
+            # a one-line grid inside a card (registry `card_grids`): She-Hulk's
+            # ALTER EGO. power ends on Jennifer Walters' grid
+            spec = [g for g in grids if cur and roster.norm(g['entry']) == roster.norm(cur['header'])
+                    and g['page'] == line['printed']]
+            if len(spec) != 1:
+                raise SystemExit('%s: a one-line grid in a card that card_grids does not name, %s PDF %d'
+                                 % (slug, part, line['pdf']))
+            block, nxt = line_block(lines, i, title, ranks)
+            block['label'] = spec[0]['label']
+            cur['blocks'].append(block)
+            grids.remove(spec[0])
+            i = nxt
+            continue
+        if booklet.is_header(line) or line.get('lost_header'):
+            cur = {'kind': 'entry', 'header': re.sub(r'(?<=[A-Z])- (?=[A-Z])', '-', booklet.clean_name(text)), 'part': part,
                    'pages': [line['printed']] if line['printed'] else [], 'identity': [], 'blocks': [],
                    'sections': {}, 'powers': [], 'members': [], 'prose': [], '_sec': None}
             entries.append(cur)
@@ -293,9 +379,19 @@ def cards(book, slug, part, first, last, ranks, reader):
         if sec is None and not cur['blocks'] and len(cur['identity']) < 2:
             sink = cur['identity']
         elif sec == 'powers':
-            pm = booklet.POWER_HEAD.match(text) or COLON_HEAD.match(text) or WHOLE_HEAD.match(text)
+            pm = booklet.POWER_HEAD.match(text) or COLON_HEAD.match(text) or WHOLE_HEAD.match(text) or MIXED_HEAD.match(text)
             prev = lines[i - 1]['text'].rstrip() if i else ''
-            if pm and (not cur['powers'] or prev.endswith(('.', ':', ')', '"', '\u201d', '!'))):
+            if pm and cur['powers'] and not prev.endswith(SENTENCE_END):
+                # a line between the last power's text and this head that
+                # Tesseract lost (MH3's Wizard: "speed." read as two marks)
+                lost = lost_line(lines[i - 1], line, reader)
+                if lost:
+                    cur['powers'][-1]['text'].append(lost)
+                    prev = lost
+            # a name in capitals inside the Powers: prose ("... such as
+            # ANNIHILUS and / NICHOLAS SCRATCH. These powers", MH3's Franklin
+            # Richards) is no power: a first power opens the section or a line
+            if pm and (not cur['powers'] and not cur['sections']['powers'] or prev.endswith(SENTENCE_END)):
                 cur['powers'].append({'name': booklet.power_name(pm.group(1)), 'text': []})
                 text = pm.group(2)
             sink = cur['powers'][-1]['text'] if cur['powers'] else cur['sections']['powers']

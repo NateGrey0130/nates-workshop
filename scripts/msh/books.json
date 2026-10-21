@@ -1319,6 +1319,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are display lettering that Tesseract reads in part or not at all, and the text's own cross-references (Chapter 5 by its title on printed 8, Chapter 6 by its title on printed 10) agree. Printed 1 has no banner of its own, only the title art (The Fantastic Four: Murderworld!), so Introduction is this registry's name for it. Chapter 3's banner spells its number (Chapter Three) and sits at the foot of printed 5's first column, under the art; the page holds nothing of Chapter 2, whose Karma table ends printed 4. Each of Chapters 1-6 is set as Campaign, Battle and Aftermath subsections, and Chapter 3's Battle is five numbered battles (Battle 1-5, printed 5-7); Chapter 7 has none. Every chapter ends on a Karma table (Tables 1-7). The character cards are on printed 13-16, after Chapter 7, unbannered, and on the two inside cover panels.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [
         {"part": "Adventure Book", "pages": [13, 16]}
       ],
