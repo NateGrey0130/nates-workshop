@@ -47,9 +47,11 @@ const rankWords = (v) => String(v).toLowerCase().replace(/\b[a-z]/g, (c) => c.to
 const shortOf = (books) => Object.fromEntries(books.map((b) => [b.slug, b.short]));
 // A book read from several booklets (ME1) lists each with its spans:
 // "ME1 Cosmos Cubed, Adventure pp.3-7, 11-28, Resource pp.2-16".
+// A book with cards on its cover's inside panels (MH1) names the panels, which
+// print no page: "MH1 The Breeder Bombs, Adventure pp.2-15, Inside front cover, ...".
 const pagesLine = (b, pages = b.pages) => (b.ranges && pages === b.pages
   ? `${b.title}, ${b.ranges.map((r) => `${r.part} pp.${r.pages.map(([x, y]) => `${x}-${y}`).join(', ')}`).join(', ')}`
-  : `${b.title}, ${b.part ? `${b.part} ` : ''}pp.${pages[0]}-${pages[1]}`);
+  : `${b.title}, ${b.part ? `${b.part} ` : ''}pp.${pages[0]}-${pages[1]}${b.panels ? `, ${b.panels.join(', ')}` : ''}`);
 
 // A page as a card cites it. A boxed module numbers each booklet from 1
 // (MHSP1's Adventure Book and Roster Booklet), so its rows carry the booklet
@@ -63,7 +65,7 @@ const cite = (short, part, pages) => {
 
 // An override's field, as a card names it.
 const FIELD = { health: 'Health', karma: 'Karma', F: 'Fighting', A: 'Agility', S: 'Strength', E: 'Endurance',
-  R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche',
+  R: 'Reason', I: 'Intuition', P: 'Psyche', RIP: 'Reason, Intuition and Psyche', IP: 'Intuition and Psyche',
   RI: 'Reason and Intuition', FAS: 'Fighting, Agility and Strength', FASE: 'Fighting, Agility, Strength and Endurance' };
 
 // A version's name on a card: the book's parenthetical, capitalised the one
@@ -288,10 +290,16 @@ export const SECTIONS = [
           out.push(['Health / Karma', `${b.health ?? '-'} / ${b.karma ?? '-'}`]);
           out.push(['Resources / Popularity', `${b.resources ?? '-'} / ${b.popularity ?? '-'}`]);
           if (b.rank_only) out.push(['Numbers', 'The book prints ranks only; each number is its rank\'s standard number']);
+          // a one-line grid printing no Health (MH1's Fluffy): F+A+S+E gives it
+          if (b.health_derived) out.push(['Health', 'Not printed; F+A+S+E of the ranks\' standard numbers gives it']);
           const o = b.override;
           const field = o && (FIELD[o.field] || o.field);
           const show = (x) => (typeof x === 'object' ? `${x.number} ${x.code}` : x);
-          if (o && o.verdict === 'misprint') {
+          if (o && o.verdict === 'as_printed' && o.corrected && (b.karma === null || b.karma === undefined)) {
+            // no rank printed and no Karma to count it (MH1's Lockheed, the False
+            // robots' dashes): played as the ruling on MHSP1's "?" says
+            out.push(['As printed', `${field} printed "${o.printed}"; played as ${show(o.corrected)}, and the book prints no Karma to count it`]);
+          } else if (o && o.verdict === 'misprint') {
             out.push(['Misprint', `${field} is printed ${show(o.printed)}; the book's own ranks give ${show(o.corrected)}`]);
           } else if (o && o.verdict === 'as_printed' && o.corrected) {
             // printed as no rank at all (Lockheed's "?" Reason), played as Karma counts it

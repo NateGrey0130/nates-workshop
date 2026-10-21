@@ -46,6 +46,13 @@ DASH = re.compile(r'^[-_~\u2014\u2013\ufffd]+$')
 # a code Tesseract misread, as the page images read it (survey: mh1.md, Rank
 # spellings): no rank code starts "Fo" or "tn", so these can be nothing else
 CODE_MISREADS = {'FO': 'Fb', 'TN': 'In'}
+# a run-in head: a word of capitals, then a colon on the line ("ROBOT
+# MENTALLO:", "STORM and ROGUE: Storm and"); "Powers:" and "Special:" are not
+RUN_IN_HEAD = re.compile(r"^[A-Z][A-Z'.-]+\b[^:]*:")
+
+
+def left_x(line):
+    return min(w['x'] for w in line['words'])
 
 
 def letter_row(text):
@@ -66,12 +73,20 @@ def stream(book, slug, part, first, last, split_at_rules):
     header set on two lines joined into one, and with the registry's
     drop_above applied. A panel's lines carry printed None."""
     panel = next(p for p in book['parts'] if p['name'] == part)['offset'] is None
-    orig = booklet.mend_fused
+    orig, orig_rules = booklet.mend_fused, booklet.rules
+    # a rule booklet.rules() cannot see (printed 15's is dashed: no dark run
+    # crosses 60% of the page), from the registry's `faint_rules`, read off the
+    # page image; without it Mentallo's second column is read after the
+    # Crimson Dynamo's card, and lands on it
+    faint = {}
+    for p, page, y in book.get('faint_rules', []):
+        faint.setdefault(booklet.pdf_of(offsets(book), p, page), []).append(y)
     booklet.mend_fused = lambda _book, _slug, lines: lines
+    booklet.rules = lambda b, pdf, height: sorted(orig_rules(b, pdf, height) + faint.get(pdf, []))
     try:
         lines = booklet.stream_of(offsets(book), slug, part, first, last, split_at_rules)
     finally:
-        booklet.mend_fused = orig
+        booklet.mend_fused, booklet.rules = orig, orig_rules
     cuts = {(p, page): y for p, page, y in book.get('drop_above', [])}
     out = []
     for l in lines:
@@ -234,13 +249,30 @@ def opponents(book, slug, part, page, ranks):
         block.update(booklet.secondary(' '.join(stats)))
         block['check'] = check(block)
         # the text: the Powers: or Special: line and the paragraph it opens,
-        # or the paragraph right under the grid; it ends at a paragraph break
+        # or the paragraph right under the grid; it ends at a paragraph break.
+        # The first line may sit a grid's row gap under a grid with no Health
+        # (Fluffy's, Augie Hickman's). A run-in head in capitals is the next
+        # grid's name or the adventure's ("ROBOT MENTALLO:", "STORM and
+        # ROGUE:"). A sentence left open at a column's foot goes on at the top
+        # of the next column to the first indented line (the False Magneto's).
         pitch = statistics.median(b['y0'] - a['y0'] for a, b in zip(lines, lines[1:]) if 0 < b['y0'] - a['y0'] < 60)
-        text, last = [], lines[k - 1]
-        while k < len(lines) and lines[k]['col'] == line['col'] and lines[k]['y0'] - last['y0'] < 1.3 * pitch \
-                and not letter_row(lines[k]['text']):
-            text.append(lines[k]['text'])
-            last = lines[k]
+        text, last, first_k, carry = [], lines[k - 1], k, None
+        while k < len(lines) and not letter_row(lines[k]['text']) and not RUN_IN_HEAD.match(lines[k]['text']):
+            l = lines[k]
+            where = (l['pdf'], l['band'])
+            if carry is None and l['col'] == line['col'] and where == (line['pdf'], line['band']):
+                if l['y0'] - last['y0'] >= (2 if k == first_k else 1.3) * pitch:
+                    break
+            elif carry is None and text and l['col'] == line['col'] + 1 and where == (line['pdf'], line['band']) \
+                    and not text[-1].rstrip().endswith(('.', '!', '?')):
+                carry = left_x(l)
+            elif carry is not None and l['col'] == last['col'] and where == (last['pdf'], last['band']):
+                if left_x(l) > carry + 20 or l['y0'] - last['y0'] >= 1.3 * pitch:
+                    break
+            else:
+                break
+            text.append(l['text'])
+            last = l
             k += 1
         sections, prose = {}, [desc] if desc else []
         prose += [lines[x]['text'] for x in range(j + 1, i)]
