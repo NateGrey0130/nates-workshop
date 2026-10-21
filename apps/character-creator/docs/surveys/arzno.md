@@ -1,8 +1,8 @@
 # Rifts World Book 28: Arzno - Vampire Incursion — survey
 
-**Status:** `importing` — gear, vehicles, creatures and five NPCs imported; the Black Swords and the two classes next. (2026-10-20)
+**Status:** `importing` — gear, vehicles, creatures and ten NPCs imported; the two classes next. (2026-10-20)
 
-**Rows citing this book:** gear 22, vehicles 12, notable_npcs 5, creatures 4
+**Rows citing this book:** gear 22, vehicles 12, notable_npcs 10, creatures 4
 
 Slug `arzno`. Cached 2026-10-05 from
 `Rifts- World Book 28 Arzno- Vampire Incursion.pdf`, 162 PDF pages, **scan
@@ -188,7 +188,10 @@ this book's items (the Madhaven lesson).
    148-160, counted from renders. **Done:** `~261-arzno-npcs-a.sql` holds
    the named people on 69-74, 133-137 and 145-146 (Prince Onra Misvina,
    Sgt. Samantha, Xavier Stuart, Cana the Blind, High Father Suthue) with
-   19 attacks; the Black Swords on 148-160 are left to the next PR.
+   19 attacks; `~262-arzno-black-swords.sql` holds the Black Swords on
+   148-160 (Sir Jude, the knight of 152 under his printed title Sir Lunais
+   the Brute, Sir Trey Risharde, Sir John of Conrad, Lady Night Runner)
+   with 23 attacks. Step 4 is done.
 5. **Classes** — the Thumper and the Waste Monkey (D19, below).
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
@@ -234,12 +237,10 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/arzno-gear-vehicles` | ruling D19 recorded; `~244-arzno-gear.sql` (22 gear rows, printed 75-90) and `~245-arzno-vehicles.sql` (5 Imitator power armors and 7 vehicles, printed 91-109, with their locations and weapons), checked by `book-reconcile` against renders, applied `--remote` before the PR. |
 | 2026-10-20 | `pal/data/arzno-creatures` | `~260-arzno-creatures.sql` (4 creature rows, printed 22-31: Waste Ghost, Screamer, Thumper and Waste Monkey, the last two playable, with 8 attacks) through `scripts/bestiary-sql.mjs`, every figure checked against renders, applied `--remote` before the PR. |
 | 2026-10-20 | `pal/data/arzno-npcs-a` | `~261-arzno-npcs-a.sql` (5 notable NPC rows with 19 attacks: Prince Onra Misvina 69-70, Sgt. Samantha 73-74, Xavier Stuart 134-136, Cana the Blind 136-137, High Father Suthue 145-146) through `scripts/bestiary-sql.mjs`, every figure checked against renders, equipment named as the Book 28 gear rows are. Left: Psythe, Lt. Fidel and Gerra No'ta (71-73) under D22, pending Nate's word; the typical A.M.C. soldier block (69-71) under D22; the secondary and wild vampire blocks (137-139) under D19; Carlos Vanderberg (no block) under D21. Applied `--remote` before the PR. |
+| 2026-10-20 | `pal/data/arzno-black-swords` | `~262-arzno-black-swords.sql` (5 notable NPC rows with 23 attacks: Sir Jude 148-151, Sir Lunais the Brute 151-153 with `real_name` NULL under D22, Sir Trey Risharde 153-156, Sir John of Conrad 156-158, Lady Night Runner 158-160) through `scripts/bestiary-sql.mjs`, every figure read off renders and cross-checked against the cache. Equipment names the catalog's TW Stake Driver and TW Wood Rail Gun (both Trey's); every other item keeps its printed name. Lunais's restrained punch refers to a damage bonus the book never prints, recorded in his `bonuses_note`; Trey's description puts his augmented arm on the right and his bionics on the left, so the row names no side. Left: printed 147-160 has no typical Black Sword block; Sir Edward, Sir Donavan Leona, Sir Pedro, Sir Antonio, Sir Bending River, Lady Beth, Burkha the Magnificent and Lord Coake are named with no block, under D21. Applied `--remote` before the PR. |
 
 ### What remains
 
-Gear, vehicles, creatures and the five Mercenary Corps and Tombstone people
-are in. Next, each in its own PR and session: the five Black Swords (row
-7c of the plan, through `scripts/bestiary-sql.mjs`, equipment mapped to
-the gear slugs), then the
-Thumper and Waste Monkey classes, then `drift-check --remote` and removing
-the book tree.
+Gear, vehicles, creatures and all ten notable NPCs are in. Left: the
+Thumper and Waste Monkey classes, then the book's close
+(`drift-check --remote` and removing the book tree).
