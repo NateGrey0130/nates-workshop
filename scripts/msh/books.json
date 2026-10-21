@@ -54,6 +54,8 @@
     "  teams (cover-panels) {team: [names]}: a character named there is that team's; every other files under the book's title",
     "  faint_rules     a cover-panels book: [part, printed page, y in TSV pixels]: a rule between two cards that booklet.rules() cannot see (a dashed one)",
     "  drop_above      a cover-panels book: [part, printed page, y in TSV pixels]: text above y on that page is not a card's (the Epilog over Magneto's)",
+    "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
+    "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
   ],
   "books": {
@@ -1522,6 +1524,7 @@
         ["The Heliopolitans", "Isis", 16, "Resource Book"]
       ],
       "contents_note": "Both booklets print a Contents on their printed page 1 (PDF 3 and PDF 35); each is stored in sections with its booklet as the fourth field, as printed, inverted names (Chimaera, The) included. Every entry was read on its page image 2026-10-21 and agrees: each chapter banner, the four Resource Book section banners and each character's header. The Adventure Book's Contents prints Pregenerated Heroes: as a heading with no page of its own, so it has no null-subsection line here. It also names the Map of the Nine Worlds (inside front cover, PDF 2), the Pregenerated Heroes Summary (inside back cover, PDF 51) and a Map of Asgard and a Map of Olympus, which are the two halves of the one map sheet scanned (PDF 53).",
+      "layout": "grid-booklets",
       "columns": 3,
       "character_ranges": [
         {"part": "Adventure Book", "pages": [4, 7]},
@@ -1533,6 +1536,20 @@
         {"part": "Adventure Book", "page": 21, "names": ["Modgud"]}
       ],
       "opponents_note": "Measured 2026-10-21 on the page images. Unlike ME1's, these are one-line grids (the seven letters, a row of numbers, a row of codes, then Health and Karma on lines of their own) with NO name line above them: each is introduced by the chapter's prose (Their statistics are listed below, Her statistics). Titans and Zeus at printed 18 are the two Titans tormenting Zeus in Hades and Zeus stripped of his powers, each a second block beside the Resource Book's own (printed 8 and 9); Actus is Ac and Tus added together; Charon and Modgud are statted only here.",
+      "grid_headers": [
+        {"part": "Resource Book", "page": 4, "health": 1550, "name": "GAL"},
+        {"part": "Resource Book", "page": 10, "health": 140, "name": "BALDER"},
+        {"part": "Resource Book", "page": 15, "health": 580, "name": "YMIR"}
+      ],
+      "grid_headers_note": "Read off the page images 2026-10-21: each header is printed plainly right above its grid, with no identity line, and Tesseract read none of the three (in neither the TSV nor the text).",
+      "one_line_grids": [
+        {"part": "Adventure Book", "page": 4, "entry": "Beta Ray Bill", "label": "Humanoid form"},
+        {"part": "Adventure Book", "page": 16, "name": "Actus"},
+        {"part": "Adventure Book", "page": 18, "name": "Titans"},
+        {"part": "Adventure Book", "page": 18, "name": "Zeus"},
+        {"part": "Adventure Book", "page": 18, "name": "Charon"},
+        {"part": "Adventure Book", "page": 21, "name": "Modgud"}
+      ],
       "roster_sections": ["Pregenerated Heroes", "The Entities", "The Olympians", "The Asgardians", "The Heliopolitans"],
       "reference_summary": {
         "pdf": 51,
