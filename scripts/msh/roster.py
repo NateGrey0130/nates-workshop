@@ -414,6 +414,12 @@ def parse(slug):
         import booklet
         stream, entries = booklet.parse(book, slug)
         return book, stream, entries
+    if book.get('layout') == 'roster-book':
+        # MHSP1's kind of module set another way (MHSP2): scripts/msh/rosterbook.py
+        # reads it with booklet.py's pieces; nothing below runs for it
+        import rosterbook
+        stream, entries = rosterbook.parse(book, slug)
+        return book, stream, entries
     if book.get('layout') == 'grid-booklets':
         # MA1's grids in a boxed module's booklets (ME1): scripts/msh/gridbooks.py
         # builds the streams and runs read_entries() below over each
@@ -725,11 +731,12 @@ def main():
     missing = index_misses(book, entries)
     first, last = book.get('character_pages', [-10 ** 6, 10 ** 6])
     in_range = [n for n, pages in book.get('index', []) if any(first <= p <= last for p in pages)]
-    if book.get('layout') == 'roster-booklet':
+    if book.get('layout') in ('roster-booklet', 'roster-book'):
         # no printed index: the Reference Summary chart is the checklist
-        import booklet
+        import booklet, rosterbook
+        cover = rosterbook.coverage if book.get('layout') == 'roster-book' else booklet.coverage
         path = os.path.join(ROOT, 'scripts', 'msh', '%s-overrides.json' % a.slug)
-        lines, missed = booklet.coverage(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
+        lines, missed = cover(book, entries, json.load(io.open(path, encoding='utf-8'))['overrides'] if os.path.exists(path) else [])
         print('\n'.join(lines))
         missing = missing or (['the Reference Summary'] if missed else [])
     elif book.get('layout') == 'grid-booklets':
