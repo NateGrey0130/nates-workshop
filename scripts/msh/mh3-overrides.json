@@ -1,0 +1,23 @@
+{
+  "about": [
+    "Hand decisions about MH3 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header, label}: a card or one-line grid; page is the printed Adventure page, header the start of the entry's header, label the block's own label where it has one",
+    "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 15, "header": "Super-Adaptoid"}, "verdict": "as_printed", "field": "health",
+     "printed": 150, "checked": "2026-10-21",
+     "note": "Printed 15, the card: every rank Typical, so F+A+S+E is 6 + 6 + 6 + 6 = 24, and the card prints Health 150 and Karma varies. The android has a Health of 150 whatever it has absorbed (the form on printed 9 says so). Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 24)."},
+    {"match": {"page": 9, "header": "Super-Adaptoid", "label": "Current Form"}, "verdict": "as_printed", "field": "health",
+     "printed": 150, "checked": "2026-10-21",
+     "note": "Printed 9, Chapter 4: the form it has absorbed, In Gd Mn Mn, is 40 + 10 + 75 + 75 = 200, and the page prints Health 150 with the reason beside it. No Karma is printed. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 200)."},
+    {"match": {"page": 3, "header": "Doombot"}, "verdict": "as_printed", "field": "karma",
+     "printed": 0, "checked": "2026-10-21",
+     "note": "Printed 3, Chapter 1: Karma 0 against R Gd 10 + I Pr 4 + P Pr 4 = 18; a robot, as MH2's machines. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 18). Health 120 = 20 + 20 + 40 + 40."},
+    {"match": {"page": 4, "header": "Water Tower Robots"}, "verdict": "as_printed", "field": "karma",
+     "printed": 0, "checked": "2026-10-21",
+     "note": "Printed 4, Chapter 2: Karma 0 against R Pr 4 + I Gd 10 + P Pr 4 = 18 (the page image prints Pr Gd Pr; the survey's first figure, 16, was wrong). Machines, as the Doombot. Nate, 2026-10-21 (survey mh3.md decision 7): kept as printed (not taken: derive 18). Health 180 = 40 + 10 + 30 + 100."}
+  ]
+}
