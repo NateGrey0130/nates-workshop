@@ -1077,7 +1077,64 @@
       "source_pdf": "TSR6851 MH-1 The Breeder Bombs Reduced.pdf",
       "source_pdf_dir": "C:\\Users\\natha\\Projects\\workshop\\books",
       "sha256": "a1265df1b30e4c92f1393129fbc28229a230df189b88096a069dbdd9401ac3a3",
-      "pdf_pages": 22
+      "pdf_pages": 22,
+      "parts": [
+        {"name": "Cover", "cite": null, "pdf": [1, 1], "offset": null},
+        {"name": "Inside front cover", "cite": "Inside front cover", "pdf": [2, 2], "offset": null},
+        {"name": "Adventure Book", "cite": "Adventure", "pdf": [3, 18], "offset": 2},
+        {"name": "Inside back cover", "cite": "Inside back cover", "pdf": [19, 19], "offset": null},
+        {"name": "Back cover", "cite": null, "pdf": [20, 20], "offset": null},
+        {"name": "Map", "cite": null, "pdf": [21, 22], "offset": null}
+      ],
+      "offset_evidence": "2026-10-21, scripts/msh/survey.py tsv_folio: 7 pages vote printed = PDF - 2 (PDF 6 and 12-17); the other two votes are numbers in the text, not folios (a Karma award at the foot of a column on PDF 8, the publisher's box number on the back cover, PDF 20). Folios 2-16 were also read on the page images of PDF 4-18; PDF 3 (printed 1) prints none. PDF 2 and 19 are the two inside panels of the loose folding cover, which carry the X-Men's character cards and no folio.",
+      "stat_labels": ["Health", "Karma", "Resources", "Popularity"],
+      "section_labels": ["Powers", "Talents", "Background", "Special"],
+      "rank_aliases": {
+        "FEEBLE": "feeble",
+        "POOR": "poor",
+        "TYPICAL": "typical",
+        "GOOD": "good",
+        "EXCELLENT": "excellent",
+        "REMARKABLE": "remarkable",
+        "INCREDIBLE": "incredible",
+        "AMAZING": "amazing",
+        "MONSTROUS": "monstrous",
+        "UNEARTHLY": "unearthly",
+        "Fb": "feeble",
+        "Pr": "poor",
+        "Ty": "typical",
+        "Gd": "good",
+        "Ex": "excellent",
+        "Rm": "remarkable",
+        "In": "incredible",
+        "Am": "amazing",
+        "Mn": "monstrous"
+      },
+      "sections": [
+        ["Introduction", null, 1, "Adventure Book"],
+        ["Chapter One: Be It Ever So Deadly...", null, 2, "Adventure Book"],
+        ["Chapter Two: Whatever Happened to Mentallo?", null, 4, "Adventure Book"],
+        ["Chapter Three: Interlude", null, 6, "Adventure Book"],
+        ["Chapter Four: Sentinels!", null, 7, "Adventure Book"],
+        ["Chapter Five: Back in the USSR", null, 9, "Adventure Book"],
+        ["Chapter Six: Land Down Under", null, 10, "Adventure Book"],
+        ["Chapter Seven: Magneto's Defeat", null, 11, "Adventure Book"],
+        ["Epilog", null, 13, "Adventure Book"],
+        ["Map C: Magneto's Lair", null, 16, "Adventure Book"]
+      ],
+      "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are outline display lettering that Tesseract does not read. Printed 1 has no banner, only the title art (The Uncanny X-Men: Breeder Bombs!), so Introduction is this registry's name for it. Each chapter is set as Campaign, Battle and Aftermath subsections (Chapter Seven has two Campaigns and two Battles). The character cards follow the Epilog on printed 13-15, unbannered, and are on the two inside cover panels.",
+      "columns": 3,
+      "character_ranges": [
+        {"part": "Adventure Book", "pages": [13, 15]}
+      ],
+      "opponents": [
+        {"part": "Adventure Book", "page": 2, "names": ["Fluffy"]},
+        {"part": "Adventure Book", "page": 3, "names": ["Wolverine", "Fixer"]},
+        {"part": "Adventure Book", "page": 5, "names": ["Robot Wolverine", "Robot Mentallo"]},
+        {"part": "Adventure Book", "page": 7, "names": ["Augie Hickman"]},
+        {"part": "Adventure Book", "page": 11, "names": ["Giant", "Flyer"]},
+        {"part": "Adventure Book", "page": 12, "names": ["False Blob", "False Scarlet Witch", "False Quicksilver", "False Toad", "False Magneto"]}
+      ]
     },
     "mh2": {
       "title": "MH2 Time Trap",
