@@ -1,8 +1,8 @@
 # Rifts World Book 28: Arzno - Vampire Incursion — survey
 
-**Status:** `importing` — gear, vehicles and creatures imported; NPCs and the two classes next. (2026-10-20)
+**Status:** `importing` — gear, vehicles, creatures and five NPCs imported; the Black Swords and the two classes next. (2026-10-20)
 
-**Rows citing this book:** gear 22, vehicles 12, creatures 4
+**Rows citing this book:** gear 22, vehicles 12, notable_npcs 5, creatures 4
 
 Slug `arzno`. Cached 2026-10-05 from
 `Rifts- World Book 28 Arzno- Vampire Incursion.pdf`, 162 PDF pages, **scan
@@ -164,6 +164,10 @@ held. The Black Sword whose real name is withheld (152) and the other
 Mercenary Corps blocks on 71-73 were not diffed by name.
 
 Names are from the OCR and are taken from a render before a row is written.
+Read off renders on 2026-10-20, the stat blocks sit at Onra 69-70, Samantha
+73-74, Xavier 135-136 (his background runs from 134), Cana 136-137 and
+Suthue 145-146 (headed *Lord Suthue Stats*); the Quick Find's 13 holds no
+stat block, so Carlos Vanderberg gets no row under D21.
 
 ## Extraction plan
 
@@ -181,7 +185,10 @@ this book's items (the Madhaven lesson).
    heading, with Waste Banshee in its description), the Thumper (27-29) and
    the Waste Monkey (29-31), the last two `playable` 1, with 8 attacks.
 4. **Notable NPCs** — every stat block on printed 69-73, 133-139, 145 and
-   148-160, counted from renders.
+   148-160, counted from renders. **Done:** `~261-arzno-npcs-a.sql` holds
+   the named people on 69-74, 133-137 and 145-146 (Prince Onra Misvina,
+   Sgt. Samantha, Xavier Stuart, Cana the Blind, High Father Suthue) with
+   19 attacks; the Black Swords on 148-160 are left to the next PR.
 5. **Classes** — the Thumper and the Waste Monkey (D19, below).
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
@@ -226,12 +233,13 @@ What is deliberately left, with the reason for each:
 | 2026-10-05 | `pal/data/arzno-survey` | cache built (162 pp, OCR), `arzno` registered in `books.json`, this survey written, offset +1 verified. No data. |
 | 2026-10-20 | `pal/data/arzno-gear-vehicles` | ruling D19 recorded; `~244-arzno-gear.sql` (22 gear rows, printed 75-90) and `~245-arzno-vehicles.sql` (5 Imitator power armors and 7 vehicles, printed 91-109, with their locations and weapons), checked by `book-reconcile` against renders, applied `--remote` before the PR. |
 | 2026-10-20 | `pal/data/arzno-creatures` | `~260-arzno-creatures.sql` (4 creature rows, printed 22-31: Waste Ghost, Screamer, Thumper and Waste Monkey, the last two playable, with 8 attacks) through `scripts/bestiary-sql.mjs`, every figure checked against renders, applied `--remote` before the PR. |
+| 2026-10-20 | `pal/data/arzno-npcs-a` | `~261-arzno-npcs-a.sql` (5 notable NPC rows with 19 attacks: Prince Onra Misvina 69-70, Sgt. Samantha 73-74, Xavier Stuart 134-136, Cana the Blind 136-137, High Father Suthue 145-146) through `scripts/bestiary-sql.mjs`, every figure checked against renders, equipment named as the Book 28 gear rows are. Left: Psythe, Lt. Fidel and Gerra No'ta (71-73) under D22, pending Nate's word; the typical A.M.C. soldier block (69-71) under D22; the secondary and wild vampire blocks (137-139) under D19; Carlos Vanderberg (no block) under D21. Applied `--remote` before the PR. |
 
 ### What remains
 
-Gear, vehicles and creatures are in. Next, each in its own PR and session:
-the NPCs, named people only (rows 7b and 7c of the plan: the Mercenary
-Corps and city people, then the five Black Swords, through
-`scripts/bestiary-sql.mjs`, equipment mapped to the gear slugs), then the
+Gear, vehicles, creatures and the five Mercenary Corps and Tombstone people
+are in. Next, each in its own PR and session: the five Black Swords (row
+7c of the plan, through `scripts/bestiary-sql.mjs`, equipment mapped to
+the gear slugs), then the
 Thumper and Waste Monkey classes, then `drift-check --remote` and removing
 the book tree.
