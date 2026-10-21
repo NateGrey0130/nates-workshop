@@ -3,9 +3,13 @@
 Marvel Super Heroes adventure module, Bruce Nesmith, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh2`. Measured 2026-10-21.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-the survey and the parser are in, the data is not (production `DB_MARVEL`
-read back 2026-10-21: no `mh2` rows).
+**Rows citing this book:** 91 `msh_book_text` rows over 20 character entries
+in production (`DB_MARVEL`, read back 2026-10-21).
+
+Committed: 20 characters in `apps/marvel-heroes/data/npcs.json` (12 full
+blocks, 8 named one-line grids, and the Mimic's absorbed form as a second
+block on his card), with 54 powers, 21 of them linked to the Ultimate Powers
+Book, read by the `cover-panels` layout. No items and no adventure.
 
 This is the seventh Marvel book, and the second of the five registered
 together by the kickoff PR (#1917). It goes through `scripts/msh/` only. **It
@@ -337,12 +341,20 @@ the four Karma 0s as printed (decision 3), each read again on the page image.
 MH1's outputs, and every other book's, were built with `origin/main`'s
 scripts and the branch's and compared byte for byte.
 
-## The next PR
+## The data (done 2026-10-21)
 
-**Data:** `npcs.py mh2`, Kang's Minions' derived Karma (decision 5), the rows
-of `msh_book_text`, this file's Rows line and `node scripts/sourcebooks.mjs`.
-`npcs.py` does not yet write the text of a form grid (the Mimic's absorbed
-form carries it in its block's `text` in `roster.json`).
+`python scripts/msh/npcs.py mh2` writes the 20 characters and 91 rows of
+`msh_book_text`, applied to production before the merge. Two things were
+taught to `npcs.py`, each behind a registry field only this book sets:
+`no_karma` gives Kang's Minions R+I+P as their Karma (Pr Fe Pr = 10,
+decision 5), flagged `karma_derived` so the Codex says it was not printed;
+and a card with a `form_grids` block is one being whose blocks are forms, so
+the GM adds the Mimic as one NPC with two forms (Mimic, Absorbed Form), and
+the form's eight run-in powers go to D1 as the card's powers 2-9, each named
+for the form, on printed 3. The form's Powers: line only lists those names,
+so it is not a row of its own. Every earlier book's `npcs.json` rows and
+`book-text.sql` were built with `origin/main`'s scripts and the branch's and
+compared byte for byte: identical.
 
 ## How to reproduce
 

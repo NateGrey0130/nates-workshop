@@ -51,6 +51,7 @@
     "  cards           a cover-panels book: [part, printed page or null, name] for every full block, read off the page images; with opponents, the checklist",
     "  not_characters  a cover-panels book: card headers that are not characters (a vehicle), dropped",
     "  no_health       a cover-panels book: opponents whose one-line grid prints no Health; scripts/msh/npcs.py gives each F+A+S+E, flagged health_derived",
+    "  no_karma        a cover-panels book: opponents whose one-line grid prints no Karma and a ruling derives it; scripts/msh/npcs.py gives each R+I+P, flagged karma_derived (MH2's Kang's Minions). Absent, an unprinted Karma stays null",
     "  teams (cover-panels) {team: [names]}: a character named there is that team's; every other files under the book's title",
     "  faint_rules     a cover-panels book: [part, printed page, y in TSV pixels]: a rule between two cards that booklet.rules() cannot see (a dashed one)",
     "  drop_above      a cover-panels book: [part, printed page, y in TSV pixels]: text above y on that page is not a card's (the Epilog over Magneto's)",
@@ -1253,6 +1254,8 @@
       "opponent_names": "title",
       "form_grids": [{"part": "Adventure Book", "page": 3, "entry": "Mimic", "label": "Absorbed Form"}],
       "form_grids_note": "Printed 3 (PDF 5), Chapter 1: once the Mimic absorbs the Avengers' powers his abilities and powers become a one-line grid with no name above it. Nate, 2026-10-21 (survey mh2.md decision 2): a second block on the Mimic's card, as Colossus's armour is on his in MH1 (not taken: an entry of its own). The grid and the line above it were read on the page image by the survey, 2026-10-21.",
+      "no_karma": ["Kang's Minions"],
+      "no_karma_note": "Printed 13 (PDF 15), Chapter 6: Kang's Minions' grid prints Health 32 and no Karma. Nate, 2026-10-21 (survey mh2.md decision 5): Karma derived as R+I+P, Pr Fe Pr = 4 + 2 + 4 = 10 (not taken: unset, the survey's recommendation).",
       "opponents": [
         {"part": "Adventure Book", "page": 5, "names": ["Aliens (humanoid)"]},
         {"part": "Adventure Book", "page": 7, "names": ["Skrulls"]},

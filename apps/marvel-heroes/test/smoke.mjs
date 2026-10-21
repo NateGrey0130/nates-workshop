@@ -925,6 +925,33 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'colossus-mh1' }).snapshot));
   }
 
+  // MH2 is laid out as MH1 is (scripts/msh/coverpanels.py, mh2-overrides.json),
+  // with Nate's six rulings of 2026-10-21 (survey mh2.md decisions 1-6).
+  if (data.npcs.characters.some((c) => c.book === 'mh2')) {
+    const mh2 = data.npcs.characters.filter((c) => c.book === 'mh2');
+    const avengers = mh2.filter((c) => c.team === 'Avengers').map((c) => c.name).sort().join();
+    check('MH2: 20 characters, the six on the cover panels filed as Avengers and the rest, Skrulls included, under the book\'s title',
+      mh2.length === 20 && avengers === 'Captain America,Captain Marvel,Scarlet Witch,Starfox,Vision,Wasp'
+      && mh2.every((c) => c.team === 'Avengers' || c.team === 'MH2 Time Trap'), `${mh2.length} ${avengers}`);
+    const blk = (id) => mh2.find((c) => c.id === id)?.versions[0].blocks[0];
+    const minions = bookNpc({ character: 'kang-s-minions-mh2' }).snapshot;
+    check('MH2: Kang\'s Minions print no Karma, so theirs is derived as R+I+P (10) and flagged so, the only one in any book',
+      minions?.karma === 10 && blk('kang-s-minions-mh2')?.karma_derived === true
+      && data.npcs.characters.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.karma_derived))).length === 1,
+      `${minions?.karma} ${blk('kang-s-minions-mh2')?.karma_derived}`);
+    const mimic = bookNpc({ character: 'mimic-mh2' }).snapshot;
+    check('MH2: the Mimic\'s absorbed form is a second block on his card, so he is one NPC with two forms (24 and 170)',
+      mimic?.forms?.map((f) => `${f.name} ${f.health}`).join() === 'Mimic 24,Absorbed Form 170'
+      && choices.filter((c) => c.character === 'mimic-mh2').length === 1, JSON.stringify(mimic?.forms?.map((f) => [f.name, f.health])));
+    const spiders = blk('energy-spiders-mh2');
+    check('MH2: the Energy Spiders\' Health, printed 46, plays as their ranks\' 44 and keeps the printed 46',
+      spiders?.health === '46' && spiders.override?.verdict === 'misprint' && spiders.override.corrected === 44
+      && bookNpc({ character: 'energy-spiders-mh2' }).snapshot?.health === 44, JSON.stringify(spiders?.override));
+    const zero = ['spirits-mh2', 'omegatrons-mh2', 'centipedes-mh2', 'energy-spiders-mh2'];
+    check('MH2: the four machine and spirit grids keep their printed Karma 0',
+      zero.every((id) => bookNpc({ character: id }).snapshot?.karma === 0), zero.map((id) => bookNpc({ character: id }).snapshot?.karma).join());
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
@@ -1582,6 +1609,11 @@ section('The codex: every section loads, searches, filters and keeps its address
     check('Notable NPCs: every card asks for its own entries\' text, one per version that has any and per cross-reference',
       npcs.rows.every((r) => npcs.bookText(r).length === r.versions.filter((v) => v.text.length).length + r.appearances.length
         && npcs.bookText(r).every((b) => b.book === r.book)));
+    const minions = npcs.byKey.get('kang-s-minions-mh2');
+    if (minions) {
+      check('Notable NPCs: a derived Karma says it was not printed (MH2\'s Kang\'s Minions)',
+        npcs.stats(minions).some(([k, v]) => k === 'Karma' && /^Not printed; R\+I\+P/.test(v)), JSON.stringify(npcs.stats(minions)));
+    }
   }
 
   // A new section is one entry: a descriptor added to the list is a section,

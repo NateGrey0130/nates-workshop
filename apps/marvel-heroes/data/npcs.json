@@ -35,6 +35,11 @@
    "pages": "Adventure 2-15; Inside front cover; Inside back cover"
   },
   {
+   "book": "MH2 Time Trap",
+   "code": "TSR6853",
+   "pages": "Adventure 5-16; Inside front cover; Inside back cover"
+  },
+  {
    "book": "MHSP2 Secret Wars II",
    "code": "TSR6869",
    "pages": "2-32"
@@ -117,6 +122,20 @@
    ]
   },
   {
+   "slug": "mh2",
+   "short": "MH2",
+   "title": "MH2 Time Trap",
+   "pages": [
+    5,
+    16
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
+  },
+  {
    "slug": "mhsp2",
    "short": "MHSP2",
    "title": "MHSP2 Secret Wars II",
@@ -169,8 +188,9 @@
   "Wundagore Mountain",
   "Xandar",
   "MH1 The Breeder Bombs",
-  "MHSP2 Secret Wars II",
   "Avengers",
+  "MH2 Time Trap",
+  "MHSP2 Secret Wars II",
   "West Coast Avengers",
   "Power Pack",
   "Defenders",
@@ -37404,6 +37424,1787 @@
    ],
    "appearances": [],
    "book": "mh1"
+  },
+  {
+   "id": "captain-america-mh2",
+   "name": "Captain America",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-america-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Steve Rogers, freelance artist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": "POOR",
+       "popularity": "95"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Unique Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "starfox-mh2",
+   "name": "Starfox",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "starfox-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Eros, adventurer/Eternal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "56",
+       "resources": "GOOD",
+       "popularity": "75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mental Tickle"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "wasp-mh2",
+   "name": "Wasp",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "wasp-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Janet Van Dyne, heiress"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "50",
+       "resources": "EXCELLENT",
+       "popularity": "65"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Wings"
+      },
+      {
+       "name": "Distance Weapon"
+      },
+      {
+       "name": "Animal Communication And Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "aliens-mh2",
+   "name": "Aliens",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "aliens-humanoid-mh2",
+     "label": "humanoid",
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Rifles"
+      },
+      {
+       "name": "Jet Packs"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "skrulls-mh2",
+   "name": "Skrulls",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "skrulls-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "20",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Laser Pistols"
+      },
+      {
+       "name": "Reflective Armor"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "spirits-mh2",
+   "name": "Spirits",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "spirits-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 0
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ghostly Touch"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "centipedes-mh2",
+   "name": "Centipedes",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "centipedes-robots-mh2",
+     "label": "robots",
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 0
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Eye Beams"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "champion-mh2",
+   "name": "Champion",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "champion-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "80",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Temporal Fugue"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "energy-spiders-mh2",
+   "name": "Energy Spiders",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "energy-spiders-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "health",
+        "printed": 46,
+        "corrected": 44,
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "karma",
+          "printed": 0
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Bite"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "omegatrons-mh2",
+   "name": "Omegatrons",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "omegatrons-robots-mh2",
+     "label": "robots",
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "155",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 0
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "kang-s-minions-mh2",
+   "name": "Kang's Minions",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "kang-s-minions-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "10",
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "drax-the-destroyer-mh2",
+   "name": "Drax the Destroyer",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "drax-the-destroyer-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "(formerly Arthur Douglas), agent of Chronos"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "180",
+       "karma": "50",
+       "resources": "FEEBLE",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Beams"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "kang-mh2",
+   "name": "Kang",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "kang-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "(real name unknown), conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "86",
+       "karma": "90",
+       "resources": "MONSTROUS",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Gauntlets"
+      },
+      {
+       "name": "Time Ship"
+      },
+      {
+       "name": "Other Devices"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "mimic-mh2",
+   "name": "Mimic",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "mimic-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Calvin Rankin, student (deceased)"
+     ],
+     "blocks": [
+      {
+       "label": "Mimic",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "24",
+       "karma": "18",
+       "resources": "POOR",
+       "popularity": "15"
+      },
+      {
+       "label": "Absorbed Form",
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "170",
+       "karma": "90",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mimicry"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "dragon-man-mh2",
+   "name": "Dragon Man",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "dragon-man-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "artificially created being"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "145",
+       "karma": "8",
+       "resources": "none",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Breath Distance Weapon"
+      },
+      {
+       "name": "Sonic Weakness"
+      },
+      {
+       "name": "Tail"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "grey-gargoyle-mh2",
+   "name": "Grey Gargoyle",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "grey-gargoyle-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Paul Pierre Duval, criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty",
+         [
+          10,
+          "Gd"
+         ]
+        ],
+        [
+         "A",
+         6,
+         "Ty",
+         [
+          20,
+          "Ex"
+         ]
+        ],
+        [
+         "S",
+         6,
+         "Ty",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "E",
+         6,
+         "Ty",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24 [110]",
+       "karma": "36",
+       "resources": "GOOD",
+       "popularity": "50 [10]"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Paralyzing Touch"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "super-skrull-mh2",
+   "name": "Super-Skrull",
+   "team": "MH2 Time Trap",
+   "versions": [
+    {
+     "id": "super-skrull-mh2",
+     "label": null,
+     "team": "MH2 Time Trap",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Skrull Warrior"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "150",
+       "karma": "22",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Generate And Control Fire"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Force Fields"
+      },
+      {
+       "name": "Stretching"
+      },
+      {
+       "name": "Cosmic Power"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "captain-marvel-mh2",
+   "name": "Captain Marvel",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-marvel-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Monica Rambeau, adventurer."
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "22",
+       "resources": "EXCELLENT",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Transformation",
+       "upb": "S8"
+      },
+      {
+       "name": "Energy Bolts"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "scarlet-witch-mh2",
+   "name": "Scarlet Witch",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "scarlet-witch-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Wanda Maximoff, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "60",
+       "resources": "POOR",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Probability Field Alteration"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
+  },
+  {
+   "id": "vision-mh2",
+   "name": "Vision",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "vision-mh2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Vision, Adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "56",
+       "resources": "FEEBLE",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Density Control"
+      },
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Fire Missile Weapon"
+      },
+      {
+       "name": "Density Attack"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh2"
   },
   {
    "id": "the-beyonder-mhsp2",

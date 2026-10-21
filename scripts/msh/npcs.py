@@ -291,7 +291,11 @@ def main(slug_arg):
     # which prints no page, cites the panel; a value the page does not print is
     # null; a one-line grid printing no Health (`no_health`) is given F+A+S+E,
     # flagged `health_derived`; and a one-line grid's Special: line is a text
-    # part of its own.
+    # part of its own. MH2 (mh2.md, Nate's rulings 2026-10-21) adds two: a
+    # grid printing no Karma that a ruling derives (`no_karma`) is given
+    # R+I+P, flagged `karma_derived`; and a card with a form grid
+    # (`form_grids`) is one being whose blocks are forms, the form's run-in
+    # powers going to D1 as the card's.
     #
     # A roster-book book (MHSP2, scripts/msh/rosterbook.py) is read as MHSP1
     # is, with four differences: its entries carry the team whose banner they
@@ -343,6 +347,7 @@ def main(slug_arg):
         return name
 
     no_health = {norm(n) for n in book.get('no_health', [])} if panels else set()
+    no_karma = {norm(n) for n in book.get('no_karma', [])} if panels else set()
 
     def team_of_panel_card(e):
         return next((t for t, names in book['teams'].items() if norm(display(e['header'])) in {norm(n) for n in names}),
@@ -375,6 +380,11 @@ def main(slug_arg):
             # MA4's The Thing prints his human form as a second grid: the
             # entry's blocks are forms of one being, the first named for him
             forms = forms or (coded and len(e['blocks']) > 1 and any('form' in (b['label'] or '').lower() for b in e['blocks']))
+            # a cover-panels card with a form grid (registry form_grids, MH2's
+            # Mimic once he has copied the Avengers' powers): one being, so its
+            # blocks are forms and the first is named for him
+            form_grid = panels and any(b.get('text') for b in e['blocks'])
+            forms = forms or form_grid
             blocks = []
             for n, b in enumerate(e['blocks']):
                 label = b['label']
@@ -419,6 +429,11 @@ def main(slug_arg):
                     # standard numbers give it, as they give every number here
                     blocks[-1]['health'] = str(sum(a[1] for a in abilities[:4]))
                     blocks[-1]['health_derived'] = True
+                if panels and b['karma'] is None and b.get('kind') == 'line' and norm(display(e['header'])) in no_karma:
+                    # printed with no Karma, and a ruling derives it (MH2's
+                    # Kang's Minions, survey decision 5): R+I+P of the ranks
+                    blocks[-1]['karma'] = str(sum(a[1] for a in abilities[4:]))
+                    blocks[-1]['karma_derived'] = True
             pw = []
             # a Summary-only character has no page; its running note has its own
             page0 = e['pages'][0] if e['pages'] else None
@@ -438,6 +453,21 @@ def main(slug_arg):
                          e['sections'].get(part, ''))
             if e['sections'].get('powers'):
                 text_row(eslug, 'powers-intro', None, None, page0, e['sections']['powers'])
+            # A form grid's own text (coverpanels.py keeps it on the block): its
+            # run-in powers, numbered on after the card's and named for the
+            # form, on the grid's page. Its Powers: line only lists those
+            # names, so it is not a row. Any other text would have no key of
+            # its own here, so the build stops on it rather than drop it.
+            n = len(e['powers'])
+            for b in (e['blocks'] if form_grid else []):
+                t = b.get('text')
+                if not t:
+                    continue
+                if t.get('prose', '').strip() or any(v.strip() for k, v in t['sections'].items() if k != 'powers'):
+                    raise SystemExit('%s: the form grid %s of %s has text npcs.py has no part for' % (slug_arg, b['label'], e['header']))
+                for p in t['powers']:
+                    n += 1
+                    text_row(eslug, 'power', n, '%s (%s)' % (p['name'], b['label']), b['page'], p['text'])
             # A header's identity is its name and status lines: one or two short
             # lines. Three is the parser's cap, reached when a team's opening
             # paragraph follows its header ("The Gladiators was an organization
