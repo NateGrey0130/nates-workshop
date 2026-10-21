@@ -65,13 +65,18 @@ function init(codex) {
 
   const statBlock = (s, r) => {
     const rows = (s.stats ? s.stats(r) : []).filter((x) => x && x[1] !== null && x[1] !== undefined && x[1] !== '');
-    return rows.length ? `<dl class="codex-stats">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : '';
+    // a value that is a list (a character's abilities) is one line each
+    const dd = (v) => (Array.isArray(v) ? v.map((x) => `<span class="codex-line">${esc(x)}</span>`).join('') : esc(v));
+    return rows.length ? `<dl class="codex-stats">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${dd(v)}</dd>`).join('')}</dl>` : '';
   };
-  const relatedBlock = (s, r) => (s.related ? s.related(r) : []).map(([label, items]) => `<p><strong>${esc(label)}:</strong> ${
-    items.map((x) => (x.code
-      ? `<button type="button" class="linklike" data-goto="${esc(x.code)}"${x.section ? ` data-goto-section="${esc(x.section)}"` : ''}${
-        x.title ? ` title="${esc(x.title)}"` : ''}>${esc(x.name)}${x.plain ? '' : ` (${esc(x.code)})`}</button>`
-      : esc(x.name))).join(', ')}</p>`).join('');
+  const relatedItem = (x) => (x.code
+    ? `<button type="button" class="linklike" data-goto="${esc(x.code)}"${x.section ? ` data-goto-section="${esc(x.section)}"` : ''}${
+      x.title ? ` title="${esc(x.title)}"` : ''}>${esc(x.name)}${x.plain ? '' : ` (${esc(x.code)})`}</button>`
+    : esc(x.name));
+  // a stacked row (a character's powers) is a list under its label
+  const relatedBlock = (s, r) => (s.related ? s.related(r) : []).map(([label, items, opt]) => (opt && opt.stack
+    ? `<p class="codex-stack-head"><strong>${esc(label)}:</strong></p><ul class="codex-stack">${items.map((x) => `<li>${relatedItem(x)}</li>`).join('')}</ul>`
+    : `<p><strong>${esc(label)}:</strong> ${items.map(relatedItem).join(', ')}</p>`)).join('');
 
   function card(s, r) {
     const key = String(s.key(r));
