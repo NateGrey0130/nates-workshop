@@ -1,6 +1,6 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear, the Lazlo Model Behemoth, all 19 creatures and the New West comparison shipped; the Horune comparison, then the NPCs, next. (2026-10-20)
+**Status:** `importing` — gear, the Lazlo Model Behemoth, all 19 creatures and both comparisons (New West, Horune) shipped; the NPCs next. (2026-10-20)
 
 **Rows citing this book:** gear 27, vehicles 1, creatures 19
 
@@ -156,8 +156,23 @@ The held **Razorback** and **Spiny Ravager** are different animals.
 | Horune Dream Ship | p.170-171 |
 | Horune Strike Ships | p.172 |
 
-The section is a reprint. It is compared with the held rows at extraction
-and any difference recorded.
+The section is a reprint. **Compared (ruling D23), and `~257` records
+the differences on the held rows**: all eight, with their 27 weapon and
+37 location rows, read line by line against production's rows and
+Underseas's page cache (printed 166-172), every differing figure read off
+a render. This printing wins where it states a different figure: the
+Speeder's and Dream Ship's 77.7 knots and the Strike Ships' 103.6; the
+Dolphin Drone's Hip Lasers at 15 each; the Land Shark's plasma double
+blast and 6 M.D. elbow blades; the Dream Ship's crew line, turret rate,
+2D4x10 lasers and a dozen to 100 drones; the Strike Ships' single-blast
+plasma turrets, 4D6 lasers, 2D4x10 mini-missiles and 3D6+2 drones; the
+harpoon gun's makers, the sonic rifle's payload and price line, the
+trident's sources and the Sea-Horse's Horune-only line. Both ships'
+missile dice are counts in both printings and move from damage to
+payload. Not taken: the Fireball Bite's 914 m, which its own 300 feet
+contradicts. Not compared: lines the held rows never carried (the
+drones' attacks and combat bonuses, the metric conversions).
+`source_book` stays Underseas.
 
 ### vehicles: 1 missing
 
@@ -197,7 +212,7 @@ their names are read off renders first.
    ten rows in `~253-adventures-in-dinosaur-swamp-creatures-a.sql`, five in
    `~254-adventures-in-dinosaur-swamp-creatures-b.sql` and four in
    `~255-adventures-in-dinosaur-swamp-creatures-c.sql`. The New West
-   comparison is done (`~256`); the Horune comparison comes next.
+   comparison is done (`~256`), and so is the Horune comparison (`~257`).
 4. **Notable NPCs** — every stat block on printed 71-133, counted from
    renders. This is the largest batch in the book.
 
@@ -251,7 +266,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-b` | **5 creatures** (`~254`, through `scripts/bestiary-sql.mjs`), printed 47-57, with 33 attacks: the Lepidosaur, Raptor King, Razorback Rhinoceros (slugged `razorback-rhinoceros`; the held `razorback` is Australia's), Razormouth Frog and Saurian Terror, every stat block read off renders and checked against the Quick Find trait index (magic: Lepidosaur, Raptor King, Razormouth Frog; psionics: Raptor King). The Quick Find also lists the Lepidosaur as poisonous, which its entry does not bear out; the row says so. Four runs the copy check refused were reworded with every figure kept. The Raptor King is a creature row, like the Wraith Soldier, with its four M.O.S. packages in `skills_note` and `playable` as the optional-race display flag. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-creatures-c` | **4 creatures** (`~255`, through `scripts/bestiary-sql.mjs`), with 13 attacks: the Spiny Creeper (57-59), Titan Raptor (60-62; printed 61 is a full-page painting), Tree Prowler (62-64; its Magic, Psionics, I.S.P. and Habitat lines sit at the top of 64) and the Quee-la (133-134, the 28% result of an adventure-seed table), every stat block read off renders and checked against the Quick Find trait index (psionics: Spiny Creeper, Tree Prowler; neither magic). The Quick Find lists the Quee-la only as Alien/D-Bee, though her block prints six psionic powers and Empathic Language Mastery; the row says so. She is one individual with fixed attributes and no pools printed, so her pools are empty. Five runs the copy check refused were reworded with every figure kept. All 19 creatures are in. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-new-west` | **No new rows.** The seven New West creatures this book reprints (35-37, 45-49, 59-60, 64, 66) compared line by line and attack by attack with production's rows and New West's text layer; every differing figure read off a render. All seven updated in place by `~256` (newest printing that states a figure wins, ruling of 2026-10-04), `source_book` unchanged, and five attack notes added (four Tiger Claw female figures, the Tri-Tops ram). Lines the held rows never carried (Value, an Allies of None) were not compared. Applied `--remote` before the merge. |
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-horune` | **No new rows.** The Horune weapons and vehicles this book reprints (150-155) compared with production's three gear and five vehicle rows, their 27 weapon and 37 location rows, and Underseas's page cache (166-172); every differing figure read off a render. All eight updated in place by `~257` (ruling D23 and the newest-printing ruling of 2026-10-04), `source_book` unchanged: 3 gear rows, 5 vehicles, 10 weapon rows and 1 location row, each with both pages and the old figure. Three figures that read like misprints (6 M.D. elbow blades, 2D4x10 and 4D6 laser turrets) taken under the ruling, old figures kept; the Fireball Bite's 914 m not taken. Applied `--remote` before the merge. |
 
 ### What remains
 
-The Horune comparison, and the NPCs.
+The NPCs.
