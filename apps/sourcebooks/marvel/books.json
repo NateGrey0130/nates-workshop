@@ -141,6 +141,20 @@
     ]
    ],
    "total": 93
+  },
+  {
+   "slug": "me2",
+   "title": "ME2 Ragnarok and Roll",
+   "code": "TSR6880",
+   "status": "imported",
+   "date": null,
+   "added": [
+    [
+     "Characters",
+     40
+    ]
+   ],
+   "total": 40
   }
  ]
 }

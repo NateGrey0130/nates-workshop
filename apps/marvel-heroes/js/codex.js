@@ -319,7 +319,18 @@ export const SECTIONS = [
           } else if (o && o.verdict === 'as_printed') {
             out.push(['As printed', `${field} ${o.printed}, which R+I+P does not give`]);
           }
-          for (const x of (o && o.also) || []) out.push(['As printed', `${FIELD[x.field] || x.field} ${x.printed}, which R+I+P does not give`]);
+          for (const x of (o && o.also) || []) {
+            const xf = FIELD[x.field] || x.field;
+            // a rank printed with its number (ME2: the Chimaera's second misprinted
+            // code, Gal's and Zeus's further in-range numbers) says so as the first does
+            if (typeof x.printed === 'object' && x.verdict === 'misprint') {
+              out.push(['Misprint', `${xf} is printed ${show(x.printed)}; the book's own ranks give ${show(x.corrected)}`]);
+            } else if (typeof x.printed === 'object') {
+              out.push(['As printed', `${xf} is printed ${show(x.printed)}, inside the rank's range`]);
+            } else {
+              out.push(['As printed', `${xf} ${x.printed}, which R+I+P does not give`]);
+            }
+          }
           // A team member the book gives no block of its own: its team's tier,
           // with the ranks its own text states (scripts/msh/<slug>-members.json).
           const f = b.built_from;

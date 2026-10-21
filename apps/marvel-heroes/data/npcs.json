@@ -43,6 +43,11 @@
    "book": "MHSP2 Secret Wars II",
    "code": "TSR6869",
    "pages": "2-32"
+  },
+  {
+   "book": "ME2 Ragnarok and Roll",
+   "code": "TSR6880",
+   "pages": "Adventure 4-7, 16-21; Resource 2-16"
   }
  ],
  "books": [
@@ -144,6 +149,39 @@
     32
    ],
    "part": "Roster"
+  },
+  {
+   "slug": "me2",
+   "short": "ME2",
+   "title": "ME2 Ragnarok and Roll",
+   "pages": [
+    4,
+    7
+   ],
+   "ranges": [
+    {
+     "part": "Adventure",
+     "pages": [
+      [
+       4,
+       7
+      ],
+      [
+       16,
+       21
+      ]
+     ]
+    },
+    {
+     "part": "Resource",
+     "pages": [
+      [
+       2,
+       16
+      ]
+     ]
+    }
+   ]
   }
  ],
  "teams": [
@@ -197,7 +235,13 @@
   "Heroes and Others",
   "Secret Wars II Villains",
   "Nebula's Crew",
-  "And of Course"
+  "And of Course",
+  "Ragnarok and Roll Heroes",
+  "Entities",
+  "ME2 Ragnarok and Roll",
+  "Olympians",
+  "Asgardians",
+  "Heliopolitans"
  ],
  "characters": [
   {
@@ -47984,6 +48028,4176 @@
    ],
    "appearances": [],
    "book": "mhsp2"
+  },
+  {
+   "id": "beta-ray-bill-me2",
+   "name": "Beta Ray Bill",
+   "team": "Ragnarok and Roll Heroes",
+   "versions": [
+    {
+     "id": "beta-ray-bill-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "(English translation of name)"
+     ],
+     "blocks": [
+      {
+       "label": "Beta Ray Bill",
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "form": true,
+       "health": "330",
+       "karma": "100",
+       "resources": "Gd(10)",
+       "popularity": "30"
+      },
+      {
+       "label": "Humanoid form",
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "80",
+       "karma": "100",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Resistance"
+      },
+      {
+       "name": "Storm Breaker"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      },
+      {
+       "name": "Skuttlebutt"
+      },
+      {
+       "name": "Sensor Implant"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "firelord-me2",
+   "name": "Firelord",
+   "team": "Ragnarok and Roll Heroes",
+   "versions": [
+    {
+     "id": "firelord-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Pyreus Kril"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "325",
+       "karma": "110",
+       "resources": "Pr(4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Stellar Flame"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Staff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "gladiator-me2",
+   "name": "Gladiator",
+   "team": "Ragnarok and Roll Heroes",
+   "versions": [
+    {
+     "id": "gladiator-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Adventure",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Shi'ar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         500,
+         "ShZ"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "725",
+       "karma": "675",
+       "resources": "Mn(175)",
+       "popularity": "15 (100 in the Empire)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Psychic Reflection"
+      },
+      {
+       "name": "Heat Beams"
+      },
+      {
+       "name": "Heightened Vision"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "mantis-me2",
+   "name": "Mantis",
+   "team": "Ragnarok and Roll Heroes",
+   "versions": [
+    {
+     "id": "mantis-me2",
+     "label": "Update",
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Real Name Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "116",
+       "karma": "76",
+       "resources": "Fe(2)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Life Support"
+      },
+      {
+       "name": "Plant Control",
+       "upb": "L14"
+      },
+      {
+       "name": "Recovery"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "actus-me2",
+   "name": "Actus",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "actus-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         500,
+         "ShZ"
+        ],
+        [
+         "E",
+         2000,
+         "C-1000"
+        ],
+        [
+         "R",
+         750,
+         "ShZ"
+        ],
+        [
+         "I",
+         750,
+         "ShZ"
+        ],
+        [
+         "P",
+         750,
+         "ShZ"
+        ]
+       ],
+       "form": true,
+       "health": "2600",
+       "karma": "2250",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "E",
+        "printed": {
+         "number": 2000,
+         "code": "C-1000"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "R",
+          "printed": {
+           "number": 750,
+           "code": "ShZ"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "I",
+          "printed": {
+           "number": 750,
+           "code": "ShZ"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "P",
+          "printed": {
+           "number": 750,
+           "code": "ShZ"
+          }
+         }
+        ]
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "charon-me2",
+   "name": "Charon",
+   "team": "ME2 Ragnarok and Roll",
+   "versions": [
+    {
+     "id": "charon-me2",
+     "label": null,
+     "team": "ME2 Ragnarok and Roll",
+     "part": "Adventure",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "form": true,
+       "health": "270",
+       "karma": "140",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Control"
+      },
+      {
+       "name": "Darkforce Generation"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "modgud-me2",
+   "name": "Modgud",
+   "team": "ME2 Ragnarok and Roll",
+   "versions": [
+    {
+     "id": "modgud-me2",
+     "label": null,
+     "team": "ME2 Ragnarok and Roll",
+     "part": "Adventure",
+     "pages": [
+      21
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "form": true,
+       "health": "205",
+       "karma": "175",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy (to Hela)"
+      },
+      {
+       "name": "Darkforce Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "death-me2",
+   "name": "Death",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "death-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      2
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         5000,
+         "C-5000"
+        ],
+        [
+         "A",
+         5000,
+         "C-5000"
+        ],
+        [
+         "S",
+         5000,
+         "C-5000"
+        ],
+        [
+         "E",
+         5000,
+         "C-5000"
+        ],
+        [
+         "R",
+         5000,
+         "C-5000"
+        ],
+        [
+         "I",
+         5000,
+         "C-5000"
+        ],
+        [
+         "P",
+         5000,
+         "C-5000"
+        ]
+       ],
+       "health": "20,000",
+       "karma": "Unlimited",
+       "resources": "Unlimited",
+       "popularity": "-1000",
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": "Unlimited"
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "gaea-me2",
+   "name": "Gaea",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "gaea-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      3
+     ],
+     "identity": [
+      "Mother Earth"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         150,
+         "ShX"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "246",
+       "karma": "195",
+       "resources": "N.A",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elemental Control"
+      },
+      {
+       "name": "Shape Changing"
+      },
+      {
+       "name": "Growth",
+       "upb": "S16"
+      },
+      {
+       "name": "Healing"
+      },
+      {
+       "name": "Telekinesis",
+       "upb": "M30"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Spiritual Transfer"
+      },
+      {
+       "name": "Power Bestowal"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Invulnerabilities"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "gal-me2",
+   "name": "Gal",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "gal-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         25,
+         "Ex"
+        ],
+        [
+         "A",
+         25,
+         "Ex"
+        ],
+        [
+         "S",
+         500,
+         "ShZ"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         250,
+         "ShY"
+        ],
+        [
+         "I",
+         250,
+         "ShY"
+        ],
+        [
+         "P",
+         500,
+         "ShZ"
+        ]
+       ],
+       "health": "1550",
+       "karma": "1000",
+       "resources": "Cl 1000",
+       "popularity": "-333",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 25,
+         "code": "Ex"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "A",
+          "printed": {
+           "number": 25,
+           "code": "Ex"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "R",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "I",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "galactus-me2",
+   "name": "Galactus",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "galactus-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Galan of Taa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         3000,
+         "C-3000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "health": "4150",
+       "karma": "3000",
+       "resources": "Cl 3000",
+       "popularity": "-1000"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Kinetic Bolts"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      },
+      {
+       "name": "Power Creation"
+      },
+      {
+       "name": "Serial Immortality",
+       "upb": "M28"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Cosmic Awareness",
+       "upb": "M7"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "ac-me2",
+   "name": "Ac",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "ac-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         25,
+         "Ex"
+        ],
+        [
+         "A",
+         25,
+         "Ex"
+        ],
+        [
+         "S",
+         250,
+         "ShY"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         500,
+         "ShZ"
+        ],
+        [
+         "I",
+         250,
+         "ShY"
+        ],
+        [
+         "P",
+         250,
+         "ShY"
+        ]
+       ],
+       "health": "1300",
+       "karma": "1000",
+       "resources": "Cl 1000",
+       "popularity": "-334",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 25,
+         "code": "Ex"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "A",
+          "printed": {
+           "number": 25,
+           "code": "Ex"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "S",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "I",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "P",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "Hyper-Invention",
+       "upb": "M14"
+      },
+      {
+       "name": "Power Creation"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "tus-me2",
+   "name": "Tus",
+   "team": "Entities",
+   "versions": [
+    {
+     "id": "tus-me2",
+     "label": null,
+     "team": "Entities",
+     "part": "Resource",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         25,
+         "Ex"
+        ],
+        [
+         "A",
+         25,
+         "Ex"
+        ],
+        [
+         "S",
+         250,
+         "ShY"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         250,
+         "ShY"
+        ],
+        [
+         "I",
+         500,
+         "ShZ"
+        ],
+        [
+         "P",
+         250,
+         "ShY"
+        ]
+       ],
+       "health": "1300",
+       "karma": "1000",
+       "resources": "Cl 1000",
+       "popularity": "-333",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 25,
+         "code": "Ex"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "A",
+          "printed": {
+           "number": 25,
+           "code": "Ex"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "S",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "R",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "P",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Life Detection",
+       "upb": "DT9"
+      },
+      {
+       "name": "Disruption",
+       "upb": "MC5"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "ares-me2",
+   "name": "Ares",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "ares-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "(Also known as Mars)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "320",
+       "karma": "56",
+       "resources": "Cl 1000",
+       "popularity": "10 (50 with soldiers)"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dimensional Travel"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Self-Sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      },
+      {
+       "name": "Immortality"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "cerberus-me2",
+   "name": "Cerberus",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "cerberus-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      6
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         250,
+         "ShY"
+        ],
+        [
+         "A",
+         250,
+         "ShY"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         250,
+         "ShY"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "850",
+       "karma": "80",
+       "resources": "N.A",
+       "popularity": "-100",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 250,
+         "code": "ShY"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "A",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "E",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Hypersensitive Hearing and Olfactory"
+      },
+      {
+       "name": "Tracking Ability"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Extra Attacks"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "chimaera-me2",
+   "name": "Chimaera",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "chimaera-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         500,
+         "ShZ"
+        ],
+        [
+         "A",
+         100,
+         "ShX"
+        ],
+        [
+         "S",
+         250,
+         "ShY"
+        ],
+        [
+         "E",
+         100,
+         "ShX"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "950",
+       "karma": "175",
+       "resources": "Am(50)",
+       "popularity": "-100",
+       "override": {
+        "verdict": "misprint",
+        "field": "A",
+        "printed": {
+         "number": 100,
+         "code": "ShX"
+        },
+        "corrected": {
+         "number": 100,
+         "code": "Un"
+        },
+        "also": [
+         {
+          "verdict": "misprint",
+          "field": "E",
+          "printed": {
+           "number": 100,
+           "code": "ShX"
+          },
+          "corrected": {
+           "number": 100,
+           "code": "Un"
+          }
+         },
+         {
+          "verdict": "as_printed",
+          "field": "S",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field vs. Magic",
+       "upb": "D5"
+      },
+      {
+       "name": "Fire Generation",
+       "upb": "EE4"
+      },
+      {
+       "name": "Poison"
+      },
+      {
+       "name": "Stealth",
+       "upb": "P12"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "hercules-me2",
+   "name": "Hercules",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "hercules-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Heracles of Olympus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "320",
+       "karma": "50",
+       "resources": "Ty(6)",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistance to Fire"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Special Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "hydra-me2",
+   "name": "Hydra",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "hydra-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      8
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         250,
+         "ShY"
+        ],
+        [
+         "E",
+         500,
+         "ShZ"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "900",
+       "karma": "225",
+       "resources": "N.A",
+       "popularity": "-100",
+       "override": {
+        "verdict": "as_printed",
+        "field": "S",
+        "printed": {
+         "number": 250,
+         "code": "ShY"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Self-sustenance",
+       "upb": "P11"
+      },
+      {
+       "name": "Skin Armor"
+      },
+      {
+       "name": "Stealth",
+       "upb": "P12"
+      },
+      {
+       "name": "Nine Heads"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "pluto-me2",
+   "name": "Pluto",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "pluto-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Hades (Pluto is his Roman name)"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         250,
+         "ShY"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "550",
+       "karma": "275",
+       "resources": "Un(100)",
+       "popularity": "-500",
+       "override": {
+        "verdict": "as_printed",
+        "field": "E",
+        "printed": {
+         "number": 250,
+         "code": "ShY"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Energy Mastery"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      },
+      {
+       "name": "Strength Drain"
+      },
+      {
+       "name": "Mystical Flame"
+      },
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "titans-me2",
+   "name": "Titans",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "titans-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Coeus and Crius"
+     ],
+     "blocks": [
+      {
+       "label": "Titans",
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         150,
+         "ShX"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         150,
+         "ShX"
+        ],
+        [
+         "E",
+         250,
+         "ShY"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "600",
+       "karma": "60",
+       "resources": "Ty(6)",
+       "popularity": "0",
+       "override": {
+        "verdict": "as_printed",
+        "field": "E",
+        "printed": {
+         "number": 250,
+         "code": "ShY"
+        }
+       }
+      },
+      {
+       "label": "Tormenting Zeus in Hades",
+       "page": 18,
+       "part": "Adventure",
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "350",
+       "karma": "60",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Element Control"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Psionic Attack"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "olympian-typical-me2",
+   "name": "Olympian, Typical",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "olympian-typical-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "120",
+       "karma": "42",
+       "resources": "Gd(10)",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "zeus-me2",
+   "name": "Zeus",
+   "team": "Olympians",
+   "versions": [
+    {
+     "id": "zeus-me2",
+     "label": null,
+     "team": "Olympians",
+     "part": "Resource",
+     "pages": [
+      9
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Zeus",
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         250,
+         "ShY"
+        ],
+        [
+         "A",
+         250,
+         "ShY"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         500,
+         "ShZ"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "1100",
+       "karma": "250",
+       "resources": "Un(100)",
+       "popularity": "100",
+       "override": {
+        "verdict": "as_printed",
+        "field": "F",
+        "printed": {
+         "number": 250,
+         "code": "ShY"
+        },
+        "also": [
+         {
+          "verdict": "as_printed",
+          "field": "A",
+          "printed": {
+           "number": 250,
+           "code": "ShY"
+          }
+         }
+        ]
+       }
+      },
+      {
+       "label": "Powerless in Hades",
+       "page": 18,
+       "part": "Adventure",
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "151",
+       "karma": "56",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Immortality"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Energy Mastery"
+      },
+      {
+       "name": "Raise Ability"
+      },
+      {
+       "name": "Enchantment",
+       "upb": "MG1"
+      },
+      {
+       "name": "Dimensional Travel"
+      },
+      {
+       "name": "Projection"
+      },
+      {
+       "name": "Precognition",
+       "upb": "M24"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "balder-me2",
+   "name": "Balder",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "balder-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      10
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "140",
+       "karma": "80",
+       "resources": "Ex(20)",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "True Invulnerability",
+       "upb": "P14"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "garm-me2",
+   "name": "Garm",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "garm-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "290",
+       "karma": "56",
+       "resources": "N.A",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Resistance to Cold"
+      },
+      {
+       "name": "Enhanced Senses"
+      },
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Claws"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "the-fenris-wolf-me2",
+   "name": "The Fenris Wolf",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "the-fenris-wolf-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "280",
+       "karma": "56",
+       "resources": "N.A",
+       "popularity": "-5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape Change"
+      },
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "geirrodur-me2",
+   "name": "Geirrodur",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "geirrodur-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "King of the Trolls"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "116",
+       "karma": "26",
+       "resources": "Am(50)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "hela-me2",
+   "name": "Hela",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "hela-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      12,
+      13
+     ],
+     "identity": [
+      "Goddess of Death"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "1200",
+       "karma": "170",
+       "resources": "Mn(75)",
+       "popularity": "-75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      },
+      {
+       "name": "Illusion-Casting",
+       "upb": "I2"
+      },
+      {
+       "name": "Death Touch"
+      },
+      {
+       "name": "Age Control"
+      },
+      {
+       "name": "Resurrection"
+      },
+      {
+       "name": "True Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Levitation",
+       "upb": "T12"
+      },
+      {
+       "name": "Hand of Glory"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "rock-troll-typical-me2",
+   "name": "Rock Troll, Typical",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "rock-troll-typical-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fb"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "health": "104",
+       "karma": "10",
+       "resources": "Fe(2)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Infravision"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "loki-me2",
+   "name": "Loki",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "loki-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [
+      "Loki Laufeyson of Asgard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "health": "150",
+       "karma": "115",
+       "resources": "Rm(30)",
+       "popularity": "-25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Extradimensional Detection"
+      },
+      {
+       "name": "Astral Projection",
+       "upb": "T1"
+      },
+      {
+       "name": "Shapeshifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Imitation"
+      },
+      {
+       "name": "Matter Transformation"
+      },
+      {
+       "name": "Animate Objects"
+      },
+      {
+       "name": "Eldritch Blasts"
+      },
+      {
+       "name": "Shield"
+      },
+      {
+       "name": "Enhancement"
+      },
+      {
+       "name": "Dimensional Travel"
+      },
+      {
+       "name": "Life Protection"
+      },
+      {
+       "name": "Magic Talismans"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "muspelheim-demon-me2",
+   "name": "Muspelheim Demon",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "muspelheim-demon-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "health": "185",
+       "karma": "22",
+       "resources": "Pr(4)",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire and Heat"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Heat Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "sif-me2",
+   "name": "Sif",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "sif-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Warrior Goddess of Asgard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "245",
+       "karma": "100",
+       "resources": "Gd(10)",
+       "popularity": "15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Dimension Travel",
+       "upb": "T3"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "typical-asgardian-me2",
+   "name": "Typical Asgardian",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "typical-asgardian-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "health": "120",
+       "karma": "40",
+       "resources": "Ty(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "frost-giant-typical-me2",
+   "name": "Frost Giant, Typical",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "frost-giant-typical-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "health": "196",
+       "karma": "14",
+       "resources": "Pr(4)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Resistance to Cold"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "ymir-me2",
+   "name": "Ymir",
+   "team": "Asgardians",
+   "versions": [
+    {
+     "id": "ymir-me2",
+     "label": null,
+     "team": "Asgardians",
+     "part": "Resource",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         200,
+         "ShY"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         150,
+         "ShX"
+        ],
+        [
+         "E",
+         200,
+         "ShY"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "health": "580",
+       "karma": "46",
+       "resources": "Ty(6)",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Resistance to Cold"
+      },
+      {
+       "name": "Cold Generation",
+       "upb": "EE1"
+      },
+      {
+       "name": "Resistance to Heat"
+      },
+      {
+       "name": "Freezing Touch"
+      },
+      {
+       "name": "Invulnerabilities"
+      },
+      {
+       "name": "Immortality"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "isis-me2",
+   "name": "Isis",
+   "team": "Heliopolitans",
+   "versions": [
+    {
+     "id": "isis-me2",
+     "label": null,
+     "team": "Heliopolitans",
+     "part": "Resource",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Goddess of Fertility and",
+      "Domestication"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "220",
+       "karma": "275",
+       "resources": "Un(100)",
+       "popularity": "75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Air Control"
+      },
+      {
+       "name": "Earth Control"
+      },
+      {
+       "name": "Fire Control",
+       "upb": "EC10"
+      },
+      {
+       "name": "Water Control"
+      },
+      {
+       "name": "Weather Control",
+       "upb": "MC12"
+      },
+      {
+       "name": "Resurrection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "notes",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "osiris-me2",
+   "name": "Osiris",
+   "team": "Heliopolitans",
+   "versions": [
+    {
+     "id": "osiris-me2",
+     "label": null,
+     "team": "Heliopolitans",
+     "part": "Resource",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "God of the Dead"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         200,
+         "ShY"
+        ],
+        [
+         "P",
+         200,
+         "ShY"
+        ]
+       ],
+       "health": "280",
+       "karma": "500",
+       "resources": "Shift X (150)",
+       "popularity": "75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Energy Generation"
+      },
+      {
+       "name": "Dimensional Travel"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "contacts",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "doc-strange-me2",
+   "name": "Doc Strange",
+   "team": "Ragnarok and Roll Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "doc-strange-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "health": "66",
+       "karma": "185",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magic"
+      },
+      {
+       "name": "Alter Appearance",
+       "rank": "Am"
+      },
+      {
+       "name": "Astral Projection",
+       "rank": "Un",
+       "upb": "T1"
+      },
+      {
+       "name": "Levitation",
+       "rank": "In",
+       "upb": "T12"
+      },
+      {
+       "name": "Shield",
+       "rank": "Am"
+      },
+      {
+       "name": "Telepathy",
+       "rank": "Un",
+       "upb": "M32"
+      },
+      {
+       "name": "Conjure",
+       "rank": "Am"
+      },
+      {
+       "name": "Forcebeam",
+       "rank": "Am"
+      },
+      {
+       "name": "Dimension Open",
+       "rank": "Mn"
+      },
+      {
+       "name": "Sleep Gas",
+       "rank": "Mn"
+      },
+      {
+       "name": "Cloak of Lev"
+      },
+      {
+       "name": "Eye"
+      },
+      {
+       "name": "Orb"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "nova-me2",
+   "name": "Nova",
+   "team": "Ragnarok and Roll Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "nova-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fire Generation and Control",
+       "rank": "ShZ"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Un",
+       "upb": "D1"
+      },
+      {
+       "name": "Invulnerability"
+      },
+      {
+       "name": "Wrapped in Fire",
+       "rank": "Am"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL3000",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "silver-surfer-me2",
+   "name": "Silver Surfer",
+   "team": "Ragnarok and Roll Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "silver-surfer-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "health": "325",
+       "karma": "135",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Cosmic"
+      },
+      {
+       "name": "Healing",
+       "rank": "Un"
+      },
+      {
+       "name": "Reconstruct Matter",
+       "rank": "Un"
+      },
+      {
+       "name": "Perceive Energy"
+      },
+      {
+       "name": "Flight",
+       "rank": "CL5000",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "rank": "Mn",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
+  },
+  {
+   "id": "thor-me2",
+   "name": "Thor",
+   "team": "Ragnarok and Roll Heroes",
+   "summary_only": true,
+   "versions": [
+    {
+     "id": "thor-me2",
+     "label": null,
+     "team": "Ragnarok and Roll Heroes",
+     "part": "Pregenerated Heroes Summary",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "health": "320",
+       "karma": "76",
+       "resources": null,
+       "popularity": null,
+       "kind": "summary"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor-Ex/Ty"
+      },
+      {
+       "name": "Mjolnir"
+      },
+      {
+       "name": "Flight",
+       "rank": "ShX",
+       "upb": "T21"
+      },
+      {
+       "name": "Shield",
+       "rank": "Rm"
+      },
+      {
+       "name": "Weather Control",
+       "rank": "Un",
+       "upb": "MC12"
+      },
+      {
+       "name": "Dimension Travel",
+       "rank": "Un",
+       "upb": "T3"
+      }
+     ],
+     "members": [],
+     "text": []
+    }
+   ],
+   "appearances": [],
+   "book": "me2"
   }
  ]
 }
