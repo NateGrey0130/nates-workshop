@@ -40,6 +40,11 @@
    "pages": "Adventure 5-16; Inside front cover; Inside back cover"
   },
   {
+   "book": "MH3 Murderworld!",
+   "code": "TSR6855",
+   "pages": "Adventure 3-16; Inside front cover; Inside back cover"
+  },
+  {
    "book": "MHSP2 Secret Wars II",
    "code": "TSR6869",
    "pages": "2-32"
@@ -141,6 +146,20 @@
    ]
   },
   {
+   "slug": "mh3",
+   "short": "MH3",
+   "title": "MH3 Murderworld!",
+   "pages": [
+    3,
+    16
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
+  },
+  {
    "slug": "mhsp2",
    "short": "MHSP2",
    "title": "MHSP2 Secret Wars II",
@@ -228,6 +247,7 @@
   "MH1 The Breeder Bombs",
   "Avengers",
   "MH2 Time Trap",
+  "MH3 Murderworld!",
   "MHSP2 Secret Wars II",
   "West Coast Avengers",
   "Power Pack",
@@ -39249,6 +39269,1856 @@
    ],
    "appearances": [],
    "book": "mh2"
+  },
+  {
+   "id": "human-torch-mh3",
+   "name": "Human Torch",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "human-torch-mh3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Johnny Storm, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Generate And Control Fire"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Nova Blast"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "invisible-girl-mh3",
+   "name": "Invisible Girl",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "invisible-girl-mh3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Susan Storm Richards, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "40",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "mr-fantastic-mh3",
+   "name": "Mr. Fantastic",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "mr-fantastic-mh3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Reed Richards, scientist"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": "100",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elastic Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Wrestling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "doombot-mh3",
+   "name": "Doombot",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "doombot-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 0
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Beams"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "water-tower-robots-mh3",
+   "name": "Water Tower Robots",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "water-tower-robots-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      4
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "180",
+       "karma": "0",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "karma",
+        "printed": 0
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Weapons"
+      },
+      {
+       "name": "Hero Scoops"
+      },
+      {
+       "name": "Armor"
+      },
+      {
+       "name": "Movement"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "arcade-mh3",
+   "name": "Arcade",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "arcade-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "(real name unknown), assassin"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "38",
+       "karma": "56",
+       "resources": "EXCELLENT",
+       "popularity": "50"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "blastaar-mh3",
+   "name": "Blastaar",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "blastaar-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "BLASTAAR, reaver"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "180",
+       "karma": "40",
+       "resources": "EXCELLENT",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Blasts"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "miss-locke-mh3",
+   "name": "Miss Locke",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "miss-locke-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "assistant to ARCADE"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "30",
+       "resources": "TYPICAL",
+       "popularity": "-",
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "mr-chambers-mh3",
+   "name": "Mr. Chambers",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "mr-chambers-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "assistant to ARCADE"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "32",
+       "resources": "TYPICAL",
+       "popularity": "-",
+       "karma_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "trapster-mh3",
+   "name": "Trapster",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "trapster-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Peter Petruski, criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "40",
+       "resources": "varies",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Paste Gun"
+      },
+      {
+       "name": "Traps"
+      },
+      {
+       "name": "Wall-Walking"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "wizard-mh3",
+   "name": "Wizard",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "wizard-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "(real name unknown),",
+      "criminal and inventor"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "40",
+       "karma": "52",
+       "resources": "varies",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Anti-Gravity Disks"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Power Gloves"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "captain-sk-yll-mh3",
+   "name": "Captain Sk'yll",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "captain-sk-yll-mh3",
+     "label": null,
+     "team": "Skrulls",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Sk'yll, Skrull military officer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "26",
+       "resources": "-",
+       "popularity": "-"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Growth and Shrinking"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Blast Rifle"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "sally-flack-mh3",
+   "name": "Sally Flack",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "sally-flack-mh3",
+     "label": null,
+     "team": "Skrulls",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Onalla, Skrull spy"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "40",
+       "resources": "-",
+       "popularity": "-"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Growth and Shrinking"
+      },
+      {
+       "name": "Blast Pen"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "skrull-soldiers-mh3",
+   "name": "Skrull Soldiers",
+   "team": "Skrulls",
+   "versions": [
+    {
+     "id": "skrull-soldiers-mh3",
+     "label": null,
+     "team": "Skrulls",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd",
+         [
+          20,
+          "Ex"
+         ]
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "22 [32]",
+       "resources": "-",
+       "popularity": "-"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Shifting",
+       "upb": "S29"
+      },
+      {
+       "name": "Growth and Shrinking"
+      },
+      {
+       "name": "Blast Pistols"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "super-adaptoid-mh3",
+   "name": "Super-Adaptoid",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "super-adaptoid-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "android"
+     ],
+     "blocks": [
+      {
+       "label": "Super-Adaptoid",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "150",
+       "karma": "varies",
+       "resources": "none",
+       "popularity": "5",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": 150
+       }
+      },
+      {
+       "label": "Current Form",
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "150",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": 150
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Duplication",
+       "upb": "PC4"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "doctor-doom-mh3",
+   "name": "Doctor Doom",
+   "team": "MH3 Murderworld!",
+   "versions": [
+    {
+     "id": "doctor-doom-mh3",
+     "label": null,
+     "team": "MH3 Murderworld!",
+     "part": "Adventure",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "VICTOR VON DOOM,",
+      "Monarch of Latveria"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "140",
+       "resources": "AMAZING",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Force Beams"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "alicia-masters-mh3",
+   "name": "Alicia Masters",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "alicia-masters-mh3",
+     "label": null,
+     "team": "Friends of the FF",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Alicia Masters, sculptress"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "18",
+       "karma": "40",
+       "resources": "TYPICAL",
+       "popularity": "20"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "franklin-richards-mh3",
+   "name": "Franklin Richards",
+   "team": "Friends of the FF",
+   "versions": [
+    {
+     "id": "franklin-richards-mh3",
+     "label": null,
+     "team": "Friends of the FF",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Franklin Benjamin Richards, child..."
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "16",
+       "karma": "91",
+       "resources": "none",
+       "popularity": "10"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "she-hulk-mh3",
+   "name": "She-Hulk",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "she-hulk-mh3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Jennifer Walters, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": "She-Hulk",
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "150",
+       "karma": "36",
+       "resources": "EXCELLENT",
+       "popularity": "30"
+      },
+      {
+       "label": "Jennifer Walters",
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "26",
+       "karma": "26",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
+  },
+  {
+   "id": "thing-mh3",
+   "name": "Thing",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "thing-mh3",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Benjamin J. Grimm, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": "Thing",
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "200",
+       "karma": "50",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      },
+      {
+       "label": "Ben Grimm",
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "50",
+       "karma": "50",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh3"
   },
   {
    "id": "the-beyonder-mhsp2",

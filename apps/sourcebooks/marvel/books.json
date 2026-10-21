@@ -125,6 +125,24 @@
    "total": 20
   },
   {
+   "slug": "mh3",
+   "title": "MH3 Murderworld!",
+   "code": "TSR6855",
+   "status": "imported",
+   "date": "2026-10-21",
+   "added": [
+    [
+     "Characters",
+     20
+    ],
+    [
+     "Rows of the book's text",
+     90
+    ]
+   ],
+   "total": 20
+  },
+  {
    "slug": "mhsp2",
    "title": "MHSP2 Secret Wars II",
    "code": "TSR6869",

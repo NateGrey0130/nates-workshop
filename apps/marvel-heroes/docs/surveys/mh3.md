@@ -3,9 +3,8 @@
 Marvel Super Heroes adventure module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh3`. Measured 2026-10-21.
 
-**Rows citing this book:** 0 `msh_book_text` rows. Nothing is imported yet:
-this is the survey, with no data and no parser (production `DB_MARVEL` read
-back 2026-10-21: no `mh3` rows).
+**Rows citing this book:** 90 `msh_book_text` rows over 20 character entries
+in production (`DB_MARVEL`, read back 2026-10-21).
 
 This is the third of the five Marvel books registered together by the
 kickoff PR (#1917). It goes through `scripts/msh/`
@@ -359,8 +358,8 @@ For Nate. Each has a recommendation.
    **Friends of the FF**, Sally Flack, Captain Sk'yll and the Skrull
    Soldiers under the existing **Skrulls**, and everyone else under the
    book's title, **MH3 Murderworld!**, as MH1 and MH2 do. The alternative
-   is MH2's ruling, which kept its Skrulls under the book's title. Not
-   written to the registry until decided.
+   is MH2's ruling, which kept its Skrulls under the book's title. Decided
+   as recommended (Nate, 2026-10-21): the registry's `teams`.
 2. **The Super-Adaptoid's current form** (printed 9): a second block on its
    card, as the Mimic's absorbed form is in MH2 (recommended), or an entry
    of its own.
