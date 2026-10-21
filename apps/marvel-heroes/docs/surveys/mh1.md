@@ -132,7 +132,7 @@ the chapter's prose columns, between paragraphs or after a Karma table.
 | `Karma: -`, `Resources: -`, `Popularity: -` | Sentinels (printed 14); Resources and Popularity only, Soviet Super-Troopers (15) |
 | `Resources: (supplied by USSR)` | Crimson Dynamo (15) |
 | bracketed alternate ranks and Health: `EXCELLENT [MONSTROUS]`, `80 [175]` | Colossus (cover), Crimson Dynamo and Soviet Super-Troopers (15) |
-| `-` for Intuition and Psyche in a one-line grid | the five False robots (12) |
+| `-` for Intuition and Psyche in a one-line grid | four of the five False robots (12); False Magneto prints I `Gd` and P `Pr` |
 | a one-line grid with no Health line | Fluffy (2), Augie Hickman (7) |
 | `Control:`, `Speed:`, `Body:` | the Blackbird (inside back cover), a vehicle |
 
@@ -313,10 +313,13 @@ real and occur 10 times.
 3. **Opponents with no printed Health** (Fluffy, Augie Hickman): derive the
    Health from the ranks (80 and 26) as MHSP1 derives every number, flagged
    rank-only, or leave it blank? Fluffy's prose agrees with 80.
-4. **Lockheed's `?` Reason, with no Karma to settle it**, and the False
-   robots' dashes for Intuition and Psyche: play them as Shift 0, or leave
-   Karma unset? The recommendation is to leave Karma unset where the book
-   prints none, and to play the `?` as Shift 0, as MHSP1's override did.
+4. **Lockheed's `?` Reason, with no Karma to settle it**, and the dashes
+   four False robots print for Intuition and Psyche (False Magneto prints
+   both): play them as Shift 0, or leave Karma unset? The recommendation is
+   to leave Karma unset where the book prints none, and to play the `?` as
+   Shift 0, as MHSP1's override did. Applied for Lockheed in
+   `scripts/msh/mh1-overrides.json` (2026-10-21), on Nate's 2026-09-28 ruling
+   for the same printed value in MHSP1; the robots' dashes are still open.
 5. **The Robot Wolverine's "Remarkable (20 points)"**: an override with
    printed and corrected (30), or `as_printed`? The recommendation is the
    override, read off printed 5.

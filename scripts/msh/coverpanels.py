@@ -42,7 +42,7 @@ import re, statistics
 import booklet
 import roster
 
-DASH = re.compile(r'^[-_~—–�]+$')
+DASH = re.compile(r'^[-_~\u2014\u2013\ufffd]+$')
 # a code Tesseract misread, as the page images read it (survey: mh1.md, Rank
 # spellings): no rank code starts "Fo" or "tn", so these can be nothing else
 CODE_MISREADS = {'FO': 'Fb', 'TN': 'In'}
@@ -169,7 +169,7 @@ def cards(book, slug, part, first, last, ranks, reader):
         elif sec == 'powers':
             pm = booklet.POWER_HEAD.match(text)
             prev = lines[i - 1]['text'].rstrip() if i else ''
-            if pm and (not cur['powers'] or prev.endswith(('.', ':', ')', '"', '”', '!'))):
+            if pm and (not cur['powers'] or prev.endswith(('.', ':', ')', '"', '\u201d', '!'))):
                 cur['powers'].append({'name': booklet.power_name(pm.group(1)), 'text': []})
                 text = pm.group(2)
             sink = cur['powers'][-1]['text'] if cur['powers'] else cur['sections']['powers']

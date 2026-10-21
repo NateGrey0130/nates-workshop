@@ -1,0 +1,14 @@
+{
+  "about": [
+    "Hand decisions about MH1 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card or one-line grid; page is the printed page, or null for a card on a cover panel (which prints no page)",
+    "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": null, "header": "LOCKHEED"}, "verdict": "as_printed", "field": "R",
+     "printed": "?", "corrected": {"number": 0, "code": "Sh0"}, "checked": "2026-10-21",
+     "note": "Inside back cover: Reason is printed as a question mark, and the card prints no Karma, Resources or Popularity, so MH1 has nothing to settle it (MHSP1's Karma 40 did). Played as Shift 0, applying Nate's 2026-09-28 ruling on the same printed value in MHSP1 (mhsp1-overrides.json); Karma is left unset. The card's Health 48 = F 6 + A 30 + S 2 + E 10, as printed."}
+  ]
+}
