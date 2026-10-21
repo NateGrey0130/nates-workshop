@@ -1,8 +1,8 @@
 # Rifts World Book 27: Adventures in Dinosaur Swamp — survey
 
-**Status:** `importing` — gear, the Lazlo Model Behemoth, all 19 creatures and both comparisons (New West, Horune) shipped; the NPCs next. (2026-10-20)
+**Status:** `importing` — gear, the Lazlo Model Behemoth, all 19 creatures and both comparisons (New West, Horune) shipped, and Char's two full NPC stat blocks; the other NPCs next. (2026-10-20)
 
-**Rows citing this book:** gear 27, vehicles 1, creatures 19
+**Rows citing this book:** gear 27, vehicles 1, notable_npcs 2, creatures 19
 
 Slug `adventures-in-dinosaur-swamp`. Cached 2026-10-05 from
 `Rifts- World Book 27 Adventures in Dinosaur Swamp.pdf`, 162 PDF pages,
@@ -194,7 +194,10 @@ Obioma Aardan-Kwu (112), Alexander Washington Lee (113); Aaarmen Cartilage
 (127). None is held. The Camp Cherokee personalities (71-72), the gang
 blocks (91-94), the Arclight Brigade (99), the other expedition members
 (114-115) and the two freehold families (122-125) were not diffed by name;
-their names are read off renders first.
+their names are read off renders first. The Char names on 83-91 print
+Quick Stats blocks (alignment, attributes, disposition, description and
+experience level, the shape D21 was ruled on), which fall under ruling D21
+below.
 
 ## Extraction plan
 
@@ -214,7 +217,11 @@ their names are read off renders first.
    `~255-adventures-in-dinosaur-swamp-creatures-c.sql`. The New West
    comparison is done (`~256`), and so is the Horune comparison (`~257`).
 4. **Notable NPCs** — every stat block on printed 71-133, counted from
-   renders. This is the largest batch in the book.
+   renders. This is the largest batch in the book. **Done** for printed
+   83-100: the two full stat blocks there, Jonny Maraschoc and Silas
+   Skinwalker, in `~258-adventures-in-dinosaur-swamp-char.sql`; the 17 Quick
+   Stats people are left under D21 and the gang and Brigade blocks under D20.
+   Printed 71-82 and 101-133 are the next row's.
 
 Each batch is extracted off renders by `book-extract-worker` and checked by
 `book-reconcile` before its script is written.
@@ -268,6 +275,8 @@ What is deliberately left, with the reason for each:
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-new-west` | **No new rows.** The seven New West creatures this book reprints (35-37, 45-49, 59-60, 64, 66) compared line by line and attack by attack with production's rows and New West's text layer; every differing figure read off a render. All seven updated in place by `~256` (newest printing that states a figure wins, ruling of 2026-10-04), `source_book` unchanged, and five attack notes added (four Tiger Claw female figures, the Tri-Tops ram). Lines the held rows never carried (Value, an Allies of None) were not compared. Applied `--remote` before the merge. |
 | 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-horune` | **No new rows.** The Horune weapons and vehicles this book reprints (150-155) compared with production's three gear and five vehicle rows, their 27 weapon and 37 location rows, and Underseas's page cache (166-172); every differing figure read off a render. All eight updated in place by `~257` (ruling D23 and the newest-printing ruling of 2026-10-04), `source_book` unchanged: 3 gear rows, 5 vehicles, 10 weapon rows and 1 location row, each with both pages and the old figure. Three figures that read like misprints (6 M.D. elbow blades, 2D4x10 and 4D6 laser turrets) taken under the ruling, old figures kept; the Fireball Bite's 914 m not taken. Applied `--remote` before the merge. |
 
+| 2026-10-20 | `pal/data/adventures-in-dinosaur-swamp-char` | **2 notable NPCs** (`~258`, through `scripts/bestiary-sql.mjs`), with 6 attacks: Jonny Maraschoc (95-97) and Silas Skinwalker (97-99), the two full stat blocks of the City of Char (83-100), every figure read off renders. One run the copy check refused (Silas's tracking by smell) was reworded with every figure kept. Left: the 17 Char people printed with Quick Stats blocks only (sixteen on 83-91, and Randal Arclight on 100), under ruling D21 (a row only where a full stat block is printed); the gang blocks (91-94) and the Arclight Brigade's typical member (99), under D20; and the people the book names with no block at all. Applied `--remote` before the merge. |
+
 ### What remains
 
-The NPCs.
+The NPCs on printed 71-82 and 101-133.
