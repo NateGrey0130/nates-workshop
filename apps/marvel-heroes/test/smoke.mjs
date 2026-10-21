@@ -1165,6 +1165,11 @@ section('No book text is in any tracked file (local only: needs the extraction)'
     // Reference Summary abbreviates ranks to four letters ("mons amaz typi"),
     // which look like words to the test and are not.
     const RANK_ABBR = new Set(['feeb', 'typi', 'exce', 'rema', 'incr', 'amaz', 'mons', 'unea']);
+    // Nor are the game's own stat names: a table headed with all eleven in
+    // order (MH3's Skrull soldiers) is the FASERIP grid, which roster.py and
+    // booklet.py name in the same order.
+    const STAT_WORDS = new Set(['fighting', 'agility', 'strength', 'endurance', 'reason', 'intuition', 'psyche',
+      'health', 'karma', 'resources', 'popularity']);
     // Nor are the books' own names: a run of section, team and character names
     // in the Contents' order ("X-Factor, New Mutants, Hellfire Club ...", the
     // teams list npcs.json carries) is a list, not prose.
@@ -1173,7 +1178,7 @@ section('No book text is in any tracked file (local only: needs the extraction)'
       ...(b.sections || []).flatMap(([s, sub]) => [s, sub || '']), ...(b.index || []).map(([n]) => n),
       ...['heroes', 'villains'].flatMap((k) => ((b.reference_summary || {})[k] || []).map(([n]) => n)),
     ]).flatMap(words));
-    const prose = (run) => run.filter((x) => /^[a-z]{3,}$/.test(x) && !RANK_ABBR.has(x) && !NAMES.has(x)).length >= 6;
+    const prose = (run) => run.filter((x) => /^[a-z]{3,}$/.test(x) && !RANK_ABBR.has(x) && !STAT_WORDS.has(x) && !NAMES.has(x)).length >= 6;
     const addText = (text) => {
       const w = words(text);
       for (let i = 0; i + N <= w.length; i++) if (prose(w.slice(i, i + N))) shingles.add(w.slice(i, i + N).join(' '));
