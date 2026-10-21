@@ -870,6 +870,39 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'nova-me1' }).snapshot));
   }
 
+  // MH1 prints MHSP1's rank words on two loose cover panels and in one-line
+  // grids inside its chapters (scripts/msh/coverpanels.py, mh1-overrides.json).
+  if (data.npcs.characters.some((c) => c.book === 'mh1')) {
+    const mh1 = data.npcs.characters.filter((c) => c.book === 'mh1');
+    const xmen = mh1.filter((c) => c.team === 'X-Men').map((c) => c.name).sort().join();
+    check('MH1: 25 characters, the eight X-Men filed with MA1\'s X-Men and the rest under the book\'s title',
+      mh1.length === 25 && xmen === 'Ariel,Colossus,Lockheed the Dragon,Nightcrawler,Professor X,Rogue,Storm,Wolverine'
+      && mh1.every((c) => c.team === 'X-Men' || c.team === 'MH1 The Breeder Bombs'), `${mh1.length} ${xmen}`);
+    const block = (id) => mh1.find((c) => c.id === id)?.versions[0].blocks[0];
+    const derived = ['fluffy-mh1', 'augie-hickman-mh1'].map((id) => [block(id), bookNpc({ character: id }).snapshot]);
+    check('MH1: Fluffy and Augie Hickman print no Health, so theirs is derived from their ranks (80, 26) and flagged so',
+      derived.map(([, s]) => s?.health).join() === '80,26' && derived.every(([b]) => b?.health_derived === true && b.rank_only === true)
+      && mh1.filter((c) => c.versions.some((v) => v.blocks.some((b) => b.health_derived))).length === 2,
+      derived.map(([b, s]) => `${s?.health} ${b?.health_derived}`).join(' | '));
+    const claws = block('robot-wolverine-mh1')?.override;
+    check('MH1: the Robot Wolverine\'s claws, printed "Remarkable (20 points)", are corrected to 30 and keep the printed 20',
+      claws?.verdict === 'misprint' && claws.printed === 20 && claws.corrected === 30, JSON.stringify(claws));
+    const dashed = ['false-blob-mh1', 'false-quicksilver-mh1', 'false-scarlet-witch-mh1', 'false-toad-mh1'].map((id) => bookNpc({ character: id }).snapshot);
+    const fm = bookNpc({ character: 'false-magneto-mh1' }).snapshot;
+    check('MH1: four False robots\' dashed Intuition and Psyche play as Shift 0 with Karma unset; False Magneto, who prints both, does not',
+      dashed.every((s) => ['intuition', 'psyche'].every((k) => s?.abilities[k].rank === 'shift-0' && s.abilities[k].number === 0) && s.karma === null)
+      && fm?.abilities.intuition.rank === 'good' && fm.abilities.psyche.rank === 'poor',
+      dashed.map((s) => `${s?.abilities.intuition.rank} ${s?.karma}`).join(' | '));
+    const lock = bookNpc({ character: 'lockheed-the-dragon-mh1' }).snapshot;
+    check('MH1: Lockheed\'s printed "?" Reason plays as Shift 0, and with no printed Karma his stays unset',
+      lock?.abilities.reason.rank === 'shift-0' && lock.abilities.reason.number === 0 && lock.karma === null, JSON.stringify(lock?.abilities.reason));
+    check('MH1: a cover-panel card cites its panel with no page, and a chapter opponent its Adventure page',
+      tagline(bookNpc({ character: 'colossus-mh1' }).snapshot).startsWith('MH1 The Breeder Bombs, Inside front cover;')
+      && tagline(bookNpc({ character: 'storm-mh1' }).snapshot).startsWith('MH1 The Breeder Bombs, Inside back cover;')
+      && tagline(bookNpc({ character: 'fixer-mh1' }).snapshot).startsWith('MH1 The Breeder Bombs, Adventure p.3;'),
+      tagline(bookNpc({ character: 'colossus-mh1' }).snapshot));
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };

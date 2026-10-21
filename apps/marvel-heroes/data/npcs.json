@@ -28,6 +28,11 @@
    "book": "MA4 The Fantastic Four Compendium",
    "code": "TSR6889",
    "pages": "3-75"
+  },
+  {
+   "book": "MH1 The Breeder Bombs",
+   "code": "TSR6851",
+   "pages": "Adventure 2-15; Inside front cover; Inside back cover"
   }
  ],
  "books": [
@@ -91,6 +96,20 @@
     3,
     75
    ]
+  },
+  {
+   "slug": "mh1",
+   "short": "MH1",
+   "title": "MH1 The Breeder Bombs",
+   "pages": [
+    2,
+    15
+   ],
+   "part": "Adventure",
+   "panels": [
+    "Inside front cover",
+    "Inside back cover"
+   ]
   }
  ],
  "teams": [
@@ -133,7 +152,8 @@
   "King's Crossing",
   "Subterranea",
   "Wundagore Mountain",
-  "Xandar"
+  "Xandar",
+  "MH1 The Breeder Bombs"
  ],
  "characters": [
   {
@@ -35327,6 +35347,2039 @@
    ],
    "appearances": [],
    "book": "ma4"
+  },
+  {
+   "id": "colossus-mh1",
+   "name": "Colossus",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "colossus-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Peter Nikolaievitch Rasputin, student"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "E",
+         20,
+         "Ex",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60 [145]",
+       "karma": "32",
+       "resources": "POOR",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armored Form"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "nightcrawler-mh1",
+   "name": "Nightcrawler",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "nightcrawler-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "Kurt Wagner, student/adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "50",
+       "resources": "POOR",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Prehensile Tail"
+      },
+      {
+       "name": "Indigo Fur"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "rogue-mh1",
+   "name": "Rogue",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "rogue-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside front cover",
+     "pages": [],
+     "identity": [
+      "(real name unrevealed),",
+      "student/adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "18",
+       "resources": "POOR",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Absorption"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Conflicting Personas"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "fluffy-mh1",
+   "name": "Fluffy",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "fluffy-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      2
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "health_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "fixer-mh1",
+   "name": "Fixer",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "fixer-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "wolverine-mh1",
+   "name": "Wolverine",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "wolverine-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "robot-mentallo-mh1",
+   "name": "Robot Mentallo",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "robot-mentallo-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         4,
+         "Pr"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "16",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "special"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "robot-wolverine-mh1",
+   "name": "Robot Wolverine",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "robot-wolverine-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      5
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "84",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "Claws' Remarkable damage",
+        "printed": 20,
+        "corrected": 30
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "special"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "augie-hickman-mh1",
+   "name": "Augie Hickman",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "augie-hickman-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "26",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line",
+       "health_derived": true
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "flyer-mh1",
+   "name": "Flyer",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "flyer-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "44",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "giant-mh1",
+   "name": "Giant",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "giant-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      11
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "104",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "false-blob-mh1",
+   "name": "False Blob",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "false-blob-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "rank_only": true,
+       "health": "94",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "IP",
+        "printed": "-",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "false-magneto-mh1",
+   "name": "False Magneto",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "false-magneto-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "false-quicksilver-mh1",
+   "name": "False Quicksilver",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "false-quicksilver-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "IP",
+        "printed": "-",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "false-scarlet-witch-mh1",
+   "name": "False Scarlet Witch",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "false-scarlet-witch-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "IP",
+        "printed": "-",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "false-toad-mh1",
+   "name": "False Toad",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "false-toad-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      12
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "IP",
+        "printed": "-",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "magneto-mh1",
+   "name": "Magneto",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "magneto-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Magnus (?), conqueror"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "125",
+       "karma": "100",
+       "resources": "AMAZING",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magnetic Control",
+       "upb": "EC15"
+      },
+      {
+       "name": "Energy Control"
+      },
+      {
+       "name": "Astral Projection",
+       "upb": "T1"
+      },
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "professor-x-mh1",
+   "name": "Professor X",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "professor-x-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Charles Xavier, Geneticist and Teacher"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "44",
+       "karma": "165",
+       "resources": "REMARKABLE",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Mental Bolts",
+       "upb": "M21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Astral Form",
+       "upb": "T1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "sentinels-mh1",
+   "name": "Sentinels",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "sentinels-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      14
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": "-",
+       "resources": "-",
+       "popularity": "-"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Bolts"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Cold Beams"
+      },
+      {
+       "name": "Learning"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "crimson-dynamo-mh1",
+   "name": "Crimson Dynamo",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "crimson-dynamo-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Dimitri Bukharin,",
+      "special operative for USSR"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "S",
+         10,
+         "Gd",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "E",
+         20,
+         "Ex",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80 [175]",
+       "karma": "36",
+       "resources": "(supplied by USSR)",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armor"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "mentallo-mh1",
+   "name": "Mentallo",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "mentallo-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Marvin Flumm, professional criminal"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "52",
+       "karma": "90",
+       "resources": "TYPICAL",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Image Generation"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "soviet-super-troopers-mh1",
+   "name": "Soviet Super-Troopers",
+   "team": "MH1 The Breeder Bombs",
+   "versions": [
+    {
+     "id": "soviet-super-troopers-mh1",
+     "label": null,
+     "team": "MH1 The Breeder Bombs",
+     "part": "Adventure",
+     "pages": [
+      15
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "E",
+         10,
+         "Gd",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50 [90]",
+       "karma": "18",
+       "resources": "-",
+       "popularity": "-"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "background",
+      "powers-intro"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "ariel-mh1",
+   "name": "Ariel",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "ariel-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Katherine \"Kitty\" Pryde, student"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "40",
+       "karma": "46",
+       "resources": "POOR",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "lockheed-the-dragon-mh1",
+   "name": "Lockheed the Dragon",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "lockheed-the-dragon-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "48",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "as_printed",
+        "field": "R",
+        "printed": "?",
+        "corrected": {
+         "number": 0,
+         "code": "Sh0"
+        }
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Flame Breath"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
+  },
+  {
+   "id": "storm-mh1",
+   "name": "Storm",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "storm-mh1",
+     "label": null,
+     "team": "X-Men",
+     "part": "Inside back cover",
+     "pages": [],
+     "identity": [
+      "Ororo Munroe, adventurer"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": null,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "36",
+       "resources": "POOR",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Weather Control",
+       "upb": "MC12"
+      }
+     ],
+     "members": [],
+     "text": [
+      "background",
+      "power",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mh1"
   }
  ]
 }
