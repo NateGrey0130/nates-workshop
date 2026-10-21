@@ -346,3 +346,8 @@ ability, because the book rolls on it zero to three times by the Number of
 Mutations table, and a `rolls` group takes a fixed number or dice while a
 `choose` group cannot take fewer picks than its count. Whether it gets a
 variable-count mechanic is open; nothing here models it.
+
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. The Mutant Features table stays prose with no variable-count
+mechanic, and the class readings recorded in the bodies of #1898, #1899,
+#1900 and #1901 stand, the Wild Knives Warrior's `men_of_arms: false`
+included.

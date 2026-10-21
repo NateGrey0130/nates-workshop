@@ -342,6 +342,8 @@ Change one with a `fix-` script if Nate reads it differently.
 | Mokoloi | 137 | headed an NPC villain and optional player race | playable, tagged `evil` |
 | Shadow People | 150 | three skills "from Espionage (+10%) or Physical (any)" | +10 on the whole choice |
 
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. Every row above stands as stored.
+
 ## Ledger
 
 | date | branch | what went in |

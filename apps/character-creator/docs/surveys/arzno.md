@@ -260,3 +260,8 @@ modifiers (Basic Mechanics -10%, Gymnastics +5%, Palming +2%, Play
 Musical Instrument -10%, Sign Language -10%, Swimming -15%). Each class
 states its list on `secondary_skills.categories` and in `restrictions`;
 neither is enforced at the pick.
+
+**Ruled D26, 2026-10-21:** kept as stored; nothing further imported. Nate took the recommended option on every open reading. Psythe, Lt. Fidel and Gerra No'ta (71-73) stay out under D22,
+and the typical A.M.C. soldier block stays out. #1912's two confirmations
+stand: the Waste Monkey copies the `vagabond` ladder, and both R.C.C.s
+store their `secondary_skills` schedules as above.
