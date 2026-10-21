@@ -527,9 +527,13 @@ def coverage(book, entries):
     # a card's run-in powers were all found: a Powers: section with text and
     # no power is a run-in head the reader missed (MH2's "UNIQUE WEAPON:"),
     # and a head inside a power's text is one read as the power before's
-    # (the Wasp's "ANIMAL COMMUNICATION AND CONTROL.", a line of its own)
+    # (the Wasp's "ANIMAL COMMUNICATION AND CONTROL.", a line of its own).
+    # The first is held only in an opponent_names "title" book (MH2), whose
+    # run-in reading it was written for: MH1's SOVIET SUPER-TROOPERS prints
+    # Powers text with no run-in head, and MH1's parse path is not changed.
+    title = book.get('opponent_names') == 'title'
     for e in entries:
-        if e['kind'] == 'entry' and e['sections'].get('powers') and not e['powers']:
+        if title and e['kind'] == 'entry' and e['sections'].get('powers') and not e['powers']:
             lines.append('  POWERS: TEXT AND NO RUN-IN POWER: %s' % e['header'])
             bad = True
         for p in e['powers']:
