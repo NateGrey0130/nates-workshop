@@ -71,6 +71,23 @@
      "note": "The chart's row is the Original State (Beyo in every rank, Karma Unlimited); the Roster Book prints that state's Health NOT APPLICABLE (p.2)."},
     {"match": {"summary": "Puma"}, "verdict": "summary_differs", "field": "health",
      "printed": 150, "corrected": 36, "checked": "2026-10-21",
-     "note": "The chart prints the puma form throughout (Rema Amaz Rema Incr, Health 150). The Roster Book prints Health 36/150 (p.23), both forms; the reader keeps 36, the human form's: Typical 6 + Good 10 + Good 10 + Good 10."}
+     "note": "The chart prints the puma form throughout (Rema Amaz Rema Incr, Health 150). The Roster Book prints Health 36/150 (p.23), both forms; the reader keeps 36, the human form's: Typical 6 + Good 10 + Good 10 + Good 10."},
+    {"match": {"page": 18, "header": "VALKYRIE", "label": "Aragorn"}, "verdict": "rows", "field": "RIP",
+     "abilities": [["F", 10, "Gd"], ["A", 20, "Ex"], ["S", 30, "Rm"], ["E", 40, "In"], ["R", null, null], ["I", null, null], ["P", null, null]],
+     "health": "100", "karma": null, "resources": null, "popularity": null,
+     "printed": "F, A, S, E and Health only", "corrected": null, "checked": "2026-10-21",
+     "note": "Roster 18. Valkyrie's steed prints four codes and a Health (GD EX RM IN, 100 = 10+20+30+40), no Reason, Intuition or Psyche."},
+    {"match": {"page": 27, "header": "PSYCHO-MAN", "label": "Earth-sized Version"}, "verdict": "rows", "field": "RIP",
+     "abilities": [["F", 20, "Ex"], ["A", 20, "Ex"], ["S", 75, "Mn"], ["E", 75, "Mn"], ["R", null, null], ["I", null, null], ["P", null, null]],
+     "health": null, "karma": null, "resources": null, "popularity": null,
+     "printed": "F, A, S and E only", "corrected": null, "checked": "2026-10-21",
+     "note": "Roster 27. A battlesuit's four physical codes (EX EX MN MN); Reason, Intuition and Psyche stay Psycho-Man's own."},
+    {"match": {"page": 27, "header": "PSYCHO-MAN", "label": "Giant-Sized Version"}, "verdict": "rows", "field": "RIP",
+     "abilities": [["F", 50, "Am"], ["A", 20, "Ex"], ["S", 100, "Un"], ["E", 100, "Un"], ["R", null, null], ["I", null, null], ["P", null, null]],
+     "health": null, "karma": null, "resources": null, "popularity": null,
+     "printed": "F, A, S and E only", "corrected": null, "checked": "2026-10-21",
+     "note": "Roster 27. A battlesuit's four physical codes (AM EX UN UN); Reason, Intuition and Psyche stay Psycho-Man's own."},
+    {"match": {"row": "mhsp2:mephisto-mhsp2:power:3"}, "verdict": "text", "checked": "2026-10-21",
+     "read": "\"\"super-powers\"", "printed": "\"super-powers\"", "note": "Roster 3, Other Powers. One opening double mark is printed; the OCR read two."}
   ]
 }

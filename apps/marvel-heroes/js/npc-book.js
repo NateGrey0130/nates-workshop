@@ -73,17 +73,19 @@ export function makeBookNpc(data) {
   // too (ME1's Ego, Endurance 5000); Beyond has no range and is never found.
   const rankOf = (n) => (n === null || n < 0 ? null
     : ladder.find((r) => r.min !== null && n >= r.min && (r.max === null || n <= r.max)) || null);
-  const ability = (n) => {
-    const r = rankOf(n);
+  // A rank printed with no number (MHSP2's Beyonder: BEYOND) is found by its
+  // code, and keeps no number.
+  const ability = (n, code) => {
+    const r = n === null && code ? ladder.find((x) => x.abbr === code) || null : rankOf(n);
     return { rank: r ? r.id : null, name: r ? r.name : String(n), number: n };
   };
 
   function block(b) {
     const fix = b.override && b.override.verdict === 'misprint' ? b.override : null;
     const abilities = {};
-    b.abilities.forEach(([letter, n], i) => {
+    b.abilities.forEach(([letter, n, code], i) => {
       const corrected = fix && fix.field === letter && typeof fix.corrected === 'object' ? fix.corrected.number : n;
-      abilities[KEYS[i]] = ability(corrected);
+      abilities[KEYS[i]] = ability(corrected, corrected === n ? code : null);
     });
     // Resources prints as a rank and a number, "Pr (4)"; the number is the
     // measure. MHSP1 prints the rank alone ("POOR", "CLASS 1000"): its standard

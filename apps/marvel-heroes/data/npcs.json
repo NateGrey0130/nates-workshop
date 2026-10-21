@@ -28,6 +28,11 @@
    "book": "MA4 The Fantastic Four Compendium",
    "code": "TSR6889",
    "pages": "3-75"
+  },
+  {
+   "book": "MHSP2 Secret Wars II",
+   "code": "TSR6869",
+   "pages": "2-32"
   }
  ],
  "books": [
@@ -91,6 +96,16 @@
     3,
     75
    ]
+  },
+  {
+   "slug": "mhsp2",
+   "short": "MHSP2",
+   "title": "MHSP2 Secret Wars II",
+   "pages": [
+    2,
+    32
+   ],
+   "part": "Roster"
   }
  ],
  "teams": [
@@ -133,7 +148,16 @@
   "King's Crossing",
   "Subterranea",
   "Wundagore Mountain",
-  "Xandar"
+  "Xandar",
+  "MHSP2 Secret Wars II",
+  "Avengers",
+  "West Coast Avengers",
+  "Power Pack",
+  "Defenders",
+  "Heroes and Others",
+  "Secret Wars II Villains",
+  "Nebula's Crew",
+  "And of Course"
  ],
  "characters": [
   {
@@ -35327,6 +35351,8785 @@
    ],
    "appearances": [],
    "book": "ma4"
+  },
+  {
+   "id": "the-beyonder-mhsp2",
+   "name": "The Beyonder",
+   "team": "MHSP2 Secret Wars II",
+   "versions": [
+    {
+     "id": "the-beyonder-mhsp2",
+     "label": null,
+     "team": "MHSP2 Secret Wars II",
+     "part": "Roster",
+     "pages": [
+      2
+     ],
+     "identity": [
+      "One from Beyond"
+     ],
+     "blocks": [
+      {
+       "label": "Original State",
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         null,
+         "B"
+        ],
+        [
+         "A",
+         null,
+         "B"
+        ],
+        [
+         "S",
+         null,
+         "B"
+        ],
+        [
+         "E",
+         null,
+         "B"
+        ],
+        [
+         "R",
+         null,
+         "B"
+        ],
+        [
+         "I",
+         null,
+         "B"
+        ],
+        [
+         "P",
+         null,
+         "B"
+        ]
+       ],
+       "rank_only": true,
+       "health": "NOT APPLICABLE",
+       "karma": "UNLIMITED",
+       "resources": "UMLIMITED",
+       "popularity": "NOT APPLICABLE"
+      },
+      {
+       "label": "Human Form",
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         1000,
+         "C-1000"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "4000",
+       "karma": "3000",
+       "resources": "UNLIMITED",
+       "popularity": "0"
+      },
+      {
+       "label": "Transition State",
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         0,
+         "Sh0"
+        ],
+        [
+         "A",
+         0,
+         "Sh0"
+        ],
+        [
+         "S",
+         0,
+         "Sh0"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         0,
+         "Sh0"
+        ],
+        [
+         "I",
+         0,
+         "Sh0"
+        ],
+        [
+         "P",
+         0,
+         "Sh0"
+        ]
+       ],
+       "rank_only": true,
+       "health": "1000",
+       "karma": "NOT APPLICABLE",
+       "resources": "NOT APPLICABLE",
+       "popularity": "NOT APPLICABLE"
+      },
+      {
+       "label": "Final State",
+       "page": 2,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         1000,
+         "C-1000"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "4000",
+       "karma": "UNLIMITED",
+       "resources": "NOT APPLICABLE",
+       "popularity": "NOT APPLICABLE"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ability Scores"
+      },
+      {
+       "name": "Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "death-mhsp2",
+   "name": "Death",
+   "team": "MHSP2 Secret Wars II",
+   "versions": [
+    {
+     "id": "death-mhsp2",
+     "label": null,
+     "team": "MHSP2 Secret Wars II",
+     "part": "Roster",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         1000,
+         "C-1000"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "4000",
+       "karma": "UNLIMITED",
+       "resources": "UNLIMITED",
+       "popularity": "-1000"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "eternity-mhsp2",
+   "name": "Eternity",
+   "team": "MHSP2 Secret Wars II",
+   "versions": [
+    {
+     "id": "eternity-mhsp2",
+     "label": null,
+     "team": "MHSP2 Secret Wars II",
+     "part": "Roster",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         1000,
+         "C-1000"
+        ],
+        [
+         "A",
+         1000,
+         "C-1000"
+        ],
+        [
+         "S",
+         1000,
+         "C-1000"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         1000,
+         "C-1000"
+        ],
+        [
+         "I",
+         1000,
+         "C-1000"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "4000",
+       "karma": "UNLIMITED",
+       "resources": "UNLIMITED",
+       "popularity": "0"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "mephisto-mhsp2",
+   "name": "Mephisto",
+   "team": "MHSP2 Secret Wars II",
+   "versions": [
+    {
+     "id": "mephisto-mhsp2",
+     "label": null,
+     "team": "MHSP2 Secret Wars II",
+     "part": "Roster",
+     "pages": [
+      3
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 3,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         75,
+         "Mn"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         75,
+         "Mn"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "rank_only": true,
+       "health": "1225",
+       "karma": "250",
+       "resources": "UNEARTHLY",
+       "popularity": "-100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mystic Force Bolts"
+      },
+      {
+       "name": "Other Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "cyclops-mhsp2",
+   "name": "Cyclops",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "cyclops-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Scott Summers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": "80",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Optic Blasts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "magneto-mhsp2",
+   "name": "Magneto",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "magneto-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Magnus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "125",
+       "karma": "100",
+       "resources": "AMAZING",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magnetic Control",
+       "upb": "EC15"
+      },
+      {
+       "name": "Energy Control"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "professor-x-mhsp2",
+   "name": "Professor X",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "professor-x-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      4
+     ],
+     "identity": [
+      "Charles Xavier"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 4,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "50",
+       "karma": "165",
+       "resources": "REMARKABLE",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Telepathy",
+       "upb": "M32"
+      },
+      {
+       "name": "Mental Bolts",
+       "upb": "M21"
+      },
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Astral Form",
+       "upb": "T1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "colossus-mhsp2",
+   "name": "Colossus",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "colossus-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Peter Nikolaievitch Rasputin"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "E",
+         20,
+         "Ex",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60 (145)",
+       "karma": "32",
+       "resources": "POOR",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Armored Form"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "rogue-mhsp2",
+   "name": "Rogue",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "rogue-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Real Name Unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "54",
+       "resources": "POOR",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 54,
+        "corrected": 58
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Power Absorption"
+      },
+      {
+       "name": "Stolen Powers"
+      },
+      {
+       "name": "Conflicting Personalities"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "wolverine-mhsp2",
+   "name": "Wolverine",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "wolverine-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      5
+     ],
+     "identity": [
+      "Logan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 5,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "121",
+       "resources": "EXCELLENT",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Rapid Healing"
+      },
+      {
+       "name": "Adamantium Skeleton"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Tracking",
+       "upb": "DT19"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "nightcrawler-mhsp2",
+   "name": "Nightcrawler",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "nightcrawler-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Kurt Wagner"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "106",
+       "karma": "50",
+       "resources": "POOR",
+       "popularity": "2"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Teleportation",
+       "upb": "T16"
+      },
+      {
+       "name": "Prehensile Tail"
+      },
+      {
+       "name": "Indigo Fur"
+      },
+      {
+       "name": "Wall-Crawling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "phoenix-ii-mhsp2",
+   "name": "Phoenix II",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "phoenix-ii-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Rachel Summers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "90",
+       "resources": "POOR",
+       "popularity": "10",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 90,
+        "corrected": 115
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "shadowcat-mhsp2",
+   "name": "Shadowcat",
+   "team": "X-Men",
+   "versions": [
+    {
+     "id": "shadowcat-mhsp2",
+     "label": null,
+     "team": "X-Men",
+     "part": "Roster",
+     "pages": [
+      6
+     ],
+     "identity": [
+      "Katherine \"Kitty\" Pryde"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 6,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "54",
+       "karma": "46",
+       "resources": "POOR",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Phasing",
+       "upb": "S22"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "magma-mhsp2",
+   "name": "Magma",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "magma-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Lady Amara Juliana Olivians Aquilla"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": "50",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Control Of Earth"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Lava Bolts"
+      },
+      {
+       "name": "Healing Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "sunspot-mhsp2",
+   "name": "Sunspot",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "sunspot-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      7
+     ],
+     "identity": [
+      "Roberto Da Costa"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "52",
+       "karma": "20",
+       "resources": "EXCELLENT",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Enhanced Strength"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "warlock-mhsp2",
+   "name": "Warlock",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "warlock-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      7
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 7,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "60",
+       "resources": "NONE",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapechanging"
+      },
+      {
+       "name": "Form Change"
+      },
+      {
+       "name": "Conversion And Draining"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "cannonball-mhsp2",
+   "name": "Cannonball",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "cannonball-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Sam Guthrie"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "54",
+       "karma": "22",
+       "resources": "POOR",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "karma-mhsp2",
+   "name": "Karma",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "karma-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Xi'an (Shan) Coy Manh"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": "111",
+       "resources": "TYPICAL",
+       "popularity": "4",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 111,
+        "corrected": 101
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Possession"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "mirage-mhsp2",
+   "name": "Mirage",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "mirage-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      8
+     ],
+     "identity": [
+      "Danielle (\"Dani\") Moonstar"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 8,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "70",
+       "resources": "POOR",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Image Generation"
+      },
+      {
+       "name": "Limited Telepathy"
+      },
+      {
+       "name": "Valkyrie Powers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "cypher-mhsp2",
+   "name": "Cypher",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "cypher-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Doug Ramsey"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "26",
+       "karma": "46",
+       "resources": "POOR",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Languages"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "magik-mhsp2",
+   "name": "Magik",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "magik-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Illyana Nikolovna Rasputina"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "80",
+       "resources": "GOOD",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Magic"
+      },
+      {
+       "name": "Soulsword"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Teleport Disks"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "wolfsbane-mhsp2",
+   "name": "Wolfsbane",
+   "team": "New Mutants",
+   "versions": [
+    {
+     "id": "wolfsbane-mhsp2",
+     "label": null,
+     "team": "New Mutants",
+     "part": "Roster",
+     "pages": [
+      9
+     ],
+     "identity": [
+      "Rahne Sinclair"
+     ],
+     "blocks": [
+      {
+       "label": "Wolfsbane",
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "50",
+       "karma": "24",
+       "resources": "POOR",
+       "popularity": "5",
+       "override": {
+        "verdict": "as_printed",
+        "field": "health",
+        "printed": 50
+       }
+      },
+      {
+       "label": "Wolf form",
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": null,
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "Wolfoid form",
+       "page": 9,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": null,
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shapechange"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "black-knight-mhsp2",
+   "name": "Black Knight",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "black-knight-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Dane Whitman"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "22",
+       "resources": "EXCELLENT",
+       "popularity": "60"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Ebony Sword"
+      },
+      {
+       "name": "Teleport",
+       "upb": "T16"
+      },
+      {
+       "name": "Atomic Steed"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "captain-america-mhsp2",
+   "name": "Captain America",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-america-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Steve Rogers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": "EXCELLENT",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shield"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "captain-marvel-mhsp2",
+   "name": "Captain Marvel",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "captain-marvel-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      10
+     ],
+     "identity": [
+      "Monica Rambeau"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 10,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "22",
+       "resources": "EXCELLENT",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Form"
+      },
+      {
+       "name": "Energy Blasts"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "hercules-mhsp2",
+   "name": "Hercules",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "hercules-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Hercules of Olympus"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "320",
+       "karma": "50",
+       "resources": "TYPICAL",
+       "popularity": "70"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      },
+      {
+       "name": "Resistance To Fire"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "starfox-mhsp2",
+   "name": "Starfox",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "starfox-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Eros of Titan"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "56",
+       "resources": "GOOD",
+       "popularity": "75"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Psionic Tickle"
+      },
+      {
+       "name": "Resources"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "sub-mariner-mhsp2",
+   "name": "Sub-Mariner",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "sub-mariner-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      11
+     ],
+     "identity": [
+      "Namor of Atlantis"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 11,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "185",
+       "karma": "76",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "she-hulk-mhsp2",
+   "name": "She-Hulk",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "she-hulk-mhsp2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Roster",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Jennifer Walters"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "175",
+       "karma": "36",
+       "resources": "EXCELLENT",
+       "popularity": "30"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Leaping",
+       "upb": "T9"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "wasp-mhsp2",
+   "name": "Wasp",
+   "team": "Avengers",
+   "versions": [
+    {
+     "id": "wasp-mhsp2",
+     "label": null,
+     "team": "Avengers",
+     "part": "Roster",
+     "pages": [
+      12
+     ],
+     "identity": [
+      "Janet \"Jan\" Van Dyne"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 12,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "50",
+       "resources": "EXCELLENT",
+       "popularity": "65"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shrinking",
+       "upb": "S30"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Wasp Sting"
+      },
+      {
+       "name": "Insect Communication"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "human-torch-mhsp2",
+   "name": "Human Torch",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "human-torch-mhsp2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Roster",
+     "pages": [
+      13,
+      14
+     ],
+     "identity": [
+      "Johnny Storm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "60",
+       "karma": "26",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Generate And Control Fire"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Nova Blast"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "invisible-woman-mhsp2",
+   "name": "Invisible Woman",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "invisible-woman-mhsp2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Roster",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Susan \"Sue\" Storm Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "40",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Invisibility",
+       "upb": "S19"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "mister-fantastic-mhsp2",
+   "name": "Mister Fantastic",
+   "team": "Fantastic Four",
+   "versions": [
+    {
+     "id": "mister-fantastic-mhsp2",
+     "label": null,
+     "team": "Fantastic Four",
+     "part": "Roster",
+     "pages": [
+      13
+     ],
+     "identity": [
+      "Reed Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 13,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "42",
+       "karma": "100",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Elastic Body"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Wrestling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "hawkeye-mhsp2",
+   "name": "Hawkeye",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "hawkeye-mhsp2",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Roster",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Clint Francis Barton"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "22",
+       "resources": "TYPICAL",
+       "popularity": "45"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extraordinary Vision"
+      },
+      {
+       "name": "Poor Hearing"
+      },
+      {
+       "name": "Bow Skill"
+      },
+      {
+       "name": "Specialty Arrows"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "tigra-mhsp2",
+   "name": "Tigra",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "tigra-mhsp2",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Roster",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Greer Grant Nelson"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "56",
+       "resources": "TYPICAL",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Extrordinary Senses"
+      },
+      {
+       "name": "Night Vision"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Empathy",
+       "upb": "M10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "wonder-man-mhsp2",
+   "name": "Wonder Man",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "wonder-man-mhsp2",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Roster",
+     "pages": [
+      14
+     ],
+     "identity": [
+      "Simon Williams"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 14,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "215",
+       "karma": "18",
+       "resources": "POOR",
+       "popularity": "45"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Enviromental Independence"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "iron-man-mhsp2",
+   "name": "Iron Man",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "iron-man-mhsp2",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Roster",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Tony Stark"
+     ],
+     "blocks": [
+      {
+       "label": "Iron Man",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "165",
+       "karma": "66",
+       "resources": "EXCELLENT",
+       "popularity": "25"
+      },
+      {
+       "label": "Tony Stark",
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": null,
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Repulsors"
+      },
+      {
+       "name": "Pulse-Bolts"
+      },
+      {
+       "name": "Unibeam"
+      },
+      {
+       "name": "Thermal Beam"
+      },
+      {
+       "name": "Disruptor Field"
+      },
+      {
+       "name": "Energy Absorbtion"
+      },
+      {
+       "name": "Air Supply"
+      },
+      {
+       "name": "Overide"
+      },
+      {
+       "name": "Detection Equipment"
+      },
+      {
+       "name": "Multi-Band Radio"
+      },
+      {
+       "name": "Sonic Distorter"
+      },
+      {
+       "name": "Eye Protection"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "mockingbird-mhsp2",
+   "name": "Mockingbird",
+   "team": "West Coast Avengers",
+   "versions": [
+    {
+     "id": "mockingbird-mhsp2",
+     "label": null,
+     "team": "West Coast Avengers",
+     "part": "Roster",
+     "pages": [
+      15
+     ],
+     "identity": [
+      "Barbara \"Bobbi\" Morse Barton"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 15,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "32",
+       "resources": "TYPICAL",
+       "popularity": "50"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Battle Staves"
+      },
+      {
+       "name": "Acrobatics"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "energizer-mhsp2",
+   "name": "Energizer",
+   "team": "Power Pack",
+   "versions": [
+    {
+     "id": "energizer-mhsp2",
+     "label": null,
+     "team": "Power Pack",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Katie Power"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "62",
+       "karma": "18",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Absorption"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "gee-mhsp2",
+   "name": "Gee",
+   "team": "Power Pack",
+   "versions": [
+    {
+     "id": "gee-mhsp2",
+     "label": null,
+     "team": "Power Pack",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Alex Power"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "72",
+       "karma": "22",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Gravity Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "lightspeed-mhsp2",
+   "name": "Lightspeed",
+   "team": "Power Pack",
+   "versions": [
+    {
+     "id": "lightspeed-mhsp2",
+     "label": null,
+     "team": "Power Pack",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Julie Power"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "26",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "mass-master-mhsp2",
+   "name": "Mass Master",
+   "team": "Power Pack",
+   "versions": [
+    {
+     "id": "mass-master-mhsp2",
+     "label": null,
+     "team": "Power Pack",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Jack Power"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "70",
+       "karma": "20",
+       "resources": "FEEBLE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mass Control"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "tattletale-mhsp2",
+   "name": "Tattletale",
+   "team": "Power Pack",
+   "versions": [
+    {
+     "id": "tattletale-mhsp2",
+     "label": null,
+     "team": "Power Pack",
+     "part": "Roster",
+     "pages": [
+      16
+     ],
+     "identity": [
+      "Franklin Benjamin Richards"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 16,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         2,
+         "Fe"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "18",
+       "karma": "91",
+       "resources": "NONE",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 91,
+        "corrected": 101
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Precognition",
+       "upb": "M24"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "angel-mhsp2",
+   "name": "Angel",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "angel-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      17
+     ],
+     "identity": [
+      "Warren Kenneth Worthington III"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "90",
+       "karma": "26",
+       "resources": "REMARKABLE",
+       "popularity": "12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "beast-mhsp2",
+   "name": "Beast",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "beast-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      17
+     ],
+     "identity": [
+      "Henry \"Hank\" McCoy"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "50",
+       "resources": "GOOD",
+       "popularity": "25"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Feet"
+      },
+      {
+       "name": "Climbing"
+      },
+      {
+       "name": "Speed"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "iceman-mhsp2",
+   "name": "Iceman",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "iceman-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      17
+     ],
+     "identity": [
+      "Robert \"Bobby\" Drake"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 17,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "30",
+       "resources": "TYPICAL",
+       "popularity": "3",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 30,
+        "corrected": 20
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Ice Generation"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Movement"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "andromeda-mhsp2",
+   "name": "Andromeda",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "andromeda-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      18
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "60",
+       "resources": "GOOD",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Water Breathing"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Swimming"
+      },
+      {
+       "name": "Warship"
+      },
+      {
+       "name": "Trident"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "gargoyle-mhsp2",
+   "name": "Gargoyle",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "gargoyle-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      18
+     ],
+     "identity": [
+      "Isaac Christians"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "94",
+       "karma": "26",
+       "resources": "POOR",
+       "popularity": "4"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Regeneration",
+       "upb": "P9"
+      },
+      {
+       "name": "Bio-Mystical Life Force Control"
+      },
+      {
+       "name": "Force Bolts"
+      },
+      {
+       "name": "Antimagical Force Field"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "valkyrie-mhsp2",
+   "name": "Valkyrie",
+   "team": "Defenders",
+   "versions": [
+    {
+     "id": "valkyrie-mhsp2",
+     "label": null,
+     "team": "Defenders",
+     "part": "Roster",
+     "pages": [
+      18
+     ],
+     "identity": [
+      "Brunnhilda of the Valkyrior"
+     ],
+     "blocks": [
+      {
+       "label": "Valkyrie",
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "205",
+       "karma": "36",
+       "resources": "TYPICAL",
+       "popularity": "15"
+      },
+      {
+       "label": "Aragorn",
+       "page": 18,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         null,
+         null
+        ],
+        [
+         "I",
+         null,
+         null
+        ],
+        [
+         "P",
+         null,
+         null
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "RIP",
+        "printed": "F, A, S, E and Health only",
+        "corrected": null
+       },
+       "kind": "partial"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Dragonfang"
+      },
+      {
+       "name": "Iron Spear"
+      },
+      {
+       "name": "Aragorn"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "beta-ray-bill-mhsp2",
+   "name": "Beta Ray Bill",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "beta-ray-bill-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      19
+     ],
+     "identity": [
+      "(English Translation of Name)"
+     ],
+     "blocks": [
+      {
+       "label": "Beta Ray Bill",
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "330",
+       "karma": "100",
+       "resources": "GOOD",
+       "popularity": "30"
+      },
+      {
+       "label": "Humanoid form",
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "80",
+       "karma": "100",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Storm Breaker"
+      },
+      {
+       "name": "Sensor Implant"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "the-thing-mhsp2",
+   "name": "The Thing",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "the-thing-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      19
+     ],
+     "identity": [
+      "Benjamin \"Ben\" J. Grimm"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "200",
+       "karma": "50",
+       "resources": "REMARKABLE",
+       "popularity": "80"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "thor-mhsp2",
+   "name": "Thor",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "thor-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      19
+     ],
+     "identity": [
+      "Thor of Asgard"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 19,
+       "abilities": [
+        [
+         "F",
+         100,
+         "Un"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "320",
+       "karma": "76",
+       "resources": "EXCELLENT",
+       "popularity": "100"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dense Flesh"
+      },
+      {
+       "name": "Mjolnir"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "dazzler-mhsp2",
+   "name": "Dazzler",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "dazzler-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      20
+     ],
+     "identity": [
+      "Alison Blaire"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "16",
+       "resources": "POOR",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Sound/light Conversion"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "iron-fist-mhsp2",
+   "name": "Iron Fist",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "iron-fist-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      20
+     ],
+     "identity": [
+      "Daniel \"Danny\" Rand"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "100",
+       "resources": "TYPICAL",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Chi"
+      },
+      {
+       "name": "Iron Fist"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "power-man-mhsp2",
+   "name": "Power Man",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "power-man-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      20
+     ],
+     "identity": [
+      "Luke Cage"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 20,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "36",
+       "resources": "TYPICAL",
+       "popularity": "20"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "cloak-mhsp2",
+   "name": "Cloak",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "cloak-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      21
+     ],
+     "identity": [
+      "Tyrone Johnson"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": "36",
+       "resources": "FEEBLE",
+       "popularity": "3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Dark Dimension"
+      },
+      {
+       "name": "Darkness Generation"
+      },
+      {
+       "name": "Teleport",
+       "upb": "T16"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "dagger-mhsp2",
+   "name": "Dagger",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "dagger-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      21
+     ],
+     "identity": [
+      "Tandy Bowen"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "76",
+       "karma": "30",
+       "resources": "FEEBLE",
+       "popularity": "7"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Light Generation"
+      },
+      {
+       "name": "Light Daggers"
+      },
+      {
+       "name": "Acrobatics"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "spider-man-mhsp2",
+   "name": "Spider-Man",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "spider-man-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      21
+     ],
+     "identity": [
+      "Peter Parker"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 21,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "160",
+       "karma": "110",
+       "resources": "POOR",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wall Crawling"
+      },
+      {
+       "name": "Spider Sense"
+      },
+      {
+       "name": "Web-Shooters"
+      },
+      {
+       "name": "Spider Tracers"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "daredevil-mhsp2",
+   "name": "Daredevil",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "daredevil-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      22
+     ],
+     "identity": [
+      "Matthew \"Matt\" Michael Murdock"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         75,
+         "Mn"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "91",
+       "resources": "GOOD",
+       "popularity": "42"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Senses"
+      },
+      {
+       "name": "Radar Sense"
+      },
+      {
+       "name": "Billy Club"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "firelord-mhsp2",
+   "name": "Firelord",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "firelord-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      22
+     ],
+     "identity": [
+      "Pyreus Kril"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         100,
+         "Un"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         50,
+         "Am"
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "325",
+       "karma": "90",
+       "resources": "POOR",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 90,
+        "corrected": 110
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Stellar Flame"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Staff"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "lila-cheney-mhsp2",
+   "name": "Lila Cheney",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "lila-cheney-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      22
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 22,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "36",
+       "resources": "REMARKABLE",
+       "popularity": "55"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Specialiazed Teleport"
+      },
+      {
+       "name": "Dyson Sphere"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "puma-mhsp2",
+   "name": "Puma",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "puma-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      23
+     ],
+     "identity": [
+      "Thomas Fireheart"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "A",
+         10,
+         "Gd",
+         [
+          50,
+          "Am"
+         ]
+        ],
+        [
+         "S",
+         10,
+         "Gd",
+         [
+          30,
+          "Rm"
+         ]
+        ],
+        [
+         "E",
+         10,
+         "Gd",
+         [
+          40,
+          "In"
+         ]
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         10,
+         "Gd",
+         [
+          75,
+          "Mn"
+         ]
+        ],
+        [
+         "P",
+         30,
+         "Rm"
+        ]
+       ],
+       "rank_only": true,
+       "health": "36",
+       "karma": "60",
+       "resources": "INCREDIBLE",
+       "popularity": "15"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Transformation"
+      },
+      {
+       "name": "Hyper-Senses"
+      }
+     ],
+     "members": [],
+     "text": [
+      "contacts",
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "the-watcher-mhsp2",
+   "name": "The Watcher",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "the-watcher-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      23
+     ],
+     "identity": [
+      "Uatu"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         100,
+         "Un"
+        ],
+        [
+         "I",
+         100,
+         "Un"
+        ],
+        [
+         "P",
+         100,
+         "Un"
+        ]
+       ],
+       "rank_only": true,
+       "health": "250",
+       "karma": "300",
+       "resources": "UNEARTHLY",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mental Powers"
+      },
+      {
+       "name": "Energy Manipulation"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "time-bomb-mhsp2",
+   "name": "Time Bomb",
+   "team": "Heroes and Others",
+   "versions": [
+    {
+     "id": "time-bomb-mhsp2",
+     "label": null,
+     "team": "Heroes and Others",
+     "part": "Roster",
+     "pages": [
+      23
+     ],
+     "identity": [
+      "Tabitha \"Boom-Boom,\" last name unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 23,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "44",
+       "karma": "22",
+       "resources": "POOR",
+       "popularity": "0",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 22,
+        "corrected": 16
+       }
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "armidillo-mhsp2",
+   "name": "Armidillo",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "armidillo-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Antonio Rodriguez"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Claws"
+      },
+      {
+       "name": "Tunneling"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "kurse-mhsp2",
+   "name": "Kurse",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "kurse-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Algrim the Elf"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         75,
+         "Mn"
+        ],
+        [
+         "A",
+         50,
+         "Am"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         2,
+         "Fe"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "325",
+       "karma": "6",
+       "resources": "NONE",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Mental Protection"
+      },
+      {
+       "name": "Previous Memory"
+      },
+      {
+       "name": "Weakness"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "thundersword-mhsp2",
+   "name": "Thundersword",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "thundersword-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      24
+     ],
+     "identity": [
+      "Stewart Cadwell"
+     ],
+     "blocks": [
+      {
+       "label": "Thundersword",
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "18",
+       "resources": "TYPICAL",
+       "popularity": "0"
+      },
+      {
+       "label": "Boromir",
+       "page": 24,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Protected Senses"
+      },
+      {
+       "name": "Thundersword"
+      },
+      {
+       "name": "Boromir"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "gunthar-mhsp2",
+   "name": "Gunthar",
+   "team": "Nebula's Crew",
+   "versions": [
+    {
+     "id": "gunthar-mhsp2",
+     "label": null,
+     "team": "Nebula's Crew",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Rigellian Pirate",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "40",
+       "karma": "80",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Density Control"
+      },
+      {
+       "name": "Mind Control",
+       "upb": "L10"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "kehl-mhsp2",
+   "name": "Kehl",
+   "team": "Nebula's Crew",
+   "versions": [
+    {
+     "id": "kehl-mhsp2",
+     "label": null,
+     "team": "Nebula's Crew",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Tauran Pirate",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         2,
+         "Fe"
+        ],
+        [
+         "P",
+         2,
+         "Fe"
+        ]
+       ],
+       "rank_only": true,
+       "health": "215",
+       "karma": "8",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "levan-mhsp2",
+   "name": "Levan",
+   "team": "Nebula's Crew",
+   "versions": [
+    {
+     "id": "levan-mhsp2",
+     "label": null,
+     "team": "Nebula's Crew",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Sark Pirate",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "60",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "nebula-mhsp2",
+   "name": "Nebula",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "nebula-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         30,
+         "Rm"
+        ],
+        [
+         "P",
+         40,
+         "In"
+        ]
+       ],
+       "rank_only": true,
+       "health": "130",
+       "karma": "100",
+       "resources": null,
+       "popularity": null
+      }
+     ],
+     "powers": [
+      {
+       "name": "Wrist-Blasters"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "prose",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "skrulls-mhsp2",
+   "name": "Skrulls",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "skrulls-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Typical Skrull Warrior",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "22",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "General Zedrao",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "80",
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 30,
+        "corrected": 60
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Shape-Change"
+      },
+      {
+       "name": "Equipment"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "skunge-mhsp2",
+   "name": "Skunge",
+   "team": "Nebula's Crew",
+   "versions": [
+    {
+     "id": "skunge-mhsp2",
+     "label": null,
+     "team": "Nebula's Crew",
+     "part": "Roster",
+     "pages": [
+      25
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Laxidazian Troll Pirate",
+       "page": 25,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "46",
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 30,
+        "corrected": 20
+       },
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "powers-intro",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "kingpin-mhsp2",
+   "name": "Kingpin",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "kingpin-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      26
+     ],
+     "identity": [
+      "Wilson Fisk"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "40",
+       "resources": "INCREDIBLE",
+       "popularity": "31"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Walking Stick"
+      },
+      {
+       "name": "Stickpin"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "kingpin-s-organization-mhsp2",
+   "name": "Kingpin's Organization",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "kingpin-s-organization-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      26
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Henchmen",
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "Enforcers",
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "Hit Men",
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "32",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "Undercover Agents",
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      },
+      {
+       "label": "Middle Management",
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         6,
+         "Ty"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "24",
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "prose"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "rose-mhsp2",
+   "name": "Rose",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "rose-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      26
+     ],
+     "identity": [
+      "Real name unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 26,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "38",
+       "karma": "60",
+       "resources": "REMARKABLE",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [],
+     "members": [],
+     "text": [
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "hate-monger-mhsp2",
+   "name": "Hate-Monger",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "hate-monger-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "Construct of the Psycho-Man"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         75,
+         "Mn"
+        ]
+       ],
+       "rank_only": true,
+       "health": "28",
+       "karma": "83",
+       "resources": "NOT APPLICABLE",
+       "popularity": "SPECIAL"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Emotion Control",
+       "upb": "L4"
+      },
+      {
+       "name": "Shape-Changing"
+      },
+      {
+       "name": "Note"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "juggernaut-mhsp2",
+   "name": "Juggernaut",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "juggernaut-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      27
+     ],
+     "identity": [
+      "Cain Marko"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         6,
+         "Ty"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "234",
+       "karma": "30",
+       "resources": "TYPICAL",
+       "popularity": "-30",
+       "override": {
+        "verdict": "misprint",
+        "field": "karma",
+        "printed": 30,
+        "corrected": 20
+       }
+      }
+     ],
+     "powers": [
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Invulnerability"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "psycho-man-mhsp2",
+   "name": "Psycho-Man",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "psycho-man-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      27
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": "Psycho-Man",
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "34",
+       "karma": "80",
+       "resources": "MONSTROUS",
+       "popularity": "0"
+      },
+      {
+       "label": "Earth-sized Version",
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         75,
+         "Mn"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         null,
+         null
+        ],
+        [
+         "I",
+         null,
+         null
+        ],
+        [
+         "P",
+         null,
+         null
+        ]
+       ],
+       "rank_only": true,
+       "health": null,
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "RIP",
+        "printed": "F, A, S and E only",
+        "corrected": null
+       },
+       "kind": "partial"
+      },
+      {
+       "label": "Giant-Sized Version",
+       "page": 27,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         null,
+         null
+        ],
+        [
+         "I",
+         null,
+         null
+        ],
+        [
+         "P",
+         null,
+         null
+        ]
+       ],
+       "rank_only": true,
+       "health": null,
+       "karma": null,
+       "resources": null,
+       "popularity": null,
+       "override": {
+        "verdict": "rows",
+        "field": "RIP",
+        "printed": "F, A, S and E only",
+        "corrected": null
+       },
+       "kind": "partial"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Battlesuits"
+      },
+      {
+       "name": "Emotion-Control Box"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "electro-mhsp2",
+   "name": "Electro",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "electro-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Maxwell Dillon"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         10,
+         "Gd"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "100",
+       "karma": "36",
+       "resources": "TYPICAL",
+       "popularity": "-12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Electrical Bolts"
+      },
+      {
+       "name": "Resistances"
+      },
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Electrical Override"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "rhino-mhsp2",
+   "name": "Rhino",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "rhino-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Real name unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         50,
+         "Am"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "34",
+       "resources": "POOR",
+       "popularity": "-14"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Movement"
+      },
+      {
+       "name": "Charging"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "ultron-mhsp2",
+   "name": "Ultron",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "ultron-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      28
+     ],
+     "identity": [],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         40,
+         "In"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         4,
+         "Pr"
+        ]
+       ],
+       "rank_only": true,
+       "health": "190",
+       "karma": "54",
+       "resources": "REMARKABLE",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Blasters"
+      },
+      {
+       "name": "Tractor Beams"
+      },
+      {
+       "name": "Encephalo Beam"
+      },
+      {
+       "name": "Power Absorption"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "vulture-mhsp2",
+   "name": "Vulture",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "vulture-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      28
+     ],
+     "identity": [
+      "Adrian Toomes"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 28,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "110",
+       "karma": "50",
+       "resources": "TYPICAL",
+       "popularity": "-3"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Flight",
+       "upb": "T21"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "doctor-octopus-mhsp2",
+   "name": "Doctor Octopus",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "doctor-octopus-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Otto Octavius"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "66",
+       "karma": "46",
+       "resources": "GOOD",
+       "popularity": "5"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Tentacles"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "kraven-mhsp2",
+   "name": "Kraven",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "kraven-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Sergei Kravin"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         40,
+         "In"
+        ],
+        [
+         "A",
+         30,
+         "Rm"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         20,
+         "Ex"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "140",
+       "karma": "66",
+       "resources": "GOOD",
+       "popularity": "-33"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Nerve Punch"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "titania-mhsp2",
+   "name": "Titania",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "titania-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      29
+     ],
+     "identity": [
+      "Mary \"Skeeter\" MacPherran"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 29,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         100,
+         "Un"
+        ],
+        [
+         "E",
+         75,
+         "Mn"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "health": "235",
+       "karma": "30",
+       "resources": "GOOD",
+       "popularity": "10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "absorbing-man-mhsp2",
+   "name": "Absorbing Man",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "absorbing-man-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      30
+     ],
+     "identity": [
+      "Carl \"Crusher\" Creel"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         6,
+         "Ty"
+        ],
+        [
+         "S",
+         10,
+         "Gd"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         4,
+         "Pr"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "56",
+       "karma": "14",
+       "resources": "POOR",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Absorption"
+      },
+      {
+       "name": "Weapon"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "blastaar-mhsp2",
+   "name": "Blastaar",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "blastaar-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      30
+     ],
+     "identity": [
+      "Blastaar of Baluur"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "180",
+       "karma": "40",
+       "resources": "EXCELLENT",
+       "popularity": "-12"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Energy Blasts"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "wizard-mhsp2",
+   "name": "Wizard",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "wizard-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      30
+     ],
+     "identity": [
+      "Real name unrevealed"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 30,
+       "abilities": [
+        [
+         "F",
+         4,
+         "Pr"
+        ],
+        [
+         "A",
+         10,
+         "Gd"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         20,
+         "Ex"
+        ],
+        [
+         "R",
+         40,
+         "In"
+        ],
+        [
+         "I",
+         6,
+         "Ty"
+        ],
+        [
+         "P",
+         6,
+         "Ty"
+        ]
+       ],
+       "rank_only": true,
+       "health": "40",
+       "karma": "52",
+       "resources": "EXCELLENT",
+       "popularity": "-10"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Anti-Gravity Disks"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Power Gloves"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "doctor-doom-mhsp2",
+   "name": "Doctor Doom",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "doctor-doom-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      31
+     ],
+     "identity": [
+      "Victor Von Doom"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         30,
+         "Rm"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         30,
+         "Rm"
+        ],
+        [
+         "E",
+         40,
+         "In"
+        ],
+        [
+         "R",
+         50,
+         "Am"
+        ],
+        [
+         "I",
+         40,
+         "In"
+        ],
+        [
+         "P",
+         50,
+         "Am"
+        ]
+       ],
+       "rank_only": true,
+       "health": "120",
+       "karma": "140",
+       "resources": "AMAZING",
+       "popularity": "40"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Force Field",
+       "upb": "D2"
+      },
+      {
+       "name": "Force Beams"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Air Supply"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "powers-intro",
+      "running",
+      "talents"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "sentinels-mhsp2",
+   "name": "Sentinels",
+   "team": "Secret Wars II Villains",
+   "versions": [
+    {
+     "id": "sentinels-mhsp2",
+     "label": null,
+     "team": "Secret Wars II Villains",
+     "part": "Roster",
+     "pages": [
+      31
+     ],
+     "identity": [
+      "Omega series - Hunter/Killers"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 31,
+       "abilities": [
+        [
+         "F",
+         50,
+         "Am"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         50,
+         "Am"
+        ],
+        [
+         "E",
+         100,
+         "Un"
+        ],
+        [
+         "R",
+         30,
+         "Rm"
+        ],
+        [
+         "I",
+         20,
+         "Ex"
+        ],
+        [
+         "P",
+         20,
+         "Ex"
+        ]
+       ],
+       "rank_only": true,
+       "health": "240",
+       "karma": "70",
+       "resources": "NOT APPLICABLE",
+       "popularity": "NOT APPLICABLE"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Mutant Detection"
+      },
+      {
+       "name": "Flight",
+       "upb": "T21"
+      },
+      {
+       "name": "Energy Bolts"
+      },
+      {
+       "name": "Body Armor",
+       "upb": "D1"
+      },
+      {
+       "name": "Catch-Web Cables"
+      },
+      {
+       "name": "Learning Program"
+      },
+      {
+       "name": "Background"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "molecule-man-mhsp2",
+   "name": "Molecule Man",
+   "team": "And of Course",
+   "versions": [
+    {
+     "id": "molecule-man-mhsp2",
+     "label": null,
+     "team": "And of Course",
+     "part": "Roster",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Owen Reece"
+     ],
+     "blocks": [
+      {
+       "label": null,
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         2,
+         "Fe"
+        ],
+        [
+         "A",
+         4,
+         "Pr"
+        ],
+        [
+         "S",
+         4,
+         "Pr"
+        ],
+        [
+         "E",
+         1000,
+         "C-1000"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         4,
+         "Pr"
+        ],
+        [
+         "P",
+         1000,
+         "C-1000"
+        ]
+       ],
+       "rank_only": true,
+       "health": "1010",
+       "karma": "1014",
+       "resources": "UNLIMITED",
+       "popularity": "0"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Molecular Control"
+      },
+      {
+       "name": "Semi-Ominiscience"
+      },
+      {
+       "name": "Power Boost"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
+  },
+  {
+   "id": "volcana-mhsp2",
+   "name": "Volcana",
+   "team": "And of Course",
+   "versions": [
+    {
+     "id": "volcana-mhsp2",
+     "label": null,
+     "team": "And of Course",
+     "part": "Roster",
+     "pages": [
+      32
+     ],
+     "identity": [
+      "Marsha Rosenberg"
+     ],
+     "blocks": [
+      {
+       "label": "Volcana",
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         20,
+         "Ex"
+        ],
+        [
+         "A",
+         40,
+         "In"
+        ],
+        [
+         "S",
+         20,
+         "Ex"
+        ],
+        [
+         "E",
+         30,
+         "Rm"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "110",
+       "karma": "30",
+       "resources": "GOOD",
+       "popularity": "5"
+      },
+      {
+       "label": "Marsha Rosenberg",
+       "page": 32,
+       "abilities": [
+        [
+         "F",
+         6,
+         "Ty"
+        ],
+        [
+         "A",
+         20,
+         "Ex"
+        ],
+        [
+         "S",
+         6,
+         "Ty"
+        ],
+        [
+         "E",
+         10,
+         "Gd"
+        ],
+        [
+         "R",
+         10,
+         "Gd"
+        ],
+        [
+         "I",
+         10,
+         "Gd"
+        ],
+        [
+         "P",
+         10,
+         "Gd"
+        ]
+       ],
+       "rank_only": true,
+       "form": true,
+       "health": "42",
+       "karma": "30",
+       "resources": null,
+       "popularity": null,
+       "kind": "line"
+      }
+     ],
+     "powers": [
+      {
+       "name": "Fiery Body"
+      },
+      {
+       "name": "Thermal Energy Blasts"
+      },
+      {
+       "name": "Fire Resistance"
+      },
+      {
+       "name": "Alter Ego",
+       "upb": "S2"
+      }
+     ],
+     "members": [],
+     "text": [
+      "power",
+      "running"
+     ]
+    }
+   ],
+   "appearances": [],
+   "book": "mhsp2"
   }
  ]
 }

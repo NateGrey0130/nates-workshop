@@ -45,6 +45,7 @@
     "  block_labels    a code-grids book: [printed page, Health, label] for a grid that is a form or an item inside another entry (The Thing's Human Form); it gets no header of its own",
     "  statted_pages   a code-grids book: pages outside character_pages that stat beings inside a place's text, {page, team (the place), names, partial: [[NAME, Karma]] for a grid printing only R, I and P}",
     "  teams (code-grids) [printed page, first entry's header, team] in book order: each starts a run of that team",
+    "  team_names      a roster-book book: {team as its banner prints it: the team its cards file under}; an entry under no banner files under the book's title",
     "  layout cover-panels for MH1's: MHSP1's blocks on a loose cover's inside panels and a few booklet pages, with one-line grids in the chapters (scripts/msh/coverpanels.py). It reads character_ranges and opponents in ME1's form, and:",
     "  panels          a cover-panels book: parts (offset null, no printed page) read whole for cards; a card there cites the panel",
     "  cards           a cover-panels book: [part, printed page or null, name] for every full block, read off the page images; with opponents, the checklist",
@@ -1258,6 +1259,16 @@
         [32, "MOLECULE MAN", "And of Course"]
       ],
       "teams_note": "[printed page, first entry's header, team], the code-grids form, because three teams start mid-page; every page is the Roster Book's. Banners as printed, in book order. No banner is printed over printed 2-3 (the Beyonder, Mephisto, Eternity, Death), so those four have none here. Nebula's Crew is a sub-heading below Nebula's own entry (p.25); the Skrulls entry after the crew is not under it. Kingpin's Organization (p.26) heads five Health-only tiers inside the Kingpin's page, not a run of entries.",
+      "team_names": {
+        "The X-Men": "X-Men",
+        "The New Mutants": "New Mutants",
+        "The Avengers": "Avengers",
+        "The Fantastic Four": "Fantastic Four",
+        "The West Coast Avengers": "West Coast Avengers",
+        "The Bad Guys": "Secret Wars II Villains"
+      },
+      "team_names_note": "Nate, 2026-10-21: drop the leading The, so these join the groups other books already file under, and name The Bad Guys as MHSP1 names its villains (not taken: every banner as printed). The four entries under no banner file under the book's title (not taken: a cosmic-cast team).",
+      "one_line_tiers": ["Aragorn", "Boromir", "Typical Skrull Warrior", "GENERAL ZEDRAO", "HENCHMEN", "ENFORCERS", "HIT MEN", "UNDERCOVER AGENTS", "MIDDLE MANAGEMENT", "Earth-sized Version", "Giant-Sized Version"],
       "reference_summary": {
         "pdf": 67,
         "note": "One undivided chart of 65 rows, in the Roster Book's own order from the Beyonder to the Molecule Man; it leaves out every entry of The Bad Guys (printed 24-31) and Volcana. The chart has no second list, so all 65 are under heroes, Mephisto, Eternity, Death and the Molecule Man included. Transcribed by eye 2026-10-21 from 170 dpi renders; Tesseract reads none of it in order. Power names as printed, Billy CLub included, but for three shortened so that no ten words of a row run as the page does (the Marvel smoke suite's leak check): Mephisto's and Iron Man's last name is 'others', and Spider-Man's last is 'Tracers'.",

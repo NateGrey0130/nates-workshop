@@ -870,6 +870,28 @@ section('An NPC from the book: the printed numbers, misprints corrected, as a hi
       tagline(bookNpc({ character: 'nova-me1' }).snapshot));
   }
 
+  // MHSP2 is MHSP1's kind of module set another way, its Roster Book in team
+  // banners (scripts/msh/rosterbook.py, mhsp2-overrides.json, survey mhsp2.md).
+  if (data.npcs.characters.some((c) => c.book === 'mhsp2')) {
+    const m2 = data.npcs.characters.filter((c) => c.book === 'mhsp2');
+    const team = (t) => m2.filter((c) => c.team === t).length;
+    check('MHSP2: 93 characters; the banners lose their "The" and join the groups other books file under, The Bad Guys are Secret Wars II Villains, and the four under no banner file under the book',
+      m2.length === 93 && team('X-Men') === 9 && team('New Mutants') === 9 && team('Fantastic Four') === 4 && team('Avengers') === 7
+      && team('Secret Wars II Villains') === 23 && m2.filter((c) => c.team === 'MHSP2 Secret Wars II').map((c) => c.name).sort().join() === 'Death,Eternity,Mephisto,The Beyonder'
+      && !m2.some((c) => /^The /.test(c.team)), `${m2.length} ${[...new Set(m2.map((c) => c.team))]}`);
+    const by = bookNpc({ character: 'the-beyonder-mhsp2', block: 0 }).snapshot;
+    check('MHSP2: the Beyonder\'s Original State, printed BEYOND with no number, plays as Beyond',
+      abil(by || { abilities: {} }).every((a) => a?.rank === 'beyond' && a.number === null), JSON.stringify(by?.abilities.fighting));
+    const wb = bookNpc({ character: 'wolfsbane-mhsp2' }).snapshot;
+    check('MHSP2: an alter ego\'s or a form\'s one-line block is a form, so Wolfsbane is one NPC with three forms',
+      wb?.forms?.map((f) => f.name).join() === 'Wolfsbane,Wolf form,Wolfoid form', JSON.stringify(wb?.forms?.map((f) => f.name)));
+    check('MHSP2: a one-line block printing four codes is a card but not a GM choice (Psycho-Man\'s suits, Valkyrie\'s Aragorn)',
+      choices.filter((c) => c.character === 'psycho-man-mhsp2').length === 1 && choices.filter((c) => c.character === 'valkyrie-mhsp2').length === 1
+      && /stat blocks/.test(bookNpc({ character: 'thundersword-mhsp2' }).error || ''));
+    check('MHSP2: an entry of tiers alone opens with prose, not an identity (Kingpin\'s Organization)',
+      m2.find((c) => c.id === 'kingpin-s-organization-mhsp2')?.versions[0].identity.length === 0);
+  }
+
   const { sqlite, env, route, call } = await marvelStandIn();
   const R = { list: await route('campaigns.js'), book: await route('campaigns/[id]/npcs/from-book.js'),
     npcs: await route('campaigns/[id]/npc-sheets.js'), link: await route('campaigns/[id]/heroes.js') };
@@ -1553,8 +1575,11 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   // are null, and no other row anywhere may be.
   const unprinted = (b, a) => b.kind === 'partial' && a[1] === null && a[2] === null
     && b.override?.verdict === 'rows' && (b.override.field || '').includes(a[0]);
+  // Beyond is the one rank with no number (ranks.json): MHSP2's Beyonder
+  // prints it in every row of his Original State, rank_only, so no number.
+  const beyond = (b, a) => b.rank_only && a[1] === null && a[2] === 'B';
   const shape = blocks.filter(({ b }) => b.abilities.map((a) => a[0]).join('') !== 'FASERIP'
-    || b.abilities.some((a) => !unprinted(b, a) && (!Number.isInteger(a[1]) || !(a[2] in RANK))));
+    || b.abilities.some((a) => !unprinted(b, a) && !beyond(b, a) && (!Number.isInteger(a[1]) || !(a[2] in RANK))));
   check('every block is F, A, S, E, R, I, P in order, each a whole number and a rank code the ladder knows',
     shape.length === 0, shape.slice(0, 3).map(({ c, b }) => `${c.id}: ${JSON.stringify(b.abilities)}`).join(' | '));
   const known = (b, field) => b.kind === 'table' || (b.override && (b.override.field === field
@@ -1567,7 +1592,7 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const karma = blocks.filter(({ b }) => num(b.karma) !== null && num(b.karma) !== sum(b, 4, 7) && !known(b, 'karma'));
   check('Karma = R+I+P on every block, or its override records it as printed',
     karma.length === 0, karma.map(({ c, b }) => `${c.id} ${b.karma}`).join(', '));
-  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i]) && !unprinted(b, a)));
+  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i]) && !unprinted(b, a) && !beyond(b, a)));
   check('every number agrees with its rank code, or its override names the misprint',
     codes.length === 0, codes.map(({ c }) => c.id).join(', '));
   const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
