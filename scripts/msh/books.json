@@ -54,6 +54,9 @@
     "  teams (cover-panels) {team: [names]}: a character named there is that team's; every other files under the book's title",
     "  faint_rules     a cover-panels book: [part, printed page, y in TSV pixels]: a rule between two cards that booklet.rules() cannot see (a dashed one)",
     "  drop_above      a cover-panels book: [part, printed page, y in TSV pixels]: text above y on that page is not a card's (the Epilog over Magneto's)",
+    "  drop_corner     a cover-panels book: [part, printed page, x, y in TSV pixels]: every word right of x and below y on that page is not a card's (MH2's PROOF OF PURCHASE coupon)",
+    "  opponent_names  a cover-panels book: \"title\" where a one-line grid's name is in title case, alone on the line above it (MH2's \"Aliens (humanoid)\"); its run-in powers after the Powers: line are read as a card's are. Absent, MH1's capitals",
+    "  form_grids      a cover-panels book: [{part, page, entry, label}]: a one-line grid with no name above it that is a second block on that card (MH2's Mimic, once he has copied the Avengers' powers)",
     "  grid_headers (grid-booklets) [{part, page, health, name}] for a character header the OCR lost (ME2's BALDER): a line with the name goes in above the grid printing that Health",
     "  one_line_grids  a grid-booklets book: one-line grids (letters, numbers, codes, then Health and Karma; ME2), in reading order per page: {part, page, name} for a character of its own with no header (the chapter's prose names it), or {part, page, entry, label} for a form inside that entry. teams may be left out until they are decided; an entry then has none",
     "The cache is under WORKSHOP_MSH_CACHE (default .cache/msh), never committed. The survey is apps/marvel-heroes/docs/surveys/<slug>.md."
@@ -1224,6 +1227,7 @@
       ],
       "contents_note": "The book prints no Contents and no index. These are its banners, each read on its page image 2026-10-21; the chapter titles are display lettering that Tesseract does not read. Printed 1 has no banner of its own, only the title art (The Mighty Avengers: Time Trap!) over a run-in INTRODUCTION, so Introduction is this registry's name for it. The last banner prints no chapter number; the text calls it Chapter 7 and its Karma table is Table 7. Each chapter is set as Campaign, Battle and Aftermath subsections, some with a second Campaign, and Chapter 5 opens on its Battle (the fortress's nine rooms). The character cards are on printed 15-16, after Chapter 7, unbannered, and on the two inside cover panels.",
       "columns": 3,
+      "layout": "cover-panels",
       "character_ranges": [
         {"part": "Adventure Book", "pages": [15, 16]}
       ],
@@ -1242,6 +1246,13 @@
         ["Inside back cover", null, "Scarlet Witch"],
         ["Inside back cover", null, "Vision"]
       ],
+      "teams": {"Avengers": ["Captain America", "Starfox", "Wasp", "Captain Marvel", "Scarlet Witch", "Vision"]},
+      "teams_note": "Nate, 2026-10-21 (survey mh2.md decision 1): the six heroes on the cover panels are the Avengers, a new filter group; every other character, the Super-Skrull and the Skrulls included, files under the book's title (not taken: the Super-Skrull and the Skrulls under the Skrulls group MA4 and ME1 share).",
+      "drop_corner": [["Adventure Book", 16, 2050, 3000]],
+      "drop_corner_note": "Printed 16 (PDF 18): a PROOF OF PURCHASE coupon in the page's lower right corner, at x 2089-2196, y 3015-3048 in the TSV (300 dpi), is read onto the last line of the Super-Skrull's card (\"points. PROOF\"). Measured on the TSV 2026-10-21.",
+      "opponent_names": "title",
+      "form_grids": [{"part": "Adventure Book", "page": 3, "entry": "Mimic", "label": "Absorbed Form"}],
+      "form_grids_note": "Printed 3 (PDF 5), Chapter 1: once the Mimic absorbs the Avengers' powers his abilities and powers become a one-line grid with no name above it. Nate, 2026-10-21 (survey mh2.md decision 2): a second block on the Mimic's card, as Colossus's armour is on his in MH1 (not taken: an entry of its own). The grid and the line above it were read on the page image by the survey, 2026-10-21.",
       "opponents": [
         {"part": "Adventure Book", "page": 5, "names": ["Aliens (humanoid)"]},
         {"part": "Adventure Book", "page": 7, "names": ["Skrulls"]},

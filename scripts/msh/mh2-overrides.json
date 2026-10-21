@@ -1,0 +1,26 @@
+{
+  "about": [
+    "Hand decisions about MH2 stat blocks, applied by scripts/msh/roster.py after scripts/msh/coverpanels.py parses them. Every one was read off the page image; none is a guess from OCR.",
+    "Facts only - ranks, numbers and labels, never the book's prose - so this file is committed while roster.json stays in the local cache.",
+    "  match     {page, header}: a card or one-line grid; page is the printed page, or null for a card on a cover panel (which prints no page)",
+    "  verdict   as_printed        the page is unambiguous and the check still fails; kept as printed, and the note says why",
+    "            misprint          the book prints a value its own ranks contradict; 'printed' keeps what the page says, 'corrected' what the ranks give",
+    "  also      further values of the same block, each {verdict, field, printed}: one override matches one block",
+    "  checked   the date the page image was read"
+  ],
+  "overrides": [
+    {"match": {"page": 10, "header": "Spirits"}, "verdict": "as_printed", "field": "karma",
+     "printed": 0, "checked": "2026-10-21",
+     "note": "Printed 10, Room 2: Karma 0 against R 30 + I 20 + P 40 = 90. The fortress's guardians are not living beings, and every grid in the book for a living being prints its R+I+P. Nate, 2026-10-21 (survey mh2.md decision 3): kept as printed (not taken: derive R+I+P). Health 66 = 2 + 4 + 10 + 50."},
+    {"match": {"page": 11, "header": "Omegatrons"}, "verdict": "as_printed", "field": "karma",
+     "printed": 0, "checked": "2026-10-21",
+     "note": "Printed 11, Room 5: Karma 0 against R 6 + I 10 + P 4 = 20; robots. As the Spirits' (decision 3). Health 155 = 75 + 20 + 30 + 30."},
+    {"match": {"page": 11, "header": "Centipedes"}, "verdict": "as_printed", "field": "karma",
+     "printed": 0, "checked": "2026-10-21",
+     "note": "Printed 11, Room 6: Karma 0 against R 4 + I 2 + P 4 = 10; robots. As the Spirits' (decision 3). Health 56 = 10 + 20 + 6 + 20."},
+    {"match": {"page": 11, "header": "Energy Spiders"}, "verdict": "misprint", "field": "health",
+     "printed": 46, "corrected": 44, "checked": "2026-10-21",
+     "also": [{"verdict": "as_printed", "field": "karma", "printed": 0}],
+     "note": "Printed 11, Room 7: Ty Rm Fb Ty is 6 + 30 + 2 + 6 = 44, and the page prints Health 46 (a Poor Strength would make 46; the page does not say which is wrong). Nate, 2026-10-21 (survey mh2.md decision 4): the Health is corrected to 44 and the ranks kept as printed (not taken: keep 46). The block also prints Karma 0 against R 4 + I 6 + P 30 = 40 (also): kept as printed, as the Spirits' (decision 3)."}
+  ]
+}
