@@ -25,8 +25,8 @@ export const ENTRY = /^[a-z0-9]+(?:-[a-z0-9]+){0,12}$/;
 // section a vehicle reads have rows every one numbered in print order
 // (scripts/msh/extras.py), so the number is the order. A character's are not:
 // its powers as printed, then the sections in the order they follow the
-// powers, then members and cross-references.
-const PART_ORDER = ['powers-intro', 'power', 'talents', 'contacts', 'background', 'notes', 'running', 'prose', 'member', 'appearance'];
+// powers, then members and cross-references. A part missing here sorts first.
+export const PART_ORDER = ['powers-intro', 'power', 'talents', 'contacts', 'background', 'notes', 'special', 'running', 'prose', 'member', 'appearance'];
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
