@@ -244,7 +244,7 @@ def line_grids(book, stream, keyed, labelled):
                      'health': health, 'karma': karma, 'resources': None, 'popularity': None}
             if rank_only:
                 block['rank_only'] = True
-            block['check'] = roster.check(block)
+            block['check'] = roster.check(block, roster.rank_ranges(book))
             labelled.append((g, block))
         i = end
     left = [g for gs in want.values() for g in gs if (g['part'], g['page']) in pages]
@@ -262,6 +262,7 @@ def grid(stream, i, reader):
 
 def parse(book, slug):
     reader = roster.GridReader(book, slug)
+    ranges = roster.rank_ranges(book)
     streams, keyed, labelled = [], {}, []
     for r in book['character_ranges']:
         s = stream_of(book, slug, r['part'], r['pages'][0], r['pages'][1])
@@ -275,7 +276,7 @@ def parse(book, slug):
     stream, entries = [], []
     for s, opponent in streams:
         stream += s
-        got = roster.read_entries(s, reader, opponent=opponent, grid=grid)
+        got = roster.read_entries(s, reader, opponent=opponent, grid=grid, ranges=ranges)
         for e in got:
             e['part'] = s[0]['part']
             e['team'] = team_of(book, e['part'], e['pages'][0])
@@ -289,7 +290,7 @@ def parse(book, slug):
             # Death's "Health: 20,000" (ME2, Resource p.2): check() reads no comma
             for b in e['blocks']:
                 if ',' in (b['health'] or '') and b['check'].get('health') is None:
-                    b['check'] = roster.check(dict(b, health=b['health'].replace(',', '')))
+                    b['check'] = roster.check(dict(b, health=b['health'].replace(',', '')), ranges)
         entries += got
     for g, block in labelled:
         hits = [e for e in entries if e['part'] == g['part'] and base(e['header']) == roster.norm(g['entry'])]
@@ -354,7 +355,7 @@ def summary_entries(book, entries):
             continue
         block = {'label': None, 'kind': 'summary', 'page': None, 'part': s['part'], 'abilities': summary_abilities(values),
                  'health': str(health), 'karma': str(karma), 'resources': None, 'popularity': None}
-        block['check'] = roster.check(block)
+        block['check'] = roster.check(block, roster.rank_ranges(book))
         entries.append({'kind': 'summary', 'header': name, 'name': name, 'part': s['part'], 'team': s.get('team'), 'pages': [],
                         'identity': [], 'blocks': [block], 'sections': {}, 'members': [], 'prose': '',
                         'powers': [{'name': p, 'text': ''} for p in powers]})

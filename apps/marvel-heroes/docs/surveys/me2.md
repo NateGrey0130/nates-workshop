@@ -307,7 +307,9 @@ For Nate. Each has a recommendation.
    group. Not written to the registry until decided.
 2. **Page citations.** Recommendation: ME1's shape, `ME2 Adventure p.4`,
    `ME2 Resource p.10`, and `ME2 Pregenerated Heroes Summary` with no page.
-3. **The twenty-three in-range numbers.** Recommendation: teach the check a rank's
+3. **The twenty-three in-range numbers** (twenty-seven, counted on the
+   overrides 2026-10-21: 26 over nine blocks and the Chimaera's S; see
+   *The rank-range check* below). Recommendation: teach the check a rank's
    range (`ranks.json` `min` and `max`) for a book that prints them, so a
    number in range passes and the card shows it as printed; the alternative
    is an override per block, as ME1's Superkree has.
@@ -326,9 +328,9 @@ For Nate. Each has a recommendation.
 
 The parser (#1928) taught `gridbooks.py` this book and wrote
 `scripts/msh/me2-overrides.json`, with decisions 2, 4 and 6 as recommended.
-Decision 3 went the other way for now: the in-range numbers are `as_printed`
-overrides, one per block, as ME1's Superkree's is, and the Codex says each is
-inside its rank's range.
+Decision 3 went the other way at first: the in-range numbers were `as_printed`
+overrides, one per block, as ME1's Superkree's is. Nate then took the
+recommendation for this book alone (below).
 
 `python scripts/msh/npcs.py me2` writes the 40 characters and 273 rows of
 `msh_book_text`, applied to production before the merge. Nate's answer to
@@ -351,6 +353,27 @@ read off the Adventure p.18 render: the Zeus grid sits under the run-in
 beside the Titans grid, so it takes the chapter's title, "Hades" (the
 `CHAPTER 8: HADES` banner on p.17; p.18's banner carries no words). The first
 import's labels were made up and are gone.
+
+## The rank-range check (done 2026-10-21)
+
+Nate, 2026-10-21: teach the check a rank's range for ME2 only, and delete the
+per-block overrides; the earlier books stay as they are. The registry's me2
+entry sets `rank_ranges`, and `roster.check()` then passes a number anywhere
+inside its rank's range (`ranks.json` `min` and `max`; Shift Y is 176-350),
+not only the standard one. The Marvel smoke suite's rank-code check reads the
+same field. Twenty-seven in-range values went with it: 26 `as_printed`
+values over nine blocks (Gal, Ac, Tus, Cerberus, Hydra, Pluto, Titans, Zeus,
+Actus) and the Chimaera's S 250 Shift Y, an `also` inside its misprint
+override, which stays for the two codes. Death's `Karma: Unlimited` and
+Firelord's chart Karma stay too: neither is a range value. So the Codex no
+longer prints an "inside the rank's range" line on an ME2 card. A number
+outside its range (S 501 Shift Y on Hydra's block, in a scratch run) is still
+refused. `roster.py me2` passes 41 blocks with 2 known from overrides, where
+it passed 32 with 11; every block's numbers, codes, Health and Karma are as
+they were, and `book-text.sql` is byte-identical, so D1 does not move. Every
+earlier book was built with `origin/main`'s scripts and the branch's and its
+`roster.json`, `book-text.sql`, `extras.json`, `extras-text.sql` and
+`npcs.json` rows compared byte for byte: identical.
 
 ## How to reproduce
 

@@ -322,7 +322,7 @@ export const SECTIONS = [
           for (const x of (o && o.also) || []) {
             const xf = FIELD[x.field] || x.field;
             // a rank printed with its number (ME2: the Chimaera's second misprinted
-            // code, Gal's and Zeus's further in-range numbers) says so as the first does
+            // code) says so as the first does
             if (typeof x.printed === 'object' && x.verdict === 'misprint') {
               out.push(['Misprint', `${xf} is printed ${show(x.printed)}; the book's own ranks give ${show(x.corrected)}`]);
             } else if (typeof x.printed === 'object') {

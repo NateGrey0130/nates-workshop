@@ -37,7 +37,9 @@ rank code; Health = F+A+S+E; Karma = R+I+P. A block that fails is kept, marked,
 and listed by --failures; the fix is an override citing the page, never a
 change to the parser to make one block pass. The book itself misprints some
 (survey: Northstar's Health, Poltergeist's S), and an override records the
-printed value beside the corrected one.
+printed value beside the corrected one. A book whose registry entry sets
+rank_ranges (ME2 alone) takes any number inside its rank's range
+(apps/marvel-heroes/data/ranks.json min and max), not only the standard one.
 """
 import argparse, collections, io, json, os, re, statistics, sys
 
@@ -393,14 +395,40 @@ def as_int(s):
     return int(s.replace(' ', '').replace('\u2013', '-').replace('\u2014', '-')) if m else None
 
 
-def check(block):
+def rank_ranges(book):
+    """{code: (min, max)} from apps/marvel-heroes/data/ranks.json, for a book
+    whose registry entry sets rank_ranges (ME2, Nate 2026-10-21): a number
+    inside its rank's range but not its standard (25 Ex, 250 Shift Y) is what
+    the book means, and its Health or Karma adds up with it. None for every
+    other book, whose check stays the standard number's."""
+    if not book.get('rank_ranges'):
+        return None
+    ranks = [r for r in json.load(io.open(os.path.join(ROOT, 'apps', 'marvel-heroes', 'data', 'ranks.json'),
+                                          encoding='utf-8'))['ranks'] if r['standard'] is not None]
+    out = {}
+    for code, n in RANK_NUMBER.items():
+        r = [x for x in ranks if x['standard'] == n]
+        assert len(r) == 1, code
+        out[code] = (r[0]['min'], r[0]['max'] if r[0]['max'] is not None else float('inf'))
+    return out
+
+
+def rank_ok(a, ranges=None):
+    """A row's number agrees with its code: the standard number, or with
+    rank_ranges(book) any number inside the rank's range. An unread code passes."""
+    std = RANK_NUMBER.get(a['code'])
+    if std is None or std == a['number']:
+        return True
+    return bool(ranges) and ranges[a['code']][0] <= a['number'] <= ranges[a['code']][1]
+
+
+def check(block, ranges=None):
     nums = [a['number'] for a in block['abilities']]
     if None in nums:
         return {'ranks': [], 'health': None, 'karma': None, 'unread': True, 'ok': False}
     h, k = as_int(block['health']), as_int(block['karma'])
     res = {
-        'ranks': [ABILITIES[n] for n, a in enumerate(block['abilities'])
-                  if RANK_NUMBER.get(a['code']) not in (None, a['number'])],
+        'ranks': [ABILITIES[n] for n, a in enumerate(block['abilities']) if not rank_ok(a, ranges)],
         'codes_unread': [ABILITIES[n] for n, a in enumerate(block['abilities']) if a['code'] is None],
         'health': None if h is None else sum(nums[:4]) == h,
         'karma': None if k is None else sum(nums[4:]) == k,
@@ -449,14 +477,15 @@ def parse(slug):
     return book, stream, entries
 
 
-def read_entries(stream, reader, opponent=False, grid=None):
+def read_entries(stream, reader, opponent=False, grid=None, ranges=None):
     """The book's entries from one stream. With opponent set, the stream is an
     adventure's page with a character statted in its prose (ME1's chapters): an
     entry is read from its header through its grid and powers, and ends where
     the adventure's own text resumes - an indented paragraph, or a run-in that
     is not one of the entry's sections - after which lines are dropped until
     the next header. `grid` reads a grid at a Health line, as grid_at does; a
-    book that sets its rows another way passes its own (MA4: codegrids.py)."""
+    book that sets its rows another way passes its own (MA4: codegrids.py).
+    `ranges` is rank_ranges(book), for a book whose check takes a rank's range."""
     grid = grid or grid_at
     entries, cur = [], None
 
@@ -495,7 +524,7 @@ def read_entries(stream, reader, opponent=False, grid=None):
                      'abilities': [{k: r[k] for k in ('letter', 'number', 'code', 'printed_code', 'alt', 'read_as') if k in r}
                                    for r in rows]}
             block.update(sec)
-            block['check'] = check(block)
+            block['check'] = check(block, ranges)
             cur['blocks'].append(block)
             if label and cur['identity'] and cur['identity'][-1] == label:
                 cur['identity'].pop()

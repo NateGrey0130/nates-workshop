@@ -50421,40 +50421,6 @@
        "karma": "2250",
        "resources": null,
        "popularity": null,
-       "override": {
-        "verdict": "as_printed",
-        "field": "E",
-        "printed": {
-         "number": 2000,
-         "code": "C-1000"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "R",
-          "printed": {
-           "number": 750,
-           "code": "ShZ"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "I",
-          "printed": {
-           "number": 750,
-           "code": "ShZ"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "P",
-          "printed": {
-           "number": 750,
-           "code": "ShZ"
-          }
-         }
-        ]
-       },
        "kind": "line"
       }
      ],
@@ -50886,41 +50852,7 @@
        "health": "1550",
        "karma": "1000",
        "resources": "Cl 1000",
-       "popularity": "-333",
-       "override": {
-        "verdict": "as_printed",
-        "field": "F",
-        "printed": {
-         "number": 25,
-         "code": "Ex"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "A",
-          "printed": {
-           "number": 25,
-           "code": "Ex"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "R",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "I",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         }
-        ]
-       }
+       "popularity": "-333"
       }
      ],
      "powers": [
@@ -51129,49 +51061,7 @@
        "health": "1300",
        "karma": "1000",
        "resources": "Cl 1000",
-       "popularity": "-334",
-       "override": {
-        "verdict": "as_printed",
-        "field": "F",
-        "printed": {
-         "number": 25,
-         "code": "Ex"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "A",
-          "printed": {
-           "number": 25,
-           "code": "Ex"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "S",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "I",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "P",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         }
-        ]
-       }
+       "popularity": "-334"
       }
      ],
      "powers": [
@@ -51259,49 +51149,7 @@
        "health": "1300",
        "karma": "1000",
        "resources": "Cl 1000",
-       "popularity": "-333",
-       "override": {
-        "verdict": "as_printed",
-        "field": "F",
-        "printed": {
-         "number": 25,
-         "code": "Ex"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "A",
-          "printed": {
-           "number": 25,
-           "code": "Ex"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "S",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "R",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "P",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         }
-        ]
-       }
+       "popularity": "-333"
       }
      ],
      "powers": [
@@ -51493,33 +51341,7 @@
        "health": "850",
        "karma": "80",
        "resources": "N.A",
-       "popularity": "-100",
-       "override": {
-        "verdict": "as_printed",
-        "field": "F",
-        "printed": {
-         "number": 250,
-         "code": "ShY"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "A",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "E",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         }
-        ]
-       }
+       "popularity": "-100"
       }
      ],
      "powers": [
@@ -51636,14 +51458,6 @@
           "corrected": {
            "number": 100,
            "code": "Un"
-          }
-         },
-         {
-          "verdict": "as_printed",
-          "field": "S",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
           }
          }
         ]
@@ -51845,15 +51659,7 @@
        "health": "900",
        "karma": "225",
        "resources": "N.A",
-       "popularity": "-100",
-       "override": {
-        "verdict": "as_printed",
-        "field": "S",
-        "printed": {
-         "number": 250,
-         "code": "ShY"
-        }
-       }
+       "popularity": "-100"
       }
      ],
      "powers": [
@@ -51951,15 +51757,7 @@
        "health": "550",
        "karma": "275",
        "resources": "Un(100)",
-       "popularity": "-500",
-       "override": {
-        "verdict": "as_printed",
-        "field": "E",
-        "printed": {
-         "number": 250,
-         "code": "ShY"
-        }
-       }
+       "popularity": "-500"
       }
      ],
      "powers": [
@@ -52058,15 +51856,7 @@
        "health": "600",
        "karma": "60",
        "resources": "Ty(6)",
-       "popularity": "0",
-       "override": {
-        "verdict": "as_printed",
-        "field": "E",
-        "printed": {
-         "number": 250,
-         "code": "ShY"
-        }
-       }
+       "popularity": "0"
       },
       {
        "label": "Hades",
@@ -52297,25 +52087,7 @@
        "health": "1100",
        "karma": "250",
        "resources": "Un(100)",
-       "popularity": "100",
-       "override": {
-        "verdict": "as_printed",
-        "field": "F",
-        "printed": {
-         "number": 250,
-         "code": "ShY"
-        },
-        "also": [
-         {
-          "verdict": "as_printed",
-          "field": "A",
-          "printed": {
-           "number": 250,
-           "code": "ShY"
-          }
-         }
-        ]
-       }
+       "popularity": "100"
       },
       {
        "label": "Zeus' Powers",

@@ -1683,13 +1683,14 @@ section('The codex: every section loads, searches, filters and keeps its address
       check('Notable NPCs: a derived Karma says it was not printed (MH2\'s Kang\'s Minions)',
         npcs.stats(minions).some(([k, v]) => k === 'Karma' && /^Not printed; R\+I\+P/.test(v)), JSON.stringify(npcs.stats(minions)));
     }
-    // ME2's overrides carry a further rank in `also` as a number and a code
+    // ME2's overrides carry a further rank in `also` as a number and a code;
+    // its in-range S 250 Shift Y needs no override (registry rank_ranges)
     const chim = npcs.byKey.get('chimaera-me2');
     if (chim) {
       const lines = npcs.stats(chim).filter(([k]) => k === 'Misprint' || k === 'As printed').map(([k, v]) => `${k}: ${v}`);
-      check('Notable NPCs: a block\'s further misprint and in-range number read as the first does (ME2\'s Chimaera)',
-        lines.length === 3 && lines.filter((l) => /^Misprint: .* is printed 100 ShX; the book's own ranks give 100 Un$/.test(l)).length === 2
-        && lines.some((l) => /^As printed: .* is printed 250 ShY, inside the rank's range$/.test(l)), JSON.stringify(lines));
+      check('Notable NPCs: a block\'s further misprint reads as the first does, and an in-range number is no note (ME2\'s Chimaera)',
+        lines.length === 2 && lines.filter((l) => /^Misprint: .* is printed 100 ShX; the book's own ranks give 100 Un$/.test(l)).length === 2,
+        JSON.stringify(lines));
     }
   }
 
@@ -1734,9 +1735,20 @@ section('Notable NPCs: every block adds up or is a misprint read off the page, a
   const karma = blocks.filter(({ b }) => num(b.karma) !== null && num(b.karma) !== sum(b, 4, 7) && !known(b, 'karma'));
   check('Karma = R+I+P on every block, or its override records it as printed',
     karma.length === 0, karma.map(({ c, b }) => `${c.id} ${b.karma}`).join(', '));
-  const codes = blocks.filter(({ b }) => b.abilities.some((a, i) => RANK[a[2]] !== a[1] && !known(b, 'FASERIP'[i]) && !unprinted(b, a) && !beyond(b, a)));
-  check('every number agrees with its rank code, or its override names the misprint',
+  // A book whose registry sets rank_ranges (ME2, Nate 2026-10-21) means a
+  // number anywhere inside its rank's range (ranks.json min and max), as
+  // scripts/msh/roster.py's check takes it; every other book, the standard.
+  const ranged = new Set(Object.entries(JSON.parse(readFileSync(join(repoRoot, 'scripts', 'msh', 'books.json'), 'utf8')).books)
+    .filter(([, bk]) => bk.rank_ranges).map(([slug]) => slug));
+  const span = Object.fromEntries(Object.entries(RANK).map(([code, std]) => {
+    const r = ranks.find((x) => x.standard === std);
+    return [code, [r.min, r.max ?? Infinity]];
+  }));
+  const agrees = (c, a) => RANK[a[2]] === a[1] || (ranged.has(c.book) && a[1] >= span[a[2]][0] && a[1] <= span[a[2]][1]);
+  const codes = blocks.filter(({ c, b }) => b.abilities.some((a, i) => !agrees(c, a) && !known(b, 'FASERIP'[i]) && !unprinted(b, a) && !beyond(b, a)));
+  check('every number agrees with its rank code (inside its range, for a book whose registry sets rank_ranges), or its override names the misprint',
     codes.length === 0, codes.map(({ c }) => c.id).join(', '));
+  check(`only ME2's registry entry sets rank_ranges (${[...ranged]})`, [...ranged].join() === 'me2', [...ranged].join());
   const misprints = blocks.filter(({ b }) => b.override && b.override.verdict === 'misprint');
   check('each misprint keeps both the printed value and the corrected one',
     misprints.length > 0 && misprints.every(({ b }) => 'printed' in b.override && 'corrected' in b.override), String(misprints.length));
