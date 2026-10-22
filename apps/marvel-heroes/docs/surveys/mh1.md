@@ -4,7 +4,8 @@ Marvel Super Heroes adventure module, Jeff Grubb, 1984. Registry entry:
 `scripts/msh/books.json` -> `mh1`. Measured 2026-10-21.
 
 **Rows citing this book:** 63 `msh_book_text` rows over 25 character entries
-in production (`DB_MARVEL`, read back 2026-10-21).
+in production (`DB_MARVEL`, read back 2026-10-21, again after Ariel's three
+moved from `ariel-mh1` to `ariel-kitty-pryde-mh1` the same day).
 
 Committed: 25 characters in `apps/marvel-heroes/data/npcs.json` (12 full
 blocks, 13 one-line grids), with 28 powers, 15 of them linked to the Ultimate
