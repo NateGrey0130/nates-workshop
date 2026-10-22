@@ -4864,15 +4864,19 @@ export async function run() {
     // section appended after it would be judged by these three as well - a
     // false failure, and the loud kind, which is the trade printCss's header
     // argues for over a slice that silently stops matching.
-    const stage = css.slice(css.indexOf('body.present {'));
-    check('the present-mode block is in the shared stylesheet', stage.length > 0);
+    // indexOf is guarded: a -1 would slice the file's last character, and the
+    // negative checks below would then pass against one byte of nothing.
+    const stageAt = css.indexOf('body.present {');
+    const stage = stageAt === -1 ? '' : css.slice(stageAt);
+    check('the present-mode block is in this app\'s stylesheet', stageAt !== -1,
+      'styles.css has no `body.present {` block');
     // Black rather than --bg-primary, and the only page in the suite that
     // departs from the palette: this background is the surround of a
     // photograph rather than a surface the UI stands on.
     check('the stage is black and the picture is fitted, never cropped',
       /background:\s*#000/.test(stage) && /object-fit:\s*contain/.test(stage)
       && /max-height:\s*100dvh/.test(stage));
-    check('and it still casts no shadow', !/box-shadow/.test(stage));
+    check('and it still casts no shadow', stageAt !== -1 && !/box-shadow/.test(stage));
     check('the chrome fades when nothing is happening',
       /body\.present\.idle \.present-chrome \{ opacity: 0; \}/.test(stage));
   }
