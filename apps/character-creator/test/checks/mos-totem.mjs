@@ -327,8 +327,11 @@ section('MOS');
     // Declaring `mos` a JSON column would decode a pre-F82 bare id to `[]` -
     // LOSING it, because a bare id is not JSON and that list falls back to
     // empty. The tolerant reader exists so this never has to happen.
+    // The exported array itself, as second-body.mjs reads it for second_form:
+    // a `.push('mos')` after the literal passed the regex over the literal.
+    // ARRAY_COLUMNS is not exported, so that half stays a text pin.
     check('mos is NOT declared a decoded JSON column',
-      !/CHARACTER_JSON_COLUMNS\s*=\s*\[[^\]]*'mos'/.test(charJsonSrc)
+      !CHARACTER_JSON_COLUMNS.includes('mos')
         && !/ARRAY_COLUMNS\s*=\s*new Set\(\[[^\]]*'mos'/.test(charJsonSrc));
     check('the wizard holds S.mos as a list',
       Array.isArray(freshState().mos) && Array.isArray(freshBuild().mos));

@@ -1560,7 +1560,11 @@ section('Starting XP');
 
   const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
     'characters.js'), 'utf8');
-  check('the create path clamps the level to the class table', /Math\.min\(/.test(src) && /xpTable\.length/.test(src));
+  // The clamp itself, not a Math.min( anywhere in the file (there is another
+  // one, on the related-skill allowance).
+  check('the create path clamps the level to the class table',
+    /const level = Math\.max\(1, Math\.min\([\s\S]{0,160}?xpTable\.length\)\);/.test(src),
+    'the create path no longer takes the smaller of the requested level and the table length');
   check('and sets XP from the threshold rather than the client',
     /thresholdFor\(xpTable, level\)/.test(src) && !/b\.xp/.test(src));
   check('and validates at the level being created, not at 1',
@@ -2071,8 +2075,16 @@ section('Class prompt covers the schema');
     ...Object.keys(deriveWin.derive.combat({})),
     ...Object.keys(deriveWin.derive.saves({})),
   ];
+  // Looked for in the key list itself, with its parenthetical asides removed:
+  // `prompt.includes('roll')` was satisfied by "rolled" and by the aside that
+  // explains `roll`, until 2026-10-22.
+  const keysAt = prompt.indexOf('Use ONLY these keys');
+  const poolsAt = keysAt < 0 ? -1 : prompt.indexOf('pools:', keysAt);
+  const keyList = poolsAt < 0 ? '' : prompt.slice(keysAt, prompt.indexOf('\n', poolsAt)).replace(/\([^)]*\)/g, '');
+  check('the prompt still has its key list', keyList.includes('combat:') && keyList.includes('saves:'));
   for (const key of ['attacks', 'strike', 'parry', 'dodge', 'roll', 'spell_magic', 'ritual_magic', 'horror_factor']) {
-    check(`the prompt lists the real bonus key \`${key}\``, prompt.includes(key) && realKeys.includes(key));
+    check(`the prompt lists the real bonus key \`${key}\``,
+      new RegExp(`[\\s,]${key}[,\\s]`).test(keyList) && realKeys.includes(key));
   }
 
   // The pool group, which is the only one taking dice, and the only one whose
@@ -3615,7 +3627,9 @@ section('Skill programs');
   check('and so does the server-side collector', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'catalog.js'), 'utf8');
-    return src.includes('skill_programs');
+    // In the walked array, not anywhere in the file: the comment above the
+    // loop names skill_programs too, and satisfied this until 2026-10-22.
+    return /for \(const group of \[[^\]]*data\?\.skills\?\.skill_programs\]/.test(src);
   })());
 }
 
@@ -4573,8 +4587,13 @@ section('A variant or an occupation change re-rolls the pools (BOOK-INGEST-AUDIT
     /onchange="pickOccVariant\(this\.value\)"/.test(appSrc) && !/S\.occVariant = this\.value/.test(appSrc));
   check('and it is exported to the global scope the inline handler evaluates in',
     /pickVariant, pickOccVariant, pickOcc/.test(appSrc));
+  // Inside pickOcc's own body: the same two calls sit near each other in two
+  // other handlers, which is what this matched until 2026-10-22.
+  const pickOccAt = appSrc.indexOf('function pickOcc(id) {');
+  const pickOccBody = pickOccAt < 0 ? '' : appSrc.slice(pickOccAt, appSrc.indexOf('\n}', pickOccAt));
   check('pickOcc clears them too, after rolling its own bonuses',
-    /rollOccBonuses\(\);[\s\S]{0,400}?clearRolledPools\(\);/.test(appSrc));
+    /rollOccBonuses\(\);[\s\S]*?clearRolledPools\(\);/.test(pickOccBody),
+    'pickOcc has moved, or no longer clears the rolled pools after rollOccBonuses');
   // pickTotem is the pattern all of this cites and was never pinned.
   check('and pickTotem, the handler this pattern came from, still does',
     /function pickTotem\(slug\) \{[\s\S]{0,300}?clearRolledPools\(\);/.test(appSrc));
@@ -4835,8 +4854,11 @@ section('A level-up pick is keyed by its grant, not by its position (BOOK-INGEST
     /keep\(S\.levelPicks, 'skill'[\s\S]{0,260}?keep\(S\.levelSpells, 'spell'[\s\S]{0,260}?keep\(S\.levelPsi, 'psionic'/.test(appSrc));
   check('recompose is still its only caller',
     (appSrc.match(/pruneOrphanLevelPicks\(\);/g) || []).length === 1);
+  // The guard as pruneOrphanLevelPicks's first statement: rollAdvancement opens
+  // with the same line, which satisfied this until 2026-10-22.
   check('and it still does nothing at level 1',
-    /if \(!S\.cls \|\| S\.level <= 1\) return;/.test(appSrc));
+    /function pruneOrphanLevelPicks\(\) \{\s*if \(!S\.cls \|\| S\.level <= 1\) return;/.test(appSrc),
+    'the level-1 guard is no longer the first statement of pruneOrphanLevelPicks');
 }
 
 
@@ -5074,9 +5096,16 @@ section('Morphus tables catalog');
     !!mem.prepare("SELECT 1 FROM schema_migrations WHERE filename = '068-morphus-characteristics.sql'").get());
   mem.close();
 
-  // A table CHECK is refused input, not a server fault.
+  // A table CHECK is refused input, not a server fault. Pinned on the handler
+  // itself and on both write paths calling it: until 2026-10-22 this matched
+  // the comment naming the constraint plus any later 422 in the file.
+  const rowsSrc = readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8');
+  const refusalAt = rowsSrc.indexOf('function checkRefusal(');
+  const refusal = refusalAt < 0 ? '' : rowsSrc.slice(refusalAt, rowsSrc.indexOf('\n}', refusalAt));
   check('the catalog write path answers a CHECK failure with a 422',
-    /CHECK constraint failed[\s\S]*?422/.test(readFileSync(join(repoRoot, 'functions', 'api', 'character-creator', 'catalogs', 'rows.js'), 'utf8')));
+    /CHECK constraint failed[\s\S]*?\}, 422\)/.test(refusal)
+      && (rowsSrc.match(/const refused = checkRefusal\(e\);\s*if \(refused\) return refused;/g) || []).length === 2,
+    'checkRefusal in rows.js no longer answers 422, or a write path stopped calling it');
 }
 
 section('An occupation beside a race offers its own pick groups (BOOK-INGEST-AUDIT F125)');
@@ -7985,15 +8014,22 @@ section('Race briefing');
   const src = readFileSync(join(appDir, 'app.js'), 'utf8');
   const fn = src.slice(src.indexOf('function raceBriefing()'));
   const body = fn.slice(0, fn.indexOf('\n}\n'));
-  for (const group of ['attributes', 'pools', 'combat', 'saves']) {
+  const BRIEFED = ['attributes', 'pools', 'combat', 'saves'];
+  for (const group of BRIEFED) {
     check(`the briefing reads bonuses.${group}`,
       new RegExp(`b\\.${group} \\|\\| \\{\\}`).test(body),
       `bonuses.${group} is granted by real classes and the briefing never prints it`);
   }
   // Every group derive.js can act on, so adding one to the parser without
-  // adding it here fails rather than showing the player nothing.
+  // adding it here fails rather than showing the player nothing. The array is
+  // read out of parser.js and compared to the four names above; until
+  // 2026-10-22 this pinned the token BONUS_GROUPS and nothing about its contents.
+  const groupsDecl = /const BONUS_GROUPS = \[([^\]]*)\]/.exec(readFileSync(join(appDir, 'js', 'parser.js'), 'utf8'));
+  const bonusGroups = groupsDecl ? [...groupsDecl[1].matchAll(/'([^']+)'/g)].map((m) => m[1]) : [];
+  const unbriefed = bonusGroups.filter((g) => !BRIEFED.includes(g));
   check('and that is every group a class bonus can name',
-    /BONUS_GROUPS/.test(readFileSync(join(appDir, 'js', 'parser.js'), 'utf8')));
+    bonusGroups.length > 0 && unbriefed.length === 0,
+    bonusGroups.length ? `parser.js BONUS_GROUPS names ${unbriefed.join(', ')} and the briefing never reads it` : 'BONUS_GROUPS is not an array literal in parser.js');
   check('pool keys are labelled, not printed raw',
     /POOL_LABELS_SHORT/.test(body), 'a bonus would read "sdc +40" rather than "S.D.C. +40"');
 }

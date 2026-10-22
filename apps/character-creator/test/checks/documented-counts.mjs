@@ -104,8 +104,10 @@ export function run() {
       ...readdirSync(appDir).filter((f) => f.endsWith('.js')).map((f) => appPath(f)),
       ...['sheet.js', 'codex.js', 'catalog.js', 'campaign.js', 'dashboard.js'].map(appPath),
     ].map((f) => readFileSync(f, 'utf8')).join('\n');
+    // A call, not the string: a comment naming the path satisfied this until
+    // 2026-10-22.
     check('the character audit is reachable from the UI',
-      pageScripts.includes("'admin/audit'"),
+      /\bapi\(\s*['"`]admin\/audit['"`?]/.test(pageScripts),
       'no page script calls it — it is an endpoint nobody can run');
 
     // The class-format example is the reference anyone writing a class by hand

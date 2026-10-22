@@ -318,8 +318,14 @@ export function run() {
   check('a whole-city reroll keeps which pins are revealed and what the players read',
     reshown.reveal?.['place-0'] === true && reshown.reveal?.['shop-1'] === true && reshown.public?.['place-0'] === 'The tower on the hill.');
   check('and so does a one-entry reroll', rerollEntry(shownCity, 'npc-0').reveal?.['place-0'] === true);
+  // Inside the print block, and the rule naming the controls must say
+  // display: none; the greedy span this used until 2026-10-22 asserted neither.
+  const printAt = css.indexOf('@media print {');
+  const printBlock = printAt < 0 ? '' : css.slice(printAt, css.indexOf('\n}', printAt));
   check('the kept city\'s controls are left off the printed page',
-    /@media print[\s\S]*\.city-keep[\s\S]*\.city-reveal/.test(css) && /\.city-public:placeholder-shown \{ display: none; \}/.test(css));
+    /^[^\n{]*\.city-keep,[^\n{]*\.city-reveal[^\n{]*\{ display: none; \}/m.test(printBlock)
+      && /\.city-public:placeholder-shown \{ display: none; \}/.test(printBlock),
+    'the print block no longer hides .city-keep and .city-reveal, or the empty public note');
   // A NEW city - from Generate or from ?seed= - is not the saved one. Left
   // pointing at the saved row, "Save changes" would overwrite that city with
   // this one; a reload of ?seed= did exactly that on screen before this line.

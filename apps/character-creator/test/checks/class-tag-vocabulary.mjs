@@ -113,7 +113,10 @@ export function run() {
   check('the tagged class re-parses with its tags',
     parseClassMarkdown(after).data?.tags?.join(',') === 'combat' && parseClassMarkdown(after).errors.length === 0);
   const rb = readback();
-  check('the emitted script\'s read-back holds', String(rb?.got) === String(rb?.want), JSON.stringify(rb));
+  // Both columns must come back: `String(undefined) === String(undefined)`
+  // passed with the columns renamed, until 2026-10-22.
+  check('the emitted script\'s read-back holds',
+    rb != null && rb.got !== undefined && rb.want !== undefined && Number(rb.got) === Number(rb.want), JSON.stringify(rb));
   // A large system: d1-apply replays a file's read-back as ONE --command, which
   // cmd.exe caps, so a script naming 373 classes had its assertions skipped.
   // The length is measured the way d1-apply measures it (cmdLineLength there:

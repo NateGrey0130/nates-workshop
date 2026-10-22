@@ -514,9 +514,19 @@ export async function run() {
     // 800-weight label is SMALL text and needs 4.5:1, so the quiet end keeps
     // 21% of headroom. The quiet end is the one to watch if this is ever
     // pushed further.
-    check('and the quiet end still clears 4.5:1',
-      !/\.box\[data-col="c"\] > \.box-title \{ color: var\(--text-(secondary|primary)\)/.test(css),
-      'the ranks collapsed rather than separated');
+    // Computed, from the tokens as this stylesheet declares them: until
+    // 2026-10-22 this only checked that the quiet rank was not re-pointed at a
+    // louder token, which says nothing about the ratio.
+    const token = (name) => (new RegExp(`^\\s*${name}:\\s*(#[0-9a-fA-F]{6});`, 'm').exec(css) || [])[1];
+    const lum = (hex) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const ratio = (a, b) => (!a || !b ? 0 : (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05));
+    const quiet = ratio(token('--text-muted'), token('--bg-secondary'));
+    check('and the quiet end still clears 4.5:1', quiet >= 4.5,
+      `--text-muted on --bg-secondary is ${quiet.toFixed(2)}:1`);
     // This file reserves --accent for what you can act on and says so twice.
     // A heading is not clickable, so the rank may not be spent on colour.
     check('and no rank is spent on the accent',
@@ -1917,9 +1927,16 @@ export async function run() {
     check('it loads on first open, not at render',
       /<details[^>]*id="log-details"[^>]*ontoggle="loadLog\(\)"/.test(sheet),
       'the log is not wired to open lazily');
+    // render()'s own body, to its closing brace: the old regex ran from
+    // render() to any later `events?limit`, so a render() that called
+    // loadLog() stayed green (2026-10-22).
+    const renderAt = sheet.indexOf('function render() {');
+    const renderBody = renderAt < 0 ? '' : sheet.slice(renderAt, sheet.indexOf('\n}', renderAt));
+    // (`loadLog();` the statement; the lazy `ontoggle="loadLog()"` markup the
+    // check above pins is written by render() and is not a fetch.)
     check('and render() does not fetch events',
-      !/function render\(\)[\s\S]*?events\?limit[\s\S]*?^}/m.test(sheet),
-      'the sheet fetches the event log at render');
+      renderAt >= 0 && !/events\?limit|loadLog\(\);/.test(renderBody),
+      'render() has moved, or the sheet fetches the event log at render');
     // WRITTEN FROM A LIVE BUG (reproduced on a local server, 2026-10-11). "Has
     // it loaded" was one flag for the page, and render() draws a NEW, closed
     // box. So after any redraw the flag still said loaded: opening the log
@@ -2715,8 +2732,10 @@ export async function run() {
       'there is no conflict UI');
     check('each side is a finger-sized target',
       /\.vital \.cf-half \{[\s\S]*?min-height: 44px;/.test(css), 'the halves are mouse-sized');
+    // Both selectors in the one rule, and the rule says display: none; until
+    // 2026-10-22 this pinned the play-mode selector line alone.
     check('and the stale number is hidden in BOTH modes',
-      /body\.play-mode \.vital\.conflict \.val > b,/.test(css),
+      /\.vital\.conflict \.val > b,\s*body\.play-mode \.vital\.conflict \.val > b,[^{}]*\{ display: none; \}/.test(css),
       'play mode reveals the <b> at higher specificity, so the cell shows three figures');
 
     check('the flush runs when the network returns',
@@ -4552,7 +4571,7 @@ export async function run() {
     // every button, and the codex row IS a button. A codex is a reference
     // document, so unlike the sheet it prints its prose.
     check('and its rows print, being a reference document',
-      /\.codex-head \{ display: grid !important;/.test(css),
+      /\.codex-head \{ display: grid !important;/.test(printCss(css)),
       'the blanket button rule leaves the printed codex as stat blocks with no names');
 
     check('the sheet points at it from the powers tab',
