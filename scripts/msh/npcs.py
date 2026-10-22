@@ -216,6 +216,33 @@ CODE_OF = {2: 'Fe', 4: 'Pr', 6: 'Ty', 10: 'Gd', 20: 'Ex', 30: 'Rm', 40: 'In', 50
            150: 'ShX', 200: 'ShY', 500: 'ShZ', 1000: 'C-1000', 3000: 'C-3000', 5000: 'C-5000'}
 
 
+def slash_forms(block, name, identity, header):
+    """A roster-book block whose ranks print a slash (the Puma, MHSP2 Roster
+    23) as its two forms: the ranks before the slash, labelled with the
+    entry's identity line (Thomas Fireheart), then the ranks after it,
+    labelled with the character's name. A rank printed with no slash is
+    both forms'. The Health '36 (150)' (rosterbook.value reads 36/150 so) is
+    split the same way, and the one Karma is both forms'. Each form's Health
+    must be its F+A+S+E; the first form's Karma must be its R+I+P, and the
+    second's may differ only under an override on that field, which goes on
+    the second form alone. Anything else stops the build."""
+    m = re.match(r'^\s*(\d+)\s*\((\d+)\)\s*$', block['health'] or '')
+    if not m or not identity:
+        raise SystemExit('%s: a slashed block needs a Health of two numbers and an identity line, found %r and %r'
+                         % (header, block['health'], identity))
+    first = dict(block, label=ascii_fold(identity[0]), abilities=[a[:3] for a in block['abilities']], health=m.group(1))
+    first.pop('override', None)
+    second = dict(block, label=name, abilities=[[a[0]] + (a[3] if len(a) > 3 else a[1:3]) for a in block['abilities']],
+                  health=m.group(2))
+    for f in (first, second):
+        nums = [a[1] for a in f['abilities']]
+        karma_ok = str(sum(nums[4:])) == f['karma'] or (f is second and (f.get('override') or {}).get('field') == 'karma')
+        if str(sum(nums[:4])) != f['health'] or not karma_ok:
+            raise SystemExit('%s: the slashed form %s does not add up: Health %s, Karma %s, ranks %s'
+                             % (header, f['label'], f['health'], f['karma'], nums))
+    return [first, second]
+
+
 def section_at(book, page):
     fixed = {e['section']: e['page'] for e in book.get('contents_errata', [])}
     best = None
@@ -306,7 +333,14 @@ def main(slug_arg):
     # a form only in an entry of more than one block; and a one-line block
     # that prints only four codes (Psycho-Man's suits, Valkyrie's steed: a
     # `rows` override in mhsp2-overrides.json) is `partial`, on the Codex card
-    # but not offered to the GM.
+    # but not offered to the GM. A block whose ranks print a slash, one form's
+    # rank then the other's (the Puma, Roster 23: TYPICAL/REMARKABLE and
+    # Health 36/150), is two blocks, both forms (Nate, 2026-10-21, as MH2's
+    # Mimic and MH3's Super-Adaptoid): the first rank's, named by the entry's
+    # identity line, then the slashed ranks', named for the character, with
+    # the Health after the slash and the Karma as printed. A rank printed
+    # with no slash is both forms'. A bracketed form (Colossus's armour) is
+    # not a slash and stays one block, in every book.
     grid = book.get('layout') == 'grid-booklets'
     rbook = book.get('layout') == 'roster-book'
     booklet = book.get('layout') == 'roster-booklet' or grid or rbook
@@ -418,6 +452,12 @@ def main(slug_arg):
             card_labels = {g['label'] for g in book.get('card_grids', []) if panels
                            and norm(re.sub(r'^the\s+', '', g['entry'], flags=re.I)) == norm(re.sub(r'^the\s+', '', base_name(e['header']), flags=re.I))}
             forms = forms or any(b.get('kind') == 'line' and b['label'] in card_labels for b in e['blocks'])
+            # a roster-book block whose ranks print a slash is two forms (above)
+            slashed = [b for b in e['blocks'] if rbook and any('/' in (a.get('printed_code') or '') for a in b['abilities'])]
+            if len(slashed) > 1 or (slashed and len(e['blocks']) > 1):
+                raise SystemExit('%s: %s has %d blocks and %d with a slash; npcs.py splits one block alone'
+                                 % (slug_arg, e['header'], len(e['blocks']), len(slashed)))
+            forms = forms or bool(slashed)
             # a chapter's second grid (second_blocks above) is not a form: the
             # GM picks one block or the other
             eblocks = e['blocks'] + ([second[id(e)][0]] if id(e) in second else [])
@@ -474,6 +514,8 @@ def main(slug_arg):
                     # Mr. Chambers, mh3.md decision 4) is derived the same way
                     blocks[-1]['karma'] = str(sum(a[1] for a in abilities[4:]))
                     blocks[-1]['karma_derived'] = True
+                if b in slashed:
+                    blocks[-1:] = slash_forms(blocks[-1], name_of(e), e['identity'], e['header'])
             pw = []
             # a Summary-only character has no page; its running note has its own
             page0 = e['pages'][0] if e['pages'] else None
