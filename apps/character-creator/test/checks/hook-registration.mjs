@@ -292,11 +292,9 @@ function sessionBudgetChecks() {
     check(`and ${on} spells the path absolutely and it resolves`,
       path !== null && !/\$|%\w+%/.test(path) && existsSync(path),
       `${command} - node exits 1 on a missing script, which is reported and blocks nothing`);
-    if (path === null || !existsSync(path)) continue;
-    const ours = join(HOOK_DIR, script);
-    check(`and ${on} runs this repo's copy`,
-      readFileSync(path, 'utf8') === readFileSync(ours, 'utf8'),
-      `${path} - registered and resolves, but its contents differ from ${ours}`);
+    // No byte comparison against this checkout's copy: the registration names
+    // the main checkout's file, so from there it compared a file to itself, and
+    // from a worktree it compared two branches, which is a fact about the branch.
   }
 }
 
@@ -374,15 +372,9 @@ export function run() {
     check('and that path resolves on this machine',
       existsSync(path),
       `${path} - sh exits 127 on a missing script, and 127 is reported rather than blocking, so the guard would read as installed and stop nothing`);
-    // Below this point the path is known to exist. Without the guard, a
-    // registration pointing nowhere failed the next check too, with a message
-    // saying the script "resolves, but its contents differ" - which is false
-    // and sends a reader looking for a diff that does not exist.
-    if (!existsSync(path)) continue;
-
-    const ours = join(repoRoot, '.claude', 'hooks', SCRIPT);
-    check('and it is this repo\'s copy of the script',
-      existsSync(ours) && readFileSync(path, 'utf8') === readFileSync(ours, 'utf8'),
-      `${path} - registered and resolves, but its contents differ from ${ours}`);
+    // The contents are not compared with this checkout's copy. The registered
+    // path is the main checkout's file: from the main checkout the comparison
+    // was a file against itself, and from a worktree it compared this branch's
+    // copy with main's, failing any branch that edits the hook (2026-10-22).
   }
 }

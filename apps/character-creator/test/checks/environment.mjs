@@ -359,16 +359,10 @@ check('no data script carries an eighteenth z', overDeep.length === 0,
   + 'sort after every z tier takes `~NNN-` instead; see the last row of the '
   + 'ordering table in docs/operations.md');
 
-// Not a vacuous check: it was written before any `~` file existed (the first,
-// `~001-men-of-arms-frontmatter.sql`, landed 2026-09-25), so it pins the MECHANISM
-// the paragraph above and operations.md both promise, using the same `.sort()`
-// every consumer calls. If it ever stops being true, the documentation is
-// wrong before any file depends on it.
-const tierProbe = ['add-a-normal-script.sql', 'zz-a-correction.sql',
-  'zzzzzzzzzzzzzzzzz-seventeen-z.sql', '~001-after-every-z.sql'].sort();
-check('a ~NNN- prefix sorts after every z- tier',
-  tierProbe[tierProbe.length - 1] === '~001-after-every-z.sql',
-  'sorted order was ' + JSON.stringify(tierProbe));
+// `~` (0x7E) sorts after `z` (0x7A) in the code-unit order `.sort()` uses, so a
+// `~NNN-` file sorts after every z- tier. That is a property of the character
+// set, not of this repo, and no check here pins it: one did until 2026-10-22,
+// sorting four literals it had typed itself, and could not fail.
 
 // The same two rules across EVERY .sql in the repo, not just the data scripts.
 // db/seed-catalogs.sql carried six em-dashes inside class markdown and is the

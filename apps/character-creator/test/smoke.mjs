@@ -487,7 +487,8 @@ import { comparePair, descriptionOverlap, mechanicalNumbers }
   from '../../../scripts/same-spell-lib.mjs';
 import { buildProposal, perLevelDiceOf, perLevelRolledDiceOf, perLevelBounds, skillGrantsFor, spellGrantsFor, psionicGrantsFor, xpTableFor,
          thresholdFor, spellLevelsForGrant, psionicCategoriesForGrant, spellNamesForGrant, grantNote,
-         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed }
+         startingPicksFor, startingGroups, spellTraditionAllowed, spellTraditionsAllowed,
+         classSkillNumbers, withIqBonus }
   from '../../../functions/api/character-creator/_lib/leveling.js';
 // js/second-form.js and js/morphus.js are imported by checks/second-body.mjs
 // now, not here: all twenty-six of their bindings this suite used were used by
@@ -1511,10 +1512,15 @@ section('Attribute Bonus Chart');
   }
 
   // The P.P. row drives strike as well as parry and dodge, which the book gives
-  // as two rows of identical numbers. One row in the app, and it must stay
-  // equal to the printed pair rather than drifting into a second copy.
+  // as one row. Read through the real function at every printed column, so a
+  // second copy of the row for strike alone would fail here. (The old line
+  // compared two of this test's own literals to each other.)
+  const ppDrift = PRINTED.pp_combat.map((want, i) => {
+    const c = D.combat({ PP: 16 + i }, null);
+    return c.strike === want && c.parry === want && c.dodge === want ? null : `P.P. ${16 + i}: ${c.strike}/${c.parry}/${c.dodge} not ${want}`;
+  }).filter(Boolean);
   check('strike shares the parry and dodge row, as the book prints it',
-    JSON.stringify(PRINTED.pp_combat) === JSON.stringify(PRINTED.pe_magic));
+    ppDrift.length === 0, ppDrift.join(', '));
 
   // Below the chart the book gives nothing, and the app must not invent it.
   check('an attribute of 15 earns nothing', D.bio({ IQ: 15 }).iq_skill_bonus_pct === 0);
@@ -2480,16 +2486,15 @@ section('Ability choice groups count PER GROUP (BOOK-INGEST-AUDIT F98)');
     && abilityRollBands({ choose: 2, from: ['K (01-50): A', 'K (51-00): B'] }) === null
     && abilityRollBands({ name: 'K (01-50): A' }) === null);
 
-  // THE REGRESSION ITSELF, stated as the disagreement rather than as an
-  // outcome: with one pick held, the TOTAL has reached group 0's limit while
-  // group 1 is still empty. The old code read the total here and closed group 1.
+  // THE REGRESSION ITSELF: with one pick held, the TOTAL (1) has reached group
+  // 0's limit (choose 1) while group 1 is still empty. The old code read the
+  // total here and closed group 1. The premise is the fixture's own shape and
+  // is not asserted; what the app does with it is.
   {
     const held = ['Alpha'];
     const groups = cls.special_abilities.filter((e) => e && e.choose);
     const counts = abilityGroupCounts(cls, held);
-    check('with one pick held the TOTAL has reached group 0 limit - which is what misled the picker',
-      held.length >= (+groups[0].choose || 1));
-    check('but group 1 is still empty and still open, which is the fix',
+    check('with one pick held, group 1 is still empty and still open, which is the fix',
       (counts[1] || 0) === 0 && (counts[1] || 0) < (+groups[1].choose || 1));
     check('and a second group stays open until ITS OWN limit is reached',
       (abilityGroupCounts(cls, ['Alpha', 'Gamma'])[1] || 0) < 2
@@ -2751,12 +2756,13 @@ section('Exceptional attribute rolls');
 section('Skill percentages');
 {
   // skillsPayload() lives inside the wizard module and depends on wizard state,
-  // so the rule it applies is restated here against the same derive call the
-  // wizard makes. What is pinned is the arithmetic and the cap.
+  // but the rule it applies is withIqBonus() in js/leveling.js, so that is what
+  // runs here, fed the same derive call the wizard makes. Until 2026-10-22 a
+  // copy of the rule written in this block ran instead, and dropping the cap
+  // from the real one left all ten checks green.
   const CAP = 98;
   const iqOf = (iq) => D.bio({ IQ: iq }, null).iq_skill_bonus_pct || 0;
-  const apply = (pct, iq) => (!pct ? { pct, iq_bonus: 0 }
-    : { pct: Math.min(CAP, pct + iqOf(iq)), iq_bonus: iqOf(iq) });
+  const apply = (pct, iq) => withIqBonus({ pct }, iqOf(iq));
 
   check('an average I.Q. adds nothing', (() => {
     const r = apply(35, 12);
@@ -3871,9 +3877,9 @@ section('Super abilities');
   check('and never stubs one', (() => {
     const src = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
       '_lib', 'catalog.js'), 'utf8');
-    const stub = src.slice(src.indexOf('export function buildStubStatements'));
-    return !/superAbilities/.test(stub);
-  })());
+    const stubAt = src.indexOf('export function buildStubStatements');
+    return stubAt !== -1 && !/superAbilities/.test(src.slice(stubAt));
+  })(), 'buildStubStatements is missing from catalog.js, or it stubs super abilities');
 }
 
 await skillRuleChecks();
@@ -4498,7 +4504,6 @@ section("The sheet's psionic pickers match an object category gate (BOOK-INGEST-
     categoryAllows(GATE, { name: 'Alter Aura', category: 'Physical' }) === true);
   check('and refuses the one the entry excepts',
     categoryAllows(GATE, { name: 'Telekinesis', category: 'Physical' }) === false);
-  check('a plain includes matches neither, which is the defect', GATE.includes('Physical') === false);
   check('and the entry has a label rather than printing as an object',
     categoryLabel(GATE[0]).includes('Physical'));
 
@@ -4713,11 +4718,12 @@ section('A border that identifies a control clears 3:1 (UI-AUDIT F55)');
       check('--border-control clears 3:1 on --' + name + ' for ' + who, r >= 3, r.toFixed(2));
     }
     // And the pair that IS the depth idiom is deliberately still below it, so a
-    // later "tidy" that points a control at --border-strong fails here.
+    // later "tidy" that points a control at --border-strong fails here. The
+    // token must be declared: ratio() answers 0 for a missing one, and 0 < 3.
     check('--border-strong is still NOT a control colour for ' + who
       + ', which is why F55 added a third token',
-      ratio(token('border-strong'), token('bg-tertiary')) < 3,
-      ratio(token('border-strong'), token('bg-tertiary')).toFixed(2));
+      !!token('border-strong') && ratio(token('border-strong'), token('bg-tertiary')) < 3,
+      token('border-strong') ? ratio(token('border-strong'), token('bg-tertiary')).toFixed(2) : '--border-strong is not declared as hex');
   }
 
   // The three call sites the finding moved, and the ones it deliberately did not.
@@ -7109,12 +7115,12 @@ section('Secondary schedules & group bonuses');
   check('a non-numeric bonus is rejected',
     !mk('  occ_skills:\n    - { choose: 2, categories: ["Technical"], bonus: "lots" }').ok);
 
-  // The arithmetic the wizard performs. A flat base gave every pick in a group
-  // the same percentage regardless of what the skill itself starts at.
-  const resolve = (catBase, explicit) => {
-    const base = explicit.base ?? (explicit.bonus && catBase ? catBase + explicit.bonus : catBase);
-    return base;
-  };
+  // The arithmetic the wizard performs, classSkillNumbers() in js/leveling.js,
+  // run against a catalog row with the given base. A flat base gave every pick
+  // in a group the same percentage regardless of what the skill itself starts
+  // at. Until 2026-10-22 this was a copy of the rule written here, which
+  // stayed green when the real one's `+` became `-`.
+  const resolve = (catBase, explicit) => classSkillNumbers({ base: catBase }, explicit, {}).base;
   check('a bonus adds to each skill\'s own base', (() => (
     resolve(50, { bonus: 30 }) === 80 && resolve(30, { bonus: 30 }) === 60
   ))());

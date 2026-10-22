@@ -1022,11 +1022,25 @@ export async function run() {
       } catch (e) { return { threw: e.message }; }
       return C.data;
     };
-    // What the PATCH stores, written out from the clamp pinned just below.
-    const serverStores = (data, key, v) => {
-      let max = data[key + '_max'];
-      if (key === 'ppe' && typeof max === 'number') max = Math.max(0, max - (Number(data.ppe_base_spent) || 0));
-      return Math.max(0, typeof max === 'number' ? Math.min(v, max) : v);
+    // What the PATCH stores: the clamp itself, cut out of the route and run
+    // against the row the route would have read. Until 2026-10-22 this was a
+    // copy of the clamp written here, which agreed with the page whatever the
+    // route did.
+    const idSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
+      'characters', '[id].js'), 'utf8');
+    // The slice runs from the first statement of the clamp to the `sets.push`
+    // that stores the result, cut back to its last `;` so the braces closing
+    // the block and the loop are left out. (The clamp's last line also occurs
+    // in the bulk route below, so it cannot be the end marker.)
+    const CLAMP_START = "let max = current?.[field.replace('_current', '_max')];";
+    const clampAt = idSrc.indexOf(CLAMP_START);
+    const clampStop = clampAt < 0 ? -1 : idSrc.indexOf('sets.push(', clampAt);
+    check('the PATCH clamp can be located', clampAt >= 0 && clampStop > clampAt, 'the clamp in [id].js moved');
+    const clampBody = clampStop > clampAt ? idSrc.slice(clampAt, clampStop) : '';
+    const clampSrc = clampBody.slice(0, clampBody.lastIndexOf(';') + 1);
+    const serverStores = (current, key, v) => {
+      try { return new Function('current', 'field', 'v', clampSrc + '\nreturn v;')(current, key + '_current', v); }
+      catch (e) { return 'threw ' + e.message; }
     };
     const burned = { ppe_max: 30, ppe_base_spent: 10, ppe_current: 5, isp_max: 40, isp_current: 1, hp_current: 3 };
     check('P.P.E. typed back up to the rolled maximum is held at what is left of it',
@@ -1040,8 +1054,6 @@ export async function run() {
       mirror(burned, { notes: 'x' }).notes === 'x' && mirror(burned, { ppe_current: null }).ppe_current === null);
 
     // And the server, which is what actually stops a refill past the spend.
-    const idSrc = readFileSync(join(appDir, '..', '..', 'functions', 'api', 'character-creator',
-      'characters', '[id].js'), 'utf8');
     check('the PATCH clamp reads the spend', /SELECT[^']*ppe_base_spent[^']*FROM characters/.test(idSrc));
     check('and subtracts it from the P.P.E. maximum before clamping',
       /field === 'ppe_current'[\s\S]{0,200}max - \(Number\(current\?\.ppe_base_spent\)/.test(idSrc));
@@ -4850,15 +4862,19 @@ export async function run() {
     // section appended after it would be judged by these three as well - a
     // false failure, and the loud kind, which is the trade printCss's header
     // argues for over a slice that silently stops matching.
-    const stage = css.slice(css.indexOf('body.present {'));
-    check('the present-mode block is in the shared stylesheet', stage.length > 0);
+    // indexOf is guarded: a -1 would slice the file's last character, and the
+    // negative checks below would then pass against one byte of nothing.
+    const stageAt = css.indexOf('body.present {');
+    const stage = stageAt === -1 ? '' : css.slice(stageAt);
+    check('the present-mode block is in this app\'s stylesheet', stageAt !== -1,
+      'styles.css has no `body.present {` block');
     // Black rather than --bg-primary, and the only page in the suite that
     // departs from the palette: this background is the surround of a
     // photograph rather than a surface the UI stands on.
     check('the stage is black and the picture is fitted, never cropped',
       /background:\s*#000/.test(stage) && /object-fit:\s*contain/.test(stage)
       && /max-height:\s*100dvh/.test(stage));
-    check('and it still casts no shadow', !/box-shadow/.test(stage));
+    check('and it still casts no shadow', stageAt !== -1 && !/box-shadow/.test(stage));
     check('the chrome fades when nothing is happening',
       /body\.present\.idle \.present-chrome \{ opacity: 0; \}/.test(stage));
   }

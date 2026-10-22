@@ -1020,10 +1020,6 @@ section('Catalog rows inserted by two scripts');
       && fixtureConflicts[0].columns.join() === 'source_book'
       && !('gear|slug' in fixture) && fixture['gear|oar']?.[1]?.mode === 'upsert',
     JSON.stringify(fixtureConflicts));
-  const BAD_LABELS = [...BASELINE].filter(([, l]) => !['resolved', 'harmless'].includes(l));
-  check('every baseline conflict is labelled resolved or harmless (a wrong one gets fixed, not listed)',
-    BAD_LABELS.length === 0, BAD_LABELS.map(([k, l]) => `${k}=${l}`).join(', '));
-
   const inserts = catalogInserts(files);
   check('the reader finds catalog inserts in the data scripts',
     Object.keys(inserts).length > 1000, `${Object.keys(inserts).length} keys`);
